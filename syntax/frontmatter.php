@@ -40,6 +40,7 @@ use ComboStrap\MetadataStoreTransfer;
 use ComboStrap\Page;
 use ComboStrap\PageH1;
 use ComboStrap\PageId;
+use ComboStrap\PageImagePath;
 use ComboStrap\PageImages;
 use ComboStrap\PageKeywords;
 use ComboStrap\PageLayout;
@@ -345,15 +346,27 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
     private function updateImageStatistics($value, $renderer)
     {
-        if (is_array($value)) {
-            foreach ($value as $subImage) {
-                $this->updateImageStatistics($subImage, $renderer);
+        if (is_array($value) && sizeof($value) > 0) {
+            $firstKey = array_keys($value)[0];
+            if (is_numeric($firstKey)) {
+                foreach ($value as $subImage) {
+                    $this->updateImageStatistics($subImage, $renderer);
+                }
+                return;
             }
-        } else {
-            $media = MediaLink::createFromRenderMatch($value);
-            $attributes = $media->toCallStackArray();
-            syntax_plugin_combo_media::updateStatistics($attributes, $renderer);
         }
+
+        /**
+         * Code below is fucked up
+         */
+        $path = $value;
+        if (is_array($value) && isset($value[PageImagePath::getPersistentName()])) {
+            $path = $value[PageImagePath::getPersistentName()];
+        }
+        $media = MediaLink::createFromRenderMatch($path);
+        $attributes = $media->toCallStackArray();
+        syntax_plugin_combo_media::updateStatistics($attributes, $renderer);
+
     }
 
 

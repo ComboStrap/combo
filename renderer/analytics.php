@@ -250,7 +250,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $titleScore = $this->getConf(self::CONF_QUALITY_SCORE_TITLE_PRESENT, 10);
         if (empty($this->metadata[PageTitle::TITLE])) {
             $ruleResults[self::RULE_TITLE_PRESENT] = self::FAILED;
-            $ruleInfo[self::RULE_TITLE_PRESENT] = "Add a title in the frontmatter for {$titleScore} points";
+            $ruleInfo[self::RULE_TITLE_PRESENT] = "Add a title for {$titleScore} points";
             $this->metadata[PageTitle::TITLE] = $dokuWikiMetadata[PageTitle::TITLE];
             $qualityScores[self::RULE_TITLE_PRESENT] = 0;
         } else {
@@ -264,7 +264,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $descScore = $this->getConf(self::CONF_QUALITY_SCORE_DESCRIPTION_PRESENT, 8);
         if (empty($this->metadata[self::DESCRIPTION])) {
             $ruleResults[self::RULE_DESCRIPTION_PRESENT] = self::FAILED;
-            $ruleInfo[self::RULE_DESCRIPTION_PRESENT] = "Add a description in the frontmatter for {$descScore} points";
+            $ruleInfo[self::RULE_DESCRIPTION_PRESENT] = "Add a description for {$descScore} points";
             $this->metadata[self::DESCRIPTION] = $dokuWikiMetadata[self::DESCRIPTION]["abstract"];
             $qualityScores[self::RULE_DESCRIPTION_PRESENT] = 0;
         } else {

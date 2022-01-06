@@ -171,6 +171,7 @@ require_once(__DIR__ . '/PagePublicationDate.php');
 require_once(__DIR__ . '/PageCreationDate.php');
 require_once(__DIR__ . '/PageH1.php');
 require_once(__DIR__ . '/QualityDynamicMonitoringOverwrite.php');
+require_once(__DIR__ . '/QualityMenuItem.php');
 require_once(__DIR__ . '/RasterImageLink.php');
 require_once(__DIR__ . '/Region.php');
 require_once(__DIR__ . '/RenderUtility.php');

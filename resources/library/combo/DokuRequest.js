@@ -41,12 +41,9 @@ export default class DokuAjaxRequest {
 
     async getJson() {
 
-        let response = await fetch(this.url.toString(), {method: this.method});
+        let response = this.getResponse()
 
         if (response.status !== 200) {
-            let modal = ComboModal.createTemporary()
-            modal.addBody(`Bad request:  the call ${this.url.getCall()} to the backend sends back the following exit code` + response.status)
-            modal.show();
             return {};
         }
 
@@ -55,6 +52,22 @@ export default class DokuAjaxRequest {
         //   * response.text()
         // are promise, you need to pass them to a callback to get the value
         return response.json();
+
+    }
+
+    async getText() {
+
+        let response = this.getResponse();
+
+        if (response.status !== 200) {
+            return "";
+        }
+
+        // Parses response data to JSON
+        //   * response.json()
+        //   * response.text()
+        // are promise, you need to pass them to a callback to get the value
+        return response.text();
 
     }
 
@@ -100,5 +113,16 @@ export default class DokuAjaxRequest {
     static createDokuRequest = function (call) {
 
         return new DokuAjaxRequest(call);
+    }
+
+    async getResponse() {
+
+        let response = await fetch(this.url.toString(), {method: this.method});
+        if (response.status !== 200) {
+            let modal = ComboModal.createTemporary()
+            modal.addBody(`Bad request:  the call ${this.url.getCall()} to the backend sends back the following exit code` + response.status)
+            modal.show();
+        }
+        return response;
     }
 }

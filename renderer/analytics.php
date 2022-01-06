@@ -8,6 +8,7 @@ use ComboStrap\LinkUtility;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\Page;
 use ComboStrap\PageTitle;
+use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use dokuwiki\ChangeLog\PageChangeLog;
 
@@ -280,7 +281,8 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             if ($ID != $root) {
                 $qualityScores[self::RULE_CANONICAL_PRESENT] = 0;
                 $ruleResults[self::RULE_CANONICAL_PRESENT] = self::FAILED;
-                $ruleInfo[self::RULE_CANONICAL_PRESENT] = "Add a canonical in the frontmatter for {$canonicalScore} points";
+                // no link to the documentation because we don't want any html in the json
+                $ruleInfo[self::RULE_CANONICAL_PRESENT] = "Add a canonical for {$canonicalScore} points";
             }
         } else {
             $qualityScores[self::RULE_CANONICAL_PRESENT] = $canonicalScore;

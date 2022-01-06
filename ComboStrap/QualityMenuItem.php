@@ -14,26 +14,37 @@ namespace ComboStrap;
 
 use dokuwiki\Menu\Item\AbstractItem;
 
+
 /**
  * Class MenuItem
+ * *
  * @package ComboStrap
  *
+ * Inspiration:
+ * https://raw.githubusercontent.com/splitbrain/dokuwiki-plugin-dw2pdf/master/MenuItem.php
  */
-class MetaManagerMenuItem extends AbstractItem
+class QualityMenuItem extends AbstractItem
 {
 
-    const CLASS_HTML = "combo_metadata_item";
-    const CANONICAL = "metadata";
+
+    const CLASS_HTML = "combo-quality-item";
+    const CANONICAL = "quality";
+    /**
+     * @var Page
+     */
+    private $page;
 
     /**
-     * MetadataMenuItem constructor.
+     * QualityMenuItem constructor.
      */
     public function __construct()
     {
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetManager->attachJavascriptComboLibrary();
         $snippetManager->attachJavascriptSnippetForRequest(self::CANONICAL);
+        $this->page = Page::createPageFromRequestedPage();
         parent::__construct();
+
     }
 
 
@@ -43,7 +54,11 @@ class MetaManagerMenuItem extends AbstractItem
      */
     public function getLabel(): string
     {
-        return "Metadata Manager";
+        $suffix = "";
+        if ($this->page->isLowQualityPage()) {
+            $suffix = "(Low)";
+        }
+        return "Page Quality $suffix";
     }
 
     public function getLinkAttributes($classprefix = 'menuitem '): array
@@ -62,13 +77,25 @@ class MetaManagerMenuItem extends AbstractItem
 
     public function getTitle(): string
     {
-        return "Show and update the Page Metadata";
+        $title = "Show the page quality";
+        if ($this->page->isLowQualityPage()) {
+            $title .= "\n(This page is a low quality page)";
+        } else {
+            $title .= "\n(This page has a normal quality)";
+        }
+        return htmlentities($title);
     }
 
     public function getSvg(): string
     {
-        /** @var string icon file */
-        return Resources::getImagesDirectory() . '/tag-text.svg';
+
+        if ($this->page->isLowQualityPage()) {
+            /** @var string icon file */
+            return Resources::getImagesDirectory() . '/quality-alert.svg';
+        } else {
+            /** @var string icon file */
+            return Resources::getImagesDirectory() . '/quality.svg';
+        }
     }
 
 

@@ -521,6 +521,11 @@ class SnippetManager
 
     }
 
+    public function attachJavascriptComboLibrary()
+    {
+        $this->attachJavascriptScriptForRequest("combo","library:combo:dist:combo.min.js");
+    }
+
 
 }
 

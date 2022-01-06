@@ -8,6 +8,7 @@ class Canonical extends MetadataWikiPath
 {
 
     public const PROPERTY_NAME = "canonical";
+    public const CANONICAL = "canonical";
 
     /**
      * The auto-canonical feature does not create any canonical value on the file system
@@ -106,7 +107,7 @@ class Canonical extends MetadataWikiPath
 
     public function getCanonical(): string
     {
-        return self::PROPERTY_NAME;
+        return self::CANONICAL;
     }
 
 

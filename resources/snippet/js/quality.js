@@ -27,7 +27,7 @@ window.addEventListener("DOMContentLoaded", function () {
                  */
                 qualityMessageModal
                     .resetIfBuild()
-                    .setHeader(`Quality Message for Page (${pageId})`)
+                    .setHeader(`Quality for Page (${pageId})`)
                     .addBody(html)
                     .show();
             });

@@ -99,16 +99,23 @@ class Message
     }
 
     public
-    function getContent($mime): string
+    function getContent($mime = null): string
     {
-        return implode($this->content[$mime], DOKU_LF);
+        if ($mime != null) {
+            return implode($this->content[$mime], DOKU_LF);
+        }
+        $contentAll = "";
+        foreach ($this->content as $contentArray) {
+            $contentAll .= implode($contentArray, DOKU_LF);
+        }
+        return $contentAll;
     }
 
     public
     function getPlainTextContent(): ?string
     {
         $plainTextLines = $this->content[Mime::PLAIN_TEXT];
-        if($plainTextLines===null){
+        if ($plainTextLines === null) {
             return null;
         }
         return implode(DOKU_LF, $plainTextLines);
@@ -252,7 +259,20 @@ EOF;
 
     public function getStatus(): int
     {
-        return $this->status;
+        if ($this->status !== null) {
+            return $this->status;
+        }
+        if ($this->type === null) {
+            return HttpResponse::STATUS_ALL_GOOD;
+        }
+        switch ($this->type) {
+            case self::TYPE_ERROR:
+                return HttpResponse::STATUS_INTERNAL_ERROR;
+            case self::TYPE_INFO:
+            default:
+                return HttpResponse::STATUS_ALL_GOOD;
+        }
+
     }
 
     public function setType(string $type): Message

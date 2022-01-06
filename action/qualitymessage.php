@@ -52,6 +52,104 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         $this->setupLocale();
     }
 
+    public static function createHtmlQualityNote(Page $page): Message
+    {
+        if ($page->isSlot()) {
+            return Message::createErrorMessage("A has no quality metrics");
+
+        }
+
+        if (!$page->isDynamicQualityMonitored()) {
+            return Message::createErrorMessage("This page is not quality monitored. Change the configuration if you want to.");
+        }
+
+        if (!$page->exists()) {
+            return Message::createInfoMessage("The page does not exist");
+        }
+
+
+        try {
+            $analyticsArray = $page->getAnalyticsDocument()->getJson()->toArray();
+        } catch (ExceptionCombo $e) {
+            return Message::createErrorMessage("Error while trying to read the JSON analytics document. {$e->getMessage()}")
+                ->setStatus(HttpResponse::STATUS_INTERNAL_ERROR);
+        }
+
+        $rules = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::RULES];
+
+
+        /**
+         * We may got null
+         * array_key_exists() expects parameter 2 to be array,
+         * null given in /opt/www/datacadamia.com/lib/plugins/combo/action/qualitymessage.php on line 113
+         */
+        if ($rules == null) {
+            return Message::createInfoMessage("No rules found in the analytics document");
+        }
+
+        /**
+         * If there is no info, nothing to show
+         */
+        if (!array_key_exists(AnalyticsDocument::INFO, $rules)) {
+            return Message::createInfoMessage("No quality rules information to show");
+        }
+
+        /**
+         * The error info
+         */
+        $qualityInfoRules = $rules[AnalyticsDocument::INFO];
+
+        /**
+         * Excluding the excluded rules
+         */
+        global $conf;
+        $excludedRulesConf = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][self::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING];
+        $excludedRules = preg_split("/,/", $excludedRulesConf);
+        foreach ($excludedRules as $excludedRule) {
+            if (array_key_exists($excludedRule, $qualityInfoRules)) {
+                unset($qualityInfoRules[$excludedRule]);
+            }
+        }
+
+        if (sizeof($qualityInfoRules) <= 0) {
+            return Message::createInfoMessage("No quality rules information to show");
+        }
+
+        $qualityScore = $analyticsArray[AnalyticsDocument::QUALITY][renderer_plugin_combo_analytics::SCORING][renderer_plugin_combo_analytics::SCORE];
+        $message = "<p>The page has a " . PluginUtility::getDocumentationHyperLink("quality:score", "quality score") . " of {$qualityScore}.</p>";
+
+        $lowQuality = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
+        if ($lowQuality) {
+
+            $mandatoryFailedRules = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::FAILED_MANDATORY_RULES];
+            $rulesUrl = PluginUtility::getDocumentationHyperLink("quality:rule", "rules");
+            $lqPageUrl = PluginUtility::getDocumentationHyperLink("low_quality_page", "low quality page");
+            $message .= "<div class='alert alert-warning'>This is a {$lqPageUrl} because it has failed the following mandatory {$rulesUrl}:";
+            $message .= "<ul style='margin-bottom: 0'>";
+            /**
+             * A low quality page should have
+             * failed mandatory rules
+             * but due to the asycn nature, sometimes
+             * we don't have an array
+             */
+            if (is_array($mandatoryFailedRules)) {
+                foreach ($mandatoryFailedRules as $mandatoryFailedRule) {
+                    $message .= "<li>" . PluginUtility::getDocumentationHyperLink("quality:rule#list", $mandatoryFailedRule) . "</li>";
+                }
+            }
+            $message .= "</ul>";
+            $message .= "</div>";
+        }
+        $message .= "<p>You can still win a couple of points.</p>";
+        $message .= "<ul>";
+        foreach ($qualityInfoRules as $qualityRule => $qualityInfo) {
+            $message .= "<li>$qualityInfo</li>";
+        }
+        $message .= "</ul>";
+        return Message::createInfoMessage($message);
+
+    }
+
 
     function register(Doku_Event_Handler $controller)
     {
@@ -141,134 +239,17 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
         $page = Page::createPageFromId($id);
 
-        if ($page->isSlot()) {
-            HttpResponse::create(HttpResponse::STATUS_BAD_REQUEST)
-                ->setEvent($event)
-                ->setCanonical(self::CANONICAL)
-                ->send("A has no quality metrics", Mime::HTML);
-            return;
+        $message = self::createHtmlQualityNote($page);
+
+        $status = $message->getStatus();
+        if ($status === null) {
+            $status = HttpResponse::STATUS_ALL_GOOD;
         }
 
-        if (!$page->isDynamicQualityMonitored()) {
-            HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
-                ->setEvent($event)
-                ->setCanonical(self::CANONICAL)
-                ->send("This page is not quality monitored. Change the configuration if you want to.", Mime::HTML);
-            return;
-        }
-
-        if (!$page->exists()) {
-            HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
-                ->setEvent($event)
-                ->setCanonical(self::CANONICAL)
-                ->send("The page does not exist", Mime::HTML);
-            return;
-        }
-
-
-        try {
-            $analyticsArray = $page->getAnalyticsDocument()->getJson()->toArray();
-        } catch (ExceptionCombo $e) {
-            HttpResponse::create(HttpResponse::STATUS_INTERNAL_ERROR)
-                ->setEvent($event)
-                ->setCanonical(self::CANONICAL)
-                ->send("Error while trying to read the JSON analytics document. {$e->getMessage()}", Mime::HTML);
-            return;
-        }
-
-        $rules = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::RULES];
-
-
-        /**
-         * We may got null
-         * array_key_exists() expects parameter 2 to be array,
-         * null given in /opt/www/datacadamia.com/lib/plugins/combo/action/qualitymessage.php on line 113
-         */
-        if ($rules == null) {
-            HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
-                ->setEvent($event)
-                ->setCanonical(self::CANONICAL)
-                ->send("No rules found in the analytics document", Mime::HTML);
-            return;
-        }
-
-        /**
-         * If there is no info, nothing to show
-         */
-        if (!array_key_exists(AnalyticsDocument::INFO, $rules)) {
-            HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
-                ->setEvent($event)
-                ->setCanonical(self::CANONICAL)
-                ->send("No quality rules information to show", Mime::HTML);
-            return;
-        }
-
-        /**
-         * The error info
-         */
-        $qualityInfoRules = $rules[AnalyticsDocument::INFO];
-
-        /**
-         * Excluding the excluded rules
-         */
-        global $conf;
-        $excludedRulesConf = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][self::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING];
-        $excludedRules = preg_split("/,/", $excludedRulesConf);
-        foreach ($excludedRules as $excludedRule) {
-            if (array_key_exists($excludedRule, $qualityInfoRules)) {
-                unset($qualityInfoRules[$excludedRule]);
-            }
-        }
-
-        if (sizeof($qualityInfoRules) <= 0) {
-            HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
-                ->setEvent($event)
-                ->setCanonical(self::CANONICAL)
-                ->send("No quality rules information to show", Mime::HTML);
-            return;
-        }
-
-        $qualityScore = $analyticsArray[AnalyticsDocument::QUALITY][renderer_plugin_combo_analytics::SCORING][renderer_plugin_combo_analytics::SCORE];
-        $message = Message::createInfoMessage()
-            ->addHtmlContent("<p>Well played, you got a " . PluginUtility::getDocumentationHyperLink("quality:score", "quality score") . " of {$qualityScore} !</p>");
-
-        $lowQuality = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
-        if ($lowQuality) {
-
-            $mandatoryFailedRules = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::FAILED_MANDATORY_RULES];
-            $rulesUrl = PluginUtility::getDocumentationHyperLink("quality:rule", "rules");
-            $lqPageUrl = PluginUtility::getDocumentationHyperLink("low_quality_page", "low quality page");
-            $message->addHtmlContent("<div class='alert alert-info'>This is a {$lqPageUrl} because it has failed the following mandatory {$rulesUrl}:");
-            $message->addHtmlContent("<ul style='margin-bottom: 0'>");
-            /**
-             * A low quality page should have
-             * failed mandatory rules
-             * but due to the asycn nature, sometimes
-             * we don't have an array
-             */
-            if (is_array($mandatoryFailedRules)) {
-                foreach ($mandatoryFailedRules as $mandatoryFailedRule) {
-                    $message->addHtmlContent("<li>" . PluginUtility::getDocumentationHyperLink("quality:rule#list", $mandatoryFailedRule) . "</li>");
-                }
-            }
-            $message->addHtmlContent("</ul>");
-            $message->addHtmlContent("</div>");
-        }
-        $message->addHtmlContent("<p>You can still win a couple of points.</p>");
-        $message->addHtmlContent("<ul>");
-        foreach ($qualityInfoRules as $qualityRule => $qualityInfo) {
-            $message->addHtmlContent("<li>$qualityInfo</li>");
-        }
-        $message->addHtmlContent("</ul>");
-
-        $htmlBox = $message->setCanonical("quality:dynamic_monitoring")
-            ->setSignatureName("Quality Dynamic Monitoring Feature")
-            ->setClass(self::QUALITY_BOX_CLASS)
-            ->toHtmlBox();
-
-        HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
+        HttpResponse::create($status)
             ->setEvent($event)
-            ->send($htmlBox, Mime::HTML);
+            ->setCanonical(self::CANONICAL)
+            ->send($message->getContent(), Mime::HTML);
 
     }
 }

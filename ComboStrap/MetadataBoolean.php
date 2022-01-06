@@ -77,6 +77,11 @@ abstract class MetadataBoolean extends Metadata
             return $value;
         }
 
+        if ($store instanceof MetadataDokuWikiStore) {
+            // The store modify it
+            return $value;
+        }
+
         if ($store->isHierarchicalTextBased()) {
             $value = Boolean::toString($value);
         }

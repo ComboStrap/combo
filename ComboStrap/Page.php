@@ -1373,7 +1373,7 @@ class Page extends ResourceComboAbs
             $beforeLowQualityPage = $this->isLowQualityPage();
             $lowQualityAttributeName
                 ->setValue($value)
-                ->sendToWriteStore();
+                ->persist();
             $afterLowQualityPage = $this->isLowQualityPage();
             if ($beforeLowQualityPage !== $afterLowQualityPage) {
                 /**

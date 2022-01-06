@@ -46,7 +46,12 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
         if (!FileSystems::exists($analyticsDocument->getCachePath())) {
             return null;
         }
-        return $analyticsDocument->getJson()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
+        try {
+            return $analyticsDocument->getJson()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error while reading the json analytics. {$e->getMessage()}");
+            return null;
+        }
 
     }
 

@@ -16,7 +16,7 @@ window.addEventListener("DOMContentLoaded", function () {
                 /**
                  * Creating the form
                  */
-                let qualityCall = "combo-quality";
+                let qualityCall = "combo-quality-message";
                 let html = await combo
                     .createDokuRequest(qualityCall)
                     .setProperty("id", pageId)
@@ -25,6 +25,7 @@ window.addEventListener("DOMContentLoaded", function () {
                 /**
                  * The modal
                  */
+                debugger;
                 qualityMessageModal
                     .setHeader(`Quality Message for Page (${pageId})`)
                     .addBody(html)

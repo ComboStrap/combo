@@ -41,7 +41,7 @@ export default class DokuAjaxRequest {
 
     async getJson() {
 
-        let response = this.getResponse()
+        let response = await this.getResponse()
 
         if (response.status !== 200) {
             return {};
@@ -57,7 +57,7 @@ export default class DokuAjaxRequest {
 
     async getText() {
 
-        let response = this.getResponse();
+        let response = await this.getResponse();
 
         if (response.status !== 200) {
             return "";

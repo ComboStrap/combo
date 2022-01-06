@@ -2,22 +2,13 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
-use ComboStrap\Aliases;
-use ComboStrap\CacheExpirationDate;
-use ComboStrap\CacheExpirationFrequency;
-use ComboStrap\Canonical;
 use ComboStrap\DataType;
-use ComboStrap\EndDate;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FormMeta;
 use ComboStrap\FormMetaField;
-use ComboStrap\FormMetaTab;
 use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\Json;
-use ComboStrap\Lang;
-use ComboStrap\LdJson;
-use ComboStrap\LogUtility;
 use ComboStrap\LowQualityPageOverwrite;
 use ComboStrap\Message;
 use ComboStrap\Metadata;
@@ -29,23 +20,8 @@ use ComboStrap\MetaManagerForm;
 use ComboStrap\MetaManagerMenuItem;
 use ComboStrap\Mime;
 use ComboStrap\Page;
-use ComboStrap\PageCreationDate;
-use ComboStrap\PageDescription;
-use ComboStrap\PageH1;
-use ComboStrap\PageId;
-use ComboStrap\PageImages;
-use ComboStrap\PageKeywords;
-use ComboStrap\PageLayout;
-use ComboStrap\PagePath;
-use ComboStrap\PagePublicationDate;
-use ComboStrap\PageTitle;
-use ComboStrap\PageType;
-use ComboStrap\PageUrlPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\QualityDynamicMonitoringOverwrite;
-use ComboStrap\Region;
-use ComboStrap\ResourceName;
-use ComboStrap\StartDate;
 
 if (!defined('DOKU_INC')) die();
 

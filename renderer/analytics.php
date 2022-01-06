@@ -145,6 +145,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
 
     /**
      * Here the score is calculated
+     * @throws \ComboStrap\ExceptionCombo
      */
     public function document_end() // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {

@@ -1171,6 +1171,7 @@ class Page extends ResourceComboAbs
              */
             $value = $metadata
                 ->setResource($this)
+                ->setWriteStore(TemplateStore::class)
                 ->toStoreValueOrDefault();
             if ($metadata->getDataType() === DataType::TEXT_TYPE_VALUE) {
 

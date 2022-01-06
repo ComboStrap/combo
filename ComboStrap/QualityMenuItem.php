@@ -101,7 +101,10 @@ class QualityMenuItem extends AbstractItem
             /** @var string icon file */
             return Resources::getImagesDirectory() . '/quality-alert.svg';
         } else {
-            /** @var string icon file */
+            /**
+             * @var string icon file
+             * !!! Same icon used in the landing page !!!
+             */
             return Resources::getImagesDirectory() . '/quality.svg';
         }
     }

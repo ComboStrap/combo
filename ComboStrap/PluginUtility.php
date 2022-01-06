@@ -199,6 +199,7 @@ require_once(__DIR__ . '/TableUtility.php');
 require_once(__DIR__ . '/Tag.php');
 require_once(__DIR__ . '/TagAttributes.php');
 require_once(__DIR__ . '/Template.php');
+require_once(__DIR__ . '/TemplateStore.php');
 require_once(__DIR__ . '/TemplateUtility.php');
 require_once(__DIR__ . '/TextAlign.php');
 require_once(__DIR__ . '/TextColor.php');

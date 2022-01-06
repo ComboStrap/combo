@@ -379,12 +379,17 @@ class DokuPath extends PathAbs
     }
 
     /**
-     * A doku path has no extension for now
      * @return string
      */
     public function getLastNameWithoutExtension(): string
     {
-        return $this->getLastName();
+        /**
+         * A page doku path has no extension for now
+         */
+        if($this->finalType===self::PAGE_TYPE) {
+            return $this->getLastName();
+        }
+        return parent::getLastNameWithoutExtension();
     }
 
 

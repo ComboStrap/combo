@@ -25,8 +25,8 @@ window.addEventListener("DOMContentLoaded", function () {
                 /**
                  * The modal
                  */
-                debugger;
                 qualityMessageModal
+                    .resetIfBuild()
                     .setHeader(`Quality Message for Page (${pageId})`)
                     .addBody(html)
                     .show();

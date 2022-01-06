@@ -109,16 +109,6 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         $event->preventDefault();
 
         /**
-         * Quality is just for the writers
-         */
-        if (!Identity::isWriter()) {
-            HttpResponse::create(HttpResponse::STATUS_NOT_AUTHORIZED)
-                ->setEvent($event)
-                ->send("Quality is only for writer", Mime::HTML);
-            return;
-        }
-
-        /**
          * Shared check between post and get HTTP method
          */
         $id = $_GET["id"];
@@ -137,6 +127,17 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                 ->send("The page id should not be empty", Mime::HTML);
             return;
         }
+
+        /**
+         * Quality is just for the writers
+         */
+        if (!Identity::isWriter($id)) {
+            HttpResponse::create(HttpResponse::STATUS_NOT_AUTHORIZED)
+                ->setEvent($event)
+                ->send("Quality is only for writer", Mime::HTML);
+            return;
+        }
+
 
         $page = Page::createPageFromId($id);
 

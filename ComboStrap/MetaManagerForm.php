@@ -32,7 +32,6 @@ class MetaManagerForm
         PageUrlPath::PROPERTY_NAME,
         PageLayout::PROPERTY_NAME,
         ModificationDate::PROPERTY_NAME,
-        ReplicationDate::PROPERTY_NAME,
         PageCreationDate::PROPERTY_NAME,
         PageImages::PROPERTY_NAME,
         Aliases::PROPERTY_NAME,
@@ -46,6 +45,7 @@ class MetaManagerForm
         Locale::PROPERTY_NAME,
         Lang::PROPERTY_NAME,
         Region::PROPERTY_NAME,
+        ReplicationDate::PROPERTY_NAME,
         PageId::PROPERTY_NAME,
         CacheExpirationFrequency::PROPERTY_NAME,
         CacheExpirationDate::PROPERTY_NAME

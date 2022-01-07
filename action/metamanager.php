@@ -35,13 +35,10 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
     const META_MANAGER_CALL_ID = "combo-meta-manager";
     const META_VIEWER_CALL_ID = "combo-meta-viewer";
-    const JSON_PARAM = "json";
+
     const CANONICAL = "meta-manager";
 
-    const VALUES_ATTRIBUTE = "values";
-    const NAME_ATTRIBUTE = "name";
-    //data type
-    // width of the label / element
+
 
     /**
      * The canonical for the metadata page

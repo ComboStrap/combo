@@ -31,6 +31,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
 
     }
 
+
     /**
      * Modify the returned pages
      * The {@link callLinkWiz} of inc/Ajax.php do
@@ -48,34 +49,36 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
          * linkwiz is the editor toolbar action
          * qsearch is the search button
          */
-        if (!(in_array($INPUT->post->str('call'), [ "linkwiz","qsearch"]))) {
+        $postCall = $INPUT->post->str('call');
+        if (!(in_array($postCall, ["linkwiz", "qsearch", action_plugin_combo_search::CALL]))) {
             return;
         }
-        if(PluginUtility::getConfValue(self::CONF_ENABLE_ENHANCED_LINK_WIZARD,1)===0){
+        if (PluginUtility::getConfValue(self::CONF_ENABLE_ENHANCED_LINK_WIZARD, 1) === 0) {
             return;
         }
         $sqlite = Sqlite::createOrGetSqlite();
         if ($sqlite === null) {
             return;
         }
-        $id = $event->data["id"];
-        if(strlen($id)<3){
+
+        $searchTerm = $event->data["id"]; // yes id is the search term
+        if (strlen($searchTerm) < 3) {
             return;
         }
-        $pattern = "*$id*";
-        $patterns = [$pattern,$pattern,$pattern,$pattern];
-        $query = <<<EOF
+        $pattern = "*$searchTerm*";
+        $patterns = [$pattern, $pattern, $pattern, $pattern];
+        $searchTerm = <<<EOF
 select id as "id", title as "title" from pages where id glob ? or H1 glob ? or title glob ? or name glob ? order by id ASC;
 EOF;
         $rows = [];
         $request = $sqlite
             ->createRequest()
-            ->setQueryParametrized($query, $patterns);
-        try{
+            ->setQueryParametrized($searchTerm, $patterns);
+        try {
             $rows = $request
                 ->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e){
+        } catch (ExceptionCombo $e) {
             LogUtility::msg("Error while trying to retrieve a list of page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         } finally {
             $request->close();

@@ -1,7 +1,8 @@
 window.addEventListener('load', function () {
 
     let searchBox = document.getElementById("internal-search-box");
-
+    let autoCompletionUlElement = searchBox.nextElementSibling;
+    const popperInstance = Popper.createPopper(searchBox, autoCompletionUlElement);
 
     searchBox.addEventListener("input", debounce(
         async function () {
@@ -29,11 +30,11 @@ window.addEventListener('load', function () {
                 },
             });
         let data = await response.json();
-        debugger;
-        let autoCompletionUlElement = searchBox.nextElementSibling;
         while (autoCompletionUlElement.firstChild) {
             autoCompletionUlElement.firstChild.remove()
         }
+        autoCompletionUlElement.classList.add("show");
+        popperInstance.update();
         for (let id in data) {
             if(!data.hasOwnProperty(id)){
                 continue;

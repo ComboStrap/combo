@@ -272,7 +272,7 @@ class DatabasePageRow
         /**
          * When the class date time is higher
          */
-        $code = LocalPath::createFromPath(__DIR__ . "/DatabasePage.php");
+        $code = LocalPath::createFromPath(__DIR__ . "/DatabasePageRow.php");
         $codeModified = FileSystems::getModifiedTime($code);
         if ($codeModified > $dateReplication) {
             return true;
@@ -367,16 +367,19 @@ class DatabasePageRow
 
     }
 
-    /**
-     * @throws ExceptionCombo
-     */
+
     public function getReplicationDate(): ?\DateTime
     {
         $dateString = $this->getFromRow(\ReplicationDate::getPersistentName());
         if ($dateString === null) {
             return null;
         }
-        return Iso8601Date::createFromString($dateString)->getDateTime();
+        try {
+            return Iso8601Date::createFromString($dateString)->getDateTime();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error while reading the replication date in the database. {$e->getMessage()}");
+            return null;
+        }
 
     }
 

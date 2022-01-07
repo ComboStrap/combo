@@ -171,7 +171,6 @@ class FsWikiUtility
             throw new \RuntimeException("A start path is mandatory");
         }
 
-        $startPath = str_replace(':', '/', $startPath);
 
         // Run as admin to overcome the fact that
         // anonymous user cannot set all links and backlinks
@@ -194,6 +193,9 @@ class FsWikiUtility
                 'open' => 1,
             );
         } else {
+
+            $startPath = str_replace(':', '/', $startPath);
+
             /**
              * Directory
              */

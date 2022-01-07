@@ -66,6 +66,9 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
     const METADATA_TO_FRONTMATTER = "metadata-to-frontmatter";
     const SYNC = "sync";
     const PLUGINS_TO_UPDATE = "plugins-to-update";
+    const FORCE_OPTION = 'force';
+    const PORT_OPTION = 'port';
+    const HOST_OPTION = 'host';
 
 
     /**
@@ -114,11 +117,30 @@ EOF;
         $options->registerOption(
             'output',
             "Optional, where to store the analytical data as csv eg. a filename.",
-            'o', 'file');
+            'o',
+            true
+        );
         $options->registerOption(
-            'force',
+            self::HOST_OPTION,
+            "The http host name of your server. This value is used by dokuwiki in the rendering cache key",
+            null,
+            true,
+            self::METADATA_TO_DATABASE
+        );
+        $options->registerOption(
+            self::PORT_OPTION,
+            "The http host port of your server. This value is used by dokuwiki in the rendering cache key",
+            null,
+            true,
+            self::METADATA_TO_DATABASE
+        );
+        $options->registerOption(
+            self::FORCE_OPTION,
             "Replicate with force",
-            'f', false);
+            'f',
+            false,
+            self::METADATA_TO_DATABASE
+        );
         $options->registerOption(
             'dry',
             "Optional, dry-run",
@@ -143,7 +165,19 @@ EOF;
         switch ($cmd) {
             case self::METADATA_TO_DATABASE:
                 $startPath = $this->getStartPath($args);
-                $force = $options->getOpt('force', false);
+                $force = $options->getOpt(self::FORCE_OPTION, false);
+                $hostOptionValue = $options->getOpt(self::HOST_OPTION, null);
+                if ($hostOptionValue === null) {
+                    fwrite(STDERR, "The host name is mandatory");
+                    return;
+                }
+                $_SERVER['HTTP_HOST'] = $hostOptionValue;
+                $portOptionName = $options->getOpt(self::PORT_OPTION, null);
+                if ($portOptionName === null) {
+                    fwrite(STDERR, "The host port is mandatory");
+                    return;
+                }
+                $_SERVER['SERVER_PORT'] = $portOptionName;
                 $this->index($startPath, $force, $depth);
                 break;
             case self::METADATA_TO_FRONTMATTER:

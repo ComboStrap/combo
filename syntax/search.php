@@ -88,6 +88,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                     // don't print the search form if search action has been disabled
                     if (!actionOK('search')) return false;
 
+                    PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("debounce");
                     PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::SNIPPET_ID);
 
                     $parameters = $data[PluginUtility::ATTRIBUTES];

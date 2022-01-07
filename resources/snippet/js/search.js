@@ -1,30 +1,34 @@
-import Browser from "../../library/combo/Browser";
-
 window.addEventListener('load', function () {
 
     let searchBox = document.getElementById("internal-search-box");
 
-    searchBox.addEventListener("input", function () {
 
-        debounce(
-            function () {
-                rebuildAutoCompletionList(this)
-            },
-            50
-        );
-    });
+    searchBox.addEventListener("input", debounce(
+        async function () {
+            await buildAutoCompletionList(this)
+        },
+        500
+    ));
 
-    let rebuildAutoCompletionList = function (searchBox) {
+
+    let buildAutoCompletionList = async function (searchBox) {
 
         let searchTerm = searchBox.value;
-        fetch(DOKU_BASE + 'lib/exe/ajax.php',
+        if (searchTerm.length < 3) {
+            return;
+        }
+        let formData = new URLSearchParams();
+        formData.append('call', 'combo-search');
+        formData.append('q', searchTerm);
+        let response = await fetch(DOKU_BASE + 'lib/exe/ajax.php',
             {
                 method: "POST",
-                body: JSON.stringify(Browser.formDataToObject(formData)),
+                body: formData,
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
                 },
             });
+        console.log(await response.json())
 
     }
 

@@ -28,7 +28,23 @@ window.addEventListener('load', function () {
                     'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
                 },
             });
-        console.log(await response.json())
+        let data = await response.json();
+        debugger;
+        let autoCompletionUlElement = searchBox.nextElementSibling;
+        while (autoCompletionUlElement.firstChild) {
+            autoCompletionUlElement.firstChild.remove()
+        }
+        for (let id in data) {
+            if(!data.hasOwnProperty(id)){
+                continue;
+            }
+            let title = data[id];
+            let li = document.createElement("li");
+            li.classList.add("dropdown-item");
+            li.setAttribute("tabindex","0");
+            li.innerText = `${id} - ${title}`;
+            autoCompletionUlElement.append(li);
+        }
 
     }
 

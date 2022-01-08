@@ -1,6 +1,10 @@
 <?php
 
+use ComboStrap\LinkUtility;
 use ComboStrap\Mime;
+use ComboStrap\Page;
+use ComboStrap\PageDescription;
+use ComboStrap\PageTitle;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -60,17 +64,25 @@ class action_plugin_combo_search extends DokuWiki_Action_Plugin
         $query = urldecode($query);
 
         $inTitle = useHeading('navigation');
-        $data = ft_pageLookup($query, true, true);
-        $count = count($data);
+        $pages = ft_pageLookup($query, true, $inTitle);
+        $count = count($pages);
         if (!$count) {
-            \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_NOT_FOUND)
+            \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
                 ->sendMessage(["No pages found"]);
             return;
         }
 
         $maxElements = 50;
         if ($count > $maxElements) {
-            array_splice($data, 0, $maxElements);
+            array_splice($pages, 0, $maxElements);
+        }
+
+        $data = [];
+        foreach ($pages as $id => $title) {
+            $page = Page::createPageFromId($id);
+            $linkUtility = LinkUtility::createFromPageId($id);
+            $html = $linkUtility->renderOpenTag() . $page->getTitleOrDefault() . $linkUtility->renderClosingTag();
+            $data[] = $html;
         }
         $dataJson = json_encode($data);
         \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)

@@ -626,7 +626,7 @@ class Page extends ResourceComboAbs
 
     /**
      * @return string the title, or h1 if empty or the id if empty
-     * @deprecated for {@link PageTitle::getValueOrDefault()}
+     * Shortcut to {@link PageTitle::getValueOrDefault()}
      */
     public
     function getTitleOrDefault(): ?string

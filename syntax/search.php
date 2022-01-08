@@ -112,7 +112,9 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                     $browserAutoComplete = 'on';
                     if (!$parameters['autocomplete']) $browserAutoComplete = 'off';
                     $ajaxAutoComplete = "";
-                    if ($parameters['ajax']) $ajaxAutoComplete = '<ul class="dropdown-menu"></ul>';
+                    if ($parameters['ajax']) {
+                        $ajaxAutoComplete = "<ul class=\"dropdown-menu\"></ul>";
+                    }
                     $action = wl();
                     $renderer->doc .= <<<EOF
 <form

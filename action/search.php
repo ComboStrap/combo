@@ -3,8 +3,6 @@
 use ComboStrap\LinkUtility;
 use ComboStrap\Mime;
 use ComboStrap\Page;
-use ComboStrap\PageDescription;
-use ComboStrap\PageTitle;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 

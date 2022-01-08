@@ -241,6 +241,7 @@ export default class FormMeta {
             if (fieldsForTab.length === 1) {
                 let formField = fieldsForTab[0];
                 if (formField.getChildren().length === 0) {
+                    elementIdCounter++;
                     let elementId = this.getControlId(elementIdCounter);
                     let labelHtml = formField.toHtmlLabel(elementId);
                     let value = formField.getValue();

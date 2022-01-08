@@ -47,6 +47,10 @@ class JavascriptLibrary extends Media
             LogUtility::msg("Only Javascript script from a wiki path can be served");
             return "";
         }
+        if(!FileSystems::exists($path)){
+            LogUtility::msg("The library path ($path) does not exist. No Url created.");
+            return "";
+        }
         /**
          * @var DokuPath $path
          */

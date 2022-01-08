@@ -328,7 +328,10 @@ export default class FormMetaField {
         } else {
             classLabel = "col-form-label";
         }
-        return `<label for="${forId}" class="${customClass} ${classLabel}">${label}</label>`
+        if(typeof customClass !== 'undefined'){
+            classLabel =`${customClass} ${classLabel}`
+        }
+        return `<label for="${forId}" class="${classLabel}">${label}</label>`
     }
 
     toHtmlControl(id, value = null, defaultValue = null) {

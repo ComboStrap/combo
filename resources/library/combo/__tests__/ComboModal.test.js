@@ -26,6 +26,7 @@ test('Modal Simple Button', () => {
   </div>
 </div>`;
     expect(modalElement.outerHTML).toEqualHtmlString(expected)
+    modal.getElement().remove(); // the test afterward are checking the number of modal ...
 
 });
 
@@ -40,13 +41,8 @@ test('Modal creation/destruction test', () => {
     let modalElement = document.getElementById(modalId);
     expect(modalElement).toBeNull();
     expect(modal.getElement()).not.toBeNull();
-    /**
-     * Remove it right away
-     */
-    modal.remove();
-    expect(modal.getElement()).toBeNull();
-    // show throw an error
-    expect(() => {modal.show()}).toThrow(Error);
+    modal.getElement().remove();
+
     /**
      * Rebuild it
      */
@@ -69,7 +65,7 @@ test('Modal creation/destruction test', () => {
     /**
      * Remove
      */
-    thirdModalInstantiation.remove();
+    thirdModalInstantiation.getElement().remove();
     modalElements = document.querySelectorAll(".modal");
     expect(modalElements).toHaveLength(0); // no more in the DOM
 
@@ -80,11 +76,12 @@ test('Modal creation/destruction/reset test', () => {
     /**
      * Should not give any error
      */
-    let modalId = "modal-id";
+    let modalId = "modal-id-reset-show";
     let modal = ComboModal.getOrCreate(modalId);
     modal.show();
     modal.reset();
     modal.show();
+    modal.getElement().remove(); // the test afterward are checking the number of modal ...
 
 
 })

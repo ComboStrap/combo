@@ -160,15 +160,19 @@ test('Json to Form Object', () => {
   </ul>
   <div class="tab-content">
     <div class="tab-pane active" id="formId-tab-pane-TheTab" role="tabpanel" aria-labelledby="formId-tab-nav-TheTab">
+      <div class="row mb-3 text-center">
+        <div class="col-sm-12">
+          <label for="formId-control-1" class="col-form-label">
+            <a href="https://combostrap.com/first" title="The big youpla" data-bs-toggle="tooltip" style="text-decoration:none" target="_blank">
+            Youpla
+            </a>
+          </label>
+        </div>
+      </div>
       <div class="row mb-3">
-        <label for="formId-control-1" class="col-sm-4 col-form-label">
-          <a href="https://combostrap.com/first" title="The big youpla" data-bs-toggle="tooltip" style="text-decoration:none">
-          Youpla
-          </a>
-        </label>
-        <div class="col-sm-8">
+        <div class="col-sm-12">
           <select class="form-select" aria-label="Youpla" name="first" id="formId-control-1">
-            <option value="">
+            <option value>
             Default (Meta Manager)
             </option>
             <option value="holy">
@@ -189,12 +193,12 @@ test('Json to Form Object', () => {
       Second
       </div>
       <div class="row mb-3">
-        <div class="col-sm-undefined text-center">
+        <div class="col-sm-12 text-center">
         Third
         </div>
       </div>
       <div class="row mb-3">
-        <div class="col-sm-undefined">
+        <div class="col-sm-12">
           <input type="text" name="third" class="form-control" id="formId-control-2" placeholder="3 default" value="3 value">
         </div>
       </div>

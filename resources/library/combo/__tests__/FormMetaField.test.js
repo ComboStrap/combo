@@ -116,7 +116,7 @@ test('Json field test', () => {
      */
     let actual = formMetaField.toHtmlControl(1);
     let expected = `
-<textarea id="1" name="json-test" class="form-control" rows="15" placeholder="Enter a Json Test" disabled>
+<textarea id="1" name="json-test" class="form-control" rows="15" placeholder="No value" disabled>
 </textarea>
 `;
     expect(actual).toEqualHtmlString(expected);

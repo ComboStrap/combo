@@ -6,7 +6,8 @@
     "private": true,
     "scripts": {
         "watch": "parcel watch",
-        "build": "parcel build --target combo"
+        "build": "parcel build --target combo",
+        "test": "jest"
     },
     "devDependencies": {
         "@babel/core": "^7.16.0",

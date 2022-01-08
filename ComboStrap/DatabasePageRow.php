@@ -47,7 +47,7 @@ class DatabasePageRow
             \ReplicationDate::PROPERTY_NAME,
             BacklinkCount::PROPERTY_NAME
         ];
-    const ANALYTICS_ATTRIBUTE = "ANALYTICS";
+    const ANALYTICS_ATTRIBUTE = "analytics";
 
     /**
      * For whatever reason, the row id is lowercase
@@ -503,6 +503,16 @@ class DatabasePageRow
              * Default implements the auto-canonical feature
              */
             $values[Canonical::PROPERTY_NAME] = $this->page->getCanonicalOrDefault();
+
+            /**
+             * Analytics
+             */
+            if(!isset($values[self::ANALYTICS_ATTRIBUTE])){
+                // otherwise we get an empty string
+                // and a json function will not work
+                $values[self::ANALYTICS_ATTRIBUTE] = Json::createEmpty()->toPrettyJsonString();
+            }
+
             /**
              * Page Id / Abbr are mandatory for url redirection
              */

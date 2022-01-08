@@ -346,14 +346,14 @@ class LinkUtility
     }
 
     /**
-     * @param Doku_Renderer_xhtml $renderer
+     * @param Doku_Renderer_xhtml|null $renderer
      * @return mixed
      *
      * Derived from {@link Doku_Renderer_xhtml::internallink()}
      * and others
      *
      */
-    public function renderOpenTag($renderer = null)
+    public function renderOpenTag(Doku_Renderer_xhtml $renderer = null)
     {
 
         $type = $this->getType();

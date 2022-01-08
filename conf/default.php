@@ -31,6 +31,8 @@ use ComboStrap\Region;
 
 /**
  * Related UI components
+ * {@link syntax_plugin_combo_related::MAX_LINKS_CONF}
+ * {@link syntax_plugin_combo_related::MAX_LINKS_CONF_DEFAULT}
  */
 $conf['maxLinks'] = 10;
 $conf['extra_pattern'] = '{{backlinks>.}}';

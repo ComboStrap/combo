@@ -63,6 +63,7 @@ require_once(__DIR__ . '/ArrayCaseInsensitive.php');
 require_once(__DIR__ . '/ArrayUtility.php');
 require_once(__DIR__ . '/Background.php');
 require_once(__DIR__ . '/BacklinkCount.php');
+require_once(__DIR__ . '/BacklinkMenuItem.php');
 require_once(__DIR__ . '/Boldness.php');
 require_once(__DIR__ . '/Boolean.php');
 require_once(__DIR__ . '/Bootstrap.php');
@@ -744,7 +745,7 @@ class PluginUtility
                     ->getXmlText($tagAttributes);
                 $cache->storeCache($xhtmlIcon);
             }
-            $xhtmlIcon = file_get_contents($cache->getFile()->getAbsoluteFileSystemPath());
+            $xhtmlIcon = FileSystems::getContent($cache->getFile());
 
         }
         $urlApex = self::$URL_APEX;

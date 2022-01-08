@@ -57,7 +57,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
      * @param null $renderer
      * @return string
      */
-    public static function getHtmlRelated(Page $page, ?int $max, $renderer = null): string
+    public static function getHtmlRelated(Page $page, ?int $max = null, $renderer = null): string
     {
         global $lang;
 
@@ -245,11 +245,13 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
             return $b[self::RELATED_BACKLINKS_COUNT_PROP] - $a[self::RELATED_BACKLINKS_COUNT_PROP];
         });
 
-        if (sizeof($related) > $max) {
-            $related = array_slice($related, 0, $max);
-            $page = array();
-            $page[self::RELATED_PAGE_ID_PROP] = self::MORE_PAGE_ID;
-            $related[] = $page;
+        if ($max !== null) {
+            if (sizeof($related) > $max) {
+                $related = array_slice($related, 0, $max);
+                $page = array();
+                $page[self::RELATED_PAGE_ID_PROP] = self::MORE_PAGE_ID;
+                $related[] = $page;
+            }
         }
 
         return $related;

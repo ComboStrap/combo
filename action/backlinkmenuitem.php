@@ -9,6 +9,7 @@ use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Mime;
 use ComboStrap\Page;
 use ComboStrap\PagePath;
+use ComboStrap\PluginUtility;
 use ComboStrap\Reference;
 use ComboStrap\References;
 
@@ -24,6 +25,7 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
 
     const CALL_ID = "combo-backlink";
     const CANONICAL = "backlink";
+    const WHREF = "whref";
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -59,7 +61,19 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
         if (!$INFO['exists']) {
             return;
         }
-        array_splice($event->data['items'], -1, 0, array(new BacklinkMenuItem()));
+        $menuItems = &$event->data["items"];
+        foreach ($menuItems as $key => $menuItem) {
+            if ($menuItem instanceof \dokuwiki\Menu\Item\Backlink) {
+                $menuItems[$key] = new BacklinkMenuItem();
+                break;
+            }
+        }
+        /**
+         * Add the wl to build the link to the backlinks actions
+         */
+        $id = PluginUtility::getMainPageDokuwikiId();
+        global $JSINFO;
+        $JSINFO[self::WHREF] = wl($id);
 
     }
 
@@ -98,20 +112,14 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
         }
 
 
-        $backlinkPages = Page::createPageFromId($id)
-            ->getBacklinks();
-        $data = [];
-
-        foreach ($backlinkPages as $backlinkPage) {
-            $link = LinkUtility::createFromPageId($backlinkPage->getDokuwikiId());
-            $data[] = $link->renderOpenTag() . $backlinkPage->getTitleOrDefault() . $link->renderClosingTag();
-        }
+        $backlinkPages = Page::createPageFromId($id);
+        $html = syntax_plugin_combo_related::getHtmlRelated($backlinkPages);
 
 
         \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
             ->setEvent($event)
             ->setCanonical(self::CANONICAL)
-            ->send(json_encode($data), Mime::JSON);
+            ->send($html, Mime::HTML);
 
     }
 

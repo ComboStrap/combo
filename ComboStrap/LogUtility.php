@@ -62,13 +62,13 @@ class LogUtility
      * @param int $level - the level see LVL constant
      * @param string $canonical - the canonical
      */
-    public static function msg($message, $level = self::LVL_MSG_ERROR, $canonical = "support")
+    public static function msg(string $message, int $level = self::LVL_MSG_ERROR, string $canonical = "support")
     {
 
         /**
          * Log to frontend
          */
-        self::log2FrontEnd($message, $level, $canonical, true);
+        self::log2FrontEnd($message, $level, $canonical);
 
         /**
          * Log level passed for a page (only for file used)
@@ -82,18 +82,14 @@ class LogUtility
         /**
          * TODO: Make it a configuration ?
          */
-        if($level >= self::LVL_MSG_WARNING) {
+        if ($level >= self::LVL_MSG_WARNING) {
             self::log2file($message, $level, $canonical);
         }
 
         /**
          * If test, we throw an error
          */
-        if (defined('DOKU_UNITTEST')
-            && ($level >= self::LVL_MSG_WARNING)
-        ) {
-            throw new LogException(PluginUtility::$PLUGIN_NAME . " - " . $message);
-        }
+        self::throwErrorIfTest($level, $message);
     }
 
     /**
@@ -109,7 +105,7 @@ class LogUtility
     static function log2file($msg, $logLevel = self::LVL_MSG_INFO, $canonical = null)
     {
 
-        if (defined('DOKU_UNITTEST') || $logLevel >= self::LVL_MSG_WARNING) {
+        if (PluginUtility::isTest() || $logLevel >= self::LVL_MSG_WARNING) {
 
             $prefix = PluginUtility::$PLUGIN_NAME;
             if (!empty($canonical)) {
@@ -120,7 +116,13 @@ class LogUtility
             global $INPUT;
             global $conf;
 
-            $id = PluginUtility::getPageId();
+            /**
+             * Adding page - context information
+             * We are not using {@link Page::createPageFromRequestedPage()}
+             * because it throws an error message when the environment
+             * is not good, creating a recursive call.
+             */
+            $id = PluginUtility::getMainPageDokuwikiId();
 
             $file = $conf['cachedir'] . '/debug.log';
             $fh = fopen($file, 'a');
@@ -129,6 +131,11 @@ class LogUtility
                 fwrite($fh, date('c') . $sep . self::LVL_NAME[$logLevel] . $sep . $msg . $sep . $INPUT->server->str('REMOTE_ADDR') . $sep . $id . "\n");
                 fclose($fh);
             }
+
+
+            self::throwErrorIfTest($logLevel, $msg);
+
+
         }
 
     }
@@ -139,7 +146,7 @@ class LogUtility
      * @param $canonical
      * @param bool $withIconURL
      */
-    public static function log2FrontEnd($message, $level, $canonical="support", $withIconURL = true)
+    public static function log2FrontEnd($message, $level, $canonical = "support", $withIconURL = true)
     {
         /**
          * If we are not in the console
@@ -147,42 +154,59 @@ class LogUtility
          * we test that the message comes in the front end
          * (example {@link \plugin_combo_frontmatter_test}
          */
-        $isCLI = (php_sapi_name() == 'cli');
-        $print = true;
-        if ($isCLI) {
+        $isTerminal = Console::isConsoleRun();
+        if ($isTerminal) {
             if (!defined('DOKU_UNITTEST')) {
-                $print = false;
+                /**
+                 * such as {@link cli_plugin_combo}
+                 */
+                $userAgent = "cli";
+            } else {
+                $userAgent = "phpunit";
             }
+        } else {
+            $userAgent = "browser";
         }
-        if ($print) {
-            $htmlMsg = PluginUtility::getUrl("", PluginUtility::$PLUGIN_NAME, $withIconURL);
-            if ($canonical != null) {
-                $htmlMsg = PluginUtility::getUrl($canonical, ucfirst(str_replace(":", " ", $canonical)));
-            }
 
-            /**
-             * Adding page - context information
-             * We are not creating the page
-             * direction from {@link Page::createRequestedPageFromEnvironment()}
-             * because it throws an error message when the environment
-             * is not good, creating a recursive call.
-             */
-            $id = PluginUtility::getPageId();
-            if ($id!=null) {
-                $page = Page::createPageFromId($id);
-                if ($page != null) {
-                    $htmlMsg .= " - " . $page->getAnchorLink();
+        switch ($userAgent) {
+            case "cli":
+                echo "$message\n";
+                break;
+            case "phpunit":
+            case "browser":
+            default:
+                $htmlMsg = PluginUtility::getDocumentationHyperLink("", PluginUtility::$PLUGIN_NAME, $withIconURL);
+                if ($canonical != null) {
+                    $htmlMsg = PluginUtility::getDocumentationHyperLink($canonical, ucfirst(str_replace(":", " ", $canonical)));
                 }
-            }
 
-            /**
-             *
-             */
-            $htmlMsg .= " - " . $message;
-            if ($level > self::LVL_MSG_DEBUG) {
-                $dokuWikiLevel = self::LVL_TO_MSG_LEVEL[$level];
-                msg($htmlMsg, $dokuWikiLevel, '', '', MSG_USERS_ONLY);
-            }
+                /**
+                 * Adding page - context information
+                 * We are not creating the page
+                 * direction from {@link Page::createPageFromRequestedPage()}
+                 * because it throws an error message when the environment
+                 * is not good, creating a recursive call.
+                 */
+                $id = PluginUtility::getMainPageDokuwikiId();
+                if ($id != null) {
+
+                    /**
+                     * We don't use any Page object to not
+                     * create a cycle while building it
+                     */
+                    $url = wl($id,[],true);
+                    $htmlMsg .= " - <a href=\"$url\">$id</a>";
+
+                }
+
+                /**
+                 *
+                 */
+                $htmlMsg .= " - " . $message;
+                if ($level > self::LVL_MSG_DEBUG) {
+                    $dokuWikiLevel = self::LVL_TO_MSG_LEVEL[$level];
+                    msg($htmlMsg, $dokuWikiLevel, '', '', MSG_USERS_ONLY);
+                }
         }
     }
 
@@ -193,5 +217,14 @@ class LogUtility
     public static function log2BrowserConsole($message)
     {
         // TODO
+    }
+
+    private static function throwErrorIfTest($level, $message)
+    {
+        if (PluginUtility::isTest()
+            && ($level >= self::LVL_MSG_WARNING)
+        ) {
+            throw new LogException($message);
+        }
     }
 }

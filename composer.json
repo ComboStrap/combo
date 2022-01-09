@@ -3,6 +3,7 @@
     "require": {
         "php": ">=7.2",
         "dragonmantank/cron-expression": "^1.2",
-        "antlr/antlr4-php-runtime": "^0.5.0"
+        "antlr/antlr4-php-runtime": "^0.5.0",
+        "hidehalo/nanoid-php": "^1.1"
     }
 }

@@ -3,6 +3,8 @@
 
 namespace ComboStrap;
 
+use dokuwiki\Cache\CacheParser;
+
 /**
  * Class BarCache
  * @package ComboStrap
@@ -41,18 +43,9 @@ namespace ComboStrap;
  *
  * and they would not share the same cache.
  */
-class CacheByLogicalKey extends \dokuwiki\Cache\Cache
+class CacheByLogicalKey extends CacheParser
 {
 
-    public $file;
-    public $mode;
-
-    /**
-     * To be compatible with
-     * {@link action_plugin_move_rewrite::handle_cache()} line 88
-     * that expect the $page with the id
-     */
-    public $page;
 
     /**
      * @var Page $pageObject The page object
@@ -71,43 +64,25 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
     {
 
         $this->pageObject = $pageObject;
-        $this->mode = $mode;
 
-
-        $this->setEvent('PARSER_CACHE_USE');
+        parent::__construct($pageObject->getDokuwikiId(), $this->pageObject->getLogicalId(), $mode);
 
         /**
-         * Needed by the move plugin
+         * The cache parser constructor takes the logical id as the file
+         * we overwrite it
+         *
+         * The source (added as dependency at {@link CacheParser::addDependencies()}
          */
-        $this->page = $pageObject->getId();
-
-        parent::__construct($this->getCacheKey(), $this->getExt());
+        $this->file = $pageObject->getPath()->toLocalPath()->toAbsolutePath()->toString();
 
     }
 
     protected function addDependencies()
     {
-
-        /**
-         * Configuration
-         * File when they are touched the cache should be stale
-         */
-        $files = getConfigFiles('main');
-        /**
-         * The original file
-         */
-        $files[] = $this->pageObject->getFileSystemPath();
-
-        /**
-         * Update the dependency
-         */
-        $this->depends = ["files" => $files];
-
         parent::addDependencies();
-
     }
 
-    public function storeCache($data)
+    public function storeCache($data): bool
     {
 
         /**
@@ -128,22 +103,25 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
 
     }
 
-    private function getCacheKey()
+    private function getCacheKey(): string
     {
         return $this->pageObject->getLogicalId() . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
     }
 
-    protected function getCacheFile()
+    protected function getCacheFile(): string
     {
         return getCacheName($this->getCacheKey(), $this->getExt());
     }
 
-    private function getExt()
+    private function getExt(): string
     {
         return '.' . $this->mode;
     }
 
-
+    public function makeDefaultCacheDecision(): bool
+    {
+        return parent::makeDefaultCacheDecision();
+    }
 
 
 }

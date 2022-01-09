@@ -51,7 +51,7 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
          *
          * https://www.dokuwiki.org/devel:event:form_login_output
          */
-        // $controller->register_hook('FORM_LOGIN_OUTPUT', 'BEFORE', $this, 'handle_login_html', array());
+        //$controller->register_hook('FORM_LOGIN_OUTPUT', 'BEFORE', $this, 'handle_login_html_new', array());
 
 
     }
@@ -155,11 +155,11 @@ EOF;
 
 
         $registerHtml = action_plugin_combo_registration::getRegisterLinkAndParagraph();
-        if(!empty($registerHtml)){
+        if (!empty($registerHtml)) {
             $newFormContent[] = $registerHtml;
         }
         $resendPwdHtml = action_plugin_combo_resend::getResendPasswordParagraphWithLinkToFormPage();
-        if(!empty($resendPwdHtml)){
+        if (!empty($resendPwdHtml)) {
             $newFormContent[] = $resendPwdHtml;
         }
 
@@ -173,6 +173,12 @@ EOF;
 
     }
 
+    /** @noinspection PhpUnused */
+    function handle_login_html_new(&$event, $param)
+    {
+        // does not fire for now
+        $data = $event->data;
+    }
 
     /**
      * Login

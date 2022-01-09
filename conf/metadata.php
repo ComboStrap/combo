@@ -1,29 +1,31 @@
 <?php
 
-use ComboStrap\AdsUtility;
-use ComboStrap\FloatAttribute;
-use ComboStrap\Icon;
-use ComboStrap\Identity;
-use ComboStrap\MediaLink;
-use ComboStrap\LazyLoad;
-use ComboStrap\RasterImageLink;
-use ComboStrap\LinkUtility;
-use ComboStrap\MetadataUtility;
-use ComboStrap\Page;
-use ComboStrap\PageProtection;
-use ComboStrap\Prism;
-use ComboStrap\LowQualityPage;
-use ComboStrap\Publication;
-use ComboStrap\Shadow;
-use ComboStrap\Site;
-use ComboStrap\SvgDocument;
-use ComboStrap\SvgImageLink;
-use ComboStrap\UrlManagerBestEndPage;
-
 /**
  * Load all class via Plugin Utility
  */
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+
+use ComboStrap\AdsUtility;
+use ComboStrap\Canonical;
+use ComboStrap\FloatAttribute;
+use ComboStrap\Icon;
+use ComboStrap\Identity;
+use ComboStrap\LazyLoad;
+use ComboStrap\LinkUtility;
+use ComboStrap\LowQualityPage;
+use ComboStrap\MediaLink;
+use ComboStrap\PageImages;
+use ComboStrap\PageProtection;
+use ComboStrap\PagePublicationDate;
+use ComboStrap\PageType;
+use ComboStrap\PageUrlType;
+use ComboStrap\Prism;
+use ComboStrap\RasterImageLink;
+use ComboStrap\Region;
+use ComboStrap\Shadow;
+use ComboStrap\SvgDocument;
+use ComboStrap\SvgImageLink;
+use ComboStrap\UrlManagerBestEndPage;
 
 
 require_once(__DIR__ . '/../syntax/related.php');
@@ -43,18 +45,17 @@ $meta[syntax_plugin_combo_disqus::CONF_DEFAULT_ATTRIBUTES] = array('string');
 /**
  * Url Manager
  */
-$meta[action_plugin_combo_urlmanager::URL_MANAGER_ENABLE_CONF] = array('onoff');
+$meta[action_plugin_combo_router::ROUTER_ENABLE_CONF] = array('onoff');
 $meta['ShowPageNameIsNotUnique'] = array('onoff');
 $meta['ShowMessageClassic'] = array('onoff');
 
-require_once(__DIR__ . '/../action/urlmanager.php');
 $actionChoices = array('multichoice', '_choices' => array(
-    action_plugin_combo_urlmanager::NOTHING,
-    action_plugin_combo_urlmanager::GO_TO_BEST_END_PAGE_NAME,
-    action_plugin_combo_urlmanager::GO_TO_NS_START_PAGE,
-    action_plugin_combo_urlmanager::GO_TO_BEST_PAGE_NAME,
-    action_plugin_combo_urlmanager::GO_TO_BEST_NAMESPACE,
-    action_plugin_combo_urlmanager::GO_TO_SEARCH_ENGINE
+    action_plugin_combo_router::NOTHING,
+    action_plugin_combo_router::GO_TO_BEST_END_PAGE_NAME,
+    action_plugin_combo_router::GO_TO_NS_START_PAGE,
+    action_plugin_combo_router::GO_TO_BEST_PAGE_NAME,
+    action_plugin_combo_router::GO_TO_BEST_NAMESPACE,
+    action_plugin_combo_router::GO_TO_SEARCH_ENGINE
 ));
 $meta['GoToEditMode'] = array('onoff');
 $meta['ActionReaderFirst'] = $actionChoices;
@@ -63,17 +64,18 @@ $meta['ActionReaderThird'] = $actionChoices;
 $meta['WeightFactorForSamePageName'] = array('string');
 $meta['WeightFactorForStartPage'] = array('string');
 $meta['WeightFactorForSameNamespace'] = array('string');
-require_once(__DIR__ . '/../ComboStrap/UrlManagerBestEndPage.php');
+
 $meta[UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = array('string');
 
-$meta[action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF] = array('string');
+$meta[Canonical::CONF_CANONICAL_LAST_NAMES_COUNT] = array('string');
+$meta[action_plugin_combo_canonical::CONF_CANONICAL_FOR_GA_PAGE_VIEW] = array('onff');
 
 /**
  * Icon namespace where the downloaded icon are stored
  */
 require_once(__DIR__ . '/../syntax/icon.php');
 $meta[Icon::CONF_ICONS_MEDIA_NAMESPACE] = array('string');
-$meta[Icon::CONF_DEFAULT_ICON_LIBRARY] = array('multichoice', '_choices' => array_keys(Icon::LIBRARY_ACRONYM));
+$meta[Icon::CONF_DEFAULT_ICON_LIBRARY] = array('multichoice', '_choices' => array_keys(Icon::PUBLIC_LIBRARY_ACRONYM));
 
 
 /**
@@ -85,8 +87,7 @@ $meta[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = array('onoff'
 /**
  * Metadata Viewer
  */
-$meta[MetadataUtility::CONF_METADATA_DEFAULT_ATTRIBUTES] = array('string');
-$meta[MetadataUtility::CONF_ENABLE_WHEN_EDITING] = array('onoff');
+$meta[syntax_plugin_combo_metadata::CONF_METADATA_DEFAULT_ATTRIBUTES] = array('string');
 
 /**
  * Badge
@@ -138,11 +139,6 @@ $meta[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_EMPTY_CONTENT_NOT_PRIN
 $meta[renderer_plugin_combo_analytics::CONF_MANDATORY_QUALITY_RULES] = array('multicheckbox', '_choices' => renderer_plugin_combo_analytics::QUALITY_RULES);
 
 /**
- * Autofrontmatter mode enable
- */
-$meta[action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE] = array('onoff');
-
-/**
  * The quality rules excluded from monitoring
  */
 $meta[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = array('onoff');
@@ -171,7 +167,7 @@ $meta[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER] = array('string
 /**
  * Page Image
  */
-$meta[Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = array('onoff');
+$meta[PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = array('onoff');
 
 /**
  * Facebook
@@ -179,15 +175,15 @@ $meta[Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = array('onoff');
 $meta[action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE] = array('string');
 
 /**
- * Site country
+ * Language region
  */
-$meta[Site::CONF_SITE_ISO_COUNTRY] = array("string");
+$meta[Region::CONF_SITE_LANGUAGE_REGION] = array("string");
 
 /**
  * Late publication protection
  */
-$meta[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = array('onoff');
-$meta[Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE] = array('multichoice', '_choices' => array(
+$meta[PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = array('onoff');
+$meta[PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_MODE] = array('multichoice', '_choices' => array(
     PageProtection::CONF_VALUE_ROBOT,
     PageProtection::CONF_VALUE_FEED,
     PageProtection::CONF_VALUE_ACL,
@@ -197,7 +193,7 @@ $meta[Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE] = array('multichoice',
 /**
  * Default Page Type
  */
-$meta[Page::CONF_DEFAULT_PAGE_TYPE] = array("string");
+$meta[PageType::CONF_DEFAULT_PAGE_TYPE] = array("string");
 
 /**
  * Default Shadow level
@@ -316,4 +312,24 @@ $meta[syntax_plugin_combo_comment::CONF_OUTPUT_COMMENT] = array("onoff");
 /**
  * Cache
  */
-$meta[action_plugin_combo_cache::CONF_STATIC_CACHE_ENABLED] = array("onoff");
+$meta[action_plugin_combo_staticresource::CONF_STATIC_CACHE_ENABLED] = array("onoff");
+
+/**
+ * Link Wizard
+ */
+$meta[action_plugin_combo_linkwizard::CONF_ENABLE_ENHANCED_LINK_WIZARD] = array("onoff");
+
+/**
+ * Canonical Url Type
+ */
+$meta[PageUrlType::CONF_CANONICAL_URL_TYPE] = array('multichoice', '_choices' => PageUrlType::CONF_VALUES);
+
+/**
+ * Frontmatter on sumbit
+ */
+$meta[syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = array("onoff");
+
+/**
+ * Heading
+ */
+$meta[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE] = array("onoff");

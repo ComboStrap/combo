@@ -13,7 +13,9 @@
 namespace ComboStrap;
 
 
-class Snippet
+use JsonSerializable;
+
+class Snippet implements JsonSerializable
 {
     /**
      * The head in css format
@@ -21,11 +23,7 @@ class Snippet
      */
     const TYPE_CSS = "css";
 
-    /**
-     * The snippet is attached to a bar (main, sidebar, ...) or to the page (request)
-     */
-    const SCOPE_BAR = "bar";
-    const SCOPE_PAGE = "page";
+
     /**
      * The head in javascript
      * We need to wrap it in a script node
@@ -36,15 +34,19 @@ class Snippet
      * No need
      */
     const TAG_TYPE = "tag";
+    const JSON_SNIPPET_ID_PROPERTY = "id";
+    const JSON_TYPE_PROPERTY = "type";
+    const JSON_CRITICAL_PROPERTY = "critical";
+    const JSON_CONTENT_PROPERTY = "content";
+    const JSON_HEAD_PROPERTY = "head";
 
     private $snippetId;
-    private $scope;
     private $type;
 
     /**
      * @var bool
      */
-    private $critical = false;
+    private $critical;
 
     /**
      * @var string the text script / style (may be null if it's an external resources)
@@ -62,31 +64,26 @@ class Snippet
     {
         $this->snippetId = $snippetId;
         $this->type = $snippetType;
-        if ($this->type == self::TYPE_CSS) {
-            // All CSS should be loaded first
-            // The CSS animation / background can set this to false
-            $this->critical = true;
-        }
     }
 
-    public static function createJavascriptSnippet($snippetId)
+    public static function createJavascriptSnippet($snippetId): Snippet
     {
-         return new Snippet($snippetId,self::TYPE_JS);
+        return new Snippet($snippetId, self::TYPE_JS);
     }
 
-    public static function createCssSnippet($snippetId)
+    public static function createCssSnippet($snippetId): Snippet
     {
-        return new Snippet($snippetId,self::TYPE_CSS);
+        return new Snippet($snippetId, self::TYPE_CSS);
     }
 
     /**
-     * @deprecated You should create a snippet with a known type, this constructor was created for refactoring
      * @param $snippetId
      * @return Snippet
+     * @deprecated You should create a snippet with a known type, this constructor was created for refactoring
      */
-    public static function createUnknownSnippet($snippetId)
+    public static function createUnknownSnippet($snippetId): Snippet
     {
-        return new Snippet($snippetId,"unknwon");
+        return new Snippet($snippetId, "unknwon");
     }
 
 
@@ -97,7 +94,7 @@ class Snippet
      * should not be set as critical as they are not needed to paint
      * exactly the page
      */
-    public function setCritical($bool)
+    public function setCritical($bool): Snippet
     {
         $this->critical = $bool;
         return $this;
@@ -107,7 +104,7 @@ class Snippet
      * @param $content - Set an inline content for a script or stylesheet
      * @return Snippet for chaining
      */
-    public function setContent($content)
+    public function setContent($content): Snippet
     {
         $this->content = $content;
         return $this;
@@ -169,7 +166,7 @@ class Snippet
 
     public function __toString()
     {
-        return $this->snippetId."-".$this->type;
+        return $this->snippetId . "-" . $this->type;
     }
 
     /**
@@ -177,23 +174,32 @@ class Snippet
      * @param array $tags
      * @return Snippet
      */
-    public function setTags(array $tags)
+    public function setTags(array $tags): Snippet
     {
         $this->headsTags = $tags;
         return $this;
     }
 
-    public function getTags()
+    public function getTags(): array
     {
         return $this->headsTags;
     }
 
-    public function getCritical()
+    public function getCritical(): bool
     {
+
+        if ($this->critical === null) {
+            if ($this->type == self::TYPE_CSS) {
+                // All CSS should be loaded first
+                // The CSS animation / background can set this to false
+                return true;
+            }
+            return false;
+        }
         return $this->critical;
     }
 
-    public function getClass()
+    public function getClass(): string
     {
         /**
          * The class for the snippet is just to be able to identify them
@@ -212,7 +218,7 @@ class Snippet
     /**
      * @return string the HTML of the tag (works for now only with CSS content)
      */
-    public function getHtmlStyleTag()
+    public function getHtmlStyleTag(): string
     {
         $content = $this->getContent();
         $class = $this->getClass();
@@ -230,4 +236,54 @@ EOF;
     }
 
 
+    public function jsonSerialize(): array
+    {
+        $dataToSerialize = [
+            self::JSON_SNIPPET_ID_PROPERTY => $this->snippetId,
+            self::JSON_TYPE_PROPERTY => $this->type
+        ];
+        if ($this->critical !== null) {
+            $dataToSerialize[self::JSON_CRITICAL_PROPERTY] = $this->critical;
+        }
+        if ($this->content !== null) {
+            $dataToSerialize[self::JSON_CONTENT_PROPERTY] = $this->content;
+        }
+        if ($this->headsTags !== null) {
+            $dataToSerialize[self::JSON_HEAD_PROPERTY] = $this->headsTags;
+        }
+        return $dataToSerialize;
+
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function createFromJson($array): Snippet
+    {
+        $snippetId = $array[self::JSON_SNIPPET_ID_PROPERTY];
+        if ($snippetId === null) {
+            throw new ExceptionCombo("The snippet id property was not found in the json array");
+        }
+        $type = $array[self::JSON_TYPE_PROPERTY];
+        if ($type === null) {
+            throw new ExceptionCombo("The snippet type property was not found in the json array");
+        }
+        $snippet = new Snippet($snippetId, $type);
+        $critical = $array[self::JSON_CRITICAL_PROPERTY];
+        if ($critical !== null) {
+            $snippet->setCritical($critical);
+        }
+
+        $content = $array[self::JSON_CONTENT_PROPERTY];
+        if ($content !== null) {
+            $snippet->setContent($content);
+        }
+
+        $heads = $array[self::JSON_HEAD_PROPERTY];
+        if ($heads !== null) {
+            $snippet->setTags($heads);
+        }
+        return $snippet;
+
+    }
 }

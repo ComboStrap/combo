@@ -1,20 +1,21 @@
 <?php
 
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+
 use ComboStrap\DokuPath;
 use ComboStrap\Image;
-use ComboStrap\RasterImageLink;
-use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
-use ComboStrap\MetadataUtility;
-use ComboStrap\PluginUtility;
+use ComboStrap\Mime;
 use ComboStrap\Page;
+use ComboStrap\PageImage;
+use ComboStrap\PageImageUsage;
+use ComboStrap\PageType;
+use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\StringUtility;
 
-if (!defined('DOKU_INC')) die();
 
-require_once(__DIR__ . '/../ComboStrap/Site.php');
-require_once(__DIR__ . '/../ComboStrap/RasterImageLink.php');
+
 
 /**
  *
@@ -83,7 +84,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
          * "og:description" is already created in the {@link action_plugin_combo_metadescription}
          */
         $facebookMeta = array(
-            "og:title" => StringUtility::truncateString($page->getTitleNotEmpty(), 70)
+            "og:title" => StringUtility::truncateString($page->getTitleOrDefault(), 70)
         );
         $descriptionOrElseDokuWiki = $page->getDescriptionOrElseDokuWiki();
         if (!empty($descriptionOrElseDokuWiki)) {
@@ -99,32 +100,33 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         /**
          * Type of page
          */
-        $ogType = $page->getType();
-        if (!empty($ogType)) {
-            $facebookMeta["og:type"] = $ogType;
-        } else {
-            // The default facebook value
-            $facebookMeta["og:type"] = Page::WEBSITE_TYPE;
+        $pageType = $page->getTypeOrDefault();
+        switch ($pageType) {
+            case PageType::ARTICLE_TYPE:
+                // https://ogp.me/#type_article
+                $facebookMeta["article:published_time"] = $page->getPublishedElseCreationTime()->format(DATE_ISO8601);
+                $modifiedTime = $page->getModifiedTimeOrDefault();
+                if ($modifiedTime !== null) {
+                    $facebookMeta["article:modified_time"] = $modifiedTime->format(DATE_ISO8601);
+                }
+                $facebookMeta["og:type"] = $pageType;
+                break;
+            default:
+                // The default facebook value
+                $facebookMeta["og:type"] = PageType::WEBSITE_TYPE;
+                break;
         }
 
-        if ($ogType == Page::ARTICLE_TYPE) {
-            // https://ogp.me/#type_article
-            $facebookMeta["article:published_time"] = $page->getPublishedElseCreationTime()->format(DATE_ISO8601);
-            $modifiedTime = $page->getModifiedTime();
-            if ($modifiedTime != null) {
-                $facebookMeta["article:modified_time"] = $modifiedTime->format(DATE_ISO8601);
-            }
-        }
 
         /**
          * @var Image[]
          */
-        $facebookImages = $page->getLocalImageSet();
+        $facebookImages = $page->getImagesOrDefaultForTheFollowingUsages([PageImageUsage::FACEBOOK, PageImageUsage::SOCIAL, PageImageUsage::ALL]);
         if (empty($facebookImages)) {
             $defaultFacebookImage = PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
             if (!empty($defaultFacebookImage)) {
                 DokuPath::addRootSeparatorIfNotPresent($defaultFacebookImage);
-                $image = Image::createImageFromAbsolutePath($defaultFacebookImage);
+                $image = Image::createImageFromId($defaultFacebookImage);
                 if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {
@@ -140,10 +142,10 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
              * One of image/jpeg, image/gif or image/png
              * As stated here: https://developers.facebook.com/docs/sharing/webmasters#images
              **/
-            $facebookMime = ["image/jpeg", "image/gif", "image/png"];
+            $facebookMime = [Mime::JPEG, Mime::GIF, Mime::PNG];
             foreach ($facebookImages as $facebookImage) {
 
-                if (!in_array($facebookImage->getMime(), $facebookMime)) {
+                if (!in_array($facebookImage->getPath()->getMime()->toString(), $facebookMime)) {
                     continue;
                 }
 
@@ -175,7 +177,11 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
                     if ($toSmall) {
                         $message = "The facebook image ($facebookImage) is too small (" . $facebookImage->getIntrinsicWidth() . " x " . $facebookImage->getIntrinsicHeight() . "). The minimum size constraint is 200px by 200px";
-                        if ($facebookImage->getId() != $page->getFirstImage()->getId()) {
+                        if (
+                            $facebookImage->getPath()->toAbsolutePath()->toString()
+                            !==
+                            $page->getFirstImage()->getPath()->toAbsolutePath()->toString()
+                        ) {
                             LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         } else {
                             LogUtility::log2BrowserConsole($message);
@@ -187,9 +193,9 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                      * We may don't known the dimensions
                      */
                     if (!$toSmall) {
-                        $mime = $facebookImage->getMime();
+                        $mime = $facebookImage->getPath()->getMime()->toString();
                         if (!empty($mime)) {
-                            $facebookMeta["og:image:type"] = $mime[1];
+                            $facebookMeta["og:image:type"] = $mime;
                         }
                         $facebookMeta["og:image"] = $facebookImage->getAbsoluteUrl();
                         // One image only

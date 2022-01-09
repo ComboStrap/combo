@@ -22,48 +22,53 @@ abstract class Image extends Media
 
     /**
      * Image constructor.
-     * @param $absolutePath
+     * @param Path $path
      * @param TagAttributes|null $attributes - the attributes
-     * @param string|null $rev
      */
-    public function __construct($absolutePath, $rev = null, $attributes = null)
+    public function __construct(Path $path, $attributes = null)
     {
         if ($attributes === null) {
             $this->attributes = TagAttributes::createEmpty(self::CANONICAL);
         }
 
-        parent::__construct($absolutePath, $rev, $attributes);
+        parent::__construct($path, $attributes);
     }
 
 
-    public static function createImageFromAbsolutePath($imageIdFromMeta, $rev = null, $attributes = null)
+    /**
+     * @param Path $path
+     * @param null $attributes
+     * @return ImageRaster|ImageSvg|null
+     */
+    public static function createImageFromPath(Path $path, $attributes = null)
     {
 
-        /**
-         * Processing
-         */
-        $dokuPath = DokuPath::createMediaPathFromAbsolutePath($imageIdFromMeta, $rev);
-        $mime = $dokuPath->getMime();
+        $mime = $path->getMime();
 
-        if (substr($mime, 0, 5) == 'image') {
-            if (substr($mime, 6) == "svg+xml") {
+        if (!$mime->isImage()) {
 
-                return new ImageSvg($imageIdFromMeta, $rev, $attributes);
+            LogUtility::msg("The file ($path) has not been detected as being an image, media returned", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return null;
 
-            } else {
-
-                return new ImageRaster($imageIdFromMeta, $rev, $attributes);
-
-            }
-        } else {
-            throw new \RuntimeException("The file ($imageIdFromMeta) has not been detected as beeing an image.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }
+        if (substr($mime, 6) == "svg+xml") {
+
+            $image = new ImageSvg($path, $attributes);
+
+        } else {
+
+            $image = new ImageRaster($path, $attributes);
+
+        }
+        return $image;
+
 
     }
 
-    public static function createImageFromId(string $imageId)
+    public static function createImageFromId(string $imageId, $rev = '', $attributes = null)
     {
-        return self::createImageFromAbsolutePath(":$imageId");
+        $dokuPath = DokuPath::createMediaPathFromId($imageId, $rev);
+        return self::createImageFromPath($dokuPath, $attributes);
     }
 
     /**
@@ -231,7 +236,7 @@ abstract class Image extends Media
      */
     public function isRaster(): bool
     {
-        if ($this->getMime() === ImageSvg::MIME) {
+        if ($this->getPath()->getMime()->toString() === Mime::SVG) {
             return false;
         } else {
             return true;
@@ -298,16 +303,13 @@ abstract class Image extends Media
     public function getAltNotEmpty()
     {
         $title = $this->getTitle();
-        if(empty($title)){
-            $generatedAlt = str_replace( $this->getBaseNameWithoutExtension(),"-"," ");
-            return str_replace( $generatedAlt,"_"," ");
+        if (empty($title)) {
+            $generatedAlt = str_replace($this->getPath()->getLastNameWithoutExtension(), "-", " ");
+            return str_replace($generatedAlt, "_", " ");
         } else {
             return $title;
         }
     }
-
-
-
 
 
     /**
@@ -412,16 +414,6 @@ abstract class Image extends Media
     {
         return intval(round($param));
     }
-
-    /**
-     * The URL will change if the file change
-     * @param $queryParameters
-     */
-    protected function addCacheBusterToQueryParameters(&$queryParameters)
-    {
-        $queryParameters[CacheMedia::CACHE_BUSTER_KEY] = $this->getBuster();
-    }
-
 
 
 }

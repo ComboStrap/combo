@@ -1,15 +1,13 @@
 <?php
 
 
-// must be run within Dokuwiki
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\PluginUtility;
 
-if (!defined('DOKU_INC')) die();
 
 /**
  * Class syntax_plugin_combo_analytics
- * This class was just created to add syntax analytics
+ * This class was just created to add the syntax analytics
  * to the metadata.
  */
 class syntax_plugin_combo_analytics extends DokuWiki_Syntax_Plugin
@@ -112,7 +110,7 @@ class syntax_plugin_combo_analytics extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             if ($state == DOKU_LEXER_SPECIAL) {
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                $renderer->stats[Analytics::SYNTAX_COUNT] = $attributes;
+                $renderer->stats[AnalyticsDocument::SYNTAX_COUNT] = $attributes;
                 return true;
             }
 

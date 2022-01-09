@@ -108,7 +108,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      * Allow which kind of plugin inside
      * All
      */
-    public function getAllowedTypes()
+    public function getAllowedTypes(): array
     {
         /**
          * Only column.
@@ -118,7 +118,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
     }
 
 
-    public function accepts($mode)
+    public function accepts($mode): bool
     {
 
         return syntax_plugin_combo_preformatted::disablePreformatted($mode);
@@ -135,7 +135,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
         return 'block';
     }
@@ -146,7 +146,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      * the mode with the lowest sort number will win out
      * the container (parent) must then have a lower number than the child
      */
-    function getSort()
+    function getSort(): int
     {
         return 100;
     }
@@ -183,11 +183,11 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      * @param int $state
      * @param int $pos
      * @param Doku_Handler $handler
-     * @return array|bool
+     * @return array
      * @see DokuWiki_Syntax_Plugin::handle()
      *
      */
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
         switch ($state) {
@@ -218,7 +218,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  */
                 $context = self::ROOT_CONTEXT;
                 if ($parent != false
-                    && !in_array($parent->getTagName(), [syntax_plugin_combo_container::TAG, syntax_plugin_combo_cell::TAG])) {
+                    && !in_array($parent->getTagName(), [syntax_plugin_combo_container::TAG, syntax_plugin_combo_cell::TAG, syntax_plugin_combo_iterator::TAG])) {
                     $context = self::CONTAINED_CONTEXT;
                 }
 

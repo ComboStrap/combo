@@ -2,7 +2,6 @@
 
 
 // must be run within Dokuwiki
-use ComboStrap\Analytics;
 use ComboStrap\Background;
 use ComboStrap\CacheMedia;
 use ComboStrap\CallStack;
@@ -10,9 +9,9 @@ use ComboStrap\ColorUtility;
 use ComboStrap\Dimension;
 use ComboStrap\LinkUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Position;
-use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -181,7 +180,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                              */
                             $backgroundImageAttribute = [
                                 MediaLink::MEDIA_DOKUWIKI_TYPE => MediaLink::INTERNAL_MEDIA_CALL_NAME,
-                                Analytics::PATH => $imageAttribute[0],
+                                PagePath::PROPERTY_NAME => $imageAttribute[0],
                                 Dimension::WIDTH_KEY => $imageAttribute[3],
                                 Dimension::HEIGHT_KEY => $imageAttribute[4],
                                 CacheMedia::CACHE_KEY => $imageAttribute[5]

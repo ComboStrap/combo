@@ -56,7 +56,12 @@ class Iso8601Date
 
     }
 
-    public static function create($dateString = null): Iso8601Date
+    /**
+     * @param null $dateString
+     * @return Iso8601Date
+     * @throws ExceptionCombo if the format is not supported
+     */
+    public static function createFromString($dateString = null): Iso8601Date
     {
 
         $original = $dateString;
@@ -120,7 +125,8 @@ class Iso8601Date
 
         $dateTime = DateTime::createFromFormat(self::getFormat(), $dateString);
         if ($dateTime === false) {
-            throw new \RuntimeException("The date string ($original) is not one of the valid date format. " . join(", ", self::VALID_FORMATS));
+            $message = "The date string ($original) is not in a valid date format. (" . join(", ", self::VALID_FORMATS) . ")";
+            throw new ExceptionCombo($message, self::CANONICAL);
         }
         return new Iso8601Date($dateTime);
 
@@ -148,13 +154,29 @@ class Iso8601Date
         return DATE_ATOM;
     }
 
-    public function isValidDateEntry()
+    public static function isValid($value): bool
+    {
+        $dateObject = Iso8601Date::createFromString($value);
+        return $dateObject->isValidDateEntry();
+    }
+
+    public function isValidDateEntry(): bool
     {
         if ($this->dateTime !== false) {
             return true;
         } else {
             return false;
         }
+    }
+
+    public static function createFromDateTime(DateTime $dateTime): Iso8601Date
+    {
+        return new Iso8601Date($dateTime);
+    }
+
+    public static function createFromNow(): Iso8601Date
+    {
+        return new Iso8601Date();
     }
 
     public function getDateTime()
@@ -177,6 +199,13 @@ class Iso8601Date
     {
         return $this->getDateTime()->format($string);
     }
+
+    public function toString()
+    {
+        return $this->__toString();
+    }
+
+
 
 
 }

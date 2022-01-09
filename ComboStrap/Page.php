@@ -3,13 +3,14 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_metadescription;
+use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
 use DateTime;
-use dokuwiki\Cache\CacheInstructions;
-use dokuwiki\Cache\CacheRenderer;
-use dokuwiki\Extension\SyntaxPlugin;
-use renderer_plugin_combo_analytics;
-use RuntimeException;
+use Exception;
+use ModificationDate;
+use Slug;
+use syntax_plugin_combo_disqus;
 
 
 /**
@@ -25,82 +26,26 @@ require_once(__DIR__ . '/PluginUtility.php');
  * This is just a wrapper around a file with the mime Dokuwiki
  * that has a doku path (ie with the `:` separator)
  */
-class Page extends DokuPath
+class Page extends ResourceComboAbs
 {
-    const CANONICAL_PROPERTY = 'canonical';
-    const TITLE_META_PROPERTY = 'title';
-
-    const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
-
-    const FIRST_IMAGE_META_RELATION = "firstimage";
-
-    /**
-     * An indicator in the meta
-     * that set a boolean to true or false
-     * to categorize a page as low quality
-     * It can be set manually via the {@link \syntax_plugin_combo_frontmatter front matter}
-     * otherwise the {@link \renderer_plugin_combo_analytics}
-     * will do it
-     */
-    const LOW_QUALITY_PAGE_INDICATOR = 'low_quality_page';
-
-    /**
-     * The default page type
-     */
-    const CONF_DEFAULT_PAGE_TYPE = "defaultPageType";
-    const WEBSITE_TYPE = "website";
-    const ARTICLE_TYPE = "article";
-    const EVENT_TYPE = "event";
-    const ORGANIZATION_TYPE = "organization";
-    const NEWS_TYPE = "news";
-    const BLOG_TYPE = "blog";
-    const NAME_PROPERTY = "name";
-    const DESCRIPTION_PROPERTY = "description";
-    const TYPE_META_PROPERTY = "type";
-
-    /**
-     * The scope is the namespace used to store the cache
-     *
-     * It can be set by a component via the {@link p_set_metadata()}
-     * in a {@link SyntaxPlugin::handle()} function
-     *
-     * This is mostly used on side slots to
-     * have several output of a list {@link \syntax_plugin_combo_pageexplorer navigation pane}
-     * for different namespace (ie there is one cache by namespace)
-     *
-     * The special value current means the namespace of the requested page
-     */
-    const SCOPE_KEY = "scope";
-    /**
-     * The special scope value current means the namespace of the requested page
-     * The real scope value is then calculated before retrieving the cache
-     */
-    const SCOPE_CURRENT_VALUE = "current";
 
 
-    const CURRENT_METADATA = "current";
-    const PERSISTENT_METADATA = "persistent";
-    const IMAGE_META_PROPERTY = 'image';
-    const COUNTRY_META_PROPERTY = "country";
-    const LANG_META_PROPERTY = "lang";
-    const LAYOUT_PROPERTY = "layout";
+    // The page id abbreviation is used in the url
+    // to make them unique.
+    //
+    // A website is not git but an abbreviation of 7
+    // is enough for a website.
+    //
+    // 7 is also the initial length of the git has abbreviation
+    //
+    // It gives a probability of collision of 1 percent
+    // for 24 pages creation by day over a period of 100 year
+    // (You need to create 876k pages).
+    // with the 36 alphabet
+    // https://datacadamia.com/crypto/hash/collision
 
 
-    private $canonical;
-
-
-    /**
-     * @var array|array[]
-     */
-    private $metadatas;
-    /**
-     * @var string|null - the description (the origin is in the $descriptionOrigin)
-     */
-    private $description;
-    /**
-     * @var string - the dokuwiki
-     */
-    private $descriptionOrigin;
+    const TYPE = "page";
 
 
     /**
@@ -114,6 +59,147 @@ class Page extends DokuPath
      * @var string
      */
     private $requestedId;
+    /**
+     * @var DatabasePageRow
+     */
+    private $databasePage;
+    /**
+     * @var Canonical
+     */
+    private $canonical;
+    /**
+     * @var PageH1
+     */
+    private $h1;
+    /**
+     * @var ResourceName
+     */
+    private $pageName;
+    /**
+     * @var PageType
+     */
+    private $type;
+    /**
+     * @var PageTitle $title
+     */
+    private $title;
+
+    /**
+     * @var LowQualityPageOverwrite
+     */
+    private $canBeOfLowQuality;
+    /**
+     * @var Region
+     */
+    private $region;
+    /**
+     * @var Lang
+     */
+    private $lang;
+    /**
+     * @var PageId
+     */
+    private $pageId;
+
+    /**
+     * @var LowQualityCalculatedIndicator
+     */
+    private $lowQualityIndicatorCalculated;
+
+    /**
+     * @var PageLayout
+     */
+    private $layout;
+    /**
+     * @var Aliases
+     */
+    private $aliases;
+    /**
+     * @var Slug a slug path
+     */
+    private $slug;
+
+
+    /**
+     * @var PageScope
+     */
+    private $scope;
+    /**
+     * @var QualityDynamicMonitoringOverwrite
+     */
+    private $qualityMonitoringIndicator;
+
+    /**
+     * @var string the alias used to build this page
+     */
+    private $buildAliasPath;
+    /**
+     * @var PagePublicationDate
+     */
+    private $publishedDate;
+    /**
+     * @var StartDate
+     */
+    private $startDate;
+    /**
+     * @var EndDate
+     */
+    private $endDate;
+    /**
+     * @var PageImages
+     */
+    private $pageImages;
+    /**
+     * @var PageKeywords
+     */
+    private $keywords;
+    /**
+     * @var CacheExpirationFrequency
+     */
+    private $cacheExpirationFrequency;
+    /**
+     * @var CacheExpirationDate
+     */
+    private $cacheExpirationDate;
+    /**
+     *
+     * @var LdJson
+     */
+    private $ldJson;
+    /**
+     * @var HtmlDocument
+     */
+    private $htmlDocument;
+    /**
+     * @var InstructionsDocument
+     */
+    private $instructionsDocument;
+
+    private $dokuPath;
+    /**
+     * @var PageDescription $description
+     */
+    private $description;
+    /**
+     * @var PageCreationDate
+     */
+    private $creationTime;
+    /**
+     * @var Locale
+     */
+    private $locale;
+    /**
+     * @var ModificationDate
+     */
+    private $modifiedTime;
+    /**
+     * @var PageUrlPath
+     */
+    private $pageUrlPath;
+    /**
+     * @var MetadataStore|string
+     */
+    private $readStore;
 
     /**
      * Page constructor.
@@ -158,22 +244,34 @@ class Page extends DokuPath
         global $ID;
         $this->requestedId = $ID;
 
-        parent::__construct($absolutePath, DokuPath::PAGE_TYPE);
+        $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath);
+
+        /**
+         * After the parent construction because we need the id
+         * and it's set in the {@link DokuPath}
+         * When the Page will be os file system based
+         * and not dokuwiki file system based we may change that
+         */
+        $this->buildPropertiesFromFileSystem();
 
     }
 
-    public static function createPageFromCurrentId()
+    public static function createPageFromGlobalDokuwikiId(): Page
     {
         global $ID;
+        if ($ID === null) {
+            LogUtility::msg("The global wiki ID is null, unable to instantiate a page");
+        }
         return self::createPageFromId($ID);
     }
 
-    public static function createPageFromId($id)
+    public static function createPageFromId($id): Page
     {
-        return new Page(DokuPath::PATH_SEPARATOR . $id);
+        DokuPath::addRootSeparatorIfNotPresent($id);
+        return new Page($id);
     }
 
-    public static function createPageFromNonQualifiedPath($pathOrId)
+    public static function createPageFromNonQualifiedPath($pathOrId): Page
     {
         global $ID;
         $qualifiedId = $pathOrId;
@@ -195,10 +293,40 @@ class Page extends DokuPath
     /**
      * @return Page - the requested page
      */
-    public static function createPageFromRequestedPage()
+    public static function createPageFromRequestedPage(): Page
     {
-        $mainPageId = FsWikiUtility::getMainPageId();
-        return self::createPageFromId($mainPageId);
+        $pageId = PluginUtility::getMainPageDokuwikiId();
+        if ($pageId !== null) {
+            return Page::createPageFromId($pageId);
+        } else {
+            LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
+            return Page::createPageFromId("unknown-requested-page");
+        }
+    }
+
+
+    public static function getHomePageFromNamespace(string $namespacePath): Page
+    {
+        global $conf;
+
+        if ($namespacePath != ":") {
+            $namespacePath = $namespacePath . ":";
+        }
+
+        $startPageName = $conf['start'];
+        if (page_exists($namespacePath . $startPageName)) {
+            // start page inside namespace
+            return self::createPageFromId($namespacePath . $startPageName);
+        } elseif (page_exists($namespacePath . noNS(cleanID($namespacePath)))) {
+            // page named like the NS inside the NS
+            return self::createPageFromId($namespacePath . noNS(cleanID($namespacePath)));
+        } elseif (page_exists($namespacePath)) {
+            // page like namespace exists
+            return self::createPageFromId(substr($namespacePath, 0, -1));
+        } else {
+            // Does not exist but can be used by hierarchical function
+            return self::createPageFromId($namespacePath . $startPageName);
+        }
     }
 
 
@@ -215,9 +343,10 @@ class Page extends DokuPath
      * This logical id does take into account this aspect.
      *
      * This is used also to store the HTML output in the cache
-     * If this is not a slot the logical id is the {@link DokuPath::getId()}
+     * If this is not a slot the logical id is the {@link DokuPath::getDokuwikiId()}
      */
-    public function getLogicalId()
+    public
+    function getLogicalId()
     {
         /**
          * Delete the first separator
@@ -225,7 +354,12 @@ class Page extends DokuPath
         return substr($this->getLogicalPath(), 1);
     }
 
-    public function getLogicalPath()
+    /**
+     * @return string - the logical path (requested path) of the resource
+     * This is used for sidebar component that may have another logical environment
+     * (namespace) than its storage location.
+     */
+    public function getLogicalPath(): string
     {
 
         /**
@@ -239,21 +373,22 @@ class Page extends DokuPath
         $scopePath = $this->getScope();
         if ($scopePath !== null) {
 
-            if ($scopePath == Page::SCOPE_CURRENT_VALUE) {
-                $requestPage = Page::createRequestedPageFromEnvironment();
-                $scopePath = $requestPage->getNamespacePath();
+            if ($scopePath == PageScope::SCOPE_CURRENT_VALUE) {
+                $requestPage = Page::createPageFromRequestedPage();
+                $parentPath = $requestPage->getPath()->getParent();
+                $scopePath = $parentPath->toString();
             }
 
-            if ($scopePath !== ":") {
-                return $scopePath . DokuPath::PATH_SEPARATOR . $this->getName();
+            if ($scopePath !== DokuPath::PATH_SEPARATOR) {
+                return $scopePath . DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName();
             } else {
-                return DokuPath::PATH_SEPARATOR . $this->getName();
+                return DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName();
             }
 
 
         } else {
 
-            return $this->getAbsolutePath();
+            return $this->dokuPath->toAbsolutePath()->toString();
 
         }
 
@@ -261,260 +396,27 @@ class Page extends DokuPath
     }
 
 
-    /**
-     *
-     *
-     * Dokuwiki Methodology taken from {@link tpl_metaheaders()}
-     * @return string - the Dokuwiki URL
-     */
-    public
-    function getUrl()
-    {
-        if ($this->isHomePage()) {
-            $url = DOKU_URL;
-        } else {
-            $url = wl($this->getId(), '', true, '&');
-        }
-        return $url;
-    }
-
-    public
-    static function createRequestedPageFromEnvironment()
-    {
-        $pageId = PluginUtility::getPageId();
-        if ($pageId != null) {
-            return Page::createPageFromId($pageId);
-        } else {
-            LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
-            return null;
-        }
-    }
-
-
-    /**
-     * Does the page is known in the pages table
-     * @return array
-     */
-    function getRow()
-    {
-
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT * FROM pages where id = ?", $this->getId());
-        if (!$res) {
-            throw new RuntimeException("An exception has occurred with the select pages query");
-        }
-        $res2arr = $sqlite->res2row($res);
-        $sqlite->res_close($res);
-        return $res2arr;
-
-
-    }
-
-    /**
-     * Delete Page
-     */
-    function deleteInDb()
-    {
-
-        $res = Sqlite::getSqlite()->query('delete from pages where id = ?', $this->getId());
-        if (!$res) {
-            LogUtility::msg("Something went wrong when deleting a page");
-        }
-
-    }
-
-
-    /**
-     * Does the page is known in the pages table
-     * @return int
-     */
-    function existInDb()
-    {
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT count(*) FROM pages where id = ?", $this->getId());
-        $count = $sqlite->res2single($res);
-        $sqlite->res_close($res);
-        return $count;
-
-    }
-
-    /**
-     * Exist in FS
-     * @return bool
-     * @deprecated use {@link DokuPath::exists()} instead
-     */
-    function existInFs()
-    {
-        return $this->exists();
-    }
-
-    private
-    function persistPageAlias($canonical, $alias)
-    {
-
-        $row = array(
-            "CANONICAL" => $canonical,
-            "ALIAS" => $alias
-        );
-
-        // Page has change of location
-        // Creation of an alias
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("select count(*) from pages_alias where CANONICAL = ? and ALIAS = ?", $row);
-        if (!$res) {
-            throw new RuntimeException("An exception has occurred with the alia selection query");
-        }
-        $aliasInDb = $sqlite->res2single($res);
-        $sqlite->res_close($res);
-        if ($aliasInDb == 0) {
-
-            $res = $sqlite->storeEntry('pages_alias', $row);
-            if (!$res) {
-                LogUtility::msg("There was a problem during pages_alias insertion");
-            }
-        }
-
-    }
-
-
-    static function createPageFromQualifiedPath($qualifiedPath)
+    static function createPageFromQualifiedPath($qualifiedPath): Page
     {
         return new Page($qualifiedPath);
     }
 
-    /**
-     * @param $canonical
-     * @return Page - an id of an existing page
-     */
-    static function createPageFromCanonical($canonical)
-    {
-
-        // Canonical
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("select * from pages where CANONICAL = ? ", $canonical);
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the pages selection query");
-        }
-        $res2arr = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
-        foreach ($res2arr as $row) {
-            $id = $row['ID'];
-            return self::createPageFromId($id)->setCanonical($canonical);
-        }
-
-
-        // If the function comes here, it means that the page id was not found in the pages table
-        // Alias ?
-        // Canonical
-        $res = $sqlite->query("select p.ID from pages p, PAGES_ALIAS pa where p.CANONICAL = pa.CANONICAL and pa.ALIAS = ? ", $canonical);
-        if (!$res) {
-            throw new RuntimeException("An exception has occurred with the alias selection query");
-        }
-        $res2arr = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
-        foreach ($res2arr as $row) {
-            $id = $row['ID'];
-            return self::createPageFromId($id)
-                ->setCanonical($canonical);
-        }
-
-        return self::createPageFromId($canonical);
-
-    }
 
     /**
-     * Persist a page in the database
+     *
+     * @throws ExceptionCombo
      */
-    function processAndPersistInDb(): Page
+    public function setCanonical($canonical): Page
     {
-
-        $canonical = p_get_metadata($this->getId(), Page::CANONICAL_PROPERTY);
-        if ($canonical != "") {
-
-            // Do we have a page attached to this canonical
-            $sqlite = Sqlite::getSqlite();
-            $res = $sqlite->query("select ID from pages where CANONICAL = ?", $canonical);
-            if (!$res) {
-                LogUtility::msg("An exception has occurred with the search id from canonical");
-            }
-            $idInDb = $sqlite->res2single($res);
-            $sqlite->res_close($res);
-            if ($idInDb && $idInDb != $this->getId()) {
-                // If the page does not exist anymore we delete it
-                if (!page_exists($idInDb)) {
-                    $res = $sqlite->query("delete from pages where ID = ?", $idInDb);
-                    if (!$res) {
-                        LogUtility::msg("An exception has occurred during the deletion of the page");
-                    }
-                    $sqlite->res_close($res);
-
-                } else {
-                    LogUtility::msg("The page ($this) and the page ($idInDb) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR, "url:manager");
-                    /**
-                     * Check if the error may come from the auto-canonical
-                     * (Never ever save generated data)
-                     */
-                    $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
-                    if ($canonicalLastNamesCount > 0) {
-                        $this->unsetMetadata(Page::CANONICAL_PROPERTY);
-                        Page::createPageFromQualifiedPath($idInDb)->unsetMetadata(Page::CANONICAL_PROPERTY);
-                    }
-                }
-                $this->persistPageAlias($canonical, $idInDb);
-            }
-
-            // Do we have a canonical on this page
-            $res = $sqlite->query("select canonical from pages where ID = ?", $this->getId());
-            if (!$res) {
-                LogUtility::msg("An exception has occurred with the query");
-            }
-            $canonicalInDb = $sqlite->res2single($res);
-            $sqlite->res_close($res);
-
-            $row = array(
-                "CANONICAL" => $canonical,
-                "ID" => $this->getId()
-            );
-            if ($canonicalInDb && $canonicalInDb != $canonical) {
-
-                // Persist alias
-                $this->persistPageAlias($canonical, $this->getId());
-
-                // Update
-                $statement = 'update pages set canonical = ? where id = ?';
-                $res = $sqlite->query($statement, $row);
-                if (!$res) {
-                    LogUtility::msg("There was a problem during page update");
-                }
-                $sqlite->res_close($res);
-
-            } else {
-
-                if ($canonicalInDb == false) {
-                    $res = $sqlite->storeEntry('pages', $row);
-                    if (!$res) {
-                        LogUtility::msg("There was a problem during pages insertion");
-                    }
-                    $sqlite->res_close($res);
-                }
-
-            }
-
-
-        }
-        return $this;
-    }
-
-    private
-    function setCanonical($canonical): Page
-    {
-        $this->canonical = $canonical;
+        $this->canonical
+            ->setValue($canonical)
+            ->sendToWriteStore();
         return $this;
     }
 
 
     public
-    function isSlot()
+    function isSlot(): bool
     {
         global $conf;
         $barsName = array($conf['sidebar']);
@@ -527,7 +429,7 @@ class Page extends DokuPath
                 $barsName[] = TplUtility::getSideKickSlotPageName();
             }
         }
-        return in_array($this->getName(), $barsName);
+        return in_array($this->getPath()->getLastName(), $barsName);
     }
 
     public
@@ -539,11 +441,16 @@ class Page extends DokuPath
     }
 
 
+    /**
+     *
+     * @return bool
+     * Used to delete the part path of a page for default name or canonical value
+     */
     public
-    function isStartPage()
+    function isStartPage(): bool
     {
-        global $conf;
-        return $this->getName() == $conf['start'];
+        $startPageName = Site::getHomePageName();
+        return $this->getPath()->getLastName() === $startPageName;
     }
 
     /**
@@ -552,394 +459,112 @@ class Page extends DokuPath
      * by taking the last two parts
      *
      * @return string
+     * @deprecated for {@link Canonical::getValueOrDefault()}
      */
-    public
-    function getCanonical()
+    public function getCanonicalOrDefault(): ?string
     {
-        if (empty($this->canonical)) {
-
-            $this->canonical = $this->getPersistentMetadata(Page::CANONICAL_PROPERTY);
-
-            /**
-             * The last part of the id as canonical
-             */
-            // How many last parts are taken into account in the canonical processing (2 by default)
-            $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
-            if (empty($this->canonical) && $canonicalLastNamesCount > 0) {
-                /**
-                 * Takes the last names part
-                 */
-                $namesOriginal = $this->getNames();
-                /**
-                 * Delete the identical names at the end
-                 * To resolve this problem
-                 * The page (viz:viz) and the page (data:viz:viz) have the same canonical.
-                 * The page (viz:viz) will get the canonical viz
-                 * The page (data:viz) will get the canonical  data:viz
-                 */
-                $i = sizeof($namesOriginal) - 1;
-                $names = $namesOriginal;
-                while ($namesOriginal[$i] == $namesOriginal[$i - 1]) {
-                    unset($names[$i]);
-                    $i--;
-                    if ($i <= 0) {
-                        break;
-                    }
-                }
-                /**
-                 * Minimal length check
-                 */
-                $namesLength = sizeof($names);
-                if ($namesLength > $canonicalLastNamesCount) {
-                    $names = array_slice($names, $namesLength - $canonicalLastNamesCount);
-                }
-                /**
-                 * If this is a start page, delete the name
-                 * ie javascript:start will become javascript
-                 */
-                if ($this->isStartPage()) {
-                    $names = array_slice($names, 0, $namesLength - 1);
-                }
-                $this->canonical = implode(":", $names);
-                p_set_metadata($this->getId(), array(Page::CANONICAL_PROPERTY => $this->canonical));
-            }
-
-        }
-        return $this->canonical;
-    }
-
-    /**
-     * @return array|null the analytics array or null if not in db
-     */
-    public
-    function getAnalyticsFromDb()
-    {
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite == null) {
-            return array();
-        }
-        $res = $sqlite->query("select ANALYTICS from pages where ID = ? ", $this->getId());
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the pages selection query");
-        }
-        $jsonString = trim($sqlite->res2single($res));
-        $sqlite->res_close($res);
-        if (!empty($jsonString)) {
-            return json_decode($jsonString, true);
-        } else {
-            return null;
-        }
+        return $this->canonical->getValueFromStoreOrDefault();
 
     }
 
+
     /**
-     * Return the metadata stored in the file system
-     * @return array|array[]
+     * Rebuild the page
+     * (refresh from disk, reset object to null)
+     * @return $this
      */
     public
-    function getMetadatas()
+    function rebuild(): Page
     {
-
-        /**
-         * Read / not {@link p_get_metadata()}
-         * because it can trigger a rendering of the meta again)
-         *
-         * This is not a {@link Page::renderMetadata()}
-         */
-        if ($this->metadatas == null) {
-            $this->metadatas = p_read_metadata($this->getId());
-        }
-        return $this->metadatas;
-
+        $this->readStore = null;
+        $this->buildPropertiesFromFileSystem();
+        $this->databasePage = null;
+        $this->htmlDocument = null;
+        $this->instructionsDocument = null;
+        return $this;
     }
 
     /**
      *
-     * @return mixed the internal links or null
+     * @return Page[]|null the internal links or null
      */
     public
-    function getInternalLinksFromMeta()
+    function getLinkReferences(): ?array
     {
-        $metadata = $this->getMetadatas();
-        if (key_exists(self::CURRENT_METADATA, $metadata)) {
-            $current = $metadata[self::CURRENT_METADATA];
-            if (key_exists('relation', $current)) {
-                $relation = $current['relation'];
-                if (is_array($relation)) {
-                    if (key_exists('references', $relation)) {
-                        return $relation['references'];
-                    }
-                }
-            }
+        $store = $this->getReadStoreOrDefault();
+        if (!($store instanceof MetadataDokuWikiStore)) {
+            return null;
         }
-        return null;
-    }
-
-    public
-    function persistAnalytics(array $analytics)
-    {
-
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
+        $metadata = $store->getCurrentFromName('relation');
+        if ($metadata === null) {
             /**
-             * Sqlite Plugin installed
+             * Happens when no rendering has been made
              */
-            $json = json_encode($analytics, JSON_PRETTY_PRINT);
-            /**
-             * Same data as {@link Page::getMetadataForRendering()}
-             */
-            $entry = array(
-                'CANONICAL' => $this->getCanonical(),
-                'ANALYTICS' => $json,
-                'PATH' => $this->getAbsolutePath(),
-                'NAME' => $this->getName(),
-                'TITLE' => $this->getTitleNotEmpty(),
-                'H1' => $this->getH1NotEmpty(),
-                'DATE_CREATED' => $this->getCreatedDateString(),
-                'DATE_MODIFIED' => $this->getModifiedDateString(),
-                'DATE_PUBLISHED' => $this->getPublishedTimeAsString(),
-                'DATE_START' => $this->getEndDateAsString(),
-                'DATE_END' => $this->getStartDateAsString(),
-                'COUNTRY' => $this->getCountry(),
-                'LANG' => $this->getLang(),
-                'IS_LOW_QUALITY' => ($this->isLowQualityPage() === true ? 1 : 0),
-                'TYPE' => $this->getType(),
-                'WORD_COUNT' => $analytics[Analytics::WORD_COUNT],
-                'BACKLINK_COUNT' => $analytics[Analytics::INTERNAL_BACKLINK_COUNT],
-                'ID' => $this->getId(),
-            );
-            $res = $sqlite->query("SELECT count(*) FROM PAGES where ID = ?", $this->getId());
-            if ($sqlite->res2single($res) == 1) {
-                // Upset not supported on all version
-                //$upsert = 'insert into PAGES (ID,CANONICAL,ANALYTICS) values (?,?,?) on conflict (ID,CANONICAL) do update set ANALYTICS = EXCLUDED.ANALYTICS';
-                $update = <<<EOF
-update
-    PAGES
-SET
-    CANONICAL = ?,
-    ANALYTICS = ?,
-    PATH = ?,
-    NAME = ?,
-    TITLE = ?,
-    H1 = ?,
-    DATE_CREATED = ?,
-    DATE_MODIFIED = ?,
-    DATE_PUBLISHED = ?,
-    DATE_START = ?,
-    DATE_END = ?,
-    COUNTRY = ?,
-    LANG = ?,
-    IS_LOW_QUALITY = ?,
-    TYPE = ?,
-    WORD_COUNT = ?,
-    BACKLINK_COUNT = ?
-where
-    ID=?
-EOF;
-                $res = $sqlite->query($update, $entry);
-            } else {
-                $res = $sqlite->storeEntry('PAGES', $entry);
-            }
-            if (!$res) {
-                LogUtility::msg("There was a problem during the upsert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            }
-            $sqlite->res_close($res);
+            return null;
         }
+        if (!key_exists('references', $metadata)) {
+            return null;
+        }
+
+        $pages = [];
+        foreach (array_keys($metadata['references']) as $referencePageId) {
+            $pages[$referencePageId] = Page::createPageFromId($referencePageId);
+        }
+        return $pages;
 
     }
 
-    /**
-     * @param string $mode delete the cache for the format XHTML and {@link renderer_plugin_combo_analytics::RENDERER_NAME_MODE}
-     */
+
     public
-    function deleteCache($mode = "xhtml")
+    function deleteCache()
     {
 
         if ($this->exists()) {
 
-
-            $cache = $this->getInstructionsCache();
-            $cache->removeCache();
-
-            $cache = $this->getRenderCache($mode);
-            $cache->removeCache();
+            $this->getInstructionsDocument()->deleteIfExists();
+            $this->getHtmlDocument()->deleteIfExists();
+            $this->getAnalyticsDocument()->deleteIfExists();
 
         }
     }
 
-
-    public
-    function isAnalyticsCached()
+    public function getHtmlDocument(): HtmlDocument
     {
-
-        $cache = new CacheRenderer($this->getId(), $this->getFileSystemPath(), renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
-        $cacheFile = $cache->cache;
-        return file_exists($cacheFile);
-    }
-
-    /**
-     *
-     * @return string - the full path to the meta file
-     */
-    public
-    function getMetaFile()
-    {
-        return metaFN($this->getId(), '.meta');
-    }
-
-    /**
-     * @param $reason - a string with the reason
-     */
-    public
-    function deleteCacheAndAskAnalyticsRefresh($reason)
-    {
-        $this->deleteCache(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-
-            /**
-             * Check if exists
-             */
-            $res = $sqlite->query("select count(1) from ANALYTICS_TO_REFRESH where ID = ?", array('ID' => $this->getId()));
-            if (!$res) {
-                LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            }
-            $result = $sqlite->res2single($res);
-            $sqlite->res_close($res);
-
-            /**
-             * If not insert
-             */
-            if ($result != 1) {
-                $entry = array(
-                    "ID" => $this->getId(),
-                    "TIMESTAMP" => date('Y-m-d H:i:s', time()),
-                    "REASON" => $reason
-                );
-                $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
-                if (!$res) {
-                    LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-                }
-                $sqlite->res_close($res);
-            }
-
+        if ($this->htmlDocument === null) {
+            $this->htmlDocument = new HtmlDocument($this);
         }
+        return $this->htmlDocument;
 
-    }
-
-    public
-    function isAnalyticsStale()
-    {
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT count(*) FROM ANALYTICS_TO_REFRESH where ID = ?", $this->getId());
-        if (!$res) {
-            LogUtility::msg("There was a problem during the select: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-        }
-        $value = $sqlite->res2single($res);
-        $sqlite->res_close($res);
-        return $value === "1";
-
-    }
-
-    /**
-     * Delete the cache, process the analytics
-     * and return it
-     * If you want the analytics from the cache use {@link Page::getAnalyticsFromFs()}
-     * instead
-     * @return mixed analytics as array
-     */
-    public
-    function processAnalytics()
-    {
-
-        /**
-         * Refresh and cache
-         * (The delete is normally not needed, just to be sure)
-         */
-        $this->deleteCache(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
-        $analytics = Analytics::processAndGetDataAsArray($this->getId(), true);
-
-        /**
-         * Delete from the table
-         */
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-            $res = $sqlite->query("DELETE FROM ANALYTICS_TO_REFRESH where ID = ?", $this->getId());
-            if (!$res) {
-                LogUtility::msg("There was a problem during the delete: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            }
-            $sqlite->res_close($res);
-
-        }
-        return $analytics;
-
-    }
-
-    /**
-     * @param bool $cache
-     * @return mixed
-     *
-     */
-    public
-    function getAnalyticsFromFs($cache = true)
-    {
-        if ($cache) {
-            /**
-             * Note for dev: because cache is off in dev environment,
-             * you will get it always processed
-             */
-            return Analytics::processAndGetDataAsArray($this->getId(), $cache);
-        } else {
-            /**
-             * Process analytics delete at the same a asked refresh
-             */
-            return $this->processAnalytics();
-        }
     }
 
     /**
      * Set the page quality
-     * @param boolean $newIndicator true if this is a low quality page rank false otherwise
+     * @param boolean $value true if this is a low quality page rank false otherwise
+     * @throws ExceptionCombo
      */
-
     public
-    function setLowQualityIndicator(bool $newIndicator)
+    function setCanBeOfLowQuality(bool $value): Page
     {
-        $actualIndicator = $this->getLowQualityIndicator();
-        if ($actualIndicator === null || $actualIndicator !== $newIndicator) {
-
-            /**
-             * Don't change the type of the value to a string
-             * otherwise dokuwiki will not see a change
-             * between true and a string and will not persist the value
-             */
-            p_set_metadata($this->getId(), array(self::LOW_QUALITY_PAGE_INDICATOR => $newIndicator));
-
-            /**
-             * Delete the cache to rewrite the links
-             * if the protection is on
-             */
-            if (PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE) === 1) {
-                foreach ($this->getBacklinks() as $backlink) {
-                    $backlink->deleteCache("xhtml");
-                }
-            }
-
-        }
-
-
+        return $this->setQualityIndicatorAndDeleteCacheIfNeeded($this->canBeOfLowQuality, $value);
     }
 
     /**
      * @return Page[] the backlinks
      * Duplicate of related
+     *
+     * Same as {@link DokuPath::getReferencedBy()} ?
      */
     public
-    function getBacklinks()
+    function getBacklinks(): array
     {
         $backlinks = array();
-        foreach (ft_backlinks($this->getId()) as $backlinkId) {
-            $backlinks[] = Page::createPageFromId($backlinkId);
+        /**
+         * Same as
+         * idx_get_indexer()->lookupKey('relation_references', $ID);
+         */
+        $ft_backlinks = ft_backlinks($this->getDokuwikiId());
+        foreach ($ft_backlinks as $backlinkId) {
+            $backlinks[$backlinkId] = Page::createPageFromId($backlinkId);
         }
         return $backlinks;
     }
@@ -947,183 +572,88 @@ EOF;
 
     /**
      * Low page quality
-     * @return bool true if this is a low internal page rank
+     * @return bool true if this is a low quality page
      */
     function isLowQualityPage(): bool
     {
 
-        $lowQualityIndicator = $this->getLowQualityIndicator();
-        if ($lowQualityIndicator == null) {
-            /**
-             * By default, if a file has not been through
-             * a {@link \renderer_plugin_combo_analytics}
-             * analysis, this is not a low page
-             */
+        $canBeOfLowQuality = $this->getCanBeOfLowQuality();
+        if ($canBeOfLowQuality === false) {
             return false;
-        } else {
-            return $lowQualityIndicator === true;
         }
+        if (!Site::isLowQualityProtectionEnable()) {
+            return false;
+        }
+        return $this->getLowQualityIndicatorCalculated();
+
 
     }
 
 
-    public
-    function getLowQualityIndicator()
+    public function getCanBeOfLowQuality(): ?bool
     {
 
-        $low = p_get_metadata($this->getId(), self::LOW_QUALITY_PAGE_INDICATOR, METADATA_DONT_RENDER);
-        if ($low === null) {
-            return null;
-        } else {
-            return filter_var($low, FILTER_VALIDATE_BOOLEAN);
-        }
+        return $this->canBeOfLowQuality->getValue();
 
     }
 
-    /**
-     * @return bool - if a {@link Page::processAnalytics()} for the page should occurs
-     */
-    public
-    function shouldAnalyticsProcessOccurs()
-    {
-        /**
-         * If cache is on
-         */
-        global $conf;
-        if ($conf['cachetime'] !== -1) {
-            /**
-             * If there is no cache
-             */
-            if (!$this->isAnalyticsCached()) {
-                return true;
-            }
-        }
 
-        /**
-         * Check Db
-         */
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-
-            $res = $sqlite->query("select count(1) from pages where ID = ? and ANALYTICS is null", $this->getId());
-            if (!$res) {
-                LogUtility::msg("An exception has occurred with the analytics detection");
-            }
-            $count = intval($sqlite->res2single($res));
-            $sqlite->res_close($res);
-            if ($count >= 1) {
-                return true;
-            }
-        }
-
-        /**
-         * Check the refresh table
-         */
-        if ($sqlite != null) {
-            $res = $sqlite->query("SELECT count(*) FROM ANALYTICS_TO_REFRESH where ID = ?", $this->getId());
-            if (!$res) {
-                LogUtility::msg("There was a problem during the delete: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            }
-            $count = $sqlite->res2single($res);
-            $sqlite->res_close($res);
-            return $count >= 1;
-        }
-
-        return false;
-    }
-
-
-    public
-    function getH1()
+    public function getH1(): ?string
     {
 
-        $heading = p_get_metadata($this->getId(), Analytics::H1, METADATA_DONT_RENDER);
-        if (!blank($heading)) {
-            return $heading;
-        } else {
-            return null;
-        }
+        return $this->h1->getValueFromStore();
 
     }
 
     /**
      * Return the Title
+     * @deprecated for {@link PageTitle::getValue()}
      */
-    public
-    function getTitle()
+    public function getTitle(): ?string
     {
-
-        $id = $this->getId();
-        $title = p_get_metadata($id, Analytics::TITLE, METADATA_RENDER_USING_SIMPLE_CACHE);
-        if (!blank($title)) {
-            return $title;
-        } else {
-            return $id;
-        }
-
+        return $this->title->getValueFromStore();
     }
 
     /**
      * If true, the page is quality monitored (a note is shown to the writer)
-     * @return bool|mixed
+     * @return null|bool
      */
     public
-    function isQualityMonitored()
+    function getQualityMonitoringIndicator(): ?bool
     {
-        $dynamicQualityIndicator = p_get_metadata($this->getId(), action_plugin_combo_qualitymessage::DISABLE_INDICATOR, METADATA_RENDER_USING_SIMPLE_CACHE);
-        if ($dynamicQualityIndicator === null) {
-            return true;
-        } else {
-            return filter_var($dynamicQualityIndicator, FILTER_VALIDATE_BOOLEAN);
-        }
+        return $this->qualityMonitoringIndicator->getValueFromStore();
     }
 
     /**
-     * @return string|null the title, or h1 if empty or the id if empty
+     * @return string the title, or h1 if empty or the id if empty
+     * Shortcut to {@link PageTitle::getValueOrDefault()}
      */
     public
-    function getTitleNotEmpty()
+    function getTitleOrDefault(): ?string
     {
-        $pageTitle = $this->getTitle();
-        if ($pageTitle == null) {
-            if (!empty($this->getH1())) {
-                $pageTitle = $this->getH1();
-            } else {
-                $pageTitle = $this->getId();
-            }
-        }
-        return $pageTitle;
+        return $this->title->getValueFromStoreOrDefault();
+    }
+
+    /**
+     * @return mixed
+     * @deprecated for {@link PageH1::getValueOrDefault()}
+     */
+    public
+    function getH1OrDefault()
+    {
+
+        return $this->h1->getValueFromStoreOrDefault();
+
 
     }
 
+    /**
+     * @return mixed
+     */
     public
-    function getH1NotEmpty()
+    function getDescription(): ?string
     {
-
-        $h1Title = $this->getH1();
-        if ($h1Title == null) {
-            if (!empty($this->getTitle())) {
-                $h1Title = $this->getTitle();
-            } else {
-                $h1Title = $this->getPageNameNotEmpty();
-            }
-        }
-        return $h1Title;
-
-    }
-
-    public
-    function getDescription()
-    {
-
-        $this->processDescriptionIfNeeded();
-        if ($this->descriptionOrigin == \syntax_plugin_combo_frontmatter::CANONICAL) {
-            return $this->description;
-        } else {
-            return null;
-        }
-
-
+        return $this->description->getValueFromStore();
     }
 
 
@@ -1131,20 +661,24 @@ EOF;
      * @return string - the description or the dokuwiki generated description
      */
     public
-    function getDescriptionOrElseDokuWiki()
+    function getDescriptionOrElseDokuWiki(): ?string
     {
-        $this->processDescriptionIfNeeded();
-        return $this->description;
+        return $this->description->getValueFromStoreOrDefault();
     }
 
 
+    /**
+     * @return string
+     * A wrapper around {@link FileSystems::getContent()} with {@link DokuPath}
+     */
     public
-    function getContent()
+    function getTextContent(): string
     {
         /**
+         *
          * use {@link io_readWikiPage(wikiFN($id, $rev), $id, $rev)};
          */
-        return rawWiki($this->getId());
+        return rawWiki($this->getPath()->getDokuwikiId());
     }
 
 
@@ -1153,70 +687,55 @@ EOF;
     {
         $Indexer = idx_get_indexer();
         $pages = $Indexer->getPages();
-        $return = array_search($this->getId(), $pages, true);
+        $return = array_search($this->getPath()->getDokuwikiId(), $pages, true);
         return $return !== false;
     }
 
 
     public
-    function upsertContent($content, $summary = "Default")
+    function upsertContent($content, $summary = "Default"): Page
     {
-        saveWikiText($this->getId(), $content, $summary);
+        saveWikiText($this->getPath()->getDokuwikiId(), $content, $summary);
         return $this;
     }
 
     public
     function addToIndex()
     {
-        idx_addPage($this->getId());
+        /**
+         * Add to index check the metadata cache
+         * Because we log the cache at the requested page level, we need to
+         * set the global ID
+         */
+        global $ID;
+        $keep = $ID;
+        try {
+            $ID = $this->getPath()->getDokuwikiId();
+            idx_addPage($ID);
+        } finally {
+            $ID = $keep;
+        }
+        return $this;
+
     }
 
-    public
-    function getType()
+    /**
+     * @return mixed
+     */
+    public function getTypeOrDefault()
     {
-        $type = $this->getPersistentMetadata(self::TYPE_META_PROPERTY);
-        if (isset($type)) {
-            return $type;
-        } else {
-            if ($this->isHomePage()) {
-                return self::WEBSITE_TYPE;
-            } else {
-                $defaultPageTypeConf = PluginUtility::getConfValue(self::CONF_DEFAULT_PAGE_TYPE);
-                if (!empty($defaultPageTypeConf)) {
-                    return $defaultPageTypeConf;
-                } else {
-                    return null;
-                }
-            }
-        }
+        return $this->type->getValueFromStoreOrDefault();
     }
 
 
     public
     function getFirstImage()
     {
-
-        $relation = $this->getCurrentMetadata('relation');
-        if (isset($relation[Page::FIRST_IMAGE_META_RELATION])) {
-            $firstImageId = $relation[Page::FIRST_IMAGE_META_RELATION];
-            if (empty($firstImageId)) {
-                return null;
-            } else {
-                // The  metadata store the Id or the url
-                // We transform them to a path id
-                $pathId = $firstImageId;
-                if (!media_isexternal($firstImageId)) {
-                    $pathId = DokuPath::PATH_SEPARATOR . $firstImageId;
-                }
-                return Image::createImageFromAbsolutePath($pathId);
-            }
-        }
-        return null;
-
+        return $this->pageImages->getFirstImage();
     }
 
     /**
-     * Return the media found in the index
+     * Return the media stored during parsing
      *
      * They are saved via the function {@link \Doku_Renderer_metadata::_recordMediaUsage()}
      * called by the {@link \Doku_Renderer_metadata::internalmedia()}
@@ -1224,11 +743,16 @@ EOF;
      *
      * {@link \Doku_Renderer_metadata::externalmedia()} does not save them
      */
-    public function getExistingInternalMediaIdFromTheIndex()
+    public function getMediasMetadata(): ?array
     {
 
+        $store = $this->getReadStoreOrDefault();
+        if (!($store instanceof MetadataDokuWikiStore)) {
+            return null;
+        }
         $medias = [];
-        $relation = $this->getCurrentMetadata('relation');
+
+        $relation = $store->getCurrentFromName('relation');
         if (isset($relation['media'])) {
             /**
              * The relation is
@@ -1242,47 +766,19 @@ EOF;
             }
         }
         return $medias;
-
     }
 
     /**
      * An array of local/internal images that represents the same image
      * but in different dimension and ratio
      * (may be empty)
-     * @return Image[]
+     * @return PageImage[]
      */
     public
-    function getLocalImageSet(): array
+    function getPageImagesOrDefault(): array
     {
 
-        /**
-         * Google accepts several images dimension and ratios
-         * for the same image
-         * We may get an array then
-         */
-        $imageMeta = $this->getMetadata(self::IMAGE_META_PROPERTY);
-        $images = array();
-        if (!empty($imageMeta)) {
-            if (is_array($imageMeta)) {
-                foreach ($imageMeta as $key => $imageIdFromMeta) {
-                    DokuPath::addRootSeparatorIfNotPresent($imageIdFromMeta);
-                    $images[$key] = Image::createImageFromAbsolutePath($imageIdFromMeta);
-                }
-            } else {
-                DokuPath::addRootSeparatorIfNotPresent($imageMeta);
-                $images = array(Image::createImageFromAbsolutePath($imageMeta));
-            }
-        } else {
-            if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
-                $firstImage = $this->getFirstImage();
-                if ($firstImage != null) {
-                    if ($firstImage->getScheme() == DokuPath::LOCAL_SCHEME) {
-                        $images = array($firstImage);
-                    }
-                }
-            }
-        }
-        return $images;
+        return $this->pageImages->getValueAsPageImagesOrDefault();
 
     }
 
@@ -1294,9 +790,9 @@ EOF;
     function getImage(): ?Image
     {
 
-        $images = $this->getLocalImageSet();
+        $images = $this->getPageImagesOrDefault();
         if (sizeof($images) >= 1) {
-            return $images[0];
+            return $images[0]->getImage();
         } else {
             return null;
         }
@@ -1308,11 +804,14 @@ EOF;
      *
      * @return string
      */
-    public
-    function getAuthor()
+    public function getAuthor(): ?string
     {
-        $author = $this->getPersistentMetadata('creator');
-        return ($author ? $author : null);
+        $store = $this->getReadStoreOrDefault();
+        if (!($store instanceof MetadataDokuWikiStore)) {
+            return null;
+        }
+
+        return $store->getFromPersistentName('creator');
     }
 
     /**
@@ -1320,125 +819,76 @@ EOF;
      *
      * @return string
      */
-    public
-    function getAuthorID()
+    public function getAuthorID(): ?string
     {
-        $user = $this->getPersistentMetadata('user');
-        return ($user ? $user : null);
-    }
 
-
-    private
-    function getPersistentMetadata($key)
-    {
-        if (isset($this->getMetadatas()['persistent'][$key])) {
-            return $this->getMetadatas()['persistent'][$key];
-        } else {
+        $store = $this->getReadStoreOrDefault();
+        if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
-    }
 
-    public
-    function getPersistentMetadatas()
-    {
-        return $this->getMetadatas()['persistent'];
-    }
-
-    /**
-     * The modified date is the last modification date
-     * the first time, this is the creation date
-     * @return string|null
-     */
-    public
-    function getModifiedDateString()
-    {
-        $modified = $this->getModifiedTime();
-        return $modified != null ? $modified->format(Iso8601Date::getFormat()) : null;
+        return $store->getFromPersistentName('user');
 
     }
 
-    private
-    function getCurrentMetadata($key)
-    {
-        $key = $this->getMetadatas()[self::CURRENT_METADATA][$key];
-        return ($key ? $key : null);
-    }
 
     /**
      * Get the create date of page
      *
      * @return DateTime
      */
-    public function getCreatedTime(): ?DateTime
+    public
+    function getCreatedTime(): ?DateTime
     {
-        $createdMeta = $this->getPersistentMetadata('date')['created'];
-        if (empty($createdMeta)) {
-            return null;
-        } else {
-            $datetime = new DateTime();
-            $datetime->setTimestamp($createdMeta);
-            return $datetime;
-        }
+        return $this->creationTime->getValueFromStore();
     }
 
-    /**
-     * Get the modified date of page
-     *
-     * The modified date is the last modification date
-     * the first time, this is the creation date
-     *
-     * @return DateTime
-     */
-    public function getModifiedTime(): \DateTime
-    {
-        $modified = $this->getCurrentMetadata('date')['modified'];
-        if (empty($modified)) {
-            return parent::getModifiedTime();
-        } else {
-            $datetime = new DateTime();
-            $datetime->setTimestamp($modified);
-            return $datetime;
-        }
-    }
 
     /**
-     * Creation date can not be null
-     * @return null|string
+     *
+     * @return null|DateTime
      */
     public
-    function getCreatedDateString()
+    function getModifiedTime(): ?\DateTime
     {
-
-        $created = $this->getCreatedTime();
-        return $created != null ? $created->format(Iso8601Date::getFormat()) : null;
-
+        return $this->modifiedTime->getValueFromStore();
     }
+
+    public
+    function getModifiedTimeOrDefault(): ?\DateTime
+    {
+        return $this->modifiedTime->getValueFromStoreOrDefault();
+    }
+
 
     /**
      * Refresh the metadata (used only in test)
+     *
+     * Trigger a:
+     *  a {@link p_render_metadata() metadata render}
+     *  a {@link p_save_metadata() metadata save}
+     *
+     * Note that {@link p_get_metadata()} uses a strange recursion
+     * There is a metadata recursion logic to avoid rendering
+     * that is not easy to grasp
+     * and therefore you may get no metadata and no backlinks
      */
     public
-    function renderMetadata()
+    function renderMetadataAndFlush(): Page
     {
 
-        if ($this->metadatas == null) {
-            /**
-             * Read the metadata from the file
-             */
-            $this->metadatas = $this->getMetadatas();
+        if (!$this->exists()) {
+            if (PluginUtility::isDevOrTest()) {
+                LogUtility::msg("You can't render the metadata of a page that does not exist");
+            }
+            return $this;
         }
 
         /**
-         * Read/render the metadata from the file
-         * with parsing
+         * @var MetadataDokuWikiStore $metadataStore
          */
-        $this->metadatas = p_render_metadata($this->getId(), $this->metadatas);
-
-        /**
-         * ReInitialize
-         */
-        $this->descriptionOrigin = null;
-        $this->description = null;
+        $metadataStore = $this->getReadStoreOrDefault();
+        $metadataStore->renderAndPersist();
 
         /**
          * Return
@@ -1447,35 +897,34 @@ EOF;
 
     }
 
+    /**
+     * @return string|null
+     * @deprecated for {@link Region}
+     */
+    public function getLocaleRegion(): ?string
+    {
+        return $this->region->getValueFromStore();
+    }
+
     public
-    function getCountry()
+    function getRegionOrDefault()
     {
 
-        $country = $this->getPersistentMetadata(self::COUNTRY_META_PROPERTY);
-        if (!empty($country)) {
-            if (!StringUtility::match($country, "[a-zA-Z]{2}")) {
-                LogUtility::msg("The country value ($country) for the page (" . $this->getId() . ") does not have two letters (ISO 3166 alpha-2 country code)", LogUtility::LVL_MSG_ERROR, "country");
-            }
-            return $country;
-        } else {
-
-            return Site::getCountry();
-
-        }
+        return $this->region->getValueFromStoreOrDefault();
 
     }
 
     public
-    function getLang()
+    function getLang(): ?string
     {
-        $lang = $this->getPersistentMetadata(self::LANG_META_PROPERTY);
-        if (empty($lang)) {
-            global $conf;
-            if (isset($conf["lang"])) {
-                $lang = $conf["lang"];
-            }
-        }
-        return $lang;
+        return $this->lang->getValueFromStore();
+    }
+
+    public
+    function getLangOrDefault()
+    {
+
+        return $this->lang->getValueFromStoreOrDefault();
     }
 
     /**
@@ -1483,20 +932,20 @@ EOF;
      * @return bool
      */
     public
-    function isHomePage()
+    function isHomePage(): bool
     {
         global $conf;
         $startPageName = $conf['start'];
-        if ($this->getName() == $startPageName) {
+        if ($this->getPath()->getLastName() == $startPageName) {
             return true;
         } else {
-            $namespaceName = noNS(cleanID($this->getNamespacePath()));
-            if ($namespaceName == $this->getName()) {
+            $namespace = $this->dokuPath->getParent();
+            if ($namespace->getLastName() === $this->getPath()->getLastName()) {
                 /**
                  * page named like the NS inside the NS
                  * ie ns:ns
                  */
-                $startPage = Page::createPageFromId(DokuPath::absolutePathToId($this->getNamespacePath()) . DokuPath::PATH_SEPARATOR . $startPageName);
+                $startPage = Page::createPageFromId($namespace->getDokuwikiId() . DokuPath::PATH_SEPARATOR . $startPageName);
                 if (!$startPage->exists()) {
                     return true;
                 }
@@ -1507,44 +956,9 @@ EOF;
 
 
     public
-    function getMetadata($key, $default = null)
-    {
-        $persistentMetadata = $this->getPersistentMetadata($key);
-        if (empty($persistentMetadata)) {
-            $persistentMetadata = $this->getCurrentMetadata($key);
-        }
-        if ($persistentMetadata == null) {
-            return $default;
-        } else {
-            return $persistentMetadata;
-        }
-    }
-
-    public
     function getPublishedTime(): ?DateTime
     {
-        $property = Publication::DATE_PUBLISHED;
-        $persistentMetadata = $this->getPersistentMetadata($property);
-        if (empty($persistentMetadata)) {
-            /**
-             * Old metadata key
-             */
-            $persistentMetadata = $this->getPersistentMetadata("published");
-            if (empty($persistentMetadata)) {
-                return null;
-            }
-        }
-        // Ms level parsing
-        $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $persistentMetadata);
-        if ($dateTime === false) {
-            /**
-             * Should not happen as the data is validate in entry
-             * at the {@link \syntax_plugin_combo_frontmatter}
-             */
-            LogUtility::msg("The published date property ($property) of the page ($this) has a value  ($persistentMetadata) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-            return null;
-        }
-        return $dateTime;
+        return $this->publishedDate->getValueFromStore();
     }
 
 
@@ -1552,271 +966,85 @@ EOF;
      * @return DateTime
      */
     public
-    function getPublishedElseCreationTime()
+    function getPublishedElseCreationTime(): ?DateTime
     {
-        $publishedDate = $this->getPublishedTime();
-        if (empty($publishedDate)) {
-            $publishedDate = $this->getCreatedTime();
-        }
-        return $publishedDate;
+        return $this->publishedDate->getValueFromStoreOrDefault();
     }
 
 
     public
-    function isLatePublication()
+    function isLatePublication(): bool
     {
-        return $this->getPublishedElseCreationTime() > new DateTime('now');
+        $dateTime = $this->getPublishedElseCreationTime();
+        return $dateTime > new DateTime('now');
     }
 
-    public
-    function getCanonicalUrl()
+    /**
+     * The unique page Url (also known as Canonical URL) used:
+     *   * in the link
+     *   * in the canonical ref
+     *   * in the site map
+     * @param array $urlParameters
+     * @param bool $absoluteUrlMandatory - by default, dokuwiki allows the canonical to be relative but it's mandatory to be absolute for the HTML meta
+     * @param string $separator - HTML encoded or not ampersand
+     * @return string|null
+     */
+    public function getCanonicalUrl(array $urlParameters = [], bool $absoluteUrlMandatory = false, string $separator = DokuwikiUrl::AMPERSAND_CHARACTER): ?string
     {
-        if (!empty($this->getCanonical())) {
-            return getBaseURL(true) . strtr($this->getCanonical(), ':', '/');
+
+        /**
+         * Conf
+         */
+        $urlType = PageUrlType::getOrCreateForPage($this)->getValue();
+        if ($urlType === PageUrlType::CONF_VALUE_PAGE_PATH) {
+            $absolutePath = Site::getCanonicalConfForRelativeVsAbsoluteUrl();
+            if ($absolutePath === 1) {
+                $absoluteUrlMandatory = true;
+            }
         }
-        return null;
+
+        /**
+         * Dokuwiki Methodology Taken from {@link tpl_metaheaders()}
+         */
+        if ($absoluteUrlMandatory && $this->isRootHomePage()) {
+            return DOKU_URL;
+        }
+
+        return wl($this->getUrlId(), $urlParameters, $absoluteUrlMandatory, $separator);
+
+
     }
 
-    public
-    function getCanonicalUrlOrDefault()
-    {
-        $url = $this->getCanonicalUrl();
-        if (empty($url)) {
-            $url = $this->getUrl();
-        }
-        return $url;
-    }
 
     /**
      *
      * @return string|null - the locale facebook way
+     * @deprecated for {@link Locale}
      */
     public
     function getLocale($default = null): ?string
     {
-        $lang = $this->getLang();
-        if (!empty($lang)) {
-
-            $country = $this->getCountry();
-            if (empty($country)) {
-                $country = $lang;
-            }
-            return $lang . "_" . strtoupper($country);
+        $value = $this->locale->getValueFromStore();
+        if ($value === null) {
+            return $default;
         }
-        return $default;
+        return $value;
     }
 
-    private
-    function processDescriptionIfNeeded()
-    {
-
-        if ($this->descriptionOrigin == null) {
-            $descriptionArray = $this->getMetadata(Page::DESCRIPTION_PROPERTY);
-            if (!empty($descriptionArray)) {
-                if (array_key_exists('abstract', $descriptionArray)) {
-
-                    $temporaryDescription = $descriptionArray['abstract'];
-
-                    $this->descriptionOrigin = "dokuwiki";
-                    if (array_key_exists('origin', $descriptionArray)) {
-                        $this->descriptionOrigin = $descriptionArray['origin'];
-                    }
-
-                    if ($this->descriptionOrigin == "dokuwiki") {
-
-                        // suppress the carriage return
-                        $temporaryDescription = str_replace("\n", " ", $descriptionArray['abstract']);
-                        // suppress the h1
-                        $temporaryDescription = str_replace($this->getH1(), "", $temporaryDescription);
-                        // Suppress the star, the tab, About
-                        $temporaryDescription = preg_replace('/(\*|\t|About)/im', "", $temporaryDescription);
-                        // Suppress all double space and trim
-                        $temporaryDescription = trim(preg_replace('/  /m', " ", $temporaryDescription));
-                        $this->description = $temporaryDescription;
-
-                    } else {
-
-                        $this->description = $temporaryDescription;
-
-                    }
-                }
-
-            }
-        }
-
-    }
 
     public
-    function hasXhtmlCache()
+    function toXhtml(): string
     {
 
-        $renderCache = $this->getRenderCache("xhtml");
-        return file_exists($renderCache->cache);
+        return $this->getHtmlDocument()->getOrProcessContent();
 
     }
+
 
     public
-    function hasInstructionCache()
+    function getAnchorLink(): string
     {
-
-        $instructionCache = $this->getInstructionsCache();
-        /**
-         * $cache->cache is the file
-         */
-        return file_exists($instructionCache->cache);
-
-    }
-
-    public
-    function render()
-    {
-
-        if (!$this->isStrapSideSlot()) {
-            $template = Site::getTemplate();
-            LogUtility::msg("This function renders only sidebar for the " . PluginUtility::getUrl("strap", "strap template") . ". (Actual page: $this, actual template: $template)", LogUtility::LVL_MSG_ERROR);
-            return "";
-        }
-
-
-        /**
-         * Global ID is the ID of the HTTP request
-         * (ie the page id)
-         * We change it for the run
-         * And restore it at the end
-         */
-        global $ID;
-        $keep = $ID;
-        $ID = $this->getId();
-
-        /**
-         * The code below is adapted from {@link p_cached_output()}
-         * $ret = p_cached_output($file, 'xhtml', $pageid);
-         *
-         * We don't use {@link CacheRenderer}
-         * because the cache key is the physical file
-         */
-        global $conf;
-        $format = 'xhtml';
-
-        $renderCache = $this->getRenderCache($format);
-        if ($renderCache->useCache()) {
-            $xhtml = $renderCache->retrieveCache(false);
-            if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
-                $logicalId = $this->getLogicalId();
-                $scope = $this->getScope();
-                $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"hit\" data-cache-file=\"{$renderCache->cache}\"></div>" . $xhtml;
-            }
-        } else {
-
-            /**
-             * Get the instructions
-             * Adapted from {@link p_cached_instructions()}
-             */
-            $instructionsCache = $this->getInstructionsCache();
-            if ($instructionsCache->useCache()) {
-                $instructions = $instructionsCache->retrieveCache();
-            } else {
-                // no cache - do some work
-                $instructions = p_get_instructions($this->getContent());
-                if (!$instructionsCache->storeCache($instructions)) {
-                    $message = 'Unable to save cache file. Hint: disk full; file permissions; safe_mode setting ?';
-                    msg($message, -1);
-                    // close restore ID
-                    $ID = $keep;
-                    return "<div class=\"text-warning\">$message</div>";
-                }
-            }
-
-            /**
-             * Due to the instructions parsing, they may have been changed
-             * by a component
-             */
-            $logicalId = $this->getLogicalId();
-            $scope = $this->getScope();
-
-            /**
-             * Render
-             */
-            $xhtml = p_render($format, $instructions, $info);
-            if ($info['cache'] && $renderCache->storeCache($xhtml)) {
-                if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
-                    $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$renderCache->cache}\"></div>" . $xhtml;
-                }
-            } else {
-                $renderCache->removeCache();   //   try to delete cachefile
-                if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
-                    $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"forbidden\"></div>" . $xhtml;
-                }
-            }
-        }
-
-        // restore ID
-        $ID = $keep;
-        return $xhtml;
-
-    }
-
-    /**
-     * @param string $outputFormat For instance, "xhtml" or {@links Analytics::RENDERER_NAME_MODE}
-     * @return \dokuwiki\Cache\Cache the cache of the page
-     *
-     * Output of {@link DokuWiki_Syntax_Plugin::render()}
-     *
-     */
-    private
-    function getRenderCache($outputFormat)
-    {
-
-        if ($this->isStrapSideSlot()) {
-
-            /**
-             * Logical cache based on scope (ie logical id) is the scope and part of the key
-             */
-            return new CacheByLogicalKey($this, $outputFormat);
-
-        } else {
-
-            return new CacheRenderer($this->getId(), $this->getFileSystemPath(), $outputFormat);
-
-        }
-    }
-
-    /**
-     * @return CacheInstructions
-     * The cache of the {@link CallStack call stack} (ie list of output of {@link DokuWiki_Syntax_Plugin::handle})
-     */
-    private
-    function getInstructionsCache()
-    {
-
-        if ($this->isStrapSideSlot()) {
-
-            /**
-             * @noinspection PhpIncompatibleReturnTypeInspection
-             * No inspection because this is not the same object interface
-             * because we can't overide the constructor of {@link CacheInstructions}
-             * but they should used the same interface (ie manipulate array data)
-             */
-            return new CacheInstructionsByLogicalKey($this);
-
-        } else {
-
-            return new CacheInstructions($this->getId(), $this->getFileSystemPath());
-
-        }
-
-    }
-
-    public
-    function deleteXhtmlCache()
-    {
-        $this->deleteCache("xhtml");
-    }
-
-    public
-    function getAnchorLink()
-    {
-        $url = $this->getCanonicalUrlOrDefault();
+        $url = $this->getCanonicalUrl();
         $title = $this->getTitle();
         return "<a href=\"$url\">$title</a>";
     }
@@ -1825,35 +1053,27 @@ EOF;
     /**
      * Without the `:` at the end
      * @return string
+     * @deprecated / shortcut for {@link DokuPath::getParent()}
+     * Because a page has always a parent, the string is never null.
      */
     public
-    function getNamespacePath()
+    function getNamespacePath(): string
     {
-        $ns = getNS($this->getId());
-        /**
-         * False means root namespace
-         */
-        if ($ns == false) {
-            return ":";
-        } else {
-            return ":$ns";
-        }
+
+        return $this->dokuPath->getParent()->toString();
+
     }
 
 
-    public
-    function getScope()
+    public function getScope()
     {
         /**
-         * The scope may change
-         * during a run, we then read the metadata file
+         * Note that the scope may change
+         * during a run, we then re-read the metadata
          * each time
          */
-        if (isset(p_read_metadata($this->getId())["persistent"][Page::SCOPE_KEY])) {
-            return p_read_metadata($this->getId())["persistent"][Page::SCOPE_KEY];
-        } else {
-            return null;
-        }
+        return $this->scope->getValueFromStore();
+
     }
 
     /**
@@ -1861,164 +1081,961 @@ EOF;
      * element that is added for cache debugging
      */
     public
-    function getCacheHtmlId()
+    function getCacheHtmlId(): string
     {
-        return "cache-" . str_replace(":", "-", $this->getId());
+        return "cache-" . str_replace(":", "-", $this->getPath()->getDokuwikiId());
     }
 
-    public
-    function deleteMetadatas()
+    /**
+     * @return $this
+     * @deprecated use {@link MetadataDokuWikiStore::deleteAndFlush()}
+     */
+    public function deleteMetadatasAndFlush(): Page
     {
-        $meta = [Page::CURRENT_METADATA => [], Page::PERSISTENT_METADATA => []];
-        p_save_metadata($this->getId(), $meta);
+        MetadataDokuWikiStore::getOrCreateFromResource($this)
+            ->deleteAndFlush();
         return $this;
     }
 
-    public
-    function getPageName()
+    public function getName(): ?string
     {
-        return p_get_metadata($this->getId(), self::NAME_PROPERTY, METADATA_RENDER_USING_SIMPLE_CACHE);
+
+        return $this->pageName->getValueFromStore();
 
     }
 
     public
-    function getPageNameNotEmpty()
+    function getNameOrDefault(): string
     {
-        $name = $this->getPageName();
-        if (!blank($name)) {
-            return $name;
-        } else {
-            return $this->getName();
-        }
+        return $this->pageName->getValueFromStoreOrDefault();
     }
 
     /**
      * @param $property
      */
-    private function unsetMetadata($property)
+    public
+    function unsetMetadata($property)
     {
-        $meta = p_read_metadata($this->getId());
+        $meta = p_read_metadata($this->getPath()->getDokuwikiId());
         if (isset($meta['persistent'][$property])) {
             unset($meta['persistent'][$property]);
         }
-        p_save_metadata($this->getId(), $meta);
+        p_save_metadata($this->getPath()->getDokuwikiId(), $meta);
 
     }
 
     /**
      * @return array - return the standard / generated metadata
-     * used in templating
+     * used in templating with the value or default
+     * TODO: should move in the templating class
      */
-    public function getMetadataForRendering()
+    public
+    function getMetadataForRendering(): array
     {
 
+        $metadataNames = [
+            PageH1::PROPERTY_NAME,
+            PageTitle::TITLE,
+            PageId::PROPERTY_NAME,
+            Canonical::PROPERTY_NAME,
+            PagePath::PROPERTY_NAME,
+            PageDescription::PROPERTY_NAME,
+            ResourceName::PROPERTY_NAME,
+            PageType::PROPERTY_NAME,
+            Slug::PROPERTY_NAME,
+            PageCreationDate::PROPERTY_NAME,
+            ModificationDate::PROPERTY_NAME,
+            PagePublicationDate::PROPERTY_NAME,
+            StartDate::PROPERTY_NAME,
+            EndDate::PROPERTY_NAME,
+            PageLayout::PROPERTY_NAME,
+            // Dokuwiki id is deprecated for path, no more advertised
+            DokuwikiId::DOKUWIKI_ID_ATTRIBUTE
+        ];
 
-        /**
-         * The title/h1 should never be null
-         * otherwise a template link such as [[$path|$title]] will return a link without an description
-         * and therefore will be not visible
-         * We render at least the id
-         */
-        $array[Analytics::H1] = $this->getH1NotEmpty();
-        $title = $this->getTitleNotEmpty();
-        /**
-         * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
-         * @see {@link \syntax_plugin_combo_pipeline}
-         */
-        $title = str_replace('"', "'", $title);
-        $array[Analytics::TITLE] = $title;
-        $array[Analytics::PATH] = $this->getAbsolutePath();
-        $array[Analytics::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
-        $array[Analytics::NAME] = $this->getPageNameNotEmpty();
-        $array[self::TYPE_META_PROPERTY] = $this->getType() !== null ? $this->getType() : "";
+        foreach ($metadataNames as $metadataName) {
+            $metadata = Metadata::getForName($metadataName);
+            if ($metadata === null) {
+                LogUtility::msg("The metadata ($metadata) should be defined");
+                continue;
+            }
+            /**
+             * The Value or Default is returned
+             *
+             * Because the title/h1 should never be null
+             * otherwise a template link such as [[$path|$title]] will return a link without an description
+             * and therefore will be not visible
+             *
+             * ToStoreValue to get the string format of date/boolean in the {@link PipelineUtility}
+             * If we want the native value, we need to change the pipeline
+             */
+            $value = $metadata
+                ->setResource($this)
+                ->setWriteStore(TemplateStore::class)
+                ->toStoreValueOrDefault();
+            if ($metadata->getDataType() === DataType::TEXT_TYPE_VALUE) {
 
-        /**
-         * When creating a page, the file
-         * may not be saved, causing a
-         * filemtime(): stat failed for pages/test.txt in lib\plugins\combo\ComboStrap\File.php on line 62
-         *
-         */
-        if($this->exists()) {
-            $array[Analytics::DATE_CREATED] = $this->getCreatedDateString();
-            $array[Analytics::DATE_MODIFIED] = $this->getModifiedDateString();
+                /**
+                 * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
+                 * @see {@link \syntax_plugin_combo_pipeline}
+                 */
+                $value = str_replace('"', "'", $value);
+            }
+            $array[$metadataName] = $value;
         }
-
-        $array[Publication::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
-
+        $array["url"] = $this->getCanonicalUrl();
         return $array;
 
     }
 
-    public function __toString()
+    public
+    function __toString()
     {
-        return $this->getId();
+        return $this->dokuPath->toUriString();
     }
 
-    public function setMetadata($key, $value)
-    {
-        p_set_metadata($this->getId(),
-            [
-                $key => $value
-            ]
-        );
-    }
 
-    private function getPublishedTimeAsString(): ?string
+    public
+    function getPublishedTimeAsString(): ?string
     {
         return $this->getPublishedTime() !== null ? $this->getPublishedTime()->format(Iso8601Date::getFormat()) : null;
     }
 
-    public function getEndDateAsString(): ?string
+    public
+    function getEndDateAsString(): ?string
     {
         return $this->getEndDate() !== null ? $this->getEndDate()->format(Iso8601Date::getFormat()) : null;
     }
 
-    public function getEndDate(): ?DateTime
+    public
+    function getEndDate(): ?DateTime
     {
-        $dateEndProperty = Analytics::DATE_END;
-        $persistentMetadata = $this->getPersistentMetadata($dateEndProperty);
-        if (empty($persistentMetadata)) {
-            return null;
-        }
-
-        // Ms level parsing
-        $dateTime = DateTime::createFromFormat(Iso8601Date::getFormat(), $persistentMetadata);
-        if ($dateTime === false) {
-            /**
-             * Should not happen as the data is validate in entry
-             * at the {@link \syntax_plugin_combo_frontmatter}
-             */
-            LogUtility::msg("The property $dateEndProperty of the page ($this) has a value ($persistentMetadata) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-            return null;
-        }
-        return $dateTime;
+        return $this->endDate->getValueFromStore();
     }
 
-    public function getStartDateAsString(): ?string
+    public
+    function getStartDateAsString(): ?string
     {
         return $this->getStartDate() !== null ? $this->getStartDate()->format(Iso8601Date::getFormat()) : null;
     }
 
-    public function getStartDate(): ?DateTime
+    public
+    function getStartDate(): ?DateTime
     {
-        $dateStartProperty = Analytics::DATE_START;
-        $persistentMetadata = $this->getPersistentMetadata($dateStartProperty);
-        if (empty($persistentMetadata)) {
-            return null;
-        }
-
-        // Ms level parsing
-        $dateTime = DateTime::createFromFormat(Iso8601Date::getFormat(), $persistentMetadata);
-        if ($dateTime === false) {
-            /**
-             * Should not happen as the data is validate in entry
-             * at the {@link \syntax_plugin_combo_frontmatter}
-             */
-            LogUtility::msg("The start date property $dateStartProperty of the page ($this) has a value ($persistentMetadata) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-            return null;
-        }
-        return $dateTime;
+        return $this->startDate->getValueFromStore();
     }
 
+    /**
+     * A page id or null if the page id does not exists
+     * @return string|null
+     */
+    public
+    function getPageId(): ?string
+    {
+
+        return $this->pageId->getValue();
+
+    }
+
+
+    public
+    function getAnalyticsDocument(): AnalyticsDocument
+    {
+        return new AnalyticsDocument($this);
+    }
+
+    public
+    function getDatabasePage(): DatabasePageRow
+    {
+        if ($this->databasePage == null) {
+            $this->databasePage = DatabasePageRow::createFromPageObject($this);
+        }
+        return $this->databasePage;
+    }
+
+    public
+    function canBeUpdatedByCurrentUser(): bool
+    {
+        return Identity::isWriter($this->getDokuwikiId());
+    }
+
+
+    public
+    function isRootHomePage(): bool
+    {
+        global $conf;
+        $startPageName = $conf['start'];
+        return $this->getPath()->toString() === ":$startPageName";
+
+    }
+
+    /**
+     * Used when the page is moved to take the Page Id of the source
+     * @param string|null $pageId
+     * @return Page
+     * @throws ExceptionCombo
+     */
+    public
+    function setPageId(?string $pageId): Page
+    {
+
+        $this->pageId
+            ->setValue($pageId)
+            ->sendToWriteStore();
+
+        return $this;
+
+    }
+
+    public
+    function getPageType(): ?string
+    {
+        return $this->type->getValueFromStore();
+    }
+
+    public function getCanonical(): ?string
+    {
+        return $this->canonical->getValueFromStore();
+    }
+
+    /**
+     * Create a canonical from the last page path part.
+     *
+     * @return string|null
+     */
+    public
+    function getDefaultCanonical(): ?string
+    {
+        return $this->canonical->getDefaultValue();
+    }
+
+    public
+    function getLayout()
+    {
+        return $this->layout->getValueFromStore();
+    }
+
+    public
+    function getDefaultPageName(): string
+    {
+        return $this->pageName->getDefaultValue();
+    }
+
+    public
+    function getDefaultTitle(): ?string
+    {
+        return $this->title->getDefaultValue();
+    }
+
+    public
+    function getDefaultH1()
+    {
+        return $this->h1->getValueOrDefault();
+    }
+
+    public
+    function getDefaultType(): string
+    {
+        return $this->type->getDefaultValue();
+    }
+
+    public
+    function getDefaultLayout(): string
+    {
+        return $this->layout->getDefaultValue();
+    }
+
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setLowQualityIndicatorCalculation($bool): Page
+    {
+
+        return $this->setQualityIndicatorAndDeleteCacheIfNeeded($this->lowQualityIndicatorCalculated, $bool);
+    }
+
+
+    /**
+     * Change the quality indicator
+     * and if the quality level has become low
+     * and that the protection is on, delete the cache
+     * @param MetadataBoolean $lowQualityAttributeName
+     * @param bool $value
+     * @return Page
+     * @throws ExceptionCombo
+     */
+    private
+    function setQualityIndicatorAndDeleteCacheIfNeeded(MetadataBoolean $lowQualityAttributeName, bool $value): Page
+    {
+        $actualValue = $lowQualityAttributeName->getValue();
+        if ($actualValue === null || $value !== $actualValue) {
+            $beforeLowQualityPage = $this->isLowQualityPage();
+            $lowQualityAttributeName
+                ->setValue($value)
+                ->persist();
+            $afterLowQualityPage = $this->isLowQualityPage();
+            if ($beforeLowQualityPage !== $afterLowQualityPage) {
+                /**
+                 * Delete the html document cache to rewrite the links
+                 * if the protection is on
+                 */
+                if (Site::isLowQualityProtectionEnable()) {
+                    foreach ($this->getBacklinks() as $backlink) {
+                        $backlink->getHtmlDocument()->deleteIfExists();
+                    }
+                }
+            }
+        }
+        return $this;
+    }
+
+
+    public
+    function getLowQualityIndicatorCalculated()
+    {
+
+        return $this->lowQualityIndicatorCalculated->getValueOrDefault();
+
+    }
+
+    /**
+     * @return PageImage[]
+     */
+    public
+    function getPageImages(): ?array
+    {
+        return $this->pageImages->getValueAsPageImages();
+    }
+
+
+    /**
+     * @return array|null
+     * @deprecated for {@link LdJson}
+     */
+    public
+    function getLdJson(): ?string
+    {
+        return $this->ldJson->getValue();
+
+    }
+
+    /**
+     * @param array|string $jsonLd
+     * @return $this
+     * @throws ExceptionCombo
+     * @deprecated for {@link LdJson}
+     */
+    public
+    function setJsonLd($jsonLd): Page
+    {
+        $this->ldJson
+            ->setValue($jsonLd)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public
+    function setPageType(string $value): Page
+    {
+        $this->type
+            ->setValue($value)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+
+    /**
+     * @param $aliasPath
+     * @param string $aliasType
+     * @return Alias
+     * @deprecated for {@link Aliases}
+     */
+    public
+    function addAndGetAlias($aliasPath, string $aliasType = AliasType::REDIRECT): Alias
+    {
+
+        return $this->aliases->addAndGetAlias($aliasPath, $aliasType);
+
+    }
+
+
+    /**
+     * @return Alias[]
+     */
+    public
+    function getAliases(): ?array
+    {
+        return $this->aliases->getValueAsAlias();
+    }
+
+    /**
+     * @return string|null
+     *
+     */
+    public
+    function getSlugOrDefault(): ?string
+    {
+
+        if ($this->getSlug() !== null) {
+            return $this->getSlug();
+        }
+        return $this->getDefaultSlug();
+    }
+
+    /**
+     *
+     * @return string|null
+     *
+     */
+    public function getDefaultSlug(): ?string
+    {
+        return $this->slug->getDefaultValue();
+    }
+
+    /**
+     * The parent page is the parent in the page tree directory
+     *
+     * If the page is at the root, the parent page is the root home
+     * Only the root home does not have any parent page and return null.
+     *
+     * @return Page|null
+     */
+    public
+    function getParentPage(): ?Page
+    {
+
+        $names = $this->getPath()->getNames();
+        if (sizeof($names) == 0) {
+            return null;
+        }
+        $slice = 1;
+        if ($this->isHomePage()) {
+            /**
+             * The parent of a home page
+             * is in the parent directory
+             */
+            $slice = 2;
+        }
+        /**
+         * Delete the last or the two last parts
+         */
+        if (sizeof($names) < $slice) {
+            return null;
+        }
+        /**
+         * Get the actual directory for a page
+         * or the parent directory for a home page
+         */
+        $parentNames = array_slice($names, 0, sizeof($names) - $slice);
+        /**
+         * Create the parent namespace id
+         */
+        $parentNamespaceId = implode(DokuPath::PATH_SEPARATOR, $parentNames);
+        return self::getHomePageFromNamespace($parentNamespaceId);
+
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public
+    function setDescription($description): Page
+    {
+
+        $this->description
+            ->setValue($description)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     * @deprecated uses {@link EndDate} instead
+     */
+    public
+    function setEndDate($value): Page
+    {
+        $this->endDate
+            ->setFromStoreValue($value)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     * @deprecated uses {@link StartDate} instead
+     */
+    public
+    function setStartDate($value): Page
+    {
+        $this->startDate
+            ->setFromStoreValue($value)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setPublishedDate($value): Page
+    {
+        $this->publishedDate
+            ->setFromStoreValue($value)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+    /**
+     * Utility to {@link ResourceName::setValue()}
+     * Used mostly to create page in test
+     * @throws ExceptionCombo
+     */
+    public
+    function setPageName($value): Page
+    {
+        $this->pageName
+            ->setValue($value)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public
+    function setTitle($value): Page
+    {
+        $this->title
+            ->setValue($value)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public
+    function setH1($value): Page
+    {
+        $this->h1
+            ->setValue($value)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public
+    function setRegion($value): Page
+    {
+        $this->region
+            ->setFromStoreValue($value)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public
+    function setLang($value): Page
+    {
+
+        $this->lang
+            ->setFromStoreValue($value)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public
+    function setLayout($value): Page
+    {
+        $this->layout
+            ->setValue($value)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+
+    /**
+     *
+     * We manage the properties by setter and getter
+     *
+     * Why ?
+     *   * Because we can capture the updates
+     *   * Because setter are the entry point to good quality data
+     *   * Because dokuwiki may cache the metadata (see below)
+     *
+     * Note all properties have been migrated
+     * but they should be initialized below
+     *
+     * Dokuwiki cache: the data may be cached without our consent
+     * The method {@link p_get_metadata()} does it with this logic
+     * ```
+     * $cache = ($ID == $id);
+     * $meta = p_read_metadata($id, $cache);
+     * ```
+     */
+    private
+    function buildPropertiesFromFileSystem()
+    {
+
+        /**
+         * New meta system
+         * Even if it does not exist, the metadata object should be instantiated
+         * otherwise, there is a null exception
+         */
+        $this->cacheExpirationDate = CacheExpirationDate::createForPage($this);
+        $this->aliases = Aliases::createForPage($this);
+        $this->pageImages = PageImages::createForPage($this);
+        $this->pageName = ResourceName::createForResource($this);
+        $this->cacheExpirationFrequency = CacheExpirationFrequency::createForPage($this);
+        $this->ldJson = LdJson::createForPage($this);
+        $this->canonical = Canonical::createForPage($this);
+        $this->pageId = PageId::createForPage($this);
+        $this->description = PageDescription::createForPage($this);
+        $this->h1 = PageH1::createForPage($this);
+        $this->type = PageType::createForPage($this);
+        $this->creationTime = PageCreationDate::createForPage($this);
+        $this->title = PageTitle::createForPage($this);
+        $this->keywords = PageKeywords::createForPage($this);
+        $this->publishedDate = PagePublicationDate::createFromPage($this);
+        $this->startDate = StartDate::createFromPage($this);
+        $this->endDate = EndDate::createFromPage($this);
+        $this->locale = Locale::createForPage($this);
+        $this->lang = Lang::createForPage($this);
+        $this->region = Region::createForPage($this);
+        $this->slug = Slug::createForPage($this);
+        $this->canBeOfLowQuality = LowQualityPageOverwrite::createForPage($this);
+        $this->lowQualityIndicatorCalculated = LowQualityCalculatedIndicator::createFromPage($this);
+        $this->qualityMonitoringIndicator = QualityDynamicMonitoringOverwrite::createFromPage($this);
+        $this->modifiedTime = ModificationDate::createForPage($this);
+        $this->pageUrlPath = PageUrlPath::createForPage($this);
+        $this->layout = PageLayout::createFromPage($this);
+        $this->scope = PageScope::createFromPage($this);
+
+    }
+
+
+    function getPageIdAbbr()
+    {
+
+        if ($this->getPageId() === null) return null;
+        return substr($this->getPageId(), 0, PageId::PAGE_ID_ABBREV_LENGTH);
+
+    }
+
+    public
+    function setDatabasePage(DatabasePageRow $databasePage): Page
+    {
+        $this->databasePage = $databasePage;
+        return $this;
+    }
+
+    /**
+     *
+     * TODO: Move to {@link HtmlDocument} ?
+     */
+    public
+    function getUrlPath(): string
+    {
+
+        return $this->pageUrlPath->getValueOrDefault();
+
+    }
+
+
+    /**
+     * @return string|null
+     *
+     */
+    public function getSlug(): ?string
+    {
+        return $this->slug->getValue();
+    }
+
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public
+    function setSlug($slug): Page
+    {
+        $this->slug
+            ->setFromStoreValue($slug)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+
+    public
+    function getUrlId()
+    {
+        return DokuPath::toDokuwikiId($this->getUrlPath());
+    }
+
+
+    /**
+     * @param string $scope {@link PageScope::SCOPE_CURRENT_VALUE} or a namespace...
+     * @throws ExceptionCombo
+     */
+    public
+    function setScope(string $scope): Page
+    {
+        $this->scope
+            ->setFromStoreValue($scope)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setQualityMonitoringIndicator($boolean): Page
+    {
+        $this->qualityMonitoringIndicator
+            ->setFromStoreValue($boolean)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+    /**
+     *
+     * @param $aliasPath - third information - the alias used to build this page
+     */
+    public function setBuildAliasPath($aliasPath)
+    {
+        $this->buildAliasPath = $aliasPath;
+    }
+
+    public function getBuildAlias(): ?Alias
+    {
+        if ($this->buildAliasPath === null) return null;
+        foreach ($this->getAliases() as $alias) {
+            if ($alias->getPath() === $this->buildAliasPath) {
+                return $alias;
+            }
+        }
+        return null;
+    }
+
+    public function isDynamicQualityMonitored(): bool
+    {
+        if ($this->getQualityMonitoringIndicator() !== null) {
+            return $this->getQualityMonitoringIndicator();
+        }
+        return $this->getDefaultQualityMonitoring();
+    }
+
+    public function getDefaultQualityMonitoring(): bool
+    {
+        if (PluginUtility::getConfValue(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING) === 1) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * @param MetadataStore|string $store
+     * @return $this
+     */
+    public function setReadStore($store): Page
+    {
+        $this->readStore = $store;
+        return $this;
+    }
+
+
+    /**
+     * @param array $usages
+     * @return Image[]
+     */
+    public function getImagesOrDefaultForTheFollowingUsages(array $usages): array
+    {
+        $usages = array_merge($usages, [PageImageUsage::ALL]);
+        $images = [];
+        foreach ($this->getPageImagesOrDefault() as $pageImage) {
+            foreach ($usages as $usage) {
+                if (in_array($usage, $pageImage->getUsages())) {
+                    $images[] = $pageImage->getImage();
+                    continue 2;
+                }
+            }
+        }
+        return $images;
+
+    }
+
+
+    public function getKeywords(): ?array
+    {
+        return $this->keywords->getValues();
+    }
+
+    public function getKeywordsOrDefault(): array
+    {
+        return $this->keywords->getValueOrDefaults();
+    }
+
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setKeywords($value): Page
+    {
+        $this->keywords
+            ->setFromStoreValue($value)
+            ->sendToWriteStore();
+        return $this;
+    }
+
+    /**
+     * @return DateTime|null
+     * @deprecated for {@link CacheExpirationDate}
+     */
+    public function getCacheExpirationDate(): ?DateTime
+    {
+        return $this->cacheExpirationDate->getValue();
+    }
+
+    /**
+     * @return DateTime|null
+     * @deprecated for {@link CacheExpirationDate}
+     */
+    public function getDefaultCacheExpirationDate(): ?DateTime
+    {
+        return $this->cacheExpirationDate->getDefaultValue();
+    }
+
+    /**
+     * @return string|null
+     * @deprecated for {@link CacheExpirationFrequency}
+     */
+    public function getCacheExpirationFrequency(): ?string
+    {
+        return $this->cacheExpirationFrequency->getValue();
+    }
+
+
+    /**
+     * @param DateTime $cacheExpirationDate
+     * @return $this
+     * @throws ExceptionCombo
+     * @deprecated for {@link CacheExpirationDate}
+     */
+    public function setCacheExpirationDate(DateTime $cacheExpirationDate): Page
+    {
+        $this->cacheExpirationDate->setValue($cacheExpirationDate);
+        return $this;
+    }
+
+    /**
+     * @return bool - true if the page has changed
+     * @deprecated use {@link Page::getInstructionsDocument()} instead
+     */
+    public function isParseCacheUsable(): bool
+    {
+        return $this->getInstructionsDocument()->shouldProcess() === false;
+    }
+
+    /**
+     * @return $this
+     * @deprecated use {@link Page::getInstructionsDocument()} instead
+     * Parse a page and put the instructions in the cache
+     */
+    public function parse(): Page
+    {
+
+        $this->getInstructionsDocument()
+            ->process();
+
+        return $this;
+
+    }
+
+    public function getInstructionsDocument(): InstructionsDocument
+    {
+        if ($this->instructionsDocument === null) {
+            $this->instructionsDocument = new InstructionsDocument($this);
+        }
+        return $this->instructionsDocument;
+
+    }
+
+    public function delete()
+    {
+
+        Index::getOrCreate()->deletePage($this);
+        saveWikiText($this->getDokuwikiId(), "", "Delete");
+
+    }
+
+    /**
+     * @return string|null -the absolute canonical url
+     */
+    public function getAbsoluteCanonicalUrl(): ?string
+    {
+        return $this->getCanonicalUrl([], true);
+    }
+
+
+    public function getReadStoreOrDefault(): MetadataStore
+    {
+        if ($this->readStore === null) {
+            $this->readStore = MetadataDokuWikiStore::getOrCreateFromResource($this);
+        }
+        if (!($this->readStore instanceof MetadataStore)) {
+            $this->readStore = MetadataStoreAbs::toMetadataStore($this->readStore, $this);
+        }
+        return $this->readStore;
+    }
+
+    /**
+     * @return DokuPath
+     */
+    public function getPath(): Path
+    {
+        return $this->dokuPath;
+    }
+
+
+    /**
+     * A shortcut for {@link Page::getPath()::getDokuwikiId()}
+     */
+    public function getDokuwikiId()
+    {
+        return $this->getPath()->getDokuwikiId();
+    }
+
+    public function getUid(): Metadata
+    {
+        return $this->pageId;
+    }
+
+
+    public function getAbsolutePath(): string
+    {
+        return DokuPath::PATH_SEPARATOR . $this->getDokuwikiId();
+    }
+
+    function getType(): string
+    {
+        return self::TYPE;
+    }
+
+    public function getUrlPathObject(): PageUrlPath
+    {
+        return $this->pageUrlPath;
+    }
 
 }

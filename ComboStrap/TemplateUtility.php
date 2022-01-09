@@ -23,7 +23,7 @@ class TemplateUtility
 
     const VARIABLE_PREFIX = "$";
 
-    static function renderStringTemplateForPageId($pageTemplate, $pageId)
+    static function renderStringTemplateForPageId($pageTemplate, $pageId): string
     {
 
 
@@ -34,20 +34,6 @@ class TemplateUtility
 
     }
 
-    /**
-     * @param $pageId
-     * @return array|mixed|null
-     * @deprecated 2021-07-02 see {@link Page::getH1()}
-     */
-    public static function getPageH1($pageId)
-    {
-        $h1 = p_get_metadata(cleanID($pageId), Analytics::H1, METADATA_DONT_RENDER);
-        if (empty($h1)) {
-            return self::getPageTitle($pageId);
-        } else {
-            return $h1;
-        }
-    }
 
     /**
      * This function is used on a lot of place
@@ -164,24 +150,10 @@ class TemplateUtility
 
     }
 
-    public static function getMetadataDataFromPage(Page $page)
+    public static function getMetadataDataFromPage(Page $page): array
     {
 
-        $array = $page->getMetadataForRendering();
-        /**
-         * @deprecated for path
-         */
-        $array["id"] = $page->getId();
-
-        /**
-         * Override / add the user variable
-         */
-        foreach ($page->getPersistentMetadatas() as $metaKey => $metaValue) {
-
-            $array[$metaKey] = $metaValue;
-
-        }
-        return $array;
+        return $page->getMetadataForRendering();
 
     }
 

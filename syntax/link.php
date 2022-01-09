@@ -1,17 +1,13 @@
 <?php
 
 
-require_once(__DIR__ . "/../ComboStrap/Analytics.php");
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
-require_once(__DIR__ . "/../ComboStrap/LinkUtility.php");
-require_once(__DIR__ . "/../ComboStrap/XhtmlUtility.php");
 
 use ComboStrap\CallStack;
 use ComboStrap\LinkUtility;
-use ComboStrap\ThirdPartyPlugins;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
+use ComboStrap\ThirdPartyPlugins;
 
 if (!defined('DOKU_INC')) die();
 
@@ -226,7 +222,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 /**
                  * Delete the separator `|` between the ref and the description if any
                  */
-                $tag = CallStack::createFromHandler( $handler);
+                $tag = CallStack::createFromHandler($handler);
                 $parent = $tag->moveToParent();
                 if ($parent->getTagName() == self::TAG) {
                     if (strpos($match, '|') === 0) {
@@ -279,7 +275,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         // The data
         switch ($format) {
@@ -302,7 +298,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     case DOKU_LEXER_ENTER:
                         $tagAttributes = TagAttributes::createFromCallStackArray($callStackAttributes, self::TAG);
                         $ref = $tagAttributes->getValueAndRemove(LinkUtility::ATTRIBUTE_REF);
-                        $link = new LinkUtility($ref, $tagAttributes);
+                        $link = LinkUtility::createFromRef($ref, $tagAttributes);
 
                         /**
                          * Extra styling

@@ -33,6 +33,7 @@ class RasterImageLink extends ImageLink
 
     const CANONICAL = ImageRaster::CANONICAL;
     const CONF_LAZY_LOADING_ENABLE = "rasterImageLazyLoadingEnable";
+    const CONF_LAZY_LOADING_ENABLE_DEFAULT = 1;
 
     const RESPONSIVE_CLASS = "img-fluid";
 
@@ -52,7 +53,6 @@ class RasterImageLink extends ImageLink
     /**
      * RasterImageLink constructor.
      * @param ImageRaster $imageRaster
-     * @param TagAttributes $tagAttributes
      */
     public function __construct($imageRaster)
     {
@@ -70,7 +70,9 @@ class RasterImageLink extends ImageLink
      */
     public function renderMediaTag(): string
     {
-
+        /**
+         * @var ImageRaster $image
+         */
         $image = $this->getDefaultImage();
         if ($image->exists()) {
 
@@ -184,7 +186,7 @@ class RasterImageLink extends ImageLink
                             $sizes .= ", ";
                         }
                         $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
-                        $xsmUrl = $image->getUrl(DokuwikiUrl::URL_ENCODED_AND, $breakpointWidthMinusMargin);
+                        $xsmUrl = $image->getUrlForSrcSetAtBreakpoint($breakpointWidthMinusMargin);
                         $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
                         $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
 
@@ -199,7 +201,7 @@ class RasterImageLink extends ImageLink
                 if (!empty($srcSet)) {
                     $srcSet .= ", ";
                     $sizes .= ", ";
-                    $srcUrl = $image->getUrl(DokuwikiUrl::URL_ENCODED_AND, $targetWidth);
+                    $srcUrl = $image->getUrlForSrcSetAtBreakpoint($targetWidth);
                     $srcSet .= "$srcUrl {$targetWidth}w";
                     $sizes .= "{$targetWidth}px";
                 }
@@ -248,6 +250,7 @@ class RasterImageLink extends ImageLink
                          * Small image but there is no little improvement
                          */
                         $attributes->addHtmlAttributeValue("data-src", $srcValue);
+                        $attributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
 
                     }
 
@@ -293,6 +296,12 @@ class RasterImageLink extends ImageLink
             $attributes->removeAttributeIfPresent(TagAttributes::TITLE_KEY);
 
             /**
+             * Old model where the src is parsed and the path
+             * is in the attributes
+             */
+            $attributes->removeAttributeIfPresent(PagePath::PROPERTY_NAME);
+
+            /**
              * Create the img element
              */
             $htmlAttributes = $attributes->toHTMLAttributeString();
@@ -315,7 +324,7 @@ class RasterImageLink extends ImageLink
         if ($lazyLoad !== null) {
             return $lazyLoad;
         } else {
-            return PluginUtility::getConfValue(RasterImageLink::CONF_LAZY_LOADING_ENABLE);
+            return PluginUtility::getConfValue(RasterImageLink::CONF_LAZY_LOADING_ENABLE, RasterImageLink::CONF_LAZY_LOADING_ENABLE_DEFAULT);
         }
     }
 

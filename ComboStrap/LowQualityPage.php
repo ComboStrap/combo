@@ -33,6 +33,8 @@ class LowQualityPage
 
     const CONF_LOW_QUALITY_PAGE_LINK_TYPE = "lowQualityPageLinkType";
     const CLASS_NAME = "low-quality-page";
+    public const LOW_QUALITY_PAGE_CANONICAL = "low_quality_page";
+    public const LQPP_CANONICAL = "lqpp";
 
     public static function getLowQualityProtectionMode()
     {

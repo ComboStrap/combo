@@ -37,6 +37,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
 
     // Conf property key
     const MAX_LINKS_CONF = 'maxLinks';
+    const MAX_LINKS_CONF_DEFAULT = 10;
     // For when you come from another plugin (such as backlinks) and that you don't want to change the pattern on each page
     const EXTRA_PATTERN_CONF = 'extra_pattern';
 
@@ -48,6 +49,59 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
     // The array key of an array of related page
     const RELATED_PAGE_ID_PROP = 'id';
     const RELATED_BACKLINKS_COUNT_PROP = 'backlinks';
+
+
+    /**
+     * @param Page $page
+     * @param int|null $max
+     * @param null $renderer
+     * @return string
+     */
+    public static function getHtmlRelated(Page $page, ?int $max = null, $renderer = null): string
+    {
+        global $lang;
+
+        $tagAttributes = TagAttributes::createEmpty(self::getTag());
+        $tagAttributes->addClassName("d-print-none");
+        $html = $tagAttributes->toHtmlEnterTag("div");
+
+        $relatedPages = self::getRelatedPagesOrderedByBacklinkCount($page, $max);
+        if (empty($relatedPages)) {
+
+            $html .= "<strong>Plugin " . PluginUtility::PLUGIN_BASE_NAME . " - Component " . self::getTag() . ": " . $lang['nothingfound'] . "</strong>" . DOKU_LF;
+
+        } else {
+
+            // Dokuwiki debug
+
+            $html .= '<ul>' . DOKU_LF;
+
+            foreach ($relatedPages as $backlink) {
+                $backlinkId = $backlink[self::RELATED_PAGE_ID_PROP];
+                $html .= '<li>';
+                if ($backlinkId != self::MORE_PAGE_ID) {
+                    $linkUtility = LinkUtility::createFromPageId($backlinkId);
+                    $html .= $linkUtility->renderOpenTag($renderer);
+                    $html .= ucfirst($linkUtility->getName());
+                    $html .= $linkUtility->renderClosingTag();
+                } else {
+                    $html .=
+                        tpl_link(
+                            wl($page->getDokuwikiId()) . '?do=backlink',
+                            "More ...",
+                            'class="" rel="nofollow" title="More..."',
+                            true
+                        );
+                }
+                $html .= '</li>' . DOKU_LF;
+            }
+
+            $html .= '</ul>' . DOKU_LF;
+
+        }
+
+        return $html . '</div>' . DOKU_LF;
+    }
 
 
     /**
@@ -86,7 +140,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
         // The basic
-        $this->Lexer->addSpecialPattern('<' . self::getTag() . '[^>]*>', $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
+        $this->Lexer->addSpecialPattern(PluginUtility::getVoidElementTagPattern(self::getTag()), $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
 
         // To replace backlinks, you may add it in the configuration
         $extraPattern = $this->getConf(self::EXTRA_PATTERN_CONF);
@@ -119,22 +173,17 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
             // but I leave it for better understanding of the process flow
             case DOKU_LEXER_SPECIAL :
 
-                // Parse the parameters
-                $match = substr($match, strlen(self::getTag()), -1);
-                $parameters = array();
-
-                // /i not case sensitive
-                $attributePattern = "\\s*(\w+)\\s*=\\s*[\'\"]{1}([^\`\"]*)[\'\"]{1}\\s*";
-                $result = preg_match_all('/' . $attributePattern . '/i', $match, $matches);
-                if ($result != 0) {
-                    foreach ($matches[1] as $key => $parameterKey) {
-                        $parameter = strtolower($parameterKey);
-                        $value = $matches[2][$key];
-                        $parameters[$parameter] = $value;
-                    }
+                $qualifiedMach = trim($match);
+                $attributes = [];
+                if ($qualifiedMach[0] === "<") {
+                    // not an extra pattern
+                    $tagAttributes = TagAttributes::createFromTagMatch($match);
+                    $attributes = $tagAttributes->toCallStackArray();
                 }
-                // Cache the values
-                return array($state, $parameters);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $attributes
+                );
 
         }
 
@@ -154,87 +203,35 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
      */
     function render($format, Doku_Renderer $renderer, $data)
     {
-        global $lang;
-        global $INFO;
-        global $ID;
 
-        $id = $ID;
-        // If it's a sidebar, get the original id.
-        if (isset($INFO)) {
-            $id = $INFO['id'];
-        }
 
         if ($format == 'xhtml') {
 
-            $relatedPages = $this->related($id);
-            $tagAttributes = TagAttributes::createEmpty(self::getTag());
-            $tagAttributes->addClassName("d-print-none");
-            $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
-
-            if (empty($relatedPages)) {
-
-                // Dokuwiki debug
-                dbglog("No Backlinks", "Related plugins: all backlinks for page: $id");
-                $renderer->doc .= "<strong>Plugin " . PluginUtility::PLUGIN_BASE_NAME . " - Component " . self::getTag() . ": " . $lang['nothingfound'] . "</strong>" . DOKU_LF;
-
-            } else {
-
-                // Dokuwiki debug
-
-                $renderer->doc .= '<ul>' . DOKU_LF;
-
-                foreach ($relatedPages as $backlink) {
-                    $backlinkId = $backlink[self::RELATED_PAGE_ID_PROP];
-                    $renderer->doc .= '<li>';
-                    if ($backlinkId != self::MORE_PAGE_ID) {
-                        $linkUtility = LinkUtility::createFromPageId($backlinkId);
-                        $renderer->doc .= $linkUtility->renderOpenTag($renderer);
-                        $renderer->doc .= ucfirst($linkUtility->getName());
-                        $renderer->doc .= $linkUtility->renderClosingTag();
-                    } else {
-                        $renderer->doc .=
-                            tpl_link(
-                                wl($id) . '?do=backlink',
-                                "More ...",
-                                'class="" rel="nofollow" title="More..."',
-                                $return = true
-                            );
-                    }
-                    $renderer->doc .= '</li>' . DOKU_LF;
-                }
-
-                $renderer->doc .= '</ul>' . DOKU_LF;
-
+            $page = Page::createPageFromRequestedPage();
+            $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+            $max = $tagAttributes->getValue(self::MAX_LINKS_CONF);
+            if ($max === NULL) {
+                $max = PluginUtility::getConfValue(self::MAX_LINKS_CONF, self::MAX_LINKS_CONF_DEFAULT);
             }
-
-            $renderer->doc .= '</div>' . DOKU_LF;
-
+            $renderer->doc .= self::getHtmlRelated($page, $max, $renderer);
             return true;
         }
         return false;
     }
 
     /**
-     * @param $id
-     * @param $max
+     * @param Page $page
+     * @param int|null $max
      * @return array
      */
-    public function related($id, $max = NULL): array
+    public static function getRelatedPagesOrderedByBacklinkCount(Page $page, ?int $max = null): array
     {
-        if ($max == NULL) {
-            $max = $this->getConf(self::MAX_LINKS_CONF);
-        }
+
         // Call the dokuwiki backlinks function
         // @require_once(DOKU_INC . 'inc/fulltext.php');
         // Backlinks called the indexer, for more info
         // See: https://www.dokuwiki.org/devel:metadata#metadata_index
-        $backlinks = ft_backlinks($id, $ignore_perms = false);
-
-        // To minimize the pressure on the index
-        // as we asks then the backlinks of the backlinks on the next step
-        if (sizeof($backlinks) > 50) {
-            $backlinks = array_slice($backlinks, 0, 50);
-        }
+        $backlinks = ft_backlinks($page->getDokuwikiId(), $ignore_perms = false);
 
         $related = array();
         foreach ($backlinks as $backlink) {
@@ -248,11 +245,13 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
             return $b[self::RELATED_BACKLINKS_COUNT_PROP] - $a[self::RELATED_BACKLINKS_COUNT_PROP];
         });
 
-        if (sizeof($related) > $max) {
-            $related = array_slice($related, 0, $max);
-            $page = array();
-            $page[self::RELATED_PAGE_ID_PROP] = self::MORE_PAGE_ID;
-            $related[] = $page;
+        if ($max !== null) {
+            if (sizeof($related) > $max) {
+                $related = array_slice($related, 0, $max);
+                $page = array();
+                $page[self::RELATED_PAGE_ID_PROP] = self::MORE_PAGE_ID;
+                $related[] = $page;
+            }
         }
 
         return $related;

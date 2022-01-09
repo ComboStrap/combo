@@ -132,22 +132,25 @@ class Call
      * Insert a tag above
      * @param $tagName
      * @param $state
-     * @param $attribute
-     * @param $context
-     * @param string $content
+     * @param array $attribute
+     * @param string|null $context
+     * @param string $content - the parsed content
+     * @param string|null $payload - the payload after handler
+     * @param int|null $position
      * @return Call - a call
      */
-    public static function createComboCall($tagName, $state, $attribute = array(), $context = null, $content = '', $payload = null)
+    public static function createComboCall($tagName, $state, array $attribute = array(), string $context = null, string $content = null, string $payload = null, int $position= null): Call
     {
         $data = array(
             PluginUtility::ATTRIBUTES => $attribute,
             PluginUtility::CONTEXT => $context,
-            PluginUtility::STATE => $state
+            PluginUtility::STATE => $state,
+            PluginUtility::POSITION => $position
         );
         if ($payload != null) {
             $data[PluginUtility::PAYLOAD] = $payload;
         }
-        $positionInText = null;
+        $positionInText = $position;
 
         $call = [
             "plugin",
@@ -244,7 +247,7 @@ class Call
                 }
             } else {
                 // To resolve: explode() expects parameter 2 to be string, array given
-                LogUtility::msg("The call (" . print_r($this->call, true) . ") has an array and not a string as component (" . print_r($component, true) . "). Page: " . PluginUtility::getPageId(), LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("The call (" . print_r($this->call, true) . ") has an array and not a string as component (" . print_r($component, true) . "). Page: " . Page::createPageFromRequestedPage(), LogUtility::LVL_MSG_ERROR);
                 $tagName = "";
             }
 

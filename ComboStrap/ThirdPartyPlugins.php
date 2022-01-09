@@ -17,13 +17,14 @@ class ThirdPartyPlugins
      * It takes over standard dokuwiki links and media
      * We then don't take over
      */
-     const IMAGE_MAPPING_NAME = "imagemapping";
+    const IMAGE_MAPPING_NAME = "imagemapping";
 
     /**
      * Move Plugin
      */
     const MOVE_NAME = "move";
     const SQLITE_NAME = "sqlite";
+    const GOOGLE_ANALYTICS = "googleanalytics";
 
 
 }

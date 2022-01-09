@@ -1,12 +1,17 @@
 <?php
 
 
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
+use ComboStrap\DokuFs;
 use ComboStrap\DokuPath;
 use ComboStrap\Image;
+use ComboStrap\InternetPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\Metadata;
+use ComboStrap\PagePath;
+use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\ThirdPartyPlugins;
 
@@ -64,17 +69,17 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     public static function updateStatistics($attributes, renderer_plugin_combo_analytics $renderer)
     {
         $media = MediaLink::createFromCallStackArray($attributes);
-        $renderer->stats[Analytics::MEDIA_COUNT]++;
-        $scheme = $media->getDefaultImage()->getScheme();
+        $renderer->stats[AnalyticsDocument::MEDIA_COUNT]++;
+        $scheme = $media->getMedia()->getPath()->getScheme();
         switch ($scheme) {
-            case DokuPath::LOCAL_SCHEME:
-                $renderer->stats[Analytics::INTERNAL_MEDIA_COUNT]++;
-                if (!$media->getDefaultImage()->exists()) {
-                    $renderer->stats[Analytics::INTERNAL_BROKEN_MEDIA_COUNT]++;
+            case DokuFs::SCHEME:
+                $renderer->stats[AnalyticsDocument::INTERNAL_MEDIA_COUNT]++;
+                if (!$media->getMedia()->exists()) {
+                    $renderer->stats[AnalyticsDocument::INTERNAL_BROKEN_MEDIA_COUNT]++;
                 }
                 break;
-            case DokuPath::INTERNET_SCHEME:
-                $renderer->stats[Analytics::EXTERNAL_MEDIA_COUNT]++;
+            case InternetPath::scheme:
+                $renderer->stats[AnalyticsDocument::EXTERNAL_MEDIA_COUNT]++;
                 break;
         }
     }
@@ -201,11 +206,10 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
                 /** @var Doku_Renderer_xhtml $renderer */
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                $mediaLink = MediaLink::createFromCallStackArray($attributes);
+                $mediaLink = MediaLink::createFromCallStackArray($attributes,$renderer->date_at);
                 $media = $mediaLink->getMedia();
-                if ($media->getScheme() == DokuPath::LOCAL_SCHEME) {
-                    $mediaLink = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
-                    if ($media->isImage() || $media->getExtension() === "svg") {
+                if ($media->getPath()->getScheme() == DokuFs::SCHEME) {
+                    if ($media->getPath()->getMime()->isImage() || $media->getPath()->getExtension() === "svg") {
                         try {
                             $renderer->doc .= $mediaLink->renderMediaTagWithLink();
                         } catch (RuntimeException $e) {
@@ -278,7 +282,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
     /**
      * Update the index for the move plugin
-     * and {@link Page::FIRST_IMAGE_META_RELATION}
+     * and {@link Metadata::FIRST_IMAGE_META_RELATION}
      *
      * @param array $attributes
      * @param Doku_Renderer_metadata $renderer
@@ -288,7 +292,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         $type = $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE];
         $src = $attributes['src'];
         if ($src == null) {
-            $src = $attributes[DokuPath::PATH_ATTRIBUTE];
+            $src = $attributes[PagePath::PROPERTY_NAME];
         }
         $title = $attributes['title'];
         $align = $attributes['align'];

@@ -26,12 +26,12 @@ class Resources
 
     public static function getImagesDirectory()
     {
-        return self::getAbsoluteResourcesDirectory() . '/' . self::IMAGES_DIRECTORY_NAME;
+        return self::getAbsoluteResourcesDirectory() . DokuPath::DIRECTORY_SEPARATOR . self::IMAGES_DIRECTORY_NAME;
     }
 
     public static function getSnippetResourceDirectory()
     {
-        return self::getAbsoluteResourcesDirectory() . "/snippet";
+        return self::getAbsoluteResourcesDirectory() . DokuPath::DIRECTORY_SEPARATOR . "snippet";
     }
 
     public static function getAbsoluteResourcesDirectory()
@@ -45,17 +45,17 @@ class Resources
      */
     public static function getRelativeImagesDirectory()
     {
-        return self::getRelativeResourceDirectory() . '/' . self::IMAGES_DIRECTORY_NAME;
+        return self::getRelativeResourceDirectory() . DokuPath::DIRECTORY_SEPARATOR . self::IMAGES_DIRECTORY_NAME;
     }
 
     private static function getRelativeResourceDirectory()
     {
-        return PluginUtility::PLUGIN_BASE_NAME . "/" . self::RESOURCES_DIRECTORY_NAME;
+        return PluginUtility::PLUGIN_BASE_NAME . DokuPath::DIRECTORY_SEPARATOR . self::RESOURCES_DIRECTORY_NAME;
     }
 
     public static function getConfResourceDirectory()
     {
-        return self::getAbsoluteResourcesDirectory() . "/conf";
+        return self::getAbsoluteResourcesDirectory() . DokuPath::DIRECTORY_SEPARATOR . "conf";
     }
 
     public static function getComboHome()

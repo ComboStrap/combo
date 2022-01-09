@@ -1,13 +1,13 @@
 <?php
 
 
-use ComboStrap\Background;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PageScope;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;
@@ -183,7 +183,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
 
                 $type = $tagAttributes->getType();
-                $renderedPage = Page::createPageFromCurrentId();
+                $renderedPage = Page::createPageFromGlobalDokuwikiId();
 
                 /**
                  * nameSpacePath determination
@@ -191,18 +191,33 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 if (!$tagAttributes->hasComponentAttribute(self::ATTR_NAMESPACE)) {
                     switch ($type) {
                         case self::LIST_TYPE:
-                            $requestedPage = Page::createRequestedPageFromEnvironment();
-                            $namespacePath = $requestedPage->getNamespacePath();
-                            $scope = Page::SCOPE_CURRENT_VALUE;
+                            $requestedPage = Page::createPageFromRequestedPage();
+                            $parent = $requestedPage->getPath()->getParent();
+                            if($parent!==null){
+                                $namespacePath = $parent->toString();
+                            } else {
+                                $namespacePath = "";
+                            }
+                            $scope = PageScope::SCOPE_CURRENT_VALUE;
                             break;
                         case self::TYPE_TREE:
-                            $namespacePath = $renderedPage->getNamespacePath();
+                            $parent = $renderedPage->getPath()->getParent();
+                            if($parent!==null){
+                                $namespacePath = $parent->toString();
+                            } else {
+                                $namespacePath = "";
+                            }
                             $scope = $namespacePath;
                             break;
                         default:
                             // Should never happens but yeah
                             LogUtility::msg("The type of the page explorer ($type) is unknown");
-                            $namespacePath = $renderedPage->getNamespacePath();
+                            $parent = $renderedPage->getPath()->getParent();
+                            if($parent!==null){
+                                $namespacePath = $parent->toString();
+                            } else {
+                                $namespacePath = "";
+                            }
                             $scope = $namespacePath;
                             break;
                     }
@@ -220,14 +235,14 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  *
                  */
                 if ($renderedPage->isStrapSideSlot()) {
-                    p_set_metadata($renderedPage->getId(), [Page::SCOPE_KEY => $scope]);
+                    $renderedPage->setScope( $scope);
                 }
 
                 /**
                  * Set the wiki-id of the namespace
                  * (Needed by javascript)
                  */
-                $namespaceId = DokuPath::absolutePathToId($namespacePath);
+                $namespaceId = DokuPath::toDokuwikiId($namespacePath);
                 if ($namespaceId == "") {
                     // root namespace id is the empty string
                     $tagAttributes->addEmptyComponentAttributeValue(TagAttributes::WIKI_ID);
@@ -826,9 +841,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @param string $nameSpacePath
      * @param array $namespaceTemplateInstructions
      * @param array $pageTemplateInstructions
+     * @param array $homeTemplateInstructions
      */
     public
-    function treeProcessSubNamespace(&$callStack, $nameSpacePath, $namespaceTemplateInstructions = [], $pageTemplateInstructions = [], $homeTemplateInstructions = [])
+    function treeProcessSubNamespace(CallStack &$callStack, string $nameSpacePath, $namespaceTemplateInstructions = [], $pageTemplateInstructions = [], $homeTemplateInstructions = [])
     {
 
 
@@ -884,7 +900,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         }
 
         /**
-         * The the subdirectories
+         * The subdirectories
          */
         foreach ($childDirectoryIds as $childDirectoryId) {
             $childDirectoryPath = DokuPath::IdToAbsolutePath($childDirectoryId);

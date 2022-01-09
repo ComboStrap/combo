@@ -11,12 +11,12 @@ use ComboStrap\Page;
  * @license  GPL 3 (https://www.gnu.org/licenses/gpl-3.0.en.html)
  * @author   ComboStrap <support@combostrap.com>
  *
+ *
+ * @deprecated - the frontmatter is no more used to enter metadata.
  */
-
 class action_plugin_combo_autofrontmatter extends DokuWiki_Action_Plugin
 {
 
-    const CONF_AUTOFRONTMATTER_ENABLE = "autoFrontMatterEnable";
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -25,15 +25,15 @@ class action_plugin_combo_autofrontmatter extends DokuWiki_Action_Plugin
          * In order to set its content
          * https://www.dokuwiki.org/devel:event:common_pagetpl_load
          */
-        if ($this->getConf(self::CONF_AUTOFRONTMATTER_ENABLE)) {
+        if (false) {
             $controller->register_hook('COMMON_PAGETPL_LOAD', 'BEFORE', $this, 'handle_new_page', array());
         }
     }
 
     public function handle_new_page(Doku_Event $event, $param){
 
-        $page = Page::createPageFromCurrentId();
-        $canonical = $page->getCanonical();
+        $page = Page::createPageFromGlobalDokuwikiId();
+        $canonical = $page->getCanonicalOrDefault();
         $event->data["tpl"] = <<<EOF
 ---json
 {

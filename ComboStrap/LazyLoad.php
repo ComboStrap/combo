@@ -190,7 +190,6 @@ class LazyLoad
      * When lazy loading, we set the srcset to a transparent image to not download the image in the src
      *
      */
-
     public static function getPlaceholder($imgTagWidth = null, $imgTagHeight = null): string
     {
         if ($imgTagWidth != null) {

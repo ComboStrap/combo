@@ -45,7 +45,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         return self::RECENT_PAGES_VISITED;
     }
 
-    public function getLinkAttributes($classprefix = 'menuitem ')
+    public function getLinkAttributes($classprefix = 'menuitem '): array
     {
 
         $linkAttributes = parent::getLinkAttributes($classprefix);
@@ -57,7 +57,12 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         $linkAttributes["data{$dataAttributeNamespace}-title"] = $lang['breadcrumb'];
 
 
-        $pages = array_reverse(breadcrumbs());
+        $pages = breadcrumbs();
+        if (sizeof($pages) === 0) {
+            // happens when there is no history
+            return $linkAttributes;
+        }
+        $pages = array_reverse($pages);
 
         /**
          * All page should be shown,
@@ -67,18 +72,20 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
          */
         $actualPageId = array_keys($pages)[0];
         $actualPageName = array_shift($pages);
-        $html = $this->createLink($actualPageId,$actualPageName, self::HISTORICAL_BREADCRUMB_NAME ."-home");
+        $html = $this->createLink($actualPageId, $actualPageName, self::HISTORICAL_BREADCRUMB_NAME . "-home");
 
         $html .= '<ol>' . PHP_EOL;
         foreach ($pages as $id => $name) {
 
             $html .= '<li>';
-            $html .= $this->createLink($id,$name);
+            $html .= $this->createLink($id, $name);
             $html .= '</li>' . PHP_EOL;
 
         }
         $html .= '</ol>' . PHP_EOL;
         $html .= '</nav>' . PHP_EOL;
+
+
         $linkAttributes["data{$dataAttributeNamespace}-content"] = $html;
 
         // Dismiss on next click
@@ -114,20 +121,20 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
      * @param null $class
      * @return string
      */
-    public function createLink($id,$name,$class=null)
+    public function createLink($id, $name, $class = null): string
     {
         $page = Page::createPageFromId($id);
         if ($name == "start") {
             $name = "Home Page";
         } else {
-            $name = $page->getTitleNotEmpty();
+            $name = $page->getTitleOrDefault();
         }
         $tagAttributes = null;
-        if($class!=null){
+        if ($class != null) {
             $tagAttributes = TagAttributes::createEmpty();
             $tagAttributes->addClassName($class);
         }
-        $link = LinkUtility::createFromPageId($id,$tagAttributes);
+        $link = LinkUtility::createFromPageId($id, $tagAttributes);
 
         return $link->renderOpenTag() . $name . $link->renderClosingTag();
     }

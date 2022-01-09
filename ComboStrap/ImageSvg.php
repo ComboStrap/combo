@@ -7,17 +7,19 @@ namespace ComboStrap;
  * Class ImageSvg
  * @package ComboStrap
  * A svg image
+ *
+ * TODO: implements {@link CachedDocument} ? to not cache the optimization in {@link ImageSvg::getSvgFile()}
  */
 class ImageSvg extends Image
 {
 
-    const MIME = "image/svg+xml";
     const EXTENSION = "svg";
     const CANONICAL = "svg";
 
-    public function __construct($absolutePath, $rev = null, $tagAttributes = null)
+
+    public function __construct($path, $tagAttributes = null)
     {
-        parent::__construct($absolutePath, $rev, $tagAttributes);
+        parent::__construct($path, $tagAttributes);
     }
 
 
@@ -39,7 +41,7 @@ class ImageSvg extends Image
     public function getSvgDocument(): SvgDocument
     {
         if ($this->svgDocument == null) {
-            $this->svgDocument = SvgDocument::createFromPath($this);
+            $this->svgDocument = SvgDocument::createSvgDocumentFromPath($this->getPath());
         }
         return $this->svgDocument;
     }
@@ -50,83 +52,97 @@ class ImageSvg extends Image
      *
      * At contrary to {@link RasterImageLink::getUrl()} this function does not need any width parameter
      */
-    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND): ?string
+    public function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML): ?string
     {
 
 
-        if ($this->exists()) {
+        if (!$this->exists()) {
+            LogUtility::msg("The svg media does not exist ({$this->getBaseName()})", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return "";
+        }
 
-            /**
-             * We remove align and linking because,
-             * they should apply only to the img tag
-             */
+        /**
+         * We remove align and linking because,
+         * they should apply only to the img tag
+         */
 
 
-            /**
-             *
-             * Create the array $att that will cary the query
-             * parameter for the URL
-             */
-            $att = array();
-            $attributes = $this->getAttributes();
-            $componentAttributes = $attributes->getComponentAttributes();
-            foreach ($componentAttributes as $name => $value) {
+        /**
+         *
+         * Create the array $att that will cary the query
+         * parameter for the URL
+         */
+        $att = array();
+        $attributes = $this->getAttributes();
+        $componentAttributes = $attributes->getComponentAttributes();
+        foreach ($componentAttributes as $name => $value) {
 
-                if (!in_array(strtolower($name), MediaLink::NON_URL_ATTRIBUTES)) {
-                    $newName = $name;
+            if (!in_array(strtolower($name), MediaLink::NON_URL_ATTRIBUTES)) {
+                $newName = $name;
 
-                    /**
-                     * Width and Height
-                     * permits to create SVG of the asked size
-                     *
-                     * This is a little bit redundant with the
-                     * {@link Dimension::processWidthAndHeight()}
-                     * `max-width and width` styling property
-                     * but you may use them outside of HTML.
-                     */
-                    switch ($name) {
-                        case Dimension::WIDTH_KEY:
-                            $newName = "w";
-                            /**
-                             * We don't remove width because,
-                             * the sizing should apply to img
-                             */
-                            break;
-                        case Dimension::HEIGHT_KEY:
-                            $newName = "h";
-                            /**
-                             * We don't remove height because,
-                             * the sizing should apply to img
-                             */
-                            break;
-                    }
-
-                    if ($newName == CacheMedia::CACHE_KEY && $value == CacheMedia::CACHE_DEFAULT_VALUE) {
-                        // This is the default
-                        // No need to add it
-                        continue;
-                    }
-
-                    if (!empty($value)) {
-                        $att[$newName] = trim($value);
-                    }
+                /**
+                 * Width and Height
+                 * permits to create SVG of the asked size
+                 *
+                 * This is a little bit redundant with the
+                 * {@link Dimension::processWidthAndHeight()}
+                 * `max-width and width` styling property
+                 * but you may use them outside of HTML.
+                 */
+                switch ($name) {
+                    case Dimension::WIDTH_KEY:
+                        $newName = "w";
+                        /**
+                         * We don't remove width because,
+                         * the sizing should apply to img
+                         */
+                        break;
+                    case Dimension::HEIGHT_KEY:
+                        $newName = "h";
+                        /**
+                         * We don't remove height because,
+                         * the sizing should apply to img
+                         */
+                        break;
                 }
 
+                if ($newName == CacheMedia::CACHE_KEY && $value == CacheMedia::CACHE_DEFAULT_VALUE) {
+                    // This is the default
+                    // No need to add it
+                    continue;
+                }
+
+                if (!empty($value)) {
+                    $att[$newName] = trim($value);
+                }
             }
 
-            /**
-             * Cache bursting
-             */
-            $this->addCacheBusterToQueryParameters($att);
-
-            $direct = true;
-            return ml($this->getId(), $att, $direct, $ampersand, true);
-
-        } else {
-
-            return null;
-
         }
+
+        /**
+         * Cache bursting
+         */
+        $this->addCacheBusterToQueryParameters($att);
+
+        $direct = true;
+
+        if ($this->getPath() === null) {
+            LogUtility::msg("The Url of a image not in the media library is not yet supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return "";
+        }
+
+        /**
+         * Old model where all parameters are parsed
+         * and src is not given entirely to the renderer
+         * path may be still present
+         */
+        if (isset($att[PagePath::PROPERTY_NAME])) {
+            unset($att[PagePath::PROPERTY_NAME]);
+        }
+
+        return ml($this->getPath()->getDokuwikiId(), $att, $direct, $ampersand, true);
+
+
     }
 
     public function getAbsoluteUrl(): ?string
@@ -139,18 +155,33 @@ class ImageSvg extends Image
     /**
      * Return the svg file transformed by the attributes
      * from cache if possible. Used when making a fetch with the URL
-     * @return mixed
+     * @return LocalPath
      */
-    public function getSvgFile()
+    public function getSvgFile(): LocalPath
     {
 
-        $cache = new CacheMedia($this, $this->getAttributes());
+        $cache = new CacheMedia($this->getPath(), $this->getAttributes());
         if (!$cache->isCacheUsable()) {
             $content = $this->getSvgDocument()->getXmlText($this->getAttributes());
             $cache->storeCache($content);
         }
-        return $cache->getFile()->getFileSystemPath();
+        return $cache->getFile();
 
     }
+
+    /**
+     * The buster is not based on file but the cache file
+     * because the cache is configuration dependent
+     * It the user changes the configuration, the svg file is generated
+     * again and the browser cache should be deleted (ie the buster regenerated)
+     * {@link ResourceCombo::getBuster()}
+     * @return string
+     */
+    public function getBuster(): string
+    {
+        $time = FileSystems::getModifiedTime($this->getSvgFile());
+        return strval($time->getTimestamp());
+    }
+
 
 }

@@ -155,7 +155,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
         return array();
     }
 
-    public function render($format, Doku_Renderer $renderer, $data)
+    public function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == "xhtml") {
@@ -195,6 +195,23 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
              * @var Doku_Renderer_metadata $renderer
              */
             syntax_plugin_combo_heading::processHeadingMetadata($data, $renderer);
+
+        } else if ($format == renderer_plugin_combo_xml::FORMAT) {
+            $state = $data[PluginUtility::STATE];
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+                    $level = $data[PluginUtility::ATTRIBUTES][syntax_plugin_combo_heading::LEVEL];
+                    $renderer->doc .= "<h$level>";
+                    break;
+                case DOKU_LEXER_UNMATCHED:
+                    $renderer->doc .= PluginUtility::renderUnmatchedXml($data);
+                    break;
+                case DOKU_LEXER_EXIT:
+                    $level = $data[PluginUtility::ATTRIBUTES][syntax_plugin_combo_heading::LEVEL];
+                    $renderer->doc .= "</h$level>";
+                    break;
+
+            }
 
         }
 

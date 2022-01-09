@@ -265,6 +265,20 @@ class TagAttributes
         }
     }
 
+    /**
+     * Clone a tag attributes
+     * Tag Attributes are used for request and for response
+     * To avoid conflict, a function should clone it before
+     * calling the final method {@link TagAttributes::toHtmlArray()}
+     * or {@link TagAttributes::toHtmlEnterTag()}
+     * @param TagAttributes $tagAttributes
+     * @return TagAttributes
+     */
+    public static function createFromTagAttributes(TagAttributes $tagAttributes)
+    {
+        return new TagAttributes($tagAttributes->getComponentAttributes(), $tagAttributes->getLogicalTag());
+    }
+
     public function addClassName($className)
     {
 
@@ -378,184 +392,184 @@ class TagAttributes
      * For historic reason, data passed between the handle and the render
      * can still be in this format
      */
-    public function toHtmlArray()
+    public function toHtmlArray(): array
     {
-        if (!$this->componentToHtmlAttributeProcessingWasDone) {
+        if ($this->componentToHtmlAttributeProcessingWasDone) {
+            LogUtility::msg("This tag attribute ($this) was already finalized. You cannot finalized it twice", LogUtility::LVL_MSG_ERROR);
+            return $this->finalHtmlArray;
+        }
 
-            $this->componentToHtmlAttributeProcessingWasDone = true;
+        $this->componentToHtmlAttributeProcessingWasDone = true;
 
-            /**
-             * Following the rule 2 to encode the unknown value
-             * We encode the component attribute (ie not the HTML attribute because
-             * they may have already encoded value)
-             * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
-             */
+        /**
+         * Following the rule 2 to encode the unknown value
+         * We encode the component attribute (ie not the HTML attribute because
+         * they may have already encoded value)
+         * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
+         */
 
-            $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
-            $this->escapeComponentAttribute($originalArray);
-
-
-            /**
-             * Width and height
-             */
-            Dimension::processWidthAndHeight($this);
-
-            /**
-             * Process animation (onHover, onView)
-             */
-            Hover::processOnHover($this);
-            Animation::processOnView($this);
+        $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
+        $this->escapeComponentAttribute($originalArray);
 
 
-            /**
-             * Position and Stickiness
-             */
-            Position::processStickiness($this);
-            Position::processPosition($this);
+        /**
+         * Width and height
+         */
+        Dimension::processWidthAndHeight($this);
 
-            /**
-             * Block processing
-             *
-             * Float, align, spacing
-             */
-            FloatAttribute::processFloat($this);
-            Align::processAlignAttributes($this);
-            Spacing::processSpacingAttributes($this);
-            Opacity::processOpacityAttribute($this);
-            Background::processBackgroundAttributes($this);
-            Shadow::process($this);
-
-            /**
-             * Process text attributes
-             */
-            LineSpacing::processLineSpacingAttributes($this);
-            TextAlign::processTextAlign($this);
-            Boldness::processBoldnessAttribute($this);
-            FontSize::processFontSizeAttribute($this);
-            TextColor::processTextColorAttribute($this);
-            Underline::processUnderlineAttribute($this);
-
-            /**
-             * Process the style attributes if any
-             */
-            PluginUtility::processStyle($this);
-            Toggle::processToggle($this);
+        /**
+         * Process animation (onHover, onView)
+         */
+        Hover::processOnHover($this);
+        Animation::processOnView($this);
 
 
-            /**
-             * Skin Attribute
-             */
-            Skin::processSkinAttribute($this);
+        /**
+         * Position and Stickiness
+         */
+        Position::processStickiness($this);
+        Position::processPosition($this);
 
-            /**
-             * Lang
-             */
-            Lang::processLangAttribute($this);
+        /**
+         * Block processing
+         *
+         * Float, align, spacing
+         */
+        FloatAttribute::processFloat($this);
+        Align::processAlignAttributes($this);
+        Spacing::processSpacingAttributes($this);
+        Opacity::processOpacityAttribute($this);
+        Background::processBackgroundAttributes($this);
+        Shadow::process($this);
 
-            /**
-             * Transform
-             */
-            if ($this->hasComponentAttribute(self::TRANSFORM)) {
-                $transformValue = $this->getValueAndRemove(self::TRANSFORM);
-                $this->addStyleDeclaration("transform", $transformValue);
+        /**
+         * Process text attributes
+         */
+        LineSpacing::processLineSpacingAttributes($this);
+        TextAlign::processTextAlign($this);
+        Boldness::processBoldnessAttribute($this);
+        FontSize::processFontSizeAttribute($this);
+        TextColor::processTextColorAttribute($this);
+        Underline::processUnderlineAttribute($this);
+
+        /**
+         * Process the style attributes if any
+         */
+        PluginUtility::processStyle($this);
+        Toggle::processToggle($this);
+
+
+        /**
+         * Skin Attribute
+         */
+        Skin::processSkinAttribute($this);
+
+        /**
+         * Lang
+         */
+        Lang::processLangAttribute($this);
+
+        /**
+         * Transform
+         */
+        if ($this->hasComponentAttribute(self::TRANSFORM)) {
+            $transformValue = $this->getValueAndRemove(self::TRANSFORM);
+            $this->addStyleDeclaration("transform", $transformValue);
+        }
+
+        /**
+         * Add the type class used for CSS styling
+         */
+        StyleUtility::addStylingClass($this);
+
+        /**
+         * Add the style has html attribute
+         * before processing
+         */
+        $this->addHtmlAttributeValueIfNotEmpty("style", $this->getStyle());
+
+        /**
+         * Create a non-sorted temporary html attributes array
+         */
+        $tempHtmlArray = $this->htmlAttributes;
+
+        /**
+         * copy the unknown component attributes
+         */
+        $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
+        foreach ($originalArray as $key => $value) {
+
+            // Null Value, not needed
+            if (is_null($value)) {
+                continue;
             }
 
-            /**
-             * Add the type class used for CSS styling
-             */
-            StyleUtility::addStylingClass($this);
-
-            /**
-             * Add the style has html attribute
-             * before processing
-             */
-            $this->addHtmlAttributeValueIfNotEmpty("style", $this->getStyle());
-
-            /**
-             * Create a non-sorted temporary html attributes array
-             */
-            $tempHtmlArray = $this->htmlAttributes;
-
-            /**
-             * copy the unknown component attributes
-             */
-            $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
-            foreach ($originalArray as $key => $value) {
-
-                // Null Value, not needed
-                if (is_null($value)) {
-                    continue;
-                }
-
-                // No overwrite
-                if (isset($tempHtmlArray[$key])) {
-                    continue;
-                }
-
-                // Reserved attribute
-                if (!in_array($key, self::RESERVED_ATTRIBUTES)) {
-                    $tempHtmlArray[$key] = $value;
-                }
-
+            // No overwrite
+            if (isset($tempHtmlArray[$key])) {
+                continue;
             }
 
-
-            /**
-             * Sort by attribute
-             * https://datacadamia.com/web/html/attribute#order
-             */
-            $sortedArray = array();
-            $once = "once";
-            $multiple = "multiple";
-            $orderPatterns = [
-                "class" => $once,
-                "id" => $once,
-                "name" => $once,
-                "data-.*" => $multiple,
-                "src.*" => $multiple,
-                "for" => $once,
-                "type" => $once,
-                "href" => $once,
-                "value" => $once,
-                "title" => $once,
-                "alt" => $once,
-                "role" => $once,
-                "aria-*" => $multiple];
-            foreach ($orderPatterns as $pattern => $type) {
-                foreach ($tempHtmlArray as $name => $value) {
-                    $searchPattern = "^$pattern$";
-                    if (preg_match("/$searchPattern/", $name)) {
-                        $sortedArray[$name] = $value;
-                        unset($tempHtmlArray[$name]);
-                        if ($type == $once) {
-                            break;
-                        }
-                    }
-                }
+            // Reserved attribute
+            if (!in_array($key, self::RESERVED_ATTRIBUTES)) {
+                $tempHtmlArray[$key] = $value;
             }
-            foreach ($tempHtmlArray as $name => $value) {
-
-                if (!is_null($value)) {
-                    /**
-                     *
-                     * Don't add a filter on the empty values
-                     *
-                     * The value of an HTML attribute may be empty
-                     * Example the wiki id of the root namespace
-                     *
-                     * By default, {@link TagAttributes::addHtmlAttributeValue()}
-                     * will not accept any value, it must be implicitly said with the
-                     * {@link TagAttributes::addHtmlAttributeValue()}
-                     *
-                     */
-                    $sortedArray[$name] = $value;
-                }
-
-            }
-            $this->finalHtmlArray = $sortedArray;
 
         }
 
+
+        /**
+         * Sort by attribute
+         * https://datacadamia.com/web/html/attribute#order
+         */
+        $sortedArray = array();
+        $once = "once";
+        $multiple = "multiple";
+        $orderPatterns = [
+            "class" => $once,
+            "id" => $once,
+            "name" => $once,
+            "data-.*" => $multiple,
+            "src.*" => $multiple,
+            "for" => $once,
+            "type" => $once,
+            "href" => $once,
+            "value" => $once,
+            "title" => $once,
+            "alt" => $once,
+            "role" => $once,
+            "aria-*" => $multiple];
+        foreach ($orderPatterns as $pattern => $type) {
+            foreach ($tempHtmlArray as $name => $value) {
+                $searchPattern = "^$pattern$";
+                if (preg_match("/$searchPattern/", $name)) {
+                    $sortedArray[$name] = $value;
+                    unset($tempHtmlArray[$name]);
+                    if ($type == $once) {
+                        break;
+                    }
+                }
+            }
+        }
+        foreach ($tempHtmlArray as $name => $value) {
+
+            if (!is_null($value)) {
+                /**
+                 *
+                 * Don't add a filter on the empty values
+                 *
+                 * The value of an HTML attribute may be empty
+                 * Example the wiki id of the root namespace
+                 *
+                 * By default, {@link TagAttributes::addHtmlAttributeValue()}
+                 * will not accept any value, it must be implicitly said with the
+                 * {@link TagAttributes::addHtmlAttributeValue()}
+                 *
+                 */
+                $sortedArray[$name] = $value;
+            }
+
+        }
+        $this->finalHtmlArray = $sortedArray;
 
         return $this->finalHtmlArray;
 

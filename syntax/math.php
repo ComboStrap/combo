@@ -1,7 +1,5 @@
 <?php
 
-use ComboStrap\SnippetManager;
-use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
@@ -16,14 +14,6 @@ class syntax_plugin_combo_math extends DokuWiki_Syntax_Plugin
 
     const TAG = "math";
 
-
-    /**
-     * syntax_plugin_combo_math constructor.
-     */
-    public function __construct()
-    {
-        LogUtility::msg("The math syntax object was instantiated", LogUtility::LVL_MSG_DEBUG);
-    }
 
 
     /**

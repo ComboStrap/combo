@@ -2,14 +2,13 @@
 
 namespace ComboStrap;
 
-use action_plugin_combo_urlmanager;
+use action_plugin_combo_router;
 
-include_once(__DIR__ . "/PagesIndex.php");
 
 /**
  * Class UrlManagerBestEndPage
  *
- * A class that implements the BestEndPage Algorithm for the {@link action_plugin_combo_urlmanager urlManager}
+ * A class that implements the BestEndPage Algorithm for the {@link action_plugin_combo_router urlManager}
  */
 class UrlManagerBestEndPage
 {
@@ -19,8 +18,8 @@ class UrlManagerBestEndPage
      * this configuration, an Id Redirect is performed
      * A value of 0 disable and send only HTTP redirect
      */
-    const CONF_MINIMAL_SCORE_FOR_REDIRECT = 'BestEndPageMinimalScoreForIdRedirect';
-    const CONF_MINIMAL_SCORE_FOR_REDIRECT_DEFAULT = '0';
+    const CONF_MINIMAL_SCORE_FOR_REDIRECT = 'BestEndPageMinimalScoreForAliasCreation';
+    const CONF_MINIMAL_SCORE_FOR_REDIRECT_DEFAULT = '2';
 
 
     /**
@@ -28,13 +27,12 @@ class UrlManagerBestEndPage
      * @return array - the best poge id and its score
      * The score is the number of name that matches
      */
-    public static function getBestEndPageId($pageId)
+    public static function getBestEndPageId($pageId): array
     {
 
         $result = array();
-        $pageName = noNS($pageId);
 
-        $pagesWithSameName = PagesIndex::pagesWithSameName($pageName, $pageId);
+        $pagesWithSameName = Index::getOrCreate()->getPagesWithSameLastName($pageId);
         if (count($pagesWithSameName) > 0) {
 
             // Default value
@@ -42,30 +40,21 @@ class UrlManagerBestEndPage
             $bestPage = $pagesWithSameName[0];
 
             // The name of the dokuwiki id
-            $pageIdNames = explode(':', $pageId);
+            $missingPageIdNames = explode(':', $pageId);
 
             // Loop
-            foreach ($pagesWithSameName as $targetPageId => $pageTitle) {
+            foreach ($pagesWithSameName as $pageIdWithSameName => $pageTitle) {
 
-                $targetPageIdNames = explode(':', $targetPageId);
-                $targetPageIdScore = 0;
-                for ($i = 1; $i <= sizeof($pageIdNames); $i++) {
-                    $pageIdName = $pageIdNames[sizeof($pageIdNames) - $i];
-                    $indexTargetPage = sizeof($targetPageIdNames) - $i;
-                    if ($indexTargetPage < 0) {
-                        break;
+                $targetPageNames = explode(':', $pageIdWithSameName);
+                $score = 0;
+                foreach($targetPageNames as $targetPageName){
+                    if(in_array($targetPageName,$missingPageIdNames)){
+                        $score++;
                     }
-                    $targetPageIdName = $targetPageIdNames[$indexTargetPage];
-                    if ($targetPageIdName == $pageIdName) {
-                        $targetPageIdScore++;
-                    } else {
-                        break;
-                    }
-
                 }
-                if ($targetPageIdScore > $bestScore) {
-                    $bestScore = $targetPageIdScore;
-                    $bestPage = $targetPageId;
+                if($score>$bestScore){
+                    $bestScore = $score;
+                    $bestPage = $pageIdWithSameName;
                 }
 
             }
@@ -82,21 +71,27 @@ class UrlManagerBestEndPage
 
 
     /**
-     * @param $pageId
+     * @param $missingPageId
      * @return array with the best page and the type of redirect
      */
-    public static function process($pageId)
+    public static function process($missingPageId): array
     {
 
         $return = array();
-        global $conf;
-        $minimalScoreForARedirect = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][self::CONF_MINIMAL_SCORE_FOR_REDIRECT];
 
-        list($bestPageId, $bestScore) = self::getBestEndPageId($pageId);
+        $minimalScoreForARedirect = PluginUtility::getConfValue(self::CONF_MINIMAL_SCORE_FOR_REDIRECT, self::CONF_MINIMAL_SCORE_FOR_REDIRECT_DEFAULT);
+
+        list($bestPageId, $bestScore) = self::getBestEndPageId($missingPageId);
         if ($bestPageId != null) {
-            $redirectType = action_plugin_combo_urlmanager::REDIRECT_HTTP;
+            $redirectType = action_plugin_combo_router::REDIRECT_NOTFOUND_METHOD;
             if ($minimalScoreForARedirect != 0 && $bestScore >= $minimalScoreForARedirect) {
-                $redirectType = action_plugin_combo_urlmanager::REDIRECT_ID;
+                $page = Page::createPageFromId($bestPageId);
+                Aliases::createForPage($page)
+                    ->addAlias($missingPageId, AliasType::REDIRECT)
+                    ->sendToWriteStore()
+                    ->setReadStore(MetadataDbStore::createForPage())
+                    ->sendToWriteStore();
+                $redirectType = action_plugin_combo_router::REDIRECT_PERMANENT_METHOD;
             }
             $return = array(
                 $bestPageId,

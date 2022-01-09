@@ -13,9 +13,30 @@ require_once(__DIR__ . '/../vendor/autoload.php');
  * Parent in th hierarchy should be first
  * Ie before {@link ImageLink, SvgImageLink, RasterImageLink)
  */
+require_once(__DIR__ . '/CachedDocument.php');
+require_once(__DIR__ . '/PageCompilerDocument.php');
+require_once(__DIR__ . '/OutputDocument.php');
+require_once(__DIR__ . '/FileSystem.php');
+require_once(__DIR__ . '/Path.php');
+require_once(__DIR__ . '/PathAbs.php');
+require_once(__DIR__ . '/File.php');
+require_once(__DIR__ . '/DokuFs.php');
 require_once(__DIR__ . '/DokuPath.php');
+require_once(__DIR__ . '/ResourceCombo.php');
+require_once(__DIR__ . '/ResourceComboAbs.php');
 require_once(__DIR__ . '/Media.php');
 require_once(__DIR__ . '/MediaLink.php');
+require_once(__DIR__ . '/Metadata.php');
+require_once(__DIR__ . '/MetadataBoolean.php');
+require_once(__DIR__ . '/MetadataDateTime.php');
+require_once(__DIR__ . '/MetadataMultiple.php');
+require_once(__DIR__ . '/MetadataTabular.php');
+require_once(__DIR__ . '/MetadataText.php');
+require_once(__DIR__ . '/MetadataJson.php');
+require_once(__DIR__ . '/MetadataWikiPath.php');
+require_once(__DIR__ . '/MetadataStore.php');
+require_once(__DIR__ . '/MetadataStoreAbs.php');
+require_once(__DIR__ . '/MetadataSingleArrayStore.php');
 
 /**
  * Plugin Utility is added in all Dokuwiki extension
@@ -30,79 +51,147 @@ require_once(__DIR__ . '/MediaLink.php');
  * the IDE when refactoring
  */
 require_once(__DIR__ . '/AdsUtility.php');
+require_once(__DIR__ . '/Alias.php');
+require_once(__DIR__ . '/AliasPath.php');
+require_once(__DIR__ . '/AliasType.php');
+require_once(__DIR__ . '/Aliases.php');
 require_once(__DIR__ . '/Align.php');
-require_once(__DIR__ . '/Analytics.php');
+require_once(__DIR__ . '/AnalyticsDocument.php');
 require_once(__DIR__ . '/AnalyticsMenuItem.php');
 require_once(__DIR__ . '/Animation.php');
 require_once(__DIR__ . '/ArrayCaseInsensitive.php');
 require_once(__DIR__ . '/ArrayUtility.php');
 require_once(__DIR__ . '/Background.php');
+require_once(__DIR__ . '/BacklinkCount.php');
+require_once(__DIR__ . '/BacklinkMenuItem.php');
 require_once(__DIR__ . '/Boldness.php');
+require_once(__DIR__ . '/Boolean.php');
 require_once(__DIR__ . '/Bootstrap.php');
 require_once(__DIR__ . '/BreadcrumbHierarchical.php');
+require_once(__DIR__ . '/CacheExpirationDate.php');
+require_once(__DIR__ . '/CacheExpirationFrequency.php');
 require_once(__DIR__ . '/CacheByLogicalKey.php');
 require_once(__DIR__ . '/CacheInstructionsByLogicalKey.php');
 require_once(__DIR__ . '/CacheManager.php');
 require_once(__DIR__ . '/CacheMedia.php');
 require_once(__DIR__ . '/Call.php');
 require_once(__DIR__ . '/CallStack.php');
+require_once(__DIR__ . '/Canonical.php');
 require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/ConditionalValue.php');
-require_once(__DIR__ . '/ConfUtility.php');
+require_once(__DIR__ . '/Console.php');
+require_once(__DIR__ . '/Cron.php');
+require_once(__DIR__ . '/DatabasePageRow.php');
+require_once(__DIR__ . '/DataType.php');
 require_once(__DIR__ . '/Dimension.php');
+require_once(__DIR__ . '/DisqusIdentifier.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
+require_once(__DIR__ . '/DokuwikiId.php');
+require_once(__DIR__ . '/EndDate.php');
+require_once(__DIR__ . '/Event.php');
 require_once(__DIR__ . '/ExitException.php');
-require_once(__DIR__ . '/File.php');
+require_once(__DIR__ . '/ExceptionCombo.php');
+require_once(__DIR__ . '/ExceptionComboRuntime.php');
+require_once(__DIR__ . '/FileSystems.php');
 require_once(__DIR__ . '/FloatAttribute.php');
+require_once(__DIR__ . '/FormMeta.php');
+require_once(__DIR__ . '/FormMetaTab.php');
+require_once(__DIR__ . '/FormMetaField.php');
 require_once(__DIR__ . '/FontSize.php');
 require_once(__DIR__ . '/FsWikiUtility.php');
 require_once(__DIR__ . '/HeaderUtility.php');
+require_once(__DIR__ . '/HtmlDocument.php');
 require_once(__DIR__ . '/HistoricalBreadcrumbMenuItem.php');
 require_once(__DIR__ . '/Hover.php');
+require_once(__DIR__ . '/Html.php');
 require_once(__DIR__ . '/Http.php');
+require_once(__DIR__ . '/HttpResponse.php');
 require_once(__DIR__ . '/Icon.php');
 require_once(__DIR__ . '/Identity.php');
 require_once(__DIR__ . '/Image.php');
 require_once(__DIR__ . '/ImageLink.php');
 require_once(__DIR__ . '/ImageRaster.php');
 require_once(__DIR__ . '/ImageSvg.php');
+require_once(__DIR__ . '/Index.php');
+require_once(__DIR__ . '/InstructionsDocument.php');
+require_once(__DIR__ . '/InternetPath.php');
+require_once(__DIR__ . '/InterWikiPath.php');
 require_once(__DIR__ . '/Iso8601Date.php');
 require_once(__DIR__ . '/Json.php');
+require_once(__DIR__ . '/JavascriptLibrary.php');
 require_once(__DIR__ . '/Lang.php');
+require_once(__DIR__ . '/LdJson.php');
 require_once(__DIR__ . '/LineSpacing.php');
+require_once(__DIR__ . '/Locale.php');
+require_once(__DIR__ . '/LocalFs.php');
+require_once(__DIR__ . '/LocalPath.php');
 require_once(__DIR__ . '/LogException.php');
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/LowQualityPage.php');
-require_once(__DIR__ . '/MetadataUtility.php');
+require_once(__DIR__ . '/LowQualityPageOverwrite.php');
+require_once(__DIR__ . '/LowQualityCalculatedIndicator.php');
+require_once(__DIR__ . '/MetaManagerForm.php');
+require_once(__DIR__ . '/MetaManagerMenuItem.php');
+require_once(__DIR__ . '/MetadataDokuWikiStore.php');
+require_once(__DIR__ . '/MetadataFormDataStore.php');
+require_once(__DIR__ . '/MetadataFrontmatterStore.php');
+require_once(__DIR__ . '/MetadataDbStore.php');
+require_once(__DIR__ . '/MetadataStoreTransfer.php');
 require_once(__DIR__ . '/Message.php');
 require_once(__DIR__ . '/Mermaid.php');
+require_once(__DIR__ . '/Mime.php');
+require_once(__DIR__ . '/ModificationDate.php');
 require_once(__DIR__ . '/NavBarUtility.php');
 require_once(__DIR__ . '/Opacity.php');
 require_once(__DIR__ . '/Os.php');
 require_once(__DIR__ . '/Page.php');
+require_once(__DIR__ . '/PageDescription.php');
+require_once(__DIR__ . '/PageId.php');
+require_once(__DIR__ . '/PageKeywords.php');
+require_once(__DIR__ . '/PageImages.php');
+require_once(__DIR__ . '/PageImage.php');
+require_once(__DIR__ . '/PageImagePath.php');
+require_once(__DIR__ . '/PageImageUsage.php');
+require_once(__DIR__ . '/PageLayout.php');
+require_once(__DIR__ . '/PagePath.php');
 require_once(__DIR__ . '/PageProtection.php');
 require_once(__DIR__ . '/PageRules.php');
+require_once(__DIR__ . '/PageScope.php');
 require_once(__DIR__ . '/PageSql.php');
 require_once(__DIR__ . '/PageSqlParser/PageSqlLexer.php');
 require_once(__DIR__ . '/PageSqlParser/PageSqlParser.php');
 require_once(__DIR__ . '/PageSqlTreeListener.php');
-require_once(__DIR__ . '/PagesIndex.php');
+require_once(__DIR__ . '/PageType.php');
+require_once(__DIR__ . '/PageTitle.php');
+require_once(__DIR__ . '/PageUrlPath.php');
+require_once(__DIR__ . '/PageUrlType.php');
 require_once(__DIR__ . '/PipelineUtility.php');
 require_once(__DIR__ . '/Position.php');
 require_once(__DIR__ . '/Prism.php');
-require_once(__DIR__ . '/Publication.php');
+require_once(__DIR__ . '/PagePublicationDate.php');
+require_once(__DIR__ . '/PageCreationDate.php');
+require_once(__DIR__ . '/PageH1.php');
+require_once(__DIR__ . '/QualityDynamicMonitoringOverwrite.php');
+require_once(__DIR__ . '/QualityMenuItem.php');
 require_once(__DIR__ . '/RasterImageLink.php');
+require_once(__DIR__ . '/Region.php');
 require_once(__DIR__ . '/RenderUtility.php');
+require_once(__DIR__ . '/ReplicationDate.php');
 require_once(__DIR__ . '/Resources.php');
+require_once(__DIR__ . '/ResourceName.php');
 require_once(__DIR__ . '/Sanitizer.php');
 require_once(__DIR__ . '/Shadow.php');
 require_once(__DIR__ . '/Site.php');
 require_once(__DIR__ . '/Skin.php');
+require_once(__DIR__ . '/Slug.php');
 require_once(__DIR__ . '/Snippet.php');
 require_once(__DIR__ . '/SnippetManager.php');
 require_once(__DIR__ . '/Spacing.php');
 require_once(__DIR__ . '/Sqlite.php');
+require_once(__DIR__ . '/SqliteRequest.php');
+require_once(__DIR__ . '/SqliteResult.php');
 require_once(__DIR__ . '/StringUtility.php');
+require_once(__DIR__ . '/StartDate.php');
 require_once(__DIR__ . '/StyleUtility.php');
 require_once(__DIR__ . '/SvgDocument.php');
 require_once(__DIR__ . '/SvgImageLink.php');
@@ -111,17 +200,21 @@ require_once(__DIR__ . '/TableUtility.php');
 require_once(__DIR__ . '/Tag.php');
 require_once(__DIR__ . '/TagAttributes.php');
 require_once(__DIR__ . '/Template.php');
+require_once(__DIR__ . '/TemplateStore.php');
 require_once(__DIR__ . '/TemplateUtility.php');
 require_once(__DIR__ . '/TextAlign.php');
 require_once(__DIR__ . '/TextColor.php');
+require_once(__DIR__ . '/ThirdMedia.php');
 require_once(__DIR__ . '/ThirdMediaLink.php');
 require_once(__DIR__ . '/ThirdPartyPlugins.php');
 require_once(__DIR__ . '/TocUtility.php');
 require_once(__DIR__ . '/Toggle.php');
+require_once(__DIR__ . '/References.php');
+require_once(__DIR__ . '/Reference.php');
 require_once(__DIR__ . '/Underline.php');
 require_once(__DIR__ . '/Unit.php');
+require_once(__DIR__ . '/Url.php');
 require_once(__DIR__ . '/UrlManagerBestEndPage.php');
-require_once(__DIR__ . '/UrlUtility.php');
 require_once(__DIR__ . '/XhtmlUtility.php');
 require_once(__DIR__ . '/XmlDocument.php');
 require_once(__DIR__ . '/XmlUtility.php');
@@ -171,7 +264,7 @@ class PluginUtility
     /**
      * The URL base of the documentation
      */
-    static $URL_BASE;
+    static $URL_APEX;
 
 
     /**
@@ -218,10 +311,8 @@ class PluginUtility
         self::$PLUGIN_NAME = 'ComboStrap';
         global $lang;
         self::$PLUGIN_LANG = $lang[self::PLUGIN_BASE_NAME];
-        self::$URL_BASE = "https://" . parse_url(self::$INFO_PLUGIN['url'], PHP_URL_HOST);
+        self::$URL_APEX = "https://" . parse_url(self::$INFO_PLUGIN['url'], PHP_URL_HOST);
         self::$VERSION = self::$INFO_PLUGIN['version'];
-
-        PluginUtility::initStaticManager();
 
     }
 
@@ -288,7 +379,8 @@ class PluginUtility
      * @return string
      *
      * Create a open tag pattern without lookahead.
-     * Used for https://dev.w3.org/html5/html-author/#void-elements-0
+     * Used for
+     * @link https://dev.w3.org/html5/html-author/#void-elements-0
      */
     public static function getVoidElementTagPattern($tag)
     {
@@ -623,12 +715,12 @@ class PluginUtility
     /**
      * Create an URL to the documentation website
      * @param $canonical - canonical id or slug
-     * @param $text -  the text of the link
+     * @param $label -  the text of the link
      * @param bool $withIcon - used to break the recursion with the message in the {@link Icon}
      * @return string - an url
      */
     public
-    static function getUrl($canonical, $text, $withIcon = true)
+    static function getDocumentationHyperLink($canonical, $label, $withIcon = true, $tooltip = ""): string
     {
         /** @noinspection SpellCheckingInspection */
 
@@ -639,23 +731,36 @@ class PluginUtility
              * We don't include it as an external resource via url
              * because it then make a http request for every logo
              * in the configuration page and makes it really slow
+             * TODO: when we have made a special fetch ajax with cache
+             * for application resource, we can serve it statically
              */
-            $path = File::createFromPath(Resources::getImagesDirectory() . "/logo.svg");
+            $path = LocalPath::createFromPath(Resources::getImagesDirectory() . "/logo.svg");
             $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
             $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
             $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");
             $cache = new CacheMedia($path, $tagAttributes);
             if (!$cache->isCacheUsable()) {
-                $xhtmlIcon = SvgDocument::createFromPath($path)
+                $xhtmlIcon = SvgDocument::createSvgDocumentFromPath($path)
                     ->setShouldBeOptimized(true)
                     ->getXmlText($tagAttributes);
                 $cache->storeCache($xhtmlIcon);
             }
-            $xhtmlIcon = file_get_contents($cache->getFile()->getFileSystemPath());
-
+            $xhtmlIcon = FileSystems::getContent($cache->getFile());
 
         }
-        return $xhtmlIcon . ' <a href="' . self::$URL_BASE . '/' . str_replace(":", "/", $canonical) . '" title="' . $text . '">' . $text . '</a>';
+        $urlApex = self::$URL_APEX;
+        $path = str_replace(":", "/", $canonical);
+        if (empty($tooltip)) {
+            $title = $label;
+        } else {
+            $title = $tooltip;
+        }
+        $htmlToolTip = "";
+        if (!empty($tooltip)) {
+            $dataAttributeNamespace = Bootstrap::getDataNamespace();
+            $htmlToolTip = "data{$dataAttributeNamespace}-toggle=\"tooltip\"";
+        }
+        return "$xhtmlIcon<a href=\"$urlApex/$path\" title=\"$title\" $htmlToolTip style=\"text-decoration:none;\">$label</a>";
     }
 
     /**
@@ -746,12 +851,34 @@ class PluginUtility
      * Get the page id
      * If the page is a sidebar, it will not return the id of the sidebar
      * but the one of the page
-     * @return string
+     * Return the main/requested page id
+     * (Not the sidebar)
+     * @return string|null - null in test
      */
     public
-    static function getPageId()
+    static function getMainPageDokuwikiId(): ?string
     {
-        return FsWikiUtility::getMainPageId();
+        global $ID;
+        global $INFO;
+        $callingId = $ID;
+        // If the component is in a sidebar, we don't want the ID of the sidebar
+        // but the ID of the page.
+        if ($INFO != null) {
+            $callingId = $INFO['id'];
+        }
+        /**
+         * This is the case with event triggered
+         * before DokuWiki such as
+         * https://www.dokuwiki.org/devel:event:init_lang_load
+         */
+        if ($callingId == null) {
+            global $_REQUEST;
+            if (isset($_REQUEST["id"])) {
+                $callingId = $_REQUEST["id"];
+            }
+        }
+        return $callingId;
+
     }
 
     /**
@@ -765,7 +892,7 @@ class PluginUtility
      * @return string
      */
     public
-    static function htmlEncode($text)
+    static function htmlEncode($text): string
     {
         /**
          * See https://stackoverflow.com/questions/46483/htmlentities-vs-htmlspecialchars/3614344
@@ -773,6 +900,15 @@ class PluginUtility
          */
         //return htmlspecialchars($text, ENT_QUOTES);
         return htmlentities($text);
+    }
+
+    public
+    static function xmlEncode($text)
+    {
+        /**
+         * {@link htmlentities }
+         */
+        return htmlentities($text, ENT_XML1);
     }
 
 
@@ -911,21 +1047,6 @@ class PluginUtility
         return DOKU_URL . 'lib/plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/resources';
     }
 
-    /**
-     * @param $TAG - the name of the tag that should correspond to the name of the css file in the style directory
-     * @return string - a inline style element to inject in the page or blank if no file exists
-     */
-    public
-    static function getTagStyle($TAG)
-    {
-        $script = self::getCssRules($TAG);
-        if (!empty($script)) {
-            return "<style>" . $script . "</style>";
-        } else {
-            return "";
-        }
-
-    }
 
 
     public
@@ -950,17 +1071,12 @@ class PluginUtility
      * @return SnippetManager
      */
     public
-    static function getSnippetManager()
+    static function getSnippetManager(): SnippetManager
     {
         return SnippetManager::get();
     }
 
-    public
-    static function initStaticManager()
-    {
-        CacheManager::init();
-        SnippetManager::init();
-    }
+
 
     /**
      * Function used in a render
@@ -992,6 +1108,18 @@ class PluginUtility
         }
     }
 
+    public
+    static function renderUnmatchedXml($data)
+    {
+        $payload = $data[self::PAYLOAD];
+        $previousTagDisplayType = $data[self::CONTEXT];
+        if ($previousTagDisplayType !== Call::INLINE_DISPLAY) {
+            $payload = ltrim($payload);
+        }
+        return PluginUtility::xmlEncode($payload);
+
+    }
+
     /**
      * Function used in a handle function of a syntax plugin for
      * unmatched context
@@ -1020,7 +1148,7 @@ class PluginUtility
     static function setConf($key, $value, $namespace = 'plugin')
     {
         global $conf;
-        if ($namespace != null) {
+        if ($namespace !== null) {
             $conf[$namespace][PluginUtility::PLUGIN_BASE_NAME][$key] = $value;
         } else {
             $conf[$key] = $value;
@@ -1271,9 +1399,9 @@ class PluginUtility
     }
 
 
-    public static function getCacheManager()
+    public static function getCacheManager(): CacheManager
     {
-        return CacheManager::get();
+        return CacheManager::getOrCreate();
     }
 
     public static function getModeFromPluginName($name)
@@ -1285,21 +1413,6 @@ class PluginUtility
     {
         // https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
         return getenv("CI") === "true";
-    }
-
-    /**
-     * An helper function to not exit when it's a test environment
-     * @param string $message
-     */
-    public static function softExit($message = null)
-    {
-
-        if (!PluginUtility::isTest()) {
-            exit;
-        } else {
-            throw new ExitException($message);
-        }
-
     }
 
 

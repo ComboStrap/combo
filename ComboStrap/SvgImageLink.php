@@ -46,7 +46,6 @@ class SvgImageLink extends ImageLink
     /**
      * SvgImageLink constructor.
      * @param ImageSvg $imageSvg
-     * @param TagAttributes $tagAttributes
      */
     public function __construct($imageSvg)
     {
@@ -94,50 +93,30 @@ class SvgImageLink extends ImageLink
         /**
          * Remove the cache attribute
          * (no cache for the img tag)
+         * @var ImageSvg $image
          */
         $image = $this->getDefaultImage();
-        $attributes = $image->getAttributes();
-        $attributes->removeComponentAttributeIfPresent(CacheMedia::CACHE_KEY);
+        $responseAttributes = TagAttributes::createFromTagAttributes($image->getAttributes());
+        $responseAttributes->removeComponentAttributeIfPresent(CacheMedia::CACHE_KEY);
 
         /**
          * Remove linking (not yet implemented)
          */
-        $attributes->removeComponentAttributeIfPresent(MediaLink::LINKING_KEY);
+        $responseAttributes->removeComponentAttributeIfPresent(MediaLink::LINKING_KEY);
 
-
-        /**
-         * Src
-         */
-        $srcValue = $image->getUrl(DokuwikiUrl::URL_ENCODED_AND);
-        if ($lazyLoad) {
-
-            /**
-             * Note: Responsive image srcset is not needed for svg
-             */
-            $attributes->addHtmlAttributeValue("data-src", $srcValue);
-            $attributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder(
-                $image->getTargetWidth(),
-                $image->getTargetHeight()
-            ));
-
-        } else {
-
-            $attributes->addHtmlAttributeValue("src", $srcValue);
-
-        }
 
         /**
          * Adaptive Image
          * It adds a `height: auto` that avoid a layout shift when
          * using the img tag
          */
-        $attributes->addClassName(RasterImageLink::RESPONSIVE_CLASS);
+        $responseAttributes->addClassName(RasterImageLink::RESPONSIVE_CLASS);
 
 
         /**
          * Alt is mandatory
          */
-        $attributes->addHtmlAttributeValue("alt", $image->getAltNotEmpty());
+        $responseAttributes->addHtmlAttributeValue("alt", $image->getAltNotEmpty());
 
 
         /**
@@ -162,19 +141,45 @@ class SvgImageLink extends ImageLink
             // A class to all component lazy loaded to download them before print
             $svgFunctionalClass .= " " . LazyLoad::LAZY_CLASS;
         }
-        $attributes->addClassName($svgFunctionalClass);
+        $responseAttributes->addClassName($svgFunctionalClass);
 
         /**
          * Dimension are mandatory
          * to avoid layout shift (CLS)
          */
-        $attributes->addHtmlAttributeValue(Dimension::WIDTH_KEY, $image->getTargetWidth());
-        $attributes->addHtmlAttributeValue(Dimension::HEIGHT_KEY, $image->getTargetHeight());
+        $responseAttributes->addHtmlAttributeValue(Dimension::WIDTH_KEY, $image->getTargetWidth());
+        $responseAttributes->addHtmlAttributeValue(Dimension::HEIGHT_KEY, $image->getTargetHeight());
+
+        /**
+         * Src call
+         */
+        $srcValue = $image->getUrl(DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
+        if ($lazyLoad) {
+
+            /**
+             * Note: Responsive image srcset is not needed for svg
+             */
+            $responseAttributes->addHtmlAttributeValue("data-src", $srcValue);
+            $responseAttributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder(
+                $image->getTargetWidth(),
+                $image->getTargetHeight()
+            ));
+
+        } else {
+
+            $responseAttributes->addHtmlAttributeValue("src", $srcValue);
+
+        }
+
+        /**
+         * Old model where dokuwiki parses the src in handle
+         */
+        $responseAttributes->removeAttributeIfPresent(PagePath::PROPERTY_NAME);
 
         /**
          * Return the image
          */
-        return '<img ' . $attributes->toHTMLAttributeString() . '/>';
+        return '<img ' . $responseAttributes->toHTMLAttributeString() . '/>';
 
     }
 
@@ -203,10 +208,11 @@ class SvgImageLink extends ImageLink
             /**
              * TODO: Title should be a node just below SVG
              */
-            $attributes->removeComponentAttributeIfPresent(Page::TITLE_META_PROPERTY);
+            $attributes->removeComponentAttributeIfPresent(PageTitle::PROPERTY_NAME);
 
+            $imageSize = FileSystems::getSize($image->getPath());
             if (
-                $image->getSize() > $this->getMaxInlineSize()
+                $imageSize > $this->getMaxInlineSize()
             ) {
 
                 /**
@@ -219,7 +225,7 @@ class SvgImageLink extends ImageLink
                 /**
                  * Svg tag
                  */
-                $imgHTML = file_get_contents($image->getSvgFile());
+                $imgHTML = FileSystems::getContent($image->getSvgFile());
 
             }
 

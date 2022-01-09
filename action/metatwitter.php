@@ -4,6 +4,8 @@ use ComboStrap\Image;
 use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PageImage;
+use ComboStrap\PageImageUsage;
 use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use ComboStrap\TagAttributes;
@@ -95,7 +97,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
 
         $page = Page::createPageFromId($ID);
 
-        if(!$page->exists()){
+        if (!$page->exists()) {
             return;
         }
 
@@ -114,12 +116,12 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
 
         $twitterMeta = array(
             self::META_CARD => "summary",
-            self::META_TITLE => StringUtility::truncateString($page->getTitleNotEmpty(), 70),
+            self::META_TITLE => StringUtility::truncateString($page->getTitleOrDefault(), 70),
             self::META_CREATOR => self::COMBO_STRAP_TWITTER_HANDLE,
             self::META_CREATOR_ID => self::COMBO_STRAP_TWITTER_ID
         );
         $description = $page->getDescriptionOrElseDokuWiki();
-        if (!empty($description)){
+        if (!empty($description)) {
             // happens in test with document without content
             $twitterMeta[self::META_DESCRIPTION] = StringUtility::truncateString($description, 200);
         }
@@ -135,7 +137,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
 
             // Identify the Twitter profile of the page that populates the via property
             // https://developer.twitter.com/en/docs/twitter-for-websites/webpage-properties
-            $name = str_replace("@","",$siteTwitterHandle);
+            $name = str_replace("@", "", $siteTwitterHandle);
             $event->data['link'][] = array("rel" => "me", "href" => "https://twitter.com/$name");
         }
         if (!empty($siteTwitterId)) {
@@ -145,11 +147,11 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         /**
          * Card image
          */
-        $twitterImages = $page->getLocalImageSet();
+        $twitterImages = $page->getImagesOrDefaultForTheFollowingUsages([PageImageUsage::TWITTER, PageImageUsage::ALL, PageImageUsage::SOCIAL]);
         if (empty($twitterImages)) {
             $defaultImageIdConf = PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE);
             if (!empty($defaultImageIdConf)) {
-                $twitterImage = Image::createImageFromAbsolutePath($defaultImageIdConf);
+                $twitterImage = Image::createImageFromId($defaultImageIdConf);
                 if ($twitterImage->exists()) {
                     $twitterImages[] = $twitterImage;
                 } else {
@@ -178,16 +180,16 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
          * https://developer.twitter.com/en/docs/twitter-for-websites/webpage-properties
          */
         // don't track
-        $twitterMeta[self::META_DNT]=PluginUtility::getConfValue(self::CONF_TWITTER_DONT_NOT_TRACK);
+        $twitterMeta[self::META_DNT] = PluginUtility::getConfValue(self::CONF_TWITTER_DONT_NOT_TRACK);
         // turn off csp warning
-        $twitterMeta[self::META_WIDGET_CSP]="on";
+        $twitterMeta[self::META_WIDGET_CSP] = "on";
 
         /**
          * Embedded Tweet Theme
          */
 
-        $twitterMeta[self::META_WIDGETS_THEME]=PluginUtility::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME);
-        $twitterMeta[self::META_WIDGETS_BORDER_COLOR]=PluginUtility::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER);
+        $twitterMeta[self::META_WIDGETS_THEME] = PluginUtility::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME);
+        $twitterMeta[self::META_WIDGETS_BORDER_COLOR] = PluginUtility::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER);
 
         /**
          * Add the properties
@@ -195,7 +197,6 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         foreach ($twitterMeta as $key => $content) {
             $event->data['meta'][] = array("name" => $key, "content" => $content);
         }
-
 
 
     }

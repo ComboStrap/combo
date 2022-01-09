@@ -7,7 +7,7 @@ window.addEventListener("DOMContentLoaded",function(){
     // correct direct navigation via fragment to heading
     let style = document.createElement("style");
     style.classList.add("menubar-fixed-top")
-    style.innerText = `main > h1, main > h2, main > h3, main > h4, main > h5, #dokuwiki__top {
+    style.innerText = `main > h1, main > h2, main > h3, main > h4, main > h5, #dokuwiki__top, .fn_top {
     padding-top: ${offsetHeight}px;
     margin-top: -${marginTop}px;
     z-index: -1;

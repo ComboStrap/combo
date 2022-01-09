@@ -9,63 +9,64 @@ use dokuwiki\Cache\CacheParser;
 class CacheManager
 {
 
-    /**
-     * The meta key that has the expiration date
-     */
-    const DATE_CACHE_EXPIRATION_META_KEY = "date_cache_expiration";
     const RESULT_STATUS = 'result';
     const DATE_MODIFIED = 'ftime';
+    public const APPLICATION_COMBO_CACHE_JSON = "application/combo+cache+json";
 
     /**
-     * Just an utility variable to tracks the slot processed
-     * @var array the processed slot
+     * @var CacheManager
      */
-    private $cacheDataBySlots = array();
+    private static $cacheManager;
+
+    /**
+     * Just an utility variable to tracks the cache result of each slot
+     * @var array the processed slot by:
+     *   * requested page id, (to avoid inconsistency  on multiple page run in one test)
+     *   * slot id
+     */
+    private $cacheResults = array();
 
 
     /**
      * @return CacheManager
      */
-    public static function get()
+    public static function getOrCreate(): CacheManager
     {
-        global $comboCacheManagerScript;
-        if (empty($comboCacheManagerScript)) {
-            self::init();
+        if (self::$cacheManager === null) {
+            self::$cacheManager = new CacheManager();
         }
-        return $comboCacheManagerScript;
+        return self::$cacheManager;
     }
 
-    public static function init()
-    {
-        global $comboCacheManagerScript;
-        $comboCacheManagerScript = new CacheManager();
-
-    }
 
     /**
      * In test, we may run more than once
      * This function delete the cache manager
      * and is called when Dokuwiki close (ie {@link \action_plugin_combo_cache::close()})
      */
-    public static function close()
+    public static function reset()
     {
 
-        global $comboCacheManagerScript;
-        unset($comboCacheManagerScript);
+        self::$cacheManager = null;
 
     }
 
     /**
-     * Keep track of the parsed bar (ie page in page)
-     * @param $pageId
+     * Keep track of the parsed slot (ie page in page)
+     * @param $slotId
      * @param $result
      * @param CacheParser $cacheParser
      */
-    public function addSlot($pageId, $result, $cacheParser)
+    public function addSlotForRequestedPage($slotId, $result, CacheParser $cacheParser)
     {
-        if (!isset($this->cacheDataBySlots[$pageId])) {
-            $this->cacheDataBySlots[$pageId] = [];
+
+        $requestedPageSlotResults = &$this->getCacheSlotResultsForRequestedPage();
+
+
+        if (!isset($requestedPageSlotResults[$slotId])) {
+            $requestedPageSlotResults[$slotId] = [];
         }
+
         /**
          * Metadata and other rendering may occurs
          * recursively in one request
@@ -73,12 +74,12 @@ class CacheManager
          * We record only the first one because the second call one will use the first
          * one
          */
-        if (!isset($this->cacheDataBySlots[$pageId][$cacheParser->mode])) {
+        if (!isset($requestedPageSlotResults[$slotId][$cacheParser->mode])) {
             $date = null;
-            if(file_exists($cacheParser->cache)){
+            if (file_exists($cacheParser->cache)) {
                 $date = Iso8601Date::createFromTimestamp(filemtime($cacheParser->cache))->getDateTime();
             }
-            $this->cacheDataBySlots[$pageId][$cacheParser->mode] = [
+            $requestedPageSlotResults[$slotId][$cacheParser->mode] = [
                 self::RESULT_STATUS => $result,
                 self::DATE_MODIFIED => $date
             ];
@@ -86,28 +87,100 @@ class CacheManager
 
     }
 
-    public function getXhtmlRenderCacheSlotResults()
+    public function getXhtmlCacheSlotResultsForRequestedPage(): array
     {
+        $cacheSlotResultsForRequestedPage = $this->getCacheSlotResultsForRequestedPage();
+        if ($cacheSlotResultsForRequestedPage === null) {
+            return [];
+        }
         $xhtmlRenderResult = [];
-        foreach ($this->cacheDataBySlots as $pageId => $modes) {
-            foreach($modes as $mode => $values) {
+        foreach ($cacheSlotResultsForRequestedPage as $slotId => $modes) {
+            foreach ($modes as $mode => $values) {
                 if ($mode === "xhtml") {
-                    $xhtmlRenderResult[$pageId] = $this->cacheDataBySlots[$pageId][$mode][self::RESULT_STATUS];
+                    $xhtmlRenderResult[$slotId] = $values[self::RESULT_STATUS];
                 }
             }
         }
         return $xhtmlRenderResult;
     }
 
-    public function getCacheSlotResults()
+    private function &getCacheSlotResultsForRequestedPage(): ?array
     {
-
-        return $this->cacheDataBySlots;
+        $requestedPage = $this->getRequestedPage();
+        $requestedPageSlotResults = &$this->cacheResults[$requestedPage];
+        if (!isset($requestedPageSlotResults)) {
+            $requestedPageSlotResults = [];
+        }
+        return $requestedPageSlotResults;
     }
 
-    public function isCacheLogPresent($pageId, $mode)
+    public function isCacheLogPresentForSlot($slotId, $mode): bool
     {
-        return isset($this->cacheDataBySlots[$pageId][$mode]);
+        $cacheSlotResultsForRequestedPage = $this->getCacheSlotResultsForRequestedPage();
+        return isset($cacheSlotResultsForRequestedPage[$slotId][$mode]);
+    }
+
+
+    /**
+     * @return array - a array that will be transformed as json HTML data block
+     * to be included in a HTML page
+     */
+    public function getCacheSlotResultsAsHtmlDataBlockArray(): array
+    {
+        $htmlDataBlock = [];
+        $cacheSlotResultsForRequestedPage = $this->getCacheSlotResultsForRequestedPage();
+        if ($cacheSlotResultsForRequestedPage === null) {
+            LogUtility::msg("No page slot results were found");
+            return [];
+        }
+        foreach ($cacheSlotResultsForRequestedPage as $pageId => $resultByFormat) {
+            foreach ($resultByFormat as $format => $result) {
+                $modifiedDate = $result[self::DATE_MODIFIED];
+                if ($modifiedDate !== null) {
+                    $modifiedDate = Iso8601Date::createFromDateTime($modifiedDate)->toString();
+                }
+                $htmlDataBlock[$pageId][$format] = [
+                    self::RESULT_STATUS => $result[self::RESULT_STATUS],
+                    "mtime" => $modifiedDate
+                ];
+            }
+
+        }
+        return $htmlDataBlock;
+    }
+
+    private function getRequestedPage()
+    {
+        global $_REQUEST;
+        $requestedPage = $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
+
+        if ($requestedPage !== null) {
+            return $requestedPage;
+        }
+
+        /**
+         * We are not on a HTTP request
+         * but may be on a {@link Page::renderMetadataAndFlush() metadata rendering request}
+         */
+        global $ID;
+        if ($ID !== null) {
+            return $ID;
+        }
+
+        if(PluginUtility::isTest()) {
+            /**
+             * {@link p_get_metadata()} check the cache and is used
+             * also in several place such as {@link feed.php}
+             * where we don't have any influence
+             */
+            LogUtility::msg("The requested page should be known to register a page cache result");
+        }
+        return "unknown";
+    }
+
+    public function isEmpty(): bool
+    {
+        return sizeof($this->cacheResults) === 0;
     }
 
 

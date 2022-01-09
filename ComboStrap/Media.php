@@ -12,9 +12,11 @@ namespace ComboStrap;
  *   * same for svg ...
  *
  * This is why there is a cache attribute - this is the cache of the generated file
+ * if any
  */
-class Media extends DokuPath
+abstract class Media extends ResourceComboAbs
 {
+    const RESOURCE_TYPE = "media";
 
     /**
      * @var TagAttributes
@@ -22,22 +24,25 @@ class Media extends DokuPath
     protected $attributes;
 
     /**
-     * Media constructor.
+     * @var Path
      */
-    public function __construct($absolutePath, $rev = null, $attributes = null)
+    private $path;
+
+    /**
+     * Media constructor.
+     * The file system path and the attributes (properties)
+     */
+    public function __construct(Path $path, $attributes = null)
     {
         if ($attributes === null) {
             $attributes = TagAttributes::createEmpty();
         }
         $this->attributes = $attributes;
-        parent::__construct($absolutePath, DokuPath::MEDIA_TYPE, $rev);
+
+        $this->path = $path;
 
     }
 
-    public static function create($absolutePath, $rev, $tagAttributes): Media
-    {
-        return new Media($absolutePath, $rev, $tagAttributes);
-    }
 
     /**
      * @return string $cache - one of {@link CacheMedia::CACHE_KEY} or null if not set
@@ -53,8 +58,61 @@ class Media extends DokuPath
         return $this->attributes->getValue(TagAttributes::TITLE_KEY);
     }
 
-    public function &getAttributes(){
+    public function &getAttributes()
+    {
         return $this->attributes;
     }
+
+
+    public function getPath(): Path
+    {
+        return $this->path;
+    }
+
+    public function getName(): ?string
+    {
+        return ResourceName::createForResource($this)
+            ->getValue();
+    }
+
+    public function getNameOrDefault(): string
+    {
+        return ResourceName::createForResource($this)
+            ->getValueOrDefault();
+    }
+
+    /**
+     * The URL will change if the file change
+     * @param $queryParameters
+     */
+    protected function addCacheBusterToQueryParameters(&$queryParameters)
+    {
+        $queryParameters[CacheMedia::CACHE_BUSTER_KEY] = $this->getBuster();
+    }
+
+    public abstract function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
+
+
+    public function getReadStoreOrDefault(): MetadataStore
+    {
+        throw new ExceptionComboRuntime("To implement");
+    }
+
+    function getType(): string
+    {
+        return self::RESOURCE_TYPE;
+    }
+
+
+    public function getUid(): Metadata
+    {
+        throw new ExceptionComboRuntime("To implement");
+    }
+
+    public function __toString()
+    {
+        return $this->getPath()->toString();
+    }
+
 
 }

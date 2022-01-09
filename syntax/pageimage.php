@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
@@ -9,6 +9,8 @@ use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
+use ComboStrap\PagePath;
+use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -149,13 +151,13 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
             case 'xhtml':
 
                 $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                if (!$tagAttributes->hasAttribute(Analytics::PATH)) {
+                if (!$tagAttributes->hasAttribute(PagePath::PROPERTY_NAME)) {
 
                     LogUtility::msg("The path is mandatory and was not found", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return false;
                 }
 
-                $path = $tagAttributes->getValueAndRemove(Analytics::PATH);
+                $path = $tagAttributes->getValueAndRemove(PagePath::PROPERTY_NAME);
                 DokuPath::addRootSeparatorIfNotPresent($path);
 
                 $page = Page::createPageFromQualifiedPath($path);
@@ -176,7 +178,8 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                         $bestRatioDistance = 9999;
 
                         $targetRatio = self::getTargetAspectRatio($stringRatio);
-                        foreach ($page->getLocalImageSet() as $image) {
+                        foreach ($page->getPageImagesOrDefault() as $pageImage) {
+                            $image = $pageImage->getImage();
                             $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
                             if ($ratioDistance < $bestRatioDistance) {
                                 $bestRatioDistance = $ratioDistance;
@@ -215,9 +218,8 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     $tagAttributes->addStyleDeclaration("max-height", "unset");
                 }
 
-                $mediaLink = MediaLink::createMediaLinkFromAbsolutePath(
-                    $selectedPageImage->getAbsolutePath(),
-                    null,
+                $mediaLink = MediaLink::createMediaLinkFromPath(
+                    $selectedPageImage->getPath(),
                     $tagAttributes
                 );
                 $renderer->doc .= $mediaLink->renderMediaTag();

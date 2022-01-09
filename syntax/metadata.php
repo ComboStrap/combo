@@ -14,6 +14,73 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  */
 class syntax_plugin_combo_metadata extends DokuWiki_Syntax_Plugin
 {
+    /**
+     * A regular expression to filter the output
+     */
+    public const EXCLUDE_ATTRIBUTE = "exclude";
+    /**
+     * The default attributes
+     */
+    public const CONF_METADATA_DEFAULT_ATTRIBUTES = "metadataViewerDefaultAttributes";
+    public const TITLE_ATTRIBUTE = "title";
+    /**
+     * The HTML tag
+     */
+    public const TAG = "metadata";
+    /**
+     * The HTML id of the box (for testing purpose)
+     */
+    public const META_MESSAGE_BOX_ID = "metadata-viewer";
+
+    /**
+     *
+     * @param \dokuwiki\Extension\Plugin $plugin - the calling dokuwiki plugin
+     * @param $inlineAttributes - the inline attribute of a component if any
+     * @return string - an HTML box of the array
+     */
+    public static function getHtmlMetadataBox($plugin, $inlineAttributes = array()): string
+    {
+
+        // Attributes processing
+        $defaultStringAttributes = $plugin->getConf(self::CONF_METADATA_DEFAULT_ATTRIBUTES);
+        $defaultAttributes = PluginUtility::parseAttributes($defaultStringAttributes);
+        $attributes = PluginUtility::mergeAttributes($inlineAttributes, $defaultAttributes);
+
+        // Building the box
+        $content = '<div id="' . self::META_MESSAGE_BOX_ID . '" class="alert alert-success " role="note">';
+        if (array_key_exists(self::TITLE_ATTRIBUTE, $attributes)) {
+            $content .= '<h2 class="alert-heading" ">' . $attributes[self::TITLE_ATTRIBUTE] . '</h2>';
+        }
+        global $ID;
+        $metadata = p_read_metadata($ID);
+        $metas = $metadata['persistent'];
+
+
+        if (array_key_exists(self::EXCLUDE_ATTRIBUTE, $attributes)) {
+            $filter = $attributes[self::EXCLUDE_ATTRIBUTE];
+            \ComboStrap\ArrayUtility::filterArrayByKey($metas, $filter);
+        }
+        if (!array_key_exists("canonical", $metas)) {
+            $metas["canonical"] = PluginUtility::getDocumentationHyperLink("canonical", "No Canonical");
+        }
+
+        $content .= \ComboStrap\ArrayUtility::formatAsHtmlList($metas);
+
+
+        $referenceStyle = array(
+            "font-size" => "95%",
+            "clear" => "both",
+            "bottom" => "10px",
+            "right" => "15px",
+            "position" => "absolute",
+            "font-style" => "italic"
+        );
+
+        $content .= '<div style="' . PluginUtility::array2InlineStyle($referenceStyle) . '">' . $plugin->getLang('message_come_from') . PluginUtility::getDocumentationHyperLink("metadata:viewer", "ComboStrap Metadata Viewer") . '</div>';
+        $content .= '</div>';
+        return $content;
+
+    }
 
     /**
      * Syntax Type.
@@ -64,7 +131,7 @@ class syntax_plugin_combo_metadata extends DokuWiki_Syntax_Plugin
     {
 
 
-        $pattern = PluginUtility::getEmptyTagPattern(MetadataUtility::TAG);
+        $pattern = PluginUtility::getEmptyTagPattern(self::TAG);
         $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
@@ -110,7 +177,7 @@ class syntax_plugin_combo_metadata extends DokuWiki_Syntax_Plugin
 
             /** @var Doku_Renderer_xhtml $renderer */
 
-            $renderer->doc .= MetadataUtility::getHtmlMetadataBox($this, $data);
+            $renderer->doc .= self::getHtmlMetadataBox($this, $data);
             return true;
 
         }

@@ -45,6 +45,8 @@ class XmlDocument
 
     ];
 
+    const CANONICAL = "xml";
+
     /**
      * @var DOMDocument
      */
@@ -174,7 +176,7 @@ class XmlDocument
                         libxml_clear_errors();
 
                         // In test, this will send a exception
-                        LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, "support");
+                        LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
 
                     }
 
@@ -212,20 +214,23 @@ class XmlDocument
     }
 
     /**
-     * @param File $file
+     * To not have a collusion with {@link SvgDocument::createSvgDocumentFromPath()}
+     * @param Path $path
+     * @return XmlDocument
      */
     public
-    static function createFromPath($file)
+    static function createXmlDocFromPath(Path $path): XmlDocument
     {
         $mime = XmlDocument::XML_TYPE;
-        if (in_array($file->getExtension(), ["html", "htm"])) {
+        if (in_array($path->getExtension(), ["html", "htm"])) {
             $mime = XmlDocument::HTML_TYPE;
         }
-        return new XmlDocument($file->getContent(), $mime);
+        $content = FileSystems::getContent($path);
+        return new XmlDocument($content, $mime);
     }
 
     public
-    static function createFromString($string)
+    static function createXmlDocFromMarkup($string): XmlDocument
     {
         $mime = XmlDocument::XML_TYPE;
         return new XmlDocument($string, $mime);

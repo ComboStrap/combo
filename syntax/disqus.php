@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\DisqusIdentifier;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
@@ -23,7 +24,6 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
 
     const TAG = 'disqus';
 
-    const META_DISQUS_IDENTIFIER = "disqus_identifier";
     const ATTRIBUTE_CATEGORY = "category";
 
     /**
@@ -114,7 +114,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                 list($attributes) = $data;
                 /** @var Doku_Renderer_xhtml $renderer */
 
-                $page = Page::createRequestedPageFromEnvironment();
+                $page = Page::createPageFromRequestedPage();
 
                 /**
                  * Disqus configuration
@@ -129,25 +129,27 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                 }
                 $forumShortName = hsc($forumShortName);
 
-                $disqusIdentifier = MetadataUtility::getMeta(self::META_DISQUS_IDENTIFIER);
+                /**
+                 * @deprecated the page id is used
+                 */
+                $disqusIdentifier = $page->getMetadata(DisqusIdentifier::PROPERTY_NAME);
                 if (empty($disqusIdentifier)) {
 
                     $disqusIdentifier = $attributes[self::ATTRIBUTE_IDENTIFIER];
                     if (empty($disqusIdentifier)) {
-                        $disqusIdentifier = $page->getId();
+                        $disqusIdentifier = $page->getPageId();
+                        if ($disqusIdentifier === null) {
+                            LogUtility::msg("The page id has not been yet set, therefore the disqus forum can not render", LogUtility::LVL_MSG_ERROR, self::TAG);
+                            return false;
+                        }
                     }
 
-                    $canonical = $page->getCanonical();
-                    if (!empty($canonical)) {
-                        $disqusIdentifier = $canonical;
-                    }
-                    MetadataUtility::setMeta(self::META_DISQUS_IDENTIFIER, $disqusIdentifier);
                 }
                 $disqusConfig = "this.page.identifier = \"$disqusIdentifier\";";
 
                 $url = $attributes[self::ATTRIBUTE_URL];
                 if (empty($url)) {
-                    $url = $page->getCanonicalUrlOrDefault();
+                    $url = $page->getCanonicalUrl();
                 }
                 $disqusConfig .= "this.page.url = $url;";
 

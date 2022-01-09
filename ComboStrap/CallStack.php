@@ -370,7 +370,7 @@ class CallStack
         /**
          * Edgde case
          */
-        if(empty($this->callStack)){
+        if (empty($this->callStack)) {
             return false;
         }
 
@@ -491,7 +491,7 @@ class CallStack
         /**
          * Edgde case
          */
-        if(empty($this->callStack)){
+        if (empty($this->callStack)) {
             return false;
         }
 
@@ -774,7 +774,7 @@ class CallStack
         /**
          * Edge case
          */
-        if(empty($this->callStack)){
+        if (empty($this->callStack)) {
             return false;
         }
 
@@ -843,9 +843,37 @@ class CallStack
      */
     public function appendInstructionsFromCallObjects($calls)
     {
-        foreach($calls as $call){
+        foreach ($calls as $call) {
             $this->appendCallAtTheEnd($call);
         }
+
+    }
+
+    /**
+     *
+     * @return int|mixed - the last position on the callstack
+     * If you are at the end of the callstack after a full parsing,
+     * this should be the length of the string of the page
+     */
+    public function getLastCharacterPosition()
+    {
+        $offset = $this->getActualOffset();
+
+        $lastEndPosition = 0;
+        $this->moveToEnd();
+        while ($actualCall = $this->previous()) {
+            // p_open and p_close have always a position value of 0
+            $lastEndPosition = $actualCall->getLastMatchedCharacterPosition();
+            if ($lastEndPosition !== 0) {
+                break;
+            }
+        }
+        if ($offset == null) {
+            $this->moveToEnd();
+        } else {
+            $this->moveToOffset($offset);
+        }
+        return $lastEndPosition;
 
     }
 

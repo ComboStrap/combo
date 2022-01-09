@@ -27,12 +27,12 @@ class InstalledVersions
 private static $installed = array (
   'root' => 
   array (
-    'pretty_version' => '1.20.x-dev',
-    'version' => '1.20.9999999.9999999-dev',
+    'pretty_version' => '1.22.x-dev',
+    'version' => '1.22.9999999.9999999-dev',
     'aliases' => 
     array (
     ),
-    'reference' => 'e00360b6decd41771547ddf57a5535bfc4e32e34',
+    'reference' => '70c0e03a7f16e199a3dc6c79fcc5b7e3edaf6886',
     'name' => 'combostrap/combo',
   ),
   'versions' => 
@@ -48,12 +48,12 @@ private static $installed = array (
     ),
     'combostrap/combo' => 
     array (
-      'pretty_version' => '1.20.x-dev',
-      'version' => '1.20.9999999.9999999-dev',
+      'pretty_version' => '1.22.x-dev',
+      'version' => '1.22.9999999.9999999-dev',
       'aliases' => 
       array (
       ),
-      'reference' => 'e00360b6decd41771547ddf57a5535bfc4e32e34',
+      'reference' => '70c0e03a7f16e199a3dc6c79fcc5b7e3edaf6886',
     ),
     'dragonmantank/cron-expression' => 
     array (
@@ -63,6 +63,24 @@ private static $installed = array (
       array (
       ),
       'reference' => '9504fa9ea681b586028adaaa0877db4aecf32bad',
+    ),
+    'hidehalo/nanoid-php' => 
+    array (
+      'pretty_version' => '1.1.8',
+      'version' => '1.1.8.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '14187ab7a5affa34078b6a54df94176bb7a21227',
+    ),
+    'paragonie/random_compat' => 
+    array (
+      'pretty_version' => 'v9.99.100',
+      'version' => '9.99.100.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '996434e5492cb4c3edcb9168db6fbb1359ef965a',
     ),
   ),
 );

@@ -1,10 +1,11 @@
 <?php
 
 
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
+use ComboStrap\PageH1;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -46,6 +47,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     const TYPE_TITLE = "title";
 
     const CANONICAL = "heading";
+
     const SYNTAX_TYPE = 'baseonly';
     const SYNTAX_PTYPE = 'block';
 
@@ -55,6 +57,17 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      * Not level 2 because this is the most used level and we can confound with it
      */
     const DEFAULT_LEVEL = "3";
+
+    /**
+     * The section generation:
+     *   - Dokuwiki section (ie div just after the heading)
+     *   - or Combo section (ie section just before the heading)
+     */
+    public const CONF_SECTION_LAYOUT = 'section_layout';
+    const CONF_SECTION_LAYOUT_COMBO = "combo";
+    const CONF_SECTION_LAYOUT_DOKUWIKI = "dokuwiki";
+    const CONF_SECTION_LAYOUT_VALUES = [self::CONF_SECTION_LAYOUT_COMBO, self::CONF_SECTION_LAYOUT_DOKUWIKI];
+    const CONF_SECTION_LAYOUT_DEFAULT = self::CONF_SECTION_LAYOUT_COMBO;
 
     /**
      * A common function used to handle exit of headings
@@ -95,7 +108,12 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         if ($level == 1) {
 
             global $ID;
-            p_set_metadata($ID, array(Analytics::H1 => trim($text)));
+            p_set_metadata(
+                $ID,
+                array(PageH1::H1_PARSED => trim($text)),
+                false,
+                false // runtime meta
+            );
 
         }
     }
@@ -290,7 +308,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
                 if (in_array($type, self::DISPLAY_TYPES_ONLY_BS_5)) {
                     $displayClass = "display-4";
-                    LogUtility::msg("Bootstrap 4 does not support the type ($type). Switch to " . PluginUtility::getUrl(Bootstrap::CANONICAL, "bootstrap 5") . " if you want to use it. The display type was set to `d4`", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                    LogUtility::msg("Bootstrap 4 does not support the type ($type). Switch to " . PluginUtility::getDocumentationHyperLink(Bootstrap::CANONICAL, "bootstrap 5") . " if you want to use it. The display type was set to `d4`", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
                 }
 
             }
@@ -327,15 +345,19 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 if (empty($tocText)) {
                     LogUtility::msg("The heading text should be not null on the enter tag");
                 }
-                if (trim(strtolower($tocText)) == "articles related") {
+                if (trim(strtolower($tocText)) === "articles related") {
                     $tagAttributes->addClassName("d-print-none");
                 }
             } else {
                 $tocText = "Heading Text Not found";
                 LogUtility::msg("The heading text attribute was not found for the toc");
             }
-            // The exact position because we does not capture any EOL
+
+
+            // note on the position value
+            // this is the exact position because we does not capture any EOL
             // and therefore the section should start at the first captured character
+
             $renderer->header($tocText, $level, $pos);
             $attributes = syntax_plugin_combo_heading::reduceToFirstOpeningTagAndReturnAttributes($renderer->doc);
             foreach ($attributes as $key => $value) {

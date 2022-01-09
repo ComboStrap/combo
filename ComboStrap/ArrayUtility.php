@@ -15,7 +15,7 @@ class ArrayUtility
      * @param string $content - [Optional] - append to this variable if given
      * @return string - an array as an HTML list or $content if given as variable
      */
-    public static function formatAsHtmlList(array $toPrint, &$content = "")
+    public static function formatAsHtmlList(array $toPrint, &$content = ""): string
     {
         /**
          * Sort it on the key
@@ -30,7 +30,7 @@ class ArrayUtility
                 $content .= '</li>';
             } else {
                 if (preg_match('/date|created|modified/i', $key) && is_numeric($value)) {
-                    $value = date(DateTime::ISO8601, $value);
+                    $value =  date(DATE_ATOM, $value);
                 }
                 $stringValue = var_export($value, true);
                 $content .= '<li>' . $key . ' : ' . $stringValue . '</li>';
@@ -79,5 +79,30 @@ class ArrayUtility
         // By default, the pointer is on the first element
         reset($array);
         return $key;
+    }
+
+    /**
+     * @param array $flatArray - the returned flat array
+     * @param array|string $value - the value to return as a flat array
+     */
+    public static function toFlatArray(array &$flatArray, $value)
+    {
+        if (is_array($value)) {
+            foreach ($value as $subImageValue) {
+                self::toFlatArray($flatArray, $subImageValue);
+            }
+        } else {
+            $flatArray[] = $value;
+        }
+    }
+
+    /**
+     * @param array $default
+     * @param array $overwrite
+     * @return array
+     */
+    public static function mergeByValue(array $default, array $overwrite): array
+    {
+        return array_merge($default,$overwrite);
     }
 }

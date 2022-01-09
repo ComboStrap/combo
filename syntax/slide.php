@@ -214,6 +214,20 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                     break;
             }
             return true;
+        } elseif ($format == 'xml') {
+            /** @var renderer_plugin_combo_xml $renderer */
+            $state = $data[PluginUtility::STATE];
+            switch ($state) {
+                case DOKU_LEXER_ENTER :
+                    $renderer->doc .= "<slide>";
+                    break;
+                case DOKU_LEXER_UNMATCHED :
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    break;
+                case DOKU_LEXER_EXIT :
+                    $renderer->doc .= "</slide>";
+                    break;
+            }
         }
 
         // unsupported $mode

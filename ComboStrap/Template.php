@@ -15,6 +15,7 @@ class Template
     const VARIABLE_PREFIX = "$";
     const VARIABLE_PATTERN_CAPTURE_VARIABLE = "/(\\" . self::VARIABLE_PREFIX . "[\w]*)/im";
     const VARIABLE_PATTERN_CAPTURE_NAME = "/\\" . self::VARIABLE_PREFIX . "([\w]*)/im";
+    const CANONICAL = "template";
 
     protected $_string;
     protected $_data = array();
@@ -52,7 +53,7 @@ class Template
                 if(isset($this->_data[$variable])) {
                     $value = $this->_data[$variable];
                 } else  {
-                    LogUtility::msg("The variable ($variable) was not found and have not been replaced");
+                    LogUtility::msg("The variable ($variable) was not found and has not been replaced", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
                     $value = $variable;
                 }
             } else {

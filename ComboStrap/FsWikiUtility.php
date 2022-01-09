@@ -24,6 +24,7 @@ class FsWikiUtility
     /**
      * Determine if the current page is a sidebar (a bar)
      * @return bool
+     * TODO: Duplicate of {@link Page::isSlot()}
      */
     public static function isSideBar()
     {
@@ -39,34 +40,6 @@ class FsWikiUtility
         return $isSidebar;
     }
 
-    /**
-     * Return the main page id
-     * (Not the sidebar)
-     * @return mixed|string
-     */
-    public static function getMainPageId()
-    {
-        global $ID;
-        global $INFO;
-        $callingId = $ID;
-        // If the component is in a sidebar, we don't want the ID of the sidebar
-        // but the ID of the page.
-        if ($INFO != null) {
-            $callingId = $INFO['id'];
-        }
-        /**
-         * This is the case with event triggered
-         * before DokuWiki such as
-         * https://www.dokuwiki.org/devel:event:init_lang_load
-         */
-        if ($callingId == null) {
-            global $_REQUEST;
-            if (isset($_REQUEST["id"])) {
-                $callingId = $_REQUEST["id"];
-            }
-        }
-        return $callingId;
-    }
 
     /**
      * Return all pages and/of sub-namespaces (subdirectory) of a namespace (ie directory)
@@ -85,7 +58,7 @@ class FsWikiUtility
          * To a relative file system path
          */
         $dokuPath = DokuPath::createPagePathFromPath($path);
-        $relativeFileSystemPath = str_replace(":", "/", $dokuPath->getId());
+        $relativeFileSystemPath = str_replace(":", "/", $dokuPath->getDokuwikiId());
 
 
         $data = array();
@@ -113,29 +86,17 @@ class FsWikiUtility
     }
 
     /**
-     * Return the page index of a namespace of null if it does not exist
+     * Return the page index of a namespace or null if it does not exist
      * ie the index.html
-     * @param $namespacePath
-     * @return string|null
+     * @param $namespacePath - in dokuwiki format
+     * @return string - the dokuwiki path
+     * @deprecated use {@link Page::getHomePageFromNamespace()} instead
      */
-    public static function getHomePagePath($namespacePath)
+    public static function getHomePagePath($namespacePath): ?string
     {
-        global $conf;
-
-        if ($namespacePath != ":") {
-            $namespacePath = $namespacePath . ":";
-        }
-
-        $startPageName = $conf['start'];
-        if (page_exists($namespacePath . $startPageName)) {
-            // start page inside namespace
-            return $namespacePath . $startPageName;
-        } elseif (page_exists($namespacePath . noNS(cleanID($namespacePath)))) {
-            // page named like the NS inside the NS
-            return $namespacePath . noNS(cleanID($namespacePath));
-        } elseif (page_exists($namespacePath)) {
-            // page like namespace exists
-            return substr($namespacePath, 0, -1);
+        $homePage = Page::getHomePageFromNamespace($namespacePath);
+        if ($homePage->exists()) {
+            return $homePage->getAbsolutePath();
         } else {
             return null;
         }
@@ -199,23 +160,48 @@ class FsWikiUtility
 
     /**
      * Find the pages in the tree
-     * @param $namespaces (default to the root tree)
-     * @param $depth
+     * @param $startPath
+     * @param int $depth
      * @return array
      */
-    public static function getPages($namespaces = array(''), $depth = 0)
+    public static function getPages($startPath, int $depth = 0): array
     {
+
+        if ($startPath === null || $startPath === "") {
+            throw new \RuntimeException("A start path is mandatory");
+        }
+
+
         // Run as admin to overcome the fact that
         // anonymous user cannot set all links and backlinks
         global $conf;
-        $datadir = $conf['datadir'];
+        $dataDir = $conf['datadir'];
 
         $pages = array();
-        foreach ($namespaces as $ns) {
 
+        // This is a page
+        if (page_exists($startPath)) {
+            $pages[] = array(
+                'id' => $startPath,
+                'ns' => getNS($startPath),
+                'title' => p_get_first_heading($startPath, false),
+                'size' => filesize(wikiFN($startPath)),
+                'mtime' => filemtime(wikiFN($startPath)),
+                'perm' => 16,
+                'type' => 'f',
+                'level' => 0,
+                'open' => 1,
+            );
+        } else {
+
+            $startPath = str_replace(':', '/', $startPath);
+
+            /**
+             * Directory
+             */
             search(
                 $pages,
-                $datadir,
+                $dataDir,
                 'search_universal',
                 array(
                     'depth' => $depth,
@@ -226,24 +212,8 @@ class FsWikiUtility
                     'firsthead' => false,
                     'meta' => false,
                 ),
-                str_replace(':', '/', $ns)
+                $startPath
             );
-
-            // add the ns start page
-            if ($ns && page_exists($ns)) {
-                $pages[] = array(
-                    'id' => $ns,
-                    'ns' => getNS($ns),
-                    'title' => p_get_first_heading($ns, false),
-                    'size' => filesize(wikiFN($ns)),
-                    'mtime' => filemtime(wikiFN($ns)),
-                    'perm' => 16,
-                    'type' => 'f',
-                    'level' => 0,
-                    'open' => 1,
-                );
-            }
-
         }
         return $pages;
     }

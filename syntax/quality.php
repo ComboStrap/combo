@@ -1,6 +1,8 @@
 <?php
 
 
+use ComboStrap\Mime;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 
 
@@ -116,7 +118,7 @@ class syntax_plugin_combo_quality extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         if ($format == 'xhtml') {
 
@@ -125,19 +127,14 @@ class syntax_plugin_combo_quality extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_SPECIAL :
                     $pageId = $data[PluginUtility::ATTRIBUTES]["page-id"];
-                    if (empty($pageId)){
+                    if (empty($pageId)) {
                         $renderer->doc .= "Quality Component: The page-id property is not defined";
                     } else {
-                        /**
-                         * If the pageId is relative make it absolute
-                         */
-                        if (strpos(":",$pageId)===false) {
-                            $pageNameSpace = getNS(PluginUtility::getPageId());
-                            resolve_pageid($pageNameSpace, $pageId, $exists);
-                        }
-                        $note = action_plugin_combo_qualitymessage::createQualityNote($pageId, $this);
-                        if ($note!=null) {
-                            $renderer->doc .= $note->toHtml();
+                        $page = Page::createPageFromId($pageId);
+                        $message = action_plugin_combo_qualitymessage::createHtmlQualityNote($page);
+                        $note = $message->getContent();
+                        if ($note != null) {
+                            $renderer->doc .= $note;
                         }
                     }
                     break;

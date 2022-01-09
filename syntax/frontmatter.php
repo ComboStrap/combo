@@ -20,14 +20,39 @@
  *
  */
 
-use ComboStrap\Analytics;
-use ComboStrap\CacheManager;
-use ComboStrap\Iso8601Date;
+use ComboStrap\Aliases;
+use ComboStrap\CacheExpirationFrequency;
+use ComboStrap\Canonical;
+use ComboStrap\EndDate;
+use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionComboRuntime;
+use ComboStrap\FileSystems;
+use ComboStrap\Lang;
+use ComboStrap\LdJson;
 use ComboStrap\LogUtility;
+use ComboStrap\LowQualityPageOverwrite;
 use ComboStrap\MediaLink;
+use ComboStrap\Message;
+use ComboStrap\Metadata;
+use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\MetadataFrontmatterStore;
+use ComboStrap\MetadataStoreTransfer;
 use ComboStrap\Page;
+use ComboStrap\PageH1;
+use ComboStrap\PageId;
+use ComboStrap\PageImagePath;
+use ComboStrap\PageImages;
+use ComboStrap\PageKeywords;
+use ComboStrap\PageLayout;
+use ComboStrap\PagePath;
+use ComboStrap\PagePublicationDate;
+use ComboStrap\PageTitle;
+use ComboStrap\PageType;
 use ComboStrap\PluginUtility;
-use ComboStrap\Publication;
+use ComboStrap\QualityDynamicMonitoringOverwrite;
+use ComboStrap\Region;
+use ComboStrap\ResourceName;
+use ComboStrap\StartDate;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -46,6 +71,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const STATUS = "status";
     const CANONICAL = "frontmatter";
     const CONF_ENABLE_SECTION_EDITING = 'enableFrontMatterSectionEditing';
+    const CONF_ENABLE_FRONT_MATTER_ON_SUBMIT = "enableFrontMatterOnSubmit";
+    const CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT = 0;
 
     /**
      * Used in the move plugin
@@ -55,28 +82,16 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const START_TAG = '---json';
     const END_TAG = '---';
     const METADATA_IMAGE_CANONICAL = "metadata:image";
+    const PATTERN = self::START_TAG . '.*?' . self::END_TAG;
 
     /**
-     * @param $match
-     * @return array|mixed - null if decodage problem, empty array if no json or an associative array
+     * The update status for the update of the frontmatter
      */
-    public static function FrontMatterMatchToAssociativeArray($match)
-    {
-        // strip
-        //   from start `---json` + eol = 8
-        //   from end   `---` + eol = 4
-        $jsonString = substr($match, 7, -3);
+    const UPDATE_EXIT_CODE_DONE = 000;
+    const UPDATE_EXIT_CODE_NOT_ENABLED = 100;
+    const UPDATE_EXIT_CODE_NOT_CHANGED = 200;
+    const UPDATE_EXIT_CODE_ERROR = 500;
 
-        // Empty front matter
-        if (trim($jsonString) == "") {
-            self::deleteKnownMetaThatAreNoMorePresent();
-            return [];
-        }
-
-        // Otherwise you get an object ie $arrayFormat-> syntax
-        $arrayFormat = true;
-        return json_decode($jsonString, $arrayFormat);
-    }
 
     /**
      * Syntax Type.
@@ -88,7 +103,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
      *
      * baseonly - run only in the base
      */
-    function getType()
+    function getType(): string
     {
         return 'baseonly';
     }
@@ -126,7 +141,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     {
         if ($mode == "base") {
             // only from the top
-            $this->Lexer->addSpecialPattern(self::START_TAG . '.*?' . self::END_TAG, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern(self::PATTERN, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
     }
 
@@ -148,81 +163,85 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
         if ($state == DOKU_LEXER_SPECIAL) {
 
-
-            $jsonArray = self::FrontMatterMatchToAssociativeArray($match);
-
-
             $result = [];
-            // Decodage problem
-            if ($jsonArray == null) {
-
+            $page = Page::createPageFromGlobalDokuwikiId();
+            try {
+                $frontMatterStore = MetadataFrontmatterStore::createFromFrontmatterString($page, $match);
+                $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
+            } catch (ExceptionCombo $e) {
+                // Decode problem
                 $result[self::STATUS] = self::PARSING_STATE_ERROR;
                 $result[PluginUtility::PAYLOAD] = $match;
-
-            } else {
-
-                if (sizeof($jsonArray) === 0) {
-                    return array(self::STATUS => self::PARSING_STATE_EMPTY);
-                }
-
-                $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
-                /**
-                 * Published is an alias for date published
-                 */
-                if (isset($jsonArray[Publication::OLD_META_KEY])) {
-                    $jsonArray[Publication::DATE_PUBLISHED] = $jsonArray[Publication::OLD_META_KEY];
-                    unset($jsonArray[Publication::OLD_META_KEY]);
-                }
-                /**
-                 * Add the time part if not present
-                 */
-                if (isset($jsonArray[Publication::DATE_PUBLISHED])) {
-                    $dateAsString = $jsonArray[Publication::DATE_PUBLISHED];
-                    $dateObject = Iso8601Date::create($dateAsString);
-                    if (!$dateObject->isValidDateEntry()) {
-                        LogUtility::msg("The published date ($dateAsString) is not a valid date supported.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-                        unset($jsonArray[Publication::DATE_PUBLISHED]);
-                    } else {
-                        $jsonArray[Publication::DATE_PUBLISHED] = "$dateObject";
-                    }
-                }
-
-                if (isset($jsonArray[Analytics::DATE_START])) {
-                    $dateAsString = $jsonArray[Analytics::DATE_START];
-                    $dateObject = Iso8601Date::create($dateAsString);
-                    if (!$dateObject->isValidDateEntry()) {
-                        LogUtility::msg("The start date ($dateAsString) is not a valid date supported.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-                        unset($jsonArray[Analytics::DATE_START]);
-                    } else {
-                        $jsonArray[Analytics::DATE_START] = "$dateObject";
-                    }
-                }
-
-                if (isset($jsonArray[Analytics::DATE_END])) {
-                    $dateAsString = $jsonArray[Analytics::DATE_END];
-                    $dateObject = Iso8601Date::create($dateAsString);
-                    if (!$dateObject->isValidDateEntry()) {
-                        LogUtility::msg("The end date ($dateAsString) is not a valid date supported.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-                        unset($jsonArray[Analytics::DATE_END]);
-                    } else {
-                        $jsonArray[Analytics::DATE_END] = "$dateObject";
-                    }
-                }
-
-                $result[PluginUtility::ATTRIBUTES] = $jsonArray;
+                return $result;
             }
 
             /**
-             * End position is the length of the match + 1 for the newline
+             * Empty string
+             * Rare case, we delete all mutable meta if present
              */
-            $newLine = 1;
-            $endPosition = $pos + strlen($match) + $newLine;
-            $result[PluginUtility::POSITION] = [$pos, $endPosition];
+            $frontmatterData = $frontMatterStore->getData();
+            if ($frontmatterData === null) {
+                global $ID;
+                $meta = p_read_metadata($ID);
+                foreach (Metadata::MUTABLE_METADATA as $metaKey) {
+                    if (isset($meta['persistent'][$metaKey])) {
+                        unset($meta['persistent'][$metaKey]);
+                    }
+                }
+                p_save_metadata($ID, $meta);
+                return array(self::STATUS => self::PARSING_STATE_EMPTY);
+            }
 
-            return $result;
+
+            /**
+             * Sync
+             */
+            $targetStore = MetadataDokuWikiStore::getOrCreateFromResource($page);
+            $transfer = MetadataStoreTransfer::createForPage($page)
+                ->fromStore($frontMatterStore)
+                ->toStore($targetStore)
+                ->process($frontmatterData);
+
+            $messages = $transfer->getMessages();
+            $dataForRenderer = $transfer->getNormalizedDataArray();
+
+
+            /**
+             * Database update
+             */
+            try {
+                $databasePage = $page->getDatabasePage();
+                $databasePage->replicateMetaAttributes();
+            } catch (Exception $e) {
+                $message = Message::createErrorMessage($e->getMessage());
+                if ($e instanceof ExceptionCombo) {
+                    $message->setCanonical($e->getCanonical());
+                }
+                $messages[] = $message;
+            }
+
+
+            foreach ($messages as $message) {
+                $message->sendLogMsg();
+            }
+
+            /**
+             * Return them for metadata rendering
+             */
+            $result[PluginUtility::ATTRIBUTES] = $dataForRenderer;
+
         }
 
-        return array();
+
+        /**
+         * End position is the length of the match + 1 for the newline
+         */
+        $newLine = 1;
+        $endPosition = $pos + strlen($match) + $newLine;
+        $result[PluginUtility::POSITION] = [$pos, $endPosition];
+
+        return $result;
+
     }
 
     /**
@@ -235,7 +254,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         switch ($format) {
@@ -245,8 +264,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
                 $state = $data[self::STATUS];
                 if ($state == self::PARSING_STATE_ERROR) {
-                    $json = $data[PluginUtility::PAYLOAD];
-                    LogUtility::msg("Front Matter: The json object for the page ($ID) is not valid. See the errors it by clicking on <a href=\"https://jsonformatter.curiousconcept.com/?data=" . urlencode($json) . "\">this link</a>.", LogUtility::LVL_MSG_ERROR);
+                    $json = MetadataFrontmatterStore::stripFrontmatterTag($data[PluginUtility::PAYLOAD]);
+                    LogUtility::msg("Front Matter: The json object for the page ($ID) is not valid. " . \ComboStrap\Json::getValidationLink($json), LogUtility::LVL_MSG_ERROR);
                 }
 
                 /**
@@ -260,105 +279,63 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     $renderer->finishSectionEdit($endPosition);
                 }
                 break;
+
             case renderer_plugin_combo_analytics::RENDERER_FORMAT:
 
                 if ($data[self::STATUS] != self::PARSING_STATE_SUCCESSFUL) {
                     return false;
                 }
 
-                $notModifiableMeta = [
-                    Analytics::PATH,
-                    Analytics::DATE_CREATED,
-                    Analytics::DATE_MODIFIED
-                ];
 
                 /** @var renderer_plugin_combo_analytics $renderer */
-                $jsonArray = $data[PluginUtility::ATTRIBUTES];
-                foreach ($jsonArray as $key => $value) {
-                    if (!in_array($key, $notModifiableMeta)) {
+                $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
+                foreach ($frontMatterJsonArray as $key => $value) {
 
-                        $renderer->setMeta($key, $value);
-                        if ($key === Page::IMAGE_META_PROPERTY) {
-                            $this->updateImageStatistics($value, $renderer);
-                        }
-
-                    } else {
-                        LogUtility::msg("The metadata ($key) cannot be set.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    $renderer->setAnalyticsMetaForReporting($key, $value);
+                    if ($key === PageImages::PROPERTY_NAME) {
+                        $this->updateImageStatistics($value, $renderer);
                     }
+
                 }
                 break;
 
             case "metadata":
 
+                global $ID;
                 /** @var Doku_Renderer_metadata $renderer */
-                if ($data[self::STATUS] != self::PARSING_STATE_SUCCESSFUL) {
+                if ($data[self::STATUS] === self::PARSING_STATE_ERROR) {
+                    if (PluginUtility::isDevOrTest()) {
+                        // fail if test
+                        throw new ExceptionComboRuntime("Front Matter: The json object for the page ($ID) is not valid.", LogUtility::LVL_MSG_ERROR);
+                    }
                     return false;
                 }
 
-                global $ID;
-                $jsonArray = $data[PluginUtility::ATTRIBUTES];
+                /**
+                 * Register media in index
+                 */
+                $page = Page::createPageFromId($ID);
+                $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
+                if (isset($frontMatterJsonArray[PageImages::getPersistentName()])) {
+                    $value = $frontMatterJsonArray[PageImages::getPersistentName()];
 
-
-                $notModifiableMeta = [
-                    "date",
-                    "user",
-                    "last_change",
-                    "creator",
-                    "contributor"
-                ];
-
-                foreach ($jsonArray as $key => $value) {
-
-                    $lowerCaseKey = trim(strtolower($key));
-
-                    // Not modifiable metadata
-                    if (in_array($lowerCaseKey, $notModifiableMeta)) {
-                        LogUtility::msg("Front Matter: The metadata ($lowerCaseKey) is a protected metadata and cannot be modified", LogUtility::LVL_MSG_WARNING);
-                        continue;
+                    /**
+                     * @var PageImages $pageImages
+                     */
+                    $pageImages = PageImages::createForPage($page)
+                        ->buildFromStoreValue($value);
+                    foreach ($pageImages->getValueAsPageImages() as $imageValue) {
+                        $imagePath = $imageValue->getImage()->getPath()->toAbsolutePath()->toString();
+                        $attributes = [PagePath::PROPERTY_NAME => $imagePath];
+                        if (media_isexternal($imagePath)) {
+                            $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::EXTERNAL_MEDIA_CALL_NAME;
+                        } else {
+                            $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::INTERNAL_MEDIA_CALL_NAME;
+                        }
+                        syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
                     }
-
-                    switch ($lowerCaseKey) {
-
-                        case Page::DESCRIPTION_PROPERTY:
-                            /**
-                             * Overwrite also the actual description
-                             */
-                            p_set_metadata($ID, array(Page::DESCRIPTION_PROPERTY => array(
-                                "abstract" => $value,
-                                "origin" => syntax_plugin_combo_frontmatter::CANONICAL
-                            )));
-                            /**
-                             * Continue because
-                             * the description value was already stored
-                             * We don't want to override it
-                             * And continue 2 because continue == break in a switch
-                             */
-                            continue 2;
-
-
-                        // Canonical should be lowercase
-                        case Page::CANONICAL_PROPERTY:
-                            $value = strtolower($value);
-                            break;
-
-                        case Page::IMAGE_META_PROPERTY:
-
-                            $imageValues = [];
-                            $this->aggregateImageValues($imageValues, $value);
-                            foreach ($imageValues as $imageValue) {
-                                $media = MediaLink::createFromRenderMatch($imageValue);
-                                $attributes = $media->toCallStackArray();
-                                syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
-                            }
-                            break;
-
-                    }
-                    // Set the value persistently
-                    p_set_metadata($ID, array($lowerCaseKey => $value));
 
                 }
-
-                $this->deleteKnownMetaThatAreNoMorePresent($jsonArray);
 
                 break;
 
@@ -366,71 +343,30 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         return true;
     }
 
-    /**
-     *
-     * @param array $json - The Json
-     * Delete the controlled meta that are no more present if they exists
-     * @return bool
-     */
-    static public
-    function deleteKnownMetaThatAreNoMorePresent(array $json = array())
-    {
-        global $ID;
-
-        /**
-         * The managed meta with the exception of
-         * the {@link action_plugin_combo_metadescription::DESCRIPTION_META_KEY description}
-         * because it's already managed by dokuwiki in description['abstract']
-         */
-        $managedMeta = [
-            Page::CANONICAL_PROPERTY,
-            Page::TYPE_META_PROPERTY,
-            Page::IMAGE_META_PROPERTY,
-            Page::COUNTRY_META_PROPERTY,
-            Page::LANG_META_PROPERTY,
-            Analytics::TITLE,
-            syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER,
-            Publication::OLD_META_KEY,
-            Publication::DATE_PUBLISHED,
-            Analytics::NAME,
-            CacheManager::DATE_CACHE_EXPIRATION_META_KEY,
-            action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY,
-            Page::LAYOUT_PROPERTY
-
-        ];
-        $meta = p_read_metadata($ID);
-        foreach ($managedMeta as $metaKey) {
-            if (!array_key_exists($metaKey, $json)) {
-                if (isset($meta['persistent'][$metaKey])) {
-                    unset($meta['persistent'][$metaKey]);
-                }
-            }
-        }
-        return p_save_metadata($ID, $meta);
-    }
 
     private function updateImageStatistics($value, $renderer)
     {
-        if(is_array($value)){
-            foreach($value as $subImage){
-                $this->updateImageStatistics($subImage, $renderer);
+        if (is_array($value) && sizeof($value) > 0) {
+            $firstKey = array_keys($value)[0];
+            if (is_numeric($firstKey)) {
+                foreach ($value as $subImage) {
+                    $this->updateImageStatistics($subImage, $renderer);
+                }
+                return;
             }
-        } else {
-            $media = MediaLink::createFromRenderMatch($value);
-            $attributes = $media->toCallStackArray();
-            syntax_plugin_combo_media::updateStatistics($attributes, $renderer);
         }
-    }
 
-    private function aggregateImageValues(array &$imageValues, $value)
-    {
-        if (is_array($value)) {
-            foreach ($value as $subImageValue) {
-                $this->aggregateImageValues($imageValues,$subImageValue);
-            }
-        } else {
-            $imageValues[] = $value;
+        /**
+         * Code below is fucked up
+         */
+        $path = $value;
+        if (is_array($value) && isset($value[PageImagePath::getPersistentName()])) {
+            $path = $value[PageImagePath::getPersistentName()];
         }
+        $media = MediaLink::createFromRenderMatch($path);
+        $attributes = $media->toCallStackArray();
+        syntax_plugin_combo_media::updateStatistics($attributes, $renderer);
+
     }
 
 

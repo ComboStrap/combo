@@ -1,18 +1,15 @@
 <?php
 
-// Search form in a navbar
 
-
-// must be run within Dokuwiki
 use ComboStrap\Bootstrap;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\Site;
-
-if (!defined('DOKU_INC')) die();
 
 
 class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
 {
+
+    const SNIPPET_ID = "search";
 
     function getType()
     {
@@ -29,7 +26,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
         return array();
     }
 
-    function getSort()
+    function getSort(): int
     {
         return 201;
     }
@@ -42,7 +39,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
 
     }
 
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
         switch ($state) {
@@ -50,7 +47,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL :
                 $init = array(
                     'ajax' => true,
-                    'autocomplete' => true
+                    'autocomplete' => false
                 );
                 $match = substr($match, strlen($this->getPluginComponent()) + 1, -1);
                 $parameters = array_merge($init, PluginUtility::parseAttributes($match));
@@ -86,37 +83,65 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
 
                     global $lang;
                     global $ACT;
-                    global $QUERY;
+                    global $QUERY; // $QUERY = $INPUT->str('q')
 
                     // don't print the search form if search action has been disabled
                     if (!actionOK('search')) return false;
 
-                    $renderer->doc .= '<form action="' . wl() . '" accept-charset="utf-8" id="dw__search" method="get" role="search" class="search form-inline ';
+                    PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("debounce");
+                    PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::SNIPPET_ID);
+
                     $parameters = $data[PluginUtility::ATTRIBUTES];
+                    $extraClass = "";
                     if (array_key_exists("class", $parameters)) {
-                        $renderer->doc .= ' ' . $parameters["class"];
+                        $extraClass = $parameters["class"];
                     }
-                    $renderer->doc .= '">' . DOKU_LF;
-                    $renderer->doc .= '<input type="hidden" name="do" value="search" />';
-                    $id = PluginUtility::getPageId();
-                    $renderer->doc .= "<input type=\"hidden\" name=\"id\" value=\"$id\" />";
-                    $inputSearchId = 'qsearch__in';
+
+                    $id = Page::createPageFromRequestedPage()->getDokuwikiId();
+                    $inputSearchId = 'internal-search-box';
 
                     // https://getbootstrap.com/docs/5.0/getting-started/accessibility/#visually-hidden-content
                     //
                     $visuallyHidden = "sr-only";
                     $bootStrapVersion = Bootstrap::getBootStrapMajorVersion();
-                    if ($bootStrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
+                    if ($bootStrapVersion === Bootstrap::BootStrapFiveMajorVersion) {
                         $visuallyHidden = "visually-hidden";
                     }
-                    $renderer->doc .= "<label class=\"$visuallyHidden\" for=\"$inputSearchId\">Search Term</label>";
-                    $renderer->doc .= '<input name="q" type="text" tabindex="1"';
-                    if ($ACT == 'search') $renderer->doc .= ' value="' . htmlspecialchars($QUERY) . '" ';
-                    $renderer->doc .= ' placeholder="' . $lang['btn_search'] . '..." ';
-                    if (!$parameters['autocomplete']) $renderer->doc .= 'autocomplete="off" ';
-                    $renderer->doc .= 'id="' . $inputSearchId . '" accesskey="f" class="edit form-control" title="[F]"/>';
-                    if ($parameters['ajax']) $renderer->doc .= '<div id="qsearch__out" class="ajax_qsearch JSpopup"></div>';
-                    $renderer->doc .= '</form>';
+                    $valueKeyProp = "";
+                    if ($ACT == 'search') $valueKeyProp = ' value="' . htmlspecialchars($QUERY) . '" ';
+                    $browserAutoComplete = 'on';
+                    if (!$parameters['autocomplete']) $browserAutoComplete = 'off';
+                    $ajaxAutoComplete = "";
+                    if ($parameters['ajax']) {
+                        $ajaxAutoComplete = "<ul class=\"dropdown-menu\"></ul>";
+                    }
+                    $action = wl();
+                    $renderer->doc .= <<<EOF
+<form
+    id="dw__search"
+    action="$action"
+    accept-charset="utf-8"
+    method="get"
+    role="search"
+    class="search form-inline $extraClass"
+    >
+<input type="hidden" name="do" value="search" />
+<input type="hidden" name="id" value="$id" />
+<label class="$visuallyHidden" for="$inputSearchId">Search Term</label>
+<input
+    id="$inputSearchId"
+    name="q"
+    type="text"
+    tabindex="1"
+    $valueKeyProp
+    placeholder="{$lang['btn_search']}..."
+    autocomplete="$browserAutoComplete"
+    accesskey="f"
+    class="edit form-control"
+    title="[F]"/>
+$ajaxAutoComplete
+</form>
+EOF;
                     break;
             }
             return true;

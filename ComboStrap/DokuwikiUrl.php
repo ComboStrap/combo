@@ -4,7 +4,7 @@
 namespace ComboStrap;
 
 /**
- * Parse a internal dokuwiki URL
+ * Parse a wiki URL that you can found in the first part of a link
  *
  * This class takes care of the
  * fact that a color can have a #
@@ -15,9 +15,13 @@ class DokuwikiUrl
 
     /**
      * In HTML (not in css)
+     *
      * Because ampersands are used to denote HTML entities,
      * if you want to use them as literal characters, you must escape them as entities,
      * e.g.  &amp;.
+     *
+     * In HTML, Browser will do the translation for you if you give an URL
+     * not encoded but testing library may not and refuse them
      *
      * This URL encoding is mandatory for the {@link ml} function
      * when there is a width and use them not otherwise
@@ -30,13 +34,13 @@ class DokuwikiUrl
      * https://daringfireball.net/projects/markdown/syntax#autoescape
      *
      */
-    const URL_ENCODED_AND = '&amp;';
+    const AMPERSAND_URL_ENCODED_FOR_HTML = '&amp;';
 
     /**
      * Used in dokuwiki syntax & in CSS attribute
      * (Css attribute value are then HTML encoded as value of the attribute)
      */
-    const URL_AND = "&";
+    const AMPERSAND_CHARACTER = "&";
     const ANCHOR_ATTRIBUTES = "anchor";
     /**
      * @var array
@@ -264,7 +268,7 @@ class DokuwikiUrl
     }
 
 
-    public static function createFromUrl($dokuwikiUrl)
+    public static function createFromUrl($dokuwikiUrl): DokuwikiUrl
     {
         return new DokuwikiUrl($dokuwikiUrl);
     }
@@ -273,11 +277,11 @@ class DokuwikiUrl
      * All URL token in an array
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         $attributes = [];
         $attributes[self::ANCHOR_ATTRIBUTES] = $this->fragment;
-        $attributes[DokuPath::PATH_ATTRIBUTE] = $this->pathOrId;
+        $attributes[PagePath::PROPERTY_NAME] = $this->pathOrId;
         return PluginUtility::mergeAttributes($attributes, $this->queryParameters);
     }
 
@@ -286,7 +290,7 @@ class DokuwikiUrl
         return $this->queryString;
     }
 
-    public function hasQueryParameter($propertyKey)
+    public function hasQueryParameter($propertyKey): bool
     {
         return isset($this->queryParameters[$propertyKey]);
     }
@@ -305,7 +309,7 @@ class DokuwikiUrl
      * In Dokuwiki, a path may also be in the form of an id (ie without root separator)
      * @return false|string
      */
-    public function getPathOrId()
+    public function getPath()
     {
         return $this->pathOrId;
     }
@@ -319,4 +323,18 @@ class DokuwikiUrl
         }
 
     }
+
+    public function getScheme(): string
+    {
+        if(link_isinterwiki($this->pathOrId)){
+            return InterWikiPath::scheme;
+        }
+        if(media_isexternal($this->pathOrId)){
+            return InternetPath::scheme;
+        }
+        return DokuFs::SCHEME;
+
+    }
+
+
 }

@@ -126,4 +126,9 @@ class/XmlUtility.php
 syntax/cardcolumns.php
 action/blockquote.php
 action/metadata.php
+action/home.php
+action/metadataviewer.php
+action/sidebarscachebursting.php
+action/urlmanager.php
+action/urlmessage.php
 

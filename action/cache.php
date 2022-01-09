@@ -1,13 +1,24 @@
 <?php
 
+use ComboStrap\AnalyticsDocument;
+use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheManager;
 use ComboStrap\CacheMedia;
-use ComboStrap\DokuPath;
+use ComboStrap\Cron;
+use ComboStrap\ExceptionCombo;
+use ComboStrap\File;
 use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
+use ComboStrap\LogUtility;
+use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\Page;
+use ComboStrap\PageDescription;
+use ComboStrap\PageH1;
+use ComboStrap\ResourceName;
+use ComboStrap\PageTitle;
 use ComboStrap\PluginUtility;
+use ComboStrap\TplUtility;
 use dokuwiki\Cache\CacheRenderer;
-use dokuwiki\Utf8\PhpString;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -18,23 +29,56 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 {
     const COMBO_CACHE_PREFIX = "combo:cache:";
 
-    /**
-     * https://www.ietf.org/rfc/rfc2616.txt
-     * To mark a response as "never expires," an origin server sends an Expires date approximately one year
-     * from the time the response is sent.
-     * HTTP/1.1 servers SHOULD NOT send Expires dates more than one year in the future.
-     *
-     * In seconds = 365*24*60*60
-     */
-    const INFINITE_MAX_AGE = 31536000;
 
-    /**
-     * Enable an infinite cache on image URL with the {@link CacheMedia::CACHE_BUSTER_KEY}
-     * present
-     */
-    const CONF_STATIC_CACHE_ENABLED = "staticCacheEnabled";
     const CANONICAL = "cache";
     const STATIC_SCRIPT_NAMES = ["/lib/exe/jquery.php", "/lib/exe/js.php", "/lib/exe/css.php"];
+
+    /**
+     * @var string[]
+     */
+    private static $sideSlotNames;
+
+
+    private static function getSideSlotNames(): array
+    {
+        if (self::$sideSlotNames === null) {
+            global $conf;
+
+            self::$sideSlotNames = [
+                $conf['sidebar']
+            ];
+
+            /**
+             * @see {@link \ComboStrap\TplConstant::CONF_SIDEKICK}
+             */
+            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            if ($loaded) {
+
+                $sideKickSlotPageName = TplUtility::getSideKickSlotPageName();
+                if (!empty($sideKickSlotPageName)) {
+                    self::$sideSlotNames[] = $sideKickSlotPageName;
+                }
+
+            }
+        }
+        return self::$sideSlotNames;
+    }
+
+    private static function removeSideSlotCache()
+    {
+        $sidebars = self::getSideSlotNames();
+
+
+        /**
+         * Delete the cache for the sidebar
+         */
+        foreach ($sidebars as $sidebarRelativePath) {
+
+            $page = Page::createPageFromNonQualifiedPath($sidebarRelativePath);
+            $page->deleteCache();
+
+        }
+    }
 
     /**
      * @param Doku_Event_Handler $controller
@@ -47,17 +91,12 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('PARSER_CACHE_USE', 'AFTER', $this, 'logCacheUsage', array());
 
-        $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'purgeIfNeeded', array());
+        $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'pageCacheExpiration', array());
 
         /**
-         * Control the HTTP cache of the image
+         * To add the cache result in the HTML
          */
-        $controller->register_hook('MEDIA_SENDFILE', 'BEFORE', $this, 'imageHTTPCacheBefore', array());
-
-        /**
-         * To add the cache result in the header
-         */
-        $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'addMeta', array());
+        $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'addCacheLogHtmlDataBlock', array());
 
         /**
          * To reset the cache manager
@@ -70,6 +109,12 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('INIT_LANG_LOAD', 'BEFORE', $this, 'deleteVaryFromStaticGeneratedResources', array());
 
+        /**
+         * To delete sidebar (cache) cache when a page was modified in a namespace
+         * https://combostrap.com/sideslots
+         */
+        $controller->register_hook(MetadataDokuWikiStore::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'sideSlotsCacheBurstingForMetadataMutation', array());
+        $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'sideSlotsCacheBurstingForPageCreationAndDeletion', array());
 
     }
 
@@ -87,19 +132,20 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $data = $event->data;
         $result = $event->result;
-        $pageId = $data->page;
+        $slotId = $data->page;
         $cacheManager = PluginUtility::getCacheManager();
-        $cacheManager->addSlot($pageId, $result, $data);
+        $cacheManager->addSlotForRequestedPage($slotId, $result, $data);
 
 
     }
 
     /**
      *
+     * Purge the cache if needed
      * @param Doku_Event $event
      * @param $params
      */
-    function purgeIfNeeded(Doku_Event $event, $params)
+    function pageCacheExpiration(Doku_Event $event, $params)
     {
 
         /**
@@ -110,7 +156,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         $pageId = $data->page;
 
         /**
-         * For whatever reason, the cache file of XHMTL
+         * For whatever reason, the cache file of XHTML
          * may be empty - No error found on the web server or the log.
          *
          * We just delete it then.
@@ -132,13 +178,28 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * rendering for a request.
          *
          * The first will be purged, the other one not
-         * because they can use the first one
+         * because they can't use the first one
          */
-        if (!PluginUtility::getCacheManager()->isCacheLogPresent($pageId, $data->mode)) {
-            $expirationStringDate = p_get_metadata($pageId, CacheManager::DATE_CACHE_EXPIRATION_META_KEY, METADATA_DONT_RENDER);
-            if ($expirationStringDate !== null) {
+        if (!PluginUtility::getCacheManager()->isCacheLogPresentForSlot($pageId, $data->mode)) {
+            $page = Page::createPageFromId($pageId);
+            $cacheExpirationFrequency = $page->getCacheExpirationFrequency();
+            if ($cacheExpirationFrequency === null) {
+                return;
+            }
 
-                $expirationDate = Iso8601Date::create($expirationStringDate)->getDateTime();
+            $expirationDate = CacheExpirationDate::createForPage($page)
+                ->getValue();
+
+            if ($expirationDate === null) {
+                try {
+                    $expirationDate = Cron::getDate($cacheExpirationFrequency);
+                    $page->setCacheExpirationDate($expirationDate);
+                } catch (ExceptionCombo $e) {
+                    LogUtility::msg("The cache expiration frequency ($cacheExpirationFrequency) is not a valid cron expression");
+                }
+            }
+            if ($expirationDate !== null) {
+
                 $actualDate = new DateTime();
                 if ($expirationDate < $actualDate) {
                     /**
@@ -146,6 +207,19 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                      * We request a purge
                      */
                     $data->depends["purge"] = true;
+
+                    /**
+                     * Calculate a new expiration date
+                     */
+                    try {
+                        $newDate = Cron::getDate($cacheExpirationFrequency);
+                        if ($newDate < $actualDate) {
+                            LogUtility::msg("The new calculated date cache expiration frequency ({$newDate->format(Iso8601Date::getFormat())}) is lower than the current date ({$actualDate->format(Iso8601Date::getFormat())})");
+                        }
+                        $page->setCacheExpirationDate($newDate);
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("The cache expiration frequency ($cacheExpirationFrequency) is not a value cron expression");
+                    }
                 }
             }
         }
@@ -158,227 +232,29 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
      * @param Doku_Event $event
      * @param $params
      */
-    function addMeta(Doku_Event $event, $params)
+    function addCacheLogHtmlDataBlock(Doku_Event $event, $params)
     {
 
         $cacheManager = PluginUtility::getCacheManager();
-        $slots = $cacheManager->getCacheSlotResults();
-        foreach ($slots as $slotId => $modes) {
+        $cacheSlotResults = $cacheManager->getCacheSlotResultsAsHtmlDataBlockArray();
+        $cacheJson = \ComboStrap\Json::createFromArray($cacheSlotResults);
 
-            $cachedMode = [];
-            foreach ($modes as $mode => $values) {
-                if ($values[CacheManager::RESULT_STATUS] === true) {
-                    $metaContentData = $mode;
-                    if (!PluginUtility::isTest()) {
-                        /**
-                         * @var DateTime $dateModified
-                         */
-                        $dateModified = $values[CacheManager::DATE_MODIFIED];
-                        $metaContentData .= ":" . $dateModified->format('Y-m-d\TH:i:s');
-                    }
-                    $cachedMode[] = $metaContentData;
-                }
-            }
-
-            if (sizeof($cachedMode) === 0) {
-                $value = "nocache";
-            } else {
-                sort($cachedMode);
-                $value = implode(",", $cachedMode);
-            }
-
-            // Add cache information into the head meta
-            // to test
-            $event->data["meta"][] = array("name" => self::COMBO_CACHE_PREFIX . $slotId, "content" => hsc($value));
+        if (PluginUtility::isDevOrTest()) {
+            $result = $cacheJson->toPrettyJsonString();
+        } else {
+            $result = $cacheJson->toMinifiedJsonString();
         }
+
+        $event->data["script"][] = array(
+            "type" => CacheManager::APPLICATION_COMBO_CACHE_JSON,
+            "_data" => $result,
+        );
 
     }
 
     function close(Doku_Event $event, $params)
     {
-        CacheManager::close();
-    }
-
-    function imageHttpCacheBefore(Doku_Event $event, $params)
-    {
-
-        if (PluginUtility::getConfValue(self::CONF_STATIC_CACHE_ENABLED, 1)) {
-            /**
-             * If there is the buster key, the infinite cache is on
-             */
-            if (isset($_GET[CacheMedia::CACHE_BUSTER_KEY])) {
-
-                /**
-                 * To avoid buggy code, we check that the value is not empty
-                 */
-                $cacheKey = $_GET[CacheMedia::CACHE_BUSTER_KEY];
-                if (!empty($cacheKey)) {
-
-                    /**
-                     * Only for Image
-                     */
-                    $mediaPath = DokuPath::createMediaPathFromId($event->data["media"]);
-                    if ($mediaPath->isImage()) {
-
-                        /**
-                         * Only for public images
-                         */
-                        if (!$mediaPath->isPublic()) {
-                            return;
-                        }
-
-                        /**
-                         * We take over the complete {@link sendFile()} function and exit
-                         *
-                         * in {@link sendFile()}, DokuWiki set the `Cache-Control` and
-                         * may exit early / send a 304 (not modified) with the function {@link http_conditionalRequest()}
-                         * Meaning that the AFTER event is never reached
-                         * that we can't send a cache control as below
-                         * header("Cache-Control: public, max-age=$infiniteMaxAge, s-maxage=$infiniteMaxAge");
-                         *
-                         * We take the control over then
-                         */
-
-                        /**
-                         * The mime
-                         */
-                        $mime = $mediaPath->getMime();
-                        header("Content-Type: {$mime}");
-
-                        /**
-                         * The cache instructions
-                         */
-                        $infiniteMaxAge = self::INFINITE_MAX_AGE;
-                        $expires = time() + $infiniteMaxAge;
-                        header('Expires: ' . gmdate("D, d M Y H:i:s", $expires) . ' GMT');
-                        header("Cache-Control: public, max-age=$infiniteMaxAge, immutable");
-                        Http::removeHeaderIfPresent("Pragma");
-
-                        /**
-                         * The Etag cache validator
-                         *
-                         * Dokuwiki {@link http_conditionalRequest()} uses only the datetime of
-                         * the file but we need to add the parameters also because they
-                         * are generated image
-                         *
-                         * Last-Modified is not needed for the same reason
-                         *
-                         */
-                        $etag = self::getEtagValue($mediaPath, $_REQUEST);
-                        header("ETag: $etag");
-
-                        /**
-                         * Conditional Request ?
-                         * We don't check on HTTP_IF_MODIFIED_SINCE because this is useless
-                         */
-                        if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
-                            $ifNoneMatch = stripslashes($_SERVER['HTTP_IF_NONE_MATCH']);
-                            if ($ifNoneMatch && $ifNoneMatch === $etag) {
-
-                                header('HTTP/1.0 304 Not Modified');
-
-                                /**
-                                 * Clean the buffer to not produce any output
-                                 */
-                                @ob_end_clean();
-
-                                /**
-                                 * Exit
-                                 */
-                                PluginUtility::softExit("File not modified");
-                            }
-                        }
-
-                        /**
-                         * Send the file
-                         */
-                        $originalFile = $event->data["orig"]; // the original file
-                        $physicalFile = $event->data["file"]; // the file modified
-                        if (empty($physicalFile)) {
-                            $physicalFile = $originalFile;
-                        }
-
-                        /**
-                         * Download or display feature
-                         * (Taken over from SendFile)
-                         */
-                        $download = $event->data["download"];
-                        if ($download && $mime !== "image/svg+xml") {
-                            header('Content-Disposition: attachment;' . rfc2231_encode(
-                                    'filename', PhpString::basename($originalFile)) . ';'
-                            );
-                        } else {
-                            header('Content-Disposition: inline;' . rfc2231_encode(
-                                    'filename', PhpString::basename($originalFile)) . ';'
-                            );
-                        }
-
-                        /**
-                         * The vary header avoid caching
-                         * Delete it
-                         */
-                        self::deleteVaryHeader();
-
-                        /**
-                         * Use x-sendfile header to pass the delivery to compatible web servers
-                         * (Taken over from SendFile)
-                         */
-                        http_sendfile($physicalFile);
-
-                        /**
-                         * Send the file
-                         */
-                        $filePointer = @fopen($physicalFile, "rb");
-                        if ($filePointer) {
-                            http_rangeRequest($filePointer, filesize($physicalFile), $mime);
-                        } else {
-                            http_status(500);
-                            print "Could not read $physicalFile - bad permissions?";
-                        }
-
-                        /**
-                         * Stop the propagation
-                         * Unfortunately, you can't stop the default ({@link sendFile()})
-                         * because the event in fetch.php does not allow it
-                         * We exit only if not test
-                         */
-                        $event->stopPropagation();
-                        PluginUtility::softExit("File Send");
-
-                    }
-                }
-
-            }
-        }
-    }
-
-    /**
-     * @param DokuPath $mediaPath
-     * @param Array $properties - the query properties
-     * @return string
-     */
-    public static function getEtagValue(DokuPath $mediaPath, array $properties): string
-    {
-        $etagString = $mediaPath->getModifiedTime()->format('r');
-        ksort($properties);
-        foreach ($properties as $key => $value) {
-            /**
-             * Media is already on the URL
-             * tok is just added when w and h are on the url
-             * Buster is the timestamp
-             */
-            if (in_array($key, ["media","tok",CacheMedia::CACHE_BUSTER_KEY])) {
-                continue;
-            }
-            /**
-             * If empty means not used
-             */
-            if(empty($value)){
-                continue;
-            }
-            $etagString .= "$key=$value";
-        }
-        return '"' . md5($etagString) . '"';
+        CacheManager::reset();
     }
 
 
@@ -392,8 +268,8 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
         $script = $_SERVER["SCRIPT_NAME"];
         if (in_array($script, self::STATIC_SCRIPT_NAMES)) {
-            // To be extra sure, they must have a tseed
-            if (isset($_REQUEST["tseed"])) {
+            // To be extra sure, they must have the buster key
+            if (isset($_REQUEST[CacheMedia::CACHE_BUSTER_KEY])) {
                 self::deleteVaryHeader();
             }
         }
@@ -411,10 +287,87 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
      */
     public static function deleteVaryHeader(): void
     {
-        if (PluginUtility::getConfValue(self::CONF_STATIC_CACHE_ENABLED, 1)) {
+        if (PluginUtility::getConfValue(action_plugin_combo_staticresource::CONF_STATIC_CACHE_ENABLED, 1)) {
             Http::removeHeaderIfPresent("Vary");
         }
     }
 
+    function sideSlotsCacheBurstingForMetadataMutation($event)
+    {
+
+        $data = $event->data;
+        /**
+         * The side slot cache is deleted only when the
+         * below property are updated
+         */
+        $descriptionProperties = [PageTitle::PROPERTY_NAME, ResourceName::PROPERTY_NAME, PageH1::PROPERTY_NAME, PageDescription::DESCRIPTION_PROPERTY];
+        if (!in_array($data["name"], $descriptionProperties)) return;
+
+        self::removeSideSlotCache();
+
+    }
+
+    /**
+     * @param $event
+     * @throws Exception
+     * @link https://www.dokuwiki.org/devel:event:io_wikipage_write
+     */
+    function sideSlotsCacheBurstingForPageCreationAndDeletion($event)
+    {
+
+        $data = $event->data;
+        $pageName = $data[2];
+
+        /**
+         * Modification to the side slot is not processed further
+         */
+        if (in_array($pageName, self::getSideSlotNames())) return;
+
+        /**
+         * Pointer to see if we need to delete the cache
+         */
+        $doWeNeedToDeleteTheSideSlotCache = false;
+
+        /**
+         * File creation
+         *
+         * ```
+         * Page creation may be detected by checking if the file already exists and the revision is false.
+         * ```
+         * From https://www.dokuwiki.org/devel:event:io_wikipage_write
+         *
+         */
+        $rev = $data[3];
+        $filePath = $data[0][0];
+        $file = File::createFromPath($filePath);
+        if (!$file->exists() && $rev === false) {
+            $doWeNeedToDeleteTheSideSlotCache = true;
+        }
+
+        /**
+         * File deletion
+         * (No content)
+         *
+         * ```
+         * Page deletion may be detected by checking for empty page content.
+         * On update to an existing page this event is called twice, once for the transfer of the old version to the attic (rev will have a value)
+         * and once to write the new version of the page into the wiki (rev is false)
+         * ```
+         * From https://www.dokuwiki.org/devel:event:io_wikipage_write
+         */
+        $append = $data[0][2];
+        if (!$append) {
+
+            $content = $data[0][1];
+            if (empty($content) && $rev === false) {
+                // Deletion
+                $doWeNeedToDeleteTheSideSlotCache = true;
+            }
+
+        }
+
+        if ($doWeNeedToDeleteTheSideSlotCache) self::removeSideSlotCache();
+
+    }
 
 }

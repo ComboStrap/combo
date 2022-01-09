@@ -1,10 +1,14 @@
 <?php
 
+use ComboStrap\CacheManager;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Resources;
-use ComboStrap\Site;
+use ComboStrap\Snippet;
+use ComboStrap\SnippetManager;
+use dokuwiki\Cache\CacheParser;
 
 if (!defined('DOKU_INC')) die();
 
@@ -73,7 +77,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * Fighting the fact that in 7.2,
          * there is still a cache
          */
-        PluginUtility::initStaticManager();
+        SnippetManager::init();
 
     }
 
@@ -121,24 +125,35 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          */
         $this->headerOutputWasCalled = true;
 
-        $snippetManager= PluginUtility::getSnippetManager();
-        $cacheManager = PluginUtility::getCacheManager();
+        $snippetManager = PluginUtility::getSnippetManager();
+        $cacheManager = CacheManager::getOrCreate();
 
         /**
          * For each processed bar in the page
          *   * retrieve the snippets from the cache or store the process one
          *   * add the cache information in meta
          */
-        $slots = $cacheManager->getXhtmlRenderCacheSlotResults();
+        $slots = $cacheManager->getXhtmlCacheSlotResultsForRequestedPage();
         foreach ($slots as $slotId => $servedFromCache) {
 
+            /**
+             * The local file location of the slot
+             */
+            $slotLocalFilePath = DokuPath::createPagePathFromId($slotId)
+                ->toLocalPath()
+                ->toAbsolutePath()
+                ->toString();
 
-            // Get or store the data
-            $cache = new \dokuwiki\Cache\Cache($slotId, "snippet");
-            $barFileSystemPath = DokuPath::createPagePathFromPath(DokuPath::PATH_SEPARATOR . $slotId)->getFileSystemPath();
+            /**
+             * Using a cache parser, set the page id and will trigger
+             * the parser cache use event in order to log/report the cache usage
+             * At {@link action_plugin_combo_cache::logCacheUsage()}
+             */
+            $cache = new CacheParser($slotId, $slotLocalFilePath, "snippet.json");
+            $cache->setEvent('PARSER_CACHE_USE'); // cache parser use already this event, just FYI
             $dependencies = array(
                 "files" => [
-                    $barFileSystemPath,
+                    $slotLocalFilePath,
                     Resources::getComboHome() . "/plugin.info.txt"
                 ]
             );
@@ -148,24 +163,28 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
                 // Retrieve snippets from previous run
                 $data = $cache->retrieveCache();
-
                 if (!empty($data)) {
-                    $snippets = unserialize($data);
-                    $snippetManager->addSnippetsFromCacheForBar($slotId, $snippets);
 
-                    if (Site::debugIsOn()) {
-                        LogUtility::log2file("Snippet cache file {$cache->cache} used", LogUtility::LVL_MSG_DEBUG);
-                        $event->data['script'][] = array(
-                            "type" => "application/json",
-                            "_data" => json_encode($snippets),
-                            "class" => "combo-snippet-cache-" . str_replace(":", "-", $slotId));
+                    $jsonDecodeSnippets = json_decode($data, true);
+                    $nativeSnippets = [];
+                    foreach ($jsonDecodeSnippets as $type => $snippets) {
+                        foreach ($snippets as $snippetId => $snippetArray) {
+                            try {
+                                $nativeSnippets[$type][$snippetId] = Snippet::createFromJson($snippetArray);
+                            } catch (ExceptionCombo $e) {
+                                LogUtility::msg("The snippet json array cannot be build into a snippet object. " . $e->getMessage());
+                            }
+                        }
                     }
+                    $snippetManager->addSnippetsFromCacheForBar($slotId, $nativeSnippets);
 
                 }
+
             } else {
-                $snippets = $snippetManager->getSnippetsForBar($slotId);
-                if (!empty($snippets)) {
-                    $cache->storeCache(serialize($snippets));
+                $jsonDecodeSnippets = $snippetManager->getSnippetsForBar($slotId);
+                if ($jsonDecodeSnippets !== null) {
+                    $data1 = json_encode($jsonDecodeSnippets);
+                    $cache->storeCache($data1);
                 }
             }
 
@@ -174,14 +193,14 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         /**
          * Snippets
          */
-        foreach ($snippetManager->getSnippets() as $tagType => $tags) {
+        $allSnippets = $snippetManager->getSnippets();
+        foreach ($allSnippets as $tagType => $tags) {
 
             foreach ($tags as $tag) {
                 $event->data[$tagType][] = $tag;
             }
 
         }
-
 
         $snippetManager->close();
 
@@ -242,9 +261,6 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         }
 
     }
-
-
-
 
 
 }

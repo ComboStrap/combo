@@ -126,17 +126,18 @@ class SvgDocument extends XmlDocument
     }
 
     /**
-     * @param File $file
+     * @param Path $path
      * @return SvgDocument
      */
-    public static function createFromPath($file)
+    public static function createSvgDocumentFromPath(Path $path): SvgDocument
     {
-        $svg = new SvgDocument($file->getContent());
-        $svg->setName($file->getBaseNameWithoutExtension());
+        $text = FileSystems::getContent($path);
+        $svg = new SvgDocument($text);
+        $svg->setName($path->getLastNameWithoutExtension());
         return $svg;
     }
 
-    public static function createFromMarkup($markup)
+    public static function createSvgDocumentFromMarkup($markup): SvgDocument
     {
         return new SvgDocument($markup);
     }
@@ -148,8 +149,10 @@ class SvgDocument extends XmlDocument
     public function getXmlText($tagAttributes = null): string
     {
 
-        if ($tagAttributes == null) {
-            $tagAttributes = TagAttributes::createEmpty();
+        if ($tagAttributes === null) {
+            $localTagAttributes = TagAttributes::createEmpty();
+        } else {
+            $localTagAttributes = TagAttributes::createFromTagAttributes($tagAttributes);
         }
 
         if ($this->shouldOptimize()) {
@@ -157,8 +160,8 @@ class SvgDocument extends XmlDocument
         }
 
         // Set the name (icon) attribute for test selection
-        if ($tagAttributes->hasComponentAttribute("name")) {
-            $name = $tagAttributes->getValueAndRemove("name");
+        if ($localTagAttributes->hasComponentAttribute("name")) {
+            $name = $localTagAttributes->getValueAndRemove("name");
             $this->setRootAttribute('data-name', $name);
         }
 
@@ -167,7 +170,7 @@ class SvgDocument extends XmlDocument
          *   ie the max-width style
          * They are treated in {@link PluginUtility::processStyle()}
          */
-        $svgType = $tagAttributes->getValue(TagAttributes::TYPE_KEY, self::ILLUSTRATION_TYPE);
+        $svgType = $localTagAttributes->getValue(TagAttributes::TYPE_KEY, self::ILLUSTRATION_TYPE);
         switch ($svgType) {
             case self::ICON_TYPE:
             case self::TILE_TYPE:
@@ -195,7 +198,7 @@ class SvgDocument extends XmlDocument
                  */
                 if (!$documentElement->hasAttribute("fill")) {
 
-                    $tagAttributes->addHtmlAttributeValue("fill", "currentColor");
+                    $localTagAttributes->addHtmlAttributeValue("fill", "currentColor");
 
                 }
 
@@ -206,8 +209,8 @@ class SvgDocument extends XmlDocument
                  * svg is used as a background image
                  * fill or stroke should have at minimum "currentColor"
                  */
-                if ($tagAttributes->hasComponentAttribute(ColorUtility::COLOR)) {
-                    $color = $tagAttributes->getValueAndRemove(ColorUtility::COLOR);
+                if ($localTagAttributes->hasComponentAttribute(ColorUtility::COLOR)) {
+                    $color = $localTagAttributes->getValueAndRemove(ColorUtility::COLOR);
                     $colorValue = ColorUtility::getColorValue($color);
 
                     /**
@@ -220,11 +223,11 @@ class SvgDocument extends XmlDocument
 
                     switch ($svgColorType) {
                         case self::COLOR_TYPE_FILL_SOLID:
-                            $tagAttributes->addHtmlAttributeValue("fill", $colorValue);
+                            $localTagAttributes->addHtmlAttributeValue("fill", $colorValue);
                             break;
                         case self::COLOR_TYPE_STROKE_OUTLINE:
-                            $tagAttributes->addHtmlAttributeValue("fill", "none");
-                            $tagAttributes->addHtmlAttributeValue("stroke", $colorValue);
+                            $localTagAttributes->addHtmlAttributeValue("fill", "none");
+                            $localTagAttributes->addHtmlAttributeValue("stroke", $colorValue);
                             break;
                     }
 
@@ -247,10 +250,10 @@ class SvgDocument extends XmlDocument
                  * The default unit on attribute is pixel, no need to add it
                  * as in CSS
                  */
-                $width = $tagAttributes->getValueAndRemove(Dimension::WIDTH_KEY, $defaultWidth);
-                $tagAttributes->addHtmlAttributeValue("width", $width);
-                $height = $tagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY, $width);
-                $tagAttributes->addHtmlAttributeValue("height", $height);
+                $width = $localTagAttributes->getValueAndRemove(Dimension::WIDTH_KEY, $defaultWidth);
+                $localTagAttributes->addHtmlAttributeValue("width", $width);
+                $height = $localTagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY, $width);
+                $localTagAttributes->addHtmlAttributeValue("height", $height);
 
                 break;
             default:
@@ -260,7 +263,7 @@ class SvgDocument extends XmlDocument
                 /**
                  * Responsive SVG
                  */
-                if (!$tagAttributes->hasComponentAttribute("preserveAspectRatio")) {
+                if (!$localTagAttributes->hasComponentAttribute("preserveAspectRatio")) {
                     /**
                      *
                      * Keep the same height
@@ -269,18 +272,18 @@ class SvgDocument extends XmlDocument
                      * Default is xMidYMid meet
                      */
                     $defaultAspectRatio = PluginUtility::getConfValue(self::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
-                    $tagAttributes->addHTMLAttributeValue("preserveAspectRatio", $defaultAspectRatio);
+                    $localTagAttributes->addHTMLAttributeValue("preserveAspectRatio", $defaultAspectRatio);
                 }
 
                 /**
                  * Adapt to the container
                  * Height `auto` and not `100%` otherwise you get a layout shift
                  */
-                $tagAttributes->addStyleDeclaration("width", "100%");
-                $tagAttributes->addStyleDeclaration("height", "auto");
-                if($tagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)){
-                    $width = $tagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
-                    $tagAttributes->addStyleDeclaration("max-width", "{$width}px");
+                $localTagAttributes->addStyleDeclaration("width", "100%");
+                $localTagAttributes->addStyleDeclaration("height", "auto");
+                if($localTagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)){
+                    $width = $localTagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
+                    $localTagAttributes->addStyleDeclaration("max-width", "{$width}px");
                 }
                 break;
 
@@ -306,16 +309,22 @@ class SvgDocument extends XmlDocument
          */
         $caseSensitives = ["preserveAspectRatio"];
         foreach ($caseSensitives as $caseSensitive) {
-            if ($tagAttributes->hasComponentAttribute($caseSensitive)) {
-                $aspectRatio = $tagAttributes->getValueAndRemove($caseSensitive);
-                $tagAttributes->addHTMLAttributeValue($caseSensitive, $aspectRatio);
+            if ($localTagAttributes->hasComponentAttribute($caseSensitive)) {
+                $aspectRatio = $localTagAttributes->getValueAndRemove($caseSensitive);
+                $localTagAttributes->addHTMLAttributeValue($caseSensitive, $aspectRatio);
             }
         }
 
         /**
+         * Old model where the src was parsed in the render
+         * When the attributes are in the {@link Path} we can delete this
+         */
+        $localTagAttributes->removeAttributeIfPresent(PagePath::PROPERTY_NAME);
+
+        /**
          * Set the attributes to the root
          */
-        $toHtmlArray = $tagAttributes->toHtmlArray();
+        $toHtmlArray = $localTagAttributes->toHtmlArray();
         foreach ($toHtmlArray as $name => $value) {
             $this->setRootAttribute($name, $value);
         }

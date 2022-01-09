@@ -20,12 +20,19 @@
  */
 
 
+use ComboStrap\Canonical;
 use ComboStrap\Icon;
+use ComboStrap\Metadata;
+use ComboStrap\PageType;
 use ComboStrap\Prism;
+use ComboStrap\PageUrlType;
+use ComboStrap\Region;
 
 
 /**
  * Related UI components
+ * {@link syntax_plugin_combo_related::MAX_LINKS_CONF}
+ * {@link syntax_plugin_combo_related::MAX_LINKS_CONF_DEFAULT}
  */
 $conf['maxLinks'] = 10;
 $conf['extra_pattern'] = '{{backlinks>.}}';
@@ -37,20 +44,20 @@ $conf['extra_pattern'] = '{{backlinks>.}}';
 $conf['disqusDefaultAttributes'] = 'shortName=""';
 
 /**
- * Enable ie {@link action_plugin_combo_urlmanager::URL_MANAGER_ENABLE_CONF}
+ * Enable ie {@link action_plugin_combo_router::ROUTER_ENABLE_CONF}
  */
-$conf['enableUrlManager']=1;
+$conf['enableRouter'] = 1;
 /**
- * ie {@link action_plugin_combo_urlmanager::GO_TO_BEST_END_PAGE_NAME}
+ * ie {@link action_plugin_combo_router::GO_TO_BEST_END_PAGE_NAME}
  */
 $conf['ActionReaderFirst'] = 'GoToBestEndPageName';
 
 /**
- * ie {@link action_plugin_combo_urlmanager::GO_TO_BEST_PAGE_NAME}
+ * ie {@link action_plugin_combo_router::GO_TO_BEST_PAGE_NAME}
  */
 $conf['ActionReaderSecond'] = 'GoToBestPageName';
 /**
- * ie {@link action_plugin_combo_urlmanager::GO_TO_SEARCH_ENGINE}
+ * ie {@link action_plugin_combo_router::GO_TO_SEARCH_ENGINE}
  */
 $conf['ActionReaderThird'] = 'GoToSearchEngine';
 $conf['GoToEditMode'] = 1;
@@ -63,12 +70,15 @@ $conf['WeightFactorForSameNamespace'] = 5;
 /**
  * See {@link UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT_DEFAULT}
  */
-$conf['BestEndPageMinimalScoreForIdRedirect'] = 0;
+$conf['BestEndPageMinimalScoreForAliasCreation'] = 2;
 
 /**
  * Does automatic canonical processing is on
+ * {@link Canonical::CONF_CANONICAL_LAST_NAMES_COUNT}
+ *
  */
 $conf['MinimalNamesCountForAutomaticCanonical'] = 0;
+$conf['useCanonicalValueForGoogleAnalyticsPageView'] = 0;
 
 /**
  * Icon Namespace
@@ -79,9 +89,10 @@ $conf['icons_namespace'] = ":combostrap:icons";
 
 /**
  * Default library
- * See {@link Icon::CONF_DEFAULT_ICON_LIBRARYE}
+ * See {@link Icon::CONF_DEFAULT_ICON_LIBRARY}
+ * See {@link Icon::CONF_DEFAULT_ICON_LIBRARY_DEFAULT}
  */
-$conf['defaultIconLibrary'] = "md";
+$conf['defaultIconLibrary'] = "mdi";
 
 /**
  * Css Optimization
@@ -93,11 +104,9 @@ $conf['disableDokuwikiStylesheet'] = 0;
 
 /**
  * Metadata Viewer
- * See {@link \ComboStrap\MetadataUtility::CONF_ENABLE_WHEN_EDITING
  * See {@link \ComboStrap\MetadataUtility::CONF_METADATA_DEFAULT_ATTRIBUTES
  * See {@link \ComboStrap\MetadataUtility::EXCLUDE_ATTRIBUTE
  */
-$conf['enableMetadataViewerWhenEditing'] = 1;
 $conf['metadataViewerDefaultAttributes'] = 'title="Metadata" exclude="tableofcontents"';
 
 /**
@@ -148,10 +157,6 @@ $conf['preformattedEmptyContentNotPrintedEnable'] = 1;
  */
 $conf['mandatoryQualityRules'] = 'words_min,internal_backlinks_min,internal_links_min';
 
-/**
- * {@link action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE}
- */
-$conf['autoFrontMatterEnable'] = 0;
 
 /**
  * {@link action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING}
@@ -182,7 +187,7 @@ $conf['twitter:widgets:theme'] = "light";
 $conf['twitter:widgets:border-color'] = "#55acee";
 
 /**
- * Page Image {@link Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE}
+ * Page Image {@link Metadata::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE}
  */
 $conf['disableFirstImageAsPageImage'] = 0;
 
@@ -194,21 +199,21 @@ $conf['defaultFacebookImage'] = ":logo-facebook.png";
 
 /**
  * Country
- * {@link Site::CONF_SITE_ISO_COUNTRY}
+ * {@link Region::CONF_SITE_LANGUAGE_REGION}
  */
-$conf['siteIsoCountry'] = "";
+$conf['siteLanguageRegion'] = "";
 
 /**
  *
- * See {@link \ComboStrap\Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE}
- * See {@link \ComboStrap\Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE}
+ * See {@link \ComboStrap\PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE}
+ * See {@link \ComboStrap\PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_MODE}
  */
 $conf['latePublicationProtectionEnable'] = 1;
 $conf["latePublicationProtectionMode"] = "acl";
 
 /**
  * Default page type
- * {@link Page::CONF_DEFAULT_PAGE_TYPE}
+ * {@link PageType::CONF_DEFAULT_PAGE_TYPE}
  */
 $conf["defaultPageType"] = "article";
 
@@ -355,6 +360,30 @@ $conf["enableProfileDeleteForm"] = 1;
 $conf['outputComment'] = 0;
 
 /**
- * {@link action_plugin_combo_cache::CONF_STATIC_CACHE_ENABLED}
+ * {@link action_plugin_combo_staticresource::CONF_STATIC_CACHE_ENABLED}
  */
 $conf["staticCacheEnabled"] = 1;
+
+
+/**
+ * {@link action_plugin_combo_linkwizard::CONF_ENABLE_ENHANCED_LINK_WIZARD}
+ */
+$conf["enableEnhancedLinkWizard"] = 1;
+
+/**
+ * {@link PageUrlType::CONF_CANONICAL_URL_TYPE}
+ * {@link PageUrlType::CONF_CANONICAL_URL_TYPE_DEFAULT}
+ */
+$conf["pageUrlType"] = "page path";
+
+/**
+ * {@link syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT}
+ * {@link syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT}
+ */
+$conf["enableFrontMatterOnSubmit"] = 0;
+
+/**
+ * {@link syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE} and
+ * {@link syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE}
+ */
+$conf["headingWikiEnable"] = 1;

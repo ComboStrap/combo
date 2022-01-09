@@ -39,24 +39,51 @@ class Icon
     const ICON_LIBRARY_URLS = array(
         self::BOOTSTRAP => "https://raw.githubusercontent.com/twbs/icons/main/icons",
         self::MATERIAL_DESIGN => "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg",
-        self::FEATHER => "https://raw.githubusercontent.com/feathericons/feather/master/icons"
+        self::FEATHER => "https://raw.githubusercontent.com/feathericons/feather/master/icons",
+        self::CODE_ICON => "https://raw.githubusercontent.com/microsoft/vscode-codicons/main/src/icons/",
+        self::LOGOS => "https://raw.githubusercontent.com/gilbarbara/logos/master/logos/",
+        self::CARBON => "https://raw.githubusercontent.com/carbon-design-system/carbon/main/packages/icons/src/svg/32/"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
         self::BOOTSTRAP => "https://icons.getbootstrap.com/",
         self::MATERIAL_DESIGN => "https://materialdesignicons.com/",
-        self::FEATHER => "https://feathericons.com/"
+        self::FEATHER => "https://feathericons.com/",
+        self::CODE_ICON => "https://microsoft.github.io/vscode-codicons/",
+        self::LOGOS => "https://svgporn.com/",
+        self::CARBON => "https://www.carbondesignsystem.com/guidelines/icons/library/"
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
-    const LIBRARY_ACRONYM = array(
-        "bs" => self::BOOTSTRAP,
-        "md" => self::MATERIAL_DESIGN,
-        "fe" => self::FEATHER
+    const CONF_DEFAULT_ICON_LIBRARY_DEFAULT = self::MATERIAL_DESIGN_ACRONYM;
+
+    /**
+     * Deprecated library acronym / name
+     */
+    const DEPRECATED_LIBRARY_ACRONYM = array(
+        "bs" => self::BOOTSTRAP, // old one (deprecated) - the good acronym is bi (seen also in the class)
+        "md" => self::MATERIAL_DESIGN
     );
+
+    /**
+     * Public known acronym / name (Used in the configuration)
+     */
+    const PUBLIC_LIBRARY_ACRONYM = array(
+        "bi" => self::BOOTSTRAP,
+        self::MATERIAL_DESIGN_ACRONYM => self::MATERIAL_DESIGN,
+        "fe" => self::FEATHER,
+        "codicon" => self::CODE_ICON,
+        "logos" => self::LOGOS,
+        "carbon" => self::CARBON
+    );
+
     const FEATHER = "feather";
     const BOOTSTRAP = "bootstrap";
     const MATERIAL_DESIGN = "material-design";
+    const CODE_ICON = "codicon";
+    const LOGOS = "logos";
+    const CARBON = "carbon";
+    const MATERIAL_DESIGN_ACRONYM = "mdi";
 
 
     /**
@@ -64,7 +91,7 @@ class Icon
      * @param TagAttributes $tagAttributes -  the icon attributes
      * @return bool|mixed - false if any error or the HTML
      */
-    static public function renderIconByAttributes($tagAttributes)
+    static public function renderIconByAttributes(TagAttributes $tagAttributes)
     {
 
 
@@ -88,7 +115,7 @@ class Icon
 
             // loop through candidates until a match was found:
             // May be an icon from the templates
-            if (!$mediaDokuPath->exists()) {
+            if (!FileSystems::exists($mediaDokuPath)) {
 
                 // Trying to see if it's not in the template images directory
                 $message = "The media file could not be found in the media library. If you want an icon from an icon library, indicate a name without extension.";
@@ -101,7 +128,7 @@ class Icon
         } else {
 
             // It may be a icon already downloaded
-            $iconNameSpace = ConfUtility::getConf(self::CONF_ICONS_MEDIA_NAMESPACE);
+            $iconNameSpace = PluginUtility::getConfValue(self::CONF_ICONS_MEDIA_NAMESPACE, self::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
             if (substr($iconNameSpace, 0, 1) != DokuPath::PATH_SEPARATOR) {
                 $iconNameSpace = DokuPath::PATH_SEPARATOR . $iconNameSpace;
             }
@@ -113,13 +140,13 @@ class Icon
 
             // Bug: null file created when the stream could not get any byte
             // We delete them
-            if ($mediaDokuPath->exists()) {
-                if ($mediaDokuPath->getSize() == 0) {
-                    $mediaDokuPath->remove();
+            if (FileSystems::exists($mediaDokuPath)) {
+                if (FileSystems::getSize($mediaDokuPath) == 0) {
+                    FileSystems::delete($mediaDokuPath);
                 }
             }
 
-            if (!$mediaDokuPath->exists()) {
+            if (!FileSystems::exists($mediaDokuPath)) {
 
                 /**
                  * Download the icon
@@ -127,9 +154,10 @@ class Icon
 
                 // Create the target directory if it does not exist
                 $iconDir = $mediaDokuPath->getParent();
-                if (!$iconDir->exists()) {
-                    $filePointer = $iconDir->createAsDirectory();
-                    if ($filePointer == false) {
+                if (!FileSystems::exists($iconDir)) {
+                    try {
+                        FileSystems::createDirectory($iconDir);
+                    } catch (ExceptionCombo $e) {
                         LogUtility::msg("The icon directory ($iconDir) could not be created.", LogUtility::LVL_MSG_ERROR, self::NAME);
                         return false;
                     }
@@ -137,7 +165,7 @@ class Icon
 
                 // Name parsing to extract the library name and icon name
                 $sepPosition = strpos($iconNameAttribute, ":");
-                $library = PluginUtility::getConfValue(self::CONF_DEFAULT_ICON_LIBRARY);
+                $library = PluginUtility::getConfValue(self::CONF_DEFAULT_ICON_LIBRARY, self::CONF_DEFAULT_ICON_LIBRARY_DEFAULT);
                 $iconName = $iconNameAttribute;
                 if ($sepPosition != false) {
                     $library = substr($iconNameAttribute, 0, $sepPosition);
@@ -145,7 +173,7 @@ class Icon
                 }
 
                 // Get the qualified library name
-                $acronymLibraries = self::LIBRARY_ACRONYM;
+                $acronymLibraries = self::getLibraries();
                 if (isset($acronymLibraries[$library])) {
                     $library = $acronymLibraries[$library];
                 }
@@ -164,7 +192,7 @@ class Icon
                 $filePointer = @fopen($downloadUrl, 'r');
                 if ($filePointer != false) {
 
-                    $numberOfByte = @file_put_contents($mediaDokuPath->getFileSystemPath(), $filePointer);
+                    $numberOfByte = @file_put_contents($mediaDokuPath->toLocalPath()->toAbsolutePath()->toString(), $filePointer);
                     if ($numberOfByte != false) {
                         LogUtility::msg("The icon ($iconName) from the library ($library) was downloaded to ($mediaPathId)", LogUtility::LVL_MSG_INFO, self::NAME);
                     } else {
@@ -183,7 +211,7 @@ class Icon
 
         }
 
-        if ($mediaDokuPath->exists()) {
+        if (FileSystems::exists($mediaDokuPath)) {
 
 
             /**
@@ -199,7 +227,7 @@ class Icon
             $tagAttributes->addComponentAttributeValue("type", SvgDocument::ICON_TYPE);
 
 
-            $svgImageLink = SvgImageLink::createMediaLinkFromNonQualifiedPath(
+            $svgImageLink = SvgImageLink::createMediaLinkFromId(
                 $mediaDokuPath->getAbsolutePath(),
                 null,
                 $tagAttributes
@@ -253,6 +281,11 @@ class Icon
 
         }
 
+    }
+
+    private static function getLibraries()
+    {
+        return array_merge(self::PUBLIC_LIBRARY_ACRONYM, self::DEPRECATED_LIBRARY_ACRONYM);
     }
 
 

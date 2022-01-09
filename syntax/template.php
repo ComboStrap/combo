@@ -1,14 +1,23 @@
 <?php
 
 
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\Canonical;
+use ComboStrap\DokuPath;
+use ComboStrap\ExceptionCombo;
+use ComboStrap\PageCreationDate;
+use ComboStrap\Metadata;
+use ComboStrap\PageImages;
+use ComboStrap\ResourceName;
+use ComboStrap\PagePath;
 use ComboStrap\PageSql;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\Path;
 use ComboStrap\PluginUtility;
-use ComboStrap\Publication;
+use ComboStrap\PagePublicationDate;
 use ComboStrap\Sqlite;
 use ComboStrap\Template;
 use ComboStrap\TemplateUtility;
@@ -42,12 +51,12 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
     const ATTRIBUTES_IN_PAGE_TABLE = [
         "id",
-        Analytics::CANONICAL,
-        Analytics::PATH,
-        Analytics::DATE_MODIFIED,
-        Analytics::DATE_CREATED,
-        Publication::DATE_PUBLISHED,
-        Analytics::NAME
+        Canonical::PROPERTY_NAME,
+        PagePath::PROPERTY_NAME,
+        ModificationDate::PROPERTY_NAME,
+        PageCreationDate::PROPERTY_NAME,
+        PagePublicationDate::PROPERTY_NAME,
+        ResourceName::PROPERTY_NAME
     ];
 
     const CANONICAL = "template";
@@ -248,7 +257,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                          */
                         $textWithVariables = $actualCall->getCapturedContent();
                         $attributes = $actualCall->getAttributes();
-                        if($attributes!=null) {
+                        if ($attributes != null) {
                             $sep = " ";
                             foreach ($attributes as $key => $attribute) {
                                 $textWithVariables .= $sep . $key . $sep . $attribute;
@@ -311,7 +320,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                     /**
                      * Sqlite available ?
                      */
-                    $sqlite = Sqlite::getSqlite();
+                    $sqlite = Sqlite::createOrGetSqlite();
                     if ($sqlite === null) {
                         LogUtility::msg("The iterator component needs Sqlite to be able to work", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         return $returnedArray;
@@ -334,13 +343,22 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                     try {
                         $executableSql = $pageSql->getExecutableSql();
                         $parameters = $pageSql->getParameters();
-                        $res = Sqlite::queryWithParameters($sqlite, $executableSql, $parameters);
-                        if (!$res) {
+                        $request = $sqlite
+                            ->createRequest()
+                            ->setQueryParametrized($executableSql, $parameters);
+                        $rowsInDb = [];
+                        try{
+                            $rowsInDb = $request
+                                ->execute()
+                                ->getRows();
+                        } catch (ExceptionCombo $e){
                             LogUtility::msg("The sql statement generated returns an error. Sql statement: $executableSql", LogUtility::LVL_MSG_ERROR);
+                        } finally {
+                            $request->close();
                         }
-                        $res2arr = $sqlite->res2arr($res);
+
                         $rows = [];
-                        foreach ($res2arr as $sourceRow) {
+                        foreach ($rowsInDb as $sourceRow) {
                             $analytics = $sourceRow["ANALYTICS"];
                             /**
                              * @deprecated
@@ -354,9 +372,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                             $targetRow = [];
                             foreach ($variableNames as $variableName) {
 
-                                $lowerColumn = strtolower($variableName);
-
-                                if ($variableName === Page::IMAGE_META_PROPERTY) {
+                                if ($variableName === PageImages::PROPERTY_NAME) {
                                     LogUtility::msg("To add an image, you must use the page image component, not the image metadata", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_pageimage::CANONICAL);
                                     continue;
                                 }
@@ -364,12 +380,10 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                                 /**
                                  * Data in the pages tables
                                  */
-                                if (!in_array($lowerColumn, self::ATTRIBUTES_IN_PAGE_TABLE)) {
+                                if (isset($sourceRow[strtoupper($variableName)])) {
                                     $data = $sourceRow[strtoupper($variableName)];
-                                    if (!empty($data)) {
-                                        $targetRow[$variableName] = $data;
-                                        continue;
-                                    }
+                                    $targetRow[$variableName] = $data;
+                                    continue;
                                 }
 
                                 /**
@@ -394,13 +408,12 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                                 /**
                                  * Bad luck
                                  */
-                                $targetRow[$variableName] = "$variableName attribute was not found in the <a href=\"https://combostrap.com/metadata\">metadata</a> for the page (:$id)";
+                                $targetRow[$variableName] = "$variableName attribute is unknown.";
 
 
                             }
                             $rows[] = $targetRow;
                         }
-                        $sqlite->res_close($res);
                     } catch (Exception $e) {
                         LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         return $returnedArray;

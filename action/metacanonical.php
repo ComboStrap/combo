@@ -1,30 +1,15 @@
 <?php
 
-use ComboStrap\MetadataUtility;
-use ComboStrap\PluginUtility;
+
 use ComboStrap\Page;
 
-if (!defined('DOKU_INC')) die();
-
 /**
- *
- *
+ * Class action_plugin_combo_metacanonical
+ * Add all canonical HTML meta
  */
-class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
+class action_plugin_combo_metacanonical
 {
 
-    /**
-     * The conf
-     */
-    const CANONICAL_LAST_NAMES_COUNT_CONF = 'MinimalNamesCountForAutomaticCanonical';
-
-
-    function __construct()
-    {
-        // enable direct access to language strings
-        // ie $this->lang
-        $this->setupLocale();
-    }
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -32,6 +17,8 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
          * https://www.dokuwiki.org/devel:event:tpl_metaheader_output
          */
         $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'metaCanonicalProcessing', array());
+
+
     }
 
     /**
@@ -44,7 +31,7 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
     {
 
         global $ID;
-        if (empty($ID)){
+        if (empty($ID)) {
             // $_SERVER['SCRIPT_NAME']== "/lib/exe/mediamanager.php"
             // $ID is null
             return;
@@ -70,9 +57,7 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
          * Calling the wl function will not work because
          * {@link wl()} use the constant DOKU_URL that is set before any test via getBaseURL(true)
          */
-
-
-        $canonicalUrl = $page->getCanonicalUrlOrDefault();
+        $canonicalUrl = $page->getAbsoluteCanonicalUrl();
 
         /**
          * Replace the meta entry
@@ -103,7 +88,7 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
         $canonicalOgArray = array("property" => $canonicalPropertyKey, "content" => $canonicalUrl);
         // Search if the canonical property is already present
         foreach ($event->data['meta'] as $key => $meta) {
-            if (array_key_exists("property",$meta)) {
+            if (array_key_exists("property", $meta)) {
                 /**
                  * We may have several properties
                  */

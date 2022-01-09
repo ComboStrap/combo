@@ -13,10 +13,11 @@
 namespace ComboStrap;
 
 
+use RuntimeException;
+
 class Site
 {
 
-    const CONF_SITE_ISO_COUNTRY = "siteIsoCountry";
     const STRAP_TEMPLATE_NAME = "strap";
 
     const SVG_LOGO_IDS = array(
@@ -42,8 +43,8 @@ class Site
         $logoIds = self::getLogoIds();
         foreach ($logoIds as $logoId) {
             if ($logoId->exists()) {
-                $mediaLink = MediaLink::createMediaLinkFromNonQualifiedPath($logoId->getAbsolutePath(), null, $tagAttributes);
-                $mediaLink->setLazyLoad(false);
+                $mediaLink = MediaLink::createMediaLinkFromPath($logoId->getPath(), $tagAttributes)
+                    ->setLazyLoad(false);
                 return $mediaLink->renderMediaTag();
             }
         }
@@ -55,10 +56,11 @@ class Site
      */
     private static function getLogoIds(): array
     {
-        $logosPaths = PluginUtility::mergeAttributes(self::PNG_LOGO_IDS,self::SVG_LOGO_IDS);
+        $logosPaths = PluginUtility::mergeAttributes(self::PNG_LOGO_IDS, self::SVG_LOGO_IDS);
         $logos = [];
-        foreach ($logosPaths as $logoPath){
-            $logos[]=Image::createImageFromAbsolutePath($logoPath);
+        foreach ($logosPaths as $logoPath) {
+            $dokuPath = DokuPath::createMediaPathFromId($logoPath);
+            $logos[] = Image::createImageFromPath($dokuPath);
         }
         return $logos;
     }
@@ -116,14 +118,14 @@ class Site
      *
      * Locale always canonicalizes to upper case.
      */
-    public static function getLocale($sep = "-")
+    public static function getLocale(string $sep = "-"): ?string
     {
 
         $locale = null;
 
         $lang = self::getLang();
         if ($lang != null) {
-            $country = self::getCountry();
+            $country = self::getLanguageRegion();
             if ($country != null) {
                 $locale = strtolower($lang) . $sep . strtoupper($country);
             }
@@ -137,15 +139,21 @@ class Site
      * ISO 3166 alpha-2 country code
      *
      */
-    public static function getCountry()
+    public static function getLanguageRegion()
     {
-        $country = PluginUtility::getConfValue(self::CONF_SITE_ISO_COUNTRY);
-        if (!empty($country)) {
-            if (!StringUtility::match($country, "[a-zA-Z]{2}")) {
-                LogUtility::msg("The country configuration value ($country) does not have two letters (ISO 3166 alpha-2 country code)", LogUtility::LVL_MSG_ERROR, "country");
-            }
-            return $country;
+        $region = PluginUtility::getConfValue(Region::CONF_SITE_LANGUAGE_REGION);
+        if (!empty($region)) {
+            return $region;
         } else {
+
+            if (extension_loaded("intl")) {
+                $locale = locale_get_default();
+                $localeParts = preg_split("/_/", $locale, 2);
+                if (sizeof($localeParts) === 2) {
+                    return $localeParts[1];
+                }
+            }
+
             return null;
         }
 
@@ -155,15 +163,15 @@ class Site
      * @return mixed|null
      * Wrapper around  https://www.dokuwiki.org/config:lang
      */
-    private static function getLang()
+    public static function getLang()
     {
 
         global $conf;
-        $locale = $conf['lang'];
-        return ($locale ? $locale : null);
+        $lang = $conf['lang'];
+        return ($lang ?: null);
     }
 
-    public static function getUrl()
+    public static function getBaseUrl(): string
     {
 
         /**
@@ -172,6 +180,8 @@ class Site
          * https://www.dokuwiki.org/config:baseurl
          * to be able to test the metadata / social integration
          * via a tunnel
+         *
+         * Same as {@link getBaseURL()} ??
          */
 
         return DOKU_URL;
@@ -200,7 +210,7 @@ class Site
         $conf['template'] = $template;
     }
 
-    public static function setRenderingCacheOn()
+    public static function setCacheXhtmlOn()
     {
         // ensure the value is not -1, which disables caching
         // https://www.dokuwiki.org/config:cachetime
@@ -263,12 +273,15 @@ class Site
 
     public static function getAjaxUrl()
     {
-        return self::getUrl() . "lib/exe/ajax.php";
+        return self::getBaseUrl() . "lib/exe/ajax.php";
     }
 
     public static function getPageDirectory()
     {
         global $conf;
+        /**
+         * Data dir is the pages dir
+         */
         return $conf['datadir'];
     }
 
@@ -282,6 +295,75 @@ class Site
     {
         global $conf;
         $conf['youarehere'] = 1;
+    }
+
+    public static function isHtmlRenderCacheOn(): bool
+    {
+        global $conf;
+        return $conf['cachetime'] !== -1;
+    }
+
+    public static function getDataDirectory()
+    {
+        global $conf;
+        $dataDirectory = $conf['datadir'];
+        if ($dataDirectory === null) {
+            throw new RuntimeException("The base directory ($dataDirectory) is null");
+        }
+        $file = File::createFromPath($dataDirectory)->getParent();
+        return $file->getAbsoluteFileSystemPath();
+    }
+
+    public static function isLowQualityProtectionEnable(): bool
+    {
+        return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE) === 1;
+    }
+
+    public static function getHomePageName()
+    {
+        global $conf;
+        return $conf["start"];
+    }
+
+    /**
+     * @return mixed - Application / Website name
+     */
+    public static function getName()
+    {
+        global $conf;
+        return $conf["title"];
+    }
+
+    public static function getTagLine()
+    {
+        global $conf;
+        return $conf['tagline'];
+    }
+
+    /**
+     * @return int|null
+     */
+    public static function getCacheTime(): ?int
+    {
+        global $conf;
+        $cacheTime = $conf['cachetime'];
+        if ($cacheTime === null) {
+            return null;
+        }
+        if (is_numeric($cacheTime)) {
+            return intval($cacheTime);
+        }
+        return null;
+    }
+
+    /**
+     * Absolute vs Relative URL
+     * https://www.dokuwiki.org/config:canonical
+     */
+    public static function getCanonicalConfForRelativeVsAbsoluteUrl()
+    {
+        global $conf;
+        return $conf['canonical'];
     }
 
 

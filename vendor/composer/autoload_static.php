@@ -7,6 +7,10 @@ namespace Composer\Autoload;
 class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
 {
     public static $prefixLengthsPsr4 = array (
+        'H' => 
+        array (
+            'Hidehalo\\Nanoid\\' => 16,
+        ),
         'C' => 
         array (
             'Cron\\' => 5,
@@ -18,6 +22,10 @@ class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
     );
 
     public static $prefixDirsPsr4 = array (
+        'Hidehalo\\Nanoid\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/hidehalo/nanoid-php/src',
+        ),
         'Cron\\' => 
         array (
             0 => __DIR__ . '/..' . '/dragonmantank/cron-expression/src/Cron',

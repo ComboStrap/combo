@@ -76,7 +76,6 @@ class SnippetManager
     private $snippetsByRequestScope = array();
 
 
-
     public static function init()
     {
         global $componentScript;
@@ -158,7 +157,7 @@ class SnippetManager
     /**
      * @return array of node type and an array of array of html attributes
      */
-    public function getSnippets()
+    public function getSnippets(): array
     {
         /**
          * Distinct Snippet
@@ -288,14 +287,13 @@ class SnippetManager
      */
     public function upsertHeadTagForRequest($snippetId, array $tags)
     {
-        $id = PluginUtility::getPageId();
+        $id = PluginUtility::getMainPageDokuwikiId();
         $snippet = &$this->snippetsByRequestScope[$id][Snippet::TAG_TYPE][$snippetId];
         if (!isset($snippet)) {
             $snippet = new Snippet($snippetId, Snippet::TAG_TYPE);
         }
         $snippet->setTags($tags);
     }
-
 
 
     /**
@@ -385,7 +383,7 @@ class SnippetManager
      * @param string $script -  the css if any, otherwise the css file will be taken
      * @return Snippet a snippet scoped at the request scope
      */
-    public function &attachCssSnippetForRequest($snippetId, $script = null)
+    public function &attachCssSnippetForRequest($snippetId, $script = null): Snippet
     {
         $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_CSS);
         if ($script != null) {
@@ -399,7 +397,7 @@ class SnippetManager
      * @param null $script
      * @return Snippet a snippet scoped at the bar level
      */
-    public function &attachJavascriptSnippetForBar($snippetId, $script = null)
+    public function &attachJavascriptSnippetForBar($snippetId, $script = null): Snippet
     {
         $snippet = $this->attachSnippetFromBar($snippetId, Snippet::TYPE_JS);
         if ($script != null) {
@@ -452,12 +450,19 @@ class SnippetManager
         return $heads;
     }
 
-    public function getCssSnippetContent($string)
+    public function &attachTagsForRequest($snippetId)
     {
-
+        global $ID;
+        $bar = $ID;
+        $heads = &$this->snippetsByRequestScope[$bar][Snippet::TAG_TYPE][$snippetId];
+        if (!isset($heads)) {
+            $heads = new Snippet($snippetId, Snippet::TAG_TYPE);
+        }
+        return $heads;
     }
 
-    private function mergeSnippetArray($left, $right)
+
+    private function mergeSnippetArray($left, $right): array
     {
 
         $distinctSnippetIdByType = $left;
@@ -466,6 +471,11 @@ class SnippetManager
              * @var $snippetObject Snippet
              */
             foreach ($right[$snippetContentType] as $snippetObject) {
+
+                if(!$snippetObject instanceof Snippet){
+                    LogUtility::msg("The value is not a snippet object");
+                    continue;
+                }
                 /**
                  * Snippet is an object
                  */
@@ -481,6 +491,39 @@ class SnippetManager
 
         return $distinctSnippetIdByType;
 
+    }
+
+    /**
+     * Add a local javascript script as tag
+     * (ie same as {@link SnippetManager::attachTagsForRequest()})
+     * but for local script
+     *
+     *
+     * For instance:
+     *   * library:combo:combo.js
+     *   * for a file located at dokuwiki_home\lib\plugins\combo\resources\library\combo\combo.js
+     * @param string $snippetId - the snippet id
+     * @param string $relativeId - the relative id from the resources directory
+     */
+    public function attachJavascriptScriptForRequest(string $snippetId, string $relativeId)
+    {
+        $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromDokuwikiId($relativeId);
+
+        $this->attachTagsForRequest($snippetId)->setTags(
+            array("script" => [
+                array(
+                    "src" => $javascriptMedia->getUrl(),
+//                    "integrity" => "sha256-LGOWMG4g6/zc0chji4hZP1d8RxR2bPvXMzl/7oPZqjs=",
+//                    "crossorigin" => "anonymous"
+                )
+            ])
+        );
+
+    }
+
+    public function attachJavascriptComboLibrary()
+    {
+        $this->attachJavascriptScriptForRequest("combo","library:combo:dist:combo.min.js");
     }
 
 

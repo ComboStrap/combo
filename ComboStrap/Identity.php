@@ -85,17 +85,29 @@ class Identity
          * The {@link getSecurityToken()} needs it
          */
         global $INPUT;
-        $INPUT->server->set('REMOTE_USER',$user);
+        $INPUT->server->set('REMOTE_USER', $user);
 
     }
 
     /**
      * @return bool if edit auth
      */
-    public static function isWriter()
+    public static function isWriter($pageId = null): bool
     {
+        if ($pageId == null) {
+            $pageId = Page::createPageFromGlobalDokuwikiId();
+        }
+        if ($_SERVER['REMOTE_USER']) {
+            $perm = auth_quickaclcheck($pageId);
+        } else {
+            $perm = auth_aclcheck($pageId, '', null);
+        }
 
-        return auth_quickaclcheck(PluginUtility::getPageId()) >= AUTH_EDIT;
+        if ($perm >= AUTH_EDIT) {
+            return true;
+        } else {
+            return false;
+        }
 
     }
 
@@ -119,13 +131,24 @@ class Identity
     public static function isManager()
     {
         global $INFO;
-        return $INFO['ismanager'];
+        if ($INFO !== null) {
+            return $INFO['ismanager'];
+        } else {
+            /**
+             * In test
+             */
+            return auth_ismanager();
+        }
     }
 
-    private static function getUser()
+    public static function getUser(): string
     {
         global $INPUT;
-        return $INPUT->server->str('REMOTE_USER');
+        $user = $INPUT->server->str('REMOTE_USER');
+        if (empty($user)) {
+            return "Anonymous";
+        }
+        return $user;
     }
 
     private static function getUserGroups()
@@ -185,6 +208,31 @@ class Identity
 EOF;
         }
         return "";
+    }
+
+    public static function isReader(string $pageId): bool
+    {
+        $perm = self::getPerm($pageId);
+
+        if ($perm >= AUTH_READ) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    private static function getPerm(string $pageId)
+    {
+        if ($pageId == null) {
+            $pageId = Page::createPageFromRequestedPage()->getDokuwikiId();
+        }
+        if ($_SERVER['REMOTE_USER']) {
+            $perm = auth_quickaclcheck($pageId);
+        } else {
+            $perm = auth_aclcheck($pageId, '', null);
+        }
+        return $perm;
     }
 
 

@@ -13,6 +13,13 @@
 namespace ComboStrap;
 
 
+use DateTime;
+
+/**
+ * Class File
+ * @package ComboStrap
+ * @deprecated for {@link LocalPath} and {@link FileSystems}
+ */
 class File
 {
 
@@ -29,14 +36,16 @@ class File
     }
 
     /**
+     * @deprecated uses {@link Path::toAbsolutePath()} instead
      * @return mixed
      */
-    public function getFileSystemPath()
+    public function getAbsoluteFileSystemPath()
     {
         return $this->path;
     }
 
     /**
+     * @deprecated use {@link FileSystems::getSize()} instead
      * @return false|int
      */
     public function getSize()
@@ -44,6 +53,10 @@ class File
         return filesize($this->path);
     }
 
+    /**
+     * @return bool
+     * @deprecated uses {@link FileSystems::exists()} instead
+     */
     public function exists()
     {
         return file_exists($this->path);
@@ -55,88 +68,90 @@ class File
     }
 
     /**
-     * @return \DateTime - The date time
+     * @return null|DateTime - The date time
+     * @deprecated use {@link FileSystems::getModifiedTime()} instead
      */
-    public function getModifiedTime(): \DateTime
+    public function getModifiedTime(): ?DateTime
     {
+        if(!$this->exists()){
+            return null;
+        }
         return Iso8601Date::createFromTimestamp(filemtime($this->path))->getDateTime();
     }
 
-    /**
-     * @return string the last part of the path without the extension
-     */
-    public function getBaseNameWithoutExtension()
-    {
 
-        return pathinfo($this->path, PATHINFO_FILENAME);
-    }
-
-    public function getExtension()
-    {
-        return pathinfo($this->path, PATHINFO_EXTENSION);
-    }
 
 
     /**
-     * @return array|string|string[] the last part of the path (ie name + extension)
+     * @deprecated use {@link FileSystems::getContent()} instead
+     * @return false|string
      */
-    public function getBaseName()
+    public function getTextContent()
     {
-        return pathinfo($this->path, PATHINFO_BASENAME);
+        return file_get_contents($this->getAbsoluteFileSystemPath());
     }
 
-    public function isImage(): bool
-    {
-        return substr($this->getMime(), 0, 5) == 'image';
-    }
-
-    public function getMime()
-    {
-        if ($this->getExtension() == ImageSvg::EXTENSION) {
-            /**
-             * Svg is authorized when viewing but is not part
-             * of the {@link File::getKnownMime()}
-             */
-            return ImageSvg::MIME;
-        } else {
-            return mimetype($this->getBaseName(), false)[1];
-        }
-    }
-
-    public function getKnownMime()
-    {
-        return mimetype($this->getBaseName(), true)[1];
-    }
-
-    public function getContent()
-    {
-        return file_get_contents($this->getFileSystemPath());
-    }
-
+    /**
+     * @deprecated use {@link FileSystems::delete()} instead
+     */
     public function remove()
     {
-        unlink($this->getFileSystemPath());
+        unlink($this->getAbsoluteFileSystemPath());
     }
 
-    public function getParent()
+    /**
+     * @return File|null
+     * @deprecated use {@link LocalPath::getParent()} instead
+     */
+    public function getParent(): ?File
     {
-        return new File(pathinfo($this->path, PATHINFO_DIRNAME));
+        $absolutePath = pathinfo($this->path, PATHINFO_DIRNAME);
+        if(empty($absolutePath)){
+            return null;
+        }
+        return new File($absolutePath);
     }
 
-    public function createAsDirectory()
+    public function createAsDirectory(): bool
     {
 
-        return mkdir($this->getFileSystemPath(), $mode = 0770, $recursive = true);
+        return mkdir($this->getAbsoluteFileSystemPath(), $mode = 0770, $recursive = true);
     }
 
-    public static function createFromPath($path)
+    public static function createFromPath($path): File
     {
         return new File($path);
 
     }
 
+    /**
+     * @deprecated for {@link ResourceCombo::getBuster()}
+     * @return string
+     */
+    public function getBuster(): string
+    {
+        return strval($this->getModifiedTime()->getTimestamp());
+    }
 
+    /**
+     * @deprecated uses {@link FileSystems::getCreationTime()} instead
+     * @return DateTime|false|mixed
+     */
+    public function getCreationTime()
+    {
+        return Iso8601Date::createFromTimestamp(filectime($this->path))->getDateTime();
+    }
 
+    /**
+     * @deprecated use {@link FileSystems::deleteIfExists()} instead
+     */
+    public function removeIfExists(): File
+    {
+        if($this->exists()){
+            $this->remove();
+        }
+        return $this;
+    }
 
 
 }

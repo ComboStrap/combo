@@ -6,11 +6,11 @@ namespace ComboStrap;
 
 use dokuwiki\Cache\Cache;
 
-class Lang
+class Lang extends MetadataText
 {
 
-    const CANONICAL = "lang";
-    const LANG_ATTRIBUTES = "lang";
+    public const PROPERTY_NAME = "lang";
+
 
     /**
      * Process the lang attribute
@@ -37,8 +37,8 @@ class Lang
          * Adding the lang attribute
          * if set
          */
-        if ($attributes->hasComponentAttribute(self::LANG_ATTRIBUTES)) {
-            $langValue = $attributes->getValueAndRemove(self::LANG_ATTRIBUTES);
+        if ($attributes->hasComponentAttribute(self::PROPERTY_NAME)) {
+            $langValue = $attributes->getValueAndRemove(self::PROPERTY_NAME);
             $attributes->addHtmlAttributeValue("lang", $langValue);
 
             $languageDataCache = new Cache("combo_" . $langValue, ".json");
@@ -53,15 +53,15 @@ class Lang
 
                     $numberOfByte = @file_put_contents($languageDataCache->cache, $filePointer);
                     if ($numberOfByte != false) {
-                        LogUtility::msg("The new language data ($langValue) was downloaded", LogUtility::LVL_MSG_INFO, self::CANONICAL);
+                        LogUtility::msg("The new language data ($langValue) was downloaded", LogUtility::LVL_MSG_INFO, self::PROPERTY_NAME);
                         $cacheDataUsable = true;
                     } else {
-                        LogUtility::msg("Internal error: The language data ($langValue) could no be written to ($languageDataCache->cache)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        LogUtility::msg("Internal error: The language data ($langValue) could no be written to ($languageDataCache->cache)", LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
                     }
 
                 } else {
 
-                    LogUtility::msg("The data for the language ($langValue) could not be found at ($downloadUrl).", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    LogUtility::msg("The data for the language ($langValue) could not be found at ($downloadUrl).", LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
 
                 }
             }
@@ -69,8 +69,8 @@ class Lang
             if ($cacheDataUsable) {
                 $jsonAsArray = true;
                 $languageData = json_decode(file_get_contents($languageDataCache->cache), $jsonAsArray);
-                if($languageData==null){
-                    LogUtility::msg("We could not read the data from the language ($langValue). No direction was set.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                if ($languageData == null) {
+                    LogUtility::msg("We could not read the data from the language ($langValue). No direction was set.", LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
                     return;
                 }
                 $characterOrder = $languageData["main"][$langValue]["layout"]["orientation"]["characterOrder"];
@@ -80,11 +80,94 @@ class Lang
                     $attributes->addHtmlAttributeValue("dir", "ltr");
                 }
             } else {
-                LogUtility::msg("The language direction cannot be set because no language data was found for the language ($langValue)", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                LogUtility::msg("The language direction cannot be set because no language data was found for the language ($langValue)", LogUtility::LVL_MSG_WARNING, self::PROPERTY_NAME);
             }
 
         }
 
     }
+
+    public static function createForPage(Page $page)
+    {
+        return (new Lang())
+            ->setResource($page);
+    }
+
+    public function getTab(): ?string
+    {
+        return MetaManagerForm::TAB_LANGUAGE_VALUE;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setFromStoreValue($value): Metadata
+    {
+
+        $this->validityCheck($value);
+        return parent::setFromStoreValue($value);
+
+    }
+
+    /**
+     * @param string|null $value
+     * @return Metadata
+     * @throws ExceptionCombo
+     */
+    public function setValue($value): Metadata
+    {
+        $this->validityCheck($value);
+        return parent::setValue($value);
+    }
+
+
+    public function getDescription(): string
+    {
+        return "The language of the page";
+    }
+
+    public function getLabel(): string
+    {
+        return "Language";
+    }
+
+    public static function getName(): string
+    {
+        return self::PROPERTY_NAME;
+    }
+
+    public function getPersistenceType(): string
+    {
+        return Metadata::PERSISTENT_METADATA;
+    }
+
+    public function getMutable(): bool
+    {
+        return true;
+    }
+
+    public function getDefaultValue()
+    {
+        return Site::getLang();
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private function validityCheck($value)
+    {
+        if ($value === "" || $value === null) {
+            return;
+        }
+        if (!StringUtility::match($value, "^[a-zA-Z]{2}$")) {
+            throw new ExceptionCombo("The lang value ($value) for the page ($this) does not have two letters", $this->getCanonical());
+        }
+    }
+
+    public function getCanonical(): string
+    {
+        return "lang";
+    }
+
 
 }

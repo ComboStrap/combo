@@ -102,11 +102,11 @@ class Message
     function getContent($mime = null): string
     {
         if ($mime != null) {
-            return implode($this->content[$mime], DOKU_LF);
+            return implode(DOKU_LF, $this->content[$mime]);
         }
         $contentAll = "";
         foreach ($this->content as $contentArray) {
-            $contentAll .= implode($contentArray, DOKU_LF);
+            $contentAll .= implode(DOKU_LF, $contentArray);
         }
         return $contentAll;
     }

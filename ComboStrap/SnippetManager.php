@@ -472,7 +472,7 @@ class SnippetManager
              */
             foreach ($right[$snippetContentType] as $snippetObject) {
 
-                if(!$snippetObject instanceof Snippet){
+                if (!$snippetObject instanceof Snippet) {
                     LogUtility::msg("The value is not a snippet object");
                     continue;
                 }
@@ -521,12 +521,25 @@ class SnippetManager
 
     }
 
+    public function attachJavascriptScriptForBar(string $snippetId, string $relativeId, string $integrity = null)
+    {
+        $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromDokuwikiId($relativeId);
+
+        $head = array("src" => $javascriptMedia->getUrl());
+
+        if ($integrity != null) {
+            $head["integrity"] = $integrity;
+            $head["crossorigin"] = "anonymous";
+        }
+
+        $this->attachTagsForBar($snippetId)->setTags(array("script" => [$head]));
+
+    }
+
     public function attachJavascriptComboLibrary()
     {
-        $this->attachJavascriptScriptForRequest("combo","library:combo:dist:combo.min.js");
+        $this->attachJavascriptScriptForRequest("combo", "library:combo:dist:combo.min.js");
     }
 
 
 }
-
-

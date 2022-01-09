@@ -8,7 +8,6 @@ use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
 
-
 /**
  * Railroad
  * https://github.com/Chrriis/rrdiagram-js/
@@ -130,7 +129,7 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
                                 };
                                 break;
                             case DOKU_LEXER_UNMATCHED:
-                                if($bnfCodeFound) {
+                                if ($bnfCodeFound) {
                                     $bnfCode = $actual->getCapturedContent();
                                     break 2;
                                 }
@@ -191,27 +190,19 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
                          * `
                          * openssl dgst -sha256 -binary rrdiagram.js | openssl base64 -A
                          * `
+                         * $sha256integrity = ;
                          */
-                        $sha256integrity = "noP8Tag5vKjRfh3+8GXy5QSZqKnRt7WQe6I9rGVl+go=";
-
-                        $snippetManager->attachTagsForBar($snippetId)->setTags(
-                            array(
-                                "script" =>
-                                    [
-                                        array(
-                                            "src" => PluginUtility::getResourceBaseUrl() . "/library/$libraryId/0.9.4.1/$libraryId.js",
-                                            "integrity" => "sha256-".$sha256integrity,
-                                            "crossorigin" => "anonymous"
-                                        )
-                                    ],
-
-                            )
+                        $snippetManager->attachJavascriptScriptForBar(
+                            $snippetId,
+                            "library:$libraryId:0.9.4.1:$libraryId.js",
+                            "sha256-" . "noP8Tag5vKjRfh3+8GXy5QSZqKnRt7WQe6I9rGVl+go="
                         );
+
                         /**
                          * This code is replaced at runtime by the diagram
                          */
                         $class = self::CLASS_NAME;
-                        $renderer->doc .= "<pre class=\"$class\">".hsc($bnfCode)."</pre>";
+                        $renderer->doc .= "<pre class=\"$class\">" . hsc($bnfCode) . "</pre>";
                     } else {
                         LogUtility::msg("No code component with bnf grammar was found", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
                     }

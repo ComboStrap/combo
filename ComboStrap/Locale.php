@@ -67,7 +67,11 @@ class Locale extends MetadataText
 
     public function getDefaultValue(): ?string
     {
-        return Site::getLocale();
+        /**
+         * The value of {@link locale_get_default()} is with an underscore
+         * We follow this lead
+         */
+        return Site::getLocale("_");
     }
 
     public function getCanonical(): string

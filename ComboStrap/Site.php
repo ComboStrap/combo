@@ -118,7 +118,7 @@ class Site
      *
      * Locale always canonicalizes to upper case.
      */
-    public static function getLocale($sep = "-"): ?string
+    public static function getLocale(string $sep = "-"): ?string
     {
 
         $locale = null;

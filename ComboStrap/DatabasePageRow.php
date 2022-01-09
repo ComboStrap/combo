@@ -469,7 +469,7 @@ class DatabasePageRow
              */
             $values[] = $rowId;
 
-            $updateStatement = "update PAGES SET " . implode($columnClauses, ", ") . " where ROWID = ?";
+            $updateStatement = "update PAGES SET " . implode(", ", $columnClauses) . " where ROWID = ?";
             $request = $this->sqlite
                 ->createRequest()
                 ->setQueryParametrized($updateStatement, $values);
@@ -507,7 +507,7 @@ class DatabasePageRow
             /**
              * Analytics
              */
-            if(!isset($values[self::ANALYTICS_ATTRIBUTE])){
+            if (!isset($values[self::ANALYTICS_ATTRIBUTE])) {
                 // otherwise we get an empty string
                 // and a json function will not work
                 $values[self::ANALYTICS_ATTRIBUTE] = Json::createEmpty()->toPrettyJsonString();

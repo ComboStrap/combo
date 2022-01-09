@@ -1060,7 +1060,7 @@ class Page extends ResourceComboAbs
     function getNamespacePath(): string
     {
 
-        return  $this->dokuPath->getParent()->toString();
+        return $this->dokuPath->getParent()->toString();
 
     }
 
@@ -1534,7 +1534,7 @@ class Page extends ResourceComboAbs
         /**
          * Create the parent namespace id
          */
-        $parentNamespaceId = implode($parentNames, DokuPath::PATH_SEPARATOR);
+        $parentNamespaceId = implode(DokuPath::PATH_SEPARATOR, $parentNames);
         return self::getHomePageFromNamespace($parentNamespaceId);
 
     }

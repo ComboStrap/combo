@@ -969,7 +969,14 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
             // Match ?
             // https://www.php.net/manual/en/function.preg-match.php
-            if (preg_match($regexpPattern, $ID, $matches)) {
+            $pregMatchResult = @preg_match($regexpPattern, $ID, $matches);
+            if ($pregMatchResult === false) {
+                // The `if` to take into account this problem
+                // PHP Warning:  preg_match(): Unknown modifier 'd' in /opt/www/datacadamia.com/lib/plugins/combo/action/router.php on line 972
+                LogUtility::log2file("processing Page Rules An error occurred with the pattern ($regexpPattern)", LogUtility::LVL_MSG_WARNING);
+                return false;
+            }
+            if ($pregMatchResult) {
                 $calculatedTarget = $ruleTarget;
                 foreach ($matches as $key => $match) {
                     if ($key == 0) {

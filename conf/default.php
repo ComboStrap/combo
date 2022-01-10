@@ -78,6 +78,11 @@ $conf['BestEndPageMinimalScoreForAliasCreation'] = 2;
  *
  */
 $conf['MinimalNamesCountForAutomaticCanonical'] = 0;
+/**
+ * Does the canonical is reported as the unique name of the page
+ * for google analytics
+ * {@link action_plugin_combo_canonical::CONF_CANONICAL_FOR_GA_PAGE_VIEW}
+ */
 $conf['useCanonicalValueForGoogleAnalyticsPageView'] = 0;
 
 /**

@@ -66,9 +66,9 @@ class LogUtility
     {
 
         $message = trim($message);
-        if ($message === "") {
+        if ($message === "" || $message === null) {
             $level = LogUtility::LVL_MSG_ERROR;
-            $message = "The passed message to the log was empty. BackTrace: \n";
+            $message = "The passed message to the log was empty or null. BackTrace: \n";
             ob_start();
             debug_print_backtrace();
             $trace = ob_get_contents();

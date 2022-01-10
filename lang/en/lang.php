@@ -62,6 +62,7 @@ $lang['btn_addmodify'] = 'Add/Modify';
 $lang['message_redirected_by_redirect'] = 'The page (%s) doesn\'t exist. You have been redirected automatically to the redirect page.';
 $lang['message_redirected_to_edit_mode'] = 'This page doesn\'t exist. You have been redirected automatically in the edit mode.';
 $lang['message_redirected_from_permalink'] = 'You have been transparently redirected to the destination url.';
+$lang['message_redirected_from_canonical'] = 'You have been redirected from a permanent named link';
 $lang['message_pagename_exist_one'] = 'The following page(s) exists already in other namespace(s) with the same name part: ';
 $lang['message_redirected_to_startpage'] = 'The page (%s) doesn\'t exist. You have been redirected automatically to the start page of the namespace.';
 $lang['message_redirected_to_bestpagename'] = 'The page (%s) doesn\'t exist. You have been redirected automatically to the best page.';

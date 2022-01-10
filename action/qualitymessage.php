@@ -59,9 +59,6 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
         }
 
-        if (!$page->isDynamicQualityMonitored()) {
-            return Message::createErrorMessage("This page is not quality monitored. Change the configuration if you want to.");
-        }
 
         if (!$page->exists()) {
             return Message::createInfoMessage("The page does not exist");
@@ -146,6 +143,11 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
             $message .= "<li>$qualityInfo</li>";
         }
         $message .= "</ul>";
+
+        if (!$page->isDynamicQualityMonitored()) {
+            $docLink = PluginUtility::getDocumentationHyperLink(":dynamic-quality-monitoring", "configuration");
+            $message .= "<p>This page is not quality monitored due its $docLink.</p>";
+        }
         return Message::createInfoMessage($message);
 
     }

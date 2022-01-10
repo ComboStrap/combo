@@ -217,7 +217,13 @@ class DatabasePageRow
         $row = $databasePage->getDatabaseRowFromAlias($alias);
         if ($row != null) {
             $databasePage->setRow($row);
-            $databasePage->getPage()->setBuildAliasPath($alias);
+            $page = $databasePage->getPage();
+            if ($page !== null) {
+                // page may be null in production
+                // PHP Fatal error:  Uncaught Error: Call to a member function setBuildAliasPath() on null in
+                // /opt/www/bytle/farmer.bytle.net/lib/plugins/combo/ComboStrap/DatabasePageRow.php:220
+                $page->setBuildAliasPath($alias);
+            }
         }
         return $databasePage;
 

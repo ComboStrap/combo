@@ -65,6 +65,20 @@ class LogUtility
     public static function msg(string $message, int $level = self::LVL_MSG_ERROR, string $canonical = "support")
     {
 
+        $message = trim($message);
+        if ($message === "") {
+            $level = LogUtility::LVL_MSG_ERROR;
+            $message = "The passed message to the log was empty. BackTrace: \n";
+            ob_start();
+            debug_print_backtrace();
+            $trace = ob_get_contents();
+            ob_end_clean();
+            $message .= $trace;
+            self::log2file($message, $level, $canonical);
+            self::throwErrorIfTest($level, $message);
+            return;
+        }
+
         /**
          * Log to frontend
          */
@@ -194,7 +208,7 @@ class LogUtility
                      * We don't use any Page object to not
                      * create a cycle while building it
                      */
-                    $url = wl($id,[],true);
+                    $url = wl($id, [], true);
                     $htmlMsg .= " - <a href=\"$url\">$id</a>";
 
                 }

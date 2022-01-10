@@ -13,6 +13,12 @@ class LocalPath extends PathAbs
 
     private const FILE_SYSTEM_DIRECTORY_SEPARATOR = DIRECTORY_SEPARATOR;
 
+    /**
+     * The characters that cannot be in the path for windows
+     * @var string[]
+     */
+    public const RESERVED_WINDOWS_CHARACTERS = ["\\", "/", ":", "*", "?", "\"", "<", ">", "|"];
+
     private $path;
 
     /**

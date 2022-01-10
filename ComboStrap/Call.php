@@ -58,6 +58,7 @@ class Call
         "emphasis_open",
         "emphasis_close",
         "underline",
+        "underline_close",
         "monospace",
         "subscript",
         "superscript",

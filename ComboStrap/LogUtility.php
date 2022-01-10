@@ -65,18 +65,10 @@ class LogUtility
     public static function msg(string $message, int $level = self::LVL_MSG_ERROR, string $canonical = "support")
     {
 
-        $message = trim($message);
-        if ($message === "" || $message === null) {
-            $level = LogUtility::LVL_MSG_ERROR;
-            $message = "The passed message to the log was empty or null. BackTrace: \n";
-            ob_start();
-            debug_print_backtrace();
-            $trace = ob_get_contents();
-            ob_end_clean();
-            $message .= $trace;
-            self::log2file($message, $level, $canonical);
-            self::throwErrorIfTest($level, $message);
-            return;
+        try {
+            self::messageNotEmpty($message);
+        } catch (ExceptionCombo $e) {
+            self::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $canonical);
         }
 
         /**
@@ -116,8 +108,15 @@ class LogUtility
      * @param int $logLevel
      * @param null $canonical
      */
-    static function log2file($msg, $logLevel = self::LVL_MSG_INFO, $canonical = null)
+    static function log2file(string $msg, int $logLevel = self::LVL_MSG_INFO, $canonical = null)
     {
+
+        try {
+            self::messageNotEmpty($msg);
+        } catch (ExceptionCombo $e) {
+            $msg = $e->getMessage();
+            $logLevel = self::LVL_MSG_ERROR;
+        }
 
         if (PluginUtility::isTest() || $logLevel >= self::LVL_MSG_WARNING) {
 
@@ -157,11 +156,19 @@ class LogUtility
     /**
      * @param $message
      * @param $level
-     * @param $canonical
+     * @param string $canonical
      * @param bool $withIconURL
      */
     public static function log2FrontEnd($message, $level, $canonical = "support", $withIconURL = true)
     {
+
+        try {
+            self::messageNotEmpty($message);
+        } catch (ExceptionCombo $e) {
+            $message = $e->getMessage();
+            $level = self::LVL_MSG_ERROR;
+        }
+
         /**
          * If we are not in the console
          * and not in test
@@ -239,6 +246,24 @@ class LogUtility
             && ($level >= self::LVL_MSG_WARNING)
         ) {
             throw new LogException($message);
+        }
+    }
+
+    /**
+     * @param string $message
+     * @throws ExceptionCombo
+     */
+    private static function messageNotEmpty(string $message)
+    {
+        $message = trim($message);
+        if ($message === "" || $message === null) {
+            $newMessage = "The passed message to the log was empty or null. BackTrace: \n";
+            ob_start();
+            debug_print_backtrace();
+            $trace = ob_get_contents();
+            ob_end_clean();
+            $newMessage .= $trace;
+            throw new ExceptionCombo($newMessage);
         }
     }
 }

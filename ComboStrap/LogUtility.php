@@ -54,6 +54,11 @@ class LogUtility
 
 
     const LOGLEVEL_URI_QUERY_PROPERTY = "loglevel";
+    /**
+     *
+     * @var bool
+     */
+    private static $throwExceptionOnDevTest = true;
 
     /**
      * Send a message to a manager and log it
@@ -244,6 +249,7 @@ class LogUtility
     {
         if (PluginUtility::isTest()
             && ($level >= self::LVL_MSG_WARNING)
+            && self::$throwExceptionOnDevTest
         ) {
             throw new LogException($message);
         }
@@ -265,5 +271,15 @@ class LogUtility
             $newMessage .= $trace;
             throw new ExceptionCombo($newMessage);
         }
+    }
+
+    public static function disableThrowExceptionOnDevTest()
+    {
+        self::$throwExceptionOnDevTest = false;
+    }
+
+    public static function enableThrowExceptionOnDevTest()
+    {
+        self::$throwExceptionOnDevTest = true;
     }
 }

@@ -1048,7 +1048,6 @@ class PluginUtility
     }
 
 
-
     public
     static function getComponentName($tag)
     {
@@ -1075,7 +1074,6 @@ class PluginUtility
     {
         return SnippetManager::get();
     }
-
 
 
     /**
@@ -1307,7 +1305,7 @@ class PluginUtility
      * to avoid function, class, or members that does not exist
      */
     public
-    static function loadStrapUtilityTemplateIfPresentAndSameVersion()
+    static function loadStrapUtilityTemplateIfPresentAndSameVersion(): bool
     {
         $templateUtilityFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
         if (file_exists($templateUtilityFile)) {
@@ -1318,11 +1316,18 @@ class PluginUtility
             $templateVersion = $templateInfo['version'];
             $comboVersion = self::$INFO_PLUGIN['version'];
             if ($templateVersion != $comboVersion) {
+                $strapName = "Strap";
+                $comboName = "Combo";
+                $strapLink = "<a href=\"https://www.dokuwiki.org/template:strap\">$strapName</a>";
+                $comboLink = "<a href=\"https://www.dokuwiki.org/plugin:combo\">$comboName</a>";
                 if ($comboVersion > $templateVersion) {
-                    LogUtility::msg("You should upgrade <a href=\"https://www.dokuwiki.org/template:strap\">strap</a> to the latest version to get a fully functional experience. The version of Combo is ($comboVersion) while the version of Strap is ($templateVersion).");
+                    $upgradeTarget = $strapName;
                 } else {
-                    LogUtility::msg("You should upgrade <a href=\"https://www.dokuwiki.org/plugin:combo\">combo</a>  to the latest version to get a fully functional experience. The version of Combo is ($comboVersion) while the version of Strap is ($templateVersion).");
+                    $upgradeTarget = $comboName;
                 }
+                $upgradeLink = "<a href=\"" . wl() . "&do=admin&page=extension" . "\">upgrade <b>$upgradeTarget</b> via the extension manager</a>";
+                $message = "You should $upgradeLink to the latest version to get a fully functional experience. The version of $comboLink is ($comboVersion) while the version of $strapLink is ($templateVersion).";
+                LogUtility::msg($message);
                 return false;
             } else {
                 /** @noinspection PhpIncludeInspection */

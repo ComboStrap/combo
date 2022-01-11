@@ -15,6 +15,13 @@ namespace ComboStrap;
 abstract class MetadataTabular extends Metadata
 {
 
+    /**
+     * In the array, the identifier may be the persistent one
+     * or the identifier one
+     */
+    const PERSISTENT_NAME = "persistent";
+    const IDENTIFIER_NAME = "identifier";
+
 
     /**
      * The rows
@@ -83,18 +90,26 @@ abstract class MetadataTabular extends Metadata
     }
 
     /**
-     * @throws ExceptionCombo
+     * The value is:
+     *   * a string for a unique identifier value
+     *   * an array of columns or an array of rows
      */
     public function buildFromStoreValue($value): Metadata
     {
+
         if ($value === null) {
             return $this;
         }
+
         /**
          * Value of the metadata id
          */
         $identifierMetadataObject = $this->getUidObject();
         $identifierPersistentName = $identifierMetadataObject::getPersistentName();
+
+        /**
+         * Single value
+         */
         if (is_string($value)) {
             /**
              * @var Metadata $identifierMetadata
@@ -104,23 +119,32 @@ abstract class MetadataTabular extends Metadata
             $this->rows[$value] = [$identifierPersistentName => $identifierMetadata];
             return $this;
         }
+
+        /**
+         * Array
+         */
         if (!is_array($value)) {
-            LogUtility::msg("The tabular value is not a string nor an array");
+            LogUtility::msg("The tabular value is nor a string nor an array");
             return $this;
         }
 
 
         /**
-         * Determine the format of the tabular
+         * List of columns ({@link MetadataFormDataStore form html way}
          */
         $keys = array_keys($value);
         $firstElement = array_shift($keys);
-
         if (!is_numeric($firstElement)) {
             /**
-             * List of row (Storage way)
+             * Check which kind of key is used
+             * Resistance to the property key !
              */
-            $identifierName = $identifierMetadataObject::getName();
+            $identifierName = $identifierMetadataObject::getPersistentName();
+            $identifierNameType = self::PERSISTENT_NAME;
+            if (!isset($value[$identifierName])) {
+                $identifierNameType = self::IDENTIFIER_NAME;
+                $identifierName = $identifierMetadataObject::getName();
+            }
             $identifierValues = $value[$identifierName];
             if ($identifierValues === null || $identifierValues === "") {
                 // No data
@@ -140,7 +164,10 @@ abstract class MetadataTabular extends Metadata
                         continue;
                     }
                     $metadataChildObject = Metadata::toMetadataObject($childClass, $this);
-                    $name = $metadataChildObject::getName();
+                    $name = $metadataChildObject::getPersistentName();
+                    if ($identifierNameType === self::IDENTIFIER_NAME) {
+                        $name = $metadataChildObject::getName();
+                    }
                     $childValue = $value[$name][$i];
                     $metadataChildObject->setFromStoreValue($childValue);
                     $row[$metadataChildObject::getPersistentName()] = $metadataChildObject;
@@ -152,12 +179,11 @@ abstract class MetadataTabular extends Metadata
         }
 
         /**
-         * List of columns (HTML way)
+         * List of row (frontmatter, dokuwiki, ...)
          */
-        // child object building
         $childClassesByPersistentName = [];
-        foreach ($this->getChildrenClass() as $childClass) {
-            $childClassesByPersistentName[$childClass::getPersistentName()] = $childClass;
+        foreach ($this->getChildrenObject() as $childObject) {
+            $childClassesByPersistentName[$childObject::getPersistentName()] = $childObject;
         }
         foreach ($value as $item) {
 

@@ -122,6 +122,9 @@ class FormMeta
      *
      * ie Equivalent to the javascript api formdata output
      * (Used in test to simulate a post)
+     *
+     * TODO: Not sure but with the {@link MetadataStore}, this should move to the class
+     *   where the target/read store is a {@link MetadataFormDataStore} ?
      */
     public function toFormData(): array
     {

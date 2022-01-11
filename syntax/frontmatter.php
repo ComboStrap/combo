@@ -324,7 +324,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                      */
                     $pageImages = PageImages::createForPage($page)
                         ->buildFromStoreValue($value);
-                    foreach ($pageImages->getValueAsPageImages() as $imageValue) {
+                    $pageImagesObject = $pageImages->getValueAsPageImages();
+                    foreach ($pageImagesObject as $imageValue) {
                         $imagePath = $imageValue->getImage()->getPath()->toAbsolutePath()->toString();
                         $attributes = [PagePath::PROPERTY_NAME => $imagePath];
                         if (media_isexternal($imagePath)) {

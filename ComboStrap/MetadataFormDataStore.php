@@ -22,13 +22,35 @@ class MetadataFormDataStore extends MetadataSingleArrayStore
     public function get(Metadata $metadata, $default = null)
     {
         $this->checkResource($metadata->getResource());
-        /**
-         * In a form, the name is send, not the {@link Metadata::getPersistentName()}
-         */
-        $value = $this->data[$metadata::getName()];
-        if ($value !== null) {
-            return $value;
+
+        $type = $metadata->getDataType();
+        switch ($type) {
+            case DataType::TABULAR_TYPE_VALUE:
+                /**
+                 * In a tabular, the children name are
+                 */
+                $value = null;
+                foreach ($metadata->getChildrenObject() as $childrenObject) {
+                    $childrenValue = $this->data[$childrenObject::getName()];
+                    if ($childrenValue !== null) {
+                        $value[$childrenObject::getPersistentName()] = $childrenValue;
+                    }
+                }
+                if ($value !== null) {
+                    return $value;
+                }
+                break;
+            default:
+                /**
+                 * In a form, the name is send, not the {@link Metadata::getPersistentName()}
+                 * but with the name
+                 */
+                $value = $this->data[$metadata::getName()];
+                if ($value !== null) {
+                    return $value;
+                }
         }
+
         return $default;
     }
 

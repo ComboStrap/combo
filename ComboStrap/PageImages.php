@@ -322,15 +322,31 @@ class PageImages extends MetadataTabular
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
-        $relation = $store->getCurrentFromName('relation');
-        if (!isset($relation[PageImages::FIRST_IMAGE_META_RELATION])) {
-            return null;
+        /**
+         * Our first image metadata
+         * We can't overwrite the {@link \Doku_Renderer_metadata::$firstimage first image}
+         * We put it then in directly under the root
+         */
+        $firstImageId = $store->getCurrentFromName(PageImages::FIRST_IMAGE_META_RELATION);
+
+        /**
+         * Dokuwiki first image metadata
+         */
+        if(empty($firstImageId)) {
+            $relation = $store->getCurrentFromName('relation');
+            if (!isset($relation[PageImages::FIRST_IMAGE_META_RELATION])) {
+                return null;
+            }
+
+            $firstImageId = $relation[PageImages::FIRST_IMAGE_META_RELATION];
+            if (empty($firstImageId)) {
+                return null;
+            }
         }
 
-        $firstImageId = $relation[PageImages::FIRST_IMAGE_META_RELATION];
-        if (empty($firstImageId)) {
-            return null;
-        }
+        /**
+         * Image Id check
+         */
         if (media_isexternal($firstImageId)) {
             return null;
         }
@@ -351,14 +367,15 @@ class PageImages extends MetadataTabular
     }
 
 
-    public function getDefaultValue(): array
+    public function getDefaultValue(): ?array
     {
 
         $pageImagePath = PageImagePath::createFromParent($this);
         $defaultImage = $this->getDefaultImage();
-        if ($defaultImage !== null) {
-            $pageImagePath->buildFromStoreValue($defaultImage->getPath()->toString());
+        if ($defaultImage === null) {
+            return null;
         }
+        $pageImagePath->buildFromStoreValue($defaultImage->getPath()->toString());
         return [
             [
                 PageImagePath::getPersistentName() => $pageImagePath,

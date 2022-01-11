@@ -106,12 +106,12 @@ require_once(__DIR__ . '/Hover.php');
 require_once(__DIR__ . '/Html.php');
 require_once(__DIR__ . '/Http.php');
 require_once(__DIR__ . '/HttpResponse.php');
-require_once(__DIR__ . '/Icon.php');
 require_once(__DIR__ . '/Identity.php');
 require_once(__DIR__ . '/Image.php');
 require_once(__DIR__ . '/ImageLink.php');
 require_once(__DIR__ . '/ImageRaster.php');
 require_once(__DIR__ . '/ImageSvg.php');
+require_once(__DIR__ . '/Icon.php'); // icon is an image svg and should be after
 require_once(__DIR__ . '/Index.php');
 require_once(__DIR__ . '/InstructionsDocument.php');
 require_once(__DIR__ . '/InternetPath.php');

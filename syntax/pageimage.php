@@ -59,7 +59,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
     }
 
 
-    function getType()
+    function getType(): string
     {
         return 'formatting';
     }

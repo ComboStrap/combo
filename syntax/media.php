@@ -10,6 +10,7 @@ use ComboStrap\InternetPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Metadata;
+use ComboStrap\PageImages;
 use ComboStrap\PagePath;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
@@ -60,6 +61,18 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      * Svg Rendering error
      */
     const SVG_RENDERING_ERROR_CLASS = "combo-svg-rendering-error";
+
+    public static function registerFirstMedia(Doku_Renderer_metadata $renderer, $src)
+    {
+        /**
+         * {@link Doku_Renderer_metadata::$firstimage} is unfortunately protected
+         * and {@link Doku_Renderer_metadata::internalmedia()} does not allow svg as first image
+         */
+        if(!isset($renderer->meta[PageImages::FIRST_IMAGE_META_RELATION])) {
+            $renderer->meta[PageImages::FIRST_IMAGE_META_RELATION] = $src;
+        }
+
+    }
 
 
     /**
@@ -206,7 +219,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
                 /** @var Doku_Renderer_xhtml $renderer */
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                $mediaLink = MediaLink::createFromCallStackArray($attributes,$renderer->date_at);
+                $mediaLink = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
                 $media = $mediaLink->getMedia();
                 if ($media->getPath()->getScheme() == DokuFs::SCHEME) {
                     if ($media->getPath()->getMime()->isImage() || $media->getPath()->getExtension() === "svg") {
@@ -303,6 +316,9 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
         switch ($type) {
             case MediaLink::INTERNAL_MEDIA_CALL_NAME:
+                if (substr($src, -4) === ".svg") {
+                    self::registerFirstMedia($renderer,$src);
+                }
                 $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking);
                 break;
             case MediaLink::EXTERNAL_MEDIA_CALL_NAME:

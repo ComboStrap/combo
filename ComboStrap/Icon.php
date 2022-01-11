@@ -28,7 +28,7 @@ require_once(__DIR__ . '/PluginUtility.php');
  * Injection via javascript to avoid problem with the php svgsimple library
  * https://www.npmjs.com/package/svg-injector
  */
-class Icon
+class Icon extends ImageSvg
 {
     const CONF_ICONS_MEDIA_NAMESPACE = "icons_namespace";
     const CONF_ICONS_MEDIA_NAMESPACE_DEFAULT = ":" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME . ":icons";
@@ -91,7 +91,7 @@ class Icon
      * @param TagAttributes $tagAttributes -  the icon attributes
      * @return bool|mixed - false if any error or the HTML
      */
-    static public function renderIconByAttributes(TagAttributes $tagAttributes)
+    static public function create(TagAttributes $tagAttributes): Icon
     {
 
 
@@ -211,35 +211,19 @@ class Icon
 
         }
 
-        if (FileSystems::exists($mediaDokuPath)) {
+        /**
+         * After optimization, the width and height of the svg are gone
+         * but the icon type set them again
+         *
+         * The icon type is used to set:
+         *   * the default dimension
+         *   * color styling
+         *   * disable the responsive properties
+         *
+         */
+        $tagAttributes->addComponentAttributeValue("type", SvgDocument::ICON_TYPE);
 
-
-            /**
-             * After optimization, the width and height of the svg are gone
-             * but the icon type set them again
-             *
-             * The icon type is used to set:
-             *   * the default dimension
-             *   * color styling
-             *   * disable the responsive properties
-             *
-             */
-            $tagAttributes->addComponentAttributeValue("type", SvgDocument::ICON_TYPE);
-
-
-            $svgImageLink = SvgImageLink::createMediaLinkFromId(
-                $mediaDokuPath->getAbsolutePath(),
-                null,
-                $tagAttributes
-            );
-            return $svgImageLink->renderMediaTag();
-
-        } else {
-
-            return "";
-
-        }
-
+        return new Icon($mediaDokuPath, $tagAttributes);
 
     }
 
@@ -283,9 +267,33 @@ class Icon
 
     }
 
-    private static function getLibraries()
+    private static function getLibraries(): array
     {
-        return array_merge(self::PUBLIC_LIBRARY_ACRONYM, self::DEPRECATED_LIBRARY_ACRONYM);
+        return array_merge(
+            self::PUBLIC_LIBRARY_ACRONYM,
+            self::DEPRECATED_LIBRARY_ACRONYM
+        );
+    }
+
+
+    public function render(): string
+    {
+
+        if (FileSystems::exists($this->getPath())) {
+
+            $svgImageLink = SvgImageLink::createMediaLinkFromPath(
+                $this->getPath(),
+                $this->getAttributes()
+            );
+            return $svgImageLink->renderMediaTag();
+
+        } else {
+
+            LogUtility::msg("The icon ($this) does not exist and cannot be rendered.");
+            return "";
+
+        }
+
     }
 
 

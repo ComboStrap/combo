@@ -107,7 +107,7 @@ class PageId extends MetadataText
         if (!($readStore instanceof MetadataDbStore)) {
             $dbStore = MetadataDbStore::getOrCreateFromResource($resource);
             $value = $dbStore->getFromPersistentName(self::getPersistentName());
-            if ($value !== null) {
+            if ($value !== null && $value !== "") {
 
                 $pathDbValue = $dbStore->getFromPersistentName(PagePath::getPersistentName());
 
@@ -117,7 +117,7 @@ class PageId extends MetadataText
                  * and we return the page id
                  */
                 $pageDbValue = Page::createPageFromQualifiedPath($pathDbValue);
-                if(!FileSystems::exists($pageDbValue->getPath())){
+                if (!FileSystems::exists($pageDbValue->getPath())) {
                     return parent::buildFromStoreValue($value);
                 }
 

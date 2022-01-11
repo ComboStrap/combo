@@ -5,9 +5,12 @@
  */
 
 use ComboStrap\CallStack;
+use ComboStrap\DokuPath;
+use ComboStrap\FileSystems;
 use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\SvgImageLink;
 use ComboStrap\TagAttributes;
 
 
@@ -144,8 +147,8 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                 $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES=>$openingCall->getAttributes(),
-                    PluginUtility::CONTEXT=>$openingCall->getContext()
+                    PluginUtility::ATTRIBUTES => $openingCall->getAttributes(),
+                    PluginUtility::CONTEXT => $openingCall->getContext()
                 );
 
 
@@ -180,12 +183,13 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                         case DOKU_LEXER_SPECIAL:
                             $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                             try {
-                                $renderer->doc .= Icon::renderIconByAttributes($tagAttribute);
-                            } catch (Exception $e){
+                                $renderer->doc .= Icon::create($tagAttribute)
+                                    ->render();
+                            } catch (Exception $e) {
                                 $errorClass = syntax_plugin_combo_media::SVG_RENDERING_ERROR_CLASS;
                                 $message = "Icon ({$tagAttribute->getValue("name")}). Error while rendering: {$e->getMessage()}";
                                 $renderer->doc .= "<span class=\"text-alert $errorClass\">" . hsc(trim($message)) . "</span>";
-                                if(!PluginUtility::isTest()) {
+                                if (!PluginUtility::isTest()) {
                                     LogUtility::msg($message, LogUtility::LVL_MSG_WARNING, self::CANONICAL);
                                 }
                             }
@@ -208,7 +212,8 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                              * Print the icon
                              */
                             $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                            $renderer->doc .= Icon::renderIconByAttributes($tagAttribute);
+                            $renderer->doc .= Icon::create($tagAttribute)
+                                ->render();
                             /**
                              * Close the span if we are in a tooltip context
                              */
@@ -219,6 +224,17 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                             break;
                     }
 
+                }
+                break;
+            case 'metadata':
+                /**
+                 * @var Doku_Renderer_metadata $renderer
+                 */
+                $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                $mediaPath = Icon::create($tagAttribute)->getPath();
+                if ($mediaPath instanceof DokuPath) {
+                    $mediaId = $mediaPath->getDokuwikiId();
+                    syntax_plugin_combo_media::registerFirstMedia($renderer, $mediaId);
                 }
                 break;
 

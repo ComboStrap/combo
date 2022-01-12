@@ -300,7 +300,7 @@ class SvgDocument extends XmlDocument
                         // We get a crop, it means that we need to change the viewBox
                         $x = 0;
                         $y = 0;
-                        if ($width < 30) {
+                        if ($width <= 72) { // 72 are the size of the twitter emoji
                             // icon case, we zoom out otherwise, this is ugly, the icon takes the whole place
                             $zoomFactor = 3;
                             $width = $zoomFactor * $width;

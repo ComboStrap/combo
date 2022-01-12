@@ -274,9 +274,13 @@ class TagAttributes
      * @param TagAttributes $tagAttributes
      * @return TagAttributes
      */
-    public static function createFromTagAttributes(TagAttributes $tagAttributes)
+    public static function createFromTagAttributes(TagAttributes $tagAttributes): TagAttributes
     {
-        return new TagAttributes($tagAttributes->getComponentAttributes(), $tagAttributes->getLogicalTag());
+        $newTagAttributes = new TagAttributes($tagAttributes->getComponentAttributes(), $tagAttributes->getLogicalTag());
+        foreach($tagAttributes->getStyleDeclarations() as $property => $value){
+            $newTagAttributes->addStyleDeclarationIfNotSet($property,$value);
+        }
+        return $newTagAttributes;
     }
 
     public function addClassName($className)
@@ -292,7 +296,7 @@ class TagAttributes
         return $this->getValue(self::CLASS_KEY);
     }
 
-    public function getStyle()
+    public function getStyle(): ?string
     {
         if (sizeof($this->styleDeclaration) != 0) {
             return PluginUtility::array2InlineStyle($this->styleDeclaration);
@@ -304,6 +308,12 @@ class TagAttributes
              */
             return null;
         }
+
+    }
+
+    public function getStyleDeclarations(): array
+    {
+        return $this->styleDeclaration;
 
     }
 
@@ -474,7 +484,7 @@ class TagAttributes
          */
         if ($this->hasComponentAttribute(self::TRANSFORM)) {
             $transformValue = $this->getValueAndRemove(self::TRANSFORM);
-            $this->addStyleDeclaration("transform", $transformValue);
+            $this->addStyleDeclarationIfNotSet("transform", $transformValue);
         }
 
         /**
@@ -703,7 +713,7 @@ class TagAttributes
     }
 
     public
-    function addStyleDeclaration($property, $value)
+    function addStyleDeclarationIfNotSet($property, $value)
     {
         ArrayUtility::addIfNotSet($this->styleDeclaration, $property, $value);
     }

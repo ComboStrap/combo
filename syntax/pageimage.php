@@ -12,6 +12,7 @@ use ComboStrap\Page;
 use ComboStrap\PagePath;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
+use ComboStrap\SvgDocument;
 use ComboStrap\TagAttributes;
 
 
@@ -42,16 +43,16 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
     public static function getTargetAspectRatio($stringRatio)
     {
         list($width, $height) = explode(":", $stringRatio, 2);
-        if(!is_numeric($width)){
-            LogUtility::msg("The width value ($width) of the ratio `$stringRatio` is not numeric", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+        if (!is_numeric($width)) {
+            LogUtility::msg("The width value ($width) of the ratio `$stringRatio` is not numeric", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return 1;
         }
-        if(!is_numeric($height)){
-            LogUtility::msg("The width value ($height) of the ratio `$stringRatio` is not numeric", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+        if (!is_numeric($height)) {
+            LogUtility::msg("The width value ($height) of the ratio `$stringRatio` is not numeric", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return 1;
         }
-        if($height==0){
-            LogUtility::msg("The height value of the ratio `$stringRatio` should not be zero", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+        if ($height == 0) {
+            LogUtility::msg("The height value of the ratio `$stringRatio` should not be zero", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return 1;
         }
         return floatval($width / $height);
@@ -214,9 +215,11 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                  * If the image is too small, we allows that it will stretch
                  */
                 if ($data[PluginUtility::CONTEXT] === syntax_plugin_combo_card::TAG) {
-                    $tagAttributes->addStyleDeclaration("max-width", "100%");
-                    $tagAttributes->addStyleDeclaration("max-height", "unset");
+                    $tagAttributes->addStyleDeclarationIfNotSet("max-width", "100%");
+                    $tagAttributes->addStyleDeclarationIfNotSet("max-height", "unset");
                 }
+
+                $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::PAGE_IMAGE);
 
                 $mediaLink = MediaLink::createMediaLinkFromPath(
                     $selectedPageImage->getPath(),

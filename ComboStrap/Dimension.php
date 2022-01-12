@@ -48,7 +48,7 @@ class Dimension
                  * For an image, the dimension are restricted by height
                  */
                 if ($attributes->hasComponentAttribute(self::HEIGHT_KEY)) {
-                    $attributes->addStyleDeclaration("width", "auto");
+                    $attributes->addStyleDeclarationIfNotSet("width", "auto");
                 }
 
             } else {
@@ -74,8 +74,8 @@ class Dimension
                      */
                     $requestedMime = $attributes->getMime();
                     if ($requestedMime == TagAttributes::TEXT_HTML_MIME) {
-                        $attributes->addStyleDeclaration('max-width', $widthValue);
-                        $attributes->addStyleDeclaration('width', "100%");
+                        $attributes->addStyleDeclarationIfNotSet('max-width', $widthValue);
+                        $attributes->addStyleDeclarationIfNotSet('width', "100%");
                     }
 
                 } else {
@@ -83,7 +83,7 @@ class Dimension
                     /**
                      * For a block
                      */
-                    $attributes->addStyleDeclaration('max-width', $widthValue);
+                    $attributes->addStyleDeclarationIfNotSet('max-width', $widthValue);
 
                 }
             }
@@ -104,7 +104,7 @@ class Dimension
                      * By default, the image has a `height: auto` due to the img-fluid class
                      * Making its height responsive
                      */
-                    $attributes->addStyleDeclaration("max-height", $heightValue);
+                    $attributes->addStyleDeclarationIfNotSet("max-height", $heightValue);
 
                 } else {
 
@@ -119,7 +119,7 @@ class Dimension
                          * The box is constrained in height
                          * By default, a box is not constrained
                          */
-                        $attributes->addStyleDeclaration("height", $heightValue);
+                        $attributes->addStyleDeclarationIfNotSet("height", $heightValue);
 
                         $scrollMechanism = $attributes->getValueAndRemoveIfPresent("scroll");
                         if ($scrollMechanism != null) {
@@ -128,11 +128,11 @@ class Dimension
                         switch ($scrollMechanism) {
                             case "toggle":
                                 // https://jsfiddle.net/gerardnico/h0g6xw58/
-                                $attributes->addStyleDeclaration("overflow-y", "hidden");
-                                $attributes->addStyleDeclaration("position", "relative");
-                                $attributes->addStyleDeclaration("display", "block");
+                                $attributes->addStyleDeclarationIfNotSet("overflow-y", "hidden");
+                                $attributes->addStyleDeclarationIfNotSet("position", "relative");
+                                $attributes->addStyleDeclarationIfNotSet("display", "block");
                                 // The block should collapse to this height
-                                $attributes->addStyleDeclaration("min-height", $heightValue);
+                                $attributes->addStyleDeclarationIfNotSet("min-height", $heightValue);
                                 if ($attributes->hasComponentAttribute("id")) {
                                     $id = $attributes->getValue("id");
                                 } else {
@@ -167,7 +167,7 @@ EOF;
                                 break;
                             case "lift";
                             default:
-                                $attributes->addStyleDeclaration("overflow", "auto");
+                                $attributes->addStyleDeclarationIfNotSet("overflow", "auto");
                                 break;
 
                         }
@@ -179,7 +179,7 @@ EOF;
                          * if fluid
                          * min-height and not height to not constraint the box
                          */
-                        $attributes->addStyleDeclaration("min-height", $heightValue);
+                        $attributes->addStyleDeclarationIfNotSet("min-height", $heightValue);
 
                     }
                 }

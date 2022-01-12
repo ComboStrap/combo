@@ -133,6 +133,7 @@ class CacheMedia
             if ($this->path->getExtension() === "svg") {
                 // svg generation depends on configuration
                 $files = getConfigFiles('main');
+                $files[] = Resources::getComboHome() . "/ComboStrap/SvgDocument.php";
             }
             $files[] = $this->path->toAbsolutePath()->toString();
             $files[] = Resources::getComboHome() . "/plugin.info.txt";

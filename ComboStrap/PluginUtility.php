@@ -641,7 +641,7 @@ class PluginUtility
             foreach ($properties as $property) {
                 list($key, $value) = explode(":", $property);
                 if ($key != "") {
-                    $attributes->addStyleDeclaration($key, $value);
+                    $attributes->addStyleDeclarationIfNotSet($key, $value);
                 }
             }
         }
@@ -655,7 +655,7 @@ class PluginUtility
 
         if ($attributes->hasComponentAttribute(ColorUtility::BORDER_COLOR)) {
             $colorValue = $attributes->getValueAndRemove(ColorUtility::BORDER_COLOR);
-            $attributes->addStyleDeclaration(ColorUtility::BORDER_COLOR, ColorUtility::getColorValue($colorValue));
+            $attributes->addStyleDeclarationIfNotSet(ColorUtility::BORDER_COLOR, ColorUtility::getColorValue($colorValue));
             self::checkDefaultBorderColorAttributes($attributes);
         }
 
@@ -928,7 +928,7 @@ class PluginUtility
      * @param $property
      * @param $value
      * @param array $attributes
-     * @deprecated use {@link TagAttributes::addStyleDeclaration()} instead
+     * @deprecated use {@link TagAttributes::addStyleDeclarationIfNotSet()} instead
      */
     public
     static function addStyleProperty($property, $value, array &$attributes)
@@ -961,7 +961,7 @@ class PluginUtility
             $tagAttributes->hasStyleDeclaration("border-width")
         )
         ) {
-            $tagAttributes->addStyleDeclaration("border-width", "1px");
+            $tagAttributes->addStyleDeclarationIfNotSet("border-width", "1px");
         }
         /**
          * border color was set without the style
@@ -974,11 +974,11 @@ class PluginUtility
             $tagAttributes->hasStyleDeclaration("border-style")
         )
         ) {
-            $tagAttributes->addStyleDeclaration("border-style", "solid");
+            $tagAttributes->addStyleDeclarationIfNotSet("border-style", "solid");
 
         }
         if (!$tagAttributes->hasStyleDeclaration("border-radius")) {
-            $tagAttributes->addStyleDeclaration("border-radius", ".25rem");
+            $tagAttributes->addStyleDeclarationIfNotSet("border-radius", ".25rem");
         }
 
     }

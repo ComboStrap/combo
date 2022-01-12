@@ -221,7 +221,7 @@ class Icon extends ImageSvg
          *   * disable the responsive properties
          *
          */
-        $tagAttributes->addComponentAttributeValue("type", SvgDocument::ICON_TYPE);
+        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
 
         return new Icon($mediaDokuPath, $tagAttributes);
 

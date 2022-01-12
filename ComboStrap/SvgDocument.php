@@ -105,6 +105,7 @@ class SvgDocument extends XmlDocument
     const COLOR_TYPE_FILL_SOLID = "fill";
     const COLOR_TYPE_STROKE_OUTLINE = "stroke";
     const DEFAULT_ICON_WIDTH = "24";
+    const PAGE_IMAGE = "page-image";
 
     /**
      * @var string - a name identifier that is added in the SVG
@@ -279,11 +280,41 @@ class SvgDocument extends XmlDocument
                  * Adapt to the container
                  * Height `auto` and not `100%` otherwise you get a layout shift
                  */
-                $localTagAttributes->addStyleDeclaration("width", "100%");
-                $localTagAttributes->addStyleDeclaration("height", "auto");
-                if($localTagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)){
+                $localTagAttributes->addStyleDeclarationIfNotSet("width", "100%");
+                $localTagAttributes->addStyleDeclarationIfNotSet("height", "auto");
+
+
+                if ($localTagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)) {
+
+                    /**
+                     * If a dimension was set, it's seen by default as a max-width
+                     * If it should not such as in a card, this property is already set
+                     * and is not overwritten
+                     */
                     $width = $localTagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
-                    $localTagAttributes->addStyleDeclaration("max-width", "{$width}px");
+                    $localTagAttributes->addStyleDeclarationIfNotSet("max-width", "{$width}px");
+
+                    if ($localTagAttributes->hasComponentAttribute(Dimension::HEIGHT_KEY)) {
+
+                        $height = $localTagAttributes->getComponentAttributeValue(Dimension::HEIGHT_KEY);
+                        // We get a crop, it means that we need to change the viewBox
+                        $x = 0;
+                        $y = 0;
+                        if ($width < 30) {
+                            // icon case, we zoom out otherwise, this is ugly, the icon takes the whole place
+                            $zoomFactor = 3;
+                            $width = $zoomFactor * $width;
+                            $height = $zoomFactor * $height;
+                            // center
+                            $actualWidth = $this->getMediaWidth();
+                            $actualHeight = $this->getMediaHeight();
+                            $x = -($width - $actualWidth) / 2;
+                            $y = -($height - $actualHeight) / 2;
+                        }
+                        $this->setRootAttribute("viewBox", "$x $y $width $height");
+
+                    }
+
                 }
                 break;
 
@@ -345,7 +376,7 @@ class SvgDocument extends XmlDocument
      * @param $boolean
      * @return SvgDocument
      */
-    public function setShouldBeOptimized($boolean)
+    public function setShouldBeOptimized($boolean): SvgDocument
     {
         $this->shouldBeOptimized = $boolean;
         return $this;

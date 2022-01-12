@@ -140,7 +140,7 @@ EOF;
                      * The css value are also supported
                      * (to define that for instance the parent of a background should be at minimum relative)
                      */
-                    $attributes->addStyleDeclaration("position", $position);
+                    $attributes->addStyleDeclarationIfNotSet("position", $position);
                     break;
 
             }

@@ -57,7 +57,7 @@ class ImageSvg extends Image
 
 
         if (!$this->exists()) {
-            LogUtility::msg("The svg media does not exist ({$this->getBaseName()})", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            LogUtility::msg("The svg media does not exist ({$this})", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return "";
         }
 

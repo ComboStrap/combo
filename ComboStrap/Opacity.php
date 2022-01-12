@@ -22,7 +22,7 @@ class Opacity
 
         if ($tagAttributes->hasComponentAttribute(self::OPACITY_ATTRIBUTE)) {
             $value = $tagAttributes->getValueAndRemove(self::OPACITY_ATTRIBUTE);
-            $tagAttributes->addStyleDeclaration("opacity",$value);
+            $tagAttributes->addStyleDeclarationIfNotSet("opacity",$value);
         }
 
     }

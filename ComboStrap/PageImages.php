@@ -350,7 +350,12 @@ class PageImages extends MetadataTabular
         if (media_isexternal($firstImageId)) {
             return null;
         }
-        return Image::createImageFromId($firstImageId);
+        try {
+            return Image::createImageFromId($firstImageId);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The first image ($firstImageId) is not valid");
+            return null;
+        }
 
 
     }

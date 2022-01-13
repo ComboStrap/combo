@@ -129,6 +129,7 @@ class SvgDocument extends XmlDocument
     /**
      * @param Path $path
      * @return SvgDocument
+     * @throws ExceptionCombo
      */
     public static function createSvgDocumentFromPath(Path $path): SvgDocument
     {
@@ -138,6 +139,9 @@ class SvgDocument extends XmlDocument
         return $svg;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public static function createSvgDocumentFromMarkup($markup): SvgDocument
     {
         return new SvgDocument($markup);

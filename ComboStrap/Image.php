@@ -39,6 +39,7 @@ abstract class Image extends Media
      * @param Path $path
      * @param null $attributes
      * @return ImageRaster|ImageSvg|null
+     * @throws ExceptionCombo if not valid
      */
     public static function createImageFromPath(Path $path, $attributes = null)
     {
@@ -65,6 +66,9 @@ abstract class Image extends Media
 
     }
 
+    /**
+     * @throws ExceptionCombo if not valid
+     */
     public static function createImageFromId(string $imageId, $rev = '', $attributes = null)
     {
         $dokuPath = DokuPath::createMediaPathFromId($imageId, $rev);

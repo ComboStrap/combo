@@ -40,9 +40,10 @@ class Icon extends ImageSvg
         self::BOOTSTRAP => "https://raw.githubusercontent.com/twbs/icons/main/icons",
         self::MATERIAL_DESIGN => "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg",
         self::FEATHER => "https://raw.githubusercontent.com/feathericons/feather/master/icons",
-        self::CODE_ICON => "https://raw.githubusercontent.com/microsoft/vscode-codicons/main/src/icons/",
-        self::LOGOS => "https://raw.githubusercontent.com/gilbarbara/logos/master/logos/",
-        self::CARBON => "https://raw.githubusercontent.com/carbon-design-system/carbon/main/packages/icons/src/svg/32/"
+        self::CODE_ICON => "https://raw.githubusercontent.com/microsoft/vscode-codicons/main/src/icons",
+        self::LOGOS => "https://raw.githubusercontent.com/gilbarbara/logos/master/logos",
+        self::CARBON => "https://raw.githubusercontent.com/carbon-design-system/carbon/main/packages/icons/src/svg/32",
+        self::TWEET_EMOJI => "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -51,7 +52,8 @@ class Icon extends ImageSvg
         self::FEATHER => "https://feathericons.com/",
         self::CODE_ICON => "https://microsoft.github.io/vscode-codicons/",
         self::LOGOS => "https://svgporn.com/",
-        self::CARBON => "https://www.carbondesignsystem.com/guidelines/icons/library/"
+        self::CARBON => "https://www.carbondesignsystem.com/guidelines/icons/library/",
+        self::TWEET_EMOJI => "https://twemoji.twitter.com/"
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
@@ -74,7 +76,8 @@ class Icon extends ImageSvg
         "fe" => self::FEATHER,
         "codicon" => self::CODE_ICON,
         "logos" => self::LOGOS,
-        "carbon" => self::CARBON
+        "carbon" => self::CARBON,
+        "twemoji" => self::TWEET_EMOJI
     );
 
     const FEATHER = "feather";
@@ -84,6 +87,7 @@ class Icon extends ImageSvg
     const LOGOS = "logos";
     const CARBON = "carbon";
     const MATERIAL_DESIGN_ACRONYM = "mdi";
+    const TWEET_EMOJI = "twemoji";
 
 
     /**
@@ -176,6 +180,16 @@ class Icon extends ImageSvg
                 $acronymLibraries = self::getLibraries();
                 if (isset($acronymLibraries[$library])) {
                     $library = $acronymLibraries[$library];
+                }
+
+                // name to code point for emoji
+                if ($library === self::TWEET_EMOJI) {
+                    try {
+                        $iconName = self::getEmojiCodePoint($iconName);
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("The emoji name $iconName is unknown. The emoji could not be downloaded.", LogUtility::LVL_MSG_ERROR, self::NAME);
+                        return false;
+                    }
                 }
 
                 // Get the url
@@ -273,6 +287,17 @@ class Icon extends ImageSvg
             self::PUBLIC_LIBRARY_ACRONYM,
             self::DEPRECATED_LIBRARY_ACRONYM
         );
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function getEmojiCodePoint(string $emojiName)
+    {
+        $path = LocalPath::createFromPath(Resources::getDictionaryDirectory() . "/emojis.json");
+        $jsonContent = FileSystems::getContent($path);
+        $jsonArray = Json::createFromString($jsonContent)->toArray();
+        return $jsonArray[$emojiName];
     }
 
 

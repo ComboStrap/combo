@@ -5,6 +5,7 @@ use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
@@ -191,6 +192,16 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                          * Trying to crop on the width
                          */
                         $width = $selectedPageImage->getIntrinsicWidth();
+                        if($tagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)){
+                            $widthValueAttribute = $tagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
+                            try {
+                                $width = Dimension::toPixelValue($widthValueAttribute);
+                            } catch (ExceptionCombo $e) {
+                                LogUtility::msg("The width value attribute ($widthValueAttribute) could not be converted to pixel ({$e->getMessage()}), intrinsic width image used instead");
+                            }
+                        }
+
+                        throw new ExceptionCombo("To continue, logical vs physical width");
                         $height = Image::round($width / $targetRatio);
                         if ($height > $selectedPageImage->getIntrinsicHeight()) {
                             /**

@@ -221,4 +221,14 @@ EOF;
 
         }
     }
+
+    /**
+     * @param $value - a css value to a pixel
+     * @throws ExceptionCombo
+     */
+    public static function toPixelValue($value): int
+    {
+        $targetValue =  str_replace("px","",$value);
+        return DataType::toInteger($targetValue);
+    }
 }

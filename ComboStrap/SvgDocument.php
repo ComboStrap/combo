@@ -106,6 +106,7 @@ class SvgDocument extends XmlDocument
     const COLOR_TYPE_STROKE_OUTLINE = "stroke";
     const DEFAULT_ICON_WIDTH = "24";
     const PAGE_IMAGE = "page-image";
+    const CURRENT_COLOR = "currentColor";
 
     /**
      * @var string - a name identifier that is added in the SVG
@@ -116,6 +117,10 @@ class SvgDocument extends XmlDocument
      * @var boolean do the svg should be optimized
      */
     private $shouldBeOptimized;
+    /**
+     * @var Path
+     */
+    private $path;
 
 
     public function __construct($text)
@@ -136,6 +141,7 @@ class SvgDocument extends XmlDocument
         $text = FileSystems::getContent($path);
         $svg = new SvgDocument($text);
         $svg->setName($path->getLastNameWithoutExtension());
+        $svg->setPath($path);
         return $svg;
     }
 
@@ -170,6 +176,66 @@ class SvgDocument extends XmlDocument
             $this->setRootAttribute('data-name', $name);
         }
 
+        // Handy variable
+        $documentElement = $this->getXmlDom()->documentElement;
+
+        /**
+         * Color
+         */
+        if ($localTagAttributes->hasComponentAttribute(ColorUtility::COLOR)) {
+            /**
+             *
+             * We say that this is used only for an icon (<72 px)
+             *
+             * Not that an icon svg file can also be used as {@link SvgDocument::PAGE_IMAGE}
+             *
+             * We don't set it as a styling attribute
+             * because it's not taken into account if the
+             * svg is used as a background image
+             * fill or stroke should have at minimum "currentColor"
+             */
+            /**
+             * Note: if fill is not set, the default is black
+             */
+            if (!$documentElement->hasAttribute("fill")) {
+
+                $localTagAttributes->addHtmlAttributeValue("fill", self::CURRENT_COLOR);
+
+            }
+
+            $color = $localTagAttributes->getValueAndRemove(ColorUtility::COLOR);
+            $colorValue = ColorUtility::getColorValue($color);
+
+            /**
+             * if the stroke element is not present this is a fill icon
+             */
+            $svgColorType = self::COLOR_TYPE_FILL_SOLID;
+            if ($documentElement->hasAttribute("stroke")) {
+                $svgColorType = self::COLOR_TYPE_STROKE_OUTLINE;
+            }
+
+            switch ($svgColorType) {
+                case self::COLOR_TYPE_FILL_SOLID:
+                    $localTagAttributes->addHtmlAttributeValue("fill", $colorValue);
+
+                    // Delete the fill property on sub-path
+                    // if the fill is set on subpath, it will not work
+                    if ($colorValue !== self::CURRENT_COLOR) {
+                        $svgPaths = $this->xpath("//*[local-name()='path']");
+                        for ($i = 0; $i < $svgPaths->length; $i++) {
+                            $this->removeAttributeValue("fill", $svgPaths[$i]);
+                        }
+                    }
+
+                    break;
+                case self::COLOR_TYPE_STROKE_OUTLINE:
+                    $localTagAttributes->addHtmlAttributeValue("fill", "none");
+                    $localTagAttributes->addHtmlAttributeValue("stroke", $colorValue);
+                    break;
+            }
+
+        }
+
         /**
          * Width and height are in reality style properties.
          *   ie the max-width style
@@ -195,46 +261,11 @@ class SvgDocument extends XmlDocument
                  * By default, the icon should have this property when downloaded
                  * but if this not the case (such as for Material design), we set them
                  */
-                $documentElement = $this->getXmlDom()->documentElement;
-
-
-                /**
-                 * Note: if fill is not set, the default is black
-                 */
                 if (!$documentElement->hasAttribute("fill")) {
-
-                    $localTagAttributes->addHtmlAttributeValue("fill", "currentColor");
-
-                }
-
-                /**
-                 * Color is set
-                 * We don't set it as a styling attribute
-                 * because it's not taken into account if the
-                 * svg is used as a background image
-                 * fill or stroke should have at minimum "currentColor"
-                 */
-                if ($localTagAttributes->hasComponentAttribute(ColorUtility::COLOR)) {
-                    $color = $localTagAttributes->getValueAndRemove(ColorUtility::COLOR);
-                    $colorValue = ColorUtility::getColorValue($color);
-
                     /**
-                     * if the stroke element is not present this is a fill icon
+                     * Note: if fill is not set, the default is black
                      */
-                    $svgColorType = self::COLOR_TYPE_FILL_SOLID;
-                    if ($documentElement->hasAttribute("stroke")) {
-                        $svgColorType = self::COLOR_TYPE_STROKE_OUTLINE;
-                    }
-
-                    switch ($svgColorType) {
-                        case self::COLOR_TYPE_FILL_SOLID:
-                            $localTagAttributes->addHtmlAttributeValue("fill", $colorValue);
-                            break;
-                        case self::COLOR_TYPE_STROKE_OUTLINE:
-                            $localTagAttributes->addHtmlAttributeValue("fill", "none");
-                            $localTagAttributes->addHtmlAttributeValue("stroke", $colorValue);
-                            break;
-                    }
+                    $localTagAttributes->addHtmlAttributeValue("fill", self::CURRENT_COLOR);
 
                 }
 
@@ -546,7 +577,16 @@ class SvgDocument extends XmlDocument
              */
             $elementsToDeleteConf = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style");
             $elementsToDelete = StringUtility::explodeAndTrim($elementsToDeleteConf, ",");
+            $iconNameSpace = PluginUtility::getConfValue(Icon::CONF_ICONS_MEDIA_NAMESPACE, Icon::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
             foreach ($elementsToDelete as $elementToDelete) {
+                if ($elementToDelete === "style" && $this->path !== null) {
+                    if (strpos($this->path->toString(), $iconNameSpace) !== false) {
+                        // icon library (downloaded) have high trust
+                        // they may include style in the defs
+                        // example carbon:SQL
+                        continue;
+                    }
+                }
                 $nodes = $this->xpath("//*[local-name()='$elementToDelete']");
                 foreach ($nodes as $node) {
                     /** @var DOMElement $node */
@@ -587,9 +627,22 @@ class SvgDocument extends XmlDocument
 
     }
 
+    /**
+     * The name is used to add class in the svg
+     * @param $name
+     */
     private function setName($name)
     {
         $this->name = $name;
+    }
+
+    /**
+     * Set the context
+     * @param Path $path
+     */
+    private function setPath(Path $path)
+    {
+        $this->path = $path;
     }
 
 

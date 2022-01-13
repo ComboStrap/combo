@@ -560,5 +560,17 @@ class XmlDocument
         $this->xmlDom->preserveWhiteSpace = false;
     }
 
+    public function removeAttributeValue(string $attributeName, DOMElement $nodeElement)
+    {
+        $attr = $nodeElement->getAttributeNode($attributeName);
+        if ($attr == false) {
+            return;
+        }
+        $result = $nodeElement->removeAttributeNode($attr);
+        if ($result === false) {
+            LogUtility::msg("Not able to delete the attribute $attributeName of the node element $nodeElement in the Xml document $this");
+        }
+    }
+
 
 }

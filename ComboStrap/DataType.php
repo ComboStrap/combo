@@ -59,5 +59,23 @@ class DataType
         DataType::BOOLEAN_TYPE_VALUE,
     ];
 
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function toInteger($targetValue): int
+    {
+        if (is_int($targetValue)) {
+            return $targetValue;
+        }
+        if (!is_string($targetValue)) {
+            $varExport = var_export($targetValue, true);
+            throw new ExceptionCombo("The value passed is not a numeric/nor a string. We can not translate it to an integer. Value: $varExport");
+        }
+        if (!ctype_digit($targetValue)) {
+            throw new ExceptionCombo("The value ($targetValue) has non-numeric digit and can not be translated to an integer");
+        }
+        return intval($targetValue);
+    }
+
 
 }

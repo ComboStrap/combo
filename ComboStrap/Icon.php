@@ -242,7 +242,7 @@ class Icon extends ImageSvg
         //   * Available at: https://raw.githubusercontent.com/Templarian/MaterialDesign/master/meta.json
         //   * See doc: https://github.com/Templarian/MaterialDesign-Site/blob/master/src/content/api.md)
         $arrayFormat = true;
-        $iconMetaJson = json_decode(file_get_contents(__DIR__ . '/icon-meta.json'), $arrayFormat);
+        $iconMetaJson = json_decode(file_get_contents(__DIR__ . '/../resources/dictionary/icon-meta.json'), $arrayFormat);
         $iconId = null;
         foreach ($iconMetaJson as $key => $value) {
             if ($value['name'] == $iconName) {

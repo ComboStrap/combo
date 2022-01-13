@@ -208,19 +208,18 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                             $logicalWidth = Image::round($targetRatio * $logicalHeight);
                         }
 
-                        /**
-                         * A width was set
-                         */
-                        if ($tagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)) {
-                            $widthAttribute = $tagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
-                            $logicalHeight = Image::round($widthAttribute / $logicalWidth * $logicalHeight);
-                            $logicalWidth = Image::round($widthAttribute);
-                        }
 
                         if ($logicalWidth !== null) {
-                            $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $logicalWidth);
-                            if ($logicalHeight !== null) {
-                                $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $logicalHeight);
+                            if ($selectedPageImage->getPath()->getMime()->toString() === Mime::SVG) {
+                                $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_INTRINSIC_KEY, $logicalWidth);
+                                if ($logicalHeight !== null) {
+                                    $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_INTRINSIC_KEY, $logicalHeight);
+                                }
+                            } else {
+                                $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $logicalWidth);
+                                if ($logicalHeight !== null) {
+                                    $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $logicalHeight);
+                                }
                             }
                         }
 
@@ -238,7 +237,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     $tagAttributes->addStyleDeclarationIfNotSet("max-height", "unset");
                 }
 
-                $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY,SvgDocument::ILLUSTRATION_TYPE);
+                $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ILLUSTRATION_TYPE);
 
                 $mediaLink = MediaLink::createMediaLinkFromPath(
                     $selectedPageImage->getPath(),

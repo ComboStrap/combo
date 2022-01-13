@@ -373,17 +373,14 @@ class SvgDocument extends XmlDocument
 
         /**
          * Cropping (used for ratio cropping)
-         * Not that we use the $tagAttributes
-         * and not the $localTagAttributes to be sure to read the
-         * request data
          */
         if (
-            $tagAttributes->hasComponentAttribute(Dimension::HEIGHT_KEY) &&
-            $tagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)
+            $localTagAttributes->hasComponentAttribute(Dimension::HEIGHT_INTRINSIC_KEY) ||
+            $localTagAttributes->hasComponentAttribute(Dimension::WIDTH_INTRINSIC_KEY)
         ) {
 
-            $width = $tagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
-            $height = $tagAttributes->getComponentAttributeValue(Dimension::HEIGHT_KEY);
+            $width = $localTagAttributes->getValueAndRemoveIfPresent(Dimension::WIDTH_INTRINSIC_KEY, $this->getMediaWidth());
+            $height = $localTagAttributes->getValueAndRemoveIfPresent(Dimension::HEIGHT_INTRINSIC_KEY, $this->getMediaHeight());
             // We get a crop, it means that we need to change the viewBox
             $x = 0;
             $y = 0;

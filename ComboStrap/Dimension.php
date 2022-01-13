@@ -28,8 +28,21 @@ class Dimension
      */
     const HEIGHT_LAYOUT_DEFAULT = self::DESIGN_LAYOUT_CONSTRAINED;
     const SCROLL = "scroll";
+
+    /**
+     * Logical height and width
+     * used by default to define the width and height of an image or a css box
+     */
     const HEIGHT_KEY = 'height';
     const WIDTH_KEY = 'width';
+
+    /**
+     * Width and height used to set the viewBox of a svg
+     * to crop it
+     * (In a raster image, there is not this distinction)
+     */
+    const HEIGHT_INTRINSIC_KEY = 'height_intrinsic';
+    const WIDTH_INTRINSIC_KEY = 'width_intrinsic';
 
 
     /**

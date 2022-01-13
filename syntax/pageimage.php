@@ -9,6 +9,7 @@ use ComboStrap\ExceptionCombo;
 use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\Mime;
 use ComboStrap\Page;
 use ComboStrap\PagePath;
 use ComboStrap\Path;
@@ -168,8 +169,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     LogUtility::msg("No page image defined for the page ($path)", LogUtility::LVL_MSG_INFO, self::CANONICAL);
                     return false;
                 }
-                $width = null;
-                $height = null;
+
                 if ($tagAttributes->hasComponentAttribute(self::RATIO_ATTRIBUTE)) {
                     $stringRatio = $tagAttributes->getValueAndRemove(self::RATIO_ATTRIBUTE);
                     if (empty($stringRatio)) {
@@ -177,6 +177,12 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                         LogUtility::msg("The ratio value is empty and was therefore not taken into account", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
 
                     } else {
+
+                        /**
+                         * The ratio is:
+                         *   * the viewBox for svg
+                         *   * the physical dimension for raster image
+                         */
                         $bestRatioDistance = 9999;
 
                         $targetRatio = self::getTargetAspectRatio($stringRatio);
@@ -192,16 +198,6 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                          * Trying to crop on the width
                          */
                         $width = $selectedPageImage->getIntrinsicWidth();
-                        if($tagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)){
-                            $widthValueAttribute = $tagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
-                            try {
-                                $width = Dimension::toPixelValue($widthValueAttribute);
-                            } catch (ExceptionCombo $e) {
-                                LogUtility::msg("The width value attribute ($widthValueAttribute) could not be converted to pixel ({$e->getMessage()}), intrinsic width image used instead");
-                            }
-                        }
-
-                        throw new ExceptionCombo("To continue, logical vs physical width");
                         $height = Image::round($width / $targetRatio);
                         if ($height > $selectedPageImage->getIntrinsicHeight()) {
                             /**
@@ -210,16 +206,27 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                             $height = $selectedPageImage->getIntrinsicHeight();
                             $width = Image::round($targetRatio * $height);
                         }
+
+                        $mime = $selectedPageImage->getPath()->getMime();
+                        switch ($mime) {
+                            case Mime::SVG:
+                                /**
+                                 * viewBox
+                                 */
+                                throw new \ComboStrap\ExceptionComboRuntime("ToDo");
+                            default:
+                                // Raster image: if the image needs to stretch, the browser do it
+                                if ($width !== null) {
+                                    $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
+                                    if ($height !== null) {
+                                        $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $height);
+                                    }
+                                }
+                        }
+
                     }
                 }
 
-
-                if ($width !== null) {
-                    $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
-                    if ($height !== null) {
-                        $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $height);
-                    }
-                }
 
                 /**
                  * Used as an illustration in a card

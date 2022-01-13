@@ -63,7 +63,8 @@ class Dimension
 
 
                 /**
-                 * For an image
+                 * For an image (png, svg)
+                 * They have width and height **element** attribute
                  */
                 if (in_array($attributes->getLogicalTag(), self::NATURAL_SIZING_ELEMENT)) {
 
@@ -190,7 +191,7 @@ EOF;
 
     /**
      *
-     * Toggle with a click on the collpased element
+     * Toggle with a click on the collapsed element
      * if there is no control element such as button or link inside
      *
      * This function is used at the {@link DOKU_LEXER_EXIT} state of a {@link SyntaxPlugin::handle()}
@@ -231,4 +232,5 @@ EOF;
         $targetValue =  str_replace("px","",$value);
         return DataType::toInteger($targetValue);
     }
+
 }

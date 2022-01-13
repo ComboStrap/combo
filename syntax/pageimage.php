@@ -6,6 +6,7 @@ use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionComboRuntime;
 use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
@@ -197,31 +198,30 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                         /**
                          * Trying to crop on the width
                          */
-                        $width = $selectedPageImage->getIntrinsicWidth();
-                        $height = Image::round($width / $targetRatio);
-                        if ($height > $selectedPageImage->getIntrinsicHeight()) {
+                        $logicalWidth = $selectedPageImage->getIntrinsicWidth();
+                        $logicalHeight = Image::round($logicalWidth / $targetRatio);
+                        if ($logicalHeight > $selectedPageImage->getIntrinsicHeight()) {
                             /**
                              * Cropping by height
                              */
-                            $height = $selectedPageImage->getIntrinsicHeight();
-                            $width = Image::round($targetRatio * $height);
+                            $logicalHeight = $selectedPageImage->getIntrinsicHeight();
+                            $logicalWidth = Image::round($targetRatio * $logicalHeight);
                         }
 
-                        $mime = $selectedPageImage->getPath()->getMime();
-                        switch ($mime) {
-                            case Mime::SVG:
-                                /**
-                                 * viewBox
-                                 */
-                                throw new \ComboStrap\ExceptionComboRuntime("ToDo");
-                            default:
-                                // Raster image: if the image needs to stretch, the browser do it
-                                if ($width !== null) {
-                                    $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
-                                    if ($height !== null) {
-                                        $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $height);
-                                    }
-                                }
+                        /**
+                         * A width was set
+                         */
+                        if ($tagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)) {
+                            $widthAttribute = $tagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
+                            $logicalHeight = Image::round($widthAttribute / $logicalWidth * $logicalHeight);
+                            $logicalWidth = Image::round($widthAttribute);
+                        }
+
+                        if ($logicalWidth !== null) {
+                            $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $logicalWidth);
+                            if ($logicalHeight !== null) {
+                                $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $logicalHeight);
+                            }
                         }
 
                     }
@@ -230,14 +230,15 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
 
                 /**
                  * Used as an illustration in a card
-                 * If the image is too small, we allows that it will stretch
+                 * If the image is too small, we allow that it will stretch
+                 * to take the whole space
                  */
                 if ($data[PluginUtility::CONTEXT] === syntax_plugin_combo_card::TAG) {
                     $tagAttributes->addStyleDeclarationIfNotSet("max-width", "100%");
                     $tagAttributes->addStyleDeclarationIfNotSet("max-height", "unset");
                 }
 
-                $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::PAGE_IMAGE);
+                $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY,SvgDocument::ILLUSTRATION_TYPE);
 
                 $mediaLink = MediaLink::createMediaLinkFromPath(
                     $selectedPageImage->getPath(),

@@ -92,10 +92,12 @@ class SvgDocument extends XmlDocument
 
     /**
      * Type of svg
+     *   * Icon and tile have the same characteristic (ie viewbox = 0 0 A A) and the color can be set)
+     *   * An illustration does not have rectangle shape and the color is not set
      */
     const ICON_TYPE = "icon";
-    const ILLUSTRATION_TYPE = "illustration";
     const TILE_TYPE = "tile";
+    const ILLUSTRATION_TYPE = "illustration";
 
     /**
      * There is only two type of svg icon / tile
@@ -105,7 +107,7 @@ class SvgDocument extends XmlDocument
     const COLOR_TYPE_FILL_SOLID = "fill";
     const COLOR_TYPE_STROKE_OUTLINE = "stroke";
     const DEFAULT_ICON_WIDTH = "24";
-    const PAGE_IMAGE = "page-image";
+
     const CURRENT_COLOR = "currentColor";
 
     /**
@@ -154,10 +156,10 @@ class SvgDocument extends XmlDocument
     }
 
     /**
-     * @param TagAttributes $tagAttributes
+     * @param TagAttributes|null $tagAttributes
      * @return string
      */
-    public function getXmlText($tagAttributes = null): string
+    public function getXmlText(TagAttributes $tagAttributes = null): string
     {
 
         if ($tagAttributes === null) {
@@ -179,77 +181,74 @@ class SvgDocument extends XmlDocument
         // Handy variable
         $documentElement = $this->getXmlDom()->documentElement;
 
+
         /**
-         * Color
+         * Svg type
+         * The svg type is the svg usage
+         * How the svg should be shown (the usage)
+         *
+         * We need it to make the difference between an icon
+         *   * in a paragraph (the width and height are the same)
+         *   * as an illustration in a page image (the width and height may be not the same)
          */
-        if ($localTagAttributes->hasComponentAttribute(ColorUtility::COLOR)) {
-            /**
-             *
-             * We say that this is used only for an icon (<72 px)
-             *
-             * Not that an icon svg file can also be used as {@link SvgDocument::PAGE_IMAGE}
-             *
-             * We don't set it as a styling attribute
-             * because it's not taken into account if the
-             * svg is used as a background image
-             * fill or stroke should have at minimum "currentColor"
-             */
-            /**
-             * Note: if fill is not set, the default is black
-             */
-            if (!$documentElement->hasAttribute("fill")) {
-
-                $localTagAttributes->addHtmlAttributeValue("fill", self::CURRENT_COLOR);
-
-            }
-
-            $color = $localTagAttributes->getValueAndRemove(ColorUtility::COLOR);
-            $colorValue = ColorUtility::getColorValue($color);
-
-            /**
-             * if the stroke element is not present this is a fill icon
-             */
-            $svgColorType = self::COLOR_TYPE_FILL_SOLID;
-            if ($documentElement->hasAttribute("stroke")) {
-                $svgColorType = self::COLOR_TYPE_STROKE_OUTLINE;
-            }
-
-            switch ($svgColorType) {
-                case self::COLOR_TYPE_FILL_SOLID:
-                    $localTagAttributes->addHtmlAttributeValue("fill", $colorValue);
-
-                    // Delete the fill property on sub-path
-                    // if the fill is set on subpath, it will not work
-                    if ($colorValue !== self::CURRENT_COLOR) {
-                        $svgPaths = $this->xpath("//*[local-name()='path']");
-                        for ($i = 0; $i < $svgPaths->length; $i++) {
-                            $this->removeAttributeValue("fill", $svgPaths[$i]);
-                        }
-                    }
-
-                    break;
-                case self::COLOR_TYPE_STROKE_OUTLINE:
-                    $localTagAttributes->addHtmlAttributeValue("fill", "none");
-                    $localTagAttributes->addHtmlAttributeValue("stroke", $colorValue);
-                    break;
-            }
-
+        $svgUsageType = $localTagAttributes->getValue(TagAttributes::TYPE_KEY, self::ILLUSTRATION_TYPE);
+        switch ($svgUsageType) {
+            case self::ICON_TYPE:
+            case self::TILE_TYPE:
+                /**
+                 * Dimension
+                 *
+                 * Using a icon in the navbrand component of bootstrap
+                 * require the set of width and height otherwise
+                 * the svg has a calculated width of null
+                 * and the bar component are below the brand text
+                 *
+                 */
+                if ($svgUsageType == self::ICON_TYPE) {
+                    $defaultWidth = self::DEFAULT_ICON_WIDTH;
+                } else {
+                    // tile
+                    $defaultWidth = "192";
+                }
+                /**
+                 * Dimension
+                 * The default unit on attribute is pixel, no need to add it
+                 * as in CSS
+                 */
+                $width = $localTagAttributes->getValueAndRemove(Dimension::WIDTH_KEY, $defaultWidth);
+                $localTagAttributes->addHtmlAttributeValue("width", $width);
+                $height = $localTagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY, $width);
+                $localTagAttributes->addHtmlAttributeValue("height", $height);
+                break;
         }
 
         /**
-         * Width and height are in reality style properties.
-         *   ie the max-width style
-         * They are treated in {@link PluginUtility::processStyle()}
+         * Svg Structure
+         *
+         * All attributes that are applied for all usage (output independent)
+         * and that depends only on the structure of the icon
+         *
+         * Why ? Because {@link \syntax_plugin_combo_pageimage}
+         * can be an icon or an illustrative image
+         *
          */
-        $svgType = $localTagAttributes->getValue(TagAttributes::TYPE_KEY, self::ILLUSTRATION_TYPE);
-        switch ($svgType) {
+        if ($this->getMediaWidth() !== null
+            && $this->getMediaHeight() !== null
+            && $this->getMediaWidth() == $this->getMediaHeight()
+            && $this->getMediaWidth() < 100) // 72 are the size of the twitter emoji but tile may be bigger ?
+        {
+            $svgStructureType = self::ICON_TYPE;
+        } else {
+            $svgStructureType = self::ILLUSTRATION_TYPE;
+        }
+        switch ($svgStructureType) {
             case self::ICON_TYPE:
             case self::TILE_TYPE:
                 /**
                  * Determine if this is a:
                  *   * fill
                  *   * or stroke
-                 * svg
+                 * svg icon
                  *
                  * The color can be set:
                  *   * on fill (surface)
@@ -262,34 +261,65 @@ class SvgDocument extends XmlDocument
                  * but if this not the case (such as for Material design), we set them
                  */
                 if (!$documentElement->hasAttribute("fill")) {
+
                     /**
-                     * Note: if fill is not set, the default is black
+                     * Note: if fill was not set, the default color would be black
                      */
                     $localTagAttributes->addHtmlAttributeValue("fill", self::CURRENT_COLOR);
 
                 }
 
                 /**
-                 * Using a icon in the navbrand component of bootstrap
-                 * require the set of width and height otherwise
-                 * the svg has a calculated width of null
-                 * and the bar component are below the brand text
-                 *
+                 * Color
+                 * Color should only be applied on icon.
+                 * What if the svg is an illustrative image
                  */
-                if ($svgType == self::ICON_TYPE) {
-                    $defaultWidth = self::DEFAULT_ICON_WIDTH;
-                } else {
-                    // tile
-                    $defaultWidth = "192";
+                if ($localTagAttributes->hasComponentAttribute(ColorUtility::COLOR)) {
+                    /**
+                     *
+                     * We say that this is used only for an icon (<72 px)
+                     *
+                     * Not that an icon svg file can also be used as {@link \syntax_plugin_combo_pageimage}
+                     *
+                     * We don't set it as a styling attribute
+                     * because it's not taken into account if the
+                     * svg is used as a background image
+                     * fill or stroke should have at minimum "currentColor"
+                     */
+
+                    $color = $localTagAttributes->getValueAndRemove(ColorUtility::COLOR);
+                    $colorValue = ColorUtility::getColorValue($color);
+
+                    /**
+                     * if the stroke element is not present this is a fill icon
+                     */
+                    $svgColorType = self::COLOR_TYPE_FILL_SOLID;
+                    if ($documentElement->hasAttribute("stroke")) {
+                        $svgColorType = self::COLOR_TYPE_STROKE_OUTLINE;
+                    }
+
+                    switch ($svgColorType) {
+                        case self::COLOR_TYPE_FILL_SOLID:
+                            $localTagAttributes->addHtmlAttributeValue("fill", $colorValue);
+
+                            // Delete the fill property on sub-path
+                            // if the fill is set on subpath, it will not work
+                            if ($colorValue !== self::CURRENT_COLOR) {
+                                $svgPaths = $this->xpath("//*[local-name()='path']");
+                                for ($i = 0; $i < $svgPaths->length; $i++) {
+                                    $this->removeAttributeValue("fill", $svgPaths[$i]);
+                                }
+                            }
+
+                            break;
+                        case self::COLOR_TYPE_STROKE_OUTLINE:
+                            $localTagAttributes->addHtmlAttributeValue("fill", "none");
+                            $localTagAttributes->addHtmlAttributeValue("stroke", $colorValue);
+                            break;
+                    }
+
                 }
-                /**
-                 * The default unit on attribute is pixel, no need to add it
-                 * as in CSS
-                 */
-                $width = $localTagAttributes->getValueAndRemove(Dimension::WIDTH_KEY, $defaultWidth);
-                $localTagAttributes->addHtmlAttributeValue("width", $width);
-                $height = $localTagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY, $width);
-                $localTagAttributes->addHtmlAttributeValue("height", $height);
+
 
                 break;
             default:
@@ -312,7 +342,14 @@ class SvgDocument extends XmlDocument
                 }
 
                 /**
-                 * Adapt to the container
+                 * Note on dimension width and height
+                 * Width and height element attribute are in reality css style properties.
+                 *   ie the max-width style
+                 * They are treated in {@link PluginUtility::processStyle()}
+                 */
+
+                /**
+                 * Adapt to the container by default
                  * Height `auto` and not `100%` otherwise you get a layout shift
                  */
                 $localTagAttributes->addStyleDeclarationIfNotSet("width", "100%");
@@ -329,29 +366,41 @@ class SvgDocument extends XmlDocument
                     $width = $localTagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
                     $localTagAttributes->addStyleDeclarationIfNotSet("max-width", "{$width}px");
 
-                    if ($localTagAttributes->hasComponentAttribute(Dimension::HEIGHT_KEY)) {
-
-                        $height = $localTagAttributes->getComponentAttributeValue(Dimension::HEIGHT_KEY);
-                        // We get a crop, it means that we need to change the viewBox
-                        $x = 0;
-                        $y = 0;
-                        if ($width <= 72) { // 72 are the size of the twitter emoji
-                            // icon case, we zoom out otherwise, this is ugly, the icon takes the whole place
-                            $zoomFactor = 3;
-                            $width = $zoomFactor * $width;
-                            $height = $zoomFactor * $height;
-                            // center
-                            $actualWidth = $this->getMediaWidth();
-                            $actualHeight = $this->getMediaHeight();
-                            $x = -($width - $actualWidth) / 2;
-                            $y = -($height - $actualHeight) / 2;
-                        }
-                        $this->setRootAttribute("viewBox", "$x $y $width $height");
-
-                    }
-
                 }
                 break;
+
+        }
+
+        /**
+         * Cropping (used for ratio cropping)
+         * Not that we use the $tagAttributes
+         * and not the $localTagAttributes to be sure to read the
+         * request data
+         */
+        if (
+            $tagAttributes->hasComponentAttribute(Dimension::HEIGHT_KEY) &&
+            $tagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)
+        ) {
+
+            $width = $tagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
+            $height = $tagAttributes->getComponentAttributeValue(Dimension::HEIGHT_KEY);
+            // We get a crop, it means that we need to change the viewBox
+            $x = 0;
+            $y = 0;
+            if ($svgStructureType == self::ICON_TYPE) {
+                // icon case, we zoom out otherwise, this is ugly, the icon takes the whole place
+                $zoomFactor = 3;
+                if ($width < $zoomFactor * 20) {
+                    $width = $zoomFactor * $width;
+                    $height = $zoomFactor * $height;
+                }
+                // center
+                $actualWidth = $this->getMediaWidth();
+                $actualHeight = $this->getMediaHeight();
+                $x = -($width - $actualWidth) / 2;
+                $y = -($height - $actualHeight) / 2;
+            }
+            $this->setRootAttribute("viewBox", "$x $y $width $height");
 
         }
 

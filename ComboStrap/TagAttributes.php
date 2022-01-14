@@ -53,7 +53,8 @@ class TagAttributes
         syntax_plugin_combo_cell::VERTICAL_ATTRIBUTE,
         self::OPEN_TAG,
         self::HTML_BEFORE,
-        self::HTML_AFTER
+        self::HTML_AFTER,
+        Dimension::RATIO_ATTRIBUTE
     ];
 
     /**

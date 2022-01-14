@@ -382,6 +382,7 @@ class TagAttributes
             $this->componentAttributesCaseInsensitive[$attLower] = $attributeValue;
         }
 
+        return $this;
 
     }
 

@@ -395,8 +395,12 @@ abstract class Image extends Media
          */
         $ratio = $this->getRequestedAspectRatio();
         if (!empty($ratio)) {
-            $width = $this->getIntrinsicWidth();
-            return self::round($width / $ratio);
+            [$croppedWidth, $croppedHeight] = Image::getCroppingDimensionsWithRatio(
+                $ratio,
+                $this->getIntrinsicWidth(),
+                $this->getIntrinsicHeight()
+            );
+            return $croppedHeight;
         }
 
         return $this->getIntrinsicHeight();
@@ -449,8 +453,12 @@ abstract class Image extends Media
          */
         $ratio = $this->getRequestedAspectRatio();
         if (!empty($ratio)) {
-            $height = $this->getIntrinsicHeight();
-            return self::round($ratio * $height);
+            [$logicalWidthWithRatio, $logicalHeightWithRatio] = Image::getCroppingDimensionsWithRatio(
+                $ratio,
+                $this->getIntrinsicWidth(),
+                $this->getIntrinsicHeight()
+            );
+            return $logicalWidthWithRatio;
         }
 
         return $this->getIntrinsicWidth();
@@ -516,7 +524,7 @@ abstract class Image extends Media
      *
      * TODO: This function is static because the {@link SvgDocument} is not an image but an xml
      */
-    public static function getDimensionsWithRatio(float $targetRatio, int $intrinsicWidth, int $intrinsicHeight): array
+    public static function getCroppingDimensionsWithRatio(float $targetRatio, int $intrinsicWidth, int $intrinsicHeight): array
     {
 
         /**

@@ -194,17 +194,17 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                             /**
                              * TODO: This code should move into the rendering function
                              */
-                            [$logicalWidthWithRatio, $logicalHeightWithRatio] = Image::getDimensionsWithRatio(
-                                $targetRatio,
-                                $selectedPageImage->getIntrinsicWidth(),
-                                $selectedPageImage->getIntrinsicHeight()
-                            );
-                            if ($logicalWidthWithRatio !== null) {
-                                $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $logicalWidthWithRatio);
-                                if ($logicalHeightWithRatio !== null) {
-                                    $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $logicalHeightWithRatio);
-                                }
-                            }
+//                            [$logicalWidthWithRatio, $logicalHeightWithRatio] = Image::getDimensionsWithRatio(
+//                                $targetRatio,
+//                                $selectedPageImage->getIntrinsicWidth(),
+//                                $selectedPageImage->getIntrinsicHeight()
+//                            );
+//                            if ($logicalWidthWithRatio !== null) {
+//                                $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $logicalWidthWithRatio);
+//                                if ($logicalHeightWithRatio !== null) {
+//                                    $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $logicalHeightWithRatio);
+//                                }
+//                            }
                     }
 
                 }

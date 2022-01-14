@@ -162,7 +162,7 @@ class SvgDocument extends XmlDocument
      * TODO: What strange is that this is a XML document that is also an image
      *   This class should be merged with {@link ImageSvg}
      *   Because we use only {@link Image} function that are here not available because we loose the fact that this is an image
-     *   For instance {@link Image::getDimensionsWithRatio()}
+     *   For instance {@link Image::getCroppingDimensionsWithRatio()}
      */
     public function getXmlText(TagAttributes $tagAttributes = null): string
     {
@@ -399,7 +399,7 @@ class SvgDocument extends XmlDocument
             // We get a crop, it means that we need to change the viewBox
             $ratio = $localTagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
             $targetRatio = Dimension::convertTextualRatioToNumber($ratio);
-            [$width, $height] = Image::getDimensionsWithRatio(
+            [$width, $height] = Image::getCroppingDimensionsWithRatio(
                 $targetRatio,
                 $this->getMediaWidth(),
                 $this->getMediaHeight()
@@ -505,7 +505,7 @@ class SvgDocument extends XmlDocument
         try {
             return DataType::toInteger($viewBoxWidth);
         } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The media with of the svg image ($this) is not a valid integer value");
+            throw new ExceptionCombo("The media with ($viewBoxWidth) of the svg image ($this) is not a valid integer value");
         }
     }
 

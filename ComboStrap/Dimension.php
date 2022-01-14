@@ -261,7 +261,7 @@ EOF;
             throw new ExceptionCombo("The width value ($width) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
         }
         try {
-            $height = DataType::toInteger($width);
+            $height = DataType::toInteger($height);
         } catch (ExceptionCombo $e) {
             throw new ExceptionCombo("The width value ($height) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
         }

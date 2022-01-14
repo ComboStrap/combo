@@ -107,6 +107,11 @@ class TagAttributes
     const HTML_AFTER = "htmlAfter";
 
     /**
+     * Attribute with multiple values
+     */
+    const MULTIPLE_VALUES_ATTRIBUTES = [self::CLASS_KEY];
+
+    /**
      * A global static counter
      * to {@link TagAttributes::generateAndSetId()}
      */
@@ -277,13 +282,43 @@ class TagAttributes
     public static function createFromTagAttributes(TagAttributes $tagAttributes): TagAttributes
     {
         $newTagAttributes = new TagAttributes($tagAttributes->getComponentAttributes(), $tagAttributes->getLogicalTag());
-        foreach($tagAttributes->getStyleDeclarations() as $property => $value){
-            $newTagAttributes->addStyleDeclarationIfNotSet($property,$value);
+        foreach ($tagAttributes->getStyleDeclarations() as $property => $value) {
+            $newTagAttributes->addStyleDeclarationIfNotSet($property, $value);
         }
         return $newTagAttributes;
     }
 
-    public function addClassName($className)
+    /**
+     * Merge class name
+     * @param string $newNames - the name that we want to add
+     * @param ?string $actualNames - the actual names
+     * @return string - the class name list
+     *
+     * for instance:
+     *   * newNames = foo blue
+     *   * actual Name = foo bar
+     * return
+     *   * foo bar blue
+     */
+     static function mergeClassNames(string $newNames, ?string $actualNames): string
+    {
+        if (!is_string($newNames)) {
+            LogUtility::msg("The value ($newNames) for the `class` attribute is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+        }
+        /**
+         * It may be in the form "value1 value2"
+         */
+        $newValues = StringUtility::explodeAndTrim($newNames, " ");
+        if (!empty($actualNames)) {
+            $actualValues = StringUtility::explodeAndTrim($actualNames, " ");
+        } else {
+            $actualValues = [];
+        }
+        $newValues = PluginUtility::mergeAttributes($newValues, $actualValues);
+        return implode(" ", $newValues);
+    }
+
+    public function addClassName($className): TagAttributes
     {
 
         $this->addComponentAttributeValue(self::CLASS_KEY, $className);
@@ -330,6 +365,7 @@ class TagAttributes
         }
 
         $attLower = strtolower($attributeName);
+        $actual = null;
         if ($this->hasComponentAttribute($attLower)) {
             $actual = $this->componentAttributesCaseInsensitive[$attLower];
         }
@@ -337,21 +373,8 @@ class TagAttributes
         /**
          * Type of data: list (class) or atomic (id)
          */
-        if ($attributeName === "class") {
-            if (!is_string($attributeValue)) {
-                LogUtility::msg("The value ($attributeValue) for the `class` attribute is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            }
-            /**
-             * It may be in the form "value1 value2"
-             */
-            $newValues = StringUtility::explodeAndTrim($attributeValue, " ");
-            if (!empty($actual)) {
-                $actualValues = StringUtility::explodeAndTrim($actual, " ");
-            } else {
-                $actualValues = [];
-            }
-            $newValues = PluginUtility::mergeAttributes($newValues, $actualValues);
-            $this->componentAttributesCaseInsensitive[$attLower] = implode(" ", $newValues);
+        if (in_array($attributeName, self::MULTIPLE_VALUES_ATTRIBUTES)) {
+            $this->componentAttributesCaseInsensitive[$attLower] = self::mergeClassNames($attributeValue, $actual);
         } else {
             if (!empty($actual)) {
                 LogUtility::msg("The attribute ($attLower) stores an unique value and has already a value ($actual). to set another value ($attributeValue), use the `set` operation instead", LogUtility::LVL_MSG_ERROR, self::CANONICAL);

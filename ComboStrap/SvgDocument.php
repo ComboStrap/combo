@@ -162,6 +162,7 @@ class SvgDocument extends XmlDocument
     public function getXmlText(TagAttributes $tagAttributes = null): string
     {
 
+
         if ($tagAttributes === null) {
             $localTagAttributes = TagAttributes::createEmpty();
         } else {
@@ -235,11 +236,19 @@ class SvgDocument extends XmlDocument
         if ($this->getMediaWidth() !== null
             && $this->getMediaHeight() !== null
             && $this->getMediaWidth() == $this->getMediaHeight()
-            && $this->getMediaWidth() < 100) // 72 are the size of the twitter emoji but tile may be bigger ?
+            && $this->getMediaWidth() < 400) // 356 for logos telegram are the size of the twitter emoji but tile may be bigger ?
         {
             $svgStructureType = self::ICON_TYPE;
         } else {
+
             $svgStructureType = self::ILLUSTRATION_TYPE;
+
+            // some icon may be bigger in size than 400 or not squared
+            // if the usage is determined, it just takes over.
+            if ($svgUsageType === self::ICON_TYPE) {
+                $svgStructureType = self::ICON_TYPE;
+            }
+
         }
         switch ($svgStructureType) {
             case self::ICON_TYPE:
@@ -438,6 +447,12 @@ class SvgDocument extends XmlDocument
          */
         $toHtmlArray = $localTagAttributes->toHtmlArray();
         foreach ($toHtmlArray as $name => $value) {
+            if (in_array($name, TagAttributes::MULTIPLE_VALUES_ATTRIBUTES)) {
+                $actualValue = $this->getRootAttributeValue($name);
+                if ($actualValue !== null) {
+                    $value = TagAttributes::mergeClassNames($value, $actualValue);
+                }
+            }
             $this->setRootAttribute($name, $value);
         }
 

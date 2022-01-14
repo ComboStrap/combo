@@ -245,11 +245,24 @@ class XmlDocument
     }
 
     public
-    function setRootAttribute($string, $name)
+    function setRootAttribute($name, $value)
     {
         if ($this->isXmlExtensionLoaded()) {
-            $this->xmlDom->documentElement->setAttribute($string, $name);
+            $this->xmlDom->documentElement->setAttribute($name, $value);
         }
+    }
+
+    /**
+     * @param $name
+     * @return string null if not found
+     */
+    public function getRootAttributeValue($name): ?string
+    {
+        $value = $this->xmlDom->documentElement->getAttribute($name);
+        if($value===""){
+            return null;
+        }
+        return $value;
     }
 
     public function getXmlText()

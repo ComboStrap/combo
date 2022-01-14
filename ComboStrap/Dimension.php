@@ -7,6 +7,7 @@ namespace ComboStrap;
 use dokuwiki\Extension\SyntaxPlugin;
 use syntax_plugin_combo_button;
 use syntax_plugin_combo_link;
+use syntax_plugin_combo_pageimage;
 
 class Dimension
 {
@@ -37,12 +38,11 @@ class Dimension
     const WIDTH_KEY = 'width';
 
     /**
-     * Width and height used to set the viewBox of a svg
-     * to crop it
-     * (In a raster image, there is not this distinction)
+     * The ratio (16:9, ...) permits to change:
+     *   * the viewBox in svg
+     *   * the intrinsic dimension in raster
      */
-    const HEIGHT_INTRINSIC_KEY = 'height_intrinsic';
-    const WIDTH_INTRINSIC_KEY = 'width_intrinsic';
+    public const RATIO_ATTRIBUTE = "ratio";
 
 
     /**
@@ -242,8 +242,35 @@ EOF;
      */
     public static function toPixelValue($value): int
     {
-        $targetValue =  str_replace("px","",$value);
+        $targetValue = str_replace("px", "", $value);
         return DataType::toInteger($targetValue);
     }
+
+    /**
+     * Convert 16:9, ... to a float
+     * @param string $stringRatio
+     * @return float
+     * @throws ExceptionCombo
+     */
+    public static function convertTextualRatioToNumber(string $stringRatio): float
+    {
+        list($width, $height) = explode(":", $stringRatio, 2);
+        try {
+            $width = DataType::toInteger($width);
+        } catch (ExceptionCombo $e) {
+            throw new ExceptionCombo("The width value ($width) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
+        }
+        try {
+            $height = DataType::toInteger($width);
+        } catch (ExceptionCombo $e) {
+            throw new ExceptionCombo("The width value ($height) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
+        }
+        if ($height == 0) {
+            throw new ExceptionCombo("The height value of the ratio `$stringRatio` should not be zero", syntax_plugin_combo_pageimage::CANONICAL);
+        }
+        return floatval($width / $height);
+
+    }
+
 
 }

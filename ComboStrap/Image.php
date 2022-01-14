@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use syntax_plugin_combo_card;
+
 require_once(__DIR__ . "/PluginUtility.php");
 
 /**
@@ -92,11 +94,17 @@ abstract class Image extends Media
     public function getBreakpointHeight(?int $breakpointWidth): int
     {
 
-        if ($this->getTargetAspectRatio() === false) {
-            LogUtility::msg("The ratio of the image ($this) could not be calculated", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return $this->getTargetHeight();
+        try {
+            $targetAspectRatio = $this->getTargetAspectRatio();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The target ratio for the image was set to 1 because we got this error: {$e->getMessage()}");
+            $targetAspectRatio = 1;
         }
-        return $this->round($breakpointWidth / $this->getTargetAspectRatio());
+        if ($targetAspectRatio === 0) {
+            LogUtility::msg("The target ratio for the image was set to 1 because its value was 0");
+            $targetAspectRatio = 1;
+        }
+        return $this->round($breakpointWidth / $targetAspectRatio);
 
     }
 
@@ -159,9 +167,9 @@ abstract class Image extends Media
      * for a svg, the defined viewBox
      *
      *
-     * @return mixed
+     * @return int in pixel
      */
-    public abstract function getIntrinsicWidth();
+    public abstract function getIntrinsicWidth(): int;
 
     /**
      * For a raster image, the internal height
@@ -170,9 +178,9 @@ abstract class Image extends Media
      * This is needed to calculate the {@link MediaLink::getTargetRatio() target ratio}
      * and pass them to the img tag to avoid layout shift
      *
-     * @return mixed
+     * @return int in pixel
      */
-    public abstract function getIntrinsicHeight();
+    public abstract function getIntrinsicHeight(): int;
 
     /**
      * The Aspect ratio as explained here
@@ -204,35 +212,56 @@ abstract class Image extends Media
      * It's needed for an img tag to set the img `width` and `height` that pass the
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
+     * @throws ExceptionCombo
      */
     public function getTargetAspectRatio()
     {
 
-        if (empty($this->getTargetHeight()) || empty($this->getIntrinsicWidth())) {
-            return false;
-        } else {
-            return $this->getTargetWidth() / $this->getTargetHeight();
+        $targetHeight = $this->getTargetHeight();
+        if ($targetHeight === 0) {
+            throw new ExceptionCombo("The target height is equal to zero, we can calculate the target aspect ratio");
         }
+        $targetWidth = $this->getTargetWidth();
+        return $targetWidth / $targetHeight;
+
     }
 
     /**
      * The Aspect ratio as explained here
      * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
-     * @return float|int|false
+     * @return float|int
      * false if the image is not supported
      *
      * It's needed for an img tag to set the img `width` and `height` that pass the
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
+     * @throws ExceptionCombo
      */
     public function getRequestedAspectRatio()
     {
 
-        if ($this->getTargetHeight() == null || $this->getTargetWidth() == null) {
-            return false;
-        } else {
-            return $this->getTargetWidth() / $this->getTargetHeight();
+        $requestedRatio = $this->attributes->getValue(Dimension::RATIO_ATTRIBUTE);
+        if ($requestedRatio !== null) {
+            try {
+                return Dimension::convertTextualRatioToNumber($requestedRatio);
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The requested ratio ($requestedRatio) is not a valid value ({$e->getMessage()})", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            }
         }
+
+        if (
+            $this->getRequestedWidth() !== null
+            && $this->getRequestedWidth() !== 0 // default value for not set in dokuwiki
+            && $this->getRequestedHeight() !== null) {
+            if ($this->getRequestedHeight() === 0) {
+                LogUtility::msg("The requested height is 0, we can't calculate the requested ratio", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            }
+            return $this->getRequestedWidth() / $this->getRequestedHeight();
+        }
+
+        return null;
+
+
     }
 
     /**
@@ -264,7 +293,12 @@ abstract class Image extends Media
          *
          * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
          */
-        $targetRatio = $this->getTargetAspectRatio();
+        try {
+            $targetRatio = $this->getTargetAspectRatio();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Unable to check the target ratio because it returns this error: {$e->getMessage()}");
+            return;
+        }
         if (!(
             $height * $targetRatio >= $width - 1
             &&
@@ -327,9 +361,10 @@ abstract class Image extends Media
      * The doc is {@link https://www.dokuwiki.org/images#resizing}
      *
      *
-     * @return array|int|mixed|string
+     * @return int
+     * @throws ExceptionCombo
      */
-    public function getTargetHeight()
+    public function getTargetHeight(): int
     {
         $requestedHeight = $this->getRequestedHeight();
         if (!empty($requestedHeight)) {
@@ -339,16 +374,32 @@ abstract class Image extends Media
         /**
          * Scaled down by width
          */
-        $requestedWidth = $this->getRequestedWidth();
-        if (empty($requestedWidth)) {
-            return $this->getIntrinsicHeight();
+        $width = $this->getRequestedWidth();
+        if (!empty($width)) {
+
+            try {
+                $ratio = $this->getRequestedAspectRatio();
+                if ($ratio === null) {
+                    $ratio = $this->getIntrinsicAspectRatio();
+                }
+                return self::round($width / $ratio);
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The intrinsic height of the image ($this) was used because retrieving the ratio returns this error: {$e->getMessage()} ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                return $this->getIntrinsicHeight();
+            }
+
         }
 
-        if ($this->getIntrinsicAspectRatio() === false) {
-            LogUtility::msg("The ratio of the image ($this) could not be calculated", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return $this->getIntrinsicHeight();
+        /**
+         * Scaled down by ratio
+         */
+        $ratio = $this->getRequestedAspectRatio();
+        if (!empty($ratio)) {
+            $width = $this->getIntrinsicWidth();
+            return self::round($width / $ratio);
         }
-        return self::round($requestedWidth / $this->getIntrinsicAspectRatio());
+
+        return $this->getIntrinsicHeight();
 
     }
 
@@ -360,9 +411,11 @@ abstract class Image extends Media
      *   * with ''0x20'', the target image has a {@link Image::getTargetHeight() logical height} of 20 and a {@link Image::getTargetWidth() logical width} that is scaled down by the {@link Image::getIntrinsicAspectRatio() instrinsic ratio}
      *
      * The doc is {@link https://www.dokuwiki.org/images#resizing}
+     * @throws ExceptionCombo
      */
-    public function getTargetWidth()
+    public function getTargetWidth(): int
     {
+
         $requestedWidth = $this->getRequestedWidth();
 
         /**
@@ -373,36 +426,69 @@ abstract class Image extends Media
         }
 
         /**
-         * Empty requested width, may be scaled down by height
+         * Scaled down by Height
          */
-        $requestedHeight = $this->getRequestedHeight();
-        if (empty($requestedHeight)) {
-            return $this->getIntrinsicWidth();
+        $height = $this->getRequestedHeight();
+        if (!empty($height)) {
+
+            try {
+                $ratio = $this->getRequestedAspectRatio();
+                if ($ratio === null) {
+                    $ratio = $this->getIntrinsicAspectRatio();
+                }
+                return self::round($ratio * $height);
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The intrinsic width of the image ($this) was used because retrieving the ratio returns this error: {$e->getMessage()} ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                return $this->getIntrinsicWidth();
+            }
+
         }
 
-        if ($this->getIntrinsicAspectRatio() === false) {
-            LogUtility::msg("The ratio of the image ($this) could not be calculated", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return $this->getIntrinsicHeight();
+        /**
+         * Scaled down by Ratio
+         */
+        $ratio = $this->getRequestedAspectRatio();
+        if (!empty($ratio)) {
+            $height = $this->getIntrinsicHeight();
+            return self::round($ratio * $height);
         }
 
-        return self::round($this->getIntrinsicAspectRatio() * $requestedHeight);
+        return $this->getIntrinsicWidth();
 
     }
 
     /**
-     * @return array|string|null
+     * @return int|null
+     * @throws ExceptionCombo
      */
-    public function getRequestedWidth()
+    public function getRequestedWidth(): ?int
     {
-        return $this->attributes->getValue(Dimension::WIDTH_KEY);
+        $value = $this->attributes->getValue(Dimension::WIDTH_KEY);
+        if ($value === null) {
+            return null;
+        }
+        try {
+            return DataType::toInteger($value);
+        } catch (ExceptionCombo $e) {
+            throw new ExceptionCombo("The width value ($value) is not a valid integer", self::CANONICAL, $e);
+        }
     }
 
     /**
-     * @return array|string|null
+     * @return int|null
+     * @throws ExceptionCombo
      */
-    public function getRequestedHeight()
+    public function getRequestedHeight(): ?int
     {
-        return $this->attributes->getValue(Dimension::HEIGHT_KEY);
+        $value = $this->attributes->getValue(Dimension::HEIGHT_KEY);
+        if ($value === null) {
+            return null;
+        }
+        try {
+            return DataType::toInteger($value);
+        } catch (ExceptionCombo $e) {
+            throw new ExceptionCombo("The height value ($value) is not a valid integer", self::CANONICAL, $e);
+        }
     }
 
     /**
@@ -417,6 +503,36 @@ abstract class Image extends Media
     public static function round(float $param): int
     {
         return intval(round($param));
+    }
+
+
+    /**
+     * Return the width and height of the image
+     * after applying a ratio (16x9, 4x3, ..)
+     *
+     * The new dimension will apply to:
+     *   * the viewBox for svg
+     *   * the physical dimension for raster image
+     *
+     * TODO: This function is static because the {@link SvgDocument} is not an image but an xml
+     */
+    public static function getDimensionsWithRatio(float $targetRatio, int $intrinsicWidth, int $intrinsicHeight): array
+    {
+
+        /**
+         * Trying to crop on the width
+         */
+        $logicalWidth = $intrinsicWidth;
+        $logicalHeight = Image::round($logicalWidth / $targetRatio);
+        if ($logicalHeight > $intrinsicHeight) {
+            /**
+             * Cropping by height
+             */
+            $logicalHeight = $intrinsicHeight;
+            $logicalWidth = Image::round($targetRatio * $logicalHeight);
+        }
+        return [$logicalWidth, $logicalHeight];
+
     }
 
 

@@ -38,12 +38,18 @@ class ImageSvg extends Image
      */
     private $svgDocument;
 
-    public function getIntrinsicWidth()
+    /**
+     * @throws ExceptionCombo
+     */
+    public function getIntrinsicWidth(): int
     {
         return $this->getSvgDocument()->getMediaWidth();
     }
 
-    public function getIntrinsicHeight()
+    /**
+     * @throws ExceptionCombo
+     */
+    public function getIntrinsicHeight(): int
     {
         return $this->getSvgDocument()->getMediaHeight();
     }

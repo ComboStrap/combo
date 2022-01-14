@@ -158,10 +158,14 @@ class SvgDocument extends XmlDocument
     /**
      * @param TagAttributes|null $tagAttributes
      * @return string
+     *
+     * TODO: What strange is that this is a XML document that is also an image
+     *   This class should be merged with {@link ImageSvg}
+     *   Because we use only {@link Image} function that are here not available because we loose the fact that this is an image
+     *   For instance {@link Image::getDimensionsWithRatio()}
      */
     public function getXmlText(TagAttributes $tagAttributes = null): string
     {
-
 
         if ($tagAttributes === null) {
             $localTagAttributes = TagAttributes::createEmpty();
@@ -220,6 +224,52 @@ class SvgDocument extends XmlDocument
                 $localTagAttributes->addHtmlAttributeValue("width", $width);
                 $height = $localTagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY, $width);
                 $localTagAttributes->addHtmlAttributeValue("height", $height);
+                break;
+            default:
+                /**
+                 * Illustration / Image
+                 */
+                /**
+                 * Responsive SVG
+                 */
+                if (!$localTagAttributes->hasComponentAttribute("preserveAspectRatio")) {
+                    /**
+                     *
+                     * Keep the same height
+                     * Image in the Middle and border deleted when resizing
+                     * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio
+                     * Default is xMidYMid meet
+                     */
+                    $defaultAspectRatio = PluginUtility::getConfValue(self::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
+                    $localTagAttributes->addHTMLAttributeValue("preserveAspectRatio", $defaultAspectRatio);
+                }
+
+                /**
+                 * Note on dimension width and height
+                 * Width and height element attribute are in reality css style properties.
+                 *   ie the max-width style
+                 * They are treated in {@link PluginUtility::processStyle()}
+                 */
+
+                /**
+                 * Adapt to the container by default
+                 * Height `auto` and not `100%` otherwise you get a layout shift
+                 */
+                $localTagAttributes->addStyleDeclarationIfNotSet("width", "100%");
+                $localTagAttributes->addStyleDeclarationIfNotSet("height", "auto");
+
+
+                if ($localTagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)) {
+
+                    /**
+                     * If a dimension was set, it's seen by default as a max-width
+                     * If it should not such as in a card, this property is already set
+                     * and is not overwritten
+                     */
+                    $width = $localTagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
+                    $localTagAttributes->addStyleDeclarationIfNotSet("max-width", "{$width}px");
+
+                }
                 break;
         }
 
@@ -331,66 +381,29 @@ class SvgDocument extends XmlDocument
 
 
                 break;
-            default:
-                /**
-                 * Illustration / Image
-                 */
-                /**
-                 * Responsive SVG
-                 */
-                if (!$localTagAttributes->hasComponentAttribute("preserveAspectRatio")) {
-                    /**
-                     *
-                     * Keep the same height
-                     * Image in the Middle and border deleted when resizing
-                     * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio
-                     * Default is xMidYMid meet
-                     */
-                    $defaultAspectRatio = PluginUtility::getConfValue(self::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
-                    $localTagAttributes->addHTMLAttributeValue("preserveAspectRatio", $defaultAspectRatio);
-                }
-
-                /**
-                 * Note on dimension width and height
-                 * Width and height element attribute are in reality css style properties.
-                 *   ie the max-width style
-                 * They are treated in {@link PluginUtility::processStyle()}
-                 */
-
-                /**
-                 * Adapt to the container by default
-                 * Height `auto` and not `100%` otherwise you get a layout shift
-                 */
-                $localTagAttributes->addStyleDeclarationIfNotSet("width", "100%");
-                $localTagAttributes->addStyleDeclarationIfNotSet("height", "auto");
-
-
-                if ($localTagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)) {
-
-                    /**
-                     * If a dimension was set, it's seen by default as a max-width
-                     * If it should not such as in a card, this property is already set
-                     * and is not overwritten
-                     */
-                    $width = $localTagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
-                    $localTagAttributes->addStyleDeclarationIfNotSet("max-width", "{$width}px");
-
-                }
-                break;
 
         }
 
         /**
-         * Cropping (used for ratio cropping)
+         * Ratio / Cropping (used for ratio cropping)
+         * Width and height used to set the viewBox of a svg
+         * to crop it
+         * (In a raster image, there is not this distinction)
+         *
+         * With an icon, the viewBox can be small but it can be zoomed out
+         * via the {@link Dimension::WIDTH_KEY}
          */
         if (
-            $localTagAttributes->hasComponentAttribute(Dimension::HEIGHT_INTRINSIC_KEY) ||
-            $localTagAttributes->hasComponentAttribute(Dimension::WIDTH_INTRINSIC_KEY)
+        $localTagAttributes->hasComponentAttribute(Dimension::RATIO_ATTRIBUTE)
         ) {
-
-            $width = $localTagAttributes->getValueAndRemoveIfPresent(Dimension::WIDTH_INTRINSIC_KEY, $this->getMediaWidth());
-            $height = $localTagAttributes->getValueAndRemoveIfPresent(Dimension::HEIGHT_INTRINSIC_KEY, $this->getMediaHeight());
             // We get a crop, it means that we need to change the viewBox
+            $ratio = $localTagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
+            $targetRatio = Dimension::convertTextualRatioToNumber($ratio);
+            [$width, $height] = Image::getDimensionsWithRatio(
+                $targetRatio,
+                $this->getMediaWidth(),
+                $this->getMediaHeight()
+            );
             $x = 0;
             $y = 0;
             if ($svgStructureType == self::ICON_TYPE) {
@@ -478,18 +491,40 @@ class SvgDocument extends XmlDocument
         return $this;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function getMediaWidth(): int
     {
         $viewBox = $this->getXmlDom()->documentElement->getAttribute("viewBox");
+        if ($viewBox === "") {
+            throw new ExceptionCombo("The svg ($this) does not have a viewBox attribute, the intrinsic width cannot be determined");
+        }
         $attributes = explode(" ", $viewBox);
-        return intval(round($attributes[2]));
+        $viewBoxWidth = $attributes[2];
+        try {
+            return DataType::toInteger($viewBoxWidth);
+        } catch (ExceptionCombo $e) {
+            throw new ExceptionCombo("The media with of the svg image ($this) is not a valid integer value");
+        }
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function getMediaHeight(): int
     {
         $viewBox = $this->getXmlDom()->documentElement->getAttribute("viewBox");
+        if ($viewBox === "") {
+            throw new ExceptionCombo("The svg ($this) does not have a viewBox attribute, the intrinsic height cannot be determined");
+        }
         $attributes = explode(" ", $viewBox);
-        return intval(round($attributes[3]));
+        $viewBoxHeight = $attributes[3];
+        try {
+            return DataType::toInteger($viewBoxHeight);
+        } catch (ExceptionCombo $e) {
+            throw new ExceptionCombo("The media height of the svg image ($this) is not a valid integer value");
+        }
     }
 
 
@@ -704,6 +739,17 @@ class SvgDocument extends XmlDocument
     private function setPath(Path $path)
     {
         $this->path = $path;
+    }
+
+    public function __toString()
+    {
+        if ($this->path !== null) {
+            return $this->path->__toString();
+        }
+        if ($this->name !== null) {
+            return $this->name;
+        }
+        return "unknown";
     }
 
 

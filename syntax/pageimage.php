@@ -37,30 +37,6 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
 
 
     const CANONICAL = self::TAG;
-    const RATIO_ATTRIBUTE = "ratio";
-
-    /**
-     * @param $stringRatio
-     * @return float
-     */
-    public static function getTargetAspectRatio($stringRatio)
-    {
-        list($width, $height) = explode(":", $stringRatio, 2);
-        if (!is_numeric($width)) {
-            LogUtility::msg("The width value ($width) of the ratio `$stringRatio` is not numeric", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return 1;
-        }
-        if (!is_numeric($height)) {
-            LogUtility::msg("The width value ($height) of the ratio `$stringRatio` is not numeric", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return 1;
-        }
-        if ($height == 0) {
-            LogUtility::msg("The height value of the ratio `$stringRatio` should not be zero", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return 1;
-        }
-        return floatval($width / $height);
-
-    }
 
 
     function getType(): string
@@ -164,6 +140,9 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                 $path = $tagAttributes->getValueAndRemove(PagePath::PROPERTY_NAME);
                 DokuPath::addRootSeparatorIfNotPresent($path);
 
+                /**
+                 * Image selection
+                 */
                 $page = Page::createPageFromQualifiedPath($path);
                 $selectedPageImage = $page->getImage();
                 if ($selectedPageImage === null) {
@@ -171,22 +150,23 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     return false;
                 }
 
-                if ($tagAttributes->hasComponentAttribute(self::RATIO_ATTRIBUTE)) {
-                    $stringRatio = $tagAttributes->getValueAndRemove(self::RATIO_ATTRIBUTE);
+                /**
+                 * We select the best image for the ratio
+                 *
+                 */
+                $targetRatio = null;
+                if ($tagAttributes->hasComponentAttribute(Dimension::RATIO_ATTRIBUTE)) {
+                    $stringRatio = $tagAttributes->getValue(Dimension::RATIO_ATTRIBUTE);
                     if (empty($stringRatio)) {
 
                         LogUtility::msg("The ratio value is empty and was therefore not taken into account", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
 
                     } else {
 
-                        /**
-                         * The ratio is:
-                         *   * the viewBox for svg
-                         *   * the physical dimension for raster image
-                         */
                         $bestRatioDistance = 9999;
 
-                        $targetRatio = self::getTargetAspectRatio($stringRatio);
+                        $targetRatio = Dimension::convertTextualRatioToNumber($stringRatio);
+
                         foreach ($page->getPageImagesOrDefault() as $pageImage) {
                             $image = $pageImage->getImage();
                             $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
@@ -195,35 +175,38 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                                 $selectedPageImage = $image;
                             }
                         }
-                        /**
-                         * Trying to crop on the width
-                         */
-                        $logicalWidth = $selectedPageImage->getIntrinsicWidth();
-                        $logicalHeight = Image::round($logicalWidth / $targetRatio);
-                        if ($logicalHeight > $selectedPageImage->getIntrinsicHeight()) {
-                            /**
-                             * Cropping by height
-                             */
-                            $logicalHeight = $selectedPageImage->getIntrinsicHeight();
-                            $logicalWidth = Image::round($targetRatio * $logicalHeight);
-                        }
 
-
-                        if ($logicalWidth !== null) {
-                            if ($selectedPageImage->getPath()->getMime()->toString() === Mime::SVG) {
-                                $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_INTRINSIC_KEY, $logicalWidth);
-                                if ($logicalHeight !== null) {
-                                    $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_INTRINSIC_KEY, $logicalHeight);
-                                }
-                            } else {
-                                $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $logicalWidth);
-                                if ($logicalHeight !== null) {
-                                    $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $logicalHeight);
-                                }
-                            }
-                        }
 
                     }
+                }
+
+                if ($targetRatio !== null) {
+
+                    $mime = $selectedPageImage->getPath()->getMime()->toString();
+                    switch ($mime) {
+                        case Mime::SVG:
+                            // Ratio is part of the request
+                            // because it is the definition of the viewBox
+                            // The rendering function takes care of it
+                            // and it's also passed in the fetch url
+                            break;
+                        default:
+                            /**
+                             * TODO: This code should move into the rendering function
+                             */
+                            [$logicalWidthWithRatio, $logicalHeightWithRatio] = Image::getDimensionsWithRatio(
+                                $targetRatio,
+                                $selectedPageImage->getIntrinsicWidth(),
+                                $selectedPageImage->getIntrinsicHeight()
+                            );
+                            if ($logicalWidthWithRatio !== null) {
+                                $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $logicalWidthWithRatio);
+                                if ($logicalHeightWithRatio !== null) {
+                                    $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $logicalHeightWithRatio);
+                                }
+                            }
+                    }
+
                 }
 
 
@@ -238,6 +221,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                 }
 
                 $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ILLUSTRATION_TYPE);
+
 
                 $mediaLink = MediaLink::createMediaLinkFromPath(
                     $selectedPageImage->getPath(),

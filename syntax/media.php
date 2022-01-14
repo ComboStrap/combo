@@ -5,6 +5,7 @@ use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
 use ComboStrap\DokuFs;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionComboRuntime;
 use ComboStrap\Image;
 use ComboStrap\InternetPath;
 use ComboStrap\LogUtility;
@@ -68,7 +69,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
          * {@link Doku_Renderer_metadata::$firstimage} is unfortunately protected
          * and {@link Doku_Renderer_metadata::internalmedia()} does not allow svg as first image
          */
-        if(!isset($renderer->meta[PageImages::FIRST_IMAGE_META_RELATION])) {
+        if (!isset($renderer->meta[PageImages::FIRST_IMAGE_META_RELATION])) {
             $renderer->meta[PageImages::FIRST_IMAGE_META_RELATION] = $src;
         }
 
@@ -226,10 +227,14 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                         try {
                             $renderer->doc .= $mediaLink->renderMediaTagWithLink();
                         } catch (RuntimeException $e) {
-                            $errorClass = self::SVG_RENDERING_ERROR_CLASS;
-                            $message = "Media ({$media->getPath()}). Error while rendering: {$e->getMessage()}";
-                            $renderer->doc .= "<span class=\"text-alert $errorClass\">" . hsc(trim($message)) . "</span>";
-                            LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, MediaLink::CANONICAL);
+                            if (PluginUtility::isDevOrTest()) {
+                                throw new ExceptionComboRuntime("Media Rendering Error. {$e->getMessage()}", MediaLink::CANONICAL, 0, $e);
+                            } else {
+                                $errorClass = self::SVG_RENDERING_ERROR_CLASS;
+                                $message = "Media ({$media->getPath()}). Error while rendering: {$e->getMessage()}";
+                                $renderer->doc .= "<span class=\"text-alert $errorClass\">" . hsc(trim($message)) . "</span>";
+                                LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, MediaLink::CANONICAL);
+                            }
                         }
                         return true;
                     }
@@ -317,7 +322,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         switch ($type) {
             case MediaLink::INTERNAL_MEDIA_CALL_NAME:
                 if (substr($src, -4) === ".svg") {
-                    self::registerFirstMedia($renderer,$src);
+                    self::registerFirstMedia($renderer, $src);
                 }
                 $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking);
                 break;

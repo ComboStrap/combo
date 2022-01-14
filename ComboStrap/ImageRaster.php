@@ -28,10 +28,6 @@ class ImageRaster extends Image
     private $imageType;
     private $wasAnalyzed = false;
 
-    /**
-     * @var bool
-     */
-    private $analyzable = false;
 
     /**
      * @var mixed - the mime from the {@link RasterImageLink::analyzeImageIfNeeded()}
@@ -40,8 +36,9 @@ class ImageRaster extends Image
 
     /**
      * @return int - the width of the image from the file
+     * @throws ExceptionCombo
      */
-    public function getIntrinsicWidth(): ?int
+    public function getIntrinsicWidth(): int
     {
         $this->analyzeImageIfNeeded();
         return $this->imageWidth;
@@ -49,13 +46,17 @@ class ImageRaster extends Image
 
     /**
      * @return int - the height of the image from the file
+     * @throws ExceptionCombo
      */
-    public function getIntrinsicHeight(): ?int
+    public function getIntrinsicHeight(): int
     {
         $this->analyzeImageIfNeeded();
         return $this->imageWeight;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     private
     function analyzeImageIfNeeded()
     {
@@ -75,37 +76,24 @@ class ImageRaster extends Image
                 }
                 $imageSize = getimagesize($path->toAbsolutePath()->toString(), $imageInfo);
                 if ($imageSize === false) {
-                    $this->analyzable = false;
-                    LogUtility::msg("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                } else {
-                    $this->analyzable = true;
-                    $this->imageWidth = (int)$imageSize[0];
-                    if (empty($this->imageWidth)) {
-                        $this->analyzable = false;
-                    }
-                    $this->imageWeight = (int)$imageSize[1];
-                    if (empty($this->imageWeight)) {
-                        $this->analyzable = false;
-                    }
-                    $this->imageType = (int)$imageSize[2];
-                    $this->mime = $imageSize[3];
+                    throw new ExceptionCombo("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", self::CANONICAL);
                 }
+                $this->imageWidth = (int)$imageSize[0];
+                if (empty($this->imageWidth)) {
+                    throw new ExceptionCombo("We couldn't retrieve the width of the image ($this)", self::CANONICAL);
+                }
+                $this->imageWeight = (int)$imageSize[1];
+                if (empty($this->imageWeight)) {
+                    throw new ExceptionCombo("We couldn't retrieve the height of the image ($this)", self::CANONICAL);
+                }
+                $this->imageType = (int)$imageSize[2];
+                $this->mime = $imageSize[3];
+
             }
         }
         $this->wasAnalyzed = true;
     }
 
-
-    /**
-     *
-     * @return bool true if we could extract the dimensions
-     */
-    public function isAnalyzable(): bool
-    {
-        $this->analyzeImageIfNeeded();
-        return $this->analyzable;
-
-    }
 
     public function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML)
     {
@@ -220,11 +208,13 @@ class ImageRaster extends Image
      * because we don't scale up for raster image
      * to not lose quality.
      *
-     * @return array|int|mixed|string
+     * @return int
+     * @throws ExceptionCombo
      */
     public
-    function getTargetWidth()
+    function getTargetWidth(): int
     {
+
         $requestedWidth = $this->getRequestedWidth();
 
         /**
@@ -251,8 +241,10 @@ class ImageRaster extends Image
         return parent::getTargetWidth();
     }
 
-    public
-    function getTargetHeight()
+    /**
+     * @throws ExceptionCombo
+     */
+    public function getTargetHeight(): int
     {
 
         $requestedHeight = $this->getRequestedHeight();
@@ -262,10 +254,9 @@ class ImageRaster extends Image
             if (!empty($mediaHeight)) {
                 if ($requestedHeight > $mediaHeight) {
                     LogUtility::msg("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    $requestedHeight = $mediaHeight;
+                    return $mediaHeight;
                 }
             }
-            return $requestedHeight;
         }
 
         return parent::getTargetHeight();

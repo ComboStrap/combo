@@ -3,6 +3,7 @@
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
@@ -13,8 +14,6 @@ use ComboStrap\PageType;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\StringUtility;
-
-
 
 
 /**
@@ -160,23 +159,30 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                 } else {
 
                     $toSmall = false;
-                    if ($facebookImage->isAnalyzable()) {
 
-                        // There is a minimum size constraint of 200px by 200px
-                        if ($facebookImage->getIntrinsicWidth() < 200) {
+                    // There is a minimum size constraint of 200px by 200px
+                    // The try is in case we can't get the width and height
+                    try {
+                        $intrinsicWidth = $facebookImage->getIntrinsicWidth();
+                        $intrinsicHeight = $facebookImage->getIntrinsicHeight();
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("No image was added for facebook. Error while retrieving the dimension of the image: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        break;
+                    }
+
+                    if ($intrinsicWidth < 200) {
+                        $toSmall = true;
+                    } else {
+                        $facebookMeta["og:image:width"] = $intrinsicWidth;
+                        if ($intrinsicHeight < 200) {
                             $toSmall = true;
                         } else {
-                            $facebookMeta["og:image:width"] = $facebookImage->getIntrinsicWidth();
-                            if ($facebookImage->getIntrinsicHeight() < 200) {
-                                $toSmall = true;
-                            } else {
-                                $facebookMeta["og:image:height"] = $facebookImage->getIntrinsicHeight();
-                            }
+                            $facebookMeta["og:image:height"] = $intrinsicHeight;
                         }
                     }
 
                     if ($toSmall) {
-                        $message = "The facebook image ($facebookImage) is too small (" . $facebookImage->getIntrinsicWidth() . " x " . $facebookImage->getIntrinsicHeight() . "). The minimum size constraint is 200px by 200px";
+                        $message = "The facebook image ($facebookImage) is too small (" . $intrinsicWidth . " x " . $intrinsicHeight . "). The minimum size constraint is 200px by 200px";
                         if (
                             $facebookImage->getPath()->toAbsolutePath()->toString()
                             !==

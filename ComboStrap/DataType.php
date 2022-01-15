@@ -71,10 +71,17 @@ class DataType
             $varExport = var_export($targetValue, true);
             throw new ExceptionCombo("The value passed is not a numeric/nor a string. We can not translate it to an integer. Value: $varExport");
         }
-        if (!ctype_digit($targetValue)) {
-            throw new ExceptionCombo("The value ($targetValue) has non-numeric digit and can not be translated to an integer");
+        /**
+         * Float 12.345 will return 12
+         */
+        $int = intval($targetValue);
+        if (
+            $int === 0 &&
+            "$targetValue" !== "0"
+        ) {
+            throw new ExceptionCombo("The value ($targetValue) can not be cast to an integer.");
         }
-        return intval($targetValue);
+        return $int;
     }
 
 

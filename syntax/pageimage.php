@@ -180,34 +180,12 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     }
                 }
 
-                if ($targetRatio !== null) {
-
-                    $mime = $selectedPageImage->getPath()->getMime()->toString();
-                    switch ($mime) {
-                        case Mime::SVG:
-                            // Ratio is part of the request
-                            // because it is the definition of the viewBox
-                            // The rendering function takes care of it
-                            // and it's also passed in the fetch url
-                            break;
-                        default:
-                            /**
-                             * TODO: This code should move into the rendering function
-                             */
-//                            [$logicalWidthWithRatio, $logicalHeightWithRatio] = Image::getDimensionsWithRatio(
-//                                $targetRatio,
-//                                $selectedPageImage->getIntrinsicWidth(),
-//                                $selectedPageImage->getIntrinsicHeight()
-//                            );
-//                            if ($logicalWidthWithRatio !== null) {
-//                                $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $logicalWidthWithRatio);
-//                                if ($logicalHeightWithRatio !== null) {
-//                                    $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $logicalHeightWithRatio);
-//                                }
-//                            }
-                    }
-
-                }
+                /**
+                 * {@link Dimension::RATIO_ATTRIBUTE Ratio} is part of the request
+                 * because in svg it is the definition of the viewBox
+                 * The rendering function takes care of it
+                 * and it's also passed in the fetch url
+                 */
 
 
                 /**

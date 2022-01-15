@@ -267,6 +267,12 @@ class SvgDocument extends XmlDocument
                      * and is not overwritten
                      */
                     $width = $localTagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
+                    try {
+                        $width = Dimension::toPixelValue($width);
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("The requested width $width could not be converted to pixel. It returns the following error ({$e->getMessage()}). Processing was stopped");
+                        return parent::getXmlText();
+                    }
                     $localTagAttributes->addStyleDeclarationIfNotSet("max-width", "{$width}px");
 
                 }
@@ -283,10 +289,22 @@ class SvgDocument extends XmlDocument
          * can be an icon or an illustrative image
          *
          */
-        if ($this->getMediaWidth() !== null
-            && $this->getMediaHeight() !== null
-            && $this->getMediaWidth() == $this->getMediaHeight()
-            && $this->getMediaWidth() < 400) // 356 for logos telegram are the size of the twitter emoji but tile may be bigger ?
+        try {
+            $mediaWidth = $this->getMediaWidth();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The media width of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
+            return parent::getXmlText();
+        }
+        try {
+            $mediaHeight = $this->getMediaHeight();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The media height of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
+            return parent::getXmlText();
+        }
+        if ($mediaWidth !== null
+            && $mediaHeight !== null
+            && $mediaWidth == $mediaHeight
+            && $mediaWidth < 400) // 356 for logos telegram are the size of the twitter emoji but tile may be bigger ?
         {
             $svgStructureType = self::ICON_TYPE;
         } else {
@@ -398,11 +416,16 @@ class SvgDocument extends XmlDocument
         ) {
             // We get a crop, it means that we need to change the viewBox
             $ratio = $localTagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
-            $targetRatio = Dimension::convertTextualRatioToNumber($ratio);
+            try {
+                $targetRatio = Dimension::convertTextualRatioToNumber($ratio);
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The target ratio attribute ($ratio) returns the following error ({$e->getMessage()}). The svg processing was stopped");
+                return parent::getXmlText();
+            }
             [$width, $height] = Image::getCroppingDimensionsWithRatio(
                 $targetRatio,
-                $this->getMediaWidth(),
-                $this->getMediaHeight()
+                $mediaWidth,
+                $mediaHeight
             );
             $x = 0;
             $y = 0;
@@ -414,8 +437,8 @@ class SvgDocument extends XmlDocument
                     $height = $zoomFactor * $height;
                 }
                 // center
-                $actualWidth = $this->getMediaWidth();
-                $actualHeight = $this->getMediaHeight();
+                $actualWidth = $mediaWidth;
+                $actualHeight = $mediaHeight;
                 $x = -($width - $actualWidth) / 2;
                 $y = -($height - $actualHeight) / 2;
             }

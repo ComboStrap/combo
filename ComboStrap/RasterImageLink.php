@@ -108,6 +108,7 @@ class RasterImageLink extends ImageLink
             // The HTML validator does not expect an unit otherwise it send an error
             // https://validator.w3.org/
             $htmlLengthUnit = "";
+            $cssLengthUnit = "px";
 
             /**
              * Height
@@ -116,9 +117,15 @@ class RasterImageLink extends ImageLink
              * Note: The style is also set in {@link Dimension::processWidthAndHeight()}
              *
              */
-            $targetHeight = $image->getTargetHeight();
+            try {
+                $targetHeight = $image->getTargetHeight();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("No rendering for the image ($image). The target height reports a problem: {$e->getMessage()}");
+                return "";
+            }
             if (!empty($targetHeight)) {
                 $attributes->addHtmlAttributeValue("height", $targetHeight . $htmlLengthUnit);
+                $attributes->addStyleDeclarationIfNotSet("max-height", $targetHeight . $cssLengthUnit);
             }
 
 
@@ -134,7 +141,12 @@ class RasterImageLink extends ImageLink
              *
              * The max-width value is set
              */
-            $mediaWidthValue = $image->getIntrinsicWidth();
+            try {
+                $mediaWidthValue = $image->getIntrinsicWidth();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("No rendering for the image ($image). The intrinsic height reports a problem: {$e->getMessage()}");
+                return "";
+            }
             $srcValue = $image->getUrl();
 
             /**
@@ -159,13 +171,21 @@ class RasterImageLink extends ImageLink
                 /**
                  * The value of the target image
                  */
-                $targetWidth = $image->getTargetWidth();
+                try {
+                    $targetWidth = $image->getTargetWidth();
+                } catch (ExceptionCombo $e) {
+                    LogUtility::msg("No rendering for the image ($image). The target width reports a problem: {$e->getMessage()}");
+                    return "";
+                }
                 if (!empty($targetWidth)) {
 
                     if (!empty($targetHeight)) {
                         $image->checkLogicalRatioAgainstTargetRatio($targetWidth, $targetHeight);
                     }
                     $attributes->addHtmlAttributeValue("width", $targetWidth . $htmlLengthUnit);
+                    $attributes->addStyleDeclarationIfNotSet("max-width", $targetWidth . $cssLengthUnit);
+                    $attributes->addStyleDeclarationIfNotSet("width", "100%");
+
                 }
 
                 /**

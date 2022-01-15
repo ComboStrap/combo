@@ -341,12 +341,11 @@ abstract class Image extends Media
     public function getAltNotEmpty()
     {
         $title = $this->getTitle();
-        if (empty($title)) {
-            $generatedAlt = str_replace($this->getPath()->getLastNameWithoutExtension(), "-", " ");
-            return str_replace($generatedAlt, "_", " ");
-        } else {
+        if (!empty($title)) {
             return $title;
         }
+        $generatedAlt = str_replace("-", " ", $this->getPath()->getLastNameWithoutExtension());
+        return str_replace($generatedAlt, "_", " ");
     }
 
 

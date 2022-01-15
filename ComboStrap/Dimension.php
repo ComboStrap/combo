@@ -41,6 +41,12 @@ class Dimension
      * The ratio (16:9, ...) permits to change:
      *   * the viewBox in svg
      *   * the intrinsic dimension in raster
+     *
+     * It's then part of the request
+     * because in svg it is the definition of the viewBox
+     *
+     * The rendering function takes care of it
+     * and it's also passed in the fetch url
      */
     public const RATIO_ATTRIBUTE = "ratio";
 

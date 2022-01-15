@@ -44,7 +44,8 @@ class Icon extends ImageSvg
         self::LOGOS => "https://raw.githubusercontent.com/gilbarbara/logos/master/logos",
         self::CARBON => "https://raw.githubusercontent.com/carbon-design-system/carbon/main/packages/icons/src/svg/32",
         self::TWEET_EMOJI => "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg",
-        self::ANT_DESIGN => "https://raw.githubusercontent.com/ant-design/ant-design-icons/master/packages/icons-svg/svg"
+        self::ANT_DESIGN => "https://raw.githubusercontent.com/ant-design/ant-design-icons/master/packages/icons-svg/svg",
+        self::FAD => "https://raw.githubusercontent.com/fefanto/fontaudio/master/svgs/"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -80,7 +81,8 @@ class Icon extends ImageSvg
         "logos" => self::LOGOS,
         "carbon" => self::CARBON,
         "twemoji" => self::TWEET_EMOJI,
-        "ant-design" => self::ANT_DESIGN
+        "ant-design" => self::ANT_DESIGN,
+        "fad" => self::FAD
     );
 
     const FEATHER = "feather";
@@ -92,12 +94,13 @@ class Icon extends ImageSvg
     const MATERIAL_DESIGN_ACRONYM = "mdi";
     const TWEET_EMOJI = "twemoji";
     const ANT_DESIGN = "ant-design";
+    const FAD = "fad";
 
 
     /**
      * The function used to render an icon
      * @param TagAttributes $tagAttributes -  the icon attributes
-     * @return bool|mixed - false if any error or the HTML
+     * @return Icon
      * @throws ExceptionCombo
      */
     static public function create(TagAttributes $tagAttributes): Icon
@@ -106,8 +109,7 @@ class Icon extends ImageSvg
 
         $name = "name";
         if (!$tagAttributes->hasComponentAttribute($name)) {
-            LogUtility::msg("The attributes should have a name. It's mandatory for an icon.", LogUtility::LVL_MSG_ERROR, self::NAME);
-            return false;
+            throw new ExceptionCombo("The attributes should have a name. It's mandatory for an icon.", self::NAME);
         }
 
         /**
@@ -129,8 +131,8 @@ class Icon extends ImageSvg
                 // Trying to see if it's not in the template images directory
                 $message = "The media file could not be found in the media library. If you want an icon from an icon library, indicate a name without extension.";
                 $message .= "<BR> Media File Library tested: $mediaDokuPath";
-                LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::NAME);
-                return false;
+                throw new ExceptionCombo($message, self::NAME);
+
 
             }
 
@@ -167,8 +169,7 @@ class Icon extends ImageSvg
                     try {
                         FileSystems::createDirectory($iconDir);
                     } catch (ExceptionCombo $e) {
-                        LogUtility::msg("The icon directory ($iconDir) could not be created.", LogUtility::LVL_MSG_ERROR, self::NAME);
-                        return false;
+                        throw new ExceptionCombo("The icon directory ($iconDir) could not be created.", self::NAME, 0, $e);
                     }
                 }
 
@@ -190,8 +191,7 @@ class Icon extends ImageSvg
                 // Get the url
                 $iconLibraries = self::ICON_LIBRARY_URLS;
                 if (!isset($iconLibraries[$library])) {
-                    LogUtility::msg("The icon library ($library) is unknown. The icon could not be downloaded.", LogUtility::LVL_MSG_ERROR, self::NAME);
-                    return false;
+                    throw new ExceptionCombo("The icon library ($library) is unknown. The icon could not be downloaded.", self::NAME);
                 } else {
                     $iconBaseUrl = $iconLibraries[$library];
                 }
@@ -205,24 +205,26 @@ class Icon extends ImageSvg
                         try {
                             $iconName = self::getEmojiCodePoint($iconName);
                         } catch (ExceptionCombo $e) {
-                            LogUtility::msg("The emoji name $iconName is unknown. The emoji could not be downloaded.", LogUtility::LVL_MSG_ERROR, self::NAME);
-                            return false;
+                            throw new ExceptionCombo("The emoji name $iconName is unknown. The emoji could not be downloaded.", self::NAME, 0, $e);
                         }
                         break;
                     case self::ANT_DESIGN:
-                        // table-outlined where table is the svg, outline the category
-                        $names = explode("-", $iconName);
-                        if (sizeof($names) != 2) {
-                            LogUtility::msg("We expect that a ant design icon name ($iconName) has two parts separated by a `-` (example: table-outlined). The icon could not be downloaded.", LogUtility::LVL_MSG_ERROR, self::NAME);
-                            return false;
+                        // table-outlined where table is the svg, outlined the category
+                        // ordered-list-outlined where ordered-list is the svg, outlined the category
+                        $iconProcessed = $iconName;
+                        $index = strrpos($iconProcessed, "-");
+                        if ($index === false) {
+                            throw new ExceptionCombo ("We expect that a ant design icon name ($iconName) has two parts separated by a `-` (example: table-outlined). The icon could not be downloaded.", self::NAME);
                         }
-                        $iconName = $names[0];
-                        $iconType = $names[1];
+                        $iconName = substr($iconProcessed, 0, $index);
+                        $iconType = substr($iconProcessed, $index + 1);
                         $iconBaseUrl .= "/$iconType";
                         break;
                     case self::CARBON:
                         $iconName = self::getCarbonPhysicalName($iconName);
                         break;
+                    case self::FAD:
+                        $iconName = self::getFadPhysicalName($iconName);
                 }
 
 
@@ -342,10 +344,26 @@ class Icon extends ImageSvg
         $jsonContent = FileSystems::getContent($path);
         $jsonArray = Json::createFromString($jsonContent)->toArray();
         $physicalName = $jsonArray[$logicalName];
-        if($physicalName===null){
+        if ($physicalName === null) {
             LogUtility::msg("The icon ($logicalName) is unknown as 32x32 carbon icon");
             // by default, just lowercase
             return lower($logicalName);
+        }
+        return $physicalName;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private static function getFadPhysicalName($logicalName)
+    {
+        $path = LocalPath::createFromPath(Resources::getDictionaryDirectory() . "/fad-icons.json");
+        $jsonContent = FileSystems::getContent($path);
+        $jsonArray = Json::createFromString($jsonContent)->toArray();
+        $physicalName = $jsonArray[$logicalName];
+        if ($physicalName === null) {
+            LogUtility::msg("The icon ($logicalName) is unknown as fad icon");
+            return $logicalName;
         }
         return $physicalName;
     }

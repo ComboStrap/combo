@@ -109,6 +109,7 @@ class SvgDocument extends XmlDocument
     const DEFAULT_ICON_WIDTH = "24";
 
     const CURRENT_COLOR = "currentColor";
+    const VIEW_BOX = "viewBox";
 
     /**
      * @var string - a name identifier that is added in the SVG
@@ -163,6 +164,7 @@ class SvgDocument extends XmlDocument
      *   This class should be merged with {@link ImageSvg}
      *   Because we use only {@link Image} function that are here not available because we loose the fact that this is an image
      *   For instance {@link Image::getCroppingDimensionsWithRatio()}
+     * @throws ExceptionCombo
      */
     public function getXmlText(TagAttributes $tagAttributes = null): string
     {
@@ -171,6 +173,24 @@ class SvgDocument extends XmlDocument
             $localTagAttributes = TagAttributes::createEmpty();
         } else {
             $localTagAttributes = TagAttributes::createFromTagAttributes($tagAttributes);
+        }
+
+        /**
+         * ViewBox should exist
+         */
+        $viewBox = $this->getXmlDom()->documentElement->getAttribute(self::VIEW_BOX);
+        if($viewBox===""){
+            $width = $this->getXmlDom()->documentElement->getAttribute("width");
+            if($width===""){
+                LogUtility::msg("Svg processing stopped. Bad svg: We can't determine the width of the svg ($this) (The viewBox and the width does not exist) ", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+                return parent::getXmlText();
+            }
+            $height =  $this->getXmlDom()->documentElement->getAttribute("height");
+            if($height===""){
+                LogUtility::msg("Svg processing stopped. Bad svg: We can't determine the height of the svg ($this) (The viewBox and the height does not exist) ", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+                return parent::getXmlText();
+            }
+            $this->getXmlDom()->documentElement->setAttribute(self::VIEW_BOX,"0 0 $width $height");
         }
 
         if ($this->shouldOptimize()) {
@@ -442,7 +462,7 @@ class SvgDocument extends XmlDocument
                 $x = -($width - $actualWidth) / 2;
                 $y = -($height - $actualHeight) / 2;
             }
-            $this->setRootAttribute("viewBox", "$x $y $width $height");
+            $this->setRootAttribute(self::VIEW_BOX, "$x $y $width $height");
 
         }
 
@@ -519,17 +539,31 @@ class SvgDocument extends XmlDocument
      */
     public function getMediaWidth(): int
     {
-        $viewBox = $this->getXmlDom()->documentElement->getAttribute("viewBox");
-        if ($viewBox === "") {
-            throw new ExceptionCombo("The svg ($this) does not have a viewBox attribute, the intrinsic width cannot be determined");
+        $viewBox = $this->getXmlDom()->documentElement->getAttribute(self::VIEW_BOX);
+        if ($viewBox !== "") {
+            $attributes = explode(" ", $viewBox);
+            $viewBoxWidth = $attributes[2];
+            try {
+                return DataType::toInteger($viewBoxWidth);
+            } catch (ExceptionCombo $e) {
+                throw new ExceptionCombo("The media with ($viewBoxWidth) of the svg image ($this) is not a valid integer value");
+            }
         }
-        $attributes = explode(" ", $viewBox);
-        $viewBoxWidth = $attributes[2];
+
+        /**
+         * Case with some icon such as
+         * https://raw.githubusercontent.com/fefanto/fontaudio/master/svgs/fad-random-1dice.svg
+         */
+        $width = $this->getXmlDom()->documentElement->getAttribute("width");
+        if ($width === "") {
+            throw new ExceptionCombo("The svg ($this) does not have a viewBox or width attribute, the intrinsic width cannot be determined");
+        }
         try {
-            return DataType::toInteger($viewBoxWidth);
+            return DataType::toInteger($width);
         } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The media with ($viewBoxWidth) of the svg image ($this) is not a valid integer value");
+            throw new ExceptionCombo("The media width ($width) of the svg image ($this) is not a valid integer value");
         }
+
     }
 
     /**
@@ -537,17 +571,30 @@ class SvgDocument extends XmlDocument
      */
     public function getMediaHeight(): int
     {
-        $viewBox = $this->getXmlDom()->documentElement->getAttribute("viewBox");
-        if ($viewBox === "") {
-            throw new ExceptionCombo("The svg ($this) does not have a viewBox attribute, the intrinsic height cannot be determined");
+        $viewBox = $this->getXmlDom()->documentElement->getAttribute(self::VIEW_BOX);
+        if ($viewBox !== "") {
+            $attributes = explode(" ", $viewBox);
+            $viewBoxHeight = $attributes[3];
+            try {
+                return DataType::toInteger($viewBoxHeight);
+            } catch (ExceptionCombo $e) {
+                throw new ExceptionCombo("The media height of the svg image ($this) is not a valid integer value");
+            }
         }
-        $attributes = explode(" ", $viewBox);
-        $viewBoxHeight = $attributes[3];
+        /**
+         * Case with some icon such as
+         * https://raw.githubusercontent.com/fefanto/fontaudio/master/svgs/fad-random-1dice.svg
+         */
+        $height = $this->getXmlDom()->documentElement->getAttribute("height");
+        if ($height === "") {
+            throw new ExceptionCombo("The svg ($this) does not have a viewBox or height attribute, the intrinsic height cannot be determined");
+        }
         try {
-            return DataType::toInteger($viewBoxHeight);
+            return DataType::toInteger($height);
         } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The media height of the svg image ($this) is not a valid integer value");
+            throw new ExceptionCombo("The media width ($height) of the svg image ($this) is not a valid integer value");
         }
+
     }
 
 
@@ -664,7 +711,7 @@ class SvgDocument extends XmlDocument
                     $heightPixel = Unit::toPixel($heightAttributeValue);
 
                     // ViewBox
-                    $viewBoxAttribute = $documentElement->getAttribute("viewBox");
+                    $viewBoxAttribute = $documentElement->getAttribute(self::VIEW_BOX);
                     if (!empty($viewBoxAttribute)) {
                         $viewBoxAttributeAsArray = StringUtility::explodeAndTrim($viewBoxAttribute, " ");
 

@@ -308,12 +308,14 @@ class SvgDocument extends XmlDocument
         {
             $svgStructureType = self::ICON_TYPE;
         } else {
-
             $svgStructureType = self::ILLUSTRATION_TYPE;
 
-            // some icon may be bigger in size than 400 or not squared
-            // if the usage is determined, it just takes over.
-            if ($svgUsageType === self::ICON_TYPE) {
+            // some icon may be bigger
+            // in size than 400. example 1024 for ant-design:table-outlined
+            // https://github.com/ant-design/ant-design-icons/blob/master/packages/icons-svg/svg/outlined/table.svg
+            // or not squared
+            // if the usage is determined or the svg is in the icon directory, it just takes over.
+            if ($svgUsageType === self::ICON_TYPE || $this->isInIconDirectory()) {
                 $svgStructureType = self::ICON_TYPE;
             }
 
@@ -429,13 +431,11 @@ class SvgDocument extends XmlDocument
             );
             $x = 0;
             $y = 0;
-            if ($svgStructureType == self::ICON_TYPE) {
+            if ($svgStructureType === self::ICON_TYPE) {
                 // icon case, we zoom out otherwise, this is ugly, the icon takes the whole place
                 $zoomFactor = 3;
-                if ($width < $zoomFactor * 20) {
-                    $width = $zoomFactor * $width;
-                    $height = $zoomFactor * $height;
-                }
+                $width = $zoomFactor * $width;
+                $height = $zoomFactor * $height;
                 // center
                 $actualWidth = $mediaWidth;
                 $actualHeight = $mediaHeight;
@@ -696,15 +696,13 @@ class SvgDocument extends XmlDocument
              */
             $elementsToDeleteConf = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style");
             $elementsToDelete = StringUtility::explodeAndTrim($elementsToDeleteConf, ",");
-            $iconNameSpace = PluginUtility::getConfValue(Icon::CONF_ICONS_MEDIA_NAMESPACE, Icon::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
+
             foreach ($elementsToDelete as $elementToDelete) {
-                if ($elementToDelete === "style" && $this->path !== null) {
-                    if (strpos($this->path->toString(), $iconNameSpace) !== false) {
-                        // icon library (downloaded) have high trust
-                        // they may include style in the defs
-                        // example carbon:SQL
-                        continue;
-                    }
+                if ($elementToDelete === "style" && $this->isInIconDirectory()) {
+                    // icon library (downloaded) have high trust
+                    // they may include style in the defs
+                    // example carbon:SQL
+                    continue;
                 }
                 $nodes = $this->xpath("//*[local-name()='$elementToDelete']");
                 foreach ($nodes as $node) {
@@ -773,6 +771,18 @@ class SvgDocument extends XmlDocument
             return $this->name;
         }
         return "unknown";
+    }
+
+    private function isInIconDirectory(): bool
+    {
+        if ($this->path == null) {
+            return false;
+        }
+        $iconNameSpace = PluginUtility::getConfValue(Icon::CONF_ICONS_MEDIA_NAMESPACE, Icon::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
+        if (strpos($this->path->toString(), $iconNameSpace) !== false) {
+            return true;
+        }
+        return false;
     }
 
 

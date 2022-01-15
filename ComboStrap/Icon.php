@@ -43,7 +43,8 @@ class Icon extends ImageSvg
         self::CODE_ICON => "https://raw.githubusercontent.com/microsoft/vscode-codicons/main/src/icons",
         self::LOGOS => "https://raw.githubusercontent.com/gilbarbara/logos/master/logos",
         self::CARBON => "https://raw.githubusercontent.com/carbon-design-system/carbon/main/packages/icons/src/svg/32",
-        self::TWEET_EMOJI => "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg"
+        self::TWEET_EMOJI => "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg",
+        self::ANT_DESIGN => "https://raw.githubusercontent.com/ant-design/ant-design-icons/master/packages/icons-svg/svg"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -53,7 +54,8 @@ class Icon extends ImageSvg
         self::CODE_ICON => "https://microsoft.github.io/vscode-codicons/",
         self::LOGOS => "https://svgporn.com/",
         self::CARBON => "https://www.carbondesignsystem.com/guidelines/icons/library/",
-        self::TWEET_EMOJI => "https://twemoji.twitter.com/"
+        self::TWEET_EMOJI => "https://twemoji.twitter.com/",
+        self::ANT_DESIGN => "https://ant.design/components/icon/"
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
@@ -77,7 +79,8 @@ class Icon extends ImageSvg
         "codicon" => self::CODE_ICON,
         "logos" => self::LOGOS,
         "carbon" => self::CARBON,
-        "twemoji" => self::TWEET_EMOJI
+        "twemoji" => self::TWEET_EMOJI,
+        "ant-design" => self::ANT_DESIGN
     );
 
     const FEATHER = "feather";
@@ -88,12 +91,14 @@ class Icon extends ImageSvg
     const CARBON = "carbon";
     const MATERIAL_DESIGN_ACRONYM = "mdi";
     const TWEET_EMOJI = "twemoji";
+    const ANT_DESIGN = "ant-design";
 
 
     /**
      * The function used to render an icon
      * @param TagAttributes $tagAttributes -  the icon attributes
      * @return bool|mixed - false if any error or the HTML
+     * @throws ExceptionCombo
      */
     static public function create(TagAttributes $tagAttributes): Icon
     {
@@ -182,16 +187,6 @@ class Icon extends ImageSvg
                     $library = $acronymLibraries[$library];
                 }
 
-                // name to code point for emoji
-                if ($library === self::TWEET_EMOJI) {
-                    try {
-                        $iconName = self::getEmojiCodePoint($iconName);
-                    } catch (ExceptionCombo $e) {
-                        LogUtility::msg("The emoji name $iconName is unknown. The emoji could not be downloaded.", LogUtility::LVL_MSG_ERROR, self::NAME);
-                        return false;
-                    }
-                }
-
                 // Get the url
                 $iconLibraries = self::ICON_LIBRARY_URLS;
                 if (!isset($iconLibraries[$library])) {
@@ -200,6 +195,33 @@ class Icon extends ImageSvg
                 } else {
                     $iconBaseUrl = $iconLibraries[$library];
                 }
+
+                /**
+                 * Name processing
+                 */
+                switch ($library) {
+
+                    case self::TWEET_EMOJI:
+                        try {
+                            $iconName = self::getEmojiCodePoint($iconName);
+                        } catch (ExceptionCombo $e) {
+                            LogUtility::msg("The emoji name $iconName is unknown. The emoji could not be downloaded.", LogUtility::LVL_MSG_ERROR, self::NAME);
+                            return false;
+                        }
+                        break;
+                    case self::ANT_DESIGN:
+                        // table-outlined where table is the svg, outline the category
+                        $names = explode("-", $iconName);
+                        if (sizeof($names) != 2) {
+                            LogUtility::msg("We expect that a ant design icon name ($iconName) has two parts separated by a `-` (example: table-outlined). The icon could not be downloaded.", LogUtility::LVL_MSG_ERROR, self::NAME);
+                            return false;
+                        }
+                        $iconName = $names[0];
+                        $iconType = $names[1];
+                        $iconBaseUrl .= "/$iconType";
+                        break;
+                }
+
 
                 // The url
                 $downloadUrl = "$iconBaseUrl/$iconName.svg";

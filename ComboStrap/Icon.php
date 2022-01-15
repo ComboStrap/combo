@@ -220,6 +220,9 @@ class Icon extends ImageSvg
                         $iconType = $names[1];
                         $iconBaseUrl .= "/$iconType";
                         break;
+                    case self::CARBON:
+                        $iconName = self::getCarbonPhysicalName($iconName);
+                        break;
                 }
 
 
@@ -320,6 +323,31 @@ class Icon extends ImageSvg
         $jsonContent = FileSystems::getContent($path);
         $jsonArray = Json::createFromString($jsonContent)->toArray();
         return $jsonArray[$emojiName];
+    }
+
+    /**
+     * Iconify normalized the name of the carbon library (making them lowercase)
+     *
+     * For instance, CSV is csv (https://icon-sets.iconify.design/carbon/csv/)
+     *
+     * This dictionary reproduce it.
+     *
+     * @param string $logicalName
+     * @return mixed
+     * @throws ExceptionCombo
+     */
+    private static function getCarbonPhysicalName(string $logicalName)
+    {
+        $path = LocalPath::createFromPath(Resources::getDictionaryDirectory() . "/carbon-icons.json");
+        $jsonContent = FileSystems::getContent($path);
+        $jsonArray = Json::createFromString($jsonContent)->toArray();
+        $physicalName = $jsonArray[$logicalName];
+        if($physicalName===null){
+            LogUtility::msg("The icon ($logicalName) is unknown as 32x32 carbon icon");
+            // by default, just lowercase
+            return lower($logicalName);
+        }
+        return $physicalName;
     }
 
 

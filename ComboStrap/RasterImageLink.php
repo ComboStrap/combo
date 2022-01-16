@@ -124,7 +124,14 @@ class RasterImageLink extends ImageLink
                 return "";
             }
             if (!empty($targetHeight)) {
+                /**
+                 * HTML height attribute is important for the ratio calculation
+                 * No layout shift
+                 */
                 $attributes->addHtmlAttributeValue("height", $targetHeight . $htmlLengthUnit);
+                /**
+                 * We don't allow the image to scale up by default
+                 */
                 $attributes->addStyleDeclarationIfNotSet("max-height", $targetHeight . $cssLengthUnit);
             }
 
@@ -144,7 +151,7 @@ class RasterImageLink extends ImageLink
             try {
                 $mediaWidthValue = $image->getIntrinsicWidth();
             } catch (ExceptionCombo $e) {
-                LogUtility::msg("No rendering for the image ($image). The intrinsic height reports a problem: {$e->getMessage()}");
+                LogUtility::msg("No rendering for the image ($image). The intrinsic width reports a problem: {$e->getMessage()}");
                 return "";
             }
             $srcValue = $image->getUrl();
@@ -182,8 +189,17 @@ class RasterImageLink extends ImageLink
                     if (!empty($targetHeight)) {
                         $image->checkLogicalRatioAgainstTargetRatio($targetWidth, $targetHeight);
                     }
+                    /**
+                     * HTML Width attribute is important to avoid layout shift
+                     */
                     $attributes->addHtmlAttributeValue("width", $targetWidth . $htmlLengthUnit);
+                    /**
+                     * We don't allow the image to scale up by default
+                     */
                     $attributes->addStyleDeclarationIfNotSet("max-width", $targetWidth . $cssLengthUnit);
+                    /**
+                     * We allow the image to scale down up to 100% of its parent
+                     */
                     $attributes->addStyleDeclarationIfNotSet("width", "100%");
 
                 }

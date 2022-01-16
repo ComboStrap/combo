@@ -40,7 +40,7 @@ abstract class Image extends Media
     /**
      * @param Path $path
      * @param null $attributes
-     * @return ImageRaster|ImageSvg|null
+     * @return ImageRaster|ImageSvg
      * @throws ExceptionCombo if not valid
      */
     public static function createImageFromPath(Path $path, $attributes = null)
@@ -50,8 +50,7 @@ abstract class Image extends Media
 
         if (!$mime->isImage()) {
 
-            LogUtility::msg("The file ($path) has not been detected as being an image, media returned", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return null;
+            throw new ExceptionCombo("The file ($path) has not been detected as being an image, media returned", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
 
         }
         if (substr($mime, 6) == "svg+xml") {

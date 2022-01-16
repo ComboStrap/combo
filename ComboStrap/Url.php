@@ -21,12 +21,17 @@ class Url
      */
     private $query;
 
+
     /**
      * UrlUtility constructor.
+     * @throws ExceptionCombo
      */
     public function __construct($url)
     {
         $this->urlComponents = parse_url($url);
+        if ($this->urlComponents === false) {
+            throw new ExceptionCombo("The url ($url) is not valid");
+        }
         parse_str($this->urlComponents['query'], $queryKeys);
         $this->query = $queryKeys;
     }
@@ -35,10 +40,9 @@ class Url
     const RESERVED_WORDS = [':', '!', '#', '$', '&', '\'', '(', ')', '*', '+', ',', '/', ';', '=', '?', '@', '[', ']'];
 
     /**
-     * A text to a slug
+     * A text to an encoded url
      * @param $string -  a string
      * @param string $separator - the path separator in the string
-     * @return string - a slug that can go into a url
      */
     public static function encodeToUrlPath($string, string $separator = DokuPath::PATH_SEPARATOR): string
     {
@@ -63,13 +67,12 @@ class Url
 
     /**
      * Extract the value of a property
-     * @param $URL
      * @param $propertyName
      * @return string - the value of the property
      */
-    public static function getPropertyValue($URL, $propertyName)
+    public function getPropertyValue($propertyName): string
     {
-        $parsedQuery = parse_url($URL, PHP_URL_QUERY);
+        $parsedQuery = $this->urlComponents["query"];
         $parsedQueryArray = [];
         parse_str($parsedQuery, $parsedQueryArray);
         return $parsedQueryArray[$propertyName];
@@ -77,19 +80,49 @@ class Url
 
     /**
      * Validate URL
-     * Allows for port, path and query string validations
-     * @param string $url string containing url user input
      * @return   boolean     Returns TRUE/FALSE
      */
-    public static function isValidURL($url)
+    public static function isValid($url): bool
     {
-        // of preg_match('/^https?:\/\//',$url) ? from redirect plugin
-        return preg_match('|^http(s)?://[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$|i', $url);
+        /**
+         *
+         * @var false
+         *
+         * Note: Url validation is hard with regexp
+         * for instance:
+         *  - http://example.lan/utility/a-combostrap-component-to-render-web-code-in-a-web-page-javascript-html-...-u8fe6ahw
+         *  - does not pass return preg_match('|^http(s)?://[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$|i', $url);
+         * of preg_match('/^https?:\/\//',$url) ? from redirect plugin
+         *
+         * We try to create the object, the object use the {@link parse_url()}
+         * method to validate or send an exception if it can be parsed
+         */
+        $urlObject = null;
+        try {
+            $urlObject = Url::create($url);
+        } catch (ExceptionCombo $e) {
+            return false;
+        }
+
+        $scheme = $urlObject->getScheme();
+        if (!in_array($scheme, ["http", "https"])) {
+            return false;
+        }
+        return true;
+
     }
 
-    public static function create(string $url)
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function create(string $url): Url
     {
         return new Url($url);
+    }
+
+    private function getScheme()
+    {
+        return $this->urlComponents["scheme"];
     }
 
 

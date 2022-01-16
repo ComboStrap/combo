@@ -34,7 +34,6 @@
   * [Templating](https://combostrap.com/template)
 
 
-
 And more. Discover them at [ComboStrap](https://combostrap.com)
 
 This repository stores the [Combo Dokuwiki plugin](https://combostrap.com/combostrap#combo)

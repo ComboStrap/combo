@@ -265,7 +265,12 @@ class LogUtility
         if ($message === "" || $message === null) {
             $newMessage = "The passed message to the log was empty or null. BackTrace: \n";
             ob_start();
-            debug_print_backtrace();
+            /**
+             * To avoid
+             * PHP Fatal error:  Allowed memory size of 2147483648 bytes exhausted (tried to allocate 1876967424 bytes)
+             */
+            $limit = 10;
+            debug_print_backtrace(0, $limit);
             $trace = ob_get_contents();
             ob_end_clean();
             $newMessage .= $trace;

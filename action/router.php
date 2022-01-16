@@ -774,7 +774,17 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
 
         // An external url ?
-        if (Url::isValid($target)) {
+        $isValid = Url::isValid($target);
+        // If there is a bug in the isValid function for an internal url
+        // We get a loop.
+        // The Url becomes the id, the id is unknown and we do a redirect again
+        //
+        // We check then if the target starts with the base url
+        // if this is the case, it's valid
+        if (!$isValid && strpos($target, DOKU_URL) === 0) {
+            $isValid = true;
+        }
+        if ($isValid) {
 
             // defend against HTTP Response Splitting
             // https://owasp.org/www-community/attacks/HTTP_Response_Splitting

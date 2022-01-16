@@ -46,7 +46,8 @@ class Icon extends ImageSvg
         self::TWEET_EMOJI => "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg",
         self::ANT_DESIGN => "https://raw.githubusercontent.com/ant-design/ant-design-icons/master/packages/icons-svg/svg",
         self::FAD => "https://raw.githubusercontent.com/fefanto/fontaudio/master/svgs",
-        self::CLARITY => "https://raw.githubusercontent.com/vmware/clarity-assets/master/icons/essential"
+        self::CLARITY => "https://raw.githubusercontent.com/vmware/clarity-assets/master/icons/essential",
+        self::OCTICON => "https://raw.githubusercontent.com/primer/octicons/main/icons"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -58,7 +59,8 @@ class Icon extends ImageSvg
         self::CARBON => "https://www.carbondesignsystem.com/guidelines/icons/library/",
         self::TWEET_EMOJI => "https://twemoji.twitter.com/",
         self::ANT_DESIGN => "https://ant.design/components/icon/",
-        self::CLARITY => "https://clarity.design/foundation/icons/"
+        self::CLARITY => "https://clarity.design/foundation/icons/",
+        self::OCTICON => "https://primer.style/octicons/"
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
@@ -85,7 +87,8 @@ class Icon extends ImageSvg
         "twemoji" => self::TWEET_EMOJI,
         "ant-design" => self::ANT_DESIGN,
         "fad" => self::FAD,
-        "clarity" => self::CLARITY
+        "clarity" => self::CLARITY,
+        "octicon" => self::OCTICON
     );
 
     const FEATHER = "feather";
@@ -99,6 +102,7 @@ class Icon extends ImageSvg
     const ANT_DESIGN = "ant-design";
     const FAD = "fad";
     const CLARITY = "clarity";
+    const OCTICON = "octicon";
 
 
     /**

@@ -168,7 +168,7 @@ class syntax_plugin_combo_inote extends DokuWiki_Syntax_Plugin
                         }
                     } else {
                         if (!$tagAttributes->hasComponentAttribute("background-color")) {
-                            $tagAttributes->addStyleDeclaration("background-color", "#fff79f"); // lum - 195
+                            $tagAttributes->addStyleDeclarationIfNotSet("background-color", "#fff79f"); // lum - 195
                             $tagAttributes->addClassName("text-dark");
                         }
                     }

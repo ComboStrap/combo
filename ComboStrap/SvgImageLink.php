@@ -177,6 +177,11 @@ class SvgImageLink extends ImageLink
         $responseAttributes->removeAttributeIfPresent(PagePath::PROPERTY_NAME);
 
         /**
+         * Ratio is an attribute of the request, not or rendering
+         */
+        $responseAttributes->removeAttributeIfPresent(Dimension::RATIO_ATTRIBUTE);
+
+        /**
          * Return the image
          */
         return '<img ' . $responseAttributes->toHTMLAttributeString() . '/>';

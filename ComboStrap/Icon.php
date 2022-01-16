@@ -28,7 +28,7 @@ require_once(__DIR__ . '/PluginUtility.php');
  * Injection via javascript to avoid problem with the php svgsimple library
  * https://www.npmjs.com/package/svg-injector
  */
-class Icon
+class Icon extends ImageSvg
 {
     const CONF_ICONS_MEDIA_NAMESPACE = "icons_namespace";
     const CONF_ICONS_MEDIA_NAMESPACE_DEFAULT = ":" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME . ":icons";
@@ -40,9 +40,14 @@ class Icon
         self::BOOTSTRAP => "https://raw.githubusercontent.com/twbs/icons/main/icons",
         self::MATERIAL_DESIGN => "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg",
         self::FEATHER => "https://raw.githubusercontent.com/feathericons/feather/master/icons",
-        self::CODE_ICON => "https://raw.githubusercontent.com/microsoft/vscode-codicons/main/src/icons/",
-        self::LOGOS => "https://raw.githubusercontent.com/gilbarbara/logos/master/logos/",
-        self::CARBON => "https://raw.githubusercontent.com/carbon-design-system/carbon/main/packages/icons/src/svg/32/"
+        self::CODE_ICON => "https://raw.githubusercontent.com/microsoft/vscode-codicons/main/src/icons",
+        self::LOGOS => "https://raw.githubusercontent.com/gilbarbara/logos/master/logos",
+        self::CARBON => "https://raw.githubusercontent.com/carbon-design-system/carbon/main/packages/icons/src/svg/32",
+        self::TWEET_EMOJI => "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg",
+        self::ANT_DESIGN => "https://raw.githubusercontent.com/ant-design/ant-design-icons/master/packages/icons-svg/svg",
+        self::FAD => "https://raw.githubusercontent.com/fefanto/fontaudio/master/svgs",
+        self::CLARITY => "https://raw.githubusercontent.com/vmware/clarity-assets/master/icons/essential",
+        self::OCTICON => "https://raw.githubusercontent.com/primer/octicons/main/icons"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -51,7 +56,11 @@ class Icon
         self::FEATHER => "https://feathericons.com/",
         self::CODE_ICON => "https://microsoft.github.io/vscode-codicons/",
         self::LOGOS => "https://svgporn.com/",
-        self::CARBON => "https://www.carbondesignsystem.com/guidelines/icons/library/"
+        self::CARBON => "https://www.carbondesignsystem.com/guidelines/icons/library/",
+        self::TWEET_EMOJI => "https://twemoji.twitter.com/",
+        self::ANT_DESIGN => "https://ant.design/components/icon/",
+        self::CLARITY => "https://clarity.design/foundation/icons/",
+        self::OCTICON => "https://primer.style/octicons/"
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
@@ -74,7 +83,12 @@ class Icon
         "fe" => self::FEATHER,
         "codicon" => self::CODE_ICON,
         "logos" => self::LOGOS,
-        "carbon" => self::CARBON
+        "carbon" => self::CARBON,
+        "twemoji" => self::TWEET_EMOJI,
+        "ant-design" => self::ANT_DESIGN,
+        "fad" => self::FAD,
+        "clarity" => self::CLARITY,
+        "octicon" => self::OCTICON
     );
 
     const FEATHER = "feather";
@@ -84,21 +98,26 @@ class Icon
     const LOGOS = "logos";
     const CARBON = "carbon";
     const MATERIAL_DESIGN_ACRONYM = "mdi";
+    const TWEET_EMOJI = "twemoji";
+    const ANT_DESIGN = "ant-design";
+    const FAD = "fad";
+    const CLARITY = "clarity";
+    const OCTICON = "octicon";
 
 
     /**
      * The function used to render an icon
      * @param TagAttributes $tagAttributes -  the icon attributes
-     * @return bool|mixed - false if any error or the HTML
+     * @return Icon
+     * @throws ExceptionCombo
      */
-    static public function renderIconByAttributes(TagAttributes $tagAttributes)
+    static public function create(TagAttributes $tagAttributes): Icon
     {
 
 
         $name = "name";
         if (!$tagAttributes->hasComponentAttribute($name)) {
-            LogUtility::msg("The attributes should have a name. It's mandatory for an icon.", LogUtility::LVL_MSG_ERROR, self::NAME);
-            return false;
+            throw new ExceptionCombo("The attributes should have a name. It's mandatory for an icon.", self::NAME);
         }
 
         /**
@@ -120,8 +139,8 @@ class Icon
                 // Trying to see if it's not in the template images directory
                 $message = "The media file could not be found in the media library. If you want an icon from an icon library, indicate a name without extension.";
                 $message .= "<BR> Media File Library tested: $mediaDokuPath";
-                LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::NAME);
-                return false;
+                throw new ExceptionCombo($message, self::NAME);
+
 
             }
 
@@ -158,8 +177,7 @@ class Icon
                     try {
                         FileSystems::createDirectory($iconDir);
                     } catch (ExceptionCombo $e) {
-                        LogUtility::msg("The icon directory ($iconDir) could not be created.", LogUtility::LVL_MSG_ERROR, self::NAME);
-                        return false;
+                        throw new ExceptionCombo("The icon directory ($iconDir) could not be created.", self::NAME, 0, $e);
                     }
                 }
 
@@ -181,11 +199,42 @@ class Icon
                 // Get the url
                 $iconLibraries = self::ICON_LIBRARY_URLS;
                 if (!isset($iconLibraries[$library])) {
-                    LogUtility::msg("The icon library ($library) is unknown. The icon could not be downloaded.", LogUtility::LVL_MSG_ERROR, self::NAME);
-                    return false;
+                    throw new ExceptionCombo("The icon library ($library) is unknown. The icon could not be downloaded.", self::NAME);
                 } else {
                     $iconBaseUrl = $iconLibraries[$library];
                 }
+
+                /**
+                 * Name processing
+                 */
+                switch ($library) {
+
+                    case self::TWEET_EMOJI:
+                        try {
+                            $iconName = self::getEmojiCodePoint($iconName);
+                        } catch (ExceptionCombo $e) {
+                            throw new ExceptionCombo("The emoji name $iconName is unknown. The emoji could not be downloaded.", self::NAME, 0, $e);
+                        }
+                        break;
+                    case self::ANT_DESIGN:
+                        // table-outlined where table is the svg, outlined the category
+                        // ordered-list-outlined where ordered-list is the svg, outlined the category
+                        $iconProcessed = $iconName;
+                        $index = strrpos($iconProcessed, "-");
+                        if ($index === false) {
+                            throw new ExceptionCombo ("We expect that a ant design icon name ($iconName) has two parts separated by a `-` (example: table-outlined). The icon could not be downloaded.", self::NAME);
+                        }
+                        $iconName = substr($iconProcessed, 0, $index);
+                        $iconType = substr($iconProcessed, $index + 1);
+                        $iconBaseUrl .= "/$iconType";
+                        break;
+                    case self::CARBON:
+                        $iconName = self::getCarbonPhysicalName($iconName);
+                        break;
+                    case self::FAD:
+                        $iconName = self::getFadPhysicalName($iconName);
+                }
+
 
                 // The url
                 $downloadUrl = "$iconBaseUrl/$iconName.svg";
@@ -211,35 +260,19 @@ class Icon
 
         }
 
-        if (FileSystems::exists($mediaDokuPath)) {
+        /**
+         * After optimization, the width and height of the svg are gone
+         * but the icon type set them again
+         *
+         * The icon type is used to set:
+         *   * the default dimension
+         *   * color styling
+         *   * disable the responsive properties
+         *
+         */
+        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
 
-
-            /**
-             * After optimization, the width and height of the svg are gone
-             * but the icon type set them again
-             *
-             * The icon type is used to set:
-             *   * the default dimension
-             *   * color styling
-             *   * disable the responsive properties
-             *
-             */
-            $tagAttributes->addComponentAttributeValue("type", SvgDocument::ICON_TYPE);
-
-
-            $svgImageLink = SvgImageLink::createMediaLinkFromId(
-                $mediaDokuPath->getAbsolutePath(),
-                null,
-                $tagAttributes
-            );
-            return $svgImageLink->renderMediaTag();
-
-        } else {
-
-            return "";
-
-        }
-
+        return new Icon($mediaDokuPath, $tagAttributes);
 
     }
 
@@ -258,7 +291,7 @@ class Icon
         //   * Available at: https://raw.githubusercontent.com/Templarian/MaterialDesign/master/meta.json
         //   * See doc: https://github.com/Templarian/MaterialDesign-Site/blob/master/src/content/api.md)
         $arrayFormat = true;
-        $iconMetaJson = json_decode(file_get_contents(__DIR__ . '/icon-meta.json'), $arrayFormat);
+        $iconMetaJson = json_decode(file_get_contents(__DIR__ . '/../resources/dictionary/icon-meta.json'), $arrayFormat);
         $iconId = null;
         foreach ($iconMetaJson as $key => $value) {
             if ($value['name'] == $iconName) {
@@ -283,9 +316,85 @@ class Icon
 
     }
 
-    private static function getLibraries()
+    private static function getLibraries(): array
     {
-        return array_merge(self::PUBLIC_LIBRARY_ACRONYM, self::DEPRECATED_LIBRARY_ACRONYM);
+        return array_merge(
+            self::PUBLIC_LIBRARY_ACRONYM,
+            self::DEPRECATED_LIBRARY_ACRONYM
+        );
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function getEmojiCodePoint(string $emojiName)
+    {
+        $path = LocalPath::createFromPath(Resources::getDictionaryDirectory() . "/emojis.json");
+        $jsonContent = FileSystems::getContent($path);
+        $jsonArray = Json::createFromString($jsonContent)->toArray();
+        return $jsonArray[$emojiName];
+    }
+
+    /**
+     * Iconify normalized the name of the carbon library (making them lowercase)
+     *
+     * For instance, CSV is csv (https://icon-sets.iconify.design/carbon/csv/)
+     *
+     * This dictionary reproduce it.
+     *
+     * @param string $logicalName
+     * @return mixed
+     * @throws ExceptionCombo
+     */
+    private static function getCarbonPhysicalName(string $logicalName)
+    {
+        $path = LocalPath::createFromPath(Resources::getDictionaryDirectory() . "/carbon-icons.json");
+        $jsonContent = FileSystems::getContent($path);
+        $jsonArray = Json::createFromString($jsonContent)->toArray();
+        $physicalName = $jsonArray[$logicalName];
+        if ($physicalName === null) {
+            LogUtility::msg("The icon ($logicalName) is unknown as 32x32 carbon icon");
+            // by default, just lowercase
+            return lower($logicalName);
+        }
+        return $physicalName;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private static function getFadPhysicalName($logicalName)
+    {
+        $path = LocalPath::createFromPath(Resources::getDictionaryDirectory() . "/fad-icons.json");
+        $jsonContent = FileSystems::getContent($path);
+        $jsonArray = Json::createFromString($jsonContent)->toArray();
+        $physicalName = $jsonArray[$logicalName];
+        if ($physicalName === null) {
+            LogUtility::msg("The icon ($logicalName) is unknown as fad icon");
+            return $logicalName;
+        }
+        return $physicalName;
+    }
+
+
+    public function render(): string
+    {
+
+        if (FileSystems::exists($this->getPath())) {
+
+            $svgImageLink = SvgImageLink::createMediaLinkFromPath(
+                $this->getPath(),
+                $this->getAttributes()
+            );
+            return $svgImageLink->renderMediaTag();
+
+        } else {
+
+            LogUtility::msg("The icon ($this) does not exist and cannot be rendered.");
+            return "";
+
+        }
+
     }
 
 

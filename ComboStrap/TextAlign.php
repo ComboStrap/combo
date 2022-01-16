@@ -34,15 +34,15 @@ class TextAlign
                     switch ($value) {
                         case "left":
                         case "start":
-                            $attributes->addStyleDeclaration(self::ATTRIBUTE_NAME, "left");
+                            $attributes->addStyleDeclarationIfNotSet(self::ATTRIBUTE_NAME, "left");
                             break;
                         case "right":
                         case "end":
-                            $attributes->addStyleDeclaration(self::ATTRIBUTE_NAME, "right");
+                            $attributes->addStyleDeclarationIfNotSet(self::ATTRIBUTE_NAME, "right");
                             break;
                         case "center":
                         case "justify":
-                            $attributes->addStyleDeclaration(self::ATTRIBUTE_NAME, $value);
+                            $attributes->addStyleDeclarationIfNotSet(self::ATTRIBUTE_NAME, $value);
                             break;
                         default:
                             LogUtility::msg("The text-align value ($value) is unknown.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -108,7 +108,7 @@ class TextAlign
                             if (!empty($breakpoint)) {
                                 LogUtility::msg("The `justify` value of the text-align attribute does not support actually breakpoint. The breakpoint value ($$breakpoint) was then not applied.", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
                             }
-                            $attributes->addStyleDeclaration(self::ATTRIBUTE_NAME, $value);
+                            $attributes->addStyleDeclarationIfNotSet(self::ATTRIBUTE_NAME, $value);
                             break;
                         default:
                             LogUtility::msg("The text-align value ($value) is unknown.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);

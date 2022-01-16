@@ -80,24 +80,24 @@ class Skin
                     $color = self::$colors[$type];
                     switch ($skinValue) {
                         case "contained":
-                            $attributes->addStyleDeclaration(ColorUtility::COLOR, $color[ColorUtility::COLOR]);
-                            $attributes->addStyleDeclaration(Background::BACKGROUND_COLOR, $color[Background::BACKGROUND_COLOR]);
-                            $attributes->addStyleDeclaration(ColorUtility::BORDER_COLOR, $color[ColorUtility::BORDER_COLOR]);
+                            $attributes->addStyleDeclarationIfNotSet(ColorUtility::COLOR, $color[ColorUtility::COLOR]);
+                            $attributes->addStyleDeclarationIfNotSet(Background::BACKGROUND_COLOR, $color[Background::BACKGROUND_COLOR]);
+                            $attributes->addStyleDeclarationIfNotSet(ColorUtility::BORDER_COLOR, $color[ColorUtility::BORDER_COLOR]);
                             Shadow::addMediumElevation($attributes);
                             break;
                         case "filled":
                         case "solid":
-                            $attributes->addStyleDeclaration(ColorUtility::COLOR, $color[ColorUtility::COLOR]);
-                            $attributes->addStyleDeclaration(Background::BACKGROUND_COLOR, $color[Background::BACKGROUND_COLOR]);
-                            $attributes->addStyleDeclaration(ColorUtility::BORDER_COLOR, $color[ColorUtility::BORDER_COLOR]);
+                            $attributes->addStyleDeclarationIfNotSet(ColorUtility::COLOR, $color[ColorUtility::COLOR]);
+                            $attributes->addStyleDeclarationIfNotSet(Background::BACKGROUND_COLOR, $color[Background::BACKGROUND_COLOR]);
+                            $attributes->addStyleDeclarationIfNotSet(ColorUtility::BORDER_COLOR, $color[ColorUtility::BORDER_COLOR]);
                             break;
                         case "outline":
                             $primaryColor = $color[ColorUtility::COLOR];
                             if ($primaryColor === "#fff") {
                                 $primaryColor = $color[Background::BACKGROUND_COLOR];
                             }
-                            $attributes->addStyleDeclaration(ColorUtility::COLOR, $primaryColor);
-                            $attributes->addStyleDeclaration(Background::BACKGROUND_COLOR, "transparent");
+                            $attributes->addStyleDeclarationIfNotSet(ColorUtility::COLOR, $primaryColor);
+                            $attributes->addStyleDeclarationIfNotSet(Background::BACKGROUND_COLOR, "transparent");
                             $borderColor = $color[Background::BACKGROUND_COLOR];
                             if ($attributes->hasStyleDeclaration(ColorUtility::BORDER_COLOR)) {
                                 // Color in the `border` attribute
@@ -105,7 +105,7 @@ class Skin
                                 // We don't take the risk
                                 $borderColor = $attributes->getAndRemoveStyleDeclaration(ColorUtility::BORDER_COLOR);
                             }
-                            $attributes->addStyleDeclaration("border", "1px solid " . $borderColor);
+                            $attributes->addStyleDeclarationIfNotSet("border", "1px solid " . $borderColor);
 
                             break;
                         case "text":
@@ -113,9 +113,9 @@ class Skin
                             if ($primaryColor === "#fff") {
                                 $primaryColor = $color[Background::BACKGROUND_COLOR];
                             }
-                            $attributes->addStyleDeclaration(ColorUtility::COLOR, $primaryColor);
-                            $attributes->addStyleDeclaration(Background::BACKGROUND_COLOR, "transparent");
-                            $attributes->addStyleDeclaration(ColorUtility::BORDER_COLOR, "transparent");
+                            $attributes->addStyleDeclarationIfNotSet(ColorUtility::COLOR, $primaryColor);
+                            $attributes->addStyleDeclarationIfNotSet(Background::BACKGROUND_COLOR, "transparent");
+                            $attributes->addStyleDeclarationIfNotSet(ColorUtility::BORDER_COLOR, "transparent");
                             break;
                     }
                 }

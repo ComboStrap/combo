@@ -502,7 +502,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                      * constraint with the `width` attributes that will
                      * set a a max-width
                      */
-                    $iFrameAttributes->addStyleDeclaration("width","100%");
+                    $iFrameAttributes->addStyleDeclarationIfNotSet("width","100%");
 
                     $iFrameHtml = $iFrameAttributes->toHtmlEnterTag("iframe") . '</iframe>';
                     $bar .= '</div>'; // close the bar

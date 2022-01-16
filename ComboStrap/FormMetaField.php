@@ -161,7 +161,10 @@ class FormMetaField
                     foreach ($rows as $row) {
                         foreach ($childFields as $childName => $childField) {
                             $colValue = $row[$childName];
-                            if ($colValue === null && $defaultRow !== null) {
+                            if ($colValue === null) {
+                                if ($defaultRow === null) {
+                                    continue;
+                                }
                                 $colValue = $defaultRow[$childName];
                                 if ($colValue === null) {
                                     continue;

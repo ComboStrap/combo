@@ -183,6 +183,7 @@ class FormMeta
     /**
      * @param Metadata $metadata
      * @return FormMeta
+     * @throws ExceptionCombo
      */
     public function addFormFieldFromMetadata(Metadata $metadata): FormMeta
     {

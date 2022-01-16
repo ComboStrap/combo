@@ -302,7 +302,6 @@ class PageImages extends MetadataTabular
     }
 
 
-
     public
     function getDefaultImage(): ?Image
     {
@@ -332,7 +331,7 @@ class PageImages extends MetadataTabular
         /**
          * Dokuwiki first image metadata
          */
-        if(empty($firstImageId)) {
+        if (empty($firstImageId)) {
             $relation = $store->getCurrentFromName('relation');
             if (!isset($relation[PageImages::FIRST_IMAGE_META_RELATION])) {
                 return null;
@@ -375,12 +374,12 @@ class PageImages extends MetadataTabular
     public function getDefaultValue(): ?array
     {
 
-        $pageImagePath = PageImagePath::createFromParent($this);
         $defaultImage = $this->getDefaultImage();
-        if ($defaultImage === null) {
-            return null;
+        $pageImagePath = null;
+        if ($defaultImage !== null) {
+            $pageImagePath = PageImagePath::createFromParent($this)
+                    ->buildFromStoreValue($defaultImage->getPath()->toString());
         }
-        $pageImagePath->buildFromStoreValue($defaultImage->getPath()->toString());
         return [
             [
                 PageImagePath::getPersistentName() => $pageImagePath,

@@ -72,7 +72,7 @@ class DataType
             throw new ExceptionCombo("The value passed is not a numeric/nor a string. We can not translate it to an integer. Value: $varExport");
         }
         /**
-         * Float 12.345 will return 12
+         * Float 12.845 will return 12
          */
         $int = intval($targetValue);
         if (

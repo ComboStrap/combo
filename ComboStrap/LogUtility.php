@@ -109,11 +109,11 @@ class LogUtility
      * Adapted from {@link dbglog}
      * Note: {@link dbg()} dbg print to the web page
      *
-     * @param string $msg
+     * @param string|null $msg - message may be empty, we take the stack trace
      * @param int $logLevel
      * @param null $canonical
      */
-    static function log2file(string $msg, int $logLevel = self::LVL_MSG_INFO, $canonical = null)
+    static function log2file(?string $msg, int $logLevel = self::LVL_MSG_INFO, $canonical = null)
     {
 
         try {

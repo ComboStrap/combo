@@ -85,6 +85,7 @@ require_once(__DIR__ . '/DatabasePageRow.php');
 require_once(__DIR__ . '/DataType.php');
 require_once(__DIR__ . '/Dimension.php');
 require_once(__DIR__ . '/DisqusIdentifier.php');
+require_once(__DIR__ . '/Display.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/DokuwikiId.php');
 require_once(__DIR__ . '/EndDate.php');
@@ -257,8 +258,8 @@ class PluginUtility
 
 
     const EDIT_SECTION_TARGET = 'section';
-    const ERROR_MESSAGE = "errorAtt";
-    const ERROR_LEVEL = "errorLevel";
+    const EXIT_MESSAGE = "errorAtt";
+    const EXIT_CODE = "exit_code";
     const DISPLAY = "display";
 
     /**
@@ -735,17 +736,21 @@ class PluginUtility
              * for application resource, we can serve it statically
              */
             $path = LocalPath::createFromPath(Resources::getImagesDirectory() . "/logo.svg");
-            $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
-            $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
-            $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");
-            $cache = new CacheMedia($path, $tagAttributes);
-            if (!$cache->isCacheUsable()) {
-                $xhtmlIcon = SvgDocument::createSvgDocumentFromPath($path)
-                    ->setShouldBeOptimized(true)
-                    ->getXmlText($tagAttributes);
-                $cache->storeCache($xhtmlIcon);
+            try {
+                $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
+                $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
+                $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");
+                $cache = new CacheMedia($path, $tagAttributes);
+                if (!$cache->isCacheUsable()) {
+                    $xhtmlIcon = SvgDocument::createSvgDocumentFromPath($path)
+                        ->setShouldBeOptimized(true)
+                        ->getXmlText($tagAttributes);
+                    $cache->storeCache($xhtmlIcon);
+                }
+                $xhtmlIcon = FileSystems::getContent($cache->getFile());
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The logo ($path) is not valid and could not be added to the documentation link. Error: {$e->getMessage()}");
             }
-            $xhtmlIcon = FileSystems::getContent($cache->getFile());
 
         }
         $urlApex = self::$URL_APEX;
@@ -1093,7 +1098,7 @@ class PluginUtility
             $attributes = [];
         }
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-        $display = $tagAttributes->getValue(TagAttributes::DISPLAY);
+        $display = $tagAttributes->getValue(Display::DISPLAY);
         if ($display != "none") {
             $payload = $data[self::PAYLOAD];
             $previousTagDisplayType = $data[self::CONTEXT];

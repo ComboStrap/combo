@@ -18,6 +18,7 @@
 // must be run within Dokuwiki
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
+use ComboStrap\Display;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -239,7 +240,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                          * on all node (enter, exit and unmatched)
                          */
                         if ($renderingMode == self::RENDERING_ONLY_RESULT) {
-                            $actualTag->addAttribute(TagAttributes::DISPLAY, "none");
+                            $actualTag->addAttribute(Display::DISPLAY, "none");
                         }
 
                         switch ($actualTag->getState()) {

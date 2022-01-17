@@ -39,6 +39,11 @@ class TagAttributes
     const ID_KEY = "id";
 
     /**
+     * If not strict, no error is reported
+     */
+    const STRICT = "strict";
+
+    /**
      * The logical attributes that:
      *   * are not becoming HTML attributes
      *   * are never deleted
@@ -54,7 +59,8 @@ class TagAttributes
         self::OPEN_TAG,
         self::HTML_BEFORE,
         self::HTML_AFTER,
-        Dimension::RATIO_ATTRIBUTE
+        Dimension::RATIO_ATTRIBUTE,
+        self::STRICT
     ];
 
     /**
@@ -74,7 +80,7 @@ class TagAttributes
     const TRANSFORM = "transform";
 
     const CANONICAL = "tag";
-    const DISPLAY = "display";
+
     const CLASS_KEY = "class";
     const WIKI_ID = "wiki-id";
 
@@ -111,6 +117,7 @@ class TagAttributes
      * Attribute with multiple values
      */
     const MULTIPLE_VALUES_ATTRIBUTES = [self::CLASS_KEY];
+
 
     /**
      * A global static counter
@@ -464,6 +471,7 @@ class TagAttributes
          */
         Position::processStickiness($this);
         Position::processPosition($this);
+        Display::processDisplay($this);
 
         /**
          * Block processing
@@ -706,7 +714,7 @@ class TagAttributes
      * @return array - an array of key string and value of the component attributes
      * This array is saved on the disk
      */
-    public function toCallStackArray()
+    public function toCallStackArray(): array
     {
         $array = array();
         $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
@@ -745,7 +753,7 @@ class TagAttributes
 
 
     public
-    function hasStyleDeclaration($styleDeclaration)
+    function hasStyleDeclaration($styleDeclaration): bool
     {
         return isset($this->styleDeclaration[$styleDeclaration]);
     }
@@ -760,7 +768,7 @@ class TagAttributes
 
 
     public
-    function toHTMLAttributeString()
+    function toHTMLAttributeString(): string
     {
 
         $tagAttributeString = "";
@@ -804,7 +812,7 @@ class TagAttributes
     }
 
     public
-    function getComponentAttributes()
+    function getComponentAttributes(): array
     {
         return $this->toCallStackArray();
     }
@@ -1066,13 +1074,13 @@ class TagAttributes
      * @return mixed
      */
     public
-    function getBooleanValueAndRemove($attribute, $default = null)
+    function getBooleanValueAndRemoveIfPresent($attribute, $default = null)
     {
-        $value = $this->getValueAndRemove($attribute);
-        if ($value == null) {
+        $value = $this->getValueAndRemoveIfPresent($attribute);
+        if ($value === null) {
             return $default;
         } else {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            return DataType::toBoolean($value);
         }
     }
 

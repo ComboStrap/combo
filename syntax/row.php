@@ -167,12 +167,12 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
     }
 
-    public function postConnect()
-    {
+        public function postConnect()
+        {
 
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+            $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
-    }
+        }
 
     /**
      *
@@ -431,7 +431,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
-                    $hadClassAttribute = $attributes->getBooleanValueAndRemove(self::HAD_USER_CLASS);
+                    $hadClassAttribute = $attributes->getBooleanValueAndRemoveIfPresent(self::HAD_USER_CLASS);
                     $htmlElement = $attributes->getValueAndRemove(self::HTML_TAG_ATT);
 
                     $attributes->addClassName("row");

@@ -6,10 +6,15 @@ use ComboStrap\ArrayUtility;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
+use ComboStrap\Display;
+use ComboStrap\DokuPath;
+use ComboStrap\DokuwikiUrl;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PageScope;
 use ComboStrap\PageUrlPath;
+use ComboStrap\PageUrlType;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
@@ -27,7 +32,25 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
     const NAMED_TYPE = "named";
     const FRAGMENT_ATTRIBUTE = "fragment";
 
-    function getType()
+    private static function handleError(string $errorMessage, bool $strict, array $returnArray, CallStack $callStack): array
+    {
+        if ($strict) {
+            $returnArray[PluginUtility::EXIT_MESSAGE] = $errorMessage;
+        }
+        $returnArray[PluginUtility::EXIT_CODE] = 1;
+
+        /**
+         * If this is a button, we cache it
+         */
+        $parent = $callStack->moveToParent();
+        if ($parent !== false && $parent->getTagName() === syntax_plugin_combo_button::TAG) {
+            $parent->addAttribute(Display::DISPLAY, Display::DISPLAY_NONE_VALUE);
+        }
+
+        return $returnArray;
+    }
+
+    function getType(): string
     {
         return 'substition';
     }
@@ -59,6 +82,10 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
 
     function connectTo($mode)
     {
+
+        $entryPattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $this->Lexer->addEntryPattern($entryPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+
         /**
          * permalink
          */
@@ -66,14 +93,23 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
 
     }
 
+    public function postConnect()
+    {
+
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+
+    }
 
     function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
+        $returnArray = array(
+            PluginUtility::STATE => $state,
+        );
         switch ($state) {
 
-
-            case DOKU_LEXER_SPECIAL :
+            case DOKU_LEXER_ENTER:
+            case DOKU_LEXER_SPECIAL:
 
                 $callStack = CallStack::createFromHandler($handler);
                 $attributes = TagAttributes::createFromTagMatch($match);
@@ -85,19 +121,29 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                     $type = strtolower($type);
                 }
 
-                $returnArray = array(
-                    PluginUtility::STATE => $state,
-                );
+                $strict = $attributes->getBooleanValueAndRemoveIfPresent(TagAttributes::STRICT, true);
 
-                $page = Page::createPageFromGlobalDokuwikiId();
+                /**
+                 * Scope if in slot
+                 */
+                $renderedPage = Page::createPageFromGlobalDokuwikiId();
+                if ($renderedPage->isSlot()) {
+                    // The output is dependent on the rendered page
+                    $renderedPage->setScope(PageScope::SCOPE_CURRENT_REQUESTED_PAGE_VALUE);
+                }
+
+                $requestedPage = Page::createPageFromRequestedPage();
                 $fragment = $attributes->getValueAndRemoveIfPresent(self::FRAGMENT_ATTRIBUTE);
                 switch ($type) {
                     case self::GENERATED_TYPE:
-                        $pageId = $page->getPageId();
+                        $pageId = $requestedPage->getPageId();
                         if ($pageId === null) {
-                            $errorMessage = "The page id has not yet been set";
-                            $returnArray[PluginUtility::PAYLOAD] = $errorMessage;
-                            return $returnArray;
+                            return self::handleError(
+                                "The page id has not yet been set",
+                                $strict,
+                                $returnArray,
+                                $callStack
+                            );
                         }
                         $permanentValue = PageUrlPath::encodePageId($pageId);
                         $url = Site::getBaseUrl() . "$permanentValue";
@@ -105,33 +151,65 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                             $url .= "#$fragment";
                         }
                         $attributes->addComponentAttributeValue(LinkUtility::ATTRIBUTE_REF, $url);
-                        $this->createLink($callStack, $attributes, $url);
+                        $this->openLinkInCallStack($callStack, $attributes);
+                        if ($state === DOKU_LEXER_SPECIAL) {
+                            $this->addLinkContentInCallStack($callStack, $url);
+                            $this->closeLinkInCallStack($callStack);
+                        }
                         return $returnArray;
                     case self::NAMED_TYPE:
-                        $canonical = $page->getCanonical();
+                        $canonical = $requestedPage->getCanonical();
                         if ($canonical === null) {
+
                             $documentationUrlForCanonical = PluginUtility::getDocumentationHyperLink(Canonical::PROPERTY_NAME, "canonical value");
-                            $errorMessage = "The page ($page) does not have a $documentationUrlForCanonical. We can't create a named permalink";
-                            $returnArray[PluginUtility::PAYLOAD] = $errorMessage;
-                        } else {
-                            $canonicalUrl = $page->getCanonicalUrl([],true);
-                            if ($fragment !== null) {
-                                $canonicalUrl .= "#$fragment";
-                            }
-                            $attributes->addComponentAttributeValue(LinkUtility::ATTRIBUTE_REF, $canonicalUrl);
-                            $this->createLink($callStack, $attributes, $canonicalUrl);
+                            $errorMessage = "The page ($requestedPage) does not have a $documentationUrlForCanonical. We can't create a named permalink";
+                            return self::handleError($errorMessage, $strict, $returnArray, $callStack);
+
+                        }
+                        $urlPath = PageUrlPath::createForPage($requestedPage)
+                            ->getUrlPathFromType(PageUrlType::CONF_VALUE_CANONICAL_PATH);
+                        $urlId = DokuPath::toDokuwikiId($urlPath);
+                        $canonicalUrl = wl($urlId, [], true, DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
+                        if ($fragment !== null) {
+                            $canonicalUrl .= "#$fragment";
+                        }
+                        $attributes->addComponentAttributeValue(LinkUtility::ATTRIBUTE_REF, $canonicalUrl);
+                        $this->openLinkInCallStack($callStack, $attributes);
+                        if ($state === DOKU_LEXER_SPECIAL) {
+                            $this->addLinkContentInCallStack($callStack, $canonicalUrl);
+                            $this->closeLinkInCallStack($callStack);
                         }
                         return $returnArray;
                     default:
-                        $errorMessage = "The permalink type ({$attributes->getType()} is unknown.";
-                        $returnArray[PluginUtility::PAYLOAD] = $errorMessage;
-                        return $returnArray;
+                        return self::handleError(
+                            "The permalink type ({$attributes->getType()} is unknown.",
+                            $strict,
+                            $returnArray,
+                            $callStack
+                        );
 
                 }
+            case DOKU_LEXER_EXIT:
+
+                $callStack = CallStack::createFromHandler($handler);
+                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                if ($openingCall->getExitCode() === 0) {
+                    // no error
+                    $this->closeLinkInCallStack($callStack);
+                }
+                return $returnArray;
+            case DOKU_LEXER_UNMATCHED:
+                $callStack = CallStack::createFromHandler($handler);
+                $openingCall = $callStack->moveToParent();
+                if ($openingCall->getExitCode() === 0) {
+                    // no error
+                    return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
+                }
+                return $returnArray;
 
 
         }
-        return array();
+        return $returnArray;
 
     }
 
@@ -148,10 +226,17 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data): bool
     {
         if ($format === "xhtml") {
-            $errorMessage = $data[PluginUtility::PAYLOAD];
-            if (!empty($errorMessage)) {
-                LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                $renderer->doc .= "<span class=\"text-warning\">{$errorMessage}</span>";
+            $state = $data[PluginUtility::STATE];
+            switch ($state) {
+                case DOKU_LEXER_UNMATCHED:
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    break;
+                default:
+                    $errorMessage = $data[PluginUtility::EXIT_MESSAGE];
+                    if (!empty($errorMessage)) {
+                        LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        $renderer->doc .= "<span class=\"text-warning\">{$errorMessage}</span>";
+                    }
             }
             return true;
         }
@@ -163,9 +248,8 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
     /**
      * @param CallStack $callStack
      * @param TagAttributes $tagAttributes
-     * @param string $url
      */
-    private function createLink(CallStack $callStack, TagAttributes $tagAttributes, string $url)
+    private function openLinkInCallStack(CallStack $callStack, TagAttributes $tagAttributes)
     {
         $parent = $callStack->moveToParent();
         $context = "";
@@ -181,6 +265,10 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 $attributes,
                 $context
             ));
+    }
+
+    private function addLinkContentInCallStack(CallStack $callStack, string $url)
+    {
         $callStack->appendCallAtTheEnd(
             Call::createComboCall(
                 syntax_plugin_combo_link::TAG,
@@ -190,6 +278,10 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 null,
                 $url
             ));
+    }
+
+    private function closeLinkInCallStack(CallStack $callStack)
+    {
         $callStack->appendCallAtTheEnd(
             Call::createComboCall(
                 syntax_plugin_combo_link::TAG,

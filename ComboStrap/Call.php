@@ -140,7 +140,7 @@ class Call
      * @param int|null $position
      * @return Call - a call
      */
-    public static function createComboCall($tagName, $state, array $attribute = array(), string $context = null, string $content = null, string $payload = null, int $position= null): Call
+    public static function createComboCall($tagName, $state, array $attribute = array(), string $context = null, string $content = null, string $payload = null, int $position = null): Call
     {
         $data = array(
             PluginUtility::ATTRIBUTES => $attribute,
@@ -844,6 +844,21 @@ class Call
             return true;
         }
         return false;
+    }
+
+    public function getExitCode()
+    {
+        $mode = $this->call[0];
+        if ($mode == "plugin") {
+            $value = $this->call[1][1][PluginUtility::EXIT_CODE];
+            if ($value === null) {
+                return 0;
+            }
+            return $value;
+        } else {
+            LogUtility::msg("You can't ask for the exit code from a non plugin call mode (" . $mode . ").", LogUtility::LVL_MSG_WARNING, "support");
+            return 0;
+        }
     }
 
 

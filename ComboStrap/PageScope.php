@@ -35,7 +35,7 @@ class PageScope extends MetadataText
      * The scope is the current requested page
      * (used for header and footer of the main slot)
      */
-    public const SCOPE_CURRENT_PAGE_VALUE = "current_page";
+    public const SCOPE_CURRENT_REQUESTED_PAGE_VALUE = "current_page";
 
 
     public static function createFromPage(Page $page)
@@ -45,7 +45,7 @@ class PageScope extends MetadataText
     }
 
     /**
-     * @param string|null $value - the {@link PageScope::SCOPE_CURRENT_NAMESPACE_VALUE} or {@link PageScope::SCOPE_CURRENT_PAGE_VALUE} or a namespace value ...
+     * @param string|null $value - the {@link PageScope::SCOPE_CURRENT_NAMESPACE_VALUE} or {@link PageScope::SCOPE_CURRENT_REQUESTED_PAGE_VALUE} or a namespace value ...
      * @return MetadataText
      * @throws ExceptionCombo
      */
@@ -58,7 +58,11 @@ class PageScope extends MetadataText
     {
         $lastName = $this->getResource()->getPath()->getLastName();
         if (in_array($lastName, \action_plugin_combo_slot::SLOT_MAIN_NAMES)) {
-            return self::SCOPE_CURRENT_PAGE_VALUE;
+            // We could also set the scope by component
+            // in the slot but this is much more work
+            // generally the data that are not main page related
+            // are in the header and footer page slot
+            return self::SCOPE_CURRENT_REQUESTED_PAGE_VALUE;
         };
         return parent::getValue();
     }

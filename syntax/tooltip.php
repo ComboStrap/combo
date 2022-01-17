@@ -243,7 +243,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                 }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ERROR_MESSAGE => $errorMessage
+                    PluginUtility::EXIT_MESSAGE => $errorMessage
                 );
 
 
@@ -285,8 +285,8 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    if (isset($data[PluginUtility::ERROR_MESSAGE])) {
-                        LogUtility::msg($data[PluginUtility::ERROR_MESSAGE], LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    if (isset($data[PluginUtility::EXIT_MESSAGE])) {
+                        LogUtility::msg($data[PluginUtility::EXIT_MESSAGE], LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         return false;
                     }
 
@@ -351,7 +351,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT:
 
-                    if (isset($data[PluginUtility::ERROR_MESSAGE])) {
+                    if (isset($data[PluginUtility::EXIT_MESSAGE])) {
                         return false;
                     }
 

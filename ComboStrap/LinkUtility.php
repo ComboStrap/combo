@@ -474,7 +474,7 @@ class LinkUtility
                      * Preview tooltip
                      */
                     $previewConfig = PluginUtility::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
-                    $preview = $this->attributes->getBooleanValueAndRemove(self::PREVIEW_ATTRIBUTE, $previewConfig);
+                    $preview = $this->attributes->getBooleanValueAndRemoveIfPresent(self::PREVIEW_ATTRIBUTE, $previewConfig);
                     if ($preview) {
                         syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
                         $tooltipHtml = <<<EOF

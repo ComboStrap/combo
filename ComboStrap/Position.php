@@ -69,7 +69,7 @@ EOF;
     /**
      * @param TagAttributes $attributes
      */
-    public static function processPosition(&$attributes)
+    public static function processPosition(TagAttributes &$attributes)
     {
         if ($attributes->hasComponentAttribute(self::POSITION_ATTRIBUTE)) {
             $position = strtolower($attributes->getValueAndRemove(self::POSITION_ATTRIBUTE));

@@ -59,16 +59,16 @@ class action_plugin_combo_slot extends DokuWiki_Action_Plugin
         global $ACT;
         $showMainHeader = $mainHeader!==false && ($ACT == 'show');
         if ($showMainHeader !== false) {
-            $slotHtml = Page::createPageFromId($mainHeader)
+            $slotHeaderHtml = Page::createPageFromId($mainHeader)
                 ->toXhtml();
-            $data .= $slotHtml;
+            $data .= $slotHeaderHtml;
         }
 
         $mainFooter = page_findnearest(self::SLOT_MAIN_FOOTER_NAME);
         if ($mainFooter !== false) {
-            $path = DokuPath::createPagePathFromId($mainFooter);
-            $content = FileSystems::getContent($path);
-            $data = $data . $content;
+            $slotFooterHtml = Page::createPageFromId($mainFooter)
+                ->toXhtml();
+            $data = $data . $slotFooterHtml;
         }
 
     }

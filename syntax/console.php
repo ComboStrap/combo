@@ -176,8 +176,8 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_UNMATCHED :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $display = $attributes->getValue("display");
-                    if ($display != "none") {
+                    $display = $attributes->getValueAndRemoveIfPresent("display");
+                    if ($display !== "none") {
                         // Delete the eol at the beginning and end
                         // otherwise we get a big block
                         $payload = trim($data[PluginUtility::PAYLOAD], "\n\r");

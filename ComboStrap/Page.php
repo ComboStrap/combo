@@ -216,7 +216,7 @@ class Page extends ResourceComboAbs
             $useAcl = false;
             $id = page_findnearest($this->dokuPath->getLastNameWithoutExtension(), $useAcl);
             if ($id !== false && $id !== $this->dokuPath->getDokuwikiId()) {
-                LogUtility::msg("What the heck");
+                LogUtility::msg("What the heck ($id, {$this->dokuPath->getDokuwikiId()})");
                 $absolutePath = DokuPath::PATH_SEPARATOR . $id;
                 $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath);
             }
@@ -352,6 +352,7 @@ class Page extends ResourceComboAbs
          */
         $scopePath = $this->getScope();
         switch ($scopePath) {
+            case PageScope::SCOPE_CURRENT_NAMESPACE_OLD_VALUE:
             case PageScope::SCOPE_CURRENT_NAMESPACE_VALUE:
                 $requestPage = Page::createPageFromRequestedPage();
                 $parentPath = $requestPage->getPath()->getParent();
@@ -362,7 +363,7 @@ class Page extends ResourceComboAbs
                 } else {
                     return DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName();
                 }
-            case PageScope::SCOPE_CURRENT_PAGE_VALUE:
+            case PageScope::SCOPE_CURRENT_REQUESTED_PAGE_VALUE:
                 $requestPage = Page::createPageFromRequestedPage();
                 return $requestPage->getPath()->toString() . "_" . $this->getPath()->getLastName();
             default:
@@ -1806,14 +1807,19 @@ class Page extends ResourceComboAbs
 
     /**
      * @param string $scope {@link PageScope::SCOPE_CURRENT_NAMESPACE_VALUE} or a namespace...
-     * @throws ExceptionCombo
      */
     public
     function setScope(string $scope): Page
     {
-        $this->scope
-            ->setFromStoreValue($scope)
-            ->sendToWriteStore();
+        try {
+            $this->scope
+                ->setFromStoreValue($scope)
+                ->sendToWriteStore();
+        } catch (ExceptionCombo $e) {
+            // This is an intern variable
+            // No need to throw
+            LogUtility::msg("Error while setting the scope ({$e->getMessage()}");
+        }
         return $this;
     }
 

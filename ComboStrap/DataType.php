@@ -84,5 +84,10 @@ class DataType
         return $int;
     }
 
+    public static function toBoolean($value)
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
 
 }

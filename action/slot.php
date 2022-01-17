@@ -27,13 +27,27 @@ class action_plugin_combo_slot extends DokuWiki_Action_Plugin
 {
 
 
+    /**
+     * Name of the main header slot
+     */
+    const SLOT_MAIN_HEADER_NAME = "slot_main_header";
+    /**
+     * Name of the main footer slot
+     */
+    const SLOT_MAIN_FOOTER_NAME = "slot_main_footer";
+    const SLOT_MAIN_NAMES = [self::SLOT_MAIN_FOOTER_NAME, self::SLOT_MAIN_HEADER_NAME];
+
     public function register(Doku_Event_Handler $controller)
     {
 
         /**
-         * https://www.dokuwiki.org/devel:event:parser_wikitext_preprocess
+         * https://www.dokuwiki.org/devel:event:tpl_act_render
          */
-        $controller->register_hook('PARSER_WIKITEXT_PREPROCESS', 'AFTER', $this, 'handleSlot');
+        $controller->register_hook('TPL_ACT_RENDER', 'BEFORE', $this, 'handleSlotMainBefore');
+        /**
+         * https://www.dokuwiki.org/devel:event:tpl_act_render
+         */
+        $controller->register_hook('TPL_ACT_RENDER', 'BEFORE', $this, 'handleSlotMainAfter');
 
 
     }
@@ -41,26 +55,30 @@ class action_plugin_combo_slot extends DokuWiki_Action_Plugin
     /**
      * @param Doku_Event $event
      */
-    public function handleSlot(Doku_Event &$event)
+    public function handleSlotMainBefore(Doku_Event &$event)
     {
 
         $data = &$event->data;
 
-        $mainHeader = page_findnearest("slot_main_header");
-        if ($mainHeader !== false) {
-            $path = DokuPath::createPagePathFromId($mainHeader);
-            $content = FileSystems::getContent($path);
+        $mainHeader = page_findnearest(self::SLOT_MAIN_HEADER_NAME);
+        global $ACT;
+        $showMainHeader = $mainHeader!==false && ($ACT == 'show');
+        if ($showMainHeader !== false) {
+            $sideBarHtml = TplUtility::renderSlot($mainHeader);
             $data .= $content;
         }
 
-        $mainFooter = page_findnearest("slot_main_footer");
+    }
+
+    public function handleSlotMainAfter(Doku_Event &$event)
+    {
+        $data = &$event->data;
+        $mainFooter = page_findnearest(self::SLOT_MAIN_FOOTER_NAME);
         if ($mainFooter !== false) {
             $path = DokuPath::createPagePathFromId($mainFooter);
             $content = FileSystems::getContent($path);
             $data = $data . $content;
         }
-
-
     }
 
 

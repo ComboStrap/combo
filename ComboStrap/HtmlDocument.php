@@ -8,6 +8,10 @@ class HtmlDocument extends OutputDocument
 {
     const extension = "xhtml";
 
+    /**
+     * HtmlDocument constructor.
+     * @param Page $page
+     */
     public function __construct($page)
     {
         parent::__construct($page);

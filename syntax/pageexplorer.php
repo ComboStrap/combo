@@ -198,7 +198,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             } else {
                                 $namespacePath = "";
                             }
-                            $scope = PageScope::SCOPE_CURRENT_VALUE;
+                            $scope = PageScope::SCOPE_CURRENT_NAMESPACE_VALUE;
                             break;
                         case self::TYPE_TREE:
                             $parent = $renderedPage->getPath()->getParent();

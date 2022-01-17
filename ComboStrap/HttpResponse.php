@@ -97,8 +97,9 @@ class HttpResponse
          * Exit
          */
         if (!PluginUtility::isTest()) {
-            if (Http::getStatus() !== self::STATUS_ALL_GOOD) {
-                LogUtility::log2file($this->msg, LogUtility::LVL_MSG_ERROR, $this->canonical);
+            if ($this->status !== self::STATUS_ALL_GOOD && $this->msg !== null) {
+                // if this is a 304, there is no body, no message
+                LogUtility::log2file("Bad Http Response: $this->status : $this->msg", LogUtility::LVL_MSG_ERROR, $this->canonical);
             }
             exit;
         } else {

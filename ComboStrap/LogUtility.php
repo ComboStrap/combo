@@ -262,7 +262,7 @@ class LogUtility
     private static function messageNotEmpty(?string $message)
     {
         $message = trim($message);
-        if ($message === "" || $message === null) {
+        if ($message === null || $message === "") {
             $newMessage = "The passed message to the log was empty or null. BackTrace: \n";
             ob_start();
             $limit = 10;

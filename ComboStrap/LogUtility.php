@@ -109,11 +109,11 @@ class LogUtility
      * Adapted from {@link dbglog}
      * Note: {@link dbg()} dbg print to the web page
      *
-     * @param string $msg
+     * @param null|string $msg - may be null always this is the default if a variable is not initialized.
      * @param int $logLevel
      * @param null $canonical
      */
-    static function log2file(string $msg, int $logLevel = self::LVL_MSG_INFO, $canonical = null)
+    static function log2file(?string $msg, int $logLevel = self::LVL_MSG_INFO, $canonical = null)
     {
 
         try {

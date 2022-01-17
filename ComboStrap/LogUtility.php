@@ -256,10 +256,10 @@ class LogUtility
     }
 
     /**
-     * @param string $message
+     * @param string|null $message
      * @throws ExceptionCombo
      */
-    private static function messageNotEmpty(string $message)
+    private static function messageNotEmpty(?string $message)
     {
         $message = trim($message);
         if ($message === "" || $message === null) {

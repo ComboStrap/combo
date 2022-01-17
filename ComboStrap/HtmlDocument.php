@@ -15,7 +15,7 @@ class HtmlDocument extends OutputDocument
     public function __construct($page)
     {
         parent::__construct($page);
-        if ($page->isStrapSideSlot()) {
+        if ($page->isSlot()) {
 
             /**
              * Logical cache based on scope (ie logical id) is the scope and part of the key

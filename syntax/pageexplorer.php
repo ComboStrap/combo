@@ -193,7 +193,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         case self::LIST_TYPE:
                             $requestedPage = Page::createPageFromRequestedPage();
                             $parent = $requestedPage->getPath()->getParent();
-                            if($parent!==null){
+                            if ($parent !== null) {
                                 $namespacePath = $parent->toString();
                             } else {
                                 $namespacePath = "";
@@ -202,7 +202,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             break;
                         case self::TYPE_TREE:
                             $parent = $renderedPage->getPath()->getParent();
-                            if($parent!==null){
+                            if ($parent !== null) {
                                 $namespacePath = $parent->toString();
                             } else {
                                 $namespacePath = "";
@@ -213,7 +213,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             // Should never happens but yeah
                             LogUtility::msg("The type of the page explorer ($type) is unknown");
                             $parent = $renderedPage->getPath()->getParent();
-                            if($parent!==null){
+                            if ($parent !== null) {
                                 $namespacePath = $parent->toString();
                             } else {
                                 $namespacePath = "";
@@ -234,8 +234,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  * https://combostrap.com/sideslots
                  *
                  */
-                if ($renderedPage->isStrapSideSlot()) {
-                    $renderedPage->setScope( $scope);
+                if ($renderedPage->isSlot()) {
+                    $renderedPage->setScope($scope);
                 }
 
                 /**

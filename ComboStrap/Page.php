@@ -3,14 +3,11 @@
 namespace ComboStrap;
 
 
-use action_plugin_combo_metadescription;
-use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
 use DateTime;
 use Exception;
 use ModificationDate;
 use Slug;
-use syntax_plugin_combo_disqus;
 
 
 /**
@@ -47,11 +44,6 @@ class Page extends ResourceComboAbs
 
     const TYPE = "page";
 
-
-    /**
-     * @var bool Indicator to say if this is a sidebar (or sidekick bar)
-     */
-    private $isSideSlot = false;
 
     /**
      * The id requested (ie the main page)
@@ -209,34 +201,24 @@ class Page extends ResourceComboAbs
     public function __construct($absolutePath)
     {
 
-        /**
-         * Slots have a logical reasoning (ie such as a virtual, alias)
-         *
-         * The output may be logically located elsewhere
-         *
-         * This block of code is processing this case
-         */
-        global $conf;
-        $sidebars = array($conf['sidebar']);
-        $strapTemplateName = 'strap';
-        if ($conf['template'] === $strapTemplateName) {
-            $sidebars[] = $conf['tpl'][$strapTemplateName]['sidekickbar'];
-        }
-        $lastPathPart = DokuPath::getLastPart($absolutePath);
-        if (in_array($lastPathPart, $sidebars)) {
+        $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath);
 
-            $this->isSideSlot = true;
+        if ($this->isSlot()) {
 
             /**
+             * TODO: Not sure if this is needed anymore, technically only the {@link HtmlDocument output} should be concern, not the page
+             *
              * Find the first physical file
              * Don't use ACL otherwise the ACL protection event 'AUTH_ACL_CHECK' will kick in
              * and we got then a recursive problem
              * with the {@link \action_plugin_combo_pageprotection}
              */
             $useAcl = false;
-            $id = page_findnearest($lastPathPart, $useAcl);
-            if ($id !== false) {
+            $id = page_findnearest($this->dokuPath->getLastNameWithoutExtension(), $useAcl);
+            if ($id !== false && $id !== $this->dokuPath->getDokuwikiId()) {
+                LogUtility::msg("What the heck");
                 $absolutePath = DokuPath::PATH_SEPARATOR . $id;
+                $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath);
             }
 
         }
@@ -244,14 +226,6 @@ class Page extends ResourceComboAbs
         global $ID;
         $this->requestedId = $ID;
 
-        $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath);
-
-        /**
-         * After the parent construction because we need the id
-         * and it's set in the {@link DokuPath}
-         * When the Page will be os file system based
-         * and not dokuwiki file system based we may change that
-         */
         $this->buildPropertiesFromFileSystem();
 
     }
@@ -419,29 +393,51 @@ class Page extends ResourceComboAbs
     }
 
 
-    public
-    function isSlot(): bool
+    /**
+     * @return bool true if this is not the main slot.
+     */
+    public function isSlot(): bool
     {
         global $conf;
-        $barsName = array($conf['sidebar']);
+        $slotNames = array($conf['sidebar']);
         $strapTemplateName = 'strap';
         if ($conf['template'] === $strapTemplateName) {
             $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
             if ($loaded) {
-                $barsName[] = TplUtility::getHeaderSlotPageName();
-                $barsName[] = TplUtility::getFooterSlotPageName();
-                $barsName[] = TplUtility::getSideKickSlotPageName();
+                $slotNames[] = TplUtility::getHeaderSlotPageName();
+                $slotNames[] = TplUtility::getFooterSlotPageName();
+                $slotNames[] = TplUtility::getSideKickSlotPageName();
             }
         }
-        return in_array($this->getPath()->getLastName(), $barsName);
+        /**
+         * Adding the main header and footer slot
+         */
+        $slotNames = array_merge($slotNames, \action_plugin_combo_slot::SLOT_MAIN_NAMES);
+        $name = $this->getPath()->getLastNameWithoutExtension();
+        if ($name === null) {
+            // root case
+            return false;
+        }
+        return in_array($name, $slotNames, true);
     }
 
-    public
-    function isStrapSideSlot(): bool
+    /**
+     * @deprecated for {@link Page::isSlot()}
+     * Return true if this is a slot
+     *
+     * Note: Slots have a logical reasoning (ie such as a virtual, alias)
+     * The output may be logically located elsewhere
+     */
+    public function isStrapSideSlot(): bool
     {
 
-        return $this->isSideSlot
-            && Site::isStrapTemplate();
+        if (!Site::isStrapTemplate()) {
+            return false;
+        }
+
+
+        return $this->isSlot();
+
 
     }
 

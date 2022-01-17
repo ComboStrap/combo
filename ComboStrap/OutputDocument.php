@@ -31,7 +31,7 @@ abstract class OutputDocument extends PageCompilerDocument
     {
         parent::__construct($page);
 
-        if ($page->isStrapSideSlot()) {
+        if ($page->isSlot()) {
 
             /**
              * Logical cache based on scope (ie logical id) is the scope and part of the key
@@ -40,6 +40,9 @@ abstract class OutputDocument extends PageCompilerDocument
 
         } else {
 
+            /**
+             * We follow Dokuwiki Cache
+             */
             $path = $page->getPath();
             $id = $path->getDokuwikiId();
 

@@ -41,14 +41,9 @@ class action_plugin_combo_slot extends DokuWiki_Action_Plugin
     {
 
         /**
-         * https://www.dokuwiki.org/devel:event:tpl_act_render
+         * https://www.dokuwiki.org/devel:event:tpl_content_display
          */
-        $controller->register_hook('TPL_ACT_RENDER', 'BEFORE', $this, 'handleSlotMainBefore');
-        /**
-         * https://www.dokuwiki.org/devel:event:tpl_act_render
-         */
-        $controller->register_hook('TPL_ACT_RENDER', 'BEFORE', $this, 'handleSlotMainAfter');
-
+        $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'handleSlotMainBefore');
 
     }
 
@@ -64,22 +59,20 @@ class action_plugin_combo_slot extends DokuWiki_Action_Plugin
         global $ACT;
         $showMainHeader = $mainHeader!==false && ($ACT == 'show');
         if ($showMainHeader !== false) {
-            $sideBarHtml = TplUtility::renderSlot($mainHeader);
-            $data .= $content;
+            $slotHtml = Page::createPageFromId($mainHeader)
+                ->toXhtml();
+            $data .= $slotHtml;
         }
 
-    }
-
-    public function handleSlotMainAfter(Doku_Event &$event)
-    {
-        $data = &$event->data;
         $mainFooter = page_findnearest(self::SLOT_MAIN_FOOTER_NAME);
         if ($mainFooter !== false) {
             $path = DokuPath::createPagePathFromId($mainFooter);
             $content = FileSystems::getContent($path);
             $data = $data . $content;
         }
+
     }
+
 
 
 }

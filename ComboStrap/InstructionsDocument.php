@@ -26,7 +26,7 @@ class InstructionsDocument extends PageCompilerDocument
     {
         parent::__construct($page);
 
-        if ($this->getPage()->isStrapSideSlot()) {
+        if ($this->getPage()->isSlot()) {
 
             /**
              * @noinspection PhpIncompatibleReturnTypeInspection

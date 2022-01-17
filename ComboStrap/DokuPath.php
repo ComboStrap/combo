@@ -379,9 +379,9 @@ class DokuPath extends PathAbs
     }
 
     /**
-     * @return string
+     * @return null|string
      */
-    public function getLastNameWithoutExtension(): string
+    public function getLastNameWithoutExtension(): ?string
     {
         /**
          * A page doku path has no extension for now
@@ -390,6 +390,7 @@ class DokuPath extends PathAbs
             return $this->getLastName();
         }
         return parent::getLastNameWithoutExtension();
+
     }
 
 

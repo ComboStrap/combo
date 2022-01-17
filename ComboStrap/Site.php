@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 
+use Exception;
 use RuntimeException;
 
 class Site
@@ -60,7 +61,14 @@ class Site
         $logos = [];
         foreach ($logosPaths as $logoPath) {
             $dokuPath = DokuPath::createMediaPathFromId($logoPath);
-            $logos[] = Image::createImageFromPath($dokuPath);
+            if(FileSystems::exists($dokuPath)) {
+                try {
+                    $logos[] = Image::createImageFromPath($dokuPath);
+                } catch (Exception $e) {
+                    // The image is not valid
+                    LogUtility::msg("The logo ($logoPath) is not a valid image. {$e->getMessage()}");
+                }
+            }
         }
         return $logos;
     }

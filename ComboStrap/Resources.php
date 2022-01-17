@@ -34,6 +34,11 @@ class Resources
         return self::getAbsoluteResourcesDirectory() . DokuPath::DIRECTORY_SEPARATOR . "snippet";
     }
 
+    public static function getDictionaryDirectory()
+    {
+        return self::getAbsoluteResourcesDirectory() . DokuPath::DIRECTORY_SEPARATOR . "dictionary";
+    }
+
     public static function getAbsoluteResourcesDirectory()
     {
         return DOKU_PLUGIN . self::getRelativeResourceDirectory();

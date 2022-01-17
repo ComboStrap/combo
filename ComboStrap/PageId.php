@@ -117,7 +117,7 @@ class PageId extends MetadataText
                  * and we return the page id
                  */
                 $pageDbValue = Page::createPageFromQualifiedPath($pathDbValue);
-                if(!FileSystems::exists($pageDbValue->getPath())){
+                if (!FileSystems::exists($pageDbValue->getPath())) {
                     return parent::buildFromStoreValue($value);
                 }
 

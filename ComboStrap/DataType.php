@@ -59,5 +59,30 @@ class DataType
         DataType::BOOLEAN_TYPE_VALUE,
     ];
 
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function toInteger($targetValue): int
+    {
+        if (is_int($targetValue)) {
+            return $targetValue;
+        }
+        if (!is_string($targetValue)) {
+            $varExport = var_export($targetValue, true);
+            throw new ExceptionCombo("The value passed is not a numeric/nor a string. We can not translate it to an integer. Value: $varExport");
+        }
+        /**
+         * Float 12.845 will return 12
+         */
+        $int = intval($targetValue);
+        if (
+            $int === 0 &&
+            "$targetValue" !== "0"
+        ) {
+            throw new ExceptionCombo("The value ($targetValue) can not be cast to an integer.");
+        }
+        return $int;
+    }
+
 
 }

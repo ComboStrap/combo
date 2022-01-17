@@ -3,7 +3,6 @@
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
-use ComboStrap\Alias;
 use ComboStrap\AliasType;
 use ComboStrap\DatabasePageRow;
 use ComboStrap\DokuPath;
@@ -16,12 +15,12 @@ use ComboStrap\Page;
 use ComboStrap\PageId;
 use ComboStrap\PageRules;
 use ComboStrap\PageUrlPath;
+use ComboStrap\PageUrlType;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\Sqlite;
 use ComboStrap\Url;
 use ComboStrap\UrlManagerBestEndPage;
-use ComboStrap\PageUrlType;
 
 
 /**
@@ -347,7 +346,10 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             if ($targetPage->getParentPage() === null && $pageId !== null) {
                 $page = DatabasePageRow::createFromPageId($pageId)->getPage();
                 if ($page !== null && $page->exists()) {
-                    $this->executePermanentRedirect($page->getCanonicalUrl(), self::TARGET_ORIGIN_PERMALINK);
+                    $this->executePermanentRedirect(
+                        $page->getCanonicalUrl([], true),
+                        self::TARGET_ORIGIN_PERMALINK
+                    );
                 }
             }
 
@@ -408,7 +410,21 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         $databasePage = DatabasePageRow::createFromCanonical($identifier);
         $targetPage = $databasePage->getPage();
         if ($targetPage !== null && $targetPage->exists()) {
-            $res = $this->executePermanentRedirect($targetPage->getDokuwikiId(), self::TARGET_ORIGIN_CANONICAL);
+            /**
+             * Does the canonical url is canonical name based
+             * ie {@link  PageUrlType::CONF_VALUE_CANONICAL_PATH}
+             */
+            if ($targetPage->getUrlId() === $identifier) {
+                $res = $this->executeTransparentRedirect(
+                    $targetPage->getDokuwikiId(),
+                    self::TARGET_ORIGIN_CANONICAL
+                );
+            } else {
+                $res = $this->executePermanentRedirect(
+                    $targetPage->getDokuwikiId(), // not the url because, it allows to add url query redirection property
+                    self::TARGET_ORIGIN_CANONICAL
+                );
+            }
             if ($res) {
                 return;
             }
@@ -428,7 +444,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             $buildAlias = $targetPage->getBuildAlias();
             switch ($buildAlias->getType()) {
                 case AliasType::REDIRECT:
-                    $res = $this->executePermanentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_ALIAS);
+                    $res = $this->executePermanentRedirect($targetPage->getCanonicalUrl([], true), self::TARGET_ORIGIN_ALIAS);
                     if ($res) {
                         return;
                     }
@@ -441,7 +457,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                     break;
                 default:
                     LogUtility::msg("The alias type ({$buildAlias->getType()}) is unknown. A permanent redirect was performed for the alias $identifier");
-                    $res = $this->executePermanentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_ALIAS);
+                    $res = $this->executePermanentRedirect($targetPage->getCanonicalUrl([], true), self::TARGET_ORIGIN_ALIAS);
                     if ($res) {
                         return;
                     }
@@ -758,7 +774,17 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
 
         // An external url ?
-        if (Url::isValidURL($target)) {
+        $isValid = Url::isValid($target);
+        // If there is a bug in the isValid function for an internal url
+        // We get a loop.
+        // The Url becomes the id, the id is unknown and we do a redirect again
+        //
+        // We check then if the target starts with the base url
+        // if this is the case, it's valid
+        if (!$isValid && strpos($target, DOKU_URL) === 0) {
+            $isValid = true;
+        }
+        if ($isValid) {
 
             // defend against HTTP Response Splitting
             // https://owasp.org/www-community/attacks/HTTP_Response_Splitting
@@ -994,7 +1020,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         }
 
         // If this is an external redirect (other domain)
-        if (Url::isValidURL($calculatedTarget)) {
+        if (Url::isValid($calculatedTarget)) {
 
             $this->executeHttpRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
             return true;

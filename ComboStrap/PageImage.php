@@ -6,6 +6,7 @@ namespace ComboStrap;
 
 class PageImage
 {
+
     const PAGE_IMAGE = "page-image";
 
     // next release ?

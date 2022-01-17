@@ -13,6 +13,9 @@ class Slug extends MetadataWikiPath
 
     public const PROPERTY_NAME = "slug";
 
+
+    const SEPARATORS_CHARACTERS = [".", "(", ")", ","];
+
     public static function createForPage(ResourceCombo $resource)
     {
         return (new Slug())
@@ -25,13 +28,21 @@ class Slug extends MetadataWikiPath
     }
 
 
+    /**
+     * The goal is to get only words that can be interpreted
+     * We could also encode it
+     * @param $string
+     * @return string|null
+     */
     public static function toSlugPath($string): ?string
     {
         if (empty($string)) return null;
         // Reserved word to space
         $slugWithoutReservedWord = str_replace(DokuPath::getReservedWords(), " ", $string);
+        // Delete points, comma, parenthesis
+        $slugWithoutSeparator = str_replace(self::SEPARATORS_CHARACTERS, " ", $slugWithoutReservedWord);
         // Doubles spaces to space
-        $slugWithoutDoubleSpace = preg_replace("/\s{2,}/", " ", $slugWithoutReservedWord);
+        $slugWithoutDoubleSpace = preg_replace("/\s{2,}/", " ", $slugWithoutSeparator);
         // Trim space
         $slugTrimmed = trim($slugWithoutDoubleSpace);
         // No Space around the path part

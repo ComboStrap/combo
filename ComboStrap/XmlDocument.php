@@ -55,9 +55,10 @@ class XmlDocument
     /**
      * XmlFile constructor.
      * @param $text
-     * @param $type - HTML or not
+     * @param string $type - HTML or not
+     * @throws ExceptionCombo
      */
-    public function __construct($text, $type = self::XML_TYPE)
+    public function __construct($text, string $type = self::XML_TYPE)
     {
 
 
@@ -175,8 +176,9 @@ class XmlDocument
                          */
                         libxml_clear_errors();
 
-                        // In test, this will send a exception
-                        LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        // The xml dom object is null, we got NULL pointer exception everywhere
+                        // just throw, the code will see it
+                        throw new ExceptionCombo($message, self::CANONICAL);
 
                     }
 
@@ -243,11 +245,24 @@ class XmlDocument
     }
 
     public
-    function setRootAttribute($string, $name)
+    function setRootAttribute($name, $value)
     {
         if ($this->isXmlExtensionLoaded()) {
-            $this->xmlDom->documentElement->setAttribute($string, $name);
+            $this->xmlDom->documentElement->setAttribute($name, $value);
         }
+    }
+
+    /**
+     * @param $name
+     * @return string null if not found
+     */
+    public function getRootAttributeValue($name): ?string
+    {
+        $value = $this->xmlDom->documentElement->getAttribute($name);
+        if($value===""){
+            return null;
+        }
+        return $value;
     }
 
     public function getXmlText()
@@ -556,6 +571,18 @@ class XmlDocument
         // the loading option: LIBXML_NOBLANKS
         // is equivalent to $this->xmlDom->preserveWhiteSpace = true;
         $this->xmlDom->preserveWhiteSpace = false;
+    }
+
+    public function removeAttributeValue(string $attributeName, DOMElement $nodeElement)
+    {
+        $attr = $nodeElement->getAttributeNode($attributeName);
+        if ($attr == false) {
+            return;
+        }
+        $result = $nodeElement->removeAttributeNode($attr);
+        if ($result === false) {
+            LogUtility::msg("Not able to delete the attribute $attributeName of the node element $nodeElement in the Xml document $this");
+        }
     }
 
 

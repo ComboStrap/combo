@@ -128,9 +128,9 @@ class Background
                     switch ($backgroundFill) {
                         case "cover":
                             // it makes the background responsive
-                            $tagAttributes->addStyleDeclaration(self::BACKGROUND_SIZE, $backgroundFill);
-                            $tagAttributes->addStyleDeclaration(self::BACKGROUND_REPEAT, "no-repeat");
-                            $tagAttributes->addStyleDeclaration(self::BACKGROUND_POSITION, "center center");
+                            $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_SIZE, $backgroundFill);
+                            $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_REPEAT, "no-repeat");
+                            $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_POSITION, "center center");
 
                             /**
                              * The type of image is important for the processing of SVG
@@ -140,7 +140,7 @@ class Background
                         case "tile":
                             // background size is then "auto" (ie repeat), the default
                             // background position is not needed (the tile start on the left top corner)
-                            $tagAttributes->addStyleDeclaration(self::BACKGROUND_REPEAT, "repeat");
+                            $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_REPEAT, "repeat");
 
                             /**
                              * The type of image is important for the processing of SVG
@@ -188,7 +188,7 @@ class Background
                  */
                 $backgroundImageStyleValue = "linear-gradient(to right, rgba(255,255,255, $finalOpacity) 0 50%, rgba(255,255,255, $finalOpacity) 50% 100%)," . $backgroundImageStyleValue;
             }
-            $tagAttributes->addStyleDeclaration(self::BACKGROUND_IMAGE, $backgroundImageStyleValue);
+            $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_IMAGE, $backgroundImageStyleValue);
         }
 
 
@@ -217,11 +217,11 @@ class Background
                     LogUtility::msg("An image and a linear gradient color are exclusive because a linear gradient color creates an image. You can't use the linear color (" . $colorValue . ") and the image (" . $backgroundImageStyleValue . ")", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
                 } else {
                     $mainColorValue = substr($colorValue, strlen($gradientPrefix));
-                    $tagAttributes->addStyleDeclaration(self::BACKGROUND_IMAGE, 'linear-gradient(to top,#fff 0,' . ColorUtility::getColorValue($mainColorValue) . ' 100%)');
-                    $tagAttributes->addStyleDeclaration(self::BACKGROUND_COLOR, 'unset!important');
+                    $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_IMAGE, 'linear-gradient(to top,#fff 0,' . ColorUtility::getColorValue($mainColorValue) . ' 100%)');
+                    $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_COLOR, 'unset!important');
                 }
             } else {
-                $tagAttributes->addStyleDeclaration(self::BACKGROUND_COLOR, $colorValue);
+                $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_COLOR, $colorValue);
             }
         }
 
@@ -330,7 +330,7 @@ class Background
                 LogUtility::msg("The pattern color was not set for the background with the (" . $pattern . "). It was set to the default color.", LogUtility::LVL_MSG_INFO, self::CANONICAL);
                 $patternColor = "#FDE482";
             }
-            $tagAttributes->addStyleDeclaration(ColorUtility::COLOR, $patternColor);
+            $tagAttributes->addStyleDeclarationIfNotSet(ColorUtility::COLOR, $patternColor);
 
         }
     }

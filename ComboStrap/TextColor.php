@@ -53,7 +53,7 @@ class TextColor
                      */
                     $colorValue = ColorUtility::getColorValue($colorValue);
                     if (!empty($colorValue)) {
-                        $attributes->addStyleDeclaration(TextColor::CSS_ATTRIBUTE, $colorValue);
+                        $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, $colorValue);
                     }
                 }
                 break;

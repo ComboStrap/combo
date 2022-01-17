@@ -50,7 +50,7 @@ class FontSize
                     $headingValue = self::HEADING_NUMBER[$value];
                     $tagAttributes->addClassName("fs-$headingValue");
                 } else {
-                    $tagAttributes->addStyleDeclaration("font-size", $value);
+                    $tagAttributes->addStyleDeclarationIfNotSet("font-size", $value);
                 }
             }
         }

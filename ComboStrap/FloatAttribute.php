@@ -80,8 +80,8 @@ class FloatAttribute
             }
 
             // position relative and z-index are needed to put the float above
-            $attributes->addStyleDeclaration("position", "relative!important");
-            $attributes->addStyleDeclaration("z-index", 1);
+            $attributes->addStyleDeclarationIfNotSet("position", "relative!important");
+            $attributes->addStyleDeclarationIfNotSet("z-index", 1);
         }
     }
 }

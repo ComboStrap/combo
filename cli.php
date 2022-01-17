@@ -13,7 +13,6 @@ if (!defined('DOKU_INC')) die();
 
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\BacklinkCount;
-use ComboStrap\DatabasePageRow;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\ExceptionComboRuntime;
@@ -74,6 +73,9 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
     /**
      * register options and arguments
      * @param Options $options
+     *
+     * Note the animal is set in {@link DokuWikiFarmCore::detectAnimal()}
+     * via the environment variable `animal` that is passed in the $_SERVER variable
      */
     protected function setup(Options $options)
     {
@@ -152,10 +154,18 @@ EOF;
     /**
      * The main entry
      * @param Options $options
+     * @throws ExceptionCombo
      */
     protected function main(Options $options)
     {
 
+
+        if(isset($_REQUEST['animal'])){
+            echo "Animal detected: ".$_REQUEST['animal']."\n";
+        } else {
+            echo "No Animal detected\n";
+            echo "Conf: ".DOKU_CONF."\n";
+        }
 
         $args = $options->getArgs();
 

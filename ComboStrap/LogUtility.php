@@ -265,7 +265,8 @@ class LogUtility
         if ($message === "" || $message === null) {
             $newMessage = "The passed message to the log was empty or null. BackTrace: \n";
             ob_start();
-            debug_print_backtrace();
+            $limit = 10;
+            debug_print_backtrace(0, $limit);
             $trace = ob_get_contents();
             ob_end_clean();
             $newMessage .= $trace;

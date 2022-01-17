@@ -204,6 +204,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                 while ($parent = $callStack->moveToParent()) {
                     if ($parent->getTagName() === syntax_plugin_combo_iterator::TAG) {
                         $iteratorNode = $parent;
+                        break; // to start from the iterator
                     }
                 }
 

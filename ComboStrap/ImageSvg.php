@@ -17,8 +17,18 @@ class ImageSvg extends Image
     const CANONICAL = "svg";
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function __construct($path, $tagAttributes = null)
     {
+
+        /**
+         * We build the svg document immediately to validate it
+         * Getting the width of an error HTML document if the file was downloaded
+         * from a server has no use at all
+         */
+        $this->svgDocument = SvgDocument::createSvgDocumentFromPath($path);
         parent::__construct($path, $tagAttributes);
     }
 
@@ -28,21 +38,25 @@ class ImageSvg extends Image
      */
     private $svgDocument;
 
-    public function getIntrinsicWidth()
+    /**
+     * @throws ExceptionCombo
+     */
+    public function getIntrinsicWidth(): int
     {
         return $this->getSvgDocument()->getMediaWidth();
     }
 
-    public function getIntrinsicHeight()
+    /**
+     * @throws ExceptionCombo
+     */
+    public function getIntrinsicHeight(): int
     {
         return $this->getSvgDocument()->getMediaHeight();
     }
 
-    public function getSvgDocument(): SvgDocument
+
+    protected function getSvgDocument(): SvgDocument
     {
-        if ($this->svgDocument == null) {
-            $this->svgDocument = SvgDocument::createSvgDocumentFromPath($this->getPath());
-        }
         return $this->svgDocument;
     }
 
@@ -57,7 +71,7 @@ class ImageSvg extends Image
 
 
         if (!$this->exists()) {
-            LogUtility::msg("The svg media does not exist ({$this->getBaseName()})", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            LogUtility::msg("The svg media does not exist ({$this})", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return "";
         }
 
@@ -162,7 +176,8 @@ class ImageSvg extends Image
 
         $cache = new CacheMedia($this->getPath(), $this->getAttributes());
         if (!$cache->isCacheUsable()) {
-            $content = $this->getSvgDocument()->getXmlText($this->getAttributes());
+            $svgDocument = $this->getSvgDocument();
+            $content = $svgDocument->getXmlText($this->getAttributes());
             $cache->storeCache($content);
         }
         return $cache->getFile();

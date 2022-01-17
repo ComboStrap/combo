@@ -36,7 +36,7 @@ class Boldness
                 $tagAttributes->addClassName("fw-$value");
             } else {
                 $value = Boldness::toNumericValue($value);
-                $tagAttributes->addStyleDeclaration("font-weight", $value);
+                $tagAttributes->addStyleDeclarationIfNotSet("font-weight", $value);
             }
         }
 

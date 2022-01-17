@@ -35,7 +35,7 @@ class RenderUtility
      * @param bool $stripOpenAndEnd - to avoid the p element in test rendering
      * @return array
      */
-    public static function getInstructionsAndStripPEventually($pageContent, $stripOpenAndEnd = true)
+    public static function getInstructionsAndStripPEventually($pageContent, $stripOpenAndEnd = true): array
     {
 
         $instructions = p_get_instructions($pageContent);

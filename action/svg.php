@@ -4,6 +4,7 @@
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\Dimension;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\Identity;
 use ComboStrap\CacheMedia;
 use ComboStrap\DokuPath;
@@ -113,10 +114,10 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
 
         $dokuPath = DokuPath::createMediaPathFromId($id,$rev);
 
-        $svgImage = new ImageSvg($dokuPath,  $tagAttributes);
         try {
+            $svgImage = new ImageSvg($dokuPath,  $tagAttributes);
             $event->data['file'] =  $svgImage->getSvgFile()->toAbsolutePath()->toString();
-        } catch (RuntimeException $e) {
+        } catch (ExceptionCombo $e) {
 
             $event->data['file'] = PluginUtility::getResourceBaseUrl()."/images/error-bad-format.svg";
             $event->data['status'] = 422;

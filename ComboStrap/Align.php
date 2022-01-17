@@ -26,11 +26,11 @@ class Align
                     case "right":
                     case "end":
                         if (Bootstrap::getBootStrapMajorVersion()==Bootstrap::BootStrapFourMajorVersion) {
-                            $attributes->addStyleDeclaration("margin-left", "auto");
+                            $attributes->addStyleDeclarationIfNotSet("margin-left", "auto");
                         } else {
                             $attributes->addClassName("ms-auto");
                         }
-                        $attributes->addStyleDeclaration("width", "fit-content");
+                        $attributes->addStyleDeclarationIfNotSet("width", "fit-content");
                         break;
                 }
 

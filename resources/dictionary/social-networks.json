@@ -85,10 +85,10 @@
             "text": "title"
         },
         "icons": {
-            "solid": "entypo-social:linkedin",
-            "solid-circle": "entypo-social:linkedin-with-circle",
-            "outline": "uit:linkedin-alt",
-            "outline-circle": "et:linkedin"
+            "solid": "dashicons:reddit",
+            "solid-circle": "bi:reddit",
+            "outline": "simple-line-icons:social-reddit",
+            "outline-circle": "simple-line-icons:social-reddit"
         }
     },
     "email": "mailto:?subject="

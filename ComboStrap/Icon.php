@@ -49,7 +49,8 @@ class Icon extends ImageSvg
         self::CLARITY => "https://raw.githubusercontent.com/vmware/clarity-assets/master/icons/essential",
         self::OCTICON => "https://raw.githubusercontent.com/primer/octicons/main/icons",
         self::ICONSCOUT => "https://raw.githubusercontent.com/Iconscout/unicons/master/svg/line",
-        self::ELEGANT_THEME => "https://raw.githubusercontent.com/pprince/etlinefont-bower/master/images/svg/individual_icons"
+        self::ELEGANT_THEME => "https://raw.githubusercontent.com/pprince/etlinefont-bower/master/images/svg/individual_icons",
+        self::EVA => "https://raw.githubusercontent.com/akveo/eva-icons/master/package/icons"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -64,7 +65,8 @@ class Icon extends ImageSvg
         self::CLARITY => "https://clarity.design/foundation/icons/",
         self::OCTICON => "https://primer.style/octicons/",
         self::ICONSCOUT => "https://iconscout.com/unicons/explore/line",
-        self::ELEGANT_THEME => "https://github.com/pprince/etlinefont-bower"
+        self::ELEGANT_THEME => "https://github.com/pprince/etlinefont-bower",
+        self::EVA => "https://akveo.github.io/eva-icons/"
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
@@ -94,7 +96,8 @@ class Icon extends ImageSvg
         "clarity" => self::CLARITY,
         "octicon" => self::OCTICON,
         "uit" => self::ICONSCOUT,
-        "et" => self::ELEGANT_THEME
+        "et" => self::ELEGANT_THEME,
+        "eva" => self::EVA
     );
 
     const FEATHER = "feather";
@@ -111,6 +114,7 @@ class Icon extends ImageSvg
     const OCTICON = "octicon";
     const ICONSCOUT = "iconscout";
     const ELEGANT_THEME = "elegant-theme";
+    const EVA = "eva";
 
 
     /**
@@ -227,13 +231,7 @@ class Icon extends ImageSvg
                     case self::ANT_DESIGN:
                         // table-outlined where table is the svg, outlined the category
                         // ordered-list-outlined where ordered-list is the svg, outlined the category
-                        $iconProcessed = $iconName;
-                        $index = strrpos($iconProcessed, "-");
-                        if ($index === false) {
-                            throw new ExceptionCombo ("We expect that a ant design icon name ($iconName) has two parts separated by a `-` (example: table-outlined). The icon could not be downloaded.", self::NAME);
-                        }
-                        $iconName = substr($iconProcessed, 0, $index);
-                        $iconType = substr($iconProcessed, $index + 1);
+                        [$iconName, $iconType] = self::explodeIconNameAndType($iconName,"-");
                         $iconBaseUrl .= "/$iconType";
                         break;
                     case self::CARBON:
@@ -241,6 +239,13 @@ class Icon extends ImageSvg
                         break;
                     case self::FAD:
                         $iconName = self::getFadPhysicalName($iconName);
+                        break;
+                    case self::EVA:
+                        // Eva
+                        // example: eva:facebook-fill
+                        [$iconName, $iconType] = self::explodeIconNameAndType($iconName,"-");
+                        $iconBaseUrl .= "/$iconType/svg";
+                        break;
                 }
 
 
@@ -363,7 +368,7 @@ class Icon extends ImageSvg
         if ($physicalName === null) {
             LogUtility::msg("The icon ($logicalName) is unknown as 32x32 carbon icon");
             // by default, just lowercase
-            return lower($logicalName);
+            return strtolower($logicalName);
         }
         return $physicalName;
     }
@@ -382,6 +387,24 @@ class Icon extends ImageSvg
             return $logicalName;
         }
         return $physicalName;
+    }
+
+    /**
+     * @param string $iconName
+     * @param string $sep
+     * @return array
+     * @throws ExceptionCombo
+     */
+    private static function explodeIconNameAndType(string $iconName, string $sep = "-"): array
+    {
+
+        $index = strrpos($iconName, $sep);
+        if ($index === false) {
+            throw new ExceptionCombo ("We expect that the icon name ($iconName) has two parts separated by a `-` (example: table-outlined). The icon could not be downloaded.", self::NAME);
+        }
+        $iconName = substr($iconName, 0, $index);
+        $iconType = substr($iconName, $index + 1);
+        return [$iconName,$iconType];
     }
 
 

@@ -406,7 +406,16 @@ class SvgDocument extends XmlDocument
                             if ($colorValue !== self::CURRENT_COLOR) {
                                 $svgPaths = $this->xpath("//*[local-name()='path']");
                                 for ($i = 0; $i < $svgPaths->length; $i++) {
-                                    $this->removeAttributeValue("fill", $svgPaths[$i]);
+                                    /**
+                                     * @var DOMElement $nodeElement
+                                     */
+                                    $nodeElement = $svgPaths[$i];
+                                    $value = $nodeElement->getAttribute("fill");
+                                    if($value!=="none") {
+                                        $this->removeAttributeValue("fill", $nodeElement);
+                                    } else {
+                                        $this->removeNode($nodeElement);
+                                    }
                                 }
                             }
 
@@ -830,6 +839,15 @@ class SvgDocument extends XmlDocument
             return true;
         }
         return false;
+    }
+
+    /**
+     * An utility function to know how to remove a node
+     * @param DOMElement $nodeElement
+     */
+    private function removeNode(DOMElement $nodeElement)
+    {
+        $nodeElement->parentNode->removeChild($nodeElement);
     }
 
 

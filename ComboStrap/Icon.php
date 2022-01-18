@@ -47,7 +47,9 @@ class Icon extends ImageSvg
         self::ANT_DESIGN => "https://raw.githubusercontent.com/ant-design/ant-design-icons/master/packages/icons-svg/svg",
         self::FAD => "https://raw.githubusercontent.com/fefanto/fontaudio/master/svgs",
         self::CLARITY => "https://raw.githubusercontent.com/vmware/clarity-assets/master/icons/essential",
-        self::OCTICON => "https://raw.githubusercontent.com/primer/octicons/main/icons"
+        self::OCTICON => "https://raw.githubusercontent.com/primer/octicons/main/icons",
+        self::ICONSCOUT => "https://raw.githubusercontent.com/Iconscout/unicons/master/svg/line",
+        self::ELEGANT_THEME => "https://raw.githubusercontent.com/pprince/etlinefont-bower/master/images/svg/individual_icons"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -60,7 +62,9 @@ class Icon extends ImageSvg
         self::TWEET_EMOJI => "https://twemoji.twitter.com/",
         self::ANT_DESIGN => "https://ant.design/components/icon/",
         self::CLARITY => "https://clarity.design/foundation/icons/",
-        self::OCTICON => "https://primer.style/octicons/"
+        self::OCTICON => "https://primer.style/octicons/",
+        self::ICONSCOUT => "https://iconscout.com/unicons/explore/line",
+        self::ELEGANT_THEME => "https://github.com/pprince/etlinefont-bower"
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
@@ -88,7 +92,9 @@ class Icon extends ImageSvg
         "ant-design" => self::ANT_DESIGN,
         "fad" => self::FAD,
         "clarity" => self::CLARITY,
-        "octicon" => self::OCTICON
+        "octicon" => self::OCTICON,
+        "uit" => self::ICONSCOUT,
+        "et" => self::ELEGANT_THEME
     );
 
     const FEATHER = "feather";
@@ -103,6 +109,8 @@ class Icon extends ImageSvg
     const FAD = "fad";
     const CLARITY = "clarity";
     const OCTICON = "octicon";
+    const ICONSCOUT = "iconscout";
+    const ELEGANT_THEME = "elegant-theme";
 
 
     /**

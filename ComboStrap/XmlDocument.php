@@ -442,7 +442,7 @@ class XmlDocument
             $childNode = &$this->getXmlDom()->documentElement->childNodes[$i];
             if ($childNode->nodeName == $nodeName) {
                 $result = $this->getXmlDom()->documentElement->removeChild($childNode);
-                if ($result === false) {
+                if ($result == false) {
                     throw new \RuntimeException("Not able to delete the child node $nodeName");
                 }
                 break;

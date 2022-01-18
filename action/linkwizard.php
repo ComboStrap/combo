@@ -78,8 +78,8 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
                 continue;
             }
             $pattern = "%$searchTermWord%";
-            $sqlParameters = array_merge([$pattern, $pattern, $pattern, $pattern], $sqlParameters);
-            $sqlPredicates[] = "(id like ? COLLATE NOCASE or H1 like ? COLLATE NOCASE or title like ? COLLATE NOCASE or name like ? COLLATE NOCASE)";
+            $sqlParameters = array_merge([$pattern, $pattern, $pattern, $pattern, $pattern], $sqlParameters);
+            $sqlPredicates[] = "(id like ? COLLATE NOCASE or H1 like ? COLLATE NOCASE or title like ? COLLATE NOCASE or name like ? COLLATE NOCASE or path like ? COLLATE NOCASE)";
         }
         $sqlPredicate = implode(" and ", $sqlPredicates);
         $searchTermSql = <<<EOF

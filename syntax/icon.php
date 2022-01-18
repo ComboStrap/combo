@@ -11,7 +11,6 @@ use ComboStrap\FileSystems;
 use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\SvgImageLink;
 use ComboStrap\TagAttributes;
 
 
@@ -195,7 +194,11 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                         case DOKU_LEXER_SPECIAL:
                             $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                             try {
-                                $renderer->doc .= Icon::create($tagAttribute)
+                                $name = $tagAttribute->getValue("name");
+                                if ($name === null) {
+                                    throw new ExceptionCombo("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
+                                }
+                                $renderer->doc .= Icon::create($name, $tagAttribute)
                                     ->render();
                             } catch (Exception $e) {
                                 $renderer->doc .= self::exceptionHandling($e, $tagAttribute);
@@ -220,7 +223,11 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                              */
                             $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                             try {
-                                $renderer->doc .= Icon::create($tagAttribute)
+                                $name = $tagAttribute->getValue("name");
+                                if ($name === null) {
+                                    throw new ExceptionCombo("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
+                                }
+                                $renderer->doc .= Icon::create($name, $tagAttribute)
                                     ->render();
                             } catch (ExceptionCombo $e) {
                                 $renderer->doc .= self::exceptionHandling($e, $tagAttribute);
@@ -243,12 +250,16 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                  */
                 $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                 try {
-                    $mediaPath = Icon::create($tagAttribute)->getPath();
+                    $name = $tagAttribute->getValueAndRemoveIfPresent("name");
+                    if ($name === null) {
+                        throw new ExceptionCombo("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
+                    }
+                    $mediaPath = Icon::create($name, $tagAttribute)->getPath();
                 } catch (ExceptionCombo $e) {
                     // error is already fired in the renderer
                     return false;
                 }
-                if ($mediaPath instanceof DokuPath) {
+                if ($mediaPath instanceof DokuPath && FileSystems::exists($mediaPath)) {
                     $mediaId = $mediaPath->getDokuwikiId();
                     syntax_plugin_combo_media::registerFirstMedia($renderer, $mediaId);
                 }

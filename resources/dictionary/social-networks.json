@@ -5,9 +5,9 @@
             "url": "u"
         },
         "icons": {
-            "outline":"uit:facebook-f",
-            "outline-circle":"et:facebook",
-            "solid":"eva:facebook-fill",
+            "outline": "uit:facebook-f",
+            "outline-circle": "et:facebook",
+            "solid": "eva:facebook-fill",
             "solid-circle": "bi:facebook"
         }
     },
@@ -18,21 +18,94 @@
             "text": "text"
         },
         "icons": {
-            "outline":"uit:twitter-alt",
-            "outline-circle":"et:twitter",
-            "solid":"mdi-twitter",
+            "outline": "uit:twitter-alt",
+            "outline-circle": "et:twitter",
+            "solid": "mdi-twitter",
             "solid-circle": "ant-design:twitter-circle-filled"
         }
     },
-
-    "tumblr": "https://www.tumblr.com/widgets/share/tool?posttype=link&title=$text&caption=$text&content=$url&canonicalUrl=$url&shareSource=tumblr_share_button",
+    "tumblr": {
+        "endpoint": "https://www.tumblr.com/widgets/share/tool?posttype=link",
+        "queries": {
+            "text": [
+                "title",
+                "caption"
+            ],
+            "url": [
+                "content",
+                "canonicalUrl"
+            ]
+        },
+        "icons": {
+            "solid": "mdi-twitter",
+            "solid-circle": "ant-design:twitter-circle-filled",
+            "outline": "uit:twitter-alt",
+            "outline-circle": "et:twitter"
+        }
+    },
     "pinterest": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$text",
-    "linkedin": "https://www.linkedin.com/shareArticle?mini=true&url=" + url + "&title=" + text + "&summary=" + text + "&source=" + url,
-    "reddit": "https://reddit.com/submit/?url=" + url + "&resubmit=true&title=" + text,
-    "email": "mailto:?subject=" + text + "&body=" + url,
-    "xing": "https://www.xing.com/app/user?op=share;url=" + url + ";title=" + text,
-    "whatsapp": "whatsapp://send?text=" + text + "%20" + url,
-    "hackernews":"https://news.ycombinator.com/submitlink?u=" + url + "&t=" + text,
-    "vk": "http://vk.com/share.php?title=" + text + "&url=" + url,
-    "telegram": "https://telegram.me/share/url?text=" + text + "&url=" + url,
+    "linkedin": "https://www.linkedin.com/shareArticle?mini=true&url="
+    +
+    url
+    +
+    "&title="
+    +
+    text
+    +
+    "&summary="
+    +
+    text
+    +
+    "&source="
+    +
+    url,
+    "reddit": "https://reddit.com/submit/?url="
+    +
+    url
+    +
+    "&resubmit=true&title="
+    +
+    text,
+    "email": "mailto:?subject="
+    +
+    text
+    +
+    "&body="
+    +
+    url,
+    "xing": "https://www.xing.com/app/user?op=share;url="
+    +
+    url
+    +
+    ";title="
+    +
+    text,
+    "whatsapp": "whatsapp://send?text="
+    +
+    text
+    +
+    "%20"
+    +
+    url,
+    "hackernews": "https://news.ycombinator.com/submitlink?u="
+    +
+    url
+    +
+    "&t="
+    +
+    text,
+    "vk": "http://vk.com/share.php?title="
+    +
+    text
+    +
+    "&url="
+    +
+    url,
+    "telegram": "https://telegram.me/share/url?text="
+    +
+    text
+    +
+    "&url="
+    +
+    url
 }

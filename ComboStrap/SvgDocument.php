@@ -15,6 +15,7 @@ namespace ComboStrap;
 
 use DOMAttr;
 use DOMElement;
+use http\Exception\InvalidArgumentException;
 
 require_once(__DIR__ . '/XmlDocument.php');
 require_once(__DIR__ . '/Unit.php');
@@ -129,7 +130,6 @@ class SvgDocument extends XmlDocument
     public function __construct($text)
     {
         parent::__construct($text);
-
         $this->shouldBeOptimized = PluginUtility::getConfValue(self::CONF_SVG_OPTIMIZATION_ENABLE, 1);
 
     }
@@ -137,7 +137,8 @@ class SvgDocument extends XmlDocument
     /**
      * @param Path $path
      * @return SvgDocument
-     * @throws ExceptionCombo
+     * @throws ExceptionCombo - if the file does not exist or is not valid
+     *
      */
     public static function createSvgDocumentFromPath(Path $path): SvgDocument
     {
@@ -164,7 +165,6 @@ class SvgDocument extends XmlDocument
      *   This class should be merged with {@link ImageSvg}
      *   Because we use only {@link Image} function that are here not available because we loose the fact that this is an image
      *   For instance {@link Image::getCroppingDimensionsWithRatio()}
-     * @throws ExceptionCombo
      */
     public function getXmlText(TagAttributes $tagAttributes = null): string
     {

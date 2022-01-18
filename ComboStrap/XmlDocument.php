@@ -56,7 +56,10 @@ class XmlDocument
      * XmlFile constructor.
      * @param $text
      * @param string $type - HTML or not
-     * @throws ExceptionCombo
+     * @throws ExceptionCombo - if the file does not exist or is not valid
+     *
+     * Getting the width of an error HTML document if the file was downloaded
+     * from a server has no use at all
      */
     public function __construct($text, string $type = self::XML_TYPE)
     {
@@ -259,7 +262,7 @@ class XmlDocument
     public function getRootAttributeValue($name): ?string
     {
         $value = $this->xmlDom->documentElement->getAttribute($name);
-        if($value===""){
+        if ($value === "") {
             return null;
         }
         return $value;

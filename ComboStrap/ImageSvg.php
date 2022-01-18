@@ -17,18 +17,9 @@ class ImageSvg extends Image
     const CANONICAL = "svg";
 
 
-    /**
-     * @throws ExceptionCombo
-     */
     public function __construct($path, $tagAttributes = null)
     {
 
-        /**
-         * We build the svg document immediately to validate it
-         * Getting the width of an error HTML document if the file was downloaded
-         * from a server has no use at all
-         */
-        $this->svgDocument = SvgDocument::createSvgDocumentFromPath($path);
         parent::__construct($path, $tagAttributes);
     }
 
@@ -55,8 +46,22 @@ class ImageSvg extends Image
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     protected function getSvgDocument(): SvgDocument
     {
+        /**
+         * We build the svg document later because the file may not exist
+         * (Case with icon for instance where they are downloaded if they don't exist)
+         *
+         */
+        if ($this->svgDocument === null) {
+            /**
+             * The svg document throw an error if the file does not exist or is not valid
+             */
+            $this->svgDocument = SvgDocument::createSvgDocumentFromPath($this->getPath());
+        }
         return $this->svgDocument;
     }
 

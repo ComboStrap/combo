@@ -37,13 +37,29 @@
             ]
         },
         "icons": {
-            "solid": "mdi-twitter",
-            "solid-circle": "ant-design:twitter-circle-filled",
-            "outline": "uit:twitter-alt",
-            "outline-circle": "et:twitter"
+            "solid": "carbon:logo-tumblr",
+            "solid-circle": "entypo-social:tumblr-with-circle",
+            "outline": "uit:tumblr-alt",
+            "outline-circle": "et:tumblr"
         }
     },
-    "pinterest": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$text",
+    "pinterest": {
+        "endpoint": "https://pinterest.com/pin/create/button/",
+        "queries": {
+            "url": [
+                "url",
+                "media"
+            ],
+            "text": "description"
+        },
+        "icons": {
+            "solid": "entypo-social:pinterest",
+            "solid-circle": "bi:pinterest",
+            "outline": "simple-line-icons:social-pinterest",
+            "outline-circle": "et:tumblr"
+        }
+    },
+    ,
     "linkedin": "https://www.linkedin.com/shareArticle?mini=true&url="
     +
     url

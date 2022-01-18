@@ -52,7 +52,9 @@ class Icon extends ImageSvg
         self::LOGOS => "https://raw.githubusercontent.com/gilbarbara/logos/master/logos",
         self::MATERIAL_DESIGN => "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg",
         self::OCTICON => "https://raw.githubusercontent.com/primer/octicons/main/icons",
-        self::TWEET_EMOJI => "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg"
+        self::TWEET_EMOJI => "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg",
+        self::SIMPLE_LINE => "https://raw.githubusercontent.com/thesabbir/simple-line-icons/master/src/svgs",
+        self::ICOMOON => "https://raw.githubusercontent.com/Keyamoon/IcoMoon-Free/master/SVG"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -71,6 +73,9 @@ class Icon extends ImageSvg
         self::EVA => "https://akveo.github.io/eva-icons/",
         self::ENTYPO_SOCIAL => "http://www.entypo.com",
         self::ENTYPO => "http://www.entypo.com",
+        self::SIMPLE_LINE => "https://thesabbir.github.io/simple-line-icons",
+        self::ICOMOON => "https://icomoon.io/"
+
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
@@ -103,7 +108,9 @@ class Icon extends ImageSvg
         "et" => self::ELEGANT_THEME,
         "eva" => self::EVA,
         "entypo-social" => self::ENTYPO_SOCIAL,
-        "entypo" => self::ENTYPO
+        "entypo" => self::ENTYPO,
+        "simple-line-icons"=> self::SIMPLE_LINE,
+        "icomoon-free" => self::ICOMOON
     );
 
     const FEATHER = "feather";
@@ -123,6 +130,9 @@ class Icon extends ImageSvg
     const EVA = "eva";
     const ENTYPO_SOCIAL = "entypo-social";
     const ENTYPO = "entypo";
+    const SIMPLE_LINE = "simple-line";
+    const ICOMOON = "icomoon";
+
     private $fullQualifiedName;
     /**
      * The icon library
@@ -236,6 +246,24 @@ class Icon extends ImageSvg
 
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
+    private static function getPhysicalNameFromDictionary(string $logicalName, string $library)
+    {
+        $path = LocalPath::createFromPath(Resources::getDictionaryDirectory() . "/$library-icons.json");
+        $jsonContent = FileSystems::getContent($path);
+        $jsonArray = Json::createFromString($jsonContent)->toArray();
+        $physicalName = $jsonArray[$logicalName];
+        if ($physicalName === null) {
+            LogUtility::msg("The icon ($logicalName) is unknown for the library ($library)");
+            // by default, just lowercase
+            return strtolower($logicalName);
+        }
+        return $physicalName;
+
+    }
+
     public function getFullQualifiedName(): string
     {
         return $this->fullQualifiedName;
@@ -283,16 +311,33 @@ class Icon extends ImageSvg
                 $iconBaseUrl .= "/$iconType";
                 break;
             case self::CARBON:
-                $iconName = self::getCarbonPhysicalName($iconName);
+                /**
+                 * Iconify normalized the name of the carbon library (making them lowercase)
+                 *
+                 * For instance, CSV is csv (https://icon-sets.iconify.design/carbon/csv/)
+                 *
+                 * This dictionary reproduce it.
+                 */
+                $iconName = self::getPhysicalNameFromDictionary($iconName,self::CARBON);
                 break;
             case self::FAD:
-                $iconName = self::getFadPhysicalName($iconName);
+                $iconName = self::getPhysicalNameFromDictionary($iconName,self::FAD);
+                break;
+            case self::ICOMOON:
+                $iconName = self::getPhysicalNameFromDictionary($iconName,self::ICOMOON);
                 break;
             case self::EVA:
                 // Eva
                 // example: eva:facebook-fill
                 [$iconName, $iconType] = self::explodeIconNameAndType($iconName, "-");
                 $iconBaseUrl .= "/$iconType/svg";
+                break;
+
+            case self::SIMPLE_LINE:
+                // Bug
+                if($iconName==="social-pinterest"){
+                    $iconName = "social-pintarest";
+                }
                 break;
         }
 
@@ -406,46 +451,10 @@ class Icon extends ImageSvg
         return $jsonArray[$emojiName];
     }
 
-    /**
-     * Iconify normalized the name of the carbon library (making them lowercase)
-     *
-     * For instance, CSV is csv (https://icon-sets.iconify.design/carbon/csv/)
-     *
-     * This dictionary reproduce it.
-     *
-     * @param string $logicalName
-     * @return mixed
-     * @throws ExceptionCombo
-     */
-    private static function getCarbonPhysicalName(string $logicalName)
-    {
-        $path = LocalPath::createFromPath(Resources::getDictionaryDirectory() . "/carbon-icons.json");
-        $jsonContent = FileSystems::getContent($path);
-        $jsonArray = Json::createFromString($jsonContent)->toArray();
-        $physicalName = $jsonArray[$logicalName];
-        if ($physicalName === null) {
-            LogUtility::msg("The icon ($logicalName) is unknown as 32x32 carbon icon");
-            // by default, just lowercase
-            return strtolower($logicalName);
-        }
-        return $physicalName;
-    }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    private static function getFadPhysicalName($logicalName)
-    {
-        $path = LocalPath::createFromPath(Resources::getDictionaryDirectory() . "/fad-icons.json");
-        $jsonContent = FileSystems::getContent($path);
-        $jsonArray = Json::createFromString($jsonContent)->toArray();
-        $physicalName = $jsonArray[$logicalName];
-        if ($physicalName === null) {
-            LogUtility::msg("The icon ($logicalName) is unknown as fad icon");
-            return $logicalName;
-        }
-        return $physicalName;
-    }
+
+
+
 
     /**
      * @param string $iconName

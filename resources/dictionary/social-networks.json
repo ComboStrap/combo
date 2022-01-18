@@ -56,32 +56,41 @@
             "solid": "entypo-social:pinterest",
             "solid-circle": "bi:pinterest",
             "outline": "simple-line-icons:social-pinterest",
-            "outline-circle": "et:tumblr"
+            "outline-circle": "icomoon-free:pinterest2"
         }
     },
-    ,
-    "linkedin": "https://www.linkedin.com/shareArticle?mini=true&url="
-    +
-    url
-    +
-    "&title="
-    +
-    text
-    +
-    "&summary="
-    +
-    text
-    +
-    "&source="
-    +
-    url,
-    "reddit": "https://reddit.com/submit/?url="
-    +
-    url
-    +
-    "&resubmit=true&title="
-    +
-    text,
+    "linkedin": {
+        "endpoint": " https://www.linkedin.com/shareArticle?mini=true",
+        "queries": {
+            "url": [
+                "url",
+                "source"
+            ],
+            "text": [
+                "title",
+                "summary"
+            ]
+        },
+        "icons": {
+            "solid": "entypo-social:linkedin",
+            "solid-circle": "entypo-social:linkedin-with-circle",
+            "outline": "uit:linkedin-alt",
+            "outline-circle": "et:linkedin"
+        }
+    },
+    "reddit": {
+        "endpoint": "https://reddit.com/submit/?resubmit=true",
+        "queries": {
+            "url": "url",
+            "text": "title"
+        },
+        "icons": {
+            "solid": "entypo-social:linkedin",
+            "solid-circle": "entypo-social:linkedin-with-circle",
+            "outline": "uit:linkedin-alt",
+            "outline-circle": "et:linkedin"
+        }
+    },
     "email": "mailto:?subject="
     +
     text

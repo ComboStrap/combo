@@ -54,7 +54,8 @@ class Icon extends ImageSvg
         self::OCTICON => "https://raw.githubusercontent.com/primer/octicons/main/icons",
         self::TWEET_EMOJI => "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg",
         self::SIMPLE_LINE => "https://raw.githubusercontent.com/thesabbir/simple-line-icons/master/src/svgs",
-        self::ICOMOON => "https://raw.githubusercontent.com/Keyamoon/IcoMoon-Free/master/SVG"
+        self::ICOMOON => "https://raw.githubusercontent.com/Keyamoon/IcoMoon-Free/master/SVG",
+        self::DASHICONS => "https://raw.githubusercontent.com/WordPress/dashicons/master/svg-min"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -74,7 +75,8 @@ class Icon extends ImageSvg
         self::ENTYPO_SOCIAL => "http://www.entypo.com",
         self::ENTYPO => "http://www.entypo.com",
         self::SIMPLE_LINE => "https://thesabbir.github.io/simple-line-icons",
-        self::ICOMOON => "https://icomoon.io/"
+        self::ICOMOON => "https://icomoon.io/",
+        self::DASHICONS => "https://developer.wordpress.org/resource/dashicons/"
 
     );
 
@@ -110,7 +112,8 @@ class Icon extends ImageSvg
         "entypo-social" => self::ENTYPO_SOCIAL,
         "entypo" => self::ENTYPO,
         "simple-line-icons"=> self::SIMPLE_LINE,
-        "icomoon-free" => self::ICOMOON
+        "icomoon-free" => self::ICOMOON,
+        "dashicons" => self::DASHICONS
     );
 
     const FEATHER = "feather";
@@ -132,6 +135,7 @@ class Icon extends ImageSvg
     const ENTYPO = "entypo";
     const SIMPLE_LINE = "simple-line";
     const ICOMOON = "icomoon";
+    const DASHICONS = " dashicons";
 
     private $fullQualifiedName;
     /**

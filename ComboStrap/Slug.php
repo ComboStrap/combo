@@ -7,14 +7,13 @@ use ComboStrap\Metadata;
 use ComboStrap\MetadataWikiPath;
 use ComboStrap\PageTitle;
 use ComboStrap\ResourceCombo;
+use ComboStrap\StringUtility;
 
 class Slug extends MetadataWikiPath
 {
 
     public const PROPERTY_NAME = "slug";
 
-
-    const SEPARATORS_CHARACTERS = [".", "(", ")", ","];
 
     public static function createForPage(ResourceCombo $resource)
     {
@@ -37,28 +36,25 @@ class Slug extends MetadataWikiPath
     public static function toSlugPath($string): ?string
     {
         if (empty($string)) return null;
-        // Reserved word to space
-        $slugWithoutReservedWord = str_replace(DokuPath::getReservedWords(), " ", $string);
-        // Delete points, comma, parenthesis
-        $slugWithoutSeparator = str_replace(self::SEPARATORS_CHARACTERS, " ", $slugWithoutReservedWord);
-        // Doubles spaces to space
-        $slugWithoutDoubleSpace = preg_replace("/\s{2,}/", " ", $slugWithoutSeparator);
-        // Trim space
-        $slugTrimmed = trim($slugWithoutDoubleSpace);
-        // No Space around the path part
-        $slugParts = explode(DokuPath::PATH_SEPARATOR, $slugTrimmed);
-        $slugParts = array_map(function ($e) {
-            return trim($e);
-        }, $slugParts);
-        $slugWithoutSpaceAroundParts = implode(DokuPath::PATH_SEPARATOR, $slugParts);
+        $excludedCharacters = array_merge(DokuPath::getReservedWords(), StringUtility::SEPARATORS_CHARACTERS);
+        $excludedCharacters[] = DokuPath::SLUG_SEPARATOR;
+        $parts = explode(DokuPath::PATH_SEPARATOR, $string);
+        $parts = array_map(function ($e) use ($excludedCharacters) {
+            $wordsPart = StringUtility::getWords(
+                $e,
+                $excludedCharacters
+            );
+            // Implode and Lower case
+            return strtolower(implode(DokuPath::SLUG_SEPARATOR, $wordsPart));
+        }, $parts);
+
+        $slug = implode(DokuPath::PATH_SEPARATOR, $parts);
         // Space to separator
-        $slugWithoutSpace = str_replace(" ", DokuPath::SLUG_SEPARATOR, $slugWithoutSpaceAroundParts);
+        //$slugWithoutSpace = str_replace(" ", DokuPath::SLUG_SEPARATOR, $slugWithoutSpaceAroundParts);
         // No double separator
-        $slugWithoutDoubleSeparator = preg_replace("/" . DokuPath::SLUG_SEPARATOR . "{2,}/", DokuPath::SLUG_SEPARATOR, $slugWithoutSpace);
-        // Root
-        DokuPath::addRootSeparatorIfNotPresent($slugWithoutDoubleSeparator);
-        // Lower case
-        return strtolower($slugWithoutDoubleSeparator);
+        //$slugWithoutDoubleSeparator = preg_replace("/" . DokuPath::SLUG_SEPARATOR . "{2,}/", DokuPath::SLUG_SEPARATOR, $slugWithoutSpace);
+        DokuPath::addRootSeparatorIfNotPresent($slug);
+        return $slug;
     }
 
     public function getTab(): string

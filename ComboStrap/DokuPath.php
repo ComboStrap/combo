@@ -577,10 +577,7 @@ class DokuPath extends PathAbs
     public static function getReservedWords(): array
     {
         if (self::$reservedWords == null) {
-            $reservedWords = array_merge(Url::RESERVED_WORDS, LocalPath::RESERVED_WINDOWS_CHARACTERS);
-            self::$reservedWords = array_filter($reservedWords, function ($e) {
-                return $e != DokuPath::PATH_SEPARATOR;
-            });
+            self::$reservedWords = array_merge(Url::RESERVED_WORDS, LocalPath::RESERVED_WINDOWS_CHARACTERS);
         }
         return self::$reservedWords;
     }

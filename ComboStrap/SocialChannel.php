@@ -75,7 +75,7 @@ class SocialChannel
         $via = null;
         switch ($this->name) {
             case \action_plugin_combo_metatwitter::CANONICAL:
-                $via = PluginUtility::getConfValue(action_plugin_combo_metatwitter::CONF_TWITTER_SITE_HANDLE);;
+                $via = substr(action_plugin_combo_metatwitter::COMBO_STRAP_TWITTER_HANDLE, 1);
                 break;
         }
         if ($via !== null && $via !== "") {

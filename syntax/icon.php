@@ -35,6 +35,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 {
     const TAG = "icon";
     const CANONICAL = self::TAG;
+    const ICON_NAME_ATTRIBUTE = "name";
 
     private static function exceptionHandling(Exception $e, $tagAttribute)
     {
@@ -191,10 +192,10 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                     switch ($state) {
 
 
-                        case DOKU_LEXER_SPECIAL:
+                        case "DOKU_LEXER_SPECIAL":
                             $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                             try {
-                                $name = $tagAttribute->getValue("name");
+                                $name = $tagAttribute->getValue(self::ICON_NAME_ATTRIBUTE);
                                 if ($name === null) {
                                     throw new ExceptionCombo("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
                                 }

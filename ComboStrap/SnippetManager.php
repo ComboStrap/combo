@@ -302,7 +302,7 @@ class SnippetManager
      * @param $bar
      * @param $snippets
      */
-    public function addSnippetsFromCacheForBar($bar, $snippets)
+    public function addSnippetsFromCacheForSlot($bar, $snippets)
     {
 
         /**
@@ -326,10 +326,10 @@ class SnippetManager
         }
     }
 
-    public function getSnippetsForBar($bar)
+    public function getSnippetsForSlot($slot)
     {
-        if (isset($this->snippetsBySlotScope[$bar])) {
-            return $this->snippetsBySlotScope[$bar];
+        if (isset($this->snippetsBySlotScope[$slot])) {
+            return $this->snippetsBySlotScope[$slot];
         } else {
             return null;
         }

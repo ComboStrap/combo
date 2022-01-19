@@ -308,7 +308,7 @@ class TagAttributes
      * return
      *   * foo bar blue
      */
-     static function mergeClassNames(string $newNames, ?string $actualNames): string
+    static function mergeClassNames(string $newNames, ?string $actualNames): string
     {
         if (!is_string($newNames)) {
             LogUtility::msg("The value ($newNames) for the `class` attribute is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -863,9 +863,10 @@ class TagAttributes
     }
 
     public
-    function setLogicalTag($tag)
+    function setLogicalTag($tag): TagAttributes
     {
         $this->logicalTag = $tag;
+        return $this;
     }
 
     public

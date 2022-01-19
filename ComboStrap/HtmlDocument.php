@@ -108,25 +108,34 @@ class HtmlDocument extends OutputDocument
     }
 
 
-    protected function setContent($content)
+    public function storeContent($content)
     {
         /**
          * Html document is stored
          *
-         * We make the Snippet cache to Html cache an atomic operation
+         * We make the Snippet store to Html store an atomic operation
          *
          * Why ? Because if the rendering of the page is stopped,
          * the cache of the HTML page may be stored but not the cache of the snippets
          * leading to a bad page because the next rendering will see then no snippets.
          */
         $this->storeSnippets();
-        return parent::setContent($content);
+        try {
+            return parent::storeContent($content);
+        } catch (\Exception $e) {
+            // if any write os exception
+            LogUtility::msg("Deleting the snippets, Error while storing the xhtml content: {$e->getMessage()}");
+            $this->removeSnippets();
+            return $this;
+        }
     }
 
     public function storeSnippets()
     {
 
-        $jsonDecodeSnippets = PluginUtility::getSnippetManager()->getSnippetsForBar($this->getPage()->getDokuwikiId());
+        $slotId = $this->getPage()->getDokuwikiId();
+        $snippetManager = PluginUtility::getSnippetManager();
+        $jsonDecodeSnippets = $snippetManager->getSnippetsForSlot($slotId);
         if ($jsonDecodeSnippets !== null) {
             $data1 = json_encode($jsonDecodeSnippets);
             $this->snippetCache->storeCache($data1);
@@ -156,5 +165,15 @@ class HtmlDocument extends OutputDocument
         }
         return $nativeSnippets;
 
+    }
+
+    private function removeSnippets()
+    {
+        $snippetCacheFile = $this->snippetCache->cache;
+        if ($snippetCacheFile !== null) {
+            if (file_exists($snippetCacheFile)) {
+                unlink($snippetCacheFile);
+            }
+        }
     }
 }

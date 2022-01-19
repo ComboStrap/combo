@@ -127,13 +127,11 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         $this->headerOutputWasCalled = true;
 
         $snippetManager = PluginUtility::getSnippetManager();
-        $cacheManager = CacheManager::getOrCreate();
 
         /**
-         * For each processed bar in the page
-         *   * retrieve the snippets from the cache or store the process one
-         *   * add the cache information in meta
+         * For each processed slot in the page, retrieve the snippets
          */
+        $cacheManager = CacheManager::getOrCreate();
         $slots = $cacheManager->getXhtmlCacheSlotResultsForRequestedPage();
         foreach ($slots as $slotId => $servedFromCache) {
 
@@ -146,13 +144,14 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                 foreach ($snippets as $snippet) {
                     $nativeSnippets[$snippet->getType()][$snippet->getId()] = $snippet;
                 }
-                $snippetManager->addSnippetsFromCacheForBar($slotId, $nativeSnippets);
+                $snippetManager->addSnippetsFromCacheForSlot($slotId, $nativeSnippets);
             }
 
         }
 
         /**
          * Snippets
+         * (Slot and request snippets)
          */
         $allSnippets = $snippetManager->getSnippets();
         foreach ($allSnippets as $tagType => $tags) {

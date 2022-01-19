@@ -26,9 +26,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
 
     const TAG = "share";
     const CANONICAL = self::TAG;
-    const GENERATED_TYPE = "generated";
-    const NAMED_TYPE = "named";
-    const FRAGMENT_ATTRIBUTE = "fragment";
+
 
 
     function getType(): string
@@ -100,15 +98,17 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL:
 
                 $callStack = CallStack::createFromHandler($handler);
-                $attributes = TagAttributes::createFromTagMatch($match);
+                $defaultAttributes = [
+                    TagAttributes::TYPE_KEY => "twitter"
+                ];
+                $shareAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes)
+                    ->setLogicalTag(self::TAG);
+                $linkAttributes = TagAttributes::createEmpty(self::TAG);
 
                 /**
                  * The channel
                  */
-                $channelName = $attributes->getValueAndRemoveIfPresent(TagAttributes::TYPE_KEY);
-                if ($channelName == null) {
-                    $channelName = "twitter";
-                }
+                $channelName = $shareAttributes->getValue(TagAttributes::TYPE_KEY);
                 try {
                     $socialChannel = SocialChannel::create($channelName);
                 } catch (ExceptionCombo $e) {
@@ -125,7 +125,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     return $returnArray;
                 }
 
-                $strict = $attributes->getBooleanValueAndRemoveIfPresent(TagAttributes::STRICT, true);
+                $strict = $linkAttributes->getBooleanValueAndRemoveIfPresent(TagAttributes::STRICT, true);
 
                 /**
                  * Scope if in slot
@@ -137,12 +137,12 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 }
 
 
-                $attributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "btn {$socialChannel->getClass()}");
-                $attributes->addComponentAttributeValue(LinkUtility::ATTRIBUTE_REF, $sharedUrl);
-                $attributes->addComponentAttributeValue("target", "_blank");
-                $attributes->addComponentAttributeValue("rel", "noopener");
+                $linkAttributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "btn {$socialChannel->getClass()}");
+                $linkAttributes->addComponentAttributeValue(LinkUtility::ATTRIBUTE_REF, $sharedUrl);
+                $linkAttributes->addComponentAttributeValue("target", "_blank");
+                $linkAttributes->addComponentAttributeValue("rel", "noopener");
                 $linkTitle = $socialChannel->getLinkTitle();
-                $attributes->addComponentAttributeValue("title", $linkTitle);
+                $linkAttributes->addComponentAttributeValue("title", $linkTitle);
 
                 /**
                  * Label
@@ -160,12 +160,10 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                         break;
                 }
                 $ariaLabel = "Share on " . ucfirst($channelName);
-                $attributes->addComponentAttributeValue("aria-label", $ariaLabel);
+                $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
 
-                $style = $socialChannel->getStyle();
-                $snippetId = "share-{$socialChannel->getName()}";
-                PluginUtility::getSnippetManager()->attachCssSnippetForSlot($snippetId, $style);
-                $this->openLinkInCallStack($callStack, $attributes);
+
+                $this->openLinkInCallStack($callStack, $linkAttributes);
                 try {
                     $this->addIconInCallStack($callStack, $socialChannel->getIconName());
                 } catch (ExceptionCombo $e) {
@@ -177,6 +175,11 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     $this->addLinkContentInCallStack($callStack, $label);
                     $this->closeLinkInCallStack($callStack);
                 }
+
+                /**
+                 * Return the data to add the snippet style in rendering
+                 */
+                $returnArray[PluginUtility::ATTRIBUTES] = $shareAttributes->toCallStackArray();
                 return $returnArray;
 
 
@@ -211,15 +214,40 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
         if ($format === "xhtml") {
             $state = $data[PluginUtility::STATE];
             switch ($state) {
-                case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::renderUnmatched($data);
-                    break;
-                default:
+                case DOKU_LEXER_SPECIAL:
+                case DOKU_LEXER_ENTER:
+
+                    /**
+                     * Any error
+                     */
                     $errorMessage = $data[PluginUtility::EXIT_MESSAGE];
                     if (!empty($errorMessage)) {
                         LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         $renderer->doc .= "<span class=\"text-warning\">{$errorMessage}</span>";
+                        return false;
                     }
+
+                    /**
+                     * Add the CSS / Javascript snippet
+                     * It should happen only in rendering
+                     */
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $channelName = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
+                    try {
+                        $socialChannel = SocialChannel::create($channelName);
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("Unable to construct the social channel ($channelName). {$e->getMessage()}");
+                        return false;
+                    }
+                    $style = $socialChannel->getStyle();
+                    $snippetId = "share-{$socialChannel->getName()}";
+                    PluginUtility::getSnippetManager()->attachCssSnippetForSlot($snippetId, $style);
+                    break;
+                case DOKU_LEXER_UNMATCHED:
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    break;
+                default:
+
             }
             return true;
         }
@@ -278,7 +306,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
             Call::createComboCall(
                 syntax_plugin_combo_icon::TAG,
                 DOKU_LEXER_SPECIAL,
-                ["name" => $iconName]
+                [syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName]
             ));
     }
 

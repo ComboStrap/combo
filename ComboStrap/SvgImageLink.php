@@ -72,7 +72,7 @@ class SvgImageLink extends ImageLink
             // See also: https://github.com/iconfu/svg-inject
             // !! There is a fork: https://github.com/tanem/svg-injector !!
             // Fallback ? : https://github.com/iconic/SVGInjector/#per-element-png-fallback
-            $snippetManager->upsertTagsForBar("svg-injector",
+            $snippetManager->upsertTagsForSlot("svg-injector",
                 array(
                     'script' => [
                         array(
@@ -128,13 +128,13 @@ class SvgImageLink extends ImageLink
          */
         $svgFunctionalClass = "";
         if ($svgInjection && $lazyLoad) {
-            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg-injection");
+            PluginUtility::getSnippetManager()->attachJavascriptSnippetForSlot("lozad-svg-injection");
             $svgFunctionalClass = "lazy-svg-injection-combo";
         } else if ($lazyLoad && !$svgInjection) {
-            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg");
+            PluginUtility::getSnippetManager()->attachJavascriptSnippetForSlot("lozad-svg");
             $svgFunctionalClass = "lazy-svg-combo";
         } else if ($svgInjection && !$lazyLoad) {
-            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("svg-injector");
+            PluginUtility::getSnippetManager()->attachJavascriptSnippetForSlot("svg-injector");
             $svgFunctionalClass = "svg-injection-combo";
         }
         if ($lazyLoad) {

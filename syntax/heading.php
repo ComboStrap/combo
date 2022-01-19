@@ -304,7 +304,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 /**
                  * Make Bootstrap display responsive
                  */
-                PluginUtility::getSnippetManager()->attachCssSnippetForBar(syntax_plugin_combo_heading::DISPLAY_BS_4_RESPONSIVE_SNIPPET_ID);
+                PluginUtility::getSnippetManager()->attachCssSnippetForSlot(syntax_plugin_combo_heading::DISPLAY_BS_4_RESPONSIVE_SNIPPET_ID);
 
                 if (in_array($type, self::DISPLAY_TYPES_ONLY_BS_5)) {
                     $displayClass = "display-4";

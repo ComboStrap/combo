@@ -15,8 +15,8 @@ class Mermaid
     {
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetId = \syntax_plugin_combo_mermaid::TAG;
-        $snippetManager->attachJavascriptSnippetForBar($snippetId);
-        $snippetManager->attachTagsForBar($snippetId)->setTags(
+        $snippetManager->attachJavascriptSnippetForSlot($snippetId);
+        $snippetManager->attachTagsForSlot($snippetId)->setTags(
             array(
                 "script" =>
                     [

@@ -47,7 +47,7 @@ class Animation
 
             self::scrollMagicInit();
 
-            $snippetManager->attachTagsForBar(self::ON_VIEW_SNIPPET_ID)
+            $snippetManager->attachTagsForSlot(self::ON_VIEW_SNIPPET_ID)
                 ->setCritical(false)
                 ->setTags(
                     array(
@@ -80,7 +80,7 @@ class Animation
         $wowClass = "wow";
         $wowSnippetId = "wow";
         PluginUtility::addClass2Attributes($wowClass, $attributes);
-        $snippetManager->upsertCssSnippetForBar($wowSnippetId);
+        $snippetManager->upsertCssSnippetForSlot($wowSnippetId);
 
 
         $animateClass = self::ANIMATE_CLASS;
@@ -103,8 +103,8 @@ window.addEventListener("load", function(event) {
     wow.init();
 });
 EOF;
-        $snippetManager->attachJavascriptSnippetForBar($wowSnippetId)->setContent($js);
-        $snippetManager->attachTagsForBar($wowSnippetId)->setTags(
+        $snippetManager->attachJavascriptSnippetForSlot($wowSnippetId)->setContent($js);
+        $snippetManager->attachTagsForSlot($wowSnippetId)->setTags(
             array(
                 "script" =>
                     [
@@ -127,8 +127,8 @@ EOF;
         $snippetManager = PluginUtility::getSnippetManager();
 
         $scrollMagicSnippetId = "scroll-magic";
-        $snippetManager->attachJavascriptSnippetForBar($scrollMagicSnippetId);
-        $snippetManager->upsertTagsForBar($scrollMagicSnippetId,
+        $snippetManager->attachJavascriptSnippetForSlot($scrollMagicSnippetId);
+        $snippetManager->upsertTagsForSlot($scrollMagicSnippetId,
             array(
                 "script" =>
                     [

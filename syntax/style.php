@@ -114,7 +114,7 @@ class syntax_plugin_combo_style extends DokuWiki_Syntax_Plugin
     $match
 }
 EOF;
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar($styleId, $css);
+                    PluginUtility::getSnippetManager()->upsertCssSnippetForSlot($styleId, $css);
 
                 }
                 /**

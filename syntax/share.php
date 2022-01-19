@@ -164,7 +164,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
 
                 $style = $socialChannel->getStyle();
                 $snippetId = "share-{$socialChannel->getName()}";
-                PluginUtility::getSnippetManager()->attachCssSnippetForBar($snippetId, $style);
+                PluginUtility::getSnippetManager()->attachCssSnippetForSlot($snippetId, $style);
                 $this->openLinkInCallStack($callStack, $attributes);
                 try {
                     $this->addIconInCallStack($callStack, $socialChannel->getIconName());

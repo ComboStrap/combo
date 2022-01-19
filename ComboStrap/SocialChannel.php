@@ -145,7 +145,7 @@ EOF;
         return <<<EOF
 $style
 
-.{$this->getClass()}:hover, {$this->getClass()}:active {
+.{$this->getClass()}:hover, .{$this->getClass()}:active {
     background-color: $hoverColor;
     border-color: $hoverColor;
     color: $textColor;

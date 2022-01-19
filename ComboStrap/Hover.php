@@ -34,7 +34,7 @@ class Hover
             foreach ($hoverAnimations as $hover) {
 
                 if (in_array($hover, self::HOVER_ANIMATIONS)) {
-                    $snippetManager->attachTagsForBar(self::ON_HOVER_SNIPPET_ID)
+                    $snippetManager->attachTagsForSlot(self::ON_HOVER_SNIPPET_ID)
                         ->setCritical(false)
                         ->setTags(
                             array("link" =>
@@ -89,7 +89,7 @@ class Hover
 
                 // Grow, float and easing are in the css
                 $snippetManager
-                    ->attachCssSnippetForBar(self::ON_HOVER_SNIPPET_ID)
+                    ->attachCssSnippetForSlot(self::ON_HOVER_SNIPPET_ID)
                     ->setCritical(false);
 
                 // Smooth Transition in and out of hover
@@ -98,7 +98,7 @@ class Hover
                 $attributes->addHtmlAttributeValue("data-hover-class", trim($comboDataHoverClasses));
 
                 // The javascript that manage the hover effect by adding the class in the data-hover class
-                $snippetManager->attachJavascriptSnippetForBar(self::ON_HOVER_SNIPPET_ID);
+                $snippetManager->attachJavascriptSnippetForSlot(self::ON_HOVER_SNIPPET_ID);
 
             }
 

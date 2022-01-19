@@ -73,7 +73,7 @@ class LazyLoad
 
         $snippetManager = PluginUtility::getSnippetManager();
 
-        $snippetManager->upsertTagsForBar(self::LAZY_SIDE_ID,
+        $snippetManager->upsertTagsForSlot(self::LAZY_SIDE_ID,
             array(
                 'script' => [
                     array(
@@ -89,7 +89,7 @@ class LazyLoad
          * lazysizes adds the class lazy loading while the images are loading
          * and the class lazyloaded as soon as the image is loaded.
          */
-        $snippetManager->attachCssSnippetForBar(self::LAZY_SIDE_ID);
+        $snippetManager->attachCssSnippetForSlot(self::LAZY_SIDE_ID);
 
     }
 
@@ -119,7 +119,7 @@ class LazyLoad
         $snippetManager = PluginUtility::getSnippetManager();
 
         // https://www.jsdelivr.com/package/npm/lozad
-        $snippetManager->upsertTagsForBar(self::LOZAD_ID,
+        $snippetManager->upsertTagsForSlot(self::LOZAD_ID,
             array(
                 'script' => [
                     array(
@@ -136,7 +136,7 @@ class LazyLoad
          * Add the fading effect
          */
         $snippetId = "lazy-load-fade";
-        $snippetManager->attachCssSnippetForBar($snippetId);
+        $snippetManager->attachCssSnippetForSlot($snippetId);
 
 
         /**
@@ -145,7 +145,7 @@ class LazyLoad
          * The others javascript snippet to download lazy load depend on the image type
          * and features and was therefore added in the code for svg or raster
          */
-        $snippetManager->attachJavascriptSnippetForBar("lozad-print");
+        $snippetManager->attachJavascriptSnippetForSlot("lozad-print");
 
 
     }

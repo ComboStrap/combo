@@ -54,7 +54,7 @@ class PageProtection
     public static function addPageProtectionSnippet()
     {
         syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
-        PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::NAME);
+        PluginUtility::getSnippetManager()->attachJavascriptSnippetForSlot(self::NAME);
     }
 
 }

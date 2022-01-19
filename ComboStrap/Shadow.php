@@ -82,7 +82,7 @@ class Shadow
                 break;
             case self::CONF_MEDIUM_LEVEL_VALUE:
             case "md";
-                PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::SNIPPET_ID);
+                PluginUtility::getSnippetManager()->upsertCssSnippetForSlot(self::SNIPPET_ID);
                 return self::MEDIUM_ELEVATION_CLASS;
             case self::CONF_LARGE_LEVEL_VALUE:
             case "lg":

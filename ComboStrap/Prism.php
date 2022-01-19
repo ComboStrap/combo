@@ -86,7 +86,7 @@ class Prism
          * We miss a bottom margin
          * as a paragraph
          */
-        PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_NAME);
+        PluginUtility::getSnippetManager()->attachCssSnippetForSlot(self::SNIPPET_NAME);
 
         /**
          * Javascript
@@ -133,7 +133,7 @@ class Prism
             "crossorigin" => "anonymous"
         );
 
-        PluginUtility::getSnippetManager()->upsertTagsForBar(self::SNIPPET_NAME, $tags);
+        PluginUtility::getSnippetManager()->upsertTagsForSlot(self::SNIPPET_NAME, $tags);
 
         $javascriptCode = <<<EOD
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 });
 EOD;
-        PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::SNIPPET_NAME, $javascriptCode);
+        PluginUtility::getSnippetManager()->upsertJavascriptForSlot(self::SNIPPET_NAME, $javascriptCode);
 
     }
 
@@ -446,7 +446,7 @@ EOD;
     {
         $tags = [];
         $tags['script'][] = array("src" => self::BASE_PRISM_CDN . "/plugins/autoloader/prism-autoloader.min.js");
-        PluginUtility::getSnippetManager()->upsertTagsForBar(self::SNIPPET_ID_AUTOLOADER, $tags);
+        PluginUtility::getSnippetManager()->upsertTagsForSlot(self::SNIPPET_ID_AUTOLOADER, $tags);
     }
 
 

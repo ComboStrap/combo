@@ -40,7 +40,7 @@ class Position
                 $stickyClass = self::STICKY_CLASS;
                 $attributes->addClassName($stickyClass);
                 $snippetManager = PluginUtility::getSnippetManager();
-                $snippetManager->upsertTagsForBar(self::STICKY,
+                $snippetManager->upsertTagsForSlot(self::STICKY,
                     array(
                         "script" => [
                             array(
@@ -58,7 +58,7 @@ let topSpacing = fixedNavbar.offsetHeight;
 var stickyElements = Sticksy.initializeAll('.$stickyClass',{topSpacing: topSpacing})
 EOF;
                 $snippetManager
-                    ->attachJavascriptSnippetForBar(self::STICKY)
+                    ->attachJavascriptSnippetForSlot(self::STICKY)
                     ->setContent($jsSnippet);
             }
 
@@ -75,7 +75,7 @@ EOF;
             $position = strtolower($attributes->getValueAndRemove(self::POSITION_ATTRIBUTE));
             if (Bootstrap::getBootStrapMajorVersion() < Bootstrap::BootStrapFiveMajorVersion) {
                 $snippetManager = PluginUtility::getSnippetManager();
-                $snippetManager->attachCssSnippetForBar(self::POSITION_SNIPPET_ID);
+                $snippetManager->attachCssSnippetForSlot(self::POSITION_SNIPPET_ID);
             }
 
             // Class value comes from
@@ -151,6 +151,6 @@ EOF;
     private static function addQuartileCss()
     {
         $snippetManager = PluginUtility::getSnippetManager();
-        $snippetManager->attachCssSnippetForBar(self::POSITION_QUARTILE_SNIPPET_ID);
+        $snippetManager->attachCssSnippetForSlot(self::POSITION_QUARTILE_SNIPPET_ID);
     }
 }

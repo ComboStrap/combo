@@ -161,11 +161,11 @@ class Dimension
                                 /**
                                  * Css of the button and other standard attribute
                                  */
-                                PluginUtility::getSnippetManager()->attachCssSnippetForBar("height-toggle");
+                                PluginUtility::getSnippetManager()->attachCssSnippetForSlot("height-toggle");
                                 /**
                                  * Set the color dynamically to the color of the parent
                                  */
-                                PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("height-toggle");
+                                PluginUtility::getSnippetManager()->attachJavascriptSnippetForSlot("height-toggle");
                                 /**
                                  * The height when there is not the show class
                                  * is the original height
@@ -176,7 +176,7 @@ class Dimension
   transition: height .35s ease;
 }
 EOF;
-                                PluginUtility::getSnippetManager()->attachCssSnippetForBar("height-toggle-show", $css);
+                                PluginUtility::getSnippetManager()->attachCssSnippetForSlot("height-toggle-show", $css);
                                 $bootstrapDataNameSpace = Bootstrap::getDataNamespace();
                                 $button = <<<EOF
 <button class="height-toggle-combo" data$bootstrapDataNameSpace-toggle="collapse" data$bootstrapDataNameSpace-target="#$id" aria-expanded="false"></button>
@@ -234,7 +234,7 @@ EOF;
             }
             if (!$controlFound) {
                 $toggleOnClickId = "height-toggle-onclick";
-                PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar($toggleOnClickId);
+                PluginUtility::getSnippetManager()->attachJavascriptSnippetForSlot($toggleOnClickId);
                 $openingCall->addClassName("{$toggleOnClickId}-combo");
                 $openingCall->addCssStyle("cursor", "pointer");
             }

@@ -21,7 +21,7 @@ require_once(__DIR__ . '/Snippet.php');
  *
  * The snippet manager handles two scope of snippet
  * All function with the suffix
- *   * `ForBar` are snippets for a bar (ie page, sidebar, ...) - cached
+ *   * `ForSlot` are snippets for a bar (ie page, sidebar, ...) - cached
  *   * `ForRequests` are snippets added for the HTTP request - not cached. Example of request component: message, anchor
  *
  */
@@ -51,14 +51,14 @@ class SnippetManager
      * may render at the same time due to the other been cached.
      *
      * There is two scope:
-     *   * {@link SnippetManager::$snippetsByBarScope}
+     *   * {@link SnippetManager::$snippetsBySlotScope}
      *   * or {@link SnippetManager::$snippetsByRequestScope}
      */
 
     /**
      * @var array all snippets scope to the bar level
      */
-    private $snippetsByBarScope = array();
+    private $snippetsBySlotScope = array();
 
     /**
      * @var array heads that are unique on a request scope
@@ -100,11 +100,11 @@ class SnippetManager
      * @param string|null $css - the css
      *   if null, the file $snippetId.css is searched in the `style` directory
      * @return Snippet
-     * @deprecated use {@link SnippetManager::attachCssSnippetForBar()} instead
+     * @deprecated use {@link SnippetManager::attachCssSnippetForSlot()} instead
      */
-    public function &upsertCssSnippetForBar($snippetId, $css = null)
+    public function &upsertCssSnippetForSlot($snippetId, $css = null): Snippet
     {
-        $snippet = &$this->attachCssSnippetForBar($snippetId);
+        $snippet = &$this->attachCssSnippetForSlot($snippetId);
         if ($css != null) {
             $snippet->setContent($css);
         }
@@ -116,11 +116,11 @@ class SnippetManager
      * @param $snippetId
      * @param $script - javascript code if null, it will search in the js directory
      * @return Snippet
-     * @deprecated use {@link SnippetManager::attachJavascriptSnippetForBar()} instead
+     * @deprecated use {@link SnippetManager::attachJavascriptSnippetForSlot()} instead
      */
-    public function &upsertJavascriptForBar($snippetId, $script = null)
+    public function &upsertJavascriptForSlot($snippetId, $script = null): Snippet
     {
-        $snippet = &$this->attachJavascriptSnippetForBar($snippetId);
+        $snippet = &$this->attachJavascriptSnippetForSlot($snippetId);
         if ($script != null) {
             $snippet->setContent($script);
         }
@@ -132,9 +132,9 @@ class SnippetManager
      * @param array $tags - an array of tags without content where the key is the node type and the value a array of attributes array
      * @return Snippet
      */
-    public function &upsertTagsForBar($snippetId, $tags)
+    public function &upsertTagsForSlot($snippetId, array $tags): Snippet
     {
-        $snippet = &$this->attachTagsForBar($snippetId);
+        $snippet = &$this->attachTagsForSlot($snippetId);
         $snippet->setTags($tags);
         return $snippet;
     }
@@ -144,7 +144,7 @@ class SnippetManager
      * @return SnippetManager - the global reference
      * that is set for every run at the end of this fille
      */
-    public static function get()
+    public static function get(): SnippetManager
     {
         global $componentScript;
         if (empty($componentScript)) {
@@ -170,7 +170,7 @@ class SnippetManager
              */
             $distinctSnippetIdByType = array_shift($this->snippetsByRequestScope);
         }
-        foreach ($this->snippetsByBarScope as $snippet) {
+        foreach ($this->snippetsBySlotScope as $snippet) {
             $distinctSnippetIdByType = $this->mergeSnippetArray($distinctSnippetIdByType, $snippet);
         }
 
@@ -275,7 +275,7 @@ class SnippetManager
      */
     public function close()
     {
-        $this->snippetsByBarScope = array();
+        $this->snippetsBySlotScope = array();
         $this->snippetsByRequestScope = array();
         $this->barsProcessed = array();
     }
@@ -315,21 +315,21 @@ class SnippetManager
          *
          * Therefore we just merge.
          */
-        if (!isset($this->snippetsByBarScope[$bar])) {
+        if (!isset($this->snippetsBySlotScope[$bar])) {
 
-            $this->snippetsByBarScope[$bar] = $snippets;
+            $this->snippetsBySlotScope[$bar] = $snippets;
 
         } else {
 
-            $this->snippetsByBarScope[$bar] = $this->mergeSnippetArray($this->snippetsByBarScope[$bar], $snippets);
+            $this->snippetsBySlotScope[$bar] = $this->mergeSnippetArray($this->snippetsBySlotScope[$bar], $snippets);
 
         }
     }
 
     public function getSnippetsForBar($bar)
     {
-        if (isset($this->snippetsByBarScope[$bar])) {
-            return $this->snippetsByBarScope[$bar];
+        if (isset($this->snippetsBySlotScope[$bar])) {
+            return $this->snippetsBySlotScope[$bar];
         } else {
             return null;
         }
@@ -367,11 +367,11 @@ class SnippetManager
     /**
      * @param $snippetId
      * @param string|null $script - the css snippet to add, otherwise it takes the file
-     * @return Snippet a snippet scoped at the bar level
+     * @return Snippet a snippet not in a slot
      */
-    public function &attachCssSnippetForBar($snippetId, string $script = null)
+    public function &attachCssSnippetForSlot($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromBar($snippetId, Snippet::TYPE_CSS);
+        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::TYPE_CSS);
         if ($script !== null) {
             $snippet->setContent($script);
         }
@@ -380,10 +380,10 @@ class SnippetManager
 
     /**
      * @param $snippetId
-     * @param string $script -  the css if any, otherwise the css file will be taken
-     * @return Snippet a snippet scoped at the request scope
+     * @param string|null $script -  the css if any, otherwise the css file will be taken
+     * @return Snippet a snippet scoped at the request scope (not in a slot)
      */
-    public function &attachCssSnippetForRequest($snippetId, $script = null): Snippet
+    public function &attachCssSnippetForRequest($snippetId, string $script = null): Snippet
     {
         $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_CSS);
         if ($script != null) {
@@ -395,11 +395,11 @@ class SnippetManager
     /**
      * @param $snippetId
      * @param null $script
-     * @return Snippet a snippet scoped at the bar level
+     * @return Snippet a snippet in a slot
      */
-    public function &attachJavascriptSnippetForBar($snippetId, $script = null): Snippet
+    public function &attachJavascriptSnippetForSlot($snippetId, $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromBar($snippetId, Snippet::TYPE_JS);
+        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::TYPE_JS);
         if ($script != null) {
             $snippet->setContent($script);
         }
@@ -408,18 +408,18 @@ class SnippetManager
 
     /**
      * @param $snippetId
-     * @return Snippet a snippet scoped at the request level
+     * @return Snippet a snippet not in a slot
      */
-    public function &attachJavascriptSnippetForRequest($snippetId)
+    public function &attachJavascriptSnippetForRequest($snippetId): Snippet
     {
         return $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_JS);
     }
 
-    private function &attachSnippetFromBar($snippetId, $type)
+    private function &attachSnippetFromSlot($snippetId, $type)
     {
         global $ID;
         $bar = $ID;
-        $snippetFromArray = &$this->snippetsByBarScope[$bar][$type][$snippetId];
+        $snippetFromArray = &$this->snippetsBySlotScope[$bar][$type][$snippetId];
         if (!isset($snippetFromArray)) {
             $snippet = new Snippet($snippetId, $type);
             $snippetFromArray = $snippet;
@@ -439,11 +439,11 @@ class SnippetManager
         return $snippetFromArray;
     }
 
-    public function &attachTagsForBar($snippetId)
+    public function &attachTagsForSlot($snippetId)
     {
         global $ID;
         $bar = $ID;
-        $heads = &$this->snippetsByBarScope[$bar][Snippet::TAG_TYPE][$snippetId];
+        $heads = &$this->snippetsBySlotScope[$bar][Snippet::TAG_TYPE][$snippetId];
         if (!isset($heads)) {
             $heads = new Snippet($snippetId, Snippet::TAG_TYPE);
         }
@@ -521,7 +521,7 @@ class SnippetManager
 
     }
 
-    public function attachJavascriptScriptForBar(string $snippetId, string $relativeId, string $integrity = null)
+    public function attachJavascriptScriptForSlot(string $snippetId, string $relativeId, string $integrity = null)
     {
         $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromDokuwikiId($relativeId);
 
@@ -532,7 +532,7 @@ class SnippetManager
             $head["crossorigin"] = "anonymous";
         }
 
-        $this->attachTagsForBar($snippetId)->setTags(array("script" => [$head]));
+        $this->attachTagsForSlot($snippetId)->setTags(array("script" => [$head]));
 
     }
 

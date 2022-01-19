@@ -156,9 +156,9 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                     $snippetManager = PluginUtility::getSnippetManager();
                     $snippetId = self::TAG;
 
-                    $snippetManager->attachCssSnippetForBar($snippetId);
-                    $snippetManager->attachJavascriptSnippetForBar($snippetId);
-                    $snippetManager->attachTagsForBar($snippetId)->setTags(
+                    $snippetManager->attachCssSnippetForSlot($snippetId);
+                    $snippetManager->attachJavascriptSnippetForSlot($snippetId);
+                    $snippetManager->attachTagsForSlot($snippetId)->setTags(
                         array(
                             "script" =>
                                 [

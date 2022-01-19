@@ -257,7 +257,7 @@ class syntax_plugin_combo_masonry extends DokuWiki_Syntax_Plugin
                             // https://masonry.desandro.com/layout.html#responsive-layouts
                             // https://masonry.desandro.com/extras.html#bootstrap
                             // https://masonry.desandro.com/#initialize-with-vanilla-javascript
-                            PluginUtility::getSnippetManager()->upsertTagsForBar(self::MASONRY_SCRIPT_ID,
+                            PluginUtility::getSnippetManager()->upsertTagsForSlot(self::MASONRY_SCRIPT_ID,
                                 array(
                                     "script" => [
                                         array(
@@ -269,7 +269,7 @@ class syntax_plugin_combo_masonry extends DokuWiki_Syntax_Plugin
                                     ]
                                 )
                             );
-                            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::MASONRY_SCRIPT_ID);
+                            PluginUtility::getSnippetManager()->attachJavascriptSnippetForSlot(self::MASONRY_SCRIPT_ID);
                             $masonryClass = self::MASONRY_SCRIPT_ID;
                             $renderer->doc .= "<div class=\"row $masonryClass\">";
                             break;

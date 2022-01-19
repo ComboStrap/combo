@@ -374,7 +374,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                      * Add the CSS
                      */
                     $snippetManager = PluginUtility::getSnippetManager();
-                    $snippetManager->attachCssSnippetForBar(self::TAG);
+                    $snippetManager->attachCssSnippetForSlot(self::TAG);
 
                     /**
                      * Create the HTML
@@ -398,7 +398,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
                         case self::TWEET:
 
-                            PluginUtility::getSnippetManager()->upsertTagsForBar(self::TWEET,
+                            PluginUtility::getSnippetManager()->upsertTagsForSlot(self::TWEET,
                                 array("script" =>
                                     array(
                                         array(

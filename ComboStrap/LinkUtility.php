@@ -415,7 +415,7 @@ class LinkUtility
 
                 // normal link for the `this` wiki
                 if ($this->getWiki() != "this") {
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TYPE_INTERWIKI);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForSlot(self::TYPE_INTERWIKI);
                 }
                 /**
                  * Target
@@ -504,7 +504,7 @@ EOF;
                         $lowerCaseLowQualityAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
                         $this->attributes->addClassName(LowQualityPage::CLASS_NAME . "-combo");
                         $snippetLowQualityPageId = $lowerCaseLowQualityAcronym;
-                        PluginUtility::getSnippetManager()->attachCssSnippetForBar($snippetLowQualityPageId);
+                        PluginUtility::getSnippetManager()->attachCssSnippetForSlot($snippetLowQualityPageId);
                         /**
                          * Note The protection does occur on Javascript level, not on the HTML
                          * because the created page is valid for a anonymous or logged-in user
@@ -918,7 +918,7 @@ EOF;
                     $searchTerms = $this->dokuwikiUrl->getQueryParameter(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY);
                     if ($searchTerms !== null) {
                         $url .= DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML;
-                        PluginUtility::getSnippetManager()->attachCssSnippetForBar("search");
+                        PluginUtility::getSnippetManager()->attachCssSnippetForSlot("search");
                         if (is_array($searchTerms)) {
                             /**
                              * To verify, do we really need the []

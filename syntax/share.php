@@ -166,6 +166,13 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 $snippetId = "share-{$socialChannel->getName()}";
                 PluginUtility::getSnippetManager()->attachCssSnippetForBar($snippetId, $style);
                 $this->openLinkInCallStack($callStack, $attributes);
+                try {
+                    $this->addIconInCallStack($callStack, $socialChannel->getIconName());
+                } catch (ExceptionCombo $e) {
+                    $returnArray[PluginUtility::EXIT_CODE] = 1;
+                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the icon for the social channel ($channelName) returns an error ({$e->getMessage()}";
+                    return $returnArray;
+                }
                 if ($state === DOKU_LEXER_SPECIAL) {
                     $this->addLinkContentInCallStack($callStack, $label);
                     $this->closeLinkInCallStack($callStack);
@@ -262,6 +269,16 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
             Call::createComboCall(
                 syntax_plugin_combo_link::TAG,
                 DOKU_LEXER_EXIT
+            ));
+    }
+
+    private function addIconInCallStack(CallStack $callStack, string $iconName)
+    {
+        $callStack->appendCallAtTheEnd(
+            Call::createComboCall(
+                syntax_plugin_combo_icon::TAG,
+                DOKU_LEXER_SPECIAL,
+                ["name" => $iconName]
             ));
     }
 

@@ -22,7 +22,7 @@
         "icons": {
             "outline": "uit:twitter-alt",
             "outline-circle": "et:twitter",
-            "solid": "mdi-twitter",
+            "solid": "mdi:twitter",
             "solid-circle": "ant-design:twitter-circle-filled"
         }
     },

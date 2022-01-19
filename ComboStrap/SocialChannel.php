@@ -164,5 +164,17 @@ EOF;
         return "link-share-{$this->getName()}-combo";
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
+    public function getIconName(string $type = "solid")
+    {
+        $iconName = $this->channelDict["icons"][$type];
+        if ($iconName === null) {
+            throw new ExceptionCombo("The icon type ($type) is undefined for the social channle ({$this->getName()}");
+        }
+        return $iconName;
+    }
+
 
 }

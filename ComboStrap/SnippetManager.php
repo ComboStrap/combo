@@ -366,13 +366,13 @@ class SnippetManager
 
     /**
      * @param $snippetId
-     * @param string $script - the css snippet to add, otherwise it takes the file
+     * @param string|null $script - the css snippet to add, otherwise it takes the file
      * @return Snippet a snippet scoped at the bar level
      */
-    public function &attachCssSnippetForBar($snippetId, $script = null)
+    public function &attachCssSnippetForBar($snippetId, string $script = null)
     {
         $snippet = $this->attachSnippetFromBar($snippetId, Snippet::TYPE_CSS);
-        if ($script != null) {
+        if ($script !== null) {
             $snippet->setContent($script);
         }
         return $snippet;

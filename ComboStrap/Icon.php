@@ -382,7 +382,7 @@ class Icon extends ImageSvg
         if ($filePointer == false) {
             // (ie no icon file found at ($downloadUrl)
             $urlLibrary = self::ICON_LIBRARY_WEBSITE_URLS[$library];
-            throw new ExceptionCombo("The library (<a href=\"$urlLibrary\">$library</a>) does not have a icon (<a href=\"$downloadUrl\">$this->iconName</a>).", LogUtility::LVL_MSG_ERROR, self::ICON_CANONICAL_NAME);
+            throw new ExceptionCombo("The library (<a href=\"$urlLibrary\">$library</a>) does not have a icon (<a href=\"$downloadUrl\">$this->iconName</a>).",  self::ICON_CANONICAL_NAME);
         }
 
         $numberOfByte = @file_put_contents($mediaDokuPath->toLocalPath()->toAbsolutePath()->toString(), $filePointer);

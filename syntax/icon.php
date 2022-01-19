@@ -192,7 +192,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                     switch ($state) {
 
 
-                        case "DOKU_LEXER_SPECIAL":
+                        case DOKU_LEXER_SPECIAL:
                             $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                             try {
                                 $name = $tagAttribute->getValue(self::ICON_NAME_ATTRIBUTE);

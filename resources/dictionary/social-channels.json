@@ -1,8 +1,11 @@
 {
     "facebook": {
-        "endpoint": "https://facebook.com/sharer/sharer.php",
-        "queries": {
-            "url": "u"
+        "endpoint": "https://facebook.com/sharer/sharer.php?u=$url",
+        "title": "Share this page with Facebook",
+        "colors": {
+            "text": "#fff",
+            "background": "#3b5998",
+            "hover-background": "#2d4373"
         },
         "icons": {
             "outline": "uit:facebook-f",

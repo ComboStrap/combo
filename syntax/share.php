@@ -28,7 +28,6 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
     const CANONICAL = self::TAG;
 
 
-
     function getType(): string
     {
         return 'substition';
@@ -239,7 +238,12 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                         LogUtility::msg("Unable to construct the social channel ($channelName). {$e->getMessage()}");
                         return false;
                     }
-                    $style = $socialChannel->getStyle();
+                    try {
+                        $style = $socialChannel->getStyle();
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("The style of the share button ($socialChannel) could not be determined. Error: {$e->getMessage()}");
+                        return false;
+                    }
                     $snippetId = "share-{$socialChannel->getName()}";
                     PluginUtility::getSnippetManager()->attachCssSnippetForSlot($snippetId, $style);
                     break;

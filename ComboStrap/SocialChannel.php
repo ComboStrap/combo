@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_metatwitter;
+use splitbrain\phpcli\Exception;
 
 /**
  * Class SocialChannel
@@ -120,11 +121,14 @@ class SocialChannel
         return $title;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function getStyle(): string
     {
         $background = $this->channelDict["colors"]["background"];
         if ($background === null) {
-            return "";
+            throw new ExceptionCombo("The background color for the social channel ($this) was not found in the data dictionary.");
         }
         $textColor = $this->channelDict["colors"]["text"];
         if ($textColor === null || $textColor === "") {
@@ -171,7 +175,7 @@ EOF;
     {
         $iconName = $this->channelDict["icons"][$type];
         if ($iconName === null) {
-            throw new ExceptionCombo("The icon type ($type) is undefined for the social channle ({$this->getName()}");
+            throw new ExceptionCombo("The icon type ($type) is undefined for the social channel ({$this->getName()}");
         }
         return $iconName;
     }

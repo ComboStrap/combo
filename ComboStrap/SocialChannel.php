@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_metatwitter;
+
 class SocialChannel
 {
 
@@ -59,7 +61,7 @@ class SocialChannel
          * Shared Url
          */
         $shareUrlTemplate = $this->channelDict["endpoint"];
-        if($shareUrlTemplate===null){
+        if ($shareUrlTemplate === null) {
             throw new ExceptionCombo("The channel ($this) does not have an endpoint");
         }
         $canonicalUrl = $requestedPage->getCanonicalUrl([], true, DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
@@ -67,12 +69,22 @@ class SocialChannel
         $templateData["title"] = $requestedPage->getTitleOrDefault();
         $description = $requestedPage->getDescription();
         if ($description === null) {
-            $description = $requestedPage->getTitleOrDefault();
+            $description = "";
         }
         $templateData["description"] = $description;
+        $via = null;
+        switch ($this->name) {
+            case \action_plugin_combo_metatwitter::CANONICAL:
+                $via = PluginUtility::getConfValue(action_plugin_combo_metatwitter::CONF_TWITTER_SITE_HANDLE);;
+                break;
+        }
+        if ($via !== null && $via !== "") {
+            $templateData["via"] = $via;
+        }
         foreach ($templateData as $key => $value) {
             $templateData[$key] = urlencode($value);
         }
+
         return TemplateUtility::renderStringTemplateFromDataArray($shareUrlTemplate, $templateData);
 
     }

@@ -12,7 +12,7 @@
         }
     },
     "twitter": {
-        "endpoint": "https://twitter.com/intent/tweet/?url=$url&text=$title%0A$description%0A",
+        "endpoint": "https://twitter.com/intent/tweet/?url=$url&text=$title%0A$description%0A&via=$via",
         "icons": {
             "outline": "uit:twitter-alt",
             "outline-circle": "et:twitter",

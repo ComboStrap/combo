@@ -286,4 +286,9 @@ EOF;
         return $snippet;
 
     }
+
+    public function getType()
+    {
+        return $this->type;
+    }
 }

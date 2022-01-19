@@ -4,9 +4,15 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Cache\CacheParser;
+
 class HtmlDocument extends OutputDocument
 {
     const extension = "xhtml";
+    /**
+     * @var CacheParser
+     */
+    private $snippetCache;
 
     /**
      * HtmlDocument constructor.
@@ -26,6 +32,21 @@ class HtmlDocument extends OutputDocument
             $this->cache = new CacheByLogicalKey($page, $this->getExtension());
 
         }
+
+        /**
+         * Snippet cache
+         */
+        /**
+         * Using a cache parser, set the page id and will trigger
+         * the parser cache use event in order to log/report the cache usage
+         * At {@link action_plugin_combo_cache::logCacheUsage()}
+         */
+        $id = $this->getPage()->getDokuwikiId();
+        $slotLocalFilePath = $this->getPage()->getPath()->toLocalPath()
+            ->toAbsolutePath()
+            ->toString();
+        $this->snippetCache = new CacheParser($id, $slotLocalFilePath, "snippet.json");
+
     }
 
 
@@ -86,6 +107,7 @@ class HtmlDocument extends OutputDocument
 
     }
 
+
     protected function setContent($content)
     {
         /**
@@ -97,9 +119,42 @@ class HtmlDocument extends OutputDocument
          * the cache of the HTML page may be stored but not the cache of the snippets
          * leading to a bad page because the next rendering will see then no snippets.
          */
-
+        $this->storeSnippets();
         return parent::setContent($content);
     }
 
+    public function storeSnippets()
+    {
 
+        $jsonDecodeSnippets = PluginUtility::getSnippetManager()->getSnippetsForBar($this->getPage()->getDokuwikiId());
+        if ($jsonDecodeSnippets !== null) {
+            $data1 = json_encode($jsonDecodeSnippets);
+            $this->snippetCache->storeCache($data1);
+        }
+
+    }
+
+    /**
+     * @return Snippet[]
+     */
+    public
+    function getSnippets(): array
+    {
+        $data = $this->snippetCache->retrieveCache();
+        $nativeSnippets = [];
+        if (!empty($data)) {
+            $jsonDecodeSnippets = json_decode($data, true);
+            foreach ($jsonDecodeSnippets as $type => $snippets) {
+                foreach ($snippets as $snippetId => $snippetArray) {
+                    try {
+                        $nativeSnippets[] = Snippet::createFromJson($snippetArray);
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("The snippet json array cannot be build into a snippet object. " . $e->getMessage());
+                    }
+                }
+            }
+        }
+        return $nativeSnippets;
+
+    }
 }

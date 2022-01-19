@@ -4,6 +4,7 @@ use ComboStrap\CacheManager;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Resources;
 use ComboStrap\Snippet;
@@ -136,56 +137,16 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         $slots = $cacheManager->getXhtmlCacheSlotResultsForRequestedPage();
         foreach ($slots as $slotId => $servedFromCache) {
 
-            /**
-             * The local file location of the slot
-             */
-            $slotLocalFilePath = DokuPath::createPagePathFromId($slotId)
-                ->toLocalPath()
-                ->toAbsolutePath()
-                ->toString();
+            $snippets = Page::createPageFromId($slotId)
+                ->getHtmlDocument()
+                ->getSnippets();
 
-            /**
-             * Using a cache parser, set the page id and will trigger
-             * the parser cache use event in order to log/report the cache usage
-             * At {@link action_plugin_combo_cache::logCacheUsage()}
-             */
-            $cache = new CacheParser($slotId, $slotLocalFilePath, "snippet.json");
-            $cache->setEvent('PARSER_CACHE_USE'); // cache parser use already this event, just FYI
-            $dependencies = array(
-                "files" => [
-                    $slotLocalFilePath,
-                    Resources::getComboHome() . "/plugin.info.txt"
-                ]
-            );
-
-            // if the bar was served from the cache
-            if ($servedFromCache && $cache->useCache($dependencies)) {
-
-                // Retrieve snippets from previous run
-                $data = $cache->retrieveCache();
-                if (!empty($data)) {
-
-                    $jsonDecodeSnippets = json_decode($data, true);
-                    $nativeSnippets = [];
-                    foreach ($jsonDecodeSnippets as $type => $snippets) {
-                        foreach ($snippets as $snippetId => $snippetArray) {
-                            try {
-                                $nativeSnippets[$type][$snippetId] = Snippet::createFromJson($snippetArray);
-                            } catch (ExceptionCombo $e) {
-                                LogUtility::msg("The snippet json array cannot be build into a snippet object. " . $e->getMessage());
-                            }
-                        }
-                    }
-                    $snippetManager->addSnippetsFromCacheForBar($slotId, $nativeSnippets);
-
+            if (sizeof($snippets) > 0) {
+                $nativeSnippets = [];
+                foreach ($snippets as $snippet) {
+                    $nativeSnippets[$snippet->getType()][$snippet->getId()] = $snippet;
                 }
-
-            } else {
-                $jsonDecodeSnippets = $snippetManager->getSnippetsForBar($slotId);
-                if ($jsonDecodeSnippets !== null) {
-                    $data1 = json_encode($jsonDecodeSnippets);
-                    $cache->storeCache($data1);
-                }
+                $snippetManager->addSnippetsFromCacheForBar($slotId, $nativeSnippets);
             }
 
         }

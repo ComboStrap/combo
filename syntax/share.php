@@ -6,12 +6,14 @@ use ComboStrap\ArrayUtility;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dictionary;
+use ComboStrap\DokuwikiUrl;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PageScope;
 use ComboStrap\PluginUtility;
+use ComboStrap\SocialChannel;
 use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;
 
@@ -107,33 +109,21 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 if ($channelName == null) {
                     $channelName = "twitter";
                 }
-                $channelName = strtolower($channelName);
-
-                /**
-                 * Get the channels
-                 */
                 try {
-                    $channels = Dictionary::getFrom("social-channels");
+                    $socialChannel = SocialChannel::create($channelName);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The channel dictionary returns an error ({$e->getMessage()}";
+                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The social channel creation ($channelName) returns an error ({$e->getMessage()}";
                     return $returnArray;
                 }
-                /**
-                 * Get the data for the channel
-                 */
-                $channel = $channels[$channelName];
-                if ($channel === null) {
-                    $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The channel ($channelName} is unknown.";
-                    return $returnArray;
-                }
-                /**
-                 * Shared Url
-                 */
-                $shareUrlTemplate = $channel["endpoint"];
                 $requestedPage = Page::createPageFromRequestedPage();
-                $sharedUrl = TemplateUtility::renderStringTemplateForDataPage($shareUrlTemplate, $requestedPage);
+                try {
+                    $sharedUrl = $socialChannel->getUrlForPage($requestedPage);
+                } catch (ExceptionCombo $e) {
+                    $returnArray[PluginUtility::EXIT_CODE] = 1;
+                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the url for the social channel ($channelName) returns an error ({$e->getMessage()}";
+                    return $returnArray;
+                }
 
                 $strict = $attributes->getBooleanValueAndRemoveIfPresent(TagAttributes::STRICT, true);
 
@@ -150,7 +140,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 $attributes->addComponentAttributeValue(LinkUtility::ATTRIBUTE_REF, $sharedUrl);
                 $this->openLinkInCallStack($callStack, $attributes);
                 if ($state === DOKU_LEXER_SPECIAL) {
-                    $this->addLinkContentInCallStack($callStack, $sharedUrl);
+                    $this->addLinkContentInCallStack($callStack, $channelName);
                     $this->closeLinkInCallStack($callStack);
                 }
                 return $returnArray;

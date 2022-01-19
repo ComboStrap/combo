@@ -12,11 +12,7 @@
         }
     },
     "twitter": {
-        "endpoint": "https://twitter.com/intent/tweet/",
-        "queries": {
-            "url": "url",
-            "text": "text"
-        },
+        "endpoint": "https://twitter.com/intent/tweet/?url=$url&text=$title%0A$description%0A",
         "icons": {
             "outline": "uit:twitter-alt",
             "outline-circle": "et:twitter",
@@ -34,7 +30,7 @@
         }
     },
     "pinterest": {
-        "endpoint": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$text",
+        "endpoint": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$description",
         "icons": {
             "solid": "entypo-social:pinterest",
             "solid-circle": "bi:pinterest",
@@ -43,7 +39,7 @@
         }
     },
     "linkedin": {
-        "endpoint": " https://www.linkedin.com/shareArticle?mini=true&url=$url&source=$url&title=$title&summary=$text",
+        "endpoint": " https://www.linkedin.com/shareArticle?mini=true&url=$url&source=$url&title=$title&summary=$description",
         "icons": {
             "solid": "entypo-social:linkedin",
             "solid-circle": "entypo-social:linkedin-with-circle",
@@ -52,7 +48,7 @@
         }
     },
     "reddit": {
-        "endpoint": "https://reddit.com/submit/?resubmit=true&url=$url&title=$text",
+        "endpoint": "https://reddit.com/submit/?resubmit=true&url=$url&title=$description",
         "icons": {
             "solid": "dashicons:reddit",
             "solid-circle": "bi:reddit",
@@ -61,23 +57,23 @@
         }
     },
     "email": {
-        "endpoint": "mailto:?subject=$title&body=$text%20$url"
+        "endpoint": "mailto:?subject=$title&body=$description%20$url"
     },
     "xing": {
         "endpoint": "https://www.xing.com/spi/shares/new?url=$url",
         "doc": "https://dev.xing.com/plugins/share_button/docs#custom-design"
     },
     "whatsapp": {
-        "endpoint": "whatsapp://send?text=$text%20$url"
+        "endpoint": "whatsapp://send?text=$description%20$url"
     },
     "hackernews": {
-        "endpoint": "https://news.ycombinator.com/submitlink?u=$url&t=$text"
+        "endpoint": "https://news.ycombinator.com/submitlink?u=$url&t=$description"
     },
     "vk": {
-        "endpoint": "http://vk.com/share.php?title=$text&url=$url"
+        "endpoint": "http://vk.com/share.php?title=$description&url=$url"
     },
     "telegram": {
-        "endpoint": "https://telegram.me/share/url?text=$text&url=$url"
+        "endpoint": "https://telegram.me/share/url?text=$description&url=$url"
     },
     "pocket": {
         "endpoint":"https://getpocket.com/save",

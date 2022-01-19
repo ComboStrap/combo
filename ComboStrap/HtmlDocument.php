@@ -86,5 +86,20 @@ class HtmlDocument extends OutputDocument
 
     }
 
+    protected function setContent($content)
+    {
+        /**
+         * Html document is stored
+         *
+         * We make the Snippet cache to Html cache an atomic operation
+         *
+         * Why ? Because if the rendering of the page is stopped,
+         * the cache of the HTML page may be stored but not the cache of the snippets
+         * leading to a bad page because the next rendering will see then no snippets.
+         */
+
+        return parent::setContent($content);
+    }
+
 
 }

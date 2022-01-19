@@ -418,8 +418,8 @@ class SnippetManager
     private function &attachSnippetFromSlot($snippetId, $type)
     {
         global $ID;
-        $bar = $ID;
-        $snippetFromArray = &$this->snippetsBySlotScope[$bar][$type][$snippetId];
+        $slot = $ID;
+        $snippetFromArray = &$this->snippetsBySlotScope[$slot][$type][$snippetId];
         if (!isset($snippetFromArray)) {
             $snippet = new Snippet($snippetId, $type);
             $snippetFromArray = $snippet;

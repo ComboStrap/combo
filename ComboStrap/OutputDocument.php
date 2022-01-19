@@ -65,7 +65,6 @@ abstract class OutputDocument extends PageCompilerDocument
         }
 
 
-
     }
 
     /**
@@ -95,24 +94,26 @@ abstract class OutputDocument extends PageCompilerDocument
          */
         global $ID;
         $keep = $ID;
-        $ID = $this->getPage()->getPath()->getDokuwikiId();
+        try {
+            $ID = $this->getPage()->getPath()->getDokuwikiId();
 
-        /**
-         * The code below is adapted from {@link p_cached_output()}
-         * $ret = p_cached_output($file, 'xhtml', $pageid);
-         */
-        $instructions = $this->getPage()->getInstructionsDocument()->getOrProcessContent();
+            /**
+             * The code below is adapted from {@link p_cached_output()}
+             * $ret = p_cached_output($file, 'xhtml', $pageid);
+             */
+            $instructions = $this->getPage()->getInstructionsDocument()->getOrProcessContent();
 
 
-        /**
-         * Render
-         */
-        $result = p_render($this->getRendererName(), $instructions, $info);
-        $this->cacheStillEnabledAfterRendering = $info['cache'];
+            /**
+             * Render
+             */
+            $result = p_render($this->getRendererName(), $instructions, $info);
+            $this->cacheStillEnabledAfterRendering = $info['cache'];
 
-        // restore ID
-        $ID = $keep;
-
+        } finally {
+            // restore ID
+            $ID = $keep;
+        }
 
 
         $this->setContent($result);
@@ -160,7 +161,6 @@ abstract class OutputDocument extends PageCompilerDocument
         } finally {
             $ID = $keep;
         }
-
 
 
     }

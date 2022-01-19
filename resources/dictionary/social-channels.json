@@ -13,6 +13,12 @@
     },
     "twitter": {
         "endpoint": "https://twitter.com/intent/tweet/?url=$url&text=$title%0A$description%0A&via=$via",
+        "title": "Share this page with Twitter",
+        "colors": {
+            "text": "#fff",
+            "background": "#55acee",
+            "hover-background": "#2795e9"
+        },
         "icons": {
             "outline": "uit:twitter-alt",
             "outline-circle": "et:twitter",

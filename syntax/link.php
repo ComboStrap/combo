@@ -84,7 +84,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      * @return bool
      * Accepts inside
      */
-    public function accepts($mode)
+    public function accepts($mode): bool
     {
         /**
          * To avoid that the description if it contains a link

@@ -137,10 +137,38 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 }
 
 
+                $attributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "btn {$socialChannel->getClass()}");
                 $attributes->addComponentAttributeValue(LinkUtility::ATTRIBUTE_REF, $sharedUrl);
+                $attributes->addComponentAttributeValue("target", "_blank");
+                $attributes->addComponentAttributeValue("rel", "noopener");
+                $linkTitle = $socialChannel->getLinkTitle();
+                $attributes->addComponentAttributeValue("title", $linkTitle);
+
+                /**
+                 * Label
+                 */
+                $size = "small";
+                switch ($size) {
+                    case "large":
+                        $label = "Share on " . ucfirst($channelName);
+                        $ariaLabel = $label;
+                        break;
+                    case "medium":
+                        $label = ucfirst($channelName);
+                        $ariaLabel = $label;
+                        break;
+                    default:
+                        $label = "";
+                        $ariaLabel = ucfirst($channelName);
+                        break;
+                }
+                $attributes->addComponentAttributeValue("aria-label", $ariaLabel);
+                $style = $socialChannel->getStyle();
+                $snippetId = "share-{$socialChannel->getName()}";
+                PluginUtility::getSnippetManager()->attachCssSnippetForBar($snippetId, $style);
                 $this->openLinkInCallStack($callStack, $attributes);
                 if ($state === DOKU_LEXER_SPECIAL) {
-                    $this->addLinkContentInCallStack($callStack, $channelName);
+                    $this->addLinkContentInCallStack($callStack, $label);
                     $this->closeLinkInCallStack($callStack);
                 }
                 return $returnArray;

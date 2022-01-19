@@ -6,6 +6,21 @@ namespace ComboStrap;
 
 use action_plugin_combo_metatwitter;
 
+/**
+ * Class SocialChannel
+ * @package ComboStrap
+ *
+ * Inspired by:
+ * http://sharingbuttons.io (Specifically thanks for the data)
+ * at:
+ *   * [Link](https://github.com/mxstbr/sharingbuttons.io/blob/master/js/stores/AppStore.js#L242)
+ *   * [Style](https://github.com/mxstbr/sharingbuttons.io/blob/master/js/stores/AppStore.js#L10)
+ *
+ * Popup:
+ * https://gist.github.com/josephabrahams/9d023596b884e80e37e5
+ * https://jonsuh.com/blog/social-share-links/
+ * https://stackoverflow.com/questions/11473345/how-to-pop-up-new-window-with-tweet-button
+ */
 class SocialChannel
 {
 
@@ -92,6 +107,61 @@ class SocialChannel
     public function __toString()
     {
         return $this->name;
+    }
+
+    public function getLinkTitle(): string
+    {
+        $name = ucfirst($this->name);
+        $title = "Share this page via $name";
+        $channelTitle = $this->channelDict["title"];
+        if ($channelTitle !== null && $channelTitle !== "") {
+            $title = $channelTitle;
+        }
+        return $title;
+    }
+
+    public function getStyle(): string
+    {
+        $background = $this->channelDict["colors"]["background"];
+        if ($background === null) {
+            return "";
+        }
+        $textColor = $this->channelDict["colors"]["text"];
+        if ($textColor === null || $textColor === "") {
+            $textColor = "#fff";
+        }
+        $style = <<<EOF
+.{$this->getClass()} {
+    background-color: $background;
+    border-color: $background;
+    color: $textColor
+}
+EOF;
+
+        $hoverColor = $this->channelDict["colors"]["hover-background"];
+        if ($hoverColor === null) {
+            return $style;
+        }
+        return <<<EOF
+$style
+
+.{$this->getClass()}:hover, {$this->getClass()}:active {
+    background-color: $hoverColor;
+    border-color: $hoverColor;
+    color: $textColor;
+}
+EOF;
+
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getClass(): string
+    {
+        return "link-share-{$this->getName()}-combo";
     }
 
 

@@ -117,7 +117,7 @@ class TemplateUtility
 
     }
 
-    public static function renderStringTemplateForDataPage($stringTemplate, Page $page)
+    public static function renderStringTemplateForDataPage($stringTemplate, Page $page): string
     {
 
 

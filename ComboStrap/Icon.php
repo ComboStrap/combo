@@ -255,9 +255,8 @@ class Icon extends ImageSvg
      */
     private static function getPhysicalNameFromDictionary(string $logicalName, string $library)
     {
-        $path = LocalPath::createFromPath(Resources::getDictionaryDirectory() . "/$library-icons.json");
-        $jsonContent = FileSystems::getContent($path);
-        $jsonArray = Json::createFromString($jsonContent)->toArray();
+
+        $jsonArray = Dictionary::getFrom("$library-icons");
         $physicalName = $jsonArray[$logicalName];
         if ($physicalName === null) {
             LogUtility::msg("The icon ($logicalName) is unknown for the library ($library)");

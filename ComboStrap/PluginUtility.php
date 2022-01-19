@@ -83,6 +83,7 @@ require_once(__DIR__ . '/Console.php');
 require_once(__DIR__ . '/Cron.php');
 require_once(__DIR__ . '/DatabasePageRow.php');
 require_once(__DIR__ . '/DataType.php');
+require_once(__DIR__ . '/Dictionary.php');
 require_once(__DIR__ . '/Dimension.php');
 require_once(__DIR__ . '/DisqusIdentifier.php');
 require_once(__DIR__ . '/Display.php');

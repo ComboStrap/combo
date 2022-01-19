@@ -151,18 +151,17 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 switch ($size) {
                     case "large":
                         $label = "Share on " . ucfirst($channelName);
-                        $ariaLabel = $label;
                         break;
                     case "medium":
                         $label = ucfirst($channelName);
-                        $ariaLabel = $label;
                         break;
                     default:
                         $label = "";
-                        $ariaLabel = ucfirst($channelName);
                         break;
                 }
+                $ariaLabel = "Share on " . ucfirst($channelName);
                 $attributes->addComponentAttributeValue("aria-label", $ariaLabel);
+
                 $style = $socialChannel->getStyle();
                 $snippetId = "share-{$socialChannel->getName()}";
                 PluginUtility::getSnippetManager()->attachCssSnippetForBar($snippetId, $style);

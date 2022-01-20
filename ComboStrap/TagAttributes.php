@@ -60,7 +60,8 @@ class TagAttributes
         self::HTML_BEFORE,
         self::HTML_AFTER,
         Dimension::RATIO_ATTRIBUTE,
-        self::STRICT
+        self::STRICT,
+        SvgDocument::PRESERVE_ATTRIBUTE
     ];
 
     /**

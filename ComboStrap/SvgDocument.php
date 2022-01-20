@@ -111,6 +111,7 @@ class SvgDocument extends XmlDocument
 
     const CURRENT_COLOR = "currentColor";
     const VIEW_BOX = "viewBox";
+    const PRESERVE_ATTRIBUTE = "preserve";
 
     /**
      * @var string - a name identifier that is added in the SVG
@@ -157,6 +158,17 @@ class SvgDocument extends XmlDocument
         return new SvgDocument($markup);
     }
 
+    private static function preserveStyle(TagAttributes $tagAttributes): bool
+    {
+        $preserve = $tagAttributes->getValue(self::PRESERVE_ATTRIBUTE);
+        if ($preserve !== null) {
+            if (strpos(strtolower($preserve), "style") !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * @param TagAttributes|null $tagAttributes
      * @return string
@@ -194,7 +206,7 @@ class SvgDocument extends XmlDocument
         }
 
         if ($this->shouldOptimize()) {
-            $this->optimize();
+            $this->optimize($localTagAttributes);
         }
 
         // Set the name (icon) attribute for test selection
@@ -436,7 +448,7 @@ class SvgDocument extends XmlDocument
                                 if ($this->path !== null) {
                                     $pathString = $this->path->toAbsolutePath()->toString();
                                     if (
-                                        preg_match("/carbon|eva/i",$pathString) === 1
+                                        preg_match("/carbon|eva/i", $pathString) === 1
                                     ) {
                                         $this->deleteAllElements("rect");
                                     }
@@ -551,13 +563,6 @@ class SvgDocument extends XmlDocument
 
     }
 
-    public function getOptimizedSvg($tagAttributes = null)
-    {
-        $this->optimize();
-
-        return $this->getXmlText($tagAttributes);
-
-    }
 
     /**
      * @param $boolean
@@ -662,7 +667,7 @@ class SvgDocument extends XmlDocument
      * Based on https://jakearchibald.github.io/svgomg/
      * (gui of https://github.com/svg/svgo)
      */
-    public function optimize()
+    public function optimize($tagAttributes)
     {
 
         if ($this->shouldOptimize()) {
@@ -715,17 +720,17 @@ class SvgDocument extends XmlDocument
             }
 
             /**
-             * Suppress the attributes (by default id, style and class)
+             * Suppress the attributes (by default id, style and class, data-name)
              */
-            $attributeConfToDelete = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE, "id, style, class");
+            $attributeConfToDelete = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE, "id, style, class, data-name");
             $attributesNameToDelete = StringUtility::explodeAndTrim($attributeConfToDelete, ",");
             foreach ($attributesNameToDelete as $value) {
-                if ($value === "style" && $this->isInIconDirectory()) {
-                    // icon library (downloaded) have high trust
-                    // they may include style in the defs
-                    // example carbon:SQL
+
+                if (in_array($value,["style","class","id"]) && self::preserveStyle($tagAttributes)) {
+                    // we preserve the style, we preserve the class
                     continue;
                 }
+
                 $nodes = $this->xpath("//@$value");
                 foreach ($nodes as $node) {
                     /** @var DOMAttr $node */
@@ -801,6 +806,9 @@ class SvgDocument extends XmlDocument
             $elementsToDeleteConf = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style, title, desc");
             $elementsToDelete = StringUtility::explodeAndTrim($elementsToDeleteConf, ",");
             foreach ($elementsToDelete as $elementToDelete) {
+                if ($elementToDelete === "style" && self::preserveStyle($tagAttributes)) {
+                    continue;
+                }
                 $this->deleteAllElements($elementToDelete);
             }
 

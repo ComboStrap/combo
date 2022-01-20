@@ -18,6 +18,7 @@ use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
 use dokuwiki\Utf8\Conversion;
+use splitbrain\phpcli\Exception;
 use syntax_plugin_combo_tooltip;
 
 require_once(__DIR__ . '/PluginUtility.php');
@@ -182,6 +183,16 @@ class LinkUtility
 
         if ($tagAttributes->hasComponentAttribute("name")) {
             $this->name = $tagAttributes->getValueAndRemove("name");
+        }
+
+        $this->type = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
+        if ($this->type !== null) {
+            /**
+             * External service url such as {@link \syntax_plugin_combo_share}
+             */
+            $this->schemeUri = strtolower(substr($ref, 0, strpos($ref, "://")));
+            $this->ref = $ref;
+            return;
         }
 
         /**
@@ -571,19 +582,7 @@ EOF;
                 }
 
                 break;
-            case
-            self::TYPE_EXTERNAL:
-                if ($conf['relnofollow']) {
-                    $this->attributes->addHtmlAttributeValue("rel", 'nofollow ugc');
-                }
-                // https://www.dokuwiki.org/config:target
-                $externTarget = $conf['target']['extern'];
-                if (!empty($externTarget)) {
-                    $this->attributes->addHtmlAttributeValue('target', $externTarget);
-                    $this->attributes->addHtmlAttributeValue("rel", 'noopener');
-                }
-                $this->attributes->addClassName(self::getHtmlClassExternalLink());
-                break;
+
             case self::TYPE_WINDOWS_SHARE:
                 // https://www.dokuwiki.org/config:target
                 $windowsTarget = $conf['target']['windows'];
@@ -597,8 +596,24 @@ EOF;
             case self::TYPE_EMAIL:
                 $this->attributes->addClassName(self::getHtmlClassEmailLink());
                 break;
+            case self::TYPE_EXTERNAL:
+                if ($conf['relnofollow']) {
+                    $this->attributes->addHtmlAttributeValue("rel", 'nofollow ugc');
+                }
+                // https://www.dokuwiki.org/config:target
+                $externTarget = $conf['target']['extern'];
+                if (!empty($externTarget)) {
+                    $this->attributes->addHtmlAttributeValue('target', $externTarget);
+                    $this->attributes->addHtmlAttributeValue("rel", 'noopener');
+                }
+                $this->attributes->addClassName(self::getHtmlClassExternalLink());
+                break;
             default:
-                LogUtility::msg("The type (" . $this->getType() . ") is unknown", LogUtility::LVL_MSG_ERROR, \syntax_plugin_combo_link::TAG);
+                /**
+                 * May be any external link
+                 * such as {@link \syntax_plugin_combo_share}
+                 */
+                break;
 
         }
 
@@ -669,7 +684,7 @@ EOF;
      * @return string a `TYPE_xxx` constant
      */
     public
-    function getType()
+    function getType(): string
     {
         return $this->type;
     }
@@ -876,10 +891,13 @@ EOF;
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function getUrl()
     {
-        $url = "";
+
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
                 $page = $this->getInternalPage();
@@ -956,20 +974,6 @@ EOF;
                 $url = str_replace('\\', '/', $this->getRef());
                 $url = 'file:///' . $url;
                 break;
-            case self::TYPE_EXTERNAL:
-                /**
-                 * Authorized scheme only
-                 * to not inject code
-                 */
-                if (is_null($this->authorizedSchemes)) {
-                    $this->authorizedSchemes = getSchemes();
-                }
-                if (!in_array($this->schemeUri, $this->authorizedSchemes)) {
-                    $url = '';
-                } else {
-                    $url = $this->ref;
-                }
-                break;
             case self::TYPE_EMAIL:
                 /**
                  * An email link is `<email>`
@@ -998,7 +1002,24 @@ EOF;
                 $url = '#' . $this->renderer->_headerToLink($this->ref);
                 break;
             default:
-                LogUtility::log2FrontEnd("The url type (" . $this->getType() . ") was not expected to get the URL", LogUtility::LVL_MSG_ERROR, \syntax_plugin_combo_link::TAG);
+            case self::TYPE_EXTERNAL:
+                /**
+                 * Default is external
+                 * For instance, {@link \syntax_plugin_combo_share} link
+                 */
+                /**
+                 * Authorized scheme only
+                 * to not inject code
+                 */
+                if (is_null($this->authorizedSchemes)) {
+                    $this->authorizedSchemes = getSchemes();
+                }
+                if (!in_array($this->schemeUri, $this->authorizedSchemes)) {
+                    throw new ExceptionCombo("The scheme ($this->schemeUri) is not authorized as uri");
+                } else {
+                    $url = $this->ref;
+                }
+                break;
         }
 
 
@@ -1006,7 +1027,7 @@ EOF;
     }
 
     public
-    function getWiki()
+    function getWiki(): string
     {
         return $this->wiki;
     }

@@ -23,6 +23,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
 
     const TAG = "share";
     const CANONICAL = self::TAG;
+    const WIDGET_ATTRIBUTE = "widget";
 
 
     function getType(): string
@@ -106,7 +107,8 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                  */
                 $channelName = $shareAttributes->getValue(TagAttributes::TYPE_KEY);
                 try {
-                    $socialChannel = SocialChannel::create($channelName);
+                    $widget = $shareAttributes->getValue(self::WIDGET_ATTRIBUTE, SocialChannel::WIDGET_BUTTON_VALUE);
+                    $socialChannel = SocialChannel::create($channelName, $widget);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "The social channel creation ($channelName) returns an error ({$e->getMessage()}";
@@ -121,6 +123,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     return $returnArray;
                 }
 
+
                 $strict = $linkAttributes->getBooleanValueAndRemoveIfPresent(TagAttributes::STRICT, true);
 
                 /**
@@ -132,8 +135,8 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     $renderedPage->setScope(PageScope::SCOPE_CURRENT_REQUESTED_PAGE_VALUE);
                 }
 
-
-                $linkAttributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "btn {$socialChannel->getClass()}");
+                $linkAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, self::TAG);
+                $linkAttributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "{$socialChannel->getWidgetClass()} {$socialChannel->getIdentifierClass()}");
                 $linkAttributes->addComponentAttributeValue(LinkUtility::ATTRIBUTE_REF, $sharedUrl);
                 $linkAttributes->addComponentAttributeValue("target", "_blank");
                 $linkAttributes->addComponentAttributeValue("rel", "noopener");
@@ -230,7 +233,8 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     $channelName = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
                     try {
-                        $socialChannel = SocialChannel::create($channelName);
+                        $widget = $tagAttributes->getValue(self::WIDGET_ATTRIBUTE, SocialChannel::WIDGET_BUTTON_VALUE);
+                        $socialChannel = SocialChannel::create($channelName, $widget);
                     } catch (ExceptionCombo $e) {
                         LogUtility::msg("Unable to construct the social channel ($channelName). {$e->getMessage()}");
                         return false;
@@ -243,7 +247,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                         LogUtility::msg("The style of the share button ($socialChannel) could not be determined. Error: {$e->getMessage()}");
                         return false;
                     }
-                    $snippetId = "share-{$socialChannel->getName()}";
+                    $snippetId = $socialChannel->getStyleScriptIdentifier();
                     PluginUtility::getSnippetManager()->attachCssSnippetForSlot($snippetId, $style);
                     break;
                 case DOKU_LEXER_UNMATCHED:

@@ -24,6 +24,9 @@ use splitbrain\phpcli\Exception;
  */
 class SocialChannel
 {
+    public const WIDGET_BUTTON_VALUE = "button";
+    public const WIDGET_LINK_VALUE = "link";
+    const WIDGETS = [self::WIDGET_BUTTON_VALUE, self::WIDGET_LINK_VALUE];
 
     /**
      * @var array
@@ -34,13 +37,17 @@ class SocialChannel
      * @var array
      */
     private $channelDict;
+    /**
+     * @var string
+     */
+    private $widget = self::WIDGET_BUTTON_VALUE;
 
 
     /**
      * SocialChannel constructor.
      * @throws ExceptionCombo
      */
-    public function __construct(string $channelName)
+    public function __construct(string $channelName, string $widget = self::WIDGET_BUTTON_VALUE)
     {
         $this->name = strtolower($channelName);
         /**
@@ -57,14 +64,19 @@ class SocialChannel
         if ($this->channelDict === null) {
             throw new ExceptionCombo("The channel ($this->name} is unknown.");
         }
+        $widget = trim(strtolower($widget));
+        if (!in_array($widget, self::WIDGETS)) {
+            throw new ExceptionCombo("The social widget ($widget} is unknown. The possible widgets value are " . implode(",", self::WIDGETS));
+        }
+        $this->widget = $widget;
     }
 
     /**
      * @throws ExceptionCombo
      */
-    public static function create(string $channelName): SocialChannel
+    public static function create(string $channelName, string $widget = self::WIDGET_BUTTON_VALUE): SocialChannel
     {
-        return new SocialChannel($channelName);
+        return new SocialChannel($channelName, $widget);
     }
 
     /**
@@ -126,38 +138,74 @@ class SocialChannel
      */
     public function getStyle(): string
     {
-        $background = $this->channelDict["colors"]["background"];
-        if ($background === null) {
-            throw new ExceptionCombo("The background color for the social channel ($this) was not found in the data dictionary.");
-        }
-        $textColor = $this->getTextColor();
-        if ($textColor === null || $textColor === "") {
-            $textColor = "#fff";
-        }
-        // make the button square
+
+        /**
+         * Default colors
+         */
+        // make the button/link space square
         $padding = "0.375rem 0.375rem";
-        $style = <<<EOF
-.{$this->getClass()} {
+        switch ($this->widget) {
+            case self::WIDGET_LINK_VALUE:
+                // important because there is a conflict with the
+                $style = <<<EOF
+.{$this->getIdentifierClass()} {
+    padding: $padding;
+    vertical-align: middle;
+    display: inline-block;
+}
+EOF;
+                break;
+            default:
+            case self::WIDGET_BUTTON_VALUE:
+
+                $background = $this->channelDict["colors"]["background"];
+                if ($background === null) {
+                    throw new ExceptionCombo("The background color for the social channel ($this) was not found in the data dictionary.");
+                }
+                $textColor = $this->getTextColor();
+                if ($textColor === null || $textColor === "") {
+                    $textColor = "#fff";
+                }
+
+                $style = <<<EOF
+.{$this->getIdentifierClass()} {
     background-color: $background;
     border-color: $background;
     color: $textColor;
     padding: $padding;
 }
 EOF;
+        }
 
+        /**
+         * Hover
+         */
         $hoverColor = $this->channelDict["colors"]["hover-background"];
         if ($hoverColor === null) {
             return $style;
         }
-        return <<<EOF
+        switch ($this->widget) {
+            case self::WIDGET_LINK_VALUE:
+                return <<<EOF
 $style
 
-.{$this->getClass()}:hover, .{$this->getClass()}:active {
+.{$this->getIdentifierClass()}:hover svg, .{$this->getIdentifierClass()}:active svg {
+    color: $hoverColor;
+}
+EOF;
+            default:
+            case self::WIDGET_BUTTON_VALUE:
+                $textColor = $this->getTextColor();
+                return <<<EOF
+$style
+
+.{$this->getIdentifierClass()}:hover, .{$this->getIdentifierClass()}:active {
     background-color: $hoverColor;
     border-color: $hoverColor;
     color: $textColor;
 }
 EOF;
+        }
 
     }
 
@@ -166,9 +214,22 @@ EOF;
         return $this->name;
     }
 
-    public function getClass(): string
+    /**
+     * The identifier of the {@link SocialChannel::getStyle()} script
+     * used as script id in the {@link SnippetManager}
+     * @return string
+     */
+    public function getStyleScriptIdentifier(): string
     {
-        return "link-share-{$this->getName()}-combo";
+        return "share-{$this->getName()}-{$this->getWidget()}";
+    }
+
+    /**
+     * @return string - the class identifier used in the {@link SocialChannel::getStyle()} script
+     */
+    public function getIdentifierClass(): string
+    {
+        return "{$this->getStyleScriptIdentifier()}-combo";
     }
 
     /**
@@ -191,7 +252,34 @@ EOF;
 
     private function getTextColor()
     {
-        return $this->channelDict["colors"]["text"];
+
+        switch ($this->widget) {
+            case self::WIDGET_LINK_VALUE:
+                return $this->channelDict["colors"]["background"];
+            default:
+            case self::WIDGET_BUTTON_VALUE:
+                return $this->channelDict["colors"]["text"];
+        }
+
+    }
+
+    /**
+     * Class added to the link
+     * This is just to be boostrap conformance
+     */
+    public function getWidgetClass(): string
+    {
+        $class = "link-share";
+        if ($this->widget === self::WIDGET_BUTTON_VALUE) {
+            $class .= " btn";
+        }
+        return $class;
+    }
+
+
+    public function getWidget(): string
+    {
+        return $this->widget;
     }
 
 

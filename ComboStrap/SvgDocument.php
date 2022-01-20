@@ -726,7 +726,7 @@ class SvgDocument extends XmlDocument
             $attributesNameToDelete = StringUtility::explodeAndTrim($attributeConfToDelete, ",");
             foreach ($attributesNameToDelete as $value) {
 
-                if (in_array($value,["style","class","id"]) && self::preserveStyle($tagAttributes)) {
+                if (in_array($value, ["style", "class", "id"]) && self::preserveStyle($tagAttributes)) {
                     // we preserve the style, we preserve the class
                     continue;
                 }

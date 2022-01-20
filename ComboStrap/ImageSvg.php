@@ -175,6 +175,7 @@ class ImageSvg extends Image
      * Return the svg file transformed by the attributes
      * from cache if possible. Used when making a fetch with the URL
      * @return LocalPath
+     * @throws ExceptionCombo
      */
     public function getSvgFile(): LocalPath
     {

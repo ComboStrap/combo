@@ -31,6 +31,12 @@
     },
     "tumblr": {
         "endpoint": "https://www.tumblr.com/widgets/share/tool?posttype=link&title=$title&caption=$description&canonicalUrl=$url&content=$url",
+        "title": "Share this page with Tumblr",
+        "colors": {
+            "text": "#fff",
+            "background": "#35465C",
+            "hover-background": "#222d3c"
+        },
         "icons": {
             "solid": "carbon:logo-tumblr",
             "solid-circle": "entypo-social:tumblr-with-circle",

@@ -179,18 +179,18 @@ class SvgDocument extends XmlDocument
          * ViewBox should exist
          */
         $viewBox = $this->getXmlDom()->documentElement->getAttribute(self::VIEW_BOX);
-        if($viewBox===""){
+        if ($viewBox === "") {
             $width = $this->getXmlDom()->documentElement->getAttribute("width");
-            if($width===""){
-                LogUtility::msg("Svg processing stopped. Bad svg: We can't determine the width of the svg ($this) (The viewBox and the width does not exist) ", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+            if ($width === "") {
+                LogUtility::msg("Svg processing stopped. Bad svg: We can't determine the width of the svg ($this) (The viewBox and the width does not exist) ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 return parent::getXmlText();
             }
-            $height =  $this->getXmlDom()->documentElement->getAttribute("height");
-            if($height===""){
-                LogUtility::msg("Svg processing stopped. Bad svg: We can't determine the height of the svg ($this) (The viewBox and the height does not exist) ", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+            $height = $this->getXmlDom()->documentElement->getAttribute("height");
+            if ($height === "") {
+                LogUtility::msg("Svg processing stopped. Bad svg: We can't determine the height of the svg ($this) (The viewBox and the height does not exist) ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 return parent::getXmlText();
             }
-            $this->getXmlDom()->documentElement->setAttribute(self::VIEW_BOX,"0 0 $width $height");
+            $this->getXmlDom()->documentElement->setAttribute(self::VIEW_BOX, "0 0 $width $height");
         }
 
         if ($this->shouldOptimize()) {
@@ -409,7 +409,7 @@ class SvgDocument extends XmlDocument
                                  *   * on sub-path
                                  *   * in style node
                                  */
-                                // if the fill is set on subpath, it will not work
+                                // if the fill is set on sub-path, it will not work
                                 $svgPaths = $this->xpath("//*[local-name()='path']");
                                 for ($i = 0; $i < $svgPaths->length; $i++) {
                                     /**
@@ -417,26 +417,29 @@ class SvgDocument extends XmlDocument
                                      */
                                     $nodeElement = $svgPaths[$i];
                                     $value = $nodeElement->getAttribute("fill");
-                                    if($value!=="none") {
+                                    if ($value !== "none") {
                                         $this->removeAttributeValue("fill", $nodeElement);
                                     } else {
                                         $this->removeNode($nodeElement);
                                     }
                                 }
-                                // if the fill is set in a style node, it will not work
-                                $styleNodes = $this->xpath("//*[local-name()='style']");
-                                for ($i = 0; $i < $styleNodes->length; $i++) {
-                                    /**
-                                     * @var DOMElement $nodeElement
-                                     */
-                                    $nodeElement = $styleNodes[$i];
-                                    // example of value from the eva:facebook-fill icon
-                                    // .cls-1{fill : #fff;opacity:0;}.cls-2{fill: #231f20}
-                                    // becomes
-                                    // .cls-1{;opacity:0;}.cls-2{;}
-                                    $value = $nodeElement->nodeValue;
-                                    $value = preg_replace("/fill\s*:\s*[^;}]*/i","",$value);
-                                    $nodeElement->nodeValue = $value;
+
+                                /**
+                                 * Eva/Carbon Source Icon are not optimized
+                                 * Example:
+                                 *   * eva:facebook-fill
+                                 *   * carbon:logo-tumblr (https://github.com/carbon-design-system/carbon/issues/5568)
+                                 *
+                                 * We delete the rectangle
+                                 * Style should have already been deleted by the optimization
+                                 */
+                                if ($this->path !== null) {
+                                    $pathString = $this->path->toAbsolutePath()->toString();
+                                    if (
+                                        preg_match("/carbon|eva/i",$pathString) === 1
+                                    ) {
+                                        $this->deleteAllElements("rect");
+                                    }
                                 }
 
 
@@ -712,9 +715,9 @@ class SvgDocument extends XmlDocument
             }
 
             /**
-             * Suppress the attributes (by default id and style)
+             * Suppress the attributes (by default id, style and class)
              */
-            $attributeConfToDelete = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE, "id, style");
+            $attributeConfToDelete = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE, "id, style, class");
             $attributesNameToDelete = StringUtility::explodeAndTrim($attributeConfToDelete, ",");
             foreach ($attributesNameToDelete as $value) {
                 if ($value === "style" && $this->isInIconDirectory()) {
@@ -775,25 +778,30 @@ class SvgDocument extends XmlDocument
 
 
             /**
-             * Suppress script metadata node
-             * Delete of:
-             *   * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/script
+             * Suppress script and style
+             *
+             *
+             * Delete of scripts https://developer.mozilla.org/en-US/docs/Web/SVG/Element/script
+             *
+             * And defs/style
+             *
+             * The style can leak in other icon/svg inlined in the document
+             *
+             * Technically on icon, there should be no `style`
+             * on inline icon otherwise, the css style can leak
+             *
+             * Example with carbon that use cls-1 on all icons
+             * https://github.com/carbon-design-system/carbon/issues/5568
+             * The facebook icon has a class cls-1 with an opacity of 0
+             * that leaks to the tumblr icon that has also a cls-1 class
+             *
+             * The illustration uses inline fill to color and styled
+             * For instance, all un-draw: https://undraw.co/illustrations
              */
-            $elementsToDeleteConf = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style");
+            $elementsToDeleteConf = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style, title, desc");
             $elementsToDelete = StringUtility::explodeAndTrim($elementsToDeleteConf, ",");
-
             foreach ($elementsToDelete as $elementToDelete) {
-                if ($elementToDelete === "style" && $this->isInIconDirectory()) {
-                    // icon library (downloaded) have high trust
-                    // they may include style in the defs
-                    // example carbon:SQL
-                    continue;
-                }
-                $nodes = $this->xpath("//*[local-name()='$elementToDelete']");
-                foreach ($nodes as $node) {
-                    /** @var DOMElement $node */
-                    $node->parentNode->removeChild($node);
-                }
+                $this->deleteAllElements($elementToDelete);
             }
 
             // Delete If Empty
@@ -877,6 +885,18 @@ class SvgDocument extends XmlDocument
     private function removeNode(DOMElement $nodeElement)
     {
         $nodeElement->parentNode->removeChild($nodeElement);
+    }
+
+    private function deleteAllElements(string $elementName)
+    {
+        $svgElement = $this->xpath("//*[local-name()='$elementName']");
+        for ($i = 0; $i < $svgElement->length; $i++) {
+            /**
+             * @var DOMElement $nodeElement
+             */
+            $nodeElement = $svgElement[$i];
+            $this->removeNode($nodeElement);
+        }
     }
 
 

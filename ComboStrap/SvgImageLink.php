@@ -230,7 +230,13 @@ class SvgImageLink extends ImageLink
                 /**
                  * Svg tag
                  */
-                $imgHTML = FileSystems::getContent($image->getSvgFile());
+                try {
+                    $imgHTML = FileSystems::getContent($image->getSvgFile());
+                } catch (ExceptionCombo $e) {
+                    $error = "Error while retrieving the content of the svg image ($image). Error: {$e->getMessage()}";
+                    LogUtility::msg($error);
+                    return "<span class=\"text-danger\">$error</span>";
+                }
 
             }
 

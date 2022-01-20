@@ -267,7 +267,7 @@ $conf["svgOptimizationNamespacesToKeep"] = "";
  * {@link \ComboStrap\SvgDocument::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE}
  * The attribute to delete separates by a ,
  */
-$conf["svgOptimizationAttributesToDelete"] = "id, style";
+$conf["svgOptimizationAttributesToDelete"] = "id, style, class";
 /**
  * {@link \ComboStrap\SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE}
  */

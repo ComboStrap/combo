@@ -399,11 +399,17 @@ class SvgDocument extends XmlDocument
 
                     switch ($svgColorType) {
                         case self::COLOR_TYPE_FILL_SOLID:
+
                             $localTagAttributes->addHtmlAttributeValue("fill", $colorValue);
 
-                            // Delete the fill property on sub-path
-                            // if the fill is set on subpath, it will not work
+
                             if ($colorValue !== self::CURRENT_COLOR) {
+                                /**
+                                 * Delete the fill property
+                                 *   * on sub-path
+                                 *   * in style node
+                                 */
+                                // if the fill is set on subpath, it will not work
                                 $svgPaths = $this->xpath("//*[local-name()='path']");
                                 for ($i = 0; $i < $svgPaths->length; $i++) {
                                     /**
@@ -417,6 +423,23 @@ class SvgDocument extends XmlDocument
                                         $this->removeNode($nodeElement);
                                     }
                                 }
+                                // if the fill is set in a style node, it will not work
+                                $styleNodes = $this->xpath("//*[local-name()='style']");
+                                for ($i = 0; $i < $styleNodes->length; $i++) {
+                                    /**
+                                     * @var DOMElement $nodeElement
+                                     */
+                                    $nodeElement = $styleNodes[$i];
+                                    // example of value from the eva:facebook-fill icon
+                                    // .cls-1{fill : #fff;opacity:0;}.cls-2{fill: #231f20}
+                                    // becomes
+                                    // .cls-1{;opacity:0;}.cls-2{;}
+                                    $value = $nodeElement->nodeValue;
+                                    $value = preg_replace("/fill\s*:\s*[^;}]*/i","",$value);
+                                    $nodeElement->nodeValue = $value;
+                                }
+
+
                             }
 
                             break;
@@ -694,6 +717,12 @@ class SvgDocument extends XmlDocument
             $attributeConfToDelete = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE, "id, style");
             $attributesNameToDelete = StringUtility::explodeAndTrim($attributeConfToDelete, ",");
             foreach ($attributesNameToDelete as $value) {
+                if ($value === "style" && $this->isInIconDirectory()) {
+                    // icon library (downloaded) have high trust
+                    // they may include style in the defs
+                    // example carbon:SQL
+                    continue;
+                }
                 $nodes = $this->xpath("//@$value");
                 foreach ($nodes as $node) {
                     /** @var DOMAttr $node */

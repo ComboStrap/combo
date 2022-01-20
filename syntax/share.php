@@ -5,8 +5,6 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 use ComboStrap\ArrayUtility;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\Dictionary;
-use ComboStrap\DokuwikiUrl;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
@@ -15,7 +13,6 @@ use ComboStrap\PageScope;
 use ComboStrap\PluginUtility;
 use ComboStrap\SocialChannel;
 use ComboStrap\TagAttributes;
-use ComboStrap\TemplateUtility;
 
 
 /**
@@ -164,7 +161,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
 
                 $this->openLinkInCallStack($callStack, $linkAttributes);
                 try {
-                    $this->addIconInCallStack($callStack, $socialChannel->getIconName());
+                    $this->addIconInCallStack($callStack, $socialChannel);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the icon for the social channel ($channelName) returns an error ({$e->getMessage()}";
@@ -227,7 +224,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     }
 
                     /**
-                     * Add the CSS / Javascript snippet
+                     * Add the Icon / CSS / Javascript snippet
                      * It should happen only in rendering
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
@@ -238,6 +235,8 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                         LogUtility::msg("Unable to construct the social channel ($channelName). {$e->getMessage()}");
                         return false;
                     }
+
+
                     try {
                         $style = $socialChannel->getStyle();
                     } catch (ExceptionCombo $e) {
@@ -304,13 +303,17 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
             ));
     }
 
-    private function addIconInCallStack(CallStack $callStack, string $iconName)
+    /**
+     * @throws ExceptionCombo
+     */
+    private function addIconInCallStack(CallStack $callStack, SocialChannel $socialChannel)
     {
+
         $callStack->appendCallAtTheEnd(
             Call::createComboCall(
                 syntax_plugin_combo_icon::TAG,
                 DOKU_LEXER_SPECIAL,
-                [syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName]
+                $socialChannel->getIconAttributes()
             ));
     }
 

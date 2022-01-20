@@ -130,15 +130,18 @@ class SocialChannel
         if ($background === null) {
             throw new ExceptionCombo("The background color for the social channel ($this) was not found in the data dictionary.");
         }
-        $textColor = $this->channelDict["colors"]["text"];
+        $textColor = $this->getTextColor();
         if ($textColor === null || $textColor === "") {
             $textColor = "#fff";
         }
+        // make the button square
+        $padding = "0.375rem 0.375rem";
         $style = <<<EOF
 .{$this->getClass()} {
     background-color: $background;
     border-color: $background;
-    color: $textColor
+    color: $textColor;
+    padding: $padding;
 }
 EOF;
 
@@ -171,13 +174,24 @@ EOF;
     /**
      * @throws ExceptionCombo
      */
-    public function getIconName(string $type = "solid")
+    public function getIconAttributes(string $type = "solid"): array
     {
+
         $iconName = $this->channelDict["icons"][$type];
         if ($iconName === null) {
             throw new ExceptionCombo("The icon type ($type) is undefined for the social channel ({$this->getName()}");
         }
-        return $iconName;
+        $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
+        $textColor = $this->getTextColor();
+        if ($textColor !== null) {
+            $attributes[ColorUtility::COLOR] = $textColor;
+        }
+        return $attributes;
+    }
+
+    private function getTextColor()
+    {
+        return $this->channelDict["colors"]["text"];
     }
 
 

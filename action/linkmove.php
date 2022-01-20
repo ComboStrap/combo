@@ -213,7 +213,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
         if ($state == DOKU_LEXER_ENTER) {
             $ref = LinkUtility::parse($match)[LinkUtility::ATTRIBUTE_REF];
             $link = new LinkUtility($ref);
-            if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
+            if ($link->getStructure() == LinkUtility::TYPE_INTERNAL) {
 
                 $handler->internallink($match, $state, $pos);
                 $suffix = "]]";

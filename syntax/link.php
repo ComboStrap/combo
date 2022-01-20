@@ -4,7 +4,9 @@
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 use ComboStrap\CallStack;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\LinkUtility;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\ThirdPartyPlugins;
@@ -304,38 +306,45 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                          * Extra styling
                          */
                         $parentTag = $data[PluginUtility::CONTEXT];
-                        switch ($parentTag) {
-                            /**
-                             * Button link
-                             */
-                            case syntax_plugin_combo_button::TAG:
-                                $tagAttributes->addHtmlAttributeValue("role", "button");
-                                syntax_plugin_combo_button::processButtonAttributesToHtmlAttributes($tagAttributes);
-                                $htmlLink = $link->renderOpenTag($renderer);
-                                break;
-                            case syntax_plugin_combo_badge::TAG:
-                            case syntax_plugin_combo_cite::TAG:
-                            case syntax_plugin_combo_contentlistitem::DOKU_TAG:
-                            case syntax_plugin_combo_preformatted::TAG:
-                                $htmlLink = $link->renderOpenTag($renderer);
-                                break;
-                            case syntax_plugin_combo_dropdown::TAG:
-                                $tagAttributes->addClassName("dropdown-item");
-                                $htmlLink = $link->renderOpenTag($renderer);
-                                break;
-                            case syntax_plugin_combo_navbarcollapse::COMPONENT:
-                                $tagAttributes->addClassName("navbar-link");
-                                $htmlLink = '<div class="navbar-nav">' . $link->renderOpenTag($renderer);
-                                break;
-                            case syntax_plugin_combo_navbargroup::COMPONENT:
-                                $tagAttributes->addClassName("nav-link");
-                                $htmlLink = '<li class="nav-item">' . $link->renderOpenTag($renderer);
-                                break;
-                            default:
-                                $htmlLink = $link->renderOpenTag($renderer);
+                        try {
+                            switch ($parentTag) {
+                                /**
+                                 * Button link
+                                 */
+                                case syntax_plugin_combo_button::TAG:
+                                    $tagAttributes->addHtmlAttributeValue("role", "button");
+                                    syntax_plugin_combo_button::processButtonAttributesToHtmlAttributes($tagAttributes);
 
+                                    $htmlLink = $link->renderOpenTag($renderer);
+
+                                    break;
+                                case syntax_plugin_combo_badge::TAG:
+                                case syntax_plugin_combo_cite::TAG:
+                                case syntax_plugin_combo_contentlistitem::DOKU_TAG:
+                                case syntax_plugin_combo_preformatted::TAG:
+                                    $htmlLink = $link->renderOpenTag($renderer);
+                                    break;
+                                case syntax_plugin_combo_dropdown::TAG:
+                                    $tagAttributes->addClassName("dropdown-item");
+                                    $htmlLink = $link->renderOpenTag($renderer);
+                                    break;
+                                case syntax_plugin_combo_navbarcollapse::COMPONENT:
+                                    $tagAttributes->addClassName("navbar-link");
+                                    $htmlLink = '<div class="navbar-nav">' . $link->renderOpenTag($renderer);
+                                    break;
+                                case syntax_plugin_combo_navbargroup::COMPONENT:
+                                    $tagAttributes->addClassName("nav-link");
+                                    $htmlLink = '<li class="nav-item">' . $link->renderOpenTag($renderer);
+                                    break;
+                                default:
+                                    $htmlLink = $link->renderOpenTag($renderer);
+
+                            }
+                        } catch (ExceptionCombo $e) {
+                            $message = "Error while rendering the link ($link) - Message: {$e->getMessage()}";
+                            LogUtility::msg($message, LogUtility::LVL_MSG_ERROR,self::TAG);
+                            $htmlLink = LogUtility::wrapInRedForHtml($message) ;
                         }
-
 
                         /**
                          * Add it to the rendering

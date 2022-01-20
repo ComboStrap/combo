@@ -27,6 +27,11 @@ class SocialChannel
     public const WIDGET_BUTTON_VALUE = "button";
     public const WIDGET_LINK_VALUE = "link";
     const WIDGETS = [self::WIDGET_BUTTON_VALUE, self::WIDGET_LINK_VALUE];
+    const ICON_SOLID_VALUE = "solid";
+    const ICON_SOLID_CIRCLE_VALUE = "solid-circle";
+    const ICON_OUTLINE_CIRCLE_VALUE = "outline-circle";
+    const ICON_OUTLINE_VALUE = "outline";
+    const ICONS = [self::ICON_SOLID_VALUE, self::ICON_SOLID_CIRCLE_VALUE, self::ICON_OUTLINE_VALUE, self::ICON_OUTLINE_CIRCLE_VALUE];
 
     /**
      * @var array
@@ -41,13 +46,17 @@ class SocialChannel
      * @var string
      */
     private $widget = self::WIDGET_BUTTON_VALUE;
+    /**
+     * @var mixed|string
+     */
+    private $icon;
 
 
     /**
      * SocialChannel constructor.
      * @throws ExceptionCombo
      */
-    public function __construct(string $channelName, string $widget = self::WIDGET_BUTTON_VALUE)
+    public function __construct(string $channelName, string $widget = self::WIDGET_BUTTON_VALUE, $icon = self::ICON_SOLID_VALUE)
     {
         $this->name = strtolower($channelName);
         /**
@@ -64,19 +73,31 @@ class SocialChannel
         if ($this->channelDict === null) {
             throw new ExceptionCombo("The channel ($this->name} is unknown.");
         }
+        /**
+         * Widget validation
+         */
+        $this->widget = $widget;
         $widget = trim(strtolower($widget));
         if (!in_array($widget, self::WIDGETS)) {
             throw new ExceptionCombo("The social widget ($widget} is unknown. The possible widgets value are " . implode(",", self::WIDGETS));
         }
-        $this->widget = $widget;
+        /**
+         * Icon Validation
+         */
+        $this->icon = $icon;
+        $icon = trim(strtolower($icon));
+        if (!in_array($icon, self::ICONS)) {
+            throw new ExceptionCombo("The social icon ($icon) is unknown. The possible icons value are " . implode(",", self::ICONS));
+        }
+
     }
 
     /**
      * @throws ExceptionCombo
      */
-    public static function create(string $channelName, string $widget = self::WIDGET_BUTTON_VALUE): SocialChannel
+    public static function create(string $channelName, string $widget = self::WIDGET_BUTTON_VALUE, string $icon = self::ICON_SOLID_VALUE): SocialChannel
     {
-        return new SocialChannel($channelName, $widget);
+        return new SocialChannel($channelName, $widget, $icon);
     }
 
     /**
@@ -235,17 +256,26 @@ EOF;
     /**
      * @throws ExceptionCombo
      */
-    public function getIconAttributes(string $type = "solid"): array
+    public function getIconAttributes(): array
     {
 
-        $iconName = $this->channelDict["icons"][$type];
+        $iconName = $this->channelDict["icons"][$this->icon];
         if ($iconName === null) {
-            throw new ExceptionCombo("The icon type ($type) is undefined for the social channel ({$this->getName()}");
+            throw new ExceptionCombo("The icon type ($this->icon) is undefined for the social channel ({$this->getName()}");
         }
         $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
         $textColor = $this->getTextColor();
         if ($textColor !== null) {
             $attributes[ColorUtility::COLOR] = $textColor;
+        }
+        switch ($this->widget) {
+            case self::WIDGET_LINK_VALUE:
+                $attributes[Dimension::WIDTH_KEY] = 36;
+                break;
+            case self::WIDGET_BUTTON_VALUE:
+            default:
+                $attributes[Dimension::WIDTH_KEY] = 24;
+
         }
         return $attributes;
     }

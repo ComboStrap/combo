@@ -90,7 +90,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
             ) {
                 $ref = $actualCall->getAttribute(Reference::REF_PROPERTY);
                 $link = LinkUtility::createFromRef($ref);
-                if ($link->getType() === LinkUtility::TYPE_INTERNAL) {
+                if ($link->getStructure() === LinkUtility::TYPE_INTERNAL) {
                     $ref = Reference::createFromResource($page)
                         ->buildFromStoreValue($link->getInternalPage()->getPath()->toString());
                     $references->addRow([$ref]);

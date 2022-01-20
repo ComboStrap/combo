@@ -24,6 +24,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
     const TAG = "share";
     const CANONICAL = self::TAG;
     const WIDGET_ATTRIBUTE = "widget";
+    const ICON_ATTRIBUTE = "icon";
 
 
     function getType(): string
@@ -108,7 +109,8 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 $channelName = $shareAttributes->getValue(TagAttributes::TYPE_KEY);
                 try {
                     $widget = $shareAttributes->getValue(self::WIDGET_ATTRIBUTE, SocialChannel::WIDGET_BUTTON_VALUE);
-                    $socialChannel = SocialChannel::create($channelName, $widget);
+                    $icon = $shareAttributes->getValue(self::ICON_ATTRIBUTE, SocialChannel::ICON_SOLID_VALUE);
+                    $socialChannel = SocialChannel::create($channelName, $widget, $icon);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "The social channel creation ($channelName) returns an error ({$e->getMessage()}";

@@ -112,7 +112,7 @@ class LinkUtility
     /**
      * @var mixed
      */
-    private $type;
+    private $structure;
     /**
      * @var mixed
      */
@@ -167,6 +167,10 @@ class LinkUtility
      * @var DokuwikiUrl
      */
     private $dokuwikiUrl;
+    /**
+     * @var array|string|null
+     */
+    private $type;
 
     /**
      * Link constructor.
@@ -186,21 +190,13 @@ class LinkUtility
         }
 
         $this->type = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
-        if ($this->type !== null) {
-            /**
-             * External service url such as {@link \syntax_plugin_combo_share}
-             */
-            $this->schemeUri = strtolower(substr($ref, 0, strpos($ref, "://")));
-            $this->ref = $ref;
-            return;
-        }
 
         /**
          * Windows share link
          */
-        if ($this->type == null) {
+        if ($this->structure == null) {
             if (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $ref)) {
-                $this->type = self::TYPE_WINDOWS_SHARE;
+                $this->structure = self::TYPE_WINDOWS_SHARE;
                 $this->ref = $ref;
                 return;
             }
@@ -213,9 +209,9 @@ class LinkUtility
         /**
          * Local
          */
-        if ($this->type == null) {
+        if ($this->structure == null) {
             if (preg_match('!^#.+!', $ref)) {
-                $this->type = self::TYPE_LOCAL;
+                $this->structure = self::TYPE_LOCAL;
                 $this->ref = $ref;
             }
         }
@@ -228,11 +224,11 @@ class LinkUtility
          * [[support@combostrap.com?subject=hallo]]
          * [[support@combostrap.com]]
          */
-        if ($this->type == null) {
+        if ($this->structure == null) {
             $emailRfc2822 = "0-9a-zA-Z!#$%&'*+/=?^_`{|}~-";
             $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
             if (preg_match('<' . $emailPattern . '>', $ref)) {
-                $this->type = self::TYPE_EMAIL;
+                $this->structure = self::TYPE_EMAIL;
                 $this->ref = $ref;
                 // we don't return. The query part is parsed afterwards
             }
@@ -242,9 +238,9 @@ class LinkUtility
         /**
          * External
          */
-        if ($this->type == null) {
+        if ($this->structure == null) {
             if (preg_match('#^([a-z0-9\-\.+]+?)://#i', $ref)) {
-                $this->type = self::TYPE_EXTERNAL;
+                $this->structure = self::TYPE_EXTERNAL;
                 $this->schemeUri = strtolower(substr($ref, 0, strpos($ref, "://")));
                 $this->ref = $ref;
             }
@@ -254,27 +250,27 @@ class LinkUtility
          * interwiki ?
          */
         $refProcessing = $ref;
-        if ($this->type == null) {
+        if ($this->structure == null) {
             $interwikiPosition = strpos($refProcessing, ">");
             if ($interwikiPosition !== false) {
                 $this->wiki = strtolower(substr($refProcessing, 0, $interwikiPosition));
                 $refProcessing = substr($refProcessing, $interwikiPosition + 1);
                 $this->ref = $ref;
-                $this->type = self::TYPE_INTERWIKI;
+                $this->structure = self::TYPE_INTERWIKI;
             }
         }
 
         /**
          * Internal then
          */
-        if ($this->type == null) {
+        if ($this->structure == null) {
             /**
              * It can be a link with a ref template
              */
             if (substr($ref, 0, 1) === TemplateUtility::VARIABLE_PREFIX) {
-                $this->type = self::TYPE_INTERNAL_TEMPLATE;
+                $this->structure = self::TYPE_INTERNAL_TEMPLATE;
             } else {
-                $this->type = self::TYPE_INTERNAL;
+                $this->structure = self::TYPE_INTERNAL;
             }
             $this->ref = $ref;
         }
@@ -302,19 +298,19 @@ class LinkUtility
      * @param $name
      * @return $this
      */
-    public function setName($name)
+    public function setName($name): LinkUtility
     {
         $this->name = $name;
         return $this;
     }
 
     /**
-     * @param $type
+     * @param $structure
      * @return $this
      */
-    public function setType($type)
+    public function setStructure($structure): LinkUtility
     {
-        $this->type = $type;
+        $this->structure = $structure;
         return $this;
     }
 
@@ -326,7 +322,7 @@ class LinkUtility
      *
      * Code adapted from  {@link Doku_Handler::internallink()}
      */
-    public static function parse($match)
+    public static function parse($match): array
     {
 
         // Strip the opening and closing markup
@@ -363,11 +359,12 @@ class LinkUtility
      * Derived from {@link Doku_Renderer_xhtml::internallink()}
      * and others
      *
+     * @throws ExceptionCombo
      */
     public function renderOpenTag(Doku_Renderer_xhtml $renderer = null)
     {
 
-        $type = $this->getType();
+        $type = $this->getStructure();
 
         /**
          * Keep a reference to the renderer
@@ -421,7 +418,7 @@ class LinkUtility
         /**
          * Processing by type
          */
-        switch ($this->getType()) {
+        switch ($this->getStructure()) {
             case self::TYPE_INTERWIKI:
 
                 // normal link for the `this` wiki
@@ -606,7 +603,14 @@ EOF;
                     $this->attributes->addHtmlAttributeValue('target', $externTarget);
                     $this->attributes->addHtmlAttributeValue("rel", 'noopener');
                 }
-                $this->attributes->addClassName(self::getHtmlClassExternalLink());
+                if ($this->type === null) {
+                    /**
+                     * Default class for default external link
+                     * To not interfere with other external link style
+                     * For instance, {@link \syntax_plugin_combo_share}
+                     */
+                    $this->attributes->addClassName(self::getHtmlClassExternalLink());
+                }
                 break;
             default:
                 /**
@@ -626,7 +630,7 @@ EOF;
          * to mitigate XSS
          *
          */
-        if ($this->getType() == self::TYPE_EMAIL) {
+        if ($this->getStructure() == self::TYPE_EMAIL) {
             $emailAddress = $this->obfuscateEmail($this->dokuwikiUrl->getPath());
             $this->attributes->addHtmlAttributeValue("title", $emailAddress);
         }
@@ -644,10 +648,10 @@ EOF;
      * @param Doku_Renderer_metadata $metaDataRenderer
      */
     public
-    function handleMetadata($metaDataRenderer)
+    function handleMetadata(Doku_Renderer_metadata $metaDataRenderer)
     {
 
-        switch ($this->getType()) {
+        switch ($this->getStructure()) {
             case self::TYPE_INTERNAL:
                 /**
                  * The relative link should be passed (ie the original)
@@ -674,7 +678,7 @@ EOF;
                 // No backlinks for link template
                 break;
             default:
-                LogUtility::msg("The link ({$this->ref}) with the type " . $this->type . " was not processed into the metadata");
+                LogUtility::msg("The link ({$this->ref}) with the type " . $this->structure . " was not processed into the metadata");
         }
     }
 
@@ -684,9 +688,9 @@ EOF;
      * @return string a `TYPE_xxx` constant
      */
     public
-    function getType(): string
+    function getStructure(): string
     {
-        return $this->type;
+        return $this->structure;
     }
 
 
@@ -698,7 +702,7 @@ EOF;
     function processLinkStats(array &$stats)
     {
 
-        if ($this->getType() == self::TYPE_INTERNAL) {
+        if ($this->getStructure() == self::TYPE_INTERNAL) {
 
 
             /**
@@ -732,42 +736,42 @@ EOF;
             $length = count($a) + count($b);
             $stats[AnalyticsDocument::INTERNAL_LINK_DISTANCE][] = $length;
 
-        } else if ($this->getType() == self::TYPE_EXTERNAL) {
+        } else if ($this->getStructure() == self::TYPE_EXTERNAL) {
 
             if (!array_key_exists(AnalyticsDocument::EXTERNAL_LINK_COUNT, $stats)) {
                 $stats[AnalyticsDocument::EXTERNAL_LINK_COUNT] = 0;
             }
             $stats[AnalyticsDocument::EXTERNAL_LINK_COUNT]++;
 
-        } else if ($this->getType() == self::TYPE_LOCAL) {
+        } else if ($this->getStructure() == self::TYPE_LOCAL) {
 
             if (!array_key_exists(AnalyticsDocument::LOCAL_LINK_COUNT, $stats)) {
                 $stats[AnalyticsDocument::LOCAL_LINK_COUNT] = 0;
             }
             $stats[AnalyticsDocument::LOCAL_LINK_COUNT]++;
 
-        } else if ($this->getType() == self::TYPE_INTERWIKI) {
+        } else if ($this->getStructure() == self::TYPE_INTERWIKI) {
 
             if (!array_key_exists(AnalyticsDocument::INTERWIKI_LINK_COUNT, $stats)) {
                 $stats[AnalyticsDocument::INTERWIKI_LINK_COUNT] = 0;
             }
             $stats[AnalyticsDocument::INTERWIKI_LINK_COUNT]++;
 
-        } else if ($this->getType() == self::TYPE_EMAIL) {
+        } else if ($this->getStructure() == self::TYPE_EMAIL) {
 
             if (!array_key_exists(AnalyticsDocument::EMAIL_COUNT, $stats)) {
                 $stats[AnalyticsDocument::EMAIL_COUNT] = 0;
             }
             $stats[AnalyticsDocument::EMAIL_COUNT]++;
 
-        } else if ($this->getType() == self::TYPE_WINDOWS_SHARE) {
+        } else if ($this->getStructure() == self::TYPE_WINDOWS_SHARE) {
 
             if (!array_key_exists(AnalyticsDocument::WINDOWS_SHARE_COUNT, $stats)) {
                 $stats[AnalyticsDocument::WINDOWS_SHARE_COUNT] = 0;
             }
             $stats[AnalyticsDocument::WINDOWS_SHARE_COUNT]++;
 
-        } else if ($this->getType() == self::TYPE_INTERNAL_TEMPLATE) {
+        } else if ($this->getStructure() == self::TYPE_INTERNAL_TEMPLATE) {
 
             if (!array_key_exists(AnalyticsDocument::TEMPLATE_LINK_COUNT, $stats)) {
                 $stats[AnalyticsDocument::TEMPLATE_LINK_COUNT] = 0;
@@ -776,7 +780,7 @@ EOF;
 
         } else {
 
-            LogUtility::msg("The link `{$this->ref}` with the type (" . $this->getType() . ")  is not taken into account into the statistics");
+            LogUtility::msg("The link `{$this->ref}` with the type (" . $this->getStructure() . ")  is not taken into account into the statistics");
 
         }
 
@@ -787,10 +791,10 @@ EOF;
      * @return Page - the internal page or an error if the link is not an internal one
      */
     public
-    function getInternalPage()
+    function getInternalPage(): Page
     {
         if ($this->linkedPage == null) {
-            if ($this->getType() == self::TYPE_INTERNAL) {
+            if ($this->getStructure() == self::TYPE_INTERNAL) {
                 // if there is no path, this is the actual page
                 $pathOrId = $this->dokuwikiUrl->getPath();
 
@@ -817,7 +821,7 @@ EOF;
         /**
          * Templating
          */
-        switch ($this->getType()) {
+        switch ($this->getStructure()) {
             case self::TYPE_INTERNAL:
                 if (!empty($name)) {
                     /**
@@ -898,7 +902,7 @@ EOF;
     function getUrl()
     {
 
-        switch ($this->getType()) {
+        switch ($this->getStructure()) {
             case self::TYPE_INTERNAL:
                 $page = $this->getInternalPage();
 
@@ -1001,7 +1005,6 @@ EOF;
             case self::TYPE_LOCAL:
                 $url = '#' . $this->renderer->_headerToLink($this->ref);
                 break;
-            default:
             case self::TYPE_EXTERNAL:
                 /**
                  * Default is external
@@ -1020,6 +1023,8 @@ EOF;
                     $url = $this->ref;
                 }
                 break;
+            default:
+                throw new ExceptionCombo("The structure of the reference ($this->ref) is unknown");
         }
 
 
@@ -1046,7 +1051,7 @@ EOF;
     function isProtectedLink()
     {
         $protectedLink = false;
-        if ($this->getType() == self::TYPE_INTERNAL) {
+        if ($this->getStructure() == self::TYPE_INTERNAL) {
 
             // Low Quality Page protection
             $lqppEnable = PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE);
@@ -1071,13 +1076,13 @@ EOF;
      * @deprecated a link is a HTML anchor element (ie a), no more link with span
      */
     public
-    function getHTMLTag()
+    function getHTMLTag(): string
     {
         return "a";
     }
 
     private
-    function wikiExists()
+    function wikiExists(): bool
     {
         $wikis = getInterwiki();
         return key_exists($this->wiki, $wikis);
@@ -1175,7 +1180,7 @@ EOF;
 
 //FYI: exist in dokuwiki is "wikilink1 but we let the control to the user
     public
-    static function getHtmlClassNotExist()
+    static function getHtmlClassNotExist(): string
     {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {

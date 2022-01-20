@@ -597,7 +597,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     {
 
         $link = new LinkUtility($id);
-        $link->setType(LinkUtility::TYPE_INTERNAL);
+        $link->setStructure(LinkUtility::TYPE_INTERNAL);
         $link->processLinkStats($this->stats);
 
     }
@@ -605,7 +605,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function externallink($url, $name = null)
     {
         $link = new LinkUtility($url);
-        $link->setType(LinkUtility::TYPE_EXTERNAL);
+        $link->setStructure(LinkUtility::TYPE_EXTERNAL);
         if ($name != null) {
             $link->setName($name);
         }

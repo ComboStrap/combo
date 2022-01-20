@@ -283,4 +283,9 @@ class LogUtility
     {
         self::$throwExceptionOnDevTest = true;
     }
+
+    public static function wrapInRedForHtml(string $message): string
+    {
+        return "<span class=\"text-alert\">$message</span>";
+    }
 }

@@ -124,7 +124,13 @@
         }
     },
     "linkedin": {
-        "uri": " https://www.linkedin.com/shareArticle?mini=true&url=$url&source=$url&title=$title&summary=$description",
+        "uri": {
+            "web": "https://www.linkedin.com/shareArticle?mini=true&url=$url&source=$url&title=$title&summary=$description"
+        },
+        "colors": {
+            "primary": "#0077b5",
+            "secondary": "#046293"
+        },
         "icons": {
             "solid": "entypo-social:linkedin",
             "solid-circle": "entypo-social:linkedin-with-circle",

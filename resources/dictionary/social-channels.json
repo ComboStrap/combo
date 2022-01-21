@@ -81,7 +81,7 @@
     },
     "telegram": {
         "uri": {
-          "web": "https://telegram.me/share/url?text=$description&url=$url"
+            "web": "https://telegram.me/share/url?text=$description&url=$url"
         },
         "colors": {
             "primary": "#54A9EB",
@@ -91,14 +91,27 @@
             "solid": "bx:bxl-telegram",
             "solid-circle": "bi:telegram",
             "outline": "la:telegram",
-            "outline-circle":"iconoir:telegram-circled"
+            "outline-circle": "iconoir:telegram-circled"
         }
     },
     "vk": {
-        "uri": "https://vk.com/share.php?title=$description&url=$url"
+        "uri": {
+          "web": "https://vk.com/share.php?title=$description&url=$url"
+        },
+        "colors": {
+            "primary": "#507299",
+            "secondary": "#43648c"
+        },
+        "icons": {
+            "solid": "bx:bxl-vk",
+            "solid-circle": "entypo-social:vk-with-circle",
+            "outline": "simple-line-icons:social-vkontakte"
+        }
     },
     "pinterest": {
-        "uri": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$description",
+        "uri": {
+            "web": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$description"
+        },
         "icons": {
             "solid": "entypo-social:pinterest",
             "solid-circle": "bi:pinterest",

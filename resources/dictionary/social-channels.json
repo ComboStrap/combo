@@ -139,7 +139,13 @@
         }
     },
     "reddit": {
-        "uri": "https://reddit.com/submit/?resubmit=true&url=$url&title=$description",
+        "uri": {
+            "web": "https://reddit.com/submit/?resubmit=true&url=$url&title=$description"
+        },
+        "colors": {
+            "primary": "#5f99cf",
+            "secondary": "#3a80c1"
+        },
         "icons": {
             "solid": "dashicons:reddit",
             "solid-circle": "bi:reddit",
@@ -148,13 +154,34 @@
         }
     },
     "xing": {
-        "uri": "https://www.xing.com/spi/shares/new?url=$url",
-        "doc": "https://dev.xing.com/plugins/share_button/docs#custom-design"
+        "uri": {
+            "web": "https://www.xing.com/spi/shares/new?url=$url"
+        },
+        "doc": "https://dev.xing.com/plugins/share_button/docs#custom-design",
+        "colors": {
+            "primary": "#1a7576",
+            "secondary": "#114C4C"
+        },
+        "icons": {
+            "solid": "carbon:logo-xing",
+            "solid-circle": "entypo-social:xing-with-circle",
+            "outline": "la:xing",
+            "outline-circle": "sharing-button"
+        }
     },
     "pocket": {
-        "uri": "https://getpocket.com/save",
-        "queries": {
-            "url": "url"
+        "uri": {
+            "web": "https://getpocket.com/save?url=$url"
+        },
+        "colors": {
+            "primary": "#F50057",
+            "secondary": "#F50057"
+        },
+        "icons": {
+            "solid": "fe:pocket",
+            "solid-circle": "fe:pocket",
+            "outline": "iconoir:pocket",
+            "outline-circle": "iconoir:pocket"
         }
     }
 }

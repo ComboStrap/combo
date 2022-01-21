@@ -58,7 +58,10 @@ class Icon extends ImageSvg
         self::DASHICONS => "https://raw.githubusercontent.com/WordPress/dashicons/master/svg-min",
         self::ICONOIR => "https://raw.githubusercontent.com/lucaburgio/iconoir/master/icons",
         self::BOX_ICON => "https://raw.githubusercontent.com/atisawd/boxicons/master/svg",
-        self::LINE_AWESOME => "https://raw.githubusercontent.com/icons8/line-awesome/master/svg"
+        self::LINE_AWESOME => "https://raw.githubusercontent.com/icons8/line-awesome/master/svg",
+        self::FONT_AWESOME_SOLID => "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid",
+        self::FONT_AWESOME_BRANDS => "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/brands",
+        self::FONT_AWESOME_REGULAR => "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/regular"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -82,7 +85,10 @@ class Icon extends ImageSvg
         self::DASHICONS => "https://developer.wordpress.org/resource/dashicons/",
         self::ICONOIR => "https://iconoir.com",
         self::BOX_ICON => "https://boxicons.com",
-        self::LINE_AWESOME => "https://icons8.com/line-awesome"
+        self::LINE_AWESOME => "https://icons8.com/line-awesome",
+        self::FONT_AWESOME_SOLID => "https://fontawesome.com/",
+        self::FONT_AWESOME_BRANDS => "https://fontawesome.com/",
+        self::FONT_AWESOME_REGULAR => "https://fontawesome.com/"
 
     );
 
@@ -122,7 +128,10 @@ class Icon extends ImageSvg
         "dashicons" => self::DASHICONS,
         "iconoir" => self::ICONOIR,
         "bx" => self::BOX_ICON,
-        "la" => self::LINE_AWESOME
+        "la" => self::LINE_AWESOME,
+        "fa-solid" => self::FONT_AWESOME_SOLID,
+        "fa-brands" => self::FONT_AWESOME_BRANDS,
+        "fa-regular" => self::FONT_AWESOME_REGULAR
     );
 
     const FEATHER = "feather";
@@ -148,6 +157,9 @@ class Icon extends ImageSvg
     const ICONOIR = "iconoir";
     const BOX_ICON = "box-icon";
     const LINE_AWESOME = "line-awesome";
+    const FONT_AWESOME_SOLID = "font-awesome-solid";
+    const FONT_AWESOME_BRANDS = "font-awesome-brands";
+    const FONT_AWESOME_REGULAR = "font-awesome-regular";
 
     private $fullQualifiedName;
     /**

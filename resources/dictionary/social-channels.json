@@ -96,7 +96,7 @@
     },
     "vk": {
         "uri": {
-          "web": "https://vk.com/share.php?title=$description&url=$url"
+            "web": "https://vk.com/share.php?title=$description&url=$url"
         },
         "colors": {
             "primary": "#507299",
@@ -111,6 +111,10 @@
     "pinterest": {
         "uri": {
             "web": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$description"
+        },
+        "colors": {
+            "primary": "#bd081c",
+            "secondary": "#8c0615"
         },
         "icons": {
             "solid": "entypo-social:pinterest",

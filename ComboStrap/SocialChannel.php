@@ -109,9 +109,9 @@ class SocialChannel
         /**
          * Shared Url
          */
-        $shareUrlTemplate = $this->channelDict["endpoint"];
+        $shareUrlTemplate = $this->channelDict["uri"]["web"];
         if ($shareUrlTemplate === null) {
-            throw new ExceptionCombo("The channel ($this) does not have an endpoint");
+            throw new ExceptionCombo("The channel ($this) does not have an uri defined for the web");
         }
         $canonicalUrl = $requestedPage->getCanonicalUrl([], true, DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
         $templateData["url"] = $canonicalUrl;
@@ -261,14 +261,19 @@ EOF;
     }
 
     /**
+     * @throws ExceptionCombo
      */
     public function getIconAttributes(): array
     {
 
-        $iconName = $this->channelDict["icons"][$this->icon];
-        if ($iconName === null) {
-            $comboResourceScheme = DokuPath::COMBO_RESOURCE_SCHEME;
-            $iconName = "$comboResourceScheme>share:{$this->getName()}:{$this->icon}.svg";
+        $comboResourceScheme = DokuPath::COMBO_RESOURCE_SCHEME;
+        $iconName = "$comboResourceScheme>share:{$this->getName()}:{$this->icon}.svg";
+        $icon = DokuPath::createResource($iconName);
+        if (!FileSystems::exists($icon)) {
+            $iconName = $this->channelDict["icons"][$this->icon];
+            if ($iconName === null) {
+                throw new ExceptionCombo("No {$this->icon} icon could be found for the channel ($this)");
+            }
         }
         $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
         $textColor = $this->getTextColor();

@@ -1,20 +1,25 @@
 {
     "facebook": {
-        "endpoint": "https://facebook.com/sharer/sharer.php?u=$url",
+        "uri": {
+            "web": "https://facebook.com/sharer/sharer.php?u=$url"
+        },
+        "doc": "https://developers.facebook.com/docs/plugins/share-button/",
         "title": "Share this page with Facebook",
         "colors": {
             "primary": "#3b5998",
             "secondary": "#2d4373"
         },
         "icons": {
-            "outline": "uit:facebook-f",
+            "outline": "uit:facebook-alt",
             "outline-circle": "et:facebook",
             "solid": "eva:facebook-fill",
             "solid-circle": "bi:facebook"
         }
     },
     "twitter": {
-        "endpoint": "https://twitter.com/intent/tweet/?url=$url&text=$title%0A$description%0A&via=$via",
+        "uri": {
+            "web": "https://twitter.com/intent/tweet/?url=$url&text=$title%0A$description%0A&via=$via"
+        },
         "title": "Share this page with Twitter",
         "colors": {
             "primary": "#55acee",
@@ -28,7 +33,9 @@
         }
     },
     "tumblr": {
-        "endpoint": "https://www.tumblr.com/widgets/share/tool?posttype=link&title=$title&caption=$description&canonicalUrl=$url&content=$url",
+        "uri": {
+            "web": "https://www.tumblr.com/widgets/share/tool?posttype=link&title=$title&caption=$description&canonicalUrl=$url&content=$url"
+        },
         "title": "Share this page with Tumblr",
         "colors": {
             "primary": "#35465C",
@@ -42,31 +49,41 @@
         }
     },
     "mail": {
-        "endpoint": "mailto:?subject=$title&body=$description%20$url",
+        "uri": {
+            "web": "mailto:?subject=$title&body=$description%20$url"
+        },
         "colors": {
             "primary": "#777777",
             "secondary": "#5e5e5e"
         }
     },
     "whatsapp": {
-        "endpoint": "https://api.whatsapp.com/send?text=$description%20$url",
-        "mobile": "whatsapp://send?text=$description%20$url",
+        "uri": {
+            "web": "https://api.whatsapp.com/send?text=$description%20$url",
+            "mobile": "whatsapp://send?text=$description%20$url"
+        },
         "colors": {
             "primary": "#25D366",
             "secondary": "#1DA851"
         }
     },
-    "hackernews": {
-        "endpoint": "https://news.ycombinator.com/submitlink?u=$url&t=$description"
+    "hn": {
+        "uri": {
+            "web": "https://news.ycombinator.com/submitlink?u=$url&t=$description"
+        },
+        "colors": {
+            "primary": "#FF6600",
+            "secondary": "#FB6200"
+        }
     },
     "vk": {
-        "endpoint": "http://vk.com/share.php?title=$description&url=$url"
+        "uri": "https://vk.com/share.php?title=$description&url=$url"
     },
     "telegram": {
-        "endpoint": "https://telegram.me/share/url?text=$description&url=$url"
+        "uri": "https://telegram.me/share/url?text=$description&url=$url"
     },
     "pinterest": {
-        "endpoint": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$description",
+        "uri": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$description",
         "icons": {
             "solid": "entypo-social:pinterest",
             "solid-circle": "bi:pinterest",
@@ -75,7 +92,7 @@
         }
     },
     "linkedin": {
-        "endpoint": " https://www.linkedin.com/shareArticle?mini=true&url=$url&source=$url&title=$title&summary=$description",
+        "uri": " https://www.linkedin.com/shareArticle?mini=true&url=$url&source=$url&title=$title&summary=$description",
         "icons": {
             "solid": "entypo-social:linkedin",
             "solid-circle": "entypo-social:linkedin-with-circle",
@@ -84,7 +101,7 @@
         }
     },
     "reddit": {
-        "endpoint": "https://reddit.com/submit/?resubmit=true&url=$url&title=$description",
+        "uri": "https://reddit.com/submit/?resubmit=true&url=$url&title=$description",
         "icons": {
             "solid": "dashicons:reddit",
             "solid-circle": "bi:reddit",
@@ -93,11 +110,11 @@
         }
     },
     "xing": {
-        "endpoint": "https://www.xing.com/spi/shares/new?url=$url",
+        "uri": "https://www.xing.com/spi/shares/new?url=$url",
         "doc": "https://dev.xing.com/plugins/share_button/docs#custom-design"
     },
     "pocket": {
-        "endpoint": "https://getpocket.com/save",
+        "uri": "https://getpocket.com/save",
         "queries": {
             "url": "url"
         }

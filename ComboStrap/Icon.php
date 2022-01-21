@@ -57,7 +57,8 @@ class Icon extends ImageSvg
         self::ICOMOON => "https://raw.githubusercontent.com/Keyamoon/IcoMoon-Free/master/SVG",
         self::DASHICONS => "https://raw.githubusercontent.com/WordPress/dashicons/master/svg-min",
         self::ICONOIR => "https://raw.githubusercontent.com/lucaburgio/iconoir/master/icons",
-        self::BOX_ICON => "https://raw.githubusercontent.com/atisawd/boxicons/master/svg"
+        self::BOX_ICON => "https://raw.githubusercontent.com/atisawd/boxicons/master/svg",
+        self::LINE_AWESOME => "https://raw.githubusercontent.com/icons8/line-awesome/master/svg"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -80,7 +81,8 @@ class Icon extends ImageSvg
         self::ICOMOON => "https://icomoon.io/",
         self::DASHICONS => "https://developer.wordpress.org/resource/dashicons/",
         self::ICONOIR => "https://iconoir.com",
-        self::BOX_ICON => "https://boxicons.com"
+        self::BOX_ICON => "https://boxicons.com",
+        self::LINE_AWESOME => "https://icons8.com/line-awesome"
 
     );
 
@@ -119,7 +121,8 @@ class Icon extends ImageSvg
         "icomoon-free" => self::ICOMOON,
         "dashicons" => self::DASHICONS,
         "iconoir" => self::ICONOIR,
-        "bx" => self::BOX_ICON
+        "bx" => self::BOX_ICON,
+        "la" => self::LINE_AWESOME
     );
 
     const FEATHER = "feather";
@@ -144,6 +147,7 @@ class Icon extends ImageSvg
     const DASHICONS = " dashicons";
     const ICONOIR = "iconoir";
     const BOX_ICON = "box-icon";
+    const LINE_AWESOME = "line-awesome";
 
     private $fullQualifiedName;
     /**

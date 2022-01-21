@@ -164,69 +164,76 @@ class SocialChannel
          * Default colors
          */
         // make the button/link space square
-        $padding = "0.375rem 0.375rem";
+        $properties["padding"] = "0.375rem 0.375rem";
         switch ($this->widget) {
             case self::WIDGET_LINK_VALUE:
-                // important because there is a conflict with the
-                $style = <<<EOF
-.{$this->getIdentifierClass()} {
-    padding: $padding;
-    vertical-align: middle;
-    display: inline-block;
-}
-EOF;
+                $properties["vertical-align"] = "middle";
+                $properties["display"] = "inline-block";
                 break;
             default:
             case self::WIDGET_BUTTON_VALUE:
 
-                $background = $this->channelDict["colors"]["primary"];
-                if ($background === null) {
+                $primary = $this->channelDict["colors"]["primary"];
+                if ($primary === null) {
                     throw new ExceptionCombo("The background color for the social channel ($this) was not found in the data dictionary.");
                 }
                 $textColor = $this->getTextColor();
                 if ($textColor === null || $textColor === "") {
                     $textColor = "#fff";
                 }
-
-                $style = <<<EOF
-.{$this->getIdentifierClass()} {
-    background-color: $background;
-    border-color: $background;
-    color: $textColor;
-    padding: $padding;
-}
-EOF;
+                $properties["background-color"] = $primary;
+                $properties["border-color"] = $primary;
+                $properties["color"] = $textColor;
+                break;
+        }
+        switch ($this->icon) {
+            case self::ICON_OUTLINE_VALUE:
+                // not for outline circle, it's cut otherwise, don't know why
+                $properties["stroke-width"] = "2px";
+                break;
         }
 
+        $cssProperties = "\n";
+        foreach ($properties as $key => $value) {
+            $cssProperties .= "    $key:$value;\n";
+        }
+        $style = <<<EOF
+.{$this->getIdentifierClass()} { $cssProperties }
+EOF;
+
         /**
-         * Hover
+         * Hover Style
          */
         $secondary = $this->channelDict["colors"]["secondary"];
         if ($secondary === null) {
             return $style;
         }
+        $hoverProperties = [];
         switch ($this->widget) {
             case self::WIDGET_LINK_VALUE:
-                return <<<EOF
-$style
-
-.{$this->getIdentifierClass()}:hover svg, .{$this->getIdentifierClass()}:active svg {
-    color: $secondary;
-}
-EOF;
+                $hoverProperties["color"] = $secondary;
+                break;
             default:
             case self::WIDGET_BUTTON_VALUE:
                 $textColor = $this->getTextColor();
-                return <<<EOF
-$style
-
-.{$this->getIdentifierClass()}:hover, .{$this->getIdentifierClass()}:active {
-    background-color: $secondary;
-    border-color: $secondary;
-    color: $textColor;
-}
-EOF;
+                $hoverProperties["background-color"] = $secondary;
+                $hoverProperties["border-color"] = $secondary;
+                $hoverProperties["color"] = $textColor;
+                break;
         }
+        $hoverCssProperties = "\n";
+        foreach ($hoverProperties as $key => $value) {
+            $hoverCssProperties .= "    $key:$value;\n";
+        }
+        $hoverStyle = <<<EOF
+.{$this->getIdentifierClass()}:hover, .{$this->getIdentifierClass()}:active { $cssProperties }
+EOF;
+
+        return <<<EOF
+$style
+$hoverStyle
+EOF;
+
 
     }
 
@@ -242,7 +249,7 @@ EOF;
      */
     public function getStyleScriptIdentifier(): string
     {
-        return "share-{$this->getName()}-{$this->getWidget()}";
+        return "share-{$this->getName()}-{$this->getWidget()}-{$this->getIcon()}";
     }
 
     /**
@@ -254,7 +261,6 @@ EOF;
     }
 
     /**
-     * @throws ExceptionCombo
      */
     public function getIconAttributes(): array
     {
@@ -262,7 +268,7 @@ EOF;
         $iconName = $this->channelDict["icons"][$this->icon];
         if ($iconName === null) {
             $comboResourceScheme = DokuPath::COMBO_RESOURCE_SCHEME;
-            $iconName = "combo>share:{$this->getName()}:{$this->icon}.svg";
+            $iconName = "$comboResourceScheme>share:{$this->getName()}:{$this->icon}.svg";
         }
         $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
         $textColor = $this->getTextColor();
@@ -311,6 +317,11 @@ EOF;
     public function getWidget(): string
     {
         return $this->widget;
+    }
+
+    private function getIcon()
+    {
+        return $this->icon;
     }
 
 

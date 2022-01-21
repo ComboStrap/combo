@@ -41,6 +41,30 @@
             "outline-circle": "et:tumblr"
         }
     },
+    "mail": {
+        "endpoint": "mailto:?subject=$title&body=$description%20$url",
+        "colors": {
+            "primary": "#777777",
+            "secondary": "#5e5e5e"
+        }
+    },
+    "whatsapp": {
+        "endpoint": "https://api.whatsapp.com/send?text=$description%20$url",
+        "mobile": "whatsapp://send?text=$description%20$url",
+        "colors": {
+            "primary": "#25D366",
+            "secondary": "#1DA851"
+        }
+    },
+    "hackernews": {
+        "endpoint": "https://news.ycombinator.com/submitlink?u=$url&t=$description"
+    },
+    "vk": {
+        "endpoint": "http://vk.com/share.php?title=$description&url=$url"
+    },
+    "telegram": {
+        "endpoint": "https://telegram.me/share/url?text=$description&url=$url"
+    },
     "pinterest": {
         "endpoint": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$description",
         "icons": {
@@ -68,31 +92,12 @@
             "outline-circle": "simple-line-icons:social-reddit"
         }
     },
-    "mail": {
-        "endpoint": "mailto:?subject=$title&body=$description%20$url",
-        "colors": {
-            "primary": "#777777",
-            "secondary": "#5e5e5e"
-        }
-    },
     "xing": {
         "endpoint": "https://www.xing.com/spi/shares/new?url=$url",
         "doc": "https://dev.xing.com/plugins/share_button/docs#custom-design"
     },
-    "whatsapp": {
-        "endpoint": "whatsapp://send?text=$description%20$url"
-    },
-    "hackernews": {
-        "endpoint": "https://news.ycombinator.com/submitlink?u=$url&t=$description"
-    },
-    "vk": {
-        "endpoint": "http://vk.com/share.php?title=$description&url=$url"
-    },
-    "telegram": {
-        "endpoint": "https://telegram.me/share/url?text=$description&url=$url"
-    },
     "pocket": {
-        "endpoint":"https://getpocket.com/save",
+        "endpoint": "https://getpocket.com/save",
         "queries": {
             "url": "url"
         }

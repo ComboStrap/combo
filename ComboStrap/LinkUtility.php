@@ -1015,7 +1015,10 @@ EOF;
                  * to not inject code
                  */
                 if (is_null($this->authorizedSchemes)) {
+                    // https://www.dokuwiki.org/urlschemes
                     $this->authorizedSchemes = getSchemes();
+                    $this->authorizedSchemes[] = "whatsapp";
+                    $this->authorizedSchemes[] = "mailto";
                 }
                 if (!in_array($this->schemeUri, $this->authorizedSchemes)) {
                     throw new ExceptionCombo("The scheme ($this->schemeUri) is not authorized as uri");

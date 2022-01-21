@@ -241,7 +241,8 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     $channelName = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
                     try {
                         $widget = $tagAttributes->getValue(self::WIDGET_ATTRIBUTE, SocialChannel::WIDGET_BUTTON_VALUE);
-                        $socialChannel = SocialChannel::create($channelName, $widget);
+                        $icon = $tagAttributes->getValue(self::ICON_ATTRIBUTE, SocialChannel::ICON_SOLID_VALUE);
+                        $socialChannel = SocialChannel::create($channelName, $widget, $icon);
                     } catch (ExceptionCombo $e) {
                         LogUtility::msg("Unable to construct the social channel ($channelName). {$e->getMessage()}");
                         return false;

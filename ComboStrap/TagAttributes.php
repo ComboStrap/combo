@@ -1147,5 +1147,17 @@ class TagAttributes
         return "TagAttributes";
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
+    public function getValueAsInteger(string $WIDTH_KEY, ?int $default = null): ?int
+    {
+        $value = $this->getValue($WIDTH_KEY,$default);
+        if($value===null){
+            return null;
+        }
+        return DataType::toInteger($value);
+    }
+
 
 }

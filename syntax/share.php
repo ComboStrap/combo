@@ -5,6 +5,7 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 use ComboStrap\ArrayUtility;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\Dimension;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
@@ -25,6 +26,18 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
     const CANONICAL = self::TAG;
     const WIDGET_ATTRIBUTE = "widget";
     const ICON_ATTRIBUTE = "icon";
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private static function createFromAttributes(TagAttributes $shareAttributes): SocialChannel
+    {
+        $channelName = $shareAttributes->getValue(TagAttributes::TYPE_KEY);
+        $widget = $shareAttributes->getValue(self::WIDGET_ATTRIBUTE, SocialChannel::WIDGET_BUTTON_VALUE);
+        $icon = $shareAttributes->getValue(self::ICON_ATTRIBUTE, SocialChannel::ICON_SOLID_VALUE);
+        $width = $shareAttributes->getValueAsInteger(Dimension::WIDTH_KEY);
+        return SocialChannel::create($channelName, $widget, $icon, $width);
+    }
 
 
     function getType(): string
@@ -79,7 +92,6 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
         $this->Lexer->addEntryPattern($entryPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
-
     }
 
     public function postConnect()
@@ -111,14 +123,11 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 /**
                  * The channel
                  */
-                $channelName = $shareAttributes->getValue(TagAttributes::TYPE_KEY);
                 try {
-                    $widget = $shareAttributes->getValue(self::WIDGET_ATTRIBUTE, SocialChannel::WIDGET_BUTTON_VALUE);
-                    $icon = $shareAttributes->getValue(self::ICON_ATTRIBUTE, SocialChannel::ICON_SOLID_VALUE);
-                    $socialChannel = SocialChannel::create($channelName, $widget, $icon);
+                    $socialChannel = self::createFromAttributes($shareAttributes);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The social channel creation ($channelName) returns an error ({$e->getMessage()}";
+                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The social channel creation returns an error ({$e->getMessage()}";
                     return $returnArray;
                 }
                 $requestedPage = Page::createPageFromRequestedPage();
@@ -126,12 +135,10 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     $sharedUrl = $socialChannel->getUrlForPage($requestedPage);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the url for the social channel ($channelName) returns an error ({$e->getMessage()}";
+                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the url for the social channel ($socialChannel) returns an error ({$e->getMessage()}";
                     return $returnArray;
                 }
 
-
-                $strict = $linkAttributes->getBooleanValueAndRemoveIfPresent(TagAttributes::STRICT, true);
 
                 /**
                  * Scope if in slot
@@ -150,22 +157,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 $linkTitle = $socialChannel->getLinkTitle();
                 $linkAttributes->addComponentAttributeValue("title", $linkTitle);
 
-                /**
-                 * Label
-                 */
-                $size = "small";
-                switch ($size) {
-                    case "large":
-                        $label = "Share on " . ucfirst($channelName);
-                        break;
-                    case "medium":
-                        $label = ucfirst($channelName);
-                        break;
-                    default:
-                        $label = "";
-                        break;
-                }
-                $ariaLabel = "Share on " . ucfirst($channelName);
+                $ariaLabel = "Share on " . ucfirst($socialChannel->getName());
                 $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
 
 
@@ -174,11 +166,10 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     $this->addIconInCallStack($callStack, $socialChannel);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the icon for the social channel ($channelName) returns an error ({$e->getMessage()}";
+                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the icon for the social channel ($socialChannel) returns an error ({$e->getMessage()}";
                     return $returnArray;
                 }
                 if ($state === DOKU_LEXER_SPECIAL) {
-                    $this->addLinkContentInCallStack($callStack, $label);
                     $this->closeLinkInCallStack($callStack);
                 }
 
@@ -238,13 +229,10 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                      * It should happen only in rendering
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $channelName = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
                     try {
-                        $widget = $tagAttributes->getValue(self::WIDGET_ATTRIBUTE, SocialChannel::WIDGET_BUTTON_VALUE);
-                        $icon = $tagAttributes->getValue(self::ICON_ATTRIBUTE, SocialChannel::ICON_SOLID_VALUE);
-                        $socialChannel = SocialChannel::create($channelName, $widget, $icon);
+                        $socialChannel = self::createFromAttributes($tagAttributes);
                     } catch (ExceptionCombo $e) {
-                        LogUtility::msg("Unable to construct the social channel ($channelName). {$e->getMessage()}");
+                        LogUtility::msg("The social channel could not be build. Error: {$e->getMessage()}");
                         return false;
                     }
 
@@ -293,18 +281,6 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
             ));
     }
 
-    private function addLinkContentInCallStack(CallStack $callStack, string $payload)
-    {
-        $callStack->appendCallAtTheEnd(
-            Call::createComboCall(
-                syntax_plugin_combo_link::TAG,
-                DOKU_LEXER_UNMATCHED,
-                [],
-                null,
-                null,
-                $payload
-            ));
-    }
 
     private function closeLinkInCallStack(CallStack $callStack)
     {
@@ -321,11 +297,15 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
     private function addIconInCallStack(CallStack $callStack, SocialChannel $socialChannel)
     {
 
+        if (!$socialChannel->hasIcon()) {
+            return;
+        }
+        $iconAttributes = $socialChannel->getIconAttributes();
         $callStack->appendCallAtTheEnd(
             Call::createComboCall(
                 syntax_plugin_combo_icon::TAG,
                 DOKU_LEXER_SPECIAL,
-                $socialChannel->getIconAttributes()
+                $iconAttributes
             ));
     }
 

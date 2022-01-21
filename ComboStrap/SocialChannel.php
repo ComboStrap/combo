@@ -31,7 +31,8 @@ class SocialChannel
     const ICON_SOLID_CIRCLE_VALUE = "solid-circle";
     const ICON_OUTLINE_CIRCLE_VALUE = "outline-circle";
     const ICON_OUTLINE_VALUE = "outline";
-    const ICONS = [self::ICON_SOLID_VALUE, self::ICON_SOLID_CIRCLE_VALUE, self::ICON_OUTLINE_VALUE, self::ICON_OUTLINE_CIRCLE_VALUE];
+    const ICONS = [self::ICON_SOLID_VALUE, self::ICON_SOLID_CIRCLE_VALUE, self::ICON_OUTLINE_VALUE, self::ICON_OUTLINE_CIRCLE_VALUE, self::ICON_NONE_VALUE];
+    const ICON_NONE_VALUE = "none";
 
     /**
      * @var array
@@ -50,13 +51,22 @@ class SocialChannel
      * @var mixed|string
      */
     private $icon;
+    /**
+     * The width of the icon
+     * @var int|null
+     */
+    private $width;
 
 
     /**
      * SocialChannel constructor.
      * @throws ExceptionCombo
      */
-    public function __construct(string $channelName, string $widget = self::WIDGET_BUTTON_VALUE, $icon = self::ICON_SOLID_VALUE)
+    public function __construct(
+        string $channelName,
+        string $widget = self::WIDGET_BUTTON_VALUE,
+        string $icon = self::ICON_SOLID_VALUE,
+        int $width = null)
     {
         $this->name = strtolower($channelName);
         /**
@@ -90,14 +100,23 @@ class SocialChannel
             throw new ExceptionCombo("The social icon ($icon) is unknown. The possible icons value are " . implode(",", self::ICONS));
         }
 
+        /**
+         * Width
+         */
+        $this->width = $width;
+
     }
 
     /**
      * @throws ExceptionCombo
      */
-    public static function create(string $channelName, string $widget = self::WIDGET_BUTTON_VALUE, string $icon = self::ICON_SOLID_VALUE): SocialChannel
+    public static function create(
+        string $channelName,
+        string $widget = self::WIDGET_BUTTON_VALUE,
+        string $icon = self::ICON_SOLID_VALUE,
+        ?int $width = null): SocialChannel
     {
-        return new SocialChannel($channelName, $widget, $icon);
+        return new SocialChannel($channelName, $widget, $icon, $width);
     }
 
     /**
@@ -280,15 +299,8 @@ EOF;
         if ($textColor !== null) {
             $attributes[ColorUtility::COLOR] = $textColor;
         }
-        switch ($this->widget) {
-            case self::WIDGET_LINK_VALUE:
-                $attributes[Dimension::WIDTH_KEY] = 36;
-                break;
-            case self::WIDGET_BUTTON_VALUE:
-            default:
-                $attributes[Dimension::WIDTH_KEY] = 24;
+        $attributes[Dimension::WIDTH_KEY] = $this->getWidth();
 
-        }
         return $attributes;
     }
 
@@ -327,6 +339,30 @@ EOF;
     private function getIcon()
     {
         return $this->icon;
+    }
+
+    private function getDefaultWidth(): int
+    {
+        switch ($this->widget) {
+            case self::WIDGET_LINK_VALUE:
+                return 36;
+            case self::WIDGET_BUTTON_VALUE:
+            default:
+                return 24;
+        }
+    }
+
+    private function getWidth(): ?int
+    {
+        if ($this->width === null) {
+            return $this->getDefaultWidth();
+        }
+        return $this->width;
+    }
+
+    public function hasIcon(): bool
+    {
+        return $this->icon !== self::ICON_NONE_VALUE;
     }
 
 

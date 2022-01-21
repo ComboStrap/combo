@@ -62,10 +62,10 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     function handleMediaStatus(Doku_Event $event, $params)
     {
 
-        if (!isset($_GET[DokuPath::WIKI_FS_TYPE])) {
+        if (!isset($_GET[DokuPath::WIKI_SCHEME])) {
             return;
         }
-        $type = $_GET[DokuPath::WIKI_FS_TYPE];
+        $type = $_GET[DokuPath::WIKI_SCHEME];
         if ($type !== DokuPath::RESOURCE_TYPE) {
             // The other resources have ACL
             // and this endpoint is normally only for
@@ -97,9 +97,9 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Combo Media
          * (Static file from the combo resources are always taken over)
          */
-        if (isset($_GET[DokuPath::WIKI_FS_TYPE])) {
+        if (isset($_GET[DokuPath::WIKI_SCHEME])) {
 
-            $isStaticFileManaged = $_GET[DokuPath::WIKI_FS_TYPE] === DokuPath::RESOURCE_TYPE;
+            $isStaticFileManaged = $_GET[DokuPath::WIKI_SCHEME] === DokuPath::RESOURCE_TYPE;
 
         }
 

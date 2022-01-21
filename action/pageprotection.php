@@ -133,7 +133,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
 
         $id = $event->data['id'];
 
-        $dokuPath = DokuPath::createUnknownFromIdOrPath($id);
+        $dokuPath = DokuPath::createFromUnknownRoot($id);
         if ($dokuPath->isPage()) {
 
             /**

@@ -30,12 +30,25 @@ class DokuPath extends PathAbs
     public const SLUG_SEPARATOR = "-";
 
     const RESOURCE_TYPE = "resource";
+
     /**
-     * Dokuwiki know as file system starts at page and media
-     * This parameters permits to add another one
-     * that starts at the resource directory
+     * Dokuwiki has a file system that starts at a page and/or media
+     * directory that depends on the used syntax.
+     *
+     * This parameters is an URL parameter
+     * that permits to set an another one
+     * when retrieving the file via HTTP
+     * For now, there is only one value: {@link DokuPath::RESOURCE_TYPE}
      */
-    public const WIKI_FS_TYPE = "wiki-fs-type";
+    public const WIKI_SCHEME = "wiki-scheme";
+    /**
+     * The interwiki scheme that points to the
+     * combo resources directory ie {@link DokuPath::RESOURCE_TYPE}
+     * ie
+     *   combo>library:
+     *   combo>image:
+     */
+    const COMBO_RESOURCE_SCHEME = "combo";
 
     /**
      * @var string[]
@@ -62,11 +75,6 @@ class DokuPath extends PathAbs
      */
     private $rev;
 
-    /**
-     * @var string a value with an absolute id without the root
-     * used in the index (ie the id)
-     */
-    private $qualifiedId;
 
     /**
      * @var string the path scheme one constant that starts with SCHEME
@@ -84,7 +92,7 @@ class DokuPath extends PathAbs
      *
      * A path for the Dokuwiki File System
      *
-     * @param string $absolutePath - the dokuwiki absolute path (may not be relative but may be a namespace)
+     * @param string $path - the dokuwiki absolute path (may not be relative but may be a namespace)
      * @param string $type - the type (media, page)
      * @param string|null $rev - the revision (mtime)
      *
@@ -97,44 +105,39 @@ class DokuPath extends PathAbs
      * Because this class is mostly the file representation, it should be able to
      * represents also a namespace
      */
-    protected function __construct(string $absolutePath, string $type, string $rev = null)
+    protected function __construct(string $path, string $type, string $rev = null)
     {
-        DokuPath::addRootSeparatorIfNotPresent($absolutePath);
-        if (empty($absolutePath)) {
+
+        if (empty($path)) {
             LogUtility::msg("A null path was given", LogUtility::LVL_MSG_WARNING);
         }
-        $this->absolutePath = $absolutePath;
 
 
-        // Check whether this is a local or remote image or interwiki
-        if (media_isexternal($absolutePath)) {
+        /**
+         * Scheme determination
+         */
+        $this->scheme = $this->schemeDetermination($path);
 
-            $this->scheme = InternetPath::scheme;
-
-        } else if (link_isinterwiki($absolutePath)) {
-
-            $this->scheme = InterWikiPath::scheme;
-
-        } else {
-
-            if (substr($absolutePath, 0, 1) !== DokuPath::PATH_SEPARATOR) {
-                if (PluginUtility::isDevOrTest()) {
-                    // Feel too much the log, test are not seeing anything, may be minimap ?
-                    LogUtility::msg("The path given ($absolutePath) is not qualified", LogUtility::LVL_MSG_ERROR);
-                }
-                $this->absolutePath = ":" . $absolutePath;
-            }
-            if (substr($absolutePath, 1, 1) === DokuPath::PATH_SEPARATOR) {
+        switch ($this->scheme) {
+            case InterWikiPath::scheme:
                 /**
-                 * path given is `::path`
+                 * We use interwiki to define the combo resources
+                 * (Internal use only)
                  */
-                if (PluginUtility::isDevOrTest()) {
-                    LogUtility::msg("The path given ($absolutePath) has too much separator", LogUtility::LVL_MSG_ERROR);
-                }
-            }
-            $this->scheme = DokuFs::SCHEME;
+                $comboInterWikiScheme = "combo>";
+                if (strpos($path, $comboInterWikiScheme) === 0) {
+                    $this->scheme = DokuFs::SCHEME;
+                    $this->id = substr($path, strlen($comboInterWikiScheme));
+                    $type = self::RESOURCE_TYPE;
+                };
+                break;
+            case DokuFs::SCHEME:
+            default:
+                DokuPath::addRootSeparatorIfNotPresent($path);
+                $this->id = DokuPath::toDokuwikiId($path);
 
         }
+        $this->absolutePath = $path;
 
 
         /**
@@ -146,7 +149,7 @@ class DokuPath extends PathAbs
          * If this is the case, this is a media
          */
         if ($type == self::UNKNOWN_TYPE) {
-            $lastPosition = StringUtility::lastIndexOf($absolutePath, ".");
+            $lastPosition = StringUtility::lastIndexOf($path, ".");
             if ($lastPosition === FALSE) {
                 $type = self::PAGE_TYPE;
             } else {
@@ -162,7 +165,6 @@ class DokuPath extends PathAbs
         $filePath = $this->absolutePath;
         if ($this->scheme == DokuFs::SCHEME) {
 
-            $this->id = DokuPath::toDokuwikiId($this->absolutePath);
             $isNamespacePath = false;
             if (\mb_substr($this->absolutePath, -1) == self::PATH_SEPARATOR) {
                 $isNamespacePath = true;
@@ -231,9 +233,18 @@ class DokuPath extends PathAbs
         return new DokuPath($absolutePath, DokuPath::MEDIA_TYPE, $rev);
     }
 
-    public static function createUnknownFromIdOrPath($id): DokuPath
+    /**
+     * If the media may come from the
+     * dokuwiki media or combo resources media,
+     * you should use this function
+     *
+     * The constructor will determine the type based on
+     * the id structure.
+     * @param $id
+     * @return DokuPath
+     */
+    public static function createFromUnknownRoot($id): DokuPath
     {
-        DokuPath::addRootSeparatorIfNotPresent($id);
         return new DokuPath($id, DokuPath::UNKNOWN_TYPE);
     }
 
@@ -658,5 +669,44 @@ class DokuPath extends PathAbs
     public function getType(): string
     {
         return $this->finalType;
+    }
+
+    private function schemeDetermination($absolutePath): string
+    {
+
+        if (media_isexternal($absolutePath)) {
+            /**
+             * This code should not be here
+             * Because it should be another path (ie http path)
+             * but for historical reason due to compatibility with
+             * dokuwiki, it's here.
+             */
+            return InternetPath::scheme;
+
+        }
+        if (link_isinterwiki($absolutePath)) {
+
+            return InterWikiPath::scheme;
+
+        }
+
+        if (substr($absolutePath, 0, 1) !== DokuPath::PATH_SEPARATOR) {
+            if (PluginUtility::isDevOrTest()) {
+                // Feel too much the log, test are not seeing anything, may be minimap ?
+                LogUtility::msg("The path given ($absolutePath) is not qualified", LogUtility::LVL_MSG_ERROR);
+            }
+            $this->absolutePath = ":" . $absolutePath;
+        }
+        if (substr($absolutePath, 1, 1) === DokuPath::PATH_SEPARATOR) {
+            /**
+             * path given is `::path`
+             */
+            if (PluginUtility::isDevOrTest()) {
+                LogUtility::msg("The path given ($absolutePath) has too much separator", LogUtility::LVL_MSG_ERROR);
+            }
+        }
+        return DokuFs::SCHEME;
+
+
     }
 }

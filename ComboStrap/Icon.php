@@ -177,7 +177,7 @@ class Icon extends ImageSvg
          * If the name have an extension, it's a file from the media directory
          * Otherwise, it's an icon from a library
          */
-        $mediaDokuPath = DokuPath::createMediaPathFromId($fullQualifiedName);
+        $mediaDokuPath = DokuPath::createFromUnknownRoot($fullQualifiedName);
         if (!empty($mediaDokuPath->getExtension())) {
 
             // loop through candidates until a match was found:

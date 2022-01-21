@@ -61,7 +61,7 @@ class JavascriptLibrary extends Media
         $direct = true;
         $att = [];
         $this->addCacheBusterToQueryParameters($att);
-        $att[DokuPath::WIKI_FS_TYPE] = $path->getType();
+        $att[DokuPath::WIKI_SCHEME] = $path->getType();
         return ml($path->getDokuwikiId(), $att, $direct, $ampersand, true);
     }
 

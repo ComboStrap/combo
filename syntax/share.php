@@ -67,13 +67,18 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
+        /**
+         * The empty tag pattern should be before the container pattern
+         */
+        $this->Lexer->addSpecialPattern(PluginUtility::getEmptyTagPattern(self::TAG), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+
+        /**
+         * Container
+         */
         $entryPattern = PluginUtility::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($entryPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
-        /**
-         * permalink
-         */
-        $this->Lexer->addSpecialPattern(PluginUtility::getEmptyTagPattern(self::TAG), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+
 
     }
 

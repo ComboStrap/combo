@@ -3,9 +3,8 @@
         "endpoint": "https://facebook.com/sharer/sharer.php?u=$url",
         "title": "Share this page with Facebook",
         "colors": {
-            "text": "#fff",
-            "background": "#3b5998",
-            "hover-background": "#2d4373"
+            "primary": "#3b5998",
+            "secondary": "#2d4373"
         },
         "icons": {
             "outline": "uit:facebook-f",
@@ -18,9 +17,8 @@
         "endpoint": "https://twitter.com/intent/tweet/?url=$url&text=$title%0A$description%0A&via=$via",
         "title": "Share this page with Twitter",
         "colors": {
-            "text": "#fff",
-            "background": "#55acee",
-            "hover-background": "#2795e9"
+            "primary": "#55acee",
+            "secondary": "#2795e9"
         },
         "icons": {
             "outline": "uit:twitter-alt",
@@ -33,9 +31,8 @@
         "endpoint": "https://www.tumblr.com/widgets/share/tool?posttype=link&title=$title&caption=$description&canonicalUrl=$url&content=$url",
         "title": "Share this page with Tumblr",
         "colors": {
-            "text": "#fff",
-            "background": "#35465C",
-            "hover-background": "#222d3c"
+            "primary": "#35465C",
+            "secondary": "#222d3c"
         },
         "icons": {
             "solid": "carbon:logo-tumblr",
@@ -71,8 +68,12 @@
             "outline-circle": "simple-line-icons:social-reddit"
         }
     },
-    "email": {
-        "endpoint": "mailto:?subject=$title&body=$description%20$url"
+    "mail": {
+        "endpoint": "mailto:?subject=$title&body=$description%20$url",
+        "colors": {
+            "primary": "#777777",
+            "secondary": "#5e5e5e"
+        }
     },
     "xing": {
         "endpoint": "https://www.xing.com/spi/shares/new?url=$url",

@@ -179,7 +179,7 @@ EOF;
             default:
             case self::WIDGET_BUTTON_VALUE:
 
-                $background = $this->channelDict["colors"]["background"];
+                $background = $this->channelDict["colors"]["primary"];
                 if ($background === null) {
                     throw new ExceptionCombo("The background color for the social channel ($this) was not found in the data dictionary.");
                 }
@@ -201,8 +201,8 @@ EOF;
         /**
          * Hover
          */
-        $hoverColor = $this->channelDict["colors"]["hover-background"];
-        if ($hoverColor === null) {
+        $secondary = $this->channelDict["colors"]["secondary"];
+        if ($secondary === null) {
             return $style;
         }
         switch ($this->widget) {
@@ -211,7 +211,7 @@ EOF;
 $style
 
 .{$this->getIdentifierClass()}:hover svg, .{$this->getIdentifierClass()}:active svg {
-    color: $hoverColor;
+    color: $secondary;
 }
 EOF;
             default:
@@ -221,8 +221,8 @@ EOF;
 $style
 
 .{$this->getIdentifierClass()}:hover, .{$this->getIdentifierClass()}:active {
-    background-color: $hoverColor;
-    border-color: $hoverColor;
+    background-color: $secondary;
+    border-color: $secondary;
     color: $textColor;
 }
 EOF;
@@ -261,7 +261,8 @@ EOF;
 
         $iconName = $this->channelDict["icons"][$this->icon];
         if ($iconName === null) {
-            throw new ExceptionCombo("The icon type ($this->icon) is undefined for the social channel ({$this->getName()}");
+            $comboResourceScheme = DokuPath::COMBO_RESOURCE_SCHEME;
+            $iconName = "combo>share:{$this->getName()}:{$this->icon}.svg";
         }
         $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
         $textColor = $this->getTextColor();
@@ -285,10 +286,10 @@ EOF;
 
         switch ($this->widget) {
             case self::WIDGET_LINK_VALUE:
-                return $this->channelDict["colors"]["background"];
+                return $this->channelDict["colors"]["primary"];
             default:
             case self::WIDGET_BUTTON_VALUE:
-                return $this->channelDict["colors"]["text"];
+                return "#fff";
         }
 
     }

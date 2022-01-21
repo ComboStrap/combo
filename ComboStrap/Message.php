@@ -238,7 +238,7 @@ EOF;
     public function getDocumentationHyperLink(): ?string
     {
         if ($this->canonical !== null) {
-            $canonicalPath = DokuPath::createUnknownFromIdOrPath($this->canonical);
+            $canonicalPath = DokuPath::createFromUnknownRoot($this->canonical);
             $label = $canonicalPath->toLabel();
             return PluginUtility::getDocumentationHyperLink($this->canonical, $label, false);
         } else {

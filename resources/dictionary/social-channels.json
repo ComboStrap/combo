@@ -10,7 +10,7 @@
             "secondary": "#2d4373"
         },
         "icons": {
-            "outline": "uit:facebook-alt",
+            "outline": "iconoir:facebook",
             "outline-circle": "et:facebook",
             "solid": "eva:facebook-fill",
             "solid-circle": "bi:facebook"

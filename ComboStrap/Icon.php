@@ -55,7 +55,8 @@ class Icon extends ImageSvg
         self::TWEET_EMOJI => "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg",
         self::SIMPLE_LINE => "https://raw.githubusercontent.com/thesabbir/simple-line-icons/master/src/svgs",
         self::ICOMOON => "https://raw.githubusercontent.com/Keyamoon/IcoMoon-Free/master/SVG",
-        self::DASHICONS => "https://raw.githubusercontent.com/WordPress/dashicons/master/svg-min"
+        self::DASHICONS => "https://raw.githubusercontent.com/WordPress/dashicons/master/svg-min",
+        self::ICONOIR => "https://raw.githubusercontent.com/lucaburgio/iconoir/master/icons"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -76,7 +77,8 @@ class Icon extends ImageSvg
         self::ENTYPO => "http://www.entypo.com",
         self::SIMPLE_LINE => "https://thesabbir.github.io/simple-line-icons",
         self::ICOMOON => "https://icomoon.io/",
-        self::DASHICONS => "https://developer.wordpress.org/resource/dashicons/"
+        self::DASHICONS => "https://developer.wordpress.org/resource/dashicons/",
+        self::ICONOIR => "https://iconoir.com"
 
     );
 
@@ -136,6 +138,7 @@ class Icon extends ImageSvg
     const SIMPLE_LINE = "simple-line";
     const ICOMOON = "icomoon";
     const DASHICONS = " dashicons";
+    const ICONOIR = "iconoir";
 
     private $fullQualifiedName;
     /**

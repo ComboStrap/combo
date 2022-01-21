@@ -690,13 +690,9 @@ class DokuPath extends PathAbs
 
         }
 
-        if (substr($absolutePath, 0, 1) !== DokuPath::PATH_SEPARATOR) {
-            if (PluginUtility::isDevOrTest()) {
-                // Feel too much the log, test are not seeing anything, may be minimap ?
-                LogUtility::msg("The path given ($absolutePath) is not qualified", LogUtility::LVL_MSG_ERROR);
-            }
-            $this->absolutePath = ":" . $absolutePath;
-        }
+        DokuPath::addRootSeparatorIfNotPresent($absolutePath);
+        $this->absolutePath = $absolutePath;
+
         if (substr($absolutePath, 1, 1) === DokuPath::PATH_SEPARATOR) {
             /**
              * path given is `::path`

@@ -106,12 +106,13 @@ class SvgDocument extends XmlDocument
      *   * stroke, the color is on the path (known as Outline
      */
     const COLOR_TYPE_FILL_SOLID = "fill";
-    const COLOR_TYPE_STROKE_OUTLINE = "stroke";
+    const COLOR_TYPE_STROKE_OUTLINE = self::STROKE_ATTRIBUTE;
     const DEFAULT_ICON_WIDTH = "24";
 
     const CURRENT_COLOR = "currentColor";
     const VIEW_BOX = "viewBox";
     const PRESERVE_ATTRIBUTE = "preserve";
+    const STROKE_ATTRIBUTE = "stroke";
 
     /**
      * @var string - a name identifier that is added in the SVG
@@ -405,7 +406,7 @@ class SvgDocument extends XmlDocument
                      * if the stroke element is not present this is a fill icon
                      */
                     $svgColorType = self::COLOR_TYPE_FILL_SOLID;
-                    if ($documentElement->hasAttribute("stroke")) {
+                    if ($documentElement->hasAttribute(self::STROKE_ATTRIBUTE)) {
                         $svgColorType = self::COLOR_TYPE_STROKE_OUTLINE;
                     }
 
@@ -417,9 +418,7 @@ class SvgDocument extends XmlDocument
 
                             if ($colorValue !== self::CURRENT_COLOR) {
                                 /**
-                                 * Delete the fill property
-                                 *   * on sub-path
-                                 *   * in style node
+                                 * Delete the fill property on sub-path
                                  */
                                 // if the fill is set on sub-path, it will not work
                                 $svgPaths = $this->xpath("//*[local-name()='path']");
@@ -460,7 +459,28 @@ class SvgDocument extends XmlDocument
                             break;
                         case self::COLOR_TYPE_STROKE_OUTLINE:
                             $localTagAttributes->addHtmlAttributeValue("fill", "none");
-                            $localTagAttributes->addHtmlAttributeValue("stroke", $colorValue);
+                            $localTagAttributes->addHtmlAttributeValue(self::STROKE_ATTRIBUTE, $colorValue);
+
+                            if ($colorValue !== self::CURRENT_COLOR) {
+                                /**
+                                 * Delete the stroke property on sub-path
+                                 */
+                                // if the fill is set on sub-path, it will not work
+                                $svgPaths = $this->xpath("//*[local-name()='path']");
+                                for ($i = 0; $i < $svgPaths->length; $i++) {
+                                    /**
+                                     * @var DOMElement $nodeElement
+                                     */
+                                    $nodeElement = $svgPaths[$i];
+                                    $value = $nodeElement->getAttribute(self::STROKE_ATTRIBUTE);
+                                    if ($value !== "none") {
+                                        $this->removeAttributeValue(self::STROKE_ATTRIBUTE, $nodeElement);
+                                    } else {
+                                        $this->removeNode($nodeElement);
+                                    }
+                                }
+
+                            }
                             break;
                     }
 

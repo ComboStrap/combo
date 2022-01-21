@@ -56,7 +56,8 @@ class Icon extends ImageSvg
         self::SIMPLE_LINE => "https://raw.githubusercontent.com/thesabbir/simple-line-icons/master/src/svgs",
         self::ICOMOON => "https://raw.githubusercontent.com/Keyamoon/IcoMoon-Free/master/SVG",
         self::DASHICONS => "https://raw.githubusercontent.com/WordPress/dashicons/master/svg-min",
-        self::ICONOIR => "https://raw.githubusercontent.com/lucaburgio/iconoir/master/icons"
+        self::ICONOIR => "https://raw.githubusercontent.com/lucaburgio/iconoir/master/icons",
+        self::BOX_ICON => "https://raw.githubusercontent.com/atisawd/boxicons/master/svg"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -78,7 +79,8 @@ class Icon extends ImageSvg
         self::SIMPLE_LINE => "https://thesabbir.github.io/simple-line-icons",
         self::ICOMOON => "https://icomoon.io/",
         self::DASHICONS => "https://developer.wordpress.org/resource/dashicons/",
-        self::ICONOIR => "https://iconoir.com"
+        self::ICONOIR => "https://iconoir.com",
+        self::BOX_ICON => "https://boxicons.com"
 
     );
 
@@ -113,9 +115,11 @@ class Icon extends ImageSvg
         "eva" => self::EVA,
         "entypo-social" => self::ENTYPO_SOCIAL,
         "entypo" => self::ENTYPO,
-        "simple-line-icons"=> self::SIMPLE_LINE,
+        "simple-line-icons" => self::SIMPLE_LINE,
         "icomoon-free" => self::ICOMOON,
-        "dashicons" => self::DASHICONS
+        "dashicons" => self::DASHICONS,
+        "iconoir" => self::ICONOIR,
+        "bx" => self::BOX_ICON
     );
 
     const FEATHER = "feather";
@@ -139,6 +143,7 @@ class Icon extends ImageSvg
     const ICOMOON = "icomoon";
     const DASHICONS = " dashicons";
     const ICONOIR = "iconoir";
+    const BOX_ICON = "box-icon";
 
     private $fullQualifiedName;
     /**
@@ -313,7 +318,7 @@ class Icon extends ImageSvg
             case self::ANT_DESIGN:
                 // table-outlined where table is the svg, outlined the category
                 // ordered-list-outlined where ordered-list is the svg, outlined the category
-                [$iconName, $iconType] = self::explodeIconNameAndType($iconName, "-");
+                [$iconName, $iconType] = self::explodeInTwoPartsByLastPosition($iconName, "-");
                 $iconBaseUrl .= "/$iconType";
                 break;
             case self::CARBON:
@@ -324,27 +329,42 @@ class Icon extends ImageSvg
                  *
                  * This dictionary reproduce it.
                  */
-                $iconName = self::getPhysicalNameFromDictionary($iconName,self::CARBON);
+                $iconName = self::getPhysicalNameFromDictionary($iconName, self::CARBON);
                 break;
             case self::FAD:
-                $iconName = self::getPhysicalNameFromDictionary($iconName,self::FAD);
+                $iconName = self::getPhysicalNameFromDictionary($iconName, self::FAD);
                 break;
             case self::ICOMOON:
-                $iconName = self::getPhysicalNameFromDictionary($iconName,self::ICOMOON);
+                $iconName = self::getPhysicalNameFromDictionary($iconName, self::ICOMOON);
                 break;
             case self::EVA:
                 // Eva
                 // example: eva:facebook-fill
-                [$iconName, $iconType] = self::explodeIconNameAndType($iconName, "-");
+                [$iconName, $iconType] = self::explodeInTwoPartsByLastPosition($iconName, "-");
                 $iconBaseUrl .= "/$iconType/svg";
                 break;
 
             case self::SIMPLE_LINE:
                 // Bug
-                if($iconName==="social-pinterest"){
+                if ($iconName === "social-pinterest") {
                     $iconName = "social-pintarest";
                 }
                 break;
+            case self::BOX_ICON:
+                [$iconType, $extractedIconName] = self::explodeInTwoPartsByLastPosition($iconName, "-");
+                switch ($iconType){
+                    case "bxl":
+                        $iconBaseUrl .= "/logos";
+                        break;
+                    case "bx":
+                        $iconBaseUrl .= "/regular";
+                        break;
+                    case "bxs":
+                        $iconBaseUrl .= "/solid";
+                        break;
+                    default:
+                        throw new ExceptionCombo("The box-icon icon ($iconName) has a type ($iconType) that is unknown, we can't determine the location of the icon to download");
+                }
         }
 
 
@@ -360,7 +380,7 @@ class Icon extends ImageSvg
     {
 
         $mediaDokuPath = $this->getPath();
-        if(!($mediaDokuPath instanceof DokuPath)){
+        if (!($mediaDokuPath instanceof DokuPath)) {
             throw new ExceptionCombo("The icon path ($mediaDokuPath) is not a wiki path. This is not yet supported");
         }
         $library = $this->getLibrary();
@@ -385,7 +405,7 @@ class Icon extends ImageSvg
         if ($filePointer == false) {
             // (ie no icon file found at ($downloadUrl)
             $urlLibrary = self::ICON_LIBRARY_WEBSITE_URLS[$library];
-            throw new ExceptionCombo("The library (<a href=\"$urlLibrary\">$library</a>) does not have a icon (<a href=\"$downloadUrl\">$this->iconName</a>).",  self::ICON_CANONICAL_NAME);
+            throw new ExceptionCombo("The library (<a href=\"$urlLibrary\">$library</a>) does not have a icon (<a href=\"$downloadUrl\">$this->iconName</a>).", self::ICON_CANONICAL_NAME);
         }
 
         $numberOfByte = @file_put_contents($mediaDokuPath->toLocalPath()->toAbsolutePath()->toString(), $filePointer);
@@ -458,25 +478,21 @@ class Icon extends ImageSvg
     }
 
 
-
-
-
-
     /**
      * @param string $iconName
      * @param string $sep
      * @return array
      * @throws ExceptionCombo
      */
-    private static function explodeIconNameAndType(string $iconName, string $sep = "-"): array
+    private static function explodeInTwoPartsByLastPosition(string $iconName, string $sep = "-"): array
     {
         $index = strrpos($iconName, $sep);
         if ($index === false) {
             throw new ExceptionCombo ("We expect that the icon name ($iconName) has two parts separated by a `-` (example: table-outlined). The icon could not be downloaded.", self::ICON_CANONICAL_NAME);
         }
-        $extractedIconName = substr($iconName, 0, $index);
-        $iconType = substr($iconName, $index + 1);
-        return [$extractedIconName, $iconType];
+        $firstPart = substr($iconName, 0, $index);
+        $secondPart = substr($iconName, $index + 1);
+        return [$firstPart, $secondPart];
     }
 
 

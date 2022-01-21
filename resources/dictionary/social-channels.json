@@ -74,13 +74,28 @@
         "colors": {
             "primary": "#FF6600",
             "secondary": "#FB6200"
+        },
+        "icons": {
+            "outline-circle": "outline-circle-facebook+et:y"
+        }
+    },
+    "telegram": {
+        "uri": {
+          "web": "https://telegram.me/share/url?text=$description&url=$url"
+        },
+        "colors": {
+            "primary": "#54A9EB",
+            "secondary": "#4B97D1"
+        },
+        "icons": {
+            "solid": "bx:bxl-telegram",
+            "solid-circle": "bi:telegram",
+            "outline": "la:telegram",
+            "outline-circle":"iconoir:telegram-circled"
         }
     },
     "vk": {
         "uri": "https://vk.com/share.php?title=$description&url=$url"
-    },
-    "telegram": {
-        "uri": "https://telegram.me/share/url?text=$description&url=$url"
     },
     "pinterest": {
         "uri": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$description",

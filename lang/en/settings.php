@@ -8,7 +8,7 @@ use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
 use ComboStrap\Identity;
 use ComboStrap\LazyLoad;
-use ComboStrap\LinkUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MediaLink;
 use ComboStrap\PageImages;
@@ -122,8 +122,8 @@ $lang[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = Plu
  * Link
  */
 $lang[syntax_plugin_combo_link::CONF_DISABLE_LINK] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Disable the ComboStrap link component";
-$lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
-$lang[LinkUtility::CONF_PREVIEW_LINK] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Add a page preview on all internal links when a user is hovering";
+$lang[MarkupRef::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
+$lang[MarkupRef::CONF_PREVIEW_LINK] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Add a page preview on all internal links when a user is hovering";
 
 /**
  * Twitter

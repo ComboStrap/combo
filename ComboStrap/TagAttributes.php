@@ -728,6 +728,12 @@ class TagAttributes
                 $array[$key] = StringUtility::toString($value);
             }
         }
+        /**
+         * html attribute may also be in the callstack
+         */
+        foreach( $this->htmlAttributes as $key => $value){
+            $array[$key] = StringUtility::toString($value);
+        }
         $style = $this->getStyle();
         if ($style != null) {
             $array["style"] = $style;

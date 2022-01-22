@@ -194,6 +194,22 @@ class CallStack
 
     }
 
+    public static function createEmpty(): CallStack
+    {
+        $emptyHandler = new class extends \Doku_Handler {
+            public $calls = [];
+
+            public function getCallWriter(): object
+            {
+                return new class {
+                    public $calls = array();
+                };
+            }
+        };
+        return new CallStack($emptyHandler);
+    }
+
+
     /**
      * Reset the pointer
      */
@@ -478,7 +494,7 @@ class CallStack
             $this->startWasReached = false;
         }
         end($this->callStack);
-        $this->next();
+        return $this->next();
     }
 
     /**
@@ -674,7 +690,7 @@ class CallStack
     function moveToStart()
     {
         $this->resetPointer();
-        $this->previous();
+        return $this->previous();
     }
 
     /**
@@ -875,6 +891,11 @@ class CallStack
         }
         return $lastEndPosition;
 
+    }
+
+    public function getStack(): array
+    {
+        return $this->callStack;
     }
 
 

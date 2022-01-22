@@ -100,7 +100,7 @@ class DokuPath extends PathAbs
      * that ends with the {@link DokuPath::PATH_SEPARATOR} points to a start page
      * and not to a namespace. The qualification occurs in the transformation
      * from ref to page.
-     *   For a page: in {@link LinkUtility::getInternalPage()}
+     *   For a page: in {@link MarkupRef::getInternalPage()}
      *   For a media: in the {@link MediaLink::createMediaLinkFromId()}
      * Because this class is mostly the file representation, it should be able to
      * represents also a namespace
@@ -520,7 +520,7 @@ class DokuPath extends PathAbs
      * @return string
      *
      * This is the local absolute path WITH the root separator.
-     * It's used in ref present in {@link LinkUtility link} or {@link MediaLink}
+     * It's used in ref present in {@link MarkupRef link} or {@link MediaLink}
      * when creating test, otherwise the ref is considered as relative
      *
      *

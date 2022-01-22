@@ -134,17 +134,17 @@ class Call
      * @param $tagName
      * @param $state
      * @param array $attribute
-     * @param string|null $context
-     * @param string $content - the parsed content
+     * @param string|null $rawContext
+     * @param string|null $content - the parsed content
      * @param string|null $payload - the payload after handler
      * @param int|null $position
      * @return Call - a call
      */
-    public static function createComboCall($tagName, $state, array $attribute = array(), string $context = null, string $content = null, string $payload = null, int $position = null): Call
+    public static function createComboCall($tagName, $state, array $attribute = array(), string $rawContext = null, string $content = null, string $payload = null, int $position = null): Call
     {
         $data = array(
             PluginUtility::ATTRIBUTES => $attribute,
-            PluginUtility::CONTEXT => $context,
+            PluginUtility::CONTEXT => $rawContext,
             PluginUtility::STATE => $state,
             PluginUtility::POSITION => $position
         );
@@ -301,9 +301,14 @@ class Call
     /**
      * @return mixed the data returned from the {@link DokuWiki_Syntax_Plugin::handle} (ie attributes, payload, ...)
      */
-    public function &getPluginData()
+    public function &getPluginData($attribute = null)
     {
-        return $this->call[1][1];
+        $data = $this->call[1][1];
+        if ($attribute === null) {
+            return $data;
+        }
+        return $data[$attribute];
+
     }
 
     /**

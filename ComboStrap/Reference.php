@@ -14,7 +14,7 @@ namespace ComboStrap;
 class Reference extends MetadataWikiPath
 {
 
-    const REF_PROPERTY = "ref";
+
 
     public static function createFromResource(Page $page)
     {

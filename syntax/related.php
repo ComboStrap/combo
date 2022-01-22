@@ -4,7 +4,7 @@
  *
  */
 
-use ComboStrap\LinkUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -80,8 +80,8 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
                 $backlinkId = $backlink[self::RELATED_PAGE_ID_PROP];
                 $html .= '<li>';
                 if ($backlinkId != self::MORE_PAGE_ID) {
-                    $linkUtility = LinkUtility::createFromPageId($backlinkId);
-                    $html .= $linkUtility->renderOpenTag($renderer);
+                    $linkUtility = MarkupRef::createFromPageId($backlinkId);
+                    $html .= $linkUtility->toAttributes($renderer);
                     $html .= ucfirst($linkUtility->getName());
                     $html .= $linkUtility->renderClosingTag();
                 } else {

@@ -121,7 +121,6 @@ class TemplateUtility
     {
 
 
-
         return TemplateUtility::renderStringTemplateFromDataArray($stringTemplate, TemplateUtility::getMetadataDataFromPage($page));
 
     }
@@ -157,7 +156,10 @@ class TemplateUtility
 
     }
 
-
+    public static function isVariable($ref): bool
+    {
+        return substr($ref, 0, 1) === TemplateUtility::VARIABLE_PREFIX;
+    }
 
 
 }

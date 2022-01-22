@@ -4,7 +4,7 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
-use ComboStrap\LinkUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\MetadataDokuWikiStore;
@@ -88,9 +88,9 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
                 $actualCall->getTagName() === syntax_plugin_combo_link::TAG
                 && $actualCall->getState() === DOKU_LEXER_ENTER
             ) {
-                $ref = $actualCall->getAttribute(Reference::REF_PROPERTY);
-                $link = LinkUtility::createFromRef($ref);
-                if ($link->getStructure() === LinkUtility::TYPE_INTERNAL) {
+                $ref = $actualCall->getPluginData(syntax_plugin_combo_link::ATTRIBUTE_REF);
+                $link = MarkupRef::createFromRef($ref);
+                if ($link->getUriType() === MarkupRef::WIKI_URI) {
                     $ref = Reference::createFromResource($page)
                         ->buildFromStoreValue($link->getInternalPage()->getPath()->toString());
                     $references->addRow([$ref]);

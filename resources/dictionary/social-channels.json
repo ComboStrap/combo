@@ -127,6 +127,7 @@
         "uri": {
             "web": "https://www.linkedin.com/shareArticle?mini=true&url=$url&source=$url&title=$title&summary=$description"
         },
+        "doc": "https://developer.linkedin.com/docs/share-on-linkedin",
         "colors": {
             "primary": "#0077b5",
             "secondary": "#046293"

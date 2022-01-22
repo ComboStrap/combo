@@ -13,64 +13,38 @@
 namespace ComboStrap;
 
 
-use Composer\Package\Link;
 use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
 use dokuwiki\Utf8\Conversion;
-use splitbrain\phpcli\Exception;
 use syntax_plugin_combo_tooltip;
 
 require_once(__DIR__ . '/PluginUtility.php');
 
 /**
- * Class LinkUtility
+ *
  * @package ComboStrap
  *
+ * Parse the ref found in a markup link
+ * and return an XHTML compliant array
+ * with href, style, ... attributes
  */
-class LinkUtility
+class MarkupRef
 {
 
-    /**
-     * Link pattern
-     * Found in {@link \dokuwiki\Parsing\ParserMode\Internallink}
-     */
-    const SPECIAL_PATTERN = "\[\[.*?\]\](?!\])";
 
-    /**
-     * A link may have a title or not
-     * ie
-     * [[path:page]]
-     * [[path:page|title]]
-     * are valid
-     *
-     * Get the content until one of this character is found:
-     *   * |
-     *   * or ]]
-     *   * or \n (No line break allowed, too much difficult to debug)
-     *   * and not [ (for two links on the same line)
-     */
-    const ENTRY_PATTERN_SINGLE_LINE = "\[\[[^\|\]]*(?=[^\n\[]*\]\])";
-    const EXIT_PATTERN = "\]\]";
 
     /**
      * Type of link
      */
-    const TYPE_INTERWIKI = 'interwiki';
-    const TYPE_WINDOWS_SHARE = 'windowsShare';
-    const TYPE_EXTERNAL = 'external';
+    const INTERWIKI_URI = 'interwiki';
+    const WINDOWS_SHARE_URI = 'windowsShare';
+    const STANDARD_URI = 'external';
 
-    const TYPE_EMAIL = 'email';
-    const TYPE_LOCAL = 'local';
-    const TYPE_INTERNAL = 'internal';
-    const TYPE_INTERNAL_TEMPLATE = 'internal_template';
-
-    /**
-     * The key of the array for the handle cache
-     */
-    const ATTRIBUTE_REF = 'ref';
-    const ATTRIBUTE_NAME = 'name';
-    const ATTRIBUTE_IMAGE = 'image';
+    const EMAIL_URI = 'email';
+    const LOCAL_URI = 'local';
+    const WIKI_URI = 'internal';
+    const VARIABLE_URI = 'internal_template';
 
 
     /**
@@ -81,7 +55,7 @@ class LinkUtility
     const CONF_USE_DOKUWIKI_CLASS_NAME = "useDokuwikiLinkClassName";
     /**
      * This configuration will set for all internal link
-     * the {@link LinkUtility::PREVIEW_ATTRIBUTE} preview attribute
+     * the {@link MarkupRef::PREVIEW_ATTRIBUTE} preview attribute
      */
     const CONF_PREVIEW_LINK = "previewLink";
     const CONF_PREVIEW_LINK_DEFAULT = 0;
@@ -112,15 +86,12 @@ class LinkUtility
     /**
      * @var mixed
      */
-    private $structure;
+    private $uriType;
     /**
      * @var mixed
      */
     private $ref;
-    /**
-     * @var mixed
-     */
-    private $name;
+
     /**
      * @var Page the internal linked page if the link is an internal one
      */
@@ -131,10 +102,6 @@ class LinkUtility
      */
     private $title;
 
-    /**
-     * @var TagAttributes|null
-     */
-    private $attributes;
 
     /**
      * The name of the wiki for an inter wiki link
@@ -142,10 +109,6 @@ class LinkUtility
      */
     private $wiki;
 
-    /**
-     * @var Doku_Renderer_xhtml
-     */
-    private $renderer;
 
     /**
      *
@@ -171,32 +134,25 @@ class LinkUtility
      * @var array|string|null
      */
     private $type;
+    /**
+     * @var array
+     */
+    private $interwiki;
 
     /**
      * Link constructor.
      * @param $ref
-     * @param TagAttributes|null $tagAttributes
      */
-    public function __construct($ref, TagAttributes &$tagAttributes = null)
+    public function __construct($ref)
     {
 
-        if ($tagAttributes == null) {
-            $tagAttributes = TagAttributes::createEmpty(\syntax_plugin_combo_link::TAG);
-        }
-        $this->attributes = &$tagAttributes;
-
-        if ($tagAttributes->hasComponentAttribute("name")) {
-            $this->name = $tagAttributes->getValueAndRemove("name");
-        }
-
-        $this->type = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
 
         /**
          * Windows share link
          */
-        if ($this->structure == null) {
+        if ($this->uriType == null) {
             if (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $ref)) {
-                $this->structure = self::TYPE_WINDOWS_SHARE;
+                $this->uriType = self::WINDOWS_SHARE_URI;
                 $this->ref = $ref;
                 return;
             }
@@ -209,9 +165,9 @@ class LinkUtility
         /**
          * Local
          */
-        if ($this->structure == null) {
+        if ($this->uriType == null) {
             if (preg_match('!^#.+!', $ref)) {
-                $this->structure = self::TYPE_LOCAL;
+                $this->uriType = self::LOCAL_URI;
                 $this->ref = $ref;
             }
         }
@@ -224,11 +180,11 @@ class LinkUtility
          * [[support@combostrap.com?subject=hallo]]
          * [[support@combostrap.com]]
          */
-        if ($this->structure == null) {
+        if ($this->uriType == null) {
             $emailRfc2822 = "0-9a-zA-Z!#$%&'*+/=?^_`{|}~-";
             $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
             if (preg_match('<' . $emailPattern . '>', $ref)) {
-                $this->structure = self::TYPE_EMAIL;
+                $this->uriType = self::EMAIL_URI;
                 $this->ref = $ref;
                 // we don't return. The query part is parsed afterwards
             }
@@ -236,41 +192,48 @@ class LinkUtility
 
 
         /**
-         * External
+         * External (ie only https)
          */
-        if ($this->structure == null) {
+        if ($this->uriType == null) {
+            /**
+             * Example: `https://`
+             *
+             * Other scheme are not yet recognized
+             * because it can also be a wiki id
+             * For instance, `mailto:` is also a valid page
+             */
             if (preg_match('#^([a-z0-9\-\.+]+?)://#i', $ref)) {
-                $this->structure = self::TYPE_EXTERNAL;
-                $this->schemeUri = strtolower(substr($ref, 0, strpos($ref, "://")));
+                $this->uriType = self::STANDARD_URI;
+                $this->schemeUri = strtolower(substr($ref, 0, strpos($ref, ":")));
                 $this->ref = $ref;
             }
         }
 
         /**
-         * interwiki ?
+         * Interwiki ?
          */
         $refProcessing = $ref;
-        if ($this->structure == null) {
+        if ($this->uriType == null) {
             $interwikiPosition = strpos($refProcessing, ">");
             if ($interwikiPosition !== false) {
                 $this->wiki = strtolower(substr($refProcessing, 0, $interwikiPosition));
                 $refProcessing = substr($refProcessing, $interwikiPosition + 1);
                 $this->ref = $ref;
-                $this->structure = self::TYPE_INTERWIKI;
+                $this->uriType = self::INTERWIKI_URI;
             }
         }
 
         /**
          * Internal then
          */
-        if ($this->structure == null) {
+        if ($this->uriType == null) {
             /**
              * It can be a link with a ref template
              */
-            if (substr($ref, 0, 1) === TemplateUtility::VARIABLE_PREFIX) {
-                $this->structure = self::TYPE_INTERNAL_TEMPLATE;
+            if (TemplateUtility::isVariable($ref)) {
+                $this->uriType = self::VARIABLE_URI;
             } else {
-                $this->structure = self::TYPE_INTERNAL;
+                $this->uriType = self::WIKI_URI;
             }
             $this->ref = $ref;
         }
@@ -284,99 +247,41 @@ class LinkUtility
 
     }
 
-    public static function createFromPageId($id, &$tagAttributes = null): LinkUtility
+    public static function createFromPageId($id): MarkupRef
     {
-        return new LinkUtility(":$id", $tagAttributes);
+        return new MarkupRef(":$id");
     }
 
-    public static function createFromRef(string $ref, TagAttributes $tagAttributes = null): LinkUtility
+    public static function createFromRef(string $ref): MarkupRef
     {
-        return new LinkUtility($ref, $tagAttributes);
+        return new MarkupRef($ref);
     }
 
-    /**
-     * @param $name
-     * @return $this
-     */
-    public function setName($name): LinkUtility
-    {
-        $this->name = $name;
-        return $this;
-    }
 
     /**
-     * @param $structure
+     * @param $uriType
      * @return $this
      */
-    public function setStructure($structure): LinkUtility
+    public function setUriType($uriType): MarkupRef
     {
-        $this->structure = $structure;
+        $this->uriType = $uriType;
         return $this;
     }
 
 
     /**
-     * Parse the match of a syntax {@link DokuWiki_Syntax_Plugin} handle function
-     * @param $match
-     * @return string[] - an array with the attributes constant `ATTRIBUTE_xxxx` as key
      *
-     * Code adapted from  {@link Doku_Handler::internallink()}
-     */
-    public static function parse($match): array
-    {
-
-        // Strip the opening and closing markup
-        $linkString = preg_replace(array('/^\[\[/', '/\]\]$/u'), '', $match);
-
-        // Split title from URL
-        $linkArray = explode('|', $linkString, 2);
-
-        // Id
-        $attributes[self::ATTRIBUTE_REF] = trim($linkArray[0]);
-
-
-        // Text or image
-        if (!isset($linkArray[1])) {
-            $attributes[self::ATTRIBUTE_NAME] = null;
-        } else {
-            // An image in the title
-            if (preg_match('/^\{\{[^\}]+\}\}$/', $linkArray[1])) {
-                // If the title is an image, convert it to an array containing the image details
-                $attributes[self::ATTRIBUTE_IMAGE] = Doku_Handler_Parse_Media($linkArray[1]);
-            } else {
-                $attributes[self::ATTRIBUTE_NAME] = $linkArray[1];
-            }
-        }
-
-        return $attributes;
-
-    }
-
-    /**
-     * @param Doku_Renderer_xhtml|null $renderer
-     * @return mixed
      *
-     * Derived from {@link Doku_Renderer_xhtml::internallink()}
-     * and others
      *
      * @throws ExceptionCombo
      */
-    public function renderOpenTag(Doku_Renderer_xhtml $renderer = null)
+    public function toAttributes($logicalTag = \syntax_plugin_combo_link::TAG): TagAttributes
     {
 
-        $type = $this->getStructure();
+        $outputAttributes = TagAttributes::createEmpty($logicalTag);
 
-        /**
-         * Keep a reference to the renderer
-         * The {@link LinkUtility::getUrl()} depends on it
-         * for local or interwiki link
-         */
-        if ($renderer == null) {
-            if (in_array($type, [self::TYPE_LOCAL, self::TYPE_INTERWIKI])) {
-                LogUtility::msg("The link ($this) is not ($type) link, the renderer should be not null and given", LogUtility::LVL_MSG_ERROR);
-            }
-        }
-        $this->renderer = $renderer;
+        $type = $this->getUriType();
+
 
         /**
          * Add the attribute from the URL
@@ -384,20 +289,20 @@ class LinkUtility
          */
 
         switch ($type) {
-            case self::TYPE_INTERNAL:
+            case self::WIKI_URI:
                 if (!$this->dokuwikiUrl->hasQueryParameter("do")) {
                     foreach ($this->getDokuwikiUrl()->getQueryParameters() as $key => $value) {
                         if ($key !== self::SEARCH_HIGHLIGHT_QUERY_PROPERTY) {
-                            $this->attributes->addComponentAttributeValue($key, $value);
+                            $outputAttributes->addComponentAttributeValue($key, $value);
                         }
                     }
                 }
                 break;
             case
-            self::TYPE_EMAIL:
+            self::EMAIL_URI:
                 foreach ($this->getDokuwikiUrl()->getQueryParameters() as $key => $value) {
                     if (!in_array($key, self::EMAIL_VALID_PARAMETERS)) {
-                        $this->attributes->addComponentAttributeValue($key, $value);
+                        $outputAttributes->addComponentAttributeValue($key, $value);
                     }
                 }
                 break;
@@ -411,49 +316,51 @@ class LinkUtility
          */
         $url = $this->getUrl();
         if (!empty($url)) {
-            $this->attributes->addHtmlAttributeValue("href", $url);
+            $outputAttributes->addHtmlAttributeValue("href", $url);
         }
 
 
         /**
          * Processing by type
          */
-        switch ($this->getStructure()) {
-            case self::TYPE_INTERWIKI:
+        switch ($this->getUriType()) {
+            case self::INTERWIKI_URI:
 
                 // normal link for the `this` wiki
                 if ($this->getWiki() != "this") {
-                    PluginUtility::getSnippetManager()->attachCssSnippetForSlot(self::TYPE_INTERWIKI);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForSlot(self::INTERWIKI_URI);
                 }
                 /**
                  * Target
                  */
                 $interWikiConf = $conf['target']['interwiki'];
                 if (!empty($interWikiConf)) {
-                    $this->attributes->addHtmlAttributeValue('target', $interWikiConf);
-                    $this->attributes->addHtmlAttributeValue('rel', 'noopener');
+                    $outputAttributes->addHtmlAttributeValue('target', $interWikiConf);
+                    $outputAttributes->addHtmlAttributeValue('rel', 'noopener');
                 }
-                $this->attributes->addClassName(self::getHtmlClassInterWikiLink());
+                $outputAttributes->addClassName(self::getHtmlClassInterWikiLink());
                 $wikiClass = "iw_" . preg_replace('/[^_\-a-z0-9]+/i', '_', $this->getWiki());
-                $this->attributes->addClassName($wikiClass);
+                $outputAttributes->addClassName($wikiClass);
                 if (!$this->wikiExists()) {
-                    $this->attributes->addClassName(self::getHtmlClassNotExist());
-                    $this->attributes->addHtmlAttributeValue("rel", 'nofollow');
+                    $outputAttributes->addClassName(self::getHtmlClassNotExist());
+                    $outputAttributes->addHtmlAttributeValue("rel", 'nofollow');
                 }
 
                 break;
-            case self::TYPE_INTERNAL:
-
+            case self::WIKI_URI:
+                /**
+                 * Derived from {@link Doku_Renderer_xhtml::internallink()}
+                 */
                 // https://www.dokuwiki.org/config:target
                 $target = $conf['target']['wiki'];
                 if (!empty($target)) {
-                    $this->attributes->addHtmlAttributeValue('target', $target);
+                    $outputAttributes->addHtmlAttributeValue('target', $target);
                 }
                 /**
                  * Internal Page
                  */
                 $linkedPage = $this->getInternalPage();
-                $this->attributes->addHtmlAttributeValue("data-wiki-id", $linkedPage->getDokuwikiId());
+                $outputAttributes->addHtmlAttributeValue("data-wiki-id", $linkedPage->getDokuwikiId());
 
 
                 if (!$linkedPage->exists()) {
@@ -461,15 +368,15 @@ class LinkUtility
                     /**
                      * Red color
                      */
-                    $this->attributes->addClassName(self::getHtmlClassNotExist());
-                    $this->attributes->addHtmlAttributeValue("rel", 'nofollow');
+                    $outputAttributes->addClassName(self::getHtmlClassNotExist());
+                    $outputAttributes->addHtmlAttributeValue("rel", 'nofollow');
 
                 } else {
 
                     /**
                      * Internal Link Class
                      */
-                    $this->attributes->addClassName(self::getHtmlClassInternalLink());
+                    $outputAttributes->addClassName(self::getHtmlClassInternalLink());
 
                     /**
                      * Link Creation
@@ -482,7 +389,7 @@ class LinkUtility
                      * Preview tooltip
                      */
                     $previewConfig = PluginUtility::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
-                    $preview = $this->attributes->getBooleanValueAndRemoveIfPresent(self::PREVIEW_ATTRIBUTE, $previewConfig);
+                    $preview = $outputAttributes->getBooleanValueAndRemoveIfPresent(self::PREVIEW_ATTRIBUTE, $previewConfig);
                     if ($preview) {
                         syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
                         $tooltipHtml = <<<EOF
@@ -490,10 +397,10 @@ class LinkUtility
 <p>{$linkedPage->getDescriptionOrElseDokuWiki()}</p>
 EOF;
                         $dataAttributeNamespace = Bootstrap::getDataNamespace();
-                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
-                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-placement", "top");
-                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
-                        $this->attributes->addHtmlAttributeValue("title", $tooltipHtml);
+                        $outputAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
+                        $outputAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-placement", "top");
+                        $outputAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
+                        $outputAttributes->addHtmlAttributeValue("title", $tooltipHtml);
                     }
 
                     /**
@@ -510,7 +417,7 @@ EOF;
                          */
                         $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
                         $lowerCaseLowQualityAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
-                        $this->attributes->addClassName(LowQualityPage::CLASS_NAME . "-combo");
+                        $outputAttributes->addClassName(LowQualityPage::CLASS_NAME . "-combo");
                         $snippetLowQualityPageId = $lowerCaseLowQualityAcronym;
                         PluginUtility::getSnippetManager()->attachCssSnippetForSlot($snippetLowQualityPageId);
                         /**
@@ -521,8 +428,8 @@ EOF;
                         if (LowQualityPage::isProtectionEnabled()) {
 
                             $linkType = LowQualityPage::getLowQualityLinkType();
-                            $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-link", $linkType);
-                            $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLowQualityAcronym);
+                            $outputAttributes->addHtmlAttributeValue("data-$pageProtectionAcronym-link", $linkType);
+                            $outputAttributes->addHtmlAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLowQualityAcronym);
 
                             /**
                              * Low Quality Page protection javascript is only for warning or login link
@@ -543,12 +450,12 @@ EOF;
                         /**
                          * Add a class to style it differently if needed
                          */
-                        $this->attributes->addClassName(PagePublicationDate::LATE_PUBLICATION_CLASS_NAME . "-combo");
+                        $outputAttributes->addClassName(PagePublicationDate::LATE_PUBLICATION_CLASS_NAME . "-combo");
                         if (PagePublicationDate::isLatePublicationProtectionEnabled()) {
                             $acronym = PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM;
                             $lowerCaseLatePublicationAcronym = strtolower(PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM);
-                            $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-link", PageProtection::PAGE_PROTECTION_LINK_LOGIN);
-                            $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLatePublicationAcronym);
+                            $outputAttributes->addHtmlAttributeValue("data-$pageProtectionAcronym-link", PageProtection::PAGE_PROTECTION_LINK_LOGIN);
+                            $outputAttributes->addHtmlAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLatePublicationAcronym);
                             PageProtection::addPageProtectionSnippet();
                         }
 
@@ -557,7 +464,7 @@ EOF;
                     /**
                      * Title (ie tooltip vs title html attribute)
                      */
-                    if (!$this->attributes->hasAttribute("title")) {
+                    if (!$outputAttributes->hasAttribute("title")) {
 
                         /**
                          * If this is not a link into the same page
@@ -571,7 +478,7 @@ EOF;
                             if (!empty($acronym)) {
                                 $description = $description . " ($acronym)";
                             }
-                            $this->attributes->addHtmlAttributeValue("title", $description);
+                            $outputAttributes->addHtmlAttributeValue("title", $description);
                         }
 
                     }
@@ -580,28 +487,28 @@ EOF;
 
                 break;
 
-            case self::TYPE_WINDOWS_SHARE:
+            case self::WINDOWS_SHARE_URI:
                 // https://www.dokuwiki.org/config:target
                 $windowsTarget = $conf['target']['windows'];
                 if (!empty($windowsTarget)) {
-                    $this->attributes->addHtmlAttributeValue('target', $windowsTarget);
+                    $outputAttributes->addHtmlAttributeValue('target', $windowsTarget);
                 }
-                $this->attributes->addClassName("windows");
+                $outputAttributes->addClassName("windows");
                 break;
-            case self::TYPE_LOCAL:
+            case self::LOCAL_URI:
                 break;
-            case self::TYPE_EMAIL:
-                $this->attributes->addClassName(self::getHtmlClassEmailLink());
+            case self::EMAIL_URI:
+                $outputAttributes->addClassName(self::getHtmlClassEmailLink());
                 break;
-            case self::TYPE_EXTERNAL:
+            case self::STANDARD_URI:
                 if ($conf['relnofollow']) {
-                    $this->attributes->addHtmlAttributeValue("rel", 'nofollow ugc');
+                    $outputAttributes->addHtmlAttributeValue("rel", 'nofollow ugc');
                 }
                 // https://www.dokuwiki.org/config:target
                 $externTarget = $conf['target']['extern'];
                 if (!empty($externTarget)) {
-                    $this->attributes->addHtmlAttributeValue('target', $externTarget);
-                    $this->attributes->addHtmlAttributeValue("rel", 'noopener');
+                    $outputAttributes->addHtmlAttributeValue('target', $externTarget);
+                    $outputAttributes->addHtmlAttributeValue("rel", 'noopener');
                 }
                 if ($this->type === null) {
                     /**
@@ -609,7 +516,7 @@ EOF;
                      * To not interfere with other external link style
                      * For instance, {@link \syntax_plugin_combo_share}
                      */
-                    $this->attributes->addClassName(self::getHtmlClassExternalLink());
+                    $outputAttributes->addClassName(self::getHtmlClassExternalLink());
                 }
                 break;
             default:
@@ -630,15 +537,15 @@ EOF;
          * to mitigate XSS
          *
          */
-        if ($this->getStructure() == self::TYPE_EMAIL) {
+        if ($this->getUriType() == self::EMAIL_URI) {
             $emailAddress = $this->obfuscateEmail($this->dokuwikiUrl->getPath());
-            $this->attributes->addHtmlAttributeValue("title", $emailAddress);
+            $outputAttributes->addHtmlAttributeValue("title", $emailAddress);
         }
 
         /**
          * Return
          */
-        return $this->attributes->toHtmlEnterTag("a");
+        return $outputAttributes;
 
 
     }
@@ -651,35 +558,7 @@ EOF;
     function handleMetadata(Doku_Renderer_metadata $metaDataRenderer)
     {
 
-        switch ($this->getStructure()) {
-            case self::TYPE_INTERNAL:
-                /**
-                 * The relative link should be passed (ie the original)
-                 */
-                $metaDataRenderer->internallink($this->ref);
-                break;
-            case self::TYPE_EXTERNAL:
-                $metaDataRenderer->externallink($this->ref, $this->name);
-                break;
-            case self::TYPE_LOCAL:
-                $metaDataRenderer->locallink($this->ref, $this->name);
-                break;
-            case self::TYPE_EMAIL:
-                $metaDataRenderer->emaillink($this->ref, $this->name);
-                break;
-            case self::TYPE_INTERWIKI:
-                $interWikiSplit = preg_split("/>/", $this->ref);
-                $metaDataRenderer->interwikilink($this->ref, $this->name, $interWikiSplit[0], $interWikiSplit[1]);
-                break;
-            case self::TYPE_WINDOWS_SHARE:
-                $metaDataRenderer->windowssharelink($this->ref, $this->name);
-                break;
-            case self::TYPE_INTERNAL_TEMPLATE:
-                // No backlinks for link template
-                break;
-            default:
-                LogUtility::msg("The link ({$this->ref}) with the type " . $this->structure . " was not processed into the metadata");
-        }
+
     }
 
     /**
@@ -688,104 +567,11 @@ EOF;
      * @return string a `TYPE_xxx` constant
      */
     public
-    function getStructure(): string
+    function getUriType(): string
     {
-        return $this->structure;
+        return $this->uriType;
     }
 
-
-    /**
-     * @param array $stats
-     * Calculate internal link statistics
-     */
-    public
-    function processLinkStats(array &$stats)
-    {
-
-        if ($this->getStructure() == self::TYPE_INTERNAL) {
-
-
-            /**
-             * Internal link count
-             */
-            if (!array_key_exists(AnalyticsDocument::INTERNAL_LINK_COUNT, $stats)) {
-                $stats[AnalyticsDocument::INTERNAL_LINK_COUNT] = 0;
-            }
-            $stats[AnalyticsDocument::INTERNAL_LINK_COUNT]++;
-
-
-            /**
-             * Broken link ?
-             */
-            $id = $this->getInternalPage()->getDokuwikiId();
-            if (!$this->getInternalPage()->exists()) {
-                $stats[AnalyticsDocument::INTERNAL_LINK_BROKEN_COUNT]++;
-                $stats[AnalyticsDocument::INFO][] = "The internal link `{$id}` does not exist";
-            }
-
-            /**
-             * Calculate link distance
-             */
-            global $ID;
-            $a = explode(':', getNS($ID));
-            $b = explode(':', getNS($id));
-            while (isset($a[0]) && $a[0] == $b[0]) {
-                array_shift($a);
-                array_shift($b);
-            }
-            $length = count($a) + count($b);
-            $stats[AnalyticsDocument::INTERNAL_LINK_DISTANCE][] = $length;
-
-        } else if ($this->getStructure() == self::TYPE_EXTERNAL) {
-
-            if (!array_key_exists(AnalyticsDocument::EXTERNAL_LINK_COUNT, $stats)) {
-                $stats[AnalyticsDocument::EXTERNAL_LINK_COUNT] = 0;
-            }
-            $stats[AnalyticsDocument::EXTERNAL_LINK_COUNT]++;
-
-        } else if ($this->getStructure() == self::TYPE_LOCAL) {
-
-            if (!array_key_exists(AnalyticsDocument::LOCAL_LINK_COUNT, $stats)) {
-                $stats[AnalyticsDocument::LOCAL_LINK_COUNT] = 0;
-            }
-            $stats[AnalyticsDocument::LOCAL_LINK_COUNT]++;
-
-        } else if ($this->getStructure() == self::TYPE_INTERWIKI) {
-
-            if (!array_key_exists(AnalyticsDocument::INTERWIKI_LINK_COUNT, $stats)) {
-                $stats[AnalyticsDocument::INTERWIKI_LINK_COUNT] = 0;
-            }
-            $stats[AnalyticsDocument::INTERWIKI_LINK_COUNT]++;
-
-        } else if ($this->getStructure() == self::TYPE_EMAIL) {
-
-            if (!array_key_exists(AnalyticsDocument::EMAIL_COUNT, $stats)) {
-                $stats[AnalyticsDocument::EMAIL_COUNT] = 0;
-            }
-            $stats[AnalyticsDocument::EMAIL_COUNT]++;
-
-        } else if ($this->getStructure() == self::TYPE_WINDOWS_SHARE) {
-
-            if (!array_key_exists(AnalyticsDocument::WINDOWS_SHARE_COUNT, $stats)) {
-                $stats[AnalyticsDocument::WINDOWS_SHARE_COUNT] = 0;
-            }
-            $stats[AnalyticsDocument::WINDOWS_SHARE_COUNT]++;
-
-        } else if ($this->getStructure() == self::TYPE_INTERNAL_TEMPLATE) {
-
-            if (!array_key_exists(AnalyticsDocument::TEMPLATE_LINK_COUNT, $stats)) {
-                $stats[AnalyticsDocument::TEMPLATE_LINK_COUNT] = 0;
-            }
-            $stats[AnalyticsDocument::TEMPLATE_LINK_COUNT]++;
-
-        } else {
-
-            LogUtility::msg("The link `{$this->ref}` with the type (" . $this->getStructure() . ")  is not taken into account into the statistics");
-
-        }
-
-
-    }
 
     /**
      * @return Page - the internal page or an error if the link is not an internal one
@@ -794,7 +580,7 @@ EOF;
     function getInternalPage(): Page
     {
         if ($this->linkedPage == null) {
-            if ($this->getStructure() == self::TYPE_INTERNAL) {
+            if ($this->getUriType() == self::WIKI_URI) {
                 // if there is no path, this is the actual page
                 $pathOrId = $this->dokuwikiUrl->getPath();
 
@@ -821,8 +607,8 @@ EOF;
         /**
          * Templating
          */
-        switch ($this->getStructure()) {
-            case self::TYPE_INTERNAL:
+        switch ($this->getUriType()) {
+            case self::WIKI_URI:
                 if (!empty($name)) {
                     /**
                      * With the new link syntax class, this is no more possible
@@ -852,7 +638,7 @@ EOF;
                     }
                 }
                 break;
-            case self::TYPE_EMAIL:
+            case self::EMAIL_URI:
                 if (empty($name)) {
                     global $conf;
                     $email = $this->dokuwikiUrl->getPath();
@@ -868,12 +654,12 @@ EOF;
 
                 }
                 break;
-            case self::TYPE_INTERWIKI:
+            case self::INTERWIKI_URI:
                 if (empty($name)) {
                     $name = $this->dokuwikiUrl->getPath();
                 }
                 break;
-            case self::TYPE_LOCAL:
+            case self::LOCAL_URI:
                 if (empty($name)) {
                     $name = $this->dokuwikiUrl->getFragment();
                 }
@@ -886,7 +672,7 @@ EOF;
     }
 
     /**
-     * @param $title -the value of the title attribute of the anchor
+     * @param $title - the value of the title attribute of the anchor
      */
     public
     function setTitle($title)
@@ -902,8 +688,8 @@ EOF;
     function getUrl()
     {
 
-        switch ($this->getStructure()) {
-            case self::TYPE_INTERNAL:
+        switch ($this->getUriType()) {
+            case self::WIKI_URI:
                 $page = $this->getInternalPage();
 
                 /**
@@ -966,19 +752,19 @@ EOF;
                     $url .= '#' . sectionID($this->dokuwikiUrl->getFragment(), $check);
                 }
                 break;
-            case self::TYPE_INTERWIKI:
+            case self::INTERWIKI_URI:
                 $wiki = $this->wiki;
                 $extendedPath = $this->dokuwikiUrl->getPath();
                 if ($this->dokuwikiUrl->getFragment() !== null) {
                     $extendedPath .= "#{$this->dokuwikiUrl->getFragment()}";
                 }
-                $url = $this->renderer->_resolveInterWiki($wiki, $extendedPath);
+                $url = $this->interWikiRefToUrl($wiki, $extendedPath);
                 break;
-            case self::TYPE_WINDOWS_SHARE:
+            case self::WINDOWS_SHARE_URI:
                 $url = str_replace('\\', '/', $this->getRef());
                 $url = 'file:///' . $url;
                 break;
-            case self::TYPE_EMAIL:
+            case self::EMAIL_URI:
                 /**
                  * An email link is `<email>`
                  * {@link Emaillink::connectTo()}
@@ -1002,10 +788,11 @@ EOF;
                 }
                 $url = 'mailto:' . $uri;
                 break;
-            case self::TYPE_LOCAL:
-                $url = '#' . $this->renderer->_headerToLink($this->ref);
+            case self::LOCAL_URI:
+                $check = false;
+                $url = '#' . sectionID($this->ref, $check);
                 break;
-            case self::TYPE_EXTERNAL:
+            case self::STANDARD_URI:
                 /**
                  * Default is external
                  * For instance, {@link \syntax_plugin_combo_share} link
@@ -1034,8 +821,7 @@ EOF;
         return $url;
     }
 
-    public
-    function getWiki(): string
+    public function getWiki(): ?string
     {
         return $this->wiki;
     }
@@ -1054,7 +840,7 @@ EOF;
     function isProtectedLink()
     {
         $protectedLink = false;
-        if ($this->getStructure() == self::TYPE_INTERNAL) {
+        if ($this->getUriType() == self::WIKI_URI) {
 
             // Low Quality Page protection
             $lqppEnable = PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE);
@@ -1074,15 +860,6 @@ EOF;
         return $protectedLink;
     }
 
-    /**
-     * @return string
-     * @deprecated a link is a HTML anchor element (ie a), no more link with span
-     */
-    public
-    function getHTMLTag(): string
-    {
-        return "a";
-    }
 
     private
     function wikiExists(): bool
@@ -1117,12 +894,6 @@ EOF;
         }
     }
 
-    public
-    function renderClosingTag(): string
-    {
-        $HTMLTag = $this->getHTMLTag();
-        return "</$HTMLTag>";
-    }
 
     public
     function isRelative(): bool
@@ -1204,6 +975,81 @@ EOF;
     {
         global $conf;
         return $conf['mailguard'];
+    }
+
+    /**
+     * @param string $shortcut
+     * @param string $reference
+     * @return mixed|string
+     * Adapted  from {@link Doku_Renderer_xhtml::_resolveInterWiki()}
+     * @noinspection DuplicatedCode
+     */
+    private function interWikiRefToUrl(string &$shortcut, string $reference)
+    {
+
+        if ($this->interwiki === null) {
+            $this->interwiki = getInterwiki();
+        }
+
+        // Get interwiki URL
+        if (isset($this->interwiki[$shortcut])) {
+            $url = $this->interwiki[$shortcut];
+        } elseif (isset($this->interwiki['default'])) {
+            $shortcut = 'default';
+            $url = $this->interwiki[$shortcut];
+        } else {
+            // not parsable interwiki outputs '' to make sure string manipulation works
+            $shortcut = '';
+            $url = '';
+        }
+
+        //split into hash and url part
+        $hash = strrchr($reference, '#');
+        if ($hash) {
+            $reference = substr($reference, 0, -strlen($hash));
+            $hash = substr($hash, 1);
+        }
+
+        //replace placeholder
+        if (preg_match('#\{(URL|NAME|SCHEME|HOST|PORT|PATH|QUERY)\}#', $url)) {
+            //use placeholders
+            $url = str_replace('{URL}', rawurlencode($reference), $url);
+            //wiki names will be cleaned next, otherwise urlencode unsafe chars
+            $url = str_replace('{NAME}', ($url[0] === ':') ? $reference :
+                preg_replace_callback('/[[\\\\\]^`{|}#%]/', function ($match) {
+                    return rawurlencode($match[0]);
+                }, $reference), $url);
+            $parsed = parse_url($reference);
+            if (empty($parsed['scheme'])) $parsed['scheme'] = '';
+            if (empty($parsed['host'])) $parsed['host'] = '';
+            if (empty($parsed['port'])) $parsed['port'] = 80;
+            if (empty($parsed['path'])) $parsed['path'] = '';
+            if (empty($parsed['query'])) $parsed['query'] = '';
+            $url = strtr($url, [
+                '{SCHEME}' => $parsed['scheme'],
+                '{HOST}' => $parsed['host'],
+                '{PORT}' => $parsed['port'],
+                '{PATH}' => $parsed['path'],
+                '{QUERY}' => $parsed['query'],
+            ]);
+        } else if ($url != '') {
+            // make sure when no url is defined, we keep it null
+            // default
+            $url = $url . rawurlencode($reference);
+        }
+        //handle as wiki links
+        if ($url[0] === ':') {
+            $urlParam = null;
+            $id = $url;
+            if (strpos($url, '?') !== false) {
+                list($id, $urlParam) = explode('?', $url, 2);
+            }
+            $url = wl(cleanID($id), $urlParam);
+            $exists = page_exists($id);
+        }
+        if ($hash) $url .= '#' . rawurlencode($hash);
+
+        return $url;
     }
 
 

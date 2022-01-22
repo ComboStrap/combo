@@ -7,7 +7,7 @@
  */
 
 use ComboStrap\SnippetManager;
-use ComboStrap\LinkUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
@@ -186,7 +186,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                             $pageId = $pageArray['id'];
 
                         }
-                        $link = new LinkUtility($pageId);
+                        $link = new MarkupRef($pageId);
 
 
                         /**
@@ -251,7 +251,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                                 $miniMapList .= "<span class=\"nicon_folder_open\" aria-hidden=\"true\"></span> ";
                             }
 
-                            $miniMapList .= $link->renderOpenTag($renderer);
+                            $miniMapList .= $link->toAttributes($renderer);
                             $miniMapList .= $link->getName();
                             $miniMapList .= $link->renderClosingTag();
 
@@ -282,8 +282,8 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                             $panelHeaderContent = 'No Home Page found';
                         }
                     } else {
-                        $startLink = new LinkUtility($startId);
-                        $panelHeaderContent = $startLink->renderOpenTag($renderer);
+                        $startLink = new MarkupRef($startId);
+                        $panelHeaderContent = $startLink->toAttributes($renderer);
                         $panelHeaderContent .= $startLink->getName();
                         $panelHeaderContent .= $startLink->renderClosingTag();
                         // We are not counting the header page

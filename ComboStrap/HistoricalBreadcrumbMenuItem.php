@@ -34,6 +34,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
      * to avoid circular reference
      */
     const HISTORICAL_BREADCRUMB_NAME = "historical-breadcrumb";
+    const CANONICAL = "breadcrumb";
 
 
     /**
@@ -129,14 +130,17 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         } else {
             $name = $page->getTitleOrDefault();
         }
-        $tagAttributes = null;
-        if ($class != null) {
-            $tagAttributes = TagAttributes::createEmpty();
-            $tagAttributes->addClassName($class);
-        }
-        $link = LinkUtility::createFromPageId($id, $tagAttributes);
 
-        return $link->renderOpenTag() . $name . $link->renderClosingTag();
+        try {
+            $attributes = MarkupRef::createFromPageId($id)->toAttributes(self::CANONICAL);
+        } catch (ExceptionCombo $e) {
+            return LogUtility::wrapInRedForHtml("Error on breadcrumb markup ref. Message: {$e->getMessage()}");
+        }
+        if($class!==null){
+            $attributes->addClassName($class);
+        }
+
+        return $attributes->toHtmlEnterTag("a") . $name . "</a>";
     }
 
 

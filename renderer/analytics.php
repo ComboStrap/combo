@@ -4,7 +4,7 @@
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\BacklinkCount;
 use ComboStrap\Canonical;
-use ComboStrap\LinkUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\Page;
 use ComboStrap\PageTitle;
@@ -596,16 +596,16 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function internallink($id, $name = null, $search = null, $returnonly = false, $linktype = 'content')
     {
 
-        $link = new LinkUtility($id);
-        $link->setStructure(LinkUtility::TYPE_INTERNAL);
+        $link = new MarkupRef($id);
+        $link->setUriType(MarkupRef::WIKI_URI);
         $link->processLinkStats($this->stats);
 
     }
 
     public function externallink($url, $name = null)
     {
-        $link = new LinkUtility($url);
-        $link->setStructure(LinkUtility::TYPE_EXTERNAL);
+        $link = new MarkupRef($url);
+        $link->setUriType(MarkupRef::STANDARD_URI);
         if ($name != null) {
             $link->setName($name);
         }

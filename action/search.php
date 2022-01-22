@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\LinkUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\Mime;
 use ComboStrap\Page;
 
@@ -78,8 +78,8 @@ class action_plugin_combo_search extends DokuWiki_Action_Plugin
         $data = [];
         foreach ($pages as $id => $title) {
             $page = Page::createPageFromId($id);
-            $linkUtility = LinkUtility::createFromPageId($id);
-            $html = $linkUtility->renderOpenTag() . $page->getTitleOrDefault() . $linkUtility->renderClosingTag();
+            $linkUtility = MarkupRef::createFromPageId($id);
+            $html = $linkUtility->toAttributes() . $page->getTitleOrDefault() . $linkUtility->renderClosingTag();
             $data[] = $html;
         }
         $dataJson = json_encode($data);

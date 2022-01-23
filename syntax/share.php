@@ -131,13 +131,6 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     return $returnArray;
                 }
                 $requestedPage = Page::createPageFromRequestedPage();
-                try {
-                    $sharedUrl = $socialChannel->getUrlForPage($requestedPage);
-                } catch (ExceptionCombo $e) {
-                    $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the url for the social channel ($socialChannel) returns an error ({$e->getMessage()}";
-                    return $returnArray;
-                }
 
 
                 /**
@@ -149,16 +142,54 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     $renderedPage->setScope(PageScope::SCOPE_CURRENT_REQUESTED_PAGE_VALUE);
                 }
 
+                /**
+                 * Standard link attribute
+                 */
                 $linkAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, self::TAG);
                 $linkAttributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "{$socialChannel->getWidgetClass()} {$socialChannel->getIdentifierClass()}");
-                $linkAttributes->addComponentAttributeValue("href", $sharedUrl);
-                $linkAttributes->addComponentAttributeValue("target", "_blank");
                 $linkAttributes->addComponentAttributeValue("rel", "noopener");
                 $linkTitle = $socialChannel->getLinkTitle();
                 $linkAttributes->addComponentAttributeValue("title", $linkTitle);
-
                 $ariaLabel = "Share on " . ucfirst($socialChannel->getName());
                 $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
+
+                /**
+                 * Standard attributes to have a href value
+                 */
+                try {
+                    $sharedUrl = $socialChannel->getChannelUrlForPage($requestedPage);
+                } catch (ExceptionCombo $e) {
+                    $returnArray[PluginUtility::EXIT_CODE] = 1;
+                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the url for the social channel ($socialChannel) returns an error ({$e->getMessage()}";
+                    return $returnArray;
+                }
+                //$linkAttributes->addComponentAttributeValue("href", $sharedUrl);
+                //$linkAttributes->addComponentAttributeValue("target", "_blank");
+
+                /**
+                 * Sharer attributes
+                 * https://ellisonleao.github.io/sharer.js/
+                 */
+                if (true) {
+                    PluginUtility::getSnippetManager()->attachTagsForSlot("sharer")
+                        ->setTags(
+                            array(
+                                "script" =>
+                                    [
+                                        array(
+                                            "src" => "https://cdn.jsdelivr.net/npm/sharer.js@0.5.0/sharer.min.js",
+                                            "integrity" => "sha256-AqqY/JJCWPQwZFY/mAhlvxjC5/880Q331aOmargQVLU=",
+                                            "crossorigin" => "anonymous"
+                                        )
+                                    ],
+
+                            ));
+                    $linkAttributes->addComponentAttributeValue("data-sharer", $socialChannel->getName());
+                    $linkAttributes->addComponentAttributeValue("data-link", "false");
+                    $linkAttributes->addComponentAttributeValue("data-title", $socialChannel->getTextForPage($requestedPage));
+                    $linkAttributes->addComponentAttributeValue("data-url", $socialChannel->getUrlToShareForPage($requestedPage));
+                    $linkAttributes->addComponentAttributeValue("href", "#");
+                }
 
 
                 $this->openLinkInCallStack($callStack, $linkAttributes);

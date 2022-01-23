@@ -5,7 +5,6 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_metatwitter;
-use splitbrain\phpcli\Exception;
 
 /**
  * Class SocialChannel
@@ -122,7 +121,7 @@ class SocialChannel
     /**
      * @throws ExceptionCombo
      */
-    public function getUrlForPage(Page $requestedPage): string
+    public function getChannelUrlForPage(Page $requestedPage): string
     {
 
         /**
@@ -132,7 +131,7 @@ class SocialChannel
         if ($shareUrlTemplate === null) {
             throw new ExceptionCombo("The channel ($this) does not have an uri defined for the web");
         }
-        $canonicalUrl = $requestedPage->getCanonicalUrl([], true, DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
+        $canonicalUrl = $this->getUrlToShareForPage($requestedPage);
         $templateData["url"] = $canonicalUrl;
         $templateData["title"] = $requestedPage->getTitleOrDefault();
         $description = $requestedPage->getDescription();
@@ -363,6 +362,22 @@ EOF;
     public function hasIcon(): bool
     {
         return $this->icon !== self::ICON_NONE_VALUE;
+    }
+
+    public function getTextForPage(Page $requestedPage): ?string
+    {
+        $text = $requestedPage->getTitleOrDefault();
+        $description = $requestedPage->getDescription();
+        if ($description !== null) {
+            $text .= " > $description";
+        }
+        return $text;
+
+    }
+
+    public function getUrlToShareForPage(Page $requestedPage): ?string
+    {
+        return $requestedPage->getCanonicalUrl([], true, DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
     }
 
 

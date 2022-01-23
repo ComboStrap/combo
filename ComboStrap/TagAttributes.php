@@ -48,6 +48,8 @@ class TagAttributes
      *   * are not becoming HTML attributes
      *   * are never deleted
      * (ie internal reserved words)
+     *
+     * TODO: they should be advertised by the syntax component
      */
     const RESERVED_ATTRIBUTES = [
         self::SCRIPT_KEY, // no script attribute for security reason
@@ -63,7 +65,9 @@ class TagAttributes
         self::STRICT,
         SvgDocument::PRESERVE_ATTRIBUTE,
         \syntax_plugin_combo_link::CLICKABLE_ATTRIBUTE,
-        MarkupRef::PREVIEW_ATTRIBUTE
+        MarkupRef::PREVIEW_ATTRIBUTE,
+        \syntax_plugin_combo_link::ATTRIBUTE_REF,
+        \syntax_plugin_combo_link::ATTRIBUTE_REF_TYPE,
     ];
 
     /**

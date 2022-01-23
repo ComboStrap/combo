@@ -151,7 +151,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
 
                 $linkAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, self::TAG);
                 $linkAttributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "{$socialChannel->getWidgetClass()} {$socialChannel->getIdentifierClass()}");
-                $linkAttributes->addComponentAttributeValue(syntax_plugin_combo_link::ATTRIBUTE_REF, $sharedUrl);
+                $linkAttributes->addComponentAttributeValue("href", $sharedUrl);
                 $linkAttributes->addComponentAttributeValue("target", "_blank");
                 $linkAttributes->addComponentAttributeValue("rel", "noopener");
                 $linkTitle = $socialChannel->getLinkTitle();

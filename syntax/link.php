@@ -477,12 +477,14 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                      * Keep track of the backlinks ie meta['relation']['references']
                      * @var Doku_Renderer_metadata $renderer
                      */
-                    if (isset($data[PluginUtility::ATTRIBUTES])) {
-                        $tagAttributes = $data[PluginUtility::ATTRIBUTES];
-                    } else {
-                        $tagAttributes = $data;
-                    }
                     $markupRef = $data[self::ATTRIBUTE_REF];
+                    if($markupRef===null){
+                        /**
+                         * This is not a markup link
+                         * (ie an external link created by a plugin {@link syntax_plugin_combo_share})
+                         */
+                        return false;
+                    }
                     $type = $data[self::ATTRIBUTE_REF_TYPE];
                     $name = $data[self::ATTRIBUTE_LABEL];
 

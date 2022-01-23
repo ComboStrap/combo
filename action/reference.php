@@ -89,6 +89,13 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
                 && $actualCall->getState() === DOKU_LEXER_ENTER
             ) {
                 $ref = $actualCall->getPluginData(syntax_plugin_combo_link::ATTRIBUTE_REF);
+                if ($ref === null) {
+                    /**
+                     * The reference data is null for this link, it may be an external
+                     * link created by a component such as {@link syntax_plugin_combo_share}
+                     */
+                    continue;
+                }
                 $link = MarkupRef::createFromRef($ref);
                 if ($link->getUriType() === MarkupRef::WIKI_URI) {
                     $ref = Reference::createFromResource($page)

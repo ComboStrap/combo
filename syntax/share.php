@@ -153,45 +153,34 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 $ariaLabel = "Share on " . ucfirst($socialChannel->getName());
                 $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
 
-                /**
-                 * Standard attributes to have a href value
-                 */
-                try {
-                    $sharedUrl = $socialChannel->getChannelUrlForPage($requestedPage);
-                } catch (ExceptionCombo $e) {
-                    $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the url for the social channel ($socialChannel) returns an error ({$e->getMessage()}";
-                    return $returnArray;
-                }
-                //$linkAttributes->addComponentAttributeValue("href", $sharedUrl);
-                //$linkAttributes->addComponentAttributeValue("target", "_blank");
 
                 /**
                  * Sharer attributes
                  * https://ellisonleao.github.io/sharer.js/
                  */
-                if (true) {
-                    PluginUtility::getSnippetManager()->attachTagsForSlot("sharer")
-                        ->setTags(
-                            array(
-                                "script" =>
-                                    [
-                                        array(
-                                            "src" => "https://cdn.jsdelivr.net/npm/sharer.js@0.5.0/sharer.min.js",
-                                            "integrity" => "sha256-AqqY/JJCWPQwZFY/mAhlvxjC5/880Q331aOmargQVLU=",
-                                            "crossorigin" => "anonymous"
-                                        )
-                                    ],
+                PluginUtility::getSnippetManager()->attachTagsForSlot("sharer")
+                    ->setTags(
+                        array(
+                            "script" =>
+                                [
+                                    array(
+                                        "src" => "https://cdn.jsdelivr.net/npm/sharer.js@0.5.0/sharer.min.js",
+                                        "integrity" => "sha256-AqqY/JJCWPQwZFY/mAhlvxjC5/880Q331aOmargQVLU=",
+                                        "crossorigin" => "anonymous"
+                                    )
+                                ],
 
-                            ));
-                    $linkAttributes->addComponentAttributeValue("data-sharer", $socialChannel->getName());
-                    $linkAttributes->addComponentAttributeValue("data-link", "false");
-                    $linkAttributes->addComponentAttributeValue("data-title", $socialChannel->getTextForPage($requestedPage));
-                    $linkAttributes->addComponentAttributeValue("data-url", $socialChannel->getUrlToShareForPage($requestedPage));
-                    $linkAttributes->addComponentAttributeValue("href", "#");
-                }
+                        ));
+                $linkAttributes->addComponentAttributeValue("data-sharer", $socialChannel->getName());
+                $linkAttributes->addComponentAttributeValue("data-link", "false");
+                $linkAttributes->addComponentAttributeValue("data-title", $socialChannel->getTextForPage($requestedPage));
+                $linkAttributes->addComponentAttributeValue("data-url", $socialChannel->getUrlToShareForPage($requestedPage));
+                //$linkAttributes->addComponentAttributeValue("href", "#"); // with # we style navigate to the top
+                $linkAttributes->addStyleDeclarationIfNotSet("cursor", "pointer"); // show a pointer (without href, there is none)
 
-
+                /**
+                 * Add the link
+                 */
                 $this->openLinkInCallStack($callStack, $linkAttributes);
                 try {
                     $this->addIconInCallStack($callStack, $socialChannel);

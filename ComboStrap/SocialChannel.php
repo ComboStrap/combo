@@ -10,16 +10,20 @@ use action_plugin_combo_metatwitter;
  * Class SocialChannel
  * @package ComboStrap
  *
- * Inspired by:
- * http://sharingbuttons.io (Specifically thanks for the data)
- * at:
+ *
+ * Share link:
  *   * [Link](https://github.com/mxstbr/sharingbuttons.io/blob/master/js/stores/AppStore.js#L242)
+ *   * https://github.com/ellisonleao/sharer.js/blob/main/sharer.js#L72
+ * Style:
  *   * [Style](https://github.com/mxstbr/sharingbuttons.io/blob/master/js/stores/AppStore.js#L10)
  *
  * Popup:
  * https://gist.github.com/josephabrahams/9d023596b884e80e37e5
  * https://jonsuh.com/blog/social-share-links/
  * https://stackoverflow.com/questions/11473345/how-to-pop-up-new-window-with-tweet-button
+ *
+ * Inspired by:
+ * http://sharingbuttons.io (Specifically thanks for the data)
  */
 class SocialChannel
 {
@@ -120,6 +124,10 @@ class SocialChannel
 
     /**
      * @throws ExceptionCombo
+     *
+     * Dictionary has been made with the data found here:
+     *   * https://github.com/ellisonleao/sharer.js/blob/main/sharer.js#L72
+     *   * and
      */
     public function getChannelUrlForPage(Page $requestedPage): string
     {

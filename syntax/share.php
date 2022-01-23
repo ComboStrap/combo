@@ -118,7 +118,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 ];
                 $shareAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes)
                     ->setLogicalTag(self::TAG);
-                $linkAttributes = TagAttributes::createEmpty(self::TAG);
+
 
                 /**
                  * The channel
@@ -130,7 +130,6 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "The social channel creation returns an error ({$e->getMessage()}";
                     return $returnArray;
                 }
-                $requestedPage = Page::createPageFromRequestedPage();
 
 
                 /**
@@ -145,38 +144,15 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 /**
                  * Standard link attribute
                  */
-                $linkAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, self::TAG);
-                $linkAttributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "{$socialChannel->getWidgetClass()} {$socialChannel->getIdentifierClass()}");
-                $linkAttributes->addComponentAttributeValue("rel", "noopener");
-                $linkTitle = $socialChannel->getLinkTitle();
-                $linkAttributes->addComponentAttributeValue("title", $linkTitle);
-                $ariaLabel = "Share on " . ucfirst($socialChannel->getName());
-                $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
+                $requestedPage = Page::createPageFromRequestedPage();
+                try {
+                    $linkAttributes = $socialChannel->getLinkAttributes($requestedPage);
+                } catch (ExceptionCombo $e) {
+                    $returnArray[PluginUtility::EXIT_CODE] = 1;
+                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The social channel creation returns an error when creating the link ({$e->getMessage()}";
+                    return $returnArray;
+                }
 
-
-                /**
-                 * Sharer attributes
-                 * https://ellisonleao.github.io/sharer.js/
-                 */
-                PluginUtility::getSnippetManager()->attachTagsForSlot("sharer")
-                    ->setTags(
-                        array(
-                            "script" =>
-                                [
-                                    array(
-                                        "src" => "https://cdn.jsdelivr.net/npm/sharer.js@0.5.0/sharer.min.js",
-                                        "integrity" => "sha256-AqqY/JJCWPQwZFY/mAhlvxjC5/880Q331aOmargQVLU=",
-                                        "crossorigin" => "anonymous"
-                                    )
-                                ],
-
-                        ));
-                $linkAttributes->addComponentAttributeValue("data-sharer", $socialChannel->getName());
-                $linkAttributes->addComponentAttributeValue("data-link", "false");
-                $linkAttributes->addComponentAttributeValue("data-title", $socialChannel->getTextForPage($requestedPage));
-                $linkAttributes->addComponentAttributeValue("data-url", $socialChannel->getUrlToShareForPage($requestedPage));
-                //$linkAttributes->addComponentAttributeValue("href", "#"); // with # we style navigate to the top
-                $linkAttributes->addStyleDeclarationIfNotSet("cursor", "pointer"); // show a pointer (without href, there is none)
 
                 /**
                  * Add the link

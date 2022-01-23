@@ -148,9 +148,9 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
+                $types = ["primary", "secondary", "success", "danger", "warning", "info", "light", "dark"];
                 $defaultAttributes = array("skin" => "filled", "type" => "primary");
-                $inLinesAttributes = PluginUtility::getTagAttributes($match);
-                $attributes = PluginUtility::mergeAttributes($inLinesAttributes, $defaultAttributes);
+                $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $types);
 
                 /**
                  * The parent
@@ -165,8 +165,8 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                     }
                 }
                 if ($isInMenuBar) {
-                    if (!isset($attributes["class"]) && !isset($attributes["spacing"])) {
-                        $attributes["spacing"] = "mr-2 mb-2 mt-2 mb-lg-0 mt-lg-0";
+                    if (!$attributes->hasAttribute("class") && !$attributes->hasAttribute("spacing")) {
+                        $attributes->addComponentAttributeValue("spacing", "mr-2 mb-2 mt-2 mb-lg-0 mt-lg-0");
                     }
                 }
 
@@ -181,7 +181,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray(),
                     PluginUtility::CONTEXT => $context
                 );
 

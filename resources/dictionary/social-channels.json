@@ -48,7 +48,7 @@
             "outline-circle": "et:tumblr"
         }
     },
-    "mail": {
+    "email": {
         "uri": {
             "web": "mailto:?subject=$title&body=$description%20$url"
         },
@@ -67,7 +67,7 @@
             "secondary": "#1DA851"
         }
     },
-    "hn": {
+    "hackernews": {
         "uri": {
             "web": "https://news.ycombinator.com/submitlink?u=$url&t=$description"
         },

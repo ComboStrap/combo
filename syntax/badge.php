@@ -111,14 +111,9 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $defaultConfValue = PluginUtility::parseAttributes($this->getConf(self::CONF_DEFAULT_ATTRIBUTES_KEY));
-                $originalAttributes = PluginUtility::getTagAttributes($match);
-                $originalAttributes = PluginUtility::mergeAttributes($originalAttributes, $defaultConfValue);
-                $tagAttributes = TagAttributes::createFromCallStackArray($originalAttributes);
 
-                /**
-                 * Context Rendering attributes
-                 */
-                $tag = new Tag(self::TAG, $originalAttributes, $state, $handler);
+                $knownTypes = ["primary", "secondary", "success", "danger", "warning", "info", "tip", "light", "dark"];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultConfValue, $knownTypes);
 
 
                 /**
@@ -130,7 +125,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                     $tagAttributes->addClassName("alert-" . $type);
                 } else {
                     if (!$tagAttributes->hasComponentAttribute("background-color")) {
-                        $tagAttributes->addStyleDeclarationIfNotSet("background-color","#fff79f"); // lum - 195
+                        $tagAttributes->addStyleDeclarationIfNotSet("background-color", "#fff79f"); // lum - 195
                         $tagAttributes->addClassName("text-dark");
                     }
                 }
@@ -199,7 +194,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
                     $renderer->doc .= "</span>";
-                        break;
+                    break;
 
             }
             return true;

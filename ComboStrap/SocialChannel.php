@@ -41,6 +41,13 @@ class SocialChannel
      * @var array
      */
     private static $channelDictionary;
+
+    /**
+     * @var string
+     * The name of the channel, we follow
+     * the naming of
+     * https://github.com/ellisonleao/sharer.js
+     */
     private $name;
     /**
      * @var array
@@ -72,6 +79,14 @@ class SocialChannel
         int $width = null)
     {
         $this->name = strtolower($channelName);
+        switch ($this->name) {
+            case "hn":
+                $this->name = "hackernews";
+                break;
+            case "mail":
+                $this->name = "email";
+                break;
+        }
         /**
          * Get the channels
          */
@@ -386,6 +401,61 @@ EOF;
     public function getUrlToShareForPage(Page $requestedPage): ?string
     {
         return $requestedPage->getCanonicalUrl([], true, DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
+    }
+
+    /**
+     * Return the link HTML attributes
+     * @throws ExceptionCombo
+     */
+    public function getLinkAttributes(Page $requestedPage): TagAttributes
+    {
+
+        $logicalTag = \syntax_plugin_combo_share::TAG;
+        $linkAttributes = TagAttributes::createEmpty($logicalTag);
+        $linkAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, $logicalTag);
+        $linkAttributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "{$this->getWidgetClass()} {$this->getIdentifierClass()}");
+        $linkAttributes->addComponentAttributeValue("rel", "noopener");
+        $linkTitle = $this->getLinkTitle();
+        $linkAttributes->addComponentAttributeValue("title", $linkTitle);
+        $ariaLabel = "Share on " . ucfirst($this->getName());
+        $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
+
+        switch ($this->getName()) {
+            case "whatsapp":
+                /**
+                 * Direct link
+                 * For whatsapp, the sharer link is not the good one
+                 */
+                $linkAttributes->addComponentAttributeValue("target", "_blank");
+                $linkAttributes->addComponentAttributeValue("href", $this->getChannelUrlForPage($requestedPage));
+                break;
+            default:
+                /**
+                 * Sharer
+                 * https://ellisonleao.github.io/sharer.js/
+                 */
+                PluginUtility::getSnippetManager()->attachTagsForSlot("sharer")
+                    ->setTags(
+                        array(
+                            "script" =>
+                                [
+                                    array(
+                                        "src" => "https://cdn.jsdelivr.net/npm/sharer.js@0.5.0/sharer.min.js",
+                                        "integrity" => "sha256-AqqY/JJCWPQwZFY/mAhlvxjC5/880Q331aOmargQVLU=",
+                                        "crossorigin" => "anonymous"
+                                    )
+                                ],
+
+                        ));
+                $linkAttributes->addComponentAttributeValue("data-sharer", $this->getName()); // the id
+                $linkAttributes->addComponentAttributeValue("data-link", "false");
+                $linkAttributes->addComponentAttributeValue("data-title", $this->getTextForPage($requestedPage));
+                $linkAttributes->addComponentAttributeValue("data-url", $this->getUrlToShareForPage($requestedPage));
+                //$linkAttributes->addComponentAttributeValue("href", "#"); // with # we style navigate to the top
+                $linkAttributes->addStyleDeclarationIfNotSet("cursor", "pointer"); // show a pointer (without href, there is none)
+        }
+        return $linkAttributes;
+
     }
 
 

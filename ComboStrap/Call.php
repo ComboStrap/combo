@@ -532,20 +532,20 @@ class Call
         return $name;
     }
 
-    public function getType()
+    /**
+     * @return string|null
+     *
+     * If the type returned is a boolean attribute,
+     * it means you need to define the expected types
+     * in the function {@link TagAttributes::createFromTagMatch()}
+     * as third attribute
+     */
+    public function getType(): ?string
     {
         if ($this->getState() == DOKU_LEXER_UNMATCHED) {
             return null;
         } else {
-            /**
-             * don't use {@link Call::getAttribute()} to get the type
-             * as this function stack also depends on
-             * this function {@link Call::getType()}
-             * to return the value
-             * Ie: if this is a boolean attribute without specified type
-             * if the boolean value is in the type, we return it
-             */
-            return $this->call[1][1][PluginUtility::ATTRIBUTES][TagAttributes::TYPE_KEY];
+            return $this->getAttribute(TagAttributes::TYPE_KEY);
         }
     }
 
@@ -554,22 +554,18 @@ class Call
      * @param null $default
      * @return string|null
      */
-    public function getAttribute($key, $default = null)
+    public function getAttribute($key, $default = null): ?string
     {
         $attributes = $this->getAttributes();
         if (isset($attributes[$key])) {
             return $attributes[$key];
-        } else {
-            // boolean attribute
-            if ($this->getType() == $key) {
-                return true;
-            } else {
-                return $default;
-            }
         }
+        return $default;
+
     }
 
-    public function getPayload()
+    public
+    function getPayload()
     {
         $mode = $this->call[0];
         if ($mode == "plugin") {
@@ -580,13 +576,15 @@ class Call
         }
     }
 
-    public function setContext($value)
+    public
+    function setContext($value)
     {
         $this->call[1][1][PluginUtility::CONTEXT] = $value;
         return $this;
     }
 
-    public function hasAttribute($attributeName)
+    public
+    function hasAttribute($attributeName)
     {
         $attributes = $this->getAttributes();
         if (isset($attributes[$attributeName])) {
@@ -600,7 +598,8 @@ class Call
         }
     }
 
-    public function isPluginCall()
+    public
+    function isPluginCall()
     {
         return $this->call[0] === "plugin";
     }
@@ -608,17 +607,20 @@ class Call
     /**
      * @return mixed|string the position (ie key) in the array
      */
-    public function getKey()
+    public
+    function getKey()
     {
         return $this->key;
     }
 
-    public function &getCall()
+    public
+    function &getCall()
     {
         return $this->call;
     }
 
-    public function setState($state)
+    public
+    function setState($state)
     {
         if ($this->call[0] == "plugin") {
             // for dokuwiki
@@ -637,7 +639,8 @@ class Call
      * Return the position of the first matched character in the text file
      * @return mixed
      */
-    public function getFirstMatchedCharacterPosition()
+    public
+    function getFirstMatchedCharacterPosition()
     {
 
         return $this->call[2];
@@ -652,7 +655,8 @@ class Call
      * matched content
      * @return int|mixed
      */
-    public function getLastMatchedCharacterPosition()
+    public
+    function getLastMatchedCharacterPosition()
     {
         return $this->getFirstMatchedCharacterPosition() + strlen($this->getCapturedContent());
     }
@@ -661,7 +665,8 @@ class Call
      * @param $value string the class string to add
      * @return Call
      */
-    public function addClassName($value)
+    public
+    function addClassName($value)
     {
         $class = $this->getAttribute("class");
         if ($class != null) {
@@ -676,7 +681,8 @@ class Call
      * @param $key
      * @return mixed|null - the delete value of null if not found
      */
-    public function removeAttribute($key)
+    public
+    function removeAttribute($key)
     {
 
         $data = &$this->getPluginData();
@@ -695,7 +701,8 @@ class Call
 
     }
 
-    public function setPayload($text)
+    public
+    function setPayload($text)
     {
         if ($this->isPluginCall()) {
             $this->call[1][1][PluginUtility::PAYLOAD] = $text;
@@ -707,7 +714,8 @@ class Call
     /**
      * @return bool true if the call is a text call (same as dom text node)
      */
-    public function isTextCall()
+    public
+    function isTextCall()
     {
         return (
             $this->getState() == DOKU_LEXER_UNMATCHED ||
@@ -716,7 +724,8 @@ class Call
         );
     }
 
-    public function setType($type)
+    public
+    function setType($type)
     {
         if ($this->isPluginCall()) {
             $this->call[1][1][PluginUtility::ATTRIBUTES][TagAttributes::TYPE_KEY] = $type;
@@ -725,7 +734,8 @@ class Call
         }
     }
 
-    public function addCssStyle($key, $value)
+    public
+    function addCssStyle($key, $value)
     {
         $style = $this->getAttribute("style");
         $cssValue = "$key:$value";
@@ -735,7 +745,8 @@ class Call
         $this->addAttribute("style", $cssValue);
     }
 
-    public function setSyntaxComponentFromTag($tag)
+    public
+    function setSyntaxComponentFromTag($tag)
     {
 
         if ($this->isPluginCall()) {
@@ -749,12 +760,14 @@ class Call
      * @param Page $page
      * @return Call
      */
-    public function render(Page $page)
+    public
+    function render(Page $page)
     {
         return $this->renderFromData(TemplateUtility::getMetadataDataFromPage($page));
     }
 
-    public function renderFromData(array $array): Call
+    public
+    function renderFromData(array $array): Call
     {
 
         /**
@@ -801,7 +814,8 @@ class Call
         return $this;
     }
 
-    public function setCapturedContent($content)
+    public
+    function setCapturedContent($content)
     {
         $tagName = $this->getTagName();
         switch ($tagName) {
@@ -817,7 +831,8 @@ class Call
      * Set the display to block or inline
      * One of `block` or `inline`
      */
-    public function setDisplay($display): Call
+    public
+    function setDisplay($display): Call
     {
         $mode = $this->getMode();
         if ($mode == "plugin") {
@@ -833,7 +848,8 @@ class Call
      * The plugin or not
      * @return mixed
      */
-    private function getMode()
+    private
+    function getMode()
     {
         return $this->call[0];
     }
@@ -843,7 +859,8 @@ class Call
      * in captured content
      * @return bool
      */
-    public function isUnMatchedEmptyCall(): bool
+    public
+    function isUnMatchedEmptyCall(): bool
     {
         if ($this->getState() === DOKU_LEXER_UNMATCHED && trim($this->getCapturedContent()) === "") {
             return true;
@@ -851,7 +868,8 @@ class Call
         return false;
     }
 
-    public function getExitCode()
+    public
+    function getExitCode()
     {
         $mode = $this->call[0];
         if ($mode == "plugin") {

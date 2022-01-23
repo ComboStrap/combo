@@ -168,7 +168,9 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $tagAttributes = TagAttributes::createFromTagMatch($match);
+                $knownTypes = [];
+                $defaultAttributes = [];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
 
                 $this->cardCounter++;
                 $id = $this->cardCounter;

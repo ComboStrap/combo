@@ -4,6 +4,8 @@
  *
  */
 
+use ComboStrap\ExceptionCombo;
+use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -49,15 +51,15 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
     // The array key of an array of related page
     const RELATED_PAGE_ID_PROP = 'id';
     const RELATED_BACKLINKS_COUNT_PROP = 'backlinks';
+    const TAG = "related";
 
 
     /**
      * @param Page $page
      * @param int|null $max
-     * @param null $renderer
      * @return string
      */
-    public static function getHtmlRelated(Page $page, ?int $max = null, $renderer = null): string
+    public static function getHtmlRelated(Page $page, ?int $max = null): string
     {
         global $lang;
 
@@ -81,9 +83,15 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
                 $html .= '<li>';
                 if ($backlinkId != self::MORE_PAGE_ID) {
                     $linkUtility = MarkupRef::createFromPageId($backlinkId);
-                    $html .= $linkUtility->toAttributes($renderer);
-                    $html .= ucfirst($linkUtility->getName());
-                    $html .= $linkUtility->renderClosingTag();
+                    try {
+                        $html .= $linkUtility->toAttributes(self::TAG)->toHtmlEnterTag("a");
+                        $html .= ucfirst($linkUtility->getName());
+                        $html .= "</a>";
+                    } catch (ExceptionCombo $e) {
+                        $html = "Error while trying to create the link for the page ($backlinkId). Error: {$e->getMessage()}";
+                        LogUtility::msg($html);
+                    }
+
                 } else {
                     $html .=
                         tpl_link(
@@ -213,7 +221,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
             if ($max === NULL) {
                 $max = PluginUtility::getConfValue(self::MAX_LINKS_CONF, self::MAX_LINKS_CONF_DEFAULT);
             }
-            $renderer->doc .= self::getHtmlRelated($page, $max, $renderer);
+            $renderer->doc .= self::getHtmlRelated($page, $max);
             return true;
         }
         return false;
@@ -260,7 +268,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
 
     public static function getTag(): string
     {
-        return "related";
+        return self::TAG;
     }
 
 

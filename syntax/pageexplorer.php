@@ -534,7 +534,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
                                     DOKU_LEXER_EXIT,
-                                    ["ref" => "\$path"],
+                                    [syntax_plugin_combo_link::ATTRIBUTE_REF => "\$path"],
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "]]"
                                 );
@@ -568,7 +568,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         }
 
                         /**
-                         * children (Namespaces/Pages)
+                         * Children (Namespaces/Pages)
                          */
                         if ($namespaceAttributes == null) {
                             $namespaceAttributes = [];
@@ -578,7 +578,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 $templateNamespaceInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
                                     DOKU_LEXER_ENTER,
-                                    ["ref" => "\$path"],
+                                    [syntax_plugin_combo_link::ATTRIBUTE_REF => "\$path"],
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "[[\$path"
                                 )->addClassName($componentClassPrefix . "-namespace-combo");
@@ -614,7 +614,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 $templateNamespaceInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
                                     DOKU_LEXER_EXIT,
-                                    ["ref" => "\$path"],
+                                    [syntax_plugin_combo_link::ATTRIBUTE_REF => "\$path"],
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "]]"
                                 );

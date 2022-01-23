@@ -33,7 +33,6 @@ class MarkupRef
 {
 
 
-
     /**
      * Type of link
      */
@@ -825,6 +824,8 @@ EOF;
                     $url = $this->ref;
                 }
                 break;
+            case self::VARIABLE_URI:
+                throw new ExceptionCombo("A template variable uri ($this->ref) can not give back an url, it should be first be replaced");
             default:
                 throw new ExceptionCombo("The structure of the reference ($this->ref) is unknown");
         }

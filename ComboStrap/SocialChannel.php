@@ -144,7 +144,7 @@ class SocialChannel
      *   * https://github.com/ellisonleao/sharer.js/blob/main/sharer.js#L72
      *   * and
      */
-    public function getChannelUrlForPage(Page $requestedPage): string
+    public function getChannelEndpointForPage(Page $requestedPage): string
     {
 
         /**
@@ -154,7 +154,7 @@ class SocialChannel
         if ($shareUrlTemplate === null) {
             throw new ExceptionCombo("The channel ($this) does not have an uri defined for the web");
         }
-        $canonicalUrl = $this->getUrlToShareForPage($requestedPage);
+        $canonicalUrl = $this->getSharedUrlForPage($requestedPage);
         $templateData["url"] = $canonicalUrl;
         $templateData["title"] = $requestedPage->getTitleOrDefault();
         $description = $requestedPage->getDescription();
@@ -398,7 +398,7 @@ EOF;
 
     }
 
-    public function getUrlToShareForPage(Page $requestedPage): ?string
+    public function getSharedUrlForPage(Page $requestedPage): ?string
     {
         return $requestedPage->getCanonicalUrl([], true, DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
     }
@@ -427,7 +427,7 @@ EOF;
                  * For whatsapp, the sharer link is not the good one
                  */
                 $linkAttributes->addComponentAttributeValue("target", "_blank");
-                $linkAttributes->addComponentAttributeValue("href", $this->getChannelUrlForPage($requestedPage));
+                $linkAttributes->addComponentAttributeValue("href", $this->getChannelEndpointForPage($requestedPage));
                 break;
             default:
                 /**
@@ -450,7 +450,7 @@ EOF;
                 $linkAttributes->addComponentAttributeValue("data-sharer", $this->getName()); // the id
                 $linkAttributes->addComponentAttributeValue("data-link", "false");
                 $linkAttributes->addComponentAttributeValue("data-title", $this->getTextForPage($requestedPage));
-                $linkAttributes->addComponentAttributeValue("data-url", $this->getUrlToShareForPage($requestedPage));
+                $linkAttributes->addComponentAttributeValue("data-url", $this->getSharedUrlForPage($requestedPage));
                 //$linkAttributes->addComponentAttributeValue("href", "#"); // with # we style navigate to the top
                 $linkAttributes->addStyleDeclarationIfNotSet("cursor", "pointer"); // show a pointer (without href, there is none)
         }

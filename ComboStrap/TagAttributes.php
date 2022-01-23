@@ -61,7 +61,9 @@ class TagAttributes
         self::HTML_AFTER,
         Dimension::RATIO_ATTRIBUTE,
         self::STRICT,
-        SvgDocument::PRESERVE_ATTRIBUTE
+        SvgDocument::PRESERVE_ATTRIBUTE,
+        \syntax_plugin_combo_link::CLICKABLE_ATTRIBUTE,
+        MarkupRef::PREVIEW_ATTRIBUTE
     ];
 
     /**
@@ -186,7 +188,7 @@ class TagAttributes
      * for a {@link \syntax_plugin_combo_code} and have therefore the same logical name)
      * @param array $componentAttributes
      */
-    private function __construct($componentAttributes = array(), $tag = null)
+    private function __construct(array $componentAttributes = array(), $tag = null)
     {
         $this->logicalTag = $tag;
         $this->componentAttributesCaseInsensitive = new ArrayCaseInsensitive($componentAttributes);
@@ -208,9 +210,9 @@ class TagAttributes
      * @param array $defaultAttributes
      * @return TagAttributes
      */
-    public static function createFromTagMatch($match, $defaultAttributes = [])
+    public static function createFromTagMatch($match, array $defaultAttributes = [], array $knownTypes = null): TagAttributes
     {
-        $inlineHtmlAttributes = PluginUtility::getTagAttributes($match);
+        $inlineHtmlAttributes = PluginUtility::getTagAttributes($match, $knownTypes);
         $tag = PluginUtility::getTag($match);
         $mergedAttributes = PluginUtility::mergeAttributes($inlineHtmlAttributes, $defaultAttributes);
         return self::createFromCallStackArray($mergedAttributes, $tag);
@@ -227,17 +229,17 @@ class TagAttributes
     }
 
     /**
-     * @param array $renderArray - an array of key value pair
-     * @param string $logicalTag - the logical tag for which this attribute will apply
+     * @param array $callStackArray - an array of key value pair
+     * @param string|null $logicalTag - the logical tag for which this attribute will apply
      * @return TagAttributes
      */
-    public static function createFromCallStackArray($renderArray, $logicalTag = null)
+    public static function createFromCallStackArray(array $callStackArray, string $logicalTag = null): TagAttributes
     {
-        if (!is_array($renderArray)) {
-            LogUtility::msg("The renderArray variable passed is not an array ($renderArray)", LogUtility::LVL_MSG_ERROR);
-            $renderArray = TagAttributes::createEmpty($logicalTag);
+        if (!is_array($callStackArray)) {
+            LogUtility::msg("The renderArray variable passed is not an array ($callStackArray)", LogUtility::LVL_MSG_ERROR);
+            $callStackArray = TagAttributes::createEmpty($logicalTag);
         }
-        return new TagAttributes($renderArray, $logicalTag);
+        return new TagAttributes($callStackArray, $logicalTag);
     }
 
 
@@ -444,15 +446,14 @@ class TagAttributes
 
         $this->componentToHtmlAttributeProcessingWasDone = true;
 
-        /**
-         * Following the rule 2 to encode the unknown value
-         * We encode the component attribute (ie not the HTML attribute because
-         * they may have already encoded value)
-         * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
-         */
+
 
         $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
-        $this->escapeComponentAttribute($originalArray);
+
+        /**
+         * HTML encode
+         */
+        $this->encodeToHtmlValue($originalArray);
 
 
         /**
@@ -628,26 +629,17 @@ class TagAttributes
      * @param $value
      * @return TagAttributes
      */
-    public function addHtmlAttributeValue($key, $value)
+    public function addHtmlAttributeValue($key, $value): TagAttributes
     {
         if (blank($value)) {
             LogUtility::msg("The value of the HTML attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
         }
         /**
-         * We encode all HTML attribute
-         * because `Unescaped '<' not allowed in attributes values`
+         * Note: We encode the HTML attribute only when rendering
+         * it ({@link TagAttributes::toHtmlArray()} and thus {@link TagAttributes::toHTMLAttributeString()}
          *
-         * except for url that have another encoding
-         * (ie only the query parameters value should be encoded)
+         * To avoid to have a double encoding (ie &amp; becomes &amp;amp;)
          */
-        $urlEncoding = ["href", "src", "data-src", "data-srcset"];
-        if (!in_array($key, $urlEncoding)) {
-            /**
-             * htmlencode the value `true` as `1`,
-             * We transform it first as string, then
-             */
-            $value = PluginUtility::htmlEncode(StringUtility::toString($value));
-        }
         $this->htmlAttributes[$key] = $value;
         return $this;
     }
@@ -834,7 +826,7 @@ class TagAttributes
     }
 
     public
-    function toHtmlEnterTag($htmlTag)
+    function toHtmlEnterTag($htmlTag): string
     {
 
         $enterTag = "<" . $htmlTag;
@@ -1104,7 +1096,7 @@ class TagAttributes
     }
 
     private
-    function hasHtmlAttribute($attribute)
+    function hasHtmlAttribute($attribute): bool
     {
         return isset($this->htmlAttributes[$attribute]);
     }
@@ -1113,9 +1105,21 @@ class TagAttributes
      * Component attribute are entered by the user and should be encoded
      * @param array $arrayToEscape
      * @param null $subKey
+     *
+     *
+     * Following the rule 2 to encode the unknown value
+     * We encode the component attribute (ie not the HTML attribute because
+     * they may have already encoded value)
+     * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
+     *
+     * TODO: the problem is that we don't know the type of attribute
+     *   When passing them through the {@link TagAttributes::toCallStackArray()}
+     *   One way to do that is by name. ie an href does not need to be encoded
+     *   but we should be sure that this is not a user entry
+     *   For now, the internal function passes the non-encoded by default
      */
     private
-    function escapeComponentAttribute(array $arrayToEscape, $subKey = null)
+    function encodeToHtmlValue(array $arrayToEscape, $subKey = null)
     {
 
         foreach ($arrayToEscape as $name => $value) {
@@ -1135,7 +1139,7 @@ class TagAttributes
             }
 
             if (is_array($value)) {
-                $this->escapeComponentAttribute($value, $encodedName);
+                $this->encodeToHtmlValue($value, $encodedName);
             } else {
 
                 $value = PluginUtility::htmlEncode($value);

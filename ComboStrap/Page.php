@@ -1010,10 +1010,7 @@ class Page extends ResourceComboAbs
          */
         $urlType = PageUrlType::getOrCreateForPage($this)->getValue();
         if ($urlType === PageUrlType::CONF_VALUE_PAGE_PATH) {
-            $absolutePath = Site::getCanonicalConfForRelativeVsAbsoluteUrl();
-            if ($absolutePath === 1) {
-                $absoluteUrlMandatory = true;
-            }
+            $absoluteUrlMandatory = Site::shouldUrlBeAbsolute();
         }
 
         /**

@@ -314,7 +314,7 @@ class MarkupRef
         /**
          * Get the url
          */
-        $url = $this->getUrl();
+        $url = $this->getUrl(DokuwikiUrl::AMPERSAND_CHARACTER);
         if (!empty($url)) {
             $outputAttributes->addHtmlAttributeValue("href", $url);
         }
@@ -683,9 +683,15 @@ EOF;
 
     /**
      * @throws ExceptionCombo
+     * @var string $targetEnvironmentAmpersand
+     * By default, all data are encoded
+     * at {@link TagAttributes::encodeToHtmlValue()}
+     * therefore the default is non-encoded
+     *
+     * If you want to pass the url directly to an HTML component,
+     * you should use the {@link DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML}
      */
-    public
-    function getUrl()
+    public function getUrl(string $targetEnvironmentAmpersand = DokuwikiUrl::AMPERSAND_CHARACTER)
     {
 
         switch ($this->getUriType()) {
@@ -704,7 +710,13 @@ EOF;
                  */
                 if ($this->dokuwikiUrl->hasQueryParameter("do")) {
 
-                    $url = wl($page->getDokuwikiId(), $this->dokuwikiUrl->getQueryParameters());
+                    $absoluteUrl = Site::shouldUrlBeAbsolute();
+                    $url = wl(
+                        $page->getDokuwikiId(),
+                        $this->dokuwikiUrl->getQueryParameters(),
+                        $absoluteUrl,
+                        $targetEnvironmentAmpersand
+                    );
 
                 } else {
 
@@ -714,7 +726,7 @@ EOF;
                     $url = $page->getCanonicalUrl(
                         [],
                         false,
-                        DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML
+                        $targetEnvironmentAmpersand
                     );
 
                     /**
@@ -725,7 +737,7 @@ EOF;
                      */
                     $searchTerms = $this->dokuwikiUrl->getQueryParameter(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY);
                     if ($searchTerms !== null) {
-                        $url .= DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML;
+                        $url .= $targetEnvironmentAmpersand;
                         PluginUtility::getSnippetManager()->attachCssSnippetForSlot("search");
                         if (is_array($searchTerms)) {
                             /**
@@ -736,7 +748,7 @@ EOF;
                             foreach ($searchTerms as $searchTerm) {
                                 $searchTermsQuery[] = "s[]=$searchTerm";
                             }
-                            $url .= implode(DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML, $searchTermsQuery);
+                            $url .= implode($targetEnvironmentAmpersand, $searchTermsQuery);
                         } else {
                             $url .= "s=$searchTerms";
                         }

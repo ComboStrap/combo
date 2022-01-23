@@ -30,6 +30,7 @@ class BreadcrumbHierarchical
      * https://developers.google.com/search/docs/data-types/breadcrumb
      *
      * @return string
+     * @throws ExceptionCombo
      */
     static function render(): string
     {
@@ -49,9 +50,11 @@ class BreadcrumbHierarchical
         // Home
         $htmlOutput .= '<li class="breadcrumb-item">' . PHP_EOL;
         $page = $conf['start'];
-        $link = MarkupRef::createFromPageId($page);
-        $pageNameNotEmpty = $link->getInternalPage()->getNameOrDefault();
-        $htmlOutput .= $link->toAttributes(). $pageNameNotEmpty .$link->renderClosingTag();
+        $markupRef = MarkupRef::createFromPageId($page);
+        $pageNameNotEmpty = $markupRef->getInternalPage()->getNameOrDefault();
+        $htmlOutput .= $markupRef->toAttributes(self::CANONICAL)->toHtmlEnterTag("a")
+            . $pageNameNotEmpty
+            ."</a>";
         $htmlOutput .= '</li>' . PHP_EOL;
 
         // Print the parts if there is more than one
@@ -82,8 +85,11 @@ class BreadcrumbHierarchical
                 $htmlOutput .= '<li class="breadcrumb-item">';
                 // html_wikilink because the page has the form pagename: and not pagename:pagename
                 if ($exist) {
-                    $link = MarkupRef::createFromPageId($page);
-                    $htmlOutput .= $link->toAttributes().$link->getInternalPage()->getNameOrDefault().$link->renderClosingTag();
+                    $markupRef = MarkupRef::createFromPageId($page);
+                    $htmlOutput .=
+                        $markupRef->toAttributes(self::CANONICAL)->toHtmlEnterTag("a")
+                        .$markupRef->getInternalPage()->getNameOrDefault()
+                        ."</a>";
                 } else {
                     $htmlOutput .= ucfirst($currentPart);
                 }

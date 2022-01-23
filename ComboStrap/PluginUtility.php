@@ -465,9 +465,9 @@ class PluginUtility
 
     }
 
-    public static function getTagAttributes($match)
+    public static function getTagAttributes($match, $knownTypes = null): array
     {
-        return self::getQualifiedTagAttributes($match, false, "");
+        return self::getQualifiedTagAttributes($match, false, "", $knownTypes);
     }
 
     /**
@@ -477,9 +477,10 @@ class PluginUtility
      * @param $hasThirdValue - if true, the third parameter is treated as value, not a property and returned in the `third` key
      * use for the code/file/console where they accept a name as third value
      * @param $keyThirdArgument - if a third argument is found, return it with this key
+     * @param array|null $knownTypes
      * @return array
      */
-    public static function getQualifiedTagAttributes($match, $hasThirdValue, $keyThirdArgument)
+    public static function getQualifiedTagAttributes($match, $hasThirdValue, $keyThirdArgument, array $knownTypes = null): array
     {
 
         $match = PluginUtility::getPreprocessEnterTag($match);
@@ -503,7 +504,15 @@ class PluginUtility
         } else {
             $nextArgument = $match;
         }
-        if (!strpos($nextArgument, "=")) {
+
+        $isType = !strpos($nextArgument, "=");
+        if ($knownTypes !== null) {
+            if (!in_array($nextArgument, $knownTypes)) {
+                $isType = false;
+            }
+        }
+        if ($isType) {
+
             $attributes["type"] = $nextArgument;
             // Suppress the type
             $match = substr($match, strlen($nextArgument));

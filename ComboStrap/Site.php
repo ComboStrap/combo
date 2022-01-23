@@ -368,10 +368,14 @@ class Site
      * Absolute vs Relative URL
      * https://www.dokuwiki.org/config:canonical
      */
-    public static function getCanonicalConfForRelativeVsAbsoluteUrl()
+    public static function shouldUrlBeAbsolute(): bool
     {
         global $conf;
-        return $conf['canonical'];
+        $value = $conf['canonical'];
+        if ($value === 1) {
+            return true;
+        }
+        return false;
     }
 
 

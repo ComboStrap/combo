@@ -194,7 +194,9 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $attributes = TagAttributes::createFromTagMatch($match);
+                $knownTypes = [];
+                $defaultAttributes = [];
+                $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
 
 
                 $callStack = CallStack::createFromHandler($handler);

@@ -86,9 +86,7 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator
     {
         if (is_string($offset)) $offset = strtolower($offset);
         $sourceOffset = $this->_keyMapping[$offset];
-        return isset($this->sourceArray[$sourceOffset])
-            ? $this->sourceArray[$sourceOffset]
-            : null;
+        return $this->sourceArray[$sourceOffset] ?? null;
     }
 
     function getOriginalArray()

@@ -1,10 +1,13 @@
 {
     "facebook": {
-        "uri": {
-            "web": "https://facebook.com/sharer/sharer.php?u=$url"
+        "share": {
+            "web": "https://facebook.com/sharer/sharer.php?u=$url",
+            "popup": "Share this page with Facebook",
+            "doc": "https://developers.facebook.com/docs/plugins/share-button/"
         },
-        "doc": "https://developers.facebook.com/docs/plugins/share-button/",
-        "title": "Share this page with Facebook",
+        "follow": {
+            "web": "https://facebook/$handle"
+        },
         "colors": {
             "primary": "#3b5998",
             "secondary": "#2d4373"
@@ -17,10 +20,15 @@
         }
     },
     "twitter": {
-        "uri": {
-            "web": "https://twitter.com/intent/tweet/?url=$url&text=$title%0A$description%0A&via=$via"
+        "share": {
+            "web": "https://twitter.com/intent/tweet/?url=$url&text=$title%0A$description%0A&via=$via",
+            "popup": "Share this page with Twitter"
         },
-        "title": "Share this page with Twitter",
+        "follow": {
+            "web": "https://twitter.com/intent/follow?screen_name=$handle",
+            "popup": "Follow us on Twitter",
+            "doc": "https://developer.twitter.com/en/docs/twitter-for-websites/follow-button/guides/web-intent-follow-button"
+        },
         "colors": {
             "primary": "#55acee",
             "secondary": "#2795e9"
@@ -33,10 +41,10 @@
         }
     },
     "tumblr": {
-        "uri": {
-            "web": "https://www.tumblr.com/widgets/share/tool?posttype=link&title=$title&caption=$description&canonicalUrl=$url&content=$url"
+        "share": {
+            "web": "https://www.tumblr.com/widgets/share/tool?posttype=link&title=$title&caption=$description&canonicalUrl=$url&content=$url",
+            "popup": "Share this page with Tumblr"
         },
-        "title": "Share this page with Tumblr",
         "colors": {
             "primary": "#35465C",
             "secondary": "#222d3c"
@@ -49,8 +57,9 @@
         }
     },
     "email": {
-        "uri": {
-            "web": "mailto:?subject=$title&body=$description%20$url"
+        "share": {
+            "web": "mailto:?subject=$title&body=$description%20$url",
+            "popup": "Share this page via Email"
         },
         "colors": {
             "primary": "#777777",
@@ -58,9 +67,10 @@
         }
     },
     "whatsapp": {
-        "uri": {
-            "web": "https://api.whatsapp.com/send?text=$description%20$url",
-            "mobile": "whatsapp://send?text=$description%20$url"
+        "share": {
+            "web": "https://api.whatsapp.com/send?text=$text%20$url",
+            "mobile": "whatsapp://send?text=$description%20$url",
+            "popup": "Share this page via Whatsapp"
         },
         "colors": {
             "primary": "#25D366",
@@ -68,8 +78,9 @@
         }
     },
     "hackernews": {
-        "uri": {
-            "web": "https://news.ycombinator.com/submitlink?u=$url&t=$description"
+        "share": {
+            "web": "https://news.ycombinator.com/submitlink?u=$url&t=$text",
+            "popup": "Share this page via Hackernews"
         },
         "colors": {
             "primary": "#FF6600",
@@ -80,8 +91,9 @@
         }
     },
     "telegram": {
-        "uri": {
-            "web": "https://telegram.me/share/url?text=$description&url=$url"
+        "share": {
+            "web": "https://telegram.me/share/url?text=$text&url=$url",
+            "popup": "Share this page with Telegram"
         },
         "colors": {
             "primary": "#54A9EB",
@@ -95,8 +107,8 @@
         }
     },
     "vk": {
-        "uri": {
-            "web": "https://vk.com/share.php?title=$description&url=$url"
+        "share": {
+            "web": "https://vk.com/share.php?title=$text&url=$url"
         },
         "colors": {
             "primary": "#507299",
@@ -109,8 +121,9 @@
         }
     },
     "pinterest": {
-        "uri": {
-            "web": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$description"
+        "share": {
+            "web": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$text",
+            "popup": "Share this page with pinterest"
         },
         "colors": {
             "primary": "#bd081c",
@@ -124,10 +137,10 @@
         }
     },
     "linkedin": {
-        "uri": {
-            "web": "https://www.linkedin.com/shareArticle?mini=true&url=$url&source=$url&title=$title&summary=$description"
+        "share": {
+            "web": "https://www.linkedin.com/shareArticle?mini=true&url=$url&source=$url&title=$title&summary=$description",
+            "doc": "https://developer.linkedin.com/docs/share-on-linkedin"
         },
-        "doc": "https://developer.linkedin.com/docs/share-on-linkedin",
         "colors": {
             "primary": "#0077b5",
             "secondary": "#046293"
@@ -140,7 +153,7 @@
         }
     },
     "reddit": {
-        "uri": {
+        "share": {
             "web": "https://reddit.com/submit/?resubmit=true&url=$url&title=$description"
         },
         "colors": {
@@ -155,7 +168,7 @@
         }
     },
     "xing": {
-        "uri": {
+        "share": {
             "web": "https://www.xing.com/spi/shares/new?url=$url"
         },
         "doc": "https://dev.xing.com/plugins/share_button/docs#custom-design",
@@ -171,7 +184,7 @@
         }
     },
     "pocket": {
-        "uri": {
+        "share": {
             "web": "https://getpocket.com/save?url=$url"
         },
         "colors": {

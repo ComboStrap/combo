@@ -12,7 +12,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PageScope;
 use ComboStrap\PluginUtility;
-use ComboStrap\SocialChannel;
+use ComboStrap\SocialButton;
 use ComboStrap\TagAttributes;
 
 
@@ -30,13 +30,13 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionCombo
      */
-    private static function createFromAttributes(TagAttributes $shareAttributes): SocialChannel
+    private static function createFromAttributes(TagAttributes $shareAttributes): SocialButton
     {
         $channelName = $shareAttributes->getValue(TagAttributes::TYPE_KEY);
-        $widget = $shareAttributes->getValue(self::WIDGET_ATTRIBUTE, SocialChannel::WIDGET_BUTTON_VALUE);
-        $icon = $shareAttributes->getValue(self::ICON_ATTRIBUTE, SocialChannel::ICON_SOLID_VALUE);
+        $widget = $shareAttributes->getValue(self::WIDGET_ATTRIBUTE, SocialButton::WIDGET_BUTTON_VALUE);
+        $icon = $shareAttributes->getValue(self::ICON_ATTRIBUTE, SocialButton::ICON_SOLID_VALUE);
         $width = $shareAttributes->getValueAsInteger(Dimension::WIDTH_KEY);
-        return SocialChannel::create($channelName, $widget, $icon, $width);
+        return SocialButton::createShareButton($channelName, $widget, $icon, $width);
     }
 
 
@@ -290,7 +290,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionCombo
      */
-    private function addIconInCallStack(CallStack $callStack, SocialChannel $socialChannel)
+    private function addIconInCallStack(CallStack $callStack, SocialButton $socialChannel)
     {
 
         if (!$socialChannel->hasIcon()) {

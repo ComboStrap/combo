@@ -25,7 +25,7 @@ use action_plugin_combo_metatwitter;
  * Inspired by:
  * http://sharingbuttons.io (Specifically thanks for the data)
  */
-class SocialChannel
+class SocialButton
 {
     public const WIDGET_BUTTON_VALUE = "button";
     public const WIDGET_LINK_VALUE = "link";
@@ -36,6 +36,9 @@ class SocialChannel
     const ICON_OUTLINE_VALUE = "outline";
     const ICONS = [self::ICON_SOLID_VALUE, self::ICON_SOLID_CIRCLE_VALUE, self::ICON_OUTLINE_VALUE, self::ICON_OUTLINE_CIRCLE_VALUE, self::ICON_NONE_VALUE];
     const ICON_NONE_VALUE = "none";
+
+    const CANONICAL = "social";
+
 
     /**
      * @var array
@@ -60,12 +63,24 @@ class SocialChannel
     /**
      * @var mixed|string
      */
-    private $icon;
+    private $icon = self::ICON_SOLID_VALUE;
     /**
      * The width of the icon
      * @var int|null
      */
-    private $width;
+    private $width = null;
+    /**
+     * @var string
+     */
+    private $type;
+    const TYPE_BUTTON_SHARE = "share";
+    const TYPE_BUTTON_FOLLOW = "follow";
+    const TYPE_BUTTONS = [self::TYPE_BUTTON_SHARE, self::TYPE_BUTTON_FOLLOW];
+
+    /**
+     * @var string the follow handle
+     */
+    private $handle;
 
 
     /**
@@ -74,9 +89,7 @@ class SocialChannel
      */
     public function __construct(
         string $channelName,
-        string $widget = self::WIDGET_BUTTON_VALUE,
-        string $icon = self::ICON_SOLID_VALUE,
-        int $width = null)
+        string $typeButton)
     {
         $this->name = strtolower($channelName);
         switch ($this->name) {
@@ -101,6 +114,19 @@ class SocialChannel
         if ($this->channelDict === null) {
             throw new ExceptionCombo("The channel ($this->name} is unknown.");
         }
+
+        $this->type = strtolower($typeButton);
+        if (!in_array($this->type, self::TYPE_BUTTONS)) {
+            throw new ExceptionCombo("The button type ($this->type} is unknown.");
+        }
+
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setWidget($widget): SocialButton
+    {
         /**
          * Widget validation
          */
@@ -109,6 +135,14 @@ class SocialChannel
         if (!in_array($widget, self::WIDGETS)) {
             throw new ExceptionCombo("The social widget ($widget} is unknown. The possible widgets value are " . implode(",", self::WIDGETS));
         }
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setIcon($icon): SocialButton
+    {
         /**
          * Icon Validation
          */
@@ -117,24 +151,46 @@ class SocialChannel
         if (!in_array($icon, self::ICONS)) {
             throw new ExceptionCombo("The social icon ($icon) is unknown. The possible icons value are " . implode(",", self::ICONS));
         }
+        return $this;
+    }
 
+    public function setWidth(?int $width): SocialButton
+    {
         /**
          * Width
          */
         $this->width = $width;
-
+        return $this;
     }
 
     /**
      * @throws ExceptionCombo
      */
-    public static function create(
+    public static function createShareButton(
         string $channelName,
         string $widget = self::WIDGET_BUTTON_VALUE,
         string $icon = self::ICON_SOLID_VALUE,
-        ?int $width = null): SocialChannel
+        ?int $width = null): SocialButton
     {
-        return new SocialChannel($channelName, $widget, $icon, $width);
+        return (new SocialButton($channelName, self::TYPE_BUTTON_SHARE))
+            ->setWidget($widget)
+            ->setIcon($icon)
+            ->setWidth($width);
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function createFollowButton(
+        string $channelName,
+        string $widget = self::WIDGET_BUTTON_VALUE,
+        string $icon = self::ICON_SOLID_VALUE,
+        ?int $width = null): SocialButton
+    {
+        return (new SocialButton($channelName, self::TYPE_BUTTON_FOLLOW))
+            ->setWidget($widget)
+            ->setIcon($icon)
+            ->setWidth($width);
     }
 
     /**
@@ -148,34 +204,46 @@ class SocialChannel
     {
 
         /**
-         * Shared Url
+         * Shared/Follow Url template
          */
-        $shareUrlTemplate = $this->channelDict["uri"]["web"];
-        if ($shareUrlTemplate === null) {
-            throw new ExceptionCombo("The channel ($this) does not have an uri defined for the web");
-        }
-        $canonicalUrl = $this->getSharedUrlForPage($requestedPage);
-        $templateData["url"] = $canonicalUrl;
-        $templateData["title"] = $requestedPage->getTitleOrDefault();
-        $description = $requestedPage->getDescription();
-        if ($description === null) {
-            $description = "";
-        }
-        $templateData["description"] = $description;
-        $via = null;
-        switch ($this->name) {
-            case \action_plugin_combo_metatwitter::CANONICAL:
-                $via = substr(action_plugin_combo_metatwitter::COMBO_STRAP_TWITTER_HANDLE, 1);
-                break;
-        }
-        if ($via !== null && $via !== "") {
-            $templateData["via"] = $via;
-        }
-        foreach ($templateData as $key => $value) {
-            $templateData[$key] = urlencode($value);
-        }
+        $urlTemplate = $this->checkThatTypeIsSupportedAndGetTemplateUrl();
+        switch ($this->type) {
 
-        return TemplateUtility::renderStringTemplateFromDataArray($shareUrlTemplate, $templateData);
+            case self::TYPE_BUTTON_SHARE:
+                $canonicalUrl = $this->getSharedUrlForPage($requestedPage);
+                $templateData["url"] = $canonicalUrl;
+                $templateData["title"] = $requestedPage->getTitleOrDefault();
+                $description = $requestedPage->getDescription();
+                if ($description === null) {
+                    $description = "";
+                }
+                $templateData["description"] = $description;
+                $templateData["text"] = $this->getTextForPage($requestedPage);
+                $via = null;
+                switch ($this->name) {
+                    case \action_plugin_combo_metatwitter::CANONICAL:
+                        $via = substr(action_plugin_combo_metatwitter::COMBO_STRAP_TWITTER_HANDLE, 1);
+                        break;
+                }
+                if ($via !== null && $via !== "") {
+                    $templateData["via"] = $via;
+                }
+                foreach ($templateData as $key => $value) {
+                    $templateData[$key] = urlencode($value);
+                }
+
+                return TemplateUtility::renderStringTemplateFromDataArray($urlTemplate, $templateData);
+
+            case self::TYPE_BUTTON_FOLLOW:
+                $templateData["handle"] = $this->handle;
+                return TemplateUtility::renderStringTemplateFromDataArray($urlTemplate, $templateData);
+            default:
+                // The type is mandatory and checked at creation,
+                // it should not happen, we don't throw an error
+                $message = "Button type ($this->type) is unknown";
+                LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                return $message;
+        }
 
     }
 
@@ -186,19 +254,26 @@ class SocialChannel
 
     public function getLinkTitle(): string
     {
-        $name = ucfirst($this->name);
-        $title = "Share this page via $name";
-        $channelTitle = $this->channelDict["title"];
-        if ($channelTitle !== null && $channelTitle !== "") {
-            $title = $channelTitle;
+        $title = $this->channelDict[$this->type]["popup"];
+        if ($title !== null && trim($title) !== "") {
+            return $title;
         }
-        return $title;
+        $name = ucfirst($this->name);
+        switch ($this->type) {
+            case self::TYPE_BUTTON_SHARE:
+                return "Share this page via $name";
+            case self::TYPE_BUTTON_FOLLOW:
+                return "Follow us on $name";
+            default:
+                return "Button type ($this->type) is unknown";
+        }
     }
 
     /**
      * @throws ExceptionCombo
      */
-    public function getStyle(): string
+    public
+    function getStyle(): string
     {
 
         /**
@@ -278,25 +353,28 @@ EOF;
 
     }
 
-    public function getName(): string
+    public
+    function getName(): string
     {
         return $this->name;
     }
 
     /**
-     * The identifier of the {@link SocialChannel::getStyle()} script
+     * The identifier of the {@link SocialButton::getStyle()} script
      * used as script id in the {@link SnippetManager}
      * @return string
      */
-    public function getStyleScriptIdentifier(): string
+    public
+    function getStyleScriptIdentifier(): string
     {
-        return "share-{$this->getName()}-{$this->getWidget()}-{$this->getIcon()}";
+        return "{$this->getType()}-{$this->getName()}-{$this->getWidget()}-{$this->getIcon()}";
     }
 
     /**
-     * @return string - the class identifier used in the {@link SocialChannel::getStyle()} script
+     * @return string - the class identifier used in the {@link SocialButton::getStyle()} script
      */
-    public function getIdentifierClass(): string
+    public
+    function getIdentifierClass(): string
     {
         return "{$this->getStyleScriptIdentifier()}-combo";
     }
@@ -304,11 +382,12 @@ EOF;
     /**
      * @throws ExceptionCombo
      */
-    public function getIconAttributes(): array
+    public
+    function getIconAttributes(): array
     {
 
         $comboResourceScheme = DokuPath::COMBO_RESOURCE_SCHEME;
-        $iconName = "$comboResourceScheme>share:{$this->getName()}:{$this->icon}.svg";
+        $iconName = "$comboResourceScheme>social:{$this->getName()}:{$this->icon}.svg";
         $icon = DokuPath::createResource($iconName);
         if (!FileSystems::exists($icon)) {
             $iconName = $this->channelDict["icons"][$this->icon];
@@ -326,7 +405,8 @@ EOF;
         return $attributes;
     }
 
-    private function getTextColor()
+    private
+    function getTextColor()
     {
 
         switch ($this->widget) {
@@ -343,7 +423,8 @@ EOF;
      * Class added to the link
      * This is just to be boostrap conformance
      */
-    public function getWidgetClass(): string
+    public
+    function getWidgetClass(): string
     {
         if ($this->widget === self::WIDGET_BUTTON_VALUE) {
             return "btn";
@@ -352,17 +433,20 @@ EOF;
     }
 
 
-    public function getWidget(): string
+    public
+    function getWidget(): string
     {
         return $this->widget;
     }
 
-    private function getIcon()
+    private
+    function getIcon()
     {
         return $this->icon;
     }
 
-    private function getDefaultWidth(): int
+    private
+    function getDefaultWidth(): int
     {
         switch ($this->widget) {
             case self::WIDGET_LINK_VALUE:
@@ -373,7 +457,8 @@ EOF;
         }
     }
 
-    private function getWidth(): ?int
+    private
+    function getWidth(): ?int
     {
         if ($this->width === null) {
             return $this->getDefaultWidth();
@@ -381,12 +466,14 @@ EOF;
         return $this->width;
     }
 
-    public function hasIcon(): bool
+    public
+    function hasIcon(): bool
     {
         return $this->icon !== self::ICON_NONE_VALUE;
     }
 
-    public function getTextForPage(Page $requestedPage): ?string
+    public
+    function getTextForPage(Page $requestedPage): ?string
     {
         $text = $requestedPage->getTitleOrDefault();
         $description = $requestedPage->getDescription();
@@ -397,7 +484,8 @@ EOF;
 
     }
 
-    public function getSharedUrlForPage(Page $requestedPage): ?string
+    public
+    function getSharedUrlForPage(Page $requestedPage): ?string
     {
         return $requestedPage->getCanonicalUrl([], true, DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
     }
@@ -406,7 +494,8 @@ EOF;
      * Return the link HTML attributes
      * @throws ExceptionCombo
      */
-    public function getLinkAttributes(Page $requestedPage): TagAttributes
+    public
+    function getLinkAttributes(Page $requestedPage): TagAttributes
     {
 
         $logicalTag = \syntax_plugin_combo_share::TAG;
@@ -456,6 +545,26 @@ EOF;
         }
         return $linkAttributes;
 
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private
+    function checkThatTypeIsSupportedAndGetTemplateUrl()
+    {
+        $urlTemplate = $this->channelDict[$this->type]["web"];
+        if ($urlTemplate === null) {
+            throw new ExceptionCombo("The channel ($this) does not support the $this->type button (The $this->type URL is unknown)");
+        }
+        return $urlTemplate;
+
+    }
+
+    private
+    function getType(): string
+    {
+        return $this->type;
     }
 
 

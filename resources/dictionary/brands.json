@@ -66,6 +66,19 @@
             "secondary": "#5e5e5e"
         }
     },
+    "github": {
+        "doc": "https://github.com/logos",
+        "colors": {
+            "primary": "#000000",
+            "secondary":"#F4CAB1"
+        },
+        "icons": {
+            "solid": "entypo-social:github",
+            "solid-circle": "eva:github-fill",
+            "outline": "eva:github-outline",
+            "outline-circle": "akar-icons:github-outline-fill",
+        }
+    },
     "whatsapp": {
         "share": {
             "web": "https://api.whatsapp.com/send?text=$text%20$url",
@@ -75,6 +88,24 @@
         "colors": {
             "primary": "#25D366",
             "secondary": "#1DA851"
+        }
+    },
+    "instagram": {
+        "follow": {
+            "web":"https://www.instagram.com/$handle/"
+        }
+    },
+    "wikipedia": {
+        "colors": {
+            "primary": "#000000",
+            "secondary": "#939598",
+            "ref": "https://foundation.wikimedia.org/wiki/Visual_identity_guidelines"
+        },
+        "icons": {
+            "solid": "cib:wikipedia",
+            "solid-circle": "flat-color-icons:wikipedia",
+            "outline": "cib:wikipedia",
+            "outline-circle": "cib:wikipedia"
         }
     },
     "hackernews": {
@@ -117,13 +148,33 @@
         "icons": {
             "solid": "bx:bxl-vk",
             "solid-circle": "entypo-social:vk-with-circle",
-            "outline": "simple-line-icons:social-vkontakte"
+            "outline": "simple-line-icons:social-vkontakte",
+            "outline-circle": "simple-line-icons:social-vkontakte"
+        }
+    },
+    "dribbble": {
+        "doc": "https://dribbble.com/branding",
+        "follow": {
+            "web": "https://dribbble.com/$handle"
+        },
+        "icons":{
+            "solid": "ph:dribbble-logo-fill",
+            "solid-circle": "ant-design:dribbble-circle-filled",
+            "outline": "ant-design:dribbble-outlined",
+            "outline-circle": "et:dribbble"
+        },
+        "colors":{
+            "primary": "#EA4C89",
+            "secondary": "#C32361"
         }
     },
     "pinterest": {
         "share": {
             "web": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$text",
             "popup": "Share this page with pinterest"
+        },
+        "follow": {
+            "web": "https://www.pinterest.com/$handle/"
         },
         "colors": {
             "primary": "#bd081c",
@@ -140,6 +191,9 @@
         "share": {
             "web": "https://www.linkedin.com/shareArticle?mini=true&url=$url&source=$url&title=$title&summary=$description",
             "doc": "https://developer.linkedin.com/docs/share-on-linkedin"
+        },
+        "follow": {
+            "web": "https://www.linkedin.com/company/$handle/"
         },
         "colors": {
             "primary": "#0077b5",
@@ -204,6 +258,22 @@
             "solid-circle": "mdi:email-newsletter",
             "outline": "fluent:news-20-regular",
             "outline-circle": "fluent:news-20-regular"
+        }
+    },
+    "youtube": {
+        "follow": {
+            "web": "https://www.youtube.com/channel/$handle"
+        },
+        "doc": "https://www.youtube.com/howyoutubeworks/resources/brand-resources/",
+        "icons": {
+            "solid": "entypo-social:youtube",
+            "solid-circle": "entypo-social:youtube-with-circle",
+            "outline": "ant-design:youtube-outlined",
+            "outline-circle": "ant-design:youtube-outlined"
+        },
+        "colors": {
+            "primary": "#FF0000",
+            "secondary": "#959595"
         }
     }
 }

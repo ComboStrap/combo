@@ -189,7 +189,7 @@ require_once(__DIR__ . '/Skin.php');
 require_once(__DIR__ . '/Slug.php');
 require_once(__DIR__ . '/Snippet.php');
 require_once(__DIR__ . '/SnippetManager.php');
-require_once(__DIR__ . '/SocialButton.php');
+require_once(__DIR__ . '/BrandButton.php');
 require_once(__DIR__ . '/Spacing.php');
 require_once(__DIR__ . '/Sqlite.php');
 require_once(__DIR__ . '/SqliteRequest.php');

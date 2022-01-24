@@ -62,7 +62,10 @@ class Icon extends ImageSvg
         self::FONT_AWESOME_SOLID => "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid",
         self::FONT_AWESOME_BRANDS => "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/brands",
         self::FONT_AWESOME_REGULAR => "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/regular",
-        self::VAADIN => "https://raw.githubusercontent.com/vaadin/vaadin-icons/master/assets/svg"
+        self::VAADIN => "https://raw.githubusercontent.com/vaadin/vaadin-icons/master/assets/svg",
+        self::CORE_UI_BRAND => "https://raw.githubusercontent.com/coreui/coreui-icons/master/svg/brand",
+        self::FLAT_COLOR_ICON => "https://raw.githubusercontent.com/icons8/flat-color-icons/master/svg",
+        self::PHOSPHOR_ICONS => "https://raw.githubusercontent.com/phosphor-icons/phosphor-icons/master/assets"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -91,7 +94,10 @@ class Icon extends ImageSvg
         self::FONT_AWESOME_SOLID => "https://fontawesome.com/",
         self::FONT_AWESOME_BRANDS => "https://fontawesome.com/",
         self::FONT_AWESOME_REGULAR => "https://fontawesome.com/",
-        self::VAADIN => "https://vaadin.com/icons"
+        self::VAADIN => "https://vaadin.com/icons",
+        self::CORE_UI_BRAND => "https://coreui.io/icons/",
+        self::FLAT_COLOR_ICON => "https://icons8.com/icons/color",
+        self::PHOSPHOR_ICONS => "https://phosphoricons.com/"
 
     );
 
@@ -135,7 +141,10 @@ class Icon extends ImageSvg
         "fa-solid" => self::FONT_AWESOME_SOLID,
         "fa-brands" => self::FONT_AWESOME_BRANDS,
         "fa-regular" => self::FONT_AWESOME_REGULAR,
-        "vaadin" => self::VAADIN
+        "vaadin" => self::VAADIN,
+        "cib" => self::CORE_UI_BRAND,
+        "flat-color-icons" => self::FLAT_COLOR_ICON,
+        "ph" => self::PHOSPHOR_ICONS
     );
 
     const FEATHER = "feather";
@@ -166,6 +175,9 @@ class Icon extends ImageSvg
     const FONT_AWESOME_REGULAR = "font-awesome-regular";
     const FONT_AWESOME = "font-awesome";
     const VAADIN = "vaadin";
+    const CORE_UI_BRAND = "cib";
+    const FLAT_COLOR_ICON = "flat-color-icons";
+    const PHOSPHOR_ICONS = "ph";
 
     private $fullQualifiedName;
     /**
@@ -359,11 +371,19 @@ class Icon extends ImageSvg
             case self::ICOMOON:
                 $iconName = self::getPhysicalNameFromDictionary($iconName, self::ICOMOON);
                 break;
+            case self::CORE_UI_BRAND:
+                $iconName = self::getPhysicalNameFromDictionary($iconName, self::CORE_UI_BRAND);
+                break;
             case self::EVA:
                 // Eva
                 // example: eva:facebook-fill
                 [$iconName, $iconType] = self::explodeInTwoPartsByLastPosition($iconName, "-");
                 $iconBaseUrl .= "/$iconType/svg";
+                break;
+            case self::PHOSPHOR_ICONS:
+                // example: activity-light
+                [$iconShortName, $iconType] = self::explodeInTwoPartsByLastPosition($iconName, "-");
+                $iconBaseUrl .= "/$iconType";
                 break;
 
             case self::SIMPLE_LINE:
@@ -374,7 +394,7 @@ class Icon extends ImageSvg
                 break;
             case self::BOX_ICON:
                 [$iconType, $extractedIconName] = self::explodeInTwoPartsByLastPosition($iconName, "-");
-                switch ($iconType){
+                switch ($iconType) {
                     case "bxl":
                         $iconBaseUrl .= "/logos";
                         break;

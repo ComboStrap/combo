@@ -7,7 +7,12 @@ namespace ComboStrap;
 use action_plugin_combo_metatwitter;
 
 /**
- * Class SocialChannel
+ *
+ * Brand button
+ *   * basic
+ *   * share
+ *   * follow
+ *
  * @package ComboStrap
  *
  *
@@ -25,7 +30,7 @@ use action_plugin_combo_metatwitter;
  * Inspired by:
  * http://sharingbuttons.io (Specifically thanks for the data)
  */
-class SocialButton
+class BrandButton
 {
     public const WIDGET_BUTTON_VALUE = "button";
     public const WIDGET_LINK_VALUE = "link";
@@ -75,7 +80,8 @@ class SocialButton
     private $type;
     const TYPE_BUTTON_SHARE = "share";
     const TYPE_BUTTON_FOLLOW = "follow";
-    const TYPE_BUTTONS = [self::TYPE_BUTTON_SHARE, self::TYPE_BUTTON_FOLLOW];
+    const TYPE_BUTTON_BRAND = "brand";
+    const TYPE_BUTTONS = [self::TYPE_BUTTON_SHARE, self::TYPE_BUTTON_FOLLOW, self::TYPE_BUTTON_BRAND];
 
     /**
      * @var string the follow handle
@@ -104,7 +110,7 @@ class SocialButton
          * Get the channels
          */
         if (self::$channelDictionary === null) {
-            self::$channelDictionary = Dictionary::getFrom("social-channels");
+            self::$channelDictionary = Dictionary::getFrom("brands");
         }
 
         /**
@@ -125,7 +131,7 @@ class SocialButton
     /**
      * @throws ExceptionCombo
      */
-    public function setWidget($widget): SocialButton
+    public function setWidget($widget): BrandButton
     {
         /**
          * Widget validation
@@ -141,7 +147,7 @@ class SocialButton
     /**
      * @throws ExceptionCombo
      */
-    public function setIcon($icon): SocialButton
+    public function setIcon($icon): BrandButton
     {
         /**
          * Icon Validation
@@ -154,7 +160,7 @@ class SocialButton
         return $this;
     }
 
-    public function setWidth(?int $width): SocialButton
+    public function setWidth(?int $width): BrandButton
     {
         /**
          * Width
@@ -170,9 +176,9 @@ class SocialButton
         string $channelName,
         string $widget = self::WIDGET_BUTTON_VALUE,
         string $icon = self::ICON_SOLID_VALUE,
-        ?int $width = null): SocialButton
+        ?int $width = null): BrandButton
     {
-        return (new SocialButton($channelName, self::TYPE_BUTTON_SHARE))
+        return (new BrandButton($channelName, self::TYPE_BUTTON_SHARE))
             ->setWidget($widget)
             ->setIcon($icon)
             ->setWidth($width);
@@ -186,9 +192,9 @@ class SocialButton
         string $handle = null,
         string $widget = self::WIDGET_BUTTON_VALUE,
         string $icon = self::ICON_SOLID_VALUE,
-        ?int $width = null): SocialButton
+        ?int $width = null): BrandButton
     {
-        return (new SocialButton($channelName, self::TYPE_BUTTON_FOLLOW))
+        return (new BrandButton($channelName, self::TYPE_BUTTON_FOLLOW))
             ->setHandle($handle)
             ->setWidget($widget)
             ->setIcon($icon)
@@ -368,7 +374,7 @@ EOF;
     }
 
     /**
-     * The identifier of the {@link SocialButton::getStyle()} script
+     * The identifier of the {@link BrandButton::getStyle()} script
      * used as script id in the {@link SnippetManager}
      * @return string
      */
@@ -379,7 +385,7 @@ EOF;
     }
 
     /**
-     * @return string - the class identifier used in the {@link SocialButton::getStyle()} script
+     * @return string - the class identifier used in the {@link BrandButton::getStyle()} script
      */
     public
     function getIdentifierClass(): string
@@ -596,7 +602,7 @@ EOF;
         return $this->type;
     }
 
-    private function setHandle(?string $handle): SocialButton
+    private function setHandle(?string $handle): BrandButton
     {
         $this->handle = $handle;
         return $this;

@@ -1199,6 +1199,7 @@ class Page extends ResourceComboAbs
             $array[$metadataName] = $value;
         }
         $array["url"] = $this->getCanonicalUrl();
+        $array["relativepath"] = str_replace(":","/",substr($array[PagePath::PROPERTY_NAME],1));
         return $array;
 
     }

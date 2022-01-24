@@ -8,7 +8,7 @@ use ComboStrap\Dimension;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\SocialButton;
+use ComboStrap\BrandButton;
 use ComboStrap\TagAttributes;
 
 
@@ -28,14 +28,14 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionCombo
      */
-    private static function createFollowButtonFromAttributes(TagAttributes $shareAttributes): SocialButton
+    private static function createFollowButtonFromAttributes(TagAttributes $shareAttributes): BrandButton
     {
         $channelName = $shareAttributes->getValue(TagAttributes::TYPE_KEY);
-        $widget = $shareAttributes->getValue(self::WIDGET_ATTRIBUTE, SocialButton::WIDGET_BUTTON_VALUE);
-        $icon = $shareAttributes->getValue(self::ICON_ATTRIBUTE, SocialButton::ICON_SOLID_VALUE);
+        $widget = $shareAttributes->getValue(self::WIDGET_ATTRIBUTE, BrandButton::WIDGET_BUTTON_VALUE);
+        $icon = $shareAttributes->getValue(self::ICON_ATTRIBUTE, BrandButton::ICON_SOLID_VALUE);
         $width = $shareAttributes->getValueAsInteger(Dimension::WIDTH_KEY);
         $handle = $shareAttributes->getValue(self::HANDLE_ATTRIBUTE);
-        return SocialButton::createFollowButton($channelName, $handle, $widget, $icon, $width);
+        return BrandButton::createFollowButton($channelName, $handle, $widget, $icon, $width);
     }
 
 
@@ -270,7 +270,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionCombo
      */
-    private function addIconInCallStack(CallStack $callStack, SocialButton $socialChannel)
+    private function addIconInCallStack(CallStack $callStack, BrandButton $socialChannel)
     {
 
         if (!$socialChannel->hasIcon()) {

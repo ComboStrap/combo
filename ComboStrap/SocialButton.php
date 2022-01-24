@@ -183,11 +183,13 @@ class SocialButton
      */
     public static function createFollowButton(
         string $channelName,
+        string $handle = null,
         string $widget = self::WIDGET_BUTTON_VALUE,
         string $icon = self::ICON_SOLID_VALUE,
         ?int $width = null): SocialButton
     {
         return (new SocialButton($channelName, self::TYPE_BUTTON_FOLLOW))
+            ->setHandle($handle)
             ->setWidget($widget)
             ->setIcon($icon)
             ->setWidth($width);
@@ -200,7 +202,7 @@ class SocialButton
      *   * https://github.com/ellisonleao/sharer.js/blob/main/sharer.js#L72
      *   * and
      */
-    public function getChannelEndpointForPage(Page $requestedPage): string
+    public function getChannelEndpointForPage(Page $requestedPage = null): ?string
     {
 
         /**
@@ -210,6 +212,9 @@ class SocialButton
         switch ($this->type) {
 
             case self::TYPE_BUTTON_SHARE:
+                if ($requestedPage === null) {
+                    throw new ExceptionCombo("The page requested should not be null for a share button when requesting the endpoint uri.");
+                }
                 $canonicalUrl = $this->getSharedUrlForPage($requestedPage);
                 $templateData["url"] = $canonicalUrl;
                 $templateData["title"] = $requestedPage->getTitleOrDefault();
@@ -235,6 +240,9 @@ class SocialButton
                 return TemplateUtility::renderStringTemplateFromDataArray($urlTemplate, $templateData);
 
             case self::TYPE_BUTTON_FOLLOW:
+                if ($this->handle === null) {
+                    return null;
+                }
                 $templateData["handle"] = $this->handle;
                 return TemplateUtility::renderStringTemplateFromDataArray($urlTemplate, $templateData);
             default:
@@ -495,55 +503,73 @@ EOF;
      * @throws ExceptionCombo
      */
     public
-    function getLinkAttributes(Page $requestedPage): TagAttributes
+    function getLinkAttributes(Page $requestedPage = null): TagAttributes
     {
 
-        $logicalTag = \syntax_plugin_combo_share::TAG;
+
+        $logicalTag = $this->type;
         $linkAttributes = TagAttributes::createEmpty($logicalTag);
         $linkAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, $logicalTag);
         $linkAttributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "{$this->getWidgetClass()} {$this->getIdentifierClass()}");
-        $linkAttributes->addComponentAttributeValue("rel", "noopener");
-        $linkTitle = $this->getLinkTitle();
-        $linkAttributes->addComponentAttributeValue("title", $linkTitle);
-        $ariaLabel = "Share on " . ucfirst($this->getName());
-        $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
+        switch ($this->type) {
+            case self::TYPE_BUTTON_SHARE:
 
-        switch ($this->getName()) {
-            case "whatsapp":
-                /**
-                 * Direct link
-                 * For whatsapp, the sharer link is not the good one
-                 */
-                $linkAttributes->addComponentAttributeValue("target", "_blank");
-                $linkAttributes->addComponentAttributeValue("href", $this->getChannelEndpointForPage($requestedPage));
-                break;
+                if ($requestedPage === null) {
+                    throw new ExceptionCombo("The page requested should not be null for a share button");
+                }
+
+                $linkAttributes->addComponentAttributeValue("rel", "noopener");
+                $linkTitle = $this->getLinkTitle();
+                $linkAttributes->addComponentAttributeValue("title", $linkTitle);
+                $ariaLabel = "Share on " . ucfirst($this->getName());
+                $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
+
+
+                switch ($this->getName()) {
+                    case "whatsapp":
+                        /**
+                         * Direct link
+                         * For whatsapp, the sharer link is not the good one
+                         */
+                        $linkAttributes->addComponentAttributeValue("target", "_blank");
+                        $linkAttributes->addComponentAttributeValue("href", $this->getChannelEndpointForPage($requestedPage));
+                        break;
+                    default:
+                        /**
+                         * Sharer
+                         * https://ellisonleao.github.io/sharer.js/
+                         */
+                        PluginUtility::getSnippetManager()->attachTagsForSlot("sharer")
+                            ->setTags(
+                                array(
+                                    "script" =>
+                                        [
+                                            array(
+                                                "src" => "https://cdn.jsdelivr.net/npm/sharer.js@0.5.0/sharer.min.js",
+                                                "integrity" => "sha256-AqqY/JJCWPQwZFY/mAhlvxjC5/880Q331aOmargQVLU=",
+                                                "crossorigin" => "anonymous"
+                                            )
+                                        ],
+
+                                ));
+                        $linkAttributes->addComponentAttributeValue("data-sharer", $this->getName()); // the id
+                        $linkAttributes->addComponentAttributeValue("data-link", "false");
+                        $linkAttributes->addComponentAttributeValue("data-title", $this->getTextForPage($requestedPage));
+                        $urlToShare = $this->getSharedUrlForPage($requestedPage);
+                        $linkAttributes->addComponentAttributeValue("data-url", $urlToShare);
+                        //$linkAttributes->addComponentAttributeValue("href", "#"); // with # we style navigate to the top
+                        $linkAttributes->addStyleDeclarationIfNotSet("cursor", "pointer"); // show a pointer (without href, there is none)
+                }
+                return $linkAttributes;
+            case self::TYPE_BUTTON_FOLLOW:
             default:
-                /**
-                 * Sharer
-                 * https://ellisonleao.github.io/sharer.js/
-                 */
-                PluginUtility::getSnippetManager()->attachTagsForSlot("sharer")
-                    ->setTags(
-                        array(
-                            "script" =>
-                                [
-                                    array(
-                                        "src" => "https://cdn.jsdelivr.net/npm/sharer.js@0.5.0/sharer.min.js",
-                                        "integrity" => "sha256-AqqY/JJCWPQwZFY/mAhlvxjC5/880Q331aOmargQVLU=",
-                                        "crossorigin" => "anonymous"
-                                    )
-                                ],
-
-                        ));
-                $linkAttributes->addComponentAttributeValue("data-sharer", $this->getName()); // the id
-                $linkAttributes->addComponentAttributeValue("data-link", "false");
-                $linkAttributes->addComponentAttributeValue("data-title", $this->getTextForPage($requestedPage));
-                $urlToShare = $this->getSharedUrlForPage($requestedPage);
-                $linkAttributes->addComponentAttributeValue("data-url", $urlToShare);
-                //$linkAttributes->addComponentAttributeValue("href", "#"); // with # we style navigate to the top
-                $linkAttributes->addStyleDeclarationIfNotSet("cursor", "pointer"); // show a pointer (without href, there is none)
+                $linkAttributes->addComponentAttributeValue("target", "_blank");
+                $href = $this->getChannelEndpointForPage();
+                if($href!==null) {
+                    $linkAttributes->addComponentAttributeValue("href", $href);
+                }
+                return $linkAttributes;
         }
-        return $linkAttributes;
 
     }
 
@@ -565,6 +591,12 @@ EOF;
     function getType(): string
     {
         return $this->type;
+    }
+
+    private function setHandle(?string $handle): SocialButton
+    {
+        $this->handle = $handle;
+        return $this;
     }
 
 

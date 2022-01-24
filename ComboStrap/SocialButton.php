@@ -511,6 +511,9 @@ EOF;
         $linkAttributes = TagAttributes::createEmpty($logicalTag);
         $linkAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, $logicalTag);
         $linkAttributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "{$this->getWidgetClass()} {$this->getIdentifierClass()}");
+        $linkTitle = $this->getLinkTitle();
+        $linkAttributes->addComponentAttributeValue("title", $linkTitle);
+        $linkAttributes->addComponentAttributeValue("rel", "noopener");
         switch ($this->type) {
             case self::TYPE_BUTTON_SHARE:
 
@@ -518,9 +521,6 @@ EOF;
                     throw new ExceptionCombo("The page requested should not be null for a share button");
                 }
 
-                $linkAttributes->addComponentAttributeValue("rel", "noopener");
-                $linkTitle = $this->getLinkTitle();
-                $linkAttributes->addComponentAttributeValue("title", $linkTitle);
                 $ariaLabel = "Share on " . ucfirst($this->getName());
                 $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
 
@@ -563,9 +563,12 @@ EOF;
                 return $linkAttributes;
             case self::TYPE_BUTTON_FOLLOW:
             default:
+
+                $ariaLabel = "Follow us on " . ucfirst($this->getName());
+                $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
                 $linkAttributes->addComponentAttributeValue("target", "_blank");
                 $href = $this->getChannelEndpointForPage();
-                if($href!==null) {
+                if ($href !== null) {
                     $linkAttributes->addComponentAttributeValue("href", $href);
                 }
                 return $linkAttributes;

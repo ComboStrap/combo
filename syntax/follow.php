@@ -2,15 +2,11 @@
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
-use ComboStrap\ArrayUtility;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionCombo;
-use ComboStrap\MarkupRef;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
-use ComboStrap\PageScope;
 use ComboStrap\PluginUtility;
 use ComboStrap\SocialButton;
 use ComboStrap\TagAttributes;
@@ -152,7 +148,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                         $returnArray[PluginUtility::EXIT_MESSAGE] = "The social button does not have any follow url. You need to set at minimum the `$handleAttribute` or `$urlAttribute` attribute";
                         return $returnArray;
                     }
-                    $this->openLinkInCallStack($callStack, $linkAttributes);
+                    syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $linkAttributes);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "The social button creation returns an error when creating the link ({$e->getMessage()}";
@@ -259,27 +255,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
         return false;
     }
 
-    /**
-     * @param CallStack $callStack
-     * @param TagAttributes $tagAttributes
-     */
-    private function openLinkInCallStack(CallStack $callStack, TagAttributes $tagAttributes)
-    {
-        $parent = $callStack->moveToParent();
-        $context = "";
-        $attributes = $tagAttributes->toCallStackArray();
-        if ($parent != null) {
-            $context = $parent->getTagName();
-            $attributes = ArrayUtility::mergeByValue($parent->getAttributes(), $attributes);
-        }
-        $callStack->appendCallAtTheEnd(
-            Call::createComboCall(
-                syntax_plugin_combo_link::TAG,
-                DOKU_LEXER_ENTER,
-                $attributes,
-                $context
-            ));
-    }
+
 
 
     private function closeLinkInCallStack(CallStack $callStack)

@@ -157,7 +157,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 /**
                  * Add the link
                  */
-                $this->openLinkInCallStack($callStack, $linkAttributes);
+                syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $linkAttributes);
                 try {
                     $this->addIconInCallStack($callStack, $socialChannel);
                 } catch (ExceptionCombo $e) {
@@ -255,27 +255,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
         return false;
     }
 
-    /**
-     * @param CallStack $callStack
-     * @param TagAttributes $tagAttributes
-     */
-    private function openLinkInCallStack(CallStack $callStack, TagAttributes $tagAttributes)
-    {
-        $parent = $callStack->moveToParent();
-        $context = "";
-        $attributes = $tagAttributes->toCallStackArray();
-        if ($parent != null) {
-            $context = $parent->getTagName();
-            $attributes = ArrayUtility::mergeByValue($parent->getAttributes(), $attributes);
-        }
-        $callStack->appendCallAtTheEnd(
-            Call::createComboCall(
-                syntax_plugin_combo_link::TAG,
-                DOKU_LEXER_ENTER,
-                $attributes,
-                $context
-            ));
-    }
+
 
 
     private function closeLinkInCallStack(CallStack $callStack)

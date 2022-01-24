@@ -151,7 +151,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                             $url .= "#$fragment";
                         }
                         $attributes->addComponentAttributeValue(syntax_plugin_combo_link::ATTRIBUTE_HREF, $url);
-                        $this->openLinkInCallStack($callStack, $attributes);
+                        syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $attributes);
                         if ($state === DOKU_LEXER_SPECIAL) {
                             $this->addLinkContentInCallStack($callStack, $url);
                             $this->closeLinkInCallStack($callStack);
@@ -174,7 +174,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                             $canonicalUrl .= "#$fragment";
                         }
                         $attributes->addComponentAttributeValue(syntax_plugin_combo_link::ATTRIBUTE_HREF, $canonicalUrl);
-                        $this->openLinkInCallStack($callStack, $attributes);
+                        syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $attributes);
                         if ($state === DOKU_LEXER_SPECIAL) {
                             $this->addLinkContentInCallStack($callStack, $canonicalUrl);
                             $this->closeLinkInCallStack($callStack);
@@ -245,27 +245,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
         return false;
     }
 
-    /**
-     * @param CallStack $callStack
-     * @param TagAttributes $tagAttributes
-     */
-    private function openLinkInCallStack(CallStack $callStack, TagAttributes $tagAttributes)
-    {
-        $parent = $callStack->moveToParent();
-        $context = "";
-        $attributes = $tagAttributes->toCallStackArray();
-        if ($parent != null) {
-            $context = $parent->getTagName();
-            $attributes = ArrayUtility::mergeByValue($parent->getAttributes(), $attributes);
-        }
-        $callStack->appendCallAtTheEnd(
-            Call::createComboCall(
-                syntax_plugin_combo_link::TAG,
-                DOKU_LEXER_ENTER,
-                $attributes,
-                $context
-            ));
-    }
+
 
     private function addLinkContentInCallStack(CallStack $callStack, string $url)
     {

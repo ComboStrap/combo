@@ -4,6 +4,8 @@
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 use ComboStrap\AnalyticsDocument;
+use ComboStrap\ArrayUtility;
+use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\MarkupRef;
@@ -81,6 +83,8 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      * Found in {@link \dokuwiki\Parsing\ParserMode\Internallink}
      */
     const SPECIAL_PATTERN = "\[\[.*?\]\](?!\])";
+
+
 
 
     /**
@@ -668,5 +672,31 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     }
 
 
+
+    /**
+     * Utility function to add a link into the callstack
+     * @param CallStack $callStack
+     * @param TagAttributes $tagAttributes
+     */
+    public static function addOpenLinkTagInCallStack(CallStack $callStack, TagAttributes $tagAttributes)
+    {
+        $parent = $callStack->moveToParent();
+        $context = "";
+        $attributes = $tagAttributes->toCallStackArray();
+        if ($parent != null) {
+            $context = $parent->getTagName();
+            $parentAttributes = $parent->getAttributes();
+            if($parentAttributes!==null) {
+                $attributes = ArrayUtility::mergeByValue($parentAttributes, $attributes);
+            }
+        }
+        $callStack->appendCallAtTheEnd(
+            Call::createComboCall(
+                syntax_plugin_combo_link::TAG,
+                DOKU_LEXER_ENTER,
+                $attributes,
+                $context
+            ));
+    }
 }
 

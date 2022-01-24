@@ -150,7 +150,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                         if ($fragment != null) {
                             $url .= "#$fragment";
                         }
-                        $attributes->addComponentAttributeValue(syntax_plugin_combo_link::ATTRIBUTE_REF, $url);
+                        $attributes->addComponentAttributeValue(syntax_plugin_combo_link::ATTRIBUTE_HREF, $url);
                         $this->openLinkInCallStack($callStack, $attributes);
                         if ($state === DOKU_LEXER_SPECIAL) {
                             $this->addLinkContentInCallStack($callStack, $url);
@@ -173,7 +173,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                         if ($fragment !== null) {
                             $canonicalUrl .= "#$fragment";
                         }
-                        $attributes->addComponentAttributeValue(syntax_plugin_combo_link::ATTRIBUTE_REF, $canonicalUrl);
+                        $attributes->addComponentAttributeValue(syntax_plugin_combo_link::ATTRIBUTE_HREF, $canonicalUrl);
                         $this->openLinkInCallStack($callStack, $attributes);
                         if ($state === DOKU_LEXER_SPECIAL) {
                             $this->addLinkContentInCallStack($callStack, $canonicalUrl);

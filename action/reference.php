@@ -88,7 +88,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
                 $actualCall->getTagName() === syntax_plugin_combo_link::TAG
                 && $actualCall->getState() === DOKU_LEXER_ENTER
             ) {
-                $ref = $actualCall->getPluginData(syntax_plugin_combo_link::ATTRIBUTE_REF);
+                $ref = $actualCall->getPluginData(syntax_plugin_combo_link::ATTRIBUTE_HREF);
                 if ($ref === null) {
                     /**
                      * The reference data is null for this link, it may be an external

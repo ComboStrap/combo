@@ -211,7 +211,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
          *
          */
         if ($state == DOKU_LEXER_ENTER) {
-            $ref = syntax_plugin_combo_link::parse($match)[syntax_plugin_combo_link::ATTRIBUTE_REF];
+            $ref = syntax_plugin_combo_link::parse($match)[syntax_plugin_combo_link::ATTRIBUTE_HREF];
             $link = new MarkupRef($ref);
             if ($link->getUriType() == MarkupRef::WIKI_URI) {
 

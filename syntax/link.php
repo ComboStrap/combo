@@ -48,10 +48,16 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     /**
      * The key of the array for the handle cache
      */
-    public const ATTRIBUTE_REF = 'ref';
-    const ATTRIBUTE_REF_TYPE = "ref-type";
-    const ATTRIBUTE_DOKUWIKI_ID = "ref-internal-id";
+    public const ATTRIBUTE_HREF = 'href';
+    /**
+     * Indicate if the href is a {@link MarkupRef}
+     * (ie comes from parsing the document or was added by a third
+     * component such as {@link syntax_plugin_combo_share}
+     */
+    const ATTRIBUTE_HREF_SOURCE = "href-source";
+    const HREF_SOURCE_MARKUP_VALUE = "markup";
     public const ATTRIBUTE_IMAGE_IN_LABEL = 'image-in-label';
+
     /**
      * A link may have a title or not
      * ie
@@ -75,6 +81,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      */
     const SPECIAL_PATTERN = "\[\[.*?\]\](?!\])";
 
+
     /**
      * Parse the match of a syntax {@link DokuWiki_Syntax_Plugin} handle function
      * @param $match
@@ -92,7 +99,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
         $linkArray = explode('|', $linkString, 2);
 
         // Id
-        $attributes[self::ATTRIBUTE_REF] = trim($linkArray[0]);
+        $attributes[self::ATTRIBUTE_HREF] = trim($linkArray[0]);
 
 
         // Text or image
@@ -239,40 +246,19 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
 
-
         switch ($state) {
             case DOKU_LEXER_ENTER:
                 $parsedArray = self::parse($match);
-                $ref = $parsedArray[self::ATTRIBUTE_REF];
-                $label = $parsedArray[self::ATTRIBUTE_LABEL];
-                $imageInTitle = $parsedArray[self::ATTRIBUTE_IMAGE_IN_LABEL];
-
-                $returnedArray = array(
-                    PluginUtility::STATE => $state,
-                    self::ATTRIBUTE_REF => $ref
-                );
-
                 /**
-                 * Markup Ref to HTML
+                 * Href needs to be passed to the
+                 * instructions stack (because we support)
+                 * dynamic href with {@link syntax_plugin_combo_template}
                  */
-                $markupRef = MarkupRef::createFromRef($ref);
-                try {
-                    $htmlAttributes = $markupRef->toAttributes(self::TAG);
-                } catch (ExceptionCombo $e) {
-                    $message = "Error while parsing the link markup ref ($markupRef). Message: {$e->getMessage()}";
-                    LogUtility::msg($message);
-                    $returnedArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnedArray[PluginUtility::EXIT_MESSAGE] = 1;
-                    return $returnedArray;
-                }
+                $href = $parsedArray[self::ATTRIBUTE_HREF];
+                $htmlAttributes = TagAttributes::createEmpty(self::TAG)
+                    ->addComponentAttributeValue(self::ATTRIBUTE_HREF, $href)
+                    ->addComponentAttributeValue(self::ATTRIBUTE_HREF_SOURCE, self::HREF_SOURCE_MARKUP_VALUE);
 
-                /**
-                 * Metadata
-                 */
-                $returnedArray[self::ATTRIBUTE_REF_TYPE] = $markupRef->getUriType();
-                if ($markupRef->getUriType() === MarkupRef::WIKI_URI) {
-                    $returnedArray[self::ATTRIBUTE_DOKUWIKI_ID] = $markupRef->getInternalPage()->getDokuwikiId();
-                }
 
                 /**
                  * Extra HTML attribute
@@ -313,9 +299,10 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     }
 
                 }
+                $returnedArray[PluginUtility::STATE] = $state;
                 $returnedArray[PluginUtility::ATTRIBUTES] = $htmlAttributes->toCallStackArray();
                 $returnedArray[PluginUtility::CONTEXT] = $parentName;
-                return  $returnedArray;
+                return $returnedArray;
 
             case DOKU_LEXER_UNMATCHED:
 
@@ -344,18 +331,23 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $previousCallPosition = $previousCall->getKey();
                 $previousCallContent = $previousCall->getCapturedContent();
 
+                /**
+                 * Link label
+                 * is set if there is no content
+                 * between enter and exit node
+                 */
+                $linkLabel = "";
                 if (
                     $openingPosition == $previousCallPosition // ie [[id]]
                     ||
                     ($openingPosition == $previousCallPosition - 1 && $previousCallContent == "|") // ie [[id|]]
                 ) {
                     // There is no name
-                    $pluginData = $openingTag->getPluginData();
-                    $ref = $pluginData[self::ATTRIBUTE_REF];
-                    $markup = MarkupRef::createFromRef($ref);
-                    $linkLabel = $markup->getName();
-                } else {
-                    $linkLabel = "";
+                    $href = $openingTag->getAttribute(self::ATTRIBUTE_HREF);
+                    if ($href !== null) {
+                        $markup = MarkupRef::createFromRef($href);
+                        $linkLabel = $markup->getName();
+                    }
                 }
                 return array(
                     PluginUtility::STATE => $state,
@@ -401,6 +393,27 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 switch ($state) {
                     case DOKU_LEXER_ENTER:
                         $tagAttributes = TagAttributes::createFromCallStackArray($callStackAttributes, self::TAG);
+
+                        $href = $tagAttributes->getValue(self::ATTRIBUTE_HREF);
+
+                        /**
+                         * HrefMarkup ?
+                         */
+                        $hrefSource = $tagAttributes->getValueAndRemoveIfPresent(self::ATTRIBUTE_HREF_SOURCE);
+                        if ($hrefSource !== null) {
+                            try {
+                                $markupRef = MarkupRef::createFromRef($href);
+                                $url = $markupRef->getUrl();
+                                $markupRefAttributes = $markupRef->toAttributes();
+                            } catch (ExceptionCombo $e) {
+                                $message = "Error while parsing the markup href ($href). Error: {$e->getMessage()}";
+                                $renderer->doc .= "<a>." . LogUtility::wrapInRedForHtml($message);
+                                return false;
+                            }
+                            $tagAttributes->mergeWithCallStackArray($markupRefAttributes->toCallStackArray());
+                            $tagAttributes->setComponentAttributeValue(self::ATTRIBUTE_HREF, $url);
+
+                        }
 
                         /**
                          * Extra styling
@@ -477,45 +490,48 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                      * Keep track of the backlinks ie meta['relation']['references']
                      * @var Doku_Renderer_metadata $renderer
                      */
-                    $markupRef = $data[self::ATTRIBUTE_REF];
-                    if($markupRef===null){
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $hrefSource = $tagAttributes->getValue(self::ATTRIBUTE_HREF_SOURCE);
+                    if ($hrefSource === null || $hrefSource !== self::HREF_SOURCE_MARKUP_VALUE) {
                         /**
                          * This is not a markup link
                          * (ie an external link created by a plugin {@link syntax_plugin_combo_share})
                          */
                         return false;
                     }
-                    $type = $data[self::ATTRIBUTE_REF_TYPE];
-                    $name = $data[self::ATTRIBUTE_LABEL];
+                    $href = $tagAttributes->getValue(self::ATTRIBUTE_HREF);
+                    $type = MarkupRef::createFromRef($href)
+                        ->getUriType();
+                    $name = $tagAttributes->getValue(self::ATTRIBUTE_LABEL);
 
                     switch ($type) {
                         case MarkupRef::WIKI_URI:
                             /**
                              * The relative link should be passed (ie the original)
                              */
-                            $renderer->internallink($markupRef);
+                            $renderer->internallink($href);
                             break;
                         case MarkupRef::STANDARD_URI:
-                            $renderer->externallink($markupRef, $name);
+                            $renderer->externallink($href, $name);
                             break;
                         case MarkupRef::LOCAL_URI:
-                            $renderer->locallink($markupRef, $name);
+                            $renderer->locallink($href, $name);
                             break;
                         case MarkupRef::EMAIL_URI:
-                            $renderer->emaillink($markupRef, $name);
+                            $renderer->emaillink($href, $name);
                             break;
                         case MarkupRef::INTERWIKI_URI:
-                            $interWikiSplit = preg_split("/>/", $markupRef);
-                            $renderer->interwikilink($markupRef, $name, $interWikiSplit[0], $interWikiSplit[1]);
+                            $interWikiSplit = preg_split("/>/", $href);
+                            $renderer->interwikilink($href, $name, $interWikiSplit[0], $interWikiSplit[1]);
                             break;
                         case MarkupRef::WINDOWS_SHARE_URI:
-                            $renderer->windowssharelink($markupRef, $name);
+                            $renderer->windowssharelink($href, $name);
                             break;
                         case MarkupRef::VARIABLE_URI:
                             // No backlinks for link template
                             break;
                         default:
-                            LogUtility::msg("The markup reference ({$markupRef}) with the type $type was not processed into the metadata");
+                            LogUtility::msg("The markup reference ({$href}) with the type $type was not processed into the metadata");
                     }
 
                     return true;
@@ -530,8 +546,17 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                      *
                      * @var renderer_plugin_combo_analytics $renderer
                      */
-                    $ref = $data[self::ATTRIBUTE_REF];
-                    $refType = $data[self::ATTRIBUTE_REF_TYPE];
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $refSource = $tagAttributes->getValue(self::ATTRIBUTE_HREF_SOURCE);
+                    if ($refSource === null || $refSource !== self::HREF_SOURCE_MARKUP_VALUE) {
+                        /**
+                         * Link added programmatically
+                         */
+                        return false;
+                    }
+                    $ref = $tagAttributes->getValue(self::ATTRIBUTE_HREF);
+                    $href = MarkupRef::createFromRef($ref);
+                    $refType = $href->getUriType();
 
 
                     /**
@@ -556,17 +581,18 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             /**
                              * Broken link ?
                              */
-                            $id = $data[self::ATTRIBUTE_DOKUWIKI_ID];;
-                            $linkedPage = Page::createPageFromId($id);
+
+                            $linkedPage = $href->getInternalPage();
                             if (!$linkedPage->exists()) {
                                 $stats[AnalyticsDocument::INTERNAL_LINK_BROKEN_COUNT]++;
-                                $stats[AnalyticsDocument::INFO][] = "The internal link `{$id}` does not exist";
+                                $stats[AnalyticsDocument::INFO][] = "The internal linked page `{$href->getInternalPage()}` does not exist";
                             }
 
                             /**
                              * Calculate link distance
                              */
                             global $ID;
+                            $id = $href->getInternalPage()->getDokuwikiId();
                             $a = explode(':', getNS($ID));
                             $b = explode(':', getNS($id));
                             while (isset($a[0]) && $a[0] == $b[0]) {

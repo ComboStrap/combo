@@ -66,8 +66,7 @@ class TagAttributes
         SvgDocument::PRESERVE_ATTRIBUTE,
         \syntax_plugin_combo_link::CLICKABLE_ATTRIBUTE,
         MarkupRef::PREVIEW_ATTRIBUTE,
-        \syntax_plugin_combo_link::ATTRIBUTE_REF,
-        \syntax_plugin_combo_link::ATTRIBUTE_REF_TYPE,
+        \syntax_plugin_combo_link::ATTRIBUTE_HREF_SOURCE,
     ];
 
     /**
@@ -371,6 +370,7 @@ class TagAttributes
      * Add an attribute with its value if the value is not empty
      * @param $attributeName
      * @param $attributeValue
+     * @return TagAttributes
      */
     public function addComponentAttributeValue($attributeName, $attributeValue)
     {
@@ -979,8 +979,12 @@ class TagAttributes
     function mergeWithCallStackArray($callStackArray)
     {
         foreach ($callStackArray as $key => $value) {
+
             if ($this->hasComponentAttribute($key)) {
-                $this->addComponentAttributeValue($key, $value);
+                $isMultipleAttributeValue = in_array($key, self::MULTIPLE_VALUES_ATTRIBUTES);
+                if($isMultipleAttributeValue) {
+                    $this->addComponentAttributeValue($key, $value);
+                }
             } else {
                 $this->setComponentAttributeValue($key, $value);
             }

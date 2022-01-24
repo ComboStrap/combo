@@ -345,11 +345,10 @@ EOF;
      */
     public function getWidgetClass(): string
     {
-        $class = "link-share";
         if ($this->widget === self::WIDGET_BUTTON_VALUE) {
-            $class .= " btn";
+            return "btn";
         }
-        return $class;
+        return "";
     }
 
 
@@ -450,7 +449,8 @@ EOF;
                 $linkAttributes->addComponentAttributeValue("data-sharer", $this->getName()); // the id
                 $linkAttributes->addComponentAttributeValue("data-link", "false");
                 $linkAttributes->addComponentAttributeValue("data-title", $this->getTextForPage($requestedPage));
-                $linkAttributes->addComponentAttributeValue("data-url", $this->getSharedUrlForPage($requestedPage));
+                $urlToShare = $this->getSharedUrlForPage($requestedPage);
+                $linkAttributes->addComponentAttributeValue("data-url", $urlToShare);
                 //$linkAttributes->addComponentAttributeValue("href", "#"); // with # we style navigate to the top
                 $linkAttributes->addStyleDeclarationIfNotSet("cursor", "pointer"); // show a pointer (without href, there is none)
         }

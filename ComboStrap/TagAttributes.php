@@ -66,7 +66,7 @@ class TagAttributes
         SvgDocument::PRESERVE_ATTRIBUTE,
         \syntax_plugin_combo_link::CLICKABLE_ATTRIBUTE,
         MarkupRef::PREVIEW_ATTRIBUTE,
-        \syntax_plugin_combo_link::ATTRIBUTE_HREF_SOURCE,
+        \syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE,
     ];
 
     /**

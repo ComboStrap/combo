@@ -391,7 +391,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         $templatePageInstructions[] = Call::createComboCall(
                             syntax_plugin_combo_link::TAG,
                             DOKU_LEXER_ENTER,
-                            [syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path"],
+                            [
+                                syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path",
+                                syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE => syntax_plugin_combo_link::HREF_MARKUP_TYPE_VALUE
+                            ],
                             syntax_plugin_combo_pageexplorerpage::TAG,
                             "[[\$path"
                         )->addClassName($componentClassPrefix . "-page-combo");
@@ -405,7 +408,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         $templatePageInstructions[] = Call::createComboCall(
                             syntax_plugin_combo_link::TAG,
                             DOKU_LEXER_EXIT,
-                            [syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path"],
+                            [
+                                syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path",
+                                syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE => syntax_plugin_combo_link::HREF_MARKUP_TYPE_VALUE
+                            ],
                             syntax_plugin_combo_pageexplorerpage::TAG,
                             "]]"
                         );
@@ -497,7 +503,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
                                     DOKU_LEXER_ENTER,
-                                    [syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path"],
+                                    [
+                                        syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path",
+                                        syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE => syntax_plugin_combo_link::HREF_MARKUP_TYPE_VALUE
+                                    ],
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "[[\$path"
                                 )->addClassName($componentClassPrefix . "-parent-combo");
@@ -534,7 +543,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
                                     DOKU_LEXER_EXIT,
-                                    [syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path"],
+                                    [
+                                        syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path",
+                                        syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE => syntax_plugin_combo_link::HREF_MARKUP_TYPE_VALUE
+                                    ],
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "]]"
                                 );
@@ -578,7 +590,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 $templateNamespaceInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
                                     DOKU_LEXER_ENTER,
-                                    [syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path"],
+                                    [
+                                        syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path",
+                                        syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE => syntax_plugin_combo_link::HREF_MARKUP_TYPE_VALUE
+                                    ],
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "[[\$path"
                                 )->addClassName($componentClassPrefix . "-namespace-combo");
@@ -614,7 +629,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 $templateNamespaceInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
                                     DOKU_LEXER_EXIT,
-                                    [syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path"],
+                                    [
+                                        syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path",
+                                        syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE => syntax_plugin_combo_link::HREF_MARKUP_TYPE_VALUE
+                                    ],
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "]]"
                                 );

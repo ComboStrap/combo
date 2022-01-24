@@ -206,7 +206,10 @@ class Page extends ResourceComboAbs
         if ($this->isSlot()) {
 
             /**
-             * TODO: Not sure if this is needed anymore, technically only the {@link HtmlDocument output} should be concern, not the page
+             * Used when we want to remove the cache of slots for a requested page
+             * (ie {@link Cache::removeSideSlotCache()})
+             *
+             * The $absolutePath is the logical path and may not exists
              *
              * Find the first physical file
              * Don't use ACL otherwise the ACL protection event 'AUTH_ACL_CHECK' will kick in
@@ -216,7 +219,6 @@ class Page extends ResourceComboAbs
             $useAcl = false;
             $id = page_findnearest($this->dokuPath->getLastNameWithoutExtension(), $useAcl);
             if ($id !== false && $id !== $this->dokuPath->getDokuwikiId()) {
-                LogUtility::msg("What the heck ($id, {$this->dokuPath->getDokuwikiId()})");
                 $absolutePath = DokuPath::PATH_SEPARATOR . $id;
                 $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath);
             }

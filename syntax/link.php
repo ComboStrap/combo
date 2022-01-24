@@ -51,11 +51,12 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     public const ATTRIBUTE_HREF = 'href';
     /**
      * Indicate if the href is a {@link MarkupRef}
-     * (ie comes from parsing the document or was added by a third
-     * component such as {@link syntax_plugin_combo_share}
+     * (ie the syntax from the markup document)
+     * or is a html href added by {@link syntax_plugin_combo_share}
+     * for instance
      */
-    const ATTRIBUTE_HREF_SOURCE = "href-source";
-    const HREF_SOURCE_MARKUP_VALUE = "markup";
+    const ATTRIBUTE_HREF_TYPE = "href-type";
+    const HREF_MARKUP_TYPE_VALUE = "markup";
     public const ATTRIBUTE_IMAGE_IN_LABEL = 'image-in-label';
 
     /**
@@ -257,7 +258,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $href = $parsedArray[self::ATTRIBUTE_HREF];
                 $htmlAttributes = TagAttributes::createEmpty(self::TAG)
                     ->addComponentAttributeValue(self::ATTRIBUTE_HREF, $href)
-                    ->addComponentAttributeValue(self::ATTRIBUTE_HREF_SOURCE, self::HREF_SOURCE_MARKUP_VALUE);
+                    ->addComponentAttributeValue(self::ATTRIBUTE_HREF_TYPE, self::HREF_MARKUP_TYPE_VALUE);
 
 
                 /**
@@ -399,7 +400,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         /**
                          * HrefMarkup ?
                          */
-                        $hrefSource = $tagAttributes->getValueAndRemoveIfPresent(self::ATTRIBUTE_HREF_SOURCE);
+                        $hrefSource = $tagAttributes->getValueAndRemoveIfPresent(self::ATTRIBUTE_HREF_TYPE);
                         if ($hrefSource !== null) {
                             try {
                                 $markupRef = MarkupRef::createFromRef($href);
@@ -491,8 +492,8 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                      * @var Doku_Renderer_metadata $renderer
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $hrefSource = $tagAttributes->getValue(self::ATTRIBUTE_HREF_SOURCE);
-                    if ($hrefSource === null || $hrefSource !== self::HREF_SOURCE_MARKUP_VALUE) {
+                    $hrefSource = $tagAttributes->getValue(self::ATTRIBUTE_HREF_TYPE);
+                    if ($hrefSource === null || $hrefSource !== self::HREF_MARKUP_TYPE_VALUE) {
                         /**
                          * This is not a markup link
                          * (ie an external link created by a plugin {@link syntax_plugin_combo_share})
@@ -547,8 +548,8 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                      * @var renderer_plugin_combo_analytics $renderer
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $refSource = $tagAttributes->getValue(self::ATTRIBUTE_HREF_SOURCE);
-                    if ($refSource === null || $refSource !== self::HREF_SOURCE_MARKUP_VALUE) {
+                    $refSource = $tagAttributes->getValue(self::ATTRIBUTE_HREF_TYPE);
+                    if ($refSource === null || $refSource !== self::HREF_MARKUP_TYPE_VALUE) {
                         /**
                          * Link added programmatically
                          */

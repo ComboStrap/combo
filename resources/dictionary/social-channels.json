@@ -197,5 +197,13 @@
             "outline": "iconoir:pocket",
             "outline-circle": "iconoir:pocket"
         }
+    },
+    "newsletter": {
+        "icons": {
+            "solid": "mdi:email-newsletter",
+            "solid-circle": "mdi:email-newsletter",
+            "outline": "fluent:news-20-regular",
+            "outline-circle": "fluent:news-20-regular"
+        }
     }
 }

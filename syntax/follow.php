@@ -141,9 +141,16 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                  */
                 try {
                     $linkAttributes = $socialButton->getLinkAttributes();
-                    $url = $shareAttributes->getValue(self::URL_ATTRIBUTE);
+                    $urlAttribute = self::URL_ATTRIBUTE;
+                    $url = $shareAttributes->getValue($urlAttribute);
                     if ($url !== null) {
                         $linkAttributes->addHtmlAttributeValue("href", $url);
+                    }
+                    if(!$linkAttributes->hasAttribute("href")){
+                        $returnArray[PluginUtility::EXIT_CODE] = 1;
+                        $handleAttribute = self::HANDLE_ATTRIBUTE;
+                        $returnArray[PluginUtility::EXIT_MESSAGE] = "The social button does not have any follow url. You need to set at minimum the `$handleAttribute` or `$urlAttribute` attribute";
+                        return $returnArray;
                     }
                     $this->openLinkInCallStack($callStack, $linkAttributes);
                 } catch (ExceptionCombo $e) {

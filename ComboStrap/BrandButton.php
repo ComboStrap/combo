@@ -83,6 +83,12 @@ class BrandButton
     const TYPE_BUTTON_BRAND = "brand";
     const TYPE_BUTTONS = [self::TYPE_BUTTON_SHARE, self::TYPE_BUTTON_FOLLOW, self::TYPE_BUTTON_BRAND];
 
+    const BRAND_ABBREVIATIONS_MAPPING =
+        ["hn" => "hackernews",
+            "mail" => "email"
+        ];
+
+
     /**
      * @var string the follow handle
      */
@@ -98,20 +104,15 @@ class BrandButton
         string $typeButton)
     {
         $this->name = strtolower($channelName);
-        switch ($this->name) {
-            case "hn":
-                $this->name = "hackernews";
-                break;
-            case "mail":
-                $this->name = "email";
-                break;
+        if (isset(self::BRAND_ABBREVIATIONS_MAPPING[$this->name])) {
+            $this->name = self::BRAND_ABBREVIATIONS_MAPPING[$this->name];
         }
+
         /**
          * Get the channels
          */
-        if (self::$channelDictionary === null) {
-            self::$channelDictionary = Dictionary::getFrom("brands");
-        }
+        self::$channelDictionary = self::getChannelDictionary();
+
 
         /**
          * Get the data for the channel
@@ -126,6 +127,28 @@ class BrandButton
             throw new ExceptionCombo("The button type ($this->type} is unknown.");
         }
 
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function getBrandNames()
+    {
+        self::$channelDictionary = self::getChannelDictionary();
+        $brandDict = array_keys(self::$channelDictionary);
+        $brandAbbreviations = array_keys(self::BRAND_ABBREVIATIONS_MAPPING);
+        return array_merge($brandDict,$brandAbbreviations);
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private static function getChannelDictionary()
+    {
+        if (self::$channelDictionary === null) {
+            self::$channelDictionary = Dictionary::getFrom("brands");
+        }
+        return self::$channelDictionary;
     }
 
     /**

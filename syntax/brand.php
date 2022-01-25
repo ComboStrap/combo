@@ -2,7 +2,12 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\BrandButton;
+use ComboStrap\CallStack;
+use ComboStrap\ExceptionCombo;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
@@ -12,6 +17,12 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "brand";
+    const CANONICAL = self::TAG;
+
+    /**
+     * The brand of the current application/website
+     */
+    const CURRENT_BRAND = "current";
 
     /**
      * Syntax Type.
@@ -88,17 +99,34 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $defaultParameters = [];
-                global $conf;
-                $title = $conf['title'];
-                if (!empty($title)) {
-                    $defaultParameters["title"] = $title;
+
+                $defaultParameters["title"] = Site::getTitle();
+                try {
+                    $knownTypes = BrandButton::getBrandNames();
+                    $knownTypes[] = self::CURRENT_BRAND;
+                } catch (ExceptionCombo $e) {
+                    LogUtility::msg("Error while retrieving the brand names", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    /**
+                     * null means no type verification during the {@link TagAttributes::createFromTagMatch()}
+                     * parsing
+                     */
+                    $knownTypes = null;
                 }
-                $parameters = PluginUtility::getTagAttributes($match);
-                $parameters = PluginUtility::mergeAttributes($parameters, $defaultParameters);
+                $parameters = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes);
+
+                /**
+                 * Context
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+                $parent = $callStack->moveToParent();
+                $context = null;
+                if ($parent !== null) {
+                    $context = $parent->getTagName();
+                }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $parameters
+                    PluginUtility::ATTRIBUTES => $parameters,
+                    PluginUtility::CONTEXT => $context
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -127,7 +155,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {
@@ -138,9 +166,20 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
                     $parameters = $data[PluginUtility::ATTRIBUTES];
                     $tagAttributes = TagAttributes::createFromCallStackArray($parameters);
-                    $tagAttributes->addHtmlAttributeValue("href", wl());
-                    $tagAttributes->addHtmlAttributeValue("accesskey", "h");
-                    $tagAttributes->addClassName("navbar-brand");
+
+                    $brandName = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
+                    if ($brandName === self::CURRENT_BRAND) {
+                        $tagAttributes->addHtmlAttributeValue("href", wl());
+                    }
+
+                    /**
+                     * Inside the menu bar
+                     */
+                    $context = $data[PluginUtility::CONTEXT];
+                    if($context===syntax_plugin_combo_menubar::TAG) {
+                        $tagAttributes->addHtmlAttributeValue("accesskey", "h");
+                        $tagAttributes->addClassName("navbar-brand");
+                    }
 
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("a");
                     break;

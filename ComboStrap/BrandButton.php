@@ -698,5 +698,11 @@ EOF;
         return $this;
     }
 
+    public function setPrimaryColor(string $color): BrandButton
+    {
+        $this->primaryColor = $color;
+        return $this;
+    }
+
 
 }

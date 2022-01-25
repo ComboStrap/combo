@@ -120,7 +120,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                  * The channel
                  */
                 try {
-                    $socialButton = self::createFollowButtonFromAttributes($shareAttributes);
+                    $brand = self::createFollowButtonFromAttributes($shareAttributes);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "The social button creation returns an error ({$e->getMessage()}";
@@ -133,7 +133,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                  * and add the link
                  */
                 try {
-                    $linkAttributes = $socialButton->getLinkAttributes();
+                    $linkAttributes = $brand->getLinkAttributes();
                     $urlAttribute = syntax_plugin_combo_brand::URL_ATTRIBUTE;
                     $url = $shareAttributes->getValue($urlAttribute);
                     if ($url !== null) {
@@ -156,10 +156,10 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                  * Icon
                  */
                 try {
-                    self::addIconInCallStack($callStack, $socialButton);
+                    syntax_plugin_combo_brand::addIconInCallStack($callStack, $brand);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the icon for the social channel ($socialButton) returns an error ({$e->getMessage()}";
+                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the icon for the brand ($brand) returns an error ({$e->getMessage()}";
                     return $returnArray;
                 }
                 if ($state === DOKU_LEXER_SPECIAL) {
@@ -250,25 +250,6 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
 
         // unsupported $mode
         return false;
-    }
-
-
-    /**
-     * @throws ExceptionCombo
-     */
-    public static function addIconInCallStack(CallStack $callStack, BrandButton $socialChannel)
-    {
-
-        if (!$socialChannel->hasIcon()) {
-            return;
-        }
-        $iconAttributes = $socialChannel->getIconAttributes();
-        $callStack->appendCallAtTheEnd(
-            Call::createComboCall(
-                syntax_plugin_combo_icon::TAG,
-                DOKU_LEXER_SPECIAL,
-                $iconAttributes
-            ));
     }
 
 

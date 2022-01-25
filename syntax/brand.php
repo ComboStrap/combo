@@ -3,6 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\BrandButton;
+use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ColorUtility;
 use ComboStrap\Dimension;
@@ -22,15 +23,11 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     const TAG = "brand";
     const CANONICAL = self::TAG;
 
-    /**
-     * True if an icon was added in the brand
-     * Allows the deprecation of the old syntax
-     * where icon was not an attribute of brand
-     */
-    const ICON_FOUND_ATTRIBUTE = "icon-found";
+
     public const ICON_ATTRIBUTE = "icon";
     public const WIDGET_ATTRIBUTE = "widget";
     public const URL_ATTRIBUTE = "url";
+
 
     /**
      * An utility constructor to be sure that we build the brand button
@@ -200,6 +197,9 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     $tagAttributes->addHtmlAttributeValue("accesskey", "h");
                     $tagAttributes->addClassName("navbar-brand");
                 }
+
+                // Width does not apply to link (otherwise the link got a max-width of 30)
+                $tagAttributes->removeComponentAttributeIfPresent(Dimension::WIDTH_KEY);
                 syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $tagAttributes);
                 if ($state === DOKU_LEXER_SPECIAL) {
                     syntax_plugin_combo_link::addExitLinkTagInCallStack($callStack);
@@ -209,7 +209,11 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                  * Logo
                  */
                 try {
-                    $iconAttributes = $brandButton->getIconAttributes();
+                    $color = $tagAttributes->getValue(ColorUtility::COLOR);
+                    if ($color !== null) {
+                        $brandButton->setPrimaryColor($color);
+                    }
+                    syntax_plugin_combo_brand::addIconInCallStack($callStack, $brandButton);
                 } catch (ExceptionComboNotFound $e) {
 
                     if ($brandButton->getName() === BrandButton::CURRENT_BRAND) {
@@ -219,6 +223,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                         LogUtility::msg("The brand icon returns an error. Error: {$e->getMessage()}");
                     }
                 }
+
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -234,18 +239,29 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
 
                 /**
-                 * Icon ?
+                 * Old syntax
+                 * An icon could be inside
+                 * If this is the case, we delete the added icon
+                 * in the enter phase
+                 * @since 2022-01-25
                  */
-                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
-                $iconFound = false;
-                while ($actualCall = $callStack->next()) {
+                $markupIconFound = false;
+                while ($actualCall = $callStack->previous()) {
                     $tagName = $actualCall->getTagName();
                     if ($tagName === syntax_plugin_combo_icon::TAG) {
-                        $iconFound = true;
-                        break;
+                        // is it a added call / no content
+                        // or is it an icon from the markup
+                        if ($actualCall->getCapturedContent() === null) {
+                            if ($markupIconFound) {
+                                // if the markup has an icon we delete it
+                                $callStack->deleteActualCallAndPrevious();
+                            }
+                            break;
+                        }
+                        $markupIconFound = true;
                     }
                 }
-                $openingCall->addAttribute(self::ICON_FOUND_ATTRIBUTE, $iconFound);
+
 
                 $callStack->moveToEnd();
                 syntax_plugin_combo_link::addExitLinkTagInCallStack($callStack);
@@ -330,6 +346,24 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     static function getTag(): string
     {
         return self::TAG;
+    }
+
+    /**
+     * @throws ExceptionComboNotFound
+     */
+    public static function addIconInCallStack(CallStack $callStack, BrandButton $brandButton)
+    {
+
+        if (!$brandButton->hasIcon()) {
+            return;
+        }
+        $iconAttributes = $brandButton->getIconAttributes();
+        $callStack->appendCallAtTheEnd(
+            Call::createComboCall(
+                syntax_plugin_combo_icon::TAG,
+                DOKU_LEXER_SPECIAL,
+                $iconAttributes
+            ));
     }
 
 }

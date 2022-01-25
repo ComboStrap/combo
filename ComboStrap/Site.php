@@ -61,7 +61,7 @@ class Site
         $logos = [];
         foreach ($logosPaths as $logoPath) {
             $dokuPath = DokuPath::createMediaPathFromId($logoPath);
-            if(FileSystems::exists($dokuPath)) {
+            if (FileSystems::exists($dokuPath)) {
                 try {
                     $logos[] = Image::createImageFromPath($dokuPath);
                 } catch (Exception $e) {
@@ -77,7 +77,7 @@ class Site
     /**
      * @return string|null
      */
-    public static function getLogoUrlAsSvg()
+    public static function getLogoUrlAsSvg(): ?string
     {
 
 
@@ -85,13 +85,29 @@ class Site
         foreach (self::SVG_LOGO_IDS as $svgLogo) {
 
             $svgLogoFN = mediaFN($svgLogo);
-
             if (file_exists($svgLogoFN)) {
                 $url = ml($svgLogo, '', true, '', true);
                 break;
-            };
+            }
         }
         return $url;
+    }
+
+    public static function getLogoAsSvgImage(): ?ImageSvg
+    {
+        foreach (self::SVG_LOGO_IDS as $svgLogo) {
+
+            try {
+                $image = ImageSvg::createImageFromId($svgLogo);
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The svg ($svgLogo) returns an error. {$e->getMessage()}");
+                continue;
+            }
+            if ($image->exists()) {
+                return $image;
+            }
+        }
+        return null;
     }
 
     public static function getLogoUrlAsPng()

@@ -4,6 +4,7 @@
 // must be run within Dokuwiki
 use ComboStrap\BrandButton;
 use ComboStrap\CallStack;
+use ComboStrap\ColorUtility;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
@@ -20,10 +21,6 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     const TAG = "brand";
     const CANONICAL = self::TAG;
 
-    /**
-     * The brand of the current application/website
-     */
-    const CURRENT_BRAND = "current";
     /**
      * True if an icon was added in the brand
      * Allows the deprecation of the old syntax
@@ -143,10 +140,10 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                  * Default parameters, type definition and parsing
                  */
                 $defaultParameters["title"] = Site::getTitle();
-                $defaultParameters[TagAttributes::TYPE_KEY] = self::CURRENT_BRAND;
+                $defaultParameters[TagAttributes::TYPE_KEY] = BrandButton::CURRENT_BRAND;
                 try {
                     $knownTypes = BrandButton::getBrandNames();
-                    $knownTypes[] = self::CURRENT_BRAND;
+                    $knownTypes[] = BrandButton::CURRENT_BRAND;
                 } catch (ExceptionCombo $e) {
                     LogUtility::msg("Error while retrieving the brand names ({$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     /**
@@ -163,13 +160,27 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                  */
                 $brandName = $linkAttributes->getValue(TagAttributes::TYPE_KEY);
                 switch ($brandName) {
-                    case self::CURRENT_BRAND:
+                    case BrandButton::CURRENT_BRAND:
                         $linkAttributes->addHtmlAttributeValue("href", Site::getBaseUrl());
+
+                        $icon = Site::getLogoAsSvgImage();
+                        if ($icon !== null) {
+                            $iconAttributes = TagAttributes::createEmpty(self::TAG);
+                            $color = $linkAttributes->getValue(ColorUtility::COLOR);
+                            if ($color !== null) {
+                                $iconAttributes->addComponentAttributeValue(ColorUtility::COLOR, $color);
+                            }
+                            $width = $linkAttributes->getValueAndRemoveIfPresent(Dimension::WIDTH_KEY);
+                            if ($width !== null) {
+                                $iconAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
+                            }
+                        }
                         break;
                     default:
                         try {
                             $brandButton = self::createBrandButtonFromAttributes($linkAttributes);
                             $linkAttributes = $brandButton->getLinkAttributes();
+                            $iconAttributes = $brandButton->getIconAttributes();
                         } catch (ExceptionCombo $e) {
                             $returnedArray[PluginUtility::EXIT_MESSAGE] = "Error while reading the brand data for the brand ($brandName). Error: {$e->getMessage()}";
                             $returnedArray[PluginUtility::EXIT_CODE] = 1;
@@ -270,7 +281,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     $brandName = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
-                    if ($brandName === self::CURRENT_BRAND) {
+                    if ($brandName === BrandButton::CURRENT_BRAND) {
                         return true;
                     }
 

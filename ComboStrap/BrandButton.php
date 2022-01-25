@@ -43,24 +43,25 @@ class BrandButton
     const ICON_NONE_VALUE = "none";
 
     const CANONICAL = "social";
+    /**
+     * The brand of the current application/website
+     */
+    public const CURRENT_BRAND = "current";
 
 
     /**
      * @var array
      */
-    private static $channelDictionary;
+    private static $brandDictionary;
 
     /**
      * @var string
-     * The name of the channel, we follow
-     * the naming of
+     * The name of the brand,
+     * for company, we follow the naming of
      * https://github.com/ellisonleao/sharer.js
      */
     private $name;
-    /**
-     * @var array
-     */
-    private $channelDict;
+
     /**
      * @var string
      */
@@ -94,33 +95,62 @@ class BrandButton
      */
     private $handle;
 
+    /**
+     * @var string the endpoint template url (for sharing and following)
+     */
+    private $webUrlTemplate;
+    private $primaryColor;
+    private $title;
+    private $secondaryColor;
+    private $iconName;
+
 
     /**
-     * SocialChannel constructor.
      * @throws ExceptionCombo
      */
     public function __construct(
-        string $channelName,
+        string $brandName,
         string $typeButton)
     {
-        $this->name = strtolower($channelName);
+
+        $this->name = strtolower($brandName);
         if (isset(self::BRAND_ABBREVIATIONS_MAPPING[$this->name])) {
             $this->name = self::BRAND_ABBREVIATIONS_MAPPING[$this->name];
         }
 
         /**
-         * Get the channels
+         * Get the brands
          */
-        self::$channelDictionary = self::getChannelDictionary();
+        self::$brandDictionary = self::getBrandDictionary();
 
 
         /**
-         * Get the data for the channel
+         * Build the data for the brand
          */
-        $this->channelDict = self::$channelDictionary[$this->name];
-        if ($this->channelDict === null) {
-            throw new ExceptionCombo("The channel ($this->name} is unknown.");
+        $brandDict = self::$brandDictionary[$this->name];
+        switch ($this->name) {
+            case self::CURRENT_BRAND:
+                $this->title = Site::getTitle();
+                $path = Site::getLogoAsSvgImage()->getPath();
+                if ($path instanceof DokuPath) {
+                    /**
+                     * End with svg, not seen as an external icon
+                     */
+                    $this->iconName = $path->toLocalPath()->getDokuwikiId();
+                }
+                break;
+            default:
+                if ($brandDict === null) {
+                    throw new ExceptionCombo("The brand ($this->name} is unknown.");
+                }
+                $this->title = $brandDict[$this->type]["popup"];
+                $this->primaryColor = $brandDict["colors"]["primary"];
+                $this->secondaryColor = $brandDict["colors"]["secondary"];
+                $this->iconName = $brandDict["icons"][$this->icon];
+                $this->webUrlTemplate = $brandDict[$this->type]["web"];
+                break;
         }
+
 
         $this->type = strtolower($typeButton);
         if (!in_array($this->type, self::TYPE_BUTTONS)) {
@@ -134,8 +164,8 @@ class BrandButton
      */
     public static function getBrandNames()
     {
-        self::$channelDictionary = self::getChannelDictionary();
-        $brandDict = array_keys(self::$channelDictionary);
+        self::$brandDictionary = self::getBrandDictionary();
+        $brandDict = array_keys(self::$brandDictionary);
         $brandAbbreviations = array_keys(self::BRAND_ABBREVIATIONS_MAPPING);
         return array_merge($brandDict, $brandAbbreviations);
     }
@@ -143,14 +173,14 @@ class BrandButton
     /**
      * @throws ExceptionCombo
      */
-    private static function getChannelDictionary()
+    private static function getBrandDictionary()
     {
-        if (self::$channelDictionary === null) {
+        if (self::$brandDictionary === null) {
 
-            self::$channelDictionary = Dictionary::getFrom("brands");
+            self::$brandDictionary = Dictionary::getFrom("brands");
 
         }
-        return self::$channelDictionary;
+        return self::$brandDictionary;
     }
 
     /**
@@ -172,7 +202,7 @@ class BrandButton
         $this->widget = $widget;
         $widget = trim(strtolower($widget));
         if (!in_array($widget, self::WIDGETS)) {
-            throw new ExceptionCombo("The social widget ($widget} is unknown. The possible widgets value are " . implode(",", self::WIDGETS));
+            throw new ExceptionCombo("The {$this->type} widget ($widget} is unknown. The possible widgets value are " . implode(",", self::WIDGETS));
         }
         return $this;
     }
@@ -206,12 +236,12 @@ class BrandButton
      * @throws ExceptionCombo
      */
     public static function createShareButton(
-        string $channelName,
+        string $brandName,
         string $widget = self::WIDGET_BUTTON_VALUE,
         string $icon = self::ICON_SOLID_VALUE,
         ?int $width = null): BrandButton
     {
-        return (new BrandButton($channelName, self::TYPE_BUTTON_SHARE))
+        return (new BrandButton($brandName, self::TYPE_BUTTON_SHARE))
             ->setWidget($widget)
             ->setIcon($icon)
             ->setWidth($width);
@@ -221,13 +251,13 @@ class BrandButton
      * @throws ExceptionCombo
      */
     public static function createFollowButton(
-        string $channelName,
+        string $brandName,
         string $handle = null,
         string $widget = self::WIDGET_BUTTON_VALUE,
         string $icon = self::ICON_SOLID_VALUE,
         ?int $width = null): BrandButton
     {
-        return (new BrandButton($channelName, self::TYPE_BUTTON_FOLLOW))
+        return (new BrandButton($brandName, self::TYPE_BUTTON_FOLLOW))
             ->setHandle($handle)
             ->setWidget($widget)
             ->setIcon($icon)
@@ -241,13 +271,16 @@ class BrandButton
      *   * https://github.com/ellisonleao/sharer.js/blob/main/sharer.js#L72
      *   * and
      */
-    public function getChannelEndpointForPage(Page $requestedPage = null): ?string
+    public function getBrandEndpointForPage(Page $requestedPage = null): ?string
     {
 
         /**
          * Shared/Follow Url template
          */
-        $urlTemplate = $this->checkThatTypeIsSupportedAndGetTemplateUrl();
+        $urlTemplate = $this->webUrlTemplate;
+        if ($urlTemplate === null) {
+            throw new ExceptionCombo("The brand ($this) does not support the $this->type button (The $this->type URL is unknown)");
+        }
         switch ($this->type) {
 
             case self::TYPE_BUTTON_SHARE:
@@ -301,7 +334,7 @@ class BrandButton
 
     public function getLinkTitle(): string
     {
-        $title = $this->channelDict[$this->type]["popup"];
+        $title = $this->title;
         if ($title !== null && trim($title) !== "") {
             return $title;
         }
@@ -311,6 +344,8 @@ class BrandButton
                 return "Share this page via $name";
             case self::TYPE_BUTTON_FOLLOW:
                 return "Follow us on $name";
+            case self::TYPE_BUTTON_BRAND:
+                return $name;
             default:
                 return "Button type ($this->type) is unknown";
         }
@@ -336,9 +371,9 @@ class BrandButton
             default:
             case self::WIDGET_BUTTON_VALUE:
 
-                $primary = $this->channelDict["colors"]["primary"];
+                $primary = $this->primaryColor;
                 if ($primary === null) {
-                    throw new ExceptionCombo("The background color for the social channel ($this) was not found in the data dictionary.");
+                    throw new ExceptionCombo("The background color for the brand ($this) is not set.");
                 }
                 $textColor = $this->getTextColor();
                 if ($textColor === null || $textColor === "") {
@@ -367,7 +402,7 @@ EOF;
         /**
          * Hover Style
          */
-        $secondary = $this->channelDict["colors"]["secondary"];
+        $secondary = $this->secondaryColor;
         if ($secondary === null) {
             return $style;
         }
@@ -434,12 +469,12 @@ EOF;
     {
 
         $comboResourceScheme = DokuPath::COMBO_RESOURCE_SCHEME;
-        $iconName = "$comboResourceScheme>social:{$this->getName()}:{$this->icon}.svg";
+        $iconName = "$comboResourceScheme>brand:{$this->getName()}:{$this->icon}.svg";
         $icon = DokuPath::createResource($iconName);
         if (!FileSystems::exists($icon)) {
-            $iconName = $this->channelDict["icons"][$this->icon];
+            $iconName = $this->iconName;
             if ($iconName === null) {
-                throw new ExceptionCombo("No {$this->icon} icon could be found for the channel ($this)");
+                throw new ExceptionCombo("No {$this->icon} icon could be found for the brand ($this)");
             }
         }
         $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
@@ -458,7 +493,7 @@ EOF;
 
         switch ($this->widget) {
             case self::WIDGET_LINK_VALUE:
-                return $this->channelDict["colors"]["primary"];
+                return $this->primaryColor;
             default:
             case self::WIDGET_BUTTON_VALUE:
                 return "#fff";
@@ -571,7 +606,7 @@ EOF;
                          * For whatsapp, the sharer link is not the good one
                          */
                         $linkAttributes->addComponentAttributeValue("target", "_blank");
-                        $linkAttributes->addComponentAttributeValue("href", $this->getChannelEndpointForPage($requestedPage));
+                        $linkAttributes->addComponentAttributeValue("href", $this->getBrandEndpointForPage($requestedPage));
                         break;
                     default:
                         /**
@@ -606,7 +641,7 @@ EOF;
                 $ariaLabel = "Follow us on " . ucfirst($this->getName());
                 $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
                 $linkAttributes->addComponentAttributeValue("target", "_blank");
-                $href = $this->getChannelEndpointForPage();
+                $href = $this->getBrandEndpointForPage();
                 if ($href !== null) {
                     $linkAttributes->addComponentAttributeValue("href", $href);
                 }
@@ -615,19 +650,6 @@ EOF;
 
     }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    private
-    function checkThatTypeIsSupportedAndGetTemplateUrl()
-    {
-        $urlTemplate = $this->channelDict[$this->type]["web"];
-        if ($urlTemplate === null) {
-            throw new ExceptionCombo("The channel ($this) does not support the $this->type button (The $this->type URL is unknown)");
-        }
-        return $urlTemplate;
-
-    }
 
     private
     function getType(): string

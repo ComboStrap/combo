@@ -156,7 +156,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                  * Icon
                  */
                 try {
-                    $this->addIconInCallStack($callStack, $socialButton);
+                    self::addIconInCallStack($callStack, $socialButton);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the icon for the social channel ($socialButton) returns an error ({$e->getMessage()}";
@@ -256,7 +256,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionCombo
      */
-    private function addIconInCallStack(CallStack $callStack, BrandButton $socialChannel)
+    public static function addIconInCallStack(CallStack $callStack, BrandButton $socialChannel)
     {
 
         if (!$socialChannel->hasIcon()) {

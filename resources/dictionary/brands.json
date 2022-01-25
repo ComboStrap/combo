@@ -1,5 +1,6 @@
 {
     "facebook": {
+        "url": "https://facebook.com",
         "share": {
             "web": "https://facebook.com/sharer/sharer.php?u=$url",
             "popup": "Share this page with Facebook",
@@ -20,6 +21,7 @@
         }
     },
     "twitter": {
+        "url": "https://twitter.com",
         "share": {
             "web": "https://twitter.com/intent/tweet/?url=$url&text=$title%0A$description%0A&via=$via",
             "popup": "Share this page with Twitter"
@@ -41,6 +43,7 @@
         }
     },
     "tumblr": {
+        "url": "https://www.tumblr.com",
         "share": {
             "web": "https://www.tumblr.com/widgets/share/tool?posttype=link&title=$title&caption=$description&canonicalUrl=$url&content=$url",
             "popup": "Share this page with Tumblr"
@@ -57,6 +60,7 @@
         }
     },
     "email": {
+        "url": "mailto:",
         "share": {
             "web": "mailto:?subject=$title&body=$description%20$url",
             "popup": "Share this page via Email"
@@ -67,10 +71,11 @@
         }
     },
     "github": {
+        "url": "https://github.com",
         "doc": "https://github.com/logos",
         "colors": {
             "primary": "#000000",
-            "secondary":"#F4CAB1"
+            "secondary": "#F4CAB1"
         },
         "icons": {
             "solid": "entypo-social:github",
@@ -80,6 +85,7 @@
         }
     },
     "whatsapp": {
+        "url": "https://whatsapp.com",
         "share": {
             "web": "https://api.whatsapp.com/send?text=$text%20$url",
             "mobile": "whatsapp://send?text=$description%20$url",
@@ -91,11 +97,17 @@
         }
     },
     "instagram": {
+        "url": "https://www.instagram.com",
         "follow": {
-            "web":"https://www.instagram.com/$handle/"
+            "web": "https://www.instagram.com/$handle/"
+        },
+        "colors": {
+            "primary": "#8a3ab9",
+            "secondary": "#cd486b"
         }
     },
     "wikipedia": {
+        "url": "https://wikipedia.org",
         "colors": {
             "primary": "#000000",
             "secondary": "#939598",
@@ -109,6 +121,7 @@
         }
     },
     "hackernews": {
+        "url": "https://news.ycombinator.com",
         "share": {
             "web": "https://news.ycombinator.com/submitlink?u=$url&t=$text",
             "popup": "Share this page via Hackernews"
@@ -122,6 +135,7 @@
         }
     },
     "telegram": {
+        "url": "https://telegram.org",
         "share": {
             "web": "https://telegram.me/share/url?text=$text&url=$url",
             "popup": "Share this page with Telegram"
@@ -138,6 +152,7 @@
         }
     },
     "vk": {
+        "url": "https://vk.com",
         "share": {
             "web": "https://vk.com/share.php?title=$text&url=$url"
         },
@@ -153,22 +168,24 @@
         }
     },
     "dribbble": {
+        "url": "https://dribbble.com",
         "doc": "https://dribbble.com/branding",
         "follow": {
             "web": "https://dribbble.com/$handle"
         },
-        "icons":{
+        "icons": {
             "solid": "ph:dribbble-logo-fill",
             "solid-circle": "ant-design:dribbble-circle-filled",
             "outline": "ant-design:dribbble-outlined",
             "outline-circle": "et:dribbble"
         },
-        "colors":{
+        "colors": {
             "primary": "#EA4C89",
             "secondary": "#C32361"
         }
     },
     "pinterest": {
+        "url": "https://pinterest.com",
         "share": {
             "web": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$text",
             "popup": "Share this page with pinterest"
@@ -188,6 +205,7 @@
         }
     },
     "linkedin": {
+        "url": "https://www.linkedin.com",
         "share": {
             "web": "https://www.linkedin.com/shareArticle?mini=true&url=$url&source=$url&title=$title&summary=$description",
             "doc": "https://developer.linkedin.com/docs/share-on-linkedin"
@@ -207,6 +225,7 @@
         }
     },
     "reddit": {
+        "url": "https://reddit.com",
         "share": {
             "web": "https://reddit.com/submit/?resubmit=true&url=$url&title=$description"
         },
@@ -222,6 +241,7 @@
         }
     },
     "xing": {
+        "url": "https://www.xing.com",
         "share": {
             "web": "https://www.xing.com/spi/shares/new?url=$url"
         },
@@ -238,6 +258,7 @@
         }
     },
     "pocket": {
+        "url": "https://getpocket.com",
         "share": {
             "web": "https://getpocket.com/save?url=$url"
         },
@@ -261,6 +282,7 @@
         }
     },
     "youtube": {
+        "url": "https://www.youtube.com",
         "follow": {
             "web": "https://www.youtube.com/channel/$handle"
         },

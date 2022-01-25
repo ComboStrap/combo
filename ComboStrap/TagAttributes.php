@@ -122,7 +122,13 @@ class TagAttributes
     /**
      * Attribute with multiple values
      */
-    const MULTIPLE_VALUES_ATTRIBUTES = [self::CLASS_KEY];
+    const MULTIPLE_VALUES_ATTRIBUTES = [self::CLASS_KEY, self::REL];
+
+    /**
+     * Link relation attributes
+     * https://html.spec.whatwg.org/multipage/links.html#linkTypes
+     */
+    const REL = "rel";
 
 
     /**
@@ -324,7 +330,7 @@ class TagAttributes
          */
         $newValues = StringUtility::explodeAndTrim($newNames, " ");
         if (!empty($actualNames)) {
-            $actualValues = StringUtility::explodeAndTrim($actualNames, " ");
+            $actualValues = StringUtility::explodeAndTrim(trim($actualNames), " ");
         } else {
             $actualValues = [];
         }
@@ -372,7 +378,7 @@ class TagAttributes
      * @param $attributeValue
      * @return TagAttributes
      */
-    public function addComponentAttributeValue($attributeName, $attributeValue)
+    public function addComponentAttributeValue($attributeName, $attributeValue): TagAttributes
     {
 
         if (empty($attributeValue) && !is_bool($attributeValue)) {
@@ -449,7 +455,6 @@ class TagAttributes
         }
 
         $this->componentToHtmlAttributeProcessingWasDone = true;
-
 
 
         $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
@@ -727,7 +732,7 @@ class TagAttributes
         /**
          * html attribute may also be in the callstack
          */
-        foreach( $this->htmlAttributes as $key => $value){
+        foreach ($this->htmlAttributes as $key => $value) {
             $array[$key] = StringUtility::toString($value);
         }
         $style = $this->getStyle();
@@ -982,7 +987,7 @@ class TagAttributes
 
             if ($this->hasComponentAttribute($key)) {
                 $isMultipleAttributeValue = in_array($key, self::MULTIPLE_VALUES_ATTRIBUTES);
-                if($isMultipleAttributeValue) {
+                if ($isMultipleAttributeValue) {
                     $this->addComponentAttributeValue($key, $value);
                 }
             } else {
@@ -1170,8 +1175,8 @@ class TagAttributes
      */
     public function getValueAsInteger(string $WIDTH_KEY, ?int $default = null): ?int
     {
-        $value = $this->getValue($WIDTH_KEY,$default);
-        if($value===null){
+        $value = $this->getValue($WIDTH_KEY, $default);
+        if ($value === null) {
             return null;
         }
         return DataType::toInteger($value);

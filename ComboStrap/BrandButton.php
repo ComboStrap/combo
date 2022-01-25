@@ -84,10 +84,11 @@ class BrandButton
     const TYPE_BUTTON_BRAND = "brand";
     const TYPE_BUTTONS = [self::TYPE_BUTTON_SHARE, self::TYPE_BUTTON_FOLLOW, self::TYPE_BUTTON_BRAND];
 
-    const BRAND_ABBREVIATIONS_MAPPING =
-        ["hn" => "hackernews",
-            "mail" => "email"
-        ];
+    const BRAND_ABBREVIATIONS_MAPPING = [
+        "hn" => "hackernews",
+        "mail" => "email",
+        "wp" => "wikipedia"
+    ];
 
 
     /**
@@ -103,6 +104,7 @@ class BrandButton
     private $title;
     private $secondaryColor;
     private $iconName;
+    private $brandUrl;
 
 
     /**
@@ -131,13 +133,17 @@ class BrandButton
         switch ($this->name) {
             case self::CURRENT_BRAND:
                 $this->title = Site::getTitle();
-                $path = Site::getLogoAsSvgImage()->getPath();
-                if ($path instanceof DokuPath) {
-                    /**
-                     * End with svg, not seen as an external icon
-                     */
-                    $this->iconName = $path->toLocalPath()->getDokuwikiId();
+                $image = Site::getLogoAsSvgImage();
+                if ($image !== null) {
+                    $path = $image->getPath();
+                    if ($path instanceof DokuPath) {
+                        /**
+                         * End with svg, not seen as an external icon
+                         */
+                        $this->iconName = $path->toLocalPath()->getDokuwikiId();
+                    }
                 }
+                $this->brandUrl = Site::getBaseUrl();
                 break;
             default:
                 if ($brandDict === null) {
@@ -148,6 +154,7 @@ class BrandButton
                 $this->secondaryColor = $brandDict["colors"]["secondary"];
                 $this->iconName = $brandDict["icons"][$this->icon];
                 $this->webUrlTemplate = $brandDict[$this->type]["web"];
+                $this->brandUrl = $brandDict["url"];
                 break;
         }
 
@@ -165,9 +172,13 @@ class BrandButton
     public static function getBrandNames()
     {
         self::$brandDictionary = self::getBrandDictionary();
-        $brandDict = array_keys(self::$brandDictionary);
-        $brandAbbreviations = array_keys(self::BRAND_ABBREVIATIONS_MAPPING);
-        return array_merge($brandDict, $brandAbbreviations);
+        $brandsDict = array_keys(self::$brandDictionary);
+        $brandsAbbreviations = array_keys(self::BRAND_ABBREVIATIONS_MAPPING);
+        return array_merge(
+            $brandsDict,
+            $brandsAbbreviations,
+            [self::CURRENT_BRAND]
+        );
     }
 
     /**
@@ -329,6 +340,9 @@ class BrandButton
 
     public function __toString()
     {
+        if ($this->name === self::CURRENT_BRAND) {
+            return $this->name . " (" . Site::getTitle() . ")";
+        }
         return $this->name;
     }
 
@@ -462,7 +476,7 @@ EOF;
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionComboNotFound
      */
     public
     function getIconAttributes(): array
@@ -474,7 +488,7 @@ EOF;
         if (!FileSystems::exists($icon)) {
             $iconName = $this->iconName;
             if ($iconName === null) {
-                throw new ExceptionCombo("No {$this->icon} icon could be found for the brand ($this)");
+                throw new ExceptionComboNotFound("No {$this->icon} icon could be found for the brand ($this)");
             }
         }
         $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
@@ -587,7 +601,6 @@ EOF;
         $linkAttributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "{$this->getWidgetClass()} {$this->getIdentifierClass()}");
         $linkTitle = $this->getLinkTitle();
         $linkAttributes->addComponentAttributeValue("title", $linkTitle);
-        $linkAttributes->addComponentAttributeValue("rel", "noopener");
         switch ($this->type) {
             case self::TYPE_BUTTON_SHARE:
 
@@ -597,7 +610,7 @@ EOF;
 
                 $ariaLabel = "Share on " . ucfirst($this->getName());
                 $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
-
+                $linkAttributes->addComponentAttributeValue("rel", "nofollow");
 
                 switch ($this->getName()) {
                     case "whatsapp":
@@ -613,6 +626,11 @@ EOF;
                          * Sharer
                          * https://ellisonleao.github.io/sharer.js/
                          */
+                        /**
+                         * Opens in a popup
+                         */
+                        $linkAttributes->addComponentAttributeValue("rel", "noopener");
+
                         PluginUtility::getSnippetManager()->attachTagsForSlot("sharer")
                             ->setTags(
                                 array(
@@ -636,17 +654,26 @@ EOF;
                 }
                 return $linkAttributes;
             case self::TYPE_BUTTON_FOLLOW:
-            default:
 
                 $ariaLabel = "Follow us on " . ucfirst($this->getName());
                 $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
                 $linkAttributes->addComponentAttributeValue("target", "_blank");
+                $linkAttributes->addComponentAttributeValue("rel", "nofollow");
                 $href = $this->getBrandEndpointForPage();
                 if ($href !== null) {
                     $linkAttributes->addComponentAttributeValue("href", $href);
                 }
                 return $linkAttributes;
+            case self::TYPE_BUTTON_BRAND:
+                if ($this->brandUrl !== null) {
+                    $linkAttributes->addComponentAttributeValue("href", $this->brandUrl);
+                }
+                return $linkAttributes;
+            default:
+                return $linkAttributes;
+
         }
+
 
     }
 

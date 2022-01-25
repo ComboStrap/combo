@@ -7,6 +7,7 @@ use ComboStrap\CallStack;
 use ComboStrap\ColorUtility;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionComboNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -137,13 +138,22 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 $returnedArray[PluginUtility::STATE] = $state;
 
                 /**
+                 * Context
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+                $parent = $callStack->moveToParent();
+                $context = null;
+                if ($parent !== false) {
+                    $context = $parent->getTagName();
+                }
+
+                /**
                  * Default parameters, type definition and parsing
                  */
                 $defaultParameters["title"] = Site::getTitle();
                 $defaultParameters[TagAttributes::TYPE_KEY] = BrandButton::CURRENT_BRAND;
                 try {
                     $knownTypes = BrandButton::getBrandNames();
-                    $knownTypes[] = BrandButton::CURRENT_BRAND;
                 } catch (ExceptionCombo $e) {
                     LogUtility::msg("Error while retrieving the brand names ({$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     /**
@@ -156,55 +166,55 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
 
 
                 /**
-                 * Brand Attribute
+                 * Brand Object creation
                  */
                 $brandName = $linkAttributes->getValue(TagAttributes::TYPE_KEY);
-                switch ($brandName) {
-                    case BrandButton::CURRENT_BRAND:
-                        $linkAttributes->addHtmlAttributeValue("href", Site::getBaseUrl());
+                try {
+                    $widget = $linkAttributes->getValue(self::WIDGET_ATTRIBUTE);
+                    if ($widget === null && $context === syntax_plugin_combo_menubar::TAG) {
+                        $linkAttributes->addComponentAttributeValue(self::WIDGET_ATTRIBUTE, BrandButton::WIDGET_LINK_VALUE);
+                    }
+                    $brandButton = self::createBrandButtonFromAttributes($linkAttributes);
 
-                        $icon = Site::getLogoAsSvgImage();
-                        if ($icon !== null) {
-                            $iconAttributes = TagAttributes::createEmpty(self::TAG);
-                            $color = $linkAttributes->getValue(ColorUtility::COLOR);
-                            if ($color !== null) {
-                                $iconAttributes->addComponentAttributeValue(ColorUtility::COLOR, $color);
-                            }
-                            $width = $linkAttributes->getValueAndRemoveIfPresent(Dimension::WIDTH_KEY);
-                            if ($width !== null) {
-                                $iconAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
-                            }
-                        }
-                        break;
-                    default:
-                        try {
-                            $brandButton = self::createBrandButtonFromAttributes($linkAttributes);
-                            $linkAttributes = $brandButton->getLinkAttributes();
-                            $iconAttributes = $brandButton->getIconAttributes();
-                        } catch (ExceptionCombo $e) {
-                            $returnedArray[PluginUtility::EXIT_MESSAGE] = "Error while reading the brand data for the brand ($brandName). Error: {$e->getMessage()}";
-                            $returnedArray[PluginUtility::EXIT_CODE] = 1;
-                            return $returnedArray;
-                        }
+
+                } catch (ExceptionCombo $e) {
+                    $returnedArray[PluginUtility::EXIT_MESSAGE] = "Error while reading the brand data for the brand ($brandName). Error: {$e->getMessage()}";
+                    $returnedArray[PluginUtility::EXIT_CODE] = 1;
+                    return $returnedArray;
                 }
-
                 /**
-                 * Inside the menu bar ?
+                 * Link
                  */
-                $callStack = CallStack::createFromHandler($handler);
-                $parent = $callStack->moveToParent();
-                $context = null;
-                if ($parent !== false) {
-                    $context = $parent->getTagName();
+                try {
+                    $linkAttributes = $brandButton->getLinkAttributes();
+                } catch (ExceptionCombo $e) {
+                    $returnedArray[PluginUtility::EXIT_MESSAGE] = "Error while getting the link data for the the brand ($brandName). Error: {$e->getMessage()}";
+                    $returnedArray[PluginUtility::EXIT_CODE] = 1;
+                    return $returnedArray;
                 }
+
                 if ($context === syntax_plugin_combo_menubar::TAG) {
                     $linkAttributes->addHtmlAttributeValue("accesskey", "h");
                     $linkAttributes->addClassName("navbar-brand");
                 }
-
                 syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $linkAttributes);
                 if ($state === DOKU_LEXER_SPECIAL) {
                     syntax_plugin_combo_link::addExitLinkTagInCallStack($callStack);
+                }
+
+                /**
+                 * Logo
+                 */
+                try {
+                    $iconAttributes = $brandButton->getIconAttributes();
+                } catch (ExceptionComboNotFound $e) {
+
+                    if ($brandButton->getName() === BrandButton::CURRENT_BRAND) {
+                        $documentationLink = PluginUtility::getDocumentationHyperLink("logo", "documentation");
+                        LogUtility::msg("A svg logo icon is not installed on your website. Check the corresponding $documentationLink.");
+                    } else {
+                        LogUtility::msg("The brand icon returns an error. Error: {$e->getMessage()}");
+                    }
                 }
 
                 return array(
@@ -313,7 +323,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
         return false;
     }
 
-    public static function getTag(): string
+    public
+    static function getTag(): string
     {
         return self::TAG;
     }

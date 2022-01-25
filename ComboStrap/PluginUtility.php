@@ -93,6 +93,7 @@ require_once(__DIR__ . '/EndDate.php');
 require_once(__DIR__ . '/Event.php');
 require_once(__DIR__ . '/ExitException.php');
 require_once(__DIR__ . '/ExceptionCombo.php');
+require_once(__DIR__ . '/ExceptionComboNotFound.php');
 require_once(__DIR__ . '/ExceptionComboRuntime.php');
 require_once(__DIR__ . '/FileSystems.php');
 require_once(__DIR__ . '/FloatAttribute.php');

@@ -13,6 +13,8 @@
 namespace ComboStrap;
 
 
+use dokuwiki\StyleUtils;
+
 class ColorUtility
 {
 
@@ -197,13 +199,24 @@ class ColorUtility
         'yellowgreen' => '#9ACD32'
     );
 
+    /**
+     * Branding colors
+     */
+    const PRIMARY_ATTRIBUTE = "primary";
+    const SECONDARY_ATTRIBUTE = "secondary";
+
+    /**
+     * @var array
+     */
+    private static $dokuWikiStyles;
+
 
     /**
      * Return a combostrap value to a web color value
      * @param string $color a color value
      * @return string the color value
      */
-    public static function getColorValue($color)
+    public static function getColorValue(string $color): string
     {
 
         if ($color[0] == "#") {
@@ -231,6 +244,19 @@ class ColorUtility
             }
         }
         return $colorValue;
+    }
+
+    /**
+     * The styles of the dokuwiki systems
+     * @return array
+     */
+    public static function getDokuWikiStyles(): array
+    {
+        if (self::$dokuWikiStyles === null) {
+            self::$dokuWikiStyles = (new StyleUtils())->cssStyleini();
+        }
+        return self::$dokuWikiStyles;
+
     }
 
 

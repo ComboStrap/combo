@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 
+use dokuwiki\StyleUtils;
 use Exception;
 use RuntimeException;
 
@@ -127,6 +128,7 @@ class Site
     }
 
     /**
+     * @deprecated use {@link Site::getName()} instead
      * https://www.dokuwiki.org/config:title
      * @return mixed
      */
@@ -134,6 +136,15 @@ class Site
     {
         global $conf;
         return $conf['title'];
+    }
+
+    /**
+     * https://www.dokuwiki.org/config:title
+     */
+    public static function setName($name)
+    {
+        global $conf;
+        $conf['title']=$name;
     }
 
     /**
@@ -355,8 +366,7 @@ class Site
      */
     public static function getName()
     {
-        global $conf;
-        return $conf["title"];
+        return self::getTitle();
     }
 
     public static function getTagLine()
@@ -393,6 +403,40 @@ class Site
             return true;
         }
         return false;
+    }
+
+    /**
+     * @param string $description
+     * Same as {@link Site::setDescription()}
+     */
+    public static function setTagLine(string $description)
+    {
+        global $conf;
+        $conf['tagline'] = $description;
+    }
+
+    /**
+     * @param string $description
+     *
+     */
+    public static function setDescription(string $description)
+    {
+        self::setTagLine($description);
+    }
+
+    public static function setPrimaryColor(string $colorValue)
+    {
+        PluginUtility::setConf(ColorUtility::PRIMARY_ATTRIBUTE, $colorValue);
+    }
+
+    public static function getPrimaryColor(): ?string
+    {
+        $value = PluginUtility::getConfValue(ColorUtility::PRIMARY_ATTRIBUTE);
+        if($value===null){
+            $styles = ColorUtility::getDokuWikiStyles();
+            return $styles["replacements"]["__theme_color__"];
+        }
+        return ColorUtility::getColorValue($value);
     }
 
 

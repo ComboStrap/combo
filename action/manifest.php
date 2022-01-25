@@ -25,7 +25,7 @@ class action_plugin_combo_manifest extends DokuWiki_Action_Plugin
         /* This will call the function _manifest */
         $controller->register_hook(
             'MANIFEST_SEND',
-            'BEFORE',
+            'AFTER',
             $this,
             '_manifest',
             array()
@@ -58,6 +58,12 @@ class action_plugin_combo_manifest extends DokuWiki_Action_Plugin
                     "type" => "image/png"
                 );
         }
+
+        /**
+         * Svg must be size any
+         * https://html.spec.whatwg.org/multipage/semantics.html#attr-link-sizes
+         */
+
 
     }
 

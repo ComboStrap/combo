@@ -30,7 +30,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionCombo
      */
-    private static function createFromAttributes(TagAttributes $shareAttributes): BrandButton
+    private static function createBrandButtonFromAttributes(TagAttributes $shareAttributes): BrandButton
     {
         $channelName = $shareAttributes->getValue(TagAttributes::TYPE_KEY);
         $widget = $shareAttributes->getValue(self::WIDGET_ATTRIBUTE, BrandButton::WIDGET_BUTTON_VALUE);
@@ -124,10 +124,10 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                  * The channel
                  */
                 try {
-                    $socialChannel = self::createFromAttributes($shareAttributes);
+                    $brandButton = self::createBrandButtonFromAttributes($shareAttributes);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The social channel creation returns an error ({$e->getMessage()}";
+                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The brand creation returns an error ({$e->getMessage()}";
                     return $returnArray;
                 }
 
@@ -146,7 +146,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                  */
                 $requestedPage = Page::createPageFromRequestedPage();
                 try {
-                    $linkAttributes = $socialChannel->getLinkAttributes($requestedPage);
+                    $linkAttributes = $brandButton->getLinkAttributes($requestedPage);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "The social channel creation returns an error when creating the link ({$e->getMessage()}";
@@ -159,10 +159,10 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                  */
                 syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $linkAttributes);
                 try {
-                    $this->addIconInCallStack($callStack, $socialChannel);
+                    $this->addIconInCallStack($callStack, $brandButton);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the icon for the social channel ($socialChannel) returns an error ({$e->getMessage()}";
+                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the icon for the social channel ($brandButton) returns an error ({$e->getMessage()}";
                     return $returnArray;
                 }
                 if ($state === DOKU_LEXER_SPECIAL) {
@@ -226,7 +226,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     try {
-                        $socialChannel = self::createFromAttributes($tagAttributes);
+                        $socialChannel = self::createBrandButtonFromAttributes($tagAttributes);
                     } catch (ExceptionCombo $e) {
                         LogUtility::msg("The social channel could not be build. Error: {$e->getMessage()}");
                         return false;

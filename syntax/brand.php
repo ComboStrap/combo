@@ -39,14 +39,16 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      */
     private static function createBrandButtonFromAttributes(TagAttributes $brandAttributes): BrandButton
     {
-        $channelName = $brandAttributes->getValue(TagAttributes::TYPE_KEY);
+        $channelName = $brandAttributes->getValue(TagAttributes::TYPE_KEY, BrandButton::CURRENT_BRAND);
         $widget = $brandAttributes->getValue(self::WIDGET_ATTRIBUTE, BrandButton::WIDGET_BUTTON_VALUE);
         $icon = $brandAttributes->getValue(self::ICON_ATTRIBUTE, BrandButton::ICON_SOLID_VALUE);
         $width = $brandAttributes->getValueAsInteger(Dimension::WIDTH_KEY);
+        $title = $brandAttributes->getValue(syntax_plugin_combo_link::TITLE_ATTRIBUTE);
         return (BrandButton::createBrandButton($channelName))
             ->setIcon($icon)
             ->setWidth($width)
-            ->setWidget($widget);
+            ->setWidget($widget)
+            ->setLinkTitle($title);
     }
 
     /**
@@ -150,7 +152,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 /**
                  * Default parameters, type definition and parsing
                  */
-                $defaultParameters["title"] = Site::getTitle();
+                $defaultParameters[syntax_plugin_combo_link::TITLE_ATTRIBUTE] = Site::getTitle();
                 $defaultParameters[TagAttributes::TYPE_KEY] = BrandButton::CURRENT_BRAND;
                 try {
                     $knownTypes = BrandButton::getBrandNames();
@@ -162,19 +164,19 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                      */
                     $knownTypes = null;
                 }
-                $linkAttributes = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes);
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes);
 
 
                 /**
                  * Brand Object creation
                  */
-                $brandName = $linkAttributes->getValue(TagAttributes::TYPE_KEY);
+                $brandName = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
                 try {
-                    $widget = $linkAttributes->getValue(self::WIDGET_ATTRIBUTE);
+                    $widget = $tagAttributes->getValue(self::WIDGET_ATTRIBUTE);
                     if ($widget === null && $context === syntax_plugin_combo_menubar::TAG) {
-                        $linkAttributes->addComponentAttributeValue(self::WIDGET_ATTRIBUTE, BrandButton::WIDGET_LINK_VALUE);
+                        $tagAttributes->addComponentAttributeValue(self::WIDGET_ATTRIBUTE, BrandButton::WIDGET_LINK_VALUE);
                     }
-                    $brandButton = self::createBrandButtonFromAttributes($linkAttributes);
+                    $brandButton = self::createBrandButtonFromAttributes($tagAttributes);
 
 
                 } catch (ExceptionCombo $e) {
@@ -186,7 +188,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                  * Link
                  */
                 try {
-                    $linkAttributes = $brandButton->getLinkAttributes();
+                    $brandLinkAttributes = $brandButton->getLinkAttributes();
+                    $tagAttributes->mergeWithCallStackArray($brandLinkAttributes->toCallStackArray());
                 } catch (ExceptionCombo $e) {
                     $returnedArray[PluginUtility::EXIT_MESSAGE] = "Error while getting the link data for the the brand ($brandName). Error: {$e->getMessage()}";
                     $returnedArray[PluginUtility::EXIT_CODE] = 1;
@@ -194,10 +197,10 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 }
 
                 if ($context === syntax_plugin_combo_menubar::TAG) {
-                    $linkAttributes->addHtmlAttributeValue("accesskey", "h");
-                    $linkAttributes->addClassName("navbar-brand");
+                    $tagAttributes->addHtmlAttributeValue("accesskey", "h");
+                    $tagAttributes->addClassName("navbar-brand");
                 }
-                syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $linkAttributes);
+                syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $tagAttributes);
                 if ($state === DOKU_LEXER_SPECIAL) {
                     syntax_plugin_combo_link::addExitLinkTagInCallStack($callStack);
                 }
@@ -219,7 +222,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $linkAttributes->toCallStackArray(),
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
                     PluginUtility::CONTEXT => $context
                 );
 
@@ -296,18 +299,18 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     }
 
                     try {
-                        $socialChannel = self::createBrandButtonFromAttributes($tagAttributes);
+                        $brandButton = self::createBrandButtonFromAttributes($tagAttributes);
                     } catch (ExceptionCombo $e) {
-                        LogUtility::msg("The social channel could not be build. Error: {$e->getMessage()}");
+                        LogUtility::msg("The brand could not be build. Error: {$e->getMessage()}");
                         return false;
                     }
                     try {
-                        $style = $socialChannel->getStyle();
+                        $style = $brandButton->getStyle();
                     } catch (ExceptionCombo $e) {
-                        LogUtility::msg("The style of the share button ($socialChannel) could not be determined. Error: {$e->getMessage()}");
+                        LogUtility::msg("The style of the {$this->getType()} button ($brandButton) could not be determined. Error: {$e->getMessage()}");
                         return false;
                     }
-                    $snippetId = $socialChannel->getStyleScriptIdentifier();
+                    $snippetId = $brandButton->getStyleScriptIdentifier();
                     PluginUtility::getSnippetManager()->attachCssSnippetForSlot($snippetId, $style);
                     break;
                 case DOKU_LEXER_UNMATCHED:

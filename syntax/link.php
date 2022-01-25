@@ -84,7 +84,10 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      */
     const SPECIAL_PATTERN = "\[\[.*?\]\](?!\])";
 
-
+    /**
+     * The link title attribute (ie popup)
+     */
+    const TITLE_ATTRIBUTE = "title";
 
 
     /**
@@ -683,12 +686,13 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
         $parent = $callStack->moveToParent();
         $context = "";
         $attributes = $tagAttributes->toCallStackArray();
-        if ($parent != null) {
+        if ($parent !== false) {
             $context = $parent->getTagName();
-            $parentAttributes = $parent->getAttributes();
-            if($parentAttributes!==null) {
-                $attributes = ArrayUtility::mergeByValue($parentAttributes, $attributes);
-            }
+            // Why a merge of attributes with the parent ?
+            //            $parentAttributes = $parent->getAttributes();
+            //            if($parentAttributes!==null) {
+            //                $attributes = ArrayUtility::mergeByValue($parentAttributes, $attributes);
+            //            }
         }
         $callStack->appendCallAtTheEnd(
             Call::createComboCall(

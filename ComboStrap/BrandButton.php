@@ -120,6 +120,11 @@ class BrandButton
             $this->name = self::BRAND_ABBREVIATIONS_MAPPING[$this->name];
         }
 
+        $this->type = strtolower($typeButton);
+        if (!in_array($this->type, self::TYPE_BUTTONS)) {
+            throw new ExceptionCombo("The button type ($this->type} is unknown.");
+        }
+
         /**
          * Get the brands
          */
@@ -140,7 +145,7 @@ class BrandButton
                         /**
                          * End with svg, not seen as an external icon
                          */
-                        $this->iconName = $path->toLocalPath()->getDokuwikiId();
+                        $this->iconName = $path->getDokuwikiId();
                     }
                 }
                 $this->brandUrl = Site::getBaseUrl();
@@ -159,10 +164,7 @@ class BrandButton
         }
 
 
-        $this->type = strtolower($typeButton);
-        if (!in_array($this->type, self::TYPE_BUTTONS)) {
-            throw new ExceptionCombo("The button type ($this->type} is unknown.");
-        }
+
 
     }
 
@@ -184,7 +186,7 @@ class BrandButton
     /**
      * @throws ExceptionCombo
      */
-    private static function getBrandDictionary()
+    public static function getBrandDictionary()
     {
         if (self::$brandDictionary === null) {
 
@@ -687,6 +689,12 @@ EOF;
     private function setHandle(?string $handle): BrandButton
     {
         $this->handle = $handle;
+        return $this;
+    }
+
+    public function setLinkTitle(?string $title): BrandButton
+    {
+        $this->title = $title;
         return $this;
     }
 

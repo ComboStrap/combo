@@ -243,9 +243,9 @@
     "xing": {
         "url": "https://www.xing.com",
         "share": {
-            "web": "https://www.xing.com/spi/shares/new?url=$url"
+            "web": "https://www.xing.com/spi/shares/new?url=$url",
+            "doc": "https://dev.xing.com/plugins/share_button/docs#custom-design"
         },
-        "doc": "https://dev.xing.com/plugins/share_button/docs#custom-design",
         "colors": {
             "primary": "#1a7576",
             "secondary": "#114C4C"

@@ -128,9 +128,9 @@ class Site
     }
 
     /**
+     * @return mixed
      * @deprecated use {@link Site::getName()} instead
      * https://www.dokuwiki.org/config:title
-     * @return mixed
      */
     public static function getTitle()
     {
@@ -144,7 +144,7 @@ class Site
     public static function setName($name)
     {
         global $conf;
-        $conf['title']=$name;
+        $conf['title'] = $name;
     }
 
     /**
@@ -426,15 +426,40 @@ class Site
 
     public static function setPrimaryColor(string $colorValue)
     {
-        PluginUtility::setConf(ColorUtility::PRIMARY_ATTRIBUTE, $colorValue);
+        PluginUtility::setConf(ColorUtility::PRIMARY_COLOR_CONF, $colorValue);
     }
 
     public static function getPrimaryColor(): ?string
     {
-        $value = PluginUtility::getConfValue(ColorUtility::PRIMARY_ATTRIBUTE);
-        if($value===null){
+        $value = PluginUtility::getConfValue(ColorUtility::PRIMARY_COLOR_CONF);
+        if ($value === null) {
             $styles = ColorUtility::getDokuWikiStyles();
             return $styles["replacements"]["__theme_color__"];
+        }
+        if ($value === ColorUtility::PRIMARY_VALUE) {
+            /**
+             * Avoid circular call because
+             * ColorUtility::getColorValue call this method is
+             * the value is primary
+             */
+            return $value;
+        }
+        return ColorUtility::getColorValue($value);
+    }
+
+    public static function getSecondaryColor(): ?string
+    {
+        $value = PluginUtility::getConfValue(ColorUtility::SECONDARY_COLOR_CONF);
+        if ($value === null) {
+            return null;
+        }
+        if ($value === ColorUtility::SECONDARY_VALUE) {
+            /**
+             * Avoid circular call because
+             * ColorUtility::getColorValue call this method is
+             * the value is secondary
+             */
+            return $value;
         }
         return ColorUtility::getColorValue($value);
     }

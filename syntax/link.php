@@ -274,7 +274,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $parent = $callStack->moveToParent();
                 $parentName = "";
-                if ($parent != false) {
+                if ($parent !== false) {
 
                     /**
                      * Button Link

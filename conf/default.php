@@ -394,3 +394,5 @@ $conf["enableFrontMatterOnSubmit"] = 0;
  * {@link syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE}
  */
 $conf["headingWikiEnable"] = 1;
+
+

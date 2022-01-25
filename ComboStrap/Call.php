@@ -110,6 +110,7 @@ class Call
         syntax_plugin_combo_media::TAG,
         syntax_plugin_combo_pageimage::TAG
     ];
+    const CANONICAL = "call";
 
     private $call;
 
@@ -337,7 +338,7 @@ class Call
     }
 
 
-    public function getAttributes()
+    public function getAttributes(): ?array
     {
 
         $tagName = $this->getTagName();
@@ -347,7 +348,16 @@ class Call
             default:
                 $data = $this->getPluginData();
                 if (isset($data[PluginUtility::ATTRIBUTES])) {
-                    return $data[PluginUtility::ATTRIBUTES];
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    if (!is_array($attributes)) {
+                        $message = "The attributes value are not an array for the call ($this)";
+                        if (PluginUtility::isDevOrTest()) {
+                            throw new ExceptionComboRuntime($message, self::CANONICAL);
+                        }
+                        LogUtility::msg($message);
+                        return null;
+                    }
+                    return $attributes;
                 } else {
                     return null;
                 }
@@ -584,7 +594,7 @@ class Call
     }
 
     public
-    function hasAttribute($attributeName)
+    function hasAttribute($attributeName): bool
     {
         $attributes = $this->getAttributes();
         if (isset($attributes[$attributeName])) {

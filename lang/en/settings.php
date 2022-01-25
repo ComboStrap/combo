@@ -4,6 +4,7 @@ require_once(__DIR__ . '/../../ComboStrap/PluginUtility.php');
 
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
+use ComboStrap\ColorUtility;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
 use ComboStrap\Identity;
@@ -259,4 +260,9 @@ $lang[syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = Plu
  */
 $lang[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_heading::CANONICAL, "If unchecked, the combo wiki heading is disabled (You cannot add extra formatting syntax)");
 
+/**
+ * Colors
+ */
+$lang[ColorUtility::PRIMARY_COLOR_CONF]= PluginUtility::getDocumentationHyperLink(ColorUtility::BRANDING_COLOR_CANONICAL, "Set the primary branding color");
+$lang[ColorUtility::SECONDARY_COLOR_CONF]= PluginUtility::getDocumentationHyperLink(ColorUtility::BRANDING_COLOR_CANONICAL, "Set the secondary branding color");
 ?>

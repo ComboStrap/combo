@@ -3,6 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Bootstrap;
+use ComboStrap\ColorUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
@@ -124,8 +125,8 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                 if ($type != "tip") {
                     $tagAttributes->addClassName("alert-" . $type);
                 } else {
-                    if (!$tagAttributes->hasComponentAttribute("background-color")) {
-                        $tagAttributes->addStyleDeclarationIfNotSet("background-color", "#fff79f"); // lum - 195
+                    if (!$tagAttributes->hasComponentAttribute(ColorUtility::BACKGROUND_COLOR)) {
+                        $tagAttributes->addStyleDeclarationIfNotSet(ColorUtility::BACKGROUND_COLOR, "#fff79f"); // lum - 195
                         $tagAttributes->addClassName("text-dark");
                     }
                 }

@@ -96,7 +96,7 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                 $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED :

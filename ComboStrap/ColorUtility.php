@@ -36,8 +36,8 @@ class ColorUtility
         'white',
         'gray',
         'gray-dark',
-        'primary',
-        'secondary',
+        self::PRIMARY_VALUE,
+        self::SECONDARY_VALUE,
         'success',
         'info',
         'warning',
@@ -202,8 +202,13 @@ class ColorUtility
     /**
      * Branding colors
      */
-    const PRIMARY_ATTRIBUTE = "primary";
-    const SECONDARY_ATTRIBUTE = "secondary";
+    const PRIMARY_VALUE = "primary";
+    const SECONDARY_VALUE = "secondary";
+
+    const PRIMARY_COLOR_CONF = "primaryColor";
+    const SECONDARY_COLOR_CONF = "secondaryColor";
+    const BRANDING_COLOR_CANONICAL = "branding-colors";
+    public const BACKGROUND_COLOR = "background-color";
 
     /**
      * @var array
@@ -228,6 +233,18 @@ class ColorUtility
         } else {
             // Custom Css variable
             if (in_array($lowerColor, self::BOOTSTRAP_COLORS)) {
+                if ($lowerColor === self::PRIMARY_VALUE) {
+                    $primaryColor = Site::getPrimaryColor();
+                    if ($primaryColor !== null) {
+                        return $primaryColor;
+                    }
+                }
+                if ($lowerColor === self::SECONDARY_VALUE) {
+                    $secondaryColor = Site::getSecondaryColor();
+                    if ($secondaryColor !== null) {
+                        return $secondaryColor;
+                    }
+                }
                 $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
                 switch ($bootstrapVersion) {
                     case Bootstrap::BootStrapFiveMajorVersion:

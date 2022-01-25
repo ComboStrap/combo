@@ -137,7 +137,7 @@ class BrandButton
         self::$channelDictionary = self::getChannelDictionary();
         $brandDict = array_keys(self::$channelDictionary);
         $brandAbbreviations = array_keys(self::BRAND_ABBREVIATIONS_MAPPING);
-        return array_merge($brandDict,$brandAbbreviations);
+        return array_merge($brandDict, $brandAbbreviations);
     }
 
     /**
@@ -146,9 +146,19 @@ class BrandButton
     private static function getChannelDictionary()
     {
         if (self::$channelDictionary === null) {
+
             self::$channelDictionary = Dictionary::getFrom("brands");
+
         }
         return self::$channelDictionary;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function createBrandButton(string $brandName): BrandButton
+    {
+        return new BrandButton($brandName, self::TYPE_BUTTON_BRAND);
     }
 
     /**

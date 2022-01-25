@@ -20,10 +20,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
 
     const TAG = "follow";
     const CANONICAL = self::TAG;
-    const WIDGET_ATTRIBUTE = "widget";
-    const ICON_ATTRIBUTE = "icon";
     const HANDLE_ATTRIBUTE = "handle";
-    const URL_ATTRIBUTE = "url";
 
     /**
      * @throws ExceptionCombo
@@ -31,8 +28,8 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
     private static function createFollowButtonFromAttributes(TagAttributes $shareAttributes): BrandButton
     {
         $channelName = $shareAttributes->getValue(TagAttributes::TYPE_KEY);
-        $widget = $shareAttributes->getValue(self::WIDGET_ATTRIBUTE, BrandButton::WIDGET_BUTTON_VALUE);
-        $icon = $shareAttributes->getValue(self::ICON_ATTRIBUTE, BrandButton::ICON_SOLID_VALUE);
+        $widget = $shareAttributes->getValue(syntax_plugin_combo_brand::WIDGET_ATTRIBUTE, BrandButton::WIDGET_BUTTON_VALUE);
+        $icon = $shareAttributes->getValue(syntax_plugin_combo_brand::ICON_ATTRIBUTE, BrandButton::ICON_SOLID_VALUE);
         $width = $shareAttributes->getValueAsInteger(Dimension::WIDTH_KEY);
         $handle = $shareAttributes->getValue(self::HANDLE_ATTRIBUTE);
         return BrandButton::createFollowButton($channelName, $handle, $widget, $icon, $width);
@@ -137,7 +134,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                  */
                 try {
                     $linkAttributes = $socialButton->getLinkAttributes();
-                    $urlAttribute = self::URL_ATTRIBUTE;
+                    $urlAttribute = syntax_plugin_combo_brand::URL_ATTRIBUTE;
                     $url = $shareAttributes->getValue($urlAttribute);
                     if ($url !== null) {
                         $linkAttributes->addHtmlAttributeValue("href", $url);
@@ -166,7 +163,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                     return $returnArray;
                 }
                 if ($state === DOKU_LEXER_SPECIAL) {
-                    $this->closeLinkInCallStack($callStack);
+                    syntax_plugin_combo_link::addExitLinkTagInCallStack($callStack);
                 }
 
                 /**
@@ -179,7 +176,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT:
 
                 $callStack = CallStack::createFromHandler($handler);
-                $this->closeLinkInCallStack($callStack);
+                syntax_plugin_combo_link::addExitLinkTagInCallStack($callStack);
                 return $returnArray;
 
             case DOKU_LEXER_UNMATCHED:
@@ -255,17 +252,6 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
         return false;
     }
 
-
-
-
-    private function closeLinkInCallStack(CallStack $callStack)
-    {
-        $callStack->appendCallAtTheEnd(
-            Call::createComboCall(
-                syntax_plugin_combo_link::TAG,
-                DOKU_LEXER_EXIT
-            ));
-    }
 
     /**
      * @throws ExceptionCombo

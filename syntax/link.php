@@ -698,5 +698,14 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $context
             ));
     }
+
+    public static function addExitLinkTagInCallStack(CallStack $callStack)
+    {
+        $callStack->appendCallAtTheEnd(
+            Call::createComboCall(
+                syntax_plugin_combo_link::TAG,
+                DOKU_LEXER_EXIT
+            ));
+    }
 }
 

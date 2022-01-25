@@ -76,7 +76,7 @@
             "solid": "entypo-social:github",
             "solid-circle": "eva:github-fill",
             "outline": "eva:github-outline",
-            "outline-circle": "akar-icons:github-outline-fill",
+            "outline-circle": "akar-icons:github-outline-fill"
         }
     },
     "whatsapp": {

@@ -17,7 +17,11 @@ class Dictionary
             throw new ExceptionCombo("The dictionary file ($path) does not exist");
         }
         $jsonContent = FileSystems::getContent($path);
-        $dict = Json::createFromString($jsonContent)->toArray();
+        try {
+            $dict = Json::createFromString($jsonContent)->toArray();
+        } catch (ExceptionCombo $e) {
+            throw new ExceptionCombo("The dictionary ($path) is not a valid json. Error: {$e->getMessage()}");
+        }
         if ($dict === null) {
             throw new ExceptionCombo("The returned dictionary of the file ($path) is empty");
         }

@@ -190,6 +190,7 @@ class Site
          * via a tunnel
          *
          * Same as {@link getBaseURL()} ??
+         * Same as {@link wl()} without nothing
          */
 
         return DOKU_URL;

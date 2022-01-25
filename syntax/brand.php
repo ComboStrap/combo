@@ -4,6 +4,7 @@
 // must be run within Dokuwiki
 use ComboStrap\BrandButton;
 use ComboStrap\CallStack;
+use ComboStrap\Dimension;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -23,6 +24,32 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      * The brand of the current application/website
      */
     const CURRENT_BRAND = "current";
+    /**
+     * True if an icon was added in the brand
+     * Allows the deprecation of the old syntax
+     * where icon was not an attribute of brand
+     */
+    const ICON_FOUND_ATTRIBUTE = "icon-found";
+    public const ICON_ATTRIBUTE = "icon";
+    public const WIDGET_ATTRIBUTE = "widget";
+    public const URL_ATTRIBUTE = "url";
+
+    /**
+     * An utility constructor to be sure that we build the brand button
+     * with the same data in the handle and render function
+     * @throws ExceptionCombo
+     */
+    private static function createBrandButtonFromAttributes(TagAttributes $brandAttributes): BrandButton
+    {
+        $channelName = $brandAttributes->getValue(TagAttributes::TYPE_KEY);
+        $widget = $brandAttributes->getValue(self::WIDGET_ATTRIBUTE, BrandButton::WIDGET_BUTTON_VALUE);
+        $icon = $brandAttributes->getValue(self::ICON_ATTRIBUTE, BrandButton::ICON_SOLID_VALUE);
+        $width = $brandAttributes->getValueAsInteger(Dimension::WIDTH_KEY);
+        return (BrandButton::createBrandButton($channelName))
+            ->setIcon($icon)
+            ->setWidth($width)
+            ->setWidget($widget);
+    }
 
     /**
      * Syntax Type.
@@ -30,9 +57,9 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
-        return 'formatting';
+        return 'substition';
     }
 
     /**
@@ -56,17 +83,17 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      * array('container', 'baseonly', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
      *
      */
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
-        return array('container', 'baseonly', 'formatting', 'substition', 'protected', 'disabled');
+        return array('baseonly', 'formatting', 'substition', 'protected', 'disabled');
     }
 
-    function getSort()
+    function getSort(): int
     {
         return 201;
     }
 
-    public function accepts($mode)
+    public function accepts($mode): bool
     {
         return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
@@ -80,6 +107,11 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      */
     function connectTo($mode)
     {
+
+        /**
+         * The empty tag pattern should be before the container pattern
+         */
+        $this->Lexer->addSpecialPattern(PluginUtility::getEmptyTagPattern(self::TAG), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
         $pattern = PluginUtility::getContainerTagPattern(self::getTag());
         $this->Lexer->addEntryPattern($pattern, $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
@@ -96,36 +128,77 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
 
+
         switch ($state) {
 
+            case DOKU_LEXER_SPECIAL :
             case DOKU_LEXER_ENTER :
 
+                /**
+                 * The returned array if any error
+                 */
+                $returnedArray[PluginUtility::STATE] = $state;
+
+                /**
+                 * Default parameters, type definition and parsing
+                 */
                 $defaultParameters["title"] = Site::getTitle();
+                $defaultParameters[TagAttributes::TYPE_KEY] = self::CURRENT_BRAND;
                 try {
                     $knownTypes = BrandButton::getBrandNames();
                     $knownTypes[] = self::CURRENT_BRAND;
                 } catch (ExceptionCombo $e) {
-                    LogUtility::msg("Error while retrieving the brand names", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    LogUtility::msg("Error while retrieving the brand names ({$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     /**
                      * null means no type verification during the {@link TagAttributes::createFromTagMatch()}
                      * parsing
                      */
                     $knownTypes = null;
                 }
-                $parameters = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes);
+                $linkAttributes = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes);
+
 
                 /**
-                 * Context
+                 * Brand Attribute
+                 */
+                $brandName = $linkAttributes->getValue(TagAttributes::TYPE_KEY);
+                switch ($brandName) {
+                    case self::CURRENT_BRAND:
+                        $linkAttributes->addHtmlAttributeValue("href", Site::getBaseUrl());
+                        break;
+                    default:
+                        try {
+                            $brandButton = self::createBrandButtonFromAttributes($linkAttributes);
+                            $linkAttributes = $brandButton->getLinkAttributes();
+                        } catch (ExceptionCombo $e) {
+                            $returnedArray[PluginUtility::EXIT_MESSAGE] = "Error while reading the brand data for the brand ($brandName). Error: {$e->getMessage()}";
+                            $returnedArray[PluginUtility::EXIT_CODE] = 1;
+                            return $returnedArray;
+                        }
+                }
+
+                /**
+                 * Inside the menu bar ?
                  */
                 $callStack = CallStack::createFromHandler($handler);
                 $parent = $callStack->moveToParent();
                 $context = null;
-                if ($parent !== null) {
+                if ($parent !== false) {
                     $context = $parent->getTagName();
                 }
+                if ($context === syntax_plugin_combo_menubar::TAG) {
+                    $linkAttributes->addHtmlAttributeValue("accesskey", "h");
+                    $linkAttributes->addClassName("navbar-brand");
+                }
+
+                syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $linkAttributes);
+                if ($state === DOKU_LEXER_SPECIAL) {
+                    syntax_plugin_combo_link::addExitLinkTagInCallStack($callStack);
+                }
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $parameters,
+                    PluginUtility::ATTRIBUTES => $linkAttributes->toCallStackArray(),
                     PluginUtility::CONTEXT => $context
                 );
 
@@ -134,7 +207,24 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                // Important otherwise we don't get an exit in the render
+                $callStack = CallStack::createFromHandler($handler);
+
+                /**
+                 * Icon ?
+                 */
+                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $iconFound = false;
+                while ($actualCall = $callStack->next()) {
+                    $tagName = $actualCall->getTagName();
+                    if ($tagName === syntax_plugin_combo_icon::TAG) {
+                        $iconFound = true;
+                        break;
+                    }
+                }
+                $openingCall->addAttribute(self::ICON_FOUND_ATTRIBUTE, $iconFound);
+
+                $callStack->moveToEnd();
+                syntax_plugin_combo_link::addExitLinkTagInCallStack($callStack);
                 return array(
                     PluginUtility::STATE => $state
                 );
@@ -149,7 +239,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      * Render the output
      * @param string $format
      * @param Doku_Renderer $renderer
-     * @param array $data - what the function handle() return'ed
+     * @param array $data - what the function handle() return
      * @return boolean - rendered correctly? (however, returned value is not used at the moment)
      * @see DokuWiki_Syntax_Plugin::render()
      *
@@ -158,42 +248,52 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data): bool
     {
 
-        if ($format == 'xhtml') {
-
-            /** @var Doku_Renderer_xhtml $renderer */
+        if ($format === "xhtml") {
             $state = $data[PluginUtility::STATE];
             switch ($state) {
-                case DOKU_LEXER_ENTER :
-                    $parameters = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($parameters);
+                case DOKU_LEXER_SPECIAL:
+                case DOKU_LEXER_ENTER:
 
-                    $brandName = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
-                    if ($brandName === self::CURRENT_BRAND) {
-                        $tagAttributes->addHtmlAttributeValue("href", wl());
+                    /**
+                     * Any error
+                     */
+                    $errorMessage = $data[PluginUtility::EXIT_MESSAGE];
+                    if (!empty($errorMessage)) {
+                        LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        $renderer->doc .= "<span class=\"text-warning\">{$errorMessage}</span>";
+                        return false;
                     }
 
                     /**
-                     * Inside the menu bar
+                     * Add the Icon / CSS / Javascript snippet
+                     * It should happen only in rendering
                      */
-                    $context = $data[PluginUtility::CONTEXT];
-                    if($context===syntax_plugin_combo_menubar::TAG) {
-                        $tagAttributes->addHtmlAttributeValue("accesskey", "h");
-                        $tagAttributes->addClassName("navbar-brand");
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $brandName = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
+                    if ($brandName === self::CURRENT_BRAND) {
+                        return true;
                     }
 
-                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("a");
+                    try {
+                        $socialChannel = self::createBrandButtonFromAttributes($tagAttributes);
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("The social channel could not be build. Error: {$e->getMessage()}");
+                        return false;
+                    }
+                    try {
+                        $style = $socialChannel->getStyle();
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("The style of the share button ($socialChannel) could not be determined. Error: {$e->getMessage()}");
+                        return false;
+                    }
+                    $snippetId = $socialChannel->getStyleScriptIdentifier();
+                    PluginUtility::getSnippetManager()->attachCssSnippetForSlot($snippetId, $style);
                     break;
-
-                case DOKU_LEXER_UNMATCHED :
-                    // What about:
-                    //   * the title of the website ? $conf['title']
-                    //   * the logo ? $logo = tpl_getMediaFile(array(':wiki:logo.png', ':logo.png', 'images/logo.png'), false, $logoSize);
+                case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
+                default:
 
-                case DOKU_LEXER_EXIT :
-                    $renderer->doc .= '</a>';
-                    break;
             }
             return true;
         }
@@ -202,10 +302,9 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
         return false;
     }
 
-    public static function getTag()
+    public static function getTag(): string
     {
-        list(/* $t */, /* $p */, /* $n */, $c) = explode('_', get_called_class(), 4);
-        return (isset($c) ? $c : '');
+        return self::TAG;
     }
 
 }

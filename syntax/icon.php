@@ -5,12 +5,14 @@
  */
 
 use ComboStrap\CallStack;
+use ComboStrap\ColorUtility;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
 use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\TagAttributes;
 
 
@@ -37,7 +39,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
     const CANONICAL = self::TAG;
     const ICON_NAME_ATTRIBUTE = "name";
 
-    private static function exceptionHandling(Exception $e, $tagAttribute)
+    private static function exceptionHandling(Exception $e, $tagAttribute): string
     {
         $errorClass = syntax_plugin_combo_media::SVG_RENDERING_ERROR_CLASS;
         $message = "Icon ({$tagAttribute->getValue("name")}). Error while rendering: {$e->getMessage()}";
@@ -149,7 +151,12 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL:
             case DOKU_LEXER_ENTER:
                 // Get the parameters
-                $tagAttributes = TagAttributes::createFromTagMatch($match);
+                $primaryColor = Site::getPrimaryColor();
+                $default = [];
+                if($primaryColor!==null){
+                    $default = [ColorUtility::COLOR=>$primaryColor];
+                }
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()

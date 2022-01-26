@@ -40,13 +40,34 @@ class TextColor
         foreach ($colorAttributes as $colorAttribute) {
             if ($attributes->hasComponentAttribute($colorAttribute)) {
                 $colorValue = $attributes->getValueAndRemove($colorAttribute);
-                $lowerCase = strtolower($colorValue);
-                if (in_array($lowerCase, self::TEXT_COLORS)) {
+                $lowerCaseColorValue = strtolower($colorValue);
+
+                /**
+                 * Branding colors overwrite
+                 */
+                switch($lowerCaseColorValue){
+                    case ColorUtility::PRIMARY_VALUE:
+                        $primaryColor = Site::getPrimaryColor();
+                        if($primaryColor!==null){
+                            // important because we set the text-class below and they already have an important value
+                            $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "$primaryColor!important");
+                        }
+                        break;
+                    case ColorUtility::SECONDARY_VALUE:
+                        $secondaryColor = Site::getSecondaryColor();
+                        if($secondaryColor!==null){
+                            // important because we set the text-class below and they already have an important value
+                            $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "$secondaryColor!important");
+                        }
+                        break;
+                }
+
+                if (in_array($lowerCaseColorValue, self::TEXT_COLORS)) {
                     /**
                      * The bootstrap text class
                      * https://getbootstrap.com/docs/5.0/utilities/colors/#colors
                      */
-                    $attributes->addClassName("text-$lowerCase");
+                    $attributes->addClassName("text-$lowerCaseColorValue");
                 } else {
                     /**
                      * Other Text Colors

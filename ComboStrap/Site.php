@@ -424,9 +424,9 @@ class Site
         self::setTagLine($description);
     }
 
-    public static function setPrimaryColor(string $colorValue)
+    public static function setPrimaryColor(string $primaryColorValue)
     {
-        PluginUtility::setConf(ColorUtility::PRIMARY_COLOR_CONF, $colorValue);
+        PluginUtility::setConf(ColorUtility::PRIMARY_COLOR_CONF, $primaryColorValue);
     }
 
     public static function getPrimaryColor(): ?string

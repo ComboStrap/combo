@@ -309,11 +309,6 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                      * It should happen only in rendering
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $brandName = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
-                    if ($brandName === BrandButton::CURRENT_BRAND) {
-                        return true;
-                    }
-
                     try {
                         $brandButton = self::createBrandButtonFromAttributes($tagAttributes);
                     } catch (ExceptionCombo $e) {

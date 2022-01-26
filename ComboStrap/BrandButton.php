@@ -149,6 +149,16 @@ class BrandButton
                     }
                 }
                 $this->brandUrl = Site::getBaseUrl();
+                $primaryColor = Site::getPrimaryColor();
+                if ($primaryColor !== null && $primaryColor !== ColorUtility::PRIMARY_VALUE) {
+                    // the predicates on the primary value is to avoid a loop with the the function below
+                    $this->primaryColor = ColorUtility::getColorValue($primaryColor);
+                }
+                $secondaryColor = Site::getSecondaryColor();
+                if ($secondaryColor !== null && $secondaryColor !== ColorUtility::SECONDARY_VALUE) {
+                    // the predicates on the secondary value is to avoid a loop with the the function below
+                    $this->primaryColor = ColorUtility::getColorValue($primaryColor);
+                }
                 break;
             default:
                 if ($brandDict === null) {
@@ -162,8 +172,6 @@ class BrandButton
                 $this->brandUrl = $brandDict["url"];
                 break;
         }
-
-
 
 
     }
@@ -383,6 +391,10 @@ class BrandButton
             case self::WIDGET_LINK_VALUE:
                 $properties["vertical-align"] = "middle";
                 $properties["display"] = "inline-block";
+                if ($this->primaryColor !== null) {
+                    // important because the nav-bar class takes over
+                    $properties["color"] = "$this->primaryColor!important";
+                }
                 break;
             default:
             case self::WIDGET_BUTTON_VALUE:

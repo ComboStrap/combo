@@ -276,5 +276,114 @@ class ColorUtility
 
     }
 
+    public static function getColorDarker()
+    {
+
+    }
+
+
+    /**
+     * @param int $red
+     * @param int $green
+     * @param int $blue
+     * @return array
+     */
+    public static function rgbToHsl(int $red, int $green, int $blue): array
+    {
+
+        $red = $red / 255;
+        $green = $green / 255;
+        $blue = $blue / 255;
+
+        $max = max($red, $green, $blue);
+        $min = min($red, $green, $blue);
+
+
+        $lightness = ($max + $min) / 2;
+        $d = $max - $min;
+
+        if ($d == 0) {
+            $hue = $saturation = 0; // achromatic
+        } else {
+            $saturation = $d / (1 - abs(2 * $lightness - 1));
+
+            switch ($max) {
+                case $red:
+                    $hue = 60 * fmod((($green - $blue) / $d), 6);
+                    if ($blue > $green) {
+                        $hue += 360;
+                    }
+                    break;
+
+                case $green:
+                    $hue = 60 * (($blue - $red) / $d + 2);
+                    break;
+
+                default:
+                case $blue:
+                    $hue = 60 * (($red - $green) / $d + 4);
+                    break;
+
+            }
+        }
+
+        return array($hue, $saturation, $lightness);
+    }
+
+    /**
+     * @param float $hue (0 to 360)
+     * @param float $saturation (range 0 to 1)
+     * @param float $lightness (range 0 to 1)
+     * @return array
+     *
+     * https://en.wikipedia.org/wiki/HSL_and_HSV#HSL_to_RGB
+     * https://gist.github.com/brandonheyer/5254516
+     */
+    static function hslToRgb(float $hue, float $saturation, float $lightness): array
+    {
+
+        $chroma = (1 - abs(2 * $lightness - 1)) * $saturation;
+        $x = $chroma * (1 - abs(fmod(($hue / 60), 2) - 1));
+        $m = $lightness - ($chroma / 2);
+
+        if ($hue < 60) {
+            $red = $chroma;
+            $green = $x;
+            $blue = 0;
+        } else if ($hue < 120) {
+            $red = $x;
+            $green = $chroma;
+            $blue = 0;
+        } else if ($hue < 180) {
+            $red = 0;
+            $green = $chroma;
+            $blue = $x;
+        } else if ($hue < 240) {
+            $red = 0;
+            $green = $x;
+            $blue = $chroma;
+        } else if ($hue < 300) {
+            $red = $x;
+            $green = 0;
+            $blue = $chroma;
+        } else {
+            $red = $chroma;
+            $green = 0;
+            $blue = $x;
+        }
+
+        $red = ($red + $m) * 255;
+        $green = ($green + $m) * 255;
+        $blue = ($blue + $m) * 255;
+
+        /**
+         * To the closest integer
+         */
+        $red = intval(round($red));
+        $green = intval(round($green));
+        $blue = intval(round($blue));
+        return array($red, $green, $blue);
+    }
+
 
 }

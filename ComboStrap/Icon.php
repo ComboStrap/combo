@@ -65,7 +65,8 @@ class Icon extends ImageSvg
         self::VAADIN => "https://raw.githubusercontent.com/vaadin/vaadin-icons/master/assets/svg",
         self::CORE_UI_BRAND => "https://raw.githubusercontent.com/coreui/coreui-icons/master/svg/brand",
         self::FLAT_COLOR_ICON => "https://raw.githubusercontent.com/icons8/flat-color-icons/master/svg",
-        self::PHOSPHOR_ICONS => "https://raw.githubusercontent.com/phosphor-icons/phosphor-icons/master/assets"
+        self::PHOSPHOR_ICONS => "https://raw.githubusercontent.com/phosphor-icons/phosphor-icons/master/assets",
+        self::VSCODE => "https://raw.githubusercontent.com/vscode-icons/vscode-icons/master/icons"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -97,7 +98,8 @@ class Icon extends ImageSvg
         self::VAADIN => "https://vaadin.com/icons",
         self::CORE_UI_BRAND => "https://coreui.io/icons/",
         self::FLAT_COLOR_ICON => "https://icons8.com/icons/color",
-        self::PHOSPHOR_ICONS => "https://phosphoricons.com/"
+        self::PHOSPHOR_ICONS => "https://phosphoricons.com/",
+        self::VSCODE => "https://marketplace.visualstudio.com/items?itemName=vscode-icons-team.vscode-icons"
 
     );
 
@@ -144,7 +146,8 @@ class Icon extends ImageSvg
         "vaadin" => self::VAADIN,
         "cib" => self::CORE_UI_BRAND,
         "flat-color-icons" => self::FLAT_COLOR_ICON,
-        "ph" => self::PHOSPHOR_ICONS
+        "ph" => self::PHOSPHOR_ICONS,
+        "vscode-icons" => self::VSCODE
     );
 
     const FEATHER = "feather";
@@ -178,6 +181,7 @@ class Icon extends ImageSvg
     const CORE_UI_BRAND = "cib";
     const FLAT_COLOR_ICON = "flat-color-icons";
     const PHOSPHOR_ICONS = "ph";
+    const VSCODE = "vscode";
 
     private $fullQualifiedName;
     /**
@@ -385,7 +389,6 @@ class Icon extends ImageSvg
                 [$iconShortName, $iconType] = self::explodeInTwoPartsByLastPosition($iconName, "-");
                 $iconBaseUrl .= "/$iconType";
                 break;
-
             case self::SIMPLE_LINE:
                 // Bug
                 if ($iconName === "social-pinterest") {
@@ -407,6 +410,10 @@ class Icon extends ImageSvg
                     default:
                         throw new ExceptionCombo("The box-icon icon ($iconName) has a type ($iconType) that is unknown, we can't determine the location of the icon to download");
                 }
+                break;
+            case self::VSCODE:
+                $iconName = str_replace("-", "_", $iconName);
+                break;
         }
 
 

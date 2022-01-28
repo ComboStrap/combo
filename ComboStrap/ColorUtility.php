@@ -327,6 +327,9 @@ class ColorUtility
             }
         }
 
+        /**
+         * No round to get a neat inverse
+         */
         return array($hue, $saturation, $lightness);
     }
 
@@ -336,6 +339,7 @@ class ColorUtility
      * @param float $lightness (range 0 to 1)
      * @return array
      *
+     * Reference:
      * https://en.wikipedia.org/wiki/HSL_and_HSV#HSL_to_RGB
      * https://gist.github.com/brandonheyer/5254516
      */
@@ -385,5 +389,75 @@ class ColorUtility
         return array($red, $green, $blue);
     }
 
+    /**
+     * @param int[] $color_1
+     * @param int[] $color_2
+     * @param int $weight
+     * @return array
+     *
+     * Because Bootstrap uses the mix function of SCSS
+     * https://sass-lang.com/documentation/modules/color#mix
+     * We try to be as clause as possible
+     *
+     * https://gist.github.com/jedfoster/7939513
+     *
+     * This is a linear extrapolation along the segment
+     */
+    static function mix(array $color_1 = array(0, 0, 0), array $color_2 = array(0, 0, 0), ?int $weight = 50): array
+    {
+        if ($weight === null) {
+            $weight = 50;
+        }
+
+        $lerp = function ($x, $y) use ($weight) {
+            $X = ($weight * $x) / 100;
+            $Y = (100 - $weight) / 100 * $y;
+            $v = $X + $Y;
+            $rest = fmod($v, 1);
+            if ($rest < 0.5) {
+                return round($v, 0, PHP_ROUND_HALF_DOWN);
+            } else {
+                return round($v, 0, PHP_ROUND_HALF_UP);
+            }
+        };
+
+        $mixColor = [];
+        foreach ($color_1 as $index => $c1) {
+            $c2 = $color_2[$index];
+            $mixColor[] = $lerp($c1, $c2);
+        }
+        return $mixColor;
+
+    }
+
+    /**
+     * hex2rgb
+     *
+     * @param mixed $hex
+     *
+     */
+    static function hex2rgb($hex = '#000000'): array
+    {
+        $f = function ($x) {
+            return hexdec($x);
+        };
+
+        return array_map($f, str_split(str_replace("#", "", $hex), 2));
+    }
+
+    /**
+     * rgb2hex
+     *
+     * @param mixed $rgb
+     *
+     */
+    static function rgb2hex($rgb = array(0, 0, 0)): string
+    {
+        $f = function ($x) {
+            return str_pad(dechex($x), 2, "0", STR_PAD_LEFT);
+        };
+
+        return "#" . implode("", array_map($f, $rgb));
+    }
 
 }

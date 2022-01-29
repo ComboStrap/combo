@@ -464,5 +464,10 @@ class Site
         return ColorUtility::getColorValue($value);
     }
 
+    public static function setSecondaryColor(string $secondaryColorValue)
+    {
+        PluginUtility::setConf(ColorUtility::SECONDARY_COLOR_CONF, $secondaryColorValue);
+    }
+
 
 }

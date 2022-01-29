@@ -219,6 +219,8 @@ class SvgDocument extends XmlDocument
         // Handy variable
         $documentElement = $this->getXmlDom()->documentElement;
 
+        // With requested
+        $requestedWidth = $localTagAttributes->getValueAndRemove(Dimension::WIDTH_KEY);
 
         /**
          * Svg type
@@ -242,20 +244,22 @@ class SvgDocument extends XmlDocument
                  * and the bar component are below the brand text
                  *
                  */
-                if ($svgUsageType == self::ICON_TYPE) {
-                    $defaultWidth = self::DEFAULT_ICON_WIDTH;
-                } else {
-                    // tile
-                    $defaultWidth = "192";
+                $appliedWidth = $requestedWidth;
+                if ($requestedWidth === null) {
+                    if ($svgUsageType == self::ICON_TYPE) {
+                        $appliedWidth = self::DEFAULT_ICON_WIDTH;
+                    } else {
+                        // tile
+                        $appliedWidth = "192";
+                    }
                 }
                 /**
                  * Dimension
                  * The default unit on attribute is pixel, no need to add it
                  * as in CSS
                  */
-                $width = $localTagAttributes->getValueAndRemove(Dimension::WIDTH_KEY, $defaultWidth);
-                $localTagAttributes->addHtmlAttributeValue("width", $width);
-                $height = $localTagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY, $width);
+                $localTagAttributes->addHtmlAttributeValue("width", $appliedWidth);
+                $height = $localTagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY, $appliedWidth);
                 $localTagAttributes->addHtmlAttributeValue("height", $height);
                 break;
             default:
@@ -292,21 +296,20 @@ class SvgDocument extends XmlDocument
                 $localTagAttributes->addStyleDeclarationIfNotSet("height", "auto");
 
 
-                if ($localTagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)) {
+                if ($requestedWidth !== null) {
 
                     /**
                      * If a dimension was set, it's seen by default as a max-width
                      * If it should not such as in a card, this property is already set
                      * and is not overwritten
                      */
-                    $width = $localTagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
                     try {
-                        $width = Dimension::toPixelValue($width);
+                        $widthInPixel = Dimension::toPixelValue($requestedWidth);
                     } catch (ExceptionCombo $e) {
-                        LogUtility::msg("The requested width $width could not be converted to pixel. It returns the following error ({$e->getMessage()}). Processing was stopped");
+                        LogUtility::msg("The requested width $requestedWidth could not be converted to pixel. It returns the following error ({$e->getMessage()}). Processing was stopped");
                         return parent::getXmlText();
                     }
-                    $localTagAttributes->addStyleDeclarationIfNotSet("max-width", "{$width}px");
+                    $localTagAttributes->addStyleDeclarationIfNotSet("max-width", "{$widthInPixel}px");
 
                 }
                 break;
@@ -383,8 +386,8 @@ class SvgDocument extends XmlDocument
 
                 /**
                  * Color
-                 * Color should only be applied on icon.
-                 * What if the svg is an illustrative image
+                 * Color applies only if this is an icon.
+                 *
                  */
                 if ($localTagAttributes->hasComponentAttribute(ColorUtility::COLOR)) {
                     /**

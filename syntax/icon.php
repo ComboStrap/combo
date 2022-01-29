@@ -6,6 +6,7 @@
 
 use ComboStrap\CallStack;
 use ComboStrap\ColorUtility;
+use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
@@ -13,6 +14,7 @@ use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\SvgDocument;
 use ComboStrap\TagAttributes;
 
 
@@ -151,12 +153,23 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL:
             case DOKU_LEXER_ENTER:
                 // Get the parameters
-                $primaryColor = Site::getPrimaryColor();
-                $default = [];
-                if($primaryColor!==null){
-                    $default = [ColorUtility::COLOR=>$primaryColor];
+                $knownTypes = [];
+                $defaultAttributes = [];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
+                $requestedColor = $tagAttributes->getValue(ColorUtility::COLOR);
+                if ($requestedColor === null) {
+                    $requestedWidth = $tagAttributes->getValue(Dimension::WIDTH_KEY, SvgDocument::DEFAULT_ICON_WIDTH);
+                    if ($requestedWidth > 36) {
+                        // Illustrative icon
+                        $color = Site::getPrimaryColor();
+                    } else {
+                        // Character icon
+                        $color = Site::getSecondaryColor();
+                    }
+                    if ($color !== null) {
+                        $tagAttributes->setComponentAttributeValue(ColorUtility::COLOR, $color);
+                    }
                 }
-                $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()

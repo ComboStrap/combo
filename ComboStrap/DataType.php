@@ -67,7 +67,7 @@ class DataType
         if (is_int($targetValue)) {
             return $targetValue;
         }
-        if (!is_string($targetValue)) {
+        if (!is_string($targetValue) && !is_float($targetValue)) {
             $varExport = var_export($targetValue, true);
             throw new ExceptionCombo("The value passed is not a numeric/nor a string. We can not translate it to an integer. Value: $varExport");
         }

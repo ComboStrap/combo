@@ -354,10 +354,18 @@ class Color
     }
 
     /**
-     * @param int[] $color_1
-     * @param int[] $color_2
-     * @param int $weight
-     * @return array
+     * @throws ExceptionCombo
+     */
+    private static function createFromRgbArray($array)
+    {
+        return new Color($array);
+    }
+
+    /**
+     * @param mixed $color2Value
+     * @param int|null $weight
+     * @return Color
+     *
      *
      * Because Bootstrap uses the mix function of SCSS
      * https://sass-lang.com/documentation/modules/color#mix
@@ -366,8 +374,9 @@ class Color
      * https://gist.github.com/jedfoster/7939513
      *
      * This is a linear extrapolation along the segment
+     * @throws ExceptionCombo
      */
-    static function mix(array $color_1 = array(0, 0, 0), array $color_2 = array(0, 0, 0), ?int $weight = 50): array
+    function mix($color2Value, ?int $weight = 50): Color
     {
         if ($weight === null) {
             $weight = 50;
@@ -385,12 +394,17 @@ class Color
             }
         };
 
-        $mixColor = [];
-        foreach ($color_1 as $index => $c1) {
-            $c2 = $color_2[$index];
-            $mixColor[] = $lerp($c1, $c2);
-        }
-        return $mixColor;
+        $color2 = Color::create($color2Value);
+        $targetRed = $lerp($this->getRed(),$color2->getRed());
+        $targetGreen = $lerp($this->getGreen(),$color2->getGreen());
+        $targetBlue = $lerp($this->getBlue(),$color2->getBlue());
+        return Color::createFromRgbArray(
+            [
+                $targetRed,
+                $targetGreen,
+                $targetBlue
+            ]
+        ) ;
 
     }
 
@@ -436,16 +450,20 @@ class Color
     /**
      * rgb2hex
      *
-     * @param mixed $rgb
-     *
+     * @return string
      */
-    static function rgb2hex($rgb = array(0, 0, 0)): string
+    function toHex(): string
     {
         $f = function ($x) {
             return str_pad(dechex($x), 2, "0", STR_PAD_LEFT);
         };
 
-        return "#" . implode("", array_map($f, $rgb));
+        return "#" . implode("", array_map($f, [
+                    $this->getRed(),
+                    $this->getGreen(),
+                    $this->getBlue()
+                ]
+            ));
     }
 
     /**
@@ -459,12 +477,29 @@ class Color
     /**
      * @throws ExceptionCombo
      */
-    public function __construct($color)
+    public function __construct($colorValue)
     {
 
-        $this->colorValue = $color;
-        if ($color[0] == "#") {
-            [$this->red, $this->green, $this->blue] = $this->hex2rgb($color);
+        $this->colorValue = $colorValue;
+        if (is_array($colorValue)) {
+            if (sizeof($colorValue) != 3) {
+                throw new ExceptionCombo("A rgb color array should be of length 3");
+            }
+            foreach ($colorValue as $color) {
+                try {
+                    $channel = DataType::toInteger($color);
+                } catch (ExceptionCombo $e) {
+                    throw new ExceptionCombo("The rgb color $color is not an integer. Error: {$e->getMessage()}");
+                }
+                if ($channel < 0 and $channel > 255) {
+                    throw new ExceptionCombo("The rgb color $color is not between 0 and 255");
+                }
+            }
+            [$this->red, $this->green, $this->blue] = $colorValue;
+            return;
+        }
+        if ($colorValue[0] == "#") {
+            [$this->red, $this->green, $this->blue] = $this->hex2rgb($colorValue);
         }
     }
 

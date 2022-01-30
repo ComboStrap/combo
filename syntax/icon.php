@@ -156,8 +156,26 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                 $knownTypes = [];
                 $defaultAttributes = [];
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
+                $callStack = CallStack::createFromHandler($handler);
+                $parent = $callStack->moveToParent();
+                $context = "";
+                if ($parent !== false) {
+                    $context = $parent->getTagName();
+                    if($context===syntax_plugin_combo_link::TAG){
+                        $context = $parent->getTagName();
+                    }
+                }
+                /**
+                 * Color setting should know the color of its parent
+                 * For now, we don't set any color if the parent is a button or a note
+                 */
                 $requestedColor = $tagAttributes->getValue(ColorUtility::COLOR);
-                if ($requestedColor === null) {
+                if ($requestedColor === null &&
+                    !in_array($context, [
+                        syntax_plugin_combo_button::TAG,
+                        syntax_plugin_combo_note::TAG,
+                        syntax_plugin_combo_link::TAG
+                    ])) {
                     $requestedWidth = $tagAttributes->getValue(Dimension::WIDTH_KEY, SvgDocument::DEFAULT_ICON_WIDTH);
                     if ($requestedWidth > 36) {
                         // Illustrative icon
@@ -172,7 +190,8 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                 }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
+                    PluginUtility::CONTEXT => $context
                 );
             case DOKU_LEXER_EXIT:
                 $callStack = CallStack::createFromHandler($handler);
@@ -213,17 +232,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 
 
                         case DOKU_LEXER_SPECIAL:
-                            $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                            try {
-                                $name = $tagAttribute->getValue(self::ICON_NAME_ATTRIBUTE);
-                                if ($name === null) {
-                                    throw new ExceptionCombo("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
-                                }
-                                $renderer->doc .= Icon::create($name, $tagAttribute)
-                                    ->render();
-                            } catch (Exception $e) {
-                                $renderer->doc .= self::exceptionHandling($e, $tagAttribute);
-                            }
+                            $renderer->doc .= $this->printIcon($data);
                             break;
                         case DOKU_LEXER_ENTER:
                             /**
@@ -242,17 +251,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                             /**
                              * Print the icon
                              */
-                            $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                            try {
-                                $name = $tagAttribute->getValue("name");
-                                if ($name === null) {
-                                    throw new ExceptionCombo("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
-                                }
-                                $renderer->doc .= Icon::create($name, $tagAttribute)
-                                    ->render();
-                            } catch (ExceptionCombo $e) {
-                                $renderer->doc .= self::exceptionHandling($e, $tagAttribute);
-                            }
+                            $renderer->doc .= $this->printIcon($data);
                             /**
                              * Close the span if we are in a tooltip context
                              */
@@ -288,6 +287,25 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 
         }
         return true;
+    }
+
+    /**
+     * @param $data
+     * @return string
+     */
+    private function printIcon($data): string
+    {
+        $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+        try {
+            $name = $tagAttributes->getValue("name");
+            if ($name === null) {
+                throw new ExceptionCombo("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
+            }
+            return Icon::create($name, $tagAttributes)
+                ->render();
+        } catch (ExceptionCombo $e) {
+            return self::exceptionHandling($e, $tagAttributes);
+        }
     }
 
 

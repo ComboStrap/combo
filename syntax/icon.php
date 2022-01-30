@@ -5,7 +5,7 @@
  */
 
 use ComboStrap\CallStack;
-use ComboStrap\ColorUtility;
+use ComboStrap\Color;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
@@ -171,7 +171,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                  * As a header is not a parent, we may say that if the icon is contained, the default
                  * branding color is not set ?
                  */
-                $requestedColor = $tagAttributes->getValue(ColorUtility::COLOR);
+                $requestedColor = $tagAttributes->getValue(Color::COLOR);
                 if ($requestedColor === null &&
                     !in_array($context, [
                         syntax_plugin_combo_button::TAG,
@@ -187,7 +187,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                         $color = Site::getSecondaryColor();
                     }
                     if ($color !== null) {
-                        $tagAttributes->setComponentAttributeValue(ColorUtility::COLOR, $color);
+                        $tagAttributes->setComponentAttributeValue(Color::COLOR, $color);
                     }
                 }
                 return array(

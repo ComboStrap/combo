@@ -77,7 +77,7 @@ require_once(__DIR__ . '/CacheMedia.php');
 require_once(__DIR__ . '/Call.php');
 require_once(__DIR__ . '/CallStack.php');
 require_once(__DIR__ . '/Canonical.php');
-require_once(__DIR__ . '/ColorUtility.php');
+require_once(__DIR__ . '/Color.php');
 require_once(__DIR__ . '/ConditionalValue.php');
 require_once(__DIR__ . '/Console.php');
 require_once(__DIR__ . '/Cron.php');
@@ -667,9 +667,9 @@ class PluginUtility
          * For text color, see {@link TextColor}
          */
 
-        if ($attributes->hasComponentAttribute(ColorUtility::BORDER_COLOR)) {
-            $colorValue = $attributes->getValueAndRemove(ColorUtility::BORDER_COLOR);
-            $attributes->addStyleDeclarationIfNotSet(ColorUtility::BORDER_COLOR, ColorUtility::getColorValue($colorValue));
+        if ($attributes->hasComponentAttribute(Color::BORDER_COLOR)) {
+            $colorValue = $attributes->getValueAndRemove(Color::BORDER_COLOR);
+            $attributes->addStyleDeclarationIfNotSet(Color::BORDER_COLOR, Color::create($colorValue)->toCssValue());
             self::checkDefaultBorderColorAttributes($attributes);
         }
 

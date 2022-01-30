@@ -46,14 +46,14 @@ class TextColor
                  * Branding colors overwrite
                  */
                 switch($lowerCaseColorValue){
-                    case ColorUtility::PRIMARY_VALUE:
+                    case Color::PRIMARY_VALUE:
                         $primaryColor = Site::getPrimaryColor();
                         if($primaryColor!==null){
                             // important because we set the text-class below and they already have an important value
                             $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "$primaryColor!important");
                         }
                         break;
-                    case ColorUtility::SECONDARY_VALUE:
+                    case Color::SECONDARY_VALUE:
                         $secondaryColor = Site::getSecondaryColor();
                         if($secondaryColor!==null){
                             // important because we set the text-class below and they already have an important value
@@ -72,7 +72,7 @@ class TextColor
                     /**
                      * Other Text Colors
                      */
-                    $colorValue = ColorUtility::getColorValue($colorValue);
+                    $colorValue = Color::create($colorValue)->toCssValue();
                     if (!empty($colorValue)) {
                         $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, $colorValue);
                     }

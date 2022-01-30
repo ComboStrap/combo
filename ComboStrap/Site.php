@@ -426,17 +426,17 @@ class Site
 
     public static function setPrimaryColor(string $primaryColorValue)
     {
-        PluginUtility::setConf(ColorUtility::PRIMARY_COLOR_CONF, $primaryColorValue);
+        PluginUtility::setConf(Color::PRIMARY_COLOR_CONF, $primaryColorValue);
     }
 
     public static function getPrimaryColor(): ?string
     {
-        $value = PluginUtility::getConfValue(ColorUtility::PRIMARY_COLOR_CONF);
+        $value = PluginUtility::getConfValue(Color::PRIMARY_COLOR_CONF);
         if ($value === null) {
-            $styles = ColorUtility::getDokuWikiStyles();
+            $styles = Color::getDokuWikiStyles();
             return $styles["replacements"]["__theme_color__"];
         }
-        if ($value === ColorUtility::PRIMARY_VALUE) {
+        if ($value === Color::PRIMARY_VALUE) {
             /**
              * Avoid circular call because
              * ColorUtility::getColorValue call this method is
@@ -444,16 +444,16 @@ class Site
              */
             return $value;
         }
-        return ColorUtility::getColorValue($value);
+        return Color::create($value)->toCssValue();
     }
 
     public static function getSecondaryColor(): ?string
     {
-        $value = PluginUtility::getConfValue(ColorUtility::SECONDARY_COLOR_CONF);
+        $value = PluginUtility::getConfValue(Color::SECONDARY_COLOR_CONF);
         if ($value === null) {
             return null;
         }
-        if ($value === ColorUtility::SECONDARY_VALUE) {
+        if ($value === Color::SECONDARY_VALUE) {
             /**
              * Avoid circular call because
              * ColorUtility::getColorValue call this method is
@@ -461,12 +461,12 @@ class Site
              */
             return $value;
         }
-        return ColorUtility::getColorValue($value);
+        return Color::create($value)->toCssValue();
     }
 
     public static function setSecondaryColor(string $secondaryColorValue)
     {
-        PluginUtility::setConf(ColorUtility::SECONDARY_COLOR_CONF, $secondaryColorValue);
+        PluginUtility::setConf(Color::SECONDARY_COLOR_CONF, $secondaryColorValue);
     }
 
 

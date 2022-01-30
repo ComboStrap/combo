@@ -5,33 +5,30 @@ use ComboStrap\PluginUtility;
 
 /**
  *
- * Taking over {@link \dokuwiki\Parsing\ParserMode\Formatting monospace}
- *
  * Known as code
  * https://spec.commonmark.org/0.30/#code-spans
  *
+ * note supported but specific highlight is done with two `==`
+ * in some processor
+ * https://www.markdownguide.org/extended-syntax/#highlight
+ *
  */
-class syntax_plugin_combo_highlight extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_highlightmd extends DokuWiki_Syntax_Plugin
 {
 
 
-    const TAG = "highlight";
+    const TAG = "highlightmd";
     // Only on one line
-    const ENTRY_PATTERN = "\x27\x27(?=[^\n]*\x27\x27)";
-    const ENTRY_PATTERN_MD = "`[\w\s].*(?=`)(?!\n)";
 
-    const CONF_HIGHLIGHT_ENABLE = "highlightEnable";
-    const CONF_DEFAULT_HIGHLIGHT_ENABLE_VALUE = 1;
-    const EXIT_PATTERN = "\x27\x27";
-    const EXIT_PATTERN_MD = "`";
+    const ENTRY_PATTERN = "`[\w\s].*(?=`)(?!\n)";
+
+    const EXIT_PATTERN = "`";
+    const CANONICAL = self::TAG;
 
     public function getSort(): int
     {
-        /**
-         * It's 49 (on less than the original of 100)
-         * {@link \dokuwiki\Parsing\ParserMode\Formatting}
-         */
-        return 49;
+
+        return 200;
     }
 
     public function getType(): string
@@ -74,10 +71,9 @@ class syntax_plugin_combo_highlight extends DokuWiki_Syntax_Plugin
 
     public function connectTo($mode)
     {
-        $enabled = PluginUtility::getConfValue(self::CONF_HIGHLIGHT_ENABLE, self::CONF_DEFAULT_HIGHLIGHT_ENABLE_VALUE);
-        if ($enabled) {
+
             $this->Lexer->addEntryPattern(self::ENTRY_PATTERN, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
-        }
+
 
     }
 

@@ -206,7 +206,7 @@ class Background
         if ($tagAttributes->hasComponentAttribute(self::BACKGROUND_COLOR)) {
 
             $colorValue = $tagAttributes->getValueAndRemove(self::BACKGROUND_COLOR);
-            $colorValue = ColorUtility::getColorValue($colorValue);
+            $colorValue = Color::create($colorValue)->toCssValue();
             $gradientPrefix = 'gradient-';
             if (strpos($colorValue, $gradientPrefix) === 0) {
                 /**
@@ -217,7 +217,7 @@ class Background
                     LogUtility::msg("An image and a linear gradient color are exclusive because a linear gradient color creates an image. You can't use the linear color (" . $colorValue . ") and the image (" . $backgroundImageStyleValue . ")", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
                 } else {
                     $mainColorValue = substr($colorValue, strlen($gradientPrefix));
-                    $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_IMAGE, 'linear-gradient(to top,#fff 0,' . ColorUtility::getColorValue($mainColorValue) . ' 100%)');
+                    $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_IMAGE, 'linear-gradient(to top,#fff 0,' . Color::create($mainColorValue)->toCssValue() . ' 100%)');
                     $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_COLOR, 'unset!important');
                 }
             } else {
@@ -330,7 +330,7 @@ class Background
                 LogUtility::msg("The pattern color was not set for the background with the (" . $pattern . "). It was set to the default color.", LogUtility::LVL_MSG_INFO, self::CANONICAL);
                 $patternColor = "#FDE482";
             }
-            $tagAttributes->addStyleDeclarationIfNotSet(ColorUtility::COLOR, $patternColor);
+            $tagAttributes->addStyleDeclarationIfNotSet(Color::COLOR, $patternColor);
 
         }
     }

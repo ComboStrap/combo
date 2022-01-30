@@ -15,7 +15,7 @@ namespace ComboStrap;
 
 use dokuwiki\StyleUtils;
 
-class ColorUtility
+class Color
 {
 
     const COLOR = "color";
@@ -214,54 +214,11 @@ class ColorUtility
      * @var array
      */
     private static $dokuWikiStyles;
-
-
     /**
-     * Return a combostrap value to a web color value
-     * @param string $color a color value
-     * @return string the color value
+     * @var string
      */
-    public static function getColorValue(string $color): string
-    {
+    private $colorValue;
 
-        if ($color[0] == "#") {
-            return $color;
-        }
-        $lowerColor = strtolower($color);
-        if ($lowerColor == "reset") {
-            $colorValue = "inherit!important";
-        } else {
-            // Custom Css variable
-            if (in_array($lowerColor, self::BOOTSTRAP_COLORS)) {
-                if ($lowerColor === self::PRIMARY_VALUE) {
-                    $primaryColor = Site::getPrimaryColor();
-                    if ($primaryColor !== null) {
-                        return $primaryColor;
-                    }
-                }
-                if ($lowerColor === self::SECONDARY_VALUE) {
-                    $secondaryColor = Site::getSecondaryColor();
-                    if ($secondaryColor !== null) {
-                        return $secondaryColor;
-                    }
-                }
-                $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
-                switch ($bootstrapVersion) {
-                    case Bootstrap::BootStrapFiveMajorVersion:
-                        $colorValue = "bs-" . $lowerColor;
-                        break;
-                    default:
-                        $colorValue = $lowerColor;
-                        break;
-                }
-                $colorValue = "var(--" . $colorValue . ")";
-            } else {
-                // css color name
-                $colorValue = $lowerColor;
-            }
-        }
-        return $colorValue;
-    }
 
     /**
      * The styles of the dokuwiki systems
@@ -459,5 +416,59 @@ class ColorUtility
 
         return "#" . implode("", array_map($f, $rgb));
     }
+
+    public static function create(string $color): Color
+    {
+        return new Color($color);
+    }
+
+    public function __construct($color)
+    {
+
+        $this->colorValue = $color;
+    }
+
+    public function toCssValue(): string
+    {
+        $color = $this->colorValue;
+        if ($color[0] == "#") {
+            return $color;
+        }
+        $lowerColor = strtolower($color);
+        if ($lowerColor == "reset") {
+            $colorValue = "inherit!important";
+        } else {
+            // Custom Css variable
+            if (in_array($lowerColor, self::BOOTSTRAP_COLORS)) {
+                if ($lowerColor === self::PRIMARY_VALUE) {
+                    $primaryColor = Site::getPrimaryColor();
+                    if ($primaryColor !== null) {
+                        return $primaryColor;
+                    }
+                }
+                if ($lowerColor === self::SECONDARY_VALUE) {
+                    $secondaryColor = Site::getSecondaryColor();
+                    if ($secondaryColor !== null) {
+                        return $secondaryColor;
+                    }
+                }
+                $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
+                switch ($bootstrapVersion) {
+                    case Bootstrap::BootStrapFiveMajorVersion:
+                        $colorValue = "bs-" . $lowerColor;
+                        break;
+                    default:
+                        $colorValue = $lowerColor;
+                        break;
+                }
+                $colorValue = "var(--" . $colorValue . ")";
+            } else {
+                // css color name
+                $colorValue = $lowerColor;
+            }
+        }
+        return $colorValue;
+    }
+
 
 }

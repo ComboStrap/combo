@@ -4,7 +4,7 @@
 // must be run within Dokuwiki
 use ComboStrap\Background;
 use ComboStrap\CallStack;
-use ComboStrap\ColorUtility;
+use ComboStrap\Color;
 use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -166,8 +166,8 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
                     } else {
                         // There is no alert-tip color
                         // base color was background color and we have modified the luminance
-                        if (!$attributes->hasComponentAttribute(ColorUtility::COLOR)) {
-                            $attributes->addComponentAttributeValue(ColorUtility::COLOR, "#6c6400"); // lum - 51
+                        if (!$attributes->hasComponentAttribute(Color::COLOR)) {
+                            $attributes->addComponentAttributeValue(Color::COLOR, "#6c6400"); // lum - 51
                         }
                         if (!$attributes->hasComponentAttribute("border-color")) {
                             $attributes->addComponentAttributeValue("border-color", "#FFF78c"); // lum - 186

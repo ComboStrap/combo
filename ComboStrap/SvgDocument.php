@@ -389,7 +389,7 @@ class SvgDocument extends XmlDocument
                  * Color applies only if this is an icon.
                  *
                  */
-                if ($localTagAttributes->hasComponentAttribute(ColorUtility::COLOR)) {
+                if ($localTagAttributes->hasComponentAttribute(Color::COLOR)) {
                     /**
                      *
                      * We say that this is used only for an icon (<72 px)
@@ -402,8 +402,8 @@ class SvgDocument extends XmlDocument
                      * fill or stroke should have at minimum "currentColor"
                      */
 
-                    $color = $localTagAttributes->getValueAndRemove(ColorUtility::COLOR);
-                    $colorValue = ColorUtility::getColorValue($color);
+                    $color = $localTagAttributes->getValueAndRemove(Color::COLOR);
+                    $colorValue = Color::create($color)->toCssValue();
 
                     /**
                      * if the stroke element is not present this is a fill icon

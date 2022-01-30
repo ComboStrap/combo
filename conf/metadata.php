@@ -7,7 +7,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
-use ComboStrap\ColorUtility;
+use ComboStrap\Color;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
 use ComboStrap\Identity;
@@ -338,5 +338,10 @@ $meta[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE] = array("onoff"
 /**
  * Branding Colors
  */
-$meta[ColorUtility::PRIMARY_COLOR_CONF] = array("string");
-$meta[ColorUtility::SECONDARY_COLOR_CONF] = array("string");
+$meta[Color::PRIMARY_COLOR_CONF] = array("string");
+$meta[Color::SECONDARY_COLOR_CONF] = array("string");
+
+/**
+ * Highlight
+ */
+$meta[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE] = array("onoff");

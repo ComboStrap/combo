@@ -4,7 +4,7 @@ require_once(__DIR__ . '/../../ComboStrap/PluginUtility.php');
 
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
-use ComboStrap\ColorUtility;
+use ComboStrap\Color;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
 use ComboStrap\Identity;
@@ -263,6 +263,11 @@ $lang[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE]= PluginUtility:
 /**
  * Colors
  */
-$lang[ColorUtility::PRIMARY_COLOR_CONF]= PluginUtility::getDocumentationHyperLink(ColorUtility::BRANDING_COLOR_CANONICAL, "Set the primary branding color");
-$lang[ColorUtility::SECONDARY_COLOR_CONF]= PluginUtility::getDocumentationHyperLink(ColorUtility::BRANDING_COLOR_CANONICAL, "Set the secondary branding color");
+$lang[Color::PRIMARY_COLOR_CONF]= PluginUtility::getDocumentationHyperLink(Color::BRANDING_COLOR_CANONICAL, "Set the primary branding color");
+$lang[Color::SECONDARY_COLOR_CONF]= PluginUtility::getDocumentationHyperLink(Color::BRANDING_COLOR_CANONICAL, "Set the secondary branding color");
+
+/**
+ * Highlight
+ */
+$lang[syntax_plugin_combo_highlight::CONF_HIGHLIGHT_ENABLE]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_highlightwiki::CANONICAL, "Set the primary branding color");
 ?>

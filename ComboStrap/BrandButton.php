@@ -150,14 +150,14 @@ class BrandButton
                 }
                 $this->brandUrl = Site::getBaseUrl();
                 $primaryColor = Site::getPrimaryColor();
-                if ($primaryColor !== null && $primaryColor !== ColorUtility::PRIMARY_VALUE) {
+                if ($primaryColor !== null && $primaryColor !== Color::PRIMARY_VALUE) {
                     // the predicates on the primary value is to avoid a loop with the the function below
-                    $this->primaryColor = ColorUtility::getColorValue($primaryColor);
+                    $this->primaryColor = Color::create($primaryColor)->toCssValue();
                 }
                 $secondaryColor = Site::getSecondaryColor();
-                if ($secondaryColor !== null && $secondaryColor !== ColorUtility::SECONDARY_VALUE) {
+                if ($secondaryColor !== null && $secondaryColor !== Color::SECONDARY_VALUE) {
                     // the predicates on the secondary value is to avoid a loop with the the function below
-                    $this->primaryColor = ColorUtility::getColorValue($primaryColor);
+                    $this->primaryColor = Color::create($primaryColor)->toCssValue();
                 }
                 break;
             default:
@@ -508,7 +508,7 @@ EOF;
         $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
         $textColor = $this->getTextColor();
         if ($textColor !== null) {
-            $attributes[ColorUtility::COLOR] = $textColor;
+            $attributes[Color::COLOR] = $textColor;
         }
         $attributes[Dimension::WIDTH_KEY] = $this->getWidth();
 

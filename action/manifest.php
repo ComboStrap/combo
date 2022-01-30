@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\ColorUtility;
+use ComboStrap\Color;
 use ComboStrap\Mime;
 use ComboStrap\Site;
 

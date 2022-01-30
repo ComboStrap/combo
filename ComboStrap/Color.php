@@ -33,7 +33,7 @@ class Color
         'green',
         'teal',
         'cyan',
-        'white',
+        //'white', css value for now
         'gray',
         'gray-dark',
         self::PRIMARY_VALUE,
@@ -48,7 +48,7 @@ class Color
     /**
      * https://drafts.csswg.org/css-color/#color-keywords
      */
-    const WEB_COLORS = array(
+    const CSS_COLOR_NAMES = array(
         'aliceblue' => '#F0F8FF',
         'antiquewhite' => '#FAEBD7',
         'aqua' => '#00FFFF',
@@ -210,6 +210,15 @@ class Color
     const BRANDING_COLOR_CANONICAL = "branding-colors";
     public const BACKGROUND_COLOR = "background-color";
 
+    // the value is a bootstrap name
+    const VALUE_TYPE_BOOTSTRAP_NAME = "bootstrap";
+    const VALUE_TYPE_RGB_HEX = "rgb-hex";
+    const VALUE_TYPE_RGB_ARRAY = "rgb-array";
+    const VALUE_TYPE_RESET = "reset";
+    const VALUE_TYPE_CSS_NAME = "css-name";
+    const VALUE_TYPE_UNKNOWN_NAME = "unknown-name";
+    const VALUE_TYPE_BRANDING = "branding";
+
     /**
      * @var array
      */
@@ -230,6 +239,10 @@ class Color
      * @var mixed
      */
     private $blue;
+    /**
+     * @var string
+     */
+    private $type = self::VALUE_TYPE_UNKNOWN_NAME;
 
 
     /**
@@ -356,13 +369,13 @@ class Color
     /**
      * @throws ExceptionCombo
      */
-    private static function createFromRgbArray($array)
+    private static function createFromRgbArray($array): Color
     {
         return new Color($array);
     }
 
     /**
-     * @param mixed $color2Value
+     * @param array|string|Color $color
      * @param int|null $weight
      * @return Color
      *
@@ -376,7 +389,7 @@ class Color
      * This is a linear extrapolation along the segment
      * @throws ExceptionCombo
      */
-    function mix($color2Value, ?int $weight = 50): Color
+    function mix($color, ?int $weight = 50): Color
     {
         if ($weight === null) {
             $weight = 50;
@@ -394,17 +407,17 @@ class Color
             }
         };
 
-        $color2 = Color::create($color2Value);
-        $targetRed = $lerp($this->getRed(),$color2->getRed());
-        $targetGreen = $lerp($this->getGreen(),$color2->getGreen());
-        $targetBlue = $lerp($this->getBlue(),$color2->getBlue());
+        $color2 = Color::createFromString($color);
+        $targetRed = $lerp($color2->getRed(), $this->getRed());
+        $targetGreen = $lerp($color2->getGreen(), $this->getGreen());
+        $targetBlue = $lerp($color2->getBlue(), $this->getBlue());
         return Color::createFromRgbArray(
             [
                 $targetRed,
                 $targetGreen,
                 $targetBlue
             ]
-        ) ;
+        );
 
     }
 
@@ -452,25 +465,38 @@ class Color
      *
      * @return string
      */
-    function toHex(): string
+    function toRgbHex(): string
     {
-        $f = function ($x) {
+        $toCssHex = function ($x) {
             return str_pad(dechex($x), 2, "0", STR_PAD_LEFT);
         };
 
-        return "#" . implode("", array_map($f, [
-                    $this->getRed(),
-                    $this->getGreen(),
-                    $this->getBlue()
-                ]
-            ));
+        $redHex = $toCssHex($this->getRed());
+        $greenHex = $toCssHex($this->getGreen());
+        $blueHex = $toCssHex($this->getBlue());
+        return "#" . $redHex . $greenHex . $blueHex;
     }
 
     /**
      * @throws ExceptionCombo
      */
-    public static function create(string $color): Color
+    public static function createFromString(string $color): Color
     {
+        $colorNormalized = trim(strtolower($color));
+        switch ($colorNormalized) {
+            case self::PRIMARY_VALUE:
+                $primaryColor = Site::getPrimaryColor();
+                if ($primaryColor !== null && $primaryColor !== self::PRIMARY_VALUE) {
+                    return self::createFromString($primaryColor);
+                }
+                break;
+            case self::SECONDARY_VALUE:
+                $secondaryColor = Site::getSecondaryColor();
+                if ($secondaryColor !== null && $secondaryColor !== self::SECONDARY_VALUE) {
+                    return self::createFromString($secondaryColor);
+                }
+                break;
+        }
         return new Color($color);
     }
 
@@ -496,53 +522,69 @@ class Color
                 }
             }
             [$this->red, $this->green, $this->blue] = $colorValue;
+            $this->type = self::VALUE_TYPE_RGB_ARRAY;
             return;
         }
+        // Hexadecimal
         if ($colorValue[0] == "#") {
             [$this->red, $this->green, $this->blue] = $this->hex2rgb($colorValue);
+            $this->type = self::VALUE_TYPE_RGB_HEX;
+            return;
         }
+        // Color Name
+        // Custom Css variable
+        $this->colorValue = strtolower($colorValue);
+        if (in_array($this->colorValue, self::BOOTSTRAP_COLORS)) {
+            $this->type = self::VALUE_TYPE_BOOTSTRAP_NAME;
+            // value are unknown for now
+            if (in_array($this->colorValue, array_keys(self::CSS_COLOR_NAMES))) {
+                $value = self::CSS_COLOR_NAMES[$this->colorValue];
+                [$this->red, $this->green, $this->blue] = $this->hex2rgb($value);
+            }
+            return;
+        }
+        if ($this->colorValue === self::VALUE_TYPE_RESET) {
+            $this->type = self::VALUE_TYPE_RESET;
+            return;
+        }
+        if (in_array($this->colorValue, array_keys(self::CSS_COLOR_NAMES))) {
+            $this->type = self::VALUE_TYPE_CSS_NAME;
+            $value = self::CSS_COLOR_NAMES[$this->colorValue];
+            [$this->red, $this->green, $this->blue] = $this->hex2rgb($value);
+            return;
+        }
+        // unknown css name
     }
 
     public function toCssValue(): string
     {
-        $color = $this->colorValue;
-        if ($color[0] == "#") {
-            return $color;
-        }
-        $lowerColor = strtolower($color);
-        if ($lowerColor == "reset") {
-            $colorValue = "inherit!important";
-        } else {
-            // Custom Css variable
-            if (in_array($lowerColor, self::BOOTSTRAP_COLORS)) {
-                if ($lowerColor === self::PRIMARY_VALUE) {
-                    $primaryColor = Site::getPrimaryColor();
-                    if ($primaryColor !== null) {
-                        return $primaryColor;
-                    }
-                }
-                if ($lowerColor === self::SECONDARY_VALUE) {
-                    $secondaryColor = Site::getSecondaryColor();
-                    if ($secondaryColor !== null) {
-                        return $secondaryColor;
-                    }
-                }
+
+        switch ($this->type) {
+            case self::VALUE_TYPE_RGB_ARRAY:
+                return $this->toRgbHex();
+            case self::VALUE_TYPE_RGB_HEX;
+                return $this->colorValue;
+            case self::VALUE_TYPE_BOOTSTRAP_NAME:
+
+
                 $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
                 switch ($bootstrapVersion) {
                     case Bootstrap::BootStrapFiveMajorVersion:
-                        $colorValue = "bs-" . $lowerColor;
+                        $colorValue = "bs-" . $this->colorValue;
                         break;
                     default:
-                        $colorValue = $lowerColor;
+                        $colorValue = $this->colorValue;
                         break;
                 }
-                $colorValue = "var(--" . $colorValue . ")";
-            } else {
-                // css color name
-                $colorValue = $lowerColor;
-            }
+                return "var(--" . $colorValue . ")";
+            case self::VALUE_TYPE_RESET:
+                return "inherit!important";
+            default:
+                // unknown css color name
+                return $this->colorValue;
         }
-        return $colorValue;
+
+
     }
 
     public function getRed()
@@ -558,6 +600,59 @@ class Color
     public function getBlue()
     {
         return $this->blue;
+    }
+
+    /**
+     * Mix with black
+     */
+    public function shade($weight): Color
+    {
+        try {
+            return $this->mix('black', $weight);
+        } catch (ExceptionCombo $e) {
+            // should not happen
+            LogUtility::msg("Error while shading. Error: {$e->getMessage()}");
+            return $this;
+        }
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    public function shift(int $percentage): Color
+    {
+        if ($percentage === 0) {
+            return $this;
+        }
+        if ($percentage > 0) {
+            return $this->shade($percentage);
+        } else {
+            return $this->tint(abs($percentage));
+        }
+
+    }
+
+    private function toRgbArray(): array
+    {
+        return [$this->getRed(), $this->getGreen(), $this->getBlue()];
+    }
+
+    public function tint(int $percentage): Color
+    {
+        try {
+            return $this->mix("white", $percentage);
+        } catch (ExceptionCombo $e) {
+            // should not happen
+            LogUtility::msg("Error while tinting ($this) with a percentage ($percentage. Error: {$e->getMessage()}");
+            return $this;
+        }
+    }
+
+    public function __toString()
+    {
+        return $this->colorValue;
     }
 
 

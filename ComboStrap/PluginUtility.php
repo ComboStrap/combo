@@ -669,7 +669,7 @@ class PluginUtility
 
         if ($attributes->hasComponentAttribute(Color::BORDER_COLOR)) {
             $colorValue = $attributes->getValueAndRemove(Color::BORDER_COLOR);
-            $attributes->addStyleDeclarationIfNotSet(Color::BORDER_COLOR, Color::create($colorValue)->toCssValue());
+            $attributes->addStyleDeclarationIfNotSet(Color::BORDER_COLOR, Color::createFromString($colorValue)->toCssValue());
             self::checkDefaultBorderColorAttributes($attributes);
         }
 

@@ -72,7 +72,7 @@ class TextColor
                     /**
                      * Other Text Colors
                      */
-                    $colorValue = Color::create($colorValue)->toCssValue();
+                    $colorValue = Color::createFromString($colorValue)->toCssValue();
                     if (!empty($colorValue)) {
                         $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, $colorValue);
                     }

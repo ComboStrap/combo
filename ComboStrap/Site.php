@@ -444,7 +444,7 @@ class Site
              */
             return $value;
         }
-        return Color::create($value)->toCssValue();
+        return Color::createFromString($value)->toCssValue();
     }
 
     public static function getSecondaryColor(): ?string
@@ -461,7 +461,7 @@ class Site
              */
             return $value;
         }
-        return Color::create($value)->toCssValue();
+        return Color::createFromString($value)->toCssValue();
     }
 
     public static function setSecondaryColor(string $secondaryColorValue)

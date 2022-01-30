@@ -403,7 +403,7 @@ class SvgDocument extends XmlDocument
                      */
 
                     $color = $localTagAttributes->getValueAndRemove(Color::COLOR);
-                    $colorValue = Color::create($color)->toCssValue();
+                    $colorValue = Color::createFromString($color)->toCssValue();
 
                     /**
                      * if the stroke element is not present this is a fill icon

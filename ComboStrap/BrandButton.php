@@ -152,12 +152,12 @@ class BrandButton
                 $primaryColor = Site::getPrimaryColor();
                 if ($primaryColor !== null && $primaryColor !== Color::PRIMARY_VALUE) {
                     // the predicates on the primary value is to avoid a loop with the the function below
-                    $this->primaryColor = Color::create($primaryColor)->toCssValue();
+                    $this->primaryColor = Color::createFromString($primaryColor)->toCssValue();
                 }
                 $secondaryColor = Site::getSecondaryColor();
                 if ($secondaryColor !== null && $secondaryColor !== Color::SECONDARY_VALUE) {
                     // the predicates on the secondary value is to avoid a loop with the the function below
-                    $this->primaryColor = Color::create($primaryColor)->toCssValue();
+                    $this->primaryColor = Color::createFromString($primaryColor)->toCssValue();
                 }
                 break;
             default:

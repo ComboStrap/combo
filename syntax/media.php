@@ -4,16 +4,13 @@
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
 use ComboStrap\DokuFs;
-use ComboStrap\DokuPath;
 use ComboStrap\ExceptionComboRuntime;
-use ComboStrap\Image;
 use ComboStrap\InternetPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Metadata;
 use ComboStrap\PageImages;
 use ComboStrap\PagePath;
-use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\ThirdPartyPlugins;
 

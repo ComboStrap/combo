@@ -218,6 +218,18 @@ class Color
      * @var string
      */
     private $colorValue;
+    /**
+     * @var int
+     */
+    private $red;
+    /**
+     * @var mixed
+     */
+    private $green;
+    /**
+     * @var mixed
+     */
+    private $blue;
 
 
     /**
@@ -230,11 +242,6 @@ class Color
             self::$dokuWikiStyles = (new StyleUtils())->cssStyleini();
         }
         return self::$dokuWikiStyles;
-
-    }
-
-    public static function getColorDarker()
-    {
 
     }
 
@@ -388,18 +395,42 @@ class Color
     }
 
     /**
-     * hex2rgb
+     * Takes an hexadecimal color and returns the rgb channels
      *
      * @param mixed $hex
      *
+     * @throws ExceptionCombo
      */
-    static function hex2rgb($hex = '#000000'): array
+    function hex2rgb($hex = '#000000'): array
     {
-        $f = function ($x) {
-            return hexdec($x);
-        };
-
-        return array_map($f, str_split(str_replace("#", "", $hex), 2));
+        if ($hex[0] !== "#") {
+            throw new ExceptionCombo("The color value ($hex) does not start with a #, this is not valid CSS hexadecimal color value");
+        }
+        $digits = str_replace("#", "", $hex);
+        $hexLen = strlen($digits);
+        switch ($hexLen) {
+            case 3:
+                $splitLength = 1;
+                break;
+            case 6:
+                $splitLength = 2;
+                break;
+            default:
+                throw new ExceptionCombo("The digit color value ($hex) is not 3 or 6 in length, this is not a valid CSS hexadecimal color value");
+        }
+        $result = preg_match("/[0-9a-f]{3,6}/i", $digits);
+        if ($result !== 1) {
+            throw new ExceptionCombo("The digit color value ($hex) is not a hexadecimal value, this is not a valid CSS hexadecimal color value");
+        }
+        $channelHexs = str_split($digits, $splitLength);
+        $rgbDec = [];
+        foreach ($channelHexs as $channelHex) {
+            if ($splitLength === 1) {
+                $channelHex .= $channelHex;
+            }
+            $rgbDec[] = hexdec($channelHex);
+        }
+        return $rgbDec;
     }
 
     /**
@@ -417,15 +448,24 @@ class Color
         return "#" . implode("", array_map($f, $rgb));
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public static function create(string $color): Color
     {
         return new Color($color);
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function __construct($color)
     {
 
         $this->colorValue = $color;
+        if ($color[0] == "#") {
+            [$this->red, $this->green, $this->blue] = $this->hex2rgb($color);
+        }
     }
 
     public function toCssValue(): string
@@ -468,6 +508,21 @@ class Color
             }
         }
         return $colorValue;
+    }
+
+    public function getRed()
+    {
+        return $this->red;
+    }
+
+    public function getGreen()
+    {
+        return $this->green;
+    }
+
+    public function getBlue()
+    {
+        return $this->blue;
     }
 
 

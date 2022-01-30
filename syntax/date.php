@@ -33,7 +33,7 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
     const DATE_ATTRIBUTE = "date";
 
 
-    function getType()
+    function getType(): string
     {
         /**
          * Not protected otherwise

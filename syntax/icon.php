@@ -167,7 +167,9 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                 }
                 /**
                  * Color setting should know the color of its parent
-                 * For now, we don't set any color if the parent is a button or a note
+                 * For now, we don't set any color if the parent is a button, note, link
+                 * As a header is not a parent, we may say that if the icon is contained, the default
+                 * branding color is not set ?
                  */
                 $requestedColor = $tagAttributes->getValue(ColorUtility::COLOR);
                 if ($requestedColor === null &&

@@ -24,7 +24,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
     const EXIT_PATTERN = "\r??\n";
 
 
-    function getType()
+    function getType(): string
     {
         return 'formatting';
     }

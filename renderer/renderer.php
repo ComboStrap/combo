@@ -252,20 +252,7 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
         TableUtility::tableOpen($this, $pos);
     }
 
-    /**
-     * https://getbootstrap.com/docs/4.4/content/typography/#inline-text-elements
-     */
-    public
-    function monospace_open()
-    {
-        $this->doc .= '<mark>';
-    }
 
-    public
-    function monospace_close()
-    {
-        $this->doc .= '</mark>';
-    }
 
 
 }

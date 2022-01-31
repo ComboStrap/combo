@@ -89,5 +89,10 @@ class DataType
         return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 
+    public static function toFloat($value): float
+    {
+        return floatval($value);
+    }
+
 
 }

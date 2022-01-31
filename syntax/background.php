@@ -5,7 +5,7 @@
 use ComboStrap\Background;
 use ComboStrap\CacheMedia;
 use ComboStrap\CallStack;
-use ComboStrap\Color;
+use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
 use ComboStrap\MarkupRef;
 use ComboStrap\MediaLink;
@@ -48,9 +48,9 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     {
 
         $attributes = PluginUtility::getTagAttributes($match);
-        if (isset($attributes[Color::COLOR])) {
-            $attributes[Background::BACKGROUND_COLOR] = $attributes[Color::COLOR];
-            unset($attributes[Color::COLOR]);
+        if (isset($attributes[ColorRgb::COLOR])) {
+            $attributes[Background::BACKGROUND_COLOR] = $attributes[ColorRgb::COLOR];
+            unset($attributes[ColorRgb::COLOR]);
         }
         return $attributes;
 

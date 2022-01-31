@@ -5,7 +5,7 @@
  */
 
 use ComboStrap\CallStack;
-use ComboStrap\Color;
+use ComboStrap\ColorRgb;
 use ComboStrap\MarkupRef;
 use ComboStrap\PluginUtility;
 use ComboStrap\Shadow;
@@ -159,10 +159,10 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $types = [Color::PRIMARY_VALUE, Color::SECONDARY_VALUE, "success", "danger", "warning", "info", "light", "dark"];
+                $types = [ColorRgb::PRIMARY_VALUE, ColorRgb::SECONDARY_VALUE, "success", "danger", "warning", "info", "light", "dark"];
                 $defaultAttributes = array(
                     Skin::SKIN_ATTRIBUTE => Skin::FILLED_VALUE,
-                    TagAttributes::TYPE_KEY => Color::PRIMARY_VALUE
+                    TagAttributes::TYPE_KEY => ColorRgb::PRIMARY_VALUE
                 );
                 $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $types);
 

@@ -426,17 +426,17 @@ class Site
 
     public static function setPrimaryColor(string $primaryColorValue)
     {
-        PluginUtility::setConf(Color::PRIMARY_COLOR_CONF, $primaryColorValue);
+        PluginUtility::setConf(ColorRgb::PRIMARY_COLOR_CONF, $primaryColorValue);
     }
 
-    public static function getPrimaryColor($default = null): ?Color
+    public static function getPrimaryColor($default = null): ?ColorRgb
     {
-        $value = PluginUtility::getConfValue(Color::PRIMARY_COLOR_CONF);
+        $value = PluginUtility::getConfValue(ColorRgb::PRIMARY_COLOR_CONF);
         if ($value === null) {
             if ($default === null) {
-                $styles = Color::getDokuWikiStyles();
+                $styles = ColorRgb::getDokuWikiStyles();
                 $value = $styles["replacements"]["__theme_color__"];
-                if($value===null){
+                if ($value === null) {
                     return null;
                 }
             } else {
@@ -444,16 +444,16 @@ class Site
             }
         }
         try {
-            return Color::createFromString($value);
+            return ColorRgb::createFromString($value);
         } catch (ExceptionCombo $e) {
             LogUtility::msg("The primary color value configuration ($value) is not valid. Error: {$e->getMessage()}");
             return null;
         }
     }
 
-    public static function getSecondaryColor($default = null): ?Color
+    public static function getSecondaryColor($default = null): ?ColorRgb
     {
-        $value = PluginUtility::getConfValue(Color::SECONDARY_COLOR_CONF);
+        $value = PluginUtility::getConfValue(ColorRgb::SECONDARY_COLOR_CONF);
         if ($value === null) {
             if ($default !== null) {
                 $value = $default;
@@ -462,7 +462,7 @@ class Site
             }
         }
         try {
-            return Color::createFromString($value);
+            return ColorRgb::createFromString($value);
         } catch (ExceptionCombo $e) {
             LogUtility::msg("The secondary color value configuration ($value) is not valid. Error: {$e->getMessage()}");
             return null;
@@ -471,21 +471,47 @@ class Site
 
     public static function setSecondaryColor(string $secondaryColorValue)
     {
-        PluginUtility::setConf(Color::SECONDARY_COLOR_CONF, $secondaryColorValue);
+        PluginUtility::setConf(ColorRgb::SECONDARY_COLOR_CONF, $secondaryColorValue);
     }
 
     public static function unsetPrimaryColor()
     {
-        PluginUtility::setConf(Color::PRIMARY_COLOR_CONF, null);
+        PluginUtility::setConf(ColorRgb::PRIMARY_COLOR_CONF, null);
     }
 
-    public static function getPrimaryColorText(string $default): ?Color
+    public static function getPrimaryColorText(string $default = null): ?ColorRgb
     {
         $primaryColor = self::getPrimaryColor($default);
         if ($primaryColor === null) {
             return null;
         }
-        return $primaryColor->shade(Color::TEXT_BOOTSTRAP_WEIGHT);
+        return $primaryColor->shade(ColorRgb::TEXT_BOOTSTRAP_WEIGHT);
+    }
+
+
+    public static function isBrandingColorInheritanceEnabled(): bool
+    {
+        return PluginUtility::getConfValue(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT) === 1;
+    }
+
+    public static function getRem(): int
+    {
+        $defaultRem = 16;
+        if (Site::getTemplate() === "strap") {
+            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            if ($loaded) {
+                $value = TplUtility::getRem();
+                if ($value === null) {
+                    return $defaultRem;
+                }
+                try {
+                    return DataType::toInteger($value);
+                } catch (ExceptionCombo $e) {
+                    LogUtility::msg("The rem configuration value ($value) is not a integer. Error: {$e->getMessage()}");
+                }
+            }
+        }
+        return $defaultRem;
     }
 
 

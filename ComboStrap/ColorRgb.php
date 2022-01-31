@@ -15,7 +15,7 @@ namespace ComboStrap;
 
 use dokuwiki\StyleUtils;
 
-class Color
+class ColorRgb
 {
 
     const COLOR = "color";
@@ -225,6 +225,13 @@ class Color
     const TEXT_BOOTSTRAP_WEIGHT = 40;
 
     /**
+     * Do we set also the branding color on
+     * other elements ?
+     */
+    const BRANDING_COLOR_INHERITANCE_ENABLE_CONF = "brandingColorInheritanceEnable";
+    const BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT = 1;
+
+    /**
      * @var array
      */
     private static $dokuWikiStyles;
@@ -250,6 +257,7 @@ class Color
     private $type = self::VALUE_TYPE_UNKNOWN_NAME;
 
 
+
     /**
      * The styles of the dokuwiki systems
      * @return array
@@ -263,19 +271,24 @@ class Color
 
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function createFromRgbChannels(int $red, int $green, int $blue): ColorRgb
+    {
+        return new ColorRgb([$red,$green,$blue]);
+    }
+
 
     /**
-     * @param int $red
-     * @param int $green
-     * @param int $blue
-     * @return array
+     * @return ColorHsl
      */
-    public static function rgbToHsl(int $red, int $green, int $blue): array
+    public function toHsl(): ColorHsl
     {
 
-        $red = $red / 255;
-        $green = $green / 255;
-        $blue = $blue / 255;
+        $red = $this->red / 255;
+        $green = $this->green / 255;
+        $blue = $this->blue / 255;
 
         $max = max($red, $green, $blue);
         $min = min($red, $green, $blue);
@@ -312,77 +325,25 @@ class Color
         /**
          * No round to get a neat inverse
          */
-        return array($hue, $saturation, $lightness);
+
+        return ColorHsl::createFromChannels($hue,$saturation*100,$lightness*100);
+
+
     }
 
-    /**
-     * @param float $hue (0 to 360)
-     * @param float $saturation (range 0 to 1)
-     * @param float $lightness (range 0 to 1)
-     * @return array
-     *
-     * Reference:
-     * https://en.wikipedia.org/wiki/HSL_and_HSV#HSL_to_RGB
-     * https://gist.github.com/brandonheyer/5254516
-     */
-    static function hslToRgb(float $hue, float $saturation, float $lightness): array
-    {
-
-        $chroma = (1 - abs(2 * $lightness - 1)) * $saturation;
-        $x = $chroma * (1 - abs(fmod(($hue / 60), 2) - 1));
-        $m = $lightness - ($chroma / 2);
-
-        if ($hue < 60) {
-            $red = $chroma;
-            $green = $x;
-            $blue = 0;
-        } else if ($hue < 120) {
-            $red = $x;
-            $green = $chroma;
-            $blue = 0;
-        } else if ($hue < 180) {
-            $red = 0;
-            $green = $chroma;
-            $blue = $x;
-        } else if ($hue < 240) {
-            $red = 0;
-            $green = $x;
-            $blue = $chroma;
-        } else if ($hue < 300) {
-            $red = $x;
-            $green = 0;
-            $blue = $chroma;
-        } else {
-            $red = $chroma;
-            $green = 0;
-            $blue = $x;
-        }
-
-        $red = ($red + $m) * 255;
-        $green = ($green + $m) * 255;
-        $blue = ($blue + $m) * 255;
-
-        /**
-         * To the closest integer
-         */
-        $red = intval(round($red));
-        $green = intval(round($green));
-        $blue = intval(round($blue));
-        return array($red, $green, $blue);
-    }
 
     /**
      * @throws ExceptionCombo
      */
-    private static function createFromRgbArray($array): Color
+    private static function createFromRgbArray($array): ColorRgb
     {
-        return new Color($array);
+        return new ColorRgb($array);
     }
 
     /**
-     * @param array|string|Color $color
+     * @param array|string|ColorRgb $color
      * @param int|null $weight
-     * @return Color
+     * @return ColorRgb
      *
      *
      * Because Bootstrap uses the mix function of SCSS
@@ -394,7 +355,7 @@ class Color
      * This is a linear extrapolation along the segment
      * @throws ExceptionCombo
      */
-    function mix($color, ?int $weight = 50): Color
+    function mix($color, ?int $weight = 50): ColorRgb
     {
         if ($weight === null) {
             $weight = 50;
@@ -412,11 +373,11 @@ class Color
             }
         };
 
-        $color2 = Color::createFromString($color);
+        $color2 = ColorRgb::createFromString($color);
         $targetRed = $lerp($color2->getRed(), $this->getRed());
         $targetGreen = $lerp($color2->getGreen(), $this->getGreen());
         $targetBlue = $lerp($color2->getBlue(), $this->getBlue());
-        return Color::createFromRgbArray(
+        return ColorRgb::createFromRgbArray(
             [
                 $targetRed,
                 $targetGreen,
@@ -485,9 +446,9 @@ class Color
     /**
      * @throws ExceptionCombo
      */
-    public static function createFromString(string $color): Color
+    public static function createFromString(string $color): ColorRgb
     {
-        return new Color($color);
+        return new ColorRgb($color);
     }
 
     /**
@@ -595,7 +556,7 @@ class Color
     /**
      * Mix with black
      */
-    public function shade($weight): Color
+    public function shade($weight): ColorRgb
     {
         try {
             return $this->mix('black', $weight);
@@ -611,7 +572,7 @@ class Color
         return $this->type;
     }
 
-    public function shift(int $percentage): Color
+    public function shift(int $percentage): ColorRgb
     {
         if ($percentage === 0) {
             return $this;
@@ -624,12 +585,16 @@ class Color
 
     }
 
-    private function toRgbArray(): array
+
+
+
+
+    public function toRgbChannels(): array
     {
         return [$this->getRed(), $this->getGreen(), $this->getBlue()];
     }
 
-    public function tint(int $percentage): Color
+    public function tint(int $percentage): ColorRgb
     {
         try {
             return $this->mix("white", $percentage);
@@ -644,6 +609,8 @@ class Color
     {
         return $this->colorValue;
     }
+
+
 
 
 }

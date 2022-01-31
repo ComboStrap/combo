@@ -104,8 +104,11 @@ class syntax_plugin_combo_highlightmd extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT:
             case DOKU_LEXER_ENTER:
-                return array(
-                    PluginUtility::STATE => $state
+
+                $content = substr($match, 1);
+            return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::PAYLOAD => $content,
                 );
             case DOKU_LEXER_UNMATCHED :
 
@@ -126,7 +129,7 @@ class syntax_plugin_combo_highlightmd extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER:
-                    $renderer->doc .= "<mark>";
+                    $renderer->doc .= syntax_plugin_combo_highlightwiki::getOpenTagHighlight(self::TAG).$data[PluginUtility::PAYLOAD];
                     return true;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);

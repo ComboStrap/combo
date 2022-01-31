@@ -507,7 +507,7 @@ EOF;
         $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
         $textColor = $this->getTextColor();
         if ($textColor !== null) {
-            $attributes[Color::COLOR] = $textColor;
+            $attributes[ColorRgb::COLOR] = $textColor;
         }
         $attributes[Dimension::WIDTH_KEY] = $this->getWidth();
 

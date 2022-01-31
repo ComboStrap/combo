@@ -5,7 +5,7 @@
 use ComboStrap\BrandButton;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\Color;
+use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\ExceptionComboNotFound;
@@ -215,7 +215,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                  * Logo
                  */
                 try {
-                    $color = $tagAttributes->getValue(Color::COLOR);
+                    $color = $tagAttributes->getValue(ColorRgb::COLOR);
                     if ($color !== null) {
                         $brandButton->setPrimaryColor($color);
                     }

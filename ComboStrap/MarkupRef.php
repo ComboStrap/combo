@@ -318,6 +318,32 @@ class MarkupRef
             $outputAttributes->addHtmlAttributeValue("href", $url);
         }
 
+        /**
+         * Default Link Color
+         * Saturation and lightness comes from the
+         * default blue color of Bootstrap #0d6efd
+         */
+        if(Site::isBrandingColorInheritanceEnabled()) {
+            $primaryColorText = Site::getPrimaryColorText()
+                ->toHsl()
+                ->setSaturation(98)
+                ->setLightness(52)
+                ->toRgb();
+            if ($primaryColorText !== null) {
+                $aCss = <<<EOF
+a {
+    color: {$primaryColorText->toRgbHex()};
+    text-decoration: none;
+}
+a:hover {
+    color: {$primaryColorText->toRgbHex()};
+    text-decoration: underline;
+}
+EOF;
+                PluginUtility::getSnippetManager()->attachCssSnippetForSlot("anchor", $aCss);
+            }
+        }
+
 
         /**
          * Processing by type
@@ -736,7 +762,7 @@ EOF;
                     $searchTerms = $this->dokuwikiUrl->getQueryParameter(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY);
                     if ($searchTerms !== null) {
                         $url .= $targetEnvironmentAmpersand;
-                        PluginUtility::getSnippetManager()->attachCssSnippetForSlot("search");
+                        PluginUtility::getSnippetManager()->attachCssSnippetForSlot("search-hit");
                         if (is_array($searchTerms)) {
                             /**
                              * To verify, do we really need the []

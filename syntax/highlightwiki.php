@@ -1,6 +1,11 @@
 <?php
 
+use ComboStrap\ColorRgb;
+use ComboStrap\ExceptionCombo;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
+use ComboStrap\TagAttributes;
 
 
 /**
@@ -29,6 +34,28 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
     const EXIT_PATTERN = "\x27\x27";
 
     const CANONICAL = self::TAG;
+    const TINT_PERCENTAGE = 95;
+
+    public static function getOpenTagHighlight(string $tag): string
+    {
+        $primaryColor = Site::getPrimaryColor();
+        if ($primaryColor !== null) {
+            $tagAttributes = TagAttributes::createEmpty($tag);
+            try {
+                $colorRgb = $primaryColor
+                    ->toHsl()
+                    ->setLightness(98)
+                    ->toRgb();
+                $tagAttributes->addComponentAttributeValue(ColorRgb::BACKGROUND_COLOR, $colorRgb
+                    ->toRgbHex());
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("Error on highlight color calculation");
+            }
+            return $tagAttributes->toHtmlEnterTag("mark");
+        } else {
+            return "<mark>";
+        }
+    }
 
     public function getSort(): int
     {
@@ -135,7 +162,7 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER:
-                    $renderer->doc .= "<mark>";
+                    $renderer->doc .= self::getOpenTagHighlight(self::TAG);
                     return true;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
@@ -148,35 +175,6 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
         }
 
         return false;
-    }
-
-    /**
-     * @param $match
-     * @return int
-     */
-    public
-    function getLevelFromMatch($match)
-    {
-        return 7 - strlen(trim($match));
-    }
-
-
-    private
-    function enableWikiHeading($mode)
-    {
-
-
-        /**
-         * Basically all mode that are not `base`
-         * To not take the dokuwiki heading
-         */
-        if (!(in_array($mode, ['base', 'header', 'table']))) {
-            return true;
-        } else {
-            return PluginUtility::getConfValue(self::CONF_WIKI_HIGHLIGHT_ENABLE, self::CONF_DEFAULT_WIKI_ENABLE_VALUE);
-        }
-
-
     }
 
 

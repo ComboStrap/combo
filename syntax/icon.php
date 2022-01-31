@@ -5,7 +5,7 @@
  */
 
 use ComboStrap\CallStack;
-use ComboStrap\Color;
+use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
@@ -161,7 +161,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                 $context = "";
                 if ($parent !== false) {
                     $context = $parent->getTagName();
-                    if($context===syntax_plugin_combo_link::TAG){
+                    if ($context === syntax_plugin_combo_link::TAG) {
                         $context = $parent->getTagName();
                     }
                 }
@@ -171,15 +171,18 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                  * As a header is not a parent, we may say that if the icon is contained, the default
                  * branding color is not set ?
                  */
-                $requestedColor = $tagAttributes->getValue(Color::COLOR);
+                $requestedColor = $tagAttributes->getValue(ColorRgb::COLOR);
                 if ($requestedColor === null &&
+                    Site::isBrandingColorInheritanceEnabled() &&
                     !in_array($context, [
                         syntax_plugin_combo_button::TAG,
                         syntax_plugin_combo_note::TAG,
                         syntax_plugin_combo_link::TAG
-                    ])) {
+                    ])
+                ) {
                     $requestedWidth = $tagAttributes->getValue(Dimension::WIDTH_KEY, SvgDocument::DEFAULT_ICON_WIDTH);
-                    if ($requestedWidth > 36) {
+                    $requestedWidthInPx = Dimension::toPixelValue($requestedWidth);
+                    if ($requestedWidthInPx > 36) {
                         // Illustrative icon
                         $color = Site::getPrimaryColor();
                     } else {
@@ -187,7 +190,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                         $color = Site::getSecondaryColor();
                     }
                     if ($color !== null) {
-                        $tagAttributes->setComponentAttributeValue(Color::COLOR, $color);
+                        $tagAttributes->setComponentAttributeValue(ColorRgb::COLOR, $color);
                     }
                 }
                 return array(

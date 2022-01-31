@@ -399,7 +399,12 @@ $conf["headingWikiEnable"] = 1;
  * {@link syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE}
  * {@link syntax_plugin_combo_highlightwiki::CONF_DEFAULT_HIGHLIGHT_WIKI_ENABLE_VALUE}
  */
-$conf["highlightWikiEnable"]= 1;
+$conf["highlightWikiEnable"] = 1;
+
+/**
+ * {@link \ComboStrap\ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF}
+ */
+$conf["brandingColorInheritanceEnable"] = 1;
 
 
 

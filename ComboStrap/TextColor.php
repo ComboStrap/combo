@@ -32,6 +32,7 @@ class TextColor
 
     /**
      * @param TagAttributes $attributes
+     * @throws ExceptionCombo
      */
     public static function processTextColorAttribute(TagAttributes &$attributes)
     {
@@ -45,21 +46,23 @@ class TextColor
                 /**
                  * Branding colors overwrite
                  */
-                switch($lowerCaseColorValue){
-                    case Color::PRIMARY_VALUE:
-                        $primaryColor = Site::getPrimaryColor();
-                        if($primaryColor!==null){
-                            // important because we set the text-class below and they already have an important value
-                            $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "{$primaryColor->toRgbHex()}!important");
-                        }
-                        break;
-                    case Color::SECONDARY_VALUE:
-                        $secondaryColor = Site::getSecondaryColor();
-                        if($secondaryColor!==null){
-                            // important because we set the text-class below and they already have an important value
-                            $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "{$secondaryColor->toRgbHex()}!important");
-                        }
-                        break;
+                if(Site::isBrandingColorInheritanceEnabled()) {
+                    switch ($lowerCaseColorValue) {
+                        case ColorRgb::PRIMARY_VALUE:
+                            $primaryColor = Site::getPrimaryColor();
+                            if ($primaryColor !== null) {
+                                // important because we set the text-class below and they already have an important value
+                                $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "{$primaryColor->toRgbHex()}!important");
+                            }
+                            break;
+                        case ColorRgb::SECONDARY_VALUE:
+                            $secondaryColor = Site::getSecondaryColor();
+                            if ($secondaryColor !== null) {
+                                // important because we set the text-class below and they already have an important value
+                                $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "{$secondaryColor->toRgbHex()}!important");
+                            }
+                            break;
+                    }
                 }
 
                 if (in_array($lowerCaseColorValue, self::TEXT_COLORS)) {
@@ -72,7 +75,7 @@ class TextColor
                     /**
                      * Other Text Colors
                      */
-                    $colorValue = Color::createFromString($colorValue)->toCssValue();
+                    $colorValue = ColorRgb::createFromString($colorValue)->toCssValue();
                     if (!empty($colorValue)) {
                         $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, $colorValue);
                     }

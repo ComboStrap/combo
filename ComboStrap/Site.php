@@ -476,5 +476,14 @@ class Site
         PluginUtility::setConf(Color::PRIMARY_COLOR_CONF, null);
     }
 
+    public static function getPrimaryColorText(string $default): ?Color
+    {
+        $primaryColor = self::getPrimaryColor($default);
+        if ($primaryColor === null) {
+            return null;
+        }
+        return $primaryColor->shade(Color::TEXT_BOOTSTRAP_WEIGHT);
+    }
+
 
 }

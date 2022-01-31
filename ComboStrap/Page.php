@@ -410,12 +410,30 @@ class Page extends ResourceComboAbs
                 $slotNames[] = TplUtility::getHeaderSlotPageName();
                 $slotNames[] = TplUtility::getFooterSlotPageName();
                 $slotNames[] = TplUtility::getSideKickSlotPageName();
+                $slotNames[] = TplUtility::getMainFooterAndHeaderNames();
             }
         }
-        /**
-         * Adding the main header and footer slot
-         */
-        $slotNames = array_merge($slotNames, \action_plugin_combo_slot::SLOT_MAIN_NAMES);
+        $name = $this->getPath()->getLastNameWithoutExtension();
+        if ($name === null) {
+            // root case
+            return false;
+        }
+        return in_array($name, $slotNames, true);
+    }
+
+    /**
+     * @return bool true if this is the main
+     */
+    public function isMainHeaderFooterSlot(): bool
+    {
+        if (!Site::isStrapTemplate()) {
+            return false;
+        }
+        $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
+        if (!$loaded) {
+            return false;
+        }
+        $slotNames[] = TplUtility::getMainFooterAndHeaderNames();
         $name = $this->getPath()->getLastNameWithoutExtension();
         if ($name === null) {
             // root case
@@ -1199,7 +1217,7 @@ class Page extends ResourceComboAbs
             $array[$metadataName] = $value;
         }
         $array["url"] = $this->getCanonicalUrl();
-        $array["relativepath"] = str_replace(":","/",substr($array[PagePath::PROPERTY_NAME],1));
+        $array["relativepath"] = str_replace(":", "/", substr($array[PagePath::PROPERTY_NAME], 1));
         return $array;
 
     }

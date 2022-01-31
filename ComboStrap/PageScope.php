@@ -56,13 +56,15 @@ class PageScope extends MetadataText
 
     public function getValue(): ?string
     {
-        $lastName = $this->getResource()->getPath()->getLastName();
-        if (in_array($lastName, \action_plugin_combo_slot::SLOT_MAIN_NAMES)) {
-            // We could also set the scope by component
-            // in the slot but this is much more work
-            // generally the data that are not main page related
-            // are in the header and footer page slot
-            return self::SCOPE_CURRENT_REQUESTED_PAGE_VALUE;
+        $resourceCombo = $this->getResource();
+        if ($resourceCombo instanceof Page) {
+            if ($resourceCombo->isMainHeaderFooterSlot()) {
+                // We could also set the scope by component
+                // in the slot but this is much more work
+                // generally the data that are not main page related
+                // are in the header and footer page slot
+                return self::SCOPE_CURRENT_REQUESTED_PAGE_VALUE;
+            }
         };
         return parent::getValue();
     }

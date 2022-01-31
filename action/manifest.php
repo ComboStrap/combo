@@ -64,7 +64,7 @@ class action_plugin_combo_manifest extends DokuWiki_Action_Plugin
 
         $primaryColor = Site::getPrimaryColor();
         if ($primaryColor !== null) {
-            $event->data["theme_color"] = $primaryColor;
+            $event->data["theme_color"] = $primaryColor->toRgbHex();
         }
 
         /**

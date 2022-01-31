@@ -429,44 +429,51 @@ class Site
         PluginUtility::setConf(Color::PRIMARY_COLOR_CONF, $primaryColorValue);
     }
 
-    public static function getPrimaryColor(): ?string
+    public static function getPrimaryColor($default = null): ?Color
     {
         $value = PluginUtility::getConfValue(Color::PRIMARY_COLOR_CONF);
         if ($value === null) {
-            $styles = Color::getDokuWikiStyles();
-            return $styles["replacements"]["__theme_color__"];
+            if ($default === null) {
+                $styles = Color::getDokuWikiStyles();
+                $value = $styles["replacements"]["__theme_color__"];
+            } else {
+                $value = $default;
+            }
         }
-        if ($value === Color::PRIMARY_VALUE) {
-            /**
-             * Avoid circular call because
-             * ColorUtility::getColorValue call this method is
-             * the value is primary
-             */
-            return $value;
+        try {
+            return Color::createFromString($value);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The primary color value configuration ($value) is not valid. Error: {$e->getMessage()}");
+            return null;
         }
-        return Color::createFromString($value)->toCssValue();
     }
 
-    public static function getSecondaryColor(): ?string
+    public static function getSecondaryColor($default = null): ?Color
     {
         $value = PluginUtility::getConfValue(Color::SECONDARY_COLOR_CONF);
         if ($value === null) {
+            if ($default !== null) {
+                $value = $default;
+            } else {
+                return null;
+            }
+        }
+        try {
+            return Color::createFromString($value);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The secondary color value configuration ($value) is not valid. Error: {$e->getMessage()}");
             return null;
         }
-        if ($value === Color::SECONDARY_VALUE) {
-            /**
-             * Avoid circular call because
-             * ColorUtility::getColorValue call this method is
-             * the value is secondary
-             */
-            return $value;
-        }
-        return Color::createFromString($value)->toCssValue();
     }
 
     public static function setSecondaryColor(string $secondaryColorValue)
     {
         PluginUtility::setConf(Color::SECONDARY_COLOR_CONF, $secondaryColorValue);
+    }
+
+    public static function unsetPrimaryColor()
+    {
+        PluginUtility::setConf(Color::PRIMARY_COLOR_CONF, null);
     }
 
 

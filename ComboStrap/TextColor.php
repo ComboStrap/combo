@@ -50,14 +50,14 @@ class TextColor
                         $primaryColor = Site::getPrimaryColor();
                         if($primaryColor!==null){
                             // important because we set the text-class below and they already have an important value
-                            $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "$primaryColor!important");
+                            $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "{$primaryColor->toRgbHex()}!important");
                         }
                         break;
                     case Color::SECONDARY_VALUE:
                         $secondaryColor = Site::getSecondaryColor();
                         if($secondaryColor!==null){
                             // important because we set the text-class below and they already have an important value
-                            $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "$secondaryColor!important");
+                            $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "{$secondaryColor->toRgbHex()}!important");
                         }
                         break;
                 }

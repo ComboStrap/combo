@@ -220,6 +220,11 @@ class Color
     const VALUE_TYPE_BRANDING = "branding";
 
     /**
+     * The shade / shift weight factor on text color
+     */
+    const TEXT_BOOTSTRAP_WEIGHT = 40;
+
+    /**
      * @var array
      */
     private static $dokuWikiStyles;
@@ -482,21 +487,6 @@ class Color
      */
     public static function createFromString(string $color): Color
     {
-        $colorNormalized = trim(strtolower($color));
-        switch ($colorNormalized) {
-            case self::PRIMARY_VALUE:
-                $primaryColor = Site::getPrimaryColor();
-                if ($primaryColor !== null && $primaryColor !== self::PRIMARY_VALUE) {
-                    return self::createFromString($primaryColor);
-                }
-                break;
-            case self::SECONDARY_VALUE:
-                $secondaryColor = Site::getSecondaryColor();
-                if ($secondaryColor !== null && $secondaryColor !== self::SECONDARY_VALUE) {
-                    return self::createFromString($secondaryColor);
-                }
-                break;
-        }
         return new Color($color);
     }
 

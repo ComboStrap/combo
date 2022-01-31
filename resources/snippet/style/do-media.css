@@ -46,6 +46,13 @@
     border-top-right-radius: 0.25rem;
 }
 
+#mediamanager__page .filelist .rows li:nth-child(2n+1) {
+    background-color: #ddd;
+}
+
+#mediamanager__page .filelist .rows li:hover {
+    background-color: #dee7ec;
+}
 
 /* ------- The original ------ */
 
@@ -135,7 +142,7 @@
 #mediamanager__page .ui-resizable-e {
     width: 6px;
     right: 2px;
-    background: transparent url(../../images/resizecol.png) center center no-repeat;
+    /*background: transparent url(../../images/resizecol.png) center center no-repeat;*/
 }
 
 #mediamanager__page .ui-resizable-e:hover {
@@ -145,7 +152,7 @@
 [dir=rtl] #mediamanager__page .ui-resizable-w {
     width: 6px;
     left: 2px;
-    background: transparent url(../../images/resizecol.png) center center no-repeat;
+    /*background: transparent url(../../images/resizecol.png) center center no-repeat;*/
 }
 
 [dir=rtl] #mediamanager__page .ui-resizable-w:hover {

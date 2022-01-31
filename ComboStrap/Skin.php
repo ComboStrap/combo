@@ -56,23 +56,17 @@ class Skin
 
     public static function getSkinColors(): array
     {
-        $primaryColor = Site::getPrimaryColor();
-        if ($primaryColor === null) {
-            $primaryColor = "#007bff";
-        }
-        $secondaryColor = Site::getSecondaryColor();
-        if ($secondaryColor === null) {
-            $secondaryColor = "#6c757d";
-        }
+        $primaryColorRgbHex = Site::getPrimaryColor("#007bff")->toRgbHex();
+        $secondaryColorRgbHex = Site::getSecondaryColor("#6c757d")->toRgbHex();
         $brandingColors = array(Color::PRIMARY_VALUE => array(
             Color::COLOR => "#fff",
-            Background::BACKGROUND_COLOR => $primaryColor,
-            Color::BORDER_COLOR => $primaryColor
+            Background::BACKGROUND_COLOR => $primaryColorRgbHex,
+            Color::BORDER_COLOR => $primaryColorRgbHex
         ),
             Color::SECONDARY_VALUE => array(
                 Color::COLOR => "#fff",
-                Background::BACKGROUND_COLOR => $secondaryColor,
-                Color::BORDER_COLOR => $secondaryColor
+                Background::BACKGROUND_COLOR => $secondaryColorRgbHex,
+                Color::BORDER_COLOR => $secondaryColorRgbHex
             ));
         return array_merge($brandingColors, self::$colorsWithoutPrimaryAndSecondary);
     }

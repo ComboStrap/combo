@@ -28,6 +28,12 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     public const WIDGET_ATTRIBUTE = "widget";
     public const URL_ATTRIBUTE = "url";
 
+    /**
+     * Class needed
+     * https://getbootstrap.com/docs/5.1/components/navbar/#image-and-text
+     */
+    const BOOTSTRAP_IMAGE_AND_TEXT_CLASS = "d-inline-block align-text-top";
+
 
     /**
      * An utility constructor to be sure that we build the brand button
@@ -245,20 +251,28 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                  * in the enter phase
                  * @since 2022-01-25
                  */
-                $markupIconFound = false;
+                $markupIconImageFound = false;
+                $textFound = false;
                 while ($actualCall = $callStack->previous()) {
                     $tagName = $actualCall->getTagName();
-                    if ($tagName === syntax_plugin_combo_icon::TAG) {
+                    if (in_array($tagName, [syntax_plugin_combo_icon::TAG,syntax_plugin_combo_media::TAG])) {
                         // is it a added call / no content
                         // or is it an icon from the markup
                         if ($actualCall->getCapturedContent() === null) {
-                            if ($markupIconFound) {
+                            if ($markupIconImageFound) {
                                 // if the markup has an icon we delete it
                                 $callStack->deleteActualCallAndPrevious();
                             }
                             break;
                         }
-                        $markupIconFound = true;
+                        if($textFound) {
+                            // if text and icon
+                            $actualCall->addClassName(self::BOOTSTRAP_IMAGE_AND_TEXT_CLASS);
+                        }
+                        $markupIconImageFound = true;
+                    }
+                    if($actualCall->getState()===DOKU_LEXER_UNMATCHED){
+                        $textFound = true;
                     }
                 }
 

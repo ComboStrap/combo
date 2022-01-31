@@ -326,7 +326,7 @@ class MarkupRef
             case self::INTERWIKI_URI:
 
                 // normal link for the `this` wiki
-                if ($this->getWiki() != "this") {
+                if ($this->getWiki() !== "this") {
                     PluginUtility::getSnippetManager()->attachCssSnippetForSlot(self::INTERWIKI_URI);
                 }
                 /**
@@ -601,7 +601,6 @@ EOF;
     public
     function getName()
     {
-        $name = $this->name;
 
         /**
          * Templating

@@ -130,15 +130,6 @@ $mainContainerSelector > h4::before { content: "$prefix" counter(h2, $level2Coun
 $mainContainerSelector > h5::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$suffix\A"; }
 $mainContainerSelector > h6::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$counterSeparator" counter(h6,$level6CounterStyle) "$suffix\A"; }
 #dw__toc .level{$tocLevel2} { counter-increment: toc2; }
-#dw__toc .level{$tocLevel3} { counter-increment: toc3; }
-#dw__toc .level{$tocLevel4} { counter-increment: toc4; }
-#dw__toc .level{$tocLevel5} { counter-increment: toc5; }
-#dw__toc .level{$tocLevel6} { counter-increment: toc6; }
-#dw__toc .level{$tocLevel2} a::before { content: "$prefix" counter(toc2, $level2CounterStyle) "$suffix\A"; }
-#dw__toc .level{$tocLevel3} a::before { content: "$prefix" counter(toc2, $level2CounterStyle) "$counterSeparator" counter(toc3,$level3CounterStyle) "$suffix\A"; }
-#dw__toc .level{$tocLevel4} a::before { content: "$prefix" counter(toc2, $level2CounterStyle) "$counterSeparator" counter(toc3,$level3CounterStyle) "$counterSeparator" counter(toc4,$level4CounterStyle) "$suffix\A"; }
-#dw__toc .level{$tocLevel5} a::before { content: "$prefix" counter(toc2, $level2CounterStyle) "$counterSeparator" counter(toc3,$level3CounterStyle) "$counterSeparator" counter(toc4,$level4CounterStyle) "$counterSeparator" counter(toc5,$level5CounterStyle) "$suffix\A"; }
-#dw__toc .level{$tocLevel6} a::before { content: "$prefix" counter(toc2, $level2CounterStyle) "$counterSeparator" counter(toc3,$level3CounterStyle) "$counterSeparator" counter(toc4,$level4CounterStyle) "$counterSeparator" counter(toc5,$level5CounterStyle) "$counterSeparator" counter(toc6,$level6CounterStyle) "$suffix\A"; }
 EOF;
 
 

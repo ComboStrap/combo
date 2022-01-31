@@ -186,12 +186,19 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         }
 
         /**
-         * Run only if the header output was already called
+         * Add snippet in the content
+         *  - if the header output was already called
+         *  - if this is not a page rendering (ie an admin rendering
+         * for instance, the upgrade plugin call {@link p_cached_output()} on local file
          */
-        if ($this->headerOutputWasCalled) {
+        global $ACT;
+        $putSnippetInContent =
+            $this->headerOutputWasCalled
+            ||
+            $ACT !== "show";
+        if ($putSnippetInContent) {
 
             $snippetManager = PluginUtility::getSnippetManager();
-
             $xhtmlContent = &$event->data[1];
             $snippets = $snippetManager->getSnippets();
             foreach ($snippets as $tagType => $tags) {

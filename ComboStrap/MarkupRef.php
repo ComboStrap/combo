@@ -333,11 +333,6 @@ class MarkupRef
                 $aCss = <<<EOF
 a {
     color: {$primaryColorText->toRgbHex()};
-    text-decoration: none;
-}
-a:hover {
-    color: {$primaryColorText->toRgbHex()};
-    text-decoration: underline;
 }
 EOF;
                 PluginUtility::getSnippetManager()->attachCssSnippetForSlot("anchor", $aCss);

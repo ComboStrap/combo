@@ -436,6 +436,9 @@ class Site
             if ($default === null) {
                 $styles = Color::getDokuWikiStyles();
                 $value = $styles["replacements"]["__theme_color__"];
+                if($value===null){
+                    return null;
+                }
             } else {
                 $value = $default;
             }

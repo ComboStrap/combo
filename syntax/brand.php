@@ -32,7 +32,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      * Class needed
      * https://getbootstrap.com/docs/5.1/components/navbar/#image-and-text
      */
-    const BOOTSTRAP_IMAGE_AND_TEXT_CLASS = "d-inline-block align-text-top";
+    const BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS = "d-inline-block align-text-top";
 
 
     /**
@@ -219,7 +219,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     if ($color !== null) {
                         $brandButton->setPrimaryColor($color);
                     }
-                    syntax_plugin_combo_brand::addIconInCallStack($callStack, $brandButton);
+                    syntax_plugin_combo_brand::addIconInCallStack($callStack, $brandButton, $context);
                 } catch (ExceptionComboNotFound $e) {
 
                     if ($brandButton->getName() === BrandButton::CURRENT_BRAND) {
@@ -255,7 +255,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 $textFound = false;
                 while ($actualCall = $callStack->previous()) {
                     $tagName = $actualCall->getTagName();
-                    if (in_array($tagName, [syntax_plugin_combo_icon::TAG,syntax_plugin_combo_media::TAG])) {
+                    if (in_array($tagName, [syntax_plugin_combo_icon::TAG, syntax_plugin_combo_media::TAG])) {
                         // is it a added call / no content
                         // or is it an icon from the markup
                         if ($actualCall->getCapturedContent() === null) {
@@ -265,13 +265,13 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                             }
                             break;
                         }
-                        if($textFound) {
+                        if ($textFound) {
                             // if text and icon
-                            $actualCall->addClassName(self::BOOTSTRAP_IMAGE_AND_TEXT_CLASS);
+                            $actualCall->addClassName(self::BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS);
                         }
                         $markupIconImageFound = true;
                     }
-                    if($actualCall->getState()===DOKU_LEXER_UNMATCHED){
+                    if ($actualCall->getState() === DOKU_LEXER_UNMATCHED) {
                         $textFound = true;
                     }
                 }
@@ -360,13 +360,16 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionComboNotFound
      */
-    public static function addIconInCallStack(CallStack $callStack, BrandButton $brandButton)
+    public static function addIconInCallStack(CallStack $callStack, BrandButton $brandButton, string $context = null)
     {
 
         if (!$brandButton->hasIcon()) {
             return;
         }
         $iconAttributes = $brandButton->getIconAttributes();
+        if ($context === syntax_plugin_combo_menubar::TAG) {
+            $iconAttributes["class"] = self::BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS;
+        }
         $callStack->appendCallAtTheEnd(
             Call::createComboCall(
                 syntax_plugin_combo_icon::TAG,

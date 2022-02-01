@@ -121,10 +121,7 @@ class MarkupRef
      */
     private $authorizedSchemes;
 
-    /**
-     * @var string the query string as it was parsed
-     */
-    private $originalQueryString;
+
     /**
      * @var DokuwikiUrl
      */
@@ -321,21 +318,35 @@ class MarkupRef
         /**
          * Default Link Color
          * Saturation and lightness comes from the
-         * default blue color of Bootstrap #0d6efd
+         * Note:
+         *   * blue color of Bootstrap #0d6efd s: 98, l: 52
+         *   * blue color of twitter #1d9bf0 s: 88, l: 53
+         *   * reddit gray with s: 16, l : 31
+         *   * the text is s: 11, l: 15
+         * We choose the gray/tone rendering to be close to black
+         * the color of the text
          */
         if(Site::isBrandingColorInheritanceEnabled()) {
             $primaryColorText = Site::getPrimaryColorText()
                 ->toHsl()
-                ->setSaturation(98)
-                ->setLightness(52)
+                ->setSaturation(30)
+                ->setLightness(40)
+                ->toRgb();
+            $primaryColorHoverText = Site::getPrimaryColorText()
+                ->toHsl()
+                ->setSaturation(88)
+                ->setLightness(53)
                 ->toRgb();
             if ($primaryColorText !== null) {
                 $aCss = <<<EOF
-a {
+main a {
     color: {$primaryColorText->toRgbHex()};
 }
+main a:hover {
+    color: {$primaryColorHoverText->toRgbHex()};
+}
 EOF;
-                PluginUtility::getSnippetManager()->attachCssSnippetForSlot("anchor", $aCss);
+                PluginUtility::getSnippetManager()->attachCssSnippetForSlot("anchor-main", $aCss);
             }
         }
 

@@ -178,6 +178,7 @@ class SvgDocument extends XmlDocument
      *   This class should be merged with {@link ImageSvg}
      *   Because we use only {@link Image} function that are here not available because we loose the fact that this is an image
      *   For instance {@link Image::getCroppingDimensionsWithRatio()}
+     * @throws ExceptionCombo
      */
     public function getXmlText(TagAttributes $tagAttributes = null): string
     {
@@ -310,6 +311,13 @@ class SvgDocument extends XmlDocument
                         return parent::getXmlText();
                     }
                     $localTagAttributes->addStyleDeclarationIfNotSet("max-width", "{$widthInPixel}px");
+
+                    /**
+                     * To have an internal width
+                     * and not shrink on the css property `width: auto !important;`
+                     * of a table
+                     */
+                    $this->setRootAttribute("width", $widthInPixel);
 
                 }
                 break;

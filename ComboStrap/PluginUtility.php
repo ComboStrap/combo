@@ -67,7 +67,6 @@ require_once(__DIR__ . '/BacklinkMenuItem.php');
 require_once(__DIR__ . '/Boldness.php');
 require_once(__DIR__ . '/Boolean.php');
 require_once(__DIR__ . '/Bootstrap.php');
-require_once(__DIR__ . '/BreadcrumbHierarchical.php');
 require_once(__DIR__ . '/CacheExpirationDate.php');
 require_once(__DIR__ . '/CacheExpirationFrequency.php');
 require_once(__DIR__ . '/CacheByLogicalKey.php');
@@ -1316,56 +1315,6 @@ class PluginUtility
         global $conf;
         return $conf["allowdebug"] === 1;
 
-    }
-
-    /**
-     * @return bool true if loaded, false otherwise
-     * Strap is loaded only if this is the same version
-     * to avoid function, class, or members that does not exist
-     */
-    public
-    static function loadStrapUtilityTemplateIfPresentAndSameVersion(): bool
-    {
-        $templateUtilityFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
-        if (file_exists($templateUtilityFile)) {
-            /**
-             * Check the version
-             */
-            $templateInfo = confToHash(__DIR__ . '/../../../tpl/strap/template.info.txt');
-            $templateVersion = $templateInfo['version'];
-            $comboVersion = self::$INFO_PLUGIN['version'];
-            if ($templateVersion != $comboVersion) {
-                $strapName = "Strap";
-                $comboName = "Combo";
-                $strapLink = "<a href=\"https://www.dokuwiki.org/template:strap\">$strapName</a>";
-                $comboLink = "<a href=\"https://www.dokuwiki.org/plugin:combo\">$comboName</a>";
-                if ($comboVersion > $templateVersion) {
-                    $upgradeTarget = $strapName;
-                } else {
-                    $upgradeTarget = $comboName;
-                }
-                $upgradeLink = "<a href=\"" . wl() . "&do=admin&page=extension" . "\">upgrade <b>$upgradeTarget</b> via the extension manager</a>";
-                $message = "You should $upgradeLink to the latest version to get a fully functional experience. The version of $comboLink is ($comboVersion) while the version of $strapLink is ($templateVersion).";
-                LogUtility::msg($message);
-                return false;
-            } else {
-                /** @noinspection PhpIncludeInspection */
-                require_once($templateUtilityFile);
-                return true;
-            }
-        } else {
-            $level = LogUtility::LVL_MSG_DEBUG;
-            if (defined('DOKU_UNITTEST')) {
-                // fail
-                $level = LogUtility::LVL_MSG_ERROR;
-            }
-            if (Site::getTemplate() != "strap") {
-                LogUtility::msg("The strap template is not installed", $level);
-            } else {
-                LogUtility::msg("The file ($templateUtilityFile) was not found", $level);
-            }
-            return false;
-        }
     }
 
 

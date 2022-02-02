@@ -13,7 +13,6 @@
 namespace ComboStrap;
 
 
-use dokuwiki\StyleUtils;
 use Exception;
 use RuntimeException;
 
@@ -263,7 +262,7 @@ class Site
     public static function setTemplateToStrap()
     {
         global $conf;
-        $conf['template'] = 'strap';
+        $conf['template'] = self::STRAP_TEMPLATE_NAME;
     }
 
     public static function setTemplateToDefault()
@@ -480,7 +479,6 @@ class Site
     }
 
 
-
     public static function isBrandingColorInheritanceEnabled(): bool
     {
         return PluginUtility::getConfValue(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT) === 1;
@@ -489,8 +487,8 @@ class Site
     public static function getRem(): int
     {
         $defaultRem = 16;
-        if (Site::getTemplate() === "strap") {
-            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
+        if (Site::getTemplate() === self::STRAP_TEMPLATE_NAME) {
+            $loaded = self::loadStrapUtilityTemplateIfPresentAndSameVersion();
             if ($loaded) {
                 $value = TplUtility::getRem();
                 if ($value === null) {
@@ -558,6 +556,134 @@ class Site
             return null;
         }
 
+    }
+
+
+    public static function getSlotNames(): array
+    {
+
+        try {
+            return [
+                Site::getSidebarName(),
+                Site::getHeaderSlotPageName(),
+                Site::getFooterSlotPageName(),
+                Site::getMainHeaderSlotName(),
+                Site::getMainFooterSlotName()
+            ];
+        } catch (ExceptionCombo $e) {
+            // We known at least this one
+            return [Site::getSidebarName()];
+        }
+
+
+    }
+
+
+    /**
+     * @throws ExceptionCombo if the strap template is not installed or could not be loaded
+     */
+    public static function getMainHeaderSlotName(): ?string
+    {
+        self::loadStrapUtilityTemplateIfPresentAndSameVersion();
+        return TplUtility::getMainHeaderSlotName();
+    }
+
+    /**
+     * Strap is loaded only if this is the same version
+     * to avoid function, class, or members that does not exist
+     * @throws ExceptionCombo if strap template utility class could not be loaded
+     */
+    public static function loadStrapUtilityTemplateIfPresentAndSameVersion(): void
+    {
+
+        if (class_exists("ComboStrap\TplUtility")) {
+            return;
+        }
+
+        $templateUtilityFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
+        if (file_exists($templateUtilityFile)) {
+            /**
+             * Check the version
+             */
+            $templateInfo = confToHash(__DIR__ . '/../../../tpl/strap/template.info.txt');
+            $templateVersion = $templateInfo['version'];
+            $comboVersion = PluginUtility::$INFO_PLUGIN['version'];
+            if ($templateVersion != $comboVersion) {
+                $strapName = "Strap";
+                $comboName = "Combo";
+                $strapLink = "<a href=\"https://www.dokuwiki.org/template:strap\">$strapName</a>";
+                $comboLink = "<a href=\"https://www.dokuwiki.org/plugin:combo\">$comboName</a>";
+                if ($comboVersion > $templateVersion) {
+                    $upgradeTarget = $strapName;
+                } else {
+                    $upgradeTarget = $comboName;
+                }
+                $upgradeLink = "<a href=\"" . wl() . "&do=admin&page=extension" . "\">upgrade <b>$upgradeTarget</b> via the extension manager</a>";
+                $message = "You should $upgradeLink to the latest version to get a fully functional experience. The version of $comboLink is ($comboVersion) while the version of $strapLink is ($templateVersion).";
+                LogUtility::msg($message);
+                throw new ExceptionCombo($message);
+            } else {
+                /** @noinspection PhpIncludeInspection */
+                require_once($templateUtilityFile);
+
+            }
+        }
+
+        if (Site::getTemplate() !== self::STRAP_TEMPLATE_NAME) {
+            $message = "The strap template is not installed";
+        } else {
+            $message = "The file ($templateUtilityFile) was not found";
+        }
+        throw new ExceptionCombo($message);
+
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function getSideKickSlotPageName()
+    {
+
+        Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+        return TplUtility::getSideKickSlotPageName();
+
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function getFooterSlotPageName()
+    {
+        Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+        return TplUtility::getFooterSlotPageName();
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function getHeaderSlotPageName()
+    {
+        Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+        return TplUtility::getHeaderSlotPageName();
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function setConfStrapTemplate($name, $value)
+    {
+        Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+        TplUtility::setConf($name, $value);
+
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function getMainFooterSlotName(): string
+    {
+        self::loadStrapUtilityTemplateIfPresentAndSameVersion();
+        return TplUtility::getMainFooterSlotName();
     }
 
 

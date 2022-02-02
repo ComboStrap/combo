@@ -1,7 +1,6 @@
 <?php
 
 use ComboStrap\AdsUtility;
-use ComboStrap\BreadcrumbHierarchical;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\XhtmlUtility;
 use ComboStrap\PluginUtility;
@@ -9,12 +8,8 @@ use ComboStrap\TableUtility;
 use ComboStrap\TocUtility;
 
 
-require_once(__DIR__ . '/../ComboStrap/FsWikiUtility.php');
-require_once(__DIR__ . '/../ComboStrap/TableUtility.php');
-require_once(__DIR__ . '/../ComboStrap/TocUtility.php');
-require_once(__DIR__ . '/../ComboStrap/AdsUtility.php');
-require_once(__DIR__ . '/../ComboStrap/XhtmlUtility.php');
-require_once(__DIR__ . '/../ComboStrap/BreadcrumbHierarchical.php');
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+
 
 /**
  * Class renderer_plugin_combo_renderer
@@ -103,7 +98,7 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
         /**
          * Save the H1 even if the heading dokuwiki is not enable
          */
-        if(!PluginUtility::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE)){
+        if (!PluginUtility::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE)) {
             /**
              * $ACT == 'show'
              * Otherwise we may capture the title of the admin page ...
@@ -146,7 +141,6 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
         $this->previousSectionTextHeader = $text;
 
 
-
         /**
          * Rendering is done by the parent
          * And should be the last one
@@ -156,7 +150,6 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
          *
          */
         parent::header($text, $level, $pos);
-
 
 
     }
@@ -187,7 +180,12 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
             if ($section['level'] == 1 and $section['position'] == 1) {
 
                 // Add the hierarchical breadcrumb detail after the first header
-                $sectionContent .= BreadcrumbHierarchical::render();
+                global $conf;
+
+                // check if enabled
+                if ($conf['youarehere']) {
+                    $sectionContent .= syntax_plugin_combo_breadcrumb::toBreadCrumbHtml();
+                }
 
                 if (TocUtility::showToc($this)) {
                     $sectionContent .= TocUtility::renderToc($this);
@@ -251,8 +249,6 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
         $this->_counter['row_counter'] = 0;
         TableUtility::tableOpen($this, $pos);
     }
-
-
 
 
 }

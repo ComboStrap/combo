@@ -1,20 +1,8 @@
 <?php
 
-use ComboStrap\AdsUtility;
-use ComboStrap\BreadcrumbHierarchical;
-use ComboStrap\FsWikiUtility;
-use ComboStrap\XhtmlUtility;
-use ComboStrap\PluginUtility;
-use ComboStrap\TableUtility;
-use ComboStrap\TocUtility;
 
 
-require_once(__DIR__ . '/../ComboStrap/FsWikiUtility.php');
-require_once(__DIR__ . '/../ComboStrap/TableUtility.php');
-require_once(__DIR__ . '/../ComboStrap/TocUtility.php');
-require_once(__DIR__ . '/../ComboStrap/AdsUtility.php');
-require_once(__DIR__ . '/../ComboStrap/XhtmlUtility.php');
-require_once(__DIR__ . '/../ComboStrap/BreadcrumbHierarchical.php');
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
  * A rendering in XML

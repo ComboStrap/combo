@@ -1,7 +1,8 @@
 <?php
 
 
-use ComboStrap\BreadcrumbHierarchical;
+use ComboStrap\DokuPath;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\PluginUtility;
 
 
@@ -14,7 +15,95 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
     const TAG = "breadcrumb";
 
 
-    const CANONICAL = "breadcrumb";
+    public const CANONICAL = "breadcrumb-hierarchical";
+
+    /**
+     * Hierarchical breadcrumbs (you are here)
+     *
+     * This will return the Hierarchical breadcrumbs.
+     *
+     * Config:
+     *    - $conf['youarehere'] must be true
+     *    - add $lang['youarehere'] if $printPrefix is true
+     *
+     * Metadata comes from here
+     * https://developers.google.com/search/docs/data-types/breadcrumb
+     *
+     * @return string
+     * @throws ExceptionCombo
+     */
+    public static function toBreadCrumbHtml(): string
+    {
+
+
+        // print intermediate namespace links
+        $htmlOutput = '<div class="branch rplus">' . PHP_EOL;
+
+        // Breadcrumb head
+        $htmlOutput .= '<nav aria-label="breadcrumb">' . PHP_EOL;
+        $htmlOutput .= '<ol class="breadcrumb">' . PHP_EOL;
+
+        // Home
+        $htmlOutput .= '<li class="breadcrumb-item">' . PHP_EOL;
+        $page = \ComboStrap\Site::getHomePageName();
+        $markupRef = \ComboStrap\MarkupRef::createFromPageId($page);
+        $pageNameNotEmpty = $markupRef->getInternalPage()->getNameOrDefault();
+        $htmlOutput .= $markupRef->toAttributes(self::CANONICAL)->toHtmlEnterTag("a")
+            . $pageNameNotEmpty
+            . "</a>";
+        $htmlOutput .= '</li>' . PHP_EOL;
+
+        // Print the parts if there is more than one
+        global $ID;
+        $idParts = explode(':', $ID);
+        $countPart = count($idParts);
+        if ($countPart > 1) {
+
+            // Print the parts without the last one ($count -1)
+            $pagePart = "";
+            $currentParts = [];
+            for ($i = 0; $i < $countPart - 1; $i++) {
+
+                $currentPart = $idParts[$i];
+                $currentParts[] = $currentPart;
+
+                /**
+                 * We pass the value to the page variable
+                 * because the resolve part will change it
+                 *
+                 * resolve will also resolve to the home page
+                 */
+
+                $page = implode(DokuPath::PATH_SEPARATOR, $currentParts) . ":";
+                $exist = null;
+                resolve_pageid(getNS($ID), $page, $exist, "", true);
+
+                $htmlOutput .= '<li class="breadcrumb-item">';
+                // html_wikilink because the page has the form pagename: and not pagename:pagename
+                if ($exist) {
+                    $markupRef = \ComboStrap\MarkupRef::createFromPageId($page);
+                    $htmlOutput .=
+                        $markupRef->toAttributes(self::CANONICAL)->toHtmlEnterTag("a")
+                        . $markupRef->getInternalPage()->getNameOrDefault()
+                        . "</a>";
+                } else {
+                    $htmlOutput .= ucfirst($currentPart);
+                }
+
+                $htmlOutput .= '</li>' . PHP_EOL;
+
+            }
+        }
+
+        // close the breadcrumb
+        $htmlOutput .= '</ol>' . PHP_EOL;
+        $htmlOutput .= '</nav>' . PHP_EOL;
+        $htmlOutput .= "</div>" . PHP_EOL;
+
+
+        return $htmlOutput;
+
+    }
 
     /**
      * Syntax Type.
@@ -22,7 +111,7 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in {@link $PARSER_MODES} in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'substition';
     }
@@ -50,7 +139,7 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array();
     }
@@ -99,7 +188,7 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
             case 'xhtml':
                 $state = $data[PluginUtility::STATE];
                 if($state===DOKU_LEXER_SPECIAL) {
-                    $renderer->doc .= BreadcrumbHierarchical::render();
+                    $renderer->doc .= self::toBreadCrumbHtml();
                 }
                 return true;
         }

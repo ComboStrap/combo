@@ -17,6 +17,7 @@ use ComboStrap\PageH1;
 use ComboStrap\ResourceName;
 use ComboStrap\PageTitle;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\TplUtility;
 use dokuwiki\Cache\CacheRenderer;
 
@@ -51,15 +52,12 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
             /**
              * @see {@link \ComboStrap\TplConstant::CONF_SIDEKICK}
              */
-            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            if ($loaded) {
-
-                $sideKickSlotPageName = TplUtility::getSideKickSlotPageName();
-                if (!empty($sideKickSlotPageName)) {
-                    self::$sideSlotNames[] = $sideKickSlotPageName;
-                }
-
+            $sideKickSlotPageName = Site::getSideKickSlotPageName();
+            if (!empty($sideKickSlotPageName)) {
+                self::$sideSlotNames[] = $sideKickSlotPageName;
             }
+
+
         }
         return self::$sideSlotNames;
     }

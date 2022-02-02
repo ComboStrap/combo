@@ -401,18 +401,7 @@ class Page extends ResourceComboAbs
      */
     public function isSlot(): bool
     {
-        global $conf;
-        $slotNames = array($conf['sidebar']);
-        $strapTemplateName = 'strap';
-        if ($conf['template'] === $strapTemplateName) {
-            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            if ($loaded) {
-                $slotNames[] = TplUtility::getHeaderSlotPageName();
-                $slotNames[] = TplUtility::getFooterSlotPageName();
-                $slotNames[] = TplUtility::getSideKickSlotPageName();
-                $slotNames[] = TplUtility::getMainFooterAndHeaderNames();
-            }
-        }
+        $slotNames = Site::getSlotNames();
         $name = $this->getPath()->getLastNameWithoutExtension();
         if ($name === null) {
             // root case
@@ -426,40 +415,18 @@ class Page extends ResourceComboAbs
      */
     public function isMainHeaderFooterSlot(): bool
     {
-        if (!Site::isStrapTemplate()) {
+
+        try {
+            $slotNames = [Site::getMainHeaderSlotName(), Site::getMainFooterSlotName()];
+        } catch (ExceptionCombo $e) {
             return false;
         }
-        $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
-        if (!$loaded) {
-            return false;
-        }
-        $slotNames[] = TplUtility::getMainFooterAndHeaderNames();
         $name = $this->getPath()->getLastNameWithoutExtension();
         if ($name === null) {
             // root case
             return false;
         }
         return in_array($name, $slotNames, true);
-    }
-
-    /**
-     * @deprecated for {@link Page::isSlot()}
-     * Return true if this is a slot
-     *
-     * Note: Slots have a logical reasoning (ie such as a virtual, alias)
-     * The output may be logically located elsewhere
-     */
-    public function isStrapSideSlot(): bool
-    {
-
-        if (!Site::isStrapTemplate()) {
-            return false;
-        }
-
-
-        return $this->isSlot();
-
-
     }
 
 

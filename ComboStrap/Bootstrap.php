@@ -34,7 +34,7 @@ class Bootstrap
     public static function getBootStrapMajorVersion()
     {
         if (Site::isStrapTemplate()) {
-            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            $loaded = Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
             if ($loaded) {
                 $bootstrapVersion = TplUtility::getBootStrapVersion();
                 return $bootstrapVersion[0];

@@ -514,5 +514,15 @@ class Site
         return $defaultRem;
     }
 
+    public static function enableBrandingColorInheritance()
+    {
+        PluginUtility::setConf(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, 1);
+    }
+
+    public static function setBrandingColorInheritanceToDefault()
+    {
+        PluginUtility::setConf(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT);
+    }
+
 
 }

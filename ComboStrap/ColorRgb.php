@@ -235,6 +235,7 @@ class ColorRgb
      * Minimum recommended ratio by the w3c
      */
     const MINIMUM_CONTRAST_RATIO = 5;
+    const WHITE = "white";
 
     /**
      * @var array
@@ -701,6 +702,14 @@ class ColorRgb
             return self::CSS_COLOR_NAMES[$hexColor];
         }
         return $hexColor;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function toMinimumContrastRatioAgainstWhite(): ColorRgb
+    {
+        return $this->toMinimumContrastRatio(self::WHITE);
     }
 
 

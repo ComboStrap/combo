@@ -135,16 +135,22 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         $slots = $cacheManager->getXhtmlCacheSlotResultsForRequestedPage();
         foreach ($slots as $slotId => $servedFromCache) {
 
-            $snippets = Page::createPageFromId($slotId)
-                ->getHtmlDocument()
-                ->getSnippets();
+            /**
+             * The snippets still exist even if it's not served from cache
+             * Therefore we can get old one
+             */
+            if ($servedFromCache) {
+                $snippets = Page::createPageFromId($slotId)
+                    ->getHtmlDocument()
+                    ->getSnippets();
 
-            if (sizeof($snippets) > 0) {
-                $nativeSnippets = [];
-                foreach ($snippets as $snippet) {
-                    $nativeSnippets[$snippet->getType()][$snippet->getId()] = $snippet;
+                if (sizeof($snippets) > 0) {
+                    $nativeSnippets = [];
+                    foreach ($snippets as $snippet) {
+                        $nativeSnippets[$snippet->getType()][$snippet->getId()] = $snippet;
+                    }
+                    $snippetManager->addSnippetsFromCacheForSlot($slotId, $nativeSnippets);
                 }
-                $snippetManager->addSnippetsFromCacheForSlot($slotId, $nativeSnippets);
             }
 
         }
@@ -188,14 +194,14 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         /**
          * Add snippet in the content
          *  - if the header output was already called
-         *  - if this is not a page rendering (ie an admin rendering
+         *  - if this is not a page rendering (ie an admin rendering)
          * for instance, the upgrade plugin call {@link p_cached_output()} on local file
          */
         global $ACT;
         $putSnippetInContent =
             $this->headerOutputWasCalled
             ||
-            $ACT !== "show";
+            ($ACT !== "show" && $ACT !== null); // admin page rendering
         if ($putSnippetInContent) {
 
             $snippetManager = PluginUtility::getSnippetManager();

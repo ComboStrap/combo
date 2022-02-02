@@ -241,10 +241,7 @@ class ColorRgb
      * @var array
      */
     private static $dokuWikiStyles;
-    /**
-     * @var string
-     */
-    private $colorValue;
+
     /**
      * @var int
      */
@@ -260,7 +257,16 @@ class ColorRgb
     /**
      * @var string
      */
-    private $type = self::VALUE_TYPE_UNKNOWN_NAME;
+    private $nameType = self::VALUE_TYPE_UNKNOWN_NAME;
+    /**
+     * The color name
+     * It can be:
+     *   * a bootstrap
+     *   * a css name
+     *   * or `reset`
+     * @var null|string
+     */
+    private $name;
 
 
     /**
@@ -281,7 +287,48 @@ class ColorRgb
      */
     public static function createFromRgbChannels(int $red, int $green, int $blue): ColorRgb
     {
-        return new ColorRgb([$red, $green, $blue]);
+        return (new ColorRgb())
+            ->setRgbChannels([$red, $green, $blue]);
+    }
+
+    /**
+     * Utility function to get white
+     * @throws ExceptionCombo
+     */
+    public static function getWhite(): ColorRgb
+    {
+
+        return (new ColorRgb())
+            ->setName("white")
+            ->setRgbChannels([255, 255, 255])
+            ->setNameType(self::VALUE_TYPE_CSS_NAME);
+
+    }
+
+    /**
+     * Utility function to get black
+     * @throws ExceptionCombo
+     */
+    public static function getBlack(): ColorRgb
+    {
+
+        return (new ColorRgb())
+            ->setName("black")
+            ->setRgbChannels([0, 0, 0])
+            ->setNameType(self::VALUE_TYPE_CSS_NAME);
+
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function createFromHex(string $color)
+    {
+
+        return (new ColorRgb())
+            ->setHex($color);
+
+
     }
 
 
@@ -453,7 +500,11 @@ class ColorRgb
      */
     public static function createFromString(string $color): ColorRgb
     {
-        return new ColorRgb($color);
+        if ($color[0] === "#") {
+            return self::createFromHex($color);
+        } else {
+            return self::createFromName($color);
+        }
     }
 
     /**
@@ -461,94 +512,39 @@ class ColorRgb
      */
     public static function createFromName(string $color): ColorRgb
     {
-        if (!in_array($color, array_keys(self::CSS_COLOR_NAMES))) {
-            throw new ExceptionCombo("The color name ($color) does not exists");
-        }
-        return new ColorRgb(self::CSS_COLOR_NAMES[$color]);
+        return (new ColorRgb())
+            ->setName($color);
     }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    public function __construct($colorValue)
-    {
-
-        $this->colorValue = $colorValue;
-        if (is_array($colorValue)) {
-            if (sizeof($colorValue) != 3) {
-                throw new ExceptionCombo("A rgb color array should be of length 3");
-            }
-            foreach ($colorValue as $color) {
-                try {
-                    $channel = DataType::toInteger($color);
-                } catch (ExceptionCombo $e) {
-                    throw new ExceptionCombo("The rgb color $color is not an integer. Error: {$e->getMessage()}");
-                }
-                if ($channel < 0 and $channel > 255) {
-                    throw new ExceptionCombo("The rgb color $color is not between 0 and 255");
-                }
-            }
-            [$this->red, $this->green, $this->blue] = $colorValue;
-            $this->type = self::VALUE_TYPE_RGB_ARRAY;
-            return;
-        }
-        // Hexadecimal
-        if ($colorValue[0] == "#") {
-            [$this->red, $this->green, $this->blue] = $this->hex2rgb($colorValue);
-            $this->type = self::VALUE_TYPE_RGB_HEX;
-            return;
-        }
-        // Color Name
-        // Custom Css variable
-        $this->colorValue = strtolower($colorValue);
-        if (in_array($this->colorValue, self::BOOTSTRAP_COLORS)) {
-            $this->type = self::VALUE_TYPE_BOOTSTRAP_NAME;
-            // value are unknown for now
-            if (in_array($this->colorValue, array_keys(self::CSS_COLOR_NAMES))) {
-                $value = self::CSS_COLOR_NAMES[$this->colorValue];
-                [$this->red, $this->green, $this->blue] = $this->hex2rgb($value);
-            }
-            return;
-        }
-        if ($this->colorValue === self::VALUE_TYPE_RESET) {
-            $this->type = self::VALUE_TYPE_RESET;
-            return;
-        }
-        if (in_array($this->colorValue, array_keys(self::CSS_COLOR_NAMES))) {
-            $this->type = self::VALUE_TYPE_CSS_NAME;
-            $value = self::CSS_COLOR_NAMES[$this->colorValue];
-            [$this->red, $this->green, $this->blue] = $this->hex2rgb($value);
-            return;
-        }
-        // unknown css name
-    }
 
     public function toCssValue(): string
     {
 
-        switch ($this->type) {
+        switch ($this->nameType) {
             case self::VALUE_TYPE_RGB_ARRAY:
                 return $this->toRgbHex();
             case self::VALUE_TYPE_RGB_HEX;
-                return $this->colorValue;
+                return $this->name;
             case self::VALUE_TYPE_BOOTSTRAP_NAME:
-
-
                 $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
                 switch ($bootstrapVersion) {
                     case Bootstrap::BootStrapFiveMajorVersion:
-                        $colorValue = "bs-" . $this->colorValue;
+                        $colorValue = "bs-" . $this->name;
                         break;
                     default:
-                        $colorValue = $this->colorValue;
+                        $colorValue = $this->name;
                         break;
                 }
                 return "var(--" . $colorValue . ")";
             case self::VALUE_TYPE_RESET:
                 return "inherit!important";
             default:
-                // unknown css color name
-                return $this->colorValue;
+                // unknown color name
+                if($this->name===null){
+                    LogUtility::msg("The name should not be null");
+                    return "black";
+                }
+                return $this->name;
         }
 
 
@@ -583,9 +579,9 @@ class ColorRgb
         }
     }
 
-    public function getType(): string
+    public function getNameType(): string
     {
-        return $this->type;
+        return $this->nameType;
     }
 
     public function shift(int $percentage): ColorRgb
@@ -620,7 +616,7 @@ class ColorRgb
 
     public function __toString()
     {
-        return $this->colorValue;
+        return $this->name;
     }
 
     public function getLuminance(): float
@@ -661,14 +657,14 @@ class ColorRgb
     /**
      * @throws ExceptionCombo
      */
-    public function toMinimumContrastRatio(string $color, $minimum = self::MINIMUM_CONTRAST_RATIO): ColorRgb
+    public function toMinimumContrastRatio(string $color, float $minimum = self::MINIMUM_CONTRAST_RATIO, $darknessIncrement = 5): ColorRgb
     {
         $targetColor = ColorRgb::createFromString($color);
         $ratio = $this->getContrastRatio($targetColor);
         $newColorRgb = $this;
         $newColorHsl = $this->toHsl();
         while ($ratio < $minimum) {
-            $newColorHsl = $newColorHsl->darken();
+            $newColorHsl = $newColorHsl->darken($darknessIncrement);
             $newColorRgb = $newColorHsl->toRgb();
             if ($newColorHsl->getLightness() === 0) {
                 break;
@@ -707,9 +703,78 @@ class ColorRgb
     /**
      * @throws ExceptionCombo
      */
-    public function toMinimumContrastRatioAgainstWhite(): ColorRgb
+    public function toMinimumContrastRatioAgainstWhite(float $minimumContrastRatio = self::MINIMUM_CONTRAST_RATIO, int $darknessIncrement = 5): ColorRgb
     {
-        return $this->toMinimumContrastRatio(self::WHITE);
+        return $this->toMinimumContrastRatio(self::WHITE, $minimumContrastRatio, $darknessIncrement);
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private function setHex(string $color): ColorRgb
+    {
+        // Hexadecimal
+        if ($color[0] !== "#") {
+            throw new ExceptionCombo("The value is not an hexadecimal color value ($color)");
+        }
+        [$this->red, $this->green, $this->blue] = $this->hex2rgb($color);
+        $this->nameType = self::VALUE_TYPE_RGB_HEX;
+        $this->name = $color;
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setRgbChannels(array $colorValue): ColorRgb
+    {
+        if (sizeof($colorValue) != 3) {
+            throw new ExceptionCombo("A rgb color array should be of length 3");
+        }
+        foreach ($colorValue as $color) {
+            try {
+                $channel = DataType::toInteger($color);
+            } catch (ExceptionCombo $e) {
+                throw new ExceptionCombo("The rgb color $color is not an integer. Error: {$e->getMessage()}");
+            }
+            if ($channel < 0 and $channel > 255) {
+                throw new ExceptionCombo("The rgb color $color is not between 0 and 255");
+            }
+        }
+        [$this->red, $this->green, $this->blue] = $colorValue;
+        $this->nameType = self::VALUE_TYPE_RGB_ARRAY;
+        return $this;
+    }
+
+    private function setNameType(string $type): ColorRgb
+    {
+        $this->nameType = $type;
+        return $this;
+    }
+
+    /**
+     * Via a name
+     * @throws ExceptionCombo
+     */
+    private function setName(string $name): ColorRgb
+    {
+
+        $qualifiedName = strtolower($name);
+        $this->name = $qualifiedName;
+        if (in_array($qualifiedName, self::BOOTSTRAP_COLORS)) {
+            return $this->setNameType(self::VALUE_TYPE_BOOTSTRAP_NAME);
+        }
+        if ($qualifiedName === self::VALUE_TYPE_RESET) {
+            return $this->setNameType(self::VALUE_TYPE_RESET);
+        }
+        if (in_array($qualifiedName, array_keys(self::CSS_COLOR_NAMES))) {
+            return $this
+                ->setHex(self::CSS_COLOR_NAMES[$qualifiedName])
+                ->setNameType(self::VALUE_TYPE_CSS_NAME);
+        }
+        LogUtility::msg("The color name ($name) is unknown");
+        return $this;
+
     }
 
 

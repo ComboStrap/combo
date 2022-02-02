@@ -479,14 +479,6 @@ class Site
         PluginUtility::setConf(ColorRgb::PRIMARY_COLOR_CONF, null);
     }
 
-    public static function getPrimaryColorText(string $default = null): ?ColorRgb
-    {
-        $primaryColor = self::getPrimaryColor($default);
-        if ($primaryColor === null) {
-            return null;
-        }
-        return $primaryColor->shade(ColorRgb::TEXT_BOOTSTRAP_WEIGHT);
-    }
 
 
     public static function isBrandingColorInheritanceEnabled(): bool
@@ -522,6 +514,50 @@ class Site
     public static function setBrandingColorInheritanceToDefault()
     {
         PluginUtility::setConf(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT);
+    }
+
+    public static function getPrimaryColorText(string $default = null): ?ColorRgb
+    {
+        $primaryColor = self::getPrimaryColor($default);
+        if ($primaryColor === null) {
+            return null;
+        }
+        try {
+            return $primaryColor
+                ->toHsl()
+                ->setSaturation(30)
+                ->setLightness(40)
+                ->toRgb()
+                ->toMinimumContrastRatioAgainstWhite();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error while calculating the primary text color. {$e->getMessage()}");
+            return null;
+        }
+    }
+
+    /**
+     * More lightness than the text
+     * @return ColorRgb|null
+     */
+    public static function getPrimaryColorTextHover(): ?ColorRgb
+    {
+
+        $primaryColor = self::getPrimaryColor();
+        if ($primaryColor === null) {
+            return null;
+        }
+        try {
+            return $primaryColor
+                ->toHsl()
+                ->setSaturation(88)
+                ->setLightness(53)
+                ->toRgb()
+                ->toMinimumContrastRatioAgainstWhite();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error while calculating the primary text color. {$e->getMessage()}");
+            return null;
+        }
+
     }
 
 

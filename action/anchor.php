@@ -68,24 +68,14 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
          * We choose the gray/tone rendering to be close to black
          * the color of the text
          */
-        $primaryColor = Site::getPrimaryColorText();
+        $primaryColor = Site::getPrimaryColor();
         if (Site::isBrandingColorInheritanceEnabled() && $primaryColor !== null) {
 
             $snippetManager = PluginUtility::getSnippetManager();
             try {
 
-                $primaryColorText = $primaryColor
-                    ->toHsl()
-                    ->setSaturation(30)
-                    ->setLightness(40)
-                    ->toRgb()
-                    ->toMinimumContrastRatioAgainstWhite();
-                $primaryColorHoverText = $primaryColor
-                    ->toHsl()
-                    ->setSaturation(88)
-                    ->setLightness(53)
-                    ->toRgb()
-                    ->toMinimumContrastRatioAgainstWhite();
+                $primaryColorText =  Site::getPrimaryColorText();
+                $primaryColorHoverText = Site::getPrimaryColorTextHover();
                 if ($primaryColorText !== null) {
                     $aCss = <<<EOF
 main a {

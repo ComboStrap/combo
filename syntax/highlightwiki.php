@@ -45,7 +45,8 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
                 $colorRgb = $primaryColor
                     ->toHsl()
                     ->setLightness(98)
-                    ->toRgb();
+                    ->toRgb()
+                    ->toMinimumContrastRatioAgainstWhite(1.1,1);
                 $tagAttributes->addComponentAttributeValue(ColorRgb::BACKGROUND_COLOR, $colorRgb
                     ->toRgbHex());
             } catch (ExceptionCombo $e) {

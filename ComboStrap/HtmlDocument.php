@@ -18,7 +18,7 @@ class HtmlDocument extends OutputDocument
      * HtmlDocument constructor.
      * @param Page $page
      */
-    public function __construct($page)
+    public function __construct(Page $page)
     {
         parent::__construct($page);
         if ($page->isSlot()) {
@@ -139,6 +139,8 @@ class HtmlDocument extends OutputDocument
         if ($jsonDecodeSnippets !== null) {
             $data1 = json_encode($jsonDecodeSnippets);
             $this->snippetCache->storeCache($data1);
+        } else {
+            $this->snippetCache->removeCache();
         }
 
     }

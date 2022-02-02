@@ -14,6 +14,7 @@ namespace ComboStrap;
 class ColorHsl
 {
 
+    const CANONICAL = "color";
     private $hue;
 
     private $saturation;
@@ -120,11 +121,18 @@ class ColorHsl
         /**
          * To the closest integer
          */
-        return ColorRgb::createFromRgbChannels(
-            intval(round($red)),
-            intval(round($green)),
-            intval(round($blue))
-        );
+        try {
+            return ColorRgb::createFromRgbChannels(
+                intval(round($red)),
+                intval(round($green)),
+                intval(round($blue))
+            );
+        } catch (ExceptionCombo $e) {
+            // should not happen but yeah, who knows
+            // and because there is no safe constructor, no safe default, we throw
+            $message = "Error while creating the rgb color from the hsl ($this)";
+            throw new ExceptionCombo($message, self::CANONICAL, 0, $e);
+        }
 
     }
 
@@ -137,6 +145,27 @@ class ColorHsl
             throw new ExceptionCombo("Saturation should be between 0 and 100");
         }
         $this->saturation = $saturation;
+        return $this;
+    }
+
+    public function toComplement(): ColorHsl
+    {
+        // Adjust Hue 180 degrees
+        $this->hue += ($this->hue > 180) ? -180 : 180;
+        return $this;
+    }
+
+    public function __toString()
+    {
+        return "hsl($this->hue deg, $this->saturation%, $this->lightness%)";
+    }
+
+    public function darken(int $lightness = 5): ColorHsl
+    {
+        if ($this->lightness - $lightness < 0) {
+            $this->lightness = 0;
+        }
+        $this->lightness -= $lightness;
         return $this;
     }
 

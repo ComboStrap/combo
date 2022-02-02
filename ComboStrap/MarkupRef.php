@@ -331,7 +331,8 @@ class MarkupRef
                 ->toHsl()
                 ->setSaturation(30)
                 ->setLightness(40)
-                ->toRgb();
+                ->toRgb()
+                ->toMinimumContrastRatio("white");
             $primaryColorHoverText = Site::getPrimaryColorText()
                 ->toHsl()
                 ->setSaturation(88)

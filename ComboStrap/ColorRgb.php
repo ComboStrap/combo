@@ -232,6 +232,11 @@ class ColorRgb
     const BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT = 1;
 
     /**
+     * Minimum recommended ratio by the w3c
+     */
+    const MINIMUM_CONTRAST_RATIO = 5;
+
+    /**
      * @var array
      */
     private static $dokuWikiStyles;
@@ -650,6 +655,52 @@ class ColorRgb
         }
         $ratio = ($lighter->getLuminance() + 0.05) / ($darker->getLuminance() + 0.05);
         return floor($ratio * 100) / 100;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function toMinimumContrastRatio(string $color, $minimum = self::MINIMUM_CONTRAST_RATIO): ColorRgb
+    {
+        $targetColor = ColorRgb::createFromString($color);
+        $ratio = $this->getContrastRatio($targetColor);
+        $newColorRgb = $this;
+        $newColorHsl = $this->toHsl();
+        while ($ratio < $minimum) {
+            $newColorHsl = $newColorHsl->darken();
+            $newColorRgb = $newColorHsl->toRgb();
+            if ($newColorHsl->getLightness() === 0) {
+                break;
+            }
+            $ratio = $newColorRgb->getContrastRatio($targetColor);
+        }
+        return $newColorRgb;
+    }
+
+    /**
+     * Returns the complimentary color
+     */
+    public function complementary(): ColorRgb
+    {
+        try {
+            return $this
+                ->toHsl()
+                ->toComplement()
+                ->toRgb();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error while getting the complementary color of ($this). Error: {$e->getMessage()}");
+            return $this;
+        }
+
+    }
+
+    public function getName(): string
+    {
+        $hexColor = $this->toRgbHex();
+        if (in_array($hexColor, self::CSS_COLOR_NAMES)) {
+            return self::CSS_COLOR_NAMES[$hexColor];
+        }
+        return $hexColor;
     }
 
 

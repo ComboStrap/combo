@@ -257,7 +257,6 @@ class ColorRgb
     private $type = self::VALUE_TYPE_UNKNOWN_NAME;
 
 
-
     /**
      * The styles of the dokuwiki systems
      * @return array
@@ -276,7 +275,7 @@ class ColorRgb
      */
     public static function createFromRgbChannels(int $red, int $green, int $blue): ColorRgb
     {
-        return new ColorRgb([$red,$green,$blue]);
+        return new ColorRgb([$red, $green, $blue]);
     }
 
 
@@ -326,7 +325,7 @@ class ColorRgb
          * No round to get a neat inverse
          */
 
-        return ColorHsl::createFromChannels($hue,$saturation*100,$lightness*100);
+        return ColorHsl::createFromChannels($hue, $saturation * 100, $lightness * 100);
 
 
     }
@@ -449,6 +448,17 @@ class ColorRgb
     public static function createFromString(string $color): ColorRgb
     {
         return new ColorRgb($color);
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function createFromName(string $color): ColorRgb
+    {
+        if (!in_array($color, array_keys(self::CSS_COLOR_NAMES))) {
+            throw new ExceptionCombo("The color name ($color) does not exists");
+        }
+        return new ColorRgb(self::CSS_COLOR_NAMES[$color]);
     }
 
     /**
@@ -586,9 +596,6 @@ class ColorRgb
     }
 
 
-
-
-
     public function toRgbChannels(): array
     {
         return [$this->getRed(), $this->getGreen(), $this->getBlue()];
@@ -610,7 +617,40 @@ class ColorRgb
         return $this->colorValue;
     }
 
+    public function getLuminance(): float
+    {
+        $toLuminanceFactor = function ($channel) {
+            $pigmentRatio = $channel / 255;
+            return $pigmentRatio <= 0.03928 ? $pigmentRatio / 12.92 : pow(($pigmentRatio + 0.055) / 1.055, 2.4);
+        };
+        $R = $toLuminanceFactor($this->getRed());
+        $G = $toLuminanceFactor($this->getGreen());
+        $B = $toLuminanceFactor($this->getBlue());
+        return $R * 0.2126 + $G * 0.7152 + $B * 0.0722;
 
+    }
+
+    /**
+     * The ratio that returns the chrome browser
+     * @param ColorRgb $colorRgb
+     * @return float
+     */
+    public function getContrastRatio(ColorRgb $colorRgb): float
+    {
+        $actualColorHsl = $this->toHsl();
+        $actualLightness = $actualColorHsl->getLightness();
+        $targetColorHsl = $colorRgb->toHsl();
+        $targetLightNess = $targetColorHsl->getLightness();
+        if ($actualLightness > $targetLightNess) {
+            $lighter = $this;
+            $darker = $colorRgb;
+        } else {
+            $lighter = $colorRgb;
+            $darker = $this;
+        }
+        $ratio = ($lighter->getLuminance() + 0.05) / ($darker->getLuminance() + 0.05);
+        return floor($ratio * 100) / 100;
+    }
 
 
 }

@@ -46,6 +46,9 @@ class Background
     const PATTERN_COLOR_ATTRIBUTE = "pattern-color";
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     public static function processBackgroundAttributes(TagAttributes &$tagAttributes)
     {
 
@@ -206,7 +209,7 @@ class Background
         if ($tagAttributes->hasComponentAttribute(self::BACKGROUND_COLOR)) {
 
             $colorValue = $tagAttributes->getValueAndRemove(self::BACKGROUND_COLOR);
-            $colorValue = ColorRgb::createFromString($colorValue)->toCssValue();
+
             $gradientPrefix = 'gradient-';
             if (strpos($colorValue, $gradientPrefix) === 0) {
                 /**
@@ -221,7 +224,10 @@ class Background
                     $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_COLOR, 'unset!important');
                 }
             } else {
+
+                $colorValue = ColorRgb::createFromString($colorValue)->toCssValue();
                 $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_COLOR, $colorValue);
+
             }
         }
 
@@ -234,7 +240,7 @@ class Background
      * @param array $mediaCallStackArray
      * @return array
      */
-    public static function fromMediaToBackgroundImageStackArray(array $mediaCallStackArray)
+    public static function fromMediaToBackgroundImageStackArray(array $mediaCallStackArray): array
     {
         $backgroundProperties = [];
         foreach ($mediaCallStackArray as $key => $property) {

@@ -10,10 +10,7 @@ class TextColor
     const TEXT_COLOR_ATTRIBUTE = "text-color";
     const CSS_ATTRIBUTE = "color";
     const CANONICAL = self::TEXT_COLOR_ATTRIBUTE;
-    const TEXT_TAGS = [
-        \syntax_plugin_combo_text::TAG,
-        \syntax_plugin_combo_itext::TAG
-    ];
+
     const TEXT_COLORS = array(
         'primary',
         'secondary',
@@ -32,7 +29,6 @@ class TextColor
 
     /**
      * @param TagAttributes $attributes
-     * @throws ExceptionCombo
      */
     public static function processTextColorAttribute(TagAttributes &$attributes)
     {
@@ -75,7 +71,12 @@ class TextColor
                     /**
                      * Other Text Colors
                      */
-                    $colorValue = ColorRgb::createFromString($colorValue)->toCssValue();
+                    try {
+                        $colorValue = ColorRgb::createFromString($colorValue)->toCssValue();
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("The text color value ($colorValue) is not a valid color. Error: {$e->getMessage()}");
+                        return;
+                    }
                     if (!empty($colorValue)) {
                         $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, $colorValue);
                     }

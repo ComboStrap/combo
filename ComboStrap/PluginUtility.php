@@ -917,7 +917,7 @@ class PluginUtility
          * {@link htmlentities }
          */
         //return htmlspecialchars($text, ENT_QUOTES);
-        return htmlentities($text);
+        return htmlentities($text, ENT_XHTML);
     }
 
     public

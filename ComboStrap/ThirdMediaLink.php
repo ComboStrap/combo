@@ -20,5 +20,9 @@ class ThirdMediaLink extends MediaLink
         return $msg;
     }
 
+    public function getUrl(): string{
+        return "";
+    }
+
 
 }

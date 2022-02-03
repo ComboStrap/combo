@@ -485,14 +485,20 @@ class ColorRgb
      */
     function toRgbHex(): string
     {
-        $toCssHex = function ($x) {
-            return str_pad(dechex($x), 2, "0", STR_PAD_LEFT);
-        };
 
-        $redHex = $toCssHex($this->getRed());
-        $greenHex = $toCssHex($this->getGreen());
-        $blueHex = $toCssHex($this->getBlue());
-        return "#" . $redHex . $greenHex . $blueHex;
+        switch ($this->nameType){
+            case self::VALUE_TYPE_CSS_NAME:
+                return strtolower(self::CSS_COLOR_NAMES[$this->name]);
+            default:
+                $toCssHex = function ($x) {
+                    return str_pad(dechex($x), 2, "0", STR_PAD_LEFT);
+                };
+                $redHex = $toCssHex($this->getRed());
+                $greenHex = $toCssHex($this->getGreen());
+                $blueHex = $toCssHex($this->getBlue());
+                return "#" . $redHex . $greenHex . $blueHex;
+        }
+
     }
 
     /**
@@ -523,6 +529,7 @@ class ColorRgb
         switch ($this->nameType) {
             case self::VALUE_TYPE_RGB_ARRAY:
                 return $this->toRgbHex();
+            case self::VALUE_TYPE_CSS_NAME:
             case self::VALUE_TYPE_RGB_HEX;
                 return $this->name;
             case self::VALUE_TYPE_BOOTSTRAP_NAME:
@@ -792,9 +799,7 @@ class ColorRgb
             return $this->setNameType(self::VALUE_TYPE_RESET);
         }
         if (in_array($qualifiedName, array_keys(self::CSS_COLOR_NAMES))) {
-            return $this
-                ->setHex(self::CSS_COLOR_NAMES[$qualifiedName])
-                ->setNameType(self::VALUE_TYPE_CSS_NAME);
+            return $this->setNameType(self::VALUE_TYPE_CSS_NAME);
         }
         LogUtility::msg("The color name ($name) is unknown");
         return $this;

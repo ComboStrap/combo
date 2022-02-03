@@ -458,15 +458,6 @@ class TagAttributes
 
         $this->componentToHtmlAttributeProcessingWasDone = true;
 
-
-        $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
-
-        /**
-         * HTML encode
-         */
-        $this->encodeToHtmlValue($originalArray);
-
-
         /**
          * Width and height
          */
@@ -626,6 +617,11 @@ class TagAttributes
 
         }
         $this->finalHtmlArray = $sortedArray;
+
+        /**
+         * To Html attribute encoding
+         */
+        $this->finalHtmlArray = $this->encodeToHtmlValue($this->finalHtmlArray);
 
         return $this->finalHtmlArray;
 
@@ -1123,20 +1119,24 @@ class TagAttributes
      *
      *
      * Following the rule 2 to encode the unknown value
-     * We encode the component attribute (ie not the HTML attribute because
-     * they may have already encoded value)
-     * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
+     * We encode the component attribute to the target output (ie HTML)
+     *
+     * See:
+     * https://stackoverflow.com/questions/129677/how-can-i-sanitize-user-input-with-php
+     * and https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
      *
      * TODO: the problem is that we don't know the type of attribute
      *   When passing them through the {@link TagAttributes::toCallStackArray()}
      *   One way to do that is by name. ie an href does not need to be encoded
      *   but we should be sure that this is not a user entry
      *   For now, the internal function passes the non-encoded by default
+     * @return array
      */
     private
-    function encodeToHtmlValue(array $arrayToEscape, $subKey = null)
+    function encodeToHtmlValue(array $arrayToEscape, $subKey = null): array
     {
 
+        $returnedArray = [];
         foreach ($arrayToEscape as $name => $value) {
 
             $encodedName = PluginUtility::htmlEncode($name);
@@ -1146,25 +1146,24 @@ class TagAttributes
              */
             if (is_bool($value)) {
                 if ($subKey == null) {
-                    $this->componentAttributesCaseInsensitive[$encodedName] = $value;
+                    $returnedArray[$encodedName] = $value;
                 } else {
-                    $this->componentAttributesCaseInsensitive[$subKey][$encodedName] = $value;
+                    $returnedArray[$subKey][$encodedName] = $value;
                 }
                 continue;
             }
 
-            if (is_array($value)) {
-                $this->encodeToHtmlValue($value, $encodedName);
-            } else {
 
-                $value = PluginUtility::htmlEncode($value);
-                if ($subKey == null) {
-                    $this->componentAttributesCaseInsensitive[$encodedName] = $value;
-                } else {
-                    $this->componentAttributesCaseInsensitive[$subKey][$encodedName] = $value;
-                }
+            $value = PluginUtility::htmlEncode($value);
+            if ($subKey == null) {
+                $returnedArray[$encodedName] = $value;
+            } else {
+                $returnedArray[$subKey][$encodedName] = $value;
             }
+
         }
+        return $returnedArray;
+
     }
 
     public function __toString()

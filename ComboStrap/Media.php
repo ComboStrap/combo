@@ -90,6 +90,10 @@ abstract class Media extends ResourceComboAbs
         $queryParameters[CacheMedia::CACHE_BUSTER_KEY] = $this->getBuster();
     }
 
+    /**
+     * @param string $ampersand
+     * @return mixed
+     */
     public abstract function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
 
 

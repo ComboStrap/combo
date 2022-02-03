@@ -14,7 +14,6 @@ namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
 use dokuwiki\Parsing\ParserMode\Internallink;
-use syntax_plugin_combo_card;
 use syntax_plugin_combo_media;
 
 require_once(__DIR__ . '/PluginUtility.php');

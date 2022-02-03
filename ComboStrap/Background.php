@@ -46,9 +46,6 @@ class Background
     const PATTERN_COLOR_ATTRIBUTE = "pattern-color";
 
 
-    /**
-     * @throws ExceptionCombo
-     */
     public static function processBackgroundAttributes(TagAttributes &$tagAttributes)
     {
 
@@ -159,17 +156,23 @@ class Background
                             break;
                     }
 
+
                     $media = MediaLink::createFromCallStackArray($backgroundImageValue);
-                    $image = $media->getDefaultImage();
-                    $url = $image->getUrl(DokuwikiUrl::AMPERSAND_CHARACTER, $image->getTargetWidth());
-                    if ($url !== false) {
-
-                        $backgroundImageStyleValue = "url(" . $url . ")";
-
-
-                    } else {
-                        LogUtility::msg("The image ($media) does not exist", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                    if ($media instanceof ThirdMediaLink) {
+                        LogUtility::msg("The background image ($media) is not supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        return;
                     }
+                    /**
+                     * @var Image $image
+                     */
+                    $image = $media->getDefaultImage();
+                    if (!FileSystems::exists($image->getPath())) {
+                        LogUtility::msg("The image ($media) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        return;
+                    }
+                    $url = $image->getUrl(DokuwikiUrl::AMPERSAND_CHARACTER);
+                    $backgroundImageStyleValue = "url(" . $url . ")";
+
                 } else {
                     LogUtility::msg("Internal Error: The background image value ($backgroundImageValue) is not a string nor an array", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 }

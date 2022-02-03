@@ -65,7 +65,7 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
     public function getSort(): int
     {
         /**
-         * It's 49 (on less than the original of 100)
+         * It's 49 (on less than the original of 100) named monospace
          * {@link \dokuwiki\Parsing\ParserMode\Formatting}
          */
         return 49;

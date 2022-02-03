@@ -42,29 +42,7 @@ class TextColor
             if ($attributes->hasComponentAttribute($colorAttribute)) {
                 $colorValue = $attributes->getValueAndRemove($colorAttribute);
                 $lowerCaseColorValue = strtolower($colorValue);
-
-                /**
-                 * Branding colors overwrite
-                 */
-                if(Site::isBrandingColorInheritanceEnabled()) {
-                    switch ($lowerCaseColorValue) {
-                        case ColorRgb::PRIMARY_VALUE:
-                            $primaryColor = Site::getPrimaryColor();
-                            if ($primaryColor !== null) {
-                                // important because we set the text-class below and they already have an important value
-                                $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "{$primaryColor->toRgbHex()}!important");
-                            }
-                            break;
-                        case ColorRgb::SECONDARY_VALUE:
-                            $secondaryColor = Site::getSecondaryColor();
-                            if ($secondaryColor !== null) {
-                                // important because we set the text-class below and they already have an important value
-                                $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "{$secondaryColor->toRgbHex()}!important");
-                            }
-                            break;
-                    }
-                }
-
+                
                 if (in_array($lowerCaseColorValue, self::TEXT_COLORS)) {
                     /**
                      * The bootstrap text class

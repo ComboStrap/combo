@@ -430,21 +430,14 @@ class Site
 
     public static function getPrimaryColor($default = null): ?ColorRgb
     {
-        $value = PluginUtility::getConfValue(ColorRgb::PRIMARY_COLOR_CONF);
+        $value = self::getPrimaryColorValue($default);
         if ($value === null) {
-            if ($default === null) {
-                $styles = ColorRgb::getDokuWikiStyles();
-                $value = $styles["replacements"]["__theme_color__"];
-                if ($value === null) {
-                    return null;
-                }
-            } else {
-                $value = $default;
-            }
+            return null;
         }
         try {
             return ColorRgb::createFromString($value);
-        } catch (ExceptionCombo $e) {
+        } catch
+        (ExceptionCombo $e) {
             LogUtility::msg("The primary color value configuration ($value) is not valid. Error: {$e->getMessage()}");
             return null;
         }
@@ -452,13 +445,9 @@ class Site
 
     public static function getSecondaryColor($default = null): ?ColorRgb
     {
-        $value = PluginUtility::getConfValue(ColorRgb::SECONDARY_COLOR_CONF);
+        $value = Site::getSecondaryColorValue($default);
         if ($value === null) {
-            if ($default !== null) {
-                $value = $default;
-            } else {
-                return null;
-            }
+            return null;
         }
         try {
             return ColorRgb::createFromString($value);
@@ -684,6 +673,22 @@ class Site
     {
         self::loadStrapUtilityTemplateIfPresentAndSameVersion();
         return TplUtility::getMainFooterSlotName();
+    }
+
+    public static function getPrimaryColorValue($default = null)
+    {
+        $value = PluginUtility::getConfValue(ColorRgb::PRIMARY_COLOR_CONF, $default);
+        if ($value !== null) {
+            return $value;
+        }
+        $styles = ColorRgb::getDokuWikiStyles();
+        return $styles["replacements"]["__theme_color__"];
+
+    }
+
+    public static function getSecondaryColorValue($default = null)
+    {
+        return PluginUtility::getConfValue(ColorRgb::SECONDARY_COLOR_CONF, $default);
     }
 
 

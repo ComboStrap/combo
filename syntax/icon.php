@@ -172,7 +172,8 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                  * branding color is not set ?
                  */
                 $requestedColor = $tagAttributes->getValue(ColorRgb::COLOR);
-                if ($requestedColor === null &&
+                if (
+                    $requestedColor === null &&
                     Site::isBrandingColorInheritanceEnabled() &&
                     !in_array($context, [
                         syntax_plugin_combo_button::TAG,

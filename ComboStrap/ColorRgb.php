@@ -540,7 +540,7 @@ class ColorRgb
                 return "inherit!important";
             default:
                 // unknown color name
-                if($this->name===null){
+                if ($this->name === null) {
                     LogUtility::msg("The name should not be null");
                     return "black";
                 }
@@ -762,6 +762,30 @@ class ColorRgb
         $qualifiedName = strtolower($name);
         $this->name = $qualifiedName;
         if (in_array($qualifiedName, self::BOOTSTRAP_COLORS)) {
+            /**
+             * Branding colors overwrite
+             */
+            switch ($this->name) {
+                case ColorRgb::PRIMARY_VALUE:
+                    $primaryColor = Site::getPrimaryColorValue();
+                    if ($primaryColor !== null) {
+                        if ($primaryColor !== ColorRgb::PRIMARY_VALUE) {
+                            return self::createFromString($primaryColor);
+                        }
+                        LogUtility::msg("The primary color cannot be set with the value primary. Default to bootstrap color.", self::BRANDING_COLOR_CANONICAL);
+                    }
+                    break;
+                case ColorRgb::SECONDARY_VALUE:
+                    $secondaryColor = Site::getSecondaryColorValue();
+                    if ($secondaryColor !== null) {
+                        if ($secondaryColor !== ColorRgb::SECONDARY_VALUE) {
+                            return self::createFromString($secondaryColor);
+                        }
+                        LogUtility::msg("The secondary color cannot be set with the value secondary. Default to bootstrap color.", self::BRANDING_COLOR_CANONICAL);
+                    }
+                    break;
+            }
+
             return $this->setNameType(self::VALUE_TYPE_BOOTSTRAP_NAME);
         }
         if ($qualifiedName === self::VALUE_TYPE_RESET) {

@@ -334,10 +334,14 @@ class ColorRgb
 
     /**
      * @return ColorHsl
+     * @throws ExceptionCombo
      */
     public function toHsl(): ColorHsl
     {
 
+        if ($this->red === null) {
+            throw new ExceptionCombo("This color ($this) does not have any channel known, we can't transform it to hsl");
+        }
         $red = $this->red / 255;
         $green = $this->green / 255;
         $blue = $this->blue / 255;
@@ -486,7 +490,7 @@ class ColorRgb
     function toRgbHex(): string
     {
 
-        switch ($this->nameType){
+        switch ($this->nameType) {
             case self::VALUE_TYPE_CSS_NAME:
                 return strtolower(self::CSS_COLOR_NAMES[$this->name]);
             default:
@@ -643,6 +647,7 @@ class ColorRgb
      * The ratio that returns the chrome browser
      * @param ColorRgb $colorRgb
      * @return float
+     * @throws ExceptionCombo
      */
     public function getContrastRatio(ColorRgb $colorRgb): float
     {
@@ -799,7 +804,10 @@ class ColorRgb
             return $this->setNameType(self::VALUE_TYPE_RESET);
         }
         if (in_array($qualifiedName, array_keys(self::CSS_COLOR_NAMES))) {
-            return $this->setNameType(self::VALUE_TYPE_CSS_NAME);
+            $this->setHex(self::CSS_COLOR_NAMES[$qualifiedName])
+                ->setNameType(self::VALUE_TYPE_CSS_NAME);
+            $this->name = $qualifiedName; // hex is a also a name, the previous setHex overwrite the name
+            return $this;
         }
         LogUtility::msg("The color name ($name) is unknown");
         return $this;

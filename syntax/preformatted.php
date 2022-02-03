@@ -232,7 +232,7 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
      * @return bool
      */
     public
-    static function disablePreformatted($mode)
+    static function disablePreformatted($mode): bool
     {
         /**
          * Disable {@link \dokuwiki\Parsing\ParserMode\Preformatted}

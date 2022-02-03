@@ -74,7 +74,10 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
 
     function getSort(): int
     {
-        return 201;
+        /**
+         * Less than {@link syntax_plugin_typography_base}
+         */
+        return 65;
     }
 
 

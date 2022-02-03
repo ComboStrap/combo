@@ -19,6 +19,7 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
     const TAG = "breadcrumb";
 
     public const CANONICAL_HIERARCHICAL = "breadcrumb-hierarchical";
+    const HTML_CLASS = self::CANONICAL_HIERARCHICAL . "-combo";
 
 
     /**
@@ -46,8 +47,8 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
          * https://www.w3.org/TR/wai-aria-practices/examples/breadcrumb/index.html
          * Arial-label Provides a label that describes the type of navigation provided in the nav element.
          */
-
-        $htmlOutput = '<nav aria-label="Hierarchical breadcrumb">' . PHP_EOL;
+        $class = self::HTML_CLASS;
+        $htmlOutput = "<nav aria-label=\"Hierarchical breadcrumb\" class=\"$class\">" . PHP_EOL;
         $htmlOutput .= '<ol class="breadcrumb">' . PHP_EOL;
 
 
@@ -85,7 +86,7 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
         }
         $liHtmlOutput = "<li class=\"breadcrumb-item$liClass\"$liArial>";
 
-        if (FileSystems::exists($page->getPath())) {
+        if (FileSystems::exists($page->getPath()) && $current === false) {
             $liHtmlOutput .= $page->getHtmlAnchorLink(self::CANONICAL_HIERARCHICAL);
         } else {
             $liHtmlOutput .= $page->getNameOrDefault();

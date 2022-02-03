@@ -3,7 +3,11 @@
 
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
+use ComboStrap\FileSystems;
+use ComboStrap\MarkupRef;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 
 
 /**
@@ -14,8 +18,8 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
 
     const TAG = "breadcrumb";
 
+    public const CANONICAL_HIERARCHICAL = "breadcrumb-hierarchical";
 
-    public const CANONICAL = "breadcrumb-hierarchical";
 
     /**
      * Hierarchical breadcrumbs (you are here)
@@ -30,79 +34,64 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
      * https://developers.google.com/search/docs/data-types/breadcrumb
      *
      * @return string
-     * @throws ExceptionCombo
      */
     public static function toBreadCrumbHtml(): string
     {
 
 
         // print intermediate namespace links
-        $htmlOutput = '<div class="branch rplus">' . PHP_EOL;
 
-        // Breadcrumb head
-        $htmlOutput .= '<nav aria-label="breadcrumb">' . PHP_EOL;
+
+        /**
+         * https://www.w3.org/TR/wai-aria-practices/examples/breadcrumb/index.html
+         * Arial-label Provides a label that describes the type of navigation provided in the nav element.
+         */
+
+        $htmlOutput = '<nav aria-label="Hierarchical breadcrumb">' . PHP_EOL;
         $htmlOutput .= '<ol class="breadcrumb">' . PHP_EOL;
 
-        // Home
-        $htmlOutput .= '<li class="breadcrumb-item">' . PHP_EOL;
-        $page = \ComboStrap\Site::getHomePageName();
-        $markupRef = \ComboStrap\MarkupRef::createFromPageId($page);
-        $pageNameNotEmpty = $markupRef->getInternalPage()->getNameOrDefault();
-        $htmlOutput .= $markupRef->toAttributes(self::CANONICAL)->toHtmlEnterTag("a")
-            . $pageNameNotEmpty
-            . "</a>";
-        $htmlOutput .= '</li>' . PHP_EOL;
 
-        // Print the parts if there is more than one
-        global $ID;
-        $idParts = explode(':', $ID);
-        $countPart = count($idParts);
-        if ($countPart > 1) {
-
-            // Print the parts without the last one ($count -1)
-            $pagePart = "";
-            $currentParts = [];
-            for ($i = 0; $i < $countPart - 1; $i++) {
-
-                $currentPart = $idParts[$i];
-                $currentParts[] = $currentPart;
-
-                /**
-                 * We pass the value to the page variable
-                 * because the resolve part will change it
-                 *
-                 * resolve will also resolve to the home page
-                 */
-
-                $page = implode(DokuPath::PATH_SEPARATOR, $currentParts) . ":";
-                $exist = null;
-                resolve_pageid(getNS($ID), $page, $exist, "", true);
-
-                $htmlOutput .= '<li class="breadcrumb-item">';
-                // html_wikilink because the page has the form pagename: and not pagename:pagename
-                if ($exist) {
-                    $markupRef = \ComboStrap\MarkupRef::createFromPageId($page);
-                    $htmlOutput .=
-                        $markupRef->toAttributes(self::CANONICAL)->toHtmlEnterTag("a")
-                        . $markupRef->getInternalPage()->getNameOrDefault()
-                        . "</a>";
-                } else {
-                    $htmlOutput .= ucfirst($currentPart);
-                }
-
-                $htmlOutput .= '</li>' . PHP_EOL;
-
-            }
+        $actual = Page::createPageFromRequestedPage();
+        $lisHtmlOutput = self::getLiHtmlOutput($actual, true);
+        while ($actual = $actual->getParentPage()) {
+            $liHtmlOutput = self::getLiHtmlOutput($actual);
+            $lisHtmlOutput = $liHtmlOutput . $lisHtmlOutput;
         }
-
+        $htmlOutput .= $lisHtmlOutput;
         // close the breadcrumb
         $htmlOutput .= '</ol>' . PHP_EOL;
         $htmlOutput .= '</nav>' . PHP_EOL;
-        $htmlOutput .= "</div>" . PHP_EOL;
-
 
         return $htmlOutput;
 
+    }
+
+    /**
+     * @param Page $page
+     * @param bool $current
+     * @return string - the list item for the page
+     */
+    private static function getLiHtmlOutput(Page $page, bool $current = false): string
+    {
+        $liClass = "";
+        $liArial = "";
+        if ($current) {
+            $liClass = " active";
+            /**
+             * https://www.w3.org/TR/wai-aria-practices/examples/breadcrumb/index.html
+             * Applied to a link in the breadcrumd set to indicate that it represents the current page.
+             */
+            $liArial = " aria-current=\"page\"";
+        }
+        $liHtmlOutput = "<li class=\"breadcrumb-item$liClass\"$liArial>";
+
+        if (FileSystems::exists($page->getPath())) {
+            $liHtmlOutput .= $page->getHtmlAnchorLink(self::CANONICAL_HIERARCHICAL);
+        } else {
+            $liHtmlOutput .= $page->getNameOrDefault();
+        }
+        $liHtmlOutput .= '</li>' . PHP_EOL;
+        return $liHtmlOutput;
     }
 
     /**
@@ -187,8 +176,12 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
 
             case 'xhtml':
                 $state = $data[PluginUtility::STATE];
-                if($state===DOKU_LEXER_SPECIAL) {
-                    $renderer->doc .= self::toBreadCrumbHtml();
+                if ($state === DOKU_LEXER_SPECIAL) {
+                    try {
+                        $renderer->doc .= self::toBreadCrumbHtml();
+                    } catch (ExceptionCombo $e) {
+                        $renderer->doc .= $e->getMessage();
+                    }
                 }
                 return true;
         }

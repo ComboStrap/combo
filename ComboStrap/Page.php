@@ -1039,11 +1039,19 @@ class Page extends ResourceComboAbs
 
 
     public
-    function getAnchorLink(): string
+    function getHtmlAnchorLink($logicalTag = null): string
     {
-        $url = $this->getCanonicalUrl();
-        $title = $this->getTitle();
-        return "<a href=\"$url\">$title</a>";
+        $id = $this->getPath()->getDokuwikiId();
+        try {
+            return MarkupRef::createFromPageId($id)
+                    ->toAttributes($logicalTag)
+                    ->toHtmlEnterTag("a")
+                . $this->getNameOrDefault()
+                . "</a>";
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The markup ref returns an error for the creation of the page anchor html link ($this). Error: {$e->getMessage()}");
+            return "<a href=\"{$this->getCanonicalUrl()}\" data-wiki-id=\"$id\">{$this->getNameOrDefault()}</a>";
+        }
     }
 
 

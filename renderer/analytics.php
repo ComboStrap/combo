@@ -605,7 +605,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function externallink($url, $name = null)
     {
         $link = new MarkupRef($url);
-        $link->setUriType(MarkupRef::STANDARD_URI);
+        $link->setUriType(MarkupRef::WEB_URI);
         if ($name != null) {
             $link->setName($name);
         }

@@ -38,7 +38,7 @@ class MarkupRef
      */
     const INTERWIKI_URI = 'interwiki';
     const WINDOWS_SHARE_URI = 'windowsShare';
-    const STANDARD_URI = 'external';
+    const WEB_URI = 'external';
 
     const EMAIL_URI = 'email';
     const LOCAL_URI = 'local';
@@ -199,7 +199,7 @@ class MarkupRef
              * For instance, `mailto:` is also a valid page
              */
             if (preg_match('#^([a-z0-9\-\.+]+?)://#i', $ref)) {
-                $this->uriType = self::STANDARD_URI;
+                $this->uriType = self::WEB_URI;
                 $this->schemeUri = strtolower(substr($ref, 0, strpos($ref, ":")));
                 $this->ref = $ref;
             }
@@ -496,7 +496,7 @@ EOF;
             case self::EMAIL_URI:
                 $outputAttributes->addClassName(self::getHtmlClassEmailLink());
                 break;
-            case self::STANDARD_URI:
+            case self::WEB_URI:
                 if ($conf['relnofollow']) {
                     $outputAttributes->addHtmlAttributeValue("rel", 'nofollow ugc');
                 }
@@ -546,16 +546,6 @@ EOF;
 
     }
 
-    /**
-     * Keep track of the backlinks ie meta['relation']['references']
-     * @param Doku_Renderer_metadata $metaDataRenderer
-     */
-    public
-    function handleMetadata(Doku_Renderer_metadata $metaDataRenderer)
-    {
-
-
-    }
 
     /**
      * Return the type of link from an ID
@@ -799,7 +789,7 @@ EOF;
                 $check = false;
                 $url = '#' . sectionID($this->ref, $check);
                 break;
-            case self::STANDARD_URI:
+            case self::WEB_URI:
                 /**
                  * Default is external
                  * For instance, {@link \syntax_plugin_combo_share} link
@@ -840,33 +830,6 @@ EOF;
     function getScheme()
     {
         return $this->schemeUri;
-    }
-
-    /**
-     * @return bool true if the page should be protected
-     */
-    private
-    function isProtectedLink()
-    {
-        $protectedLink = false;
-        if ($this->getUriType() == self::WIKI_URI) {
-
-            // Low Quality Page protection
-            $lqppEnable = PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE);
-            if ($lqppEnable == 1
-                && $this->getInternalPage()->isLowQualityPage()) {
-                $protectedLink = true;
-            }
-
-            if ($protectedLink === false) {
-                $latePublicationProtectionEnabled = PluginUtility::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE);
-                if ($latePublicationProtectionEnabled == 1
-                    && $this->getInternalPage()->isLatePublication()) {
-                    $protectedLink = true;
-                }
-            }
-        }
-        return $protectedLink;
     }
 
 
@@ -918,7 +881,7 @@ EOF;
 
 
     public
-    static function getHtmlClassInternalLink()
+    static function getHtmlClassInternalLink(): string
     {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {

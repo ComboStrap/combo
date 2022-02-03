@@ -182,10 +182,11 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
                 // Add the hierarchical breadcrumb detail after the first header
                 global $conf;
 
+                //
                 // check if enabled
-                if ($conf['youarehere']) {
-                    $sectionContent .= syntax_plugin_combo_breadcrumb::toBreadCrumbHtml();
-                }
+                //                if ($conf['youarehere']) {
+                //                    $sectionContent .= syntax_plugin_combo_breadcrumb::toBreadCrumbHtml();
+                //                }
 
                 if (TocUtility::showToc($this)) {
                     $sectionContent .= TocUtility::renderToc($this);

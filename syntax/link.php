@@ -519,7 +519,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                              */
                             $renderer->internallink($href);
                             break;
-                        case MarkupRef::STANDARD_URI:
+                        case MarkupRef::WEB_URI:
                             $renderer->externallink($href, $name);
                             break;
                         case MarkupRef::LOCAL_URI:
@@ -611,7 +611,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $stats[AnalyticsDocument::INTERNAL_LINK_DISTANCE][] = $length;
                             break;
 
-                        case MarkupRef::STANDARD_URI:
+                        case MarkupRef::WEB_URI:
 
                             if (!array_key_exists(AnalyticsDocument::EXTERNAL_LINK_COUNT, $stats)) {
                                 $stats[AnalyticsDocument::EXTERNAL_LINK_COUNT] = 0;

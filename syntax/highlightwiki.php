@@ -34,28 +34,32 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
     const EXIT_PATTERN = "\x27\x27";
 
     const CANONICAL = self::TAG;
-    const TINT_PERCENTAGE = 95;
+
+    const HTML_TAG = "mark";
 
     public static function getOpenTagHighlight(string $tag): string
     {
-        $primaryColor = Site::getPrimaryColor();
-        if ($primaryColor !== null) {
-            $tagAttributes = TagAttributes::createEmpty($tag);
-            try {
-                $colorRgb = $primaryColor
-                    ->toHsl()
-                    ->setLightness(98)
-                    ->toRgb()
-                    ->toMinimumContrastRatioAgainstWhite(1.1,1);
-                $tagAttributes->addComponentAttributeValue(ColorRgb::BACKGROUND_COLOR, $colorRgb
-                    ->toRgbHex());
-            } catch (ExceptionCombo $e) {
-                LogUtility::msg("Error on highlight color calculation");
-            }
-            return $tagAttributes->toHtmlEnterTag("mark");
-        } else {
-            return "<mark>";
+        $htmlTag = self::HTML_TAG;
+        if (!Site::isBrandingColorInheritanceEnabled()) {
+            return "<$htmlTag>";
         }
+        $primaryColor = Site::getPrimaryColor();
+        if ($primaryColor === null) {
+            return "<$htmlTag>";
+        }
+        $tagAttributes = TagAttributes::createEmpty($tag);
+        try {
+            $colorRgb = $primaryColor
+                ->toHsl()
+                ->setLightness(98)
+                ->toRgb()
+                ->toMinimumContrastRatioAgainstWhite(1.1, 1);
+            $tagAttributes->addComponentAttributeValue(ColorRgb::BACKGROUND_COLOR, $colorRgb
+                ->toRgbHex());
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error on highlight color calculation");
+        }
+        return $tagAttributes->toHtmlEnterTag($htmlTag);
     }
 
     public function getSort(): int
@@ -169,7 +173,8 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     return true;
                 case DOKU_LEXER_EXIT:
-                    $renderer->doc .= "</mark>";
+                    $htmlTag = self::HTML_TAG;
+                    $renderer->doc .= "</$htmlTag>";
                     return true;
 
             }

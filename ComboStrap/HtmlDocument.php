@@ -42,7 +42,9 @@ class HtmlDocument extends OutputDocument
          * At {@link action_plugin_combo_cache::logCacheUsage()}
          */
         $id = $this->getPage()->getDokuwikiId();
-        $slotLocalFilePath = $this->getPage()->getPath()->toLocalPath()
+        $slotLocalFilePath = $this->getPage()
+            ->getPath()
+            ->toLocalPath()
             ->toAbsolutePath()
             ->toString();
         $this->snippetCache = new CacheParser($id, $slotLocalFilePath, "snippet.json");

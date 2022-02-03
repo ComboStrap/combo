@@ -1,15 +1,9 @@
 <?php
 
 use ComboStrap\CacheManager;
-use ComboStrap\DokuPath;
-use ComboStrap\ExceptionCombo;
-use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\Resources;
-use ComboStrap\Snippet;
 use ComboStrap\SnippetManager;
-use dokuwiki\Cache\CacheParser;
 
 if (!defined('DOKU_INC')) die();
 

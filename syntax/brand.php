@@ -224,7 +224,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
 
                     if ($brandButton->getName() === BrandButton::CURRENT_BRAND) {
                         $documentationLink = PluginUtility::getDocumentationHyperLink("logo", "documentation");
-                        LogUtility::msg("A svg logo icon is not installed on your website. Check the corresponding $documentationLink.");
+                        LogUtility::msg("A svg logo icon is not installed on your website. Check the corresponding $documentationLink.", LogUtility::LVL_MSG_INFO);
                     } else {
                         LogUtility::msg("The brand icon returns an error. Error: {$e->getMessage()}");
                     }

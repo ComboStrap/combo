@@ -400,7 +400,7 @@ class BrandButton
 
                 $primary = $this->primaryColor;
                 if ($primary === null) {
-                    throw new ExceptionCombo("The background color for the brand ($this) is not set.");
+                    throw new ExceptionCombo("The primary color for the brand ($this) is not set.");
                 }
                 $textColor = $this->getTextColor();
                 if ($textColor === null || $textColor === "") {

@@ -182,7 +182,7 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {

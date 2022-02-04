@@ -12,6 +12,8 @@ form.page-edit-combo svg {
 }
 form.btn_secedit {
     font-size: initial!important;
+    position:relative;
+    z-index:10;
 }
 form.btn_secedit button {
     background-position-x: center; /** best effort not really centered with the page-edit-combo **/

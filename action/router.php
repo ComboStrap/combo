@@ -325,10 +325,16 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                 && $ID != Site::getHomePageName()
                 && !isset($_REQUEST["rev"])
             ) {
-                $this->executePermanentRedirect(
-                    $targetPage->getCanonicalUrl([], true),
-                    self::TARGET_ORIGIN_PERMALINK_EXTENDED
-                );
+                /**
+                 * TODO: When saving for the first time, the page is not stored in the database
+                 *   but that's not the case actually
+                 */
+                if($targetPage->getDatabasePage()->exists()) {
+                    $this->executePermanentRedirect(
+                        $targetPage->getCanonicalUrl([], true),
+                        self::TARGET_ORIGIN_PERMALINK_EXTENDED
+                    );
+                }
             }
             return;
         }
@@ -365,7 +371,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                     // or the length of the abbr has changed
                     $databasePage = new DatabasePageRow();
                     $row = $databasePage->getDatabaseRowFromAttribute("substr(" . PageId::PROPERTY_NAME . ", 1, " . strlen($pageId) . ")", $pageId);
-                    if ($row != null) {
+                    if ($row !== null) {
                         $databasePage->setRow($row);
                         $page = $databasePage->getPage();
                     }

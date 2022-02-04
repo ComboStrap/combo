@@ -184,6 +184,7 @@ require_once(__DIR__ . '/ReplicationDate.php');
 require_once(__DIR__ . '/Resources.php');
 require_once(__DIR__ . '/ResourceName.php');
 require_once(__DIR__ . '/Sanitizer.php');
+require_once(__DIR__ . '/SectionEdit.php');
 require_once(__DIR__ . '/Shadow.php');
 require_once(__DIR__ . '/Site.php');
 require_once(__DIR__ . '/Skin.php');
@@ -1100,7 +1101,7 @@ class PluginUtility
      * @return string
      */
     public
-    static function renderUnmatched($data)
+    static function renderUnmatched($data): string
     {
         /**
          * Attributes
@@ -1112,7 +1113,7 @@ class PluginUtility
         }
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
         $display = $tagAttributes->getValue(Display::DISPLAY);
-        if ($display != "none") {
+        if ($display !== "none") {
             $payload = $data[self::PAYLOAD];
             $previousTagDisplayType = $data[self::CONTEXT];
             if ($previousTagDisplayType !== Call::INLINE_DISPLAY) {
@@ -1386,6 +1387,11 @@ class PluginUtility
     {
         // https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
         return getenv("CI") === "true";
+    }
+
+    public static function htmlDecode($int): string
+    {
+        return htmlspecialchars_decode($int, ENT_XHTML);
     }
 
 

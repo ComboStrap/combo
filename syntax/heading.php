@@ -382,7 +382,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      * @param TagAttributes $tagAttributes
      * @return string
      */
-    public static function renderClosingTag($tagAttributes)
+    public static function renderClosingTag(TagAttributes $tagAttributes): string
     {
         $level = $tagAttributes->getValueAndRemove(syntax_plugin_combo_heading::LEVEL);
         if ($level == null) {
@@ -398,7 +398,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return self::SYNTAX_TYPE;
     }

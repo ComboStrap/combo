@@ -58,7 +58,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'container';
     }
@@ -72,7 +72,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      * is used
      * ***************
      */
-    public function getAllowedTypes()
+    public function getAllowedTypes(): array
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }

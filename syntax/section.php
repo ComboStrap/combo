@@ -19,7 +19,7 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'container';
     }
@@ -98,7 +98,7 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
         /**
          * As of today, we don't render on XHTML
          * because it would go in the way
-         * of the sectionEdit function
+         * of the {@link html_secedit()} function
          *
          * The rendering is used only when exporting to another format
          * (XML) to render on another platform such as mobile

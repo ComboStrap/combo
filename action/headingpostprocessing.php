@@ -3,9 +3,11 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
+use ComboStrap\SectionEdit;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
@@ -173,11 +175,10 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $actualLastPosition = 0;
         while ($actualCall = $callStack->next()) {
 
-            $previousCall = $actualCall;
             $tagName = $actualCall->getTagName();
 
             /**
-             * TRack the position in the file
+             * Track the position in the file
              */
             $currentLastPosition = $actualCall->getLastMatchedCharacterPosition();
             if ($currentLastPosition > $actualLastPosition) {
@@ -343,6 +344,27 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          */
         while ($this->outlineSectionBalance > 0) {
             $this->closeOutlineSection($callStack, $actualLastPosition);
+        }
+
+        /**
+         * Not heading at all
+         */
+        if ($headingTotalCounter === 0) {
+
+            try {
+                $sectionEditComment = Call::createComboCall(
+                    syntax_plugin_combo_comment::TAG,
+                    DOKU_LEXER_UNMATCHED,
+                    array(),
+                    Call::INLINE_DISPLAY, // don't trim
+                    null,
+                    SectionEdit::create()->toTag()
+                );
+                $callStack->insertBefore($sectionEditComment);
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("Error while adding the edit button. Error: {$e->getMessage()}");
+            }
+
         }
 
 

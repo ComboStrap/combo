@@ -131,19 +131,11 @@ class PageEdit
             $url = $page->getUrl(PageUrlType::CONF_VALUE_PAGE_PATH);
             $wikiIdHtmlClassForm = str_replace(":", "-", $wikiId);
             $classPageEdit = self::CLASS_PAGE_EDIT;
-            try {
-                $svgHtml = Icon::createFromComboResource("clarity-note-edit-line")
-                    ->render();
-            } catch (ExceptionCombo $e) {
-                LogUtility::msg("Error while processing the edit icon. Error: {$e->getMessage()}", self::CANONICAL);
-                $svgHtml = "edit";
-            }
             return <<<EOF
 <form id="edit-combo-$wikiIdHtmlClassForm-$editId" class="$classPageEdit" method="post" action="{$url}">
 $inputs
 <input name="do" type="hidden" value="edit"/>
 <button type="submit" title="Edit the page $wikiId">
-$svgHtml
 </button>
 </form>
 EOF;

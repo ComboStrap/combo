@@ -8,19 +8,21 @@ namespace ComboStrap;
  * @package ComboStrap
  * Manage the section edit button
  */
-class SectionEdit
+class PageEdit
 {
 
 
     const SEC_EDIT_PATTERN = "/" . self::ENTER_HTML_COMMENT . "\s*" . self::SEC_EDIT_PREFIX . "({.*?})\s*" . self::CLOSE_HTML_COMMENT . "/";
     const SEC_EDIT_PREFIX = "COMBO-EDIT";
     const WIKI_ID = "wiki-id";
-    const SECTION_ID = "secid";
-    const SECTION_NAME = "name";
+
+    const EDIT_EDIT_ID = "id";
+    const EDIT_MESSAGE = "message";
 
     const CANONICAL = "support";
     const ENTER_HTML_COMMENT = "<!--";
     const CLOSE_HTML_COMMENT = "-->";
+    const CLASS_PAGE_EDIT = "page-edit-combo";
 
 
     private static $countersByWikiId = array();
@@ -37,9 +39,9 @@ class SectionEdit
     }
 
 
-    public static function create($name): SectionEdit
+    public static function create($name): PageEdit
     {
-        return new SectionEdit($name);
+        return new PageEdit($name);
     }
 
     /**
@@ -55,12 +57,12 @@ class SectionEdit
         if ($ID === null) {
             throw new ExceptionCombo("The global ID is not set", self::CANONICAL);
         }
-        $id = $this->getNewId($ID);
+        $id = $this->getNewFormId($ID);
         $data = [
             self::WIKI_ID => $ID,
-            self::SECTION_ID => $id, // id of the edit button
-            self::SECTION_NAME => $this->name,
-            "target" => "section",
+            self::EDIT_MESSAGE => $this->name,
+            self::EDIT_EDIT_ID => $id, // id of the form
+            // "target" => "section", // this is the default
         ];
         return self::SEC_EDIT_PREFIX . PluginUtility::htmlEncode(json_encode($data));
     }
@@ -81,33 +83,64 @@ class SectionEdit
 
     public static function replaceAll($html)
     {
+
+        /**
+         * Delete the edit comment
+         *   * if not writable
+         *   * or an old revision
+         * Original: {@link html_secedit()}
+         */
+        global $INFO;
+        if((isset($INFO) && !$INFO['writable']) || (isset($INFO) && $INFO['rev'])){
+            return preg_replace(SEC_EDIT_PATTERN,'',$html);
+        }
+
+        /**
+         * The callback function on all edit comment
+         * @param $matches
+         * @return string
+         */
         $editFormCallBack = function ($matches) {
             $json = PluginUtility::htmlDecode($matches[1]);
             $data = json_decode($json, true);
             if ($data == NULL) {
                 return "";
             }
-            $id = $data[self::WIKI_ID];
-            $sectionId = $data[self::SECTION_ID];
-            $name = $data[self::SECTION_NAME];
-            global $INFO;
-            return "<div class='edit-combo secedit editbutton_" . $data['target'] .
-                " editbutton_" . $sectionId . "'>" .
-                html_btn(
-                    'secedit',
-                    $id,
-                    '',
-                    array(
-                        'do' => 'edit',
-                        'summary' => '[' . $name . '] '
-                    ),
-                    'post',
-                    $name) . '</div>';
+            $wikiId = $data[self::WIKI_ID];
+            unset($data[self::WIKI_ID]);
+            $editId = $data[self::EDIT_EDIT_ID];
+            unset($data[self::EDIT_EDIT_ID]);
+            $message = $data[self::EDIT_MESSAGE];
+            unset($data[self::EDIT_MESSAGE]);
+            $data["summary"] = $message;
+            $page = Page::createPageFromId($wikiId);
+            $inputs = "";
+            foreach ($data as $key => $val) {
+                $inputAttributes = TagAttributes::createEmpty()
+                    ->addHtmlAttributeValue("name", $key)
+                    ->addHtmlAttributeValue("value", $val)
+                    ->addHtmlAttributeValue("type", "hidden");
+                $inputs .= $inputAttributes->toHtmlEmptyTag("input");
+            }
+            $url = $page->getUrl(PageUrlType::CONF_VALUE_PAGE_PATH);
+            $wikiIdHtmlClassForm = str_replace(":", "-", $wikiId);
+            $classPageEdit = self::CLASS_PAGE_EDIT;
+            return <<<EOF
+<form id="edit-combo-$wikiIdHtmlClassForm-$editId" class="$classPageEdit" method="post" action="{$url}">
+$inputs
+<input name="do" type="hidden" value="edit"/>
+<button type="submit" title="test">Edit</button>
+</form>
+EOF;
         };
+
+        /**
+         * The replacement
+         */
         return preg_replace_callback(self::SEC_EDIT_PATTERN, $editFormCallBack, $html);
     }
 
-    private function getNewId($wikiId): int
+    private function getNewFormId($wikiId): int
     {
         $counter = self::$countersByWikiId[$wikiId];
         if ($counter === null) {

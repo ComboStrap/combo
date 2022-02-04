@@ -985,7 +985,7 @@ class Page extends ResourceComboAbs
      *   * in the site map
      * @param array $urlParameters
      * @param bool $absoluteUrlMandatory - by default, dokuwiki allows the canonical to be relative but it's mandatory to be absolute for the HTML meta
-     * @param string $separator - HTML encoded or not ampersand
+     * @param string $separator - HTML encoded or not ampersand (the default should always be good because the encoding is done just before printing (ie {@link TagAttributes::encodeToHtmlValue()})
      * @return string|null
      */
     public
@@ -1010,6 +1010,16 @@ class Page extends ResourceComboAbs
         return wl($this->getUrlId(), $urlParameters, $absoluteUrlMandatory, $separator);
 
 
+    }
+
+    public function getUrl($type = null): ?string
+    {
+        if($type===null){
+            return $this->getCanonicalUrl();
+        }
+        $pageUrlId = DokuPath::toDokuwikiId(PageUrlPath::createForPage($this)
+            ->getUrlPathFromType($type));
+        return wl($pageUrlId);
     }
 
 
@@ -1758,8 +1768,7 @@ class Page extends ResourceComboAbs
      *
      * TODO: Move to {@link HtmlDocument} ?
      */
-    public
-    function getUrlPath(): string
+    public function getUrlPath(): string
     {
 
         return $this->pageUrlPath->getValueOrDefault();

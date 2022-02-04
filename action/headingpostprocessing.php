@@ -7,7 +7,7 @@ use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
-use ComboStrap\SectionEdit;
+use ComboStrap\PageEdit;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
@@ -350,7 +350,6 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * Not heading at all
          */
         if ($headingTotalCounter === 0) {
-
             try {
                 $sectionEditComment = Call::createComboCall(
                     syntax_plugin_combo_comment::TAG,
@@ -358,7 +357,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                     array(),
                     Call::INLINE_DISPLAY, // don't trim
                     null,
-                    SectionEdit::create()->toTag()
+                    PageEdit::create("Page Edit")->toTag()
                 );
                 $callStack->insertBefore($sectionEditComment);
             } catch (ExceptionCombo $e) {

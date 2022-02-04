@@ -3,7 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
-use ComboStrap\SectionEdit;
+use ComboStrap\PageEdit;
 
 if (!defined('DOKU_INC')) die();
 
@@ -30,7 +30,8 @@ class syntax_plugin_combo_comment extends DokuWiki_Syntax_Plugin
          * section edit added at {@link action_plugin_combo_headingpostprocessing}
          * if there is no heading at all
          */
-        if (strpos(trim(strtolower($content)), SectionEdit::SEC_EDIT_PREFIX)===0){
+        $normalizedContent = trim($content);
+        if (strpos($normalizedContent, PageEdit::SEC_EDIT_PREFIX)===0){
             return true;
         }
         $confValue = PluginUtility::getConfValue(self::CONF_OUTPUT_COMMENT, 0);

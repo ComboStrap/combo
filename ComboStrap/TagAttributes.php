@@ -630,7 +630,7 @@ class TagAttributes
     /**
      * HTML attribute are attributes
      * that are not transformed to HTML
-     * (We make a difference between a high level attribute
+     * (We make a difference between a markup attribute
      * that we have in the written document set on a component
      * @param $key
      * @param $value
@@ -859,6 +859,19 @@ class TagAttributes
 
 
         return $enterTag;
+
+    }
+
+    public
+    function toHtmlEmptyTag($htmlTag): string
+    {
+
+        $enterTag = "<" . $htmlTag;
+        $attributeString = $this->toHTMLAttributeString();
+        if (!empty($attributeString)) {
+            $enterTag .= " " . $attributeString;
+        }
+        return $enterTag . "/>";
 
     }
 

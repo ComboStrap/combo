@@ -348,8 +348,11 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 
         /**
          * Not heading at all
+         * No dynamic rendering (ie $ID is not null)
          */
-        if ($headingTotalCounter === 0) {
+        global $ID;
+        if ($headingTotalCounter === 0 && $ID !== null) {
+
             try {
                 $sectionEditComment = Call::createComboCall(
                     syntax_plugin_combo_comment::TAG,

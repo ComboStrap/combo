@@ -182,6 +182,7 @@ class Icon extends ImageSvg
     const FLAT_COLOR_ICON = "flat-color-icons";
     const PHOSPHOR_ICONS = "ph";
     const VSCODE = "vscode";
+    const COMBO = "combo";
 
     private $fullQualifiedName;
     /**
@@ -243,18 +244,30 @@ class Icon extends ImageSvg
 
         }
 
+
         /**
-         * From the icon library
+         * Resource icon library
+         * {@link Icon::createFromComboResource()}
          */
-        $iconNameSpace = PluginUtility::getConfValue(self::CONF_ICONS_MEDIA_NAMESPACE, self::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
-        if (substr($iconNameSpace, 0, 1) != DokuPath::PATH_SEPARATOR) {
-            $iconNameSpace = DokuPath::PATH_SEPARATOR . $iconNameSpace;
+        if (strpos($fullQualifiedName, self::COMBO) === 0) {
+            $iconName = str_replace(self::COMBO . ":", "", $fullQualifiedName);
+            $mediaDokuPath = DokuPath::createResource("images:$iconName.svg");
+        } else {
+            /**
+             * From an icon library
+             */
+            $iconNameSpace = PluginUtility::getConfValue(self::CONF_ICONS_MEDIA_NAMESPACE, self::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
+            if (substr($iconNameSpace, 0, 1) != DokuPath::PATH_SEPARATOR) {
+                $iconNameSpace = DokuPath::PATH_SEPARATOR . $iconNameSpace;
+            }
+            if (substr($iconNameSpace, -1) != DokuPath::PATH_SEPARATOR) {
+                $iconNameSpace = $iconNameSpace . ":";
+            }
+
+            $mediaPathId = $iconNameSpace . $fullQualifiedName . ".svg";
+            $mediaDokuPath = DokuPath::createMediaPathFromAbsolutePath($mediaPathId);
         }
-        if (substr($iconNameSpace, -1) != DokuPath::PATH_SEPARATOR) {
-            $iconNameSpace = $iconNameSpace . ":";
-        }
-        $mediaPathId = $iconNameSpace . $fullQualifiedName . ".svg";
-        $mediaDokuPath = DokuPath::createMediaPathFromAbsolutePath($mediaPathId);
+
 
         // Bug: null file created when the stream could not get any byte
         // We delete them
@@ -294,6 +307,14 @@ class Icon extends ImageSvg
 
         return new Icon($name, $tagAttributes);
 
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function createFromComboResource(string $name, TagAttributes $tagAttributes = null): Icon
+    {
+        return self::create(self::COMBO . ":$name", $tagAttributes);
     }
 
     /**

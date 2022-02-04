@@ -1,0 +1,9 @@
+form.page-edit-combo {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+form.page-edit-combo button {
+    background: none;
+    border: 0
+}

@@ -23,6 +23,7 @@ class PageEdit
     const ENTER_HTML_COMMENT = "<!--";
     const CLOSE_HTML_COMMENT = "-->";
     const CLASS_PAGE_EDIT = "page-edit-combo";
+    const SNIPPET_ID = "page-edit";
 
 
     private static $countersByWikiId = array();
@@ -96,6 +97,11 @@ class PageEdit
         }
 
         /**
+         * Request based because the button are added only if you can write
+         */
+        PluginUtility::getSnippetManager()->attachCssSnippetForRequest(self::SNIPPET_ID);
+
+        /**
          * The callback function on all edit comment
          * @param $matches
          * @return string
@@ -125,11 +131,15 @@ class PageEdit
             $url = $page->getUrl(PageUrlType::CONF_VALUE_PAGE_PATH);
             $wikiIdHtmlClassForm = str_replace(":", "-", $wikiId);
             $classPageEdit = self::CLASS_PAGE_EDIT;
+            $svgHtml = Icon::createFromComboResource("clarity-note-edit-line")
+                ->render();
             return <<<EOF
 <form id="edit-combo-$wikiIdHtmlClassForm-$editId" class="$classPageEdit" method="post" action="{$url}">
 $inputs
 <input name="do" type="hidden" value="edit"/>
-<button type="submit" title="test">Edit</button>
+<button type="submit" title="Edit the page $wikiId">
+$svgHtml
+</button>
 </form>
 EOF;
         };

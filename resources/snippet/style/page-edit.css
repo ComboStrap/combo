@@ -12,7 +12,7 @@ form.page-edit-combo svg {
 }
 form.btn_secedit {
     font-size: initial!important;
-    position:relative;
+    position:relative; /* for z-index */
     z-index:10;
 }
 form.btn_secedit button {

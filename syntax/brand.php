@@ -9,10 +9,14 @@ use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\ExceptionComboNotFound;
+use ComboStrap\Icon;
 use ComboStrap\LogUtility;
+use ComboStrap\Page;
+use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
+use ComboStrap\TemplateUtility;
 
 if (!defined('DOKU_INC')) die();
 
@@ -33,6 +37,23 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      * https://getbootstrap.com/docs/5.1/components/navbar/#image-and-text
      */
     const BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS = "d-inline-block align-text-top";
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function mixBrandButtonToTagAttributes(TagAttributes $tagAttributes, BrandButton $brandButton)
+    {
+        $brandLinkAttributes = $brandButton->getLinkAttributes();
+        $urlAttribute = syntax_plugin_combo_brand::URL_ATTRIBUTE;
+        $url = $tagAttributes->getValueAndRemoveIfPresent($urlAttribute);
+        if ($url !== null) {
+            $page = Page::createPageFromRequestedPage();
+            $relativePath = str_replace(":", "/", $page->getDokuwikiId());
+            $url = TemplateUtility::renderStringTemplateFromDataArray($url, ["path" => $relativePath]);
+            $tagAttributes->addHtmlAttributeValue("href", $url);
+        }
+        $tagAttributes->mergeWithCallStackArray($brandLinkAttributes->toCallStackArray());
+    }
 
 
     /**
@@ -169,8 +190,6 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes);
 
 
-
-
                 /**
                  * Brand Object creation
                  */
@@ -191,13 +210,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                  * Link
                  */
                 try {
-                    $brandLinkAttributes = $brandButton->getLinkAttributes();
-                    $urlAttribute = syntax_plugin_combo_brand::URL_ATTRIBUTE;
-                    $url = $tagAttributes->getValueAndRemoveIfPresent($urlAttribute);
-                    if ($url !== null) {
-                        $tagAttributes->addHtmlAttributeValue("href", $url);
-                    }
-                    $tagAttributes->mergeWithCallStackArray($brandLinkAttributes->toCallStackArray());
+                    self::mixBrandButtonToTagAttributes($tagAttributes, $brandButton);
                 } catch (ExceptionCombo $e) {
                     $returnedArray[PluginUtility::EXIT_MESSAGE] = "Error while getting the link data for the the brand ($brandName). Error: {$e->getMessage()}";
                     $returnedArray[PluginUtility::EXIT_CODE] = 1;

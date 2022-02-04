@@ -66,12 +66,12 @@ class ImageSvg extends Image
     }
 
     /**
-     * @param string $ampersand $absolute - the & separator (should be encoded for HTML but not for CSS)
+     *
      * @return string|null
      *
      * At contrary to {@link RasterImageLink::getUrl()} this function does not need any width parameter
      */
-    public function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML): ?string
+    public function getUrl(): ?string
     {
 
 
@@ -197,6 +197,7 @@ class ImageSvg extends Image
      * again and the browser cache should be deleted (ie the buster regenerated)
      * {@link ResourceCombo::getBuster()}
      * @return string
+     * @throws ExceptionCombo
      */
     public function getBuster(): string
     {

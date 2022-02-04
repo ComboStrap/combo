@@ -673,10 +673,8 @@ EOF;
      * at {@link TagAttributes::encodeToHtmlValue()}
      * therefore the default is non-encoded
      *
-     * If you want to pass the url directly to an HTML component,
-     * you should use the {@link DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML}
      */
-    public function getUrl(string $targetEnvironmentAmpersand = DokuwikiUrl::AMPERSAND_CHARACTER)
+    public function getUrl()
     {
 
         switch ($this->getUriType()) {
@@ -699,8 +697,7 @@ EOF;
                     $url = wl(
                         $page->getDokuwikiId(),
                         $this->dokuwikiUrl->getQueryParameters(),
-                        $absoluteUrl,
-                        $targetEnvironmentAmpersand
+                        $absoluteUrl
                     );
 
                 } else {
@@ -710,8 +707,7 @@ EOF;
                      */
                     $url = $page->getCanonicalUrl(
                         [],
-                        false,
-                        $targetEnvironmentAmpersand
+                        false
                     );
 
                     /**
@@ -722,7 +718,7 @@ EOF;
                      */
                     $searchTerms = $this->dokuwikiUrl->getQueryParameter(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY);
                     if ($searchTerms !== null) {
-                        $url .= $targetEnvironmentAmpersand;
+                        $url .= DokuwikiUrl::AMPERSAND_CHARACTER;
                         PluginUtility::getSnippetManager()->attachCssSnippetForSlot("search-hit");
                         if (is_array($searchTerms)) {
                             /**
@@ -733,7 +729,7 @@ EOF;
                             foreach ($searchTerms as $searchTerm) {
                                 $searchTermsQuery[] = "s[]=$searchTerm";
                             }
-                            $url .= implode($targetEnvironmentAmpersand, $searchTermsQuery);
+                            $url .= implode(DokuwikiUrl::AMPERSAND_CHARACTER, $searchTermsQuery);
                         } else {
                             $url .= "s=$searchTerms";
                         }

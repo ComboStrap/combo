@@ -133,19 +133,14 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                  * and add the link
                  */
                 try {
-                    $linkAttributes = $brand->getLinkAttributes();
-                    $urlAttribute = syntax_plugin_combo_brand::URL_ATTRIBUTE;
-                    $url = $shareAttributes->getValueAndRemoveIfPresent($urlAttribute);
-                    if ($url !== null) {
-                        $linkAttributes->addHtmlAttributeValue("href", $url);
-                    }
-                    if(!$linkAttributes->hasAttribute("href")){
+                    syntax_plugin_combo_brand::mixBrandButtonToTagAttributes($shareAttributes, $brand);
+                    if (!$shareAttributes->hasAttribute(syntax_plugin_combo_link::ATTRIBUTE_HREF)) {
                         $returnArray[PluginUtility::EXIT_CODE] = 1;
                         $handleAttribute = self::HANDLE_ATTRIBUTE;
                         $returnArray[PluginUtility::EXIT_MESSAGE] = "The social button does not have any follow url. You need to set at minimum the `$handleAttribute` or `$urlAttribute` attribute";
                         return $returnArray;
                     }
-                    syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $linkAttributes);
+                    syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $shareAttributes);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "The social button creation returns an error when creating the link ({$e->getMessage()}";

@@ -248,6 +248,9 @@ class BrandButton
         /**
          * Width
          */
+        if ($width === null) {
+            return $this;
+        }
         $this->width = $width;
         return $this;
     }
@@ -596,7 +599,7 @@ EOF;
     public
     function getSharedUrlForPage(Page $requestedPage): ?string
     {
-        return $requestedPage->getCanonicalUrl([], true, DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
+        return $requestedPage->getCanonicalUrl([], true);
     }
 
     /**
@@ -705,6 +708,9 @@ EOF;
 
     public function setLinkTitle(?string $title): BrandButton
     {
+        if ($title === null) {
+            return $this;
+        }
         $this->title = $title;
         return $this;
     }

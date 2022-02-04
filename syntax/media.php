@@ -176,11 +176,14 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $parentTag = "";
                 if (!empty($parent)) {
                     $parentTag = $parent->getTagName();
-                    if ($parentTag == syntax_plugin_combo_link::TAG) {
+                    if (in_array($parentTag,
+                        [syntax_plugin_combo_link::TAG,syntax_plugin_combo_brand::TAG])) {
                         /**
                          * TODO: should be on the exit tag of the link
-                         * The image is in a link, we don't want another link
+                         * - The image is in a link, we don't want another link
                          * to the image
+                         * - In a brand, there is also already a link to the home page, no link
+                         * to the media
                          */
                         $attributes[MediaLink::LINKING_KEY] = MediaLink::LINKING_NOLINK_VALUE;
                     }

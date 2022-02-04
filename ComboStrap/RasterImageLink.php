@@ -222,7 +222,8 @@ class RasterImageLink extends ImageLink
                             $sizes .= ", ";
                         }
                         $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
-                        $xsmUrl = $image->getUrlForSrcSetAtBreakpoint($breakpointWidthMinusMargin);
+
+                        $xsmUrl = $image->getUrlAtBreakpoint($breakpointWidthMinusMargin);
                         $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
                         $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
 
@@ -237,7 +238,7 @@ class RasterImageLink extends ImageLink
                 if (!empty($srcSet)) {
                     $srcSet .= ", ";
                     $sizes .= ", ";
-                    $srcUrl = $image->getUrlForSrcSetAtBreakpoint($targetWidth);
+                    $srcUrl = $image->getUrlAtBreakpoint($targetWidth);
                     $srcSet .= "$srcUrl {$targetWidth}w";
                     $sizes .= "{$targetWidth}px";
                 }

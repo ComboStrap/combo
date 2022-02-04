@@ -55,6 +55,9 @@ class SvgImageLink extends ImageLink
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     private function createImgHTMLTag(): string
     {
 
@@ -153,7 +156,7 @@ class SvgImageLink extends ImageLink
         /**
          * Src call
          */
-        $srcValue = $image->getUrl(DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
+        $srcValue = $image->getUrl();
         if ($lazyLoad) {
 
             /**
@@ -194,6 +197,7 @@ class SvgImageLink extends ImageLink
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
      * A media can be a video also
      * @return string
+     * @throws ExceptionCombo
      */
     public function renderMediaTag(): string
     {

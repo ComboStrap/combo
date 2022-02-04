@@ -91,10 +91,9 @@ abstract class Media extends ResourceComboAbs
     }
 
     /**
-     * @param string $ampersand
      * @return mixed
      */
-    public abstract function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
+    public abstract function getUrl();
 
 
     public function getReadStoreOrDefault(): MetadataStore

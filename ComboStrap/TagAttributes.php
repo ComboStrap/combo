@@ -1166,8 +1166,30 @@ class TagAttributes
                 continue;
             }
 
-
-            $value = PluginUtility::htmlEncode($value);
+            /**
+             *
+             * Browser bug in a srcset
+             *
+             * In the HTML attribute srcset (not in the img src), if we set,
+             * ```
+             * http://nico.lan/_media/docs/metadata/metadata_manager.png?w=355&amp;h=176&amp;tseed=1636624852&amp;tok=af396a 355w
+             * ```
+             * the request is encoded ***by the browser**** one more time and the server gets:
+             *   * `&amp;&amp;h  =   176`
+             *   * php create therefore the property
+             *      * `&amp;h  =   176`
+             *      * and note `h = 176`
+             */
+            $encodeValue = true;
+            if ($encodedName === "srcset" && !PluginUtility::isTest()) {
+                /**
+                 * Our test xhtml processor does not support non ampersand encoded character
+                 */
+                $encodeValue = false;
+            }
+            if ($encodeValue) {
+                $value = PluginUtility::htmlEncode($value);
+            }
             if ($subKey == null) {
                 $returnedArray[$encodedName] = $value;
             } else {

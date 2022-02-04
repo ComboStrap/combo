@@ -169,7 +169,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                         $urlPath = PageUrlPath::createForPage($requestedPage)
                             ->getUrlPathFromType(PageUrlType::CONF_VALUE_CANONICAL_PATH);
                         $urlId = DokuPath::toDokuwikiId($urlPath);
-                        $canonicalUrl = wl($urlId, [], true, DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
+                        $canonicalUrl = wl($urlId, [], true);
                         if ($fragment !== null) {
                             $canonicalUrl .= "#$fragment";
                         }

@@ -95,6 +95,9 @@ class ImageRaster extends Image
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function getUrl()
     {
         return $this->getUrlAtBreakpoint();
@@ -173,6 +176,9 @@ class ImageRaster extends Image
 
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function getAbsoluteUrl()
     {

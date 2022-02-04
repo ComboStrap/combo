@@ -159,7 +159,7 @@ class ImageSvg extends Image
             unset($att[PagePath::PROPERTY_NAME]);
         }
 
-        return ml($this->getPath()->getDokuwikiId(), $att, $direct, $ampersand, true);
+        return ml($this->getPath()->getDokuwikiId(), $att, $direct, DokuwikiUrl::AMPERSAND_CHARACTER, true);
 
 
     }

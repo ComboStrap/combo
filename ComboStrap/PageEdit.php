@@ -92,8 +92,8 @@ class PageEdit
          * Original: {@link html_secedit()}
          */
         global $INFO;
-        if((isset($INFO) && !$INFO['writable']) || (isset($INFO) && $INFO['rev'])){
-            return preg_replace(SEC_EDIT_PATTERN,'',$html);
+        if ((isset($INFO) && !$INFO['writable']) || (isset($INFO) && $INFO['rev'])) {
+            return preg_replace(SEC_EDIT_PATTERN, '', $html);
         }
 
         /**
@@ -131,8 +131,13 @@ class PageEdit
             $url = $page->getUrl(PageUrlType::CONF_VALUE_PAGE_PATH);
             $wikiIdHtmlClassForm = str_replace(":", "-", $wikiId);
             $classPageEdit = self::CLASS_PAGE_EDIT;
-            $svgHtml = Icon::createFromComboResource("clarity-note-edit-line")
-                ->render();
+            try {
+                $svgHtml = Icon::createFromComboResource("clarity-note-edit-line")
+                    ->render();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("Error while processing the edit icon. Error: {$e->getMessage()}", self::CANONICAL);
+                $svgHtml = "edit";
+            }
             return <<<EOF
 <form id="edit-combo-$wikiIdHtmlClassForm-$editId" class="$classPageEdit" method="post" action="{$url}">
 $inputs

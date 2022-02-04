@@ -6,4 +6,8 @@ form.page-edit-combo {
 form.page-edit-combo button {
     background: none;
     border: 0
+
+}
+form.page-edit-combo svg {
+    fill: rgba(0,0,0,0.35)
 }

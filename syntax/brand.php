@@ -74,7 +74,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
         return 'normal';
     }
@@ -155,7 +155,6 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 /**
                  * Default parameters, type definition and parsing
                  */
-                $defaultParameters[syntax_plugin_combo_link::TITLE_ATTRIBUTE] = Site::getTitle();
                 $defaultParameters[TagAttributes::TYPE_KEY] = BrandButton::CURRENT_BRAND;
                 try {
                     $knownTypes = BrandButton::getBrandNames();
@@ -170,6 +169,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes);
 
 
+
+
                 /**
                  * Brand Object creation
                  */
@@ -181,7 +182,6 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     }
                     $brandButton = self::createBrandButtonFromAttributes($tagAttributes);
 
-
                 } catch (ExceptionCombo $e) {
                     $returnedArray[PluginUtility::EXIT_MESSAGE] = "Error while reading the brand data for the brand ($brandName). Error: {$e->getMessage()}";
                     $returnedArray[PluginUtility::EXIT_CODE] = 1;
@@ -192,6 +192,11 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                  */
                 try {
                     $brandLinkAttributes = $brandButton->getLinkAttributes();
+                    $urlAttribute = syntax_plugin_combo_brand::URL_ATTRIBUTE;
+                    $url = $tagAttributes->getValueAndRemoveIfPresent($urlAttribute);
+                    if ($url !== null) {
+                        $tagAttributes->addHtmlAttributeValue("href", $url);
+                    }
                     $tagAttributes->mergeWithCallStackArray($brandLinkAttributes->toCallStackArray());
                 } catch (ExceptionCombo $e) {
                     $returnedArray[PluginUtility::EXIT_MESSAGE] = "Error while getting the link data for the the brand ($brandName). Error: {$e->getMessage()}";
@@ -207,9 +212,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 // Width does not apply to link (otherwise the link got a max-width of 30)
                 $tagAttributes->removeComponentAttributeIfPresent(Dimension::WIDTH_KEY);
                 syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $tagAttributes);
-                if ($state === DOKU_LEXER_SPECIAL) {
-                    syntax_plugin_combo_link::addExitLinkTagInCallStack($callStack);
-                }
+
 
                 /**
                  * Logo
@@ -230,6 +233,12 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     }
                 }
 
+                /**
+                 * End of link
+                 */
+                if ($state === DOKU_LEXER_SPECIAL) {
+                    syntax_plugin_combo_link::addExitLinkTagInCallStack($callStack);
+                }
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -307,7 +316,6 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_SPECIAL:
                 case DOKU_LEXER_ENTER:
-
                     /**
                      * Any error
                      */

@@ -135,7 +135,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                 try {
                     $linkAttributes = $brand->getLinkAttributes();
                     $urlAttribute = syntax_plugin_combo_brand::URL_ATTRIBUTE;
-                    $url = $shareAttributes->getValue($urlAttribute);
+                    $url = $shareAttributes->getValueAndRemoveIfPresent($urlAttribute);
                     if ($url !== null) {
                         $linkAttributes->addHtmlAttributeValue("href", $url);
                     }

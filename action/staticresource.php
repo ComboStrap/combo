@@ -62,18 +62,18 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     function handleMediaStatus(Doku_Event $event, $params)
     {
 
-        if (!isset($_GET[DokuPath::WIKI_SCHEME])) {
+        if (!isset($_GET[DokuPath::LIBRARY_ATTRIBUTE])) {
             return;
         }
-        $type = $_GET[DokuPath::WIKI_SCHEME];
-        if ($type !== DokuPath::RESOURCE_TYPE) {
+        $library = $_GET[DokuPath::LIBRARY_ATTRIBUTE];
+        if ($library !== DokuPath::LIBRARY_COMBO) {
             // The other resources have ACL
             // and this endpoint is normally only for
             $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
             return;
         }
         $mediaId = $event->data['media'];
-        $mediaPath = DokuPath::createDokuPath($mediaId, $type);
+        $mediaPath = DokuPath::createDokuPath($mediaId, $library);
         $event->data['file'] = $mediaPath->toLocalPath()->toAbsolutePath()->toString();
         if (FileSystems::exists($mediaPath)) {
             $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
@@ -97,9 +97,9 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Combo Media
          * (Static file from the combo resources are always taken over)
          */
-        if (isset($_GET[DokuPath::WIKI_SCHEME])) {
+        if (isset($_GET[DokuPath::LIBRARY_ATTRIBUTE])) {
 
-            $isStaticFileManaged = $_GET[DokuPath::WIKI_SCHEME] === DokuPath::RESOURCE_TYPE;
+            $isStaticFileManaged = $_GET[DokuPath::LIBRARY_ATTRIBUTE] === DokuPath::LIBRARY_COMBO;
 
         }
 

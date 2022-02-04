@@ -495,8 +495,8 @@ EOF;
     function getIconAttributes(): array
     {
 
-        $comboResourceScheme = DokuPath::COMBO_RESOURCE_SCHEME;
-        $iconName = "$comboResourceScheme>brand:{$this->getName()}:{$this->icon}.svg";
+        $comboLibrary = DokuPath::LIBRARY_COMBO;
+        $iconName = "$comboLibrary>brand:{$this->getName()}:{$this->icon}.svg";
         $icon = DokuPath::createResource($iconName);
         if (!FileSystems::exists($icon)) {
             $iconName = $this->iconName;

@@ -29,26 +29,28 @@ class DokuPath extends PathAbs
     public const DIRECTORY_SEPARATOR = "/";
     public const SLUG_SEPARATOR = "-";
 
-    const RESOURCE_TYPE = "resource";
+
 
     /**
      * Dokuwiki has a file system that starts at a page and/or media
      * directory that depends on the used syntax.
      *
+     * It's a little bit the same than as the icon library (we set it as library then)
+     *
      * This parameters is an URL parameter
      * that permits to set an another one
      * when retrieving the file via HTTP
-     * For now, there is only one value: {@link DokuPath::RESOURCE_TYPE}
+     * For now, there is only one value: {@link DokuPath::LIBRARY_COMBO}
      */
-    public const WIKI_SCHEME = "wiki-scheme";
+    public const LIBRARY_ATTRIBUTE = "library";
     /**
      * The interwiki scheme that points to the
-     * combo resources directory ie {@link DokuPath::RESOURCE_TYPE}
+     * combo resources directory ie {@link DokuPath::LIBRARY_COMBO}
      * ie
      *   combo>library:
      *   combo>image:
      */
-    const COMBO_RESOURCE_SCHEME = "combo";
+    const LIBRARY_COMBO = "combo";
 
     /**
      * @var string[]
@@ -69,7 +71,7 @@ class DokuPath extends PathAbs
     /**
      * @var string
      */
-    private $finalType;
+    private $finalLibrary;
     /**
      * @var string|null - ie mtime
      */
@@ -128,7 +130,7 @@ class DokuPath extends PathAbs
                 if (strpos($path, $comboInterWikiScheme) === 0) {
                     $this->scheme = DokuFs::SCHEME;
                     $this->id = substr($path, strlen($comboInterWikiScheme));
-                    $type = self::RESOURCE_TYPE;
+                    $type = self::LIBRARY_COMBO;
                 };
                 break;
             case DokuFs::SCHEME:
@@ -156,7 +158,7 @@ class DokuPath extends PathAbs
                 $type = self::MEDIA_TYPE;
             }
         }
-        $this->finalType = $type;
+        $this->finalLibrary = $type;
         $this->rev = $rev;
 
         /**
@@ -190,7 +192,7 @@ class DokuPath extends PathAbs
                             $filePath = wikiFN($this->id);
                         }
                         break;
-                    case self::RESOURCE_TYPE:
+                    case self::LIBRARY_COMBO:
                         $relativeFsPath = DokuPath::toFileSystemSeparator($this->id);
                         $filePath = Resources::getAbsoluteResourcesDirectory() . DIRECTORY_SEPARATOR . $relativeFsPath;
                         break;
@@ -367,7 +369,7 @@ class DokuPath extends PathAbs
 
     public static function createResource($dokuwikiId): DokuPath
     {
-        return new DokuPath($dokuwikiId, self::RESOURCE_TYPE);
+        return new DokuPath($dokuwikiId, self::LIBRARY_COMBO);
     }
 
     public static function createDokuPath($mediaId, $type, $rev = ''): DokuPath
@@ -397,7 +399,7 @@ class DokuPath extends PathAbs
         /**
          * A page doku path has no extension for now
          */
-        if ($this->finalType === self::PAGE_TYPE) {
+        if ($this->finalLibrary === self::PAGE_TYPE) {
             return $this->getLastName();
         }
         return parent::getLastNameWithoutExtension();
@@ -428,7 +430,7 @@ class DokuPath extends PathAbs
     {
 
         if (
-            $this->finalType === self::PAGE_TYPE
+            $this->finalLibrary === self::PAGE_TYPE
             &&
             !$this->isGlob()
         ) {
@@ -545,7 +547,7 @@ class DokuPath extends PathAbs
     function getReferencedBy(): array
     {
         $absoluteId = $this->getDokuwikiId();
-        if ($this->finalType == self::MEDIA_TYPE) {
+        if ($this->finalLibrary == self::MEDIA_TYPE) {
             return idx_get_indexer()->lookupKey('relation_media', $absoluteId);
         } else {
             return idx_get_indexer()->lookupKey('relation_references', $absoluteId);
@@ -619,7 +621,7 @@ class DokuPath extends PathAbs
 
     function toUriString(): string
     {
-        $string = "{$this->scheme}://$this->finalType/$this->id";
+        $string = "{$this->scheme}://$this->finalLibrary/$this->id";
         if ($this->rev !== null) {
             return "$string?rev={$this->rev}";
         }
@@ -628,7 +630,7 @@ class DokuPath extends PathAbs
 
     function toAbsolutePath(): Path
     {
-        return new DokuPath($this->absolutePath, $this->finalType, $this->rev);
+        return new DokuPath($this->absolutePath, $this->finalLibrary, $this->rev);
     }
 
     /**
@@ -648,27 +650,27 @@ class DokuPath extends PathAbs
             case 0:
                 return null;
             case 1:
-                return new DokuPath(DokuPath::PATH_SEPARATOR, $this->finalType, $this->rev);
+                return new DokuPath(DokuPath::PATH_SEPARATOR, $this->finalLibrary, $this->rev);
             default:
                 $names = array_slice($names, 0, sizeof($names) - 1);
                 $path = implode(DokuPath::PATH_SEPARATOR, $names);
-                return new DokuPath($path, $this->finalType, $this->rev);
+                return new DokuPath($path, $this->finalLibrary, $this->rev);
         }
 
     }
 
     function getMime(): ?Mime
     {
-        if ($this->finalType === self::PAGE_TYPE) {
+        if ($this->finalLibrary === self::PAGE_TYPE) {
             return new Mime(Mime::PLAIN_TEXT);
         }
         return parent::getMime();
 
     }
 
-    public function getType(): string
+    public function getLibrary(): string
     {
-        return $this->finalType;
+        return $this->finalLibrary;
     }
 
     private function schemeDetermination($absolutePath): string

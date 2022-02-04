@@ -182,7 +182,8 @@ class Icon extends ImageSvg
     const FLAT_COLOR_ICON = "flat-color-icons";
     const PHOSPHOR_ICONS = "ph";
     const VSCODE = "vscode";
-    const COMBO = "combo";
+
+    const COMBO = DokuPath::LIBRARY_COMBO;
 
     private $fullQualifiedName;
     /**

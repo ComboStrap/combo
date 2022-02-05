@@ -329,7 +329,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                  * TODO: When saving for the first time, the page is not stored in the database
                  *   but that's not the case actually
                  */
-                if($targetPage->getDatabasePage()->exists()) {
+                if ($targetPage->getDatabasePage()->exists()) {
                     $this->executePermanentRedirect(
                         $targetPage->getCanonicalUrl([], true),
                         self::TARGET_ORIGIN_PERMALINK_EXTENDED
@@ -395,6 +395,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                         );
                         return;
                     }
+
                     $this->executeTransparentRedirect($page->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
                     return;
 
@@ -726,14 +727,16 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         global $INFO;
         $sourceId = $ID;
         $ID = $targetPageId;
-        // Change the info id for the sidebar
-        $INFO['id'] = $targetPageId;
+
         /**
-         * otherwise there is:
-         *   * a meta robot = noindex,follow
-         * See {@link tpl_metaheaders()}
+         * Refresh the $INFO data
+         *
+         * the info attributes are used elsewhere
+         *   'id': for the sidebar
+         *   'exist' : for the meta robot = noindex,follow, see {@link tpl_metaheaders()}
+         *   'rev' : for the edit button to be sure that the page is still the same
          */
-        $INFO['exists'] = true;
+        $INFO = pageinfo();
 
         /**
          * Not compatible with

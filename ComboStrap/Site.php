@@ -696,5 +696,15 @@ class Site
         return PluginUtility::getConfValue(ColorRgb::SECONDARY_COLOR_CONF, $default);
     }
 
+    public static function setCanonicalUrlType(string $value)
+    {
+        PluginUtility::setConf(PageUrlType::CONF_CANONICAL_URL_TYPE, $value);
+    }
+
+    public static function setCanonicalUrlTypeToDefault()
+    {
+        PluginUtility::setConf(PageUrlType::CONF_CANONICAL_URL_TYPE,null);
+    }
+
 
 }

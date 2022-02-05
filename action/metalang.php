@@ -34,8 +34,8 @@ class action_plugin_combo_metalang extends DokuWiki_Action_Plugin
          * unfortunately
          *
          * We don't have any ID and we can't set them because
-         * they will be overwritten
-         * {@link getID()}
+         * they will be overwritten by calling the {@link getID()} function
+         *
          */
         $id = getID();
         $page = Page::createPageFromId($id);
@@ -52,7 +52,7 @@ class action_plugin_combo_metalang extends DokuWiki_Action_Plugin
                 }
                 if ($id === $page->getUrlId()){
                     /**
-                     * hack as {@link getID()} reads the id from the input variable
+                     * hack as {@link getID()} invoked later reads the id from the input variable
                      */
                     global $INPUT;
                     $INPUT->set("id",$page->getPath()->getDokuwikiId());

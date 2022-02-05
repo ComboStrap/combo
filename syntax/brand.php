@@ -188,16 +188,15 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                  * Default parameters, type definition and parsing
                  */
                 $defaultParameters[TagAttributes::TYPE_KEY] = BrandButton::CURRENT_BRAND;
-                try {
-                    $knownTypes = BrandButton::getBrandNames();
-                } catch (ExceptionCombo $e) {
-                    LogUtility::msg("Error while retrieving the brand names ({$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    /**
-                     * null means no type verification during the {@link TagAttributes::createFromTagMatch()}
-                     * parsing
-                     */
-                    $knownTypes = null;
-                }
+                /**
+                 * Every brand name is allowed
+                 * (
+                 *   null means no type verification
+                 *   during the {@link TagAttributes::createFromTagMatch()} parsing
+                 * )
+                 */
+                $knownTypes = null;
+
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes);
 
 
@@ -241,15 +240,22 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 /**
                  * Logo
                  */
-                try {
-                    syntax_plugin_combo_brand::addIconInCallStack($callStack, $brandButton);
-                } catch (ExceptionComboNotFound $e) {
+                if($brandButton->hasIcon()) {
+                    try {
+                        syntax_plugin_combo_brand::addIconInCallStack($callStack, $brandButton);
+                    } catch (ExceptionCombo $e) {
 
-                    if ($brandButton->getName() === BrandButton::CURRENT_BRAND) {
-                        $documentationLink = PluginUtility::getDocumentationHyperLink("logo", "documentation");
-                        LogUtility::msg("A svg logo icon is not installed on your website. Check the corresponding $documentationLink.", LogUtility::LVL_MSG_INFO);
-                    } else {
-                        LogUtility::msg("The brand icon returns an error. Error: {$e->getMessage()}");
+                        if ($brandButton->getName() === BrandButton::CURRENT_BRAND) {
+
+                            $documentationLink = PluginUtility::getDocumentationHyperLink("logo", "documentation");
+                            LogUtility::msg("A svg logo icon is not installed on your website. Check the corresponding $documentationLink.", LogUtility::LVL_MSG_INFO);
+
+                        } else {
+
+                            LogUtility::msg("The brand icon returns an error. Error: {$e->getMessage()}");
+
+                        }
+
                     }
                 }
 
@@ -399,7 +405,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     }
 
     /**
-     * @throws ExceptionComboNotFound
+     *
+     * @throws ExceptionCombo
      */
     public
     static function addIconInCallStack(CallStack $callStack, BrandButton $brandButton)

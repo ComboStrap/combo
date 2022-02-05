@@ -160,15 +160,19 @@ class BrandButton
                 }
                 break;
             default:
-                if ($brandDict === null) {
-                    throw new ExceptionCombo("The brand ($this->name} is unknown.");
+                if ($brandDict !== null) {
+                    $this->title = $brandDict[$this->type]["popup"];
+                    $this->primaryColor = $brandDict["colors"]["primary"];
+                    $this->secondaryColor = $brandDict["colors"]["secondary"];
+                    $this->iconName = $brandDict["icons"][$this->icon];
+                    $this->webUrlTemplate = $brandDict[$this->type]["web"];
+                    $this->brandUrl = $brandDict["url"];
+                    return;
                 }
-                $this->title = $brandDict[$this->type]["popup"];
-                $this->primaryColor = $brandDict["colors"]["primary"];
-                $this->secondaryColor = $brandDict["colors"]["secondary"];
-                $this->iconName = $brandDict["icons"][$this->icon];
-                $this->webUrlTemplate = $brandDict[$this->type]["web"];
-                $this->brandUrl = $brandDict["url"];
+                $this->primaryColor = Site::getPrimaryColor();
+                if ($this->primaryColor === null) {
+                    $this->primaryColor = ComboStrap::PRIMARY_COLOR;
+                }
                 break;
         }
 
@@ -492,18 +496,17 @@ EOF;
     }
 
     /**
-     * @throws ExceptionComboNotFound
+     * @throws ExceptionCombo
      */
     public
     function getIconAttributes(): array
     {
 
-        $comboLibrary = DokuPath::LIBRARY_COMBO;
-        $iconName = "$comboLibrary>brand:{$this->getName()}:{$this->icon}.svg";
-        $icon = DokuPath::createResource($iconName);
+        $icon = $this->getIconFile();
         if (!FileSystems::exists($icon)) {
             $iconName = $this->iconName;
-            if ($iconName === null) {
+            $brandNames = BrandButton::getBrandNames();
+            if ($iconName === null && in_array($this->getName(), $brandNames)) {
                 throw new ExceptionComboNotFound("No {$this->icon} icon could be found for the brand ($this)");
             }
         }
@@ -581,7 +584,16 @@ EOF;
     public
     function hasIcon(): bool
     {
-        return $this->icon !== self::ICON_NONE_VALUE;
+        if ($this->icon === self::ICON_NONE_VALUE) {
+            return false;
+        }
+        if ($this->icon !== null) {
+            return true;
+        }
+        if (!FileSystems::exists($this->getIconFile())) {
+            return false;
+        }
+        return true;
     }
 
     public
@@ -716,6 +728,13 @@ EOF;
     {
         $this->primaryColor = $color;
         return $this;
+    }
+
+    private function getIconFile(): DokuPath
+    {
+        $comboLibrary = DokuPath::LIBRARY_COMBO;
+        $iconName = "$comboLibrary>brand:{$this->getName()}:{$this->icon}.svg";
+        return DokuPath::createResource($iconName);
     }
 
 

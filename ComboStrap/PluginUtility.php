@@ -79,6 +79,7 @@ require_once(__DIR__ . '/CallStack.php');
 require_once(__DIR__ . '/Canonical.php');
 require_once(__DIR__ . '/ColorRgb.php');
 require_once(__DIR__ . '/ColorHsl.php');
+require_once(__DIR__ . '/ComboStrap.php');
 require_once(__DIR__ . '/ConditionalValue.php');
 require_once(__DIR__ . '/Console.php');
 require_once(__DIR__ . '/Cron.php');

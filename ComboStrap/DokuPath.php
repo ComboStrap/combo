@@ -506,14 +506,20 @@ class DokuPath extends PathAbs
      * is the {@link File::getModifiedTime()} of the file
      *
      * Let op passing a revision to Dokuwiki will
-     * make ti search to the history
+     * make it search to the history
      * The actual file will then not be found
      *
      * @return string|null
      */
     public
-    function getRevision()
+    function getRevision(): ?string
     {
+        if($this->rev===null){
+            $localPath = $this->toLocalPath();
+            if(FileSystems::exists($localPath)){
+                return FileSystems::getModifiedTime($localPath)->getTimestamp();
+            }
+        }
         return $this->rev;
     }
 

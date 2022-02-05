@@ -37,6 +37,7 @@ require_once(__DIR__ . '/MetadataWikiPath.php');
 require_once(__DIR__ . '/MetadataStore.php');
 require_once(__DIR__ . '/MetadataStoreAbs.php');
 require_once(__DIR__ . '/MetadataSingleArrayStore.php');
+require_once(__DIR__ . '/XmlDocument.php');
 
 /**
  * Plugin Utility is added in all Dokuwiki extension

@@ -17,8 +17,6 @@ use DOMAttr;
 use DOMElement;
 use DOMNode;
 
-require_once(__DIR__ . '/XmlDocument.php');
-require_once(__DIR__ . '/Unit.php');
 
 class SvgDocument extends XmlDocument
 {

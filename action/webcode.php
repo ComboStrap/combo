@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\ExceptionCombo;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TplUtility;
@@ -83,10 +84,13 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
                 /**
                  * The strap header function
                  */
-                $loaded = Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-                if ($loaded) {
+                try {
+                    Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
                     TplUtility::registerHeaderHandler();
+                } catch (ExceptionCombo $e) {
+                    \ComboStrap\LogUtility::log2file("Error while registering the header handler on webcode ajax call. Error: {$e->getMessage()}");
                 }
+
             }
 
             /**

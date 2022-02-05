@@ -68,7 +68,9 @@ class TagAttributes
         MarkupRef::PREVIEW_ATTRIBUTE,
         \syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE,
         \syntax_plugin_combo_brand::WIDGET_ATTRIBUTE,
-        Skin::SKIN_ATTRIBUTE
+        Skin::SKIN_ATTRIBUTE,
+        ColorRgb::PRIMARY_VALUE
+
     ];
 
     /**

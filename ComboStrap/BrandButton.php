@@ -517,7 +517,7 @@ EOF;
         return $attributes;
     }
 
-    private
+    public
     function getTextColor()
     {
 
@@ -700,17 +700,14 @@ EOF;
         return $this->type;
     }
 
-    private function setHandle(?string $handle): BrandButton
+    private function setHandle(string $handle): BrandButton
     {
         $this->handle = $handle;
         return $this;
     }
 
-    public function setLinkTitle(?string $title): BrandButton
+    public function setLinkTitle(string $title): BrandButton
     {
-        if ($title === null) {
-            return $this;
-        }
         $this->title = $title;
         return $this;
     }

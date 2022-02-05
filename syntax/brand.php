@@ -66,13 +66,23 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
         $channelName = $brandAttributes->getValue(TagAttributes::TYPE_KEY, BrandButton::CURRENT_BRAND);
         $widget = $brandAttributes->getValue(self::WIDGET_ATTRIBUTE, BrandButton::WIDGET_BUTTON_VALUE);
         $icon = $brandAttributes->getValue(self::ICON_ATTRIBUTE, BrandButton::ICON_SOLID_VALUE);
-        $width = $brandAttributes->getValueAsInteger(Dimension::WIDTH_KEY);
-        $title = $brandAttributes->getValue(syntax_plugin_combo_link::TITLE_ATTRIBUTE);
-        return (BrandButton::createBrandButton($channelName))
-            ->setIcon($icon)
-            ->setWidth($width)
+        $brandButton = BrandButton::createBrandButton($channelName)
             ->setWidget($widget)
-            ->setLinkTitle($title);
+            ->setIcon($icon);
+
+        $width = $brandAttributes->getValueAsInteger(Dimension::WIDTH_KEY);
+        if ($width !== null) {
+            $brandButton->setWidth($width);
+        }
+        $title = $brandAttributes->getValue(syntax_plugin_combo_link::TITLE_ATTRIBUTE);
+        if ($title !== null) {
+            $brandButton->setLinkTitle($title);
+        }
+        $color = $brandAttributes->getValue(ColorRgb::PRIMARY_VALUE);
+        if ($color !== null) {
+            $brandButton->setPrimaryColor($color);
+        }
+        return $brandButton;
     }
 
     /**
@@ -117,7 +127,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
         return 201;
     }
 
-    public function accepts($mode): bool
+    public
+    function accepts($mode): bool
     {
         return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
@@ -231,11 +242,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                  * Logo
                  */
                 try {
-                    $color = $tagAttributes->getValue(ColorRgb::COLOR);
-                    if ($color !== null) {
-                        $brandButton->setPrimaryColor($color);
-                    }
-                    syntax_plugin_combo_brand::addIconInCallStack($callStack, $brandButton, $context);
+                    syntax_plugin_combo_brand::addIconInCallStack($callStack, $brandButton);
                 } catch (ExceptionComboNotFound $e) {
 
                     if ($brandButton->getName() === BrandButton::CURRENT_BRAND) {
@@ -265,6 +272,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
 
                 $callStack = CallStack::createFromHandler($handler);
+                $openTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $openTagAttributes = TagAttributes::createFromCallStackArray($openTag->getAttributes());
 
                 /**
                  * Old syntax
@@ -275,6 +284,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                  */
                 $markupIconImageFound = false;
                 $textFound = false;
+                $callStack->moveToEnd();
                 while ($actualCall = $callStack->previous()) {
                     $tagName = $actualCall->getTagName();
                     if (in_array($tagName, [syntax_plugin_combo_icon::TAG, syntax_plugin_combo_media::TAG])) {
@@ -287,10 +297,20 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                             }
                             break;
                         }
-                        if ($textFound) {
+                        if ($textFound && $openTag->getContext() === syntax_plugin_combo_menubar::TAG) {
                             // if text and icon
                             $actualCall->addClassName(self::BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS);
                         }
+                        $primary = $openTagAttributes->getValue(ColorRgb::PRIMARY_VALUE);
+                        if ($primary !== null && $tagName === syntax_plugin_combo_icon::TAG) {
+                            try {
+                                $brandButton = self::createBrandButtonFromAttributes($openTagAttributes);
+                                $actualCall->addAttribute(ColorRgb::COLOR, $brandButton->getTextColor());
+                            } catch (ExceptionCombo $e) {
+                                LogUtility::msg("Error while trying to set the icon color on exit. Error: {$e->getMessage()}");
+                            }
+                        }
+
                         $markupIconImageFound = true;
                     }
                     if ($actualCall->getState() === DOKU_LEXER_UNMATCHED) {
@@ -381,16 +401,15 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionComboNotFound
      */
-    public static function addIconInCallStack(CallStack $callStack, BrandButton $brandButton, string $context = null)
+    public
+    static function addIconInCallStack(CallStack $callStack, BrandButton $brandButton)
     {
 
         if (!$brandButton->hasIcon()) {
             return;
         }
         $iconAttributes = $brandButton->getIconAttributes();
-        if ($context === syntax_plugin_combo_menubar::TAG) {
-            $iconAttributes["class"] = self::BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS;
-        }
+
         $callStack->appendCallAtTheEnd(
             Call::createComboCall(
                 syntax_plugin_combo_icon::TAG,

@@ -19,6 +19,7 @@
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\Display;
+use ComboStrap\DokuwikiUrl;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -321,7 +322,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
      * @see DokuWiki_Syntax_Plugin::render()
      *
      */
-    public function render($mode, Doku_Renderer $renderer, $data)
+    public function render($mode, Doku_Renderer $renderer, $data): bool
     {
         // The $data variable comes from the handle() function
         //
@@ -375,7 +376,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             'call' => action_plugin_combo_webcode::CALL_ID,
                             action_plugin_combo_webcode::MARKI_PARAM => $markiCode
                         );
-                        $queryString = http_build_query($queryParams);
+                        $queryString = http_build_query($queryParams,'', DokuwikiUrl::AMPERSAND_CHARACTER);
                         $url = Site::getAjaxUrl() . "?$queryString";
                         $iFrameAttributes->addHtmlAttributeValue("src", $url);
 

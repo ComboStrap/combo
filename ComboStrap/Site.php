@@ -306,7 +306,7 @@ class Site
         return $conf['template'] == self::STRAP_TEMPLATE_NAME;
     }
 
-    public static function getAjaxUrl()
+    public static function getAjaxUrl(): string
     {
         return self::getBaseUrl() . "lib/exe/ajax.php";
     }

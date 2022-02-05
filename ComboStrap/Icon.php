@@ -66,7 +66,8 @@ class Icon extends ImageSvg
         self::CORE_UI_BRAND => "https://raw.githubusercontent.com/coreui/coreui-icons/master/svg/brand",
         self::FLAT_COLOR_ICON => "https://raw.githubusercontent.com/icons8/flat-color-icons/master/svg",
         self::PHOSPHOR_ICONS => "https://raw.githubusercontent.com/phosphor-icons/phosphor-icons/master/assets",
-        self::VSCODE => "https://raw.githubusercontent.com/vscode-icons/vscode-icons/master/icons"
+        self::VSCODE => "https://raw.githubusercontent.com/vscode-icons/vscode-icons/master/icons",
+        self::SI_GLYPH => "https://raw.githubusercontent.com/frexy/glyph-iconset/master/svg"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -99,7 +100,8 @@ class Icon extends ImageSvg
         self::CORE_UI_BRAND => "https://coreui.io/icons/",
         self::FLAT_COLOR_ICON => "https://icons8.com/icons/color",
         self::PHOSPHOR_ICONS => "https://phosphoricons.com/",
-        self::VSCODE => "https://marketplace.visualstudio.com/items?itemName=vscode-icons-team.vscode-icons"
+        self::VSCODE => "https://marketplace.visualstudio.com/items?itemName=vscode-icons-team.vscode-icons",
+        self::SI_GLYPH => "https://glyph.smarticons.co/"
 
     );
 
@@ -147,7 +149,8 @@ class Icon extends ImageSvg
         "cib" => self::CORE_UI_BRAND,
         "flat-color-icons" => self::FLAT_COLOR_ICON,
         "ph" => self::PHOSPHOR_ICONS,
-        "vscode-icons" => self::VSCODE
+        "vscode-icons" => self::VSCODE,
+        "si-glyph" => self::SI_GLYPH
     );
 
     const FEATHER = "feather";
@@ -182,8 +185,9 @@ class Icon extends ImageSvg
     const FLAT_COLOR_ICON = "flat-color-icons";
     const PHOSPHOR_ICONS = "ph";
     const VSCODE = "vscode";
-
+    const SI_GLYPH = "si-glyph";
     const COMBO = DokuPath::LIBRARY_COMBO;
+
 
     private $fullQualifiedName;
     /**
@@ -435,6 +439,9 @@ class Icon extends ImageSvg
                 break;
             case self::VSCODE:
                 $iconName = str_replace("-", "_", $iconName);
+                break;
+            case self::SI_GLYPH:
+                $iconName = "si-glyph-" . $iconName;
                 break;
         }
 

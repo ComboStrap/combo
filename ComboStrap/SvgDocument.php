@@ -15,7 +15,7 @@ namespace ComboStrap;
 
 use DOMAttr;
 use DOMElement;
-use http\Exception\InvalidArgumentException;
+use DOMNode;
 
 require_once(__DIR__ . '/XmlDocument.php');
 require_once(__DIR__ . '/Unit.php');
@@ -429,10 +429,12 @@ class SvgDocument extends XmlDocument
 
                             if ($colorValue !== self::CURRENT_COLOR) {
                                 /**
-                                 * Delete the fill property on sub-path
+                                 * Update the fill property on sub-path
+                                 * If the fill is set on sub-path, it will not work
+                                 *
+                                 * fill may be set on group or whatever
                                  */
-                                // if the fill is set on sub-path, it will not work
-                                $svgPaths = $this->xpath("//*[local-name()='path']");
+                                $svgPaths = $this->xpath("//*[local-name()='path' or local-name()='g']");
                                 for ($i = 0; $i < $svgPaths->length; $i++) {
                                     /**
                                      * @var DOMElement $nodeElement
@@ -440,9 +442,11 @@ class SvgDocument extends XmlDocument
                                     $nodeElement = $svgPaths[$i];
                                     $value = $nodeElement->getAttribute("fill");
                                     if ($value !== "none") {
-                                        $this->removeAttributeValue("fill", $nodeElement);
-                                    } else {
-                                        $this->removeNode($nodeElement);
+                                        if ($nodeElement->parentNode->tagName !== "svg") {
+                                            $nodeElement->setAttribute("fill", self::CURRENT_COLOR);
+                                        } else {
+                                            $this->removeAttributeValue("fill", $nodeElement);
+                                        }
                                     }
                                 }
 
@@ -735,6 +739,13 @@ class SvgDocument extends XmlDocument
                 }
             }
 
+            /**
+             * Delete comments
+             */
+            $commentNodes = $this->xpath("//comment()");
+            foreach ($commentNodes as $commentNode){
+                $this->removeNode($commentNode);
+            }
 
             /**
              * Delete default value (version=1.1 for instance)
@@ -919,9 +930,9 @@ class SvgDocument extends XmlDocument
 
     /**
      * An utility function to know how to remove a node
-     * @param DOMElement $nodeElement
+     * @param DOMNode $nodeElement
      */
-    private function removeNode(DOMElement $nodeElement)
+    private function removeNode(DOMNode $nodeElement)
     {
         $nodeElement->parentNode->removeChild($nodeElement);
     }

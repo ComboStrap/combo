@@ -492,57 +492,64 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
             case 'metadata':
 
+                /**
+                 * @var Doku_Renderer_metadata $renderer
+                 */
                 $state = $data[PluginUtility::STATE];
-                if ($state == DOKU_LEXER_ENTER) {
-                    /**
-                     * Keep track of the backlinks ie meta['relation']['references']
-                     * @var Doku_Renderer_metadata $renderer
-                     */
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $hrefSource = $tagAttributes->getValue(self::ATTRIBUTE_HREF_TYPE);
-                    if ($hrefSource === null || $hrefSource !== self::HREF_MARKUP_TYPE_VALUE) {
+                switch ($state) {
+                    case DOKU_LEXER_ENTER:
                         /**
-                         * This is not a markup link
-                         * (ie an external link created by a plugin {@link syntax_plugin_combo_share})
+                         * Keep track of the backlinks ie meta['relation']['references']
+                         * @var Doku_Renderer_metadata $renderer
                          */
-                        return false;
-                    }
-                    $href = $tagAttributes->getValue(self::ATTRIBUTE_HREF);
-                    $type = MarkupRef::createFromRef($href)
-                        ->getUriType();
-                    $name = $tagAttributes->getValue(self::ATTRIBUTE_LABEL);
-
-                    switch ($type) {
-                        case MarkupRef::WIKI_URI:
+                        $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                        $hrefSource = $tagAttributes->getValue(self::ATTRIBUTE_HREF_TYPE);
+                        if ($hrefSource === null || $hrefSource !== self::HREF_MARKUP_TYPE_VALUE) {
                             /**
-                             * The relative link should be passed (ie the original)
+                             * This is not a markup link
+                             * (ie an external link created by a plugin {@link syntax_plugin_combo_share})
                              */
-                            $renderer->internallink($href);
-                            break;
-                        case MarkupRef::WEB_URI:
-                            $renderer->externallink($href, $name);
-                            break;
-                        case MarkupRef::LOCAL_URI:
-                            $renderer->locallink($href, $name);
-                            break;
-                        case MarkupRef::EMAIL_URI:
-                            $renderer->emaillink($href, $name);
-                            break;
-                        case MarkupRef::INTERWIKI_URI:
-                            $interWikiSplit = preg_split("/>/", $href);
-                            $renderer->interwikilink($href, $name, $interWikiSplit[0], $interWikiSplit[1]);
-                            break;
-                        case MarkupRef::WINDOWS_SHARE_URI:
-                            $renderer->windowssharelink($href, $name);
-                            break;
-                        case MarkupRef::VARIABLE_URI:
-                            // No backlinks for link template
-                            break;
-                        default:
-                            LogUtility::msg("The markup reference ({$href}) with the type $type was not processed into the metadata");
-                    }
+                            return false;
+                        }
+                        $href = $tagAttributes->getValue(self::ATTRIBUTE_HREF);
+                        $type = MarkupRef::createFromRef($href)
+                            ->getUriType();
+                        $name = $tagAttributes->getValue(self::ATTRIBUTE_LABEL);
 
-                    return true;
+                        switch ($type) {
+                            case MarkupRef::WIKI_URI:
+                                /**
+                                 * The relative link should be passed (ie the original)
+                                 */
+                                $renderer->internallink($href);
+                                break;
+                            case MarkupRef::WEB_URI:
+                                $renderer->externallink($href, $name);
+                                break;
+                            case MarkupRef::LOCAL_URI:
+                                $renderer->locallink($href, $name);
+                                break;
+                            case MarkupRef::EMAIL_URI:
+                                $renderer->emaillink($href, $name);
+                                break;
+                            case MarkupRef::INTERWIKI_URI:
+                                $interWikiSplit = preg_split("/>/", $href);
+                                $renderer->interwikilink($href, $name, $interWikiSplit[0], $interWikiSplit[1]);
+                                break;
+                            case MarkupRef::WINDOWS_SHARE_URI:
+                                $renderer->windowssharelink($href, $name);
+                                break;
+                            case MarkupRef::VARIABLE_URI:
+                                // No backlinks for link template
+                                break;
+                            default:
+                                LogUtility::msg("The markup reference ({$href}) with the type $type was not processed into the metadata");
+                        }
+
+                        return true;
+                    case DOKU_LEXER_UNMATCHED:
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
+                        break;
                 }
                 break;
 
@@ -673,7 +680,6 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
         // unsupported $mode
         return false;
     }
-
 
 
     /**

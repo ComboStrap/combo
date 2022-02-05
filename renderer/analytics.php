@@ -279,7 +279,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         if (empty($this->metadata[Canonical::PROPERTY_NAME])) {
             global $conf;
             $root = $conf['start'];
-            if ($ID != $root) {
+            if ($ID !== $root) {
                 $qualityScores[self::RULE_CANONICAL_PRESENT] = 0;
                 $ruleResults[self::RULE_CANONICAL_PRESENT] = self::FAILED;
                 // no link to the documentation because we don't want any html in the json
@@ -593,24 +593,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         return self::RENDERER_FORMAT;
     }
 
-    public function internallink($id, $name = null, $search = null, $returnonly = false, $linktype = 'content')
-    {
 
-        $link = new MarkupRef($id);
-        $link->setUriType(MarkupRef::WIKI_URI);
-        $link->processLinkStats($this->stats);
-
-    }
-
-    public function externallink($url, $name = null)
-    {
-        $link = new MarkupRef($url);
-        $link->setUriType(MarkupRef::WEB_URI);
-        if ($name != null) {
-            $link->setName($name);
-        }
-        $link->processLinkStats($this->stats);
-    }
 
     public function header($text, $level, $pos)
     {
@@ -702,6 +685,10 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function underline_open() // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
         $this->formattingBracket++;
+    }
+
+    public function addToDescription($text){
+
     }
 
     public function underline_close() // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps

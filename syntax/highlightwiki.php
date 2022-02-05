@@ -156,28 +156,42 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
         return array();
     }
 
-    public function render($format, Doku_Renderer $renderer, $data): bool
+    public function render($format, $renderer, $data): bool
     {
 
-        if ($format === "xhtml") {
-            /**
-             * @var Doku_Renderer_xhtml $renderer
-             */
-            $state = $data[PluginUtility::STATE];
-            switch ($state) {
+        switch($format) {
+            case "xhtml":
+            {
+                /**
+                 * @var Doku_Renderer_xhtml $renderer
+                 */
+                $state = $data[PluginUtility::STATE];
+                switch ($state) {
 
-                case DOKU_LEXER_ENTER:
-                    $renderer->doc .= self::getOpenTagHighlight(self::TAG);
-                    return true;
-                case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::renderUnmatched($data);
-                    return true;
-                case DOKU_LEXER_EXIT:
-                    $htmlTag = self::HTML_TAG;
-                    $renderer->doc .= "</$htmlTag>";
-                    return true;
+                    case DOKU_LEXER_ENTER:
+                        $renderer->doc .= self::getOpenTagHighlight(self::TAG);
+                        return true;
+                    case DOKU_LEXER_UNMATCHED:
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
+                        return true;
+                    case DOKU_LEXER_EXIT:
+                        $htmlTag = self::HTML_TAG;
+                        $renderer->doc .= "</$htmlTag>";
+                        return true;
 
+                }
+                break;
             }
+            case "metadata":
+                /**
+                 * @var Doku_Renderer_metadata $renderer
+                 */
+                $state = $data[PluginUtility::STATE];
+                switch ($state) {
+                    case DOKU_LEXER_UNMATCHED:
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
+                }
+                break;
         }
 
         return false;

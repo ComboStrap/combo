@@ -72,7 +72,7 @@ class syntax_plugin_combo_highlightmd extends DokuWiki_Syntax_Plugin
     public function connectTo($mode)
     {
 
-            $this->Lexer->addEntryPattern(self::ENTRY_PATTERN, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $this->Lexer->addEntryPattern(self::ENTRY_PATTERN, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
     }
@@ -106,7 +106,7 @@ class syntax_plugin_combo_highlightmd extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER:
 
                 $content = substr($match, 1);
-            return array(
+                return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::PAYLOAD => $content,
                 );
@@ -121,24 +121,39 @@ class syntax_plugin_combo_highlightmd extends DokuWiki_Syntax_Plugin
     public function render($format, Doku_Renderer $renderer, $data): bool
     {
 
-        if ($format === "xhtml") {
-            /**
-             * @var Doku_Renderer_xhtml $renderer
-             */
-            $state = $data[PluginUtility::STATE];
-            switch ($state) {
+        switch ($format) {
+            case "xhtml":
+                /**
+                 * @var Doku_Renderer_xhtml $renderer
+                 */
+                $state = $data[PluginUtility::STATE];
+                switch ($state) {
 
-                case DOKU_LEXER_ENTER:
-                    $renderer->doc .= syntax_plugin_combo_highlightwiki::getOpenTagHighlight(self::TAG).$data[PluginUtility::PAYLOAD];
-                    return true;
-                case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::renderUnmatched($data);
-                    return true;
-                case DOKU_LEXER_EXIT:
-                    $renderer->doc .= "</mark>";
-                    return true;
+                    case DOKU_LEXER_ENTER:
+                        $renderer->doc .= syntax_plugin_combo_highlightwiki::getOpenTagHighlight(self::TAG) . $data[PluginUtility::PAYLOAD];
+                        return true;
+                    case DOKU_LEXER_UNMATCHED:
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
+                        return true;
+                    case DOKU_LEXER_EXIT:
+                        $renderer->doc .= "</mark>";
+                        return true;
 
-            }
+                }
+                break;
+            case "metadata":
+                /**
+                 * @var Doku_Renderer_metadata $renderer
+                 */
+                $state = $data[PluginUtility::STATE];
+                switch ($state) {
+                    case DOKU_LEXER_ENTER:
+                        $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                        return true;
+                    case DOKU_LEXER_UNMATCHED:
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
+                }
+                break;
         }
 
         return false;

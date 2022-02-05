@@ -580,7 +580,12 @@ class PluginUtility
     public static function getEmptyTagPattern($tag): string
     {
 
-        return '<' . $tag . '[^>]*/>';
+        /**
+         * A tag should start with the tag
+         * then a space or the / (lookahead)
+         * then until the close / character
+         */
+        return '<' . $tag . '(?=[/ ]{1})[^/]*\/>';
     }
 
     /**

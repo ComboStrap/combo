@@ -69,7 +69,7 @@ class BrandButton
     /**
      * @var mixed|string
      */
-    private $icon = self::ICON_SOLID_VALUE;
+    private $iconType = self::ICON_SOLID_VALUE;
     /**
      * The width of the icon
      * @var int|null
@@ -164,7 +164,7 @@ class BrandButton
                     $this->title = $brandDict[$this->type]["popup"];
                     $this->primaryColor = $brandDict["colors"]["primary"];
                     $this->secondaryColor = $brandDict["colors"]["secondary"];
-                    $this->iconName = $brandDict["icons"][$this->icon];
+                    $this->iconName = $brandDict["icons"][$this->iconType];
                     $this->webUrlTemplate = $brandDict[$this->type]["web"];
                     $this->brandUrl = $brandDict["url"];
                     return;
@@ -184,8 +184,8 @@ class BrandButton
      */
     public static function getBrandNames()
     {
-        self::$brandDictionary = self::getBrandDictionary();
-        $brandsDict = array_keys(self::$brandDictionary);
+        $brandDictionary = self::getBrandDictionary();
+        $brandsDict = array_keys($brandDictionary);
         $brandsAbbreviations = array_keys(self::BRAND_ABBREVIATIONS_MAPPING);
         return array_merge(
             $brandsDict,
@@ -234,15 +234,15 @@ class BrandButton
     /**
      * @throws ExceptionCombo
      */
-    public function setIcon($icon): BrandButton
+    public function setIconType($iconType): BrandButton
     {
         /**
          * Icon Validation
          */
-        $this->icon = $icon;
-        $icon = trim(strtolower($icon));
-        if (!in_array($icon, self::ICONS)) {
-            throw new ExceptionCombo("The social icon ($icon) is unknown. The possible icons value are " . implode(",", self::ICONS));
+        $this->iconType = $iconType;
+        $iconType = trim(strtolower($iconType));
+        if (!in_array($iconType, self::ICONS)) {
+            throw new ExceptionCombo("The social icon ($iconType) is unknown. The possible icons value are " . implode(",", self::ICONS));
         }
         return $this;
     }
@@ -270,7 +270,7 @@ class BrandButton
     {
         return (new BrandButton($brandName, self::TYPE_BUTTON_SHARE))
             ->setWidget($widget)
-            ->setIcon($icon)
+            ->setIconType($icon)
             ->setWidth($width);
     }
 
@@ -287,7 +287,7 @@ class BrandButton
         return (new BrandButton($brandName, self::TYPE_BUTTON_FOLLOW))
             ->setHandle($handle)
             ->setWidget($widget)
-            ->setIcon($icon)
+            ->setIconType($icon)
             ->setWidth($width);
     }
 
@@ -418,7 +418,7 @@ class BrandButton
                 $properties["color"] = $textColor;
                 break;
         }
-        switch ($this->icon) {
+        switch ($this->iconType) {
             case self::ICON_OUTLINE_VALUE:
                 // not for outline circle, it's cut otherwise, don't know why
                 $properties["stroke-width"] = "2px";
@@ -430,7 +430,7 @@ class BrandButton
             $cssProperties .= "    $key:$value;\n";
         }
         $style = <<<EOF
-.{$this->getIdentifierClass()} { $cssProperties }
+.{$this->getIdentifierClass()} {{$cssProperties}}
 EOF;
 
         /**
@@ -458,7 +458,7 @@ EOF;
             $hoverCssProperties .= "    $key:$value;\n";
         }
         $hoverStyle = <<<EOF
-.{$this->getIdentifierClass()}:hover, .{$this->getIdentifierClass()}:active { $cssProperties }
+.{$this->getIdentifierClass()}:hover, .{$this->getIdentifierClass()}:active {{$hoverCssProperties}}
 EOF;
 
         return <<<EOF
@@ -502,12 +502,13 @@ EOF;
     function getIconAttributes(): array
     {
 
-        $icon = $this->getIconFile();
+        $iconName = $this->getResourceIconName();
+        $icon = $this->getResourceIconFile();
         if (!FileSystems::exists($icon)) {
             $iconName = $this->iconName;
             $brandNames = BrandButton::getBrandNames();
             if ($iconName === null && in_array($this->getName(), $brandNames)) {
-                throw new ExceptionComboNotFound("No {$this->icon} icon could be found for the brand ($this)");
+                throw new ExceptionComboNotFound("No {$this->iconType} icon could be found for the brand ($this)");
             }
         }
         $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
@@ -557,7 +558,7 @@ EOF;
     private
     function getIcon()
     {
-        return $this->icon;
+        return $this->iconType;
     }
 
     private
@@ -584,13 +585,13 @@ EOF;
     public
     function hasIcon(): bool
     {
-        if ($this->icon === self::ICON_NONE_VALUE) {
+        if ($this->iconType === self::ICON_NONE_VALUE) {
             return false;
         }
-        if ($this->icon !== null) {
+        if ($this->iconType !== null) {
             return true;
         }
-        if (!FileSystems::exists($this->getIconFile())) {
+        if (!FileSystems::exists($this->getResourceIconFile())) {
             return false;
         }
         return true;
@@ -730,11 +731,22 @@ EOF;
         return $this;
     }
 
-    private function getIconFile(): DokuPath
+    private function getResourceIconFile(): DokuPath
+    {
+        $iconName = $this->getResourceIconName();
+        return DokuPath::createResource($iconName);
+    }
+
+    public function setSecondaryColor(string $secondaryColor): BrandButton
+    {
+        $this->secondaryColor = $secondaryColor;
+        return $this;
+    }
+
+    private function getResourceIconName(): string
     {
         $comboLibrary = DokuPath::LIBRARY_COMBO;
-        $iconName = "$comboLibrary>brand:{$this->getName()}:{$this->icon}.svg";
-        return DokuPath::createResource($iconName);
+        return "$comboLibrary>brand:{$this->getName()}:{$this->iconType}.svg";
     }
 
 

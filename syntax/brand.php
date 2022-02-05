@@ -68,7 +68,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
         $icon = $brandAttributes->getValue(self::ICON_ATTRIBUTE, BrandButton::ICON_SOLID_VALUE);
         $brandButton = BrandButton::createBrandButton($channelName)
             ->setWidget($widget)
-            ->setIcon($icon);
+            ->setIconType($icon);
 
         $width = $brandAttributes->getValueAsInteger(Dimension::WIDTH_KEY);
         if ($width !== null) {
@@ -81,6 +81,10 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
         $color = $brandAttributes->getValue(ColorRgb::PRIMARY_VALUE);
         if ($color !== null) {
             $brandButton->setPrimaryColor($color);
+        }
+        $secondaryColor = $brandAttributes->getValue(ColorRgb::SECONDARY_VALUE);
+        if ($secondaryColor !== null) {
+            $brandButton->setSecondaryColor($secondaryColor);
         }
         return $brandButton;
     }

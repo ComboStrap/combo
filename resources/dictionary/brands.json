@@ -104,6 +104,12 @@
         "colors": {
             "primary": "#8a3ab9",
             "secondary": "#cd486b"
+        },
+        "icons": {
+            "solid": "ant-design:instagram-filled",
+            "solid-circle": "entypo-social:instagram-with-circle",
+            "outline": "ant-design:instagram-outlined",
+            "outline-circle": "ant-design:instagram-outlined"
         }
     },
     "wikipedia": {

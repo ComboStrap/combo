@@ -2,6 +2,7 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\Brand;
 use ComboStrap\BrandButton;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
@@ -63,7 +64,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      */
     private static function createBrandButtonFromAttributes(TagAttributes $brandAttributes): BrandButton
     {
-        $channelName = $brandAttributes->getValue(TagAttributes::TYPE_KEY, BrandButton::CURRENT_BRAND);
+        $channelName = $brandAttributes->getValue(TagAttributes::TYPE_KEY, Brand::CURRENT_BRAND);
         $widget = $brandAttributes->getValue(self::WIDGET_ATTRIBUTE, BrandButton::WIDGET_BUTTON_VALUE);
         $icon = $brandAttributes->getValue(self::ICON_ATTRIBUTE, BrandButton::ICON_SOLID_VALUE);
         $brandButton = BrandButton::createBrandButton($channelName)
@@ -191,7 +192,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 /**
                  * Default parameters, type definition and parsing
                  */
-                $defaultParameters[TagAttributes::TYPE_KEY] = BrandButton::CURRENT_BRAND;
+                $defaultParameters[TagAttributes::TYPE_KEY] = Brand::CURRENT_BRAND;
                 /**
                  * Every brand name is allowed
                  * (
@@ -249,7 +250,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                         syntax_plugin_combo_brand::addIconInCallStack($callStack, $brandButton);
                     } catch (ExceptionCombo $e) {
 
-                        if ($brandButton->getName() === BrandButton::CURRENT_BRAND) {
+                        if ($brandButton->getBrand() === Brand::CURRENT_BRAND) {
 
                             $documentationLink = PluginUtility::getDocumentationHyperLink("logo", "documentation");
                             LogUtility::msg("A svg logo icon is not installed on your website. Check the corresponding $documentationLink.", LogUtility::LVL_MSG_INFO);

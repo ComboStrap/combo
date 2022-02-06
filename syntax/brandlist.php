@@ -3,9 +3,12 @@
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
+use ComboStrap\Brand;
 use ComboStrap\BrandButton;
 use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionComboRuntime;
 use ComboStrap\Icon;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -66,8 +69,16 @@ class syntax_plugin_combo_brandlist extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_SPECIAL :
 
-
-                return array(PluginUtility::STATE => $state);
+                $tagAttributes = TagAttributes::createFromTagMatch($match,
+                    [
+                        TagAttributes::TYPE_KEY => BrandButton::TYPE_BUTTON_BRAND
+                    ],
+                    BrandButton::TYPE_BUTTONS
+                );
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                );
 
 
         }
@@ -92,41 +103,114 @@ class syntax_plugin_combo_brandlist extends DokuWiki_Syntax_Plugin
 
             /** @var Doku_Renderer_xhtml $renderer */
             try {
-                $brandDictionary = BrandButton::getBrandDictionary();
+                $brandDictionary = Brand::getBrandDictionary();
                 $brandNames = array_keys($brandDictionary);
+                sort($brandNames);
             } catch (ExceptionCombo $e) {
                 $renderer->doc .= "Error while creating the brand list. Error: {$e->getMessage()}";
                 return false;
             }
-            $html = "";
+
+            $variants = BrandButton::getVariants();
+
             $snippetManager = PluginUtility::getSnippetManager();
+            $snippetManager->attachCssSnippetForSlot("table");
+            $html = <<<EOF
+<table class="table table-non-fluid">
+<thead>
+    <tr>
+    <th scope="col">
+Brand Name
+    </th>
+EOF;
+            foreach ($variants as $variant) {
+                $iconType = ucfirst($variant[syntax_plugin_combo_brand::ICON_ATTRIBUTE]);
+                $widgetType = ucfirst($variant[syntax_plugin_combo_brand::WIDGET_ATTRIBUTE]);
+                $html .= <<<EOF
+    <th scope="col">
+$widgetType <br/> $iconType
+    </th>
+EOF;
+            }
+
+            $html .= <<<EOF
+</tr>
+</thead>
+EOF;
+
+            $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+            $type = $tagAttributes->getType();
             foreach ($brandNames as $brandName) {
 
-                if(in_array($brandName,["email","newsletter"])){
-                    continue;
-                }
                 try {
 
-                    $brandButton = BrandButton::createBrandButton($brandName);
-                    $html .= ucfirst($brandName);
-                    $html .= $brandButton->getLinkAttributes()->toHtmlEnterTag("a");
-
-                    if ($brandButton->hasIcon()) {
-                        $iconArrayAttributes = $brandButton->getIconAttributes();
-                        $iconAttributes = TagAttributes::createFromCallStackArray($iconArrayAttributes);
-                        $name = $iconAttributes->getValueAndRemoveIfPresent(syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE);
-                        if ($name !== null) {
-                            $html .= Icon::create($name, $iconAttributes)->render();
-                        } else {
-                            $html .= "Icon name is null for brand $brandName";
-                        }
+                    $brandButton = new BrandButton($brandName, $type);
+                    if(!$brandButton->isType($type)){
+                        continue;
                     }
-                    $snippetManager->attachCssSnippetForSlot($brandButton->getStyleScriptIdentifier(),$brandButton->getStyle());
-                    $html .= "</a><br/>\n";
+                    /**
+                     * Begin row
+                     */
+                    $html .= "<tr>";
+
+                    /**
+                     * First column
+                     */
+
+                    $html .= "<td>" . ucfirst($brandName) . "</td>";
+
+
+                    foreach ($variants as $variant) {
+                        $iconType = $variant[syntax_plugin_combo_brand::ICON_ATTRIBUTE];
+                        $widgetType = $variant[syntax_plugin_combo_brand::WIDGET_ATTRIBUTE];
+                        $brandButton
+                            ->setIconType($iconType)
+                            ->setWidget($widgetType);
+                        /**
+                         * Second column
+                         */
+                        $html .= "<td>";
+                        $page = null;
+                        if($type === BrandButton::TYPE_BUTTON_SHARE ){
+                            $page = Page::createPageFromRequestedPage();
+                        }
+                        $html .= $brandButton->getLinkAttributes($page)->toHtmlEnterTag("a");
+
+                        if ($brandButton->hasIcon()) {
+                            $iconArrayAttributes = $brandButton->getIconAttributes();
+                            $iconAttributes = TagAttributes::createFromCallStackArray($iconArrayAttributes);
+                            $name = $iconAttributes->getValueAndRemoveIfPresent(syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE);
+                            if ($name !== null) {
+                                $html .= Icon::create($name, $iconAttributes)->render();
+                            } else {
+                                $html .= "Icon name is null for brand $brandName";
+                            }
+                        }
+                        $snippetManager->attachCssSnippetForSlot($brandButton->getStyleScriptIdentifier(), $brandButton->getStyle());
+                        $html .= "</a></td>";
+                    }
+
+                    /**
+                     * End row
+                     */
+                    $html .= "</td>" . PHP_EOL;
                 } catch (ExceptionCombo $e) {
-                    $renderer->doc .= "Error while rendering the brand $brandName. Error: {$e->getMessage()}\n";
+                    $message = "Error while rendering the brand $brandName. Error: {$e->getMessage()}";
+                    if (!PluginUtility::isDevOrTest()) {
+                        $renderer->doc .= "$message\n";
+                    } else {
+                        throw new ExceptionComboRuntime($message, self::TAG, 0, $e);
+                    }
                 }
             }
+            /**
+             * End table
+             */
+            $html .= <<<EOF
+</tbody>
+</table>
+EOF;
+
             $renderer->doc .= $html;
 
 

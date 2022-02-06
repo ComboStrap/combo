@@ -39,28 +39,12 @@ class BrandButton
     const ICON_SOLID_CIRCLE_VALUE = "solid-circle";
     const ICON_OUTLINE_CIRCLE_VALUE = "outline-circle";
     const ICON_OUTLINE_VALUE = "outline";
-    const ICONS = [self::ICON_SOLID_VALUE, self::ICON_SOLID_CIRCLE_VALUE, self::ICON_OUTLINE_VALUE, self::ICON_OUTLINE_CIRCLE_VALUE, self::ICON_NONE_VALUE];
+    const ICON_TYPES = [self::ICON_SOLID_VALUE, self::ICON_SOLID_CIRCLE_VALUE, self::ICON_OUTLINE_VALUE, self::ICON_OUTLINE_CIRCLE_VALUE, self::ICON_NONE_VALUE];
     const ICON_NONE_VALUE = "none";
 
     const CANONICAL = "social";
-    /**
-     * The brand of the current application/website
-     */
-    public const CURRENT_BRAND = "current";
 
 
-    /**
-     * @var array
-     */
-    private static $brandDictionary;
-
-    /**
-     * @var string
-     * The name of the brand,
-     * for company, we follow the naming of
-     * https://github.com/ellisonleao/sharer.js
-     */
-    private $name;
 
     /**
      * @var string
@@ -84,27 +68,21 @@ class BrandButton
     const TYPE_BUTTON_BRAND = "brand";
     const TYPE_BUTTONS = [self::TYPE_BUTTON_SHARE, self::TYPE_BUTTON_FOLLOW, self::TYPE_BUTTON_BRAND];
 
-    const BRAND_ABBREVIATIONS_MAPPING = [
-        "hn" => "hackernews",
-        "mail" => "email",
-        "wp" => "wikipedia"
-    ];
-
 
     /**
      * @var string the follow handle
      */
     private $handle;
 
+
+
     /**
-     * @var string the endpoint template url (for sharing and following)
+     * @var Brand
      */
-    private $webUrlTemplate;
+    private $brand;
     private $primaryColor;
     private $title;
     private $secondaryColor;
-    private $iconName;
-    private $brandUrl;
 
 
     /**
@@ -115,96 +93,32 @@ class BrandButton
         string $typeButton)
     {
 
-        $this->name = strtolower($brandName);
-        if (isset(self::BRAND_ABBREVIATIONS_MAPPING[$this->name])) {
-            $this->name = self::BRAND_ABBREVIATIONS_MAPPING[$this->name];
-        }
+        $this->brand = Brand::create($brandName);
 
         $this->type = strtolower($typeButton);
         if (!in_array($this->type, self::TYPE_BUTTONS)) {
             throw new ExceptionCombo("The button type ($this->type} is unknown.");
         }
 
-        /**
-         * Get the brands
-         */
-        self::$brandDictionary = self::getBrandDictionary();
-
-
-        /**
-         * Build the data for the brand
-         */
-        $brandDict = self::$brandDictionary[$this->name];
-        switch ($this->name) {
-            case self::CURRENT_BRAND:
-                $this->title = Site::getTitle();
-                $image = Site::getLogoAsSvgImage();
-                if ($image !== null) {
-                    $path = $image->getPath();
-                    if ($path instanceof DokuPath) {
-                        /**
-                         * End with svg, not seen as an external icon
-                         */
-                        $this->iconName = $path->getDokuwikiId();
-                    }
-                }
-                $this->brandUrl = Site::getBaseUrl();
-                $primaryColor = Site::getPrimaryColor();
-                if ($primaryColor !== null) {
-                    $this->primaryColor = $primaryColor->toCssValue();
-                }
-                $secondaryColor = Site::getSecondaryColor();
-                if ($secondaryColor !== null) {
-                    // the predicates on the secondary value is to avoid a loop with the the function below
-                    $this->secondaryColor = $secondaryColor->toCssValue();
-                }
-                break;
-            default:
-                if ($brandDict !== null) {
-                    $this->title = $brandDict[$this->type]["popup"];
-                    $this->primaryColor = $brandDict["colors"]["primary"];
-                    $this->secondaryColor = $brandDict["colors"]["secondary"];
-                    $this->iconName = $brandDict["icons"][$this->iconType];
-                    $this->webUrlTemplate = $brandDict[$this->type]["web"];
-                    $this->brandUrl = $brandDict["url"];
-                    return;
-                }
-                $this->primaryColor = Site::getPrimaryColor();
-                if ($this->primaryColor === null) {
-                    $this->primaryColor = ComboStrap::PRIMARY_COLOR;
-                }
-                break;
-        }
-
 
     }
 
     /**
-     * @throws ExceptionCombo
+     * Return all combination of widget type and icon type
+     * @return array
      */
-    public static function getBrandNames()
+    public static function getVariants(): array
     {
-        $brandDictionary = self::getBrandDictionary();
-        $brandsDict = array_keys($brandDictionary);
-        $brandsAbbreviations = array_keys(self::BRAND_ABBREVIATIONS_MAPPING);
-        return array_merge(
-            $brandsDict,
-            $brandsAbbreviations,
-            [self::CURRENT_BRAND]
-        );
-    }
-
-    /**
-     * @throws ExceptionCombo
-     */
-    public static function getBrandDictionary()
-    {
-        if (self::$brandDictionary === null) {
-
-            self::$brandDictionary = Dictionary::getFrom("brands");
-
+        $variants = [];
+        foreach (self::WIDGETS as $widget) {
+            foreach (self::ICON_TYPES as $typeIcon) {
+                if ($typeIcon === self::ICON_NONE_VALUE) {
+                    continue;
+                }
+                $variants[] = [\syntax_plugin_combo_brand::ICON_ATTRIBUTE => $typeIcon, \syntax_plugin_combo_brand::WIDGET_ATTRIBUTE => $widget];
+            }
         }
-        return self::$brandDictionary;
+        return $variants;
     }
 
     /**
@@ -241,8 +155,8 @@ class BrandButton
          */
         $this->iconType = $iconType;
         $iconType = trim(strtolower($iconType));
-        if (!in_array($iconType, self::ICONS)) {
-            throw new ExceptionCombo("The social icon ($iconType) is unknown. The possible icons value are " . implode(",", self::ICONS));
+        if (!in_array($iconType, self::ICON_TYPES)) {
+            throw new ExceptionCombo("The icon type ($iconType) is unknown. The possible icons value are " . implode(",", self::ICON_TYPES));
         }
         return $this;
     }
@@ -304,7 +218,7 @@ class BrandButton
         /**
          * Shared/Follow Url template
          */
-        $urlTemplate = $this->webUrlTemplate;
+        $urlTemplate = $this->brand->getWebUrlTemplate($this->type);
         if ($urlTemplate === null) {
             throw new ExceptionCombo("The brand ($this) does not support the $this->type button (The $this->type URL is unknown)");
         }
@@ -324,7 +238,7 @@ class BrandButton
                 $templateData["description"] = $description;
                 $templateData["text"] = $this->getTextForPage($requestedPage);
                 $via = null;
-                switch ($this->name) {
+                switch ($this->brand->getName()) {
                     case \action_plugin_combo_metatwitter::CANONICAL:
                         $via = substr(action_plugin_combo_metatwitter::COMBO_STRAP_TWITTER_HANDLE, 1);
                         break;
@@ -356,10 +270,7 @@ class BrandButton
 
     public function __toString()
     {
-        if ($this->name === self::CURRENT_BRAND) {
-            return $this->name . " (" . Site::getTitle() . ")";
-        }
-        return $this->name;
+        return $this->brand->__toString();
     }
 
     public function getLinkTitle(): string
@@ -368,7 +279,11 @@ class BrandButton
         if ($title !== null && trim($title) !== "") {
             return $title;
         }
-        $name = ucfirst($this->name);
+        $title = $this->brand->getTitle($this->iconType);
+        if ($title !== null && trim($title) !== "") {
+            return $title;
+        }
+        $name = ucfirst($this->brand->getName());
         switch ($this->type) {
             case self::TYPE_BUTTON_SHARE:
                 return "Share this page via $name";
@@ -397,7 +312,7 @@ class BrandButton
             case self::WIDGET_LINK_VALUE:
                 $properties["vertical-align"] = "middle";
                 $properties["display"] = "inline-block";
-                if ($this->primaryColor !== null) {
+                if ($this->getPrimaryColor() !== null) {
                     // important because the nav-bar class takes over
                     $properties["color"] = "$this->primaryColor!important";
                 }
@@ -436,7 +351,7 @@ EOF;
         /**
          * Hover Style
          */
-        $secondary = $this->secondaryColor;
+        $secondary = $this->getSecondaryColor();
         if ($secondary === null) {
             return $style;
         }
@@ -470,9 +385,9 @@ EOF;
     }
 
     public
-    function getName(): string
+    function getBrand(): string
     {
-        return $this->name;
+        return $this->brand;
     }
 
     /**
@@ -483,7 +398,7 @@ EOF;
     public
     function getStyleScriptIdentifier(): string
     {
-        return "{$this->getType()}-{$this->getName()}-{$this->getWidget()}-{$this->getIcon()}";
+        return "{$this->getType()}-{$this->getBrand()}-{$this->getWidget()}-{$this->getIcon()}";
     }
 
     /**
@@ -506,8 +421,8 @@ EOF;
         $icon = $this->getResourceIconFile();
         if (!FileSystems::exists($icon)) {
             $iconName = $this->iconName;
-            $brandNames = BrandButton::getBrandNames();
-            if ($iconName === null && in_array($this->getName(), $brandNames)) {
+            $brandNames = Brand::getBrandNames();
+            if ($iconName === null && in_array($this->getBrand(), $brandNames)) {
                 throw new ExceptionComboNotFound("No {$this->iconType} icon could be found for the brand ($this)");
             }
         }
@@ -637,11 +552,11 @@ EOF;
                     throw new ExceptionCombo("The page requested should not be null for a share button");
                 }
 
-                $ariaLabel = "Share on " . ucfirst($this->getName());
+                $ariaLabel = "Share on " . ucfirst($this->getBrand());
                 $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
                 $linkAttributes->addComponentAttributeValue("rel", "nofollow");
 
-                switch ($this->getName()) {
+                switch ($this->getBrand()) {
                     case "whatsapp":
                         /**
                          * Direct link
@@ -673,7 +588,7 @@ EOF;
                                         ],
 
                                 ));
-                        $linkAttributes->addComponentAttributeValue("data-sharer", $this->getName()); // the id
+                        $linkAttributes->addComponentAttributeValue("data-sharer", $this->getBrand()); // the id
                         $linkAttributes->addComponentAttributeValue("data-link", "false");
                         $linkAttributes->addComponentAttributeValue("data-title", $this->getTextForPage($requestedPage));
                         $urlToShare = $this->getSharedUrlForPage($requestedPage);
@@ -684,7 +599,7 @@ EOF;
                 return $linkAttributes;
             case self::TYPE_BUTTON_FOLLOW:
 
-                $ariaLabel = "Follow us on " . ucfirst($this->getName());
+                $ariaLabel = "Follow us on " . ucfirst($this->getBrand());
                 $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
                 $linkAttributes->addComponentAttributeValue("target", "_blank");
                 $linkAttributes->addComponentAttributeValue("rel", "nofollow");
@@ -694,8 +609,8 @@ EOF;
                 }
                 return $linkAttributes;
             case self::TYPE_BUTTON_BRAND:
-                if ($this->brandUrl !== null) {
-                    $linkAttributes->addComponentAttributeValue("href", $this->brandUrl);
+                if ($this->brand->getBrandUrl() !== null) {
+                    $linkAttributes->addComponentAttributeValue("href", $this->brand->getBrandUrl());
                 }
                 return $linkAttributes;
             default:
@@ -746,7 +661,25 @@ EOF;
     private function getResourceIconName(): string
     {
         $comboLibrary = DokuPath::LIBRARY_COMBO;
-        return "$comboLibrary>brand:{$this->getName()}:{$this->iconType}.svg";
+        return "$comboLibrary>brand:{$this->getBrand()}:{$this->iconType}.svg";
+    }
+
+
+
+    private function getPrimaryColor(): ?string
+    {
+        if($this->primaryColor!==null){
+            return $this->primaryColor;
+        }
+        return $this->brand->getPrimaryColor();
+    }
+
+    private function getSecondaryColor(): ?string
+    {
+        if($this->secondaryColor!==null){
+            return $this->secondaryColor;
+        }
+        return $this->brand->getSecondaryColor();
     }
 
 

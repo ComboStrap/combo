@@ -27,8 +27,8 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
      */
     private static function createFollowButtonFromAttributes(TagAttributes $shareAttributes): BrandButton
     {
-        $channelName = $shareAttributes->getValue(TagAttributes::TYPE_KEY);
-        $widget = $shareAttributes->getValue(syntax_plugin_combo_brand::WIDGET_ATTRIBUTE, BrandButton::WIDGET_BUTTON_VALUE);
+        $channelName = $shareAttributes->getValue(syntax_plugin_combo_brand::NAME_ATTRIBUTE);
+        $widget = $shareAttributes->getValue(TagAttributes::TYPE_KEY, BrandButton::WIDGET_BUTTON_VALUE);
         $icon = $shareAttributes->getValue(syntax_plugin_combo_brand::ICON_ATTRIBUTE, BrandButton::ICON_SOLID_VALUE);
         $width = $shareAttributes->getValueAsInteger(Dimension::WIDTH_KEY);
         $handle = $shareAttributes->getValue(self::HANDLE_ATTRIBUTE);

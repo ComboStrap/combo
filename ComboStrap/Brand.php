@@ -20,14 +20,8 @@ class Brand
      */
     public const CURRENT_BRAND = "current";
 
-    /**
-     * @var string the endpoint template url (for sharing and following)
-     */
-    private $webUrlTemplate;
-    private $primaryColor;
-    private $title;
+
     private $secondaryColor;
-    private $iconName;
     private $brandUrl;
 
     /**
@@ -67,21 +61,7 @@ class Brand
         $this->brandDict = Brand::$brandDictionary[$this->name];
         switch ($this->name) {
             case self::CURRENT_BRAND:
-                $image = Site::getLogoAsSvgImage();
-                if ($image !== null) {
-                    $path = $image->getPath();
-                    if ($path instanceof DokuPath) {
-                        /**
-                         * End with svg, not seen as an external icon
-                         */
-                        $this->iconName = $path->getDokuwikiId();
-                    }
-                }
                 $this->brandUrl = Site::getBaseUrl();
-                $primaryColor = Site::getPrimaryColor();
-                if ($primaryColor !== null) {
-                    $this->primaryColor = $primaryColor->toCssValue();
-                }
                 $secondaryColor = Site::getSecondaryColor();
                 if ($secondaryColor !== null) {
                     // the predicates on the secondary value is to avoid a loop with the the function below
@@ -90,19 +70,11 @@ class Brand
                 break;
             default:
                 if ($this->brandDict !== null) {
-                    $this->primaryColor = $this->brandDict["colors"]["primary"];
-                    if ($this->primaryColor === null && $this->name === self::NEWSLETTER_BRAND_NAME) {
-                        $this->primaryColor = ComboStrap::PRIMARY_COLOR;
-                    }
                     $this->secondaryColor = $this->brandDict["colors"]["secondary"];
                     $this->brandUrl = $this->brandDict["url"];
                     return;
                 }
                 $this->unknown = true;
-                $this->primaryColor = Site::getPrimaryColor();
-                if ($this->primaryColor === null) {
-                    $this->primaryColor = ComboStrap::PRIMARY_COLOR;
-                }
                 break;
         }
 
@@ -177,8 +149,10 @@ class Brand
 
     /**
      * Shared/Follow Url template
+     * the endpoint template url (for sharing and following)
+     * @var string $type - the type of button
      */
-    public function getWebUrlTemplate($type): ?string
+    public function getWebUrlTemplate(string $type): ?string
     {
         if (isset($this->brandDict[$type])) {
             return $this->brandDict[$type]["web"];
@@ -207,7 +181,22 @@ class Brand
 
     public function getPrimaryColor(): ?string
     {
-        return $this->primaryColor;
+
+        if ($this->brandDict !== null) {
+            $primaryColor = $this->brandDict["colors"]["primary"];
+            if ($primaryColor !== null) {
+                return $primaryColor;
+            }
+        }
+
+        // Unknown or current brand / unknown color
+        $primaryColor = Site::getPrimaryColor();
+        if ($primaryColor !== null) {
+            return $primaryColor;
+        }
+
+        return ComboStrap::PRIMARY_COLOR;
+
     }
 
     public function getSecondaryColor(): ?string
@@ -221,9 +210,27 @@ class Brand
      */
     public function getIconName(string $type): ?string
     {
-        if (isset($this->brandDict["icons"])) {
-            return $this->brandDict["icons"][$type];
+
+        switch ($this->name) {
+            case self::CURRENT_BRAND:
+                $image = Site::getLogoAsSvgImage();
+                if ($image !== null) {
+                    $path = $image->getPath();
+                    if ($path instanceof DokuPath) {
+                        /**
+                         * End with svg, not seen as an external icon
+                         */
+                        return $path->getDokuwikiId();
+                    }
+                }
+                break;
+            default:
+                if (isset($this->brandDict["icons"])) {
+                    return $this->brandDict["icons"][$type];
+                }
+                break;
         }
+
         return null;
     }
 
@@ -236,10 +243,10 @@ class Brand
      */
     public function supportButtonType(string $type): bool
     {
-        switch ($type){
+        switch ($type) {
             case BrandButton::TYPE_BUTTON_SHARE:
             case BrandButton::TYPE_BUTTON_FOLLOW:
-                if($this->getWebUrlTemplate($type)!==null){
+                if ($this->getWebUrlTemplate($type) !== null) {
                     return true;
                 }
                 return false;

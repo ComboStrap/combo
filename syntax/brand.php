@@ -30,7 +30,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
 
 
     public const ICON_ATTRIBUTE = "icon";
-    public const WIDGET_ATTRIBUTE = "widget";
+
     public const URL_ATTRIBUTE = "url";
 
     /**
@@ -38,6 +38,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      * https://getbootstrap.com/docs/5.1/components/navbar/#image-and-text
      */
     const BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS = "d-inline-block align-text-top";
+    const NAME_ATTRIBUTE = "name";
 
     /**
      * @throws ExceptionCombo
@@ -64,8 +65,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      */
     private static function createBrandButtonFromAttributes(TagAttributes $brandAttributes): BrandButton
     {
-        $channelName = $brandAttributes->getValue(TagAttributes::TYPE_KEY, Brand::CURRENT_BRAND);
-        $widget = $brandAttributes->getValue(self::WIDGET_ATTRIBUTE, BrandButton::WIDGET_BUTTON_VALUE);
+        $channelName = $brandAttributes->getValue(self::NAME_ATTRIBUTE, Brand::CURRENT_BRAND);
+        $widget = $brandAttributes->getValue(TagAttributes::TYPE_KEY, BrandButton::WIDGET_BUTTON_VALUE);
         $icon = $brandAttributes->getValue(self::ICON_ATTRIBUTE, BrandButton::ICON_SOLID_VALUE);
         $brandButton = BrandButton::createBrandButton($channelName)
             ->setWidget($widget)
@@ -192,15 +193,21 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 /**
                  * Default parameters, type definition and parsing
                  */
-                $defaultParameters[TagAttributes::TYPE_KEY] = Brand::CURRENT_BRAND;
+                if ($context === syntax_plugin_combo_menubar::TAG) {
+                    $defaultWidget = BrandButton::WIDGET_LINK_VALUE;
+                } else {
+                    $defaultWidget = BrandButton::WIDGET_BUTTON_VALUE;
+                }
+                $defaultParameters[TagAttributes::TYPE_KEY] = $defaultWidget;
+                $defaultParameters[self::NAME_ATTRIBUTE] = Brand::CURRENT_BRAND;
                 /**
-                 * Every brand name is allowed
+                 * The allowed widgets
                  * (
-                 *   null means no type verification
+                 *   type verification
                  *   during the {@link TagAttributes::createFromTagMatch()} parsing
                  * )
                  */
-                $knownTypes = null;
+                $knownTypes = BrandButton::WIDGETS;
 
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes);
 
@@ -208,14 +215,9 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 /**
                  * Brand Object creation
                  */
-                $brandName = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
+                $brandName = $tagAttributes->getValue(self::NAME_ATTRIBUTE);
                 try {
-                    $widget = $tagAttributes->getValue(self::WIDGET_ATTRIBUTE);
-                    if ($widget === null && $context === syntax_plugin_combo_menubar::TAG) {
-                        $tagAttributes->addComponentAttributeValue(self::WIDGET_ATTRIBUTE, BrandButton::WIDGET_LINK_VALUE);
-                    }
                     $brandButton = self::createBrandButtonFromAttributes($tagAttributes);
-
                 } catch (ExceptionCombo $e) {
                     $returnedArray[PluginUtility::EXIT_MESSAGE] = "Error while reading the brand data for the brand ($brandName). Error: {$e->getMessage()}";
                     $returnedArray[PluginUtility::EXIT_CODE] = 1;
@@ -239,18 +241,24 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
 
                 // Width does not apply to link (otherwise the link got a max-width of 30)
                 $tagAttributes->removeComponentAttributeIfPresent(Dimension::WIDTH_KEY);
-                syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $tagAttributes);
+
+                // Link
+                $linkArrayAttributes = $tagAttributes->toCallStackArray();
+                $linkArrayAttributes[TagAttributes::TYPE_KEY] = self::TAG;
+                unset($linkArrayAttributes[self::NAME_ATTRIBUTE]);
+                $linkAttributes = TagAttributes::createFromCallStackArray($linkArrayAttributes);
+                syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $linkAttributes);
 
 
                 /**
                  * Logo
                  */
-                if($brandButton->hasIcon()) {
+                if ($brandButton->hasIcon()) {
                     try {
                         syntax_plugin_combo_brand::addIconInCallStack($callStack, $brandButton);
                     } catch (ExceptionCombo $e) {
 
-                        if ($brandButton->getBrand() === Brand::CURRENT_BRAND) {
+                        if ($brandButton->getBrand()->getName() === Brand::CURRENT_BRAND) {
 
                             $documentationLink = PluginUtility::getDocumentationHyperLink("logo", "documentation");
                             LogUtility::msg("A svg logo icon is not installed on your website. Check the corresponding $documentationLink.", LogUtility::LVL_MSG_INFO);

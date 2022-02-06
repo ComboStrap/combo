@@ -45,7 +45,6 @@ class BrandButton
     const CANONICAL = "social";
 
 
-
     /**
      * @var string
      */
@@ -73,7 +72,6 @@ class BrandButton
      * @var string the follow handle
      */
     private $handle;
-
 
 
     /**
@@ -115,7 +113,7 @@ class BrandButton
                 if ($typeIcon === self::ICON_NONE_VALUE) {
                     continue;
                 }
-                $variants[] = [\syntax_plugin_combo_brand::ICON_ATTRIBUTE => $typeIcon, \syntax_plugin_combo_brand::WIDGET_ATTRIBUTE => $widget];
+                $variants[] = [\syntax_plugin_combo_brand::ICON_ATTRIBUTE => $typeIcon, TagAttributes::TYPE_KEY => $widget];
             }
         }
         return $variants;
@@ -312,15 +310,16 @@ class BrandButton
             case self::WIDGET_LINK_VALUE:
                 $properties["vertical-align"] = "middle";
                 $properties["display"] = "inline-block";
-                if ($this->getPrimaryColor() !== null) {
+                $primaryColor = $this->getPrimaryColor();
+                if ($primaryColor !== null) {
                     // important because the nav-bar class takes over
-                    $properties["color"] = "$this->primaryColor!important";
+                    $properties["color"] = "$primaryColor!important";
                 }
                 break;
             default:
             case self::WIDGET_BUTTON_VALUE:
 
-                $primary = $this->primaryColor;
+                $primary = $this->getPrimaryColor();
                 if ($primary === null) {
                     throw new ExceptionCombo("The primary color for the brand ($this) is not set.");
                 }
@@ -384,8 +383,7 @@ EOF;
 
     }
 
-    public
-    function getBrand(): string
+    public function getBrand(): Brand
     {
         return $this->brand;
     }
@@ -398,7 +396,7 @@ EOF;
     public
     function getStyleScriptIdentifier(): string
     {
-        return "{$this->getType()}-{$this->getBrand()}-{$this->getWidget()}-{$this->getIcon()}";
+        return "{$this->getType()}-{$this->brand->getName()}-{$this->getWidget()}-{$this->getIcon()}";
     }
 
     /**
@@ -420,10 +418,10 @@ EOF;
         $iconName = $this->getResourceIconName();
         $icon = $this->getResourceIconFile();
         if (!FileSystems::exists($icon)) {
-            $iconName = $this->iconName;
+            $iconName = $this->brand->getIconName($this->iconType);
             $brandNames = Brand::getBrandNames();
             if ($iconName === null && in_array($this->getBrand(), $brandNames)) {
-                throw new ExceptionComboNotFound("No {$this->iconType} icon could be found for the brand ($this)");
+                throw new ExceptionComboNotFound("No {$this->iconType} icon could be found for the known brand ($this)");
             }
         }
         $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
@@ -437,12 +435,12 @@ EOF;
     }
 
     public
-    function getTextColor()
+    function getTextColor(): ?string
     {
 
         switch ($this->widget) {
             case self::WIDGET_LINK_VALUE:
-                return $this->primaryColor;
+                return $this->getPrimaryColor();
             default:
             case self::WIDGET_BUTTON_VALUE:
                 return "#fff";
@@ -497,14 +495,15 @@ EOF;
         return $this->width;
     }
 
-    public
-    function hasIcon(): bool
+    public function hasIcon(): bool
     {
         if ($this->iconType === self::ICON_NONE_VALUE) {
             return false;
         }
         if ($this->iconType !== null) {
-            return true;
+            if ($this->brand->getIconName($this->iconType) !== null) {
+                return true;
+            }
         }
         if (!FileSystems::exists($this->getResourceIconFile())) {
             return false;
@@ -665,10 +664,9 @@ EOF;
     }
 
 
-
     private function getPrimaryColor(): ?string
     {
-        if($this->primaryColor!==null){
+        if ($this->primaryColor !== null) {
             return $this->primaryColor;
         }
         return $this->brand->getPrimaryColor();
@@ -676,7 +674,7 @@ EOF;
 
     private function getSecondaryColor(): ?string
     {
-        if($this->secondaryColor!==null){
+        if ($this->secondaryColor !== null) {
             return $this->secondaryColor;
         }
         return $this->brand->getSecondaryColor();

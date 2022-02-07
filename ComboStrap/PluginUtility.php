@@ -584,9 +584,10 @@ class PluginUtility
         /**
          * A tag should start with the tag
          * then a space or the / (lookahead)
+         * then not a single > with space or word character
          * then until the close / character
          */
-        return '<' . $tag . '(?=[/ ]{1})[^/]*\/>';
+        return '<' . $tag . '(?=[/ ]{1})(?![^/]>).*\/>';
     }
 
     /**

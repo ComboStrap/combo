@@ -149,13 +149,13 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        /**
-         * The empty tag pattern should be before the container pattern
-         */
-        $this->Lexer->addSpecialPattern(PluginUtility::getEmptyTagPattern(self::TAG), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
-
         $pattern = PluginUtility::getContainerTagPattern(self::getTag());
         $this->Lexer->addEntryPattern($pattern, $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
+
+        /**
+         * The empty tag pattern should be after the container pattern
+         */
+        $this->Lexer->addSpecialPattern(PluginUtility::getEmptyTagPattern(self::TAG), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
@@ -293,6 +293,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $openTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $openTagAttributes = TagAttributes::createFromCallStackArray($openTag->getAttributes());
+                $openTagContext = $openTag->getContext();
 
                 /**
                  * Old syntax
@@ -307,19 +308,26 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 while ($actualCall = $callStack->previous()) {
                     $tagName = $actualCall->getTagName();
                     if (in_array($tagName, [syntax_plugin_combo_icon::TAG, syntax_plugin_combo_media::TAG])) {
+
+                        if ($textFound && $openTagContext === syntax_plugin_combo_menubar::TAG) {
+                            // if text and icon
+                            $actualCall->addClassName(self::BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS);
+                        }
+
                         // is it a added call / no content
                         // or is it an icon from the markup
                         if ($actualCall->getCapturedContent() === null) {
+
                             if ($markupIconImageFound) {
                                 // if the markup has an icon we delete it
                                 $callStack->deleteActualCallAndPrevious();
                             }
+                            // It's an added call
+                            // No user icon, image can be found anymore
+                            // exiting
                             break;
                         }
-                        if ($textFound && $openTag->getContext() === syntax_plugin_combo_menubar::TAG) {
-                            // if text and icon
-                            $actualCall->addClassName(self::BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS);
-                        }
+
                         $primary = $openTagAttributes->getValue(ColorRgb::PRIMARY_VALUE);
                         if ($primary !== null && $tagName === syntax_plugin_combo_icon::TAG) {
                             try {

@@ -22,18 +22,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
     const CANONICAL = self::TAG;
     const HANDLE_ATTRIBUTE = "handle";
 
-    /**
-     * @throws ExceptionCombo
-     */
-    private static function createFollowButtonFromAttributes(TagAttributes $shareAttributes): BrandButton
-    {
-        $channelName = $shareAttributes->getValue(syntax_plugin_combo_brand::NAME_ATTRIBUTE);
-        $widget = $shareAttributes->getValue(TagAttributes::TYPE_KEY, BrandButton::WIDGET_BUTTON_VALUE);
-        $icon = $shareAttributes->getValue(syntax_plugin_combo_brand::ICON_ATTRIBUTE, BrandButton::ICON_SOLID_VALUE);
-        $width = $shareAttributes->getValueAsInteger(Dimension::WIDTH_KEY);
-        $handle = $shareAttributes->getValue(self::HANDLE_ATTRIBUTE);
-        return BrandButton::createFollowButton($channelName, $handle, $widget, $icon, $width);
-    }
+
 
 
     function getType(): string
@@ -110,9 +99,10 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
 
                 $callStack = CallStack::createFromHandler($handler);
                 $defaultAttributes = [
-                    TagAttributes::TYPE_KEY => "twitter"
+                    TagAttributes::TYPE_KEY => BrandButton::WIDGET_BUTTON_VALUE
                 ];
-                $shareAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes)
+                $types = BrandButton::WIDGETS;
+                $shareAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $types)
                     ->setLogicalTag(self::TAG);
 
 
@@ -120,10 +110,10 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                  * The channel
                  */
                 try {
-                    $brand = self::createFollowButtonFromAttributes($shareAttributes);
+                    $brand = syntax_plugin_combo_brand::createButtonFromAttributes($shareAttributes, BrandButton::TYPE_BUTTON_FOLLOW);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The social button creation returns an error ({$e->getMessage()}";
+                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The brand button creation returns an error ({$e->getMessage()}";
                     return $returnArray;
                 }
 
@@ -134,16 +124,20 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                  */
                 try {
                     syntax_plugin_combo_brand::mixBrandButtonToTagAttributes($shareAttributes, $brand);
-                    if (!$shareAttributes->hasAttribute(syntax_plugin_combo_link::ATTRIBUTE_HREF)) {
+                    if (
+                        !$shareAttributes->hasAttribute(syntax_plugin_combo_link::ATTRIBUTE_HREF)
+                        && !$shareAttributes->hasAttribute(self::HANDLE_ATTRIBUTE)
+                    ) {
                         $returnArray[PluginUtility::EXIT_CODE] = 1;
                         $handleAttribute = self::HANDLE_ATTRIBUTE;
-                        $returnArray[PluginUtility::EXIT_MESSAGE] = "The social button does not have any follow url. You need to set at minimum the `$handleAttribute` or `$urlAttribute` attribute";
+                        $urlAttribute = syntax_plugin_combo_brand::URL_ATTRIBUTE;
+                        $returnArray[PluginUtility::EXIT_MESSAGE] = "The brand button does not have any follow url. You need to set at minimum the `$handleAttribute` or `$urlAttribute` attribute";
                         return $returnArray;
                     }
-                    syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $shareAttributes);
+                    syntax_plugin_combo_brand::addOpenLinkTagInCallStack($callStack, $shareAttributes);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The social button creation returns an error when creating the link ({$e->getMessage()}";
+                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The brand button creation returns an error when creating the link ({$e->getMessage()}";
                     return $returnArray;
                 }
 
@@ -218,7 +212,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     try {
-                        $socialChannel = self::createFollowButtonFromAttributes($tagAttributes);
+                        $socialChannel = syntax_plugin_combo_brand::createButtonFromAttributes($tagAttributes, BrandButton::TYPE_BUTTON_FOLLOW);
                     } catch (ExceptionCombo $e) {
                         LogUtility::msg("The social channel could not be build. Error: {$e->getMessage()}");
                         return false;

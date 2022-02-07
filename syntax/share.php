@@ -26,9 +26,6 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
     const CANONICAL = self::TAG;
 
 
-
-
-
     function getType(): string
     {
         return 'substition';
@@ -136,18 +133,22 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                  */
                 $requestedPage = Page::createPageFromRequestedPage();
                 try {
-                    $linkAttributes = $brandButton->getLinkAttributes($requestedPage);
+                    $linkAttributes = $brandButton->getLinkAttributes($requestedPage)
+                        ->setLogicalTag(self::TAG);
                 } catch (ExceptionCombo $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "The social channel creation returns an error when creating the link ({$e->getMessage()}";
                     return $returnArray;
                 }
 
-
                 /**
                  * Add the link
                  */
-                syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $linkAttributes);
+                syntax_plugin_combo_brand::addOpenLinkTagInCallStack($callStack, $linkAttributes);
+
+                /**
+                 * Icon
+                 */
                 try {
                     $this->addIconInCallStack($callStack, $brandButton);
                 } catch (ExceptionCombo $e) {
@@ -244,8 +245,6 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
         // unsupported $mode
         return false;
     }
-
-
 
 
     private function closeLinkInCallStack(CallStack $callStack)

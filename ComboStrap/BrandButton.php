@@ -246,7 +246,7 @@ class BrandButton
 
             case self::TYPE_BUTTON_FOLLOW:
                 if ($this->handle === null) {
-                    return null;
+                    return $urlTemplate;
                 }
                 $templateData["handle"] = $this->handle;
                 return TemplateUtility::renderStringTemplateFromDataArray($urlTemplate, $templateData);
@@ -621,7 +621,7 @@ EOF;
         return $this->type;
     }
 
-    private function setHandle(string $handle): BrandButton
+    public function setHandle(string $handle): BrandButton
     {
         $this->handle = $handle;
         return $this;

@@ -36,6 +36,16 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     const BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS = "d-inline-block align-text-top";
     const NAME_ATTRIBUTE = "name";
 
+
+    public static function addOpenLinkTagInCallStack(CallStack $callStack, TagAttributes $tagAttributes)
+    {
+        $linkArrayAttributes = $tagAttributes->toCallStackArray();
+        $linkArrayAttributes[TagAttributes::TYPE_KEY] = $tagAttributes->getLogicalTag();
+        unset($linkArrayAttributes[self::NAME_ATTRIBUTE]);
+        $linkAttributes = TagAttributes::createFromCallStackArray($linkArrayAttributes);
+        syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $linkAttributes);
+    }
+
     /**
      * @throws ExceptionCombo
      */
@@ -84,6 +94,10 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
         $secondaryColor = $brandAttributes->getValue(ColorRgb::SECONDARY_VALUE);
         if ($secondaryColor !== null) {
             $brandButton->setSecondaryColor($secondaryColor);
+        }
+        $handle = $brandAttributes->getValue(syntax_plugin_combo_follow::HANDLE_ATTRIBUTE);
+        if($handle!==null){
+            $brandButton->setHandle($handle);
         }
         return $brandButton;
     }
@@ -206,7 +220,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                  */
                 $knownTypes = BrandButton::WIDGETS;
 
-                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes);
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes)
+                    ->setLogicalTag(self::TAG);
 
 
                 /**
@@ -240,11 +255,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 $tagAttributes->removeComponentAttributeIfPresent(Dimension::WIDTH_KEY);
 
                 // Link
-                $linkArrayAttributes = $tagAttributes->toCallStackArray();
-                $linkArrayAttributes[TagAttributes::TYPE_KEY] = self::TAG;
-                unset($linkArrayAttributes[self::NAME_ATTRIBUTE]);
-                $linkAttributes = TagAttributes::createFromCallStackArray($linkArrayAttributes);
-                syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $linkAttributes);
+                self::addOpenLinkTagInCallStack($callStack, $tagAttributes);
 
 
                 /**

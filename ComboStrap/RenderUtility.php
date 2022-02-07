@@ -23,7 +23,7 @@ class RenderUtility
      * @param bool $strip
      * @return string|null
      */
-    public static function renderText2XhtmlAndStripPEventually($content, $strip = true)
+    public static function renderText2XhtmlAndStripPEventually($content, bool $strip = true): ?string
     {
         $instructions = self::getInstructionsAndStripPEventually($content, $strip);
         return p_render('xhtml', $instructions, $info);
@@ -35,7 +35,7 @@ class RenderUtility
      * @param bool $stripOpenAndEnd - to avoid the p element in test rendering
      * @return array
      */
-    public static function getInstructionsAndStripPEventually($pageContent, $stripOpenAndEnd = true): array
+    public static function getInstructionsAndStripPEventually($pageContent, bool $stripOpenAndEnd = true): array
     {
 
         $instructions = p_get_instructions($pageContent);

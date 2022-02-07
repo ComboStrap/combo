@@ -7,7 +7,7 @@
             "doc": "https://developers.facebook.com/docs/plugins/share-button/"
         },
         "follow": {
-            "web": "https://facebook/$handle"
+            "web": "https://facebook.com/$handle"
         },
         "colors": {
             "primary": "#3b5998",
@@ -135,9 +135,6 @@
         "colors": {
             "primary": "#FF6600",
             "secondary": "#FB6200"
-        },
-        "icons": {
-            "outline-circle": "outline-circle-facebook+et:y"
         }
     },
     "telegram": {

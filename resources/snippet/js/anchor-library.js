@@ -1,3 +1,4 @@
+/* global anchors */
 document.addEventListener('DOMContentLoaded', (event) => {
     anchors.options = {
         placement: 'right',

@@ -253,7 +253,7 @@ class CallStack
      * @return CallStack
      */
     public
-    static function createFromHandler(&$handler)
+    static function createFromHandler(Doku_Handler &$handler)
     {
         return new CallStack($handler);
     }

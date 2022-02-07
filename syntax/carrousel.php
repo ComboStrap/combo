@@ -2,7 +2,6 @@
 
 
 use ComboStrap\CallStack;
-use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -11,6 +10,17 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
  * Carrousel
+ *
+ * We loved
+ * https://github.com/OwlCarousel2/OwlCarousel2
+ * but it's deprecated and
+ * send us to
+ * https://github.com/ganlanyuan/tiny-slider
+ * But it used as gutter the padding not the margin (http://ganlanyuan.github.io/tiny-slider/demo/#gutter_wrapper)
+ * Then we found
+ * https://glidejs.com/
+ *
+ *
  *
  */
 class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
@@ -93,11 +103,11 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
      * @param int $state
      * @param int $pos - byte position in the original source file
      * @param Doku_Handler $handler
-     * @return array|bool
+     * @return array
      * @see DokuWiki_Syntax_Plugin::handle()
      *
      */
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
         switch ($state) {
@@ -116,6 +126,15 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
+                $callStack = CallStack::createFromHandler($handler);
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $actualCall = $callStack->moveToFirstChildTag();
+                if ($actualCall !== false) {
+                    $actualCall->addClassName("glide__slide");
+                    while ($actualCall = $callStack->moveToNextSiblingTag()) {
+                        $actualCall->addClassName("glide__slide");
+                    }
+                }
                 return array(
                     PluginUtility::STATE => $state
                 );
@@ -148,7 +167,11 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
 
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
-                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
+                    $renderer->doc .= <<<EOF
+<div class="carrousel-combo glide">
+  <div class="slider__track glide__track" data-glide-el="track">
+    <ul class="slider__slides glide__slides">
+EOF;
 
                     /**
                      * Snippet
@@ -158,13 +181,14 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
                     $snippetManager->attachCssSnippetForSlot($snippetId);
                     $snippetManager->attachJavascriptSnippetForSlot($snippetId);
+                    // https://www.jsdelivr.com/package/npm/@glidejs/glide
                     $snippetManager->attachTagsForSlot($snippetId)->setTags(
                         array(
                             "script" =>
                                 [
                                     array(
-                                        "src" => "https://cdnjs.cloudflare.com/ajax/libs/tiny-slider/2.9.2/min/tiny-slider.js",
-                                        "integrity" => "sha256-CApIX5Te4OdXVy1iWP+5+qG/iHa+8apfYOFagdVMRwk=",
+                                        "src" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.min.js",
+                                        "integrity" => "sha256-cXguqBvlUaDoW4nGjs4YamNC2mlLGJUOl64bhts/ztU=",
                                         "crossorigin" => "anonymous"
                                     )
                                 ],
@@ -172,14 +196,28 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                                 [
                                     array(
                                         "rel" => "stylesheet",
-                                        "href" => "https://cdnjs.cloudflare.com/ajax/libs/tiny-slider/2.9.3/tiny-slider.css",
-                                        "integrity" => "sha256-6biQaot1QLisz9KkkcCCHWvW2My9SrU6VtqJBv8ChCM=",
+                                        "href" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.css",
+                                        "integrity" => "sha256-LJrGIMqDkLqFClxG6hffz/yOcRxFtp+iFfIIhSEA8lk=",
                                         "crossorigin" => "anonymous"
                                     )
                                 ]
-                        )
-                    );
-
+                        ));
+                    // to customized
+                    // https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.theme.css
+                    $snippetManager->attachTagsForSlot($snippetId . "-theme")
+                        ->setCritical(false)
+                        ->setTags(
+                            array("link" =>
+                                [
+                                    array(
+                                        "rel" => "stylesheet",
+                                        "href" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.theme.min.css",
+                                        "integrity" => "sha256-GgTH00L+A55Lmho3ZMp7xhGf6UYkv8I/8wLyhLLDXjo=",
+                                        "crossorigin" => "anonymous"
+                                    )
+                                ]
+                            )
+                        );
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -189,7 +227,35 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
 
-                    $renderer->doc .= "</div>";
+                    $renderer->doc .= <<<EOF
+</ul>
+  </div>
+  <div data-glide-el="controls">
+    <button class="glide__arrow glide__arrow--left" data-glide-dir="<">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+        <path d="M0 12l10.975 11 2.848-2.828-6.176-6.176H24v-3.992H7.646l6.176-6.176L10.975 1 0 12z"></path>
+      </svg>
+    </button>
+    <button class="glide__arrow glide__arrow--right" data-glide-dir=">">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+        <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="glide__bullets" data-glide-el="controls[nav]">
+      <button class="glide__bullet glide__bullet--active" data-glide-dir="=0"></button>
+      <button class="glide__bullet" data-glide-dir="=1"></button>
+      <button class="glide__bullet" data-glide-dir="=2"></button>
+      <button class="glide__bullet" data-glide-dir="=3"></button>
+      <button class="glide__bullet" data-glide-dir="=4"></button>
+      <button class="glide__bullet" data-glide-dir="=5"></button>
+      <button class="glide__bullet" data-glide-dir="=6"></button>
+      <button class="glide__bullet" data-glide-dir="=7"></button>
+      <button class="glide__bullet" data-glide-dir="=8"></button>
+      <button class="glide__bullet" data-glide-dir="=9"></button>
+  </div>
+</div>
+EOF;
 
                     break;
 

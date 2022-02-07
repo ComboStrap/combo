@@ -2,21 +2,22 @@
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
-use ComboStrap\ArrayUtility;
+use ComboStrap\BrandButton;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\Dimension;
 use ComboStrap\ExceptionCombo;
-use ComboStrap\MarkupRef;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PageScope;
 use ComboStrap\PluginUtility;
-use ComboStrap\BrandButton;
 use ComboStrap\TagAttributes;
 
 
 /**
+ *
+ * See also:
+ * Mobile sharing: https://web.dev/web-share/
+ * https://twitter.com/addyosmani/status/1490055796704497665?s=21
  */
 class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
 {
@@ -106,7 +107,6 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 $shareAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $types)
                     ->setLogicalTag(self::TAG);
 
-
                 /**
                  * The channel
                  */
@@ -156,6 +156,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the icon for the social channel ($brandButton) returns an error ({$e->getMessage()}";
                     return $returnArray;
                 }
+
                 if ($state === DOKU_LEXER_SPECIAL) {
                     $this->closeLinkInCallStack($callStack);
                 }

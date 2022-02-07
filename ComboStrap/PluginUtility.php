@@ -583,11 +583,12 @@ class PluginUtility
 
         /**
          * A tag should start with the tag
-         * then a space or the / (lookahead)
-         * then not a single > with space or word character
-         * then until the close / character
+         * `(?=[/ ]{1})` - a space or the / (lookahead) => to allow allow tag name with minus character
+         * `(?![^/]>)` - it's not a normal tag (ie a > with the previous character that is not /)
+         * `[^>]*` then until the > is found (dokuwiki capture greedy, don't use the point character)
+         * then until the close `/>` character
          */
-        return '<' . $tag . '(?=[/ ]{1})(?![^/]>).*\/>';
+        return '<' . $tag . '(?=[/ ]{1})(?![^/]>)[^>]*\/>';
     }
 
     /**

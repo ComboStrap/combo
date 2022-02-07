@@ -83,10 +83,20 @@ class Skin
         }
         $skinValue = $attributes->getValue(self::SKIN_ATTRIBUTE);
         if (!$attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)) {
+
             LogUtility::msg("A component type is mandatory when using the skin attribute", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
 
         } else {
             $type = $attributes->getValue(TagAttributes::TYPE_KEY);
+            $logicalTag = $attributes->getLogicalTag();
+            if (in_array($logicalTag, [\syntax_plugin_combo_link::TAG, \syntax_plugin_combo_button::TAG])) {
+                if ($skinValue === self::FILLED_VALUE
+                    && $attributes->hasClass("btn-$type")
+                    && !Site::isBrandingColorInheritanceFunctional()) {
+                    // btn-primary is by default filled
+                    return;
+                }
+            }
             $skinColors = self::getSkinColors();
             if (!isset($skinColors[$type])) {
                 $types = implode(", ", array_keys($skinColors));

@@ -1219,5 +1219,10 @@ class TagAttributes
         return DataType::toInteger($value);
     }
 
+    public function hasClass(string $string): bool
+    {
+        return strpos($this->getClass(),$string)!==false;
+    }
+
 
 }

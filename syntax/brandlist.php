@@ -145,7 +145,7 @@ EOF;
                 try {
 
                     $brandButton = new BrandButton($brandName, $type);
-                    if(!$brandButton->isType($type)){
+                    if (!$brandButton->getBrand()->supportButtonType($type)) {
                         continue;
                     }
                     /**
@@ -171,7 +171,7 @@ EOF;
                          */
                         $html .= "<td>";
                         $page = null;
-                        if($type === BrandButton::TYPE_BUTTON_SHARE ){
+                        if ($type === BrandButton::TYPE_BUTTON_SHARE) {
                             $page = Page::createPageFromRequestedPage();
                         }
                         $html .= $brandButton->getLinkAttributes($page)->toHtmlEnterTag("a");

@@ -300,7 +300,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                         /**
                          * If this is a button and not a link button
                          */
-                        if ($context == self::TAG) {
+                        if ($context === self::TAG) {
                             $renderer->doc .= '</button>';
                         }
 

@@ -681,7 +681,7 @@ class Site
         if ($value !== null) {
             return $value;
         }
-        if(PluginUtility::isTest()){
+        if (PluginUtility::isTest()) {
             // too much trouble
             // the load of styles is not consistent
             return null;
@@ -703,7 +703,12 @@ class Site
 
     public static function setCanonicalUrlTypeToDefault()
     {
-        PluginUtility::setConf(PageUrlType::CONF_CANONICAL_URL_TYPE,null);
+        PluginUtility::setConf(PageUrlType::CONF_CANONICAL_URL_TYPE, null);
+    }
+
+    public static function isBrandingColorInheritanceFunctional(): bool
+    {
+        return self::isBrandingColorInheritanceEnabled() && Site::getPrimaryColorValue() !== null;
     }
 
 

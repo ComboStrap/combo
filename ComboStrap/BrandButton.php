@@ -119,13 +119,7 @@ class BrandButton
         return $variants;
     }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    public static function createBrandButton(string $brandName): BrandButton
-    {
-        return new BrandButton($brandName, self::TYPE_BUTTON_BRAND);
-    }
+
 
     /**
      * @throws ExceptionCombo

@@ -1,9 +1,18 @@
-*[data-glide-el="controls"] {
-    display: flex;
-    justify-content: center;
-    margin-top: -1rem;
+.carrousel-combo {
+    padding: 2rem;
 }
+.glide__arrow--left{
+    left:-1rem;
+}
+.glide__arrow--right{
+    right:-1rem;
+}
+
 .glide__arrow {
+    position: absolute;
+    display: block;
+    top: 50%;
+    z-index: 2;
     color: white;
     text-transform: uppercase;
     padding: 9px 12px;
@@ -25,7 +34,10 @@
 }
 .glide__bullets {
     list-style: none;
-    margin: 0 1rem 0 1rem;
+    position: absolute;
+    z-index: 2;
+    bottom: 2em;
+    left: 50%;
 }
 .glide__bullet {
     background-color: rgba(0, 0, 0, 0.3);

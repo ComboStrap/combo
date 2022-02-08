@@ -229,6 +229,9 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                         case $imageTag:
                             $actualCall->addClassName("card-img-top");
                             $actualCall->addAttribute(MediaLink::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
+                            if (!$actualCall->hasAttribute(Dimension::RATIO_ATTRIBUTE)) {
+                                $actualCall->addAttribute(Dimension::RATIO_ATTRIBUTE, "16:9");
+                            }
                             $actualCall->setDisplay(Call::BlOCK_DISPLAY);
                             break 2;
                         case "eol":

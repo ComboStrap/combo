@@ -6,11 +6,23 @@ namespace ComboStrap;
 
 use dokuwiki\Cache\CacheParser;
 
+/**
+ * Class CacheManager
+ * @package ComboStrap
+ *
+ * The cache manager reports and influence the cache
+ * of all slot for a requested page
+ */
 class CacheManager
 {
 
     const RESULT_STATUS = 'result';
     const DATE_MODIFIED = 'ftime';
+
+    /**
+     * Used when the cache data report
+     * are injected in the page in a json format
+     */
     public const APPLICATION_COMBO_CACHE_JSON = "application/combo+cache+json";
 
     /**

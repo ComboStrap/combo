@@ -2,6 +2,8 @@
 
 
 use ComboStrap\CallStack;
+use ComboStrap\ExceptionCombo;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -29,6 +31,7 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
     const TAG = 'carrousel';
     const CANONICAL = self::TAG;
+    const SLIDE_WIDTH = "slide-width";
 
 
     function getType(): string
@@ -167,8 +170,17 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
 
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
+
+                    $slideMinimalWidth = $tagAttributes->getValueAndRemoveIfPresent(self::SLIDE_WIDTH, 300);
+                    try {
+                        $slideMinimalWidth = \ComboStrap\Dimension::toPixelValue($slideMinimalWidth);
+                    } catch (ExceptionCombo $e) {
+                        $slideMinimalWidth = 300;
+                        LogUtility::msg("The minimal width value ($slideMinimalWidth) is not a valid value. Error: {$e->getMessage()}");
+                    }
+
                     $renderer->doc .= <<<EOF
-<div class="carrousel-combo glide">
+<div class="carrousel-combo glide" data-slide-width="$slideMinimalWidth">
   <div class="slider__track glide__track" data-glide-el="track">
     <ul class="slider__slides glide__slides">
 EOF;
@@ -204,20 +216,8 @@ EOF;
                         ));
                     // to customized
                     // https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.theme.css
-                    $snippetManager->attachTagsForSlot($snippetId . "-theme")
-                        ->setCritical(false)
-                        ->setTags(
-                            array("link" =>
-                                [
-                                    array(
-                                        "rel" => "stylesheet",
-                                        "href" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.theme.min.css",
-                                        "integrity" => "sha256-GgTH00L+A55Lmho3ZMp7xhGf6UYkv8I/8wLyhLLDXjo=",
-                                        "crossorigin" => "anonymous"
-                                    )
-                                ]
-                            )
-                        );
+                    $snippetManager->attachCssSnippetForSlot($snippetId )
+                        ->setCritical(false);
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -227,32 +227,29 @@ EOF;
 
                 case DOKU_LEXER_EXIT :
 
+                    $escapedLessThan = PluginUtility::htmlEncode("<");
+                    $escapedGreaterThan = PluginUtility::htmlEncode(">");
                     $renderer->doc .= <<<EOF
 </ul>
   </div>
-  <div data-glide-el="controls">
-    <button class="glide__arrow glide__arrow--left" data-glide-dir="<">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-        <path d="M0 12l10.975 11 2.848-2.828-6.176-6.176H24v-3.992H7.646l6.176-6.176L10.975 1 0 12z"></path>
-      </svg>
-    </button>
-    <button class="glide__arrow glide__arrow--right" data-glide-dir=">">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-        <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"></path>
-      </svg>
-    </button>
-  </div>
-  <div class="glide__bullets" data-glide-el="controls[nav]">
-      <button class="glide__bullet glide__bullet--active" data-glide-dir="=0"></button>
-      <button class="glide__bullet" data-glide-dir="=1"></button>
-      <button class="glide__bullet" data-glide-dir="=2"></button>
-      <button class="glide__bullet" data-glide-dir="=3"></button>
-      <button class="glide__bullet" data-glide-dir="=4"></button>
-      <button class="glide__bullet" data-glide-dir="=5"></button>
-      <button class="glide__bullet" data-glide-dir="=6"></button>
-      <button class="glide__bullet" data-glide-dir="=7"></button>
-      <button class="glide__bullet" data-glide-dir="=8"></button>
-      <button class="glide__bullet" data-glide-dir="=9"></button>
+  <div>
+      <div data-glide-el="controls">
+        <button class="glide__arrow glide__arrow--left" data-glide-dir="$escapedLessThan">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+            <path d="M0 12l10.975 11 2.848-2.828-6.176-6.176H24v-3.992H7.646l6.176-6.176L10.975 1 0 12z"></path>
+          </svg>
+        </button>
+        <div class="glide__bullets" data-glide-el="controls[nav]">
+          <button class="glide__bullet glide__bullet--active" data-glide-dir="=0"></button>
+          <button class="glide__bullet" data-glide-dir="=1"></button>
+          <button class="glide__bullet" data-glide-dir="=2"></button>
+        </div>
+        <button class="glide__arrow glide__arrow--right" data-glide-dir="$escapedGreaterThan">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+            <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"></path>
+          </svg>
+        </button>
+      </div>
   </div>
 </div>
 EOF;

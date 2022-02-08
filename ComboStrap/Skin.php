@@ -3,6 +3,8 @@
 
 namespace ComboStrap;
 
+use splitbrain\phpcli\Colors;
+
 /**
  * Class Skin
  * @package ComboStrap
@@ -88,15 +90,21 @@ class Skin
 
         } else {
             $type = $attributes->getValue(TagAttributes::TYPE_KEY);
-            $logicalTag = $attributes->getLogicalTag();
-            if (in_array($logicalTag, [\syntax_plugin_combo_link::TAG, \syntax_plugin_combo_button::TAG])) {
-                if ($skinValue === self::FILLED_VALUE
-                    && $attributes->hasClass("btn-$type")
-                    && !Site::isBrandingColorInheritanceFunctional()) {
-                    // btn-primary is by default filled
+            if (
+                $skinValue === self::FILLED_VALUE
+                && $attributes->hasClass("btn-$type")
+            ) {
+                $isBrandingColor = in_array($type, [ColorRgb::PRIMARY_VALUE, ColorRgb::SECONDARY_VALUE]);
+                if (!$isBrandingColor) {
+                    // example: light
+                    return;
+                }
+                if (!Site::isBrandingColorInheritanceFunctional()) {
+                    // example: primary, secondary
                     return;
                 }
             }
+
             $skinColors = self::getSkinColors();
             if (!isset($skinColors[$type])) {
                 $types = implode(", ", array_keys($skinColors));

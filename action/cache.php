@@ -1,6 +1,5 @@
 <?php
 
-use ComboStrap\AnalyticsDocument;
 use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheManager;
 use ComboStrap\CacheMedia;
@@ -14,17 +13,19 @@ use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
 use ComboStrap\PageDescription;
 use ComboStrap\PageH1;
-use ComboStrap\ResourceName;
 use ComboStrap\PageTitle;
 use ComboStrap\PluginUtility;
+use ComboStrap\ResourceName;
 use ComboStrap\Site;
-use ComboStrap\TplUtility;
 use dokuwiki\Cache\CacheRenderer;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
  * Can we use the parser cache
+ *
+ *
+ *
  */
 class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 {

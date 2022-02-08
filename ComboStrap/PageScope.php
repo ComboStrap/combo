@@ -4,8 +4,20 @@
 namespace ComboStrap;
 
 /**
- * The scope is used to determine the {@link Page::getLogicalPath()}
- * of the page used as key to store the cache
+ *
+ * The scope is used to influence the cache render key.
+ *
+ * TODO:
+ *   - In a general pattern, it could just be a series of function that would output runtime data
+ *      that should go into the render cache key such as user logged in, requested page, namespace of the requested page, ...
+ *   - It should be part of the {@link CacheManager}
+ *     - The scope variable should be deleted before the parse tree building.
+ *     - Same way than the {@link SnippetManager}
+ *     - The cache manager could then calculate the cache render key
+ *
+ * The determine the {@link Page::getLogicalPath()}
+ * of the page used as key to store the render cache
+ *
  *
  * It can be set by a component via the {@link p_set_metadata()}
  * in a {@link SyntaxPlugin::handle()} function

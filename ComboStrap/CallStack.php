@@ -524,9 +524,13 @@ class CallStack
             $state = $actualCall->getState();
             switch ($state) {
                 case DOKU_LEXER_ENTER:
-                case DOKU_LEXER_SPECIAL:
                     $level++;
                     break;
+                case DOKU_LEXER_SPECIAL:
+                    // empty, void tag
+                    // next call, we don't break otherwise
+                    // the loop break on the condition
+                    continue 2;
                 case DOKU_LEXER_EXIT:
                     $level--;
                     break;

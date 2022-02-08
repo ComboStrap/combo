@@ -6,16 +6,15 @@ namespace ComboStrap;
 use dokuwiki\Cache\CacheParser;
 
 /**
- * Class BarCache
+ *
  * @package ComboStrap
  *
- * This class resolve the following problem.
+ * A cache parser wrappers that modifies the key
  *
- * An improvement request was done at:
- * See:
  * https://github.com/splitbrain/dokuwiki/issues/3496
  *
- * *The problem**
+ * *Because**
+ *
  * Most of the [sidebar](https://www.dokuwiki.org/faq:sidebar) requires to disallow the cache with the tag `~~CACHE~~` to keep the content relevant.
  * *Why ?**
  * - The output of a sidebar is related to the context of the requested page. (ie `$ID`). They contains mostly navigational plugin (for instance, showing the list of pages for the parent namespace of the requested page.)
@@ -29,19 +28,8 @@ use dokuwiki\Cache\CacheParser;
  * - for a `:sidebar` at the root of the website listing the pages of the current namespace
  * - the first requested page (for instance, `:bar:page`) would see a sidebar with all pages of the namespace `bar`
  * - the second requested page (for instance `:foo:page`) would hit the cache and would show all pages of the `bar` namespace and not `foo`
- **Proposed solution**
  *
- * Can we have a logical key (ie the id) instead of the physical one (the file) ?
  *
- * ```
- * parent::__construct($id . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'], '.' . $mode);
- * ```
- *
- * It would then be possible to pass a different id (logical id):
- * - for the first request  `:bar:sidebar`
- * - for the second: `:foo:sidebar`
- *
- * and they would not share the same cache.
  */
 class CacheByLogicalKey extends CacheParser
 {

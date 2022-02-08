@@ -2,6 +2,7 @@
 
 
 use ComboStrap\CallStack;
+use ComboStrap\Dimension;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -133,9 +134,14 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                 $callStack->moveToPreviousCorrespondingOpeningCall();
                 $actualCall = $callStack->moveToFirstChildTag();
                 if ($actualCall !== false) {
-                    $actualCall->addClassName("glide__slide");
-                    while ($actualCall = $callStack->moveToNextSiblingTag()) {
+                    if ($actualCall->getTagName() === syntax_plugin_combo_template::TAG) {
+                        $actualCall = $callStack->moveToFirstChildTag();
+                    }
+                    if ($actualCall !== false) {
                         $actualCall->addClassName("glide__slide");
+                        while ($actualCall = $callStack->moveToNextSiblingTag()) {
+                            $actualCall->addClassName("glide__slide");
+                        }
                     }
                 }
                 return array(
@@ -171,16 +177,20 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
 
-                    $slideMinimalWidth = $tagAttributes->getValueAndRemoveIfPresent(self::SLIDE_WIDTH, 300);
+                    $slideMinimalWidth = $tagAttributes->getValueAndRemoveIfPresent(self::SLIDE_WIDTH);
+                    $slideMinimalWidthData = "";
                     try {
-                        $slideMinimalWidth = \ComboStrap\Dimension::toPixelValue($slideMinimalWidth);
+                        if ($slideMinimalWidth !== null) {
+                            $slideMinimalWidth = Dimension::toPixelValue($slideMinimalWidth);
+                            $slideMinimalWidthData = "data-slide-width=\"$slideMinimalWidth\"";
+                        }
                     } catch (ExceptionCombo $e) {
-                        $slideMinimalWidth = 300;
+                        $slideMinimalWidth = 200;
                         LogUtility::msg("The minimal width value ($slideMinimalWidth) is not a valid value. Error: {$e->getMessage()}");
                     }
 
                     $renderer->doc .= <<<EOF
-<div class="carrousel-combo glide" data-slide-width="$slideMinimalWidth">
+<div class="carrousel-combo glide" $slideMinimalWidthData>
   <div class="slider__track glide__track" data-glide-el="track">
     <ul class="slider__slides glide__slides">
 EOF;
@@ -216,7 +226,7 @@ EOF;
                         ));
                     // to customized
                     // https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.theme.css
-                    $snippetManager->attachCssSnippetForSlot($snippetId )
+                    $snippetManager->attachCssSnippetForSlot($snippetId)
                         ->setCritical(false);
                     break;
 

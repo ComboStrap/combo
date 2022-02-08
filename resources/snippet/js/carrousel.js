@@ -2,16 +2,20 @@
 window.addEventListener('load', function () {
 
     let selector = '.glide';
-    let element = document.querySelector(selector);
-    let slideMinimalWidth = element.dataset.slideWidth;
-    if(typeof slideMinimalWidth === undefined){
-        slideMinimalWidth = 300;
-    }
-    let perView = Math.floor(element.offsetWidth / slideMinimalWidth);
-    let glide = new Glide(selector, {
-        type: 'carousel',
-        perView: perView
+    const sliders = [...document.querySelectorAll(selector)];
+
+    sliders.forEach(slider => {
+        let slideMinimalWidth = slider.dataset.slideWidth;
+        if (typeof slideMinimalWidth === 'undefined') {
+            slideMinimalWidth = 250;
+        }
+        let offsetWidth = slider.offsetWidth;
+        let perView = Math.floor(offsetWidth / slideMinimalWidth);
+        let glide = new Glide(slider, {
+            type: 'carousel',
+            perView: perView
+        });
+        glide.mount();
     });
-    glide.mount();
 
 });

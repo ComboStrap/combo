@@ -132,6 +132,7 @@ class TagAttributes
      * https://html.spec.whatwg.org/multipage/links.html#linkTypes
      */
     const REL = "rel";
+    const STYLE_ATTRIBUTE = "style";
 
 
     /**
@@ -212,6 +213,15 @@ class TagAttributes
         foreach ($componentAttributes as $key => $value) {
             if (is_null($value)) {
                 unset($this->componentAttributesCaseInsensitive[$key]);
+                continue;
+            }
+            if($key === self::STYLE_ATTRIBUTE){
+                unset($this->componentAttributesCaseInsensitive[$key]);
+                $stylingProperties = explode(";",$value);
+                foreach ($stylingProperties as $stylingProperty ){
+                    [$key,$value] = preg_split("/:/",$stylingProperty,2);
+                    $this->addStyleDeclarationIfNotSet($key,$value);
+                }
             }
         }
 
@@ -220,6 +230,7 @@ class TagAttributes
     /**
      * @param $match - the {@link SyntaxPlugin::handle()} match
      * @param array $defaultAttributes
+     * @param array|null $knownTypes
      * @return TagAttributes
      */
     public static function createFromTagMatch($match, array $defaultAttributes = [], array $knownTypes = null): TagAttributes

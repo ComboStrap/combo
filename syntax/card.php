@@ -233,6 +233,8 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                                 $actualCall->addAttribute(Dimension::RATIO_ATTRIBUTE, "16:9");
                             }
                             $actualCall->setDisplay(Call::BlOCK_DISPLAY);
+                            // an image should stretch into the card
+                            $actualCall->addCssStyle("max-width", "100%");
                             break 2;
                         case "eol":
                             break;

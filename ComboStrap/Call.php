@@ -749,7 +749,7 @@ class Call
     {
         $style = $this->getAttribute("style");
         $cssValue = "$key:$value";
-        if ($style != null) {
+        if ($style !== null) {
             $cssValue = "$style; $cssValue";
         }
         $this->addAttribute("style", $cssValue);

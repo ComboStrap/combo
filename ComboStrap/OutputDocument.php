@@ -11,7 +11,7 @@ abstract class OutputDocument extends PageCompilerDocument
 
 
     /**
-     * @var CacheRenderer
+     * @var CacheRenderer cache file
      */
     protected $cache;
 
@@ -31,39 +31,36 @@ abstract class OutputDocument extends PageCompilerDocument
     {
         parent::__construct($page);
 
-        if ($page->isSlot()) {
 
-            /**
-             * Logical cache based on scope (ie logical id) is the scope and part of the key
-             */
-            $this->cache = new CacheByLogicalKey($page, $this->getExtension());
+        /**
+         * Variables
+         */
+        $path = $page->getPath();
+        $id = $path->getDokuwikiId();
 
-        } else {
+        /**
+         * The local path is part of the key cache and should be the same
+         * than dokuwiki
+         *
+         * For whatever reason, Dokuwiki uses:
+         *   * `/` as separator on Windows
+         *   * and Windows short path `GERARD~1` not gerardnico
+         * See {@link wikiFN()}
+         * There is also a cache in the function
+         *
+         * We can't use our {@link Path} class because the
+         * path is on windows format without the short path format
+         */
+        $localFile = wikiFN($id);
+        $this->cache = new CacheRenderer($id, $localFile, $this->getExtension());
 
-            /**
-             * We follow Dokuwiki Cache
-             */
-            $path = $page->getPath();
-            $id = $path->getDokuwikiId();
-
-            /**
-             * The local path is part of the key cache and should be the same
-             * than dokuwiki
-             *
-             * For whatever reason, Dokuwiki uses:
-             *   * `/` as separator on Windows
-             *   * and Windows short path `GERARD~1` not gerardnico
-             * See {@link wikiFN()}
-             * There is also a cache in the function
-             *
-             * We can't use our {@link Path} class because the
-             * path is on windows format without the short path format
-             */
-            $localFile = wikiFN($id);
-            $this->cache = new CacheRenderer($id, $localFile, $this->getExtension());
-
-        }
-
+        /**
+         * Modifying the cache key and the corresponding output file
+         * from runtime dependencies
+         */
+        $cacheManager = CacheManager::getOrCreate()->getCacheManagerForSlot($id);
+        $this->cache->key = $cacheManager->getCacheKeyFromRuntimeDependencies();
+        $this->cache->cache = $cacheManager->getCacheFile($this->cache);
 
     }
 
@@ -130,7 +127,7 @@ abstract class OutputDocument extends PageCompilerDocument
         if ($this->cacheStillEnabledAfterRendering) {
             $this->cache->storeCache($content);
         } else {
-            $this->cache->removeCache(); // try to delete cachefile
+            $this->cache->removeCache(); // try to delete cache file
         }
         return $this;
     }
@@ -148,6 +145,10 @@ abstract class OutputDocument extends PageCompilerDocument
         /**
          * The cache is stored by requested
          * page scope
+         *
+         * We set the id because it's not passed
+         * in all actions and is needed to log the cache
+         * result
          */
         global $ID;
         $keep = $ID;

@@ -34,14 +34,14 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      * https://getbootstrap.com/docs/5.1/components/navbar/#image-and-text
      */
     const BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS = "d-inline-block align-text-top";
-    const NAME_ATTRIBUTE = "name";
+
+    const WIDGET_ATTRIBUTE = "widget";
 
 
     public static function addOpenLinkTagInCallStack(CallStack $callStack, TagAttributes $tagAttributes)
     {
         $linkArrayAttributes = $tagAttributes->toCallStackArray();
         $linkArrayAttributes[TagAttributes::TYPE_KEY] = $tagAttributes->getLogicalTag();
-        unset($linkArrayAttributes[self::NAME_ATTRIBUTE]);
         $linkAttributes = TagAttributes::createFromCallStackArray($linkArrayAttributes);
         syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $linkAttributes);
     }
@@ -71,8 +71,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
      */
     public static function createButtonFromAttributes(TagAttributes $brandAttributes, $type = BrandButton::TYPE_BUTTON_BRAND): BrandButton
     {
-        $brandName = $brandAttributes->getValue(self::NAME_ATTRIBUTE, Brand::CURRENT_BRAND);
-        $widget = $brandAttributes->getValue(TagAttributes::TYPE_KEY, BrandButton::WIDGET_BUTTON_VALUE);
+        $brandName = $brandAttributes->getValue(TagAttributes::TYPE_KEY, Brand::CURRENT_BRAND);
+        $widget = $brandAttributes->getValue(self::WIDGET_ATTRIBUTE, BrandButton::WIDGET_BUTTON_VALUE);
         $icon = $brandAttributes->getValue(self::ICON_ATTRIBUTE, BrandButton::ICON_SOLID_VALUE);
 
         $brandButton = (new BrandButton($brandName, $type))
@@ -209,8 +209,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 } else {
                     $defaultWidget = BrandButton::WIDGET_BUTTON_VALUE;
                 }
-                $defaultParameters[TagAttributes::TYPE_KEY] = $defaultWidget;
-                $defaultParameters[self::NAME_ATTRIBUTE] = Brand::CURRENT_BRAND;
+                $defaultParameters[TagAttributes::TYPE_KEY] = Brand::CURRENT_BRAND;
+                $defaultParameters[self::WIDGET_ATTRIBUTE] = $defaultWidget;
                 /**
                  * The allowed widgets
                  * (
@@ -227,7 +227,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 /**
                  * Brand Object creation
                  */
-                $brandName = $tagAttributes->getValue(self::NAME_ATTRIBUTE);
+                $brandName = $tagAttributes->getType();
                 try {
                     $brandButton = self::createButtonFromAttributes($tagAttributes);
                 } catch (ExceptionCombo $e) {

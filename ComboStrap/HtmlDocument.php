@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 
 use dokuwiki\Cache\CacheParser;
+use dokuwiki\Cache\CacheRenderer;
 
 class HtmlDocument extends OutputDocument
 {
@@ -14,6 +15,7 @@ class HtmlDocument extends OutputDocument
      */
     private $snippetCache;
 
+
     /**
      * HtmlDocument constructor.
      * @param Page $page
@@ -21,34 +23,6 @@ class HtmlDocument extends OutputDocument
     public function __construct(Page $page)
     {
         parent::__construct($page);
-        if ($page->isSlot()) {
-
-            /**
-             * Logical cache based on scope (ie logical id) is the scope and part of the key
-             *
-             * We don't use {@link CacheRenderer}
-             * because the cache key is the physical file
-             */
-            $this->cache = new CacheByLogicalKey($page, $this->getExtension());
-
-        }
-
-        /**
-         * Snippet cache
-         */
-        /**
-         * Using a cache parser, set the page id and will trigger
-         * the parser cache use event in order to log/report the cache usage
-         * At {@link action_plugin_combo_cache::logCacheUsage()}
-         */
-        $id = $this->getPage()->getDokuwikiId();
-        $slotLocalFilePath = $this->getPage()
-            ->getPath()
-            ->toLocalPath()
-            ->toAbsolutePath()
-            ->toString();
-        $this->snippetCache = new CacheParser($id, $slotLocalFilePath, "snippet.json");
-
     }
 
 
@@ -56,6 +30,7 @@ class HtmlDocument extends OutputDocument
     {
         return self::extension;
     }
+
 
     function getRendererName(): string
     {
@@ -110,12 +85,18 @@ class HtmlDocument extends OutputDocument
     }
 
 
+    /**
+     * Html document is stored
+     */
     public function storeContent($content)
     {
+
         /**
-         * Html document is stored
-         *
-         * We make the Snippet store to Html store an atomic operation
+         * Save the dependencies
+         */
+        $this->storeDependencies();
+
+        /** We make the Snippet store to Html store an atomic operation
          *
          * Why ? Because if the rendering of the page is stopped,
          * the cache of the HTML page may be stored but not the cache of the snippets
@@ -123,6 +104,11 @@ class HtmlDocument extends OutputDocument
          */
         $this->storeSnippets();
         try {
+
+
+            $this->cache = $this->getHtmlCache();
+
+
             return parent::storeContent($content);
         } catch (\Exception $e) {
             // if any write os exception
@@ -136,13 +122,28 @@ class HtmlDocument extends OutputDocument
     {
 
         $slotId = $this->getPage()->getDokuwikiId();
+
+        /**
+         * Snippet
+         */
         $snippetManager = PluginUtility::getSnippetManager();
         $jsonDecodeSnippets = $snippetManager->getSnippetsForSlot($slotId);
+
+        /**
+         * Cache file
+         * Using a cache parser, set the page id and will trigger
+         * the parser cache use event in order to log/report the cache usage
+         * At {@link action_plugin_combo_cache::logCacheUsage()}
+         */
+
+        $snippetCache = $this->getSnippetCache();
+
+
         if ($jsonDecodeSnippets !== null) {
             $data1 = json_encode($jsonDecodeSnippets);
-            $this->snippetCache->storeCache($data1);
+            $snippetCache->storeCache($data1);
         } else {
-            $this->snippetCache->removeCache();
+            $snippetCache->removeCache();
         }
 
     }
@@ -153,7 +154,7 @@ class HtmlDocument extends OutputDocument
     public
     function getSnippets(): array
     {
-        $data = $this->snippetCache->retrieveCache();
+        $data = $this->getSnippetCache()->retrieveCache();
         $nativeSnippets = [];
         if (!empty($data)) {
             $jsonDecodeSnippets = json_decode($data, true);
@@ -173,11 +174,94 @@ class HtmlDocument extends OutputDocument
 
     private function removeSnippets()
     {
-        $snippetCacheFile = $this->snippetCache->cache;
+        $snippetCacheFile = $this->getSnippetCache()->cache;
         if ($snippetCacheFile !== null) {
             if (file_exists($snippetCacheFile)) {
                 unlink($snippetCacheFile);
             }
         }
     }
+
+    /**
+     * Cache file
+     * Using a cache parser, set the page id and will trigger
+     * the parser cache use event in order to log/report the cache usage
+     * At {@link action_plugin_combo_cache::logCacheUsage()}
+     */
+    private function getSnippetCache(): CacheParser
+    {
+        if ($this->snippetCache !== null) {
+            return $this->snippetCache;
+        }
+        $id = $this->getPage()->getDokuwikiId();
+        $slotLocalFilePath = $this->getPage()
+            ->getPath()
+            ->toLocalPath()
+            ->toAbsolutePath()
+            ->toString();
+        $this->snippetCache = new CacheParser($id, $slotLocalFilePath, "snippet.json");
+        return $this->snippetCache;
+    }
+
+    private function storeDependencies()
+    {
+
+        $slotId = $this->getPage()->getDokuwikiId();
+
+        /**
+         * Snippet
+         */
+        $cacheManager = CacheManager::getOrCreate();
+        $deps = $cacheManager->getDepsForSlot($slotId);
+
+        /**
+         * Cache file
+         * Using a cache parser, set the page id and will trigger
+         * the parser cache use event in order to log/report the cache usage
+         * At {@link action_plugin_combo_cache::logCacheUsage()}
+         */
+        $dependencies = $this->getDependenciesCache();
+
+        if ($deps !== null) {
+            $jsonDeps = json_encode($deps);
+            $dependencies->storeCache($jsonDeps);
+        } else {
+            $dependencies->removeCache();
+        }
+
+    }
+
+
+
+    /**
+     * @return array []
+     */
+    public function getDependencies(): array
+    {
+        $data = $this->getDependenciesCache()->retrieveCache();
+        $deps = [];
+        if (!empty($data)) {
+            $deps = json_decode($data, true);
+        }
+        return $deps;
+
+    }
+
+    /**
+     * Logical cache based on the cache dependencies (ie current namespace, user)
+     *
+     * We don't use {@link CacheRenderer}
+     * because the cache key is the physical file
+     */
+    private function getHtmlCache()
+    {
+
+        $slotId = $this->getPage()->getDokuwikiId();
+        $file = $this->getPage()->getPath()->toLocalPath()->toString();
+        $this->cache = new CacheRenderer($slotId, $file, self::extension);
+
+
+
+    }
+
 }

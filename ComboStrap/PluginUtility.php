@@ -72,10 +72,10 @@ require_once(__DIR__ . '/Brand.php');
 require_once(__DIR__ . '/BrandButton.php');
 require_once(__DIR__ . '/CacheExpirationDate.php');
 require_once(__DIR__ . '/CacheExpirationFrequency.php');
-require_once(__DIR__ . '/CacheByLogicalKey.php');
-require_once(__DIR__ . '/CacheInstructionsByLogicalKey.php');
 require_once(__DIR__ . '/CacheManager.php');
+require_once(__DIR__ . '/CacheManagerForSlot.php');
 require_once(__DIR__ . '/CacheMedia.php');
+require_once(__DIR__ . '/CacheRuntimeDependencies.php');
 require_once(__DIR__ . '/Call.php');
 require_once(__DIR__ . '/CallStack.php');
 require_once(__DIR__ . '/Canonical.php');
@@ -165,7 +165,6 @@ require_once(__DIR__ . '/PageLayout.php');
 require_once(__DIR__ . '/PagePath.php');
 require_once(__DIR__ . '/PageProtection.php');
 require_once(__DIR__ . '/PageRules.php');
-require_once(__DIR__ . '/PageScope.php');
 require_once(__DIR__ . '/PageSql.php');
 require_once(__DIR__ . '/PageSqlParser/PageSqlLexer.php');
 require_once(__DIR__ . '/PageSqlParser/PageSqlParser.php');
@@ -885,7 +884,7 @@ class PluginUtility
      * @return string|null - null in test
      */
     public
-    static function getMainPageDokuwikiId(): ?string
+    static function getRequestedWikiId(): ?string
     {
         global $ID;
         global $INFO;
@@ -902,10 +901,11 @@ class PluginUtility
          */
         if ($callingId == null) {
             global $_REQUEST;
-            if (isset($_REQUEST["id"])) {
-                $callingId = $_REQUEST["id"];
+            if (isset($_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE])) {
+                $callingId = $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
             }
         }
+
         return $callingId;
 
     }

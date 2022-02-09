@@ -1,13 +1,14 @@
 <?php
 
 
+use ComboStrap\CacheManager;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
-use ComboStrap\PageScope;
+use ComboStrap\CacheRuntimeDependencies;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;
@@ -44,7 +45,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
     /**
      * Namespace attribute
-     * that contains scope information
+     * that contains the namespace information
      * (ie
      *   * a namespace path
      *   * or current, for the namespace of the current requested page
@@ -120,17 +121,17 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    function getSort()
+    function getSort(): int
     {
         return 201;
     }
 
-    public function accepts($mode)
+    public function accepts($mode): bool
     {
         return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
@@ -198,7 +199,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             } else {
                                 $namespacePath = "";
                             }
-                            $scope = PageScope::SCOPE_CURRENT_NAMESPACE_VALUE;
+                            CacheManager::getOrCreate()->addDependency(
+                                CacheRuntimeDependencies::DEPENDENCY_NAME,
+                                CacheRuntimeDependencies::REQUESTED_NAMESPACE_VALUE
+                            );
                             break;
                         case self::TYPE_TREE:
                             $parent = $renderedPage->getPath()->getParent();
@@ -207,7 +211,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             } else {
                                 $namespacePath = "";
                             }
-                            $scope = $namespacePath;
                             break;
                         default:
                             // Should never happens but yeah
@@ -218,25 +221,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             } else {
                                 $namespacePath = "";
                             }
-                            $scope = $namespacePath;
                             break;
                     }
                 } else {
                     $namespacePath = $tagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
-                    $scope = $namespacePath;
                 }
 
-                /**
-                 * Set the namespace location of the cache for this run
-                 * if this is a sidebar
-                 *
-                 * Side slots cache management
-                 * https://combostrap.com/sideslots
-                 *
-                 */
-                if ($renderedPage->isSlot()) {
-                    $renderedPage->setScope($scope);
-                }
 
                 /**
                  * Set the wiki-id of the namespace
@@ -770,7 +760,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         if ($format == 'xhtml') {
 

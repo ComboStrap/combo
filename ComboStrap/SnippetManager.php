@@ -287,7 +287,7 @@ class SnippetManager
      */
     public function upsertHeadTagForRequest($snippetId, array $tags)
     {
-        $id = PluginUtility::getMainPageDokuwikiId();
+        $id = PluginUtility::getRequestedWikiId();
         $snippet = &$this->snippetsByRequestScope[$id][Snippet::TAG_TYPE][$snippetId];
         if (!isset($snippet)) {
             $snippet = new Snippet($snippetId, Snippet::TAG_TYPE);

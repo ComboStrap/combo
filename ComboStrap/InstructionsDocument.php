@@ -10,53 +10,47 @@ class InstructionsDocument extends PageCompilerDocument
 {
 
     private $path;
-
     /**
-     * @var CacheInstructionsByLogicalKey|CacheInstructions
+     * @var CacheInstructions
      */
     private $cache;
 
 
-
     /**
      * InstructionsDocument constructor.
+     * @throws ExceptionCombo
      * @var Page $page
      */
     public function __construct(Page $page)
     {
         parent::__construct($page);
 
-        if ($this->getPage()->isSlot()) {
 
-            /**
-             * @noinspection PhpIncompatibleReturnTypeInspection
-             * No inspection because this is not the same object interface
-             * because we can't override the constructor of {@link CacheInstructions}
-             * but they should used the same interface (ie manipulate array data)
-             */
-            $this->cache = new CacheInstructionsByLogicalKey($page);
+        $path = $page->getPath();
+        $id = $path->getDokuwikiId();
+        /**
+         * The local path is part of the key cache and should be the same
+         * than dokuwiki
+         *
+         * For whatever reason, Dokuwiki uses:
+         *   * `/` as separator on Windows
+         *   * and Windows short path `GERARD~1` not gerardnico
+         * See {@link wikiFN()}
+         * There is also a cache in the function
+         *
+         * We can't use our {@link Path} class because the
+         * path is on windows format without the short path format
+         */
+        $localFile = wikiFN($id);
+        $this->cache = new CacheInstructions($id, $localFile);
 
-        } else {
+        /**
+         * Cache Key
+         */
+        $cacheManager = CacheManager::getOrCreate()->getCacheManagerForSlot($id);
+        $this->cache->key = $cacheManager->getCacheKeyFromRuntimeDependencies();
+        $this->cache->cache = $cacheManager->getCacheFile($this->cache);
 
-            $path = $page->getPath();
-            $id = $path->getDokuwikiId();
-            /**
-             * The local path is part of the key cache and should be the same
-             * than dokuwiki
-             *
-             * For whatever reason, Dokuwiki uses:
-             *   * `/` as separator on Windows
-             *   * and Windows short path `GERARD~1` not gerardnico
-             * See {@link wikiFN()}
-             * There is also a cache in the function
-             *
-             * We can't use our {@link Path} class because the
-             * path is on windows format without the short path format
-             */
-            $localFile = wikiFN($id);
-            $this->cache = new CacheInstructions($id, $localFile);
-
-        }
         $this->path = LocalPath::createFromPath($this->cache->cache);
     }
 
@@ -84,11 +78,13 @@ class InstructionsDocument extends PageCompilerDocument
          * Get the instructions
          * Adapted from {@link p_cached_instructions()}
          */
-        $text = $this->getPage()->getTextContent();
-        $instructions = p_get_instructions($text);
-
-        // close restore ID
-        $ID = $oldId;
+        try {
+            $text = $this->getPage()->getTextContent();
+            $instructions = p_get_instructions($text);
+        } finally {
+            // close restore ID
+            $ID = $oldId;
+        }
 
         if (!$this->cache->storeCache($instructions)) {
             $message = 'Unable to save the parsed instructions cache file. Hint: disk full; file permissions; safe_mode setting ?';
@@ -104,7 +100,6 @@ class InstructionsDocument extends PageCompilerDocument
         return $this;
 
     }
-
 
 
     public function getFileContent()

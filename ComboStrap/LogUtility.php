@@ -140,7 +140,7 @@ class LogUtility
              * because it throws an error message when the environment
              * is not good, creating a recursive call.
              */
-            $id = PluginUtility::getMainPageDokuwikiId();
+            $id = PluginUtility::getRequestedWikiId();
 
             $file = $conf['cachedir'] . '/debug.log';
             $fh = fopen($file, 'a');
@@ -213,7 +213,7 @@ class LogUtility
                  * because it throws an error message when the environment
                  * is not good, creating a recursive call.
                  */
-                $id = PluginUtility::getMainPageDokuwikiId();
+                $id = PluginUtility::getRequestedWikiId();
                 if ($id != null) {
 
                     /**

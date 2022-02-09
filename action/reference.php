@@ -49,6 +49,8 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
 
     /**
      * Store the references set for the whole page
+     * The datastore will then see a mutation
+     * processed by {@link action_plugin_combo_backlinkmutation}
      */
     function storeReference(Doku_Event $event, $params)
     {
@@ -88,7 +90,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
                 $actualCall->getTagName() === syntax_plugin_combo_link::TAG
                 && $actualCall->getState() === DOKU_LEXER_ENTER
             ) {
-                $ref = $actualCall->getPluginData(syntax_plugin_combo_link::ATTRIBUTE_HREF);
+                $ref = $actualCall->getAttribute(syntax_plugin_combo_link::ATTRIBUTE_HREF);
                 if ($ref === null) {
                     /**
                      * The reference data is null for this link, it may be an external

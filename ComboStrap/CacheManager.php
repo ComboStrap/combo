@@ -38,18 +38,43 @@ class CacheManager
      */
     private $cacheResults = array();
 
+    /**
+     * The list of cache manager for slot
+     */
+    private $slotCacheManagers;
+
 
     /**
      * @return CacheManager
      */
     public static function getOrCreate(): CacheManager
     {
-        if (self::$cacheManager === null) {
-            self::$cacheManager = new CacheManager();
+        $page = Page::createPageFromRequestedPage();
+        $cacheManager = self::$cacheManager[$page->getDokuwikiId()];
+        if ($cacheManager === null) {
+            // delete all old cache managers
+            self::$cacheManager = [];
+            // create
+            $cacheManager = new CacheManager();
+            self::$cacheManager[$page->getDokuwikiId()] = $cacheManager;
         }
-        return self::$cacheManager;
+        return $cacheManager;
     }
 
+    /**
+     * @param $id
+     * @return CacheManagerForSlot
+     */
+    public function getCacheManagerForSlot($id): CacheManagerForSlot
+    {
+        $cacheManagerForSlot = $this->slotCacheManagers[$id];
+        if ($cacheManagerForSlot === null) {
+            $cacheManagerForSlot = new CacheManagerForSlot($id);
+            $this->slotCacheManagers[$id] = $cacheManagerForSlot;
+        }
+        return $cacheManagerForSlot;
+
+    }
 
     /**
      * In test, we may run more than once
@@ -62,6 +87,7 @@ class CacheManager
         self::$cacheManager = null;
 
     }
+
 
     /**
      * Keep track of the parsed slot (ie page in page)
@@ -118,8 +144,19 @@ class CacheManager
 
     private function &getCacheSlotResultsForRequestedPage(): ?array
     {
-        $requestedPage = $this->getRequestedPage();
-        $requestedPageSlotResults = &$this->cacheResults[$requestedPage];
+        $requestedPageId = PluginUtility::getRequestedWikiId();
+
+
+        if (PluginUtility::isTest() && $requestedPageId === null) {
+            /**
+             * {@link p_get_metadata()} check the cache and is used
+             * also in several place such as {@link feed.php}
+             * where we don't have any influence
+             */
+            LogUtility::msg("The requested page should be known to register a page cache result");
+        }
+
+        $requestedPageSlotResults = &$this->cacheResults[$requestedPageId];
         if (!isset($requestedPageSlotResults)) {
             $requestedPageSlotResults = [];
         }
@@ -161,39 +198,41 @@ class CacheManager
         return $htmlDataBlock;
     }
 
-    private function getRequestedPage()
-    {
-        global $_REQUEST;
-        $requestedPage = $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-
-        if ($requestedPage !== null) {
-            return $requestedPage;
-        }
-
-        /**
-         * We are not on a HTTP request
-         * but may be on a {@link Page::renderMetadataAndFlush() metadata rendering request}
-         */
-        global $ID;
-        if ($ID !== null) {
-            return $ID;
-        }
-
-        if(PluginUtility::isTest()) {
-            /**
-             * {@link p_get_metadata()} check the cache and is used
-             * also in several place such as {@link feed.php}
-             * where we don't have any influence
-             */
-            LogUtility::msg("The requested page should be known to register a page cache result");
-        }
-        return "unknown";
-    }
 
     public function isEmpty(): bool
     {
         return sizeof($this->cacheResults) === 0;
     }
 
+    /**
+     * @param string $dependencyName
+     * @param string|array|null $attributes
+     * @throws ExceptionCombo
+     */
+    public function addDependency(string $dependencyName, $attributes)
+    {
+        $this->getCacheManagerForCurrentSlot()->addDependency($dependencyName,$attributes);
+
+    }
+
+    public function getDepsForSlot(string $slotId)
+    {
+        return $this->slotCacheManagers[$slotId];
+    }
+
+
+
+    /**
+     * @return CacheManagerForSlot
+     * @throws ExceptionCombo
+     */
+    private function getCacheManagerForCurrentSlot(): CacheManagerForSlot
+    {
+        global $ID;
+        if ($ID === null) {
+            throw new ExceptionCombo("The actual slot is unknown (global ID is null). We cannot add a dependency");
+        }
+        return $this->getCacheManagerForSlot($ID);
+    }
 
 }

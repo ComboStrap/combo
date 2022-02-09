@@ -71,7 +71,7 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
         /**
          * Add the wl to build the link to the backlinks actions
          */
-        $id = PluginUtility::getMainPageDokuwikiId();
+        $id = PluginUtility::getRequestedWikiId();
         global $JSINFO;
         $JSINFO[self::WHREF] = wl($id);
 

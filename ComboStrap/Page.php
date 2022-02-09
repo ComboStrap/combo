@@ -113,10 +113,6 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * @var PageScope
-     */
-    private $scope;
-    /**
      * @var QualityDynamicMonitoringOverwrite
      */
     private $qualityMonitoringIndicator;
@@ -271,7 +267,7 @@ class Page extends ResourceComboAbs
      */
     public static function createPageFromRequestedPage(): Page
     {
-        $pageId = PluginUtility::getMainPageDokuwikiId();
+        $pageId = PluginUtility::getRequestedWikiId();
         if ($pageId !== null) {
             return Page::createPageFromId($pageId);
         } else {
@@ -303,76 +299,6 @@ class Page extends ResourceComboAbs
             // Does not exist but can be used by hierarchical function
             return self::createPageFromId($namespacePath . $startPageName);
         }
-    }
-
-
-    /**
-     * @var string the logical id is used with slots.
-     *
-     * A slot may exist in several node of the file system tree
-     * but they can be rendered for a page in a lowest level
-     * listing the page of the current namespace
-     *
-     * The slot is physically stored in one place but is equivalent
-     * physically to the same slot in all sub-node.
-     *
-     * This logical id does take into account this aspect.
-     *
-     * This is used also to store the HTML output in the cache
-     * If this is not a slot the logical id is the {@link DokuPath::getDokuwikiId()}
-     */
-    public
-    function getLogicalId()
-    {
-        /**
-         * Delete the first separator
-         */
-        return substr($this->getLogicalPath(), 1);
-    }
-
-    /**
-     * @return string - the logical path of the resource
-     * This is used for slots component that may have another logical path
-     * than its storage location.
-     *
-     * For example:
-     *   * a ':sidebar' may get a logical path to ':ns:sidebar'
-     *   * while a ':slot_main_header' will have a logical path to ':slot_main_header_name_of_main'
-     */
-    public function getLogicalPath(): string
-    {
-
-        /**
-         * Set the logical id
-         * When no $ID is set (for instance, test),
-         * the logical id is the id
-         *
-         * The logical id depends on the namespace attribute of the {@link \syntax_plugin_combo_pageexplorer}
-         * stored in the `scope` metadata.
-         *
-         * Scope is directory/namespace based
-         */
-        $scopePath = $this->getScope();
-        switch ($scopePath) {
-            case PageScope::SCOPE_CURRENT_NAMESPACE_OLD_VALUE:
-            case PageScope::SCOPE_CURRENT_NAMESPACE_VALUE:
-                $requestPage = Page::createPageFromRequestedPage();
-                $parentPath = $requestPage->getPath()->getParent();
-                $scopePath = $parentPath->toString();
-
-                if ($scopePath !== DokuPath::PATH_SEPARATOR) {
-                    return $scopePath . DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName();
-                } else {
-                    return DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName();
-                }
-            case PageScope::SCOPE_CURRENT_REQUESTED_PAGE_VALUE:
-                $requestPage = Page::createPageFromRequestedPage();
-                return $requestPage->getPath()->toString() . "_" . $this->getPath()->getLastName();
-            default:
-                return $this->dokuPath->toAbsolutePath()->toString();
-        }
-
-
     }
 
 
@@ -1743,7 +1669,6 @@ class Page extends ResourceComboAbs
         $this->modifiedTime = ModificationDate::createForPage($this);
         $this->pageUrlPath = PageUrlPath::createForPage($this);
         $this->layout = PageLayout::createFromPage($this);
-        $this->scope = PageScope::createFromPage($this);
 
     }
 
@@ -1807,7 +1732,7 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * @param string $scope {@link PageScope::SCOPE_CURRENT_NAMESPACE_VALUE} or a namespace...
+     * @param string $scope {@link CacheRuntimeDependencies::REQUESTED_NAMESPACE_VALUE} or a namespace...
      */
     public
     function setScope(string $scope): Page

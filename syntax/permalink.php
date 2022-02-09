@@ -3,16 +3,18 @@
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 use ComboStrap\ArrayUtility;
+use ComboStrap\CacheManager;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
 use ComboStrap\Display;
 use ComboStrap\DokuPath;
 use ComboStrap\DokuwikiUrl;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\MarkupRef;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
-use ComboStrap\PageScope;
+use ComboStrap\CacheRuntimeDependencies;
 use ComboStrap\PageUrlPath;
 use ComboStrap\PageUrlType;
 use ComboStrap\PluginUtility;
@@ -124,12 +126,15 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 $strict = $attributes->getBooleanValueAndRemoveIfPresent(TagAttributes::STRICT, true);
 
                 /**
-                 * Scope if in slot
+                 * Cache key dependencies
                  */
-                $renderedPage = Page::createPageFromGlobalDokuwikiId();
-                if ($renderedPage->isSlot()) {
-                    // The output is dependent on the rendered page
-                    $renderedPage->setScope(PageScope::SCOPE_CURRENT_REQUESTED_PAGE_VALUE);
+                try {
+                    CacheManager::getOrCreate()->addDependency(
+                        CacheRuntimeDependencies::DEPENDENCY_NAME,
+                        CacheRuntimeDependencies::REQUESTED_PAGE_VALUE
+                    );
+                } catch (ExceptionCombo $e) {
+                    LogUtility::msg("We were unable to add the requested page runtime dependency. Cache errors may occurs. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 }
 
                 $requestedPage = Page::createPageFromRequestedPage();
@@ -244,7 +249,6 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
         // unsupported $mode
         return false;
     }
-
 
 
     private function addLinkContentInCallStack(CallStack $callStack, string $url)

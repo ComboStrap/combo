@@ -641,7 +641,7 @@ class DokuPath extends PathAbs
 
     /**
      * The parent path is a directory (namespace)
-     * The parent of page in the root does return the root namespace.
+     * The parent of page in the root does return null.
      *
      * @return DokuPath|null
      */

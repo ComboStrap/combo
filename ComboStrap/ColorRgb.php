@@ -33,8 +33,8 @@ class ColorRgb
         'green',
         'teal',
         'cyan',
-        //'white', css value for now
-        'gray',
+        //'white', css value for now otherwise we don't know the value when tinting
+        //'gray', css value for now otherwise we don't know the value when tinting
         'gray-dark',
         self::PRIMARY_VALUE,
         self::SECONDARY_VALUE,
@@ -267,6 +267,7 @@ class ColorRgb
      * @var null|string
      */
     private $name;
+    private $transparency;
 
 
     /**
@@ -389,14 +390,6 @@ class ColorRgb
 
 
     /**
-     * @throws ExceptionCombo
-     */
-    private static function createFromRgbArray($array): ColorRgb
-    {
-        return new ColorRgb($array);
-    }
-
-    /**
      * @param array|string|ColorRgb $color
      * @param int|null $weight
      * @return ColorRgb
@@ -433,13 +426,7 @@ class ColorRgb
         $targetRed = $lerp($color2->getRed(), $this->getRed());
         $targetGreen = $lerp($color2->getGreen(), $this->getGreen());
         $targetBlue = $lerp($color2->getBlue(), $this->getBlue());
-        return ColorRgb::createFromRgbArray(
-            [
-                $targetRed,
-                $targetGreen,
-                $targetBlue
-            ]
-        );
+        return ColorRgb::createFromRgbChannels($targetRed, $targetGreen, $targetBlue);
 
     }
 
@@ -457,27 +444,35 @@ class ColorRgb
         }
         $digits = str_replace("#", "", $hex);
         $hexLen = strlen($digits);
+        $transparency = false;
         switch ($hexLen) {
             case 3:
-                $splitLength = 1;
+                $lengthColorHex = 1;
                 break;
             case 6:
-                $splitLength = 2;
+                $lengthColorHex = 2;
+                break;
+            case 8:
+                $lengthColorHex = 2;
+                $transparency = true;
                 break;
             default:
                 throw new ExceptionCombo("The digit color value ($hex) is not 3 or 6 in length, this is not a valid CSS hexadecimal color value");
         }
-        $result = preg_match("/[0-9a-f]{3,6}/i", $digits);
+        $result = preg_match("/[0-9a-f]{3,8}/i", $digits);
         if ($result !== 1) {
             throw new ExceptionCombo("The digit color value ($hex) is not a hexadecimal value, this is not a valid CSS hexadecimal color value");
         }
-        $channelHexs = str_split($digits, $splitLength);
+        $channelHexs = str_split($digits, $lengthColorHex);
         $rgbDec = [];
         foreach ($channelHexs as $channelHex) {
-            if ($splitLength === 1) {
+            if ($lengthColorHex === 1) {
                 $channelHex .= $channelHex;
             }
             $rgbDec[] = hexdec($channelHex);
+        }
+        if (!$transparency) {
+            $rgbDec[] = null;
         }
         return $rgbDec;
     }
@@ -500,7 +495,11 @@ class ColorRgb
                 $redHex = $toCssHex($this->getRed());
                 $greenHex = $toCssHex($this->getGreen());
                 $blueHex = $toCssHex($this->getBlue());
-                return "#" . $redHex . $greenHex . $blueHex;
+                $withoutAlpha = "#" . $redHex . $greenHex . $blueHex;
+                if ($this->transparency === null) {
+                    return $withoutAlpha;
+                }
+                return $withoutAlpha . $toCssHex($this->getTransparency());
         }
 
     }
@@ -729,7 +728,7 @@ class ColorRgb
         if ($color[0] !== "#") {
             throw new ExceptionCombo("The value is not an hexadecimal color value ($color)");
         }
-        [$this->red, $this->green, $this->blue] = $this->hex2rgb($color);
+        [$this->red, $this->green, $this->blue, $this->transparency] = $this->hex2rgb($color);
         $this->nameType = self::VALUE_TYPE_RGB_HEX;
         $this->name = $color;
         return $this;
@@ -812,6 +811,11 @@ class ColorRgb
         LogUtility::msg("The color name ($name) is unknown");
         return $this;
 
+    }
+
+    public function getTransparency()
+    {
+        return $this->transparency;
     }
 
 

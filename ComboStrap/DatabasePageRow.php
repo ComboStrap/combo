@@ -3,6 +3,7 @@
 
 namespace ComboStrap;
 
+use DateTime;
 use ModificationDate;
 
 /**
@@ -249,6 +250,19 @@ class DatabasePageRow
     function shouldReplicate(): bool
     {
 
+        $dateReplication = $this->getReplicationDate();
+        if($dateReplication===null){
+            return true;
+        }
+
+        /**
+         * When the replication date is older than the actual document
+         */
+        $modifiedTime = FileSystems::getModifiedTime($this->page->getPath());
+        if ($modifiedTime > $dateReplication) {
+            return true;
+        }
+
         /**
          * When the file does not exist
          */
@@ -258,13 +272,14 @@ class DatabasePageRow
         }
 
         /**
-         * When the file exists
+         * When the analytics document is older
          */
         $modifiedTime = FileSystems::getModifiedTime($this->page->getAnalyticsDocument()->getCachePath());
-        $dateReplication = $this->getReplicationDate();
         if ($modifiedTime > $dateReplication) {
             return true;
         }
+
+
 
         /**
          * When the database version file is higher
@@ -374,7 +389,10 @@ class DatabasePageRow
     }
 
 
-    public function getReplicationDate(): ?\DateTime
+    /**
+     * @return DateTime|null
+     */
+    public function getReplicationDate(): ?DateTime
     {
         $dateString = $this->getFromRow(\ReplicationDate::getPersistentName());
         if ($dateString === null) {
@@ -405,7 +423,7 @@ class DatabasePageRow
          */
         $replicationDate = \ReplicationDate::createFromPage($this->page)
             ->setWriteStore(MetadataDbStore::class)
-            ->setValue(new \DateTime());
+            ->setValue(new DateTime());
 
         /**
          * Convenient variable
@@ -1078,7 +1096,7 @@ class DatabasePageRow
          */
         $replicationDateMeta = \ReplicationDate::createFromPage($this->page)
             ->setWriteStore(MetadataDbStore::class)
-            ->setValue(new \DateTime());
+            ->setValue(new DateTime());
 
         /**
          * Analytics

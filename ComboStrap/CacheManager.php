@@ -63,13 +63,13 @@ class CacheManager
 
     /**
      * @param $id
-     * @return CacheManagerForSlot
+     * @return CacheDependencies
      */
-    public function getCacheManagerForSlot($id): CacheManagerForSlot
+    public function getRuntimeCacheDependenciesForSlot($id): CacheDependencies
     {
         $cacheManagerForSlot = $this->slotCacheManagers[$id];
         if ($cacheManagerForSlot === null) {
-            $cacheManagerForSlot = new CacheManagerForSlot($id);
+            $cacheManagerForSlot = new CacheDependencies($id);
             $this->slotCacheManagers[$id] = $cacheManagerForSlot;
         }
         return $cacheManagerForSlot;
@@ -206,33 +206,29 @@ class CacheManager
 
     /**
      * @param string $dependencyName
-     * @param string|array|null $attributes
+     * @param null $dependencyFunction
      * @throws ExceptionCombo
      */
-    public function addDependency(string $dependencyName, $attributes)
+    public function addDependency(string $dependencyName, $dependencyFunction = null)
     {
-        $this->getCacheManagerForCurrentSlot()->addDependency($dependencyName,$attributes);
+        $this->getCacheManagerForCurrentSlot()->addDependency($dependencyName, $dependencyFunction);
 
     }
 
-    public function getDepsForSlot(string $slotId)
-    {
-        return $this->slotCacheManagers[$slotId];
-    }
 
 
 
     /**
-     * @return CacheManagerForSlot
+     * @return CacheDependencies
      * @throws ExceptionCombo
      */
-    private function getCacheManagerForCurrentSlot(): CacheManagerForSlot
+    private function getCacheManagerForCurrentSlot(): CacheDependencies
     {
         global $ID;
         if ($ID === null) {
             throw new ExceptionCombo("The actual slot is unknown (global ID is null). We cannot add a dependency");
         }
-        return $this->getCacheManagerForSlot($ID);
+        return $this->getRuntimeCacheDependenciesForSlot($ID);
     }
 
 }

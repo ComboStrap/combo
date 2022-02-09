@@ -58,9 +58,13 @@ abstract class OutputDocument extends PageCompilerDocument
          * Modifying the cache key and the corresponding output file
          * from runtime dependencies
          */
-        $cacheManager = CacheManager::getOrCreate()->getCacheManagerForSlot($id);
-        $this->cache->key = $cacheManager->getCacheKeyFromRuntimeDependencies();
-        $this->cache->cache = $cacheManager->getCacheFile($this->cache);
+        $cacheManager = CacheManager::getOrCreate()->getRuntimeCacheDependenciesForSlot($id);
+        try {
+            $this->cache->key = $cacheManager->getOrCalculateDependencyKey($this->cache->key);
+            $this->cache->cache = $cacheManager->getCacheFile($this->cache);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error while trying to set the cache key for the output document ($this). You may have cache problem. Error: {$e->getMessage()}");
+        }
 
     }
 
@@ -165,6 +169,14 @@ abstract class OutputDocument extends PageCompilerDocument
 
 
     }
+
+    public function __toString()
+    {
+        return $this->getPage()->getDokuwikiId() . "." . $this->getExtension();
+    }
+
+
+
 
 
 }

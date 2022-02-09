@@ -1931,6 +1931,9 @@ class Page extends ResourceComboAbs
 
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function getInstructionsDocument(): InstructionsDocument
     {

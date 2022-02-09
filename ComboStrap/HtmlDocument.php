@@ -91,10 +91,7 @@ class HtmlDocument extends OutputDocument
     public function storeContent($content)
     {
 
-        /**
-         * Save the dependencies
-         */
-        $this->storeDependencies();
+
 
         /** We make the Snippet store to Html store an atomic operation
          *
@@ -203,49 +200,10 @@ class HtmlDocument extends OutputDocument
         return $this->snippetCache;
     }
 
-    private function storeDependencies()
-    {
-
-        $slotId = $this->getPage()->getDokuwikiId();
-
-        /**
-         * Snippet
-         */
-        $cacheManager = CacheManager::getOrCreate();
-        $deps = $cacheManager->getDepsForSlot($slotId);
-
-        /**
-         * Cache file
-         * Using a cache parser, set the page id and will trigger
-         * the parser cache use event in order to log/report the cache usage
-         * At {@link action_plugin_combo_cache::logCacheUsage()}
-         */
-        $dependencies = $this->getDependenciesCache();
-
-        if ($deps !== null) {
-            $jsonDeps = json_encode($deps);
-            $dependencies->storeCache($jsonDeps);
-        } else {
-            $dependencies->removeCache();
-        }
-
-    }
 
 
 
-    /**
-     * @return array []
-     */
-    public function getDependencies(): array
-    {
-        $data = $this->getDependenciesCache()->retrieveCache();
-        $deps = [];
-        if (!empty($data)) {
-            $deps = json_decode($data, true);
-        }
-        return $deps;
 
-    }
 
     /**
      * Logical cache based on the cache dependencies (ie current namespace, user)

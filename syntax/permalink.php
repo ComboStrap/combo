@@ -130,7 +130,6 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                  */
                 try {
                     CacheManager::getOrCreate()->addDependency(
-                        CacheRuntimeDependencies::DEPENDENCY_NAME,
                         CacheRuntimeDependencies::REQUESTED_PAGE_VALUE
                     );
                 } catch (ExceptionCombo $e) {

@@ -53,31 +53,6 @@ class HtmlDocument extends OutputDocument
 
         if ($this->shouldProcess()) {
             $this->process();
-
-            /**
-             * Scope may change during processing
-             * And therefore logical id also
-             */
-            $scope = $this->getPage()->getScope();
-            $logicalId = $this->getPage()->getLogicalId();
-
-            if (
-            (Site::debugIsOn() || PluginUtility::isDevOrTest())
-            ) {
-                $cachePath = $this->getCachePath()->toAbsolutePath()->toString();
-                $debug = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$cachePath}\"></div>";
-            }
-
-        } else {
-
-            $scope = $this->getPage()->getScope();
-            $logicalId = $this->getPage()->getLogicalId();
-            if (
-            (Site::debugIsOn() || PluginUtility::isDevOrTest())
-            ) {
-                $debug = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"forbidden\"></div>";
-            }
-
         }
         return $debug . $this->getContent();
 
@@ -101,10 +76,6 @@ class HtmlDocument extends OutputDocument
          */
         $this->storeSnippets();
         try {
-
-
-            $this->cache = $this->getHtmlCache();
-
 
             return parent::storeContent($content);
         } catch (\Exception $e) {

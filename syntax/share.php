@@ -4,12 +4,13 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 use ComboStrap\BrandButton;
 use ComboStrap\CacheManager;
+use ComboStrap\CacheRuntimeDependencies;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
-use ComboStrap\CacheRuntimeDependencies;
+use ComboStrap\CacheRuntimeDependencies2;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 

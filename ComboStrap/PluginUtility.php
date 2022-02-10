@@ -73,7 +73,6 @@ require_once(__DIR__ . '/BrandButton.php');
 require_once(__DIR__ . '/CacheExpirationDate.php');
 require_once(__DIR__ . '/CacheExpirationFrequency.php');
 require_once(__DIR__ . '/CacheManager.php');
-require_once(__DIR__ . '/CacheDependencies.php');
 require_once(__DIR__ . '/CacheMedia.php');
 require_once(__DIR__ . '/CacheRuntimeDependencies.php');
 require_once(__DIR__ . '/Call.php');

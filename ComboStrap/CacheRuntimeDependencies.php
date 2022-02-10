@@ -3,31 +3,24 @@
 
 namespace ComboStrap;
 
+use dokuwiki\Cache\CacheParser;
+
 /**
+ * Class CacheManagerForSlot
+ * @package ComboStrap
+ * Cache data on slot level
  *
- * The scope is used to influence the cache render key.
- *
- *
- *
- * The determine the {@link Page::getLogicalPath()}
- * of the page used as key to store the render cache
- *
- *
- * It can be set by a component via the {@link p_set_metadata()}
- * in a {@link SyntaxPlugin::handle()} function
- *
- * This is mostly used on
+ * * This is mostly used on
  *   * side slots to have several output of a list {@link \syntax_plugin_combo_pageexplorer navigation pane} for different namespace (ie there is one cache by namespace)
  *   * header and footer main slot to have one output for each requested main page
- *
- *
  */
 class CacheRuntimeDependencies
 {
-
-
-    public const DEPENDENCY_NAME = "requested";
-
+    /**
+     * The dependency value is the requested page path
+     * (used for syntax mostly used in the header and footer of the main slot for instance)
+     */
+    public const REQUESTED_PAGE_VALUE = "requested_page";
     /**
      * The special scope value current means the namespace of the requested page
      * The real scope value is then calculated before retrieving the cache
@@ -38,12 +31,58 @@ class CacheRuntimeDependencies
      */
     public const NAMESPACE_OLD_VALUE = "current";
 
-    /**
-     * The dependency value is the requested page path
-     * (used for syntax mostly used in the header and footer of the main slot for instance)
-     */
-    public const REQUESTED_PAGE_VALUE = "requested_page";
+    public const dependencies = [self::REQUESTED_PAGE_VALUE, self::REQUESTED_NAMESPACE_VALUE];
 
+
+    /**
+     * @var CacheParser
+     */
+    private $dependenciesCacheStore;
+
+
+    /**
+     * @var array list of dependencies to calculate the cache key
+     *
+     * In a general pattern, a dependency is a series of function that would output runtime data
+     * that should go into the render cache key such as user logged in, requested page, namespace of the requested page, ...
+     *
+     * The cache dependencies data are saved alongside the page (same as snippets)
+     *
+     */
+    private $runtimeAddedDependencies = null;
+    /**
+     * The stored runtime dependencies
+     * @var array
+     */
+    private $runtimeStoreDependencies;
+
+    private $page;
+
+    /**
+     * @var string the first key captured
+     */
+    private $firstActualKey;
+
+
+    /**
+     * CacheManagerForSlot constructor.
+     * @param string $id
+     */
+    public function __construct(string $id)
+    {
+        $this->page = Page::createPageFromId($id);
+
+        $data = $this->getDependenciesCacheStore()->retrieveCache();
+        if (!empty($data)) {
+            $this->runtimeStoreDependencies = json_decode($data, true);
+        }
+
+    }
+
+    public static function create(Page $page): CacheRuntimeDependencies
+    {
+        return new CacheRuntimeDependencies($page);
+    }
 
 
     /**
@@ -84,4 +123,123 @@ class CacheRuntimeDependencies
 
 
     }
+
+    /**
+     * @return string
+     *
+     * Cache is now managed by dependencies function that creates a unique key
+     * for the instruction document and the output document
+     *
+     * See the discussion at: https://github.com/splitbrain/dokuwiki/issues/3496
+     * @throws ExceptionCombo
+     * @var $actualKey
+     */
+    public function getOrCalculateDependencyKey($actualKey): string
+    {
+        /**
+         * We should wrap a call only once
+         * We capture therefore the first actual key passed
+         */
+        if ($this->firstActualKey === null) {
+            $this->firstActualKey = $actualKey;
+        }
+        $dependencyKey = $this->firstActualKey;
+        $runtimeDependencies = $this->getDependencies();
+
+        if ($runtimeDependencies !== null) {
+
+            foreach ($runtimeDependencies as $dependency) {
+                $dependencyKey .= self::getValueForKey($dependency);
+            }
+
+        }
+        return $dependencyKey;
+    }
+
+
+    /**
+     * @param string $dependencyName
+     * @return CacheRuntimeDependencies
+     * @throws ExceptionCombo
+     */
+    public function addDependency(string $dependencyName): CacheRuntimeDependencies
+    {
+        if (!in_array($dependencyName, self::dependencies)) {
+            throw new ExceptionCombo("Unknown dependency value ($dependencyName");
+        }
+        $this->runtimeAddedDependencies[$dependencyName] = "";
+        return $this;
+    }
+
+    public function getDependencies(): ?array
+    {
+        if ($this->runtimeAddedDependencies != null) {
+            return array_keys($this->runtimeAddedDependencies);
+        }
+        return $this->runtimeStoreDependencies;
+    }
+
+    /**
+     * The default key as seen in {@link CacheParser}
+     * Used for test purpose
+     * @return string
+     */
+    public function getDefaultKey(): string
+    {
+        return $this->page->getPath()->toLocalPath()->toString() . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
+    }
+
+    public function rerouteCacheDestination(&$cache)
+    {
+
+        try {
+            $cache->key = $this->getOrCalculateDependencyKey($cache->key);
+            $cache->cache = getCacheName($cache->key, '.' . $cache->mode);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error while trying to reroute the cache destination for the slot ({$this->page}). You may have cache problem. Error: {$e->getMessage()}");
+        }
+
+    }
+
+
+    /**
+     */
+    private function storeDependencies()
+    {
+
+
+        /**
+         * Cache file
+         * Using a cache parser, set the page id and will trigger
+         * the parser cache use event in order to log/report the cache usage
+         * At {@link action_plugin_combo_cache::logCacheUsage()}
+         */
+        $dependencies = $this->getDependenciesCacheStore();
+        $deps = $this->runtimeAddedDependencies;
+        if ($deps !== null) {
+            $jsonDeps = json_encode($deps);
+            $dependencies->storeCache($jsonDeps);
+        } else {
+            // dependencies does not exist or were removed
+            $dependencies->removeCache();
+        }
+
+
+    }
+
+    private function getDependenciesCacheStore(): CacheParser
+    {
+        if ($this->dependenciesCacheStore !== null) {
+            return $this->dependenciesCacheStore;
+        }
+        $id = $this->page->getDokuwikiId();
+        $slotLocalFilePath = $this->page
+            ->getPath()
+            ->toLocalPath()
+            ->toAbsolutePath()
+            ->toString();
+        $this->dependenciesCacheStore = new CacheParser($id, $slotLocalFilePath, "deps.json");
+        return $this->dependenciesCacheStore;
+    }
+
 }

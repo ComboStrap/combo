@@ -2,13 +2,14 @@
 
 
 use ComboStrap\CacheManager;
+use ComboStrap\CacheRuntimeDependencies;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
-use ComboStrap\CacheRuntimeDependencies;
+use ComboStrap\CacheRuntimeDependencies2;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;

@@ -97,11 +97,6 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'addCacheLogHtmlDataBlock', array());
 
-        /**
-         * To reset the cache manager
-         * between two run in the test
-         */
-        $controller->register_hook('DOKUWIKI_DONE', 'BEFORE', $this, 'close', array());
 
         /**
          * To delete the VARY on css.php, jquery.php, js.php
@@ -251,10 +246,6 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
     }
 
-    function close(Doku_Event $event, $params)
-    {
-        CacheManager::reset();
-    }
 
 
     /**

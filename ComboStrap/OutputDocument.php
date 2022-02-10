@@ -59,18 +59,14 @@ abstract class OutputDocument extends PageCompilerDocument
          * from runtime dependencies
          */
         $cacheManager = CacheManager::getOrCreate()->getRuntimeCacheDependenciesForSlot($id);
-        try {
-            $this->cache->key = $cacheManager->getOrCalculateDependencyKey($this->cache->key);
-            $this->cache->cache = $cacheManager->getCacheFile($this->cache);
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("Error while trying to set the cache key for the output document ($this). You may have cache problem. Error: {$e->getMessage()}");
-        }
+        $cacheManager->rerouteCacheDestination($this->cache);
 
     }
 
     /**
      * @return OutputDocument
      * @noinspection PhpMissingReturnTypeInspection
+     * @throws ExceptionCombo
      */
     function process()
     {
@@ -124,11 +120,22 @@ abstract class OutputDocument extends PageCompilerDocument
 
     public function storeContent($content)
     {
+
         /**
          * Store
          * if the cache is not on, don't store
          */
         if ($this->cacheStillEnabledAfterRendering) {
+
+            /**
+             * Reroute the cache output by runtime dependencies
+             */
+            $cacheRuntimeDependencies = CacheManager::getOrCreate()->getRuntimeCacheDependenciesForSlot($this->page->getDokuwikiId());
+            $cacheRuntimeDependencies->rerouteCacheDestination($this->cache);
+
+            /**
+             * Store
+             */
             $this->cache->storeCache($content);
         } else {
             $this->cache->removeCache(); // try to delete cache file

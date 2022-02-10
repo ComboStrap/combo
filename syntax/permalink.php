@@ -4,6 +4,7 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 use ComboStrap\ArrayUtility;
 use ComboStrap\CacheManager;
+use ComboStrap\CacheRuntimeDependencies;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
@@ -14,7 +15,7 @@ use ComboStrap\ExceptionCombo;
 use ComboStrap\MarkupRef;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
-use ComboStrap\CacheRuntimeDependencies;
+use ComboStrap\CacheRuntimeDependencies2;
 use ComboStrap\PageUrlPath;
 use ComboStrap\PageUrlType;
 use ComboStrap\PluginUtility;

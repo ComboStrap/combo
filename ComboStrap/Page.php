@@ -1006,18 +1006,6 @@ class Page extends ResourceComboAbs
     }
 
 
-    public
-    function getScope()
-    {
-        /**
-         * Note that the scope may change
-         * during a run, we then re-read the metadata
-         * each time
-         */
-        return $this->scope->getValueFromStore();
-
-    }
-
     /**
      * Return the id of the div HTML
      * element that is added for cache debugging

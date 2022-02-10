@@ -52,7 +52,7 @@ class CacheManager
         $page = Page::createPageFromRequestedPage();
         $cacheManager = self::$cacheManager[$page->getDokuwikiId()];
         if ($cacheManager === null) {
-            // delete all old cache managers
+            // new run, delete all old cache managers
             self::$cacheManager = [];
             // create
             $cacheManager = new CacheManager();
@@ -63,13 +63,13 @@ class CacheManager
 
     /**
      * @param $id
-     * @return CacheDependencies
+     * @return CacheRuntimeDependencies
      */
-    public function getRuntimeCacheDependenciesForSlot($id): CacheDependencies
+    public function getRuntimeCacheDependenciesForSlot($id): CacheRuntimeDependencies
     {
         $cacheManagerForSlot = $this->slotCacheManagers[$id];
         if ($cacheManagerForSlot === null) {
-            $cacheManagerForSlot = new CacheDependencies($id);
+            $cacheManagerForSlot = new CacheRuntimeDependencies($id);
             $this->slotCacheManagers[$id] = $cacheManagerForSlot;
         }
         return $cacheManagerForSlot;
@@ -219,10 +219,10 @@ class CacheManager
 
 
     /**
-     * @return CacheDependencies
+     * @return CacheRuntimeDependencies
      * @throws ExceptionCombo
      */
-    private function getCacheManagerForCurrentSlot(): CacheDependencies
+    private function getCacheManagerForCurrentSlot(): CacheRuntimeDependencies
     {
         global $ID;
         if ($ID === null) {

@@ -10,25 +10,13 @@ use dokuwiki\Cache\CacheParser;
 class InstructionsDocument extends PageCompilerDocument
 {
 
-    private $path;
+
 
     /**
      * @var CacheInstructions
      */
     private $cache;
 
-    /**
-     * @var CacheParser
-     */
-    private $dependenciesCacheStore;
-    /**
-     * @var CacheDependencies
-     */
-    private $cacheDependencies;
-    /**
-     * @var string
-     */
-    private $initialCacheKey;
 
 
     /**
@@ -59,68 +47,11 @@ class InstructionsDocument extends PageCompilerDocument
         $localFile = wikiFN($id);
         $this->cache = new CacheInstructions($id, $localFile);
 
-        /**
-         * Cache Key
-         */
-        $this->cacheDependencies = $this->getStoredCacheDependencies();
-        $this->initialCacheKey = $this->cache->key;
-        $this->refreshInstructionsCacheKeyAndPath();
 
     }
 
-    /**
-     * @return CacheDependencies
-     */
-    public function getStoredCacheDependencies(): CacheDependencies
-    {
-        $data = $this->getDependenciesCacheStore()->retrieveCache();
-        $cacheDependencies = CacheDependencies::create($this->getPage());
-        if (!empty($data)) {
-            $deps = json_decode($data, true);
-            foreach ($deps as $dep=>$function) {
-                $cacheDependencies->addDependency($dep,$function);
-            }
-        }
-        return $cacheDependencies;
 
-    }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    private function storeDependencies()
-    {
-
-        try {
-
-            /**
-             * Runtime cache dependencies
-             */
-            $slotId = $this->getPage()->getDokuwikiId();
-            $this->cacheDependencies = CacheManager::getOrCreate()->getRuntimeCacheDependenciesForSlot($slotId);
-            $deps = $this->cacheDependencies->getDependencies();
-
-            /**
-             * Cache file
-             * Using a cache parser, set the page id and will trigger
-             * the parser cache use event in order to log/report the cache usage
-             * At {@link action_plugin_combo_cache::logCacheUsage()}
-             */
-            $dependencies = $this->getDependenciesCacheStore();
-            if ($deps !== null) {
-                $jsonDeps = json_encode($deps);
-                $dependencies->storeCache($jsonDeps);
-            } else {
-                $dependencies->removeCache();
-            }
-
-        } finally {
-
-            $this->refreshInstructionsCacheKeyAndPath();
-
-        }
-
-    }
 
     function getExtension(): string
     {
@@ -206,48 +137,19 @@ class InstructionsDocument extends PageCompilerDocument
 
 
     /**
-     * @throws ExceptionCombo
      */
     public function storeContent($content)
     {
-        /**
-         * Save the dependencies
-         */
-        $this->storeDependencies();
 
         /**
-         * Refresh the cache key
+         * Store the content
          */
-        $this->cache->cache = $this->cacheDependencies->getCacheFile($this->cache);
         $this->cache->storeCache($content);
         return $this;
+
     }
 
-    private function getDependenciesCacheStore(): CacheParser
-    {
-        if ($this->dependenciesCacheStore !== null) {
-            return $this->dependenciesCacheStore;
-        }
-        $id = $this->getPage()->getDokuwikiId();
-        $slotLocalFilePath = $this->getPage()
-            ->getPath()
-            ->toLocalPath()
-            ->toAbsolutePath()
-            ->toString();
-        $this->dependenciesCacheStore = new CacheParser($id, $slotLocalFilePath, "deps.json");
-        return $this->dependenciesCacheStore;
-    }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    private function refreshInstructionsCacheKeyAndPath()
-    {
-
-        $this->cache->key = $this->cacheDependencies->getOrCalculateDependencyKey($this->initialCacheKey);
-        $this->cache->cache = $this->cacheDependencies->getCacheFile($this->cache);
-        $this->path = LocalPath::createFromPath($this->cache->cache);
-    }
 
 
 }

@@ -102,10 +102,8 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL:
 
                 $callStack = CallStack::createFromHandler($handler);
-                $defaultAttributes = [
-                    TagAttributes::TYPE_KEY => BrandButton::WIDGET_BUTTON_VALUE
-                ];
-                $types = BrandButton::WIDGETS;
+                $defaultAttributes = [];
+                $types = null;
                 $shareAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $types)
                     ->setLogicalTag(self::TAG);
 

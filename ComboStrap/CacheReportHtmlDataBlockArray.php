@@ -14,6 +14,7 @@ class CacheReportHtmlDataBlockArray
      * are injected in the page in a json format
      */
     public const APPLICATION_COMBO_CACHE_JSON = "application/combo+cache+json";
+    const DEPENDENCY_ATT = "dependency";
 
     /**
      * @return array - a array that will be transformed as json HTML data block
@@ -21,7 +22,8 @@ class CacheReportHtmlDataBlockArray
      */
     public static function get(): array
     {
-        $cacheReporters = CacheManager::getOrCreate()->getCacheResults();
+        $cacheManager = CacheManager::getOrCreate();
+        $cacheReporters = $cacheManager->getCacheResults();
         $htmlDataBlock = [];
         foreach ($cacheReporters as $cacheReporter) {
 
@@ -31,10 +33,24 @@ class CacheReportHtmlDataBlockArray
                 if ($result->getPath() !== null) {
                     $modifiedDate = FileSystems::getModifiedTime($result->getPath())->format(Iso8601Date::getFormat());
                 }
-                $htmlDataBlock[$result->getSlotId()][$result->getMode()] = [
+                $mode = $result->getMode();
+                $slotId = $result->getSlotId();
+
+                $data = [
                     self::RESULT_STATUS => $result->getResult(),
                     self::DATE_MODIFIED => $modifiedDate
                 ];
+
+                if ($mode === HtmlDocument::mode) {
+                    $dependencies = $cacheManager
+                        ->getRuntimeCacheDependenciesForSlot($slotId)
+                        ->getDependencies();
+                    if ($dependencies !== null) {
+                        $data[self::DEPENDENCY_ATT] = $dependencies;
+                    }
+                }
+
+                $htmlDataBlock[$slotId][$mode] = $data;
             }
 
         }

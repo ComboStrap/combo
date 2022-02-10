@@ -121,49 +121,6 @@ window.addEventListener("DOMContentLoaded", function () {
                 .createDokuRequest(metaManagerCall)
                 .setProperty("id", pageId)
                 .getJson();
-            /**
-             * Add the page runtime cache metadata field
-             */
-            let cachePageInfo = document.querySelector('script[type="application/combo+cache+json"]');
-            if (cachePageInfo !== null) {
-                let cachePageJsonString = cachePageInfo
-                    .innerText
-                    .trim()
-                    .slice("/*<![CDATA[*/".length)
-                    .slice(0, -("/*!]]>*/".length));
-                let cachePageJson = JSON.parse(cachePageJsonString);
-                for (let slot in cachePageJson) {
-                    if (!cachePageJson.hasOwnProperty(slot)) {
-                        continue;
-                    }
-
-                    let formatResults = cachePageJson[slot];
-                    for (let formatResult in formatResults) {
-                        if (!formatResults.hasOwnProperty(formatResult)) {
-                            continue;
-                        }
-                        let name = `cache_slot_${slot}_${formatResult}`;
-                        let result = formatResults[formatResult];
-                        let styledFormatResult;
-                        if (formatResult === "i") {
-                            styledFormatResult = "Parse Instructions"
-                        } else {
-                            styledFormatResult = formatResult.charAt(0).toUpperCase() + formatResult.slice(1);
-                        }
-                        let hit = result["result"];
-                        formMetadata["fields"][name] =
-                            combo.createFormMetaField(name)
-                                .setMutable(false)
-                                .setLabel(`Cache Hit for ${styledFormatResult} (${slot})`)
-                                .setType("boolean")
-                                .setUrl("https://combostrap.com/page/cache")
-                                .setDescription(`${styledFormatResult} Slot Cache Information for the slot (${slot}) - (File cache time ${result["mtime"]})`)
-                                .setTab("cache")
-                                .addValue(hit,true)
-                                .toJavascriptObject();
-                    }
-                }
-            }
             let formId = combo.toHtmlId(`${modalManagerId}-form`);
             let form = combo.createFormFromJson(formId, formMetadata);
             let htmlFormElement = form.toHtmlElement();

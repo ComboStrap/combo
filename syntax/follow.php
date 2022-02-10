@@ -23,8 +23,6 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
     const HANDLE_ATTRIBUTE = "handle";
 
 
-
-
     function getType(): string
     {
         return 'substition';
@@ -98,11 +96,9 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL:
 
                 $callStack = CallStack::createFromHandler($handler);
-                $defaultAttributes = [
-                    TagAttributes::TYPE_KEY => BrandButton::WIDGET_BUTTON_VALUE
-                ];
-                $types = BrandButton::WIDGETS;
-                $shareAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $types)
+                $defaultAttributes = [];
+                $knownTypes = null;
+                $shareAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes)
                     ->setLogicalTag(self::TAG);
 
 

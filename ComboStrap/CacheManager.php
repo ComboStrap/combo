@@ -50,18 +50,25 @@ class CacheManager
         return $cacheManager;
     }
 
+    public static function resetAndGet(): CacheManager
+    {
+        self::reset();
+        return self::getOrCreate();
+    }
+
     /**
      * @param $id
      * @return CacheRuntimeDependencies
      */
     public function getRuntimeCacheDependenciesForSlot($id): CacheRuntimeDependencies
     {
-        $cacheManagerForSlot = $this->slotCacheRuntimeDependencies[$id];
-        if ($cacheManagerForSlot === null) {
-            $cacheManagerForSlot = new CacheRuntimeDependencies($id);
-            $this->slotCacheRuntimeDependencies[$id] = $cacheManagerForSlot;
+
+        $cacheRuntimeDependencies = $this->slotCacheRuntimeDependencies[$id];
+        if ($cacheRuntimeDependencies === null) {
+            $cacheRuntimeDependencies = new CacheRuntimeDependencies($id);
+            $this->slotCacheRuntimeDependencies[$id] = $cacheRuntimeDependencies;
         }
-        return $cacheManagerForSlot;
+        return $cacheRuntimeDependencies;
 
     }
 
@@ -70,11 +77,10 @@ class CacheManager
      * This function delete the cache manager
      * and is called when Dokuwiki close (ie {@link \action_plugin_combo_cache::close()})
      */
-    public static function reset(): CacheManager
+    public static function reset()
     {
 
         self::$cacheManager = null;
-        return self::getOrCreate();
 
     }
 

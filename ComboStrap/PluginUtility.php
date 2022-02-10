@@ -74,6 +74,7 @@ require_once(__DIR__ . '/CacheExpirationDate.php');
 require_once(__DIR__ . '/CacheExpirationFrequency.php');
 require_once(__DIR__ . '/CacheManager.php');
 require_once(__DIR__ . '/CacheMedia.php');
+require_once(__DIR__ . '/CacheMenuItem.php');
 require_once(__DIR__ . '/CacheReportHtmlDataBlockArray.php');
 require_once(__DIR__ . '/CacheResults.php');
 require_once(__DIR__ . '/CacheResult.php');
@@ -1404,6 +1405,35 @@ class PluginUtility
     public static function htmlDecode($int): string
     {
         return htmlspecialchars_decode($int, ENT_XHTML);
+    }
+
+    /**
+     * Tells if the process is to output a page
+     * @return bool
+     */
+    public static function isRenderingRequestedPageProcess(): bool
+    {
+
+        global $ID;
+        if (empty($ID)) {
+            // $ID is null
+            // case on "/lib/exe/mediamanager.php"
+            return false;
+        }
+
+        $page = Page::createPageFromId($ID);
+        if (!$page->exists()) {
+            return false;
+        }
+
+        /**
+         * No metadata for bars
+         */
+        if ($page->isSlot()) {
+            return false;
+        }
+        return true;
+
     }
 
 

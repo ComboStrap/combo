@@ -3,6 +3,7 @@
 use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheManager;
 use ComboStrap\CacheMedia;
+use ComboStrap\CacheMenuItem;
 use ComboStrap\CacheReportHtmlDataBlockArray;
 use ComboStrap\Cron;
 use ComboStrap\ExceptionCombo;
@@ -113,6 +114,12 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $controller->register_hook(MetadataDokuWikiStore::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'sideSlotsCacheBurstingForMetadataMutation', array());
         $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'sideSlotsCacheBurstingForPageCreationAndDeletion', array());
+
+        /**
+         * Add a icon in the page tools menu
+         * https://www.dokuwiki.org/devel:event:menu_items_assembly
+         */
+        $controller->register_hook('MENU_ITEMS_ASSEMBLY', 'AFTER', $this, 'addMenuItem');
 
     }
 
@@ -232,7 +239,9 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     function addCacheLogHtmlDataBlock(Doku_Event $event, $params)
     {
 
-
+        if(!PluginUtility::isRenderingRequestedPageProcess()){
+            return;
+        }
         $cacheSlotResults = CacheReportHtmlDataBlockArray::get();
         $cacheJson = \ComboStrap\Json::createFromArray($cacheSlotResults);
 
@@ -360,6 +369,26 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         }
 
         if ($doWeNeedToDeleteTheSideSlotCache) self::removeSideSlotCache();
+
+    }
+
+    function addMenuItem(Doku_Event $event, $param)
+    {
+
+
+        /**
+         * The `view` property defines the menu that is currently built
+         * https://www.dokuwiki.org/devel:menus
+         * If this is not the page menu, return
+         */
+        if ($event->data['view'] != 'page') return;
+
+        global $INFO;
+        if (!$INFO['exists']) {
+            return;
+        }
+        array_splice($event->data['items'], -1, 0, array(new CacheMenuItem()));
+
 
     }
 

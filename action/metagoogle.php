@@ -2,6 +2,7 @@
 
 use ComboStrap\LdJson;
 use ComboStrap\Page;
+use ComboStrap\PluginUtility;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -34,27 +35,13 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
     {
 
 
-        global $ID;
-        if (empty($ID)) {
-            // $ID is null
-            // case on "/lib/exe/mediamanager.php"
-            return;
-        }
-        $page = Page::createPageFromId($ID);
-        if (!$page->exists()) {
+        if(!PluginUtility::isRenderingRequestedPageProcess()){
             return;
         }
 
-        /**
-         * No metadata for bars
-         */
-        if ($page->isSlot()) {
-            return;
-        }
-
+        $page = Page::createPageFromRequestedPage();
         $ldJson = LdJson::createForPage($page)
             ->getLdJsonMergedWithDefault();
-
 
         /**
          * Publish

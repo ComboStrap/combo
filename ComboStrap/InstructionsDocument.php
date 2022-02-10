@@ -5,7 +5,6 @@ namespace ComboStrap;
 
 
 use dokuwiki\Cache\CacheInstructions;
-use dokuwiki\Cache\CacheParser;
 
 class InstructionsDocument extends PageCompilerDocument
 {
@@ -119,7 +118,7 @@ class InstructionsDocument extends PageCompilerDocument
 
     public function getCachePath(): Path
     {
-        return $this->path;
+        return LocalPath::create($this->cache->cache);
     }
 
     public function shouldProcess(): bool

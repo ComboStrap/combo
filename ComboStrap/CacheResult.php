@@ -35,7 +35,8 @@ class CacheResult
         $this->cacheParser = $event->data;
     }
 
-    public function getKey(){
+    public function getKey()
+    {
         return $this->cacheParser->key;
     }
 
@@ -54,7 +55,7 @@ class CacheResult
         return $this->cacheParser->page;
     }
 
-    public function getResult()
+    public function getResult(): bool
     {
         return $this->result;
     }

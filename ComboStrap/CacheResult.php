@@ -19,11 +19,11 @@ class CacheResult
      * @var mixed|null
      */
     private $result;
-
     /**
      * @var CacheParser
      */
     private $cacheParser;
+
 
     /**
      * CacheReport constructor.

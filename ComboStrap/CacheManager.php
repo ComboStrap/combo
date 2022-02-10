@@ -23,8 +23,6 @@ class CacheManager
     private static $cacheManager;
 
 
-    private $cacheResults = array();
-
     /**
      * The list of cache runtimes dependencies by slot {@link CacheRuntimeDependencies}
      */
@@ -72,10 +70,11 @@ class CacheManager
      * This function delete the cache manager
      * and is called when Dokuwiki close (ie {@link \action_plugin_combo_cache::close()})
      */
-    public static function reset()
+    public static function reset(): CacheManager
     {
 
         self::$cacheManager = null;
+        return self::getOrCreate();
 
     }
 

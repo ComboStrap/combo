@@ -34,9 +34,9 @@ class CacheResults
          * recursively in one request
          *
          * We record only the first one because the second call one will use the first
-         * one
+         * one and overwrite the result
          */
-        if (!isset($this->cacheOutput[$cacheParser->mode])) {
+        if (!isset($this->cacheResults[$cacheParser->mode])) {
             $this->cacheResults[$cacheParser->mode] = new CacheResult($event);
         }
     }

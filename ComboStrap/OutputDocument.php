@@ -54,12 +54,6 @@ abstract class OutputDocument extends PageCompilerDocument
         $localFile = wikiFN($id);
         $this->cache = new CacheRenderer($id, $localFile, $this->getExtension());
 
-        /**
-         * Modifying the cache key and the corresponding output file
-         * from runtime dependencies
-         */
-        $cacheManager = CacheManager::getOrCreate()->getRuntimeCacheDependenciesForSlot($id);
-        $cacheManager->rerouteCacheDestination($this->cache);
 
     }
 

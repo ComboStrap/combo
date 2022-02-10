@@ -87,10 +87,13 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     {
 
         /**
-         * Log the cache usage and also
+         * Create a {@link \ComboStrap\CacheResult}
          */
-        $controller->register_hook('PARSER_CACHE_USE', 'AFTER', $this, 'logCacheUsage', array());
+        $controller->register_hook('PARSER_CACHE_USE', 'AFTER', $this, 'createCacheResult', array());
 
+        /**
+         * Page expiration feature
+         */
         $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'pageCacheExpiration', array());
 
         /**
@@ -118,7 +121,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
      * @param Doku_Event $event
      * @param $params
      */
-    function logCacheUsage(Doku_Event $event, $params)
+    function createCacheResult(Doku_Event $event, $params)
     {
 
         /**

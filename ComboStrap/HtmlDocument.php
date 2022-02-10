@@ -9,11 +9,15 @@ use dokuwiki\Cache\CacheRenderer;
 
 class HtmlDocument extends OutputDocument
 {
-    const extension = "xhtml";
+    const mode = "xhtml";
     /**
      * @var CacheParser
      */
     private $snippetCache;
+    /**
+     * @var CacheRuntimeDependencies
+     */
+    private $cacheDependencies;
 
 
     /**
@@ -23,18 +27,26 @@ class HtmlDocument extends OutputDocument
     public function __construct(Page $page)
     {
         parent::__construct($page);
+
+        /**
+         * Modifying the cache key and the corresponding output file
+         * from runtime dependencies
+         */
+        $this->cacheDependencies = CacheManager::getOrCreate()->getRuntimeCacheDependenciesForSlot($page->getDokuwikiId());
+        $this->cacheDependencies->rerouteCacheDestination($this->cache);
+
     }
 
 
     function getExtension(): string
     {
-        return self::extension;
+        return self::mode;
     }
 
 
     function getRendererName(): string
     {
-        return self::extension;
+        return self::mode;
     }
 
     public function shouldProcess(): bool
@@ -45,16 +57,17 @@ class HtmlDocument extends OutputDocument
         return parent::shouldProcess();
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function getOrProcessContent(): string
     {
-
-        $debug = "";
 
 
         if ($this->shouldProcess()) {
             $this->process();
         }
-        return $debug . $this->getContent();
+        return $this->getContent();
 
 
     }
@@ -75,8 +88,14 @@ class HtmlDocument extends OutputDocument
          * leading to a bad page because the next rendering will see then no snippets.
          */
         $this->storeSnippets();
-        try {
 
+        /**
+         * Cache output dependencies
+         */
+        $this->cacheDependencies->storeDependencies();
+        $this->cacheDependencies->rerouteCacheDestination($this->cache);
+
+        try {
             return parent::storeContent($content);
         } catch (\Exception $e) {
             // if any write os exception
@@ -101,7 +120,7 @@ class HtmlDocument extends OutputDocument
          * Cache file
          * Using a cache parser, set the page id and will trigger
          * the parser cache use event in order to log/report the cache usage
-         * At {@link action_plugin_combo_cache::logCacheUsage()}
+         * At {@link action_plugin_combo_cache::createCacheReport()}
          */
 
         $snippetCache = $this->getSnippetCache();
@@ -154,7 +173,7 @@ class HtmlDocument extends OutputDocument
      * Cache file
      * Using a cache parser, set the page id and will trigger
      * the parser cache use event in order to log/report the cache usage
-     * At {@link action_plugin_combo_cache::logCacheUsage()}
+     * At {@link action_plugin_combo_cache::createCacheReport()}
      */
     private function getSnippetCache(): CacheParser
     {
@@ -187,7 +206,7 @@ class HtmlDocument extends OutputDocument
 
         $slotId = $this->getPage()->getDokuwikiId();
         $file = $this->getPage()->getPath()->toLocalPath()->toString();
-        $this->cache = new CacheRenderer($slotId, $file, self::extension);
+        $this->cache = new CacheRenderer($slotId, $file, self::mode);
 
 
 

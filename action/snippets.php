@@ -131,7 +131,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
             foreach ($cacheReporter->getResults() as $report) {
 
-                if ($report->getMode() !== HtmlDocument::extension) {
+                if ($report->getMode() !== HtmlDocument::mode) {
                     continue;
                 }
 

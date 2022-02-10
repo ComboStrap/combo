@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 use dokuwiki\Cache\CacheParser;
+use dokuwiki\Cache\CacheRenderer;
 
 /**
  * Class CacheManagerForSlot
@@ -176,7 +177,10 @@ class CacheRuntimeDependencies
         if ($this->runtimeAddedDependencies != null) {
             return array_keys($this->runtimeAddedDependencies);
         }
-        return $this->runtimeStoreDependencies;
+        if($this->runtimeStoreDependencies===null){
+            return null;
+        }
+        return array_keys($this->runtimeStoreDependencies);
     }
 
     /**
@@ -193,8 +197,10 @@ class CacheRuntimeDependencies
     {
 
         try {
+
             $cache->key = $this->getOrCalculateDependencyKey($cache->key);
             $cache->cache = getCacheName($cache->key, '.' . $cache->mode);
+
         } catch (ExceptionCombo $e) {
             LogUtility::msg("Error while trying to reroute the cache destination for the slot ({$this->page}). You may have cache problem. Error: {$e->getMessage()}");
         }
@@ -204,15 +210,14 @@ class CacheRuntimeDependencies
 
     /**
      */
-    private function storeDependencies()
+    public function storeDependencies()
     {
-
 
         /**
          * Cache file
          * Using a cache parser, set the page id and will trigger
          * the parser cache use event in order to log/report the cache usage
-         * At {@link action_plugin_combo_cache::logCacheUsage()}
+         * At {@link action_plugin_combo_cache::createCacheReport()}
          */
         $dependencies = $this->getDependenciesCacheStore();
         $deps = $this->runtimeAddedDependencies;

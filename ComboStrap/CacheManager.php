@@ -16,32 +16,23 @@ use dokuwiki\Cache\CacheParser;
 class CacheManager
 {
 
-    const RESULT_STATUS = 'result';
-    const DATE_MODIFIED = 'ftime';
-
-    /**
-     * Used when the cache data report
-     * are injected in the page in a json format
-     */
-    public const APPLICATION_COMBO_CACHE_JSON = "application/combo+cache+json";
 
     /**
      * @var CacheManager
      */
     private static $cacheManager;
 
-    /**
-     * Just an utility variable to tracks the cache result of each slot
-     * @var array the processed slot by:
-     *   * requested page id, (to avoid inconsistency  on multiple page run in one test)
-     *   * slot id
-     */
+
     private $cacheResults = array();
 
     /**
-     * The list of cache manager for slot
+     * The list of cache runtimes dependencies by slot {@link CacheRuntimeDependencies}
      */
-    private $slotCacheManagers;
+    private $slotCacheRuntimeDependencies;
+    /**
+     * The list of cache results slot {@link CacheResults}
+     */
+    private $slotCacheResults;
 
 
     /**
@@ -67,10 +58,10 @@ class CacheManager
      */
     public function getRuntimeCacheDependenciesForSlot($id): CacheRuntimeDependencies
     {
-        $cacheManagerForSlot = $this->slotCacheManagers[$id];
+        $cacheManagerForSlot = $this->slotCacheRuntimeDependencies[$id];
         if ($cacheManagerForSlot === null) {
             $cacheManagerForSlot = new CacheRuntimeDependencies($id);
-            $this->slotCacheManagers[$id] = $cacheManagerForSlot;
+            $this->slotCacheRuntimeDependencies[$id] = $cacheManagerForSlot;
         }
         return $cacheManagerForSlot;
 
@@ -89,129 +80,25 @@ class CacheManager
     }
 
 
-    /**
-     * Keep track of the parsed slot (ie page in page)
-     * @param $slotId
-     * @param $result
-     * @param CacheParser $cacheParser
-     */
-    public function addSlotForRequestedPage($slotId, $result, CacheParser $cacheParser)
+    public function isCacheResultPresentForSlot($slotId, $mode): bool
     {
-
-        $requestedPageSlotResults = &$this->getCacheSlotResultsForRequestedPage();
-
-
-        if (!isset($requestedPageSlotResults[$slotId])) {
-            $requestedPageSlotResults[$slotId] = [];
-        }
-
-        /**
-         * Metadata and other rendering may occurs
-         * recursively in one request
-         *
-         * We record only the first one because the second call one will use the first
-         * one
-         */
-        if (!isset($requestedPageSlotResults[$slotId][$cacheParser->mode])) {
-            $date = null;
-            if (file_exists($cacheParser->cache)) {
-                $date = Iso8601Date::createFromTimestamp(filemtime($cacheParser->cache))->getDateTime();
-            }
-            $requestedPageSlotResults[$slotId][$cacheParser->mode] = [
-                self::RESULT_STATUS => $result,
-                self::DATE_MODIFIED => $date
-            ];
-        }
-
-    }
-
-    public function getXhtmlCacheSlotResultsForRequestedPage(): array
-    {
-        $cacheSlotResultsForRequestedPage = $this->getCacheSlotResultsForRequestedPage();
-        if ($cacheSlotResultsForRequestedPage === null) {
-            return [];
-        }
-        $xhtmlRenderResult = [];
-        foreach ($cacheSlotResultsForRequestedPage as $slotId => $modes) {
-            foreach ($modes as $mode => $values) {
-                if ($mode === "xhtml") {
-                    $xhtmlRenderResult[$slotId] = $values[self::RESULT_STATUS];
-                }
-            }
-        }
-        return $xhtmlRenderResult;
-    }
-
-    private function &getCacheSlotResultsForRequestedPage(): ?array
-    {
-        $requestedPageId = PluginUtility::getRequestedWikiId();
-
-
-        if (PluginUtility::isTest() && $requestedPageId === null) {
-            /**
-             * {@link p_get_metadata()} check the cache and is used
-             * also in several place such as {@link feed.php}
-             * where we don't have any influence
-             */
-            LogUtility::msg("The requested page should be known to register a page cache result");
-        }
-
-        $requestedPageSlotResults = &$this->cacheResults[$requestedPageId];
-        if (!isset($requestedPageSlotResults)) {
-            $requestedPageSlotResults = [];
-        }
-        return $requestedPageSlotResults;
-    }
-
-    public function isCacheLogPresentForSlot($slotId, $mode): bool
-    {
-        $cacheSlotResultsForRequestedPage = $this->getCacheSlotResultsForRequestedPage();
-        return isset($cacheSlotResultsForRequestedPage[$slotId][$mode]);
+        $cacheReporter = $this->getCacheResultsForSlot($slotId);
+        return $cacheReporter->hasResultForMode($mode);
     }
 
 
-    /**
-     * @return array - a array that will be transformed as json HTML data block
-     * to be included in a HTML page
-     */
-    public function getCacheSlotResultsAsHtmlDataBlockArray(): array
+    public function hasNoCacheResult(): bool
     {
-        $htmlDataBlock = [];
-        $cacheSlotResultsForRequestedPage = $this->getCacheSlotResultsForRequestedPage();
-        if ($cacheSlotResultsForRequestedPage === null) {
-            LogUtility::msg("No page slot results were found");
-            return [];
-        }
-        foreach ($cacheSlotResultsForRequestedPage as $pageId => $resultByFormat) {
-            foreach ($resultByFormat as $format => $result) {
-                $modifiedDate = $result[self::DATE_MODIFIED];
-                if ($modifiedDate !== null) {
-                    $modifiedDate = Iso8601Date::createFromDateTime($modifiedDate)->toString();
-                }
-                $htmlDataBlock[$pageId][$format] = [
-                    self::RESULT_STATUS => $result[self::RESULT_STATUS],
-                    "mtime" => $modifiedDate
-                ];
-            }
-
-        }
-        return $htmlDataBlock;
-    }
-
-
-    public function isEmpty(): bool
-    {
-        return sizeof($this->cacheResults) === 0;
+        return sizeof($this->slotCacheResults) === 0;
     }
 
     /**
      * @param string $dependencyName
-     * @param null $dependencyFunction
      * @throws ExceptionCombo
      */
-    public function addDependency(string $dependencyName, $dependencyFunction = null)
+    public function addDependency(string $dependencyName)
     {
-        $this->getCacheManagerForCurrentSlot()->addDependency($dependencyName, $dependencyFunction);
+        $this->getCacheManagerForCurrentSlot()->addDependency($dependencyName);
 
     }
 
@@ -229,6 +116,24 @@ class CacheManager
             throw new ExceptionCombo("The actual slot is unknown (global ID is null). We cannot add a dependency");
         }
         return $this->getRuntimeCacheDependenciesForSlot($ID);
+    }
+
+    public function getCacheResultsForSlot(string $id): CacheResults
+    {
+        $cacheManagerForSlot = $this->slotCacheResults[$id];
+        if ($cacheManagerForSlot === null) {
+            $cacheManagerForSlot = new CacheResults($id);
+            $this->slotCacheResults[$id] = $cacheManagerForSlot;
+        }
+        return $cacheManagerForSlot;
+    }
+
+    /**
+     * @return CacheResults[]
+     */
+    public function getCacheResults(): array
+    {
+        return $this->slotCacheResults;
     }
 
 }

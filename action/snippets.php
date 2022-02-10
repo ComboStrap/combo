@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\CacheManager;
+use ComboStrap\HtmlDocument;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\SnippetManager;
@@ -125,20 +126,27 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         /**
          * For each processed slot in the page, retrieve the snippets
          */
-        $cacheManager = CacheManager::getOrCreate();
-        $slots = $cacheManager->getXhtmlCacheSlotResultsForRequestedPage();
-        foreach ($slots as $slotId => $servedFromCache) {
+        $cacheReporters = CacheManager::getOrCreate()->getCacheResults();
+        foreach ($cacheReporters as $cacheReporter) {
 
-            $snippets = Page::createPageFromId($slotId)
-                ->getHtmlDocument()
-                ->getSnippets();
+            foreach ($cacheReporter->getResults() as $report) {
 
-            if (sizeof($snippets) > 0) {
-                $nativeSnippets = [];
-                foreach ($snippets as $snippet) {
-                    $nativeSnippets[$snippet->getType()][$snippet->getId()] = $snippet;
+                if ($report->getMode() !== HtmlDocument::extension) {
+                    continue;
                 }
-                $snippetManager->addSnippetsFromCacheForSlot($slotId, $nativeSnippets);
+
+                $slotId = $report->getSlotId();
+                $snippets = Page::createPageFromId($slotId)
+                    ->getHtmlDocument()
+                    ->getSnippets();
+
+                if (sizeof($snippets) > 0) {
+                    $nativeSnippets = [];
+                    foreach ($snippets as $snippet) {
+                        $nativeSnippets[$snippet->getType()][$snippet->getId()] = $snippet;
+                    }
+                    $snippetManager->addSnippetsFromCacheForSlot($slotId, $nativeSnippets);
+                }
             }
 
 

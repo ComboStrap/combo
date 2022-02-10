@@ -3,6 +3,7 @@
 use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheManager;
 use ComboStrap\CacheMedia;
+use ComboStrap\CacheReportHtmlDataBlockArray;
 use ComboStrap\Cron;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\File;
@@ -125,10 +126,9 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * @var \dokuwiki\Cache\CacheParser $data
          */
         $data = $event->data;
-        $result = $event->result;
         $slotId = $data->page;
-        $cacheManager = PluginUtility::getCacheManager();
-        $cacheManager->addSlotForRequestedPage($slotId, $result, $data);
+        $cacheReporter = CacheManager::getOrCreate()->getCacheResultsForSlot($slotId);
+        $cacheReporter->setData($event);
 
 
     }
@@ -174,7 +174,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * The first will be purged, the other one not
          * because they can't use the first one
          */
-        if (!PluginUtility::getCacheManager()->isCacheLogPresentForSlot($pageId, $data->mode)) {
+        if (!PluginUtility::getCacheManager()->isCacheResultPresentForSlot($pageId, $data->mode)) {
             $page = Page::createPageFromId($pageId);
             $cacheExpirationFrequency = $page->getCacheExpirationFrequency();
             if ($cacheExpirationFrequency === null) {
@@ -229,8 +229,8 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     function addCacheLogHtmlDataBlock(Doku_Event $event, $params)
     {
 
-        $cacheManager = PluginUtility::getCacheManager();
-        $cacheSlotResults = $cacheManager->getCacheSlotResultsAsHtmlDataBlockArray();
+
+        $cacheSlotResults = CacheReportHtmlDataBlockArray::get();
         $cacheJson = \ComboStrap\Json::createFromArray($cacheSlotResults);
 
         if (PluginUtility::isDevOrTest()) {
@@ -240,7 +240,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         }
 
         $event->data["script"][] = array(
-            "type" => CacheManager::APPLICATION_COMBO_CACHE_JSON,
+            "type" => CacheReportHtmlDataBlockArray::APPLICATION_COMBO_CACHE_JSON,
             "_data" => $result,
         );
 

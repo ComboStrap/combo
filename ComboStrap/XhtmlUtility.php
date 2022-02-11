@@ -31,8 +31,9 @@ class XhtmlUtility
      * @return string
      * DOMDocument supports formatted XML while SimpleXMLElement does not.
      * @noinspection PhpComposerExtensionStubsInspection
+     * @throws ExceptionCombo
      */
-    public static function diffMarkup($left, $right, $xhtml = true)
+    public static function diffMarkup($left, $right, $xhtml = true, $excludedAttributes = null): string
     {
         if (empty($right)) {
             throw new \RuntimeException("The right text should not be empty");
@@ -49,7 +50,12 @@ class XhtmlUtility
         $rightDocument = (new XmlDocument($right, $loading))->getXmlDom();
 
         $error = "";
-        XmlUtility::diffNode($leftDocument, $rightDocument, $error);
+        XmlUtility::diffNode(
+            $leftDocument,
+            $rightDocument,
+            $error,
+            $excludedAttributes
+        );
 
         return $error;
 

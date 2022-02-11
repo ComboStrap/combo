@@ -929,10 +929,15 @@ class PluginUtility
     {
         /**
          * See https://stackoverflow.com/questions/46483/htmlentities-vs-htmlspecialchars/3614344
-         * {@link htmlentities }
+         *
+         * Not {@link htmlentities } htmlentities($text, ENT_QUOTES);
+         * Otherwise we get `Error while loading HTMLError: Entity 'hellip' not defined`
+         * when loading HTML
+         *
+         * See also {@link PluginUtility::htmlDecode()}
          */
-        //return htmlspecialchars($text, ENT_QUOTES);
-        return htmlentities($text, ENT_XHTML);
+        return htmlspecialchars($text, ENT_XHTML);
+
     }
 
     public

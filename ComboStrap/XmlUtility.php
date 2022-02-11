@@ -119,10 +119,14 @@ class XmlUtility
      * Tip: To get the text of a node:
      * $leftNode->ownerDocument->saveHTML($leftNode)
      * @param $error
+     * @param string[]|null $excludedAttributes - the value of this attributes will not be checked
      */
-    public static function diffNode(DOMNode $leftNode, DOMNode $rightNode, &$error)
+    public static function diffNode(DOMNode $leftNode, DOMNode $rightNode, &$error, array $excludedAttributes = null)
     {
 
+        if ($excludedAttributes === null) {
+            $excludedAttributes = [];
+        }
         $leftNodeName = $leftNode->localName;
         $rightNodeName = $rightNode->localName;
         if ($leftNodeName != $rightNodeName) {
@@ -157,9 +161,16 @@ class XmlUtility
                         $error .= "The attribute (" . $leftAtt->getNodePath() . ") does not exist on the right side\n";
                     } else {
                         unset($rightAttributes[$leftAttName]);
+
+                        /**
+                         * Value check
+                         */
+                        if (in_array($leftAttName, $excludedAttributes)) {
+                            continue;
+                        }
                         $leftAttValue = $leftAtt->nodeValue;
                         $rightAttValue = $rightAtt->nodeValue;
-                        if ($leftAttValue != $rightAttValue) {
+                        if ($leftAttValue !== $rightAttValue) {
                             if ($leftAtt->name === "class") {
                                 $leftClasses = preg_split("/\s/", $leftAttValue);
                                 $rightClasses = preg_split("/\s/", $rightAttValue);
@@ -188,7 +199,7 @@ class XmlUtility
                 }
             }
         } else {
-            if ($rightNode->hasAttributes()){
+            if ($rightNode->hasAttributes()) {
                 for ($i = 0; $i < $rightNode->attributes->length; $i++) {
                     /** @var \DOMAttr $rightAtt */
                     $rightAtt = $rightNode->attributes->item($i);
@@ -242,7 +253,7 @@ class XmlUtility
 
                     if ($rightChildNode != null) {
                         if ($leftChildNode != null) {
-                            self::diffNode($leftChildNode, $rightChildNode, $error);
+                            self::diffNode($leftChildNode, $rightChildNode, $error, $excludedAttributes);
                         } else {
                             $error .= "The right node (" . $rightChildNode->getNodePath() . ") does not exist in the left document.\n";
                         }
@@ -270,8 +281,9 @@ class XmlUtility
      * @return string
      * DOMDocument supports formatted XML while SimpleXMLElement does not.
      * @noinspection PhpComposerExtensionStubsInspection
+     * @throws ExceptionCombo
      */
-    public static function diffMarkup($left, $right)
+    public static function diffMarkup(string $left, string $right): string
     {
         if (empty($right)) {
             throw new \RuntimeException("The right text should not be empty");

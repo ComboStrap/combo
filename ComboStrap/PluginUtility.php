@@ -6,6 +6,7 @@ namespace ComboStrap;
 
 use dokuwiki\Extension\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
+use PHPUnit\Exception;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
 
@@ -1434,6 +1435,23 @@ class PluginUtility
         }
         return true;
 
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function renderInstructionsToXhtml($callStackHeaderInstructions): ?string
+    {
+        try {
+            return p_render("xhtml", $callStackHeaderInstructions, $info);
+        } catch (Exception $e){
+            /**
+             * Example of errors;
+             * method_exists() expects parameter 2 to be string, array given
+             * inc\parserutils.php:672
+             */
+            throw new ExceptionCombo("Error while rendering instructions. Error was: {$e->getMessage()}");
+        }
     }
 
 

@@ -163,7 +163,6 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
      * @param int $pos - byte position in the original source file
      * @param Doku_Handler $handler
      * @return array
-     * @throws Exception
      * @see DokuWiki_Syntax_Plugin::handle()
      *
      */
@@ -199,17 +198,19 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                 $beforeTemplateCallStack = [];
                 $templateStack = [];
                 $afterTemplateCallStack = [];
-                $state = "before";
+                $parsingState = "before";
                 $complexMarkupFound = false;
                 $variableNames = [];
                 while ($actualCall = $callStack->next()) {
                     $tagName = $actualCall->getTagName();
                     switch ($tagName) {
                         case syntax_plugin_combo_iteratordata::TAG:
-                            $pageSql = $actualCall->getCapturedContent();
+                            if ($actualCall->getState() === DOKU_LEXER_UNMATCHED) {
+                                $pageSql = $actualCall->getCapturedContent();
+                            }
                             continue 2;
                         case syntax_plugin_combo_template::TAG:
-                            $state = "after";
+                            $parsingState = "after";
                             if ($actualCall->getState() === DOKU_LEXER_EXIT) {
                                 $templateStack = $actualCall->getPluginData(syntax_plugin_combo_template::CALLSTACK);
                                 /**
@@ -247,7 +248,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                             }
                             continue 2;
                         default:
-                            if ($state === "before") {
+                            if ($parsingState === "before") {
                                 $beforeTemplateCallStack[] = $actualCall->toCallArray();
                             } else {
                                 $afterTemplateCallStack[] = $actualCall->toCallArray();
@@ -283,7 +284,6 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
      * @param Doku_Renderer $renderer
      * @param array $data - what the function handle() return'ed
      * @return boolean - rendered correctly? (however, returned value is not used at the moment)
-     * @throws ExceptionCombo
      * @see DokuWiki_Syntax_Plugin::render()
      *
      *
@@ -389,8 +389,8 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                                  * Data in the pages tables
                                  */
                                 if (isset($sourceRow[strtoupper($variableName)])) {
-                                    $data = $sourceRow[strtoupper($variableName)];
-                                    $targetRow[$variableName] = $data;
+                                    $variableValue = $sourceRow[strtoupper($variableName)];
+                                    $targetRow[$variableName] = $variableValue;
                                     continue;
                                 }
 
@@ -445,7 +445,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         $renderer->doc .= "No template was found in this iterator.";
                         return false;
                     }
-                    $templateStackInstructionsProcessed = [];
+                    $templateInstructionsInstances = [];
 
 
                     /**
@@ -503,15 +503,15 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         /**
                          * Loop and recreate the call stack in instructions  form for rendering
                          */
-                        $templateStackInstructionsProcessed = [];
+                        $templateInstructionsInstances = [];
                         foreach ($templateHeader as $templateHeaderCall) {
-                            $templateStackInstructionsProcessed[] = $templateHeaderCall->toCallArray();
+                            $templateInstructionsInstances[] = $templateHeaderCall->toCallArray();
                         }
                         foreach ($rows as $row) {
-                            $templateStackInstructionsProcessed[] = TemplateUtility::renderInstructionsTemplateFromDataArray($templateMain, $row);
+                            $templateInstructionsInstances[] = TemplateUtility::renderInstructionsTemplateFromDataArray($templateMain, $row);
                         }
                         foreach ($templateFooter as $templateFooterCall) {
-                            $templateStackInstructionsProcessed[] = $templateFooterCall->toCallArray();
+                            $templateInstructionsInstances[] = $templateFooterCall->toCallArray();
                         }
 
 
@@ -527,7 +527,8 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                          * Append the new instructions by row
                          */
                         foreach ($rows as $row) {
-                            $templateStackInstructionsProcessed[] = TemplateUtility::renderInstructionsTemplateFromDataArray($templateStack, $row);
+                            $templateInstructionForInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateStack, $row);
+                            $templateInstructionsInstances = array_merge($templateInstructionsInstances,$templateInstructionForInstance) ;
                         }
 
 
@@ -538,14 +539,26 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     // header
                     $callStackHeaderInstructions = $data[self::BEFORE_TEMPLATE_CALLSTACK];
                     if (!empty($callStackHeaderInstructions)) {
-                        $renderer->doc .= p_render($format, $callStackHeaderInstructions, $info);
+                        try {
+                            $renderer->doc .= PluginUtility::renderInstructionsToXhtml($callStackHeaderInstructions);
+                        } catch (ExceptionCombo $e) {
+                            $renderer->doc .= "Error while rendering the template header. Error: {$e->getMessage()}";
+                        }
                     }
                     // content
-                    $renderer->doc .= p_render($format, $templateStackInstructionsProcessed, $info);
+                    try {
+                        $renderer->doc .= PluginUtility::renderInstructionsToXhtml($templateInstructionsInstances);
+                    } catch (ExceptionCombo $e) {
+                        $renderer->doc .= "Error while rendering the template content. Error: {$e->getMessage()}";
+                    }
                     // footer
                     $callStackFooterInstructions = $data[self::AFTER_TEMPLATE_CALLSTACK];
                     if (!empty($callStackFooterInstructions)) {
-                        $renderer->doc .= p_render($format, $callStackFooterInstructions, $info);
+                        try {
+                            $renderer->doc .= PluginUtility::renderInstructionsToXhtml($callStackFooterInstructions);
+                        } catch (ExceptionCombo $e) {
+                            $renderer->doc .= "Error while rendering the footer template. Error: {$e->getMessage()}";
+                        }
                     }
                     return true;
             }

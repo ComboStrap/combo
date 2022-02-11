@@ -6,6 +6,7 @@ use ComboStrap\CallStack;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\PageEdit;
 
@@ -351,20 +352,23 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * No dynamic rendering (ie $ID is not null)
          */
         global $ID;
-        if ($headingTotalCounter === 0 && $ID !== null) {
+        if ($ID !== null) {
 
-            try {
-                $sectionEditComment = Call::createComboCall(
-                    syntax_plugin_combo_comment::TAG,
-                    DOKU_LEXER_UNMATCHED,
-                    array(),
-                    Call::INLINE_DISPLAY, // don't trim
-                    null,
-                    PageEdit::create("Page Edit")->toTag()
-                );
-                $callStack->insertBefore($sectionEditComment);
-            } catch (ExceptionCombo $e) {
-                LogUtility::msg("Error while adding the edit button. Error: {$e->getMessage()}");
+            $page = Page::createPageFromId($ID);
+            if ($headingTotalCounter === 0 || $page->isSlot()) {
+                try {
+                    $sectionEditComment = Call::createComboCall(
+                        syntax_plugin_combo_comment::TAG,
+                        DOKU_LEXER_UNMATCHED,
+                        array(),
+                        Call::INLINE_DISPLAY, // don't trim
+                        null,
+                        PageEdit::create("Page Edit")->toTag()
+                    );
+                    $callStack->insertBefore($sectionEditComment);
+                } catch (ExceptionCombo $e) {
+                    LogUtility::msg("Error while adding the edit button. Error: {$e->getMessage()}");
+                }
             }
 
         }

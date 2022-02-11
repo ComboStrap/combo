@@ -24,6 +24,7 @@ class PageEdit
     const CLOSE_HTML_COMMENT = "-->";
     const CLASS_PAGE_EDIT = "page-edit-combo";
     const SNIPPET_ID = "page-edit";
+    public const PAGE_EDIT_BUTTON_CONF = "page-edit-button";
 
 
     private static $countersByWikiId = array();
@@ -50,6 +51,11 @@ class PageEdit
      */
     public function toTag(): string
     {
+        $pageEditButton = PluginUtility::getConfValue(PageEdit::PAGE_EDIT_BUTTON_CONF, 1);
+        if ($pageEditButton !== 1) {
+            return "";
+        }
+
         /**
          * The following data are mandatory from:
          * {@link html_secedit_get_button}

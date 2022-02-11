@@ -4,7 +4,7 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 use ComboStrap\ArrayUtility;
 use ComboStrap\CacheManager;
-use ComboStrap\CacheRuntimeDependencies;
+use ComboStrap\CacheDependencies;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
@@ -131,7 +131,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                  */
                 try {
                     CacheManager::getOrCreate()->addDependency(
-                        CacheRuntimeDependencies::REQUESTED_PAGE_DEPENDENCY
+                        CacheDependencies::REQUESTED_PAGE_DEPENDENCY
                     );
                 } catch (ExceptionCombo $e) {
                     LogUtility::msg("We were unable to add the requested page runtime dependency. Cache errors may occurs. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);

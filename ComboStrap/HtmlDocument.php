@@ -15,7 +15,7 @@ class HtmlDocument extends OutputDocument
      */
     private $snippetCache;
     /**
-     * @var CacheRuntimeDependencies
+     * @var CacheDependencies
      */
     private $cacheDependencies;
 
@@ -190,7 +190,7 @@ class HtmlDocument extends OutputDocument
         return $this->snippetCache;
     }
 
-    public function getDependencies(): CacheRuntimeDependencies
+    public function getDependencies(): CacheDependencies
     {
         return $this->cacheDependencies;
     }

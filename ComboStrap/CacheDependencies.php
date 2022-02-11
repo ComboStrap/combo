@@ -4,18 +4,17 @@
 namespace ComboStrap;
 
 use dokuwiki\Cache\CacheParser;
-use dokuwiki\Cache\CacheRenderer;
 
 /**
  * Class CacheManagerForSlot
  * @package ComboStrap
- * Cache data on slot level
+ * Render Cache dependencies on slot level (not instructions cache)
  *
  * * This is mostly used on
  *   * side slots to have several output of a list {@link \syntax_plugin_combo_pageexplorer navigation pane} for different namespace (ie there is one cache by namespace)
  *   * header and footer main slot to have one output for each requested main page
  */
-class CacheRuntimeDependencies
+class CacheDependencies
 {
     /**
      * The dependency value is the requested page path
@@ -28,14 +27,14 @@ class CacheRuntimeDependencies
      */
     public const REQUESTED_NAMESPACE_DEPENDENCY = "requested_namespace";
     /**
-     * @deprecated use the {@link CacheRuntimeDependencies::REQUESTED_NAMESPACE_DEPENDENCY}
+     * @deprecated use the {@link CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY}
      */
     public const NAMESPACE_OLD_VALUE = "current";
 
     /**
      * This dependencies have an impact on the
      * output location of the cache
-     * {@link CacheRuntimeDependencies::getOrCalculateDependencyKey()}
+     * {@link CacheDependencies::getOrCalculateDependencyKey()}
      */
     public const outputDependencies = [self::REQUESTED_PAGE_DEPENDENCY, self::REQUESTED_NAMESPACE_DEPENDENCY];
 
@@ -111,9 +110,9 @@ class CacheRuntimeDependencies
 
     }
 
-    public static function create(Page $page): CacheRuntimeDependencies
+    public static function create(Page $page): CacheDependencies
     {
-        return new CacheRuntimeDependencies($page);
+        return new CacheDependencies($page);
     }
 
 
@@ -139,15 +138,15 @@ class CacheRuntimeDependencies
          */
         $requestPage = Page::createPageFromRequestedPage();
         switch ($dependenciesValue) {
-            case CacheRuntimeDependencies::NAMESPACE_OLD_VALUE:
-            case CacheRuntimeDependencies::REQUESTED_NAMESPACE_DEPENDENCY:
+            case CacheDependencies::NAMESPACE_OLD_VALUE:
+            case CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY:
                 $parentPath = $requestPage->getPath()->getParent();
                 if ($parentPath === null) {
                     return ":";
                 } else {
                     return $parentPath->toString();
                 }
-            case CacheRuntimeDependencies::REQUESTED_PAGE_DEPENDENCY:
+            case CacheDependencies::REQUESTED_PAGE_DEPENDENCY:
                 return $requestPage->getPath()->toString();
             default:
                 throw new ExceptionCombo("The requested dependency value ($dependenciesValue) is unknown");
@@ -191,10 +190,10 @@ class CacheRuntimeDependencies
 
     /**
      * @param string $dependencyName
-     * @return CacheRuntimeDependencies
+     * @return CacheDependencies
      * @throws ExceptionCombo
      */
-    public function addDependency(string $dependencyName): CacheRuntimeDependencies
+    public function addDependency(string $dependencyName): CacheDependencies
     {
         if (!in_array($dependencyName, self::outputDependencies)) {
             throw new ExceptionCombo("Unknown dependency value ($dependencyName");

@@ -2,7 +2,7 @@
 
 
 use ComboStrap\CacheManager;
-use ComboStrap\CacheRuntimeDependencies;
+use ComboStrap\CacheDependencies;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
@@ -200,7 +200,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             } else {
                                 $namespacePath = "";
                             }
-                            CacheManager::getOrCreate()->addDependency(CacheRuntimeDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
+                            CacheManager::getOrCreate()->addDependency(CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
                             break;
                         case self::TYPE_TREE:
                             $parent = $renderedPage->getPath()->getParent();

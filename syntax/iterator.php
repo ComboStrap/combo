@@ -2,7 +2,7 @@
 
 
 use ComboStrap\CacheManager;
-use ComboStrap\CacheRuntimeDependencies;
+use ComboStrap\CacheDependencies;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
@@ -287,7 +287,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                 $cacheManager = CacheManager::getOrCreate();
                 switch ($table){
                     case PageSqlTreeListener::BACKLINKS:
-                        $cacheManager->addDependency(CacheRuntimeDependencies::BACKLINKS_DEPENDENCY);
+                        $cacheManager->addDependency(CacheDependencies::BACKLINKS_DEPENDENCY);
                         break;
                     default:
                 }

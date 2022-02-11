@@ -24,7 +24,7 @@ class CacheManager
 
 
     /**
-     * The list of cache runtimes dependencies by slot {@link CacheRuntimeDependencies}
+     * The list of cache runtimes dependencies by slot {@link CacheDependencies}
      */
     private $slotCacheRuntimeDependencies;
     /**
@@ -58,14 +58,14 @@ class CacheManager
 
     /**
      * @param $id
-     * @return CacheRuntimeDependencies
+     * @return CacheDependencies
      */
-    public function getRuntimeCacheDependenciesForSlot($id): CacheRuntimeDependencies
+    public function getRuntimeCacheDependenciesForSlot($id): CacheDependencies
     {
 
         $cacheRuntimeDependencies = $this->slotCacheRuntimeDependencies[$id];
         if ($cacheRuntimeDependencies === null) {
-            $cacheRuntimeDependencies = new CacheRuntimeDependencies($id);
+            $cacheRuntimeDependencies = new CacheDependencies($id);
             $this->slotCacheRuntimeDependencies[$id] = $cacheRuntimeDependencies;
         }
         return $cacheRuntimeDependencies;
@@ -111,10 +111,10 @@ class CacheManager
 
 
     /**
-     * @return CacheRuntimeDependencies
+     * @return CacheDependencies
      * @throws ExceptionCombo
      */
-    private function getCacheManagerForCurrentSlot(): CacheRuntimeDependencies
+    private function getCacheManagerForCurrentSlot(): CacheDependencies
     {
         global $ID;
         if ($ID === null) {

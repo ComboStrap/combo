@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\CacheRuntimeDependencies;
+use ComboStrap\CacheDependencies;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
@@ -70,7 +70,7 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         $dependencies = $footerSlot
             ->getHtmlDocument()
             ->getDependencies();
-        if ($dependencies->hasDependency(CacheRuntimeDependencies::BACKLINKS_DEPENDENCY)) {
+        if ($dependencies->hasDependency(CacheDependencies::BACKLINKS_DEPENDENCY)) {
             global $ID;
             $keep = $ID;
             $ID = $reference->getDokuwikiId();

@@ -3,7 +3,7 @@
 
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\CacheManager;
-use ComboStrap\CacheRuntimeDependencies;
+use ComboStrap\CacheDependencies;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
@@ -208,7 +208,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                 /**
                  * Cache dependent on the requested page
                  */
-                CacheManager::getOrCreate()->addDependency(CacheRuntimeDependencies::REQUESTED_PAGE_DEPENDENCY);
+                CacheManager::getOrCreate()->addDependency(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
 
                 return array(
                     PluginUtility::STATE => $state,

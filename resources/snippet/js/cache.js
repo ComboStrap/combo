@@ -11,7 +11,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
                 let pageId = JSINFO.id;
                 let modalBacklinkId = combo.toHtmlId(`combo-cache-${pageId}`);
-                let backlinkModal = combo.getOrCreateModal(modalBacklinkId)
+                let cacheModal = combo.getOrCreateModal(modalBacklinkId)
 
                 /**
                  * Creating the form
@@ -77,7 +77,7 @@ window.addEventListener("DOMContentLoaded", function () {
                 /**
                  * The modal
                  */
-                backlinkModal
+                cacheModal
                     .resetIfBuild()
                     .setHeader(`Cache Info for the page (${pageId})`)
                     .addBody(html)

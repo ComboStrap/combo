@@ -1,7 +1,9 @@
 <?php
 
 use ComboStrap\CacheManager;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\HtmlDocument;
+use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\SnippetManager;
@@ -156,7 +158,12 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * Snippets
          * (Slot and request snippets)
          */
-        $allSnippets = $snippetManager->getSnippets();
+        try {
+            $allSnippets = $snippetManager->getSnippets();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error: We couldn't add the snippets in the head. Error: {$e->getMessage()}");
+            return;
+        }
         foreach ($allSnippets as $tagType => $tags) {
 
             foreach ($tags as $tag) {
@@ -203,15 +210,37 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
             $snippetManager = PluginUtility::getSnippetManager();
             $xhtmlContent = &$event->data[1];
-            $snippets = $snippetManager->getSnippets();
-            foreach ($snippets as $tagType => $tags) {
+            try {
+                $snippets = $snippetManager->getSnippets();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("Error: We couldn't add the snippets in the content. Error: {$e->getMessage()}");
+                return;
+            }
+            foreach ($snippets as $htmlElement => $tags) {
 
                 foreach ($tags as $tag) {
-                    $xhtmlContent .= DOKU_LF . "<$tagType";
+                    $xhtmlContent .= DOKU_LF . "<$htmlElement";
                     $attributes = "";
                     $content = null;
+
+                    /**
+                     * This code runs in editing mode
+                     * or if the template is not strap
+                     * No preload is then supported
+                     */
+                    if ($htmlElement === "link"){
+                        $relValue = $tag["rel"];
+                        $relAs = $tag["as"];
+                        if($relValue==="preload"){
+                            $tag["rel"]=$relAs;
+                        }
+                    }
+
+                    /**
+                     * Print
+                     */
                     foreach ($tag as $attributeName => $attributeValue) {
-                        if ($attributeName != "_data") {
+                        if ($attributeName !== "_data") {
                             $attributes .= " $attributeName=\"$attributeValue\"";
                         } else {
                             $content = $attributeValue;
@@ -221,7 +250,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                     if (!empty($content)) {
                         $xhtmlContent .= $content;
                     }
-                    $xhtmlContent .= "</$tagType>" . DOKU_LF;
+                    $xhtmlContent .= "</$htmlElement>" . DOKU_LF;
                 }
 
             }

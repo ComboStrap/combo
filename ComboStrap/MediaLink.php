@@ -12,6 +12,7 @@
 
 namespace ComboStrap;
 
+use dokuwiki\Action\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
 use dokuwiki\Parsing\ParserMode\Internallink;
 use syntax_plugin_combo_media;
@@ -571,6 +572,12 @@ abstract class MediaLink
                     true
                 );
                 $mediaLink->addHtmlAttributeValue("href", $src);
+                $snippetId = "lightbox";
+                $mediaLink->addClassName("{$snippetId}-combo");
+                $snippetManager = PluginUtility::getSnippetManager();
+                $snippetManager->attachJavascriptComboLibrary();
+                $snippetManager->attachJavascriptSnippetForSlot("lightbox");
+                $snippetManager->attachCssSnippetForSlot("lightbox");
                 return $mediaLink->toHtmlEnterTag("a") . $this->renderMediaTag() . "</a>";
 
             case self::LINKING_DETAILS_VALUE:
@@ -611,7 +618,6 @@ abstract class MediaLink
     {
         return $this->media;
     }
-
 
 
 }

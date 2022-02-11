@@ -156,6 +156,7 @@ class SnippetManager
 
     /**
      * @return array of node type and an array of array of html attributes
+     * @throws ExceptionCombo
      */
     public function getSnippets(): array
     {
@@ -233,7 +234,7 @@ class SnippetManager
                 case Snippet::TAG_TYPE:
                     foreach ($snippetBySnippetId as $snippetId => $tagsSnippet) {
                         /** @var Snippet $tagsSnippet */
-                        foreach ($tagsSnippet->getTags() as $snippetType => $heads) {
+                        foreach ($tagsSnippet->getTags() as $htmlElement => $heads) {
                             $classFromSnippetId = self::getClassFromSnippetId($snippetId);
                             foreach ($heads as $head) {
                                 if (isset($head["class"])) {
@@ -242,12 +243,28 @@ class SnippetManager
                                     $head["class"] = $classFromSnippetId;
                                 }
                                 /**
-                                 * Critical is only treated by strap
+                                 * Critical treated now via the
+                                 * html attribute because the snippets
+                                 * can be rendered by the strap template
+                                 * or combo via {@link \action_plugin_combo_snippets::componentSnippetContent()}
                                  */
-                                if (Site::isStrapTemplate()) {
-                                    $head[self::CRITICAL_ATTRIBUTE] = $tagsSnippet->getCritical();
+                                if (!$tagsSnippet->getCritical()) {
+                                    switch ($htmlElement) {
+                                        case "script":
+                                            $head["defer"] = null;
+                                            break;
+                                        case "link":
+                                            $relValue = $head["rel"];
+                                            if ($relValue !== null && $relValue === "stylesheet") {
+                                                $head["rel"] = "preload";
+                                                $head['as'] = 'style';
+                                            }
+                                            break;
+                                        default:
+                                            throw new ExceptionCombo("The non-critical tag snippet ($tagsSnippet) has an unknown html element ($htmlElement)");
+                                    }
                                 }
-                                $dokuWikiHeadsSrc[$snippetType][] = $head;
+                                $dokuWikiHeadsSrc[$htmlElement][] = $head;
                             }
                         }
                     }

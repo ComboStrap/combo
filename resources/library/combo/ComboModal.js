@@ -18,6 +18,9 @@ export default class ComboModal {
     footerButtons = [];
     bodies = [];
     isBuild = false;
+    bodyStyles = {};
+    dialogStyles = {};
+    showFooter = true;
 
     /**
      * A valid HTML id
@@ -59,6 +62,25 @@ export default class ComboModal {
     addBody(htmlBody) {
 
         this.bodies.push(htmlBody);
+        return this;
+
+    }
+
+    addBodyStyle(property, value) {
+
+        this.bodyStyles[property] = value;
+        return this;
+
+    }
+
+    noFooter() {
+        this.showFooter = false;
+        return this;
+    }
+
+    addDialogStyle(property, value) {
+
+        this.dialogStyles[property] = value;
         return this;
 
     }
@@ -297,6 +319,12 @@ export default class ComboModal {
         // we want still the mouse below the tab when we click
         modalManagerDialog.style.setProperty("margin", "5rem auto");
         modalManagerDialog.style.setProperty("height", "calc(100% - 9rem)");
+        for (let dialogStyleName in this.dialogStyles) {
+            if (!this.dialogStyles.hasOwnProperty(dialogStyleName)) {
+                continue;
+            }
+            modalManagerDialog.style.setProperty(dialogStyleName, this.dialogStyles[dialogStyleName]);
+        }
         this.modalRootHtmlElement.appendChild(modalManagerDialog);
         this.modalContent = document.createElement("div");
         this.modalContent.classList.add("modal-content");
@@ -304,6 +332,12 @@ export default class ComboModal {
 
         this.modalBody = document.createElement("div");
         this.modalBody.classList.add("modal-body");
+        for (let bodyStyleName in this.bodyStyles) {
+            if (!this.bodyStyles.hasOwnProperty(bodyStyleName)) {
+                continue;
+            }
+            this.modalBody.style.setProperty(bodyStyleName, this.bodyStyles[bodyStyleName]);
+        }
         this.modalContent.appendChild(this.modalBody);
 
 
@@ -358,19 +392,21 @@ export default class ComboModal {
         /**
          * Footer button
          */
-        let modalFooter = document.createElement("div");
-        modalFooter.classList.add("modal-footer");
-        this.modalContent.appendChild(modalFooter);
+        if(this.showFooter) {
+            let modalFooter = document.createElement("div");
+            modalFooter.classList.add("modal-footer");
+            this.modalContent.appendChild(modalFooter);
 
-        if (this.footerButtons.length === 0) {
-            this.addFooterCloseButton();
-        }
+            if (this.footerButtons.length === 0) {
+                this.addFooterCloseButton();
+            }
 
-        for (let footerButton of this.footerButtons) {
-            if (typeof footerButton === 'string' || footerButton instanceof String) {
-                modalFooter.insertAdjacentHTML('beforeend', footerButton);
-            } else {
-                modalFooter.appendChild(footerButton);
+            for (let footerButton of this.footerButtons) {
+                if (typeof footerButton === 'string' || footerButton instanceof String) {
+                    modalFooter.insertAdjacentHTML('beforeend', footerButton);
+                } else {
+                    modalFooter.appendChild(footerButton);
+                }
             }
         }
 

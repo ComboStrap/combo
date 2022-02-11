@@ -1723,7 +1723,7 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * @param string $scope {@link CacheRuntimeDependencies::REQUESTED_NAMESPACE_VALUE} or a namespace...
+     * @param string $scope {@link CacheRuntimeDependencies::REQUESTED_NAMESPACE_DEPENDENCY} or a namespace...
      */
     public
     function setScope(string $scope): Page

@@ -200,7 +200,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             } else {
                                 $namespacePath = "";
                             }
-                            CacheManager::getOrCreate()->addDependency(CacheRuntimeDependencies::REQUESTED_NAMESPACE_VALUE);
+                            CacheManager::getOrCreate()->addDependency(CacheRuntimeDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
                             break;
                         case self::TYPE_TREE:
                             $parent = $renderedPage->getPath()->getParent();

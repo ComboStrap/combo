@@ -77,4 +77,9 @@ class PageSql
         return $this->sql;
     }
 
+    public function getTable()
+    {
+        return $this->listener->getTable();
+    }
+
 }

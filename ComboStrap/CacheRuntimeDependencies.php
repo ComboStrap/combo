@@ -21,18 +21,49 @@ class CacheRuntimeDependencies
      * The dependency value is the requested page path
      * (used for syntax mostly used in the header and footer of the main slot for instance)
      */
-    public const REQUESTED_PAGE_VALUE = "requested_page";
+    public const REQUESTED_PAGE_DEPENDENCY = "requested_page";
     /**
      * The special scope value current means the namespace of the requested page
      * The real scope value is then calculated before retrieving the cache
      */
-    public const REQUESTED_NAMESPACE_VALUE = "requested_namespace";
+    public const REQUESTED_NAMESPACE_DEPENDENCY = "requested_namespace";
     /**
-     * @deprecated use the {@link CacheRuntimeDependencies::REQUESTED_NAMESPACE_VALUE}
+     * @deprecated use the {@link CacheRuntimeDependencies::REQUESTED_NAMESPACE_DEPENDENCY}
      */
     public const NAMESPACE_OLD_VALUE = "current";
 
-    public const dependencies = [self::REQUESTED_PAGE_VALUE, self::REQUESTED_NAMESPACE_VALUE];
+    /**
+     * This dependencies have an impact on the
+     * output location of the cache
+     * {@link CacheRuntimeDependencies::getOrCalculateDependencyKey()}
+     */
+    public const outputDependencies = [self::REQUESTED_PAGE_DEPENDENCY, self::REQUESTED_NAMESPACE_DEPENDENCY];
+
+    /**
+     * This dependencies have an impact on the freshness
+     * of the cache
+     */
+    public const validityDependencies = [self::BACKLINKS_DEPENDENCY, self::SQL_DEPENDENCY, self::DESCRIPTION_DEPENDENCY];
+
+    /**
+     * Backlinks are printed in the page
+     * {@link \action_plugin_combo_backlinkmutation}
+     * If a referent page add or delete a link,
+     * the slot should be refreshed / cache should be deleted
+     */
+    const BACKLINKS_DEPENDENCY = "backlinks";
+
+    /**
+     * A page sql is in the page
+     * (The page should be refreshed by default once a day)
+     */
+    const SQL_DEPENDENCY = "sql";
+
+    /**
+     * If the name, the title or the description
+     * of a page changes, the cache should be invalidated
+     */
+    const DESCRIPTION_DEPENDENCY = "page_description";
 
 
     /**
@@ -109,14 +140,14 @@ class CacheRuntimeDependencies
         $requestPage = Page::createPageFromRequestedPage();
         switch ($dependenciesValue) {
             case CacheRuntimeDependencies::NAMESPACE_OLD_VALUE:
-            case CacheRuntimeDependencies::REQUESTED_NAMESPACE_VALUE:
+            case CacheRuntimeDependencies::REQUESTED_NAMESPACE_DEPENDENCY:
                 $parentPath = $requestPage->getPath()->getParent();
                 if ($parentPath === null) {
                     return ":";
                 } else {
                     return $parentPath->toString();
                 }
-            case CacheRuntimeDependencies::REQUESTED_PAGE_VALUE:
+            case CacheRuntimeDependencies::REQUESTED_PAGE_DEPENDENCY:
                 return $requestPage->getPath()->toString();
             default:
                 throw new ExceptionCombo("The requested dependency value ($dependenciesValue) is unknown");
@@ -165,7 +196,7 @@ class CacheRuntimeDependencies
      */
     public function addDependency(string $dependencyName): CacheRuntimeDependencies
     {
-        if (!in_array($dependencyName, self::dependencies)) {
+        if (!in_array($dependencyName, self::outputDependencies)) {
             throw new ExceptionCombo("Unknown dependency value ($dependencyName");
         }
         $this->runtimeAddedDependencies[$dependencyName] = "";
@@ -177,7 +208,7 @@ class CacheRuntimeDependencies
         if ($this->runtimeAddedDependencies != null) {
             return array_keys($this->runtimeAddedDependencies);
         }
-        if($this->runtimeStoreDependencies===null){
+        if ($this->runtimeStoreDependencies === null) {
             return null;
         }
         return array_keys($this->runtimeStoreDependencies);

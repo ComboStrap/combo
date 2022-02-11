@@ -123,7 +123,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                  * Cache key dependencies
                  */
                 try {
-                    CacheManager::getOrCreate()->addDependency(CacheRuntimeDependencies::REQUESTED_PAGE_VALUE);
+                    CacheManager::getOrCreate()->addDependency(CacheRuntimeDependencies::REQUESTED_PAGE_DEPENDENCY);
                 } catch (ExceptionCombo $e) {
                     LogUtility::msg("We were unable to add the requested page runtime dependency. Cache errors may occurs. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 }

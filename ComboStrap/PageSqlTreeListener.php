@@ -337,6 +337,11 @@ EOF;
         return $this->columns;
     }
 
+    public function getTable(): string
+    {
+        return $this->type;
+    }
+
     /**
      * For documentation
      * @param ParserRuleContext $ctx

@@ -2,6 +2,8 @@
 
 
 use ComboStrap\AnalyticsDocument;
+use ComboStrap\CacheManager;
+use ComboStrap\CacheRuntimeDependencies;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
@@ -60,6 +62,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
     ];
 
     const CANONICAL = "template";
+    const CALLSTACK = "callstack";
 
     /**
      * @param Call $call
@@ -191,339 +194,26 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
+                /**
+                 * Gather template stack
+                 */
                 $callStack = CallStack::createFromHandler($handler);
-
-                /**
-                 * Iterator node parent ?
-                 * The iterator is often the grand-parent
-                 * (ie a parent is generally a layout component
-                 * such as masonry, ...)
-                 */
-                $iteratorNode = null;
-                $callStack->moveToPreviousCorrespondingOpeningCall();
-                while ($parent = $callStack->moveToParent()) {
-                    if ($parent->getTagName() === syntax_plugin_combo_iterator::TAG) {
-                        $iteratorNode = $parent;
-                        break; // to start from the iterator
-                    }
+                $templateEnterCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $templateStack = [];
+                while ($actualCall = $callStack->next()) {
+                    $templateStack[] = $actualCall;
                 }
-
+                $callStack->deleteAllCallsAfter($templateEnterCall);
 
                 /**
-                 * The array returned if any error
+                 * Cache dependent on the requested page
                  */
-                $returnedArray = array(
-                    PluginUtility::STATE => $state
+                CacheManager::getOrCreate()->addDependency(CacheRuntimeDependencies::REQUESTED_PAGE_DEPENDENCY);
+
+                return array(
+                    PluginUtility::STATE => $state,
+                    self::CALLSTACK => $templateStack
                 );
-
-                if ($iteratorNode === null) {
-
-                    /**
-                     * Gather template string
-                     */
-                    $callStack->moveToEnd();
-                    $templateEnterCall = $callStack->moveToPreviousCorrespondingOpeningCall();
-                    $templateStack = [];
-                    while ($actualCall = $callStack->next()) {
-                        $templateStack[] = $actualCall;
-                    }
-                    $callStack->deleteAllCallsAfter($templateEnterCall);
-
-                    /**
-                     * Template
-                     */
-                    $page = Page::createPageFromRequestedPage();
-                    $metadata = $page->getMetadataForRendering();
-                    $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateStack, $metadata);
-                    $callStack->appendInstructionsFromNativeArray($instructionsInstance);
-
-
-                } else {
-
-                    /**
-                     * Scanning the callstack and extracting the information
-                     * such as sql and template instructions
-                     */
-                    $pageSql = null;
-                    /**
-                     * @var Call[]
-                     */
-                    $actualStack = [];
-                    $complexMarkupFound = false;
-                    $variableNames = [];
-                    while ($actualCall = $callStack->next()) {
-
-                        /**
-                         * Capture Variable Names
-                         */
-                        $textWithVariables = $actualCall->getCapturedContent();
-                        $attributes = $actualCall->getAttributes();
-                        if ($attributes != null) {
-                            $sep = " ";
-                            foreach ($attributes as $key => $attribute) {
-                                $textWithVariables .= $sep . $key . $sep . $attribute;
-                            }
-                        }
-
-                        if (!empty($textWithVariables)) {
-                            $template = Template::create($textWithVariables);
-                            $variablesDetected = $template->getVariablesDetected();
-                            $variableNames = array_merge($variableNames, $variablesDetected);
-                        }
-
-                        /**
-                         * Other capture
-                         */
-                        switch ($actualCall->getTagName()) {
-                            case syntax_plugin_combo_iteratordata::TAG:
-                                if ($actualCall->getState() === DOKU_LEXER_UNMATCHED) {
-                                    $pageSql = $actualCall->getCapturedContent();
-                                }
-                                break;
-                            case self::TAG:
-                                if ($actualCall->getState() === DOKU_LEXER_ENTER) {
-                                    $headerStack = $actualStack;
-                                    $actualStack = [];
-                                } else {
-                                    $actualStack[] = $actualCall;
-                                }
-                                break;
-                            default:
-                                $actualStack[] = $actualCall;
-                                /**
-                                 * Do we have markup where the instructions should be generated at once
-                                 * and not line by line
-                                 *
-                                 * ie a list or a table
-                                 */
-                                if (in_array($actualCall->getComponentName(), Call::BLOCK_MARKUP_DOKUWIKI_COMPONENTS)) {
-                                    $complexMarkupFound = true;
-                                }
-
-                        }
-                    }
-                    $templateStack = $actualStack;
-                    $variableNames = array_unique($variableNames);
-
-
-                    /**
-                     * Data Processing
-                     */
-                    if ($pageSql === null) {
-                        LogUtility::msg("A data node could not be found in the iterator", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        return $returnedArray;
-                    }
-                    if (empty($pageSql)) {
-                        LogUtility::msg("The data node definition needs a logical sql content", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        return $returnedArray;
-                    }
-
-                    /**
-                     * Sqlite available ?
-                     */
-                    $sqlite = Sqlite::createOrGetSqlite();
-                    if ($sqlite === null) {
-                        LogUtility::msg("The iterator component needs Sqlite to be able to work", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        return $returnedArray;
-                    }
-
-
-                    /**
-                     * Create the SQL
-                     */
-                    try {
-                        $pageSql = PageSql::create($pageSql);
-                    } catch (Exception $e) {
-                        LogUtility::msg("The page sql is not valid. Error Message: {$e->getMessage()}. Page Sql: ($pageSql)", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
-                        return $returnedArray;
-                    }
-
-                    /**
-                     * Execute the generated SQL
-                     */
-                    try {
-                        $executableSql = $pageSql->getExecutableSql();
-                        $parameters = $pageSql->getParameters();
-                        $request = $sqlite
-                            ->createRequest()
-                            ->setQueryParametrized($executableSql, $parameters);
-                        $rowsInDb = [];
-                        try{
-                            $rowsInDb = $request
-                                ->execute()
-                                ->getRows();
-                        } catch (ExceptionCombo $e){
-                            LogUtility::msg("The sql statement generated returns an error. Sql statement: $executableSql", LogUtility::LVL_MSG_ERROR);
-                        } finally {
-                            $request->close();
-                        }
-
-                        $rows = [];
-                        foreach ($rowsInDb as $sourceRow) {
-                            $analytics = $sourceRow["ANALYTICS"];
-                            /**
-                             * @deprecated
-                             * We use id until path is full in the database
-                             */
-                            $id = $sourceRow["ID"];
-                            $page = Page::createPageFromId($id);
-                            $standardMetadata = $page->getMetadataForRendering();
-
-                            $jsonArray = json_decode($analytics, true);
-                            $targetRow = [];
-                            foreach ($variableNames as $variableName) {
-
-                                if ($variableName === PageImages::PROPERTY_NAME) {
-                                    LogUtility::msg("To add an image, you must use the page image component, not the image metadata", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_pageimage::CANONICAL);
-                                    continue;
-                                }
-
-                                /**
-                                 * Data in the pages tables
-                                 */
-                                if (isset($sourceRow[strtoupper($variableName)])) {
-                                    $data = $sourceRow[strtoupper($variableName)];
-                                    $targetRow[$variableName] = $data;
-                                    continue;
-                                }
-
-                                /**
-                                 * In the analytics
-                                 */
-                                $value = $jsonArray["metadata"][$variableName];
-                                if (!empty($value)) {
-                                    $targetRow[$variableName] = $value;
-                                    continue;
-                                }
-
-                                /**
-                                 * Computed
-                                 * (if the table is empty because of migration)
-                                 */
-                                $value = $standardMetadata[$variableName];
-                                if (isset($value)) {
-                                    $targetRow[$variableName] = $value;
-                                    continue;
-                                }
-
-                                /**
-                                 * Bad luck
-                                 */
-                                $targetRow[$variableName] = "$variableName attribute is unknown.";
-
-
-                            }
-                            $rows[] = $targetRow;
-                        }
-                    } catch (Exception $e) {
-                        LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        return $returnedArray;
-                    }
-
-
-                    /**
-                     * Loop
-                     */
-                    if (sizeof($rows) == 0) {
-                        $iteratorNode->addAttribute(syntax_plugin_combo_iterator::EMPTY_ROWS_COUNT_ATTRIBUTE, true);
-                        $parametersString = implode($parameters,", ");
-                        LogUtility::msg("The physical query (Sql: {$pageSql->getExecutableSql()}, Parameters: $parametersString) does not return any data", LogUtility::LVL_MSG_INFO, syntax_plugin_combo_iterator::CANONICAL);
-                        return $returnedArray;
-                    }
-
-                    /**
-                     * List and table
-                     */
-                    if ($complexMarkupFound) {
-
-                        /**
-                         * Splits the template into header, main and footer
-                         * @var Call $actualCall
-                         */
-                        $templateHeader = array();
-                        $templateMain = array();
-                        $actualStack = array();
-                        foreach ($templateStack as $actualCall) {
-                            switch ($actualCall->getComponentName()) {
-                                case "listitem_open":
-                                case "tablerow_open":
-                                    $templateHeader = $actualStack;
-                                    $actualStack = [$actualCall];
-                                    continue 2;
-                                case "listitem_close":
-                                case "tablerow_close":
-                                    $actualStack[] = $actualCall;
-                                    $templateMain = $actualStack;
-                                    $actualStack = [];
-                                    continue 2;
-                                default:
-                                    $actualStack[] = $actualCall;
-                            }
-                        }
-                        $templateFooter = $actualStack;
-
-                        /**
-                         * Delete the template calls
-                         */
-                        $callStack->moveToEnd();;
-                        $openingTemplateCall = $callStack->moveToPreviousCorrespondingOpeningCall();
-                        $callStack->deleteAllCallsAfter($openingTemplateCall);
-
-                        /**
-                         * Table with an header
-                         * If this is the case, the table_close of the header
-                         * and the table_open of the template should be
-                         * deleted to create one table
-                         */
-                        if (!empty($templateHeader)) {
-                            $firstTemplateCall = $templateHeader[0];
-                            if ($firstTemplateCall->getComponentName() === "table_open") {
-                                $callStack->moveToEnd();
-                                $callStack->moveToPreviousCorrespondingOpeningCall();
-                                $previousCall = $callStack->previous();
-                                if ($previousCall->getComponentName() === "table_close") {
-                                    $callStack->deleteActualCallAndPrevious();
-                                    unset($templateHeader[0]);
-                                }
-                            }
-                        }
-                        /**
-                         * Loop and recreate the call stack
-                         */
-                        $callStack->appendInstructionsFromCallObjects($templateHeader);
-                        foreach ($rows as $row) {
-                            $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateMain, $row);
-                            $callStack->appendInstructionsFromNativeArray($instructionsInstance);
-                        }
-                        $callStack->appendInstructionsFromCallObjects($templateFooter);
-
-
-                    } else {
-
-                        /**
-                         * No Complex Markup
-                         * We can use the calls form
-                         */
-
-                        /**
-                         * Delete the template
-                         */
-                        $callStack->moveToEnd();
-                        $templateEnterCall = $callStack->moveToPreviousCorrespondingOpeningCall();
-                        $callStack->deleteAllCallsAfter($templateEnterCall);
-
-                        /**
-                         * Append the new instructions by row
-                         */
-                        foreach ($rows as $row) {
-                            $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateStack, $row);
-                            $callStack->appendInstructionsFromNativeArray($instructionsInstance);
-                        }
-
-                    }
-
-                }
-                return $returnedArray;
 
 
         }

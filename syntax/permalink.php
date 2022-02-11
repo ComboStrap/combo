@@ -131,7 +131,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                  */
                 try {
                     CacheManager::getOrCreate()->addDependency(
-                        CacheRuntimeDependencies::REQUESTED_PAGE_VALUE
+                        CacheRuntimeDependencies::REQUESTED_PAGE_DEPENDENCY
                     );
                 } catch (ExceptionCombo $e) {
                     LogUtility::msg("We were unable to add the requested page runtime dependency. Cache errors may occurs. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);

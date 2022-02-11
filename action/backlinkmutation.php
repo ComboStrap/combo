@@ -48,6 +48,10 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         $pagePath = $data[PagePath::getPersistentName()];
         $reference = Page::createPageFromQualifiedPath($pagePath);
 
+        if ($reference->isSlot()) {
+            return;
+        }
+
         /**
          * Delete analytics
          */
@@ -57,6 +61,7 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         /**
          * Render the slots that have a reference dependency
          */
+        $slots = $reference->getSlots();
 
 
     }

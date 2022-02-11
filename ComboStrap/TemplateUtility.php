@@ -111,9 +111,10 @@ class TemplateUtility
         $instructions = [];
         foreach ($namespaceTemplateInstructions as $call) {
             if(is_array($call)){
-                $call = Call::createFromInstruction($call);
+                $newCall = Call::createFromInstruction($call);
+            } else {
+                $newCall = Call::createFromCall($call);
             }
-            $newCall = clone $call;
             $instructions[] = $newCall->renderFromData($array)->toCallArray();
         }
         return $instructions;

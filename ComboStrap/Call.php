@@ -189,6 +189,15 @@ class Call
         return new Call($instruction);
     }
 
+    /**
+     * @param Call $call
+     * @return Call
+     */
+    public static function createFromCall(Call $call): Call
+    {
+        return self::createFromInstruction($call->toCallArray());
+    }
+
 
     /**
      *

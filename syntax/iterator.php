@@ -440,12 +440,15 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     /**
                      * Template stack processing
                      */
-                    $templateStack = $data[self::TEMPLATE_CALLSTACK];
-                    if ($templateStack === null) {
+                    $iteratorTemplateInstructions = $data[self::TEMPLATE_CALLSTACK];
+                    if ($iteratorTemplateInstructions === null) {
                         $renderer->doc .= "No template was found in this iterator.";
                         return false;
                     }
-                    $templateInstructionsInstances = [];
+                    $iteratorHeaderInstructions = $data[self::BEFORE_TEMPLATE_CALLSTACK];
+
+
+                    $iteratorTemplateGeneratedInstructions = [];
 
 
                     /**
@@ -458,11 +461,12 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                          * Splits the template into header, main and footer
                          * @var Call $actualCall
                          */
-                        $templateStack = CallStack::createFromInstructions($templateStack);
+                        $templateCallStack = CallStack::createFromInstructions($iteratorTemplateInstructions);
                         $templateHeader = array();
                         $templateMain = array();
                         $actualStack = array();
-                        foreach ($templateStack as $actualCall) {
+                        $templateCallStack->moveToStart();
+                        while ($actualCall = $templateCallStack->next()) {
                             switch ($actualCall->getComponentName()) {
                                 case "listitem_open":
                                 case "tablerow_open":
@@ -490,11 +494,10 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         if (!empty($templateHeader)) {
                             $firstTemplateCall = $templateHeader[0];
                             if ($firstTemplateCall->getComponentName() === "table_open") {
-                                $templateStack->moveToEnd();
-                                $templateStack->moveToPreviousCorrespondingOpeningCall();
-                                $previousCall = $templateStack->previous();
-                                if ($previousCall->getComponentName() === "table_close") {
-                                    $templateStack->deleteActualCallAndPrevious();
+                                $lastIterationHeaderElement = sizeof($iteratorHeaderInstructions) - 1;
+                                $lastIterationHeaderInstruction = Call::createFromInstruction($iteratorHeaderInstructions[$lastIterationHeaderElement]);
+                                if ($lastIterationHeaderInstruction->getComponentName() === "table_close") {
+                                    unset($iteratorHeaderInstructions[$lastIterationHeaderElement]);
                                     unset($templateHeader[0]);
                                 }
                             }
@@ -503,15 +506,16 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         /**
                          * Loop and recreate the call stack in instructions  form for rendering
                          */
-                        $templateInstructionsInstances = [];
+                        $iteratorTemplateGeneratedInstructions = [];
                         foreach ($templateHeader as $templateHeaderCall) {
-                            $templateInstructionsInstances[] = $templateHeaderCall->toCallArray();
+                            $iteratorTemplateGeneratedInstructions[] = $templateHeaderCall->toCallArray();
                         }
                         foreach ($rows as $row) {
-                            $templateInstructionsInstances[] = TemplateUtility::renderInstructionsTemplateFromDataArray($templateMain, $row);
+                            $templateInstructionForInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateMain, $row);
+                            $iteratorTemplateGeneratedInstructions = array_merge($iteratorTemplateGeneratedInstructions, $templateInstructionForInstance);
                         }
                         foreach ($templateFooter as $templateFooterCall) {
-                            $templateInstructionsInstances[] = $templateFooterCall->toCallArray();
+                            $iteratorTemplateGeneratedInstructions[] = $templateFooterCall->toCallArray();
                         }
 
 
@@ -527,8 +531,8 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                          * Append the new instructions by row
                          */
                         foreach ($rows as $row) {
-                            $templateInstructionForInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateStack, $row);
-                            $templateInstructionsInstances = array_merge($templateInstructionsInstances,$templateInstructionForInstance) ;
+                            $templateInstructionForInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($iteratorTemplateInstructions, $row);
+                            $iteratorTemplateGeneratedInstructions = array_merge($iteratorTemplateGeneratedInstructions, $templateInstructionForInstance);
                         }
 
 
@@ -536,28 +540,25 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     /**
                      * Rendering
                      */
+                    $totalInstructions = [];
                     // header
-                    $callStackHeaderInstructions = $data[self::BEFORE_TEMPLATE_CALLSTACK];
-                    if (!empty($callStackHeaderInstructions)) {
-                        try {
-                            $renderer->doc .= PluginUtility::renderInstructionsToXhtml($callStackHeaderInstructions);
-                        } catch (ExceptionCombo $e) {
-                            $renderer->doc .= "Error while rendering the template header. Error: {$e->getMessage()}";
-                        }
+                    if (!empty($iteratorHeaderInstructions)) {
+                        $totalInstructions = $iteratorHeaderInstructions;
                     }
                     // content
-                    try {
-                        $renderer->doc .= PluginUtility::renderInstructionsToXhtml($templateInstructionsInstances);
-                    } catch (ExceptionCombo $e) {
-                        $renderer->doc .= "Error while rendering the template content. Error: {$e->getMessage()}";
+                    if (!empty($iteratorTemplateGeneratedInstructions)) {
+                        $totalInstructions = array_merge($totalInstructions,$iteratorTemplateGeneratedInstructions);
                     }
                     // footer
                     $callStackFooterInstructions = $data[self::AFTER_TEMPLATE_CALLSTACK];
                     if (!empty($callStackFooterInstructions)) {
+                        $totalInstructions = array_merge($totalInstructions,$callStackFooterInstructions);
+                    }
+                    if (!empty($totalInstructions)) {
                         try {
-                            $renderer->doc .= PluginUtility::renderInstructionsToXhtml($callStackFooterInstructions);
+                            $renderer->doc .= PluginUtility::renderInstructionsToXhtml($totalInstructions);
                         } catch (ExceptionCombo $e) {
-                            $renderer->doc .= "Error while rendering the footer template. Error: {$e->getMessage()}";
+                            $renderer->doc .= "Error while rendering the iterators instructions. Error: {$e->getMessage()}";
                         }
                     }
                     return true;

@@ -190,9 +190,10 @@ class HtmlDocument extends OutputDocument
         return $this->snippetCache;
     }
 
-
-
-
+    public function getDependencies(): CacheRuntimeDependencies
+    {
+        return $this->cacheDependencies;
+    }
 
 
     /**

@@ -1,8 +1,10 @@
 <?php
 
+use ComboStrap\CacheRuntimeDependencies;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
+use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
 use ComboStrap\PagePath;
@@ -53,15 +55,34 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         }
 
         /**
-         * Delete analytics
+         * Delete and recompute analytics
          */
         FileSystems::deleteIfExists($reference->getAnalyticsDocument()->getCachePath());
         $reference->getDatabasePage()->replicateAnalytics();
 
         /**
-         * Render the slots that have a reference dependency
+         * Render the footer slot if it has a backlink dependency
          */
-        $slots = $reference->getSlots();
+        $footerSlot = $reference->getFooterSlot();
+        if ($footerSlot === null) {
+            return;
+        }
+        $dependencies = $footerSlot
+            ->getHtmlDocument()
+            ->getDependencies();
+        if ($dependencies->hasDependency(CacheRuntimeDependencies::BACKLINKS_DEPENDENCY)) {
+            global $ID;
+            $keep = $ID;
+            $ID = $reference->getDokuwikiId();
+            try {
+                $footerSlot->toXhtml();
+            } catch (ExceptionCombo $e) {
+                LogUtility::log2file("Error while rendering the footer slot after backlink mutation. Error: {$e->getMessage()} ");
+            } finally {
+                $ID = $keep;
+            }
+
+        }
 
 
     }

@@ -278,4 +278,13 @@ class CacheRuntimeDependencies
         return $this->dependenciesCacheStore;
     }
 
+    public function hasDependency(string $dependencyName): bool
+    {
+        $dependencies = $this->getDependencies();
+        if($dependencies===null){
+            return false;
+        }
+        return in_array($dependencyName,$dependencies);
+    }
+
 }

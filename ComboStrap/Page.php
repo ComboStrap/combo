@@ -940,7 +940,7 @@ class Page extends ResourceComboAbs
 
     public function getUrl($type = null): ?string
     {
-        if($type===null){
+        if ($type === null) {
             return $this->getCanonicalUrl();
         }
         $pageUrlId = DokuPath::toDokuwikiId(PageUrlPath::createForPage($this)
@@ -1923,7 +1923,7 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @throws ExceptionCombo
+     *
      */
     public
     function getInstructionsDocument(): InstructionsDocument
@@ -2009,6 +2009,22 @@ class Page extends ResourceComboAbs
         return $this->pageUrlPath;
     }
 
+    public function getFooterSlot(): ?Page
+    {
+        if ($this->isSlot() || $this->isRootHomePage()) {
+            return null;
+        }
+
+        try {
+            Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            $nearestMainFooter = page_findnearest(TplUtility::SLOT_MAIN_FOOTER_NAME);
+            return Page::createPageFromId($nearestMainFooter);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("We can't load strap. The footer slot could not be detected, Error: {$e->getMessage()}");
+            return null;
+        }
+
+    }
 
 
 }

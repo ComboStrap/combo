@@ -20,7 +20,6 @@ class InstructionsDocument extends PageCompilerDocument
 
     /**
      * InstructionsDocument constructor.
-     * @throws ExceptionCombo
      * @var Page $page
      */
     public function __construct(Page $page)

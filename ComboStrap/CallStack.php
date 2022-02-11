@@ -178,7 +178,7 @@ class CallStack
     }
 
     public
-    static function createFromMarkup($marki)
+    static function createFromMarkup($marki): CallStack
     {
 
         $modes = p_get_parsermodes();
@@ -207,6 +207,13 @@ class CallStack
             }
         };
         return new CallStack($emptyHandler);
+    }
+
+    public static function createFromInstructions(?array $callStackArray): CallStack
+    {
+        return CallStack::createEmpty()
+            ->appendInstructionsFromNativeArray($callStackArray);
+
     }
 
 
@@ -775,10 +782,12 @@ class CallStack
     /**
      * Append instructions to the callstack (ie at the end)
      * @param array $instructions
+     * @return CallStack
      */
-    public function appendInstructionsFromNativeArray($instructions)
+    public function appendInstructionsFromNativeArray(array $instructions): CallStack
     {
         array_splice($this->callStack, count($this->callStack), 0, $instructions);
+        return $this;
     }
 
     /**

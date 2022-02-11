@@ -101,7 +101,7 @@ class TemplateUtility
     }
 
     /**
-     * @param Call[] $namespaceTemplateInstructions
+     * @param Call[]|array $namespaceTemplateInstructions
      * @param array $array - the data array
      * @return array - native call stack instructions
      */
@@ -110,6 +110,9 @@ class TemplateUtility
 
         $instructions = [];
         foreach ($namespaceTemplateInstructions as $call) {
+            if(is_array($call)){
+                $call = Call::createFromInstruction($call);
+            }
             $newCall = clone $call;
             $instructions[] = $newCall->renderFromData($array)->toCallArray();
         }

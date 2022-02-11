@@ -201,7 +201,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                 $templateEnterCall = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $templateStack = [];
                 while ($actualCall = $callStack->next()) {
-                    $templateStack[] = $actualCall;
+                    $templateStack[] = $actualCall->toCallArray();
                 }
                 $callStack->deleteAllCallsAfter($templateEnterCall);
 
@@ -231,13 +231,22 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format === "xhtml") {
             $state = $data[PluginUtility::STATE];
-            if ($state === DOKU_LEXER_UNMATCHED) {
-                $renderer->doc .= PluginUtility::renderUnmatched($data);
+            switch ($state) {
+                case DOKU_LEXER_UNMATCHED:
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    return true;
+                case DOKU_LEXER_EXIT:
+                    $templateStack = $data[self::CALLSTACK];
+                    $page = Page::createPageFromRequestedPage();
+                    $metadata = $page->getMetadataForRendering();
+                    $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateStack, $metadata);
+                    $renderer->doc .= p_render($format, $instructionsInstance,$info);
+                    return true;
             }
         }
         return false;

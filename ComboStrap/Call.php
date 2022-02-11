@@ -174,7 +174,7 @@ class Call
      * @param $positionInText
      * @return Call
      */
-    public static function createNativeCall($callName, $array = [], $positionInText = null)
+    public static function createNativeCall($callName, $array = [], $positionInText = null): Call
     {
         $call = [
             $callName,
@@ -268,7 +268,7 @@ class Call
     public function getState()
     {
         $mode = $this->call[0];
-        if ($mode != "plugin") {
+        if ($mode !== "plugin") {
 
             /**
              * There is no state because this is a standard

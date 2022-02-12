@@ -1023,12 +1023,14 @@ class TagAttributes
 
     /**
      * @param $string
+     * @return TagAttributes
      */
     public
-    function removeAttributeIfPresent($string)
+    function removeAttributeIfPresent($string): TagAttributes
     {
         $this->removeComponentAttributeIfPresent($string);
         $this->removeHTMLAttributeIfPresent($string);
+        return $this;
 
     }
 

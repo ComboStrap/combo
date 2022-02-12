@@ -205,9 +205,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 ];
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
 
-                $type = $tagAttributes->getType();
-
-
                 $callStackArray = $tagAttributes->toCallStackArray();
                 return array(
                     PluginUtility::STATE => $state,
@@ -240,10 +237,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  */
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 /**
-                 * @var Call[] $templateNamespaceInstructions
+                 * @var Call[] $namespaceInstructions
                  * @var array $namespaceAttributes
                  */
-                $templateNamespaceInstructions = null;
+                $namespaceInstructions = null;
                 $namespaceAttributes = null;
                 /**
                  * @var Call[] $templatePageInstructions
@@ -298,7 +295,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     $actualInstructionsStack = [];
                                     continue 3;
                                 case syntax_plugin_combo_pageexplorernamespace::TAG:
-                                    $templateNamespaceInstructions = $actualInstructionsStack;
+                                    $namespaceInstructions = $actualInstructionsStack;
                                     $actualInstructionsStack = [];
                                     continue 3;
                                 case syntax_plugin_combo_pageexplorerhome::TAG:
@@ -440,9 +437,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 if ($namespaceAttributes === null) {
                     $namespaceAttributes = [];
                     // default template instructions
-                    if ($templateNamespaceInstructions === null) {
-                        $templateNamespaceInstructions = [];
-                        $templateNamespaceInstructions[] = Call::createComboCall(
+                    if ($namespaceInstructions === null && $type === self::LIST_TYPE) {
+                        $namespaceInstructions = [];
+                        $namespaceInstructions[] = Call::createComboCall(
                             syntax_plugin_combo_link::TAG,
                             DOKU_LEXER_ENTER,
                             [
@@ -458,7 +455,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                          * and to get stable test
                          */
                         if (!PluginUtility::isTest()) {
-                            $templateNamespaceInstructions[] = Call::createComboCall(
+                            $namespaceInstructions[] = Call::createComboCall(
                                 syntax_plugin_combo_icon::TAG,
                                 DOKU_LEXER_SPECIAL,
                                 ["name" => "folder"],
@@ -466,7 +463,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 "<icon name=\"folder\"/>"
                             );
                         }
-                        $templateNamespaceInstructions[] = Call::createComboCall(
+                        $namespaceInstructions[] = Call::createComboCall(
                             syntax_plugin_combo_link::TAG,
                             DOKU_LEXER_UNMATCHED,
                             [],
@@ -474,14 +471,14 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             " ",
                             " "
                         );
-                        $templateNamespaceInstructions[] = Call::createComboCall(
+                        $namespaceInstructions[] = Call::createComboCall(
                             syntax_plugin_combo_pipeline::TAG,
                             DOKU_LEXER_SPECIAL,
                             [PluginUtility::PAYLOAD => ""],
                             "",
                             "<pipeline>\"\$name\" | replace(\"_\",\" \") | capitalize()</pipeline>"
                         );
-                        $templateNamespaceInstructions[] = Call::createComboCall(
+                        $namespaceInstructions[] = Call::createComboCall(
                             syntax_plugin_combo_link::TAG,
                             DOKU_LEXER_EXIT,
                             [
@@ -495,9 +492,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 }
 
                 if ($namespaceAttributes == null) {
-                    if ($templateNamespaceInstructions === null) {
-                        $templateNamespaceInstructions = [];
-                        $templateNamespaceInstructions[] = Call::createComboCall(
+                    if ($namespaceInstructions === null) {
+                        $namespaceInstructions = [];
+                        $namespaceInstructions[] = Call::createComboCall(
                             syntax_plugin_combo_pipeline::TAG,
                             DOKU_LEXER_SPECIAL,
                             [PluginUtility::PAYLOAD => ""],
@@ -510,7 +507,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $openingTag->getAttributes(),
-                    self::NAMESPACE_INSTRUCTIONS => $templateNamespaceInstructions,
+                    self::NAMESPACE_INSTRUCTIONS => $namespaceInstructions,
                     self::NAMESPACE_ATTRIBUTES => $namespaceAttributes,
                     self::PAGE_INSTRUCTIONS => $templatePageInstructions,
                     self::PAGE_ATTRIBUTES => $pageAttributes,
@@ -898,7 +895,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 ->addClassName("btn")
                 ->addClassName("align-items-center")
                 ->addClassName("rounded")
-                ->addClassName("btn-toggle-combo")
                 ->toHtmlEnterTag("button");
 
             // Button label

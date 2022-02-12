@@ -242,10 +242,18 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                     return true;
                 case DOKU_LEXER_EXIT:
                     $templateStack = $data[self::CALLSTACK];
+                    if ($templateStack === null) {
+                        $renderer->doc .= LogUtility::wrapInRedForHtml("Template instructions should not be null");
+                        return false;
+                    }
                     $page = Page::createPageFromRequestedPage();
                     $metadata = $page->getMetadataForRendering();
                     $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateStack, $metadata);
-                    $renderer->doc .= p_render($format, $instructionsInstance,$info);
+                    try {
+                        $renderer->doc .= PluginUtility::renderInstructionsToXhtml($instructionsInstance);
+                    } catch (ExceptionCombo $e) {
+                        $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the template instruction. Error: {$e->getMessage()}");
+                    }
                     return true;
             }
         }

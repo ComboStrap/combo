@@ -194,16 +194,19 @@ class CacheDependencies
      */
     public function addDependency(string $dependencyName): CacheDependencies
     {
-        if (!in_array($dependencyName, self::outputDependencies)) {
-            if(PluginUtility::isDevOrTest()) {
-                throw new ExceptionComboRuntime("Unknown dependency value ($dependencyName");
+        if (PluginUtility::isDevOrTest()) {
+            if (!in_array($dependencyName, self::outputDependencies) &&
+                !in_array($dependencyName, self::validityDependencies)
+            ) {
+                throw new ExceptionComboRuntime("Unknown dependency value ($dependencyName)");
             }
         }
         $this->runtimeAddedDependencies[$dependencyName] = "";
         return $this;
     }
 
-    public function getDependencies(): ?array
+    public
+    function getDependencies(): ?array
     {
         if ($this->runtimeAddedDependencies != null) {
             return array_keys($this->runtimeAddedDependencies);
@@ -219,12 +222,14 @@ class CacheDependencies
      * Used for test purpose
      * @return string
      */
-    public function getDefaultKey(): string
+    public
+    function getDefaultKey(): string
     {
         return $this->page->getPath()->toLocalPath()->toString() . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
     }
 
-    public function rerouteCacheDestination(&$cache)
+    public
+    function rerouteCacheDestination(&$cache)
     {
 
         try {
@@ -241,7 +246,8 @@ class CacheDependencies
 
     /**
      */
-    public function storeDependencies()
+    public
+    function storeDependencies()
     {
 
         /**
@@ -263,7 +269,8 @@ class CacheDependencies
 
     }
 
-    private function getDependenciesCacheStore(): CacheParser
+    private
+    function getDependenciesCacheStore(): CacheParser
     {
         if ($this->dependenciesCacheStore !== null) {
             return $this->dependenciesCacheStore;
@@ -278,13 +285,14 @@ class CacheDependencies
         return $this->dependenciesCacheStore;
     }
 
-    public function hasDependency(string $dependencyName): bool
+    public
+    function hasDependency(string $dependencyName): bool
     {
         $dependencies = $this->getDependencies();
-        if($dependencies===null){
+        if ($dependencies === null) {
             return false;
         }
-        return in_array($dependencyName,$dependencies);
+        return in_array($dependencyName, $dependencies);
     }
 
 }

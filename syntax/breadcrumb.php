@@ -1,6 +1,8 @@
 <?php
 
 
+use ComboStrap\CacheDependencies;
+use ComboStrap\CacheManager;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
@@ -115,7 +117,7 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
         return 'block';
     }
@@ -135,7 +137,7 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
     }
 
 
-    function getSort()
+    function getSort(): int
     {
         return 201;
     }
@@ -178,11 +180,8 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
             case 'xhtml':
                 $state = $data[PluginUtility::STATE];
                 if ($state === DOKU_LEXER_SPECIAL) {
-                    try {
-                        $renderer->doc .= self::toBreadCrumbHtml();
-                    } catch (ExceptionCombo $e) {
-                        $renderer->doc .= $e->getMessage();
-                    }
+                    CacheManager::getOrCreate()->addDependency(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                    $renderer->doc .= self::toBreadCrumbHtml();
                 }
                 return true;
         }

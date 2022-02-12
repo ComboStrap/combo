@@ -191,12 +191,13 @@ class CacheDependencies
     /**
      * @param string $dependencyName
      * @return CacheDependencies
-     * @throws ExceptionCombo
      */
     public function addDependency(string $dependencyName): CacheDependencies
     {
         if (!in_array($dependencyName, self::outputDependencies)) {
-            throw new ExceptionCombo("Unknown dependency value ($dependencyName");
+            if(PluginUtility::isDevOrTest()) {
+                throw new ExceptionComboRuntime("Unknown dependency value ($dependencyName");
+            }
         }
         $this->runtimeAddedDependencies[$dependencyName] = "";
         return $this;

@@ -994,9 +994,10 @@ class TagAttributes
     }
 
     public
-    function setType($type)
+    function setType($type): TagAttributes
     {
         $this->setComponentAttributeValue(TagAttributes::TYPE_KEY, $type);
+        return $this;
     }
 
     /**

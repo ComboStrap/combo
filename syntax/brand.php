@@ -96,7 +96,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
             $brandButton->setSecondaryColor($secondaryColor);
         }
         $handle = $brandAttributes->getValue(syntax_plugin_combo_follow::HANDLE_ATTRIBUTE);
-        if($handle!==null){
+        if ($handle !== null) {
             $brandButton->setHandle($handle);
         }
         return $brandButton;
@@ -211,15 +211,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 }
                 $defaultParameters[TagAttributes::TYPE_KEY] = Brand::CURRENT_BRAND;
                 $defaultParameters[self::WIDGET_ATTRIBUTE] = $defaultWidget;
-                /**
-                 * The allowed widgets
-                 * (
-                 *   type verification
-                 *   during the {@link TagAttributes::createFromTagMatch()} parsing
-                 * )
-                 */
-                $knownTypes = BrandButton::WIDGETS;
-
+                $knownTypes = null;
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes)
                     ->setLogicalTag(self::TAG);
 

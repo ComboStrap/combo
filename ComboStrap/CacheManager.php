@@ -99,7 +99,6 @@ class CacheManager
 
     /**
      * @param string $dependencyName
-     * @throws ExceptionCombo
      */
     public function addDependency(string $dependencyName)
     {

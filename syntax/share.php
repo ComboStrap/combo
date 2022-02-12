@@ -8,6 +8,7 @@ use ComboStrap\CacheDependencies;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionCombo;
+use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\CacheRuntimeDependencies2;
@@ -101,66 +102,11 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER:
             case DOKU_LEXER_SPECIAL:
 
-                $callStack = CallStack::createFromHandler($handler);
                 $defaultAttributes = [];
                 $types = null;
                 $shareAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $types)
                     ->setLogicalTag(self::TAG);
 
-                /**
-                 * The channel
-                 */
-                try {
-                    $brandButton = syntax_plugin_combo_brand::createButtonFromAttributes($shareAttributes, BrandButton::TYPE_BUTTON_SHARE);
-                } catch (ExceptionCombo $e) {
-                    $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The brand creation returns an error ({$e->getMessage()}";
-                    return $returnArray;
-                }
-
-
-                /**
-                 * Cache key dependencies
-                 */
-                try {
-                    CacheManager::getOrCreate()->addDependency(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
-                } catch (ExceptionCombo $e) {
-                    LogUtility::msg("We were unable to add the requested page runtime dependency. Cache errors may occurs. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                }
-
-
-                /**
-                 * Standard link attribute
-                 */
-                $requestedPage = Page::createPageFromRequestedPage();
-                try {
-                    $linkAttributes = $brandButton->getLinkAttributes($requestedPage)
-                        ->setLogicalTag(self::TAG);
-                } catch (ExceptionCombo $e) {
-                    $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The social channel creation returns an error when creating the link ({$e->getMessage()}";
-                    return $returnArray;
-                }
-
-                /**
-                 * Add the link
-                 */
-                syntax_plugin_combo_brand::addOpenLinkTagInCallStack($callStack, $linkAttributes);
-
-                /**
-                 * Icon
-                 */
-                try {
-                    $this->addIconInCallStack($callStack, $brandButton);
-                } catch (ExceptionCombo $e) {
-                    $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the icon for the social channel ($brandButton) returns an error ({$e->getMessage()}";
-                    return $returnArray;
-                }
-
-                if ($state === DOKU_LEXER_SPECIAL) {
-                    $this->closeLinkInCallStack($callStack);
-                }
 
                 /**
                  * Return the data to add the snippet style in rendering
@@ -171,8 +117,6 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT:
 
-                $callStack = CallStack::createFromHandler($handler);
-                $this->closeLinkInCallStack($callStack);
                 return $returnArray;
 
             case DOKU_LEXER_UNMATCHED:
@@ -203,37 +147,73 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_SPECIAL:
                 case DOKU_LEXER_ENTER:
 
-                    /**
-                     * Any error
-                     */
-                    $errorMessage = $data[PluginUtility::EXIT_MESSAGE];
-                    if (!empty($errorMessage)) {
-                        LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        $renderer->doc .= "<span class=\"text-warning\">{$errorMessage}</span>";
-                        return false;
-                    }
+                    $shareAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
 
                     /**
-                     * Add the Icon / CSS / Javascript snippet
-                     * It should happen only in rendering
+                     * The channel
                      */
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     try {
-                        $socialChannel = syntax_plugin_combo_brand::createButtonFromAttributes($tagAttributes, BrandButton::TYPE_BUTTON_SHARE);
+                        $brandButton = syntax_plugin_combo_brand::createButtonFromAttributes($shareAttributes, BrandButton::TYPE_BUTTON_SHARE);
                     } catch (ExceptionCombo $e) {
-                        LogUtility::msg("The brand could not be build. Error: {$e->getMessage()}");
+                        $renderer->doc .= LogUtility::wrapInRedForHtml("The brand creation returns an error ({$e->getMessage()}");
                         return false;
                     }
 
 
+                    /**
+                     * Standard link attribute
+                     * and Runtime Cache key dependencies
+                     */
+                    CacheManager::getOrCreate()->addDependency(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                    $requestedPage = Page::createPageFromRequestedPage();
                     try {
-                        $style = $socialChannel->getStyle();
+                        $linkAttributes = $brandButton->getLinkAttributes($requestedPage)
+                            ->setType($shareAttributes->getType())
+                            ->setLogicalTag(self::TAG);
                     } catch (ExceptionCombo $e) {
-                        LogUtility::msg("The style of the share button ($socialChannel) could not be determined. Error: {$e->getMessage()}");
+                        $renderer->doc .= LogUtility::wrapInRedForHtml("The social channel creation returns an error when creating the link ({$e->getMessage()}");
                         return false;
                     }
-                    $snippetId = $socialChannel->getStyleScriptIdentifier();
+
+                    /**
+                     * Add the link
+                     */
+                    $renderer->doc .= $linkAttributes->toHtmlEnterTag("a");
+
+                    /**
+                     * Icon
+                     */
+                    if ($brandButton->hasIcon()) {
+                        try {
+                            $iconAttributes = $brandButton->getIconAttributes();
+                            $name = $iconAttributes[\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE];
+                            unset($iconAttributes[\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE]);
+                            $iconAttributes = TagAttributes::createFromCallStackArray($iconAttributes);
+                            $renderer->doc .= Icon::create($name, $iconAttributes)
+                                ->render();
+                        } catch (ExceptionCombo $e) {
+                            $renderer->doc .= LogUtility::wrapInRedForHtml("Getting the icon for the social channel ($brandButton) returns an error ({$e->getMessage()}");
+                            // don't return because the anchor link is open
+                        }
+                    }
+
+
+                    if ($state === DOKU_LEXER_SPECIAL) {
+                        $renderer->doc .= "</a>";
+                    }
+
+
+                    try {
+                        $style = $brandButton->getStyle();
+                    } catch (ExceptionCombo $e) {
+                        $renderer->doc .= LogUtility::wrapInRedForHtml("The style of the share button ($brandButton) could not be determined. Error: {$e->getMessage()}");
+                        return false;
+                    }
+                    $snippetId = $brandButton->getStyleScriptIdentifier();
                     PluginUtility::getSnippetManager()->attachCssSnippetForSlot($snippetId, $style);
+                    break;
+                case DOKU_LEXER_EXIT:
+                    $renderer->doc .= "</a>";
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
@@ -255,24 +235,6 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
             Call::createComboCall(
                 syntax_plugin_combo_link::TAG,
                 DOKU_LEXER_EXIT
-            ));
-    }
-
-    /**
-     * @throws ExceptionCombo
-     */
-    private function addIconInCallStack(CallStack $callStack, BrandButton $socialChannel)
-    {
-
-        if (!$socialChannel->hasIcon()) {
-            return;
-        }
-        $iconAttributes = $socialChannel->getIconAttributes();
-        $callStack->appendCallAtTheEnd(
-            Call::createComboCall(
-                syntax_plugin_combo_icon::TAG,
-                DOKU_LEXER_SPECIAL,
-                $iconAttributes
             ));
     }
 

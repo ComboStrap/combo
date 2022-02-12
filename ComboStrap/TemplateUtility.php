@@ -88,7 +88,7 @@ class TemplateUtility
      * @param string|Page $pageValue
      * @return array
      */
-    public static function renderInstructionsTemplateFromDataPage(array $namespaceTemplateInstructions, $pageValue): array
+    public static function generateInstructionsFromDataPage(array $namespaceTemplateInstructions, $pageValue): array
     {
         $page = null;
         if (is_string($pageValue)) {

@@ -48,7 +48,7 @@ class FsWikiUtility
      * @param string $path The container of the pages
      * @return array An array of the pages for the namespace
      */
-    static function getChildren($path)
+    static function getChildren(string $path): array
     {
         require_once(__DIR__ . '/../../../../inc/search.php');
         global $conf;

@@ -1369,23 +1369,6 @@ class PluginUtility
         return RenderUtility::getInstructionsAndStripPEventually($markiCode);
     }
 
-    /**
-     * Transform a text into a valid HTML id
-     * @param $string
-     * @return string
-     */
-    public static function toHtmlId($string)
-    {
-        /**
-         * sectionId calls cleanID
-         * cleanID delete all things before a ':'
-         * we do then the replace before to not
-         * lost a minus '-' separator
-         */
-        $string = str_replace(array(':', '.'), '', $string);
-        return sectionID($string, $check);
-    }
-
     public static function isTest()
     {
         return defined('DOKU_UNITTEST');

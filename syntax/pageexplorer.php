@@ -9,7 +9,9 @@ use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\Html;
+use ComboStrap\Icon;
 use ComboStrap\LogUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\Page;
 use ComboStrap\CacheRuntimeDependencies2;
 use ComboStrap\PluginUtility;
@@ -435,72 +437,26 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 }
 
                 if ($namespaceAttributes === null) {
-                    $namespaceAttributes = [];
                     // default template instructions
-                    if ($namespaceInstructions === null && $type === self::LIST_TYPE) {
-                        $namespaceInstructions = [];
-                        $namespaceInstructions[] = Call::createComboCall(
-                            syntax_plugin_combo_link::TAG,
-                            DOKU_LEXER_ENTER,
-                            [
-                                syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path",
-                                syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE => syntax_plugin_combo_link::HREF_MARKUP_TYPE_VALUE
-                            ],
-                            syntax_plugin_combo_pageexplorerparent::TAG,
-                            "[[\$path"
-                        )->addClassName($componentClassPrefix . "-namespace-combo");
-                        /**
-                         * To not hurt
-                         * the icon server in test
-                         * and to get stable test
-                         */
-                        if (!PluginUtility::isTest()) {
-                            $namespaceInstructions[] = Call::createComboCall(
-                                syntax_plugin_combo_icon::TAG,
-                                DOKU_LEXER_SPECIAL,
-                                ["name" => "folder"],
-                                syntax_plugin_combo_pageexplorerparent::TAG,
-                                "<icon name=\"folder\"/>"
-                            );
-                        }
-                        $namespaceInstructions[] = Call::createComboCall(
-                            syntax_plugin_combo_link::TAG,
-                            DOKU_LEXER_UNMATCHED,
-                            [],
-                            syntax_plugin_combo_link::TAG,
-                            " ",
-                            " "
-                        );
-                        $namespaceInstructions[] = Call::createComboCall(
-                            syntax_plugin_combo_pipeline::TAG,
-                            DOKU_LEXER_SPECIAL,
-                            [PluginUtility::PAYLOAD => ""],
-                            "",
-                            "<pipeline>\"\$name\" | replace(\"_\",\" \") | capitalize()</pipeline>"
-                        );
-                        $namespaceInstructions[] = Call::createComboCall(
-                            syntax_plugin_combo_link::TAG,
-                            DOKU_LEXER_EXIT,
-                            [
-                                syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path",
-                                syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE => syntax_plugin_combo_link::HREF_MARKUP_TYPE_VALUE
-                            ],
-                            syntax_plugin_combo_pageexplorerparent::TAG,
-                            "]]"
-                        );
-                    }
-                }
-
-                if ($namespaceAttributes == null) {
                     if ($namespaceInstructions === null) {
-                        $namespaceInstructions = [];
-                        $namespaceInstructions[] = Call::createComboCall(
-                            syntax_plugin_combo_pipeline::TAG,
-                            DOKU_LEXER_SPECIAL,
-                            [PluginUtility::PAYLOAD => ""],
-                            "",
-                            "<pipeline>\"\$name\" | replace(\"_\",\" \") | capitalize()</pipeline>"
-                        );
+                        switch ($type) {
+                            case self::LIST_TYPE:
+
+                                // Default is now in the render phase
+                                // hard coded
+
+                                break;
+                            case self::TYPE_TREE:
+                                $namespaceInstructions = [];
+                                $namespaceInstructions[] = Call::createComboCall(
+                                    syntax_plugin_combo_pipeline::TAG,
+                                    DOKU_LEXER_SPECIAL,
+                                    [PluginUtility::PAYLOAD => ""],
+                                    "",
+                                    "<pipeline>\"\$name\" | replace(\"_\",\" \") | capitalize()</pipeline>"
+                                );
+                                break;
+                        }
                     }
                 }
 
@@ -591,7 +547,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
 
                     /**
-                     * Creating the callstack
+                     * Rendering
                      */
                     switch ($type) {
                         default:
@@ -680,14 +636,21 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Children (Namespaces/Pages)
                              */
-                            $namespaceEnterTag = TagAttributes::createFromCallStackArray($data[self::NAMESPACE_ATTRIBUTES])
-                                ->addClassName($classItem)
-                                ->toHtmlEnterTag("li");
-                            $pageEnterTag = TagAttributes::createFromCallStackArray($data[self::PAGE_ATTRIBUTES])
-                                ->addClassName($classItem)
-                                ->toHtmlEnterTag("li");
+                            try {
+                                $namespaceEnterTag = TagAttributes::createFromCallStackArray($data[self::NAMESPACE_ATTRIBUTES])
+                                    ->addClassName($classItem)
+                                    ->toHtmlEnterTag("li");
+                                $pageEnterTag = TagAttributes::createFromCallStackArray($data[self::PAGE_ATTRIBUTES])
+                                    ->addClassName($classItem)
+                                    ->toHtmlEnterTag("li");
+                            } catch (ExceptionCombo $e) {
+                                $renderer->doc .= LogUtility::wrapInRedForHtml("Error while creating the li for namespace and page. Error: {$e->getMessage()}");
+                                return false;
+                            }
+
                             $pageInstructions = $data[self::PAGE_INSTRUCTIONS];
                             $namespaceInstructions = $data[self::NAMESPACE_INSTRUCTIONS];
+                            $namespaceAttributes = $data[self::NAMESPACE_ATTRIBUTES];
                             $pageOrNamespaces = FsWikiUtility::getChildren($namespacePath);
                             $pageNum = 0;
                             foreach ($pageOrNamespaces as $pageOrNamespace) {
@@ -696,9 +659,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 if ($pageOrNamespace['type'] == "d") {
 
                                     // Namespace
-                                    if (!empty($namespaceInstructions)) {
-                                        $subNamespacePagePath = FsWikiUtility::getHomePagePath($pageOrNamespacePath);
-                                        if ($subNamespacePagePath != null) {
+                                    if (!($namespaceInstructions === null && $namespaceAttributes !== null)) {
+                                        $subNamespacePage = Page::getHomePageFromNamespace($pageOrNamespacePath);
+                                        if ($subNamespacePage->exists()) {
                                             /**
                                              * SubNamespace Enter tag
                                              */
@@ -707,24 +670,39 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                             /**
                                              * SubNamespace Content
                                              */
-                                            $namespaceInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($namespaceInstructions, $subNamespacePagePath);
-                                            try {
-                                                $renderer->doc .= PluginUtility::renderInstructionsToXhtml($namespaceInstructionsInstance);
-                                            } catch (ExceptionCombo $e) {
-                                                $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the sub-namespace. Error: {$e->getMessage()}");
+                                            if ($namespaceInstructions !== null) {
+                                                $namespaceInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($namespaceInstructions, $subNamespacePage);
+                                                try {
+                                                    $renderer->doc .= PluginUtility::renderInstructionsToXhtml($namespaceInstructionsInstance);
+                                                } catch (ExceptionCombo $e) {
+                                                    $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the sub-namespace. Error: {$e->getMessage()}");
+                                                }
+                                            } else {
+                                                try {
+                                                    $renderer->doc .= MarkupRef::createFromPageId($subNamespacePage->getDokuwikiId())
+                                                        ->toAttributes()
+                                                        ->toHtmlEnterTag("a");
+                                                    $renderer->doc .= Icon::createFromComboResource("page-explorer-folder")
+                                                        ->render();
+                                                    $renderer->doc .= " {$subNamespacePage->getNameOrDefault()}</a>";
+                                                } catch (ExceptionCombo $e) {
+                                                    $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default namespace. Error: {$e->getMessage()}");
+                                                }
+
                                             }
                                             /**
                                              * SubNamespace Exit tag
                                              */
                                             $renderer->doc .= "</li>";
                                         }
+
                                     }
 
                                 } else {
 
                                     if (!empty($pageInstructions)) {
                                         $pageNum++;
-                                        if ($pageOrNamespacePath !== $currentHomePage) {
+                                        if ($pageOrNamespacePath !== $currentHomePage->getPath()->toString()) {
                                             /**
                                              * Page Enter tag
                                              */

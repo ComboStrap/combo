@@ -215,12 +215,12 @@ class TagAttributes
                 unset($this->componentAttributesCaseInsensitive[$key]);
                 continue;
             }
-            if($key === self::STYLE_ATTRIBUTE){
+            if ($key === self::STYLE_ATTRIBUTE) {
                 unset($this->componentAttributesCaseInsensitive[$key]);
-                $stylingProperties = explode(";",$value);
-                foreach ($stylingProperties as $stylingProperty ){
-                    [$key,$value] = preg_split("/:/",$stylingProperty,2);
-                    $this->addStyleDeclarationIfNotSet($key,$value);
+                $stylingProperties = explode(";", $value);
+                foreach ($stylingProperties as $stylingProperty) {
+                    [$key, $value] = preg_split("/:/", $stylingProperty, 2);
+                    $this->addStyleDeclarationIfNotSet($key, $value);
                 }
             }
         }
@@ -252,15 +252,18 @@ class TagAttributes
     }
 
     /**
-     * @param array $callStackArray - an array of key value pair
+     * @param array|null $callStackArray - an array of key value pair
      * @param string|null $logicalTag - the logical tag for which this attribute will apply
      * @return TagAttributes
+     * @throws ExceptionCombo
      */
-    public static function createFromCallStackArray(array $callStackArray, string $logicalTag = null): TagAttributes
+    public static function createFromCallStackArray(?array $callStackArray, string $logicalTag = null): TagAttributes
     {
+        if ($callStackArray === null) {
+            $callStackArray = [];
+        }
         if (!is_array($callStackArray)) {
-            LogUtility::msg("The renderArray variable passed is not an array ($callStackArray)", LogUtility::LVL_MSG_ERROR);
-            $callStackArray = TagAttributes::createEmpty($logicalTag);
+            throw new ExceptionCombo("The renderArray variable passed is not an array ($callStackArray)");
         }
         return new TagAttributes($callStackArray, $logicalTag);
     }
@@ -1235,7 +1238,7 @@ class TagAttributes
 
     public function hasClass(string $string): bool
     {
-        return strpos($this->getClass(),$string)!==false;
+        return strpos($this->getClass(), $string) !== false;
     }
 
 

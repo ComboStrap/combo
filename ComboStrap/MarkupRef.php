@@ -310,7 +310,7 @@ class MarkupRef
         /**
          * Get the url
          */
-        $url = $this->getUrl(DokuwikiUrl::AMPERSAND_CHARACTER);
+        $url = $this->getUrl();
         if (!empty($url)) {
             $outputAttributes->addHtmlAttributeValue("href", $url);
         }

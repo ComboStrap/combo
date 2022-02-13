@@ -379,87 +379,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     }
                 }
 
-                if ($parentAttributes === null) {
-                    $parentAttributes = [];
-                    // default template instructions
-                    if ($parentInstructions === null) {
-                        $parentInstructions = [];
-                        $parentInstructions[] = Call::createComboCall(
-                            syntax_plugin_combo_link::TAG,
-                            DOKU_LEXER_ENTER,
-                            [
-                                syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path",
-                                syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE => syntax_plugin_combo_link::HREF_MARKUP_TYPE_VALUE
-                            ],
-                            syntax_plugin_combo_pageexplorerparent::TAG,
-                            "[[\$path"
-                        )->addClassName($componentClassPrefix . "-parent-combo");
-                        /**
-                         * To not hurt the icon
-                         * server and to get
-                         * stable test
-                         */
-                        if (!PluginUtility::isTest()) {
-                            $parentIconName = "arrow-left-box";
-                            $parentInstructions[] = Call::createComboCall(
-                                syntax_plugin_combo_icon::TAG,
-                                DOKU_LEXER_SPECIAL,
-                                ["name" => $parentIconName],
-                                syntax_plugin_combo_pageexplorerparent::TAG,
-                                "<icon name=\"$parentIconName\"/>"
-                            );
-                        }
-                        $parentInstructions[] = Call::createComboCall(
-                            syntax_plugin_combo_link::TAG,
-                            DOKU_LEXER_UNMATCHED,
-                            [],
-                            syntax_plugin_combo_link::TAG,
-                            " ... ",
-                            " ... "
-                        );
-                        $parentInstructions[] = Call::createComboCall(
-                            syntax_plugin_combo_pipeline::TAG,
-                            DOKU_LEXER_SPECIAL,
-                            [PluginUtility::PAYLOAD => ""],
-                            "",
-                            "<pipeline>\"\$name\" | replace(\"_\",\" \") | capitalize()</pipeline>"
-                        );
-                        $parentInstructions[] = Call::createComboCall(
-                            syntax_plugin_combo_link::TAG,
-                            DOKU_LEXER_EXIT,
-                            [
-                                syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path",
-                                syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE => syntax_plugin_combo_link::HREF_MARKUP_TYPE_VALUE
-                            ],
-                            syntax_plugin_combo_pageexplorerparent::TAG,
-                            "]]"
-                        );
-                    }
-                }
-
-                if ($namespaceAttributes === null) {
-                    // default template instructions
-                    if ($namespaceInstructions === null) {
-                        switch ($type) {
-                            case self::LIST_TYPE:
-
-                                // Default is now in the render phase
-                                // hard coded
-
-                                break;
-                            case self::TYPE_TREE:
-                                $namespaceInstructions = [];
-                                $namespaceInstructions[] = Call::createComboCall(
-                                    syntax_plugin_combo_pipeline::TAG,
-                                    DOKU_LEXER_SPECIAL,
-                                    [PluginUtility::PAYLOAD => ""],
-                                    "",
-                                    "<pipeline>\"\$name\" | replace(\"_\",\" \") | capitalize()</pipeline>"
-                                );
-                                break;
-                        }
-                    }
-                }
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -598,7 +517,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                  */
                                 $renderer->doc .= $homeAttributes
                                     ->addClassName($classItem)
-                                    ->setLogicalTag(self::CANONICAL."-{$type}-home")
+                                    ->setLogicalTag(self::CANONICAL . "-{$type}-home")
                                     ->toHtmlEnterTag("li");
                                 /**
                                  * Content
@@ -619,30 +538,52 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Parent ?
                              */
-                            $parentPagePath = FsWikiUtility::getParentPagePath($namespacePath);
                             $parentInstructions = $data[self::PARENT_INSTRUCTIONS];
-                            if ($parentPagePath != null && $parentInstructions !== null) {
+                            $parentAttributes = $data[self::PARENT_ATTRIBUTES];
+                            if (!($parentInstructions === null && $parentAttributes !== null)) {
+                                $parentPage = FsWikiUtility::getParentPagePath($namespacePath);
+                                if($parentPage->exists()) {
+                                    try {
+                                        $parentAttributes = TagAttributes::createFromCallStackArray($data[self::PARENT_ATTRIBUTES]);
+                                    } catch (ExceptionCombo $e) {
+                                        $renderer->doc .= LogUtility::wrapInRedForHtml("Error while creating the parent tag. Error: {$e->getMessage()}");
+                                        return false;
+                                    }
+                                    /**
+                                     * Enter parent tag
+                                     */
+                                    $renderer->doc .= $parentAttributes
+                                        ->addClassName($classItem)
+                                        ->setLogicalTag(self::CANONICAL . "-{$type}-parent")
+                                        ->toHtmlEnterTag("li");
+                                    /**
+                                     * Content
+                                     */
+                                    if ($parentInstructions !== null) {
 
-                                $parentAttributes = TagAttributes::createFromCallStackArray($data[self::PARENT_ATTRIBUTES]);
-                                /**
-                                 * Enter parent tag
-                                 */
-                                $renderer->doc .= $parentAttributes
-                                    ->addClassName($classItem)
-                                    ->toHtmlEnterTag("li");
-                                /**
-                                 * Content
-                                 */
-                                $parentInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($parentInstructions, $parentPagePath);
-                                try {
-                                    $renderer->doc .= PluginUtility::renderInstructionsToXhtml($parentInstructionsInstance);
-                                } catch (ExceptionCombo $e) {
-                                    $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the parent. Error: {$e->getMessage()}");
+                                        $parentInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($parentInstructions, $parentPage);
+                                        try {
+                                            $renderer->doc .= PluginUtility::renderInstructionsToXhtml($parentInstructionsInstance);
+                                        } catch (ExceptionCombo $e) {
+                                            $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the parent instructions. Error: {$e->getMessage()}");
+                                        }
+                                    } else {
+                                        try {
+                                            $renderer->doc .= MarkupRef::createFromPageId($parentPage->getDokuwikiId())
+                                                ->toAttributes()
+                                                ->toHtmlEnterTag("a");
+                                            $renderer->doc .= Icon::createFromComboResource("page-explorer-arrow-left-box")
+                                                ->render();
+                                            $renderer->doc .= " {$parentPage->getNameOrDefault()}</a>";
+                                        } catch (ExceptionCombo $e) {
+                                            $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default parent. Error: {$e->getMessage()}");
+                                        }
+                                    }
+                                    /**
+                                     * End parent tag
+                                     */
+                                    $renderer->doc .= "</li>";
                                 }
-                                /**
-                                 * End parent tag
-                                 */
-                                $renderer->doc .= "</li>";
                             }
 
                             /**
@@ -899,7 +840,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         $html .= LogUtility::wrapInRedForHtml("Error while rendering the child directory. Error: {$e->getMessage()}");
                     }
                 } else {
-                    $html .= $subHomePage->getName();
+                    $html .= $subHomePage->getNameOrDefault();
                 }
             } else {
                 $namespaceName = self::toNamespaceName($childDirectoryPath);

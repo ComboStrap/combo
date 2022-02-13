@@ -126,9 +126,9 @@ class FsWikiUtility
 
     /**
      * @param $namespacePath
-     * @return string|null the page path of the parent or null if it does not exist
+     * @return Page|null the page path of the parent or null if it does not exist
      */
-    public static function getParentPagePath($namespacePath)
+    public static function getParentPagePath($namespacePath): ?Page
     {
 
         /**
@@ -149,7 +149,8 @@ class FsWikiUtility
             } else {
                 $parentNamespacePath = substr($namespacePath, 0, $pos);
             }
-            return self::getHomePagePath($parentNamespacePath);
+            return Page::getHomePageFromNamespace($parentNamespacePath);
+
         } else {
             return null;
         }

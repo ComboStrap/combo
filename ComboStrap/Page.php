@@ -264,16 +264,15 @@ class Page extends ResourceComboAbs
 
     /**
      * @return Page - the requested page
+     * @throws ExceptionCombo
      */
     public static function createPageFromRequestedPage(): Page
     {
         $pageId = PluginUtility::getRequestedWikiId();
-        if ($pageId !== null) {
-            return Page::createPageFromId($pageId);
-        } else {
-            LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
-            return Page::createPageFromId("unknown-requested-page");
+        if ($pageId === null) {
+            throw new ExceptionCombo("We were unable to determine the page from the variables environment");
         }
+        return Page::createPageFromId($pageId);
     }
 
 

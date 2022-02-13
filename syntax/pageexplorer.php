@@ -368,17 +368,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     }
                 }
 
-                /**
-                 * Home instruction
-                 * If unset, set it with the pages
-                 */
-                if ($homeAttributes == null) {
-                    $homeAttributes = [];
-                    if ($templateHomeInstructions === null) {
-                        $templateHomeInstructions = $templatePageInstructions;
-                    }
-                }
-
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -497,41 +486,56 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Home
                              */
-                            $currentHomePage = Page::getHomePageFromNamespace($namespacePath);
                             $homeInstructions = $data[self::HOME_INSTRUCTIONS];
-                            if ($currentHomePage !== null && $homeInstructions !== null) {
+                            $parentAttributes = $data[self::HOME_ATTRIBUTES];
+                            if (!($homeInstructions === null && $parentAttributes !== null)) {
 
-                                try {
-                                    $homeAttributes = TagAttributes::createFromCallStackArray($data[self::HOME_ATTRIBUTES]);
-                                } catch (ExceptionCombo $e) {
-                                    $message = "Error on home rendering. Error: {$e->getMessage()}";
-                                    if (PluginUtility::isDevOrTest()) {
-                                        throw new ExceptionComboRuntime($message, self::CANONICAL, 0, $e);
+                                $currentHomePage = Page::getHomePageFromNamespace($namespacePath);
+                                if ($currentHomePage->exists()) {
+
+                                    try {
+                                        $homeAttributes = TagAttributes::createFromCallStackArray($data[self::HOME_ATTRIBUTES]);
+                                    } catch (ExceptionCombo $e) {
+                                        $message = "Error on home rendering. Error: {$e->getMessage()}";
+                                        if (PluginUtility::isDevOrTest()) {
+                                            throw new ExceptionComboRuntime($message, self::CANONICAL, 0, $e);
+                                        }
+                                        $renderer->doc .= $message;
+                                        return false;
                                     }
-                                    $renderer->doc .= $message;
-                                    return false;
-                                }
 
-                                /**
-                                 * Enter home tag
-                                 */
-                                $renderer->doc .= $homeAttributes
-                                    ->addClassName($classItem)
-                                    ->setLogicalTag(self::CANONICAL . "-{$type}-home")
-                                    ->toHtmlEnterTag("li");
-                                /**
-                                 * Content
-                                 */
-                                $instructions = TemplateUtility::generateInstructionsFromDataPage($homeInstructions, $currentHomePage);
-                                try {
-                                    $renderer->doc .= PluginUtility::renderInstructionsToXhtml($instructions);
-                                } catch (ExceptionCombo $e) {
-                                    $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the home. Error: {$e->getMessage()}");
+                                    /**
+                                     * Enter home tag
+                                     */
+                                    $renderer->doc .= $homeAttributes
+                                        ->addClassName($classItem)
+                                        ->setLogicalTag(self::CANONICAL . "-{$type}-home")
+                                        ->toHtmlEnterTag("li");
+                                    /**
+                                     * Content
+                                     */
+                                    if ($homeInstructions !== null) {
+                                        $instructions = TemplateUtility::generateInstructionsFromDataPage($homeInstructions, $currentHomePage);
+                                        try {
+                                            $renderer->doc .= PluginUtility::renderInstructionsToXhtml($instructions);
+                                        } catch (ExceptionCombo $e) {
+                                            $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the home. Error: {$e->getMessage()}");
+                                        }
+                                    } else {
+                                        try {
+                                            $renderer->doc .= MarkupRef::createFromPageId($currentHomePage->getDokuwikiId())
+                                                ->toAttributes()
+                                                ->toHtmlEnterTag("a");
+                                            $renderer->doc .= "{$currentHomePage->getNameOrDefault()}</a>";
+                                        } catch (ExceptionCombo $e) {
+                                            $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default home. Error: {$e->getMessage()}");
+                                        }
+                                    }
+                                    /**
+                                     * End home tag
+                                     */
+                                    $renderer->doc .= "</li>";
                                 }
-                                /**
-                                 * End home tag
-                                 */
-                                $renderer->doc .= "</li>";
 
                             }
 
@@ -542,7 +546,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $parentAttributes = $data[self::PARENT_ATTRIBUTES];
                             if (!($parentInstructions === null && $parentAttributes !== null)) {
                                 $parentPage = FsWikiUtility::getParentPagePath($namespacePath);
-                                if($parentPage->exists()) {
+                                if ($parentPage !== null && $parentPage->exists()) {
                                     try {
                                         $parentAttributes = TagAttributes::createFromCallStackArray($data[self::PARENT_ATTRIBUTES]);
                                     } catch (ExceptionCombo $e) {
@@ -574,7 +578,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                                 ->toHtmlEnterTag("a");
                                             $renderer->doc .= Icon::createFromComboResource("page-explorer-arrow-left-box")
                                                 ->render();
-                                            $renderer->doc .= " {$parentPage->getNameOrDefault()}</a>";
+                                            $renderer->doc .= "... {$parentPage->getNameOrDefault()}</a>";
                                         } catch (ExceptionCombo $e) {
                                             $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default parent. Error: {$e->getMessage()}");
                                         }

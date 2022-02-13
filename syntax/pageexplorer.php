@@ -7,6 +7,7 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionComboRuntime;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\Html;
 use ComboStrap\Icon;
@@ -581,12 +582,23 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $homeInstructions = $data[self::HOME_INSTRUCTIONS];
                             if ($currentHomePage !== null && $homeInstructions !== null) {
 
-                                $homeAttributes = TagAttributes::createFromCallStackArray($data[self::HOME_ATTRIBUTES]);
+                                try {
+                                    $homeAttributes = TagAttributes::createFromCallStackArray($data[self::HOME_ATTRIBUTES]);
+                                } catch (ExceptionCombo $e) {
+                                    $message = "Error on home rendering. Error: {$e->getMessage()}";
+                                    if (PluginUtility::isDevOrTest()) {
+                                        throw new ExceptionComboRuntime($message, self::CANONICAL, 0, $e);
+                                    }
+                                    $renderer->doc .= $message;
+                                    return false;
+                                }
+
                                 /**
                                  * Enter home tag
                                  */
                                 $renderer->doc .= $homeAttributes
                                     ->addClassName($classItem)
+                                    ->setLogicalTag(self::CANONICAL."-{$type}-home")
                                     ->toHtmlEnterTag("li");
                                 /**
                                  * Content

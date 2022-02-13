@@ -274,7 +274,7 @@ class TagAttributes
      * @param $value
      * @return string return a CSS property with pixel as unit if the unit is not specified
      */
-    public static function toQualifiedCssValue($value)
+    public static function toQualifiedCssValue($value): string
     {
         /**
          * A length value may be also `fit-content`

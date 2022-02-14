@@ -20,7 +20,7 @@ class CacheReportHtmlDataBlockArray
      * @return array - a array that will be transformed as json HTML data block
      * to be included in a HTML page in order to insert cache results in the html page
      */
-    public static function get(): array
+    public static function getFromRuntime(): array
     {
         $cacheManager = CacheManager::getOrCreate();
         $cacheReporters = $cacheManager->getCacheResults();
@@ -38,7 +38,8 @@ class CacheReportHtmlDataBlockArray
 
                 $data = [
                     self::RESULT_STATUS => $result->getResult(),
-                    self::DATE_MODIFIED => $modifiedDate
+                    self::DATE_MODIFIED => $modifiedDate,
+                    self::CACHE_FILE => $result->getPath()
                 ];
 
                 if ($mode === HtmlDocument::mode) {
@@ -55,5 +56,22 @@ class CacheReportHtmlDataBlockArray
 
         }
         return $htmlDataBlock;
+    }
+
+
+    /**
+     * An utility function to extract the cache data block from test responses
+     * @param \TestResponse $response
+     * @return mixed
+     * @throws ExceptionCombo
+     */
+    public static function extractFromResponse(\TestResponse $response)
+    {
+        $metaCacheMain = $response->queryHTML('script[type="' . CacheReportHtmlDataBlockArray::APPLICATION_COMBO_CACHE_JSON . '"]');
+        if($metaCacheMain->count()!=1){
+            throw new ExceptionCombo("The data cache was not found");
+        }
+        $cacheJsonTextValue = $metaCacheMain->elements[0]->childNodes->item(0)->textContent;
+        return json_decode(XmlUtility::extractTextWithoutCdata($cacheJsonTextValue), true);
     }
 }

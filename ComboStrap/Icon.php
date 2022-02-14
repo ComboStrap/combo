@@ -186,7 +186,7 @@ class Icon extends ImageSvg
     const PHOSPHOR_ICONS = "ph";
     const VSCODE = "vscode";
     const SI_GLYPH = "si-glyph";
-    const COMBO = DokuPath::LIBRARY_COMBO;
+    const COMBO = DokuPath::COMBO_DRIVE;
 
 
     private $fullQualifiedName;

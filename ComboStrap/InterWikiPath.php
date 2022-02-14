@@ -51,7 +51,7 @@ class InterWikiPath extends PathAbs
     }
 
 
-    function toString()
+    function toString(): string
     {
         return $this->path;
     }

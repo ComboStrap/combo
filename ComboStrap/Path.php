@@ -39,7 +39,15 @@ interface Path
 
     function getParent(): ?Path;
 
-    function toString();
+    /**
+     * @return string only the string representation of the path
+     */
+    function toString(): string;
+
+    /**
+     * @return string the uri string representation of this path (with all information, drive, attributes)
+     */
+    function toUriString(): string;
 
     function toAbsolutePath(): Path;
 

@@ -649,7 +649,7 @@ EOF;
     private function getResourceIconFile(): DokuPath
     {
         $iconName = $this->getResourceIconName();
-        $iconPath = str_replace(Icon::COMBO . ":", DokuPath::LIBRARY_COMBO . ">", $iconName);
+        $iconPath = str_replace(Icon::COMBO . ":", DokuPath::COMBO_DRIVE . ">", $iconName);
         return DokuPath::createResource($iconPath);
     }
 

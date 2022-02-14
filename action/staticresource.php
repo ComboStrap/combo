@@ -62,11 +62,11 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     function handleMediaStatus(Doku_Event $event, $params)
     {
 
-        if (!isset($_GET[DokuPath::LIBRARY_ATTRIBUTE])) {
+        if (!isset($_GET[DokuPath::DRIVE_ATTRIBUTE])) {
             return;
         }
-        $library = $_GET[DokuPath::LIBRARY_ATTRIBUTE];
-        if ($library !== DokuPath::LIBRARY_COMBO) {
+        $library = $_GET[DokuPath::DRIVE_ATTRIBUTE];
+        if ($library !== DokuPath::COMBO_DRIVE) {
             // The other resources have ACL
             // and this endpoint is normally only for
             $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
@@ -97,9 +97,9 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Combo Media
          * (Static file from the combo resources are always taken over)
          */
-        if (isset($_GET[DokuPath::LIBRARY_ATTRIBUTE])) {
+        if (isset($_GET[DokuPath::DRIVE_ATTRIBUTE])) {
 
-            $isStaticFileManaged = $_GET[DokuPath::LIBRARY_ATTRIBUTE] === DokuPath::LIBRARY_COMBO;
+            $isStaticFileManaged = $_GET[DokuPath::DRIVE_ATTRIBUTE] === DokuPath::COMBO_DRIVE;
 
         }
 

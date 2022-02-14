@@ -74,7 +74,7 @@ class LocalPath extends PathAbs
     }
 
 
-    function toString()
+    function toString(): string
     {
         return $this->path;
     }
@@ -115,5 +115,10 @@ class LocalPath extends PathAbs
         return $directorySeparator;
     }
 
+
+    public function toDokuPath(): DokuPath
+    {
+
+    }
 
 }

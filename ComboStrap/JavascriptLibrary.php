@@ -54,14 +54,14 @@ class JavascriptLibrary extends Media
         /**
          * @var DokuPath $path
          */
-        if ($path->getLibrary() !== DokuPath::LIBRARY_COMBO) {
+        if ($path->getLibrary() !== DokuPath::COMBO_DRIVE) {
             LogUtility::msg("Only Javascript script in the resource directory can be served, blank url returned");
             return "";
         };
         $direct = true;
         $att = [];
         $this->addCacheBusterToQueryParameters($att);
-        $att[DokuPath::LIBRARY_ATTRIBUTE] = $path->getLibrary();
+        $att[DokuPath::DRIVE_ATTRIBUTE] = $path->getLibrary();
         return ml($path->getDokuwikiId(), $att, $direct, $ampersand, true);
     }
 

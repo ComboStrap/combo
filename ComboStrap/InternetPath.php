@@ -58,10 +58,10 @@ class InternetPath extends PathAbs
         $names = explode("/", $this->path);
         // with the scheme and the hostname, the names start at the third position
         $size = sizeof($names);
-        if($size<=3){
+        if ($size <= 3) {
             return [];
         }
-        return array_slice($names,3);
+        return array_slice($names, 3);
 
     }
 
@@ -71,7 +71,7 @@ class InternetPath extends PathAbs
     }
 
 
-    function toString()
+    function toString(): string
     {
         return $this->path;
     }

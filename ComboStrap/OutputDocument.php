@@ -101,17 +101,24 @@ abstract class OutputDocument extends PageCompilerDocument
             $result = p_render($this->getRendererName(), $instructions, $info);
             $this->cacheStillEnabledAfterRendering = $info['cache'];
 
+
         } finally {
             // restore ID
             $ID = $keep;
         }
 
-
+        /**
+         * Set document should also know the requested page id
+         * to be able to calculate the cache output directory
+         */
         $this->setContent($result);
         return $this;
 
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function storeContent($content)
     {
 

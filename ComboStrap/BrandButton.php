@@ -119,6 +119,13 @@ class BrandButton
         return $variants;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function createBrandButton(string $brand): BrandButton
+    {
+        return new BrandButton($brand, self::TYPE_BUTTON_BRAND);
+    }
 
 
     /**
@@ -642,7 +649,8 @@ EOF;
     private function getResourceIconFile(): DokuPath
     {
         $iconName = $this->getResourceIconName();
-        return DokuPath::createResource($iconName);
+        $iconPath = str_replace(Icon::COMBO . ":", DokuPath::LIBRARY_COMBO . ">", $iconName);
+        return DokuPath::createResource($iconPath);
     }
 
     public function setSecondaryColor(string $secondaryColor): BrandButton
@@ -653,8 +661,8 @@ EOF;
 
     private function getResourceIconName(): string
     {
-        $comboLibrary = DokuPath::LIBRARY_COMBO;
-        return "$comboLibrary>brand:{$this->getBrand()}:{$this->iconType}.svg";
+        $comboLibrary = Icon::COMBO;
+        return "$comboLibrary:brand:{$this->getBrand()}:{$this->iconType}.svg";
     }
 
 

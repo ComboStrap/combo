@@ -548,7 +548,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                             $renderer->doc .= MarkupRef::createFromPageId($parentPage->getDokuwikiId())
                                                 ->toAttributes()
                                                 ->toHtmlEnterTag("a");
-                                            $renderer->doc .= Icon::createFromComboResource("page-explorer-arrow-left-box")
+                                            $renderer->doc .= Icon::createFromComboResource("images:page-explorer-arrow-left-box")
                                                 ->render();
                                             $renderer->doc .= "... {$parentPage->getNameOrDefault()}</a>";
                                         } catch (ExceptionCombo $e) {
@@ -614,7 +614,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                                     $renderer->doc .= MarkupRef::createFromPageId($subNamespacePage->getDokuwikiId())
                                                         ->toAttributes()
                                                         ->toHtmlEnterTag("a");
-                                                    $renderer->doc .= Icon::createFromComboResource("page-explorer-folder")
+                                                    $renderer->doc .= Icon::createFromComboResource("images:page-explorer-folder")
                                                         ->render();
                                                     $renderer->doc .= " {$subNamespacePage->getNameOrDefault()}</a>";
                                                 } catch (ExceptionCombo $e) {

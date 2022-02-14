@@ -270,7 +270,7 @@ class Page extends ResourceComboAbs
     {
         $pageId = PluginUtility::getRequestedWikiId();
         if ($pageId === null) {
-            throw new ExceptionCombo("We were unable to determine the page from the variables environment");
+            throw new ExceptionCombo("We were unable to determine the requested page from the variables environment");
         }
         return Page::createPageFromId($pageId);
     }

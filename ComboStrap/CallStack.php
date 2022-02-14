@@ -256,11 +256,11 @@ class CallStack
     /**
      * A callstack pointer based implementation
      * that starts at the end
-     * @param Doku_Handler $handler
+     * @param mixed|Doku_Handler $handler - mixed because we test if the handler passed is not the good one (It can happen with third plugin)
      * @return CallStack
      */
     public
-    static function createFromHandler(Doku_Handler &$handler)
+    static function createFromHandler(&$handler): CallStack
     {
         return new CallStack($handler);
     }

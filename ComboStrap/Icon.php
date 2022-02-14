@@ -256,7 +256,9 @@ class Icon extends ImageSvg
          */
         if (strpos($fullQualifiedName, self::COMBO) === 0) {
             $iconName = str_replace(self::COMBO . ":", "", $fullQualifiedName);
-            $mediaDokuPath = DokuPath::createResource("images:$iconName.svg");
+            // the icon name is not to be found in the images directory (there is also brand)
+            // but can be anywhere below the resources directory
+            $mediaDokuPath = DokuPath::createResource("$iconName.svg");
         } else {
             /**
              * From an icon library

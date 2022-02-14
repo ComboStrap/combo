@@ -23,6 +23,7 @@ class HtmlDocument extends OutputDocument
     /**
      * HtmlDocument constructor.
      * @param Page $page
+     * @throws ExceptionCombo
      */
     public function __construct(Page $page)
     {

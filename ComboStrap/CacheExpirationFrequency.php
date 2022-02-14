@@ -32,7 +32,7 @@ class CacheExpirationFrequency extends MetadataText
     public function setValue($value): Metadata
     {
 
-        if ($value === null){
+        if ($value === null) {
             parent::setValue($value);
             return $this;
         }
@@ -52,7 +52,7 @@ class CacheExpirationFrequency extends MetadataText
             parent::setValue($value);
             return $this;
         } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The cache frequency expression ($value) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheExpirationFrequency::PROPERTY_NAME);
+            throw new ExceptionCombo("The cache frequency expression ($value) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheExpirationFrequency::PROPERTY_NAME, 0, $e);
         }
 
     }

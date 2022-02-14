@@ -266,7 +266,11 @@ class LogUtility
             $newMessage = "The passed message to the log was empty or null. BackTrace: \n";
             ob_start();
             $limit = 10;
-            debug_print_backtrace(0, $limit); // It prints also the data passed :)
+            /**
+             * DEBUG_BACKTRACE_IGNORE_ARGS options to avoid
+             * PHP Fatal error:  Allowed memory size of 2147483648 bytes exhausted (tried to allocate 1876967424 bytes)
+             */
+            debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $limit); // It prints also the data passed :)
             $trace = ob_get_contents();
             ob_end_clean();
             $newMessage .= $trace;

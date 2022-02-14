@@ -895,7 +895,7 @@ class PluginUtility
         $callingId = $ID;
         // If the component is in a sidebar, we don't want the ID of the sidebar
         // but the ID of the page.
-        if ($INFO != null) {
+        if ($INFO !== null) {
             $callingId = $INFO['id'];
         }
         /**

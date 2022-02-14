@@ -251,7 +251,7 @@ class DatabasePageRow
     {
 
         $dateReplication = $this->getReplicationDate();
-        if($dateReplication===null){
+        if ($dateReplication === null) {
             return true;
         }
 
@@ -278,7 +278,6 @@ class DatabasePageRow
         if ($modifiedTime > $dateReplication) {
             return true;
         }
-
 
 
         /**
@@ -1081,14 +1080,16 @@ class DatabasePageRow
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function replicateAnalytics()
     {
 
         try {
             $analyticsJson = $this->page->getAnalyticsDocument()->getOrProcessJson();
         } catch (ExceptionCombo $e) {
-            LogUtility::msg("Unable to replicate the analytics: " . $e->getMessage());
-            return;
+            throw new ExceptionCombo("Unable to get the analytics document", self::CANONICAL, 0, $e);
         }
 
         /**

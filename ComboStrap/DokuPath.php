@@ -30,7 +30,6 @@ class DokuPath extends PathAbs
     public const SLUG_SEPARATOR = "-";
 
 
-
     /**
      * Dokuwiki has a file system that starts at a page and/or media
      * directory that depends on the used syntax.
@@ -514,9 +513,9 @@ class DokuPath extends PathAbs
     public
     function getRevision(): ?string
     {
-        if($this->rev===null){
+        if ($this->rev === null) {
             $localPath = $this->toLocalPath();
-            if(FileSystems::exists($localPath)){
+            if (FileSystems::exists($localPath)) {
                 return FileSystems::getModifiedTime($localPath)->getTimestamp();
             }
         }
@@ -622,6 +621,9 @@ class DokuPath extends PathAbs
 
     function toString(): string
     {
+        if ($this->finalLibrary !== null) {
+            return $this->finalLibrary . ">" . $this->id;
+        }
         return $this->absolutePath;
     }
 

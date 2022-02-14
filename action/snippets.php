@@ -129,31 +129,32 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * For each processed slot in the page, retrieve the snippets
          */
         $cacheReporters = CacheManager::getOrCreate()->getCacheResults();
-        foreach ($cacheReporters as $cacheReporter) {
+        if($cacheReporters!==null) {
+            foreach ($cacheReporters as $cacheReporter) {
 
-            foreach ($cacheReporter->getResults() as $report) {
+                foreach ($cacheReporter->getResults() as $report) {
 
-                if ($report->getMode() !== HtmlDocument::mode) {
-                    continue;
-                }
-
-                $slotId = $report->getSlotId();
-                $snippets = Page::createPageFromId($slotId)
-                    ->getHtmlDocument()
-                    ->getSnippets();
-
-                if (sizeof($snippets) > 0) {
-                    $nativeSnippets = [];
-                    foreach ($snippets as $snippet) {
-                        $nativeSnippets[$snippet->getType()][$snippet->getId()] = $snippet;
+                    if ($report->getMode() !== HtmlDocument::mode) {
+                        continue;
                     }
-                    $snippetManager->addSnippetsFromCacheForSlot($slotId, $nativeSnippets);
+
+                    $slotId = $report->getSlotId();
+                    $snippets = Page::createPageFromId($slotId)
+                        ->getHtmlDocument()
+                        ->getSnippets();
+
+                    if (sizeof($snippets) > 0) {
+                        $nativeSnippets = [];
+                        foreach ($snippets as $snippet) {
+                            $nativeSnippets[$snippet->getType()][$snippet->getId()] = $snippet;
+                        }
+                        $snippetManager->addSnippetsFromCacheForSlot($slotId, $nativeSnippets);
+                    }
                 }
+
+
             }
-
-
         }
-
         /**
          * Snippets
          * (Slot and request snippets)

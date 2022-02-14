@@ -189,7 +189,6 @@ require_once(__DIR__ . '/RasterImageLink.php');
 require_once(__DIR__ . '/Region.php');
 require_once(__DIR__ . '/RenderUtility.php');
 require_once(__DIR__ . '/ReplicationDate.php');
-require_once(__DIR__ . '/Resources.php');
 require_once(__DIR__ . '/ResourceName.php');
 require_once(__DIR__ . '/Sanitizer.php');
 require_once(__DIR__ . '/Shadow.php');

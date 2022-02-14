@@ -7,7 +7,14 @@ require_once(__DIR__ . '/PluginUtility.php');
 /**
  * Class DokuPath
  * @package ComboStrap
- * A dokuwiki path
+ * A dokuwiki path has the same structure than a windows path
+ * with a drive and a path
+ *
+ * The drive is just a local path on the local file system
+ *
+ * Dokuwiki knows only two drives ({@link DokuPath::PAGE_DRIVE} and {@link DokuPath::MEDIA_DRIVE}
+ * but we have added a couple more such as the {@link DokuPath::COMBO_DRIVE combo resources}
+ * and the {@link DokuPath::CACHE_DRIVE}
  *
  */
 class DokuPath extends PathAbs
@@ -110,6 +117,7 @@ class DokuPath extends PathAbs
      *   For a media: in the {@link MediaLink::createMediaLinkFromId()}
      * Because this class is mostly the file representation, it should be able to
      * represents also a namespace
+     * @throws ExceptionCombo
      */
     protected function __construct(string $path, string $drive, string $rev = null)
     {
@@ -196,13 +204,14 @@ class DokuPath extends PathAbs
                             $filePath = wikiFN($this->id);
                         }
                         break;
-                    case self::COMBO_DRIVE:
-                        $relativeFsPath = DokuPath::toFileSystemSeparator($this->id);
-                        $filePath = Site::getComboResourcesDirectory()->resolve($relativeFsPath)->toString();
-                        break;
                     default:
-                        LogUtility::msg("Wiki Path Type ($drive) is unknown, the local file system path could not be found", LogUtility::LVL_MSG_ERROR);
-
+                        $baseDirectory = DokuPath::getDriveRoots()[$drive];
+                        if ($baseDirectory === null) {
+                            throw new ExceptionCombo("The drive ($drive) is unknown, the local file system path could not be found");
+                        }
+                        $relativeFsPath = DokuPath::toFileSystemSeparator($this->id);
+                        $filePath = $baseDirectory->resolve($relativeFsPath)->toString();
+                        break;
                 }
             } else {
                 /**
@@ -381,12 +390,13 @@ class DokuPath extends PathAbs
         return new DokuPath($mediaId, $type, $rev);
     }
 
-    public static function getDriveRoots()
+    public static function getDriveRoots(): array
     {
         return [
-            self::MEDIA_DRIVE=> Site::getMediaDirectory(),
-            self::PAGE_DRIVE=>Site::getPageDirectory(),
-            self::COMBO_DRIVE=>Site::getComboResourcesDirectory()
+            self::MEDIA_DRIVE => Site::getMediaDirectory(),
+            self::PAGE_DRIVE => Site::getPageDirectory(),
+            self::COMBO_DRIVE => Site::getComboResourcesDirectory(),
+            self::CACHE_DRIVE => Site::getCacheDirectory()
         ];
     }
 

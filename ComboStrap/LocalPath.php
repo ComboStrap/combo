@@ -11,7 +11,11 @@ namespace ComboStrap;
 class LocalPath extends PathAbs
 {
 
-    private const FILE_SYSTEM_DIRECTORY_SEPARATOR = DIRECTORY_SEPARATOR;
+    /**
+     * For whatever reason, it seems that php uses always the / separator
+     * on windows also
+     */
+    private const FILE_SYSTEM_DIRECTORY_SEPARATOR = DokuPath::DIRECTORY_SEPARATOR;
 
     /**
      * The characters that cannot be in the path for windows
@@ -116,15 +120,43 @@ class LocalPath extends PathAbs
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function toDokuPath(): DokuPath
     {
         $driveRoots = DokuPath::getDriveRoots();
+        foreach ($driveRoots as $driveRoot => $drivePath) {
+            try {
+                $relativePath = $this->relativize($drivePath);
+                return DokuPath::createDokuPath($relativePath->toString(), $driveRoot);
+            } catch (ExceptionCombo $e) {
+                // not a relative path
+            }
+
+        }
+        throw new ExceptionCombo("The local path ($this) is not inside a doku path drive");
+
 
     }
 
     public function resolve(string $name): LocalPath
     {
         return self::create($this->path . self::FILE_SYSTEM_DIRECTORY_SEPARATOR . $name);
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private function relativize(LocalPath $localPath): LocalPath
+    {
+        if (!(strpos($this->toString(), $localPath->toString()) === 0)) {
+            throw new ExceptionCombo("The path ($localPath) is not a parent path of the actual path ($this)");
+        }
+        $sepCharacter = 1; // delete the sep characters
+        $relativePath = substr($this->toString(), strlen($localPath->toString()) + $sepCharacter);
+        $relativePath = str_replace(self::FILE_SYSTEM_DIRECTORY_SEPARATOR, DokuPath::PATH_SEPARATOR, $relativePath);
+        return LocalPath::create($relativePath);
     }
 
 }

@@ -68,7 +68,7 @@ class BacklinkMenuItem extends AbstractItem
     public function getSvg(): string
     {
         /** @var string icon file */
-        return Resources::getImagesDirectory() . '/backlink.svg';
+        return Site::getComboImagesDirectory()->resolve('backlink.svg')->toString();
     }
 
 

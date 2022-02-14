@@ -133,11 +133,11 @@ class CacheMedia
             if ($this->path->getExtension() === "svg") {
                 // svg generation depends on configuration
                 $files = getConfigFiles('main');
-                $files[] = Resources::getComboHome() . "/ComboStrap/SvgDocument.php";
-                $files[] = Resources::getComboHome() . "/ComboStrap/XmlDocument.php";
+                $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve("SvgDocument.php")->toString();
+                $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve( "XmlDocument.php")->toString();
             }
             $files[] = $this->path->toAbsolutePath()->toString();
-            $files[] = Resources::getComboHome() . "/plugin.info.txt";
+            $files[] = Site::getComboHome()->resolve("plugin.info.txt");
             $dependencies = array('files' => $files);
             if ($this->maxAge != null) {
                 $dependencies['age'] = $this->maxAge;

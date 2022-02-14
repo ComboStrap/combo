@@ -23,27 +23,28 @@ use renderer_plugin_combo_analytics;
  * Inspiration:
  * https://raw.githubusercontent.com/splitbrain/dokuwiki-plugin-dw2pdf/master/MenuItem.php
  */
-class AnalyticsMenuItem extends AbstractItem {
+class AnalyticsMenuItem extends AbstractItem
+{
     const ITEM_ID = renderer_plugin_combo_analytics::RENDERER_NAME_MODE . "_item_id";
 
 
     /** @var string do action for this plugin */
-    protected $type = 'export_'. renderer_plugin_combo_analytics::RENDERER_NAME_MODE;
-
+    protected $type = 'export_' . renderer_plugin_combo_analytics::RENDERER_NAME_MODE;
 
 
     /**
      *
      * @return string
      */
-    public function getLabel() {
+    public function getLabel()
+    {
         return "Analytics";
     }
 
     public function getLinkAttributes($classprefix = 'menuitem ')
     {
         $linkAttributes = parent::getLinkAttributes($classprefix);
-        $linkAttributes['id']= self::ITEM_ID;
+        $linkAttributes['id'] = self::ITEM_ID;
         return $linkAttributes;
     }
 
@@ -55,7 +56,8 @@ class AnalyticsMenuItem extends AbstractItem {
     public function getSvg()
     {
         /** @var string icon file */
-        return Resources::getImagesDirectory() . '/file-chart.svg';
+        return Site::getComboImagesDirectory()->resolve('file-chart.svg')->toString();
+
     }
 
 

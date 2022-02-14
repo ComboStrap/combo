@@ -118,7 +118,13 @@ class LocalPath extends PathAbs
 
     public function toDokuPath(): DokuPath
     {
+        $driveRoots = DokuPath::getDriveRoots();
 
+    }
+
+    public function resolve(string $name): LocalPath
+    {
+        return self::create($this->path . self::FILE_SYSTEM_DIRECTORY_SEPARATOR . $name);
     }
 
 }

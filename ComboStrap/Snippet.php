@@ -137,7 +137,7 @@ class Snippet implements JsonSerializable
     private function getCssRulesFromFile($tagName)
     {
 
-        $path = Resources::getSnippetResourceDirectory() . "/style/" . strtolower($tagName) . ".css";
+        $path = Site::getComboResourceSnippetDirectory()->resolve("style")->resolve(strtolower($tagName) . ".css");
         if (file_exists($path)) {
             return file_get_contents($path);
         } else {
@@ -154,7 +154,7 @@ class Snippet implements JsonSerializable
     private function getJavascriptContentFromFile($tagName)
     {
 
-        $path = Resources::getSnippetResourceDirectory() . "/js/" . strtolower($tagName) . ".js";
+        $path = Site::getComboResourceSnippetDirectory()->resolve("js")->resolve(strtolower($tagName) . ".js");
         if (file_exists($path)) {
             return file_get_contents($path);
         } else {

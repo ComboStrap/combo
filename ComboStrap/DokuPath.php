@@ -51,6 +51,7 @@ class DokuPath extends PathAbs
      *   combo>image:
      */
     const COMBO_DRIVE = "combo";
+    const CACHE_DRIVE = "cache";
 
     /**
      * @var string[]
@@ -197,7 +198,7 @@ class DokuPath extends PathAbs
                         break;
                     case self::COMBO_DRIVE:
                         $relativeFsPath = DokuPath::toFileSystemSeparator($this->id);
-                        $filePath = Resources::getAbsoluteResourcesDirectory() . DIRECTORY_SEPARATOR . $relativeFsPath;
+                        $filePath = Site::getComboResourcesDirectory()->resolve($relativeFsPath)->toString();
                         break;
                     default:
                         LogUtility::msg("Wiki Path Type ($drive) is unknown, the local file system path could not be found", LogUtility::LVL_MSG_ERROR);
@@ -378,6 +379,15 @@ class DokuPath extends PathAbs
     public static function createDokuPath($mediaId, $type, $rev = ''): DokuPath
     {
         return new DokuPath($mediaId, $type, $rev);
+    }
+
+    public static function getDriveRoots()
+    {
+        return [
+            self::MEDIA_DRIVE=> Site::getMediaDirectory(),
+            self::PAGE_DRIVE=>Site::getPageDirectory(),
+            self::COMBO_DRIVE=>Site::getComboResourcesDirectory()
+        ];
     }
 
 
@@ -725,5 +735,10 @@ class DokuPath extends PathAbs
     public function getDrive(): string
     {
         return $this->drive;
+    }
+
+    public function resolve(string $name): DokuPath
+    {
+        return new DokuPath($this->absolutePath . self::PATH_SEPARATOR . $name, $this->getDrive());
     }
 }

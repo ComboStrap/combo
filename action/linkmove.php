@@ -31,7 +31,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
 
     private static function checkAndSendAMessageIfLockFilePresent(): bool
     {
-        $lockFile = File::createFromPath(Site::getDataDirectory() . "/locks_plugin_move.lock");
+        $lockFile = Site::getDataDirectory().resolve("locks_plugin_move.lock");
         if (!$lockFile->exists()) {
             return false;
         }

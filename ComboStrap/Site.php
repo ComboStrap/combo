@@ -14,7 +14,6 @@ namespace ComboStrap;
 
 
 use Exception;
-use RuntimeException;
 
 class Site
 {
@@ -315,9 +314,13 @@ class Site
     {
         global $conf;
         /**
-         * Data dir is the pages dir
+         * Data dir is the pages dir (savedir is the data dir)
          */
-        return $conf['datadir'];
+        $pageDirectory = $conf['datadir'];
+        if ($pageDirectory === null) {
+            throw new ExceptionComboRuntime("The page directory ($pageDirectory) is null");
+        }
+        return LocalPath::createFromPath($pageDirectory);
     }
 
     public static function disableHeadingSectionEditing()
@@ -338,15 +341,14 @@ class Site
         return $conf['cachetime'] !== -1;
     }
 
-    public static function getDataDirectory()
+    public static function getDataDirectory(): Path
     {
         global $conf;
-        $dataDirectory = $conf['datadir'];
+        $dataDirectory = $conf['savedir'];
         if ($dataDirectory === null) {
-            throw new RuntimeException("The base directory ($dataDirectory) is null");
+            throw new ExceptionComboRuntime("The data directory ($dataDirectory) is null");
         }
-        $file = File::createFromPath($dataDirectory)->getParent();
-        return $file->getAbsoluteFileSystemPath();
+        return LocalPath::createFromPath($dataDirectory);
     }
 
     public static function isLowQualityProtectionEnable(): bool
@@ -709,6 +711,52 @@ class Site
     public static function isBrandingColorInheritanceFunctional(): bool
     {
         return self::isBrandingColorInheritanceEnabled() && Site::getPrimaryColorValue() !== null;
+    }
+
+    public static function getMediaDirectory(): LocalPath
+    {
+        global $conf;
+        $mediaDirectory = $conf['mediadir'];
+        if ($mediaDirectory === null) {
+            throw new ExceptionComboRuntime("The media directory ($mediaDirectory) is null");
+        }
+        return LocalPath::createFromPath($mediaDirectory);
+    }
+
+    public static function getCacheDirectory(): LocalPath
+    {
+        global $conf;
+        $cacheDirectory = $conf['cachedir'];
+        if ($cacheDirectory === null) {
+            throw new ExceptionComboRuntime("The cache directory ($cacheDirectory) is null");
+        }
+        return LocalPath::createFromPath($cacheDirectory);
+    }
+
+
+    public static function getComboHome(): LocalPath
+    {
+        return LocalPath::create(DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME);
+    }
+
+    public static function getComboImagesDirectory(): LocalPath
+    {
+        return self::getComboResourcesDirectory()->resolve("images");
+    }
+
+    public static function getComboResourcesDirectory(): LocalPath
+    {
+        return Site::getComboHome()->resolve("resources");
+    }
+
+    public static function getComboDictionaryDirectory(): LocalPath
+    {
+        return Site::getComboResourcesDirectory()->resolve("dictionary");
+    }
+
+    public static function getComboResourceSnippetDirectory(): LocalPath
+    {
+        return Site::getComboResourcesDirectory()->resolve("snippet");
     }
 
 

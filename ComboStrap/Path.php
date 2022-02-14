@@ -55,4 +55,6 @@ interface Path
      * @return Mime the mime from the extension
      */
     function getMime(): ?Mime;
+
+    function resolve(string $name);
 }

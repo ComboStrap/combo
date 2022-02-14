@@ -4,6 +4,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\PageRules;
 use ComboStrap\PluginUtility;
 use ComboStrap\Resources;
+use ComboStrap\Site;
 
 if (!defined('DOKU_INC')) die();
 
@@ -27,7 +28,6 @@ require_once(__DIR__ . '/../ComboStrap/Resources.php');
  */
 class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 {
-
 
 
     /**
@@ -101,7 +101,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 
     public function getMenuIcon()
     {
-        return Resources::getImagesDirectory() .'/page-next.svg';
+        return Site::getComboImagesDirectory()->resolve('page-next.svg')->toString();
     }
 
 
@@ -150,7 +150,6 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
             }
 
 
-
         }
 
         if ($_POST['Delete'] && checkSecurityToken()) {
@@ -185,7 +184,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 
             // Update ?
             $id = $_POST[PageRules::ID_NAME];
-            if ($id != null){
+            if ($id != null) {
                 $rule = $this->pageRuleManager->getRule($id);
                 $matcher = $rule[PageRules::MATCHER_NAME];
                 $target = $rule[PageRules::TARGET_NAME];
@@ -197,7 +196,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
             ptln('<div class="level2" >');
             ptln('<div id="form_container" style="max-width: 600px;">');
             ptln('<form action="" method="post">');
-            ptln('<input type="hidden" name="sectok" value="'.getSecurityToken().'" />');
+            ptln('<input type="hidden" name="sectok" value="' . getSecurityToken() . '" />');
             ptln('<p><b>If the Dokuwiki ID matches the following pattern:</b></p>');
             $matcherDefault = "";
             if ($matcher != null) {
@@ -235,16 +234,16 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
             ptln('<div class="level2">');
 
             ptln('<form class="pt-3 pb-3" action="" method="post">');
-            ptln('<input type="hidden" name="sectok" value="'.getSecurityToken().'" />');
+            ptln('<input type="hidden" name="sectok" value="' . getSecurityToken() . '" />');
             ptln('    <input type="hidden" name="do"    value="admin" />');
             ptln('	<input type="hidden" name="page"  value="' . $this->getPluginName() . '_' . $this->getPluginComponent() . '" />');
-            ptln('	<input type="submit" name="upsert" name="Create a page rule" class="button" value="' . $this->getLangOrDefault('AddNewRule','Add a new rule') . '" />');
+            ptln('	<input type="submit" name="upsert" name="Create a page rule" class="button" value="' . $this->getLangOrDefault('AddNewRule', 'Add a new rule') . '" />');
             ptln('</form>');
 
             // List of redirection
             $rules = $this->pageRuleManager->getRules();
 
-            if (sizeof($rules)==0){
+            if (sizeof($rules) == 0) {
                 ptln('<p>No Rules found</p>');
             } else {
                 ptln('<div class="table-responsive">');
@@ -274,17 +273,17 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
                     ptln('	  <tr class="redirect_info">');
                     ptln('		<td>');
                     ptln('			<form action="" method="post" style="display: inline-block">');
-                    ptln('<input type="hidden" name="sectok" value="'.getSecurityToken().'" />');
+                    ptln('<input type="hidden" name="sectok" value="' . getSecurityToken() . '" />');
                     ptln('<button style="background: none;border: 0;">');
-                    ptln(inlineSVG(Resources::getImagesDirectory() . '/delete.svg'));
+                    ptln(inlineSVG(Site::getComboImagesDirectory()->resolve('delete.svg')->toString()));
                     ptln('</button>');
                     ptln('				<input type="hidden" name="Delete"  value="Yes" />');
                     ptln('				<input type="hidden" name="' . PageRules::ID_NAME . '"  value="' . $id . '" />');
                     ptln('			</form>');
                     ptln('			<form action="" method="post" style="display: inline-block">');
-                    ptln('<input type="hidden" name="sectok" value="'.getSecurityToken().'" />');
+                    ptln('<input type="hidden" name="sectok" value="' . getSecurityToken() . '" />');
                     ptln('<button style="background: none;border: 0;">');
-                    ptln(inlineSVG(Resources::getImagesDirectory() . '/file-document-edit-outline.svg'));
+                    ptln(inlineSVG(Site::getComboImagesDirectory()->resolve('file-document-edit-outline.svg')->toString()));
                     ptln('</button>');
                     ptln('				<input type="hidden" name="upsert"  value="Yes" />');
                     ptln('				<input type="hidden" name="' . PageRules::ID_NAME . '"  value="' . $id . '" />');
@@ -319,11 +318,12 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
     private function getLangOrDefault($id, $default)
     {
         $lang = $this->getLang($id);
-        return $lang !='' ? $lang : $default;
+        return $lang != '' ? $lang : $default;
     }
 
 
-    static function getAdminPageName(){
+    static function getAdminPageName()
+    {
         return PluginUtility::getAdminPageName(get_called_class());
     }
 

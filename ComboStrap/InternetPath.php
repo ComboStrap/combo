@@ -15,6 +15,7 @@ class InternetPath extends PathAbs
 
 
     public const scheme = "internet";
+    const PATH_SEP = "/";
 
     private $path;
 
@@ -81,4 +82,9 @@ class InternetPath extends PathAbs
         return new InternetPath($this->path);
     }
 
+
+    function resolve(string $name): InternetPath
+    {
+        return self::create($this->path . self::PATH_SEP . $name);
+    }
 }

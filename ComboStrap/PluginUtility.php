@@ -762,7 +762,7 @@ class PluginUtility
              * TODO: when we have made a special fetch ajax with cache
              * for application resource, we can serve it statically
              */
-            $path = LocalPath::createFromPath(Resources::getImagesDirectory() . "/logo.svg");
+            $path = Site::getComboImagesDirectory()->resolve("logo.svg");
             try {
                 $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
                 $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
@@ -1432,7 +1432,7 @@ class PluginUtility
     {
         try {
             return p_render("xhtml", $callStackHeaderInstructions, $info);
-        } catch (Exception $e){
+        } catch (Exception $e) {
             /**
              * Example of errors;
              * method_exists() expects parameter 2 to be string, array given

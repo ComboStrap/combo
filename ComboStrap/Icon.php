@@ -551,7 +551,7 @@ class Icon extends ImageSvg
      */
     public static function getEmojiCodePoint(string $emojiName)
     {
-        $path = LocalPath::createFromPath(Resources::getDictionaryDirectory() . "/emojis.json");
+        $path = Site::getComboDictionaryDirectory()->resolve("emojis.json");
         $jsonContent = FileSystems::getContent($path);
         $jsonArray = Json::createFromString($jsonContent)->toArray();
         return $jsonArray[$emojiName];

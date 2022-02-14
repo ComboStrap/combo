@@ -17,7 +17,7 @@ class InterWikiPath extends PathAbs
      */
     public function __construct($path)
     {
-        if (!media_isexternal($path)){
+        if (!media_isexternal($path)) {
             LogUtility::msg("The path ($path) is not an internet path");
         }
         $this->path = $path;
@@ -41,8 +41,8 @@ class InterWikiPath extends PathAbs
 
     function getNames(): array
     {
-        $sepPosition = strpos(">",$this->path);
-        return [substr($this->path,$sepPosition)];
+        $sepPosition = strpos(">", $this->path);
+        return [substr($this->path, $sepPosition)];
     }
 
     function getParent(): ?Path
@@ -61,4 +61,11 @@ class InterWikiPath extends PathAbs
         return new InterWikiPath($this->path);
     }
 
+    /**
+     *
+     */
+    function resolve(string $name): InterWikiPath
+    {
+        return self::create($this->path . "/" . $name);
+    }
 }

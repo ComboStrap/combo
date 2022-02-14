@@ -12,7 +12,7 @@ class Dictionary
      */
     public static function getFrom(string $name): array
     {
-        $path = LocalPath::createFromPath(Resources::getDictionaryDirectory() . "/$name.json");
+        $path = Site::getComboDictionaryDirectory()->resolve("$name.json");
         if (!FileSystems::exists($path)) {
             throw new ExceptionCombo("The dictionary file ($path) does not exist");
         }

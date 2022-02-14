@@ -548,7 +548,7 @@ class Site
     }
 
 
-    public static function getSlotNames(): array
+    public static function getSecondarySlotNames(): array
     {
 
         try {

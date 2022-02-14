@@ -376,6 +376,17 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     $pageExplorerTagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::CANONICAL);
 
                     /**
+                     * The cache output is composed of primary metadata
+                     * (If it changes, the content change)
+                     */
+                    CacheManager::getOrCreate()->addDependency(CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
+                    /**
+                     * The content depend on the file system tree
+                     * (if a file is added or deleted, the content will change)
+                     */
+                    CacheManager::getOrCreate()->addDependency(CacheDependencies::FILE_SYSTEM_DEPENDENCY);
+
+                    /**
                      * NameSpacePath determination
                      */
                     $type = $pageExplorerTagAttributes->getType();

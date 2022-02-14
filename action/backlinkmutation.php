@@ -129,10 +129,9 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
             }
         }
         foreach ($afterReferences as $newReference) {
-            Page::createPageFromQualifiedPath($newReference)
-                ->getAnalyticsDocument()
-                ->deleteIfExists();
-            Event::createEvent(action_plugin_combo_backlinkmutation::BACKLINK_MUTATION_EVENT_NAME, [PagePath::getPersistentName() => $newReference]);
+            Event::createEvent(
+                action_plugin_combo_backlinkmutation::BACKLINK_MUTATION_EVENT_NAME,
+                [PagePath::getPersistentName() => $newReference]);
         }
 
 

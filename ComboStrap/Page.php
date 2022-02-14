@@ -326,7 +326,7 @@ class Page extends ResourceComboAbs
      */
     public function isSlot(): bool
     {
-        $slotNames = Site::getSlotNames();
+        $slotNames = Site::getSecondarySlotNames();
         $name = $this->getPath()->getLastNameWithoutExtension();
         if ($name === null) {
             // root case

@@ -30,7 +30,7 @@ window.addEventListener("DOMContentLoaded", function () {
                         .slice("/*<![CDATA[*/".length)
                         .slice(0, -("/*!]]>*/".length));
 
-                    html += `<table class="table table-striped table-hover"><thead><th>Slot</th><th>Output</th><th>Cache <br/>Hit</th><th title="Modification time of the cache file">Modification <br/>Time</th><th>Cache Deps</th></thead>`;
+                    html += `<table class="table table-striped table-hover text-nowrap overflow-auto"><thead><th>Slot</th><th>Output</th><th>Cache <br/>Hit</th><th title="Modification time of the cache file">Modification <br/>Time</th><th>Cache Deps</th></thead>`;
                     let cachePageJson = JSON.parse(cachePageJsonString);
                     for (let slot in cachePageJson) {
                         if (!cachePageJson.hasOwnProperty(slot)) {

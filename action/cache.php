@@ -43,33 +43,12 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     private static $sideSlotNames;
 
 
-    private static function getSideSlotNames(): array
+
+
+    public static function removeSecondarySlotCache()
     {
-        if (self::$sideSlotNames === null) {
-            global $conf;
 
-            self::$sideSlotNames = [
-                $conf['sidebar']
-            ];
-
-            /**
-             * @see {@link \ComboStrap\TplConstant::CONF_SIDEKICK}
-             */
-            $sideKickSlotPageName = Site::getSideKickSlotPageName();
-            if (!empty($sideKickSlotPageName)) {
-                self::$sideSlotNames[] = $sideKickSlotPageName;
-            }
-
-
-        }
-        return self::$sideSlotNames;
-    }
-
-    private static function removeSideSlotCache()
-    {
-        $sidebars = self::getSideSlotNames();
-
-
+        $sidebars = Site::getSecondarySlotNames();
         /**
          * Delete the cache for the sidebar
          */
@@ -108,12 +87,6 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('INIT_LANG_LOAD', 'BEFORE', $this, 'deleteVaryFromStaticGeneratedResources', array());
 
-        /**
-         * To delete sidebar (cache) cache when a page was modified in a namespace
-         * https://combostrap.com/sideslots
-         */
-        $controller->register_hook(MetadataDokuWikiStore::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'sideSlotsCacheBurstingForMetadataMutation', array());
-        $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'sideSlotsCacheBurstingForPageCreationAndDeletion', array());
 
         /**
          * Add a icon in the page tools menu
@@ -232,7 +205,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     }
 
     /**
-     * Add HTML meta to be able to debug
+     * Add cache data to the rendered html page
      * @param Doku_Event $event
      * @param $params
      */
@@ -294,83 +267,8 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         }
     }
 
-    function sideSlotsCacheBurstingForMetadataMutation($event)
-    {
 
-        $data = $event->data;
-        /**
-         * The side slot cache is deleted only when the
-         * below property are updated
-         */
-        $descriptionProperties = [PageTitle::PROPERTY_NAME, ResourceName::PROPERTY_NAME, PageH1::PROPERTY_NAME, PageDescription::DESCRIPTION_PROPERTY];
-        if (!in_array($data["name"], $descriptionProperties)) return;
 
-        self::removeSideSlotCache();
-
-    }
-
-    /**
-     * @param $event
-     * @throws Exception
-     * @link https://www.dokuwiki.org/devel:event:io_wikipage_write
-     */
-    function sideSlotsCacheBurstingForPageCreationAndDeletion($event)
-    {
-
-        $data = $event->data;
-        $pageName = $data[2];
-
-        /**
-         * Modification to the side slot is not processed further
-         */
-        if (in_array($pageName, self::getSideSlotNames())) return;
-
-        /**
-         * Pointer to see if we need to delete the cache
-         */
-        $doWeNeedToDeleteTheSideSlotCache = false;
-
-        /**
-         * File creation
-         *
-         * ```
-         * Page creation may be detected by checking if the file already exists and the revision is false.
-         * ```
-         * From https://www.dokuwiki.org/devel:event:io_wikipage_write
-         *
-         */
-        $rev = $data[3];
-        $filePath = $data[0][0];
-        $file = File::createFromPath($filePath);
-        if (!$file->exists() && $rev === false) {
-            $doWeNeedToDeleteTheSideSlotCache = true;
-        }
-
-        /**
-         * File deletion
-         * (No content)
-         *
-         * ```
-         * Page deletion may be detected by checking for empty page content.
-         * On update to an existing page this event is called twice, once for the transfer of the old version to the attic (rev will have a value)
-         * and once to write the new version of the page into the wiki (rev is false)
-         * ```
-         * From https://www.dokuwiki.org/devel:event:io_wikipage_write
-         */
-        $append = $data[0][2];
-        if (!$append) {
-
-            $content = $data[0][1];
-            if (empty($content) && $rev === false) {
-                // Deletion
-                $doWeNeedToDeleteTheSideSlotCache = true;
-            }
-
-        }
-
-        if ($doWeNeedToDeleteTheSideSlotCache) self::removeSideSlotCache();
-
-    }
 
     function addMenuItem(Doku_Event $event, $param)
     {

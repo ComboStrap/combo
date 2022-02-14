@@ -42,7 +42,7 @@ class CacheDependencies
      * This dependencies have an impact on the freshness
      * of the cache
      */
-    public const validityDependencies = [self::BACKLINKS_DEPENDENCY, self::SQL_DEPENDENCY, self::DESCRIPTION_DEPENDENCY];
+    public const validityDependencies = [self::BACKLINKS_DEPENDENCY, self::SQL_DEPENDENCY, self::PAGE_PRIMARY_META_DEPENDENCY];
 
     /**
      * Backlinks are printed in the page
@@ -59,10 +59,16 @@ class CacheDependencies
     const SQL_DEPENDENCY = "sql";
 
     /**
-     * If the name, the title or the description
+     * If the name, the title, the h1 or the description
      * of a page changes, the cache should be invalidated
+     * See {@link \action_plugin_combo_pageprimarymetamutation}
      */
-    const DESCRIPTION_DEPENDENCY = "page_description";
+    const PAGE_PRIMARY_META_DEPENDENCY = "page_primary_meta";
+    /**
+     * If a file is added or delete
+     * See {@link \action_plugin_combo_filesystemtreemutation}
+     */
+    const FILE_SYSTEM_DEPENDENCY = "file_system";
 
 
     /**

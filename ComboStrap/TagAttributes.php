@@ -604,12 +604,19 @@ class TagAttributes
             foreach ($tempHtmlArray as $name => $value) {
                 $searchPattern = "^$pattern$";
                 if (preg_match("/$searchPattern/", $name)) {
-                    $sortedArray[$name] = $value;
                     unset($tempHtmlArray[$name]);
-                    if ($type == $once) {
-                        break;
+                    if ($type === $once) {
+                        $sortedArray[$name] = $value;
+                        continue 2;
+                    } else {
+                        $multipleValues[$name]=$value;
                     }
                 }
+            }
+            if(!empty($multipleValues)){
+                ksort($multipleValues);
+                $sortedArray = array_merge($sortedArray,$multipleValues);
+                $multipleValues=[];
             }
         }
         foreach ($tempHtmlArray as $name => $value) {

@@ -8,6 +8,7 @@ use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\ExceptionComboRuntime;
+use ComboStrap\FileSystems;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\Html;
 use ComboStrap\Icon;
@@ -73,6 +74,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     const HOME_ATTRIBUTES = "home-attributes";
     const PARENT_INSTRUCTIONS = "parent-instructions";
     const PARENT_ATTRIBUTES = "parent-attributes";
+    const HOME_TYPE = "home";
+    const PAGE_TYPE = "page";
 
     /**
      * A counter/index that keeps
@@ -328,47 +331,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $type = $openingTag->getType();
                 $componentClassPrefix = self::getClassPrefix($type);
 
-                /**
-                 * Default template
-                 * if null, no node page present
-                 */
-                if ($pageAttributes == null) {
-                    // attributes are mandatory as array
-                    $pageAttributes = [];
-                    // default template instructions
-                    if ($templatePageInstructions === null) {
-                        $templatePageInstructions = [];
-                        $templatePageInstructions[] = Call::createComboCall(
-                            syntax_plugin_combo_link::TAG,
-                            DOKU_LEXER_ENTER,
-                            [
-                                syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path",
-                                syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE => syntax_plugin_combo_link::HREF_MARKUP_TYPE_VALUE
-                            ],
-                            syntax_plugin_combo_pageexplorerpage::TAG,
-                            "[[\$path"
-                        )->addClassName($componentClassPrefix . "-page-combo");
-                        $templatePageInstructions[] = Call::createComboCall(
-                            syntax_plugin_combo_pipeline::TAG,
-                            DOKU_LEXER_SPECIAL,
-                            [PluginUtility::PAYLOAD => ""],
-                            "",
-                            "<pipeline>\"\$name\" | replace(\"_\",\" \") | capitalize()</pipeline>"
-                        );
-                        $templatePageInstructions[] = Call::createComboCall(
-                            syntax_plugin_combo_link::TAG,
-                            DOKU_LEXER_EXIT,
-                            [
-                                syntax_plugin_combo_link::ATTRIBUTE_HREF => "\$path",
-                                syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE => syntax_plugin_combo_link::HREF_MARKUP_TYPE_VALUE
-                            ],
-                            syntax_plugin_combo_pageexplorerpage::TAG,
-                            "]]"
-                        );
-                    }
-                }
-
-
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $openingTag->getAttributes(),
@@ -380,7 +342,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     self::HOME_ATTRIBUTES => $homeAttributes,
                     self::PARENT_INSTRUCTIONS => $parentInstructions,
                     self::PARENT_ATTRIBUTES => $parentAttributes
-
                 );
 
 
@@ -395,9 +356,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @param Doku_Renderer $renderer
      * @param array $data - what the function handle() return'ed
      * @return boolean - rendered correctly? (however, returned value is not used at the moment)
+     * @throws ExceptionCombo
      * @see DokuWiki_Syntax_Plugin::render()
-     *
-     *
      */
     function render($format, Doku_Renderer $renderer, $data): bool
     {
@@ -488,6 +448,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                              */
                             $homeInstructions = $data[self::HOME_INSTRUCTIONS];
                             $parentAttributes = $data[self::HOME_ATTRIBUTES];
+                            $currentHomePage = null;
                             if (!($homeInstructions === null && $parentAttributes !== null)) {
 
                                 $currentHomePage = Page::getHomePageFromNamespace($namespacePath);
@@ -596,9 +557,11 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             try {
                                 $namespaceEnterTag = TagAttributes::createFromCallStackArray($data[self::NAMESPACE_ATTRIBUTES])
                                     ->addClassName($classItem)
+                                    ->setLogicalTag(self::CANONICAL . "-{$type}-namespace")
                                     ->toHtmlEnterTag("li");
                                 $pageEnterTag = TagAttributes::createFromCallStackArray($data[self::PAGE_ATTRIBUTES])
                                     ->addClassName($classItem)
+                                    ->setLogicalTag(self::CANONICAL . "-{$type}-page")
                                     ->toHtmlEnterTag("li");
                             } catch (ExceptionCombo $e) {
                                 $renderer->doc .= LogUtility::wrapInRedForHtml("Error while creating the li for namespace and page. Error: {$e->getMessage()}");
@@ -606,6 +569,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             }
 
                             $pageInstructions = $data[self::PAGE_INSTRUCTIONS];
+                            $pageAttributes = $data[self::PAGE_ATTRIBUTES];
                             $namespaceInstructions = $data[self::NAMESPACE_INSTRUCTIONS];
                             $namespaceAttributes = $data[self::NAMESPACE_ATTRIBUTES];
                             $pageOrNamespaces = FsWikiUtility::getChildren($namespacePath);
@@ -657,9 +621,13 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                                 } else {
 
-                                    if (!empty($pageInstructions)) {
+                                    if (!($pageInstructions === null && $pageAttributes !== null)) {
                                         $pageNum++;
-                                        if ($pageOrNamespacePath !== $currentHomePage->getPath()->toString()) {
+                                        $page = Page::createPageFromQualifiedPath($pageOrNamespacePath);
+                                        if ($currentHomePage !== null
+                                            && $page->getDokuwikiId() !== $currentHomePage->getDokuwikiId()
+                                            && FileSystems::exists($page->getPath())
+                                        ) {
                                             /**
                                              * Page Enter tag
                                              */
@@ -667,11 +635,22 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                             /**
                                              * Page Content
                                              */
-                                            $pageInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($pageInstructions, $pageOrNamespacePath);
-                                            try {
-                                                $renderer->doc .= PluginUtility::renderInstructionsToXhtml($pageInstructionsInstance);
-                                            } catch (ExceptionCombo $e) {
-                                                $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the page. Error: {$e->getMessage()}");
+                                            if ($namespaceInstructions !== null) {
+                                                $pageInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($pageInstructions, $page);
+                                                try {
+                                                    $renderer->doc .= PluginUtility::renderInstructionsToXhtml($pageInstructionsInstance);
+                                                } catch (ExceptionCombo $e) {
+                                                    $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the page. Error: {$e->getMessage()}");
+                                                }
+                                            } else {
+                                                try {
+                                                    $renderer->doc .= MarkupRef::createFromPageId($page->getDokuwikiId())
+                                                        ->toAttributes()
+                                                        ->toHtmlEnterTag("a");
+                                                    $renderer->doc .= "{$page->getNameOrDefault()}</a>";
+                                                } catch (ExceptionCombo $e) {
+                                                    $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default page. Error: {$e->getMessage()}");
+                                                }
                                             }
                                             /**
                                              * Page Exit tag
@@ -792,7 +771,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
          * First the home page
          */
         if ($homePage !== null) {
-            self::treeProcessLeaf($html, $homePage->getAbsolutePath(), $data[self::PAGE_INSTRUCTIONS]);
+            self::treeProcessLeaf($html, $homePage->getAbsolutePath(), $data, self::HOME_TYPE);
         }
 
         /**
@@ -880,7 +859,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
          * Then the other pages
          */
         foreach ($nonHomePages as $page) {
-            self::treeProcessLeaf($html, $page->getAbsolutePath(), $data[self::PAGE_INSTRUCTIONS]);
+            self::treeProcessLeaf($html, $page->getAbsolutePath(), $data, self::PAGE_TYPE);
         }
 
 
@@ -889,10 +868,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     /**
      * @param string $html
      * @param $pageOrNamespacePath
-     * @param array|null $pageTemplateInstructions
+     *
      */
-    private
-    static function treeProcessLeaf(string &$html, $pageOrNamespacePath, array $pageTemplateInstructions = null)
+    private static function treeProcessLeaf(string &$html, $pageOrNamespacePath, array $data, string $type)
     {
         /**
          * In callstack instructions
@@ -900,16 +878,36 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
          *   $instructions
          * </li>
          */
-        $html .= "<li>";
-        if ($pageTemplateInstructions !== null) {
-            $pageInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($pageTemplateInstructions, $pageOrNamespacePath);
+        $pageAttributes = $data[self::PAGE_ATTRIBUTES];
+        $pageInstructions = $data[self::PAGE_INSTRUCTIONS];
+        if ($pageInstructions === null && $pageAttributes !== null) {
+            return;
+        }
+        $page = Page::createPageFromQualifiedPath($pageOrNamespacePath);
+        if(!FileSystems::exists($page->getPath())){
+            return;
+        }
+
+        $html .= TagAttributes::createEmpty()
+            ->setLogicalTag(self::CANONICAL . "-tree-{$type}")
+            ->toHtmlEnterTag("li");
+
+        if ($pageInstructions !== null) {
+            $pageInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($pageInstructions, $page);
             try {
                 $html .= PluginUtility::renderInstructionsToXhtml($pageInstructionsInstance);
             } catch (ExceptionCombo $e) {
                 $html .= LogUtility::wrapInRedForHtml("Error while rendering the leaf. Error: {$e->getMessage()}");
             }
         } else {
-            $html .= $pageOrNamespacePath;
+            try {
+                $html .= MarkupRef::createFromPageId($page->getDokuwikiId())
+                    ->toAttributes()
+                    ->toHtmlEnterTag("a");
+                $html .= "{$page->getNameOrDefault()}</a>";
+            } catch (ExceptionCombo $e) {
+                $html .= LogUtility::wrapInRedForHtml("Error while rendering the default tree page. Error: {$e->getMessage()}");
+            }
         }
         $html .= "</li>";
 

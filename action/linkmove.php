@@ -36,7 +36,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
         if (!FileSystems::exists($lockFile)) {
             return false;
         }
-        $lockFileDateTimeModified = $lockFile->getModifiedTime();
+        $lockFileDateTimeModified = FileSystems::getModifiedTime($lockFile);
         $lockFileModifiedTimestamp = $lockFileDateTimeModified->getTimestamp();
         $now = time();
 

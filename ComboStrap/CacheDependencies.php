@@ -46,7 +46,7 @@ class CacheDependencies
         self::BACKLINKS_DEPENDENCY,
         self::SQL_DEPENDENCY,
         self::PAGE_PRIMARY_META_DEPENDENCY,
-        self::FILE_SYSTEM_DEPENDENCY
+        self::PAGE_SYSTEM_DEPENDENCY
     ];
 
     /**
@@ -70,10 +70,10 @@ class CacheDependencies
      */
     const PAGE_PRIMARY_META_DEPENDENCY = "page_primary_meta";
     /**
-     * If a file is added or delete
-     * See {@link \action_plugin_combo_filesystemtreemutation}
+     * If a page is added or deleted
+     * See {@link \action_plugin_combo_pagesystemmutation}
      */
-    const FILE_SYSTEM_DEPENDENCY = "file_system";
+    const PAGE_SYSTEM_DEPENDENCY = "page_system";
 
 
     /**

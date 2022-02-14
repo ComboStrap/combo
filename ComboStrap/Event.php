@@ -210,12 +210,14 @@ class Event
         $evt->advise_after();
     }
 
-    public static function getQueueSize()
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function getQueue(): array
     {
         $sqlite = Sqlite::createOrGetBackendSqlite();
         if ($sqlite === null) {
-            LogUtility::msg("Unable to count the number of event in the queue. Sqlite is not available");
-            return;
+            throw new ExceptionCombo("Sqlite is not available");
         }
 
 
@@ -223,17 +225,42 @@ class Event
          * Execute
          */
         $request = $sqlite->createRequest()
-            ->setQuery("select count(1) from " . self::EVENT_TABLE_NAME);
-        $count = 0;
+            ->setQuery("select * from " . self::EVENT_TABLE_NAME);
         try {
-            $count = $request->execute()
-                ->getFirstCellValueAsInt();
+            return $request->execute()
+                ->getRows();
         } catch (ExceptionCombo $e) {
-            LogUtility::msg("Unable to count the number of event in the queue. Error:" . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+            throw new ExceptionCombo("Unable to get the queue. Error:" . $e->getMessage(),self::CANONICAL,0,$e);
         } finally {
             $request->close();
         }
-        return $count;
+
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function purgeQueue(): int
+    {
+        $sqlite = Sqlite::createOrGetBackendSqlite();
+        if ($sqlite === null) {
+            throw new ExceptionCombo("Sqlite is not available");
+        }
+
+
+        /**
+         * Execute
+         */
+        $request = $sqlite->createRequest()
+            ->setQuery("delete from " . self::EVENT_TABLE_NAME);
+        try {
+            return $request->execute()
+                ->getChangeCount();
+        } catch (ExceptionCombo $e) {
+            throw new ExceptionCombo("Unable to count the number of event in the queue. Error:" . $e->getMessage(),self::CANONICAL,0,$e);
+        } finally {
+            $request->close();
+        }
     }
 
 

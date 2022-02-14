@@ -196,6 +196,11 @@ class HtmlDocument extends OutputDocument
         return $this->cacheDependencies;
     }
 
+    public function getCacheDependencies(): CacheDependencies
+    {
+        return $this->cacheDependencies;
+    }
+
 
     /**
      * Logical cache based on the cache dependencies (ie current namespace, user)

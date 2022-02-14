@@ -31,34 +31,17 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  */
 class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 {
-    const COMBO_CACHE_PREFIX = "combo:cache:";
+
 
 
     const CANONICAL = "cache";
     const STATIC_SCRIPT_NAMES = ["/lib/exe/jquery.php", "/lib/exe/js.php", "/lib/exe/css.php"];
 
-    /**
-     * @var string[]
-     */
-    private static $sideSlotNames;
 
 
 
 
-    public static function removeSecondarySlotCache()
-    {
 
-        $sidebars = Site::getSecondarySlotNames();
-        /**
-         * Delete the cache for the sidebar
-         */
-        foreach ($sidebars as $sidebarRelativePath) {
-
-            $page = Page::createPageFromNonQualifiedPath($sidebarRelativePath);
-            $page->deleteCache();
-
-        }
-    }
 
     /**
      * @param Doku_Event_Handler $controller

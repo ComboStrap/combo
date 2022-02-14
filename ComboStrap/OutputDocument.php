@@ -60,7 +60,6 @@ abstract class OutputDocument extends PageCompilerDocument
     /**
      * @return OutputDocument
      * @noinspection PhpMissingReturnTypeInspection
-     * @throws ExceptionCombo
      */
     function process()
     {

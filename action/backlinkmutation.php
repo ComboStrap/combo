@@ -58,7 +58,11 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
          * Delete and recompute analytics
          */
         FileSystems::deleteIfExists($reference->getAnalyticsDocument()->getCachePath());
-        $reference->getDatabasePage()->replicateAnalytics();
+        try {
+            $reference->getDatabasePage()->replicateAnalytics();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Backlink Mutation: Error while trying to replicate the analytics. Error: {$e->getMessage()}");
+        }
 
         /**
          * Render the footer slot if it has a backlink dependency

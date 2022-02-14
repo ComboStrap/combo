@@ -384,7 +384,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                      * The content depend on the file system tree
                      * (if a file is added or deleted, the content will change)
                      */
-                    CacheManager::getOrCreate()->addDependency(CacheDependencies::FILE_SYSTEM_DEPENDENCY);
+                    CacheManager::getOrCreate()->addDependency(CacheDependencies::PAGE_SYSTEM_DEPENDENCY);
 
                     /**
                      * NameSpacePath determination

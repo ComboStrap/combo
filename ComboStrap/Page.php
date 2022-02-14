@@ -2016,11 +2016,48 @@ class Page extends ResourceComboAbs
 
         try {
             Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            $nearestMainFooter = page_findnearest(TplUtility::SLOT_MAIN_FOOTER_NAME);
-            return Page::createPageFromId($nearestMainFooter);
         } catch (ExceptionCombo $e) {
-            LogUtility::msg("We can't load strap. The footer slot could not be detected, Error: {$e->getMessage()}");
+            LogUtility::msg("We can't load strap. The nearest main footer slot could not be detected, Error: {$e->getMessage()}");
             return null;
+        }
+
+        $nearestMainFooter = $this->findNearest(TplUtility::SLOT_MAIN_FOOTER_NAME);
+        if ($nearestMainFooter === false) {
+            return null;
+        }
+        return Page::createPageFromId($nearestMainFooter);
+
+
+    }
+
+    public function getSideSlot(): ?Page
+    {
+        if ($this->isSlot() || $this->isRootHomePage()) {
+            return null;
+        }
+
+        $nearestMainFooter = $this->findNearest(Site::getSidebarName());
+        if ($nearestMainFooter === false) {
+            return null;
+        }
+        return Page::createPageFromId($nearestMainFooter);
+
+
+    }
+
+    /**
+     * @param $pageName
+     * @return false|string
+     */
+    private function findNearest($pageName)
+    {
+        global $ID;
+        $keep = $ID;
+        try {
+            $ID = $this->getDokuwikiId();
+            return page_findnearest($pageName);
+        } finally {
+            $ID = $keep;
         }
 
     }

@@ -42,7 +42,12 @@ class CacheDependencies
      * This dependencies have an impact on the freshness
      * of the cache
      */
-    public const validityDependencies = [self::BACKLINKS_DEPENDENCY, self::SQL_DEPENDENCY, self::PAGE_PRIMARY_META_DEPENDENCY];
+    public const validityDependencies = [
+        self::BACKLINKS_DEPENDENCY,
+        self::SQL_DEPENDENCY,
+        self::PAGE_PRIMARY_META_DEPENDENCY,
+        self::FILE_SYSTEM_DEPENDENCY
+    ];
 
     /**
      * Backlinks are printed in the page
@@ -155,7 +160,7 @@ class CacheDependencies
             case CacheDependencies::REQUESTED_PAGE_DEPENDENCY:
                 return $requestPage->getPath()->toString();
             default:
-                throw new ExceptionCombo("The requested dependency value ($dependenciesValue) is unknown");
+                throw new ExceptionCombo("The requested dependency value ($dependenciesValue) has no calculation");
         }
 
 
@@ -186,7 +191,9 @@ class CacheDependencies
         if ($runtimeDependencies !== null) {
 
             foreach ($runtimeDependencies as $dependency) {
-                $dependencyKey .= self::getValueForKey($dependency);
+                if(in_array($dependency,self::outputDependencies)) {
+                    $dependencyKey .= self::getValueForKey($dependency);
+                }
             }
 
         }

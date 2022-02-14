@@ -7,6 +7,7 @@ use ComboStrap\Aliases;
 use ComboStrap\DatabasePageRow;
 use ComboStrap\ExceptionComboRuntime;
 use ComboStrap\File;
+use ComboStrap\FileSystems;
 use ComboStrap\MarkupRef;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDbStore;
@@ -31,8 +32,8 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
 
     private static function checkAndSendAMessageIfLockFilePresent(): bool
     {
-        $lockFile = Site::getDataDirectory().resolve("locks_plugin_move.lock");
-        if (!$lockFile->exists()) {
+        $lockFile = Site::getDataDirectory()->resolve("locks_plugin_move.lock");
+        if (!FileSystems::exists($lockFile)) {
             return false;
         }
         $lockFileDateTimeModified = $lockFile->getModifiedTime();

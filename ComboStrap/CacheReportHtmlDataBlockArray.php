@@ -9,12 +9,15 @@ class CacheReportHtmlDataBlockArray
 
     const RESULT_STATUS = 'result';
     const DATE_MODIFIED = 'mtime';
+    const CACHE_FILE = "file";
+
     /**
      * Used when the cache data report
      * are injected in the page in a json format
      */
     public const APPLICATION_COMBO_CACHE_JSON = "application/combo+cache+json";
     const DEPENDENCY_ATT = "dependency";
+
 
     /**
      * @return array - a array that will be transformed as json HTML data block
@@ -31,15 +34,26 @@ class CacheReportHtmlDataBlockArray
 
                 $modifiedDate = "";
                 if ($result->getPath() !== null) {
-                    $modifiedDate = FileSystems::getModifiedTime($result->getPath())->format(Iso8601Date::getFormat());
+                    $modifiedTime = FileSystems::getModifiedTime($result->getPath());
+                    if ($modifiedTime !== null) {
+                        // the file exists
+                        $modifiedDate = $modifiedTime->format(Iso8601Date::getFormat());
+                    }
                 }
                 $mode = $result->getMode();
                 $slotId = $result->getSlotId();
 
+                $cacheFile = null;
+                try {
+                    $dokuPath = $result->getPath()->toDokuPath();
+                    $cacheFile = $dokuPath->toString();
+                } catch (ExceptionCombo $e) {
+                    LogUtility::msg("The path ({$result->getPath()}) could not be transformed as wiki path. Error:{$e->getMessage()}");
+                }
                 $data = [
                     self::RESULT_STATUS => $result->getResult(),
                     self::DATE_MODIFIED => $modifiedDate,
-                    self::CACHE_FILE => $result->getPath()
+                    self::CACHE_FILE => $cacheFile
                 ];
 
                 if ($mode === HtmlDocument::mode) {
@@ -68,7 +82,7 @@ class CacheReportHtmlDataBlockArray
     public static function extractFromResponse(\TestResponse $response)
     {
         $metaCacheMain = $response->queryHTML('script[type="' . CacheReportHtmlDataBlockArray::APPLICATION_COMBO_CACHE_JSON . '"]');
-        if($metaCacheMain->count()!=1){
+        if ($metaCacheMain->count() != 1) {
             throw new ExceptionCombo("The data cache was not found");
         }
         $cacheJsonTextValue = $metaCacheMain->elements[0]->childNodes->item(0)->textContent;

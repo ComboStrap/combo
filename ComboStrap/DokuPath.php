@@ -117,7 +117,6 @@ class DokuPath extends PathAbs
      *   For a media: in the {@link MediaLink::createMediaLinkFromId()}
      * Because this class is mostly the file representation, it should be able to
      * represents also a namespace
-     * @throws ExceptionCombo
      */
     protected function __construct(string $path, string $drive, string $rev = null)
     {
@@ -207,10 +206,13 @@ class DokuPath extends PathAbs
                     default:
                         $baseDirectory = DokuPath::getDriveRoots()[$drive];
                         if ($baseDirectory === null) {
-                            throw new ExceptionCombo("The drive ($drive) is unknown, the local file system path could not be found");
+                            // We don't throw, the file will just not exist
+                            // this is metadata
+                            LogUtility::msg("The drive ($drive) is unknown, the local file system path could not be found");
+                        } else {
+                            $relativeFsPath = DokuPath::toFileSystemSeparator($this->id);
+                            $filePath = $baseDirectory->resolve($relativeFsPath)->toString();
                         }
-                        $relativeFsPath = DokuPath::toFileSystemSeparator($this->id);
-                        $filePath = $baseDirectory->resolve($relativeFsPath)->toString();
                         break;
                 }
             } else {
@@ -380,14 +382,18 @@ class DokuPath extends PathAbs
         return $path;
     }
 
+    /**
+     */
     public static function createResource($dokuwikiId): DokuPath
     {
         return new DokuPath($dokuwikiId, self::COMBO_DRIVE);
     }
 
-    public static function createDokuPath($mediaId, $type, $rev = ''): DokuPath
+    /**
+     */
+    public static function createDokuPath($path, $drive, $rev = ''): DokuPath
     {
-        return new DokuPath($mediaId, $type, $rev);
+        return new DokuPath($path, $drive, $rev);
     }
 
     public static function getDriveRoots(): array

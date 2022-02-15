@@ -36,7 +36,7 @@ class CacheDependencies
      * output location of the cache
      * {@link CacheDependencies::getOrCalculateDependencyKey()}
      */
-    public const outputDependencies = [self::REQUESTED_PAGE_DEPENDENCY, self::REQUESTED_NAMESPACE_DEPENDENCY];
+    public const OUTPUT_DEPENDENCIES = [self::REQUESTED_PAGE_DEPENDENCY, self::REQUESTED_NAMESPACE_DEPENDENCY];
 
     /**
      * This dependencies have an impact on the freshness
@@ -221,7 +221,7 @@ class CacheDependencies
         if ($runtimeDependencies !== null) {
 
             foreach ($runtimeDependencies as $dependency) {
-                if(in_array($dependency,self::outputDependencies)) {
+                if(in_array($dependency,self::OUTPUT_DEPENDENCIES)) {
                     $dependencyKey .= self::getValueForKey($dependency);
                 }
             }
@@ -238,7 +238,7 @@ class CacheDependencies
     public function addDependency(string $dependencyName): CacheDependencies
     {
         if (PluginUtility::isDevOrTest()) {
-            if (!in_array($dependencyName, self::outputDependencies) &&
+            if (!in_array($dependencyName, self::OUTPUT_DEPENDENCIES) &&
                 !in_array($dependencyName, self::validityDependencies)
             ) {
                 throw new ExceptionComboRuntime("Unknown dependency value ($dependencyName)");

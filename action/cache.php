@@ -54,10 +54,6 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('PARSER_CACHE_USE', 'AFTER', $this, 'createCacheResult', array());
 
-        /**
-         * Page expiration feature
-         */
-        $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'pageCacheExpiration', array());
 
         /**
          * To add the cache result in the HTML
@@ -99,93 +95,6 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
     }
 
-    /**
-     *
-     * Purge the cache if needed
-     * @param Doku_Event $event
-     * @param $params
-     */
-    function pageCacheExpiration(Doku_Event $event, $params)
-    {
-
-        /**
-         * No cache for all mode
-         * (ie xhtml, instruction)
-         */
-        $data = &$event->data;
-        $pageId = $data->page;
-
-        /**
-         * For whatever reason, the cache file of XHTML
-         * may be empty - No error found on the web server or the log.
-         *
-         * We just delete it then.
-         *
-         * It has been seen after the creation of a new page or a `move` of the page.
-         */
-        if ($data instanceof CacheRenderer) {
-            if ($data->mode === "xhtml") {
-                if (file_exists($data->cache)) {
-                    if (filesize($data->cache) === 0) {
-                        $data->depends["purge"] = true;
-                    }
-                }
-            }
-        }
-        /**
-         * Because of the recursive nature of rendering
-         * inside dokuwiki, we just handle the first
-         * rendering for a request.
-         *
-         * The first will be purged, the other one not
-         * because they can't use the first one
-         */
-        if (!PluginUtility::getCacheManager()->isCacheResultPresentForSlot($pageId, $data->mode)) {
-            $page = Page::createPageFromId($pageId);
-            $cacheExpirationFrequency = $page->getCacheExpirationFrequency();
-            if ($cacheExpirationFrequency === null) {
-                return;
-            }
-
-            $expirationDate = CacheExpirationDate::createForPage($page)
-                ->getValue();
-
-            if ($expirationDate === null) {
-                try {
-                    $expirationDate = Cron::getDate($cacheExpirationFrequency);
-                    $page->setCacheExpirationDate($expirationDate);
-                } catch (ExceptionCombo $e) {
-                    LogUtility::msg("The cache expiration frequency ($cacheExpirationFrequency) is not a valid cron expression");
-                }
-            }
-            if ($expirationDate !== null) {
-
-                $actualDate = new DateTime();
-                if ($expirationDate < $actualDate) {
-                    /**
-                     * As seen in {@link Cache::makeDefaultCacheDecision()}
-                     * We request a purge
-                     */
-                    $data->depends["purge"] = true;
-
-                    /**
-                     * Calculate a new expiration date
-                     */
-                    try {
-                        $newDate = Cron::getDate($cacheExpirationFrequency);
-                        if ($newDate < $actualDate) {
-                            LogUtility::msg("The new calculated date cache expiration frequency ({$newDate->format(Iso8601Date::getFormat())}) is lower than the current date ({$actualDate->format(Iso8601Date::getFormat())})");
-                        }
-                        $page->setCacheExpirationDate($newDate);
-                    } catch (ExceptionCombo $e) {
-                        LogUtility::msg("The cache expiration frequency ($cacheExpirationFrequency) is not a value cron expression");
-                    }
-                }
-            }
-        }
-
-
-    }
 
     /**
      * Add cache data to the rendered html page

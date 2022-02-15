@@ -24,7 +24,7 @@ class FsWikiUtility
     /**
      * Determine if the current page is a sidebar (a bar)
      * @return bool
-     * TODO: Duplicate of {@link Page::isSlot()}
+     * TODO: Duplicate of {@link Page::isSecondarySlot()}
      */
     public static function isSideBar()
     {

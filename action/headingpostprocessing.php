@@ -355,7 +355,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         if ($ID !== null) {
 
             $page = Page::createPageFromId($ID);
-            if ($headingTotalCounter === 0 || $page->isSlot()) {
+            if ($headingTotalCounter === 0 || $page->isSecondarySlot()) {
                 try {
                     $sectionEditComment = Call::createComboCall(
                         syntax_plugin_combo_comment::TAG,

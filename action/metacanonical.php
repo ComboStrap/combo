@@ -42,7 +42,7 @@ class action_plugin_combo_metacanonical
         /**
          * No canonical for slot page
          */
-        if ($page->isSlot()) {
+        if ($page->isSecondarySlot()) {
             return;
         }
 

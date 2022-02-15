@@ -224,8 +224,10 @@ class Event
         /**
          * Execute
          */
+        $attributes = [self::EVENT_NAME_ATTRIBUTE, self::EVENT_DATA_ATTRIBUTE, DatabasePageRow::ROWID];
+        $select = Sqlite::createSelectFromTableAndColumns(self::EVENT_TABLE_NAME, $attributes);
         $request = $sqlite->createRequest()
-            ->setQuery("select * from " . self::EVENT_TABLE_NAME);
+            ->setQuery($select);
         try {
             return $request->execute()
                 ->getRows();

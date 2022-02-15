@@ -199,7 +199,7 @@ class Page extends ResourceComboAbs
 
         $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath);
 
-        if ($this->isSlot()) {
+        if ($this->isSecondarySlot()) {
 
             /**
              * Used when we want to remove the cache of slots for a requested page
@@ -324,7 +324,7 @@ class Page extends ResourceComboAbs
     /**
      * @return bool true if this is not the main slot.
      */
-    public function isSlot(): bool
+    public function isSecondarySlot(): bool
     {
         $slotNames = Site::getSecondarySlotNames();
         $name = $this->getPath()->getLastNameWithoutExtension();
@@ -1885,7 +1885,6 @@ class Page extends ResourceComboAbs
     /**
      * @param DateTime $cacheExpirationDate
      * @return $this
-     * @throws ExceptionCombo
      * @deprecated for {@link CacheExpirationDate}
      */
     public
@@ -2010,7 +2009,7 @@ class Page extends ResourceComboAbs
 
     public function getMainFooterSlot(): ?Page
     {
-        if ($this->isSlot() || $this->isRootHomePage()) {
+        if ($this->isSecondarySlot() || $this->isRootHomePage()) {
             return null;
         }
 
@@ -2032,7 +2031,7 @@ class Page extends ResourceComboAbs
 
     public function getSideSlot(): ?Page
     {
-        if ($this->isSlot() || $this->isRootHomePage()) {
+        if ($this->isSecondarySlot() || $this->isRootHomePage()) {
             return null;
         }
 

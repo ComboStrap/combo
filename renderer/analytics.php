@@ -514,7 +514,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         } else {
             $quality["message"] = "No mandatory rules broken";
         }
-        if ($this->page->isSlot()) {
+        if ($this->page->isSecondarySlot()) {
             $lowLevel = false;
         }
         $this->page->setLowQualityIndicatorCalculation($lowLevel);

@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 
+use DateTime;
 use dokuwiki\Cache\CacheParser;
 
 /**
@@ -31,6 +32,11 @@ class CacheManager
      * The list of cache results slot {@link CacheResults}
      */
     private $slotCacheResults;
+
+    /**
+     * @var array hold the result for slot cache expiration
+     */
+    private $slotsExpiration;
 
 
     /**
@@ -88,7 +94,8 @@ class CacheManager
     /**
      * In test, we may run more than once
      * This function delete the cache manager
-     * and is called when Dokuwiki close (ie {@link \action_plugin_combo_cache::close()})
+     * and is called
+     * when a new request is created {@link \TestUtility::createTestRequest()}
      */
     public static function reset()
     {
@@ -149,6 +156,65 @@ class CacheManager
     public function getCacheResults(): ?array
     {
         return $this->slotCacheResults;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function shouldSlotExpire($pageId): bool
+    {
+
+        /**
+         * Because of the recursive nature of rendering
+         * inside dokuwiki, we just return a result for
+         * the first call to the function
+         *
+         * We use the cache manager as scope element
+         * (ie it's {@link CacheManager::reset()} for each request
+         */
+        if (isset($this->slotsExpiration[$pageId])) {
+            return false;
+        }
+
+        $page = Page::createPageFromId($pageId);
+        $cacheExpirationFrequency = CacheExpirationFrequency::createForPage($page)
+            ->getValue();
+        if ($cacheExpirationFrequency === null) {
+            $this->slotsExpiration[$pageId] = false;
+            return false;
+        }
+
+        $cacheExpirationDateMeta = CacheExpirationDate::createForPage($page);
+        $expirationDate = $cacheExpirationDateMeta->getValue();
+
+        if ($expirationDate === null) {
+
+            $expirationDate = Cron::getDate($cacheExpirationFrequency);
+            $cacheExpirationDateMeta->setValue($expirationDate);
+
+        }
+
+
+        $actualDate = new DateTime();
+        if ($expirationDate > $actualDate) {
+            $this->slotsExpiration[$pageId] = false;
+            return false;
+        }
+
+        /**
+         * Calculate a new expiration date
+         */
+        $newDate = Cron::getDate($cacheExpirationFrequency);
+        if ($newDate < $actualDate) {
+            throw new ExceptionCombo("The new calculated date cache expiration frequency ({$newDate->format(Iso8601Date::getFormat())}) is lower than the current date ({$actualDate->format(Iso8601Date::getFormat())})");
+        }
+        $cacheExpirationDateMeta
+            ->setValue($newDate)
+            ->persist();
+
+        $this->slotsExpiration[$pageId] = true;
+        return true;
+
     }
 
 }

@@ -1417,7 +1417,7 @@ class PluginUtility
         /**
          * No metadata for bars
          */
-        if ($page->isSlot()) {
+        if ($page->isSecondarySlot()) {
             return false;
         }
         return true;

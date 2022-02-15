@@ -1956,7 +1956,12 @@ class Page extends ResourceComboAbs
     function getReadStoreOrDefault(): MetadataStore
     {
         if ($this->readStore === null) {
-            $this->readStore = MetadataDokuWikiStore::getOrCreateFromResource($this);
+            /**
+             * No cache please if not set
+             * Cache should be in the MetadataDokuWikiStore
+             * that is page requested scoped and not by slot
+             */
+            return MetadataDokuWikiStore::getOrCreateFromResource($this);
         }
         if (!($this->readStore instanceof MetadataStore)) {
             $this->readStore = MetadataStoreAbs::toMetadataStore($this->readStore, $this);

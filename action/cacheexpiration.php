@@ -95,7 +95,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
         try {
             $shouldSlotExpire = $cacheManager->shouldSlotExpire($pageId);
         } catch (ExceptionCombo $e) {
-            LogUtility::msg("Error while trying to check if the slot ($pageId) should expired. Error: {$e->getMessage()}",self::CANONICAL);
+            LogUtility::msg("Error while trying to check if the slot ($pageId) should expired. Error: {$e->getMessage()}", self::CANONICAL);
             return;
         }
         if ($shouldSlotExpire) {
@@ -126,6 +126,34 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
         try {
             $ID = $requestedId;
             $slot = Page::createPageFromQualifiedPath($slotPath);
+
+            /**
+             * Calculate a new expiration date
+             * And set it here because setting a new metadata
+             * will make the cache unusable
+             */
+            $cacheExpirationDateMeta = CacheExpirationDate::createForPage($slot);
+            $actualDate = $cacheExpirationDateMeta->getValue();
+            $cacheExpirationFrequency = CacheExpirationFrequency::createForPage($slot)
+                ->getValue();
+            try {
+                $newDate = Cron::getDate($cacheExpirationFrequency);
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("Error while calculating the new expiration date. Error: {$e->getMessage()}");
+                return;
+            }
+            if ($newDate < $actualDate) {
+                LogUtility::msg("The new calculated date cache expiration frequency ({$newDate->format(Iso8601Date::getFormat())}) is lower than the current date ({$actualDate->format(Iso8601Date::getFormat())})");
+            }
+            try {
+                $cacheExpirationDateMeta
+                    ->setValue($newDate)
+                    ->persist();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("Error while persisting the new expiration date. Error:{$e->getMessage()}");
+                return;
+            }
+
             /**
              * Cache deletion
              */

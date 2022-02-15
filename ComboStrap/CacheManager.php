@@ -201,17 +201,6 @@ class CacheManager
             return false;
         }
 
-        /**
-         * Calculate a new expiration date
-         */
-        $newDate = Cron::getDate($cacheExpirationFrequency);
-        if ($newDate < $actualDate) {
-            throw new ExceptionCombo("The new calculated date cache expiration frequency ({$newDate->format(Iso8601Date::getFormat())}) is lower than the current date ({$actualDate->format(Iso8601Date::getFormat())})");
-        }
-        $cacheExpirationDateMeta
-            ->setValue($newDate)
-            ->persist();
-
         $this->slotsExpiration[$pageId] = true;
         return true;
 

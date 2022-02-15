@@ -15,7 +15,7 @@ class LocalPath extends PathAbs
      * For whatever reason, it seems that php uses always the / separator
      * on windows also
      */
-    private const FILE_SYSTEM_DIRECTORY_SEPARATOR = DokuPath::DIRECTORY_SEPARATOR;
+    private const PHP_SYSTEM_DIRECTORY_SEPARATOR = DokuPath::DIRECTORY_SEPARATOR;
 
     /**
      * The characters that cannot be in the path for windows
@@ -108,7 +108,7 @@ class LocalPath extends PathAbs
      */
     private function getDirectorySeparator(): string
     {
-        $directorySeparator = self::FILE_SYSTEM_DIRECTORY_SEPARATOR;
+        $directorySeparator = self::PHP_SYSTEM_DIRECTORY_SEPARATOR;
         if (
             $directorySeparator === '\\'
             &&
@@ -142,7 +142,13 @@ class LocalPath extends PathAbs
 
     public function resolve(string $name): LocalPath
     {
-        return self::create($this->path . self::FILE_SYSTEM_DIRECTORY_SEPARATOR . $name);
+
+        $newPath = $this->path . self::PHP_SYSTEM_DIRECTORY_SEPARATOR . $name;
+        if ($this->path[strlen($this->path) - 1] === self::PHP_SYSTEM_DIRECTORY_SEPARATOR) {
+            $newPath = $this->path . $name;
+        }
+        return self::create($newPath);
+
     }
 
     /**
@@ -155,8 +161,10 @@ class LocalPath extends PathAbs
         }
         $sepCharacter = 1; // delete the sep characters
         $relativePath = substr($this->toString(), strlen($localPath->toString()) + $sepCharacter);
-        $relativePath = str_replace(self::FILE_SYSTEM_DIRECTORY_SEPARATOR, DokuPath::PATH_SEPARATOR, $relativePath);
+        $relativePath = str_replace(self::PHP_SYSTEM_DIRECTORY_SEPARATOR, DokuPath::PATH_SEPARATOR, $relativePath);
         return LocalPath::create($relativePath);
     }
+
+
 
 }

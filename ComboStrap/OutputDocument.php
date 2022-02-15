@@ -73,7 +73,7 @@ abstract class OutputDocument extends PageCompilerDocument
             && FileSystems::exists($this->getCachePath())
             && PluginUtility::isDevOrTest()
         ) {
-            LogUtility::msg("The file ({$this->getExtension()}) should not compile and exists, compilation is not needed", LogUtility::LVL_MSG_ERROR);
+            throw new ExceptionComboRuntime("The file ({$this->getExtension()}) should not compile and exists already, compilation is not needed", LogUtility::LVL_MSG_ERROR);
         }
 
         /**
@@ -181,9 +181,6 @@ abstract class OutputDocument extends PageCompilerDocument
     {
         return $this->getPage()->getDokuwikiId() . "." . $this->getExtension();
     }
-
-
-
 
 
 }

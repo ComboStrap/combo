@@ -59,7 +59,6 @@ class HtmlDocument extends OutputDocument
     }
 
     /**
-     * @throws ExceptionCombo
      */
     public function getOrProcessContent(): string
     {

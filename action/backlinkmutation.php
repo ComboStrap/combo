@@ -65,28 +65,10 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         }
 
         /**
-         * Render the footer slot if it has a backlink dependency
+         * Render the (footer slot) if it has a backlink dependency
          */
-        $footerSlot = $reference->getFooterSlot();
-        if ($footerSlot === null) {
-            return;
-        }
-        $dependencies = $footerSlot
-            ->getHtmlDocument()
-            ->getDependencies();
-        if ($dependencies->hasDependency(CacheDependencies::BACKLINKS_DEPENDENCY)) {
-            global $ID;
-            $keep = $ID;
-            $ID = $reference->getDokuwikiId();
-            try {
-                $footerSlot->toXhtml();
-            } catch (ExceptionCombo $e) {
-                LogUtility::log2file("Error while rendering the footer slot after backlink mutation. Error: {$e->getMessage()} ");
-            } finally {
-                $ID = $keep;
-            }
+        CacheDependencies::reRenderSecondarySlotsIfNeeded($pagePath, CacheDependencies::BACKLINKS_DEPENDENCY);
 
-        }
 
 
     }

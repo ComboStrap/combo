@@ -5,6 +5,7 @@ use ComboStrap\Event;
 use ComboStrap\FileSystems;
 use ComboStrap\LocalPath;
 use ComboStrap\Page;
+use ComboStrap\PagePath;
 use ComboStrap\Site;
 
 
@@ -102,7 +103,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
                     action_plugin_combo_pagesystemmutation::PAGE_SYSTEM_MUTATION_EVENT_NAME,
                     [
                         self::TYPE_ATTRIBUTE => self::TYPE_DELETION,
-                        self::PAGE_ID => $file->toDokuPath()->getDokuwikiId()
+                        PagePath::getPersistentName() => $file->toDokuPath()->toString()
                     ]
                 );
             }
@@ -121,24 +122,10 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
         $data = $event->data;
 
         /**
-         * Build the context back before getting the slots
+         * Re-render
          */
-        global $ID;
-        $ID = $data[self::PAGE_ID];
-
-        $page = Page::createPageFromId($ID);
-        $sideSlot = $page->getSideSlot();
-        /**
-         * Rerender if needed
-         */
-        $htmlDocument = $sideSlot->getHtmlDocument();
-        $cacheDependencies = $htmlDocument->getCacheDependencies();
-        if($cacheDependencies->hasDependency(CacheDependencies::PAGE_SYSTEM_DEPENDENCY)) {
-            FileSystems::deleteIfExists($htmlDocument->getCachePath());
-            $htmlDocument->process();
-        }
-
-
+        $path = $data[PagePath::getPersistentName()];
+        CacheDependencies::reRenderSecondarySlotsIfNeeded($path, CacheDependencies::PAGE_SYSTEM_DEPENDENCY);
 
     }
 

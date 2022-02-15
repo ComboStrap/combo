@@ -1,18 +1,12 @@
-<?php
+<?php /** @noinspection SpellCheckingInspection */
 
 use ComboStrap\CacheDependencies;
 use ComboStrap\Event;
-use ComboStrap\ExceptionCombo;
-use ComboStrap\FileSystems;
-use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\Page;
 use ComboStrap\PageDescription;
 use ComboStrap\PageH1;
 use ComboStrap\PagePath;
 use ComboStrap\PageTitle;
-use ComboStrap\Reference;
-use ComboStrap\References;
 use ComboStrap\ResourceName;
 
 
@@ -25,32 +19,36 @@ class action_plugin_combo_pageprimarymetamutation extends DokuWiki_Action_Plugin
 {
 
 
-
     public const PRIMARY_META_MUTATION_EVENT_NAME = 'PAGE_PRIMARY_META_MUTATION';
+
+    public const PRIMARY_METAS = [PageTitle::PROPERTY_NAME, ResourceName::PROPERTY_NAME, PageH1::PROPERTY_NAME, PageDescription::DESCRIPTION_PROPERTY];
+
 
     public function register(Doku_Event_Handler $controller)
     {
 
-
         /**
          * create the async event
          */
-        $controller->register_hook(MetadataDokuWikiStore::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'handlePrimaryMetaMutation', array());
+        $controller->register_hook(MetadataDokuWikiStore::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'createPrimaryMetaMutation', array());
 
-
+        /**
+         * process the Async event
+         */
+        $controller->register_hook(self::PRIMARY_META_MUTATION_EVENT_NAME, 'AFTER', $this, 'handlePrimaryMetaMutation');
 
     }
 
-    function handlePrimaryMetaMutation($event)
+    function createPrimaryMetaMutation($event)
     {
 
         $data = $event->data;
+
         /**
-         * The side slot cache is deleted only when the
+         * The slot cache are re-rendered only when the
          * below property are updated
          */
-        $descriptionProperties = [PageTitle::PROPERTY_NAME, ResourceName::PROPERTY_NAME, PageH1::PROPERTY_NAME, PageDescription::DESCRIPTION_PROPERTY];
-        if (!in_array($data["name"], $descriptionProperties)) return;
+        if (!in_array($data["name"], self::PRIMARY_METAS)) return;
 
         Event::createEvent(
             self::PRIMARY_META_MUTATION_EVENT_NAME,
@@ -59,6 +57,24 @@ class action_plugin_combo_pageprimarymetamutation extends DokuWiki_Action_Plugin
             ]
         );
 
+
+    }
+
+    function handlePrimaryMetaMutation($event)
+    {
+
+        /**
+         * We need to re-render the slot
+         * that are {@link \ComboStrap\CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY}
+         * dependent
+         */
+        $data = $event->data;
+
+        /**
+         * Build the context back before getting the slots
+         */
+        $path = $data[PagePath::getPersistentName()];
+        CacheDependencies::reRenderSecondarySlotsIfNeeded($path, CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
 
     }
 

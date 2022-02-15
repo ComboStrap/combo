@@ -2008,7 +2008,7 @@ class Page extends ResourceComboAbs
         return $this->pageUrlPath;
     }
 
-    public function getFooterSlot(): ?Page
+    public function getMainFooterSlot(): ?Page
     {
         if ($this->isSlot() || $this->isRootHomePage()) {
             return null;
@@ -2060,6 +2060,20 @@ class Page extends ResourceComboAbs
             $ID = $keep;
         }
 
+    }
+
+    public function getSecondarySlots(): array
+    {
+        $secondarySlots = [];
+        $sideSlot = $this->getSideSlot();
+        if ($sideSlot !== null) {
+            $secondarySlots[] = $sideSlot;
+        }
+        $footerSlot = $this->getMainFooterSlot();
+        if ($footerSlot !== null) {
+            $secondarySlots[] = $footerSlot;
+        }
+        return $secondarySlots;
     }
 
 

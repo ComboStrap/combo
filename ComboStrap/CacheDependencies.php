@@ -126,6 +126,36 @@ class CacheDependencies
         return new CacheDependencies($page);
     }
 
+    /**
+     * Rerender for now only the footer and slide slot if it has cache dependency
+     * (ie {@link CacheDependencies::PAGE_SYSTEM_DEPENDENCY} or {@link CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY})
+     * @param $path
+     * @param string $dependency -  a {@link CacheDependencies} ie
+     */
+    public static function reRenderSecondarySlotsIfNeeded($path, string $dependency)
+    {
+        global $ID;
+        $keep = $ID;
+        try {
+            $ID = DokuPath::toDokuwikiId($path);
+            /**
+             * Rerender secondary slot if needed
+             */
+            $page = Page::createPageFromId($ID);
+            $secondarySlots = $page->getSecondarySlots();
+            foreach ($secondarySlots as $secondarySlot) {
+                $htmlDocument = $secondarySlot->getHtmlDocument();
+                $cacheDependencies = $htmlDocument->getCacheDependencies();
+                if ($cacheDependencies->hasDependency($dependency)) {
+                    FileSystems::deleteIfExists($htmlDocument->getCachePath());
+                    $htmlDocument->process();
+                }
+            }
+        } finally {
+            $ID = $keep;
+        }
+    }
+
 
     /**
      * @return string - output the namespace used in the cache key

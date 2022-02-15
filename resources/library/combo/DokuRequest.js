@@ -5,12 +5,20 @@
 import ComboModal from "./ComboModal";
 import Browser from "./Browser";
 
-class DokuAjaxUrl {
+export class DokuUrl {
 
-    constructor(call) {
-        this.url = new URL(DOKU_BASE + 'lib/exe/ajax.php', window.location.href);
-        this.url.searchParams.set("call", call);
-        this.call = call;
+    static AJAX = "AJAX";
+    static RUNNER = "RUNNER";
+    static CALL = "call";
+
+    constructor(type) {
+        switch (type) {
+            case DokuUrl.AJAX:
+                this.url = new URL(DOKU_BASE + 'lib/exe/ajax.php', window.location.href);
+                break;
+            case DokuUrl.RUNNER:
+                this.url = new URL(DOKU_BASE + 'lib/exe/taskrunner.php', window.location.href);
+        }
         this.url.searchParams.set("id", JSINFO.id);
     }
 
@@ -24,18 +32,27 @@ class DokuAjaxUrl {
     }
 
     getCall() {
-        return this.call;
+        return this.url.searchParams.get(DokuUrl.CALL);
+    }
+
+    static createAjax(call) {
+        return (new DokuUrl(this.AJAX))
+            .setProperty(DokuUrl.CALL, call);
+    }
+
+    static createRunner() {
+        return new DokuUrl(this.RUNNER);
     }
 }
 
-export default class DokuAjaxRequest {
+export class DokuAjaxRequest {
 
 
     method = "GET";
 
     constructor(call) {
 
-        this.url = new DokuAjaxUrl(call);
+        this.url = DokuUrl.createAjax(call);
 
     }
 

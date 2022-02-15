@@ -191,8 +191,8 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
                     $renderer->doc .= <<<EOF
 <div class="carrousel-combo glide" $slideMinimalWidthData>
-  <div class="slider__track glide__track" data-glide-el="track">
-    <ul class="slider__slides glide__slides">
+  <div class="glide__track" data-glide-el="track">
+    <ul class="glide__slides">
 EOF;
 
                     /**
@@ -218,8 +218,8 @@ EOF;
                                 [
                                     array(
                                         "rel" => "stylesheet",
-                                        "href" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.css",
-                                        "integrity" => "sha256-LJrGIMqDkLqFClxG6hffz/yOcRxFtp+iFfIIhSEA8lk=",
+                                        "href"=>"https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
+                                        "integrity"=>"sha256-bmdlmBAVo1Q6XV2cHiyaBuBfe9KgYQhCrfQmoRq8+Sg=",
                                         "crossorigin" => "anonymous"
                                     )
                                 ]

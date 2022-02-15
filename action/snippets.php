@@ -233,7 +233,9 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                         $relValue = $tag["rel"];
                         $relAs = $tag["as"];
                         if($relValue==="preload"){
-                            $tag["rel"]=$relAs;
+                            if($relAs==="style") {
+                                $tag["rel"] = "stylesheet";
+                            }
                         }
                     }
 

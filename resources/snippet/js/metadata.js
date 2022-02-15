@@ -154,6 +154,18 @@ window.addEventListener("DOMContentLoaded", function () {
                     .sendFormDataAsJson(formData);
                 managerModal.reset();
                 modalViewer.reset();
+
+                /**
+                 * Send a cron request to re-render if any
+                 */
+                fetch(combo.getRunnerUrl().toString(), {method: "GET"})
+                    .then((response) => {
+                            if (response.status !== 200) {
+                                console.error('Bad runner request, status Code is: ' + response.status);
+                            }
+                        }
+                    );
+
                 await processResponse(response, () => openMetadataManager(pageId));
             })
 

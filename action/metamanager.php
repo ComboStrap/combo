@@ -151,7 +151,15 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                  */
                 if (!PluginUtility::isTest()) {
                     $jsonString = file_get_contents('php://input');
-                    $_POST = Json::createFromString($jsonString)->toArray();
+                    try {
+                        $_POST = Json::createFromString($jsonString)->toArray();
+                    } catch (ExceptionCombo $e) {
+                        HttpResponse::create(HttpResponse::STATUS_BAD_REQUEST)
+                            ->setEvent($event)
+                            ->setCanonical(self::CANONICAL)
+                            ->sendMessage("The json payload could not decoded. Error: {$e->getMessage()}");
+                        return;
+                    }
                 }
 
                 if ($call === self::META_MANAGER_CALL_ID) {
@@ -276,7 +284,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     /**
      * @param Doku_Event $event
      * @param Page $page
-     * @throws ExceptionCombo
      */
     private
     function handleManagerGet(Doku_Event $event, Page $page)

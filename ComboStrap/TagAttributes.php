@@ -255,7 +255,6 @@ class TagAttributes
      * @param array|null $callStackArray - an array of key value pair
      * @param string|null $logicalTag - the logical tag for which this attribute will apply
      * @return TagAttributes
-     * @throws ExceptionCombo
      */
     public static function createFromCallStackArray(?array $callStackArray, string $logicalTag = null): TagAttributes
     {
@@ -263,7 +262,8 @@ class TagAttributes
             $callStackArray = [];
         }
         if (!is_array($callStackArray)) {
-            throw new ExceptionCombo("The renderArray variable passed is not an array ($callStackArray)");
+            LogUtility::msg("The renderArray variable passed is not an array ($callStackArray)");
+            $callStackArray = [];
         }
         return new TagAttributes($callStackArray, $logicalTag);
     }

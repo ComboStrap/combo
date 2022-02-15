@@ -46,7 +46,7 @@ class CacheReportHtmlDataBlockArray
                 $cacheFile = null;
                 try {
                     $dokuPath = $result->getPath()->toDokuPath();
-                    $cacheFile = $dokuPath->toString();
+                    $cacheFile = $dokuPath->getDokuwikiId();
                 } catch (ExceptionCombo $e) {
                     LogUtility::msg("The path ({$result->getPath()}) could not be transformed as wiki path. Error:{$e->getMessage()}");
                 }

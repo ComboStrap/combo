@@ -343,7 +343,8 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             $data = [
                 "name" => $key,
                 "new_value" => $value,
-                "old_value" => $oldValue
+                "old_value" => $oldValue,
+                PagePath::getPersistentName() => ":$wikiId"
             ];
             Event::createAndTrigger(self::PAGE_METADATA_MUTATION_EVENT, $data);
         }

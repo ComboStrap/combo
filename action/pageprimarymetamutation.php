@@ -1,6 +1,7 @@
 <?php /** @noinspection SpellCheckingInspection */
 
 use ComboStrap\CacheDependencies;
+use ComboStrap\DokuwikiId;
 use ComboStrap\Event;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\PageDescription;
@@ -53,7 +54,7 @@ class action_plugin_combo_pageprimarymetamutation extends DokuWiki_Action_Plugin
         Event::createEvent(
             self::PRIMARY_META_MUTATION_EVENT_NAME,
             [
-                PagePath::getPersistentName() => $beforeReference
+                PagePath::getPersistentName() => $data[PagePath::getPersistentName()]
             ]
         );
 

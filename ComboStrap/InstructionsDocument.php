@@ -115,7 +115,7 @@ class InstructionsDocument extends PageCompilerDocument
         return "i";
     }
 
-    public function getCachePath(): Path
+    public function getCachePath(): LocalPath
     {
         return LocalPath::create($this->cache->cache);
     }

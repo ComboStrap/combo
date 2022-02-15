@@ -144,7 +144,7 @@ abstract class OutputDocument extends PageCompilerDocument
     }
 
 
-    public function getCachePath(): Path
+    public function getCachePath(): LocalPath
     {
         $path = $this->cache->cache;
         return LocalPath::createFromPath($path);

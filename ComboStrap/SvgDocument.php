@@ -391,6 +391,29 @@ class SvgDocument extends XmlDocument
                 }
 
                 /**
+                 * Eva/Carbon Source Icon are not optimized at the source
+                 * Example:
+                 *   * eva:facebook-fill
+                 *   * carbon:logo-tumblr (https://github.com/carbon-design-system/carbon/issues/5568)
+                 *
+                 * We delete the rectangle
+                 * Style should have already been deleted by the optimization
+                 *
+                 * This optimization should happen if the color is set
+                 * or not because we set the color value to `currentColor`
+                 *
+                 * If the rectangle stay, we just see a black rectangle
+                 */
+                if ($this->path !== null) {
+                    $pathString = $this->path->toAbsolutePath()->toString();
+                    if (
+                        preg_match("/carbon|eva/i", $pathString) === 1
+                    ) {
+                        $this->deleteAllElements("rect");
+                    }
+                }
+
+                /**
                  * Color
                  * Color applies only if this is an icon.
                  *
@@ -445,24 +468,6 @@ class SvgDocument extends XmlDocument
                                         } else {
                                             $this->removeAttributeValue("fill", $nodeElement);
                                         }
-                                    }
-                                }
-
-                                /**
-                                 * Eva/Carbon Source Icon are not optimized
-                                 * Example:
-                                 *   * eva:facebook-fill
-                                 *   * carbon:logo-tumblr (https://github.com/carbon-design-system/carbon/issues/5568)
-                                 *
-                                 * We delete the rectangle
-                                 * Style should have already been deleted by the optimization
-                                 */
-                                if ($this->path !== null) {
-                                    $pathString = $this->path->toAbsolutePath()->toString();
-                                    if (
-                                        preg_match("/carbon|eva/i", $pathString) === 1
-                                    ) {
-                                        $this->deleteAllElements("rect");
                                     }
                                 }
 
@@ -741,7 +746,7 @@ class SvgDocument extends XmlDocument
              * Delete comments
              */
             $commentNodes = $this->xpath("//comment()");
-            foreach ($commentNodes as $commentNode){
+            foreach ($commentNodes as $commentNode) {
                 $this->removeNode($commentNode);
             }
 

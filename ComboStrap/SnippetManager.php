@@ -88,7 +88,7 @@ class SnippetManager
      * @return string
      * @deprecated create a {@link Snippet} instead and use the {@link Snippet::getClass()} function instead
      */
-    public static function getClassFromSnippetId($tag)
+    public static function getClassFromSnippetId($tag): string
     {
         $snippet = Snippet::createUnknownSnippet($tag);
         return $snippet->getClass();

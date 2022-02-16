@@ -14,9 +14,14 @@ namespace ComboStrap;
 
 
 use dokuwiki\Extension\SyntaxPlugin;
+use PHPUnit\Exception;
 
 class RenderUtility
 {
+    /**
+     * When the rendering is a snippet or an instructions
+     */
+    const DYNAMIC_RENDERING = "dynamic";
 
     /**
      * @param $content
@@ -94,6 +99,28 @@ class RenderUtility
             return $xhtml;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function renderInstuctionsToXhtml($callStackHeaderInstructions)
+    {
+        global $ACT;
+        $keep = $ACT;
+        try {
+            $ACT = self::DYNAMIC_RENDERING;
+            return p_render("xhtml", $callStackHeaderInstructions, $info);
+        } catch (Exception $e) {
+            /**
+             * Example of errors;
+             * method_exists() expects parameter 2 to be string, array given
+             * inc\parserutils.php:672
+             */
+            throw new ExceptionCombo("Error while rendering instructions. Error was: {$e->getMessage()}");
+        } finally {
+            $ACT = $keep;
         }
     }
 

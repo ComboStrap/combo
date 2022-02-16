@@ -1429,16 +1429,7 @@ class PluginUtility
      */
     public static function renderInstructionsToXhtml($callStackHeaderInstructions): ?string
     {
-        try {
-            return p_render("xhtml", $callStackHeaderInstructions, $info);
-        } catch (Exception $e) {
-            /**
-             * Example of errors;
-             * method_exists() expects parameter 2 to be string, array given
-             * inc\parserutils.php:672
-             */
-            throw new ExceptionCombo("Error while rendering instructions. Error was: {$e->getMessage()}");
-        }
+        return RenderUtility::renderInstuctionsToXhtml($callStackHeaderInstructions);
     }
 
 

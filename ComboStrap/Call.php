@@ -313,7 +313,7 @@ class Call
      */
     public function &getPluginData($attribute = null)
     {
-        $data = $this->call[1][1];
+        $data = &$this->call[1][1];
         if ($attribute === null) {
             return $data;
         }
@@ -571,9 +571,9 @@ class Call
     /**
      * @param $key
      * @param null $default
-     * @return string|null
+     * @return array|string|null
      */
-    public function getAttribute($key, $default = null): ?string
+    public function getAttribute($key, $default = null)
     {
         $attributes = $this->getAttributes();
         if (isset($attributes[$key])) {
@@ -901,6 +901,18 @@ class Call
             LogUtility::msg("You can't ask for the exit code from a non plugin call mode (" . $mode . ").", LogUtility::LVL_MSG_WARNING, "support");
             return 0;
         }
+    }
+
+    public function setAttribute(string $name, $value): Call
+    {
+        $this->getPluginData()[PluginUtility::ATTRIBUTES][$name] = $value;
+        return $this;
+    }
+
+    public function setPluginData(string $name, array $value): Call
+    {
+        $this->getPluginData()[$name] = $value;
+        return $this;
     }
 
 

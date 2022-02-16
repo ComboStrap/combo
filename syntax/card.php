@@ -46,9 +46,9 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
 
     /**
-     * @var int a counter for an unknown card type
+     * @var array of a counter for the actual requested wiki id
      */
-    private $cardCounter = 0;
+    private $cardCounter = null;
     private $sectionCounter = 0;
 
 
@@ -172,16 +172,10 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 $defaultAttributes = [];
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
 
-                $this->cardCounter++;
-                $id = $this->cardCounter;
 
                 /** A card without context */
                 $tagAttributes->addClassName("card");
 
-
-                if (!$tagAttributes->hasAttribute("id")) {
-                    $tagAttributes->addComponentAttributeValue("id", self::TAG . $id);
-                }
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -328,7 +322,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {
@@ -349,6 +343,23 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      * Tag Attributes
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
+
+                    /**
+                     * Card counter that reset when an unknown request wiki id is asked
+                     */
+                    $requestedId = PluginUtility::getRequestedWikiId();
+                    $counter = &$this->cardCounter[$requestedId];
+                    if ($counter === null) {
+                        $this->cardCounter = null; // delete old counter
+                        $counter = 1;
+                        $this->cardCounter[$requestedId] = $counter;
+                    } else {
+                        $counter++;
+                    }
+
+                    if (!$tagAttributes->hasAttribute("id")) {
+                        $tagAttributes->addComponentAttributeValue("id", self::TAG . $counter);
+                    }
 
                     /**
                      * Section (Edit button)

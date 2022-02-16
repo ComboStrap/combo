@@ -257,15 +257,18 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
         switch ($state) {
             case DOKU_LEXER_ENTER:
                 $parsedArray = self::parse($match);
+                $htmlAttributes = TagAttributes::createEmpty(self::TAG);
                 /**
                  * Href needs to be passed to the
                  * instructions stack (because we support)
-                 * dynamic href with {@link syntax_plugin_combo_template}
+                 * dynamic link call href with {@link syntax_plugin_combo_template}
                  */
                 $href = $parsedArray[self::ATTRIBUTE_HREF];
-                $htmlAttributes = TagAttributes::createEmpty(self::TAG)
-                    ->addComponentAttributeValue(self::ATTRIBUTE_HREF, $href)
-                    ->addComponentAttributeValue(self::ATTRIBUTE_HREF_TYPE, self::HREF_MARKUP_TYPE_VALUE);
+                if ($href !== null) {
+                    $htmlAttributes
+                        ->addComponentAttributeValue(self::ATTRIBUTE_HREF, $href)
+                        ->addComponentAttributeValue(self::ATTRIBUTE_HREF_TYPE, self::HREF_MARKUP_TYPE_VALUE);
+                }
 
 
                 /**

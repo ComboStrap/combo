@@ -33,6 +33,8 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
     const TAG = 'carrousel';
     const CANONICAL = self::TAG;
     const SLIDE_WIDTH = "slide-width";
+    const CONTROL_ATTRIBUTE = "control";
+    const GLIDE_SLIDE_CLASS = "glide__slide";
 
 
     function getType(): string
@@ -131,21 +133,31 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
 
                 $callStack = CallStack::createFromHandler($handler);
-                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $actualCall = $callStack->moveToFirstChildTag();
                 if ($actualCall !== false) {
                     if ($actualCall->getTagName() === syntax_plugin_combo_template::TAG) {
-                        $actualCall = $callStack->moveToFirstChildTag();
-                    }
-                    if ($actualCall !== false) {
-                        $actualCall->addClassName("glide__slide");
+                        $templateEndCall = $callStack->moveToNextCorrespondingExitTag();
+                        $templateCallStackInstructions = $templateEndCall->getPluginData(syntax_plugin_combo_template::CALLSTACK);
+                        if($templateCallStackInstructions!==null) {
+                            $templateCallStack = CallStack::createFromInstructions($templateCallStackInstructions);
+                            $templateCallStack->moveToStart();
+                            $firstTemplateEnterTag = $templateCallStack->moveToFirstEnterTag();
+                            if ($firstTemplateEnterTag !== false) {
+                                $firstTemplateEnterTag->addClassName(self::GLIDE_SLIDE_CLASS);
+                                $templateEndCall->setPluginData(syntax_plugin_combo_template::CALLSTACK, $templateCallStack->getStack());
+                            }
+                        }
+                    } else {
+                        $actualCall->addClassName(self::GLIDE_SLIDE_CLASS);
                         while ($actualCall = $callStack->moveToNextSiblingTag()) {
-                            $actualCall->addClassName("glide__slide");
+                            $actualCall->addClassName(self::GLIDE_SLIDE_CLASS);
                         }
                     }
                 }
                 return array(
-                    PluginUtility::STATE => $state
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $openingCall->getAttributes()
                 );
 
 
@@ -218,8 +230,8 @@ EOF;
                                 [
                                     array(
                                         "rel" => "stylesheet",
-                                        "href"=>"https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
-                                        "integrity"=>"sha256-bmdlmBAVo1Q6XV2cHiyaBuBfe9KgYQhCrfQmoRq8+Sg=",
+                                        "href" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
+                                        "integrity" => "sha256-bmdlmBAVo1Q6XV2cHiyaBuBfe9KgYQhCrfQmoRq8+Sg=",
                                         "crossorigin" => "anonymous"
                                     )
                                 ]
@@ -237,32 +249,43 @@ EOF;
 
                 case DOKU_LEXER_EXIT :
 
-                    $escapedLessThan = PluginUtility::htmlEncode("<");
-                    $escapedGreaterThan = PluginUtility::htmlEncode(">");
                     $renderer->doc .= <<<EOF
 </ul>
   </div>
-  <div>
-      <div data-glide-el="controls">
-        <button class="glide__arrow glide__arrow--left" data-glide-dir="$escapedLessThan">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-            <path d="M0 12l10.975 11 2.848-2.828-6.176-6.176H24v-3.992H7.646l6.176-6.176L10.975 1 0 12z"></path>
-          </svg>
-        </button>
-        <button class="glide__arrow glide__arrow--right" data-glide-dir="$escapedGreaterThan">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-            <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"></path>
-          </svg>
-        </button>
-      </div>
-      <div class="glide__bullets" data-glide-el="controls[nav]">
-          <button class="glide__bullet glide__bullet--active" data-glide-dir="=0"></button>
-          <button class="glide__bullet" data-glide-dir="=1"></button>
-          <button class="glide__bullet" data-glide-dir="=2"></button>
-      </div>
+EOF;
+
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $control = $tagAttributes->getValue(self::CONTROL_ATTRIBUTE);
+                    if ($control !== "none") {
+                        $escapedLessThan = PluginUtility::htmlEncode("<");
+                        $escapedGreaterThan = PluginUtility::htmlEncode(">");
+
+
+                        $renderer->doc .= <<<EOF
+<div>
+  <div data-glide-el="controls">
+    <button class="glide__arrow glide__arrow--left" data-glide-dir="$escapedLessThan">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+        <path d="M0 12l10.975 11 2.848-2.828-6.176-6.176H24v-3.992H7.646l6.176-6.176L10.975 1 0 12z"></path>
+      </svg>
+    </button>
+    <button class="glide__arrow glide__arrow--right" data-glide-dir="$escapedGreaterThan">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+        <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="glide__bullets" data-glide-el="controls[nav]">
+      <button class="glide__bullet glide__bullet--active" data-glide-dir="=0"></button>
+      <button class="glide__bullet" data-glide-dir="=1"></button>
+      <button class="glide__bullet" data-glide-dir="=2"></button>
   </div>
 </div>
 EOF;
+                    }
+
+                    $renderer->doc .= "</div>";
+
 
                     break;
 

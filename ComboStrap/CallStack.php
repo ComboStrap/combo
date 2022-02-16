@@ -333,7 +333,7 @@ class CallStack
      * in the stack
      */
     public
-    function getActualCall()
+    function getActualCall(): ?Call
     {
         if ($this->endWasReached) {
             LogUtility::msg("The actual call cannot be ask because the end of the stack was reached", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -391,7 +391,7 @@ class CallStack
     {
 
         /**
-         * Edgde case
+         * Edge case
          */
         if (empty($this->callStack)) {
             return false;
@@ -909,6 +909,72 @@ class CallStack
     public function getStack(): array
     {
         return $this->callStack;
+    }
+
+    public function moveToFirstEnterTag()
+    {
+
+        while ($actualCall = $this->next()) {
+
+            if ($actualCall->getState() === DOKU_LEXER_ENTER) {
+                return $this->getActualCall();
+            }
+        }
+        return false;
+
+    }
+
+    /**
+     * Move the pointer to the corresponding exit call
+     * and return it or false if not found
+     * @return Call|false
+     */
+    public function moveToNextCorrespondingExitTag()
+    {
+        /**
+         * Edge case
+         */
+        if (empty($this->callStack)) {
+            return false;
+        }
+
+        /**
+         * Check if we are on an enter tag
+         */
+        $actualCall = $this->getActualCall();
+        if ($actualCall===null){
+            LogUtility::msg("You are not on the stack (start or end), you can't ask for the corresponding exit call", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return false;
+        }
+        $actualState = $actualCall->getState();
+        if ($actualState != DOKU_LEXER_ENTER) {
+            LogUtility::msg("You are not on an enter tag ($actualState). You can't ask for the corresponding exit call .", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return false;
+        }
+
+        $level = 0;
+        while ($actualCall = $this->next()) {
+
+            $state = $actualCall->getState();
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+                    $level++;
+                    break;
+                case DOKU_LEXER_EXIT:
+                    $level--;
+                    break;
+            }
+            if ($level < 0) {
+                break;
+            }
+
+        }
+        if ($level < 0) {
+            return $actualCall;
+        } else {
+            return false;
+        }
+
     }
 
 

@@ -6,6 +6,7 @@ use ComboStrap\HtmlDocument;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
+use ComboStrap\RenderUtility;
 use ComboStrap\SnippetManager;
 
 if (!defined('DOKU_INC')) die();
@@ -129,7 +130,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * For each processed slot in the page, retrieve the snippets
          */
         $cacheReporters = CacheManager::getOrCreate()->getCacheResults();
-        if($cacheReporters!==null) {
+        if ($cacheReporters !== null) {
             foreach ($cacheReporters as $cacheReporter) {
 
                 foreach ($cacheReporter->getResults() as $report) {
@@ -203,6 +204,9 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * for instance, the upgrade plugin call {@link p_cached_output()} on local file
          */
         global $ACT;
+        if ($ACT === RenderUtility::DYNAMIC_RENDERING) {
+            return;
+        }
         $putSnippetInContent =
             $this->headerOutputWasCalled
             ||
@@ -229,12 +233,13 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                      * or if the template is not strap
                      * No preload is then supported
                      */
-                    if ($htmlElement === "link"){
+                    if ($htmlElement === "link") {
                         $relValue = $tag["rel"];
                         $relAs = $tag["as"];
-                        if($relValue==="preload"){
-                            if($relAs==="style") {
+                        if ($relValue === "preload") {
+                            if ($relAs === "style") {
                                 $tag["rel"] = "stylesheet";
+                                unset($tag["as"]);
                             }
                         }
                     }

@@ -399,7 +399,7 @@ class TagAttributes
     {
 
         if (empty($attributeValue) && !is_bool($attributeValue)) {
-            LogUtility::msg("The value of the attribute ($attributeName) is empty. Use the nonEmpty function instead", LogUtility::LVL_MSG_WARNING, "support");
+            LogUtility::msg("The value of the attribute ($attributeName) is empty. Use the nonEmpty function instead if it's the wanted behavior", LogUtility::LVL_MSG_WARNING, "support");
         }
 
         $attLower = strtolower($attributeName);

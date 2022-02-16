@@ -1,10 +1,12 @@
 <?php
 
 
+use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
+use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -35,6 +37,23 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
     const SLIDE_WIDTH = "slide-width";
     const CONTROL_ATTRIBUTE = "control";
     const GLIDE_SLIDE_CLASS = "glide__slide";
+
+    /**
+     * Glide copy the HTML element and lozad does not see element that are not visible
+     * The element non-visible are not processed by lozad
+     * We set lazy loading to HTML loading attribute
+     */
+    private static function setLazyLoadToHtmlOnImageTagUntilTheEndOfTheStack(CallStack $callStack)
+    {
+        while ($actualCall = $callStack->next()) {
+            if ($actualCall->getState() === DOKU_LEXER_SPECIAL && in_array($actualCall->getTagName(), Call::IMAGE_TAGS)) {
+                $actualCall->addAttribute(
+                    MediaLink::LAZY_LOAD_METHOD,
+                    MediaLink::LAZY_LOAD_METHOD_HTML_VALUE
+                );
+            }
+        }
+    }
 
 
     function getType(): string
@@ -139,20 +158,28 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                     if ($actualCall->getTagName() === syntax_plugin_combo_template::TAG) {
                         $templateEndCall = $callStack->moveToNextCorrespondingExitTag();
                         $templateCallStackInstructions = $templateEndCall->getPluginData(syntax_plugin_combo_template::CALLSTACK);
-                        if($templateCallStackInstructions!==null) {
+                        if ($templateCallStackInstructions !== null) {
                             $templateCallStack = CallStack::createFromInstructions($templateCallStackInstructions);
+                            // The glide class
                             $templateCallStack->moveToStart();
                             $firstTemplateEnterTag = $templateCallStack->moveToFirstEnterTag();
                             if ($firstTemplateEnterTag !== false) {
                                 $firstTemplateEnterTag->addClassName(self::GLIDE_SLIDE_CLASS);
-                                $templateEndCall->setPluginData(syntax_plugin_combo_template::CALLSTACK, $templateCallStack->getStack());
                             }
+                            // Lazy load
+                            $templateCallStack->moveToStart();
+                            self::setLazyLoadToHtmlOnImageTagUntilTheEndOfTheStack($templateCallStack);
+                            $templateEndCall->setPluginData(syntax_plugin_combo_template::CALLSTACK, $templateCallStack->getStack());
                         }
                     } else {
                         $actualCall->addClassName(self::GLIDE_SLIDE_CLASS);
                         while ($actualCall = $callStack->moveToNextSiblingTag()) {
                             $actualCall->addClassName(self::GLIDE_SLIDE_CLASS);
                         }
+                        // Lazy load
+                        $callStack->moveToEnd();
+                        $callStack->moveToPreviousCorrespondingOpeningCall();
+                        self::setLazyLoadToHtmlOnImageTagUntilTheEndOfTheStack($callStack);
                     }
                 }
                 return array(

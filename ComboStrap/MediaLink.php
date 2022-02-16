@@ -115,6 +115,17 @@ abstract class MediaLink
     const LINKING_KEY = 'linking';
     const ALIGN_KEY = 'align';
 
+    /**
+     * The method to lazy load resources (Ie media)
+     */
+    const LAZY_LOAD_METHOD = "lazy-method";
+    const LAZY_LOAD_METHOD_HTML_VALUE = "html-attribute";
+    const LAZY_LOAD_METHOD_LOZAD_VALUE = "lozad";
+    const UNKNOWN_MIME = "unknwon";
+    /**
+     * @var string
+     */
+    private $lazyLoadMethod;
 
     private $lazyLoad = null;
 
@@ -400,11 +411,21 @@ abstract class MediaLink
 
     /**
      * @param Path $path
-     * @param null $tagAttributes
+     * @param TagAttributes $tagAttributes
      * @return RasterImageLink|SvgImageLink|ThirdMediaLink
      */
     public static function createMediaLinkFromPath(Path $path, $tagAttributes = null)
     {
+
+        if ($tagAttributes === null) {
+            $tagAttributes = TagAttributes::createEmpty();
+        }
+
+        /**
+         * Get and delete the attribute for the link
+         * (The rest is for the image)
+         */
+        $lazyLoadMethod = $tagAttributes->getValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD, self::LAZY_LOAD_METHOD_LOZAD_VALUE);
 
         /**
          * Processing
@@ -421,26 +442,41 @@ abstract class MediaLink
         }
 
         if ($mime === null) {
-            LogUtility::msg("The mime type of the media ($path) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
-            $media = new ImageRaster($path, $tagAttributes);
-            return new RasterImageLink($media);
+            $stringMime = self::UNKNOWN_MIME;
+        } else {
+            $stringMime = $mime->toString();
         }
 
-        if (!$mime->isImage()) {
-            LogUtility::msg("The type ($mime) of media ($path) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
-            $media = new ThirdMedia($path, $tagAttributes);
-            return new ThirdMediaLink($media);
+        switch ($stringMime) {
+            case self::UNKNOWN_MIME:
+                LogUtility::msg("The mime type of the media ($path) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
+                $media = new ImageRaster($path, $tagAttributes);
+                $mediaLink = new RasterImageLink($media);
+                break;
+            case Mime::SVG:
+                $media = new ImageSvg($path, $tagAttributes);
+                $mediaLink = new SvgImageLink($media);
+                break;
+            default:
+                if (!$mime->isImage()) {
+                    LogUtility::msg("The type ($mime) of media ($path) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
+                    $media = new ThirdMedia($path, $tagAttributes);
+                    $mediaLink = new ThirdMediaLink($media);
+                } else {
+                    $media = new ImageRaster($path, $tagAttributes);
+                    $mediaLink = new RasterImageLink($media);
+                }
+                break;
         }
 
-        if ($mime->toString() === Mime::SVG) {
-            $media = new ImageSvg($path, $tagAttributes);
-            return new SvgImageLink($media);
-        }
+        $mediaLink->setLazyLoadMethod($lazyLoadMethod);
+        return $mediaLink;
 
-        $media = new ImageRaster($path, $tagAttributes);
-        return new RasterImageLink($media);
+    }
 
-
+    public function setLazyLoadMethod(string $lazyLoadMethod)
+    {
+        $this->lazyLoadMethod = $lazyLoadMethod;
     }
 
 
@@ -617,6 +653,11 @@ abstract class MediaLink
     public function getMedia(): Media
     {
         return $this->media;
+    }
+
+    protected function getLazyLoadMethod(): string
+    {
+        return $this->lazyLoadMethod;
     }
 
 

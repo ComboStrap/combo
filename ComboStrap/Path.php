@@ -57,4 +57,10 @@ interface Path
     function getMime(): ?Mime;
 
     function resolve(string $name);
+
+    /**
+     * @return DokuPath
+     * @throws ExceptionCombo - if the path cannot be transformed to a doku path
+     */
+    function toDokuPath(): DokuPath;
 }

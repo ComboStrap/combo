@@ -66,5 +66,19 @@ abstract class PathAbs implements Path
         return $this->toString();
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
+    function toDokuPath(): DokuPath
+    {
+        if($this instanceof DokuPath){
+            return $this;
+        }
+        if($this instanceof LocalPath){
+            return $this->toDokuPath();
+        }
+        throw new ExceptionCombo("This is not a doku path or local path");
+    }
+
 
 }

@@ -1,20 +1,18 @@
 <?php
 
 
-use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
-use ComboStrap\ExceptionComboRuntime;
+use ComboStrap\FileSystems;
 use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
-use ComboStrap\Mime;
 use ComboStrap\Page;
 use ComboStrap\PagePath;
-use ComboStrap\Path;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\SvgDocument;
 use ComboStrap\TagAttributes;
 
@@ -37,6 +35,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
 
 
     const CANONICAL = self::TAG;
+    const DEFAULT_ATTRIBUTE = "default";
 
 
     function getType(): string
@@ -53,17 +52,17 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
         return 'normal';
     }
 
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array();
     }
 
-    function getSort()
+    function getSort(): int
     {
         return 201;
     }
@@ -121,7 +120,6 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
      * @return boolean - rendered correctly? (however, returned value is not used at the moment)
      * @see DokuWiki_Syntax_Plugin::render()
      *
-     *
      */
     function render($format, Doku_Renderer $renderer, $data): bool
     {
@@ -131,30 +129,24 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
             case 'xhtml':
 
                 $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                if (!$tagAttributes->hasAttribute(PagePath::PROPERTY_NAME)) {
 
-                    LogUtility::msg("The path is mandatory and was not found", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return false;
-                }
 
                 $path = $tagAttributes->getValueAndRemove(PagePath::PROPERTY_NAME);
+                if ($path === null) {
+                    LogUtility::msg("The path attribute is mandatory for a page image");
+                    return false;
+                }
                 DokuPath::addRootSeparatorIfNotPresent($path);
 
                 /**
                  * Image selection
                  */
                 $page = Page::createPageFromQualifiedPath($path);
-                $selectedPageImage = $page->getImage();
-                if ($selectedPageImage === null) {
-                    LogUtility::msg("No page image defined for the page ($path)", LogUtility::LVL_MSG_INFO, self::CANONICAL);
-                    return false;
-                }
-
+                $selectedPageImage = $page->getImage();// the default image
                 /**
                  * We select the best image for the ratio
                  *
                  */
-                $targetRatio = null;
                 if ($tagAttributes->hasComponentAttribute(Dimension::RATIO_ATTRIBUTE)) {
                     $stringRatio = $tagAttributes->getValue(Dimension::RATIO_ATTRIBUTE);
                     if (empty($stringRatio)) {
@@ -164,19 +156,49 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     } else {
 
                         $bestRatioDistance = 9999;
-
-                        $targetRatio = Dimension::convertTextualRatioToNumber($stringRatio);
-
-                        foreach ($page->getPageImagesOrDefault() as $pageImage) {
-                            $image = $pageImage->getImage();
-                            $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
-                            if ($ratioDistance < $bestRatioDistance) {
-                                $bestRatioDistance = $ratioDistance;
-                                $selectedPageImage = $image;
+                        $targetRatio = null;
+                        try {
+                            $targetRatio = Dimension::convertTextualRatioToNumber($stringRatio);
+                        } catch (ExceptionCombo $e) {
+                            LogUtility::msg("The ratio ($stringRatio) is not a valid ratio. Error: {$e->getMessage()}");
+                        }
+                        if ($targetRatio !== null) {
+                            foreach ($page->getPageImagesOrDefault() as $pageImage) {
+                                $image = $pageImage->getImage();
+                                $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
+                                if ($ratioDistance < $bestRatioDistance) {
+                                    $bestRatioDistance = $ratioDistance;
+                                    $selectedPageImage = $image;
+                                }
                             }
                         }
-
-
+                    }
+                }
+                if ($selectedPageImage === null) {
+                    $default = $tagAttributes->getValue(self::DEFAULT_ATTRIBUTE);
+                    switch ($default) {
+                        case null:
+                            $selectedPageImage = Site::getLogoAsSvgImage();
+                            if ($selectedPageImage === null) {
+                                LogUtility::msg("No page image could be find for the page ($path)", LogUtility::LVL_MSG_INFO, self::CANONICAL);
+                                return false;
+                            }
+                            break;
+                        case "none":
+                            break;
+                        default:
+                            try {
+                                $defaultId = DokuPath::toDokuwikiId($default);
+                                $selectedPageImage = Image::createImageFromId($defaultId);
+                            } catch (ExceptionCombo $e) {
+                                $renderer->doc .= LogUtility::wrapInRedForHtml("The default image value ($default) is not a valid image. Error: {$e->getMessage()}");
+                                return false;
+                            }
+                            if (!FileSystems::exists($selectedPageImage->getPath())) {
+                                $renderer->doc .= LogUtility::wrapInRedForHtml("The default image ($default) does not exist.");
+                                return false;
+                            }
+                            break;
                     }
                 }
 
@@ -198,14 +220,21 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     $tagAttributes->addStyleDeclarationIfNotSet("max-height", "unset");
                 }
 
+                /**
+                 * This is an illustration image
+                 * Used by svg to color by default with the primary color for instance
+                 */
                 $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ILLUSTRATION_TYPE);
-
 
                 $mediaLink = MediaLink::createMediaLinkFromPath(
                     $selectedPageImage->getPath(),
                     $tagAttributes
                 );
-                $renderer->doc .= $mediaLink->renderMediaTag();
+                try {
+                    $renderer->doc .= $mediaLink->renderMediaTag();
+                } catch (ExceptionCombo $e) {
+                    $renderer->doc .= "Error while rendering: {$e->getMessage()}";
+                }
 
                 break;
 

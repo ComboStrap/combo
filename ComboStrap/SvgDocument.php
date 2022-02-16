@@ -413,12 +413,20 @@ class SvgDocument extends XmlDocument
                     }
                 }
 
+                $color = $localTagAttributes->getValueAndRemoveIfPresent(ColorRgb::COLOR);
+                if ($svgUsageType === self::ILLUSTRATION_TYPE && $color === null) {
+                    $primaryColor = Site::getPrimaryColorValue();
+                    if ($primaryColor !== null) {
+                        $color = $primaryColor;
+                    }
+                }
+
                 /**
                  * Color
                  * Color applies only if this is an icon.
                  *
                  */
-                if ($localTagAttributes->hasComponentAttribute(ColorRgb::COLOR)) {
+                if ($color!==null) {
                     /**
                      *
                      * We say that this is used only for an icon (<72 px)
@@ -430,8 +438,6 @@ class SvgDocument extends XmlDocument
                      * svg is used as a background image
                      * fill or stroke should have at minimum "currentColor"
                      */
-
-                    $color = $localTagAttributes->getValueAndRemove(ColorRgb::COLOR);
                     $colorValue = ColorRgb::createFromString($color)->toCssValue();
 
                     /**

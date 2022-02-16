@@ -67,6 +67,7 @@ class RasterImageLink extends ImageLink
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
      * A media can be a video also (Use
      * @return string
+     * @throws ExceptionCombo
      */
     public function renderMediaTag(): string
     {
@@ -250,48 +251,64 @@ class RasterImageLink extends ImageLink
                 if ($lazyLoad) {
 
                     /**
-                     * Snippet Lazy loading
+                     * Html Lazy loading
                      */
-                    LazyLoad::addLozadSnippet();
-                    PluginUtility::getSnippetManager()->attachJavascriptSnippetForSlot("lozad-raster");
-                    $attributes->addClassName(self::LAZY_CLASS);
-                    $attributes->addClassName(LazyLoad::LAZY_CLASS);
+                    $lazyLoadMethod = $this->getLazyLoadMethod();
+                    switch ($lazyLoadMethod) {
+                        case MediaLink::LAZY_LOAD_METHOD_HTML_VALUE:
+                            $attributes->addHtmlAttributeValue("src", $srcValue);
+                            if(!empty($srcSet)) {
+                                // it the image is small, no srcset for instance
+                                $attributes->addHtmlAttributeValue("srcset", $srcSet);
+                            }
+                            $attributes->addHtmlAttributeValue("loading", "lazy");
+                            break;
+                        default:
+                        case MediaLink::LAZY_LOAD_METHOD_LOZAD_VALUE:
+                            /**
+                             * Snippet Lazy loading
+                             */
+                            LazyLoad::addLozadSnippet();
+                            PluginUtility::getSnippetManager()->attachJavascriptSnippetForSlot("lozad-raster");
+                            $attributes->addClassName(self::LAZY_CLASS);
+                            $attributes->addClassName(LazyLoad::LAZY_CLASS);
 
-                    /**
-                     * A small image has no srcset
-                     *
-                     */
-                    if (!empty($srcSet)) {
+                            /**
+                             * A small image has no srcset
+                             *
+                             */
+                            if (!empty($srcSet)) {
 
-                        /**
-                         * !!!!! DON'T FOLLOW THIS ADVICE !!!!!!!!!
-                         * https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
-                         * The transparent image has a fix dimension aspect ratio of 1x1 making
-                         * a bad reserved space for the image
-                         * We use a svg instead
-                         */
-                        $attributes->addHtmlAttributeValue("src", $srcValue);
-                        $attributes->addHtmlAttributeValue("srcset", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
-                        /**
-                         * We use `data-sizes` and not `sizes`
-                         * because `sizes` without `srcset`
-                         * shows the broken image symbol
-                         * Javascript changes them at the same time
-                         */
-                        $attributes->addHtmlAttributeValue("data-sizes", $sizes);
-                        $attributes->addHtmlAttributeValue("data-srcset", $srcSet);
+                                /**
+                                 * !!!!! DON'T FOLLOW THIS ADVICE !!!!!!!!!
+                                 * https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
+                                 * The transparent image has a fix dimension aspect ratio of 1x1 making
+                                 * a bad reserved space for the image
+                                 * We use a svg instead
+                                 */
+                                $attributes->addHtmlAttributeValue("src", $srcValue);
+                                $attributes->addHtmlAttributeValue("srcset", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
+                                /**
+                                 * We use `data-sizes` and not `sizes`
+                                 * because `sizes` without `srcset`
+                                 * shows the broken image symbol
+                                 * Javascript changes them at the same time
+                                 */
+                                $attributes->addHtmlAttributeValue("data-sizes", $sizes);
+                                $attributes->addHtmlAttributeValue("data-srcset", $srcSet);
 
-                    } else {
+                            } else {
 
-                        /**
-                         * Small image but there is no little improvement
-                         */
-                        $attributes->addHtmlAttributeValue("data-src", $srcValue);
-                        $attributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
+                                /**
+                                 * Small image but there is no little improvement
+                                 */
+                                $attributes->addHtmlAttributeValue("data-src", $srcValue);
+                                $attributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
 
+                            }
+                            LazyLoad::addPlaceholderBackground($attributes);
+                            break;
                     }
-
-                    LazyLoad::addPlaceholderBackground($attributes);
 
 
                 } else {

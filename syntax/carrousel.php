@@ -204,7 +204,7 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= <<<EOF
 <div class="carrousel-combo glide" $slideMinimalWidthData>
   <div class="glide__track" data-glide-el="track">
-    <ul class="glide__slides">
+    <div class="glide__slides">
 EOF;
 
                     /**
@@ -250,7 +250,7 @@ EOF;
                 case DOKU_LEXER_EXIT :
 
                     $renderer->doc .= <<<EOF
-</ul>
+</div>
   </div>
 EOF;
 

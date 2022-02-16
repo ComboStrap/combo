@@ -16,6 +16,11 @@ window.addEventListener('load', function () {
             perView: perView
         });
         glide.mount();
+        /**
+         * To be able to set percentage height value on the slide (child)
+         */
+        let glideSlideElement = slider.querySelector(".glide__slides");
+        glideSlideElement.style.height = `${glideSlideElement.offsetHeight}px`;
     });
 
 });

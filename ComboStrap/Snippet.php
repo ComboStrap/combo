@@ -86,6 +86,11 @@ class Snippet implements JsonSerializable
         return new Snippet($snippetId, "unknwon");
     }
 
+    public static function createTagSnippet($snippetId): Snippet
+    {
+        return new Snippet($snippetId, Snippet::TAG_TYPE);
+    }
+
 
     /**
      * @param $bool - if the snippet is critical, it would not be deferred or preloaded

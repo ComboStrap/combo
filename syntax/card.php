@@ -358,6 +358,11 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     }
 
                     if (!$tagAttributes->hasAttribute("id")) {
+                        /**
+                         * TODO: the value should normally also have the slot id (because other slot may have a card and be cached, the counter
+                         *   will then miss them)
+                         *   but do we really need this id ? Is it for testing purpose ?
+                         */
                         $tagAttributes->addComponentAttributeValue("id", self::TAG . $counter);
                     }
 

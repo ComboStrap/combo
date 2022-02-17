@@ -9,6 +9,7 @@ use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionCombo;
+use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -36,6 +37,9 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     const BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS = "d-inline-block align-text-top";
 
     const WIDGET_ATTRIBUTE = "widget";
+
+    const BRAND_IMAGE_FOUND_INDICATOR = "brand_image_found";
+    const BRAND_TEXT_FOUND_INDICATOR = "brand_text_found";
 
 
     public static function addOpenLinkTagInCallStack(CallStack $callStack, TagAttributes $tagAttributes)
@@ -187,11 +191,6 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 /**
-                 * The returned array if any error
-                 */
-                $returnedArray[PluginUtility::STATE] = $state;
-
-                /**
                  * Context
                  */
                 $callStack = CallStack::createFromHandler($handler);
@@ -216,69 +215,6 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     ->setLogicalTag(self::TAG);
 
 
-                /**
-                 * Brand Object creation
-                 */
-                $brandName = $tagAttributes->getType();
-                try {
-                    $brandButton = self::createButtonFromAttributes($tagAttributes);
-                } catch (ExceptionCombo $e) {
-                    $returnedArray[PluginUtility::EXIT_MESSAGE] = "Error while reading the brand data for the brand ($brandName). Error: {$e->getMessage()}";
-                    $returnedArray[PluginUtility::EXIT_CODE] = 1;
-                    return $returnedArray;
-                }
-                /**
-                 * Link
-                 */
-                try {
-                    self::mixBrandButtonToTagAttributes($tagAttributes, $brandButton);
-                } catch (ExceptionCombo $e) {
-                    $returnedArray[PluginUtility::EXIT_MESSAGE] = "Error while getting the link data for the the brand ($brandName). Error: {$e->getMessage()}";
-                    $returnedArray[PluginUtility::EXIT_CODE] = 1;
-                    return $returnedArray;
-                }
-
-                if ($context === syntax_plugin_combo_menubar::TAG) {
-                    $tagAttributes->addHtmlAttributeValue("accesskey", "h");
-                    $tagAttributes->addClassName("navbar-brand");
-                }
-
-                // Width does not apply to link (otherwise the link got a max-width of 30)
-                $tagAttributes->removeComponentAttributeIfPresent(Dimension::WIDTH_KEY);
-
-                // Link
-                self::addOpenLinkTagInCallStack($callStack, $tagAttributes);
-
-
-                /**
-                 * Logo
-                 */
-                if ($brandButton->hasIcon()) {
-                    try {
-                        syntax_plugin_combo_brand::addIconInCallStack($callStack, $brandButton);
-                    } catch (ExceptionCombo $e) {
-
-                        if ($brandButton->getBrand()->getName() === Brand::CURRENT_BRAND) {
-
-                            $documentationLink = PluginUtility::getDocumentationHyperLink("logo", "documentation");
-                            LogUtility::msg("A svg logo icon is not installed on your website. Check the corresponding $documentationLink.", LogUtility::LVL_MSG_INFO);
-
-                        } else {
-
-                            LogUtility::msg("The brand icon returns an error. Error: {$e->getMessage()}");
-
-                        }
-
-                    }
-                }
-
-                /**
-                 * End of link
-                 */
-                if ($state === DOKU_LEXER_SPECIAL) {
-                    syntax_plugin_combo_link::addExitLinkTagInCallStack($callStack);
-                }
-
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
@@ -293,14 +229,13 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $openTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $openTagAttributes = TagAttributes::createFromCallStackArray($openTag->getAttributes());
-                $openTagContext = $openTag->getContext();
 
                 /**
                  * Old syntax
-                 * An icon could be inside
-                 * If this is the case, we delete the added icon
-                 * in the enter phase
-                 * @since 2022-01-25
+                 * An icon/image could be already inside
+                 * We go from end to start to
+                 * see if there is also a text, if this is the case,
+                 * there is a class added on the media
                  */
                 $markupIconImageFound = false;
                 $textFound = false;
@@ -309,19 +244,11 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     $tagName = $actualCall->getTagName();
                     if (in_array($tagName, [syntax_plugin_combo_icon::TAG, syntax_plugin_combo_media::TAG])) {
 
-                        if ($textFound && $openTagContext === syntax_plugin_combo_menubar::TAG) {
-                            // if text and icon
-                            $actualCall->addClassName(self::BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS);
-                        }
 
                         // is it a added call / no content
                         // or is it an icon from the markup
                         if ($actualCall->getCapturedContent() === null) {
 
-                            if ($markupIconImageFound) {
-                                // if the markup has an icon we delete it
-                                $callStack->deleteActualCallAndPrevious();
-                            }
                             // It's an added call
                             // No user icon, image can be found anymore
                             // exiting
@@ -344,10 +271,9 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                         $textFound = true;
                     }
                 }
+                $openTag->setPluginData(self::BRAND_IMAGE_FOUND_INDICATOR, $markupIconImageFound);
+                $openTag->setPluginData(self::BRAND_TEXT_FOUND_INDICATOR, $textFound);
 
-
-                $callStack->moveToEnd();
-                syntax_plugin_combo_link::addExitLinkTagInCallStack($callStack);
                 return array(
                     PluginUtility::STATE => $state
                 );
@@ -376,19 +302,84 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_SPECIAL:
                 case DOKU_LEXER_ENTER:
+
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     /**
-                     * Any error
+                     * Brand Object creation
                      */
-                    $errorMessage = $data[PluginUtility::EXIT_MESSAGE];
-                    if (!empty($errorMessage)) {
-                        LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        $renderer->doc .= "<span class=\"text-warning\">{$errorMessage}</span>";
+                    $brandName = $tagAttributes->getType();
+                    try {
+                        $brandButton = self::createButtonFromAttributes($tagAttributes);
+                    } catch (ExceptionCombo $e) {
+                        $renderer->doc .= LogUtility::wrapInRedForHtml("Error while reading the brand data for the brand ($brandName). Error: {$e->getMessage()}");
                         return false;
+                    }
+                    /**
+                     * Link
+                     */
+                    try {
+                        self::mixBrandButtonToTagAttributes($tagAttributes, $brandButton);
+                    } catch (ExceptionCombo $e) {
+                        $renderer->doc .= LogUtility::wrapInRedForHtml("Error while getting the link data for the the brand ($brandName). Error: {$e->getMessage()}");
+                        return false;
+                    }
+                    $context = $data[PluginUtility::CONTEXT];
+                    if ($context === syntax_plugin_combo_menubar::TAG) {
+                        $tagAttributes->addHtmlAttributeValue("accesskey", "h");
+                        $tagAttributes->addClassName("navbar-brand");
+                    }
+                    // Width does not apply to link (otherwise the link got a max-width of 30)
+                    $tagAttributes->removeComponentAttributeIfPresent(Dimension::WIDTH_KEY);
+                    // Widget also
+                    $tagAttributes->removeComponentAttributeIfPresent(self::WIDGET_ATTRIBUTE);
+                    $renderer->doc .= $tagAttributes
+                        ->setType(self::CANONICAL)
+                        ->setLogicalTag(syntax_plugin_combo_link::TAG)
+                        ->toHtmlEnterTag("a");
+
+
+                    /**
+                     * Logo
+                     */
+                    $brandImageFound = $data[self::BRAND_IMAGE_FOUND_INDICATOR];
+                    if (!$brandImageFound && $brandButton->hasIcon()) {
+                        try {
+                            $iconAttributes = $brandButton->getIconAttributes();
+                            $textFound = $data[self::BRAND_TEXT_FOUND_INDICATOR];
+                            $name = $iconAttributes[\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE];
+                            $iconAttributes = TagAttributes::createFromCallStackArray($iconAttributes);
+                            if ($textFound && $context === syntax_plugin_combo_menubar::TAG) {
+                                $iconAttributes->addClassName(self::BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS);
+                            }
+                            $renderer->doc .= Icon::create($name, $iconAttributes)
+                                ->render();
+                        } catch (ExceptionCombo $e) {
+
+                            if ($brandButton->getBrand()->getName() === Brand::CURRENT_BRAND) {
+
+                                $documentationLink = PluginUtility::getDocumentationHyperLink("logo", "documentation");
+                                LogUtility::msg("A svg logo icon is not installed on your website. Check the corresponding $documentationLink.", LogUtility::LVL_MSG_INFO);
+
+                            } else {
+
+                                $renderer->doc .= "The brand icon returns an error. Error: {$e->getMessage()}";
+                                // we don't return because the link is not closed
+
+                            }
+
+                        }
+                    }
+
+                    /**
+                     * End of link
+                     */
+                    if ($state === DOKU_LEXER_SPECIAL) {
+                        $renderer->doc .= "</a>";
                     }
 
                     /**
                      * Add the Icon / CSS / Javascript snippet
-                     * It should happen only in rendering
+                     *
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     try {
@@ -409,7 +400,9 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
-                default:
+                case DOKU_LEXER_EXIT:
+                    $renderer->doc .= "</a>";
+                    break;
 
             }
             return true;

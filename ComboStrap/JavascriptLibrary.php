@@ -20,7 +20,7 @@ class JavascriptLibrary extends Media
      */
     public static function createJavascriptLibraryFromDokuwikiId($dokuwikiId): JavascriptLibrary
     {
-        $resource = DokuPath::createResource($dokuwikiId);
+        $resource = DokuPath::createComboResource($dokuwikiId);
         return new JavascriptLibrary($resource);
     }
 

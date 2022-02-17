@@ -649,8 +649,8 @@ EOF;
     private function getResourceIconFile(): DokuPath
     {
         $iconName = $this->getResourceIconName();
-        $iconPath = str_replace(Icon::COMBO . ":", DokuPath::COMBO_DRIVE . ">", $iconName);
-        return DokuPath::createResource($iconPath);
+        $iconPath = str_replace(Icon::COMBO . ":", "", $iconName).".svg";
+        return DokuPath::createComboResource($iconPath);
     }
 
     public function setSecondaryColor(string $secondaryColor): BrandButton
@@ -662,7 +662,7 @@ EOF;
     private function getResourceIconName(): string
     {
         $comboLibrary = Icon::COMBO;
-        return "$comboLibrary:brand:{$this->getBrand()}:{$this->iconType}.svg";
+        return "$comboLibrary:brand:{$this->getBrand()}:{$this->iconType}";
     }
 
 

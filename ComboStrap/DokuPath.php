@@ -384,7 +384,7 @@ class DokuPath extends PathAbs
 
     /**
      */
-    public static function createResource($dokuwikiId): DokuPath
+    public static function createComboResource($dokuwikiId): DokuPath
     {
         return new DokuPath($dokuwikiId, self::COMBO_DRIVE);
     }

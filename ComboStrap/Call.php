@@ -909,7 +909,7 @@ class Call
         return $this;
     }
 
-    public function setPluginData(string $name, array $value): Call
+    public function setPluginData(string $name, $value): Call
     {
         $this->getPluginData()[$name] = $value;
         return $this;

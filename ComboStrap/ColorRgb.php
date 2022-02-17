@@ -231,7 +231,7 @@ class ColorRgb
      */
     const MINIMUM_CONTRAST_RATIO = 5;
     const WHITE = "white";
-    const TIP_COLOR = "#fff5a0";
+    const TIP_COLOR = "#ffee33";
 
     /**
      * @var array

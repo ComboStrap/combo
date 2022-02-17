@@ -174,14 +174,14 @@ class ColorHsl
      */
     public function diff($color): array
     {
-        if($color instanceof ColorRgb){
+        if ($color instanceof ColorRgb) {
             $color = $color->toHsl();
         }
 
         return [
-            "h"=>$this->getHue()-$color->getHue(),
-            "s"=>$this->getSaturation()-$color->getSaturation(),
-            "l"=>$this->getLightness()-$color->getLightness(),
+            "h" => round($this->getHue() - $color->getHue(), 2),
+            "s" => round($this->getSaturation() - $color->getSaturation(), 2),
+            "l" => round($this->getLightness() - $color->getLightness(), 2),
         ];
     }
 

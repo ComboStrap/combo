@@ -142,6 +142,7 @@ require_once(__DIR__ . '/LowQualityPage.php');
 require_once(__DIR__ . '/LowQualityPageOverwrite.php');
 require_once(__DIR__ . '/LowQualityCalculatedIndicator.php');
 require_once(__DIR__ . '/MarkupRef.php');
+require_once(__DIR__ . '/Math.php');
 require_once(__DIR__ . '/MetaManagerForm.php');
 require_once(__DIR__ . '/MetaManagerMenuItem.php');
 require_once(__DIR__ . '/MetadataDokuWikiStore.php');

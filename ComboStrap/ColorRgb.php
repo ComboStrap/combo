@@ -231,7 +231,7 @@ class ColorRgb
      */
     const MINIMUM_CONTRAST_RATIO = 5;
     const WHITE = "white";
-    const TIP_COLOR = "#333120";
+    const TIP_COLOR = "#fff5a0";
 
     /**
      * @var array
@@ -277,6 +277,22 @@ class ColorRgb
         }
         return self::$dokuWikiStyles;
 
+    }
+
+    /**
+     * Same round instructions than SCSS to be able to do the test
+     * have value as bootstrap
+     * @param float $value
+     * @return float
+     */
+    private static function round(float $value): float
+    {
+        $rest = fmod($value, 1);
+        if ($rest < 0.5) {
+            return round($value, 0, PHP_ROUND_HALF_DOWN);
+        } else {
+            return round($value, 0, PHP_ROUND_HALF_UP);
+        }
     }
 
     /**
@@ -406,22 +422,36 @@ class ColorRgb
             $weight = 50;
         }
 
-        $lerp = function ($x, $y) use ($weight) {
-            $X = ($weight * $x) / 100;
-            $Y = (100 - $weight) / 100 * $y;
-            $v = $X + $Y;
-            $rest = fmod($v, 1);
-            if ($rest < 0.5) {
-                return round($v, 0, PHP_ROUND_HALF_DOWN);
-            } else {
-                return round($v, 0, PHP_ROUND_HALF_UP);
-            }
-        };
+        $color2 = ColorRgb::createFromString($color);
+        $targetRed = self::round(Math::lerp($color2->getRed(), $this->getRed(), $weight));
+        $targetGreen = self::round(Math::lerp($color2->getGreen(), $this->getGreen(), $weight));
+        $targetBlue = self::round(Math::lerp($color2->getBlue(), $this->getBlue(), $weight));
+        return ColorRgb::createFromRgbChannels($targetRed, $targetGreen, $targetBlue);
+
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    function unmix($color, ?int $weight = 50): ColorRgb
+    {
+        if ($weight === null) {
+            $weight = 50;
+        }
 
         $color2 = ColorRgb::createFromString($color);
-        $targetRed = $lerp($color2->getRed(), $this->getRed());
-        $targetGreen = $lerp($color2->getGreen(), $this->getGreen());
-        $targetBlue = $lerp($color2->getBlue(), $this->getBlue());
+        $targetRed = self::round(Math::unlerp($color2->getRed(), $this->getRed(), $weight));
+        if ($targetRed < 0) {
+            throw new ExceptionCombo("This is not possible, the red value ({$color2->getBlue()}) with the percentage $weight could not be unmixed. They were not calculated with color mixing.");
+        }
+        $targetGreen = self::round(Math::unlerp($color2->getGreen(), $this->getGreen(), $weight));
+        if ($targetGreen < 0) {
+            throw new ExceptionCombo("This is not possible, the green value ({$color2->getGreen()}) with the percentage $weight could not be unmixed. They were not calculated with color mixing.");
+        }
+        $targetBlue = self::round(Math::unlerp($color2->getBlue(), $this->getBlue(), $weight));
+        if ($targetBlue < 0) {
+            throw new ExceptionCombo("This is not possible, the blue value ({$color2->getBlue()}) with the percentage $weight could not be unmixed. They were not calculated with color mixing.");
+        }
         return ColorRgb::createFromRgbChannels($targetRed, $targetGreen, $targetBlue);
 
     }
@@ -503,7 +533,8 @@ class ColorRgb
     /**
      * @throws ExceptionCombo
      */
-        public static function createFromString(string $color): ColorRgb
+    public
+    static function createFromString(string $color): ColorRgb
     {
         if ($color[0] === "#") {
             return self::createFromHex($color);
@@ -515,14 +546,16 @@ class ColorRgb
     /**
      * @throws ExceptionCombo
      */
-    public static function createFromName(string $color): ColorRgb
+    public
+    static function createFromName(string $color): ColorRgb
     {
         return (new ColorRgb())
             ->setName($color);
     }
 
 
-    public function toCssValue(): string
+    public
+    function toCssValue(): string
     {
 
         switch ($this->nameType) {
@@ -556,17 +589,20 @@ class ColorRgb
 
     }
 
-    public function getRed()
+    public
+    function getRed()
     {
         return $this->red;
     }
 
-    public function getGreen()
+    public
+    function getGreen()
     {
         return $this->green;
     }
 
-    public function getBlue()
+    public
+    function getBlue()
     {
         return $this->blue;
     }
@@ -575,7 +611,8 @@ class ColorRgb
      * Mix with black
      * @var int $percentage between 0 and 100
      */
-    public function shade(int $percentage): ColorRgb
+    public
+    function shade(int $percentage): ColorRgb
     {
         try {
             return $this->mix('black', $percentage);
@@ -586,7 +623,8 @@ class ColorRgb
         }
     }
 
-    public function getNameType(): string
+    public
+    function getNameType(): string
     {
         return $this->nameType;
     }
@@ -595,7 +633,8 @@ class ColorRgb
      * @param int $percentage between -100 and 100
      * @return $this
      */
-    public function scale(int $percentage): ColorRgb
+    public
+    function scale(int $percentage): ColorRgb
     {
         if ($percentage === 0) {
             return $this;
@@ -609,7 +648,8 @@ class ColorRgb
     }
 
 
-    public function toRgbChannels(): array
+    public
+    function toRgbChannels(): array
     {
         return [$this->getRed(), $this->getGreen(), $this->getBlue()];
     }
@@ -618,7 +658,8 @@ class ColorRgb
      * @param int $percentage between 0 and 100
      * @return $this
      */
-    public function tint(int $percentage): ColorRgb
+    public
+    function tint(int $percentage): ColorRgb
     {
         try {
             return $this->mix("white", $percentage);
@@ -629,12 +670,14 @@ class ColorRgb
         }
     }
 
-    public function __toString()
+    public
+    function __toString()
     {
         return $this->name;
     }
 
-    public function getLuminance(): float
+    public
+    function getLuminance(): float
     {
         $toLuminanceFactor = function ($channel) {
             $pigmentRatio = $channel / 255;
@@ -653,7 +696,8 @@ class ColorRgb
      * @return float
      * @throws ExceptionCombo
      */
-    public function getContrastRatio(ColorRgb $colorRgb): float
+    public
+    function getContrastRatio(ColorRgb $colorRgb): float
     {
         $actualColorHsl = $this->toHsl();
         $actualLightness = $actualColorHsl->getLightness();
@@ -673,7 +717,8 @@ class ColorRgb
     /**
      * @throws ExceptionCombo
      */
-    public function toMinimumContrastRatio(string $color, float $minimum = self::MINIMUM_CONTRAST_RATIO, $darknessIncrement = 5): ColorRgb
+    public
+    function toMinimumContrastRatio(string $color, float $minimum = self::MINIMUM_CONTRAST_RATIO, $darknessIncrement = 5): ColorRgb
     {
         $targetColor = ColorRgb::createFromString($color);
         $ratio = $this->getContrastRatio($targetColor);
@@ -693,7 +738,8 @@ class ColorRgb
     /**
      * Returns the complimentary color
      */
-    public function complementary(): ColorRgb
+    public
+    function complementary(): ColorRgb
     {
         try {
             return $this
@@ -707,7 +753,8 @@ class ColorRgb
 
     }
 
-    public function getName(): string
+    public
+    function getName(): string
     {
         $hexColor = $this->toRgbHex();
         if (in_array($hexColor, self::CSS_COLOR_NAMES)) {
@@ -719,7 +766,8 @@ class ColorRgb
     /**
      * @throws ExceptionCombo
      */
-    public function toMinimumContrastRatioAgainstWhite(float $minimumContrastRatio = self::MINIMUM_CONTRAST_RATIO, int $darknessIncrement = 5): ColorRgb
+    public
+    function toMinimumContrastRatioAgainstWhite(float $minimumContrastRatio = self::MINIMUM_CONTRAST_RATIO, int $darknessIncrement = 5): ColorRgb
     {
         return $this->toMinimumContrastRatio(self::WHITE, $minimumContrastRatio, $darknessIncrement);
     }
@@ -727,7 +775,8 @@ class ColorRgb
     /**
      * @throws ExceptionCombo
      */
-    private function setHex(string $color): ColorRgb
+    private
+    function setHex(string $color): ColorRgb
     {
         // Hexadecimal
         if ($color[0] !== "#") {
@@ -742,7 +791,8 @@ class ColorRgb
     /**
      * @throws ExceptionCombo
      */
-    public function setRgbChannels(array $colorValue): ColorRgb
+    public
+    function setRgbChannels(array $colorValue): ColorRgb
     {
         if (sizeof($colorValue) != 3) {
             throw new ExceptionCombo("A rgb color array should be of length 3");
@@ -762,7 +812,8 @@ class ColorRgb
         return $this;
     }
 
-    private function setNameType(string $type): ColorRgb
+    private
+    function setNameType(string $type): ColorRgb
     {
         $this->nameType = $type;
         return $this;
@@ -772,7 +823,8 @@ class ColorRgb
      * Via a name
      * @throws ExceptionCombo
      */
-    private function setName(string $name): ColorRgb
+    private
+    function setName(string $name): ColorRgb
     {
 
         $qualifiedName = strtolower($name);
@@ -818,7 +870,8 @@ class ColorRgb
 
     }
 
-    public function getTransparency()
+    public
+    function getTransparency()
     {
         return $this->transparency;
     }

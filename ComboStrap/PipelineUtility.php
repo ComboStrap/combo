@@ -85,7 +85,7 @@ class PipelineUtility
                         $value = trim($value);
                         break;
                     case "capitalize":
-                        $value=ucwords($value);
+                        $value = ucwords($value);
                         break;
                     default:
                         LogUtility::msg("command ($commandName) is unknown", LogUtility::LVL_MSG_ERROR, "pipeline");
@@ -111,7 +111,15 @@ class PipelineUtility
     private static function head(array $commandArgs, $value)
     {
         $length = $commandArgs[0];
-        return substr($value, 0, $length);
+        if (strlen($value) < $length) {
+            return $value;
+        }
+        $headValue = substr($value, 0, $length);
+        $tail = $commandArgs[1];
+        if ($tail !== null) {
+            $headValue .= $tail;
+        }
+        return $headValue;
     }
 
     private static function concat(array $commandArgs, $value, $side)

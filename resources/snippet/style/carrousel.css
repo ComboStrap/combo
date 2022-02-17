@@ -36,7 +36,7 @@
     list-style: none;
     position: absolute;
     z-index: 2;
-    bottom: 2em;
+    bottom: 1em;
     left: 50%;
 }
 .glide__bullet {

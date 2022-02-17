@@ -34,7 +34,7 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
     const TAG = 'carrousel';
     const CANONICAL = self::TAG;
-    const SLIDE_WIDTH = "slide-width";
+    const ELEMENT_WIDTH = "element-width";
     const CONTROL_ATTRIBUTE = "control";
     const GLIDE_SLIDE_CLASS = "glide__slide";
 
@@ -216,12 +216,12 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
 
-                    $slideMinimalWidth = $tagAttributes->getValueAndRemoveIfPresent(self::SLIDE_WIDTH);
+                    $slideMinimalWidth = $tagAttributes->getValueAndRemoveIfPresent(self::ELEMENT_WIDTH);
                     $slideMinimalWidthData = "";
                     try {
                         if ($slideMinimalWidth !== null) {
                             $slideMinimalWidth = Dimension::toPixelValue($slideMinimalWidth);
-                            $slideMinimalWidthData = "data-slide-width=\"$slideMinimalWidth\"";
+                            $slideMinimalWidthData = "data-".self::ELEMENT_WIDTH."=\"$slideMinimalWidth\"";
                         }
                     } catch (ExceptionCombo $e) {
                         $slideMinimalWidth = 200;

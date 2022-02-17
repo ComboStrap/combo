@@ -5,19 +5,19 @@ window.addEventListener('load', function () {
     const sliders = [...document.querySelectorAll(selector)];
 
     sliders.forEach(slider => {
-        let slideMinimalWidth = slider.dataset.slideWidth;
-        if (typeof slideMinimalWidth === 'undefined') {
-            slideMinimalWidth = 250;
+        let perView = 1;
+        let elementMinimalWidth = slider.dataset.elementWidth;
+        if (typeof elementMinimalWidth !== 'undefined') {
+            let offsetWidth = slider.offsetWidth;
+            perView = Math.floor(offsetWidth / elementMinimalWidth);
         }
-        let offsetWidth = slider.offsetWidth;
-        let perView = Math.floor(offsetWidth / slideMinimalWidth);
         let glide = new Glide(slider, {
             type: 'carousel',
             perView: perView
         });
         glide.mount();
         /**
-         * To be able to set percentage height value on the slide (child)
+         * To be able to set percentage height value on the child elements.
          */
         let glideSlideElement = slider.querySelector(".glide__slides");
         glideSlideElement.style.height = `${glideSlideElement.offsetHeight}px`;

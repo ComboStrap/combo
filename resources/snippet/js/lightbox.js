@@ -20,11 +20,17 @@ window.addEventListener("DOMContentLoaded", function () {
                 namespace = "";
             }
 
+            let svgStyle = "";
+            if(src.match(/svg/i)!==null){
+                // a svg does not show without width
+                // because the intrinsic svg can be really small, we put a min with
+                svgStyle='style="width: 100%;min-width: 75vw"'
+            }
             let html = `
 <button type="button" class="lightbox-close-combo" data${namespace}-dismiss="modal" aria-label="Close">
     <span aria-hidden="true">&times;</span>
 </button>
-<img src="${src}" alt="${alt}"/>
+<img src="${src}" alt="${alt}" ${svgStyle}/>
 `
             lightBoxModel
                 .resetIfBuild()

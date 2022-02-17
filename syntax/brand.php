@@ -4,6 +4,8 @@
 // must be run within Dokuwiki
 use ComboStrap\Brand;
 use ComboStrap\BrandButton;
+use ComboStrap\CacheDependencies;
+use ComboStrap\CacheManager;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
@@ -14,6 +16,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\Template;
 use ComboStrap\TemplateUtility;
 
 if (!defined('DOKU_INC')) die();
@@ -59,9 +62,16 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
         $urlAttribute = syntax_plugin_combo_brand::URL_ATTRIBUTE;
         $url = $tagAttributes->getValueAndRemoveIfPresent($urlAttribute);
         if ($url !== null) {
-            $page = Page::createPageFromRequestedPage();
-            $relativePath = str_replace(":", "/", $page->getDokuwikiId());
-            $url = TemplateUtility::renderStringTemplateFromDataArray($url, ["path" => $relativePath]);
+            $urlTemplate = Template::create($url);
+            $variableDetected = $urlTemplate->getVariablesDetected();
+            if (sizeof($variableDetected) === 1 && $variableDetected[0] === "path") {
+                CacheManager::getOrCreate()->addDependency(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                $page = Page::createPageFromRequestedPage();
+                $relativePath = str_replace(":", "/", $page->getDokuwikiId());
+                $url = $urlTemplate
+                    ->set("path", $relativePath)
+                    ->render();
+            }
             $tagAttributes->addHtmlAttributeValue("href", $url);
         }
         $tagAttributes->mergeWithCallStackArray($brandLinkAttributes->toCallStackArray());
@@ -229,7 +239,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $openTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $openTagAttributes = TagAttributes::createFromCallStackArray($openTag->getAttributes());
-
+                $openTagContext = $openTag->getContext();
                 /**
                  * Old syntax
                  * An icon/image could be already inside
@@ -244,6 +254,13 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     $tagName = $actualCall->getTagName();
                     if (in_array($tagName, [syntax_plugin_combo_icon::TAG, syntax_plugin_combo_media::TAG])) {
 
+
+                        if ($textFound && $openTagContext === syntax_plugin_combo_menubar::TAG) {
+                            // if text and icon
+                            // We add it here because, if they are present, we don't add them later
+                            // for all on raster image
+                            $actualCall->addClassName(self::BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS);
+                        }
 
                         // is it a added call / no content
                         // or is it an icon from the markup

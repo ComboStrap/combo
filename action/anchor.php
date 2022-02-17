@@ -74,7 +74,7 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
             $snippetManager = PluginUtility::getSnippetManager();
             try {
 
-                $primaryColorText =  Site::getPrimaryColorText();
+                $primaryColorText =  Site::getPrimaryColorForText();
                 $primaryColorHoverText = Site::getPrimaryColorTextHover();
                 if ($primaryColorText !== null) {
                     $aCss = <<<EOF

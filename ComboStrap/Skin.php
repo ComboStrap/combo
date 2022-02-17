@@ -92,7 +92,7 @@ class Skin
             $type = $attributes->getValue(TagAttributes::TYPE_KEY);
             if (
                 $skinValue === self::FILLED_VALUE
-                && $attributes->hasClass("btn-$type")
+                && ($attributes->hasClass("btn-$type")||$attributes->hasClass("alert-$type"))
             ) {
                 $isBrandingColor = in_array($type, [ColorRgb::PRIMARY_VALUE, ColorRgb::SECONDARY_VALUE]);
                 if (!$isBrandingColor) {

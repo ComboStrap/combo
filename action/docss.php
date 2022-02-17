@@ -39,7 +39,7 @@ class action_plugin_combo_docss extends DokuWiki_Action_Plugin
             case "admin":
                 $defaultColor = "black";
                 $iconColor = Site::getPrimaryColor($defaultColor);
-                $colorText = Site::getPrimaryColorText($defaultColor);
+                $colorText = Site::getPrimaryColorForText($defaultColor);
                 $css = <<<EOF
 ul.admin_tasks, ul.admin_plugins {
     list-style: none;

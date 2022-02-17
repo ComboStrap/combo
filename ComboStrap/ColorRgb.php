@@ -188,6 +188,7 @@ class ColorRgb
         'steelblue' => '#4682B4',
         'tan' => '#D2B48C',
         'teal' => '#008080',
+        'tip' => self::TIP_COLOR,
         'thistle' => '#D8BFD8',
         'tomato' => '#FF6347',
         'turquoise' => '#40E0D0',
@@ -217,12 +218,6 @@ class ColorRgb
     const VALUE_TYPE_RESET = "reset";
     const VALUE_TYPE_CSS_NAME = "css-name";
     const VALUE_TYPE_UNKNOWN_NAME = "unknown-name";
-    const VALUE_TYPE_BRANDING = "branding";
-
-    /**
-     * The shade / shift weight factor on text color
-     */
-    const TEXT_BOOTSTRAP_WEIGHT = 40;
 
     /**
      * Do we set also the branding color on
@@ -236,6 +231,7 @@ class ColorRgb
      */
     const MINIMUM_CONTRAST_RATIO = 5;
     const WHITE = "white";
+    const TIP_COLOR = "#333120";
 
     /**
      * @var array
@@ -507,7 +503,7 @@ class ColorRgb
     /**
      * @throws ExceptionCombo
      */
-    public static function createFromString(string $color): ColorRgb
+        public static function createFromString(string $color): ColorRgb
     {
         if ($color[0] === "#") {
             return self::createFromHex($color);
@@ -577,11 +573,12 @@ class ColorRgb
 
     /**
      * Mix with black
+     * @var int $percentage between 0 and 100
      */
-    public function shade($weight): ColorRgb
+    public function shade(int $percentage): ColorRgb
     {
         try {
-            return $this->mix('black', $weight);
+            return $this->mix('black', $percentage);
         } catch (ExceptionCombo $e) {
             // should not happen
             LogUtility::msg("Error while shading. Error: {$e->getMessage()}");
@@ -594,7 +591,11 @@ class ColorRgb
         return $this->nameType;
     }
 
-    public function shift(int $percentage): ColorRgb
+    /**
+     * @param int $percentage between -100 and 100
+     * @return $this
+     */
+    public function scale(int $percentage): ColorRgb
     {
         if ($percentage === 0) {
             return $this;
@@ -613,6 +614,10 @@ class ColorRgb
         return [$this->getRed(), $this->getGreen(), $this->getBlue()];
     }
 
+    /**
+     * @param int $percentage between 0 and 100
+     * @return $this
+     */
     public function tint(int $percentage): ColorRgb
     {
         try {

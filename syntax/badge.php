@@ -4,7 +4,11 @@
 // must be run within Dokuwiki
 use ComboStrap\Bootstrap;
 use ComboStrap\ColorRgb;
+use ComboStrap\ExceptionCombo;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
+use ComboStrap\Skin;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
@@ -118,17 +122,63 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
 
 
                 /**
-                 * Type attributes
+                 * Brand and tip colors
                  */
                 $tagAttributes->addClassName("badge");
                 $type = $tagAttributes->getType();
-                if ($type != "tip") {
-                    $tagAttributes->addClassName("alert-" . $type);
-                } else {
-                    if (!$tagAttributes->hasComponentAttribute(ColorRgb::BACKGROUND_COLOR)) {
-                        $tagAttributes->addStyleDeclarationIfNotSet(ColorRgb::BACKGROUND_COLOR, "#fff79f"); // lum - 195
-                        $tagAttributes->addClassName("text-dark");
+                $color = null;
+                switch ($type) {
+                    case "tip":
+                        $color = ColorRgb::TIP_COLOR;
+                        break;
+                    case ColorRgb::PRIMARY_VALUE:
+                        $color = Site::getPrimaryColorValue();
+                        break;
+                    case ColorRgb::SECONDARY_VALUE:
+                        $color = Site::getSecondaryColorValue();
+                        break;
+                    default:
+                }
+                $colorObject = null;
+                if ($color !== null) {
+                    try {
+                        $colorObject = ColorRgb::createFromString($color);
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("The color value ($color) for the badge type ($type) is not valid. Error: {$e->getMessage()}");
                     }
+                }
+                if ($colorObject !== null) {
+                    /**
+                     * https://getbootstrap.com/docs/5.0/components/alerts/
+                     * $alert-bg-scale:                -80%;
+                     * $alert-border-scale:            -70%;
+                     * $alert-color-scale:             40%;
+                     */
+                    $backgroundColor = $tagAttributes->getValue(ColorRgb::BACKGROUND_COLOR);
+                    if ($backgroundColor === null) {
+                        $backgroundColor = $colorObject->scale(-80)->toCssValue();
+                        $tagAttributes->addStyleDeclarationIfNotSet(ColorRgb::BACKGROUND_COLOR, $backgroundColor);
+                    }
+                    if (!$tagAttributes->hasComponentAttribute(ColorRgb::BORDER_COLOR)) {
+                        $borderColor = $colorObject->scale(-70)->toCssValue();
+                        $tagAttributes->addStyleDeclarationIfNotSet(ColorRgb::BORDER_COLOR, $borderColor);
+                    }
+                    if (!$tagAttributes->hasComponentAttribute(ColorRgb::COLOR)) {
+                        try {
+                            $textColor = $colorObject
+                                ->scale(40)
+                                ->toMinimumContrastRatio($backgroundColor)
+                                ->toCssValue();
+                        } catch (ExceptionCombo $e) {
+                            LogUtility::msg("Error while scaling the text color ($color) for the badge type ($type). Error: {$e->getMessage()}");
+                            $textColor = $colorObject
+                                ->scale(40)
+                                ->toCssValue();
+                        }
+                        $tagAttributes->addStyleDeclarationIfNotSet(ColorRgb::COLOR, $textColor);
+                    }
+                } else {
+                    $tagAttributes->addClassName("alert-" . $type);
                 }
 
                 $rounded = $tagAttributes->getValueAndRemove(self::ATTRIBUTE_ROUNDED);
@@ -186,6 +236,8 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
 
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
+                    // badge on boostrap does not allow
+                    $tagAttributes->addStyleDeclarationIfNotSet("white-space", "normal");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("span") . DOKU_LF;
                     break;
 

@@ -505,7 +505,7 @@ class Site
         PluginUtility::setConf(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT);
     }
 
-    public static function getPrimaryColorText(string $default = null): ?ColorRgb
+    public static function getPrimaryColorForText(string $default = null): ?ColorRgb
     {
         $primaryColor = self::getPrimaryColor($default);
         if ($primaryColor === null) {

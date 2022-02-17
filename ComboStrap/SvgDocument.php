@@ -426,7 +426,7 @@ class SvgDocument extends XmlDocument
                  * Color applies only if this is an icon.
                  *
                  */
-                if ($color!==null) {
+                if ($color !== null) {
                     /**
                      *
                      * We say that this is used only for an icon (<72 px)
@@ -524,9 +524,9 @@ class SvgDocument extends XmlDocument
          * With an icon, the viewBox can be small but it can be zoomed out
          * via the {@link Dimension::WIDTH_KEY}
          */
-        if (
-        $localTagAttributes->hasComponentAttribute(Dimension::RATIO_ATTRIBUTE)
-        ) {
+        $processedWidth = $mediaWidth;
+        $processedHeight = $mediaHeight;
+        if ($localTagAttributes->hasComponentAttribute(Dimension::RATIO_ATTRIBUTE)) {
             // We get a crop, it means that we need to change the viewBox
             $ratio = $localTagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
             try {
@@ -535,33 +535,46 @@ class SvgDocument extends XmlDocument
                 LogUtility::msg("The target ratio attribute ($ratio) returns the following error ({$e->getMessage()}). The svg processing was stopped");
                 return parent::getXmlText();
             }
-            [$width, $height] = Image::getCroppingDimensionsWithRatio(
-                $targetRatio,
-                $mediaWidth,
-                $mediaHeight
-            );
-            $x = 0;
-            $y = 0;
-            if ($svgStructureType === self::ICON_TYPE) {
-                // icon case, we zoom out otherwise, this is ugly, the icon takes the whole place
-                $zoomFactor = 3;
-                $width = $zoomFactor * $width;
-                $height = $zoomFactor * $height;
-                // center
-                $actualWidth = $mediaWidth;
-                $actualHeight = $mediaHeight;
-                $x = -($width - $actualWidth) / 2;
-                $y = -($height - $actualHeight) / 2;
-            }
-            $this->setRootAttribute(self::VIEW_BOX, "$x $y $width $height");
+            [$processedWidth, $processedHeight] = Image::getCroppingDimensionsWithRatio($targetRatio, $mediaWidth, $mediaHeight);
 
+            $this->setRootAttribute(self::VIEW_BOX, "0 0 $processedWidth $processedHeight");
+
+        }
+
+        /**
+         * Zoom occurs after the crop if any
+         */
+        $zoomFactor = $localTagAttributes->getValueAsInteger(Dimension::ZOOM_ATTRIBUTE);
+        if ($zoomFactor === null
+            && $svgStructureType === self::ICON_TYPE
+            && $svgUsageType === self::ILLUSTRATION_TYPE
+        ) {
+            $zoomFactor = -4;
+        }
+        if ($zoomFactor !== null) {
+            // icon case, we zoom out otherwise, this is ugly, the icon takes the whole place
+            if ($zoomFactor < 0) {
+                $processedWidth = -$zoomFactor * $processedWidth;
+                $processedHeight = -$zoomFactor * $processedHeight;
+            } else {
+                $processedWidth = $processedWidth / $zoomFactor;
+                $processedHeight = $processedHeight / $zoomFactor;
+            }
+            // center
+            $actualWidth = $mediaWidth;
+            $actualHeight = $mediaHeight;
+            $x = -($processedWidth - $actualWidth) / 2;
+            $y = -($processedHeight - $actualHeight) / 2;
+            $this->setRootAttribute(self::VIEW_BOX, "$x $y $processedWidth $processedHeight");
         }
 
 
         // Add a class on each path for easy styling
         if (!empty($this->name)) {
             $svgPaths = $this->xpath("//*[local-name()='path']");
-            for ($i = 0; $i < $svgPaths->length; $i++) {
+            for ($i = 0;
+                 $i < $svgPaths->length;
+                 $i++) {
 
                 $stylingClass = $this->name . "-" . $i;
                 $this->addAttributeValue("class", $stylingClass, $svgPaths[$i]);
@@ -612,7 +625,8 @@ class SvgDocument extends XmlDocument
      * @param $boolean
      * @return SvgDocument
      */
-    public function setShouldBeOptimized($boolean): SvgDocument
+    public
+    function setShouldBeOptimized($boolean): SvgDocument
     {
         $this->shouldBeOptimized = $boolean;
         return $this;
@@ -621,7 +635,8 @@ class SvgDocument extends XmlDocument
     /**
      * @throws ExceptionCombo
      */
-    public function getMediaWidth(): int
+    public
+    function getMediaWidth(): int
     {
         $viewBox = $this->getXmlDom()->documentElement->getAttribute(self::VIEW_BOX);
         if ($viewBox !== "") {
@@ -653,7 +668,8 @@ class SvgDocument extends XmlDocument
     /**
      * @throws ExceptionCombo
      */
-    public function getMediaHeight(): int
+    public
+    function getMediaHeight(): int
     {
         $viewBox = $this->getXmlDom()->documentElement->getAttribute(self::VIEW_BOX);
         if ($viewBox !== "") {
@@ -682,7 +698,8 @@ class SvgDocument extends XmlDocument
     }
 
 
-    private function getSvgPaths()
+    private
+    function getSvgPaths()
     {
         if ($this->isXmlExtensionLoaded()) {
 
@@ -711,7 +728,8 @@ class SvgDocument extends XmlDocument
      * Based on https://jakearchibald.github.io/svgomg/
      * (gui of https://github.com/svg/svgo)
      */
-    public function optimize($tagAttributes)
+    public
+    function optimize($tagAttributes)
     {
 
         if ($this->shouldOptimize()) {
@@ -889,7 +907,8 @@ class SvgDocument extends XmlDocument
         }
     }
 
-    public function shouldOptimize()
+    public
+    function shouldOptimize()
     {
 
         return $this->shouldBeOptimized;
@@ -900,7 +919,8 @@ class SvgDocument extends XmlDocument
      * The name is used to add class in the svg
      * @param $name
      */
-    private function setName($name)
+    private
+    function setName($name)
     {
         $this->name = $name;
     }
@@ -909,12 +929,14 @@ class SvgDocument extends XmlDocument
      * Set the context
      * @param Path $path
      */
-    private function setPath(Path $path)
+    private
+    function setPath(Path $path)
     {
         $this->path = $path;
     }
 
-    public function __toString()
+    public
+    function __toString()
     {
         if ($this->path !== null) {
             return $this->path->__toString();
@@ -925,7 +947,8 @@ class SvgDocument extends XmlDocument
         return "unknown";
     }
 
-    private function isInIconDirectory(): bool
+    private
+    function isInIconDirectory(): bool
     {
         if ($this->path == null) {
             return false;
@@ -941,12 +964,14 @@ class SvgDocument extends XmlDocument
      * An utility function to know how to remove a node
      * @param DOMNode $nodeElement
      */
-    private function removeNode(DOMNode $nodeElement)
+    private
+    function removeNode(DOMNode $nodeElement)
     {
         $nodeElement->parentNode->removeChild($nodeElement);
     }
 
-    private function deleteAllElements(string $elementName)
+    private
+    function deleteAllElements(string $elementName)
     {
         $svgElement = $this->xpath("//*[local-name()='$elementName']");
         for ($i = 0; $i < $svgElement->length; $i++) {

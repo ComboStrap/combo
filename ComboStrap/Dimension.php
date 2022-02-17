@@ -49,6 +49,7 @@ class Dimension
      * and it's also passed in the fetch url
      */
     public const RATIO_ATTRIBUTE = "ratio";
+    const ZOOM_ATTRIBUTE = "zoom";
 
 
     /**

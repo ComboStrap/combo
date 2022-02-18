@@ -201,7 +201,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                         if ($attributes['suppress']) {
                             $substrPattern = '/' . $attributes['suppress'] . '/i';
                             $replacement = '';
-                            $name = preg_replace($substrPattern, $replacement, $link->getName());
+                            $name = preg_replace($substrPattern, $replacement, $link->getLabel());
                             $link->setName($name);
                         }
 
@@ -252,7 +252,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                             }
 
                             $miniMapList .= $link->toAttributes($renderer);
-                            $miniMapList .= $link->getName();
+                            $miniMapList .= $link->getLabel();
                             $miniMapList .= $link->renderClosingTag();
 
 
@@ -284,7 +284,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                     } else {
                         $startLink = new MarkupRef($startId);
                         $panelHeaderContent = $startLink->toAttributes($renderer);
-                        $panelHeaderContent .= $startLink->getName();
+                        $panelHeaderContent .= $startLink->getLabel();
                         $panelHeaderContent .= $startLink->renderClosingTag();
                         // We are not counting the header page
                         $pageNum--;

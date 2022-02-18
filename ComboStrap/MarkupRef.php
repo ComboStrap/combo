@@ -585,8 +585,7 @@ EOF;
         return $this->ref;
     }
 
-    public
-    function getName()
+    public function getLabel($navigation = false)
     {
 
         /**
@@ -603,23 +602,11 @@ EOF;
                     $name = TemplateUtility::renderStringTemplateForPageId($name, $this->dokuwikiUrl->getPath());
                 }
                 if (empty($name)) {
-                    $name = $this->getInternalPage()->getNameOrDefault();
-                    if (useHeading('content')) {
-                        $page = $this->getInternalPage();
-                        $h1 = $page->getH1();
-                        if (!empty($h1)) {
-                            $name = $h1;
-                        } else {
-                            /**
-                             * In dokuwiki by default, title = h1
-                             * If there is no h1, we take title
-                             * for backward compatibility
-                             */
-                            $title = $page->getTitle();
-                            if (!empty($title)) {
-                                $name = $title;
-                            }
-                        }
+
+                    if ($navigation) {
+                        return $this->getInternalPage()->getNameOrDefault();
+                    } else {
+                        return $this->getInternalPage()->getTitleOrDefault();
                     }
                 }
                 break;

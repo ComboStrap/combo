@@ -20,7 +20,7 @@ class action_plugin_combo_pageprimarymetamutation extends DokuWiki_Action_Plugin
 {
 
 
-    public const PRIMARY_META_MUTATION_EVENT_NAME = 'PAGE_PRIMARY_META_MUTATION';
+    public const PRIMARY_META_MUTATION_EVENT_NAME = 'page_primary_meta_mutation';
 
     public const PRIMARY_METAS = [PageTitle::PROPERTY_NAME, ResourceName::PROPERTY_NAME, PageH1::PROPERTY_NAME, PageDescription::DESCRIPTION_PROPERTY];
 
@@ -75,7 +75,11 @@ class action_plugin_combo_pageprimarymetamutation extends DokuWiki_Action_Plugin
          * Build the context back before getting the slots
          */
         $path = $data[PagePath::getPersistentName()];
-        CacheDependencies::reRenderSecondarySlotsIfNeeded($path, CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
+        CacheDependencies::reRenderSecondarySlotsIfNeeded(
+            $path,
+            CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY,
+            self::PRIMARY_META_MUTATION_EVENT_NAME
+        );
 
     }
 

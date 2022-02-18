@@ -3,6 +3,7 @@
 use ComboStrap\CacheDependencies;
 use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheExpirationFrequency;
+use ComboStrap\CacheLog;
 use ComboStrap\CacheManager;
 use ComboStrap\CacheMedia;
 use ComboStrap\CacheMenuItem;
@@ -10,6 +11,7 @@ use ComboStrap\CacheReportHtmlDataBlockArray;
 use ComboStrap\Cron;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCombo;
+use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
@@ -157,12 +159,24 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
             /**
              * Cache deletion
              */
-            $slot->getInstructionsDocument()->deleteIfExists();
-            $slot->getHtmlDocument()->deleteIfExists();
+            $message = "Expiration Date has expired";
+            CacheLog::deleteCacheIfExistsAndLog(
+                $slot->getInstructionsDocument(),
+                self::SLOT_CACHE_EXPIRATION_EVENT,
+                $message);
+            CacheLog::deleteCacheIfExistsAndLog(
+                $slot->getHtmlDocument(),
+                self::SLOT_CACHE_EXPIRATION_EVENT,
+                $message);
+
             /**
              * Re-render
              */
-            $slot->getHtmlDocument()->process();
+            CacheLog::renderCacheAndLog(
+                $slot->getHtmlDocument(),
+                self::SLOT_CACHE_EXPIRATION_EVENT,
+                $message);
+
         } finally {
             $ID = $keep;
         }

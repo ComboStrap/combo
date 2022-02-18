@@ -16,6 +16,8 @@ use dokuwiki\Cache\CacheParser;
  */
 class CacheManager
 {
+    const CACHE_DELETION = "deletion";
+    const CACHE_CREATION = "creation";
 
 
     /**
@@ -73,35 +75,6 @@ class CacheManager
     {
         self::reset();
         return self::getOrCreate();
-    }
-
-    /**
-     * @throws ExceptionCombo
-     */
-    public static function logCacheEvent(string $event, string $path, string $format, string $message)
-    {
-
-
-            $row = array(
-                "timestamp" => date("c"),
-                "event" => $event,
-                "path" => $path,
-                "format" => $format,
-                "message" => $message
-            );
-            $request = Sqlite::createOrGetBackendSqlite()
-                ->createRequest()
-                ->setTableRow('cache_log', $row);
-            try {
-                $request
-                    ->execute();
-            } finally {
-                $request->close();
-            }
-
-
-
-
     }
 
     /**

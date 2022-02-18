@@ -125,7 +125,11 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
          * Re-render
          */
         $path = $data[PagePath::getPersistentName()];
-        CacheDependencies::reRenderSecondarySlotsIfNeeded($path, CacheDependencies::PAGE_SYSTEM_DEPENDENCY);
+        CacheDependencies::reRenderSecondarySlotsIfNeeded(
+            $path,
+            CacheDependencies::PAGE_SYSTEM_DEPENDENCY,
+            self::PAGE_SYSTEM_MUTATION_EVENT_NAME
+        );
 
     }
 

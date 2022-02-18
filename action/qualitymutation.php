@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\CacheLog;
 use ComboStrap\CacheManager;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCombo;
@@ -63,21 +64,12 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
          */
         foreach ($page->getBacklinks() as $backlink) {
             $htmlDocument = $backlink->getHtmlDocument();
-            $backlinkHtmlFileDoc = $htmlDocument->getCachePath();
-            if (FileSystems::exists($backlinkHtmlFileDoc)) {
-                FileSystems::delete($backlinkHtmlFileDoc);
-                try {
-                    $desc = $data[self::DESC];
-                    CacheManager::logCacheEvent(
-                        self::QUALITY_MUTATION_EVENT_NAME,
-                        $backlink->getDokuwikiId(),
-                        $htmlDocument->getExtension(),
-                        "The {$backlink->getDokuwikiId()} of {$path} had its HTML cache deleted ($desc).");
-                } catch (ExceptionCombo $e) {
-                    // we don't throw to let the next event run
-                    LogUtility::msg("Error while trying to insert the log", self::CANONICAL);
-                }
-            }
+            $desc = $data[self::DESC];
+            CacheLog::deleteCacheIfExistsAndLog(
+                $htmlDocument,
+                self::QUALITY_MUTATION_EVENT_NAME,
+                "The {$backlink->getDokuwikiId()} of {$path} had its HTML cache deleted ($desc)."
+            );
         }
     }
 

@@ -1,20 +1,13 @@
 <?php
-// must be run within Dokuwiki
+
 use ComboStrap\LogUtility;
 use ComboStrap\PageRules;
 use ComboStrap\PluginUtility;
-use ComboStrap\Resources;
 use ComboStrap\Site;
 
-if (!defined('DOKU_INC')) die();
 
-if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
-
-require_once(DOKU_PLUGIN . 'admin.php');
-require_once(DOKU_INC . 'inc/parser/xhtml.php');
-require_once(__DIR__ . '/../ComboStrap/PageRules.php');
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
-require_once(__DIR__ . '/../ComboStrap/Resources.php');
+
 
 /**
  * The admin pages

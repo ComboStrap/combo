@@ -1,6 +1,8 @@
 <?php
 
 use ComboStrap\CacheDependencies;
+use ComboStrap\CacheLog;
+use ComboStrap\CacheManager;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
@@ -21,7 +23,7 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
 {
 
 
-    public const BACKLINK_MUTATION_EVENT_NAME = 'BACKLINK_MUTATION';
+    public const BACKLINK_MUTATION_EVENT_NAME = 'backlink_mutation';
 
 
     public function register(Doku_Event_Handler $controller)
@@ -57,7 +59,11 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         /**
          * Delete and recompute analytics
          */
-        FileSystems::deleteIfExists($reference->getAnalyticsDocument()->getCachePath());
+        CacheLog::deleteCacheIfExistsAndLog(
+            $reference->getAnalyticsDocument(),
+            self::BACKLINK_MUTATION_EVENT_NAME,
+            "Backlink mutation"
+        );
         try {
             $reference->getDatabasePage()->replicateAnalytics();
         } catch (ExceptionCombo $e) {
@@ -67,7 +73,11 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         /**
          * Render the (footer slot) if it has a backlink dependency
          */
-        CacheDependencies::reRenderSecondarySlotsIfNeeded($pagePath, CacheDependencies::BACKLINKS_DEPENDENCY);
+        CacheDependencies::reRenderSecondarySlotsIfNeeded(
+            $pagePath,
+            CacheDependencies::BACKLINKS_DEPENDENCY,
+            self::BACKLINK_MUTATION_EVENT_NAME
+        );
 
 
 

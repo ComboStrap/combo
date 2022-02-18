@@ -101,11 +101,6 @@ abstract class PageCompilerDocument implements CachedDocument
     }
 
 
-    public function deleteIfExists(): PageCompilerDocument
-    {
-        FileSystems::deleteIfExists($this->getCachePath());
-        return $this;
-    }
 
     /**
      * @param $content

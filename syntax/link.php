@@ -357,7 +357,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     $href = $openingTag->getAttribute(self::ATTRIBUTE_HREF);
                     if ($href !== null) {
                         $markup = MarkupRef::createFromRef($href);
-                        $linkLabel = $markup->getName();
+                        $linkLabel = $markup->getLabel();
                     }
                 }
                 return array(

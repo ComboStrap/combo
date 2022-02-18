@@ -131,8 +131,9 @@ class CacheDependencies
      * (ie {@link CacheDependencies::PAGE_SYSTEM_DEPENDENCY} or {@link CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY})
      * @param $path
      * @param string $dependency -  a {@link CacheDependencies} ie
+     * @param string $event
      */
-    public static function reRenderSecondarySlotsIfNeeded($path, string $dependency)
+    public static function reRenderSecondarySlotsIfNeeded($path, string $dependency, string $event)
     {
         global $ID;
         $keep = $ID;
@@ -147,8 +148,18 @@ class CacheDependencies
                 $htmlDocument = $secondarySlot->getHtmlDocument();
                 $cacheDependencies = $htmlDocument->getCacheDependencies();
                 if ($cacheDependencies->hasDependency($dependency)) {
-                    FileSystems::deleteIfExists($htmlDocument->getCachePath());
-                    $htmlDocument->process();
+                    $link = PluginUtility::getDocumentationHyperLink("cache:slot","Slot Dependency", false);
+                    $message = "$link ($dependency) was met with the primary slot ($path).";
+                    CacheLog::deleteCacheIfExistsAndLog(
+                        $htmlDocument,
+                        $event,
+                        $message
+                    );
+                    CacheLog::renderCacheAndLog(
+                        $htmlDocument,
+                        $event,
+                        $message
+                    );
                 }
             }
         } finally {
@@ -221,7 +232,7 @@ class CacheDependencies
         if ($runtimeDependencies !== null) {
 
             foreach ($runtimeDependencies as $dependency) {
-                if(in_array($dependency,self::OUTPUT_DEPENDENCIES)) {
+                if (in_array($dependency, self::OUTPUT_DEPENDENCIES)) {
                     $dependencyKey .= self::getValueForKey($dependency);
                 }
             }

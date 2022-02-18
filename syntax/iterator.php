@@ -374,6 +374,9 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                              */
                             $id = $sourceRow["ID"];
                             $page = Page::createPageFromId($id);
+                            if($page->isHidden()){
+                                continue;
+                            }
                             $standardMetadata = $page->getMetadataForRendering();
 
                             $jsonArray = json_decode($analytics, true);

@@ -2058,4 +2058,10 @@ class Page extends ResourceComboAbs
     }
 
 
+    public function isHidden(): bool
+    {
+        return isHiddenPage($this->getDokuwikiId());
+    }
+
+
 }

@@ -156,7 +156,19 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                      */
                     $backgroundColor = $tagAttributes->getValue(ColorRgb::BACKGROUND_COLOR);
                     if ($backgroundColor === null) {
-                        $backgroundColor = $colorObject->scale(-80)->toCssValue();
+                        try {
+                            $backgroundColor = $colorObject
+                                ->scale(-80)
+                                ->toHsl()
+                                ->setLightness(80)
+                                ->toRgb()
+                                ->toCssValue();
+                        } catch (ExceptionCombo $e) {
+                            LogUtility::msg("Error while trying to set the lightness for the badge background color");
+                            $backgroundColor = $colorObject
+                                ->scale(-80)
+                                ->toCssValue();
+                        }
                         $tagAttributes->addStyleDeclarationIfNotSet(ColorRgb::BACKGROUND_COLOR, $backgroundColor);
                     }
                     if (!$tagAttributes->hasComponentAttribute(ColorRgb::BORDER_COLOR)) {

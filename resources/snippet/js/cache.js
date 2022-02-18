@@ -62,7 +62,7 @@ window.addEventListener("DOMContentLoaded", function () {
                                 checkedBox = "checked";
                             }
                             let hitHtml = ` <input type="checkbox" class="form-check-input" disabled ${checkedBox}>`
-                            let mtime = result["mtime"];
+                            let mtime = combo.comboDate.createFromIso(result["mtime"]).toSqlTimestampString();
                             let dependencies = "";
                             let dependency = result["dependency"];
                             if (typeof dependency !== 'undefined') {

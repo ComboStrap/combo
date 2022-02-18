@@ -3,6 +3,7 @@ import Html from "./Html";
 import ComboModal from "./ComboModal";
 import {DokuAjaxRequest, DokuUrl} from "./DokuRequest";
 import FormMetaField from "./FormMetaField";
+import ComboDate from "./ComboDate";
 
 window['combo'] = class combo {
 
@@ -10,6 +11,7 @@ window['combo'] = class combo {
         return Html.toHtmlId(name)
     }
 
+    static comboDate = ComboDate;
 
     static getOrCreateModal(id) {
         return ComboModal.getOrCreate(id);

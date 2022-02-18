@@ -430,18 +430,6 @@ class Page extends ResourceComboAbs
     }
 
 
-    public
-    function deleteCache()
-    {
-
-        if ($this->exists()) {
-
-            $this->getInstructionsDocument()->deleteIfExists();
-            $this->getHtmlDocument()->deleteIfExists();
-            $this->getAnalyticsDocument()->deleteIfExists();
-
-        }
-    }
 
     public
     function getHtmlDocument(): HtmlDocument
@@ -1287,7 +1275,6 @@ class Page extends ResourceComboAbs
     public
     function setLowQualityIndicatorCalculation($bool): Page
     {
-
         return $this->setQualityIndicatorAndDeleteCacheIfNeeded($this->lowQualityIndicatorCalculated, $bool);
     }
 
@@ -1306,22 +1293,9 @@ class Page extends ResourceComboAbs
     {
         $actualValue = $lowQualityAttributeName->getValue();
         if ($actualValue === null || $value !== $actualValue) {
-            $beforeLowQualityPage = $this->isLowQualityPage();
             $lowQualityAttributeName
                 ->setValue($value)
                 ->persist();
-            $afterLowQualityPage = $this->isLowQualityPage();
-            if ($beforeLowQualityPage !== $afterLowQualityPage) {
-                /**
-                 * Delete the html document cache to rewrite the links
-                 * if the protection is on
-                 */
-                if (Site::isLowQualityProtectionEnable()) {
-                    foreach ($this->getBacklinks() as $backlink) {
-                        $backlink->getHtmlDocument()->deleteIfExists();
-                    }
-                }
-            }
         }
         return $this;
     }
@@ -2066,6 +2040,9 @@ class Page extends ResourceComboAbs
 
     }
 
+    /**
+     * @return Page[]
+     */
     public function getSecondarySlots(): array
     {
         $secondarySlots = [];

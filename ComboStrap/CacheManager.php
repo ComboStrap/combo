@@ -76,6 +76,35 @@ class CacheManager
     }
 
     /**
+     * @throws ExceptionCombo
+     */
+    public static function logCacheEvent(string $event, string $path, string $format, string $message)
+    {
+
+
+            $row = array(
+                "timestamp" => date("c"),
+                "event" => $event,
+                "path" => $path,
+                "format" => $format,
+                "message" => $message
+            );
+            $request = Sqlite::createOrGetBackendSqlite()
+                ->createRequest()
+                ->setTableRow('cache_log', $row);
+            try {
+                $request
+                    ->execute();
+            } finally {
+                $request->close();
+            }
+
+
+
+
+    }
+
+    /**
      * @param $id
      * @return CacheDependencies
      */

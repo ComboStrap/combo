@@ -5,7 +5,6 @@ namespace ComboStrap;
 
 
 use dokuwiki\Cache\CacheParser;
-use dokuwiki\Cache\CacheRenderer;
 
 class HtmlDocument extends OutputDocument
 {
@@ -23,7 +22,6 @@ class HtmlDocument extends OutputDocument
     /**
      * HtmlDocument constructor.
      * @param Page $page
-     * @throws ExceptionCombo
      */
     public function __construct(Page $page)
     {
@@ -198,24 +196,6 @@ class HtmlDocument extends OutputDocument
     public function getCacheDependencies(): CacheDependencies
     {
         return $this->cacheDependencies;
-    }
-
-
-    /**
-     * Logical cache based on the cache dependencies (ie current namespace, user)
-     *
-     * We don't use {@link CacheRenderer}
-     * because the cache key is the physical file
-     */
-    private function getHtmlCache()
-    {
-
-        $slotId = $this->getPage()->getDokuwikiId();
-        $file = $this->getPage()->getPath()->toLocalPath()->toString();
-        $this->cache = new CacheRenderer($slotId, $file, self::mode);
-
-
-
     }
 
 }

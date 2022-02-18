@@ -61,6 +61,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      * When the value of a metadata has changed
      */
     public const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
+    const NEW_VALUE_ATTRIBUTE = "new_value";
 
     /**
      *
@@ -342,7 +343,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
              */
             $data = [
                 "name" => $key,
-                "new_value" => $value,
+                self::NEW_VALUE_ATTRIBUTE => $value,
                 "old_value" => $oldValue,
                 PagePath::getPersistentName() => ":$wikiId"
             ];

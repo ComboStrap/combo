@@ -158,7 +158,7 @@ window.addEventListener("DOMContentLoaded", function () {
                 /**
                  * Send a cron request to re-render if any
                  */
-                fetch(combo.getRunnerUrl().toString(), {method: "GET"})
+                fetch(combo.DokuUrl.createRunner().toString(), {method: "GET"})
                     .then((response) => {
                             if (response.status !== 200) {
                                 console.error('Bad runner request, status Code is: ' + response.status);

@@ -30,7 +30,7 @@ window.addEventListener("DOMContentLoaded", function () {
                         .slice("/*<![CDATA[*/".length)
                         .slice(0, -("/*!]]>*/".length));
 
-                    html += `<table class="table table-striped table-hover text-nowrap overflow-auto"><thead><th>Slot</th><th>Output</th><th>Cache <br/>Hit</th><th title="Modification time of the cache file">Modification <br/>Time</th><th>Cache Deps</th></thead>`;
+                    html += `<table class="table table-striped table-hover text-nowrap overflow-auto"><thead><th>Slot</th><th>Output</th><th>Cache <br/>Hit</th><th title="Modification time of the cache file">Modification <br/>Time</th><th>Cache Deps</th><th>Cache File</th></thead>`;
                     let cachePageJson = JSON.parse(cachePageJsonString);
                     for (let slot in cachePageJson) {
                         if (!cachePageJson.hasOwnProperty(slot)) {
@@ -39,7 +39,8 @@ window.addEventListener("DOMContentLoaded", function () {
 
                         let formatResults = cachePageJson[slot];
                         let outputCounterBySlot = 0;
-                        let slotLabel = slot;
+                        let slotUrl = combo.DokuUrl.createEdit(slot).toString()
+                        let slotLabel = `<a href="${slotUrl}" title="Edit the slot ${slot}">${slot}</a>`;
                         for (let formatResult in formatResults) {
                             if (!formatResults.hasOwnProperty(formatResult)) {
                                 continue;
@@ -63,12 +64,19 @@ window.addEventListener("DOMContentLoaded", function () {
                             }
                             let hitHtml = ` <input type="checkbox" class="form-check-input" disabled ${checkedBox}>`
                             let mtime = combo.comboDate.createFromIso(result["mtime"]).toSqlTimestampString();
+                            let file = result["file"];
+                            let fileLabel = file.substr(file.indexOf(':') + 1, file.lastIndexOf('.') - 2);
+                            let fileUrl = combo.DokuUrl
+                                .createFetch(file,'cache')
+                                .toString();
+                            let fileAnchor = `<a href="${fileUrl}">${fileLabel}</a>`;
+
                             let dependencies = "";
                             let dependency = result["dependency"];
                             if (typeof dependency !== 'undefined') {
                                 dependencies = dependency.join(", ");
                             }
-                            html += `<tr><td>${slotLabel}</td><td>${styledFormatResult}</td><td>${hitHtml}</td><td>${mtime}</td><td>${dependencies}</td></tr>`;
+                            html += `<tr><td>${slotLabel}</td><td>${styledFormatResult}</td><td>${hitHtml}</td><td>${mtime}</td><td>${dependencies}</td><td>${fileAnchor}</td></tr>`;
                         }
                     }
                     html += '</table><hr/>';

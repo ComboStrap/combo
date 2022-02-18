@@ -65,15 +65,15 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if (!isset($_GET[DokuPath::DRIVE_ATTRIBUTE])) {
             return;
         }
-        $library = $_GET[DokuPath::DRIVE_ATTRIBUTE];
-        if ($library !== DokuPath::COMBO_DRIVE) {
+        $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
+        if (!in_array($drive,  DokuPath::DRIVES)) {
             // The other resources have ACL
             // and this endpoint is normally only for
             $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
             return;
         }
         $mediaId = $event->data['media'];
-        $mediaPath = DokuPath::createDokuPath($mediaId, $library);
+        $mediaPath = DokuPath::createDokuPath($mediaId, $drive);
         $event->data['file'] = $mediaPath->toLocalPath()->toAbsolutePath()->toString();
         if (FileSystems::exists($mediaPath)) {
             $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;

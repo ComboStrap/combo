@@ -59,6 +59,7 @@ class DokuPath extends PathAbs
      */
     const COMBO_DRIVE = "combo";
     const CACHE_DRIVE = "cache";
+    const DRIVES = [self::COMBO_DRIVE, self::CACHE_DRIVE, self::MEDIA_DRIVE];
 
     /**
      * @var string[]

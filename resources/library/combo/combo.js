@@ -12,6 +12,7 @@ window['combo'] = class combo {
     }
 
     static comboDate = ComboDate;
+    static DokuUrl = DokuUrl;
 
     static getOrCreateModal(id) {
         return ComboModal.getOrCreate(id);

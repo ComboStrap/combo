@@ -34,9 +34,16 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
     const TAG = 'carrousel';
     const CANONICAL = self::TAG;
-    const ELEMENT_WIDTH = "element-width";
+    const ELEMENT_WIDTH_ATTRIBUTE = "element-width";
     const CONTROL_ATTRIBUTE = "control";
     const GLIDE_SLIDE_CLASS = "glide__slide";
+
+    /**
+     * The number of element
+     * (we get it by scanning the element or
+     * via the {@link syntax_plugin_combo_iterator} that set it up)
+     */
+    const BULLET_COUNT = "bullet-count";
 
     /**
      * Glide copy the HTML element and lozad does not see element that are not visible
@@ -139,9 +146,16 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
                 $tagAttributes = TagAttributes::createFromTagMatch($match);
+                $callStack = CallStack::createFromHandler($handler);
+                $parent = $callStack->moveToParent();
+                $context = null;
+                if ($parent !== false) {
+                    $context = $parent->getTagName();
+                }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
+                    PluginUtility::CONTEXT => $context
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -154,6 +168,7 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $actualCall = $callStack->moveToFirstChildTag();
+                $childrenCount = null;
                 if ($actualCall !== false) {
                     if ($actualCall->getTagName() === syntax_plugin_combo_template::TAG) {
                         $templateEndCall = $callStack->moveToNextCorrespondingExitTag();
@@ -173,8 +188,10 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                         }
                     } else {
                         $actualCall->addClassName(self::GLIDE_SLIDE_CLASS);
+                        $childrenCount = 1;
                         while ($actualCall = $callStack->moveToNextSiblingTag()) {
                             $actualCall->addClassName(self::GLIDE_SLIDE_CLASS);
+                            $childrenCount++;
                         }
                         // Lazy load
                         $callStack->moveToEnd();
@@ -184,7 +201,8 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                 }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $openingCall->getAttributes()
+                    PluginUtility::ATTRIBUTES => $openingCall->getAttributes(),
+                    self::BULLET_COUNT => $childrenCount
                 );
 
 
@@ -216,12 +234,12 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
 
-                    $slideMinimalWidth = $tagAttributes->getValueAndRemoveIfPresent(self::ELEMENT_WIDTH);
+                    $slideMinimalWidth = $tagAttributes->getValueAndRemoveIfPresent(self::ELEMENT_WIDTH_ATTRIBUTE);
                     $slideMinimalWidthData = "";
                     try {
                         if ($slideMinimalWidth !== null) {
                             $slideMinimalWidth = Dimension::toPixelValue($slideMinimalWidth);
-                            $slideMinimalWidthData = "data-".self::ELEMENT_WIDTH."=\"$slideMinimalWidth\"";
+                            $slideMinimalWidthData = "data-" . self::ELEMENT_WIDTH_ATTRIBUTE . "=\"$slideMinimalWidth\"";
                         }
                     } catch (ExceptionCombo $e) {
                         $slideMinimalWidth = 200;
@@ -303,9 +321,18 @@ EOF;
     </button>
   </div>
   <div class="glide__bullets" data-glide-el="controls[nav]">
-      <button class="glide__bullet glide__bullet--active" data-glide-dir="=0"></button>
-      <button class="glide__bullet" data-glide-dir="=1"></button>
-      <button class="glide__bullet" data-glide-dir="=2"></button>
+EOF;
+                        $elementCount = $data[self::BULLET_COUNT];
+                        for ($i = 0; $i < $elementCount; $i++) {
+                            $activeClass = "";
+                            if ($i === 0) {
+                                $activeClass = " glide__bullet--activeClass";
+                            }
+                            $renderer->doc .= <<<EOF
+    <button class="glide__bullet{$activeClass}" data-glide-dir="={$i}"></button>
+EOF;
+                        }
+                        $renderer->doc .= <<<EOF
   </div>
 </div>
 EOF;

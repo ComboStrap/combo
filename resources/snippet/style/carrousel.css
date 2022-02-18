@@ -38,6 +38,7 @@
     z-index: 2;
     bottom: 1em;
     left: 50%;
+    transform: translate(-50%, 0);
 }
 .glide__bullet {
     background-color: rgba(0, 0, 0, 0.3);

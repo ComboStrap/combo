@@ -81,6 +81,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
     const TEMPLATE_CALLSTACK = "template-callstack";
 
 
+
     /**
      * Syntax Type.
      *
@@ -374,7 +375,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                              */
                             $id = $sourceRow["ID"];
                             $page = Page::createPageFromId($id);
-                            if($page->isHidden()){
+                            if ($page->isHidden()) {
                                 continue;
                             }
                             $standardMetadata = $page->getMetadataForRendering();
@@ -434,11 +435,13 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     /**
                      * Loop
                      */
-                    if (sizeof($rows) == 0) {
+                    $elementCounts = sizeof($rows);
+                    if ($elementCounts === 0) {
                         $parametersString = implode($parameters, ", ");
                         LogUtility::msg("The physical query (Sql: {$pageSql->getExecutableSql()}, Parameters: $parametersString) does not return any data", LogUtility::LVL_MSG_INFO, syntax_plugin_combo_iterator::CANONICAL);
                         return true;
                     }
+
 
                     /**
                      * Template stack processing
@@ -550,16 +553,34 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     }
                     // content
                     if (!empty($iteratorTemplateGeneratedInstructions)) {
-                        $totalInstructions = array_merge($totalInstructions,$iteratorTemplateGeneratedInstructions);
+                        $totalInstructions = array_merge($totalInstructions, $iteratorTemplateGeneratedInstructions);
                     }
                     // footer
                     $callStackFooterInstructions = $data[self::AFTER_TEMPLATE_CALLSTACK];
                     if (!empty($callStackFooterInstructions)) {
-                        $totalInstructions = array_merge($totalInstructions,$callStackFooterInstructions);
+                        $totalInstructions = array_merge($totalInstructions, $callStackFooterInstructions);
                     }
                     if (!empty($totalInstructions)) {
+
+                        /**
+                         * Advertise the total count to the
+                         * {@link syntax_plugin_combo_carrousel}
+                         * for the bullets if any
+                         */
+                        $totalCallStack = CallStack::createFromInstructions($totalInstructions);
+                        $totalCallStack->moveToEnd();
+                        while($actualCall = $totalCallStack->previous()){
+                            if(
+                                $actualCall->getTagName()===syntax_plugin_combo_carrousel::TAG
+                                && $actualCall->getState() ===DOKU_LEXER_EXIT
+                            ) {
+                                $actualCall->setPluginData(syntax_plugin_combo_carrousel::BULLET_COUNT,$elementCounts);
+                                break;
+                            }
+                        }
+
                         try {
-                            $renderer->doc .= PluginUtility::renderInstructionsToXhtml($totalInstructions);
+                            $renderer->doc .= PluginUtility::renderInstructionsToXhtml($totalCallStack->getStack());
                         } catch (ExceptionCombo $e) {
                             $renderer->doc .= "Error while rendering the iterators instructions. Error: {$e->getMessage()}";
                         }

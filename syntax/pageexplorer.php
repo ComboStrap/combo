@@ -76,6 +76,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     const PARENT_ATTRIBUTES = "parent-attributes";
     const HOME_TYPE = "home";
     const PAGE_TYPE = "page";
+    const LEVEL_UP_ICON = "images:page-explorer-icons8-level-up";
+    const FOLDER_ICON = "images:page-explorer-folder";
 
     /**
      * A counter/index that keeps
@@ -519,12 +521,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             if (!($parentInstructions === null && $parentAttributes !== null)) {
                                 $parentPage = FsWikiUtility::getParentPagePath($namespacePath);
                                 if ($parentPage !== null && $parentPage->exists()) {
-                                    try {
-                                        $parentAttributes = TagAttributes::createFromCallStackArray($data[self::PARENT_ATTRIBUTES]);
-                                    } catch (ExceptionCombo $e) {
-                                        $renderer->doc .= LogUtility::wrapInRedForHtml("Error while creating the parent tag. Error: {$e->getMessage()}");
-                                        return false;
-                                    }
+
+                                    $parentAttributes = TagAttributes::createFromCallStackArray($data[self::PARENT_ATTRIBUTES]);
                                     /**
                                      * Enter parent tag
                                      */
@@ -548,9 +546,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                             $renderer->doc .= MarkupRef::createFromPageId($parentPage->getDokuwikiId())
                                                 ->toAttributes()
                                                 ->toHtmlEnterTag("a");
-                                            $renderer->doc .= Icon::createFromComboResource("images:page-explorer-arrow-left-box")
+                                            $renderer->doc .= Icon::createFromComboResource(self::LEVEL_UP_ICON)
                                                 ->render();
-                                            $renderer->doc .= "... {$parentPage->getNameOrDefault()}</a>";
+                                            $renderer->doc .= " {$parentPage->getNameOrDefault()}</a>";
                                         } catch (ExceptionCombo $e) {
                                             $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default parent. Error: {$e->getMessage()}");
                                         }
@@ -614,7 +612,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                                     $renderer->doc .= MarkupRef::createFromPageId($subNamespacePage->getDokuwikiId())
                                                         ->toAttributes()
                                                         ->toHtmlEnterTag("a");
-                                                    $renderer->doc .= Icon::createFromComboResource("images:page-explorer-folder")
+                                                    $renderer->doc .= Icon::createFromComboResource(self::FOLDER_ICON)
                                                         ->render();
                                                     $renderer->doc .= " {$subNamespacePage->getNameOrDefault()}</a>";
                                                 } catch (ExceptionCombo $e) {
@@ -895,7 +893,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             return;
         }
         $page = Page::createPageFromQualifiedPath($pageOrNamespacePath);
-        if(!FileSystems::exists($page->getPath())){
+        if (!FileSystems::exists($page->getPath())) {
             return;
         }
 

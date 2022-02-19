@@ -261,27 +261,34 @@ EOF;
                     $snippetManager->attachCssSnippetForSlot($snippetId);
                     $snippetManager->attachJavascriptSnippetForSlot($snippetId);
                     // https://www.jsdelivr.com/package/npm/@glidejs/glide
-                    $snippetManager->attachTagsForSlot($snippetId)->setTags(
-                        array(
-                            "script" =>
-                                [
-                                    array(
-                                        "src" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.min.js",
-                                        "integrity" => "sha256-cXguqBvlUaDoW4nGjs4YamNC2mlLGJUOl64bhts/ztU=",
-                                        "crossorigin" => "anonymous"
-                                    )
-                                ],
-                            "link" =>
-                                [
-                                    array(
-                                        "rel" => "stylesheet",
-                                        "href" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
-                                        "integrity" => "sha256-bmdlmBAVo1Q6XV2cHiyaBuBfe9KgYQhCrfQmoRq8+Sg=",
-                                        "crossorigin" => "anonymous"
-                                    )
-                                ]
-                        ));
-                    // Theme customized from the official theme
+                    $tags["link"][] =
+                        [
+                            "rel" => "stylesheet",
+                            "href" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
+                            "integrity" => "sha256-bmdlmBAVo1Q6XV2cHiyaBuBfe9KgYQhCrfQmoRq8+Sg=",
+                            "crossorigin" => "anonymous"
+                        ];
+
+                    if (PluginUtility::isDevOrTest()) {
+
+                        $tags["script"][] = [
+                            "src" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.js",
+                            "integrity" => "sha256-zkYoJ1XwwGA4FbdmSdTz28y5PtHT8O/ZKzUAuQsmhKg=",
+                            "crossorigin" => "anonymous"
+                        ];
+
+                    } else {
+
+                        $tags["script"][] = [
+                            "src" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.min.js",
+                            "integrity" => "sha256-cXguqBvlUaDoW4nGjs4YamNC2mlLGJUOl64bhts/ztU=",
+                            "crossorigin" => "anonymous"
+                        ];
+
+                    }
+                    $snippetManager->attachTagsForSlot($snippetId)->setTags($tags);
+
+                    // Theme customized from the below official theme
                     // https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.theme.css
                     $snippetManager->attachCssSnippetForSlot($snippetId)
                         ->setCritical(false);
@@ -302,13 +309,13 @@ EOF;
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     $control = $tagAttributes->getValue(self::CONTROL_ATTRIBUTE);
                     if ($control !== "none") {
-                        $escapedLessThan = PluginUtility::htmlEncode("<");
-                        $escapedGreaterThan = PluginUtility::htmlEncode(">");
+                        $escapedLessThan = PluginUtility::htmlEncode("|<");
+                        $escapedGreaterThan = PluginUtility::htmlEncode("|>");
 
 
                         $renderer->doc .= <<<EOF
 <div>
-  <div data-glide-el="controls">
+  <div class="d-none d-sm-block" data-glide-el="controls">
     <button class="glide__arrow glide__arrow--left" data-glide-dir="$escapedLessThan">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
         <path d="M0 12l10.975 11 2.848-2.828-6.176-6.176H24v-3.992H7.646l6.176-6.176L10.975 1 0 12z"></path>
@@ -320,7 +327,7 @@ EOF;
       </svg>
     </button>
   </div>
-  <div class="glide__bullets" data-glide-el="controls[nav]">
+  <div class="glide__bullets d-none d-sm-block" data-glide-el="controls[nav]">
 EOF;
                         $elementCount = $data[self::BULLET_COUNT];
                         for ($i = 0; $i < $elementCount; $i++) {

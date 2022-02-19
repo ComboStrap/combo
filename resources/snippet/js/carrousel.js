@@ -11,6 +11,7 @@ window.addEventListener('load', function () {
             let offsetWidth = slider.offsetWidth;
             perView = Math.floor(offsetWidth / elementMinimalWidth);
         }
+        perView = perView+1.5;
         let glide = new Glide(slider, {
             type: 'carousel',
             perView: perView

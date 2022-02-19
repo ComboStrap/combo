@@ -162,7 +162,7 @@ class Dimension
                                 /**
                                  * Css of the button and other standard attribute
                                  */
-                                PluginUtility::getSnippetManager()->attachCssSnippetForSlot("height-toggle");
+                                PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("height-toggle");
                                 /**
                                  * Set the color dynamically to the color of the parent
                                  */
@@ -177,7 +177,7 @@ class Dimension
   transition: height .35s ease;
 }
 EOF;
-                                PluginUtility::getSnippetManager()->attachCssSnippetForSlot("height-toggle-show", $css);
+                                PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("height-toggle-show", $css);
                                 $bootstrapDataNameSpace = Bootstrap::getDataNamespace();
                                 $button = <<<EOF
 <button class="height-toggle-combo" data$bootstrapDataNameSpace-toggle="collapse" data$bootstrapDataNameSpace-target="#$id" aria-expanded="false"></button>

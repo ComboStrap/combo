@@ -258,7 +258,7 @@ EOF;
                     $snippetManager = PluginUtility::getSnippetManager();
                     $snippetId = self::TAG;
 
-                    $snippetManager->attachCssSnippetForSlot($snippetId);
+                    $snippetManager->attachCssInternalStyleSheetForSlot($snippetId);
                     $snippetManager->attachJavascriptSnippetForSlot($snippetId);
                     // https://www.jsdelivr.com/package/npm/@glidejs/glide
                     $snippetManager->attachCssStyleSheetForSlot($snippetId,
@@ -283,7 +283,7 @@ EOF;
 
                     // Theme customized from the below official theme
                     // https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.theme.css
-                    $snippetManager->attachCssSnippetForSlot($snippetId)
+                    $snippetManager->attachCssInternalStyleSheetForSlot($snippetId)
                         ->setCritical(false);
                     break;
 

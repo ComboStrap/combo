@@ -297,7 +297,7 @@ EOF;
         return $this->type;
     }
 
-    public function setUrl(string $url, string $integrity): Snippet
+    public function setUrl(string $url, ?string $integrity): Snippet
     {
         $this->url = $url;
         $this->integrity = $integrity;

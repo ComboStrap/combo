@@ -260,7 +260,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                  * CSS if dokuwiki class name for link
                  */
                 if ($this->getConf(MarkupRef::CONF_USE_DOKUWIKI_CLASS_NAME, false)) {
-                    PluginUtility::getSnippetManager()->attachCssSnippetForSlot(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
                 }
 
                 /**

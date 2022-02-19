@@ -71,7 +71,7 @@ EOF;
             $position = strtolower($attributes->getValueAndRemove(self::POSITION_ATTRIBUTE));
             if (Bootstrap::getBootStrapMajorVersion() < Bootstrap::BootStrapFiveMajorVersion) {
                 $snippetManager = PluginUtility::getSnippetManager();
-                $snippetManager->attachCssSnippetForSlot(self::POSITION_SNIPPET_ID);
+                $snippetManager->attachCssInternalStyleSheetForSlot(self::POSITION_SNIPPET_ID);
             }
 
             // Class value comes from
@@ -147,6 +147,6 @@ EOF;
     private static function addQuartileCss()
     {
         $snippetManager = PluginUtility::getSnippetManager();
-        $snippetManager->attachCssSnippetForSlot(self::POSITION_QUARTILE_SNIPPET_ID);
+        $snippetManager->attachCssInternalStyleSheetForSlot(self::POSITION_QUARTILE_SNIPPET_ID);
     }
 }

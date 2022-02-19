@@ -496,7 +496,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                     }
 
 
-                    PluginUtility::getSnippetManager()->attachCssSnippetForSlot(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
 
                     /**
                      * The iframe does not have any width

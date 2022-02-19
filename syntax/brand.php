@@ -412,7 +412,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                         return false;
                     }
                     $snippetId = $brandButton->getStyleScriptIdentifier();
-                    PluginUtility::getSnippetManager()->attachCssSnippetForSlot($snippetId, $style);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($snippetId, $style);
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);

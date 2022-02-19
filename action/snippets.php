@@ -76,7 +76,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * Fighting the fact that in 7.2,
          * there is still a cache
          */
-        SnippetManager::init();
+        SnippetManager::reset();
 
     }
 

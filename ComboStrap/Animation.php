@@ -73,7 +73,7 @@ class Animation
         $wowClass = "wow";
         $wowSnippetId = "wow";
         PluginUtility::addClass2Attributes($wowClass, $attributes);
-        $snippetManager->attachCssSnippetForSlot($wowSnippetId);
+        $snippetManager->attachCssInternalStyleSheetForSlot($wowSnippetId);
 
 
         $animateClass = self::ANIMATE_CLASS;

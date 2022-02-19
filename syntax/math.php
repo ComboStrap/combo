@@ -120,7 +120,7 @@ class syntax_plugin_combo_math extends DokuWiki_Syntax_Plugin
                  * CSS
                  */
                 $snippetManager = PluginUtility::getSnippetManager();
-                $snippetManager->attachCssSnippetForSlot(self::TAG);
+                $snippetManager->attachCssInternalStyleSheetForSlot(self::TAG);
 
                 /**
                  * Javascript config

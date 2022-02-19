@@ -113,7 +113,7 @@ class LogUtility
      * @param int $logLevel
      * @param null $canonical
      */
-    static function log2file(?string $msg, int $logLevel = self::LVL_MSG_INFO, $canonical = null)
+    static function log2file(?string $msg, int $logLevel = self::LVL_MSG_ERROR, $canonical = null)
     {
 
         try {

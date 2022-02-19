@@ -39,6 +39,13 @@ class SnippetManager
      */
     const SCRIPT_IDENTIFIER = "script";
 
+    const CANONICAL = "snippet-manager";
+
+    /**
+     * @var SnippetManager array that contains one element (one {@link SnippetManager} scoped to the requested id
+     */
+    private static $componentScript;
+
 
     /**
      *
@@ -48,8 +55,8 @@ class SnippetManager
      * may render at the same time due to the other been cached.
      *
      * There is two scope:
-     *   * {@link SnippetManager::$snippetsBySlotScope}
-     *   * or {@link SnippetManager::$snippetsByRequestScope}
+     *   * {@link SnippetManager::$snippetsBySlotScope} - cached
+     *   * or {@link SnippetManager::$snippetsByRequestScope} - never cached
      */
 
     /**
@@ -73,10 +80,9 @@ class SnippetManager
     private $snippetsByRequestScope = array();
 
 
-    public static function init()
+    public static function reset()
     {
-        global $componentScript;
-        $componentScript = new SnippetManager();
+        self::$componentScript = null;
     }
 
 
@@ -92,20 +98,28 @@ class SnippetManager
     }
 
 
-
-
-
     /**
      * @return SnippetManager - the global reference
-     * that is set for every run at the end of this fille
+     * that is set for every run at the end of this file
      */
-    public static function get(): SnippetManager
+    public static function getOrCreate(): SnippetManager
     {
-        global $componentScript;
-        if (empty($componentScript)) {
-            SnippetManager::init();
+        $id = PluginUtility::getRequestedWikiId();
+        if ($id === null) {
+            if (PluginUtility::isTest()) {
+                $id = "test_dynamic_script_execution";
+            } else {
+                LogUtility::msg("The requested Id could not be found, the snippets may not be scoped properly");
+            }
         }
-        return $componentScript;
+
+        $snippetManager = self::$componentScript[$id];
+        if ($snippetManager === null) {
+            self::$componentScript = null; // delete old snippet manager for other request
+            $snippetManager = new SnippetManager();
+            self::$componentScript[$id] = $snippetManager;
+        }
+        return $snippetManager;
     }
 
 
@@ -122,7 +136,7 @@ class SnippetManager
         if (sizeof($this->snippetsByRequestScope) == 1) {
             /**
              * There is only 0 or 1 value
-             * because this is still scoped to the actual request (by the requested id)
+             * because this is scoped to the actual request (by the requested id)
              */
             $distinctSnippetIdByType = array_shift($this->snippetsByRequestScope);
         }
@@ -249,22 +263,6 @@ class SnippetManager
     {
         $this->snippetsBySlotScope = array();
         $this->snippetsByRequestScope = array();
-        $this->barsProcessed = array();
-    }
-
-
-    /**
-     * @param $snippetId
-     * @param array $tags - upsert a tag each time that this function is called
-     */
-    public function upsertHeadTagForRequest($snippetId, array $tags)
-    {
-        $id = PluginUtility::getRequestedWikiId();
-        $snippet = &$this->snippetsByRequestScope[$id][Snippet::TAG_TYPE][$snippetId];
-        if (!isset($snippet)) {
-            $snippet = new Snippet($snippetId, Snippet::TAG_TYPE);
-        }
-        $snippet->setTags($tags);
     }
 
 
@@ -308,40 +306,13 @@ class SnippetManager
 
     }
 
-    /**
-     * Add a javascript snippet at a request level
-     * (Meaning that it should never be cached)
-     * @param $snippetId
-     * @param $script
-     * @return Snippet
-     */
-    public function &upsertJavascriptSnippetForRequest($snippetId, $script = null)
-    {
-        $snippet = &$this->attachJavascriptSnippetForRequest($snippetId);
-        if ($script != null) {
-            $snippet->setContent($script);
-        }
-        return $snippet;
-
-    }
-
-    /**
-     * @param $snippetId
-     * @param null $script
-     * @return Snippet
-     */
-    public function &upsertCssSnippetForRequest($snippetId, $script = null)
-    {
-        $snippet = &$this->attachCssSnippetForRequest($snippetId, $script);
-        return $snippet;
-    }
 
     /**
      * @param $snippetId
      * @param string|null $script - the css snippet to add, otherwise it takes the file
      * @return Snippet a snippet not in a slot
      */
-    public function &attachCssSnippetForSlot($snippetId, string $script = null): Snippet
+    public function &attachCssInternalStyleSheetForSlot($snippetId, string $script = null): Snippet
     {
         $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::TYPE_CSS, self::SCRIPT_IDENTIFIER);
         if ($script !== null) {
@@ -357,7 +328,7 @@ class SnippetManager
      */
     public function &attachCssSnippetForRequest($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_CSS);
+        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_CSS, self::SCRIPT_IDENTIFIER);
         if ($script != null) {
             $snippet->setContent($script);
         }
@@ -384,7 +355,7 @@ class SnippetManager
      */
     public function &attachJavascriptSnippetForRequest($snippetId): Snippet
     {
-        return $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_JS);
+        return $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_JS, self::SCRIPT_IDENTIFIER);
     }
 
     /**
@@ -393,11 +364,13 @@ class SnippetManager
      * @param $identifier
      * @return Snippet
      */
-    private function &attachSnippetFromSlot($snippetId, $type, $identifier)
+    private function &attachSnippetFromSlot($snippetId, $type, $identifier): Snippet
     {
         global $ID;
         $slot = $ID;
-
+        if ($slot === null) {
+            LogUtility::log2file("The slot could not be identified (global ID is null)",LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+        }
         $snippetFromArray = &$this->snippetsBySlotScope[$slot][$type][$snippetId][$identifier];
         if (!isset($snippetFromArray)) {
             $snippet = new Snippet($snippetId, $type);
@@ -406,28 +379,16 @@ class SnippetManager
         return $snippetFromArray;
     }
 
-    private function &attachSnippetFromRequest($snippetId, $type)
+    private function &attachSnippetFromRequest($snippetId, $type, $identifier)
     {
-        global $ID;
-        $bar = $ID;
-        $snippetFromArray = &$this->snippetsByRequestScope[$bar][$type][$snippetId];
+
+        $primarySlot = PluginUtility::getRequestedWikiId();
+        $snippetFromArray = &$this->snippetsByRequestScope[$primarySlot][$type][$snippetId][$identifier];
         if (!isset($snippetFromArray)) {
             $snippet = new Snippet($snippetId, $type);
             $snippetFromArray = $snippet;
         }
         return $snippetFromArray;
-    }
-
-
-    public function &attachTagsForRequest($snippetId)
-    {
-        global $ID;
-        $bar = $ID;
-        $heads = &$this->snippetsByRequestScope[$bar][Snippet::TAG_TYPE][$snippetId];
-        if (!isset($heads)) {
-            $heads = new Snippet($snippetId, Snippet::TAG_TYPE);
-        }
-        return $heads;
     }
 
 
@@ -464,9 +425,8 @@ class SnippetManager
 
     /**
      * Add a local javascript script as tag
-     * (ie same as {@link SnippetManager::attachTagsForRequest()})
-     * but for local script
-     *
+     * (ie same as {@link SnippetManager::attachJavascriptLibraryForSlot()})
+     * but for local resource combo file (library)
      *
      * For instance:
      *   * library:combo:combo.js
@@ -477,16 +437,8 @@ class SnippetManager
     public function attachJavascriptScriptForRequest(string $snippetId, string $relativeId)
     {
         $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromDokuwikiId($relativeId);
-
-        $this->attachTagsForRequest($snippetId)->setTags(
-            array("script" => [
-                array(
-                    "src" => $javascriptMedia->getUrl(),
-//                    "integrity" => "sha256-LGOWMG4g6/zc0chji4hZP1d8RxR2bPvXMzl/7oPZqjs=",
-//                    "crossorigin" => "anonymous"
-                )
-            ])
-        );
+        $url = $javascriptMedia->getUrl();
+        return $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_JS, $url);
 
     }
 
@@ -510,18 +462,26 @@ class SnippetManager
 
     public function attachJavascriptComboLibrary()
     {
-        $this->attachJavascriptScriptForRequest("combo", "library:combo:dist:combo.min.js");
+        return $this->attachJavascriptScriptForRequest("combo", "library:combo:dist:combo.min.js");
     }
 
     public function attachJavascriptLibraryForSlot(string $snippetId, string $url, string $integrity = null): Snippet
     {
-        return $this->attachSnippetFromSlot($snippetId, Snippet::TYPE_JS, $url)
+        return $this
+            ->attachSnippetFromSlot(
+                $snippetId,
+                Snippet::TYPE_JS,
+                $url)
             ->setUrl($url, $integrity);
     }
 
     public function attachCssStyleSheetForSlot(string $snippetId, string $url, string $integrity = null): Snippet
     {
-        return $this->attachSnippetFromSlot($snippetId, Snippet::TYPE_CSS, $url)
+        return $this
+            ->attachSnippetFromSlot(
+                $snippetId,
+                Snippet::TYPE_CSS,
+                $url)
             ->setUrl($url, $integrity);
     }
 

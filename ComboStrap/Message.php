@@ -142,7 +142,7 @@ class Message
     function toHtmlBox(): string
     {
 
-        PluginUtility::getSnippetManager()->upsertCssSnippetForRequest(self::TAG);
+        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
         $message = "";
 
         $tagAttributes = TagAttributes::createEmpty("message")

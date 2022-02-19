@@ -53,7 +53,7 @@ class Background
          * Backgrounds set with the {@link \syntax_plugin_combo_background} component
          */
         if ($tagAttributes->hasComponentAttribute(self::BACKGROUNDS)) {
-            PluginUtility::getSnippetManager()->attachCssSnippetForSlot(self::CANONICAL);
+            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::CANONICAL);
             $backgrounds = $tagAttributes->getValueAndRemove(self::BACKGROUNDS);
             switch (sizeof($backgrounds)) {
                 case 1:

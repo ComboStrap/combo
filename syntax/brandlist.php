@@ -114,7 +114,7 @@ class syntax_plugin_combo_brandlist extends DokuWiki_Syntax_Plugin
             $variants = BrandButton::getVariants();
 
             $snippetManager = PluginUtility::getSnippetManager();
-            $snippetManager->attachCssSnippetForSlot("table");
+            $snippetManager->attachCssInternalStyleSheetForSlot("table");
             $html = <<<EOF
 <table class="table table-non-fluid">
 <thead>
@@ -186,7 +186,7 @@ EOF;
                                 $html .= "Icon name is null for brand $brandName";
                             }
                         }
-                        $snippetManager->attachCssSnippetForSlot($brandButton->getStyleScriptIdentifier(), $brandButton->getStyle());
+                        $snippetManager->attachCssInternalStyleSheetForSlot($brandButton->getStyleScriptIdentifier(), $brandButton->getStyle());
                         $html .= "</a></td>";
                     }
 

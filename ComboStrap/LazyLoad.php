@@ -83,7 +83,7 @@ class LazyLoad
          * lazysizes adds the class lazy loading while the images are loading
          * and the class lazyloaded as soon as the image is loaded.
          */
-        $snippetManager->attachCssSnippetForSlot(self::LAZY_SIDE_ID);
+        $snippetManager->attachCssInternalStyleSheetForSlot(self::LAZY_SIDE_ID);
 
     }
 
@@ -123,7 +123,7 @@ class LazyLoad
          * Add the fading effect
          */
         $snippetId = "lazy-load-fade";
-        $snippetManager->attachCssSnippetForSlot($snippetId);
+        $snippetManager->attachCssInternalStyleSheetForSlot($snippetId);
 
 
         /**

@@ -398,7 +398,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     $callStackAttributes = $data;
                 }
 
-                PluginUtility::getSnippetManager()->attachCssSnippetForSlot(self::TAG);
+                PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
 
                 $state = $data[PluginUtility::STATE];
                 switch ($state) {

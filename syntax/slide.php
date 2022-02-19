@@ -182,7 +182,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                             break;
                     }
 
-                    PluginUtility::getSnippetManager()->attachCssSnippetForSlot(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
 
 
                     $renderer->doc .= $attributes->toHtmlEnterTag("section");

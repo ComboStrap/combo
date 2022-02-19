@@ -45,15 +45,10 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
         /**
          * Anchor on id
          */
-        PluginUtility::getSnippetManager()->upsertHeadTagForRequest(
+        PluginUtility::getSnippetManager()->attachJavascriptLibraryForSlot(
             self::ANCHOR_LIBRARY_SNIPPET_ID,
-            array("script" => [
-                array(
-                    "src" => "https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js",
-                    "integrity" => "sha256-LGOWMG4g6/zc0chji4hZP1d8RxR2bPvXMzl/7oPZqjs=",
-                    "crossorigin" => "anonymous"
-                )
-            ])
+            "https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js",
+            "sha256-LGOWMG4g6/zc0chji4hZP1d8RxR2bPvXMzl/7oPZqjs="
         );
         PluginUtility::getSnippetManager()->attachJavascriptSnippetForRequest(self::ANCHOR_LIBRARY_SNIPPET_ID);
 
@@ -74,7 +69,7 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
             $snippetManager = PluginUtility::getSnippetManager();
             try {
 
-                $primaryColorText =  Site::getPrimaryColorForText();
+                $primaryColorText = Site::getPrimaryColorForText();
                 $primaryColorHoverText = Site::getPrimaryColorTextHover();
                 if ($primaryColorText !== null) {
                     $aCss = <<<EOF

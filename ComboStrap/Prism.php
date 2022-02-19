@@ -87,7 +87,7 @@ class Prism
          * as a paragraph
          */
         $snippetManager = PluginUtility::getSnippetManager();
-        $snippetManager->attachCssSnippetForSlot(self::SNIPPET_NAME);
+        $snippetManager->attachCssInternalStyleSheetForSlot(self::SNIPPET_NAME);
 
         /**
          * Javascript

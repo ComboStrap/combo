@@ -85,7 +85,7 @@ class Hover
 
                 // Grow, float and easing are in the css
                 $snippetManager
-                    ->attachCssSnippetForSlot(self::ON_HOVER_SNIPPET_ID)
+                    ->attachCssInternalStyleSheetForSlot(self::ON_HOVER_SNIPPET_ID)
                     ->setCritical(false);
 
                 // Smooth Transition in and out of hover

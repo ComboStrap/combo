@@ -1111,7 +1111,7 @@ class PluginUtility
     public
     static function getSnippetManager(): SnippetManager
     {
-        return SnippetManager::get();
+        return SnippetManager::getOrCreate();
     }
 
 

@@ -59,7 +59,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
     public static function addToolTipSnippetIfNeeded()
     {
         PluginUtility::getSnippetManager()->attachJavascriptSnippetForSlot(self::TAG);
-        PluginUtility::getSnippetManager()->attachCssSnippetForSlot(self::TAG);
+        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
     }
 
 

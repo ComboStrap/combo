@@ -444,7 +444,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Css
                              */
-                            PluginUtility::getSnippetManager()->attachCssSnippetForSlot($componentClassPrefix);
+                            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($componentClassPrefix);
 
                             /**
                              * Create the enter content list tag
@@ -705,7 +705,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Styling
                              */
-                            PluginUtility::getSnippetManager()->attachCssSnippetForSlot($snippetId);
+                            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($snippetId);
                             $renderer->doc .= $pageExplorerTagAttributes->toHtmlEnterTag("nav") . DOKU_LF;
                             $renderer->doc .= "<ul>" . DOKU_LF;
 

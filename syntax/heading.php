@@ -119,7 +119,11 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     }
 
 
-    public static function processHeadingMetadata($data, $renderer)
+    /**
+     * @param $data
+     * @param Doku_Renderer_metadata $renderer
+     */
+    public static function processHeadingMetadata($data, Doku_Renderer_metadata $renderer)
     {
 
         $state = $data[PluginUtility::STATE];
@@ -129,7 +133,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
              * Not component heading
              */
             $context = $data[PluginUtility::CONTEXT];
-            if ($context == self::TYPE_OUTLINE) {
+            if ($context === self::TYPE_OUTLINE) {
                 $callStackArray = $data[PluginUtility::ATTRIBUTES];
                 $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
                 $text = trim($tagAttributes->getValue(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE));

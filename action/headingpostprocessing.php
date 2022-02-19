@@ -385,19 +385,18 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
      * @param $actualHeadingParsingState
      */
     private
-    static function insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(&$headingEntryCall, &$handler, &$callStack, &$actualSectionState, &$headingText, &$actualHeadingParsingState)
+    static function insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(&$headingEntryCall, &$handler, CallStack &$callStack, &$actualSectionState, &$headingText, &$actualHeadingParsingState)
     {
         /**
          * We are no more in a heading
          */
         $actualHeadingParsingState = DOKU_LEXER_EXIT;
 
-
         /**
          * Outline ?
          * Update the text and open a section
          */
-        if ($headingEntryCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
+        if ($headingEntryCall->getContext() === syntax_plugin_combo_heading::TYPE_OUTLINE) {
 
             /**
              * Update the entering call with the text capture
@@ -410,8 +409,6 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             }
             $headingEntryCall->addAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $headingText);
 
-            $headingText = "";
-
             /**
              * Insert an entry call
              */
@@ -421,6 +418,16 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             $callStack->next();
 
         }
+
+        /**
+         * Reset
+         * Important: If this is not an outline header, we need to reset it
+         * otherwise it comes in the {@link \ComboStrap\TocUtility::renderToc()}
+         */
+        $headingText = "";
+
+
+
     }
 
     /**

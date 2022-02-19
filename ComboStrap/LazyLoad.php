@@ -73,16 +73,10 @@ class LazyLoad
 
         $snippetManager = PluginUtility::getSnippetManager();
 
-        $snippetManager->upsertTagsForSlot(self::LAZY_SIDE_ID,
-            array(
-                'script' => [
-                    array(
-                        "src" => "https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js",
-                        "integrity" => "sha256-bmG+LzdKASJRACVXiUC69++Nu8rz7MX1U1z8gb0c/Tk=",
-                        "crossorigin" => "anonymous"
-                    )
-                ]
-            )
+        $snippetManager->attachJavascriptLibraryForSlot(
+            self::LAZY_SIDE_ID,
+            "https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js",
+            "sha256-bmG+LzdKASJRACVXiUC69++Nu8rz7MX1U1z8gb0c/Tk="
         );
         /**
          * The Spinner effect
@@ -119,17 +113,10 @@ class LazyLoad
         $snippetManager = PluginUtility::getSnippetManager();
 
         // https://www.jsdelivr.com/package/npm/lozad
-        $snippetManager->upsertTagsForSlot(self::LOZAD_ID,
-            array(
-                'script' => [
-                    array(
-                        "src" => "https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js",
-                        "integrity" => "sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=",
-                        "crossorigin" => "anonymous"
-
-                    )
-                ]
-            )
+        $snippetManager->attachJavascriptLibraryForSlot(
+            self::LOZAD_ID,
+            "https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js",
+            "sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc="
         );
 
         /**
@@ -183,7 +170,6 @@ class LazyLoad
      * @param null $imgTagHeight
      * @return string
      *
-
      *
      * Src is always set, this is the default
      * src attribute is served to browsers that do not take the srcset attribute into account.

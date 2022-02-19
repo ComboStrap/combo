@@ -26,11 +26,9 @@ class JavascriptLibrary extends Media
 
 
     /**
-     *
-     * @param string $ampersand
      * @return string
      */
-    public function getUrl($ampersand = DokuwikiUrl::AMPERSAND_CHARACTER): string
+    public function getUrl(): string
     {
         /**
          * The ampersand must not be send encoded

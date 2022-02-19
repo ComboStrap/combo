@@ -284,20 +284,12 @@ class Background
             /**
              * Attach the stylesheet
              */
-            PluginUtility::getSnippetManager()->attachTagsForSlot(self::PATTERN_CSS_SNIPPET_ID)
-                ->setCritical(false) // not blocking for rendering
-                ->setTags(
-                    array(
-                        "link" =>
-                            [
-                                array(
-                                    "rel" => "stylesheet",
-                                    "href" => "https://cdn.jsdelivr.net/npm/pattern.css@1.0.0/dist/pattern.min.css",
-                                    "integrity" => "sha256-Vwich3JPJa27TO9g6q+TxJGE7DNEigBaHNPm+KkMR6o=",
-                                    "crossorigin" => "anonymous"
-                                )
-                            ]
-                    ));
+            PluginUtility::getSnippetManager()->attachCssStyleSheetForSlot(
+                self::PATTERN_CSS_SNIPPET_ID,
+                "https://cdn.jsdelivr.net/npm/pattern.css@1.0.0/dist/pattern.min.css",
+                "sha256-Vwich3JPJa27TO9g6q+TxJGE7DNEigBaHNPm+KkMR6o=")
+                ->setCritical(false); // not blocking for rendering
+
 
             $patternValue = strtolower($tagAttributes->getValueAndRemove(self::PATTERN_ATTRIBUTE));
 

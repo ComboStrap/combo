@@ -47,20 +47,13 @@ class Animation
 
             self::scrollMagicInit();
 
-            $snippetManager->attachTagsForSlot(self::ON_VIEW_SNIPPET_ID)
-                ->setCritical(false)
-                ->setTags(
-                    array(
-                        "link" =>
-                            [
-                                array(
-                                    "rel" => "stylesheet",
-                                    "href" => "https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css",
-                                    "integrity" => "sha256-X7rrn44l1+AUO65h1LGALBbOc5C5bOstSYsNlv9MhT8=",
-                                    "crossorigin" => "anonymous"
-                                )
-                            ]
-                    ));
+            $snippetManager
+                ->attachCssStyleSheetForSlot(
+                    self::ON_VIEW_SNIPPET_ID,
+                    "https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css",
+                    "sha256-X7rrn44l1+AUO65h1LGALBbOc5C5bOstSYsNlv9MhT8="
+                )
+                ->setCritical(false);
 
         }
 
@@ -80,7 +73,7 @@ class Animation
         $wowClass = "wow";
         $wowSnippetId = "wow";
         PluginUtility::addClass2Attributes($wowClass, $attributes);
-        $snippetManager->upsertCssSnippetForSlot($wowSnippetId);
+        $snippetManager->attachCssSnippetForSlot($wowSnippetId);
 
 
         $animateClass = self::ANIMATE_CLASS;
@@ -103,19 +96,11 @@ window.addEventListener("load", function(event) {
     wow.init();
 });
 EOF;
-        $snippetManager->attachJavascriptSnippetForSlot($wowSnippetId)->setContent($js);
-        $snippetManager->attachTagsForSlot($wowSnippetId)->setTags(
-            array(
-                "script" =>
-                    [
-                        array(
-                            "src" => "https://cdn.jsdelivr.net/npm/wowjs@1.1.3/dist/wow.min.js",
-                            "integrity" => "sha256-gHiUEskgBO+3ccSDRM+c5+nEwTGp64R99KYPfITpnuo=",
-                            "crossorigin" => "anonymous"
-                        )
-                    ],
-
-            )
+        $snippetManager->attachJavascriptSnippetForSlot($wowSnippetId, $js);
+        $snippetManager->attachJavascriptLibraryForSlot(
+            $wowSnippetId,
+            "https://cdn.jsdelivr.net/npm/wowjs@1.1.3/dist/wow.min.js",
+            "sha256-gHiUEskgBO+3ccSDRM+c5+nEwTGp64R99KYPfITpnuo="
         );
     }
 
@@ -128,23 +113,16 @@ EOF;
 
         $scrollMagicSnippetId = "scroll-magic";
         $snippetManager->attachJavascriptSnippetForSlot($scrollMagicSnippetId);
-        $snippetManager->upsertTagsForSlot($scrollMagicSnippetId,
-            array(
-                "script" =>
-                    [
-                        array(
-                            "src" => "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/ScrollMagic.min.js",
-                            "integrity" => "sha512-8E3KZoPoZCD+1dgfqhPbejQBnQfBXe8FuwL4z/c8sTrgeDMFEnoyTlH3obB4/fV+6Sg0a0XF+L/6xS4Xx1fUEg==",
-                            "crossorigin" => "anonymous"
-                        ),
-                        array(
-                            "src" => "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/debug.addIndicators.min.js",
-                            "integrity" => "sha512-RvUydNGlqYJapy0t4AH8hDv/It+zKsv4wOQGb+iOnEfa6NnF2fzjXgRy+FDjSpMfC3sjokNUzsfYZaZ8QAwIxg==",
-                            "crossorigin" => "anonymous"
-                        )
-                    ],
-
-            ));
+        $snippetManager->attachJavascriptLibraryForSlot(
+            $scrollMagicSnippetId,
+            "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/ScrollMagic.min.js",
+            "sha512-8E3KZoPoZCD+1dgfqhPbejQBnQfBXe8FuwL4z/c8sTrgeDMFEnoyTlH3obB4/fV+6Sg0a0XF+L/6xS4Xx1fUEg=="
+        );
+        $snippetManager->attachJavascriptLibraryForSlot(
+            $scrollMagicSnippetId,
+            "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/debug.addIndicators.min.js",
+            "sha512-RvUydNGlqYJapy0t4AH8hDv/It+zKsv4wOQGb+iOnEfa6NnF2fzjXgRy+FDjSpMfC3sjokNUzsfYZaZ8QAwIxg=="
+        );
     }
 
 }

@@ -40,15 +40,11 @@ class Position
                 $stickyClass = self::STICKY_CLASS;
                 $attributes->addClassName($stickyClass);
                 $snippetManager = PluginUtility::getSnippetManager();
-                $snippetManager->upsertTagsForSlot(self::STICKY,
-                    array(
-                        "script" => [
-                            array(
-                                "src" => "https://cdn.jsdelivr.net/npm/sticksy@0.2.0/dist/sticksy.min.js",
-                                "integrity" => "sha256-H6uQ878/jyt6w1oBNhL6s01iAfWxACrWvVXCBjZsrGM=",
-                                "crossorigin" => "anonymous"
-                            )]
-                    ));
+                $snippetManager->attachJavascriptLibraryForSlot(
+                    self::STICKY,
+                    "https://cdn.jsdelivr.net/npm/sticksy@0.2.0/dist/sticksy.min.js",
+                    "sha256-H6uQ878/jyt6w1oBNhL6s01iAfWxACrWvVXCBjZsrGM="
+                );
                 /**
                  * If top bar
                  */

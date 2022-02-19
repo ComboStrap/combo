@@ -86,54 +86,50 @@ class Prism
          * We miss a bottom margin
          * as a paragraph
          */
-        PluginUtility::getSnippetManager()->attachCssSnippetForSlot(self::SNIPPET_NAME);
+        $snippetManager = PluginUtility::getSnippetManager();
+        $snippetManager->attachCssSnippetForSlot(self::SNIPPET_NAME);
 
         /**
          * Javascript
          */
-        $tags = array();
-        $tags['script'][] = array(
-            "src" => "$BASE_PRISM_CDN/components/prism-core.min.js",
-            "integrity" => "sha256-vlRYHThwdq55dA+n1BKQRzzLwFtH9VINdSI68+5JhpU=",
-            "crossorigin" => "anonymous"
-        );
-        $tags['script'][] = array(
-            "src" => "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.min.js",
-            "integrity" => "sha256-FyIVdIHL0+ppj4Q4Ft05K3wyCsYikpHIDGI7dcaBalU=",
-            "crossorigin" => "anonymous"
+        $snippetManager->attachJavascriptLibraryForSlot(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/components/prism-core.min.js",
+            "sha256-vlRYHThwdq55dA+n1BKQRzzLwFtH9VINdSI68+5JhpU=");
+        $snippetManager->attachJavascriptLibraryForSlot(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.min.js",
+            "sha256-FyIVdIHL0+ppj4Q4Ft05K3wyCsYikpHIDGI7dcaBalU="
         );
         // https://prismjs.com/plugins/normalize-whitespace/
-        $tags['script'][] = array(
-            "src" => "$BASE_PRISM_CDN/plugins/normalize-whitespace/prism-normalize-whitespace.min.js",
-            "integrity" => "sha256-gBzABGbXfQYYnyr8xmDFjx6KGO9dBYuypG1QBjO76pY=",
-            "crossorigin" => "anonymous"
-        );
-        // https://prismjs.com/plugins/show-language/
-        $tags['script'][] = array(
-            "src" => "$BASE_PRISM_CDN/plugins/show-language/prism-show-language.min.js",
-            "integrity" => "sha256-Z3GTw2RIadLG7KyP/OYB+aAxVYzvg2PByKzYrJlA1EM=",
-            "crossorigin" => "anonymous"
-        );
-        // https://prismjs.com/plugins/command-line/
-        $tags['script'][] = array(
-            "src" => "$BASE_PRISM_CDN/plugins/command-line/prism-command-line.min.js",
-            "integrity" => "sha256-9WlakH0Upf3N8DDteHlbeKCHxSsljby+G9ucUCQNiU0=",
-            "crossorigin" => "anonymous"
-        );
-        //https://prismjs.com/plugins/line-numbers/
-        $tags['script'][] = array(
-            "src" => "$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.min.js",
-            "integrity" => "sha256-K837BwIyiXo5k/9fCYgqUyA14bN4/Ve9P2SIT0KmZD0=",
-            "crossorigin" => "anonymous"
-        );
-        // https://prismjs.com/plugins/download-button/-->
-        $tags['script'][] = array(
-            "src" => "$BASE_PRISM_CDN/plugins/download-button/prism-download-button.min.js",
-            "integrity" => "sha256-CQyVQ5ejeTshlzOS/eCiry40br9f4fQ9jb5e4qPl7ZA=",
-            "crossorigin" => "anonymous"
-        );
+        $snippetManager->attachJavascriptLibraryForSlot(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/plugins/normalize-whitespace/prism-normalize-whitespace.min.js",
+            "sha256-gBzABGbXfQYYnyr8xmDFjx6KGO9dBYuypG1QBjO76pY=");
 
-        PluginUtility::getSnippetManager()->upsertTagsForSlot(self::SNIPPET_NAME, $tags);
+        // https://prismjs.com/plugins/show-language/
+        $snippetManager->attachJavascriptLibraryForSlot(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/plugins/show-language/prism-show-language.min.js",
+            "sha256-Z3GTw2RIadLG7KyP/OYB+aAxVYzvg2PByKzYrJlA1EM=");
+        // https://prismjs.com/plugins/command-line/
+        $snippetManager->attachJavascriptLibraryForSlot(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/plugins/command-line/prism-command-line.min.js",
+            "sha256-9WlakH0Upf3N8DDteHlbeKCHxSsljby+G9ucUCQNiU0=");
+
+        //https://prismjs.com/plugins/line-numbers/
+        $snippetManager->attachJavascriptLibraryForSlot(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.min.js",
+            "sha256-K837BwIyiXo5k/9fCYgqUyA14bN4/Ve9P2SIT0KmZD0=");
+
+        // https://prismjs.com/plugins/download-button/-->
+        $snippetManager->attachJavascriptLibraryForSlot(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/plugins/download-button/prism-download-button.min.js",
+            "sha256-CQyVQ5ejeTshlzOS/eCiry40br9f4fQ9jb5e4qPl7ZA=");
+
 
         $javascriptCode = <<<EOD
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -247,7 +243,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 });
 EOD;
-        PluginUtility::getSnippetManager()->upsertJavascriptForSlot(self::SNIPPET_NAME, $javascriptCode);
+        $snippetManager->attachJavascriptSnippetForSlot(self::SNIPPET_NAME, $javascriptCode);
 
     }
 
@@ -444,9 +440,11 @@ EOD;
      */
     private static function addAutoloaderSnippet()
     {
-        $tags = [];
-        $tags['script'][] = array("src" => self::BASE_PRISM_CDN . "/plugins/autoloader/prism-autoloader.min.js");
-        PluginUtility::getSnippetManager()->upsertTagsForSlot(self::SNIPPET_ID_AUTOLOADER, $tags);
+        PluginUtility::getSnippetManager()
+            ->attachJavascriptLibraryForSlot(
+                self::SNIPPET_ID_AUTOLOADER,
+                self::BASE_PRISM_CDN . "/plugins/autoloader/prism-autoloader.min.js"
+            );
     }
 
 

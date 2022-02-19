@@ -261,32 +261,25 @@ EOF;
                     $snippetManager->attachCssSnippetForSlot($snippetId);
                     $snippetManager->attachJavascriptSnippetForSlot($snippetId);
                     // https://www.jsdelivr.com/package/npm/@glidejs/glide
-                    $tags["link"][] =
-                        [
-                            "rel" => "stylesheet",
-                            "href" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
-                            "integrity" => "sha256-bmdlmBAVo1Q6XV2cHiyaBuBfe9KgYQhCrfQmoRq8+Sg=",
-                            "crossorigin" => "anonymous"
-                        ];
-
+                    $snippetManager->attachCssStyleSheetForSlot($snippetId,
+                        "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
+                        "sha256-bmdlmBAVo1Q6XV2cHiyaBuBfe9KgYQhCrfQmoRq8+Sg="
+                    );
                     if (PluginUtility::isDev()) {
 
-                        $tags["script"][] = [
-                            "src" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.js",
-                            "integrity" => "sha256-zkYoJ1XwwGA4FbdmSdTz28y5PtHT8O/ZKzUAuQsmhKg=",
-                            "crossorigin" => "anonymous"
-                        ];
+                        $snippetManager->attachJavascriptLibraryForSlot($snippetId,
+                            "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.js",
+                            "sha256-zkYoJ1XwwGA4FbdmSdTz28y5PtHT8O/ZKzUAuQsmhKg="
+                        );
 
                     } else {
 
-                        $tags["script"][] = [
-                            "src" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.min.js",
-                            "integrity" => "sha256-cXguqBvlUaDoW4nGjs4YamNC2mlLGJUOl64bhts/ztU=",
-                            "crossorigin" => "anonymous"
-                        ];
+                        $snippetManager->attachJavascriptLibraryForSlot($snippetId,
+                            "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.min.js",
+                            "sha256-cXguqBvlUaDoW4nGjs4YamNC2mlLGJUOl64bhts/ztU="
+                        );
 
                     }
-                    $snippetManager->attachTagsForSlot($snippetId)->setTags($tags);
 
                     // Theme customized from the below official theme
                     // https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.theme.css

@@ -398,17 +398,9 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
                         case self::TWEET:
 
-                            PluginUtility::getSnippetManager()->upsertTagsForSlot(self::TWEET,
-                                array("script" =>
-                                    array(
-                                        array(
-                                            "id" => "twitter-wjs",
-                                            "type" => "text/javascript",
-                                            "aysnc" => true,
-                                            "src" => "https://platform.twitter.com/widgets.js",
-                                            "defer" => true
-                                        ))));
-
+                            PluginUtility::getSnippetManager()
+                                ->attachJavascriptLibraryForSlot(self::TWEET, "https://platform.twitter.com/widgets.js")
+                                ->addHtmlAttribute("id", "twitter-wjs");
 
                             $tagAttributes->addClassName("twitter-tweet");
 

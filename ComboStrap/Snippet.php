@@ -15,6 +15,14 @@ namespace ComboStrap;
 
 use JsonSerializable;
 
+/**
+ * Class Snippet
+ * @package ComboStrap
+ * A HTML tag:
+ *   * CSS: link for href or style with content
+ *   * Javascript: script
+ *
+ */
 class Snippet implements JsonSerializable
 {
     /**
@@ -22,18 +30,11 @@ class Snippet implements JsonSerializable
      * We need to add the style node
      */
     const TYPE_CSS = "css";
-
-
     /**
      * The head in javascript
      * We need to wrap it in a script node
      */
     const TYPE_JS = "js";
-    /**
-     * A tag head in array format
-     * No need
-     */
-    const TAG_TYPE = "tag";
     const JSON_SNIPPET_ID_PROPERTY = "id";
     const JSON_TYPE_PROPERTY = "type";
     const JSON_CRITICAL_PROPERTY = "critical";
@@ -56,6 +57,18 @@ class Snippet implements JsonSerializable
      * @var array
      */
     private $headsTags;
+    /**
+     * @var string
+     */
+    private $url;
+    /**
+     * @var string
+     */
+    private $integrity;
+    /**
+     * @var array Extra html attributes if needed
+     */
+    private $htmlAttributes = [];
 
     /**
      * Snippet constructor.
@@ -98,6 +111,15 @@ class Snippet implements JsonSerializable
      * All css that are for animation or background for instance
      * should not be set as critical as they are not needed to paint
      * exactly the page
+     *
+     * If a snippet is critical, it should not be deferred
+     *
+     * By default:
+     *   * all css are critical (except animation or background stylesheet)
+     *   * all javascript are not critical
+     *
+     * This attribute is passed in the dokuwiki array
+     * The value is stored in the {@link Snippet::getCritical()}
      */
     public function setCritical($bool): Snippet
     {
@@ -117,57 +139,34 @@ class Snippet implements JsonSerializable
 
     /**
      * @return string
+     * @throws ExceptionCombo
      */
-    public function getContent()
+    public function getContent(): string
     {
         if ($this->content == null) {
             switch ($this->type) {
                 case self::TYPE_CSS:
-                    $this->content = $this->getCssRulesFromFile($this->snippetId);
+                    $extension = "css";
+                    $subDirectory = "style";
                     break;
                 case self::TYPE_JS:
-                    $this->content = $this->getJavascriptContentFromFile($this->snippetId);
+                    $extension = "js";
+                    $subDirectory = "js";
                     break;
                 default:
-                    LogUtility::msg("The snippet ($this) has no content", LogUtility::LVL_MSG_ERROR, "support");
+                    throw new ExceptionCombo("Unknown snippet type ($this->type)");
             }
+            $path = Site::getComboResourceSnippetDirectory()
+                ->resolve($subDirectory)
+                ->resolve(strtolower($this->snippetId) . ".$extension");
+            if (!FileSystems::exists($path)) {
+                throw new ExceptionCombo("The $this->snippetId file ($path) does not exist");
+            }
+            return FileSystems::getContent($path);
         }
         return $this->content;
     }
 
-    /**
-     * @param $tagName
-     * @return false|string - the css content of the css file
-     */
-    private function getCssRulesFromFile($tagName)
-    {
-
-        $path = Site::getComboResourceSnippetDirectory()->resolve("style")->resolve(strtolower($tagName) . ".css");
-        if (file_exists($path)) {
-            return file_get_contents($path);
-        } else {
-            LogUtility::msg("The css file ($path) was not found", LogUtility::LVL_MSG_WARNING, $tagName);
-            return "";
-        }
-
-    }
-
-    /**
-     * @param $tagName - the tag name
-     * @return false|string - the specific javascript content for the tag
-     */
-    private function getJavascriptContentFromFile($tagName)
-    {
-
-        $path = Site::getComboResourceSnippetDirectory()->resolve("js")->resolve(strtolower($tagName) . ".js");
-        if (file_exists($path)) {
-            return file_get_contents($path);
-        } else {
-            LogUtility::msg("The javascript file ($path) was not found", LogUtility::LVL_MSG_WARNING, $tagName);
-            return "";
-        }
-
-    }
 
     public function __toString()
     {
@@ -178,6 +177,7 @@ class Snippet implements JsonSerializable
      * Set all tags at once.
      * @param array $tags
      * @return Snippet
+     * @deprecated
      */
     public function setTags(array $tags): Snippet
     {
@@ -296,4 +296,19 @@ EOF;
     {
         return $this->type;
     }
+
+    public function setUrl(string $url, string $integrity): Snippet
+    {
+        $this->url = $url;
+        $this->integrity = $integrity;
+        return $this;
+    }
+
+    public function addHtmlAttribute(string $name, string $value): Snippet
+    {
+        $this->htmlAttributes[$name] = $value;
+        return $this;
+    }
+
+
 }

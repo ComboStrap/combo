@@ -192,7 +192,7 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
                          * `
                          * $sha256integrity = ;
                          */
-                        $snippetManager->attachJavascriptScriptForSlot(
+                        $snippetManager->attachJavascriptComboResourceForSlot(
                             $snippetId,
                             "library:$libraryId:0.9.4.1:$libraryId.js",
                             "sha256-" . "noP8Tag5vKjRfh3+8GXy5QSZqKnRt7WQe6I9rGVl+go="

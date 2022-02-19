@@ -16,18 +16,10 @@ class Mermaid
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetId = \syntax_plugin_combo_mermaid::TAG;
         $snippetManager->attachJavascriptSnippetForSlot($snippetId);
-        $snippetManager->attachTagsForSlot($snippetId)->setTags(
-            array(
-                "script" =>
-                    [
-                        array(
-                            "src" => "https://cdn.jsdelivr.net/npm/mermaid@8.12.1/dist/mermaid.min.js",
-                            "integrity" => "sha256-51Oz+q3qIYwzBL0k7JLyk158Ye4XqprPU0/9DUcZMQQ=",
-                            "crossorigin" => "anonymous"
-                        )
-                    ],
-
-            )
+        $snippetManager->attachJavascriptLibraryForSlot(
+            $snippetId,
+            "https://cdn.jsdelivr.net/npm/mermaid@8.12.1/dist/mermaid.min.js",
+            "sha256-51Oz+q3qIYwzBL0k7JLyk158Ye4XqprPU0/9DUcZMQQ="
         );
     }
 
@@ -94,7 +86,7 @@ class Mermaid
         }
     }
 
-    public static function handle($state,$match,&$handler): array
+    public static function handle($state, $match, &$handler): array
     {
         switch ($state) {
 

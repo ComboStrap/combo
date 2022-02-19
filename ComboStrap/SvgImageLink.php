@@ -75,17 +75,12 @@ class SvgImageLink extends ImageLink
             // See also: https://github.com/iconfu/svg-inject
             // !! There is a fork: https://github.com/tanem/svg-injector !!
             // Fallback ? : https://github.com/iconic/SVGInjector/#per-element-png-fallback
-            $snippetManager->upsertTagsForSlot("svg-injector",
-                array(
-                    'script' => [
-                        array(
-                            "src" => "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/svg-injector.min.js",
-                            // "integrity" => "sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk=",
-                            "crossorigin" => "anonymous"
-                        )
-                    ]
-                )
+            $snippetManager->attachJavascriptLibraryForSlot(
+                "svg-injector",
+                "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/svg-injector.min.js"
             );
+
+
         }
 
         // Add lazy load snippet

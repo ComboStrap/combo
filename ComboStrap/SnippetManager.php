@@ -30,17 +30,14 @@ class SnippetManager
 
     const COMBO_CLASS_SUFFIX = "combo";
 
+
     /**
-     * If a snippet is critical, it should not be deferred
-     *
-     * By default:
-     *   * all css are critical (except animation or background stylesheet)
-     *   * all javascript are not critical
-     *
-     * This attribute is passed in the dokuwiki array
-     * The value is stored in the {@link Snippet::getCritical()}
+     * The identifier for a script snippet
+     * (ie inline javascript or style)
+     * To make the difference with library
+     * that have already an identifier with the url value
      */
-    const CRITICAL_ATTRIBUTE = "critical";
+    const SCRIPT_IDENTIFIER = "script";
 
 
     /**
@@ -95,49 +92,7 @@ class SnippetManager
     }
 
 
-    /**
-     * @param $snippetId
-     * @param string|null $css - the css
-     *   if null, the file $snippetId.css is searched in the `style` directory
-     * @return Snippet
-     * @deprecated use {@link SnippetManager::attachCssSnippetForSlot()} instead
-     */
-    public function &upsertCssSnippetForSlot($snippetId, $css = null): Snippet
-    {
-        $snippet = &$this->attachCssSnippetForSlot($snippetId);
-        if ($css != null) {
-            $snippet->setContent($css);
-        }
-        return $snippet;
 
-    }
-
-    /**
-     * @param $snippetId
-     * @param $script - javascript code if null, it will search in the js directory
-     * @return Snippet
-     * @deprecated use {@link SnippetManager::attachJavascriptSnippetForSlot()} instead
-     */
-    public function &upsertJavascriptForSlot($snippetId, $script = null): Snippet
-    {
-        $snippet = &$this->attachJavascriptSnippetForSlot($snippetId);
-        if ($script != null) {
-            $snippet->setContent($script);
-        }
-        return $snippet;
-    }
-
-    /**
-     * @param $snippetId
-     * @param array $tags - an array of tags without content where the key is the node type and the value a array of attributes array
-     * @return Snippet
-     */
-    public function &upsertTagsForSlot($snippetId, array $tags): Snippet
-    {
-        $snippet = &$this->attachTagsForSlot($snippetId);
-        $snippet->setTags($tags);
-        return $snippet;
-    }
 
 
     /**
@@ -388,7 +343,7 @@ class SnippetManager
      */
     public function &attachCssSnippetForSlot($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::TYPE_CSS);
+        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::TYPE_CSS, self::SCRIPT_IDENTIFIER);
         if ($script !== null) {
             $snippet->setContent($script);
         }
@@ -411,12 +366,12 @@ class SnippetManager
 
     /**
      * @param $snippetId
-     * @param null $script
+     * @param string|null $script
      * @return Snippet a snippet in a slot
      */
-    public function &attachJavascriptSnippetForSlot($snippetId, $script = null): Snippet
+    public function &attachJavascriptSnippetForSlot($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::TYPE_JS);
+        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::TYPE_JS, self::SCRIPT_IDENTIFIER);
         if ($script != null) {
             $snippet->setContent($script);
         }
@@ -432,11 +387,18 @@ class SnippetManager
         return $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_JS);
     }
 
-    private function &attachSnippetFromSlot($snippetId, $type)
+    /**
+     * @param $snippetId
+     * @param $type
+     * @param $identifier
+     * @return Snippet
+     */
+    private function &attachSnippetFromSlot($snippetId, $type, $identifier)
     {
         global $ID;
         $slot = $ID;
-        $snippetFromArray = &$this->snippetsBySlotScope[$slot][$type][$snippetId];
+
+        $snippetFromArray = &$this->snippetsBySlotScope[$slot][$type][$snippetId][$identifier];
         if (!isset($snippetFromArray)) {
             $snippet = new Snippet($snippetId, $type);
             $snippetFromArray = $snippet;
@@ -456,16 +418,6 @@ class SnippetManager
         return $snippetFromArray;
     }
 
-    public function &attachTagsForSlot($snippetId)
-    {
-        global $ID;
-        $bar = $ID;
-        $heads = &$this->snippetsBySlotScope[$bar][Snippet::TAG_TYPE][$snippetId];
-        if (!isset($heads)) {
-            $heads = new Snippet($snippetId, Snippet::TAG_TYPE);
-        }
-        return $heads;
-    }
 
     public function &attachTagsForRequest($snippetId)
     {
@@ -538,24 +490,39 @@ class SnippetManager
 
     }
 
-    public function attachJavascriptScriptForSlot(string $snippetId, string $relativeId, string $integrity = null)
+    /**
+     * @param string $snippetId
+     * @param string $relativeId
+     * @param string|null $integrity
+     * @return Snippet
+     */
+    public function attachJavascriptComboResourceForSlot(string $snippetId, string $relativeId, string $integrity = null): Snippet
     {
         $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromDokuwikiId($relativeId);
-
-        $head = array("src" => $javascriptMedia->getUrl());
-
-        if ($integrity != null) {
-            $head["integrity"] = $integrity;
-            $head["crossorigin"] = "anonymous";
-        }
-
-        $this->attachTagsForSlot($snippetId)->setTags(array("script" => [$head]));
+        $url = $javascriptMedia->getUrl();
+        return $this->attachJavascriptLibraryForSlot(
+            $snippetId,
+            $url,
+            $integrity
+        );
 
     }
 
     public function attachJavascriptComboLibrary()
     {
         $this->attachJavascriptScriptForRequest("combo", "library:combo:dist:combo.min.js");
+    }
+
+    public function attachJavascriptLibraryForSlot(string $snippetId, string $url, string $integrity = null): Snippet
+    {
+        return $this->attachSnippetFromSlot($snippetId, Snippet::TYPE_JS, $url)
+            ->setUrl($url, $integrity);
+    }
+
+    public function attachCssStyleSheetForSlot(string $snippetId, string $url, string $integrity = null): Snippet
+    {
+        return $this->attachSnippetFromSlot($snippetId, Snippet::TYPE_CSS, $url)
+            ->setUrl($url, $integrity);
     }
 
 

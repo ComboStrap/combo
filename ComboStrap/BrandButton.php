@@ -575,19 +575,12 @@ EOF;
                          */
                         $linkAttributes->addComponentAttributeValue("rel", "noopener");
 
-                        PluginUtility::getSnippetManager()->attachTagsForSlot("sharer")
-                            ->setTags(
-                                array(
-                                    "script" =>
-                                        [
-                                            array(
-                                                "src" => "https://cdn.jsdelivr.net/npm/sharer.js@0.5.0/sharer.min.js",
-                                                "integrity" => "sha256-AqqY/JJCWPQwZFY/mAhlvxjC5/880Q331aOmargQVLU=",
-                                                "crossorigin" => "anonymous"
-                                            )
-                                        ],
+                        PluginUtility::getSnippetManager()->attachJavascriptLibraryForSlot(
+                            "sharer",
+                            "https://cdn.jsdelivr.net/npm/sharer.js@0.5.0/sharer.min.js",
+                            "sha256-AqqY/JJCWPQwZFY/mAhlvxjC5/880Q331aOmargQVLU="
+                        );
 
-                                ));
                         $linkAttributes->addComponentAttributeValue("data-sharer", $this->getBrand()); // the id
                         $linkAttributes->addComponentAttributeValue("data-link", "false");
                         $linkAttributes->addComponentAttributeValue("data-title", $this->getTextForPage($requestedPage));
@@ -649,7 +642,7 @@ EOF;
     private function getResourceIconFile(): DokuPath
     {
         $iconName = $this->getResourceIconName();
-        $iconPath = str_replace(Icon::COMBO . ":", "", $iconName).".svg";
+        $iconPath = str_replace(Icon::COMBO . ":", "", $iconName) . ".svg";
         return DokuPath::createComboResource($iconPath);
     }
 

@@ -34,19 +34,15 @@ class Hover
             foreach ($hoverAnimations as $hover) {
 
                 if (in_array($hover, self::HOVER_ANIMATIONS)) {
-                    $snippetManager->attachTagsForSlot(self::ON_HOVER_SNIPPET_ID)
-                        ->setCritical(false)
-                        ->setTags(
-                            array("link" =>
-                                [
-                                    array(
-                                        "rel" => "stylesheet",
-                                        "href" => "https://cdnjs.cloudflare.com/ajax/libs/hover.css/2.3.1/css/hover-min.css",
-                                        "integrity" => "sha512-csw0Ma4oXCAgd/d4nTcpoEoz4nYvvnk21a8VA2h2dzhPAvjbUIK6V3si7/g/HehwdunqqW18RwCJKpD7rL67Xg==",
-                                        "crossorigin" => "anonymous"
-                                    )
-                                ]
-                            ));
+
+                    $snippetManager
+                        ->attachCssStyleSheetForSlot(
+                            self::ON_HOVER_SNIPPET_ID,
+                            "https://cdnjs.cloudflare.com/ajax/libs/hover.css/2.3.1/css/hover-min.css",
+                            "sha512-csw0Ma4oXCAgd/d4nTcpoEoz4nYvvnk21a8VA2h2dzhPAvjbUIK6V3si7/g/HehwdunqqW18RwCJKpD7rL67Xg=="
+                        )
+                        ->setCritical(false);
+
                     $attributes->addClassName("hvr-$hover");
 
                 } else {

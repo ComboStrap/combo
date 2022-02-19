@@ -134,6 +134,10 @@ class RasterImageLink extends ImageLink
                  * We don't allow the image to scale up by default
                  */
                 $attributes->addStyleDeclarationIfNotSet("max-height", $targetHeight . $cssLengthUnit);
+                /**
+                 * if the image has a class that has a `height: 100%`, the image will stretch
+                 */
+                $attributes->addStyleDeclarationIfNotSet("height", "auto");
             }
 
 
@@ -257,7 +261,7 @@ class RasterImageLink extends ImageLink
                     switch ($lazyLoadMethod) {
                         case MediaLink::LAZY_LOAD_METHOD_HTML_VALUE:
                             $attributes->addHtmlAttributeValue("src", $srcValue);
-                            if(!empty($srcSet)) {
+                            if (!empty($srcSet)) {
                                 // it the image is small, no srcset for instance
                                 $attributes->addHtmlAttributeValue("srcset", $srcSet);
                             }

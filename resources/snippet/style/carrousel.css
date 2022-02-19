@@ -52,7 +52,7 @@
     list-style: none;
     position: absolute;
     z-index: 2;
-    bottom: 1em;
+    bottom: 0;
     left: 50%;
     transform: translate(-50%, 0);
 }

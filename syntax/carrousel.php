@@ -269,7 +269,7 @@ EOF;
                             "crossorigin" => "anonymous"
                         ];
 
-                    if (PluginUtility::isDevOrTest()) {
+                    if (PluginUtility::isDev()) {
 
                         $tags["script"][] = [
                             "src" => "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.js",

@@ -10,8 +10,8 @@ window.addEventListener('load', function () {
         if (typeof elementMinimalWidth !== 'undefined') {
             let offsetWidth = slider.offsetWidth;
             perView = Math.floor(offsetWidth / elementMinimalWidth);
+            perView += 0.5; // mobile to show that there is elements
         }
-        perView = perView+1.5;
         let glide = new Glide(slider, {
             type: 'carousel',
             perView: perView

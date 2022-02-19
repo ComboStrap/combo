@@ -102,6 +102,7 @@ window.addEventListener("DOMContentLoaded", function () {
              */
             let modalManagerId = combo.toHtmlId(`combo-meta-manager-page-${pageId}`);
             let managerModal = combo.getOrCreateModal(modalManagerId)
+                .addDialogClass("modal-fullscreen-md-down");
             if (managerModal.wasBuild()) {
                 managerModal.show();
                 return;
@@ -112,7 +113,8 @@ window.addEventListener("DOMContentLoaded", function () {
              * We create it here because it needs to be reset if there is a submit on the manager.
              */
             let modalViewerId = combo.toHtmlId(`combo-metadata-viewer-modal-${pageId}`);
-            let modalViewer = combo.getOrCreateModal(modalViewerId);
+            let modalViewer = combo.getOrCreateModal(modalViewerId)
+                .addDialogClass("modal-fullscreen-md-down");
 
             /**
              * Creating the form

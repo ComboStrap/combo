@@ -21,6 +21,7 @@ export default class ComboModal {
     bodyStyles = {};
     dialogStyles = {};
     showFooter = true;
+    dialogClasses = [];
 
     /**
      * A valid HTML id
@@ -81,6 +82,13 @@ export default class ComboModal {
     addDialogStyle(property, value) {
 
         this.dialogStyles[property] = value;
+        return this;
+
+    }
+
+    addDialogClass(value) {
+
+        this.dialogClasses.push(value);
         return this;
 
     }
@@ -310,7 +318,6 @@ export default class ComboModal {
         modalManagerDialog.classList.add(
             "modal-dialog",
             "modal-dialog-scrollable",
-            "modal-fullscreen-md-down",
             "modal-lg");
         if (this.isCentered) {
             modalManagerDialog.classList.add("modal-dialog-centered")
@@ -324,6 +331,9 @@ export default class ComboModal {
                 continue;
             }
             modalManagerDialog.style.setProperty(dialogStyleName, this.dialogStyles[dialogStyleName]);
+        }
+        for (let dialogClass in this.dialogClasses){
+            modalManagerDialog.classList.add(dialogClass);
         }
         this.modalRootHtmlElement.appendChild(modalManagerDialog);
         this.modalContent = document.createElement("div");

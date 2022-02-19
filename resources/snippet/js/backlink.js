@@ -12,6 +12,7 @@ window.addEventListener("DOMContentLoaded", function () {
                 let pageId = JSINFO.id;
                 let modalBacklinkId = combo.toHtmlId(`combo-backlink-${pageId}`);
                 let backlinkModal = combo.getOrCreateModal(modalBacklinkId)
+                    .addDialogClass("modal-fullscreen-md-down");
 
                 /**
                  * Creating the form

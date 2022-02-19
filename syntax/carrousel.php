@@ -312,10 +312,15 @@ EOF;
                         $escapedLessThan = PluginUtility::htmlEncode("|<");
                         $escapedGreaterThan = PluginUtility::htmlEncode("|>");
 
-
+                        $minimumWidth = $tagAttributes->getValue(self::ELEMENT_WIDTH_ATTRIBUTE);
+                        $classDontShowOnSmallDevice = "";
+                        if ($minimumWidth !== null) {
+                            // not a one by one (not a gallery)
+                            $classDontShowOnSmallDevice = "class=\"d-none d-sm-block\"";
+                        }
                         $renderer->doc .= <<<EOF
 <div>
-  <div class="d-none d-sm-block" data-glide-el="controls">
+  <div $classDontShowOnSmallDevice data-glide-el="controls">
     <button class="glide__arrow glide__arrow--left" data-glide-dir="$escapedLessThan">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
         <path d="M0 12l10.975 11 2.848-2.828-6.176-6.176H24v-3.992H7.646l6.176-6.176L10.975 1 0 12z"></path>

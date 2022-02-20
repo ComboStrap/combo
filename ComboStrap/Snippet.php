@@ -34,7 +34,7 @@ class Snippet implements JsonSerializable
      * The head in javascript
      * We need to wrap it in a script node
      */
-    const MIME_JS = "js";
+    const EXTENSION_JS = "js";
     const JSON_SNIPPET_ID_PROPERTY = "id";
     const JSON_TYPE_PROPERTY = "type";
     const JSON_CRITICAL_PROPERTY = "critical";
@@ -50,6 +50,27 @@ class Snippet implements JsonSerializable
     public const INTERNAL_STYLESHEET_IDENTIFIER = "internal-stylesheet";
     const INTERNAL = "internal";
     const EXTERNAL = "external";
+
+    /**
+     * When a snippet is scoped to the request
+     * (ie not saved with a slot)
+     *
+     * They are unique on a request scope
+     *
+     * TlDR: The snippet does not depends to a slot and cannot therefore be cached along.
+     *
+     * The code that adds this snippet is not created by the parsing of content
+     * or depends on the page.
+     *
+     * It's always called and add the snippet whatsoever.
+     * Generally, this is an action plugin with a `TPL_METAHEADER_OUTPUT` hook
+     * such as {@link Bootstrap}, {@link HistoricalBreadcrumbMenuItem},
+     * ,...
+     */
+    const REQUEST_SLOT = "request";
+
+
+    protected static $globalSnippets;
 
     private $snippetId;
     private $mime;
@@ -87,6 +108,20 @@ class Snippet implements JsonSerializable
     private $componentId;
 
     /**
+     * @var array - the slots that needs this snippet (as key to get only one snippet by scope)
+     * A special slot exists for {@link Snippet::REQUEST_SLOT}
+     * where a snippet is for the whole requested page
+     *
+     * It's also used in the cache because not all bars
+     * may render at the same time due to the other been cached.
+     *
+     * There is two scope:
+     *   * a slot - cached along the HTML
+     *   * or  {@link Snippet::REQUEST_SLOT} - never cached
+     */
+    private $slots;
+
+    /**
      * Snippet constructor.
      */
     public function __construct($snippetId, $mime, $type, $url, $componentId)
@@ -101,21 +136,21 @@ class Snippet implements JsonSerializable
 
     public static function createInternalCssSnippet($componentId): Snippet
     {
-        return self::createSnippet(self::INTERNAL_STYLESHEET_IDENTIFIER, self::MIME_CSS,$componentId);
+        return self::getOrCreateSnippet(self::INTERNAL_STYLESHEET_IDENTIFIER, self::MIME_CSS, $componentId);
     }
 
 
     /**
-     * @param $snippetId
+     * @param $componentId
      * @return Snippet
      * @deprecated You should create a snippet with a known type, this constructor was created for refactoring
      */
-    public static function createUnknownSnippet($snippetId): Snippet
+    public static function createUnknownSnippet($componentId): Snippet
     {
-        return new Snippet($snippetId, "unknwon");
+        return new Snippet("unknown", "unknwon", "unknwon", "unknwon", $componentId);
     }
 
-    public static function createSnippet(string $identifier, string $mime, string $componentId)
+    public static function &getOrCreateSnippet(string $identifier, string $mime, string $componentId): Snippet
     {
 
         /**
@@ -134,9 +169,44 @@ class Snippet implements JsonSerializable
             $snippetId = $identifier;
             $url = $identifier;
         }
+        $requestedPageId = PluginUtility::getRequestedWikiId();
+        if ($requestedPageId === null) {
+            if (PluginUtility::isTest()) {
+                $requestedPageId = "test-id";
+            } else {
+                $requestedPageId = "unknown";
+                LogUtility::msg("The requested id is unknown. We couldn't scope the snippets.");
+            }
+        }
+        $snippets = &self::$globalSnippets[$requestedPageId];
+        if ($snippets === null) {
+            self::$globalSnippets = null;
+            self::$globalSnippets[$requestedPageId] = [];
+            $snippets = &self::$globalSnippets[$requestedPageId];
+        }
+        $snippet = &$snippets[$snippetId];
+        if ($snippet === null) {
+            $snippets[$snippetId] = new Snippet($snippetId, $mime, $type, $url, $componentId);
+            $snippet = &$snippets[$snippetId];
+        }
+        return $snippet;
 
-        return new Snippet($snippetId, $mime, $type, $url, $componentId);
+    }
 
+    public static function reset()
+    {
+        self::$globalSnippets = null;
+    }
+
+    /**
+     * @return Snippet[]|null
+     */
+    public static function getSnippets(): ?array
+    {
+        if (self::$globalSnippets === null) {
+            return null;
+        }
+        return array_shift(self::$globalSnippets);
     }
 
 
@@ -175,7 +245,7 @@ class Snippet implements JsonSerializable
     /**
      * @return string
      */
-    public function getContent(): ?string
+    public function getInternalDynamicContent(): ?string
     {
         return $this->content;
     }
@@ -199,7 +269,7 @@ class Snippet implements JsonSerializable
                 $extension = "css";
                 $subDirectory = "style";
                 break;
-            case self::MIME_JS:
+            case self::EXTENSION_JS:
                 $extension = "js";
                 $subDirectory = "js";
                 break;
@@ -257,7 +327,7 @@ class Snippet implements JsonSerializable
      */
     public function getHtmlStyleTag(): string
     {
-        $content = $this->getContent();
+        $content = $this->getInternalDynamicContent();
         $class = $this->getClass();
         return <<<EOF
 <style class="$class">
@@ -318,7 +388,7 @@ EOF;
 
     }
 
-    public function getMime()
+    public function getExtension()
     {
         return $this->mime;
     }
@@ -334,6 +404,52 @@ EOF;
     {
         $this->htmlAttributes[$name] = $value;
         return $this;
+    }
+
+    public function addSlot(string $slot): Snippet
+    {
+        $this->slots[$slot] = 1;
+        return $this;
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    public function getUrl(): string
+    {
+        return $this->url;
+    }
+
+    public function getIntegrity(): ?string
+    {
+        return $this->integrity;
+    }
+
+    public function getHtmlAttributes(): array
+    {
+        return $this->htmlAttributes;
+    }
+
+    public function getInternalInlineAndFileContent(): ?string
+    {
+        $totalContent = null;
+        $internalFileContent = $this->getInternalFileContent();
+        if ($internalFileContent !== null) {
+            $totalContent = $internalFileContent;
+        }
+
+        $content = $this->getInternalDynamicContent();
+        if ($content !== null) {
+            if ($totalContent === null) {
+                $totalContent = $content;
+            } else {
+                $totalContent .= $content;
+            }
+        }
+        return $totalContent;
+
     }
 
 

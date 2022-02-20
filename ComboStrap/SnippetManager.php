@@ -37,45 +37,13 @@ class SnippetManager
     /**
      * @var SnippetManager array that contains one element (one {@link SnippetManager} scoped to the requested id
      */
-    private static $componentScript;
-
-
-    /**
-     *
-     * The scope is used for snippet that are not added
-     * by the syntax plugin but by the actions plugin
-     * It's also used in the cache because not all bars
-     * may render at the same time due to the other been cached.
-     *
-     * There is two scope:
-     *   * {@link SnippetManager::$snippetsBySlotScope} - cached
-     *   * or {@link SnippetManager::$snippetsByRequestScope} - never cached
-     */
-
-    /**
-     * @var array all snippets scope to the bar level
-     */
-    private $snippetsBySlotScope = array();
-
-    /**
-     * @var array heads that are unique on a request scope
-     *
-     * TlDR: The snippet does not depends to a Page and cannot therefore be cached along.
-     *
-     * The code that adds this snippet is not created by the parsing of content
-     * or depends on the page.
-     *
-     * It's always called and add the snippet whatsoever.
-     * Generally, this is an action plugin with a `TPL_METAHEADER_OUTPUT` hook
-     * such as {@link Bootstrap}, {@link HistoricalBreadcrumbMenuItem},
-     * ,...
-     */
-    private $snippetsByRequestScope = array();
+    private static $globalSnippetManager;
 
 
     public static function reset()
     {
-        self::$componentScript = null;
+        self::$globalSnippetManager = null;
+        Snippet::reset();
     }
 
 
@@ -94,6 +62,8 @@ class SnippetManager
     /**
      * @return SnippetManager - the global reference
      * that is set for every run at the end of this file
+     * TODO: migrate the attach function to {@link Snippet}
+     *   because Snippet has already a global variable {@link Snippet::getOrCreateSnippet()}
      */
     public static function getOrCreate(): SnippetManager
     {
@@ -106,145 +76,147 @@ class SnippetManager
             }
         }
 
-        $snippetManager = self::$componentScript[$id];
+        $snippetManager = self::$globalSnippetManager[$id];
         if ($snippetManager === null) {
-            self::$componentScript = null; // delete old snippet manager for other request
+            self::$globalSnippetManager = null; // delete old snippet manager for other request
             $snippetManager = new SnippetManager();
-            self::$componentScript[$id] = $snippetManager;
+            self::$globalSnippetManager[$id] = $snippetManager;
         }
         return $snippetManager;
     }
 
 
     /**
+     * Transform in dokuwiki format
+     *
      * @return array of node type and an array of array of html attributes
      * @throws ExceptionCombo
      */
     public function getSnippets(): array
     {
+
+        $snippets = Snippet::getSnippets();
+        if ($snippets === null) {
+            return [];
+        }
         /**
-         * Distinct Snippet
+         * The returned array in dokuwiki format
          */
-        $distinctSnippetIdByType = [];
-        if (sizeof($this->snippetsByRequestScope) == 1) {
-            /**
-             * There is only 0 or 1 value
-             * because this is scoped to the actual request (by the requested id)
-             */
-            $distinctSnippetIdByType = array_shift($this->snippetsByRequestScope);
-        }
-        foreach ($this->snippetsBySlotScope as $snippet) {
-            $distinctSnippetIdByType = $this->mergeSnippetArray($distinctSnippetIdByType, $snippet);
-        }
-
+        $returnedDokuWikiFormat = array();
 
         /**
-         * Transform in dokuwiki format
+         * Processing the external resources
+         * and collecting the internal one
+         *
          * We collect the separately head that have content
          * from the head that refers to external resources
          * because the content will depends on the resources
          * and should then come in the last position
+         *
+         * @var Snippet[] $internalSnippets
          */
-        $dokuWikiHeadsFormatContent = array();
-        $dokuWikiHeadsSrc = array();
-        foreach ($distinctSnippetIdByType as $snippetType => $snippetBySnippetId) {
-            switch ($snippetType) {
-                case Snippet::MIME_JS:
-                    foreach ($snippetBySnippetId as $snippetId => $snippet) {
-                        /**
-                         * Bug (Quick fix)
-                         */
-                        if (is_string($snippet)) {
-                            LogUtility::msg("The snippet ($snippetId) is a string ($snippet) and not a snippet object", LogUtility::LVL_MSG_ERROR);
-                            $content = $snippet;
-                        } else {
-                            $content = $snippet->getContent();
-                        }
-                        /** @var Snippet $snippet */
-                        $dokuWikiHeadsFormatContent["script"][] = array(
-                            "class" => $snippet->getClass(),
-                            "_data" => $content
-                        );
+        $internalSnippets = [];
+        $scriptHtmlTag = "script";
+        $linkHtmlTag = "link";
+        $styleHtmlTag = "style";
+        foreach ($snippets as $snippet) {
+
+            $type = $snippet->getType();
+            if ($type === Snippet::INTERNAL) {
+
+                $internalSnippets[] = $snippet;
+                continue;
+            }
+
+
+            $extension = $snippet->getExtension();
+            switch ($extension) {
+                case Snippet::EXTENSION_JS:
+                    $jsDokuwiki = array(
+                        "class" => $snippet->getClass(),
+                        "src" => $snippet->getUrl(),
+                        "crossorigin" => "anonymous"
+                    );
+                    $integrity = $snippet->getIntegrity();
+                    if ($integrity !== null) {
+                        $jsDokuwiki["integrity"] = $integrity;
                     }
+                    $critical = $snippet->getCritical();
+                    if (!$critical) {
+                        $jsDokuwiki["defer"] = null;
+                        $jsDokuwiki["async"] = null;
+                    }
+                    foreach ($snippet->getHtmlAttributes() as $name => $value) {
+                        $jsDokuwiki[$name] = $value;
+                    }
+                    $returnedDokuWikiFormat[$scriptHtmlTag][] = $jsDokuwiki;
+                    break;
+                case Snippet::MIME_CSS:
+                    $cssDokuwiki = array(
+                        "class" => $snippet->getClass(),
+                        "rel" => "stylesheet",
+                        "href" => $snippet->getUrl(),
+                        "crossorigin" => "anonymous"
+                    );
+                    $integrity = $snippet->getIntegrity();
+                    if ($integrity !== null) {
+                        $cssDokuwiki["integrity"] = $integrity;
+                    }
+                    $critical = $snippet->getCritical();
+                    if (!$critical && Site::getTemplate() === Site::STRAP_TEMPLATE_NAME) {
+                        $cssDokuwiki["rel"] = "preload";
+                        $cssDokuwiki['as'] = 'style';
+                    }
+                    foreach ($snippet->getHtmlAttributes() as $name => $value) {
+                        $jsDokuwiki[$name] = $value;
+                    }
+                    $returnedDokuWikiFormat[$linkHtmlTag][] = $cssDokuwiki;
+                    break;
+                default:
+                    LogUtility::msg("The extension ($extension) is unknown, the external snippet ($snippet) was not added");
+            }
+
+        }
+
+        foreach ($internalSnippets as $snippet) {
+            $extension = $snippet->getExtension();
+            switch ($extension) {
+                case Snippet::EXTENSION_JS:
+
+                    $content = $snippet->getInternalInlineAndFileContent();
+                    if ($content === null) {
+                        LogUtility::msg("The internal snippet ($snippet) has no content. Skipped");
+                        continue 2;
+                    }
+
+                    $returnedDokuWikiFormat[$scriptHtmlTag][] = array(
+                        "class" => $snippet->getClass(),
+                        "_data" => $content
+                    );
+
                     break;
                 case Snippet::MIME_CSS:
                     /**
                      * CSS inline in script tag
                      * They are all critical
                      */
-                    foreach ($snippetBySnippetId as $snippetId => $snippet) {
-                        /**
-                         * Bug (Quick fix)
-                         */
-                        if (is_string($snippet)) {
-                            LogUtility::msg("The snippet ($snippetId) is a string ($snippet) and not a snippet object", LogUtility::LVL_MSG_ERROR);
-                            $content = $snippet;
-                        } else {
-                            /**
-                             * @var Snippet $snippet
-                             */
-                            $content = $snippet->getContent();
-                        }
-                        $snippetArray = array(
-                            "class" => $snippet->getClass(),
-                            "_data" => $content
-                        );
-                        /** @var Snippet $snippet */
-                        $dokuWikiHeadsFormatContent["style"][] = $snippetArray;
+                    $content = $snippet->getInternalInlineAndFileContent();
+                    if ($content === null) {
+                        LogUtility::msg("The internal snippet ($snippet) has no content. Skipped");
+                        continue 2;
                     }
+                    $snippetArray = array(
+                        "class" => $snippet->getClass(),
+                        "_data" => $content
+                    );
+
+                    $returnedDokuWikiFormat[$styleHtmlTag][] = $snippetArray;
                     break;
                 default:
-                    LogUtility::msg("To refactor");
-                    foreach ($snippetBySnippetId as $snippetId => $tagsSnippet) {
-                        /** @var Snippet $tagsSnippet */
-                        $headsTag = [];
-                        foreach ($headsTag as $htmlElement => $heads) {
-                            $classFromSnippetId = self::getClassFromSnippetId($snippetId);
-                            foreach ($heads as $head) {
-                                if (isset($head["class"])) {
-                                    $head["class"] = $head["class"] . " " . $classFromSnippetId;
-                                } else {
-                                    $head["class"] = $classFromSnippetId;
-                                }
-                                /**
-                                 * Critical treated now via the
-                                 * html attribute because the snippets
-                                 * can be rendered by the strap template
-                                 * or combo via {@link \action_plugin_combo_snippets::componentSnippetContent()}
-                                 */
-                                if (!$tagsSnippet->getCritical()) {
-                                    switch ($htmlElement) {
-                                        case "script":
-                                            $head["defer"] = null;
-                                            break;
-                                        case "link":
-                                            $relValue = $head["rel"];
-                                            if ($relValue !== null && $relValue === "stylesheet") {
-                                                $head["rel"] = "preload";
-                                                $head['as'] = 'style';
-                                            }
-                                            break;
-                                        default:
-                                            throw new ExceptionCombo("The non-critical tag snippet ($tagsSnippet) has an unknown html element ($htmlElement)");
-                                    }
-                                }
-                                $dokuWikiHeadsSrc[$htmlElement][] = $head;
-                            }
-                        }
-                    }
-                    break;
+                    LogUtility::msg("The extension ($extension) is unknown, the internal snippet ($snippet) was not added");
             }
         }
-
-        /**
-         * Merge the content head node at the last position of the head ref node
-         */
-        foreach ($dokuWikiHeadsFormatContent as $headsNodeType => $headsData) {
-            foreach ($headsData as $heads) {
-                $dokuWikiHeadsSrc[$headsNodeType][] = $heads;
-            }
-        }
-        return $dokuWikiHeadsSrc;
+        return $returnedDokuWikiFormat;
     }
 
     /**
@@ -254,7 +226,8 @@ class SnippetManager
      * and otherwise at the end of the document
      * if the user are using another template or are in edit mode
      */
-    public function close()
+    public
+    function close()
     {
         $this->snippetsBySlotScope = array();
         $this->snippetsByRequestScope = array();
@@ -267,7 +240,8 @@ class SnippetManager
      * @param $bar
      * @param $snippets
      */
-    public function addSnippetsFromCacheForSlot($bar, $snippets)
+    public
+    function addSnippetsFromCacheForSlot($bar, $snippets)
     {
 
         /**
@@ -291,7 +265,8 @@ class SnippetManager
         }
     }
 
-    public function getSnippetsForSlot($slot)
+    public
+    function getSnippetsForSlot($slot)
     {
         if (isset($this->snippetsBySlotScope[$slot])) {
             return $this->snippetsBySlotScope[$slot];
@@ -307,7 +282,8 @@ class SnippetManager
      * @param string|null $script - the css snippet to add, otherwise it takes the file
      * @return Snippet a snippet not in a slot
      */
-    public function &attachCssInternalStyleSheetForSlot($snippetId, string $script = null): Snippet
+    public
+    function &attachCssInternalStyleSheetForSlot($snippetId, string $script = null): Snippet
     {
         $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::MIME_CSS, Snippet::INTERNAL_STYLESHEET_IDENTIFIER);
         if ($script !== null) {
@@ -321,7 +297,8 @@ class SnippetManager
      * @param string|null $script -  the css if any, otherwise the css file will be taken
      * @return Snippet a snippet scoped at the request scope (not in a slot)
      */
-    public function &attachCssSnippetForRequest($snippetId, string $script = null): Snippet
+    public
+    function &attachCssSnippetForRequest($snippetId, string $script = null): Snippet
     {
         $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::MIME_CSS, Snippet::INTERNAL_JAVASCRIPT_IDENTIFIER);
         if ($script != null) {
@@ -335,13 +312,16 @@ class SnippetManager
      * @param string|null $script
      * @return Snippet a snippet in a slot
      */
-    public function &attachJavascriptScriptForSlot($snippetId, string $script = null): Snippet
+    public
+    function &attachJavascriptScriptForSlot($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::MIME_JS, Snippet::INTERNAL_JAVASCRIPT_IDENTIFIER);
+        $snippet = &$this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_JAVASCRIPT_IDENTIFIER);
         if ($script !== null) {
-            $content = $snippet->getContent();
+            $content = $snippet->getInternalDynamicContent();
             if ($content !== null) {
                 $content .= $script;
+            } else {
+                $content = $script;
             }
             $snippet->setContent($content);
         }
@@ -352,9 +332,10 @@ class SnippetManager
      * @param $snippetId
      * @return Snippet a snippet not in a slot
      */
-    public function &attachJavascriptSnippetForRequest($snippetId): Snippet
+    public
+    function &attachJavascriptSnippetForRequest($snippetId): Snippet
     {
-        return $this->attachSnippetFromRequest($snippetId, Snippet::MIME_JS, Snippet::INTERNAL_JAVASCRIPT_IDENTIFIER);
+        return $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_JAVASCRIPT_IDENTIFIER);
     }
 
     /**
@@ -363,69 +344,27 @@ class SnippetManager
      * @param string $identifier
      * @return Snippet
      */
-    private function &attachSnippetFromSlot(string $componentId, string $type, string $identifier): Snippet
+    private
+    function &attachSnippetFromSlot(string $componentId, string $type, string $identifier): Snippet
     {
         global $ID;
         $slot = $ID;
         if ($slot === null) {
             LogUtility::log2file("The slot could not be identified (global ID is null)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }
-        $snippet = Snippet::createSnippet($identifier,$type,$componentId);
-        $snippetFromArray = &$this->snippetsBySlotScope[$slot][$snippetId];
-        if (!isset($snippetFromArray)) {
-            $snippet = new Snippet($snippetId, $type);
-            $snippetFromArray = $snippet;
-        }
-        return $snippetFromArray;
+        $snippet = Snippet::getOrCreateSnippet($identifier, $type, $componentId)
+            ->addSlot($slot);
+        return $snippet;
     }
 
-    private function &attachSnippetFromRequest($snippetId, $type, $identifier)
+    private
+    function &attachSnippetFromRequest($componentId, $type, $identifier): Snippet
     {
-
-        $primarySlot = PluginUtility::getRequestedWikiId();
-        if ($primarySlot === null) {
-            LogUtility::log2file("The primary slot could not be identified (global ID is null)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-        }
-        $arrayId = $this->getArrayId($snippetId, $identifier);
-        $snippetFromArray = &$this->snippetsByRequestScope[$primarySlot][$arrayId];
-        if (!isset($snippetFromArray)) {
-            $snippet = new Snippet($snippetId, $type);
-            $snippetFromArray = $snippet;
-        }
-        return $snippetFromArray;
+        $snippet = Snippet::getOrCreateSnippet($identifier, $type, $componentId)
+            ->addSlot(Snippet::REQUEST_SLOT);
+        return $snippet;
     }
 
-
-    private function mergeSnippetArray($left, $right): array
-    {
-
-        $distinctSnippetIdByType = $left;
-        foreach (array_keys($right) as $snippetIdentifier) {
-            /**
-             * @var $snippetObject Snippet
-             */
-            foreach ($right[$snippetIdentifier] as $snippetObject) {
-
-                if (!$snippetObject instanceof Snippet) {
-                    LogUtility::msg("The value is not a snippet object");
-                    continue;
-                }
-                /**
-                 * Snippet is an object
-                 */
-                if (isset($distinctSnippetIdByType[$snippetIdentifier])) {
-                    if (!array_key_exists($snippetObject->getId(), $distinctSnippetIdByType[$snippetIdentifier])) {
-                        $distinctSnippetIdByType[$snippetIdentifier][$snippetObject->getId()] = $snippetObject;
-                    }
-                } else {
-                    $distinctSnippetIdByType[$snippetIdentifier][$snippetObject->getId()] = $snippetObject;
-                }
-            }
-        }
-
-        return $distinctSnippetIdByType;
-
-    }
 
     /**
      * Add a local javascript script as tag
@@ -438,11 +377,12 @@ class SnippetManager
      * @param string $snippetId - the snippet id
      * @param string $relativeId - the relative id from the resources directory
      */
-    public function attachJavascriptScriptForRequest(string $snippetId, string $relativeId)
+    public
+    function attachJavascriptScriptForRequest(string $snippetId, string $relativeId)
     {
         $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromDokuwikiId($relativeId);
         $url = $javascriptMedia->getUrl();
-        return $this->attachSnippetFromRequest($snippetId, Snippet::MIME_JS, $url);
+        return $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, $url);
 
     }
 
@@ -452,7 +392,8 @@ class SnippetManager
      * @param string|null $integrity
      * @return Snippet
      */
-    public function attachJavascriptComboResourceForSlot(string $snippetId, string $relativeId, string $integrity = null): Snippet
+    public
+    function attachJavascriptComboResourceForSlot(string $snippetId, string $relativeId, string $integrity = null): Snippet
     {
         $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromDokuwikiId($relativeId);
         $url = $javascriptMedia->getUrl();
@@ -464,22 +405,25 @@ class SnippetManager
 
     }
 
-    public function attachJavascriptComboLibrary()
+    public
+    function attachJavascriptComboLibrary()
     {
         return $this->attachJavascriptScriptForRequest("combo", "library:combo:dist:combo.min.js");
     }
 
-    public function attachJavascriptLibraryForSlot(string $snippetId, string $url, string $integrity = null): Snippet
+    public
+    function attachJavascriptLibraryForSlot(string $snippetId, string $url, string $integrity = null): Snippet
     {
         return $this
             ->attachSnippetFromSlot(
                 $snippetId,
-                Snippet::MIME_JS,
+                Snippet::EXTENSION_JS,
                 $url)
             ->setUrl($url, $integrity);
     }
 
-    public function attachCssExternalStyleSheetForSlot(string $snippetId, string $url, string $integrity = null): Snippet
+    public
+    function attachCssExternalStyleSheetForSlot(string $snippetId, string $url, string $integrity = null): Snippet
     {
         return $this
             ->attachSnippetFromSlot(
@@ -488,8 +432,6 @@ class SnippetManager
                 $url)
             ->setUrl($url, $integrity);
     }
-
-
 
 
 }

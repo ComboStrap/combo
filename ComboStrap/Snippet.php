@@ -105,7 +105,7 @@ class Snippet implements JsonSerializable
     /**
      * @var string The name of the component (used for internal style sheet to retrieve the file)
      */
-    private $componentId;
+    private $componentName;
 
     /**
      * @var array - the slots that needs this snippet (as key to get only one snippet by scope)
@@ -130,7 +130,7 @@ class Snippet implements JsonSerializable
         $this->mime = $mime;
         $this->type = $type;
         $this->url = $url;
-        $this->componentId = $componentId;
+        $this->componentName = $componentId;
     }
 
 
@@ -284,7 +284,7 @@ class Snippet implements JsonSerializable
         }
         return Site::getComboResourceSnippetDirectory()
             ->resolve($subDirectory)
-            ->resolve(strtolower($this->snippetId) . ".$extension");
+            ->resolve(strtolower($this->componentName) . ".$extension");
     }
 
 
@@ -318,7 +318,7 @@ class Snippet implements JsonSerializable
          * the same class name, the inline `style` tag is not applied
          *
          */
-        return "snippet-" . $this->snippetId . "-" . SnippetManager::COMBO_CLASS_SUFFIX;
+        return "snippet-" . $this->componentName . "-" . SnippetManager::COMBO_CLASS_SUFFIX;
 
     }
 

@@ -32,6 +32,10 @@ class SnippetManager
 
 
     const CANONICAL = "snippet-manager";
+    const SCRIPT_TAG = "script";
+    const LINK_TAG = "link";
+    const STYLE_TAG = "style";
+    const DATA_DOKUWIKI_ATT = "_data";
 
 
     /**
@@ -92,7 +96,7 @@ class SnippetManager
      * @return array of node type and an array of array of html attributes
      * @throws ExceptionCombo
      */
-    public function getSnippets(): array
+    public function snippetsToDokuwikiArray(): array
     {
 
         $snippets = Snippet::getSnippets();
@@ -116,18 +120,14 @@ class SnippetManager
          * @var Snippet[] $internalSnippets
          */
         $internalSnippets = [];
-        $scriptHtmlTag = "script";
-        $linkHtmlTag = "link";
-        $styleHtmlTag = "style";
+
         foreach ($snippets as $snippet) {
 
             $type = $snippet->getType();
             if ($type === Snippet::INTERNAL) {
-
                 $internalSnippets[] = $snippet;
                 continue;
             }
-
 
             $extension = $snippet->getExtension();
             switch ($extension) {
@@ -149,7 +149,8 @@ class SnippetManager
                     foreach ($snippet->getHtmlAttributes() as $name => $value) {
                         $jsDokuwiki[$name] = $value;
                     }
-                    $returnedDokuWikiFormat[$scriptHtmlTag][] = $jsDokuwiki;
+                    ksort($jsDokuwiki);
+                    $returnedDokuWikiFormat[self::SCRIPT_TAG][] = $jsDokuwiki;
                     break;
                 case Snippet::MIME_CSS:
                     $cssDokuwiki = array(
@@ -165,12 +166,13 @@ class SnippetManager
                     $critical = $snippet->getCritical();
                     if (!$critical && Site::getTemplate() === Site::STRAP_TEMPLATE_NAME) {
                         $cssDokuwiki["rel"] = "preload";
-                        $cssDokuwiki['as'] = 'style';
+                        $cssDokuwiki['as'] = self::STYLE_TAG;
                     }
                     foreach ($snippet->getHtmlAttributes() as $name => $value) {
-                        $jsDokuwiki[$name] = $value;
+                        $cssDokuwiki[$name] = $value;
                     }
-                    $returnedDokuWikiFormat[$linkHtmlTag][] = $cssDokuwiki;
+                    ksort($cssDokuwiki);
+                    $returnedDokuWikiFormat[self::LINK_TAG][] = $cssDokuwiki;
                     break;
                 default:
                     LogUtility::msg("The extension ($extension) is unknown, the external snippet ($snippet) was not added");
@@ -189,9 +191,9 @@ class SnippetManager
                         continue 2;
                     }
 
-                    $returnedDokuWikiFormat[$scriptHtmlTag][] = array(
+                    $returnedDokuWikiFormat[self::SCRIPT_TAG][] = array(
                         "class" => $snippet->getClass(),
-                        "_data" => $content
+                        self::DATA_DOKUWIKI_ATT => $content
                     );
 
                     break;
@@ -207,10 +209,10 @@ class SnippetManager
                     }
                     $snippetArray = array(
                         "class" => $snippet->getClass(),
-                        "_data" => $content
+                        self::DATA_DOKUWIKI_ATT => $content
                     );
 
-                    $returnedDokuWikiFormat[$styleHtmlTag][] = $snippetArray;
+                    $returnedDokuWikiFormat[self::STYLE_TAG][] = $snippetArray;
                     break;
                 default:
                     LogUtility::msg("The extension ($extension) is unknown, the internal snippet ($snippet) was not added");

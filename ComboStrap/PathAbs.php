@@ -41,6 +41,8 @@ abstract class PathAbs implements Path
                 return new Mime(Mime::HTML);
             case "png":
                 return new Mime(Mime::PNG);
+            case "css":
+                return new Mime(Mime::CSS);
             default:
                 $mime = mimetype($this->getLastName(), true)[1];
                 if ($mime === null || $mime === false) {

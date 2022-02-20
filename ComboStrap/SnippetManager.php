@@ -99,20 +99,13 @@ class SnippetManager
 
 
     /**
-     */
-    public function getAllSnippetsInDokuwikiArray(): array
-    {
-        return $this->snippetsToDokuwikiArray(Snippet::getSnippets());
-    }
-
-    /**
      * Transform in dokuwiki format
      *
      * @return array of node type and an array of array of html attributes
      */
-    private function snippetsToDokuwikiArray($snippets = null): array
+    public function getAllSnippetsToDokuwikiArray(): array
     {
-
+        $snippets = Snippet::getSnippets();
         if ($snippets === null) {
             return [];
         }
@@ -278,15 +271,31 @@ class SnippetManager
 
 
     public
-    function getSlotSnippetsInDokuwikiArrayFormat($slot): ?array
+    function getSlotSnippetsToJsonArray($slot): ?array
     {
         $snippets = Snippet::getSnippets();
         $snippetsForSlot = array_filter($snippets,
             function ($s) use ($slot) {
                 return $s->hasSlot($slot);
             });
-        return $this->snippetsToDokuwikiArray($snippetsForSlot);
+        throw new ExceptionCombo("To do");
+        return [];
 
+    }
+
+    /**
+     * @param array $array
+     * @return null|Snippet[]
+     * @throws ExceptionCombo
+     */
+    public
+    function getSlotSnippetsFromJsonArray(array $array): ?array
+    {
+        $snippets = null;
+        foreach ($array as $element) {
+            $snippets[] = Snippet::createFromJson($element);
+        }
+        return $snippets;
     }
 
 

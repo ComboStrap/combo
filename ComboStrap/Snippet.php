@@ -32,14 +32,14 @@ class Snippet implements JsonSerializable
      * The head in css format
      * We need to add the style node
      */
-    const MIME_CSS = "css";
+    const EXTENSION_CSS = "css";
     /**
      * The head in javascript
      * We need to wrap it in a script node
      */
     const EXTENSION_JS = "js";
-    const JSON_SNIPPET_ID_PROPERTY = "id";
-    const JSON_TYPE_PROPERTY = "type";
+    const JSON_COMPONENT_PROPERTY = "component";
+    const JSON_EXTENSION_PROPERTY = "extension";
     const JSON_CRITICAL_PROPERTY = "critical";
     const JSON_CONTENT_PROPERTY = "content";
 
@@ -51,8 +51,8 @@ class Snippet implements JsonSerializable
      */
     public const INTERNAL_JAVASCRIPT_IDENTIFIER = "internal-javascript";
     public const INTERNAL_STYLESHEET_IDENTIFIER = "internal-stylesheet";
-    const INTERNAL = "internal";
-    const EXTERNAL = "external";
+    const INTERNAL_TYPE = "internal";
+    const EXTERNAL_TYPE = "external";
 
     /**
      * When a snippet is scoped to the request
@@ -71,12 +71,16 @@ class Snippet implements JsonSerializable
      * ,...
      */
     const REQUEST_SLOT = "request";
+    const JSON_URL_PROPERTY = "url";
+    const JSON_INTEGRITY_PROPERTY = "integrity";
+    const JSON_TYPE_PROPERTY = "type";
+    const JSON_HTML_ATTRIBUTES_PROPERTY = "attributes";
 
 
     protected static $globalSnippets;
 
     private $snippetId;
-    private $mime;
+    private $extension;
 
     /**
      * @var bool
@@ -86,7 +90,7 @@ class Snippet implements JsonSerializable
     /**
      * @var string the text script / style (may be null if it's an external resources)
      */
-    private $content;
+    private $inlineContent;
 
     /**
      * @var string
@@ -99,7 +103,7 @@ class Snippet implements JsonSerializable
     /**
      * @var array Extra html attributes if needed
      */
-    private $htmlAttributes = [];
+    private $htmlAttributes;
 
     /**
      * @var string ie internal or external
@@ -130,7 +134,7 @@ class Snippet implements JsonSerializable
     public function __construct($snippetId, $mime, $type, $url, $componentId)
     {
         $this->snippetId = $snippetId;
-        $this->mime = $mime;
+        $this->extension = $mime;
         $this->type = $type;
         $this->url = $url;
         $this->componentName = $componentId;
@@ -139,7 +143,7 @@ class Snippet implements JsonSerializable
 
     public static function createInternalCssSnippet($componentId): Snippet
     {
-        return self::getOrCreateSnippet(self::INTERNAL_STYLESHEET_IDENTIFIER, self::MIME_CSS, $componentId);
+        return self::getOrCreateSnippet(self::INTERNAL_STYLESHEET_IDENTIFIER, self::EXTENSION_CSS, $componentId);
     }
 
 
@@ -153,7 +157,7 @@ class Snippet implements JsonSerializable
         return new Snippet("unknown", "unknwon", "unknwon", "unknwon", $componentId);
     }
 
-    public static function &getOrCreateSnippet(string $identifier, string $mime, string $componentId): Snippet
+    public static function &getOrCreateSnippet(string $identifier, string $extension, string $componentId): Snippet
     {
 
         /**
@@ -165,10 +169,10 @@ class Snippet implements JsonSerializable
          */
         if (in_array($identifier, [self::INTERNAL_JAVASCRIPT_IDENTIFIER, self::INTERNAL_STYLESHEET_IDENTIFIER])) {
             $snippetId = $identifier . "-" . $componentId;
-            $type = self::INTERNAL;
+            $type = self::INTERNAL_TYPE;
             $url = null;
         } else {
-            $type = self::EXTERNAL;
+            $type = self::EXTERNAL_TYPE;
             $snippetId = $identifier;
             $url = $identifier;
         }
@@ -189,7 +193,7 @@ class Snippet implements JsonSerializable
         }
         $snippet = &$snippets[$snippetId];
         if ($snippet === null) {
-            $snippets[$snippetId] = new Snippet($snippetId, $mime, $type, $url, $componentId);
+            $snippets[$snippetId] = new Snippet($snippetId, $extension, $type, $url, $componentId);
             $snippet = &$snippets[$snippetId];
         }
         return $snippet;
@@ -209,7 +213,8 @@ class Snippet implements JsonSerializable
         if (self::$globalSnippets === null) {
             return null;
         }
-        return array_shift(self::$globalSnippets);
+        $keys = array_keys(self::$globalSnippets);
+        return self::$globalSnippets[$keys[0]];
     }
 
 
@@ -236,12 +241,12 @@ class Snippet implements JsonSerializable
     }
 
     /**
-     * @param $content - Set an inline content for a script or stylesheet
+     * @param $inlineContent - Set an inline content for a script or stylesheet
      * @return Snippet for chaining
      */
-    public function setContent($content): Snippet
+    public function setInlineContent($inlineContent): Snippet
     {
-        $this->content = $content;
+        $this->inlineContent = $inlineContent;
         return $this;
     }
 
@@ -250,7 +255,7 @@ class Snippet implements JsonSerializable
      */
     public function getInternalDynamicContent(): ?string
     {
-        return $this->content;
+        return $this->inlineContent;
     }
 
     /**
@@ -267,8 +272,8 @@ class Snippet implements JsonSerializable
 
     public function getInternalFile(): ?LocalPath
     {
-        switch ($this->mime) {
-            case self::MIME_CSS:
+        switch ($this->extension) {
+            case self::EXTENSION_CSS:
                 $extension = "css";
                 $subDirectory = "style";
                 break;
@@ -277,7 +282,7 @@ class Snippet implements JsonSerializable
                 $subDirectory = "js";
                 break;
             default:
-                $message = "Unknown snippet type ($this->mime)";
+                $message = "Unknown snippet type ($this->extension)";
                 if (PluginUtility::isDevOrTest()) {
                     throw new ExceptionComboRuntime($message);
                 } else {
@@ -297,13 +302,13 @@ class Snippet implements JsonSerializable
 
     public function __toString()
     {
-        return $this->snippetId . "-" . $this->mime;
+        return $this->snippetId . "-" . $this->extension;
     }
 
     public function getCritical(): bool
     {
         if ($this->critical === null) {
-            if ($this->mime == self::MIME_CSS) {
+            if ($this->extension == self::EXTENSION_CSS) {
                 // All CSS should be loaded first
                 // The CSS animation / background can set this to false
                 return true;
@@ -352,18 +357,7 @@ EOF;
 
     public function toJsonArray(): array
     {
-        $dataToSerialize = [
-            self::JSON_SNIPPET_ID_PROPERTY => $this->snippetId,
-            self::JSON_TYPE_PROPERTY => $this->mime
-        ];
-        if ($this->critical !== null) {
-            $dataToSerialize[self::JSON_CRITICAL_PROPERTY] = $this->critical;
-        }
-        if ($this->content !== null) {
-            $dataToSerialize[self::JSON_CONTENT_PROPERTY] = $this->content;
-        }
-
-        return $dataToSerialize;
+        return $this->jsonSerialize();
 
     }
 
@@ -372,11 +366,11 @@ EOF;
      */
     public static function createFromJson($array): Snippet
     {
-        $snippetId = $array[self::JSON_SNIPPET_ID_PROPERTY];
+        $snippetId = $array[self::JSON_COMPONENT_PROPERTY];
         if ($snippetId === null) {
             throw new ExceptionCombo("The snippet id property was not found in the json array");
         }
-        $type = $array[self::JSON_TYPE_PROPERTY];
+        $type = $array[self::JSON_EXTENSION_PROPERTY];
         if ($type === null) {
             throw new ExceptionCombo("The snippet type property was not found in the json array");
         }
@@ -388,7 +382,7 @@ EOF;
 
         $content = $array[self::JSON_CONTENT_PROPERTY];
         if ($content !== null) {
-            $snippet->setContent($content);
+            $snippet->setInlineContent($content);
         }
 
         return $snippet;
@@ -397,7 +391,7 @@ EOF;
 
     public function getExtension()
     {
-        return $this->mime;
+        return $this->extension;
     }
 
     public function setUrl(string $url, ?string $integrity): Snippet
@@ -434,7 +428,7 @@ EOF;
         return $this->integrity;
     }
 
-    public function getHtmlAttributes(): array
+    public function getHtmlAttributes(): ?array
     {
         return $this->htmlAttributes;
     }
@@ -460,4 +454,28 @@ EOF;
     }
 
 
+    public function jsonSerialize(): array
+    {
+        $dataToSerialize = [
+            self::JSON_COMPONENT_PROPERTY => $this->componentName,
+            self::JSON_EXTENSION_PROPERTY => $this->extension,
+            self::JSON_TYPE_PROPERTY => $this->type
+        ];
+        if ($this->url !== null) {
+            $dataToSerialize[self::JSON_URL_PROPERTY] =  $this->url;
+        }
+        if ($this->integrity !== null) {
+            $dataToSerialize[self::JSON_INTEGRITY_PROPERTY] = $this->integrity;
+        }
+        if ($this->critical !== null) {
+            $dataToSerialize[self::JSON_CRITICAL_PROPERTY] = $this->critical;
+        }
+        if ($this->inlineContent !== null) {
+            $dataToSerialize[self::JSON_CONTENT_PROPERTY] = $this->inlineContent;
+        }
+        if($this->htmlAttributes!==null){
+            $dataToSerialize[self::JSON_HTML_ATTRIBUTES_PROPERTY] = $this->htmlAttributes;
+        }
+        return $dataToSerialize;
+    }
 }

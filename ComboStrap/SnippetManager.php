@@ -130,7 +130,7 @@ class SnippetManager
         foreach ($snippets as $snippet) {
 
             $type = $snippet->getType();
-            if ($type === Snippet::INTERNAL) {
+            if ($type === Snippet::INTERNAL_TYPE) {
                 $internalSnippets[] = $snippet;
                 continue;
             }
@@ -152,13 +152,16 @@ class SnippetManager
                         $jsDokuwiki["defer"] = null;
                         $jsDokuwiki["async"] = null;
                     }
-                    foreach ($snippet->getHtmlAttributes() as $name => $value) {
-                        $jsDokuwiki[$name] = $value;
+                    $htmlAttributes = $snippet->getHtmlAttributes();
+                    if ($htmlAttributes !== null) {
+                        foreach ($htmlAttributes as $name => $value) {
+                            $jsDokuwiki[$name] = $value;
+                        }
                     }
                     ksort($jsDokuwiki);
                     $returnedDokuWikiFormat[self::SCRIPT_TAG][] = $jsDokuwiki;
                     break;
-                case Snippet::MIME_CSS:
+                case Snippet::EXTENSION_CSS:
                     $cssDokuwiki = array(
                         "class" => $snippet->getClass(),
                         "rel" => "stylesheet",
@@ -174,8 +177,11 @@ class SnippetManager
                         $cssDokuwiki["rel"] = "preload";
                         $cssDokuwiki['as'] = self::STYLE_TAG;
                     }
-                    foreach ($snippet->getHtmlAttributes() as $name => $value) {
-                        $cssDokuwiki[$name] = $value;
+                    $htmlAttributes = $snippet->getHtmlAttributes();
+                    if ($htmlAttributes !== null) {
+                        foreach ($htmlAttributes as $name => $value) {
+                            $cssDokuwiki[$name] = $value;
+                        }
                     }
                     ksort($cssDokuwiki);
                     $returnedDokuWikiFormat[self::LINK_TAG][] = $cssDokuwiki;
@@ -203,7 +209,7 @@ class SnippetManager
                     );
 
                     break;
-                case Snippet::MIME_CSS:
+                case Snippet::EXTENSION_CSS:
                     /**
                      * CSS inline in script tag
                      * They are all critical
@@ -271,15 +277,18 @@ class SnippetManager
 
 
     public
-    function getSlotSnippetsToJsonArray($slot): ?array
+    function getJsonArrayFromSlotSnippets($slot): ?array
     {
         $snippets = Snippet::getSnippets();
         $snippetsForSlot = array_filter($snippets,
             function ($s) use ($slot) {
                 return $s->hasSlot($slot);
             });
-        throw new ExceptionCombo("To do");
-        return [];
+        $jsonSnippets = null;
+        foreach ($snippetsForSlot as $snippet) {
+            $jsonSnippets[] = $snippet->toJsonArray();
+        }
+        return $jsonSnippets;
 
     }
 
@@ -307,9 +316,9 @@ class SnippetManager
     public
     function &attachCssInternalStyleSheetForSlot($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::MIME_CSS, Snippet::INTERNAL_STYLESHEET_IDENTIFIER);
+        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_CSS, Snippet::INTERNAL_STYLESHEET_IDENTIFIER);
         if ($script !== null) {
-            $snippet->setContent($script);
+            $snippet->setInlineContent($script);
         }
         return $snippet;
     }
@@ -322,9 +331,9 @@ class SnippetManager
     public
     function &attachCssSnippetForRequest($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::MIME_CSS, Snippet::INTERNAL_JAVASCRIPT_IDENTIFIER);
+        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_CSS, Snippet::INTERNAL_JAVASCRIPT_IDENTIFIER);
         if ($script != null) {
-            $snippet->setContent($script);
+            $snippet->setInlineContent($script);
         }
         return $snippet;
     }
@@ -345,7 +354,7 @@ class SnippetManager
             } else {
                 $content = $script;
             }
-            $snippet->setContent($content);
+            $snippet->setInlineContent($content);
         }
         return $snippet;
     }
@@ -450,7 +459,7 @@ class SnippetManager
         return $this
             ->attachSnippetFromSlot(
                 $snippetId,
-                Snippet::MIME_CSS,
+                Snippet::EXTENSION_CSS,
                 $url)
             ->setUrl($url, $integrity);
     }

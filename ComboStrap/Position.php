@@ -55,7 +55,7 @@ var stickyElements = Sticksy.initializeAll('.$stickyClass',{topSpacing: topSpaci
 EOF;
                 $snippetManager
                     ->attachJavascriptScriptForSlot(self::STICKY)
-                    ->setContent($jsSnippet);
+                    ->setInlineContent($jsSnippet);
             }
 
         }

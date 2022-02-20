@@ -112,7 +112,7 @@ class HtmlDocument extends OutputDocument
          * Snippet
          */
         $snippetManager = PluginUtility::getSnippetManager();
-        $jsonDecodeSnippets = $snippetManager->getSlotSnippetsToJsonArray($slotId);
+        $jsonDecodeSnippets = $snippetManager->getJsonArrayFromSlotSnippets($slotId);
 
         /**
          * Cache file

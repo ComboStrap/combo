@@ -350,7 +350,7 @@ EOF;
     }
 
 
-    public function jsonSerialize(): array
+    public function toJsonArray(): array
     {
         $dataToSerialize = [
             self::JSON_SNIPPET_ID_PROPERTY => $this->snippetId,

@@ -22,6 +22,9 @@ use JsonSerializable;
  *   * CSS: link for href or style with content
  *   * Javascript: script
  *
+ * A component to manage the extra HTML that
+ * comes from components and that should come in the head HTML node
+ *
  */
 class Snippet implements JsonSerializable
 {

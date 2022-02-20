@@ -16,14 +16,16 @@ require_once(__DIR__ . '/Snippet.php');
 
 /**
  * @package ComboStrap
- * A component to manage the extra HTML that
- * comes from components and that should come in the head HTML node
  *
- * The snippet manager handles two scope of snippet
+ * Public interface of {@link Snippet}
+ *
+ * All plugin/component should use the attach functions to add a internal or external
+ * stylesheet/javascript to a slot or request scoped
+ *
+ * Note:
  * All function with the suffix
  *   * `ForSlot` are snippets for a bar (ie page, sidebar, ...) - cached
  *   * `ForRequests` are snippets added for the HTTP request - not cached. Example of request component: message, anchor
- *
  */
 class SnippetManager
 {

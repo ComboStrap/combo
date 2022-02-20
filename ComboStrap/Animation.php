@@ -48,7 +48,7 @@ class Animation
             self::scrollMagicInit();
 
             $snippetManager
-                ->attachCssStyleSheetForSlot(
+                ->attachCssExternalStyleSheetForSlot(
                     self::ON_VIEW_SNIPPET_ID,
                     "https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css",
                     "sha256-X7rrn44l1+AUO65h1LGALBbOc5C5bOstSYsNlv9MhT8="
@@ -96,7 +96,7 @@ window.addEventListener("load", function(event) {
     wow.init();
 });
 EOF;
-        $snippetManager->attachJavascriptSnippetForSlot($wowSnippetId, $js);
+        $snippetManager->attachJavascriptScriptForSlot($wowSnippetId, $js);
         $snippetManager->attachJavascriptLibraryForSlot(
             $wowSnippetId,
             "https://cdn.jsdelivr.net/npm/wowjs@1.1.3/dist/wow.min.js",
@@ -112,7 +112,7 @@ EOF;
         $snippetManager = PluginUtility::getSnippetManager();
 
         $scrollMagicSnippetId = "scroll-magic";
-        $snippetManager->attachJavascriptSnippetForSlot($scrollMagicSnippetId);
+        $snippetManager->attachJavascriptScriptForSlot($scrollMagicSnippetId);
         $snippetManager->attachJavascriptLibraryForSlot(
             $scrollMagicSnippetId,
             "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/ScrollMagic.min.js",

@@ -31,15 +31,8 @@ class SnippetManager
     const COMBO_CLASS_SUFFIX = "combo";
 
 
-    /**
-     * The identifier for a script snippet
-     * (ie inline javascript or style)
-     * To make the difference with library
-     * that have already an identifier with the url value
-     */
-    const SCRIPT_IDENTIFIER = "script";
-
     const CANONICAL = "snippet-manager";
+
 
     /**
      * @var SnippetManager array that contains one element (one {@link SnippetManager} scoped to the requested id
@@ -156,7 +149,7 @@ class SnippetManager
         $dokuWikiHeadsSrc = array();
         foreach ($distinctSnippetIdByType as $snippetType => $snippetBySnippetId) {
             switch ($snippetType) {
-                case Snippet::TYPE_JS:
+                case Snippet::MIME_JS:
                     foreach ($snippetBySnippetId as $snippetId => $snippet) {
                         /**
                          * Bug (Quick fix)
@@ -174,7 +167,7 @@ class SnippetManager
                         );
                     }
                     break;
-                case Snippet::TYPE_CSS:
+                case Snippet::MIME_CSS:
                     /**
                      * CSS inline in script tag
                      * They are all critical
@@ -200,10 +193,12 @@ class SnippetManager
                         $dokuWikiHeadsFormatContent["style"][] = $snippetArray;
                     }
                     break;
-                case Snippet::TAG_TYPE:
+                default:
+                    LogUtility::msg("To refactor");
                     foreach ($snippetBySnippetId as $snippetId => $tagsSnippet) {
                         /** @var Snippet $tagsSnippet */
-                        foreach ($tagsSnippet->getTags() as $htmlElement => $heads) {
+                        $headsTag = [];
+                        foreach ($headsTag as $htmlElement => $heads) {
                             $classFromSnippetId = self::getClassFromSnippetId($snippetId);
                             foreach ($heads as $head) {
                                 if (isset($head["class"])) {
@@ -314,7 +309,7 @@ class SnippetManager
      */
     public function &attachCssInternalStyleSheetForSlot($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::TYPE_CSS, self::SCRIPT_IDENTIFIER);
+        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::MIME_CSS, Snippet::INTERNAL_STYLESHEET_IDENTIFIER);
         if ($script !== null) {
             $snippet->setContent($script);
         }
@@ -328,7 +323,7 @@ class SnippetManager
      */
     public function &attachCssSnippetForRequest($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_CSS, self::SCRIPT_IDENTIFIER);
+        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::MIME_CSS, Snippet::INTERNAL_JAVASCRIPT_IDENTIFIER);
         if ($script != null) {
             $snippet->setContent($script);
         }
@@ -340,11 +335,15 @@ class SnippetManager
      * @param string|null $script
      * @return Snippet a snippet in a slot
      */
-    public function &attachJavascriptSnippetForSlot($snippetId, string $script = null): Snippet
+    public function &attachJavascriptScriptForSlot($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::TYPE_JS, self::SCRIPT_IDENTIFIER);
-        if ($script != null) {
-            $snippet->setContent($script);
+        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::MIME_JS, Snippet::INTERNAL_JAVASCRIPT_IDENTIFIER);
+        if ($script !== null) {
+            $content = $snippet->getContent();
+            if ($content !== null) {
+                $content .= $script;
+            }
+            $snippet->setContent($content);
         }
         return $snippet;
     }
@@ -355,23 +354,24 @@ class SnippetManager
      */
     public function &attachJavascriptSnippetForRequest($snippetId): Snippet
     {
-        return $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_JS, self::SCRIPT_IDENTIFIER);
+        return $this->attachSnippetFromRequest($snippetId, Snippet::MIME_JS, Snippet::INTERNAL_JAVASCRIPT_IDENTIFIER);
     }
 
     /**
-     * @param $snippetId
-     * @param $type
-     * @param $identifier
+     * @param string $componentId
+     * @param string $type
+     * @param string $identifier
      * @return Snippet
      */
-    private function &attachSnippetFromSlot($snippetId, $type, $identifier): Snippet
+    private function &attachSnippetFromSlot(string $componentId, string $type, string $identifier): Snippet
     {
         global $ID;
         $slot = $ID;
         if ($slot === null) {
-            LogUtility::log2file("The slot could not be identified (global ID is null)",LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+            LogUtility::log2file("The slot could not be identified (global ID is null)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }
-        $snippetFromArray = &$this->snippetsBySlotScope[$slot][$type][$snippetId][$identifier];
+        $snippet = Snippet::createSnippet($identifier,$type,$componentId);
+        $snippetFromArray = &$this->snippetsBySlotScope[$slot][$snippetId];
         if (!isset($snippetFromArray)) {
             $snippet = new Snippet($snippetId, $type);
             $snippetFromArray = $snippet;
@@ -383,7 +383,11 @@ class SnippetManager
     {
 
         $primarySlot = PluginUtility::getRequestedWikiId();
-        $snippetFromArray = &$this->snippetsByRequestScope[$primarySlot][$type][$snippetId][$identifier];
+        if ($primarySlot === null) {
+            LogUtility::log2file("The primary slot could not be identified (global ID is null)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+        }
+        $arrayId = $this->getArrayId($snippetId, $identifier);
+        $snippetFromArray = &$this->snippetsByRequestScope[$primarySlot][$arrayId];
         if (!isset($snippetFromArray)) {
             $snippet = new Snippet($snippetId, $type);
             $snippetFromArray = $snippet;
@@ -396,11 +400,11 @@ class SnippetManager
     {
 
         $distinctSnippetIdByType = $left;
-        foreach (array_keys($right) as $snippetContentType) {
+        foreach (array_keys($right) as $snippetIdentifier) {
             /**
              * @var $snippetObject Snippet
              */
-            foreach ($right[$snippetContentType] as $snippetObject) {
+            foreach ($right[$snippetIdentifier] as $snippetObject) {
 
                 if (!$snippetObject instanceof Snippet) {
                     LogUtility::msg("The value is not a snippet object");
@@ -409,12 +413,12 @@ class SnippetManager
                 /**
                  * Snippet is an object
                  */
-                if (isset($distinctSnippetIdByType[$snippetContentType])) {
-                    if (!array_key_exists($snippetObject->getId(), $distinctSnippetIdByType[$snippetContentType])) {
-                        $distinctSnippetIdByType[$snippetContentType][$snippetObject->getId()] = $snippetObject;
+                if (isset($distinctSnippetIdByType[$snippetIdentifier])) {
+                    if (!array_key_exists($snippetObject->getId(), $distinctSnippetIdByType[$snippetIdentifier])) {
+                        $distinctSnippetIdByType[$snippetIdentifier][$snippetObject->getId()] = $snippetObject;
                     }
                 } else {
-                    $distinctSnippetIdByType[$snippetContentType][$snippetObject->getId()] = $snippetObject;
+                    $distinctSnippetIdByType[$snippetIdentifier][$snippetObject->getId()] = $snippetObject;
                 }
             }
         }
@@ -438,7 +442,7 @@ class SnippetManager
     {
         $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromDokuwikiId($relativeId);
         $url = $javascriptMedia->getUrl();
-        return $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_JS, $url);
+        return $this->attachSnippetFromRequest($snippetId, Snippet::MIME_JS, $url);
 
     }
 
@@ -470,20 +474,22 @@ class SnippetManager
         return $this
             ->attachSnippetFromSlot(
                 $snippetId,
-                Snippet::TYPE_JS,
+                Snippet::MIME_JS,
                 $url)
             ->setUrl($url, $integrity);
     }
 
-    public function attachCssStyleSheetForSlot(string $snippetId, string $url, string $integrity = null): Snippet
+    public function attachCssExternalStyleSheetForSlot(string $snippetId, string $url, string $integrity = null): Snippet
     {
         return $this
             ->attachSnippetFromSlot(
                 $snippetId,
-                Snippet::TYPE_CSS,
+                Snippet::MIME_CSS,
                 $url)
             ->setUrl($url, $integrity);
     }
+
+
 
 
 }

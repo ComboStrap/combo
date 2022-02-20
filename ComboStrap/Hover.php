@@ -36,7 +36,7 @@ class Hover
                 if (in_array($hover, self::HOVER_ANIMATIONS)) {
 
                     $snippetManager
-                        ->attachCssStyleSheetForSlot(
+                        ->attachCssExternalStyleSheetForSlot(
                             self::ON_HOVER_SNIPPET_ID,
                             "https://cdnjs.cloudflare.com/ajax/libs/hover.css/2.3.1/css/hover-min.css",
                             "sha512-csw0Ma4oXCAgd/d4nTcpoEoz4nYvvnk21a8VA2h2dzhPAvjbUIK6V3si7/g/HehwdunqqW18RwCJKpD7rL67Xg=="
@@ -94,7 +94,7 @@ class Hover
                 $attributes->addHtmlAttributeValue("data-hover-class", trim($comboDataHoverClasses));
 
                 // The javascript that manage the hover effect by adding the class in the data-hover class
-                $snippetManager->attachJavascriptSnippetForSlot(self::ON_HOVER_SNIPPET_ID);
+                $snippetManager->attachJavascriptScriptForSlot(self::ON_HOVER_SNIPPET_ID);
 
             }
 

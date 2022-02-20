@@ -65,7 +65,7 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
          * The profile page is created via buffer
          * We print before the forms to avoid a FOUC
          */
-        print Snippet::createCssSnippet(self::TAG_UPDATE)
+        print Snippet::createInternalCssSnippet(self::TAG_UPDATE)
             ->getHtmlStyleTag();
 
         /**
@@ -242,7 +242,7 @@ EOF;
          * The profile page is created via buffer
          * We print before the forms to avoid a FOUC
          */
-        print Snippet::createCssSnippet(self::TAG_DELETE)
+        print Snippet::createInternalCssSnippet(self::TAG_DELETE)
             ->getHtmlStyleTag();
 
         /**

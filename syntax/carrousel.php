@@ -259,9 +259,9 @@ EOF;
                     $snippetId = self::TAG;
 
                     $snippetManager->attachCssInternalStyleSheetForSlot($snippetId);
-                    $snippetManager->attachJavascriptSnippetForSlot($snippetId);
+                    $snippetManager->attachJavascriptScriptForSlot($snippetId);
                     // https://www.jsdelivr.com/package/npm/@glidejs/glide
-                    $snippetManager->attachCssStyleSheetForSlot($snippetId,
+                    $snippetManager->attachCssExternalStyleSheetForSlot($snippetId,
                         "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
                         "sha256-bmdlmBAVo1Q6XV2cHiyaBuBfe9KgYQhCrfQmoRq8+Sg="
                     );
@@ -302,6 +302,8 @@ EOF;
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     $control = $tagAttributes->getValue(self::CONTROL_ATTRIBUTE);
                     if ($control !== "none") {
+                        // move per view
+                        // https://github.com/glidejs/glide/issues/346#issuecomment-1046137773
                         $escapedLessThan = PluginUtility::htmlEncode("|<");
                         $escapedGreaterThan = PluginUtility::htmlEncode("|>");
 

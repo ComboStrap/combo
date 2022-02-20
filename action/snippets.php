@@ -147,7 +147,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                     if (sizeof($snippets) > 0) {
                         $nativeSnippets = [];
                         foreach ($snippets as $snippet) {
-                            $nativeSnippets[$snippet->getType()][$snippet->getId()] = $snippet;
+                            $nativeSnippets[$snippet->getMime()][$snippet->getId()] = $snippet;
                         }
                         $snippetManager->addSnippetsFromCacheForSlot($slotId, $nativeSnippets);
                     }

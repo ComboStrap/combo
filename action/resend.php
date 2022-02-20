@@ -74,7 +74,7 @@ EOF;
          * We print before the forms
          * to avoid a FOUC
          */
-        $loginCss = Snippet::createCssSnippet(self::CANONICAL);
+        $loginCss = Snippet::createInternalCssSnippet(self::CANONICAL);
         $content = $loginCss->getContent();
         $class = $loginCss->getClass();
         $cssHtml = <<<EOF

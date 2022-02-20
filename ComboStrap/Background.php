@@ -284,7 +284,7 @@ class Background
             /**
              * Attach the stylesheet
              */
-            PluginUtility::getSnippetManager()->attachCssStyleSheetForSlot(
+            PluginUtility::getSnippetManager()->attachCssExternalStyleSheetForSlot(
                 self::PATTERN_CSS_SNIPPET_ID,
                 "https://cdn.jsdelivr.net/npm/pattern.css@1.0.0/dist/pattern.min.css",
                 "sha256-Vwich3JPJa27TO9g6q+TxJGE7DNEigBaHNPm+KkMR6o=")

@@ -29,20 +29,30 @@ class Snippet implements JsonSerializable
      * The head in css format
      * We need to add the style node
      */
-    const TYPE_CSS = "css";
+    const MIME_CSS = "css";
     /**
      * The head in javascript
      * We need to wrap it in a script node
      */
-    const TYPE_JS = "js";
+    const MIME_JS = "js";
     const JSON_SNIPPET_ID_PROPERTY = "id";
     const JSON_TYPE_PROPERTY = "type";
     const JSON_CRITICAL_PROPERTY = "critical";
     const JSON_CONTENT_PROPERTY = "content";
-    const JSON_HEAD_PROPERTY = "head";
+
+    /**
+     * The identifier for a script snippet
+     * (ie inline javascript or style)
+     * To make the difference with library
+     * that have already an identifier with the url value
+     */
+    public const INTERNAL_JAVASCRIPT_IDENTIFIER = "internal-javascript";
+    public const INTERNAL_STYLESHEET_IDENTIFIER = "internal-stylesheet";
+    const INTERNAL = "internal";
+    const EXTERNAL = "external";
 
     private $snippetId;
-    private $type;
+    private $mime;
 
     /**
      * @var bool
@@ -53,10 +63,7 @@ class Snippet implements JsonSerializable
      * @var string the text script / style (may be null if it's an external resources)
      */
     private $content;
-    /**
-     * @var array
-     */
-    private $headsTags;
+
     /**
      * @var string
      */
@@ -71,23 +78,32 @@ class Snippet implements JsonSerializable
     private $htmlAttributes = [];
 
     /**
+     * @var string ie internal or external
+     */
+    private $type;
+    /**
+     * @var string The name of the component (used for internal style sheet to retrieve the file)
+     */
+    private $componentId;
+
+    /**
      * Snippet constructor.
      */
-    public function __construct($snippetId, $snippetType)
+    public function __construct($snippetId, $mime, $type, $url, $componentId)
     {
         $this->snippetId = $snippetId;
-        $this->type = $snippetType;
+        $this->mime = $mime;
+        $this->type = $type;
+        $this->url = $url;
+        $this->componentId = $componentId;
     }
 
-    public static function createJavascriptSnippet($snippetId): Snippet
+
+    public static function createInternalCssSnippet($componentId): Snippet
     {
-        return new Snippet($snippetId, self::TYPE_JS);
+        return self::createSnippet(self::INTERNAL_STYLESHEET_IDENTIFIER, self::MIME_CSS,$componentId);
     }
 
-    public static function createCssSnippet($snippetId): Snippet
-    {
-        return new Snippet($snippetId, self::TYPE_CSS);
-    }
 
     /**
      * @param $snippetId
@@ -99,9 +115,28 @@ class Snippet implements JsonSerializable
         return new Snippet($snippetId, "unknwon");
     }
 
-    public static function createTagSnippet($snippetId): Snippet
+    public static function createSnippet(string $identifier, string $mime, string $componentId)
     {
-        return new Snippet($snippetId, Snippet::TAG_TYPE);
+
+        /**
+         * The snippet id is the url for external resources (ie external javascript / stylesheet)
+         * otherwise if it's internal, it's the component id and it's type
+         * @param string $componentId
+         * @param string $identifier
+         * @return string
+         */
+        if (in_array($identifier, [self::INTERNAL_JAVASCRIPT_IDENTIFIER, self::INTERNAL_STYLESHEET_IDENTIFIER])) {
+            $snippetId = $identifier . "-" . $componentId;
+            $type = self::INTERNAL;
+            $url = null;
+        } else {
+            $type = self::EXTERNAL;
+            $snippetId = $identifier;
+            $url = $identifier;
+        }
+
+        return new Snippet($snippetId, $mime, $type, $url, $componentId);
+
     }
 
 
@@ -139,62 +174,59 @@ class Snippet implements JsonSerializable
 
     /**
      * @return string
-     * @throws ExceptionCombo
      */
-    public function getContent(): string
+    public function getContent(): ?string
     {
-        if ($this->content == null) {
-            switch ($this->type) {
-                case self::TYPE_CSS:
-                    $extension = "css";
-                    $subDirectory = "style";
-                    break;
-                case self::TYPE_JS:
-                    $extension = "js";
-                    $subDirectory = "js";
-                    break;
-                default:
-                    throw new ExceptionCombo("Unknown snippet type ($this->type)");
-            }
-            $path = Site::getComboResourceSnippetDirectory()
-                ->resolve($subDirectory)
-                ->resolve(strtolower($this->snippetId) . ".$extension");
-            if (!FileSystems::exists($path)) {
-                throw new ExceptionCombo("The $this->snippetId file ($path) does not exist");
-            }
-            return FileSystems::getContent($path);
-        }
         return $this->content;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getInternalFileContent(): ?string
+    {
+        $path = $this->getInternalFile();
+        if (!FileSystems::exists($path)) {
+            return null;
+        }
+        return FileSystems::getContent($path);
+    }
+
+    public function getInternalFile(): ?LocalPath
+    {
+        switch ($this->mime) {
+            case self::MIME_CSS:
+                $extension = "css";
+                $subDirectory = "style";
+                break;
+            case self::MIME_JS:
+                $extension = "js";
+                $subDirectory = "js";
+                break;
+            default:
+                $message = "Unknown snippet type ($this->mime)";
+                if (PluginUtility::isDevOrTest()) {
+                    throw new ExceptionComboRuntime($message);
+                } else {
+                    LogUtility::msg($message);
+                }
+                return null;
+        }
+        return Site::getComboResourceSnippetDirectory()
+            ->resolve($subDirectory)
+            ->resolve(strtolower($this->snippetId) . ".$extension");
     }
 
 
     public function __toString()
     {
-        return $this->snippetId . "-" . $this->type;
-    }
-
-    /**
-     * Set all tags at once.
-     * @param array $tags
-     * @return Snippet
-     * @deprecated
-     */
-    public function setTags(array $tags): Snippet
-    {
-        $this->headsTags = $tags;
-        return $this;
-    }
-
-    public function getTags(): array
-    {
-        return $this->headsTags;
+        return $this->snippetId . "-" . $this->mime;
     }
 
     public function getCritical(): bool
     {
-
         if ($this->critical === null) {
-            if ($this->type == self::TYPE_CSS) {
+            if ($this->mime == self::MIME_CSS) {
                 // All CSS should be loaded first
                 // The CSS animation / background can set this to false
                 return true;
@@ -245,7 +277,7 @@ EOF;
     {
         $dataToSerialize = [
             self::JSON_SNIPPET_ID_PROPERTY => $this->snippetId,
-            self::JSON_TYPE_PROPERTY => $this->type
+            self::JSON_TYPE_PROPERTY => $this->mime
         ];
         if ($this->critical !== null) {
             $dataToSerialize[self::JSON_CRITICAL_PROPERTY] = $this->critical;
@@ -253,9 +285,7 @@ EOF;
         if ($this->content !== null) {
             $dataToSerialize[self::JSON_CONTENT_PROPERTY] = $this->content;
         }
-        if ($this->headsTags !== null) {
-            $dataToSerialize[self::JSON_HEAD_PROPERTY] = $this->headsTags;
-        }
+
         return $dataToSerialize;
 
     }
@@ -284,17 +314,13 @@ EOF;
             $snippet->setContent($content);
         }
 
-        $heads = $array[self::JSON_HEAD_PROPERTY];
-        if ($heads !== null) {
-            $snippet->setTags($heads);
-        }
         return $snippet;
 
     }
 
-    public function getType()
+    public function getMime()
     {
-        return $this->type;
+        return $this->mime;
     }
 
     public function setUrl(string $url, ?string $integrity): Snippet

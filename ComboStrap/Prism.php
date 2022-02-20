@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 });
 EOD;
-        $snippetManager->attachJavascriptSnippetForSlot(self::SNIPPET_NAME, $javascriptCode);
+        $snippetManager->attachJavascriptScriptForSlot(self::SNIPPET_NAME, $javascriptCode);
 
     }
 

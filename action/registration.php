@@ -88,7 +88,7 @@ EOF;
          * We print before the forms
          * to avoid a FOUC
          */
-        print Snippet::createCssSnippet("register")
+        print Snippet::createInternalCssSnippet("register")
             ->getHtmlStyleTag();
 
 

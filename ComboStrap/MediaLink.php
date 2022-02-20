@@ -612,7 +612,7 @@ abstract class MediaLink
                 $mediaLink->addClassName("{$snippetId}-combo");
                 $snippetManager = PluginUtility::getSnippetManager();
                 $snippetManager->attachJavascriptComboLibrary();
-                $snippetManager->attachJavascriptSnippetForSlot("lightbox");
+                $snippetManager->attachJavascriptScriptForSlot("lightbox");
                 $snippetManager->attachCssInternalStyleSheetForSlot("lightbox");
                 return $mediaLink->toHtmlEnterTag("a") . $this->renderMediaTag() . "</a>";
 

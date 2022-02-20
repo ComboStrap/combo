@@ -477,7 +477,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                          * of the iframe element
                          * Any styling attribute would take over
                          */
-                        PluginUtility::getSnippetManager()->attachJavascriptSnippetForSlot(self::TAG);
+                        PluginUtility::getSnippetManager()->attachJavascriptScriptForSlot(self::TAG);
                         /**
                          * CSS Height auto works when an image is loaded asynchronously but not
                          * when there is only text in the iframe

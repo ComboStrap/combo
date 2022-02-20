@@ -140,17 +140,10 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                     }
 
                     $slotId = $report->getSlotId();
-                    $snippets = Page::createPageFromId($slotId)
+                    Page::createPageFromId($slotId)
                         ->getHtmlDocument()
-                        ->getSnippets();
+                        ->loadSnippets();
 
-                    if (sizeof($snippets) > 0) {
-                        $nativeSnippets = [];
-                        foreach ($snippets as $snippet) {
-                            $nativeSnippets[$snippet->getExtension()][$snippet->getId()] = $snippet;
-                        }
-                        $snippetManager->addSnippetsFromCacheForSlot($slotId, $nativeSnippets);
-                    }
                 }
 
 

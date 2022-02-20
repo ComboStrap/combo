@@ -244,36 +244,6 @@ class SnippetManager
     }
 
 
-    /**
-     * A function to be able to add snippets from the snippets cache
-     * when a bar was served from the cache
-     * @param $bar
-     * @param $snippets
-     */
-    public
-    function addSnippetsFromCacheForSlot($bar, $snippets)
-    {
-
-        /**
-         * It may happens that this snippetsByBarScope is not empty
-         * when the snippet is added with the bad scope
-         *
-         * For instance, due to the {@link HistoricalBreadcrumbMenuItem},
-         * A protected link can be used in a slot but also added on a page level (ie
-         * that has a {@link PageProtection::addPageProtectionSnippet() page protection}
-         *
-         * Therefore we just merge.
-         */
-        if (!isset($this->snippetsBySlotScope[$bar])) {
-
-            $this->snippetsBySlotScope[$bar] = $snippets;
-
-        } else {
-
-            $this->snippetsBySlotScope[$bar] = $this->mergeSnippetArray($this->snippetsBySlotScope[$bar], $snippets);
-
-        }
-    }
 
 
     public
@@ -391,9 +361,9 @@ class SnippetManager
     }
 
     private
-    function &attachSnippetFromRequest($componentId, $type, $identifier): Snippet
+    function &attachSnippetFromRequest($componentName, $type, $internalOrUrlIdentifier): Snippet
     {
-        $snippet = Snippet::getOrCreateSnippet($identifier, $type, $componentId)
+        $snippet = Snippet::getOrCreateSnippet($internalOrUrlIdentifier, $type, $componentName)
             ->addSlot(Snippet::REQUEST_SLOT);
         return $snippet;
     }
@@ -464,6 +434,18 @@ class SnippetManager
                 Snippet::EXTENSION_CSS,
                 $url)
             ->setIntegrity($integrity);
+    }
+
+
+    public function attachJavascriptLibraryForRequest(string $componentName, string $url, string $integrity): Snippet
+    {
+        return $this
+            ->attachSnippetFromRequest(
+                $componentName,
+                Snippet::EXTENSION_JS,
+                $url)
+            ->setIntegrity($integrity);
+
     }
 
 

@@ -78,7 +78,6 @@ class HtmlDocument extends OutputDocument
     {
 
 
-
         /** We make the Snippet store to Html store an atomic operation
          *
          * Why ? Because if the rendering of the page is stopped,
@@ -136,20 +135,19 @@ class HtmlDocument extends OutputDocument
      * @return Snippet[]
      */
     public
-    function getSnippets(): array
+    function loadSnippets(): array
     {
         $data = $this->getSnippetCache()->retrieveCache();
         $nativeSnippets = [];
         if (!empty($data)) {
             $jsonDecodeSnippets = json_decode($data, true);
-            foreach ($jsonDecodeSnippets as $type => $snippets) {
-                foreach ($snippets as $snippetId => $snippetArray) {
-                    try {
-                        $nativeSnippets[] = Snippet::createFromJson($snippetArray);
-                    } catch (ExceptionCombo $e) {
-                        LogUtility::msg("The snippet json array cannot be build into a snippet object. " . $e->getMessage());
-                    }
+            foreach ($jsonDecodeSnippets as $snippet) {
+                try {
+                    $nativeSnippets[] = Snippet::createFromJson($snippet);
+                } catch (ExceptionCombo $e) {
+                    LogUtility::msg("The snippet json array cannot be build into a snippet object. " . $e->getMessage());
                 }
+
             }
         }
         return $nativeSnippets;

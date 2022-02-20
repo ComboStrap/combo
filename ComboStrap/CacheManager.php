@@ -116,11 +116,15 @@ class CacheManager
 
     public function hasNoCacheResult(): bool
     {
+        if($this->slotCacheResults===null){
+            return true;
+        }
         return sizeof($this->slotCacheResults) === 0;
     }
 
     /**
      * @param string $dependencyName
+     * @throws ExceptionCombo
      */
     public function addDependency(string $dependencyName)
     {

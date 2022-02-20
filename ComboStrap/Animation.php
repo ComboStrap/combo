@@ -28,7 +28,7 @@ class Animation
      * Based on https://wowjs.uk/
      * @param TagAttributes $attributes
      */
-    public static function processOnView(&$attributes)
+    public static function processOnView(TagAttributes &$attributes)
     {
         if ($attributes->hasComponentAttribute(self::ON_VIEW_ATTRIBUTE)) {
             $onView = $attributes->getValueAndRemove(self::ON_VIEW_ATTRIBUTE);

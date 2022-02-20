@@ -81,7 +81,6 @@ class Snippet implements JsonSerializable
     const REQUEST_SLOT = "request";
 
 
-
     protected static $globalSnippets;
 
     private $snippetId;
@@ -302,6 +301,9 @@ class Snippet implements JsonSerializable
 
     public function hasSlot($slot): bool
     {
+        if ($this->slots === null) {
+            return false;
+        }
         return key_exists($slot, $this->slots);
     }
 

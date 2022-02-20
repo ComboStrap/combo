@@ -17,7 +17,13 @@ if (!defined('DOKU_INC')) die();
 class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
 {
 
+    /**
+     * To add hash tag to heading
+     */
     const ANCHOR_LIBRARY_SNIPPET_ID = "anchor-library";
+    /**
+     * For styling on the anchor tag (ie a)
+     */
     const ANCHOR_HTML_SNIPPET_ID = "anchor-branding";
 
 
@@ -45,7 +51,7 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
         /**
          * Anchor on id
          */
-        PluginUtility::getSnippetManager()->attachJavascriptLibraryForSlot(
+        PluginUtility::getSnippetManager()->attachJavascriptLibraryForRequest(
             self::ANCHOR_LIBRARY_SNIPPET_ID,
             "https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js",
             "sha256-LGOWMG4g6/zc0chji4hZP1d8RxR2bPvXMzl/7oPZqjs="

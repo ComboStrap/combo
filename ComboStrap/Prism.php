@@ -132,7 +132,7 @@ class Prism
 
 
         $javascriptCode = <<<EOD
-document.addEventListener('DOMContentLoaded', (event) => {
+window.addEventListener('load', (event) => {
 
     if (typeof self === 'undefined' || !self.Prism || !self.document) {
         return;

@@ -150,7 +150,8 @@ class SnippetManager
                     $critical = $snippet->getCritical();
                     if (!$critical) {
                         $jsDokuwiki["defer"] = null;
-                        $jsDokuwiki["async"] = null;
+                        // not async: it will run as soon as possible
+                        // the dom main not be loaded completely, the script may miss HTML dom element
                     }
                     $htmlAttributes = $snippet->getHtmlAttributes();
                     if ($htmlAttributes !== null) {

@@ -294,15 +294,17 @@ class SnippetManager
 
     /**
      * @param array $array
+     * @param string $slot
      * @return null|Snippet[]
      * @throws ExceptionCombo
      */
     public
-    function getSlotSnippetsFromJsonArray(array $array): ?array
+    function getSlotSnippetsFromJsonArray(array $array, string $slot): ?array
     {
         $snippets = null;
         foreach ($array as $element) {
-            $snippets[] = Snippet::createFromJson($element);
+            $snippets[] = Snippet::createFromJson($element)
+                ->addSlot($slot);
         }
         return $snippets;
     }
@@ -316,7 +318,7 @@ class SnippetManager
     public
     function &attachCssInternalStyleSheetForSlot($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_CSS, Snippet::INTERNAL_STYLESHEET_IDENTIFIER);
+        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_CSS, Snippet::INTERNAL_TYPE);
         if ($script !== null) {
             $snippet->setInlineContent($script);
         }
@@ -331,7 +333,7 @@ class SnippetManager
     public
     function &attachCssSnippetForRequest($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_CSS, Snippet::INTERNAL_JAVASCRIPT_IDENTIFIER);
+        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_CSS, Snippet::INTERNAL_TYPE);
         if ($script != null) {
             $snippet->setInlineContent($script);
         }
@@ -346,7 +348,7 @@ class SnippetManager
     public
     function &attachJavascriptScriptForSlot($snippetId, string $script = null): Snippet
     {
-        $snippet = &$this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_JAVASCRIPT_IDENTIFIER);
+        $snippet = &$this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE);
         if ($script !== null) {
             $content = $snippet->getInternalDynamicContent();
             if ($content !== null) {
@@ -366,7 +368,7 @@ class SnippetManager
     public
     function &attachJavascriptSnippetForRequest($snippetId): Snippet
     {
-        return $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_JAVASCRIPT_IDENTIFIER);
+        return $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE);
     }
 
     /**
@@ -450,7 +452,7 @@ class SnippetManager
                 $snippetId,
                 Snippet::EXTENSION_JS,
                 $url)
-            ->setUrl($url, $integrity);
+            ->setIntegrity($integrity);
     }
 
     public
@@ -461,7 +463,7 @@ class SnippetManager
                 $snippetId,
                 Snippet::EXTENSION_CSS,
                 $url)
-            ->setUrl($url, $integrity);
+            ->setIntegrity($integrity);
     }
 
 

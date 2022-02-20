@@ -519,8 +519,8 @@ class CallStack
         }
 
         $actualCall = $this->getActualCall();
-        $actualState = $actualCall->getState();
-        if (!in_array($actualState, CallStack::TAG_STATE)) {
+        $enterState = $actualCall->getState();
+        if (!in_array($enterState, CallStack::TAG_STATE)) {
             LogUtility::msg("A next sibling can be asked only from a tag call. The state is " . $actualState, LogUtility::LVL_MSG_ERROR, "support");
             return false;
         }
@@ -534,10 +534,12 @@ class CallStack
                     $level++;
                     break;
                 case DOKU_LEXER_SPECIAL:
-                    // empty, void tag
-                    // next call, we don't break otherwise
-                    // the loop break on the condition
-                    continue 2;
+                    if ($enterState === DOKU_LEXER_SPECIAL) {
+                        break;
+                    } else {
+                        // ENTER TAG
+                        continue 2;
+                    }
                 case DOKU_LEXER_EXIT:
                     $level--;
                     break;
@@ -807,27 +809,35 @@ class CallStack
             return false;
         }
 
+        $enterState = null;
         if (!$this->endWasReached) {
             $actualCall = $this->getActualCall();
-            $actualState = $actualCall->getState();
-            if (!in_array($actualState, CallStack::TAG_STATE)) {
+            $enterState = $actualCall->getState();
+            if (!in_array($enterState, CallStack::TAG_STATE)) {
                 LogUtility::msg("A previous sibling can be asked only from a tag call. The state is " . $actualState, LogUtility::LVL_MSG_ERROR, "support");
                 return false;
             }
         }
         $level = 0;
-        while ($this->previous()) {
+        while ($actualCall = $this->previous()) {
 
-            $actualCall = $this->getActualCall();
             $state = $actualCall->getState();
             switch ($state) {
                 case DOKU_LEXER_ENTER:
-                case DOKU_LEXER_SPECIAL:
                     $level++;
                     break;
+                case DOKU_LEXER_SPECIAL:
+                    if ($enterState === DOKU_LEXER_SPECIAL) {
+                        break;
+                    } else {
+                        continue 2;
+                    }
                 case DOKU_LEXER_EXIT:
                     $level--;
                     break;
+                default:
+                    // cdata
+                    continue 2;
             }
 
             if ($level == 0 && in_array($state, self::TAG_STATE)) {
@@ -942,7 +952,7 @@ class CallStack
          * Check if we are on an enter tag
          */
         $actualCall = $this->getActualCall();
-        if ($actualCall===null){
+        if ($actualCall === null) {
             LogUtility::msg("You are not on the stack (start or end), you can't ask for the corresponding exit call", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return false;
         }

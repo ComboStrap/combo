@@ -3,10 +3,38 @@ window.addEventListener("DOMContentLoaded", function () {
 
     document.querySelectorAll(".lightbox-combo").forEach((lightBoxAnchor) => {
 
-        lightBoxAnchor.addEventListener("click", async function (event) {
-            event.preventDefault();
+        let drag = false;
 
+        lightBoxAnchor.addEventListener('mousedown', () => drag = false);
+        lightBoxAnchor.addEventListener('mousemove', () => drag = true);
+
+        /**
+         * Click is an event that appears after mouseup
+         */
+        let startX;
+        let startY;
+        let delta = 6;
+        lightBoxAnchor.addEventListener("click", async function (event) {
+            // we open the lightbox on mouseup
+            event.preventDefault();
+        });
+        lightBoxAnchor.addEventListener("mousedown", async function (event) {
+            // capture the position to see if it's a drag or a click
+            startX = event.pageX;
+            startY = event.pageY;
+        });
+
+        lightBoxAnchor.addEventListener("mouseup", event => {
+            const diffX = Math.abs(event.pageX - startX);
+            const diffY = Math.abs(event.pageY - startY);
+            if (diffX < delta && diffY < delta) {
+                // A click
+                openLightbox();
+            }
+        });
+        let openLightbox = function () {
             let lightBoxId = combo.toHtmlId(`combo-lightbox`);
+
             let lightBoxModel = combo.getOrCreateModal(lightBoxId);
             let src = lightBoxAnchor.getAttribute("href");
             let img = lightBoxAnchor.querySelector("img");
@@ -21,10 +49,10 @@ window.addEventListener("DOMContentLoaded", function () {
             }
 
             let svgStyle = "";
-            if(src.match(/svg/i)!==null){
+            if (src.match(/svg/i) !== null) {
                 // a svg does not show without width
                 // because the intrinsic svg can be really small, we put a min with
-                svgStyle='style="width: 100%;min-width: 75vw"'
+                svgStyle = 'style="width: 100%;min-width: 75vw"'
             }
             let html = `
 <button type="button" class="lightbox-close-combo" data${namespace}-dismiss="modal" aria-label="Close">
@@ -40,7 +68,7 @@ window.addEventListener("DOMContentLoaded", function () {
                 .addBodyStyle("padding", "0")
                 .noFooter()
                 .show();
-        });
+        }
     });
 
 });

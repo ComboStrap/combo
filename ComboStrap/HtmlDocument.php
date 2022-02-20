@@ -112,7 +112,7 @@ class HtmlDocument extends OutputDocument
          * Snippet
          */
         $snippetManager = PluginUtility::getSnippetManager();
-        $jsonDecodeSnippets = $snippetManager->getSnippetsForSlot($slotId);
+        $jsonDecodeSnippets = $snippetManager->getSlotSnippetsInDokuwikiArrayFormat($slotId);
 
         /**
          * Cache file
@@ -120,7 +120,6 @@ class HtmlDocument extends OutputDocument
          * the parser cache use event in order to log/report the cache usage
          * At {@link action_plugin_combo_cache::createCacheReport()}
          */
-
         $snippetCache = $this->getSnippetCache();
 
 

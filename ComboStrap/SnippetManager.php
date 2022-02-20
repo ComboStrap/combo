@@ -43,7 +43,13 @@ class SnippetManager
      */
     private static $globalSnippetManager;
 
-
+    /**
+     * Empty the snippets
+     * This is used to render the snippet only once
+     * The snippets renders first in the head
+     * and otherwise at the end of the document
+     * if the user are using another template or are in edit mode
+     */
     public static function reset()
     {
         self::$globalSnippetManager = null;
@@ -91,15 +97,20 @@ class SnippetManager
 
 
     /**
+     */
+    public function getAllSnippetsInDokuwikiArray(): array
+    {
+        return $this->snippetsToDokuwikiArray(Snippet::getSnippets());
+    }
+
+    /**
      * Transform in dokuwiki format
      *
      * @return array of node type and an array of array of html attributes
-     * @throws ExceptionCombo
      */
-    public function snippetsToDokuwikiArray(): array
+    private function snippetsToDokuwikiArray($snippets = null): array
     {
 
-        $snippets = Snippet::getSnippets();
         if ($snippets === null) {
             return [];
         }
@@ -222,17 +233,13 @@ class SnippetManager
     }
 
     /**
-     * Empty the snippets
-     * This is used to render the snippet only once
-     * The snippets renders first in the head
-     * and otherwise at the end of the document
-     * if the user are using another template or are in edit mode
+     * @deprecated see {@link SnippetManager::reset()}
+     *
      */
     public
     function close()
     {
-        $this->snippetsBySlotScope = array();
-        $this->snippetsByRequestScope = array();
+        self::reset();
     }
 
 
@@ -267,14 +274,16 @@ class SnippetManager
         }
     }
 
+
     public
-    function getSnippetsForSlot($slot)
+    function getSlotSnippetsInDokuwikiArrayFormat($slot): ?array
     {
-        if (isset($this->snippetsBySlotScope[$slot])) {
-            return $this->snippetsBySlotScope[$slot];
-        } else {
-            return null;
-        }
+        $snippets = Snippet::getSnippets();
+        $snippetsForSlot = array_filter($snippets,
+            function ($s) use ($slot) {
+                return $s->hasSlot($slot);
+            });
+        return $this->snippetsToDokuwikiArray($snippetsForSlot);
 
     }
 

@@ -161,7 +161,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * (Slot and request snippets)
          */
         try {
-            $allSnippets = $snippetManager->snippetsToDokuwikiArray();
+            $allSnippets = $snippetManager->getAllSnippetsInDokuwikiArray();
         } catch (ExceptionCombo $e) {
             LogUtility::msg("Error: We couldn't add the snippets in the head. Error: {$e->getMessage()}");
             return;
@@ -216,7 +216,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             $snippetManager = PluginUtility::getSnippetManager();
             $xhtmlContent = &$event->data[1];
             try {
-                $snippets = $snippetManager->snippetsToDokuwikiArray();
+                $snippets = $snippetManager->getAllSnippetsInDokuwikiArray();
             } catch (ExceptionCombo $e) {
                 LogUtility::msg("Error: We couldn't add the snippets in the content. Error: {$e->getMessage()}");
                 return;

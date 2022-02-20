@@ -287,6 +287,10 @@ class Snippet implements JsonSerializable
             ->resolve(strtolower($this->componentName) . ".$extension");
     }
 
+    public function hasSlot($slot): bool
+    {
+        return key_exists($slot, $this->slots);
+    }
 
     public function __toString()
     {

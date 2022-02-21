@@ -141,7 +141,7 @@ class PageEdit
 <form id="edit-combo-$wikiIdHtmlClassForm-$editId" class="$classPageEdit" method="post" action="{$url}">
 $inputs
 <input name="do" type="hidden" value="edit"/>
-<button type="submit" title="Edit the page $wikiId">
+<button type="submit" title="Edit the slot $wikiId">
 </button>
 </form>
 EOF;

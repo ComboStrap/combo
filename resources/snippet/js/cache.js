@@ -70,7 +70,7 @@ window.addEventListener("DOMContentLoaded", function () {
                             let fileUrl = combo.DokuUrl
                                 .createFetch(file,'cache')
                                 .toString();
-                            let fileAnchor = `<a href="${fileUrl}">${fileLabel}</a>`;
+                            let fileAnchor = `<a href="${fileUrl}" target="_blank">${fileLabel}</a>`;
 
                             let dependencies = "";
                             let dependency = result["dependency"];

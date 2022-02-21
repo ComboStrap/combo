@@ -234,10 +234,17 @@ class XmlDocument
         return new XmlDocument($content, $mime);
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
-    static function createXmlDocFromMarkup($string): XmlDocument
+    static function createXmlDocFromMarkup($string, $asHtml = false): XmlDocument
     {
+
         $mime = XmlDocument::XML_TYPE;
+        if($asHtml){
+            $mime = XmlDocument::HTML_TYPE;
+        }
         return new XmlDocument($string, $mime);
     }
 
@@ -586,6 +593,24 @@ class XmlDocument
         if ($result === false) {
             LogUtility::msg("Not able to delete the attribute $attributeName of the node element $nodeElement in the Xml document $this");
         }
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function xpathAndGetFirstDOMElement(string $string): ?DOMElement
+    {
+        $domList = $this->xpath($string);
+        if($domList->count()===0){
+            return null;
+        }
+        $domElement = $domList->item(0);
+        if($domElement instanceof DOMElement){
+            return $domElement;
+        } else {
+            throw new ExceptionCombo("The first DOM node is not a DOM element");
+        }
+
     }
 
 

@@ -37,6 +37,7 @@ class Site
 
     /**
      * @return string|null the html img tag or null
+     * @throws ExceptionCombo
      */
     public static function getLogoImgHtmlTag($tagAttributes = null): ?string
     {

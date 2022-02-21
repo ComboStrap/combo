@@ -65,7 +65,7 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
          * to avoid a FOUC
          */
         $loginCss = Snippet::createInternalCssSnippet(self::TAG);
-        $content = $loginCss->getInternalDynamicContent();
+        $content = $loginCss->getInternalInlineAndFileContent();
         $class = $loginCss->getClass();
         $cssHtml = <<<EOF
 <style class="$class">

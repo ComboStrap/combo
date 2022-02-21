@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\ExceptionCombo;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TplConstant;
@@ -36,14 +37,18 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
          */
         $pattern = "(" . $conf['sidebar'] . "|" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
         if ($conf['template'] == PluginUtility::TEMPLATE_STRAP_NAME) {
-            $loaded = Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            if ($loaded) {
-
-                $pattern .= "|" . TplUtility::getFooterSlotPageName();
-                $pattern .= "|" . TplUtility::getSideKickSlotPageName();
-                $pattern .= "|" . TplUtility::getHeaderSlotPageName();
-
+            try {
+                Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            } catch (ExceptionCombo $e) {
+                return;
             }
+
+            $pattern .= "|" . TplUtility::getFooterSlotPageName();
+            $pattern .= "|" . TplUtility::getSideKickSlotPageName();
+            $pattern .= "|" . TplUtility::getHeaderSlotPageName();
+            $pattern .= "|" . TplUtility::getMainFooterSlotName();
+            $pattern .= "|" . TplUtility::getMainHeaderSlotName();
+
         }
         $pattern .= ")";
         if (preg_match('/' . $pattern . '/ui', ':' . $event->data['id'])) {

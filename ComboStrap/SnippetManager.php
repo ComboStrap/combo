@@ -245,12 +245,13 @@ class SnippetManager
     }
 
 
-
-
     public
     function getJsonArrayFromSlotSnippets($slot): ?array
     {
         $snippets = Snippet::getSnippets();
+        if ($snippets === null) {
+            return null;
+        }
         $snippetsForSlot = array_filter($snippets,
             function ($s) use ($slot) {
                 return $s->hasSlot($slot);

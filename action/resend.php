@@ -75,7 +75,7 @@ EOF;
          * to avoid a FOUC
          */
         $loginCss = Snippet::createInternalCssSnippet(self::CANONICAL);
-        $content = $loginCss->getInternalDynamicContent();
+        $content = $loginCss->getInternalInlineAndFileContent();
         $class = $loginCss->getClass();
         $cssHtml = <<<EOF
 <style class="$class">

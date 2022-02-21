@@ -363,7 +363,7 @@ class Snippet implements JsonSerializable
      */
     public function getHtmlStyleTag(): string
     {
-        $content = $this->getInternalDynamicContent();
+        $content = $this->getInternalInlineAndFileContent();
         $class = $this->getClass();
         return <<<EOF
 <style class="$class">

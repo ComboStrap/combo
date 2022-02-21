@@ -78,7 +78,8 @@ class SvgImageLink extends ImageLink
             $snippetManager
                 ->attachJavascriptLibraryForSlot(
                     "svg-injector",
-                    "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/svg-injector.min.js"
+                    "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/dist/svg-injector.min.js",
+                    "sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk="
                 )
                 ->setDoesManipulateTheDomOnRun(false);
 

@@ -1431,7 +1431,23 @@ class PluginUtility
      */
     public static function renderInstructionsToXhtml($callStackHeaderInstructions): ?string
     {
-        return RenderUtility::renderInstuctionsToXhtml($callStackHeaderInstructions);
+        return RenderUtility::renderInstructionsToXhtml($callStackHeaderInstructions);
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function getSlotId()
+    {
+        global $ID;
+        $slot = $ID;
+        if ($slot === null) {
+            if(!PluginUtility::isTest()){
+                LogUtility::msg("The slot could not be identified (global ID is null)");
+            }
+            return RenderUtility::DEFAULT_SLOT_ID_FOR_TEST;
+        }
+        return $slot;
     }
 
 

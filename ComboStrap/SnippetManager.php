@@ -351,11 +351,7 @@ class SnippetManager
     private
     function &attachSnippetFromSlot(string $componentId, string $type, string $identifier): Snippet
     {
-        global $ID;
-        $slot = $ID;
-        if ($slot === null) {
-            LogUtility::log2file("The slot could not be identified (global ID is null)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-        }
+        $slot = PluginUtility::getSlotId();
         $snippet = Snippet::getOrCreateSnippet($identifier, $type, $componentId)
             ->addSlot($slot);
         return $snippet;

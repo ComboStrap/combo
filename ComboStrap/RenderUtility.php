@@ -22,6 +22,10 @@ class RenderUtility
      * When the rendering is a snippet or an instructions
      */
     const DYNAMIC_RENDERING = "dynamic";
+    /**
+     * The id used if
+     */
+    const DEFAULT_SLOT_ID_FOR_TEST = "test-slot-id";
 
     /**
      * @param $content
@@ -33,7 +37,7 @@ class RenderUtility
         global $ID;
         $keep = $ID;
         if ($ID === null && PluginUtility::isTest()) {
-            $ID = "test-dynamic-rendering";
+            $ID = self::DEFAULT_SLOT_ID_FOR_TEST;
         }
         try {
             $instructions = self::getInstructionsAndStripPEventually($content, $strip);
@@ -114,7 +118,7 @@ class RenderUtility
     /**
      * @throws ExceptionCombo
      */
-    public static function renderInstuctionsToXhtml($callStackHeaderInstructions)
+    public static function renderInstructionsToXhtml($callStackHeaderInstructions): ?string
     {
         global $ACT;
         $keep = $ACT;

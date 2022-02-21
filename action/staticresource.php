@@ -130,7 +130,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
                 // not a dokuwiki file ?
                 return;
             }
-            if ($dokuPath->isPublic()) {
+            if (!$dokuPath->isPublic()) {
                 return; // Infinite static is only for public media
             }
 

@@ -30,8 +30,17 @@ class RenderUtility
      */
     public static function renderText2XhtmlAndStripPEventually($content, bool $strip = true): ?string
     {
-        $instructions = self::getInstructionsAndStripPEventually($content, $strip);
-        return p_render('xhtml', $instructions, $info);
+        global $ID;
+        $keep = $ID;
+        if ($ID === null && PluginUtility::isTest()) {
+            $ID = "test-dynamic-rendering";
+        }
+        try {
+            $instructions = self::getInstructionsAndStripPEventually($content, $strip);
+            return p_render('xhtml', $instructions, $info);
+        } finally {
+            $ID = $keep;
+        }
 
     }
 

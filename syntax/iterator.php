@@ -339,7 +339,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     $cacheManager = CacheManager::getOrCreate();
                     switch ($table) {
                         case PageSqlTreeListener::BACKLINKS:
-                            $cacheManager->addDependency(CacheDependencies::BACKLINKS_DEPENDENCY);
+                            $cacheManager->addDependencyForCurrentSlot(CacheDependencies::BACKLINKS_DEPENDENCY);
                             break;
                         default:
                     }

@@ -208,7 +208,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                 /**
                  * Cache dependent on the requested page
                  */
-                CacheManager::getOrCreate()->addDependency(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
 
                 return array(
                     PluginUtility::STATE => $state,

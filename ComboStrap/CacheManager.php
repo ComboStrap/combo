@@ -5,17 +5,20 @@ namespace ComboStrap;
 
 
 use DateTime;
-use dokuwiki\Cache\CacheParser;
 
 /**
  * Class CacheManager
  * @package ComboStrap
  *
- * The cache manager reports and influence the cache
+ * The cache manager is public static object
+ * that can be used by plugin to report cache dependency {@link CacheManager::addDependencyForCurrentSlot()}
+ * reports and influence the cache
  * of all slot for a requested page
  */
 class CacheManager
 {
+
+
     const CACHE_DELETION = "deletion";
     const CACHE_CREATION = "creation";
 
@@ -29,7 +32,7 @@ class CacheManager
     /**
      * The list of cache runtimes dependencies by slot {@link CacheDependencies}
      */
-    private $slotCacheRuntimeDependencies;
+    private $slotCacheDependencies;
     /**
      * The list of cache results slot {@link CacheResults}
      */
@@ -81,13 +84,13 @@ class CacheManager
      * @param $id
      * @return CacheDependencies
      */
-    public function getRuntimeCacheDependenciesForSlot($id): CacheDependencies
+    public function getCacheDependenciesForSlot($id): CacheDependencies
     {
 
-        $cacheRuntimeDependencies = $this->slotCacheRuntimeDependencies[$id];
+        $cacheRuntimeDependencies = $this->slotCacheDependencies[$id];
         if ($cacheRuntimeDependencies === null) {
             $cacheRuntimeDependencies = new CacheDependencies($id);
-            $this->slotCacheRuntimeDependencies[$id] = $cacheRuntimeDependencies;
+            $this->slotCacheDependencies[$id] = $cacheRuntimeDependencies;
         }
         return $cacheRuntimeDependencies;
 
@@ -124,27 +127,21 @@ class CacheManager
 
     /**
      * @param string $dependencyName
+     * @return CacheManager
      * @throws ExceptionCombo
      */
-    public function addDependency(string $dependencyName)
-    {
-        $this->getCacheManagerForCurrentSlot()->addDependency($dependencyName);
-
-    }
-
-
-    /**
-     * @return CacheDependencies
-     * @throws ExceptionCombo
-     */
-    private function getCacheManagerForCurrentSlot(): CacheDependencies
+    public function addDependencyForCurrentSlot(string $dependencyName): CacheManager
     {
         global $ID;
         if ($ID === null) {
             throw new ExceptionCombo("The actual slot is unknown (global ID is null). We cannot add a dependency");
         }
-        return $this->getRuntimeCacheDependenciesForSlot($ID);
+        $cacheDependencies = $this->getCacheDependenciesForSlot($ID);
+        $cacheDependencies->addDependency($dependencyName);
+        return $this;
+
     }
+
 
     public function getCacheResultsForSlot(string $id): CacheResults
     {

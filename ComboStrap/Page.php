@@ -997,16 +997,6 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * Return the id of the div HTML
-     * element that is added for cache debugging
-     */
-    public
-    function getCacheHtmlId(): string
-    {
-        return "cache-" . str_replace(":", "-", $this->getPath()->getDokuwikiId());
-    }
-
-    /**
      * @return $this
      * @deprecated use {@link MetadataDokuWikiStore::deleteAndFlush()}
      */
@@ -1695,23 +1685,6 @@ class Page extends ResourceComboAbs
     }
 
 
-    /**
-     * @param string $scope {@link CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY} or a namespace...
-     */
-    public
-    function setScope(string $scope): Page
-    {
-        try {
-            $this->scope
-                ->setFromStoreValue($scope)
-                ->sendToWriteStore();
-        } catch (ExceptionCombo $e) {
-            // This is an intern variable
-            // No need to throw
-            LogUtility::msg("Error while setting the scope ({$e->getMessage()}");
-        }
-        return $this;
-    }
 
     /**
      * @throws ExceptionCombo

@@ -130,7 +130,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                  * Cache key dependencies
                  */
                 try {
-                    CacheManager::getOrCreate()->addDependency(
+                    CacheManager::getOrCreate()->addDependencyForCurrentSlot(
                         CacheDependencies::REQUESTED_PAGE_DEPENDENCY
                     );
                 } catch (ExceptionCombo $e) {

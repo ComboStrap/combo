@@ -130,7 +130,7 @@ abstract class OutputDocument extends PageCompilerDocument
             /**
              * Reroute the cache output by runtime dependencies
              */
-            $cacheRuntimeDependencies = CacheManager::getOrCreate()->getRuntimeCacheDependenciesForSlot($this->page->getDokuwikiId());
+            $cacheRuntimeDependencies = CacheManager::getOrCreate()->getCacheDependenciesForSlot($this->page->getDokuwikiId());
             $cacheRuntimeDependencies->rerouteCacheDestination($this->cache);
 
             /**

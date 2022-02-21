@@ -27,6 +27,9 @@ class CacheReportHtmlDataBlockArray
     {
         $cacheManager = CacheManager::getOrCreate();
         $cacheReporters = $cacheManager->getCacheResults();
+        if ($cacheReporters === null) {
+            return [];
+        }
         $htmlDataBlock = [];
         foreach ($cacheReporters as $cacheReporter) {
 
@@ -58,7 +61,7 @@ class CacheReportHtmlDataBlockArray
 
                 if ($mode === HtmlDocument::mode) {
                     $dependencies = $cacheManager
-                        ->getRuntimeCacheDependenciesForSlot($slotId)
+                        ->getCacheDependenciesForSlot($slotId)
                         ->getDependencies();
                     if ($dependencies !== null) {
                         $data[self::DEPENDENCY_ATT] = $dependencies;

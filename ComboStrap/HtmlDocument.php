@@ -31,7 +31,7 @@ class HtmlDocument extends OutputDocument
          * Modifying the cache key and the corresponding output file
          * from runtime dependencies
          */
-        $this->cacheDependencies = CacheManager::getOrCreate()->getRuntimeCacheDependenciesForSlot($page->getDokuwikiId());
+        $this->cacheDependencies = CacheManager::getOrCreate()->getCacheDependenciesForSlot($page->getDokuwikiId());
         $this->cacheDependencies->rerouteCacheDestination($this->cache);
 
     }

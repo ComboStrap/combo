@@ -182,9 +182,9 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
                 if ($state === DOKU_LEXER_SPECIAL) {
                     $cacheManager = CacheManager::getOrCreate();
                     // the output has the data from the requested page
-                    $cacheManager->addDependency(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                    $cacheManager->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
                     // the data from the requested page is dependent on the name, title or description of the page
-                    $cacheManager->addDependency(CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
+                    $cacheManager->addDependencyForCurrentSlot(CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
                     $renderer->doc .= self::toBreadCrumbHtml();
                 }
                 return true;

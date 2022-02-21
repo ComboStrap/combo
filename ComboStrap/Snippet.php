@@ -47,6 +47,7 @@ class Snippet implements JsonSerializable
     const JSON_EXTENSION_PROPERTY = "extension"; // mandatory
     const JSON_URL_PROPERTY = "url"; // mandatory if external
     const JSON_CRITICAL_PROPERTY = "critical";
+    const JSON_ASYNC_PROPERTY = "async";
     const JSON_CONTENT_PROPERTY = "content";
     const JSON_INTEGRITY_PROPERTY = "integrity";
     const JSON_HTML_ATTRIBUTES_PROPERTY = "attributes";
@@ -131,6 +132,10 @@ class Snippet implements JsonSerializable
      *   * or  {@link Snippet::REQUEST_SLOT} - never cached
      */
     private $slots;
+    /**
+     * @var bool run as soon as possible
+     */
+    private $async;
 
     /**
      * Snippet constructor.
@@ -241,6 +246,12 @@ class Snippet implements JsonSerializable
     public function setCritical($bool): Snippet
     {
         $this->critical = $bool;
+        return $this;
+    }
+
+    public function setRunAsSoonAsPossible($bool): Snippet
+    {
+        $this->async = $bool;
         return $this;
     }
 
@@ -403,6 +414,11 @@ EOF;
             $snippet->setCritical($critical);
         }
 
+        $async = $array[self::JSON_ASYNC_PROPERTY];
+        if ($async !== null) {
+            $snippet->setRunAsSoonAsPossible($async);
+        }
+
         $content = $array[self::JSON_CONTENT_PROPERTY];
         if ($content !== null) {
             $snippet->setInlineContent($content);
@@ -503,6 +519,9 @@ EOF;
         }
         if ($this->critical !== null) {
             $dataToSerialize[self::JSON_CRITICAL_PROPERTY] = $this->critical;
+        }
+        if ($this->async !== null) {
+            $dataToSerialize[self::JSON_ASYNC_PROPERTY] = $this->async;
         }
         if ($this->inlineContent !== null) {
             $dataToSerialize[self::JSON_CONTENT_PROPERTY] = $this->inlineContent;

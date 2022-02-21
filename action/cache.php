@@ -40,9 +40,6 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
 
 
-
-
-
     /**
      * @param Doku_Event_Handler $controller
      */
@@ -120,6 +117,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
             "type" => CacheReportHtmlDataBlockArray::APPLICATION_COMBO_CACHE_JSON,
             "_data" => $result,
         );
+
 
     }
 

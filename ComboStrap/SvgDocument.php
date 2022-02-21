@@ -221,6 +221,50 @@ class SvgDocument extends XmlDocument
         // With requested
         $requestedWidth = $localTagAttributes->getValueAndRemove(Dimension::WIDTH_KEY);
 
+        $svgUsageType = $localTagAttributes->getValue(TagAttributes::TYPE_KEY);
+
+        /**
+         * Svg Structure
+         *
+         * All attributes that are applied for all usage (output independent)
+         * and that depends only on the structure of the icon
+         *
+         * Why ? Because {@link \syntax_plugin_combo_pageimage}
+         * can be an icon or an illustrative image
+         *
+         */
+        try {
+            $mediaWidth = $this->getMediaWidth();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The media width of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
+            return parent::getXmlText();
+        }
+        try {
+            $mediaHeight = $this->getMediaHeight();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The media height of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
+            return parent::getXmlText();
+        }
+        if ($mediaWidth !== null
+            && $mediaHeight !== null
+            && $mediaWidth == $mediaHeight
+            && $mediaWidth < 400) // 356 for logos telegram are the size of the twitter emoji but tile may be bigger ?
+        {
+            $svgStructureType = self::ICON_TYPE;
+        } else {
+            $svgStructureType = self::ILLUSTRATION_TYPE;
+
+            // some icon may be bigger
+            // in size than 400. example 1024 for ant-design:table-outlined
+            // https://github.com/ant-design/ant-design-icons/blob/master/packages/icons-svg/svg/outlined/table.svg
+            // or not squared
+            // if the usage is determined or the svg is in the icon directory, it just takes over.
+            if ($svgUsageType === self::ICON_TYPE || $this->isInIconDirectory()) {
+                $svgStructureType = self::ICON_TYPE;
+            }
+
+        }
+
         /**
          * Svg type
          * The svg type is the svg usage
@@ -230,7 +274,16 @@ class SvgDocument extends XmlDocument
          *   * in a paragraph (the width and height are the same)
          *   * as an illustration in a page image (the width and height may be not the same)
          */
-        $svgUsageType = $localTagAttributes->getValue(TagAttributes::TYPE_KEY, self::ILLUSTRATION_TYPE);
+        if ($svgUsageType === null) {
+            switch ($svgStructureType) {
+                case self::ICON_TYPE:
+                    $svgUsageType = self::ICON_TYPE;
+                    break;
+                default:
+                    $svgUsageType = self::ILLUSTRATION_TYPE;
+                    break;
+            }
+        }
         switch ($svgUsageType) {
             case self::ICON_TYPE:
             case self::TILE_TYPE:
@@ -321,47 +374,7 @@ class SvgDocument extends XmlDocument
                 break;
         }
 
-        /**
-         * Svg Structure
-         *
-         * All attributes that are applied for all usage (output independent)
-         * and that depends only on the structure of the icon
-         *
-         * Why ? Because {@link \syntax_plugin_combo_pageimage}
-         * can be an icon or an illustrative image
-         *
-         */
-        try {
-            $mediaWidth = $this->getMediaWidth();
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("The media width of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
-            return parent::getXmlText();
-        }
-        try {
-            $mediaHeight = $this->getMediaHeight();
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("The media height of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
-            return parent::getXmlText();
-        }
-        if ($mediaWidth !== null
-            && $mediaHeight !== null
-            && $mediaWidth == $mediaHeight
-            && $mediaWidth < 400) // 356 for logos telegram are the size of the twitter emoji but tile may be bigger ?
-        {
-            $svgStructureType = self::ICON_TYPE;
-        } else {
-            $svgStructureType = self::ILLUSTRATION_TYPE;
 
-            // some icon may be bigger
-            // in size than 400. example 1024 for ant-design:table-outlined
-            // https://github.com/ant-design/ant-design-icons/blob/master/packages/icons-svg/svg/outlined/table.svg
-            // or not squared
-            // if the usage is determined or the svg is in the icon directory, it just takes over.
-            if ($svgUsageType === self::ICON_TYPE || $this->isInIconDirectory()) {
-                $svgStructureType = self::ICON_TYPE;
-            }
-
-        }
         switch ($svgStructureType) {
             case self::ICON_TYPE:
             case self::TILE_TYPE:

@@ -403,11 +403,20 @@ class XmlDocument
      * @param $query
      * @param string $defaultNamespace
      * @return DOMNodeList|false
+     *
+     * Note that this is possible to do evaluation to return a string instead
+     * https://www.php.net/manual/en/domxpath.evaluate.php
      */
     public
     function xpath($query)
     {
         $xpath = new DOMXPath($this->getXmlDom());
+
+        /**
+         * Prefix mapping
+         * It is necessary to use xpath to handle documents which have default namespaces.
+         * The xpath expression will search for items with no namespace by default.
+         */
         foreach ($this->getDocNamespaces() as $prefix => $namespaceUri) {
             /**
              * You can't register an empty prefix
@@ -595,23 +604,6 @@ class XmlDocument
         }
     }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    public function xpathAndGetFirstDOMElement(string $string): ?DOMElement
-    {
-        $domList = $this->xpath($string);
-        if($domList->count()===0){
-            return null;
-        }
-        $domElement = $domList->item(0);
-        if($domElement instanceof DOMElement){
-            return $domElement;
-        } else {
-            throw new ExceptionCombo("The first DOM node is not a DOM element");
-        }
-
-    }
 
 
 }

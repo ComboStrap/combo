@@ -249,9 +249,15 @@ class Snippet implements JsonSerializable
         return $this;
     }
 
-    public function setRunAsSoonAsPossible($bool): Snippet
+    /**
+     * If the library does not manipulate the DOM,
+     * it can be ran as soon as possible (ie async)
+     * @param $bool
+     * @return $this
+     */
+    public function setDoesManipulateTheDomOnRun($bool): Snippet
     {
-        $this->async = $bool;
+        $this->async = !$bool;
         return $this;
     }
 
@@ -416,7 +422,7 @@ EOF;
 
         $async = $array[self::JSON_ASYNC_PROPERTY];
         if ($async !== null) {
-            $snippet->setRunAsSoonAsPossible($async);
+            $snippet->setDoesManipulateTheDomOnRun($async);
         }
 
         $content = $array[self::JSON_CONTENT_PROPERTY];

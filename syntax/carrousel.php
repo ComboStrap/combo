@@ -259,7 +259,7 @@ EOF;
                     $snippetId = self::TAG;
 
                     $snippetManager->attachCssInternalStyleSheetForSlot($snippetId);
-                    $snippetManager->attachJavascriptScriptForSlot($snippetId);
+                    $snippetManager->attachInternalJavascriptForSlot($snippetId);
                     // https://www.jsdelivr.com/package/npm/@glidejs/glide
                     $snippetManager->attachCssExternalStyleSheetForSlot($snippetId,
                         "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
@@ -267,19 +267,18 @@ EOF;
                     );
                     if (PluginUtility::isDev()) {
 
-                        $snippetManager->attachJavascriptLibraryForSlot($snippetId,
+                        $javascriptSnippet = $snippetManager->attachJavascriptLibraryForSlot($snippetId,
                             "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.js",
                             "sha256-zkYoJ1XwwGA4FbdmSdTz28y5PtHT8O/ZKzUAuQsmhKg="
                         );
 
                     } else {
-
-                        $snippetManager->attachJavascriptLibraryForSlot($snippetId,
+                        $javascriptSnippet = $snippetManager->attachJavascriptLibraryForSlot($snippetId,
                             "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.min.js",
                             "sha256-cXguqBvlUaDoW4nGjs4YamNC2mlLGJUOl64bhts/ztU="
                         );
-
                     }
+                    $javascriptSnippet->setDoesManipulateTheDomOnRun(false);
 
                     // Theme customized from the below official theme
                     // https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.theme.css

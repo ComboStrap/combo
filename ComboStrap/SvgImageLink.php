@@ -68,18 +68,19 @@ class SvgImageLink extends ImageLink
         /**
          * Snippet
          */
+        $snippetManager = PluginUtility::getSnippetManager();
         if ($svgInjection) {
-            $snippetManager = PluginUtility::getSnippetManager();
 
             // Based on https://github.com/iconic/SVGInjector/
             // See also: https://github.com/iconfu/svg-inject
             // !! There is a fork: https://github.com/tanem/svg-injector !!
             // Fallback ? : https://github.com/iconic/SVGInjector/#per-element-png-fallback
-            $snippetManager->attachJavascriptLibraryForSlot(
-                "svg-injector",
-                "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/svg-injector.min.js"
-            );
-
+            $snippetManager
+                ->attachJavascriptLibraryForSlot(
+                    "svg-injector",
+                    "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/svg-injector.min.js"
+                )
+                ->setDoesManipulateTheDomOnRun(false);
 
         }
 
@@ -126,13 +127,13 @@ class SvgImageLink extends ImageLink
          */
         $svgFunctionalClass = "";
         if ($svgInjection && $lazyLoad) {
-            PluginUtility::getSnippetManager()->attachJavascriptScriptForSlot("lozad-svg-injection");
+            $snippetManager->attachInternalJavascriptForSlot("lozad-svg-injection");
             $svgFunctionalClass = "lazy-svg-injection-combo";
         } else if ($lazyLoad && !$svgInjection) {
-            PluginUtility::getSnippetManager()->attachJavascriptScriptForSlot("lozad-svg");
+            $snippetManager->attachInternalJavascriptForSlot("lozad-svg");
             $svgFunctionalClass = "lazy-svg-combo";
         } else if ($svgInjection && !$lazyLoad) {
-            PluginUtility::getSnippetManager()->attachJavascriptScriptForSlot("svg-injector");
+            $snippetManager->attachInternalJavascriptForSlot("svg-injector");
             $svgFunctionalClass = "svg-injection-combo";
         }
         if ($lazyLoad) {

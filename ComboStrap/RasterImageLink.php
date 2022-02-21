@@ -273,7 +273,7 @@ class RasterImageLink extends ImageLink
                              * Snippet Lazy loading
                              */
                             LazyLoad::addLozadSnippet();
-                            PluginUtility::getSnippetManager()->attachJavascriptScriptForSlot("lozad-raster");
+                            PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot("lozad-raster");
                             $attributes->addClassName(self::LAZY_CLASS);
                             $attributes->addClassName(LazyLoad::LAZY_CLASS);
 

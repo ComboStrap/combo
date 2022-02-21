@@ -317,7 +317,7 @@ class SnippetManager
      * @return Snippet a snippet in a slot
      */
     public
-    function &attachJavascriptScriptForSlot($snippetId, string $script = null): Snippet
+    function &attachInternalJavascriptForSlot($snippetId, string $script = null): Snippet
     {
         $snippet = &$this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE);
         if ($script !== null) {

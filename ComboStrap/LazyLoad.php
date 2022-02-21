@@ -113,11 +113,13 @@ class LazyLoad
         $snippetManager = PluginUtility::getSnippetManager();
 
         // https://www.jsdelivr.com/package/npm/lozad
-        $snippetManager->attachJavascriptLibraryForSlot(
-            self::LOZAD_ID,
-            "https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js",
-            "sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc="
-        );
+        $snippetManager
+            ->attachJavascriptLibraryForSlot(
+                self::LOZAD_ID,
+                "https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js",
+                "sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc="
+            )
+            ->setDoesManipulateTheDomOnRun(false);
 
         /**
          * Add the fading effect
@@ -132,7 +134,7 @@ class LazyLoad
          * The others javascript snippet to download lazy load depend on the image type
          * and features and was therefore added in the code for svg or raster
          */
-        $snippetManager->attachJavascriptScriptForSlot("lozad-print");
+        $snippetManager->attachInternalJavascriptForSlot("lozad-print");
 
 
     }

@@ -94,7 +94,7 @@ class Hover
                 $attributes->addHtmlAttributeValue("data-hover-class", trim($comboDataHoverClasses));
 
                 // The javascript that manage the hover effect by adding the class in the data-hover class
-                $snippetManager->attachJavascriptScriptForSlot(self::ON_HOVER_SNIPPET_ID);
+                $snippetManager->attachInternalJavascriptForSlot(self::ON_HOVER_SNIPPET_ID);
 
             }
 

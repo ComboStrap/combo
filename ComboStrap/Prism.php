@@ -243,7 +243,7 @@ window.addEventListener('load', (event) => {
 
 });
 EOD;
-        $snippetManager->attachJavascriptScriptForSlot(self::SNIPPET_NAME, $javascriptCode);
+        $snippetManager->attachInternalJavascriptForSlot(self::SNIPPET_NAME, $javascriptCode);
 
     }
 

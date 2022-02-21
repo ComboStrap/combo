@@ -96,7 +96,7 @@ window.addEventListener("load", function(event) {
     wow.init();
 });
 EOF;
-        $snippetManager->attachJavascriptScriptForSlot($wowSnippetId, $js);
+        $snippetManager->attachInternalJavascriptForSlot($wowSnippetId, $js);
         $snippetManager->attachJavascriptLibraryForSlot(
             $wowSnippetId,
             "https://cdn.jsdelivr.net/npm/wowjs@1.1.3/dist/wow.min.js",
@@ -112,7 +112,7 @@ EOF;
         $snippetManager = PluginUtility::getSnippetManager();
 
         $scrollMagicSnippetId = "scroll-magic";
-        $snippetManager->attachJavascriptScriptForSlot($scrollMagicSnippetId);
+        $snippetManager->attachInternalJavascriptForSlot($scrollMagicSnippetId);
         $snippetManager->attachJavascriptLibraryForSlot(
             $scrollMagicSnippetId,
             "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/ScrollMagic.min.js",

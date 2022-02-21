@@ -141,7 +141,7 @@ MathJax.Hub.Config({
 EOD;
 
                 $snippetManager
-                    ->attachJavascriptScriptForSlot(
+                    ->attachInternalJavascriptForSlot(
                         self::TAG,
                         $headHtmlElement
                     )

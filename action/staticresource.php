@@ -6,6 +6,7 @@ use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\HttpResponse;
+use ComboStrap\Identity;
 use ComboStrap\LocalPath;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
@@ -83,6 +84,9 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         }
         if ($drive === DokuPath::CACHE_DRIVE) {
             $event->data['download'] = false;
+            if (!Identity::isManager()) {
+                $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
+            }
         }
 
     }

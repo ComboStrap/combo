@@ -160,7 +160,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      * No one of array('container', 'baseonly', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
      * because we manage self the content and we call self the parser
      */
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array('substition', 'formatting', 'disabled');
     }
@@ -422,7 +422,13 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 return false;
                             }
                             $tagAttributes->mergeWithCallStackArray($markupRefAttributes->toCallStackArray());
-                            $tagAttributes->setComponentAttributeValue(self::ATTRIBUTE_HREF, $url);
+                            // No href if the url could not be calculated
+                            // such as a bad interwiki link
+                            if (!empty($url)) {
+                                $tagAttributes->setComponentAttributeValue(self::ATTRIBUTE_HREF, $url);
+                            } else {
+                                $tagAttributes->removeComponentAttributeIfPresent(self::ATTRIBUTE_HREF);
+                            }
 
                         }
 

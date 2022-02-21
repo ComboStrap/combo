@@ -3,6 +3,8 @@
 
 namespace ComboStrap;
 
+use dokuwiki\Cache\CacheParser;
+
 /**
  * Class CacheResults
  * @package ComboStrap
@@ -37,7 +39,27 @@ class CacheResults
          * one and overwrite the result
          */
         if (!isset($this->cacheResults[$cacheParser->mode])) {
-            $this->cacheResults[$cacheParser->mode] = new CacheResult($event);
+            $this->cacheResults[$cacheParser->mode] = (new CacheResult($cacheParser))
+                ->setResult($event->result);
+            /**
+             * Add snippet and output dependencies
+             */
+            if ($cacheParser->mode === HtmlDocument::mode) {
+                $page = $cacheParser->page;
+                $htmlDocument = Page::createPageFromId($page)
+                    ->getHtmlDocument();
+
+                /**
+                 * @var CacheParser[] $cacheStores
+                 */
+                $cacheStores = [$htmlDocument->getSnippetCacheStore(), $htmlDocument->getDependenciesCacheStore()];
+                foreach ($cacheStores as $cacheStore) {
+                    if(file_exists($cacheStore->cache)) {
+                        $this->cacheResults[$cacheStore->mode] = (new CacheResult($cacheStore))
+                            ->setResult($event->result);
+                    }
+                }
+            }
         }
     }
 

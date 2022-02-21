@@ -323,7 +323,7 @@ class CacheDependencies
 
     }
 
-    private
+    public
     function getDependenciesCacheStore(): CacheParser
     {
         if ($this->dependenciesCacheStore !== null) {

@@ -69,6 +69,7 @@ class CacheReportHtmlDataBlockArray
                 }
 
                 $htmlDataBlock[$slotId][$mode] = $data;
+
             }
 
         }

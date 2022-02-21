@@ -27,15 +27,14 @@ class CacheResult
 
     /**
      * CacheReport constructor.
-     * @param \Doku_Event $event
+     * @param CacheParser $cacheParser
      */
-    public function __construct(\Doku_Event $event)
+    public function __construct(CacheParser $cacheParser)
     {
-        $this->result = $event->result;
-        $this->cacheParser = $event->data;
+        $this->cacheParser = $cacheParser;
     }
 
-    public function getKey()
+    public function getKey(): string
     {
         return $this->cacheParser->key;
     }
@@ -45,12 +44,12 @@ class CacheResult
         return LocalPath::create($this->cacheParser->cache);
     }
 
-    public function getMode()
+    public function getMode(): string
     {
         return $this->cacheParser->mode;
     }
 
-    public function getSlotId()
+    public function getSlotId(): string
     {
         return $this->cacheParser->page;
     }
@@ -58,6 +57,12 @@ class CacheResult
     public function getResult(): bool
     {
         return $this->result;
+    }
+
+    public function setResult($result): CacheResult
+    {
+        $this->result = $result;
+        return $this;
     }
 
 }

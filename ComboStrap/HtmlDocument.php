@@ -119,7 +119,7 @@ class HtmlDocument extends OutputDocument
          * the parser cache use event in order to log/report the cache usage
          * At {@link action_plugin_combo_cache::createCacheReport()}
          */
-        $snippetCache = $this->getSnippetCache();
+        $snippetCache = $this->getSnippetCacheStore();
 
 
         if ($jsonDecodeSnippets !== null) {
@@ -137,7 +137,7 @@ class HtmlDocument extends OutputDocument
     public
     function loadSnippets(): array
     {
-        $data = $this->getSnippetCache()->retrieveCache();
+        $data = $this->getSnippetCacheStore()->retrieveCache();
         $nativeSnippets = [];
         if (!empty($data)) {
             $jsonDecodeSnippets = json_decode($data, true);
@@ -156,7 +156,7 @@ class HtmlDocument extends OutputDocument
 
     private function removeSnippets()
     {
-        $snippetCacheFile = $this->getSnippetCache()->cache;
+        $snippetCacheFile = $this->getSnippetCacheStore()->cache;
         if ($snippetCacheFile !== null) {
             if (file_exists($snippetCacheFile)) {
                 unlink($snippetCacheFile);
@@ -170,7 +170,7 @@ class HtmlDocument extends OutputDocument
      * the parser cache use event in order to log/report the cache usage
      * At {@link action_plugin_combo_cache::createCacheReport()}
      */
-    private function getSnippetCache(): CacheParser
+    public function getSnippetCacheStore(): CacheParser
     {
         if ($this->snippetCache !== null) {
             return $this->snippetCache;
@@ -193,6 +193,11 @@ class HtmlDocument extends OutputDocument
     public function getCacheDependencies(): CacheDependencies
     {
         return $this->cacheDependencies;
+    }
+
+    public function getDependenciesCacheStore(): CacheParser
+    {
+        return $this->cacheDependencies->getDependenciesCacheStore();
     }
 
 }

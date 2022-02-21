@@ -60,6 +60,11 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      */
     const SVG_RENDERING_ERROR_CLASS = "combo-svg-rendering-error";
 
+    /**
+     * An attribute to set the class of the link if any
+     */
+    const LINK_CLASS_ATTRIBUTE = "link-class";
+
     public static function registerFirstMedia(Doku_Renderer_metadata $renderer, $src)
     {
         /**
@@ -96,7 +101,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     }
 
 
-    function getType()
+    function getType(): string
     {
         return 'formatting';
     }
@@ -110,7 +115,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
         /**
          * An image is not a block (it can be inside paragraph)
@@ -118,7 +123,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         return 'normal';
     }
 
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array('substition', 'formatting', 'disabled');
     }
@@ -129,7 +134,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      * @return int
      *
      */
-    function getSort()
+    function getSort(): int
     {
         return 319;
     }
@@ -179,11 +184,9 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                     if (in_array($parentTag,
                         [syntax_plugin_combo_link::TAG,syntax_plugin_combo_brand::TAG])) {
                         /**
-                         * TODO: should be on the exit tag of the link
-                         * - The image is in a link, we don't want another link
-                         * to the image
-                         * - In a brand, there is also already a link to the home page, no link
-                         * to the media
+                         * TODO: should be on the exit tag of the link / brand
+                         *   - The image is in a link, we don't want another link to the image
+                         *   - In a brand, there is also already a link to the home page, no link to the media
                          */
                         $attributes[MediaLink::LINKING_KEY] = MediaLink::LINKING_NOLINK_VALUE;
                     }
@@ -211,7 +214,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         switch ($format) {

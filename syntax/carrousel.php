@@ -46,6 +46,23 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
     const BULLET_COUNT = "bullet-count";
 
     /**
+     * To center the image inside a link in a carrousel
+     */
+    const MEDIA_CENTER_LINK_CLASS = "justify-content-center align-items-center d-flex";
+
+
+    private static function madeChildElementCarrouselAware(?Call $childCarrouselElement)
+    {
+        $tagName = $childCarrouselElement->getTagName();
+        if ($tagName === syntax_plugin_combo_media::TAG) {
+            $childCarrouselElement->setAttribute(syntax_plugin_combo_media::LINK_CLASS_ATTRIBUTE, self::GLIDE_SLIDE_CLASS." ".self::MEDIA_CENTER_LINK_CLASS);
+        } else {
+            $childCarrouselElement->addClassName(self::GLIDE_SLIDE_CLASS);
+        }
+
+    }
+
+    /**
      * Glide copy the HTML element and lozad does not see element that are not visible
      * The element non-visible are not processed by lozad
      * We set lazy loading to HTML loading attribute
@@ -179,7 +196,7 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                             $templateCallStack->moveToStart();
                             $firstTemplateEnterTag = $templateCallStack->moveToFirstEnterTag();
                             if ($firstTemplateEnterTag !== false) {
-                                $firstTemplateEnterTag->addClassName(self::GLIDE_SLIDE_CLASS);
+                                self::madeChildElementCarrouselAware($firstTemplateEnterTag);
                             }
                             // Lazy load
                             $templateCallStack->moveToStart();
@@ -187,10 +204,10 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                             $templateEndCall->setPluginData(syntax_plugin_combo_template::CALLSTACK, $templateCallStack->getStack());
                         }
                     } else {
-                        $actualCall->addClassName(self::GLIDE_SLIDE_CLASS);
+                        self::madeChildElementCarrouselAware($actualCall);
                         $childrenCount = 1;
                         while ($actualCall = $callStack->moveToNextSiblingTag()) {
-                            $actualCall->addClassName(self::GLIDE_SLIDE_CLASS);
+                            self::madeChildElementCarrouselAware($actualCall);
                             $childrenCount++;
                         }
                         // Lazy load

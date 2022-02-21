@@ -9,6 +9,7 @@ use ComboStrap\Cron;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\File;
 use ComboStrap\Http;
+use ComboStrap\Identity;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
@@ -163,7 +164,6 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     function addMenuItem(Doku_Event $event, $param)
     {
 
-
         /**
          * The `view` property defines the menu that is currently built
          * https://www.dokuwiki.org/devel:menus
@@ -173,6 +173,12 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
         global $INFO;
         if (!$INFO['exists']) {
+            return;
+        }
+        /**
+         * Cache is for manager
+         */
+        if (!Identity::isManager()) {
             return;
         }
         array_splice($event->data['items'], -1, 0, array(new CacheMenuItem()));

@@ -685,7 +685,7 @@ class Call
      * @return Call
      */
     public
-    function addClassName($value)
+    function addClassName(string $value): Call
     {
         $class = $this->getAttribute("class");
         if ($class != null) {

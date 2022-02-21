@@ -135,6 +135,8 @@ abstract class MediaLink
      * @var Media[]
      */
     private $media;
+    private $linking;
+    private $linkingClass;
 
 
     /**
@@ -411,10 +413,10 @@ abstract class MediaLink
 
     /**
      * @param Path $path
-     * @param TagAttributes $tagAttributes
+     * @param TagAttributes|null $tagAttributes
      * @return RasterImageLink|SvgImageLink|ThirdMediaLink
      */
-    public static function createMediaLinkFromPath(Path $path, $tagAttributes = null)
+    public static function createMediaLinkFromPath(Path $path, TagAttributes $tagAttributes = null)
     {
 
         if ($tagAttributes === null) {
@@ -426,6 +428,8 @@ abstract class MediaLink
          * (The rest is for the image)
          */
         $lazyLoadMethod = $tagAttributes->getValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD, self::LAZY_LOAD_METHOD_LOZAD_VALUE);
+        $linking = $tagAttributes->getValueAndRemoveIfPresent(self::LINKING_KEY);
+        $linkingClass = $tagAttributes->getValueAndRemoveIfPresent(syntax_plugin_combo_media::LINK_CLASS_ATTRIBUTE);
 
         /**
          * Processing
@@ -469,14 +473,18 @@ abstract class MediaLink
                 break;
         }
 
-        $mediaLink->setLazyLoadMethod($lazyLoadMethod);
+        $mediaLink
+            ->setLazyLoadMethod($lazyLoadMethod)
+            ->setLinking($linking)
+            ->setLinkingClass($linkingClass);
         return $mediaLink;
 
     }
 
-    public function setLazyLoadMethod(string $lazyLoadMethod)
+    public function setLazyLoadMethod(string $lazyLoadMethod): MediaLink
     {
         $this->lazyLoadMethod = $lazyLoadMethod;
+        return $this;
     }
 
 
@@ -534,18 +542,32 @@ abstract class MediaLink
         }
     }
 
-    private
-    function getAlign()
-    {
-        return $this->getMedia()->getAttributes()->getComponentAttributeValue(self::ALIGN_KEY);
-    }
 
     private
     function getLinking()
     {
-        return $this->getMedia()->getAttributes()->getComponentAttributeValue(self::LINKING_KEY);
+        return $this->linking;
     }
 
+    private
+    function setLinking($value): MediaLink
+    {
+        $this->linking = $value;
+        return $this;
+    }
+
+    private
+    function getLinkingClass()
+    {
+        return $this->linkingClass;
+    }
+
+    private
+    function setLinkingClass($value): MediaLink
+    {
+        $this->linkingClass = $value;
+        return $this;
+    }
 
     /**
      * @return string - the HTML of the image inside a link if asked
@@ -610,6 +632,10 @@ abstract class MediaLink
                 $mediaLink->addHtmlAttributeValue("href", $src);
                 $snippetId = "lightbox";
                 $mediaLink->addClassName("{$snippetId}-combo");
+                $linkingClass = $this->getLinkingClass();
+                if ($linkingClass !== null) {
+                    $mediaLink->addClassName($linkingClass);
+                }
                 $snippetManager = PluginUtility::getSnippetManager();
                 $snippetManager->attachJavascriptComboLibrary();
                 $snippetManager->attachInternalJavascriptForSlot("lightbox");

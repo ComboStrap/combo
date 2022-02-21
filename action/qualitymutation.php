@@ -23,7 +23,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
 {
 
 
-    public const QUALITY_MUTATION_EVENT_NAME = 'QUALITY_MUTATION';
+    public const QUALITY_MUTATION_EVENT_NAME = 'quality_mutation';
     const CANONICAL = "low_quality";
     const DESC = "desc";
 

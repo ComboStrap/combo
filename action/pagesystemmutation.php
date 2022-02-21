@@ -18,12 +18,12 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
 {
 
 
-    public const PAGE_SYSTEM_MUTATION_EVENT_NAME = 'PAGE_SYSTEM_MUTATION';
+    public const PAGE_SYSTEM_MUTATION_EVENT_NAME = 'page_system_mutation';
 
     const TYPE_ATTRIBUTE = "type";
     const TYPE_CREATION = "creation";
     const TYPE_DELETION = "deletion";
-    const PAGE_ID = "id";
+
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -76,7 +76,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
                 action_plugin_combo_pagesystemmutation::PAGE_SYSTEM_MUTATION_EVENT_NAME,
                 [
                     self::TYPE_ATTRIBUTE => self::TYPE_CREATION,
-                    self::PAGE_ID => $file->toDokuPath()->getDokuwikiId()
+                    PagePath::getPersistentName() => $file->toDokuPath()->toString()
                 ]
             );
             return;

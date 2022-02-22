@@ -1435,9 +1435,8 @@ class PluginUtility
     }
 
     /**
-     * @throws ExceptionCombo
      */
-    public static function getSlotId()
+    public static function getCurrentSlotId()
     {
         global $ID;
         $slot = $ID;

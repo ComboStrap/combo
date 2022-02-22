@@ -81,7 +81,6 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
     const TEMPLATE_CALLSTACK = "template-callstack";
 
 
-
     /**
      * Syntax Type.
      *
@@ -569,13 +568,15 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                          */
                         $totalCallStack = CallStack::createFromInstructions($totalInstructions);
                         $totalCallStack->moveToEnd();
-                        while($actualCall = $totalCallStack->previous()){
-                            if(
-                                $actualCall->getTagName()===syntax_plugin_combo_carrousel::TAG
-                                && $actualCall->getState() ===DOKU_LEXER_EXIT
+                        while ($actualCall = $totalCallStack->previous()) {
+                            if (
+                                $actualCall->getTagName() === syntax_plugin_combo_carrousel::TAG
+                                && in_array($actualCall->getState(), [DOKU_LEXER_ENTER, DOKU_LEXER_EXIT])
                             ) {
-                                $actualCall->setPluginData(syntax_plugin_combo_carrousel::BULLET_COUNT,$elementCounts);
-                                break;
+                                $actualCall->setPluginData(syntax_plugin_combo_carrousel::ELEMENT_COUNT, $elementCounts);
+                                if ($actualCall->getState() === DOKU_LEXER_ENTER) {
+                                    break;
+                                }
                             }
                         }
 

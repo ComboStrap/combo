@@ -352,7 +352,7 @@ class SnippetManager
     private
     function &attachSnippetFromSlot(string $componentId, string $type, string $identifier): Snippet
     {
-        $slot = PluginUtility::getSlotId();
+        $slot = PluginUtility::getCurrentSlotId();
         $snippet = Snippet::getOrCreateSnippet($identifier, $type, $componentId)
             ->addSlot($slot);
         return $snippet;

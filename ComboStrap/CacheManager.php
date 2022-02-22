@@ -128,14 +128,10 @@ class CacheManager
     /**
      * @param string $dependencyName
      * @return CacheManager
-     * @throws ExceptionCombo
      */
     public function addDependencyForCurrentSlot(string $dependencyName): CacheManager
     {
-        global $ID;
-        if ($ID === null) {
-            throw new ExceptionCombo("The actual slot is unknown (global ID is null). We cannot add a dependency");
-        }
+        $ID = PluginUtility::getCurrentSlotId();
         $cacheDependencies = $this->getCacheDependenciesForSlot($ID);
         $cacheDependencies->addDependency($dependencyName);
         return $this;

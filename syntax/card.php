@@ -9,6 +9,7 @@ use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
+use ComboStrap\SvgDocument;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
@@ -222,6 +223,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     switch ($tagName) {
                         case $imageTag:
                             $actualCall->addClassName("card-img-top");
+                            $actualCall->setType(SvgDocument::ILLUSTRATION_TYPE);
                             $actualCall->addAttribute(MediaLink::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
                             if (!$actualCall->hasAttribute(Dimension::RATIO_ATTRIBUTE)) {
                                 $actualCall->addAttribute(Dimension::RATIO_ATTRIBUTE, "16:9");

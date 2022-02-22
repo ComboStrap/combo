@@ -371,6 +371,7 @@ class SvgDocument extends XmlDocument
                     $this->setRootAttribute("width", $widthInPixel);
 
                 }
+
                 break;
         }
 

@@ -181,7 +181,14 @@ class ImageSvg extends Image
     {
 
         $cache = new CacheMedia($this->getPath(), $this->getAttributes());
-        if (!$cache->isCacheUsable()) {
+        global $ACT;
+        if (PluginUtility::isDev() && $ACT === "preview") {
+            // in dev mode, don't cache
+            $isCacheUsable = false;
+        } else {
+            $isCacheUsable = $cache->isCacheUsable();
+        }
+        if (!$isCacheUsable) {
             $svgDocument = $this->getSvgDocument();
             $content = $svgDocument->getXmlText($this->getAttributes());
             $cache->storeCache($content);
@@ -199,7 +206,8 @@ class ImageSvg extends Image
      * @return string
      * @throws ExceptionCombo
      */
-    public function getBuster(): string
+    public
+    function getBuster(): string
     {
         $time = FileSystems::getModifiedTime($this->getSvgFile());
         return strval($time->getTimestamp());

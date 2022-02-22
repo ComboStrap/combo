@@ -84,16 +84,25 @@ class Brand
      * @return string[]
      * @throws ExceptionCombo
      */
-    public static function getBrandNames(): array
+    public static function getAllKnownBrandNames(): array
     {
-        $brandDictionary = self::getBrandDictionary();
-        $brandsDict = array_keys($brandDictionary);
+
+        $brandsDict = self::getBrandNamesFromDictionary();
         $brandsAbbreviations = array_keys(self::BRAND_ABBREVIATIONS_MAPPING);
         return array_merge(
             $brandsDict,
             $brandsAbbreviations,
             [self::CURRENT_BRAND]
         );
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function getBrandNamesFromDictionary(): array
+    {
+        $brandDictionary = self::getBrandDictionary();
+        return array_keys($brandDictionary);
     }
 
     /**

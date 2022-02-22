@@ -420,7 +420,7 @@ EOF;
         $icon = $this->getResourceIconFile();
         if (!FileSystems::exists($icon)) {
             $iconName = $this->brand->getIconName($this->iconType);
-            $brandNames = Brand::getBrandNames();
+            $brandNames = Brand::getAllKnownBrandNames();
             if ($iconName === null && in_array($this->getBrand(), $brandNames)) {
                 throw new ExceptionComboNotFound("No {$this->iconType} icon could be found for the known brand ($this)");
             }

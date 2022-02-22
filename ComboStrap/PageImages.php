@@ -53,13 +53,24 @@ class PageImages extends MetadataTabular
         if ($pageImages !== null) {
             return $pageImages;
         }
-
-        $defaultPageImage = $this->getDefaultImage();
-        if ($defaultPageImage !== null) {
-            return [PageImage::create($defaultPageImage, $this->getResource())];
+        try {
+            $defaultPageImage = $this->getDefaultImage();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error while getting the default page image for the page {$this->getResource()}. The image was not used. Error: {$e->getMessage()}");
+            return [];
+        }
+        if ($defaultPageImage === null) {
+            return [];
+        }
+        try {
+            return [
+                PageImage::create($defaultPageImage, $this->getResource())
+            ];
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error while creating the default page image ($defaultPageImage) for the page {$this->getResource()}. The image was not used. Error: {$e->getMessage()}");
+            return [];
         }
 
-        return [];
     }
 
     /**
@@ -212,7 +223,12 @@ class PageImages extends MetadataTabular
              * @var PageImagePath $pageImagePath
              */
             $pageImagePath = $row[PageImagePath::getPersistentName()];
-            $pageImage = PageImage::create($pageImagePath->getValue(), $this->getResource());
+            try {
+                $pageImage = PageImage::create($pageImagePath->getValue(), $this->getResource());
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("Error while creating the page image ($pageImagePath) for the page {$this->getResource()}. The image was not used. Error: {$e->getMessage()}");
+                continue;
+            }
             /**
              * @var PageImageUsage $pageImageUsage
              */
@@ -302,6 +318,9 @@ class PageImages extends MetadataTabular
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function getDefaultImage(): ?Image
     {
@@ -313,6 +332,7 @@ class PageImages extends MetadataTabular
 
     /**
      * @return ImageRaster|ImageSvg|null - the first image of the page
+     * @throws ExceptionCombo
      */
     public function getFirstImage()
     {
@@ -349,13 +369,7 @@ class PageImages extends MetadataTabular
         if (media_isexternal($firstImageId)) {
             return null;
         }
-        try {
-            return Image::createImageFromId($firstImageId);
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("The first image ($firstImageId) is not valid");
-            return null;
-        }
-
+        return Image::createImageFromId($firstImageId);
 
     }
 
@@ -378,7 +392,7 @@ class PageImages extends MetadataTabular
         $pageImagePath = null;
         if ($defaultImage !== null) {
             $pageImagePath = PageImagePath::createFromParent($this)
-                    ->buildFromStoreValue($defaultImage->getPath()->toString());
+                ->buildFromStoreValue($defaultImage->getPath()->toString());
         }
         return [
             [

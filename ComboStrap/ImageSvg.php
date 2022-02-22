@@ -21,6 +21,7 @@ class ImageSvg extends Image
     {
 
         parent::__construct($path, $tagAttributes);
+
     }
 
 
@@ -30,6 +31,7 @@ class ImageSvg extends Image
     private $svgDocument;
 
     /**
+     *
      * @throws ExceptionCombo
      */
     public function getIntrinsicWidth(): int

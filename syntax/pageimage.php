@@ -163,9 +163,15 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                             LogUtility::msg("The ratio ($stringRatio) is not a valid ratio. Error: {$e->getMessage()}");
                         }
                         if ($targetRatio !== null) {
-                            foreach ($page->getPageImagesOrDefault() as $pageImage) {
+                            $pageImages = $page->getPageImagesOrDefault();
+                            foreach ($pageImages as $pageImage) {
                                 $image = $pageImage->getImage();
-                                $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
+                                try {
+                                    $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
+                                } catch (ExceptionCombo $e) {
+                                    LogUtility::msg("The page image ($image) of the page ($page) returns an error. Error: {$e->getMessage()}");
+                                    continue;
+                                }
                                 if ($ratioDistance < $bestRatioDistance) {
                                     $bestRatioDistance = $ratioDistance;
                                     $selectedPageImage = $image;

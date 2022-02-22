@@ -136,6 +136,7 @@ EOF;
             $html .= <<<EOF
 </tr>
 </thead>
+<tbody>
 EOF;
 
             $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
@@ -193,7 +194,7 @@ EOF;
                     /**
                      * End row
                      */
-                    $html .= "</td>" . PHP_EOL;
+                    $html .= "</tr>" . PHP_EOL;
                 } catch (ExceptionCombo $e) {
                     $message = "Error while rendering the brand $brandName. Error: {$e->getMessage()}";
                     if (!PluginUtility::isDevOrTest()) {

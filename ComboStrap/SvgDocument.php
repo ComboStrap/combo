@@ -142,6 +142,9 @@ class SvgDocument extends XmlDocument
      */
     public static function createSvgDocumentFromPath(Path $path): SvgDocument
     {
+        if(!FileSystems::exists($path)){
+            throw new ExceptionCombo("The path ($path) does not exist. A svg document cannot be created", self::CANONICAL);
+        }
         $text = FileSystems::getContent($path);
         $svg = new SvgDocument($text);
         $svg->setName($path->getLastNameWithoutExtension());

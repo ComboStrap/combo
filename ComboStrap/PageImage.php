@@ -34,6 +34,7 @@ class PageImage
      * @param Image|string $image
      * @param Page $page
      * @return PageImage
+     * @throws ExceptionCombo
      */
     public static function create($image, ResourceCombo $page): PageImage
     {

@@ -40,7 +40,12 @@ class LocalFs implements FileSystem
             throw new ExceptionComboRuntime("The mime is unknown for the path ($path)");
         }
         if ($mime->isTextBased()) {
-            return file_get_contents($path->toAbsolutePath()->toString());
+            $content = @file_get_contents($path->toAbsolutePath()->toString());
+            if($content===false){
+                // file does not exists
+                return null;
+            }
+            return $content;
         }
         throw new ExceptionComboRuntime("This mime content ($mime) can not yet be retrieved for the path ($path)");
     }

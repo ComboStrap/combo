@@ -411,6 +411,11 @@ class Icon extends ImageSvg
                 // example: eva:facebook-fill
                 [$iconName, $iconType] = self::explodeInTwoPartsByLastPosition($iconName, "-");
                 $iconBaseUrl .= "/$iconType/svg";
+                if($iconType==="outline"){
+                    // for whatever reason, the name of outline icon has outline at the end
+                    // and not for the fill icon
+                    $iconName .= "-$iconType";
+                }
                 break;
             case self::PHOSPHOR_ICONS:
                 // example: activity-light

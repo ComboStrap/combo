@@ -198,7 +198,8 @@ EOF;
                 } catch (ExceptionCombo $e) {
                     $message = "Error while rendering the brand $brandName. Error: {$e->getMessage()}";
                     if (!PluginUtility::isDevOrTest()) {
-                        $renderer->doc .= "$message\n";
+                        $rowSpan = sizeof($variants)+1; // 1 for the brand column
+                        $renderer->doc .= "<tr><td rowspan=\"$rowSpan\" class=\"text-danger\">$message</td></tr>";
                     } else {
                         throw new ExceptionComboRuntime($message, self::TAG, 0, $e);
                     }

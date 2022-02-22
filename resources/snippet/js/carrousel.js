@@ -24,15 +24,18 @@ window.addEventListener('load', function () {
             let glideSlideElement = carrousel.querySelector(".glide__slides");
             glideSlideElement.style.height = `${glideSlideElement.offsetHeight}px`;
         } else {
+            // we can't set the height of the container to have same height component
+            // because this is a grid and in small mobile screen, the height would be double
             [...carrousel.childNodes].forEach(child => {
-                if (typeof child.classList !== 'undefined') {
-                    // not a text node
-                    // m-2 and p-0 to add gutter without extra div
-                    // not sure how we can transform a width to a `col` class based on media width, fix for now
-                    child.classList.add("col", "col-12", "col-sm-6", "col-md-4", "m-2", "p-0");
+                if (child.nodeType === Node.ELEMENT_NODE) {
+                    // wrap it in a col
+                    child.classList.remove("glide__slide")
+                    let cellElement = document.createElement("div");
+                    cellElement.classList.add("col", "col-12", "col-sm-6", "col-md-4");
+                    cellElement.appendChild(child);
+                    carrousel.appendChild(cellElement);
                 }
             });
-            carrousel.style.height = `${carrousel.offsetHeight}px`;
         }
 
     });

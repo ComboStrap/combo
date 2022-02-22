@@ -12,10 +12,14 @@ class LocalPath extends PathAbs
 {
 
     /**
-     * For whatever reason, it seems that php uses always the / separator
-     * on windows also
+     * For whatever reason, it seems that php uses always the / separator on windows also
+     * but not always (ie  https://www.php.net/manual/en/function.realpath.php output \ on windows)
+     *
+     * Because we want to be able to copy the path and to be able to use
+     * it directly, we {@link LocalPath::normalizedToOs() normalize} it to the OS separator
+     * at build time
      */
-    private const PHP_SYSTEM_DIRECTORY_SEPARATOR = DokuPath::DIRECTORY_SEPARATOR;
+    private const PHP_SYSTEM_DIRECTORY_SEPARATOR = DIRECTORY_SEPARATOR;
 
     /**
      * The characters that cannot be in the path for windows
@@ -31,7 +35,7 @@ class LocalPath extends PathAbs
      */
     public function __construct($path)
     {
-        $this->path = $path;
+        $this->path = $this->normalizedToOs($path);
     }
 
 
@@ -165,6 +169,20 @@ class LocalPath extends PathAbs
         return LocalPath::create($relativePath);
     }
 
+    private function normalizedToOs($path)
+    {
+        // real path handle also the
+        // windows name ie USERNAME~
+        $realPath = realpath($path);
+        if ($realPath !== false) {
+            // false if it does not exist
+            return $realPath;
+        }
+        if (self::PHP_SYSTEM_DIRECTORY_SEPARATOR === "\\") {
+            return str_replace("/", "\\", $path);
+        }
+        return $path;
+    }
 
 
 }

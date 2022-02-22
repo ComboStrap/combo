@@ -8,6 +8,7 @@ use ComboStrap\Http;
 use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\LocalPath;
+use ComboStrap\LogUtility;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use dokuwiki\Utf8\PhpString;
@@ -132,6 +133,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
                 $dokuPath = $mediaToSend->toDokuPath();
             } catch (ExceptionCombo $e) {
                 // not a dokuwiki file ?
+                LogUtility::msg("Error: {$e->getMessage()}");
                 return;
             }
             if (!$dokuPath->isPublic()) {

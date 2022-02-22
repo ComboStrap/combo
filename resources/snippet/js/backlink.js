@@ -36,6 +36,7 @@ window.addEventListener("DOMContentLoaded", function () {
                  */
                 backlinkModal
                     .resetIfBuild()
+                    .setCentered(true)
                     .setHeader(`Backlinks for the page (${pageId})`)
                     .addBody(html)
                     .addFooterButton(dokuWikiBacklinkButton)

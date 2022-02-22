@@ -268,6 +268,10 @@ export default class ComboModal {
         return this.isBuild;
     }
 
+    setCentered(bool){
+        this.isCentered = bool;
+        return this;
+    }
     resetIfBuild() {
         if (this.wasBuild()) {
             this.reset();
@@ -321,11 +325,12 @@ export default class ComboModal {
             "modal-lg");
         if (this.isCentered) {
             modalManagerDialog.classList.add("modal-dialog-centered")
+        } else {
+            // Get the modal more central but fix as we have tab and
+            // we want still the mouse below the tab to be at the same position when we click
+            modalManagerDialog.style.setProperty("margin", "5rem auto");
+            modalManagerDialog.style.setProperty("height", "calc(100% - 9rem)");
         }
-        // Get the modal more central but fix as we have tab and
-        // we want still the mouse below the tab when we click
-        modalManagerDialog.style.setProperty("margin", "5rem auto");
-        modalManagerDialog.style.setProperty("height", "calc(100% - 9rem)");
         for (let dialogStyleName in this.dialogStyles) {
             if (!this.dialogStyles.hasOwnProperty(dialogStyleName)) {
                 continue;

@@ -12,6 +12,7 @@ window.addEventListener("DOMContentLoaded", function () {
                 let pageId = JSINFO.id;
                 let modalBacklinkId = combo.toHtmlId(`combo-cache-${pageId}`);
                 let cacheModal = combo.getOrCreateModal(modalBacklinkId)
+                    .resetIfBuild()
                     .addDialogClass("modal-fullscreen-md-down");
 
                 /**
@@ -87,7 +88,6 @@ window.addEventListener("DOMContentLoaded", function () {
                  * The modal
                  */
                 cacheModal
-                    .resetIfBuild()
                     .setHeader(`Cache Info for the page (${pageId})`)
                     .addBody(html)
                     .addFooterCloseButton()

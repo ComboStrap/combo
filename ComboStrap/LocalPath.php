@@ -98,6 +98,10 @@ class LocalPath extends PathAbs
 
     function toAbsolutePath(): Path
     {
+        /**
+         * TODO: because we use realpath in {@link LocalPath::normalizedToOs()} used in the constructor
+         *   the path is always absolute, not needed ?
+         */
         $path = realpath($this->path);
         if ($path !== false) {
             // Path return false when the file does not exist

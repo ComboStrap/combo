@@ -118,74 +118,102 @@ class SnippetManager
          * Processing the external resources
          * and collecting the internal one
          *
-         * We collect the separately head that have content
-         * from the head that refers to external resources
-         * because the content will depends on the resources
-         * and should then come in the last position
+         * The order is the order where they were added/created.
          *
-         * @var Snippet[] $internalSnippets
+         * The internal script may be dependent on the external javascript
+         * and vice-versa (for instance, Math-Jax library is dependent
+         * on the config that is an internal script)
+         *
          */
-        $internalSnippets = [];
-
         foreach ($snippets as $snippet) {
 
             $type = $snippet->getType();
-            if ($type === Snippet::INTERNAL_TYPE) {
-                $internalSnippets[] = $snippet;
-                continue;
-            }
+
 
             $extension = $snippet->getExtension();
             switch ($extension) {
                 case Snippet::EXTENSION_JS:
-                    $jsDokuwiki = array(
-                        "class" => $snippet->getClass(),
-                        "src" => $snippet->getUrl(),
-                        "crossorigin" => "anonymous"
-                    );
-                    $integrity = $snippet->getIntegrity();
-                    if ($integrity !== null) {
-                        $jsDokuwiki["integrity"] = $integrity;
+                    switch ($type) {
+                        case Snippet::EXTERNAL_TYPE:
+
+                            $jsDokuwiki = array(
+                                "class" => $snippet->getClass(),
+                                "src" => $snippet->getUrl(),
+                                "crossorigin" => "anonymous"
+                            );
+                            $integrity = $snippet->getIntegrity();
+                            if ($integrity !== null) {
+                                $jsDokuwiki["integrity"] = $integrity;
+                            }
+                            $critical = $snippet->getCritical();
+                            if (!$critical) {
+                                $jsDokuwiki["defer"] = null;
+                                // not async: it will run as soon as possible
+                                // the dom main not be loaded completely, the script may miss HTML dom element
+                            }
+                            $jsDokuwiki = $this->addExtraHtml($jsDokuwiki, $snippet);
+                            ksort($jsDokuwiki);
+                            $returnedDokuWikiFormat[self::SCRIPT_TAG][] = $jsDokuwiki;
+                            break;
+                        case Snippet::INTERNAL_TYPE:
+                            $content = $snippet->getInternalInlineAndFileContent();
+                            if ($content === null) {
+                                LogUtility::msg("The internal js snippet ($snippet) has no content. Skipped");
+                                continue 3;
+                            }
+                            $jsDokuwiki = array(
+                                "class" => $snippet->getClass(),
+                                self::DATA_DOKUWIKI_ATT => $content
+                            );
+                            $jsDokuwiki = $this->addExtraHtml($jsDokuwiki, $snippet);
+                            $returnedDokuWikiFormat[self::SCRIPT_TAG][] = $jsDokuwiki;
+                            break;
+                        default:
+                            LogUtility::msg("Unknown javascript snippet type");
                     }
-                    $critical = $snippet->getCritical();
-                    if (!$critical) {
-                        $jsDokuwiki["defer"] = null;
-                        // not async: it will run as soon as possible
-                        // the dom main not be loaded completely, the script may miss HTML dom element
-                    }
-                    $htmlAttributes = $snippet->getHtmlAttributes();
-                    if ($htmlAttributes !== null) {
-                        foreach ($htmlAttributes as $name => $value) {
-                            $jsDokuwiki[$name] = $value;
-                        }
-                    }
-                    ksort($jsDokuwiki);
-                    $returnedDokuWikiFormat[self::SCRIPT_TAG][] = $jsDokuwiki;
                     break;
                 case Snippet::EXTENSION_CSS:
-                    $cssDokuwiki = array(
-                        "class" => $snippet->getClass(),
-                        "rel" => "stylesheet",
-                        "href" => $snippet->getUrl(),
-                        "crossorigin" => "anonymous"
-                    );
-                    $integrity = $snippet->getIntegrity();
-                    if ($integrity !== null) {
-                        $cssDokuwiki["integrity"] = $integrity;
+                    switch ($type) {
+                        case Snippet::EXTERNAL_TYPE:
+                            $cssDokuwiki = array(
+                                "class" => $snippet->getClass(),
+                                "rel" => "stylesheet",
+                                "href" => $snippet->getUrl(),
+                                "crossorigin" => "anonymous"
+                            );
+                            $integrity = $snippet->getIntegrity();
+                            if ($integrity !== null) {
+                                $cssDokuwiki["integrity"] = $integrity;
+                            }
+                            $critical = $snippet->getCritical();
+                            if (!$critical && Site::getTemplate() === Site::STRAP_TEMPLATE_NAME) {
+                                $cssDokuwiki["rel"] = "preload";
+                                $cssDokuwiki['as'] = self::STYLE_TAG;
+                            }
+                            $cssDokuwiki = $this->addExtraHtml($cssDokuwiki, $snippet);
+                            ksort($cssDokuwiki);
+                            $returnedDokuWikiFormat[self::LINK_TAG][] = $cssDokuwiki;
+                            break;
+                        case Snippet::INTERNAL_TYPE:
+                            /**
+                             * CSS inline in script tag
+                             * They are all critical
+                             */
+                            $content = $snippet->getInternalInlineAndFileContent();
+                            if ($content === null) {
+                                LogUtility::msg("The internal css snippet ($snippet) has no content. Skipped");
+                                continue 3;
+                            }
+                            $cssInternalArray = array(
+                                "class" => $snippet->getClass(),
+                                self::DATA_DOKUWIKI_ATT => $content
+                            );
+                            $cssInternalArray = $this->addExtraHtml($cssInternalArray, $snippet);
+                            $returnedDokuWikiFormat[self::STYLE_TAG][] = $cssInternalArray;
+                            break;
+                        default:
+                            LogUtility::msg("Unknown css snippet type");
                     }
-                    $critical = $snippet->getCritical();
-                    if (!$critical && Site::getTemplate() === Site::STRAP_TEMPLATE_NAME) {
-                        $cssDokuwiki["rel"] = "preload";
-                        $cssDokuwiki['as'] = self::STYLE_TAG;
-                    }
-                    $htmlAttributes = $snippet->getHtmlAttributes();
-                    if ($htmlAttributes !== null) {
-                        foreach ($htmlAttributes as $name => $value) {
-                            $cssDokuwiki[$name] = $value;
-                        }
-                    }
-                    ksort($cssDokuwiki);
-                    $returnedDokuWikiFormat[self::LINK_TAG][] = $cssDokuwiki;
                     break;
                 default:
                     LogUtility::msg("The extension ($extension) is unknown, the external snippet ($snippet) was not added");
@@ -193,44 +221,6 @@ class SnippetManager
 
         }
 
-        foreach ($internalSnippets as $snippet) {
-            $extension = $snippet->getExtension();
-            switch ($extension) {
-                case Snippet::EXTENSION_JS:
-
-                    $content = $snippet->getInternalInlineAndFileContent();
-                    if ($content === null) {
-                        LogUtility::msg("The internal snippet ($snippet) has no content. Skipped");
-                        continue 2;
-                    }
-
-                    $returnedDokuWikiFormat[self::SCRIPT_TAG][] = array(
-                        "class" => $snippet->getClass(),
-                        self::DATA_DOKUWIKI_ATT => $content
-                    );
-
-                    break;
-                case Snippet::EXTENSION_CSS:
-                    /**
-                     * CSS inline in script tag
-                     * They are all critical
-                     */
-                    $content = $snippet->getInternalInlineAndFileContent();
-                    if ($content === null) {
-                        LogUtility::msg("The internal snippet ($snippet) has no content. Skipped");
-                        continue 2;
-                    }
-                    $snippetArray = array(
-                        "class" => $snippet->getClass(),
-                        self::DATA_DOKUWIKI_ATT => $content
-                    );
-
-                    $returnedDokuWikiFormat[self::STYLE_TAG][] = $snippetArray;
-                    break;
-                default:
-                    LogUtility::msg("The extension ($extension) is unknown, the internal snippet ($snippet) was not added");
-            }
-        }
         return $returnedDokuWikiFormat;
     }
 
@@ -444,6 +434,17 @@ class SnippetManager
                 $url)
             ->setIntegrity($integrity);
 
+    }
+
+    private function addExtraHtml(array $attributesArray, Snippet $snippet): array
+    {
+        $htmlAttributes = $snippet->getHtmlAttributes();
+        if ($htmlAttributes !== null) {
+            foreach ($htmlAttributes as $name => $value) {
+                $attributesArray[$name] = $value;
+            }
+        }
+        return $attributesArray;
     }
 
 

@@ -142,15 +142,16 @@ EOD;
 
                 $snippetManager
                     ->attachInternalJavascriptForSlot(
-                        self::TAG,
-                        $headHtmlElement
-                    )
-                    ->addHtmlAttribute("type", "text/x-mathjax-config");
-                $snippetManager->attachJavascriptLibraryForSlot(
                     self::TAG,
-                    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js"
-                );
-
+                    $headHtmlElement
+                )
+                    ->addHtmlAttribute("type", "text/x-mathjax-config");
+                $snippetManager
+                    ->attachJavascriptLibraryForSlot(
+                        self::TAG,
+                        "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js"
+                    )
+                    ->setDoesManipulateTheDomOnRun(false);
                 break;
 
             case 'latexport':

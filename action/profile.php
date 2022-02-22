@@ -4,7 +4,6 @@ use ComboStrap\Bootstrap;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Snippet;
 
 if (!defined('DOKU_INC')) die();
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -16,13 +15,12 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
 {
 
     const CANONICAL = Identity::CANONICAL;
-    const TAG_UPDATE = "profile-update";
-    const TAG_DELETE = "profile-delete";
+    const TAG_UPDATE = "profile-update"; // form 1
+    const TAG_DELETE = "profile-delete"; // form 2
     const FORM_PROFILE_UPDATE_CLASS = "form-" . self::TAG_UPDATE;
     const FORM_PROFILE_DELETE_CLASS = "form-" . self::TAG_DELETE;
     const CONF_ENABLE_PROFILE_UPDATE_FORM = "enableProfileUpdateForm";
     const CONF_ENABLE_PROFILE_DELETE_FORM = "enableProfileDeleteForm";
-
 
 
     function register(Doku_Event_Handler $controller)
@@ -36,7 +34,7 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
          * Event using the new object but not found anywhere
          * https://www.dokuwiki.org/devel:event:form_updateprofile_output
          */
-        if (PluginUtility::getConfValue(self::CONF_ENABLE_PROFILE_UPDATE_FORM,1)) {
+        if (PluginUtility::getConfValue(self::CONF_ENABLE_PROFILE_UPDATE_FORM, 1)) {
             $controller->register_hook('HTML_UPDATEPROFILEFORM_OUTPUT', 'BEFORE', $this, 'handle_profile_update', array());
         }
 
@@ -49,11 +47,9 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
          * Event using the new object but not found anywhere
          * https://www.dokuwiki.org/devel:event:form_profiledelete_output
          */
-        if (PluginUtility::getConfValue(self::CONF_ENABLE_PROFILE_DELETE_FORM,1)) {
+        if (PluginUtility::getConfValue(self::CONF_ENABLE_PROFILE_DELETE_FORM, 1)) {
             $controller->register_hook('HTML_PROFILEDELETEFORM_OUTPUT', 'BEFORE', $this, 'handle_profile_delete', array());
         }
-
-
 
 
     }
@@ -65,19 +61,14 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
          * The profile page is created via buffer
          * We print before the forms to avoid a FOUC
          */
-        print Snippet::createInternalCssSnippet(self::TAG_UPDATE)
-            ->getHtmlStyleTag();
+        print Identity::getHtmlStyleTag(self::TAG_UPDATE);
 
         /**
          * @var Doku_Form $form
          */
         $form = &$event->data;
         $class = &$form->params["class"];
-        if (isset($class)) {
-            $class = $class . " " . self::FORM_PROFILE_UPDATE_CLASS;
-        } else {
-            $class = self::FORM_PROFILE_UPDATE_CLASS;
-        }
+        Identity::addIdentityClass($class, self::FORM_PROFILE_UPDATE_CLASS);
         $newFormContent = [];
 
         /**
@@ -236,31 +227,27 @@ EOF;
 
     }
 
-    public function handle_profile_delete($event,$param){
+    public function handle_profile_delete($event, $param)
+    {
 
         /**
          * The profile page is created via buffer
          * We print before the forms to avoid a FOUC
          */
-        print Snippet::createInternalCssSnippet(self::TAG_DELETE)
-            ->getHtmlStyleTag();
+        print Identity::getHtmlStyleTag(self::TAG_DELETE);
 
         /**
          * @var Doku_Form $form
          */
         $form = &$event->data;
         $class = &$form->params["class"];
-        if (isset($class)) {
-            $class = $class . " " . self::FORM_PROFILE_DELETE_CLASS;
-        } else {
-            $class = self::FORM_PROFILE_DELETE_CLASS;
-        }
+        Identity::addIdentityClass($class, self::FORM_PROFILE_DELETE_CLASS);
         $newFormContent = [];
 
         /**
          * Header (Logo / Title)
          */
-        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_PROFILE_DELETE_CLASS,false);
+        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_PROFILE_DELETE_CLASS, false);
 
         /**
          * Field

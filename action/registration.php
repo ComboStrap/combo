@@ -27,7 +27,7 @@ class action_plugin_combo_registration extends DokuWiki_Action_Plugin
 
     const CANONICAL = Identity::CANONICAL;
     const TAG = "register";
-    const FORM_REGISTER_CLASS = "form-".self::TAG;
+    const FORM_REGISTER_CLASS = "form-" . self::TAG;
     const CONF_ENABLE_REGISTER_FORM = "enableRegistrationForm";
 
 
@@ -88,8 +88,7 @@ EOF;
          * We print before the forms
          * to avoid a FOUC
          */
-        print Snippet::createInternalCssSnippet("register")
-            ->getHtmlStyleTag();
+        print Identity::getHtmlStyleTag(self::TAG);
 
 
         /**
@@ -97,11 +96,7 @@ EOF;
          */
         $form = &$event->data;
         $class = &$form->params["class"];
-        if (isset($class)) {
-            $class = $class . " " . self::FORM_REGISTER_CLASS;
-        } else {
-            $class = self::FORM_REGISTER_CLASS;
-        }
+        Identity::addIdentityClass($class, self::FORM_REGISTER_CLASS);
         $newFormContent = [];
 
         /**

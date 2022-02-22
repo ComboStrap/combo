@@ -36,26 +36,9 @@ class Site
 
 
     /**
-     * @return string|null the html img tag or null
-     * @throws ExceptionCombo
-     */
-    public static function getLogoImgHtmlTag($tagAttributes = null): ?string
-    {
-        $logoIds = self::getLogoIds();
-        foreach ($logoIds as $logoId) {
-            if ($logoId->exists()) {
-                $mediaLink = MediaLink::createMediaLinkFromPath($logoId->getPath(), $tagAttributes)
-                    ->setLazyLoad(false);
-                return $mediaLink->renderMediaTag();
-            }
-        }
-        return null;
-    }
-
-    /**
      * @return Image[]
      */
-    private static function getLogoIds(): array
+    public static function getLogoImages(): array
     {
         $logosPaths = PluginUtility::mergeAttributes(self::PNG_LOGO_IDS, self::SVG_LOGO_IDS);
         $logos = [];
@@ -758,6 +741,35 @@ class Site
     public static function getComboResourceSnippetDirectory(): LocalPath
     {
         return Site::getComboResourcesDirectory()->resolve("snippet");
+    }
+
+    public static function getLogoHtml(): ?string
+    {
+
+        $tagAttributes = TagAttributes::createEmpty("identity");
+        $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "72");
+        $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, "72");
+        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
+        $tagAttributes->addClassName("logo");
+
+
+
+        /**
+         * Logo
+         */
+        $logoImages = Site::getLogoImages();
+        foreach ($logoImages as $logoImage) {
+            $path = $logoImage->getPath();
+            $mediaLink = MediaLink::createMediaLinkFromPath($path, $tagAttributes)
+                ->setLazyLoad(false);
+            try {
+                return $mediaLink->renderMediaTag();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("Error while rendering the logo $logoImage");
+            }
+        }
+
+        return null;
     }
 
 

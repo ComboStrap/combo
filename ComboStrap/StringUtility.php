@@ -247,14 +247,12 @@ class StringUtility
     public static function getWords($string, $separatorsCharacters = null): array
     {
         // Reserved characters to space
-        if ($separatorsCharacters === null || !is_array($separatorsCharacters)) {
-            if (!is_array($separatorsCharacters)) {
-                LogUtility::msg("The separators characters are not an array, default characters used");
-            }
-            $separatorsCharacters = array_merge(
-                Url::RESERVED_WORDS,
-                LocalPath::RESERVED_WINDOWS_CHARACTERS,
-                StringUtility::SEPARATORS_CHARACTERS);
+        if ($separatorsCharacters === null) {
+            $separatorsCharacters = StringUtility::getAllSeparators();
+        }
+        if (!is_array($separatorsCharacters)) {
+            LogUtility::msg("The separators characters are not an array, default characters used");
+            $separatorsCharacters = StringUtility::getAllSeparators();
         }
 
         $string = str_replace($separatorsCharacters, " ", $string);
@@ -264,6 +262,15 @@ class StringUtility
         $string = trim($string);
 
         return explode(" ", $string);
+    }
+
+    private static function getAllSeparators(): array
+    {
+        return array_merge(
+            Url::RESERVED_WORDS,
+            LocalPath::RESERVED_WINDOWS_CHARACTERS,
+            StringUtility::SEPARATORS_CHARACTERS
+        );
     }
 
 }

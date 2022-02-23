@@ -142,7 +142,7 @@ class SvgDocument extends XmlDocument
      */
     public static function createSvgDocumentFromPath(Path $path): SvgDocument
     {
-        if(!FileSystems::exists($path)){
+        if (!FileSystems::exists($path)) {
             throw new ExceptionCombo("The path ($path) does not exist. A svg document cannot be created", self::CANONICAL);
         }
         $text = FileSystems::getContent($path);
@@ -384,21 +384,53 @@ class SvgDocument extends XmlDocument
             case self::TILE_TYPE:
                 /**
                  * Determine if this is a:
-                 *   * fill
-                 *   * or stroke
-                 * svg icon
+                 *   * fill one color
+                 *   * fill two colors
+                 *   * or stroke svg icon
                  *
                  * The color can be set:
                  *   * on fill (surface)
                  *   * on stroke (line)
                  *
-                 * Feather set it on the stroke
-                 * Example: view-source:https://raw.githubusercontent.com/feathericons/feather/master/icons/airplay.svg
+                 * If the stroke attribute is not present this is a fill icon
+                 */
+                $svgColorType = self::COLOR_TYPE_FILL_SOLID;
+                if ($documentElement->hasAttribute(self::STROKE_ATTRIBUTE)) {
+                    $svgColorType = self::COLOR_TYPE_STROKE_OUTLINE;
+                }
+                /**
+                 * Double color icon ?
+                 */
+                $isDoubleColor = false;
+                if ($svgColorType === self::COLOR_TYPE_FILL_SOLID) {
+                    $svgFillsElement = $this->xpath("//*[@fill]");
+                    $fillColors = [];
+                    for ($i = 0; $i < $svgFillsElement->length; $i++) {
+                        /**
+                         * @var DOMElement $nodeElement
+                         */
+                        $nodeElement = $svgFillsElement[$i];
+                        $value = $nodeElement->getAttribute("fill");
+                        $fillColors[$value] = $value;
+                    }
+                    if (sizeof($fillColors) > 1) {
+                        $isDoubleColor = true;
+                    }
+                }
+
+                /**
+                 * CurrentColor
                  *
                  * By default, the icon should have this property when downloaded
                  * but if this not the case (such as for Material design), we set them
+                 *
+                 * Feather set it on the stroke
+                 * Example: view-source:https://raw.githubusercontent.com/feathericons/feather/master/icons/airplay.svg
+                 * <svg
+                 *  fill="none"
+                 *  stroke="currentColor">
                  */
-                if (!$documentElement->hasAttribute("fill")) {
+                if (!$isDoubleColor && !$documentElement->hasAttribute("fill")) {
 
                     /**
                      * Note: if fill was not set, the default color would be black
@@ -406,6 +438,7 @@ class SvgDocument extends XmlDocument
                     $localTagAttributes->addHtmlAttributeValue("fill", self::CURRENT_COLOR);
 
                 }
+
 
                 /**
                  * Eva/Carbon Source Icon are not optimized at the source
@@ -457,44 +490,45 @@ class SvgDocument extends XmlDocument
                      */
                     $colorValue = ColorRgb::createFromString($color)->toCssValue();
 
-                    /**
-                     * if the stroke element is not present this is a fill icon
-                     */
-                    $svgColorType = self::COLOR_TYPE_FILL_SOLID;
-                    if ($documentElement->hasAttribute(self::STROKE_ATTRIBUTE)) {
-                        $svgColorType = self::COLOR_TYPE_STROKE_OUTLINE;
-                    }
 
                     switch ($svgColorType) {
                         case self::COLOR_TYPE_FILL_SOLID:
 
-                            $localTagAttributes->addHtmlAttributeValue("fill", $colorValue);
 
+                            if (!$isDoubleColor) {
 
-                            if ($colorValue !== self::CURRENT_COLOR) {
-                                /**
-                                 * Update the fill property on sub-path
-                                 * If the fill is set on sub-path, it will not work
-                                 *
-                                 * fill may be set on group or whatever
-                                 */
-                                $svgPaths = $this->xpath("//*[local-name()='path' or local-name()='g']");
-                                for ($i = 0; $i < $svgPaths->length; $i++) {
+                                $localTagAttributes->addHtmlAttributeValue("fill", $colorValue);
+
+                                if ($colorValue !== self::CURRENT_COLOR) {
                                     /**
-                                     * @var DOMElement $nodeElement
+                                     * Update the fill property on sub-path
+                                     * If the fill is set on sub-path, it will not work
+                                     *
+                                     * fill may be set on group or whatever
                                      */
-                                    $nodeElement = $svgPaths[$i];
-                                    $value = $nodeElement->getAttribute("fill");
-                                    if ($value !== "none") {
-                                        if ($nodeElement->parentNode->tagName !== "svg") {
-                                            $nodeElement->setAttribute("fill", self::CURRENT_COLOR);
-                                        } else {
-                                            $this->removeAttributeValue("fill", $nodeElement);
+                                    $svgPaths = $this->xpath("//*[local-name()='path' or local-name()='g']");
+                                    for ($i = 0; $i < $svgPaths->length; $i++) {
+                                        /**
+                                         * @var DOMElement $nodeElement
+                                         */
+                                        $nodeElement = $svgPaths[$i];
+                                        $value = $nodeElement->getAttribute("fill");
+                                        if ($value !== "none") {
+                                            if ($nodeElement->parentNode->tagName !== "svg") {
+                                                $nodeElement->setAttribute("fill", self::CURRENT_COLOR);
+                                            } else {
+                                                $this->removeAttributeValue("fill", $nodeElement);
+                                            }
                                         }
                                     }
+
                                 }
-
-
+                            } else {
+                                // double color
+                                $firsFillElement = $this->xpath("//*[@fill][1]")->item(0);
+                                if ($firsFillElement instanceof DOMElement) {
+                                    $firsFillElement->setAttribute("fill", $colorValue);
+                                }
                             }
 
                             break;

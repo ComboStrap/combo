@@ -195,7 +195,9 @@ class XmlUtility
 
                 ksort($rightAttributes);
                 foreach ($rightAttributes as $rightAttName => $rightAtt) {
-                    $error .= "The attribute (" . $rightAttName . ") of the node (" . $rightAtt->getNodePath() . ") does not exist on the left side\n";
+                    if(!in_array($rightAttName,$excludedAttributes)) {
+                        $error .= "The attribute (" . $rightAttName . ") of the node (" . $rightAtt->getNodePath() . ") does not exist on the left side\n";
+                    }
                 }
             }
         } else {

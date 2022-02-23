@@ -175,7 +175,7 @@ class LocalPath extends PathAbs
         $sepCharacter = 1; // delete the sep characters
         $relativePath = substr($this->toString(), strlen($localPath->toString()) + $sepCharacter);
         $relativePath = str_replace(self::PHP_SYSTEM_DIRECTORY_SEPARATOR, DokuPath::PATH_SEPARATOR, $relativePath);
-        return LocalPath::create($relativePath);
+        return LocalPath::createFromPath($relativePath);
     }
 
     private function normalizedToOs($path)
@@ -187,16 +187,23 @@ class LocalPath extends PathAbs
          *
          */
         $realPath = realpath($path);
+        if ($realPath !== false) {
+            return $realPath;
+        }
+
+        /**
+         * It returns false on on file that does not exists.
+         * The suggestion on the realpath man page
+         * is to look for an existing parent directory.
+         * https://man7.org/linux/man-pages/man3/realpath.3.html
+         */
         $parts = null;
         $isRoot = false;
+        $counter = 0; // breaker
+        $workingPath = $path;
         while ($realPath === false) {
-            /**
-             * It returns false on on file that does not exists.
-             * The suggestion on the realpath man page
-             * is to look for an existing parent directory.
-             * https://man7.org/linux/man-pages/man3/realpath.3.html
-             */
-            $parent = dirname($path);
+            $counter++;
+            $parent = dirname($workingPath);
             /**
              * From the doc: https://www.php.net/manual/en/function.dirname.php
              * dirname('.');    // Will return '.'.
@@ -213,15 +220,24 @@ class LocalPath extends PathAbs
             if ($isRoot) {
                 $lastSep = 0;
             }
-            $parts[] = substr($path, strlen($parent) + $lastSep);
+            $parts[] = substr($workingPath, strlen($parent) + $lastSep);
 
             $realPath = realpath($parent);
             if ($isRoot) {
                 break;
             }
-            if($realPath===false) {
+            if ($counter > 200) {
+                $message = "Bad absolute local path file ($path)";
+                if (PluginUtility::isDevOrTest()) {
+                    throw new ExceptionComboRuntime($message);
+                } else {
+                    LogUtility::msg($message);
+                }
+                return $path;
+            }
+            if ($realPath === false) {
                 // loop
-                $path = $parent;
+                $workingPath = $parent;
             }
         }
         if ($parts !== null) {
@@ -232,6 +248,7 @@ class LocalPath extends PathAbs
             $realPath .= implode(self::PHP_SYSTEM_DIRECTORY_SEPARATOR, $parts);
         }
         return $realPath;
+
     }
 
 

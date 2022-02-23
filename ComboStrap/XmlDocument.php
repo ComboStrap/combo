@@ -242,10 +242,18 @@ class XmlDocument
     {
 
         $mime = XmlDocument::XML_TYPE;
-        if($asHtml){
+        if ($asHtml) {
             $mime = XmlDocument::HTML_TYPE;
         }
         return new XmlDocument($string, $mime);
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function createHtmlDocFromMarkup($markup): XmlDocument
+    {
+        return self::createXmlDocFromMarkup($markup, true);
     }
 
     public
@@ -604,6 +612,18 @@ class XmlDocument
         }
     }
 
+    public function queryXpath(string $string): ?DOMElement
+    {
+        $elements = $this->xpath($string);
+        if ($elements->count() === 0) {
+            return null;
+        }
+        $element = $elements->item(0);
+        if (!($element instanceof DOMElement)) {
+            return null;
+        }
+        return $element;
+    }
 
 
 }

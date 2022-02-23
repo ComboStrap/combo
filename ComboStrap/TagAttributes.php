@@ -219,6 +219,10 @@ class TagAttributes
                 unset($this->componentAttributesCaseInsensitive[$key]);
                 $stylingProperties = explode(";", $value);
                 foreach ($stylingProperties as $stylingProperty) {
+                    if(empty($stylingProperty)){
+                        // case with a trailing comma. ie `width:18rem;`
+                        continue;
+                    }
                     [$key, $value] = preg_split("/:/", $stylingProperty, 2);
                     $this->addStyleDeclarationIfNotSet($key, $value);
                 }

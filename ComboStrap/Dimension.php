@@ -55,7 +55,7 @@ class Dimension
     /**
      * @param TagAttributes $attributes
      */
-    public static function processWidthAndHeight(&$attributes)
+    public static function processWidthAndHeight(TagAttributes &$attributes)
     {
         $widthName = self::WIDTH_KEY;
         if ($attributes->hasComponentAttribute($widthName)) {

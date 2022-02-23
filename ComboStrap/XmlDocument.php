@@ -612,17 +612,43 @@ class XmlDocument
         }
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function queryXpath(string $string): ?DOMElement
     {
-        $elements = $this->xpath($string);
-        if ($elements->count() === 0) {
+
+        $elements = $this->queryXpaths($string);
+        if ($elements !== null && sizeof($elements) > 0) {
+            return $elements[0];
+        }
+        return null;
+    }
+
+    /**
+     * @return null|DOMElement[]
+     * @throws ExceptionCombo
+     */
+    public function queryXpaths(string $string): ?array
+    {
+        $nodes = $this->xpath($string);
+        if ($nodes === false) {
+            throw new ExceptionCombo("Bad xpath expression ($string)");
+        }
+        if ($nodes->count() === 0) {
             return null;
         }
-        $element = $elements->item(0);
-        if (!($element instanceof DOMElement)) {
-            return null;
+        $elements = null;
+        for ($i = 0; $i < $nodes->count(); $i++) {
+            $element = $nodes->item($i);
+            if (!($element instanceof DOMElement)) {
+                throw new ExceptionCombo("The xpath expression has selected a Node that is not an element");
+            }
+            $elements[] = $element;
+
         }
-        return $element;
+
+        return $elements;
     }
 
 

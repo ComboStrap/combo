@@ -190,12 +190,18 @@ class LocalPath extends PathAbs
 
     }
 
+    /**
+     * An absolute path may not be canonical
+     * (ie windows short name or the path separator is not consistent (ie / in place of \ on windows)
+     *
+     * This function makes the path canonical meaning that two canonical path can be compared.
+     */
     public function toCanonicalPath(): LocalPath
     {
+
         /**
          * realpath() is just a system/library call to actual realpath() function supported by OS.
          * real path handle also the windows name ie USERNAME~
-         *
          */
         $realPath = realpath($this->path);
         if ($realPath !== false) {

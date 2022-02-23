@@ -1351,10 +1351,17 @@ class PluginUtility
         return self::isTest();
     }
 
-    public static function isDev()
+    /**
+     * Is this a dev environment (ie laptop where the dev is working)
+     * @return bool
+     */
+    public static function isDev(): bool
     {
         global $_SERVER;
         if ($_SERVER["REMOTE_ADDR"] == "127.0.0.1") {
+            return true;
+        }
+        if ($_SERVER["COMPUTERNAME"] === "NICO") {
             return true;
         }
         return false;
@@ -1441,7 +1448,7 @@ class PluginUtility
         global $ID;
         $slot = $ID;
         if ($slot === null) {
-            if(!PluginUtility::isTest()){
+            if (!PluginUtility::isTest()) {
                 LogUtility::msg("The slot could not be identified (global ID is null)");
             }
             return RenderUtility::DEFAULT_SLOT_ID_FOR_TEST;

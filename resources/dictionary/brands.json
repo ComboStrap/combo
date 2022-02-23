@@ -121,7 +121,7 @@
         },
         "icons": {
             "solid": "cib:wikipedia",
-            "solid-circle": "flat-color-icons:wikipedia",
+            "solid-circle": "cib:wikipedia",
             "outline": "cib:wikipedia",
             "outline-circle": "cib:wikipedia"
         }

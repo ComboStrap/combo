@@ -39,6 +39,11 @@ class LocalPath extends PathAbs
     }
 
 
+    /**
+     * @param string $filePath
+     * @return LocalPath
+     * @deprecated for {@link LocalPath::createFromPath()}
+     */
     public static function create(string $filePath): LocalPath
     {
         return new LocalPath($filePath);
@@ -175,17 +180,58 @@ class LocalPath extends PathAbs
 
     private function normalizedToOs($path)
     {
-        // real path handle also the
-        // windows name ie USERNAME~
+
+        /**
+         * realpath() is just a system/library call to actual realpath() function supported by OS.
+         * real path handle also the windows name ie USERNAME~
+         *
+         */
         $realPath = realpath($path);
-        if ($realPath !== false) {
-            // false if it does not exist
-            return $realPath;
+        $parts = null;
+        $isRoot = false;
+        while ($realPath === false) {
+            /**
+             * It returns false on on file that does not exists.
+             * The suggestion on the realpath man page
+             * is to look for an existing parent directory.
+             * https://man7.org/linux/man-pages/man3/realpath.3.html
+             */
+            $parent = dirname($path);
+            /**
+             * From the doc: https://www.php.net/manual/en/function.dirname.php
+             * dirname('.');    // Will return '.'.
+             * dirname('/');    // Will return `\` on Windows and '/' on *nix systems.
+             * dirname('\\');   // Will return `\` on Windows and '.' on *nix systems.
+             * dirname('C:\\'); // Will return 'C:\' on Windows and '.' on *nix systems.
+             * dirname('\');    // Will return `C:\` on Windows and ??? on *nix systems.
+             */
+            if (preg_match("/^\.|\\\\|[a-z]:\\\\$/i", $parent)) {
+                $isRoot = true;
+            }
+            // root, no need to delete the last sep
+            $lastSep = 1;
+            if ($isRoot) {
+                $lastSep = 0;
+            }
+            $parts[] = substr($path, strlen($parent) + $lastSep);
+
+            $realPath = realpath($parent);
+            if ($isRoot) {
+                break;
+            }
+            if($realPath===false) {
+                // loop
+                $path = $parent;
+            }
         }
-        if (self::PHP_SYSTEM_DIRECTORY_SEPARATOR === "\\") {
-            return str_replace("/", "\\", $path);
+        if ($parts !== null) {
+            if (!$isRoot) {
+                $realPath .= self::PHP_SYSTEM_DIRECTORY_SEPARATOR;
+            }
+            $parts = array_reverse($parts);
+            $realPath .= implode(self::PHP_SYSTEM_DIRECTORY_SEPARATOR, $parts);
         }
-        return $path;
+        return $realPath;
     }
 
 

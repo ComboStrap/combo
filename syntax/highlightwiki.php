@@ -26,7 +26,7 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
 
     const TAG = "highlightwiki";
     // Only on one line
-    const ENTRY_PATTERN = "\x27\x27[^\n]*(?=\x27\x27)(?!\n)";
+    const ENTRY_PATTERN = "\x27\x27(?=[^\n]*\x27\x27)(?!\n)";
 
 
     const CONF_HIGHLIGHT_WIKI_ENABLE = "highlightWikiEnable";
@@ -36,6 +36,18 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
     const CANONICAL = self::TAG;
 
     const HTML_TAG = "mark";
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function toBackgroundColor(ColorRgb $primaryColor): ColorRgb
+    {
+        return $primaryColor
+            ->toHsl()
+            ->setLightness(98)
+            ->toRgb()
+            ->toMinimumContrastRatioAgainstWhite(1.1, 1);
+    }
 
     public static function getOpenTagHighlight(string $tag): string
     {
@@ -49,11 +61,7 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
         }
         $tagAttributes = TagAttributes::createEmpty($tag);
         try {
-            $colorRgb = $primaryColor
-                ->toHsl()
-                ->setLightness(98)
-                ->toRgb()
-                ->toMinimumContrastRatioAgainstWhite(1.1, 1);
+            $colorRgb = self::toBackgroundColor($primaryColor);
             $tagAttributes->addComponentAttributeValue(ColorRgb::BACKGROUND_COLOR, $colorRgb
                 ->toRgbHex());
         } catch (ExceptionCombo $e) {

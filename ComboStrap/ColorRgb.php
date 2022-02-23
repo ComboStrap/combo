@@ -673,7 +673,7 @@ class ColorRgb
     public
     function __toString()
     {
-        return $this->name;
+        return $this->toCssValue();
     }
 
     public
@@ -875,6 +875,8 @@ class ColorRgb
     {
         return $this->transparency;
     }
+
+
 
 
 }

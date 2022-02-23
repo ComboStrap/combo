@@ -26,7 +26,7 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
 
     const TAG = "highlightwiki";
     // Only on one line
-    const ENTRY_PATTERN = "\x27\x27(?=[^\n]*\x27\x27)";
+    const ENTRY_PATTERN = "\x27\x27[^\n]*(?=\x27\x27)(?!\n)";
 
 
     const CONF_HIGHLIGHT_WIKI_ENABLE = "highlightWikiEnable";

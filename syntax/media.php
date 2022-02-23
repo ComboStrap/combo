@@ -12,6 +12,8 @@ use ComboStrap\Metadata;
 use ComboStrap\PageImages;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
+use ComboStrap\SvgDocument;
+use ComboStrap\TagAttributes;
 use ComboStrap\ThirdPartyPlugins;
 
 
@@ -172,6 +174,11 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $media = MediaLink::createFromRenderMatch($match);
                 $attributes = $media->toCallStackArray();
 
+                $type = $attributes[TagAttributes::TYPE_KEY];
+                if ($type === null) {
+                    $attributes[TagAttributes::TYPE_KEY] = SvgDocument::ILLUSTRATION_TYPE;
+                }
+
                 $callStack = CallStack::createFromHandler($handler);
 
                 /**
@@ -182,7 +189,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 if (!empty($parent)) {
                     $parentTag = $parent->getTagName();
                     if (in_array($parentTag,
-                        [syntax_plugin_combo_link::TAG,syntax_plugin_combo_brand::TAG])) {
+                        [syntax_plugin_combo_link::TAG, syntax_plugin_combo_brand::TAG])) {
                         /**
                          * TODO: should be on the exit tag of the link / brand
                          *   - The image is in a link, we don't want another link to the image

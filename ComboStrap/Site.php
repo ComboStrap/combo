@@ -325,7 +325,7 @@ class Site
         return $conf['cachetime'] !== -1;
     }
 
-    public static function getDataDirectory(): Path
+    public static function getDataDirectory(): LocalPath
     {
         global $conf;
         $dataDirectory = $conf['savedir'];

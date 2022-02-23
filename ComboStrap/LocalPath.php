@@ -19,7 +19,7 @@ class LocalPath extends PathAbs
      * it directly, we {@link LocalPath::normalizedToOs() normalize} it to the OS separator
      * at build time
      */
-    private const PHP_SYSTEM_DIRECTORY_SEPARATOR = DIRECTORY_SEPARATOR;
+    public const PHP_SYSTEM_DIRECTORY_SEPARATOR = DIRECTORY_SEPARATOR;
 
     /**
      * The characters that cannot be in the path for windows
@@ -31,11 +31,11 @@ class LocalPath extends PathAbs
 
     /**
      * LocalPath constructor.
-     * @param $path
+     * @param $path - relative or absolute
      */
     public function __construct($path)
     {
-        $this->path = $this->normalizedToOs($path);
+        $this->path = $path;
     }
 
 
@@ -103,16 +103,12 @@ class LocalPath extends PathAbs
 
     function toAbsolutePath(): Path
     {
-        /**
-         * TODO: because we use realpath in {@link LocalPath::normalizedToOs()} used in the constructor
-         *   the path is always absolute, not needed ?
-         */
-        $path = realpath($this->path);
-        if ($path !== false) {
-            // Path return false when the file does not exist
-            return new LocalPath($path);
+
+        if ($this->isAbsolute()) {
+            return $this;
         }
-        return $this;
+
+        return $this->toCanonicalPath();
 
     }
 
@@ -156,39 +152,54 @@ class LocalPath extends PathAbs
     public function resolve(string $name): LocalPath
     {
 
-        $newPath = $this->path . self::PHP_SYSTEM_DIRECTORY_SEPARATOR . $name;
-        if ($this->path[strlen($this->path) - 1] === self::PHP_SYSTEM_DIRECTORY_SEPARATOR) {
-            $newPath = $this->path . $name;
-        }
-        return self::create($newPath);
+        $newPath = $this->toCanonicalPath()->toString() . self::PHP_SYSTEM_DIRECTORY_SEPARATOR . $name;
+        return self::createFromPath($newPath);
 
     }
 
     /**
      * @throws ExceptionCombo
      */
-    private function relativize(LocalPath $localPath): LocalPath
+    public function relativize(LocalPath $localPath): LocalPath
     {
-        if (!(strpos($this->toString(), $localPath->toString()) === 0)) {
-            throw new ExceptionCombo("The path ($localPath) is not a parent path of the actual path ($this)");
+        $actualPath = $this->toCanonicalPath();
+        $localPath = $localPath->toCanonicalPath();
+
+        if (!(strpos($actualPath->toString(), $localPath->toString()) === 0)) {
+            throw new ExceptionCombo("The path ($localPath) is not a parent path of the actual path ($actualPath)");
         }
         $sepCharacter = 1; // delete the sep characters
-        $relativePath = substr($this->toString(), strlen($localPath->toString()) + $sepCharacter);
+        $relativePath = substr($actualPath->toString(), strlen($localPath->toString()) + $sepCharacter);
         $relativePath = str_replace(self::PHP_SYSTEM_DIRECTORY_SEPARATOR, DokuPath::PATH_SEPARATOR, $relativePath);
         return LocalPath::createFromPath($relativePath);
+
     }
 
-    private function normalizedToOs($path)
+    public function isAbsolute(): bool
     {
+        /**
+         * /
+         * \
+         * or a:/
+         * or z:\
+         */
+        if (preg_match("/^\/|[a-z]:[\\\\\/]|\\\\/i", $this->path)) {
+            return true;
+        }
+        return false;
 
+    }
+
+    public function toCanonicalPath(): LocalPath
+    {
         /**
          * realpath() is just a system/library call to actual realpath() function supported by OS.
          * real path handle also the windows name ie USERNAME~
          *
          */
-        $realPath = realpath($path);
+        $realPath = realpath($this->path);
         if ($realPath !== false) {
-            return $realPath;
+            return LocalPath::createFromPath($realPath);
         }
 
         /**
@@ -200,7 +211,7 @@ class LocalPath extends PathAbs
         $parts = null;
         $isRoot = false;
         $counter = 0; // breaker
-        $workingPath = $path;
+        $workingPath = $this->path;
         while ($realPath === false) {
             $counter++;
             $parent = dirname($workingPath);
@@ -212,7 +223,10 @@ class LocalPath extends PathAbs
              * dirname('C:\\'); // Will return 'C:\' on Windows and '.' on *nix systems.
              * dirname('\');    // Will return `C:\` on Windows and ??? on *nix systems.
              */
-            if (preg_match("/^\.|\\\\|[a-z]:\\\\$/i", $parent)) {
+            if (preg_match("/^(\.|\/|\\\\|[a-z]:\\\\)$/i", $parent)
+                || $parent === $workingPath
+                || $parent === "\\" // bug on regexp
+            ) {
                 $isRoot = true;
             }
             // root, no need to delete the last sep
@@ -227,13 +241,13 @@ class LocalPath extends PathAbs
                 break;
             }
             if ($counter > 200) {
-                $message = "Bad absolute local path file ($path)";
+                $message = "Bad absolute local path file ($this->path)";
                 if (PluginUtility::isDevOrTest()) {
                     throw new ExceptionComboRuntime($message);
                 } else {
                     LogUtility::msg($message);
                 }
-                return $path;
+                return $this;
             }
             if ($realPath === false) {
                 // loop
@@ -247,8 +261,7 @@ class LocalPath extends PathAbs
             $parts = array_reverse($parts);
             $realPath .= implode(self::PHP_SYSTEM_DIRECTORY_SEPARATOR, $parts);
         }
-        return $realPath;
-
+        return LocalPath::createFromPath($realPath);
     }
 
 

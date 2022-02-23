@@ -378,6 +378,9 @@ class Icon extends ImageSvg
         $iconName = $this->iconName;
         switch ($library) {
 
+            case self::FLAT_COLOR_ICON:
+                $iconName = str_replace("-", "_", $iconName);
+                break;
             case self::TWEET_EMOJI:
                 try {
                     $iconName = self::getEmojiCodePoint($iconName);
@@ -415,7 +418,7 @@ class Icon extends ImageSvg
                 // example: eva:facebook-fill
                 [$iconName, $iconType] = self::explodeInTwoPartsByLastPosition($iconName, "-");
                 $iconBaseUrl .= "/$iconType/svg";
-                if($iconType==="outline"){
+                if ($iconType === "outline") {
                     // for whatever reason, the name of outline icon has outline at the end
                     // and not for the fill icon
                     $iconName .= "-$iconType";

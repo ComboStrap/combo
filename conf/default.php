@@ -410,8 +410,8 @@ $conf["brandingColorInheritanceEnable"] = 1;
  * {@link \ComboStrap\ColorRgb::PRIMARY_COLOR_CONF}
  * {@link \ComboStrap\ColorRgb::SECONDARY_COLOR_CONF}
  */
-$conf["primaryColor"] = null;
-$conf["secondaryColor"] = null;
+$conf["primaryColor"] = "";
+$conf["secondaryColor"] = "";
 
 
 

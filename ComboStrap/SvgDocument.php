@@ -411,7 +411,13 @@ class SvgDocument extends XmlDocument
                          */
                         $nodeElement = $svgFillsElement[$i];
                         $value = $nodeElement->getAttribute("fill");
-                        $fillColors[$value] = $value;
+                        if ($value !== "none") {
+                            /**
+                             * Icon may have none alongside colors
+                             * Example:
+                             */
+                            $fillColors[$value] = $value;
+                        }
                     }
                     if (sizeof($fillColors) > 1) {
                         $isDoubleColor = true;

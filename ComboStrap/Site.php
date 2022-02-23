@@ -527,7 +527,7 @@ class Site
                 ->toRgb()
                 ->toMinimumContrastRatioAgainstWhite();
         } catch (ExceptionCombo $e) {
-            LogUtility::msg("Error while calculating the primary text color. {$e->getMessage()}");
+            LogUtility::msg("Error while calculating the secondary text color. {$e->getMessage()}");
             return null;
         }
 
@@ -664,7 +664,7 @@ class Site
     public static function getPrimaryColorValue($default = null)
     {
         $value = PluginUtility::getConfValue(ColorRgb::PRIMARY_COLOR_CONF, $default);
-        if ($value !== null) {
+        if ($value !== null && trim($value) !== "") {
             return $value;
         }
         if (PluginUtility::isTest()) {
@@ -679,7 +679,11 @@ class Site
 
     public static function getSecondaryColorValue($default = null)
     {
-        return PluginUtility::getConfValue(ColorRgb::SECONDARY_COLOR_CONF, $default);
+        $value = PluginUtility::getConfValue(ColorRgb::SECONDARY_COLOR_CONF, $default);
+        if ($value !== null && trim($value) !== "") {
+            return null;
+        }
+        return $value;
     }
 
     public static function setCanonicalUrlType(string $value)
@@ -751,7 +755,6 @@ class Site
         $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, "72");
         $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
         $tagAttributes->addClassName("logo");
-
 
 
         /**

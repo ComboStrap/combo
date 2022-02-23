@@ -204,7 +204,7 @@ class Brand
             return $primaryColor;
         }
 
-        return ComboStrap::PRIMARY_COLOR;
+        return null;
 
     }
 

@@ -11,7 +11,7 @@ test('Modal Simple Button', () => {
         let modalElement = modal.getElement();
         let id = modal.getModalId();
         let expected = `<div id="${id}" class="modal fade" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-md-down modal-lg" style="margin: 5rem auto; height: calc(100% - 9rem);">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" style="margin: 5rem auto; height: calc(100% - 9rem);">
     <div class="modal-content">
       <div class="modal-body">
         <p>
@@ -41,8 +41,8 @@ test('Modal creation/destruction test', () => {
      * @type {string}
      */
     let modalId = "modal-creation-destruction-test";
+    let modal = ComboModal.getOrCreate(modalId);
     try {
-        let modal = ComboModal.getOrCreate(modalId);
         let modalElement = document.getElementById(modalId);
         expect(modalElement).toBeNull();
         expect(modal.getElement()).not.toBeNull();
@@ -53,17 +53,18 @@ test('Modal creation/destruction test', () => {
     /**
      * Rebuild it
      */
+    let secondModalInstantiation = ComboModal.getOrCreate(modalId);
+    secondModalInstantiation.show(); // add the modal in the DOM
+    let modalElement = document.getElementById(modalId);
+    expect(modalElement).not.toBeNull();
+
+    /**
+     * GettingOrCreate / Showing twice
+     * should not create two elements in the DOM
+     * @type {ComboModal}
+     */
+    let thirdModalInstantiation = ComboModal.getOrCreate(modalId);
     try {
-        let secondModalInstantiation = ComboModal.getOrCreate(modalId);
-        secondModalInstantiation.show(); // add the modal in the DOM
-        let modalElement = document.getElementById(modalId);
-        expect(modalElement).not.toBeNull();
-        /**
-         * GettingOrCreate / Showing twice
-         * should not create two elements in the DOM
-         * @type {ComboModal}
-         */
-        let thirdModalInstantiation = ComboModal.getOrCreate(modalId);
         expect(thirdModalInstantiation).toBe(secondModalInstantiation);
         thirdModalInstantiation.show();
         let modalElements = document.querySelectorAll(".modal");

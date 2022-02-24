@@ -32,6 +32,9 @@
         "testEnvironmentOptions": {
             "userAgent": "Agent/007"
         },
+        "testMatch": [
+            "**/resources/library/combo/__tests__/*.[jt]s?(x)"
+        ],
         "setupFilesAfterEnv": [
             "./resources/library/combo/jest/JestExtend.js"
         ]

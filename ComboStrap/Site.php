@@ -417,7 +417,9 @@ class Site
     public static function getPrimaryColor($default = null): ?ColorRgb
     {
         $value = self::getPrimaryColorValue($default);
-        if ($value === null) {
+        if (
+            $value === null ||
+            (trim($value) === "")) {
             return null;
         }
         try {
@@ -664,7 +666,7 @@ class Site
     public static function getPrimaryColorValue($default = null)
     {
         $value = PluginUtility::getConfValue(ColorRgb::PRIMARY_COLOR_CONF, $default);
-        if ($value !== null && trim($value) === "") {
+        if ($value !== null && trim($value) !== "") {
             return $value;
         }
         if (PluginUtility::isTest()) {

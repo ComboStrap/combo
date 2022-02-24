@@ -238,32 +238,40 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 
 
                         case DOKU_LEXER_SPECIAL:
-                            $renderer->doc .= $this->printIcon($data);
+                            $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                            $renderer->doc .= $this->printIcon($tagAttributes);
                             break;
                         case DOKU_LEXER_ENTER:
-                            /**
-                             * If there is a tooltip, we need
-                             * to start with a span to wrap the svg with it
-                             */
-                            if ($data[PluginUtility::CONTEXT] == syntax_plugin_combo_tooltip::TAG) {
+
+                            $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                            $tooltip = $tagAttributes->getValueAndRemoveIfPresent(\ComboStrap\Tooltip::TOOLTIP_ATTRIBUTE);
+                            if ($tooltip !== null) {
+                                /**
+                                 * If there is a tooltip, we need
+                                 * to start with a span to wrap the svg with it
+                                 */
                                 /**
                                  * The inline block is to make the span take the whole space
                                  * of the image (ie dimension)
                                  */
-                                $renderer->doc .= "<span class=\"d-inline-block\"";
+                                $className = "d-inline-block";
+                                $tooltipTag = TagAttributes::createFromCallStackArray([\ComboStrap\Tooltip::TOOLTIP_ATTRIBUTE => $tooltip])
+                                    ->addClassName($className);
+                                $renderer->doc .= $tooltipTag->toHtmlEnterTag("span");
                             }
-                            break;
-                        case DOKU_LEXER_EXIT:
                             /**
                              * Print the icon
                              */
-                            $renderer->doc .= $this->printIcon($data);
+                            $renderer->doc .= $this->printIcon($tagAttributes);
                             /**
                              * Close the span if we are in a tooltip context
                              */
-                            if ($data[PluginUtility::CONTEXT] == syntax_plugin_combo_tooltip::TAG) {
+                            if ($tooltip !== null) {
                                 $renderer->doc .= "</span>";
                             }
+
+                            break;
+                        case DOKU_LEXER_EXIT:
 
                             break;
                     }
@@ -296,12 +304,11 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
     }
 
     /**
-     * @param $data
+     * @param TagAttributes $tagAttributes
      * @return string
      */
-    private function printIcon($data): string
+    private function printIcon(TagAttributes $tagAttributes): string
     {
-        $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
         try {
             $name = $tagAttributes->getValue("name");
             if ($name === null) {

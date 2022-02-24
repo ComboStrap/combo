@@ -39,12 +39,9 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
      * Class added to the parent
      */
     const CANONICAL = "tooltip";
+    public const TEXT_ATTRIBUTE = "text";
 
-    /**
-     * @var string
-     */
-    private $docCapture;
-
+    const TOOLTIP_CLASS_INLINE_BLOCK = "d-inline-block";
 
     /**
      * Syntax Type.
@@ -144,6 +141,15 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
 
                 $callStack = CallStack::createFromHandler($handler);
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                if ($openingTag->hasAttribute(self::TEXT_ATTRIBUTE)) {
+                    /**
+                     * Old syntax where the tooltip was the wrapper
+                     */
+                    return array(
+                        PluginUtility::STATE => $state,
+                        PluginUtility::ATTRIBUTES=>$openingTag->getAttributes()
+                    );
+                }
                 $parent = $callStack->moveToParent();
                 if ($parent === false) {
                     return array(
@@ -201,6 +207,21 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
+                    /**
+                     * Old syntax
+                     * where tooltip was enclosing the text with the tooltip
+                     */
+                    $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                    $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
+                    $text = $tagAttributes->getValue(self::TEXT_ATTRIBUTE);
+                    if ($text !== null) {
+                        /**
+                         * Old syntax where the tooltip was the wrapper
+                         */
+                        $renderer->doc .= TagAttributes::createFromCallStackArray([Tooltip::TOOLTIP_ATTRIBUTE => $callStackArray])
+                            ->addClassName(self::TOOLTIP_CLASS_INLINE_BLOCK)
+                            ->toHtmlEnterTag("span");
+                    }
                     break;
 
                 case DOKU_LEXER_UNMATCHED:
@@ -211,7 +232,19 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                     $message = $data[PluginUtility::EXIT_MESSAGE];
                     if ($message !== null) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml($message);
+                        return false;
                     }
+
+                    $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                    $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
+                    $text = $tagAttributes->getValue(self::TEXT_ATTRIBUTE);
+                    if ($text !== null) {
+                        /**
+                         * Old syntax where the tooltip was the wrapper
+                         */
+                        $renderer->doc .= "</span>";
+                    }
+
                     break;
 
 

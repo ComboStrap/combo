@@ -255,6 +255,8 @@ EOF;
         $totalNumberOfPages = sizeof($pages);
         while ($pageArray = array_shift($pages)) {
             $id = $pageArray['id'];
+            global $ID;
+            $ID = $id;
             /**
              * Indexing the page start the database replication
              * See {@link action_plugin_combo_fulldatabasereplication}
@@ -415,6 +417,8 @@ EOF;
         $notChangedCounter = 0;
         while ($pageArray = array_shift($pages)) {
             $id = $pageArray['id'];
+            global $ID;
+            $ID = $id;
             $page = Page::createPageFromId($id);
             $pageCounter++;
             LogUtility::msg("Processing page {$id} ($pageCounter / $totalNumberOfPages) ", LogUtility::LVL_MSG_INFO);

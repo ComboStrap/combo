@@ -436,7 +436,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                      */
                     $elementCounts = sizeof($rows);
                     if ($elementCounts === 0) {
-                        $parametersString = implode($parameters, ", ");
+                        $parametersString = implode(", ", $parameters);
                         LogUtility::msg("The physical query (Sql: {$pageSql->getExecutableSql()}, Parameters: $parametersString) does not return any data", LogUtility::LVL_MSG_INFO, syntax_plugin_combo_iterator::CANONICAL);
                         return true;
                     }

@@ -31,9 +31,9 @@ class LocalFs implements FileSystem
     }
 
     /**
-     * @return false|string
+     * @return string
      */
-    public function getContent($path)
+    public function getContent($path): ?string
     {
         $mime = $path->getMime();
         if($mime === null){

@@ -703,11 +703,13 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
         $attributes = $tagAttributes->toCallStackArray();
         if ($parent !== false) {
             $context = $parent->getTagName();
-            // Why a merge of attributes with the parent ?
-            //            $parentAttributes = $parent->getAttributes();
-            //            if($parentAttributes!==null) {
-            //                $attributes = ArrayUtility::mergeByValue($parentAttributes, $attributes);
-            //            }
+            if ($context === syntax_plugin_combo_button::TAG) {
+                // the link takes by default the data from the button
+                $parentAttributes = $parent->getAttributes();
+                if ($parentAttributes !== null) {
+                    $attributes = ArrayUtility::mergeByValue($parentAttributes, $attributes);
+                }
+            }
         }
         $callStack->appendCallAtTheEnd(
             Call::createComboCall(

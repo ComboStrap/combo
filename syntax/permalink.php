@@ -129,13 +129,8 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 /**
                  * Cache key dependencies
                  */
-                try {
-                    CacheManager::getOrCreate()->addDependencyForCurrentSlot(
-                        CacheDependencies::REQUESTED_PAGE_DEPENDENCY
-                    );
-                } catch (ExceptionCombo $e) {
-                    LogUtility::msg("We were unable to add the requested page runtime dependency. Cache errors may occurs. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                }
+                CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+
 
                 $requestedPage = Page::createPageFromRequestedPage();
                 $fragment = $attributes->getValueAndRemoveIfPresent(self::FRAGMENT_ATTRIBUTE);
@@ -156,6 +151,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                             $url .= "#$fragment";
                         }
                         $attributes->addComponentAttributeValue(syntax_plugin_combo_link::ATTRIBUTE_HREF, $url);
+                        $attributes->addOutputAttributeValue("rel","nofollow");
                         syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $attributes);
                         if ($state === DOKU_LEXER_SPECIAL) {
                             $this->addLinkContentInCallStack($callStack, $url);
@@ -179,6 +175,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                             $canonicalUrl .= "#$fragment";
                         }
                         $attributes->addComponentAttributeValue(syntax_plugin_combo_link::ATTRIBUTE_HREF, $canonicalUrl);
+                        $attributes->addOutputAttributeValue("rel","nofollow");
                         syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $attributes);
                         if ($state === DOKU_LEXER_SPECIAL) {
                             $this->addLinkContentInCallStack($callStack, $canonicalUrl);

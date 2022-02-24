@@ -264,13 +264,14 @@ class Page extends ResourceComboAbs
 
     /**
      * @return Page - the requested page
-     * @throws ExceptionCombo
      */
     public static function createPageFromRequestedPage(): Page
     {
         $pageId = PluginUtility::getRequestedWikiId();
         if ($pageId === null) {
-            throw new ExceptionCombo("We were unable to determine the requested page from the variables environment");
+            $pageId = RenderUtility::DEFAULT_SLOT_ID_FOR_TEST;
+            // should never happen, we don't throw an exception
+            LogUtility::msg("We were unable to determine the requested page from the variables environment, default non-existing page id used");
         }
         return Page::createPageFromId($pageId);
     }
@@ -428,7 +429,6 @@ class Page extends ResourceComboAbs
         return $pages;
 
     }
-
 
 
     public
@@ -1683,7 +1683,6 @@ class Page extends ResourceComboAbs
     {
         return DokuPath::toDokuwikiId($this->getUrlPath());
     }
-
 
 
     /**

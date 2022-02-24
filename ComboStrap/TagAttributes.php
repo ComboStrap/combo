@@ -70,7 +70,7 @@ class TagAttributes
         Skin::SKIN_ATTRIBUTE,
         ColorRgb::PRIMARY_VALUE,
         ColorRgb::SECONDARY_VALUE,
-
+        Dimension::ZOOM_ATTRIBUTE
     ];
 
     /**

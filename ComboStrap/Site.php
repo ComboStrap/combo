@@ -682,7 +682,7 @@ class Site
     public static function getSecondaryColorValue($default = null)
     {
         $value = PluginUtility::getConfValue(ColorRgb::SECONDARY_COLOR_CONF, $default);
-        if ($value !== null && trim($value) === "") {
+        if ($value === null || trim($value) === "") {
             return null;
         }
         return $value;

@@ -1047,11 +1047,11 @@ class PluginUtility
     static function getConfValue($confName, $defaultValue = null)
     {
         global $conf;
-        if (isset($conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName])) {
-            return $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName];
-        } else {
+        $value = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName];
+        if ($value === null || trim($value) === "") {
             return $defaultValue;
         }
+        return $value;
     }
 
     /**
@@ -1422,7 +1422,7 @@ class PluginUtility
 
     public static function htmlDecode($int): string
     {
-        return htmlspecialchars_decode($int, ENT_XHTML|ENT_QUOTES);
+        return htmlspecialchars_decode($int, ENT_XHTML | ENT_QUOTES);
     }
 
     /**

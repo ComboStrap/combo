@@ -161,8 +161,10 @@ EOF;
 
 
         if(isset($_REQUEST['animal'])){
+            // on linux
             echo "Animal detected: ".$_REQUEST['animal']."\n";
         } else {
+            // on windows
             echo "No Animal detected\n";
             echo "Conf: ".DOKU_CONF."\n";
         }

@@ -131,4 +131,6 @@ action/metadataviewer.php
 action/sidebarscachebursting.php
 action/urlmanager.php
 action/urlmessage.php
-
+action/tooltippostprocessing.php
+syntax/pageexplorertreesubnamespace.php
+syntax/pageexplorertreesubnamespacelist.php

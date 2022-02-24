@@ -7,11 +7,12 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
+use ComboStrap\ColorRgb;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
 use ComboStrap\Identity;
 use ComboStrap\LazyLoad;
-use ComboStrap\LinkUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MediaLink;
 use ComboStrap\PageImages;
@@ -147,8 +148,8 @@ $meta[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAM
 /**
  * Link
  */
-$meta[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = array('onoff');
-$meta[LinkUtility::CONF_PREVIEW_LINK] = array('onoff');
+$meta[MarkupRef::CONF_USE_DOKUWIKI_CLASS_NAME] = array('onoff');
+$meta[MarkupRef::CONF_PREVIEW_LINK] = array('onoff');
 $meta[syntax_plugin_combo_link::CONF_DISABLE_LINK] = array('onoff');
 
 /**
@@ -333,3 +334,15 @@ $meta[syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = arr
  * Heading
  */
 $meta[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE] = array("onoff");
+
+/**
+ * Branding Colors
+ */
+$meta[ColorRgb::PRIMARY_COLOR_CONF] = array("string");
+$meta[ColorRgb::SECONDARY_COLOR_CONF] = array("string");
+$meta[ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF] = array("onoff");
+
+/**
+ * Highlight
+ */
+$meta[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE] = array("onoff");

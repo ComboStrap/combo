@@ -4,7 +4,7 @@
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\BacklinkCount;
 use ComboStrap\Canonical;
-use ComboStrap\LinkUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\Page;
 use ComboStrap\PageTitle;
@@ -279,7 +279,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         if (empty($this->metadata[Canonical::PROPERTY_NAME])) {
             global $conf;
             $root = $conf['start'];
-            if ($ID != $root) {
+            if ($ID !== $root) {
                 $qualityScores[self::RULE_CANONICAL_PRESENT] = 0;
                 $ruleResults[self::RULE_CANONICAL_PRESENT] = self::FAILED;
                 // no link to the documentation because we don't want any html in the json
@@ -514,7 +514,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         } else {
             $quality["message"] = "No mandatory rules broken";
         }
-        if ($this->page->isSlot()) {
+        if ($this->page->isSecondarySlot()) {
             $lowLevel = false;
         }
         $this->page->setLowQualityIndicatorCalculation($lowLevel);
@@ -593,24 +593,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         return self::RENDERER_FORMAT;
     }
 
-    public function internallink($id, $name = null, $search = null, $returnonly = false, $linktype = 'content')
-    {
 
-        $link = new LinkUtility($id);
-        $link->setType(LinkUtility::TYPE_INTERNAL);
-        $link->processLinkStats($this->stats);
-
-    }
-
-    public function externallink($url, $name = null)
-    {
-        $link = new LinkUtility($url);
-        $link->setType(LinkUtility::TYPE_EXTERNAL);
-        if ($name != null) {
-            $link->setName($name);
-        }
-        $link->processLinkStats($this->stats);
-    }
 
     public function header($text, $level, $pos)
     {
@@ -702,6 +685,10 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function underline_open() // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
         $this->formattingBracket++;
+    }
+
+    public function addToDescription($text){
+
     }
 
     public function underline_close() // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps

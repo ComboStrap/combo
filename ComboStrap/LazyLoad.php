@@ -73,23 +73,17 @@ class LazyLoad
 
         $snippetManager = PluginUtility::getSnippetManager();
 
-        $snippetManager->upsertTagsForBar(self::LAZY_SIDE_ID,
-            array(
-                'script' => [
-                    array(
-                        "src" => "https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js",
-                        "integrity" => "sha256-bmG+LzdKASJRACVXiUC69++Nu8rz7MX1U1z8gb0c/Tk=",
-                        "crossorigin" => "anonymous"
-                    )
-                ]
-            )
+        $snippetManager->attachJavascriptLibraryForSlot(
+            self::LAZY_SIDE_ID,
+            "https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js",
+            "sha256-bmG+LzdKASJRACVXiUC69++Nu8rz7MX1U1z8gb0c/Tk="
         );
         /**
          * The Spinner effect
          * lazysizes adds the class lazy loading while the images are loading
          * and the class lazyloaded as soon as the image is loaded.
          */
-        $snippetManager->attachCssSnippetForBar(self::LAZY_SIDE_ID);
+        $snippetManager->attachCssInternalStyleSheetForSlot(self::LAZY_SIDE_ID);
 
     }
 
@@ -103,7 +97,7 @@ class LazyLoad
         if ($attributes->hasComponentAttribute(Background::BACKGROUND_COLOR)) {
             $placeholderColor = $attributes->getValueAndRemove(Background::BACKGROUND_COLOR);
         }
-        $attributes->addHtmlAttributeValue("data-placeholder-background", "$placeholderColor");
+        $attributes->addOutputAttributeValue("data-placeholder-background", "$placeholderColor");
 
 
     }
@@ -119,24 +113,19 @@ class LazyLoad
         $snippetManager = PluginUtility::getSnippetManager();
 
         // https://www.jsdelivr.com/package/npm/lozad
-        $snippetManager->upsertTagsForBar(self::LOZAD_ID,
-            array(
-                'script' => [
-                    array(
-                        "src" => "https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js",
-                        "integrity" => "sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=",
-                        "crossorigin" => "anonymous"
-
-                    )
-                ]
+        $snippetManager
+            ->attachJavascriptLibraryForSlot(
+                self::LOZAD_ID,
+                "https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js",
+                "sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc="
             )
-        );
+            ->setDoesManipulateTheDomOnRun(false);
 
         /**
          * Add the fading effect
          */
         $snippetId = "lazy-load-fade";
-        $snippetManager->attachCssSnippetForBar($snippetId);
+        $snippetManager->attachCssInternalStyleSheetForSlot($snippetId);
 
 
         /**
@@ -145,7 +134,7 @@ class LazyLoad
          * The others javascript snippet to download lazy load depend on the image type
          * and features and was therefore added in the code for svg or raster
          */
-        $snippetManager->attachJavascriptSnippetForBar("lozad-print");
+        $snippetManager->attachInternalJavascriptForSlot("lozad-print");
 
 
     }
@@ -183,7 +172,6 @@ class LazyLoad
      * @param null $imgTagHeight
      * @return string
      *
-
      *
      * Src is always set, this is the default
      * src attribute is served to browsers that do not take the srcset attribute into account.

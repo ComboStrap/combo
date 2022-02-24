@@ -15,9 +15,8 @@ namespace ComboStrap;
 
 use DOMAttr;
 use DOMElement;
+use DOMNode;
 
-require_once(__DIR__ . '/XmlDocument.php');
-require_once(__DIR__ . '/Unit.php');
 
 class SvgDocument extends XmlDocument
 {
@@ -105,11 +104,13 @@ class SvgDocument extends XmlDocument
      *   * stroke, the color is on the path (known as Outline
      */
     const COLOR_TYPE_FILL_SOLID = "fill";
-    const COLOR_TYPE_STROKE_OUTLINE = "stroke";
+    const COLOR_TYPE_STROKE_OUTLINE = self::STROKE_ATTRIBUTE;
     const DEFAULT_ICON_WIDTH = "24";
 
     const CURRENT_COLOR = "currentColor";
     const VIEW_BOX = "viewBox";
+    const PRESERVE_ATTRIBUTE = "preserve";
+    const STROKE_ATTRIBUTE = "stroke";
 
     /**
      * @var string - a name identifier that is added in the SVG
@@ -129,7 +130,6 @@ class SvgDocument extends XmlDocument
     public function __construct($text)
     {
         parent::__construct($text);
-
         $this->shouldBeOptimized = PluginUtility::getConfValue(self::CONF_SVG_OPTIMIZATION_ENABLE, 1);
 
     }
@@ -137,10 +137,14 @@ class SvgDocument extends XmlDocument
     /**
      * @param Path $path
      * @return SvgDocument
-     * @throws ExceptionCombo
+     * @throws ExceptionCombo - if the file does not exist or is not valid
+     *
      */
     public static function createSvgDocumentFromPath(Path $path): SvgDocument
     {
+        if (!FileSystems::exists($path)) {
+            throw new ExceptionCombo("The path ($path) does not exist. A svg document cannot be created", self::CANONICAL);
+        }
         $text = FileSystems::getContent($path);
         $svg = new SvgDocument($text);
         $svg->setName($path->getLastNameWithoutExtension());
@@ -154,6 +158,17 @@ class SvgDocument extends XmlDocument
     public static function createSvgDocumentFromMarkup($markup): SvgDocument
     {
         return new SvgDocument($markup);
+    }
+
+    private static function preserveStyle(TagAttributes $tagAttributes): bool
+    {
+        $preserve = $tagAttributes->getValue(self::PRESERVE_ATTRIBUTE);
+        if ($preserve !== null) {
+            if (strpos(strtolower($preserve), "style") !== false) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -179,22 +194,22 @@ class SvgDocument extends XmlDocument
          * ViewBox should exist
          */
         $viewBox = $this->getXmlDom()->documentElement->getAttribute(self::VIEW_BOX);
-        if($viewBox===""){
+        if ($viewBox === "") {
             $width = $this->getXmlDom()->documentElement->getAttribute("width");
-            if($width===""){
-                LogUtility::msg("Svg processing stopped. Bad svg: We can't determine the width of the svg ($this) (The viewBox and the width does not exist) ", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+            if ($width === "") {
+                LogUtility::msg("Svg processing stopped. Bad svg: We can't determine the width of the svg ($this) (The viewBox and the width does not exist) ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 return parent::getXmlText();
             }
-            $height =  $this->getXmlDom()->documentElement->getAttribute("height");
-            if($height===""){
-                LogUtility::msg("Svg processing stopped. Bad svg: We can't determine the height of the svg ($this) (The viewBox and the height does not exist) ", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+            $height = $this->getXmlDom()->documentElement->getAttribute("height");
+            if ($height === "") {
+                LogUtility::msg("Svg processing stopped. Bad svg: We can't determine the height of the svg ($this) (The viewBox and the height does not exist) ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 return parent::getXmlText();
             }
-            $this->getXmlDom()->documentElement->setAttribute(self::VIEW_BOX,"0 0 $width $height");
+            $this->getXmlDom()->documentElement->setAttribute(self::VIEW_BOX, "0 0 $width $height");
         }
 
         if ($this->shouldOptimize()) {
-            $this->optimize();
+            $this->optimize($localTagAttributes);
         }
 
         // Set the name (icon) attribute for test selection
@@ -206,98 +221,10 @@ class SvgDocument extends XmlDocument
         // Handy variable
         $documentElement = $this->getXmlDom()->documentElement;
 
+        // With requested
+        $requestedWidth = $localTagAttributes->getValueAndRemove(Dimension::WIDTH_KEY);
 
-        /**
-         * Svg type
-         * The svg type is the svg usage
-         * How the svg should be shown (the usage)
-         *
-         * We need it to make the difference between an icon
-         *   * in a paragraph (the width and height are the same)
-         *   * as an illustration in a page image (the width and height may be not the same)
-         */
-        $svgUsageType = $localTagAttributes->getValue(TagAttributes::TYPE_KEY, self::ILLUSTRATION_TYPE);
-        switch ($svgUsageType) {
-            case self::ICON_TYPE:
-            case self::TILE_TYPE:
-                /**
-                 * Dimension
-                 *
-                 * Using a icon in the navbrand component of bootstrap
-                 * require the set of width and height otherwise
-                 * the svg has a calculated width of null
-                 * and the bar component are below the brand text
-                 *
-                 */
-                if ($svgUsageType == self::ICON_TYPE) {
-                    $defaultWidth = self::DEFAULT_ICON_WIDTH;
-                } else {
-                    // tile
-                    $defaultWidth = "192";
-                }
-                /**
-                 * Dimension
-                 * The default unit on attribute is pixel, no need to add it
-                 * as in CSS
-                 */
-                $width = $localTagAttributes->getValueAndRemove(Dimension::WIDTH_KEY, $defaultWidth);
-                $localTagAttributes->addHtmlAttributeValue("width", $width);
-                $height = $localTagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY, $width);
-                $localTagAttributes->addHtmlAttributeValue("height", $height);
-                break;
-            default:
-                /**
-                 * Illustration / Image
-                 */
-                /**
-                 * Responsive SVG
-                 */
-                if (!$localTagAttributes->hasComponentAttribute("preserveAspectRatio")) {
-                    /**
-                     *
-                     * Keep the same height
-                     * Image in the Middle and border deleted when resizing
-                     * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio
-                     * Default is xMidYMid meet
-                     */
-                    $defaultAspectRatio = PluginUtility::getConfValue(self::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
-                    $localTagAttributes->addHTMLAttributeValue("preserveAspectRatio", $defaultAspectRatio);
-                }
-
-                /**
-                 * Note on dimension width and height
-                 * Width and height element attribute are in reality css style properties.
-                 *   ie the max-width style
-                 * They are treated in {@link PluginUtility::processStyle()}
-                 */
-
-                /**
-                 * Adapt to the container by default
-                 * Height `auto` and not `100%` otherwise you get a layout shift
-                 */
-                $localTagAttributes->addStyleDeclarationIfNotSet("width", "100%");
-                $localTagAttributes->addStyleDeclarationIfNotSet("height", "auto");
-
-
-                if ($localTagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)) {
-
-                    /**
-                     * If a dimension was set, it's seen by default as a max-width
-                     * If it should not such as in a card, this property is already set
-                     * and is not overwritten
-                     */
-                    $width = $localTagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
-                    try {
-                        $width = Dimension::toPixelValue($width);
-                    } catch (ExceptionCombo $e) {
-                        LogUtility::msg("The requested width $width could not be converted to pixel. It returns the following error ({$e->getMessage()}). Processing was stopped");
-                        return parent::getXmlText();
-                    }
-                    $localTagAttributes->addStyleDeclarationIfNotSet("max-width", "{$width}px");
-
-                }
-                break;
-        }
+        $svgUsageType = $localTagAttributes->getValue(TagAttributes::TYPE_KEY);
 
         /**
          * Svg Structure
@@ -340,40 +267,222 @@ class SvgDocument extends XmlDocument
             }
 
         }
+
+        /**
+         * Svg type
+         * The svg type is the svg usage
+         * How the svg should be shown (the usage)
+         *
+         * We need it to make the difference between an icon
+         *   * in a paragraph (the width and height are the same)
+         *   * as an illustration in a page image (the width and height may be not the same)
+         */
+        if ($svgUsageType === null) {
+            switch ($svgStructureType) {
+                case self::ICON_TYPE:
+                    $svgUsageType = self::ICON_TYPE;
+                    break;
+                default:
+                    $svgUsageType = self::ILLUSTRATION_TYPE;
+                    break;
+            }
+        }
+        switch ($svgUsageType) {
+            case self::ICON_TYPE:
+            case self::TILE_TYPE:
+                /**
+                 * Dimension
+                 *
+                 * Using a icon in the navbrand component of bootstrap
+                 * require the set of width and height otherwise
+                 * the svg has a calculated width of null
+                 * and the bar component are below the brand text
+                 *
+                 */
+                $appliedWidth = $requestedWidth;
+                if ($requestedWidth === null) {
+                    if ($svgUsageType == self::ICON_TYPE) {
+                        $appliedWidth = self::DEFAULT_ICON_WIDTH;
+                    } else {
+                        // tile
+                        $appliedWidth = "192";
+                    }
+                }
+                /**
+                 * Dimension
+                 * The default unit on attribute is pixel, no need to add it
+                 * as in CSS
+                 */
+                $localTagAttributes->addOutputAttributeValue("width", $appliedWidth);
+                $height = $localTagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY, $appliedWidth);
+                $localTagAttributes->addOutputAttributeValue("height", $height);
+                break;
+            default:
+                /**
+                 * Illustration / Image
+                 */
+                /**
+                 * Responsive SVG
+                 */
+                if (!$localTagAttributes->hasComponentAttribute("preserveAspectRatio")) {
+                    /**
+                     *
+                     * Keep the same height
+                     * Image in the Middle and border deleted when resizing
+                     * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio
+                     * Default is xMidYMid meet
+                     */
+                    $defaultAspectRatio = PluginUtility::getConfValue(self::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
+                    $localTagAttributes->addOutputAttributeValue("preserveAspectRatio", $defaultAspectRatio);
+                }
+
+                /**
+                 * Note on dimension width and height
+                 * Width and height element attribute are in reality css style properties.
+                 *   ie the max-width style
+                 * They are treated in {@link PluginUtility::processStyle()}
+                 */
+
+                /**
+                 * Adapt to the container by default
+                 * Height `auto` and not `100%` otherwise you get a layout shift
+                 */
+                $localTagAttributes->addStyleDeclarationIfNotSet("width", "100%");
+                $localTagAttributes->addStyleDeclarationIfNotSet("height", "auto");
+
+
+                if ($requestedWidth !== null) {
+
+                    /**
+                     * If a dimension was set, it's seen by default as a max-width
+                     * If it should not such as in a card, this property is already set
+                     * and is not overwritten
+                     */
+                    try {
+                        $widthInPixel = Dimension::toPixelValue($requestedWidth);
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("The requested width $requestedWidth could not be converted to pixel. It returns the following error ({$e->getMessage()}). Processing was stopped");
+                        return parent::getXmlText();
+                    }
+                    $localTagAttributes->addStyleDeclarationIfNotSet("max-width", "{$widthInPixel}px");
+
+                    /**
+                     * To have an internal width
+                     * and not shrink on the css property `width: auto !important;`
+                     * of a table
+                     */
+                    $this->setRootAttribute("width", $widthInPixel);
+
+                }
+
+                break;
+        }
+
+
         switch ($svgStructureType) {
             case self::ICON_TYPE:
             case self::TILE_TYPE:
                 /**
                  * Determine if this is a:
-                 *   * fill
-                 *   * or stroke
-                 * svg icon
+                 *   * fill one color
+                 *   * fill two colors
+                 *   * or stroke svg icon
                  *
                  * The color can be set:
                  *   * on fill (surface)
                  *   * on stroke (line)
                  *
-                 * Feather set it on the stroke
-                 * Example: view-source:https://raw.githubusercontent.com/feathericons/feather/master/icons/airplay.svg
+                 * If the stroke attribute is not present this is a fill icon
+                 */
+                $svgColorType = self::COLOR_TYPE_FILL_SOLID;
+                if ($documentElement->hasAttribute(self::STROKE_ATTRIBUTE)) {
+                    $svgColorType = self::COLOR_TYPE_STROKE_OUTLINE;
+                }
+                /**
+                 * Double color icon ?
+                 */
+                $isDoubleColor = false;
+                if ($svgColorType === self::COLOR_TYPE_FILL_SOLID) {
+                    $svgFillsElement = $this->xpath("//*[@fill]");
+                    $fillColors = [];
+                    for ($i = 0; $i < $svgFillsElement->length; $i++) {
+                        /**
+                         * @var DOMElement $nodeElement
+                         */
+                        $nodeElement = $svgFillsElement[$i];
+                        $value = $nodeElement->getAttribute("fill");
+                        if ($value !== "none") {
+                            /**
+                             * Icon may have none alongside colors
+                             * Example:
+                             */
+                            $fillColors[$value] = $value;
+                        }
+                    }
+                    if (sizeof($fillColors) > 1) {
+                        $isDoubleColor = true;
+                    }
+                }
+
+                /**
+                 * CurrentColor
                  *
                  * By default, the icon should have this property when downloaded
                  * but if this not the case (such as for Material design), we set them
+                 *
+                 * Feather set it on the stroke
+                 * Example: view-source:https://raw.githubusercontent.com/feathericons/feather/master/icons/airplay.svg
+                 * <svg
+                 *  fill="none"
+                 *  stroke="currentColor">
                  */
-                if (!$documentElement->hasAttribute("fill")) {
+                if (!$isDoubleColor && !$documentElement->hasAttribute("fill")) {
 
                     /**
                      * Note: if fill was not set, the default color would be black
                      */
-                    $localTagAttributes->addHtmlAttributeValue("fill", self::CURRENT_COLOR);
+                    $localTagAttributes->addOutputAttributeValue("fill", self::CURRENT_COLOR);
 
+                }
+
+
+                /**
+                 * Eva/Carbon Source Icon are not optimized at the source
+                 * Example:
+                 *   * eva:facebook-fill
+                 *   * carbon:logo-tumblr (https://github.com/carbon-design-system/carbon/issues/5568)
+                 *
+                 * We delete the rectangle
+                 * Style should have already been deleted by the optimization
+                 *
+                 * This optimization should happen if the color is set
+                 * or not because we set the color value to `currentColor`
+                 *
+                 * If the rectangle stay, we just see a black rectangle
+                 */
+                if ($this->path !== null) {
+                    $pathString = $this->path->toAbsolutePath()->toString();
+                    if (
+                        preg_match("/carbon|eva/i", $pathString) === 1
+                    ) {
+                        $this->deleteAllElements("rect");
+                    }
+                }
+
+                $color = $localTagAttributes->getValueAndRemoveIfPresent(ColorRgb::COLOR);
+                if ($svgUsageType === self::ILLUSTRATION_TYPE && $color === null) {
+                    $primaryColor = Site::getPrimaryColorValue();
+                    if ($primaryColor !== null) {
+                        $color = $primaryColor;
+                    }
                 }
 
                 /**
                  * Color
-                 * Color should only be applied on icon.
-                 * What if the svg is an illustrative image
+                 * Color applies only if this is an icon.
+                 *
                  */
-                if ($localTagAttributes->hasComponentAttribute(ColorUtility::COLOR)) {
+                if ($color !== null) {
                     /**
                      *
                      * We say that this is used only for an icon (<72 px)
@@ -385,35 +494,74 @@ class SvgDocument extends XmlDocument
                      * svg is used as a background image
                      * fill or stroke should have at minimum "currentColor"
                      */
+                    $colorValue = ColorRgb::createFromString($color)->toCssValue();
 
-                    $color = $localTagAttributes->getValueAndRemove(ColorUtility::COLOR);
-                    $colorValue = ColorUtility::getColorValue($color);
-
-                    /**
-                     * if the stroke element is not present this is a fill icon
-                     */
-                    $svgColorType = self::COLOR_TYPE_FILL_SOLID;
-                    if ($documentElement->hasAttribute("stroke")) {
-                        $svgColorType = self::COLOR_TYPE_STROKE_OUTLINE;
-                    }
 
                     switch ($svgColorType) {
                         case self::COLOR_TYPE_FILL_SOLID:
-                            $localTagAttributes->addHtmlAttributeValue("fill", $colorValue);
 
-                            // Delete the fill property on sub-path
-                            // if the fill is set on subpath, it will not work
-                            if ($colorValue !== self::CURRENT_COLOR) {
-                                $svgPaths = $this->xpath("//*[local-name()='path']");
-                                for ($i = 0; $i < $svgPaths->length; $i++) {
-                                    $this->removeAttributeValue("fill", $svgPaths[$i]);
+
+                            if (!$isDoubleColor) {
+
+                                $localTagAttributes->addOutputAttributeValue("fill", $colorValue);
+
+                                if ($colorValue !== self::CURRENT_COLOR) {
+                                    /**
+                                     * Update the fill property on sub-path
+                                     * If the fill is set on sub-path, it will not work
+                                     *
+                                     * fill may be set on group or whatever
+                                     */
+                                    $svgPaths = $this->xpath("//*[local-name()='path' or local-name()='g']");
+                                    for ($i = 0; $i < $svgPaths->length; $i++) {
+                                        /**
+                                         * @var DOMElement $nodeElement
+                                         */
+                                        $nodeElement = $svgPaths[$i];
+                                        $value = $nodeElement->getAttribute("fill");
+                                        if ($value !== "none") {
+                                            if ($nodeElement->parentNode->tagName !== "svg") {
+                                                $nodeElement->setAttribute("fill", self::CURRENT_COLOR);
+                                            } else {
+                                                $this->removeAttributeValue("fill", $nodeElement);
+                                            }
+                                        }
+                                    }
+
+                                }
+                            } else {
+                                // double color
+                                $firsFillElement = $this->xpath("//*[@fill][1]")->item(0);
+                                if ($firsFillElement instanceof DOMElement) {
+                                    $firsFillElement->setAttribute("fill", $colorValue);
                                 }
                             }
 
                             break;
                         case self::COLOR_TYPE_STROKE_OUTLINE:
-                            $localTagAttributes->addHtmlAttributeValue("fill", "none");
-                            $localTagAttributes->addHtmlAttributeValue("stroke", $colorValue);
+                            $localTagAttributes->addOutputAttributeValue("fill", "none");
+                            $localTagAttributes->addOutputAttributeValue(self::STROKE_ATTRIBUTE, $colorValue);
+
+                            if ($colorValue !== self::CURRENT_COLOR) {
+                                /**
+                                 * Delete the stroke property on sub-path
+                                 */
+                                // if the fill is set on sub-path, it will not work
+                                $svgPaths = $this->xpath("//*[local-name()='path']");
+                                for ($i = 0; $i < $svgPaths->length; $i++) {
+                                    /**
+                                     * @var DOMElement $nodeElement
+                                     */
+                                    $nodeElement = $svgPaths[$i];
+                                    $value = $nodeElement->getAttribute(self::STROKE_ATTRIBUTE);
+                                    if ($value !== "none") {
+                                        $this->removeAttributeValue(self::STROKE_ATTRIBUTE, $nodeElement);
+                                    } else {
+                                        $this->removeNode($nodeElement);
+                                    }
+                                }
+
+                            }
                             break;
                     }
 
@@ -433,9 +581,9 @@ class SvgDocument extends XmlDocument
          * With an icon, the viewBox can be small but it can be zoomed out
          * via the {@link Dimension::WIDTH_KEY}
          */
-        if (
-        $localTagAttributes->hasComponentAttribute(Dimension::RATIO_ATTRIBUTE)
-        ) {
+        $processedWidth = $mediaWidth;
+        $processedHeight = $mediaHeight;
+        if ($localTagAttributes->hasComponentAttribute(Dimension::RATIO_ATTRIBUTE)) {
             // We get a crop, it means that we need to change the viewBox
             $ratio = $localTagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
             try {
@@ -444,33 +592,46 @@ class SvgDocument extends XmlDocument
                 LogUtility::msg("The target ratio attribute ($ratio) returns the following error ({$e->getMessage()}). The svg processing was stopped");
                 return parent::getXmlText();
             }
-            [$width, $height] = Image::getCroppingDimensionsWithRatio(
-                $targetRatio,
-                $mediaWidth,
-                $mediaHeight
-            );
-            $x = 0;
-            $y = 0;
-            if ($svgStructureType === self::ICON_TYPE) {
-                // icon case, we zoom out otherwise, this is ugly, the icon takes the whole place
-                $zoomFactor = 3;
-                $width = $zoomFactor * $width;
-                $height = $zoomFactor * $height;
-                // center
-                $actualWidth = $mediaWidth;
-                $actualHeight = $mediaHeight;
-                $x = -($width - $actualWidth) / 2;
-                $y = -($height - $actualHeight) / 2;
-            }
-            $this->setRootAttribute(self::VIEW_BOX, "$x $y $width $height");
+            [$processedWidth, $processedHeight] = Image::getCroppingDimensionsWithRatio($targetRatio, $mediaWidth, $mediaHeight);
 
+            $this->setRootAttribute(self::VIEW_BOX, "0 0 $processedWidth $processedHeight");
+
+        }
+
+        /**
+         * Zoom occurs after the crop if any
+         */
+        $zoomFactor = $localTagAttributes->getValueAsInteger(Dimension::ZOOM_ATTRIBUTE);
+        if ($zoomFactor === null
+            && $svgStructureType === self::ICON_TYPE
+            && $svgUsageType === self::ILLUSTRATION_TYPE
+        ) {
+            $zoomFactor = -4;
+        }
+        if ($zoomFactor !== null) {
+            // icon case, we zoom out otherwise, this is ugly, the icon takes the whole place
+            if ($zoomFactor < 0) {
+                $processedWidth = -$zoomFactor * $processedWidth;
+                $processedHeight = -$zoomFactor * $processedHeight;
+            } else {
+                $processedWidth = $processedWidth / $zoomFactor;
+                $processedHeight = $processedHeight / $zoomFactor;
+            }
+            // center
+            $actualWidth = $mediaWidth;
+            $actualHeight = $mediaHeight;
+            $x = -($processedWidth - $actualWidth) / 2;
+            $y = -($processedHeight - $actualHeight) / 2;
+            $this->setRootAttribute(self::VIEW_BOX, "$x $y $processedWidth $processedHeight");
         }
 
 
         // Add a class on each path for easy styling
         if (!empty($this->name)) {
             $svgPaths = $this->xpath("//*[local-name()='path']");
-            for ($i = 0; $i < $svgPaths->length; $i++) {
+            for ($i = 0;
+                 $i < $svgPaths->length;
+                 $i++) {
 
                 $stylingClass = $this->name . "-" . $i;
                 $this->addAttributeValue("class", $stylingClass, $svgPaths[$i]);
@@ -488,7 +649,7 @@ class SvgDocument extends XmlDocument
         foreach ($caseSensitives as $caseSensitive) {
             if ($localTagAttributes->hasComponentAttribute($caseSensitive)) {
                 $aspectRatio = $localTagAttributes->getValueAndRemove($caseSensitive);
-                $localTagAttributes->addHTMLAttributeValue($caseSensitive, $aspectRatio);
+                $localTagAttributes->addOutputAttributeValue($caseSensitive, $aspectRatio);
             }
         }
 
@@ -516,19 +677,13 @@ class SvgDocument extends XmlDocument
 
     }
 
-    public function getOptimizedSvg($tagAttributes = null)
-    {
-        $this->optimize();
-
-        return $this->getXmlText($tagAttributes);
-
-    }
 
     /**
      * @param $boolean
      * @return SvgDocument
      */
-    public function setShouldBeOptimized($boolean): SvgDocument
+    public
+    function setShouldBeOptimized($boolean): SvgDocument
     {
         $this->shouldBeOptimized = $boolean;
         return $this;
@@ -537,7 +692,8 @@ class SvgDocument extends XmlDocument
     /**
      * @throws ExceptionCombo
      */
-    public function getMediaWidth(): int
+    public
+    function getMediaWidth(): int
     {
         $viewBox = $this->getXmlDom()->documentElement->getAttribute(self::VIEW_BOX);
         if ($viewBox !== "") {
@@ -569,7 +725,8 @@ class SvgDocument extends XmlDocument
     /**
      * @throws ExceptionCombo
      */
-    public function getMediaHeight(): int
+    public
+    function getMediaHeight(): int
     {
         $viewBox = $this->getXmlDom()->documentElement->getAttribute(self::VIEW_BOX);
         if ($viewBox !== "") {
@@ -598,7 +755,8 @@ class SvgDocument extends XmlDocument
     }
 
 
-    private function getSvgPaths()
+    private
+    function getSvgPaths()
     {
         if ($this->isXmlExtensionLoaded()) {
 
@@ -627,7 +785,8 @@ class SvgDocument extends XmlDocument
      * Based on https://jakearchibald.github.io/svgomg/
      * (gui of https://github.com/svg/svgo)
      */
-    public function optimize()
+    public
+    function optimize($tagAttributes)
     {
 
         if ($this->shouldOptimize()) {
@@ -664,6 +823,13 @@ class SvgDocument extends XmlDocument
                 }
             }
 
+            /**
+             * Delete comments
+             */
+            $commentNodes = $this->xpath("//comment()");
+            foreach ($commentNodes as $commentNode) {
+                $this->removeNode($commentNode);
+            }
 
             /**
              * Delete default value (version=1.1 for instance)
@@ -680,11 +846,17 @@ class SvgDocument extends XmlDocument
             }
 
             /**
-             * Suppress the attributes (by default id and style)
+             * Suppress the attributes (by default id, style and class, data-name)
              */
-            $attributeConfToDelete = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE, "id, style");
+            $attributeConfToDelete = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE, "id, style, class, data-name");
             $attributesNameToDelete = StringUtility::explodeAndTrim($attributeConfToDelete, ",");
             foreach ($attributesNameToDelete as $value) {
+
+                if (in_array($value, ["style", "class", "id"]) && self::preserveStyle($tagAttributes)) {
+                    // we preserve the style, we preserve the class
+                    continue;
+                }
+
                 $nodes = $this->xpath("//@$value");
                 foreach ($nodes as $node) {
                     /** @var DOMAttr $node */
@@ -737,25 +909,33 @@ class SvgDocument extends XmlDocument
 
 
             /**
-             * Suppress script metadata node
-             * Delete of:
-             *   * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/script
+             * Suppress script and style
+             *
+             *
+             * Delete of scripts https://developer.mozilla.org/en-US/docs/Web/SVG/Element/script
+             *
+             * And defs/style
+             *
+             * The style can leak in other icon/svg inlined in the document
+             *
+             * Technically on icon, there should be no `style`
+             * on inline icon otherwise, the css style can leak
+             *
+             * Example with carbon that use cls-1 on all icons
+             * https://github.com/carbon-design-system/carbon/issues/5568
+             * The facebook icon has a class cls-1 with an opacity of 0
+             * that leaks to the tumblr icon that has also a cls-1 class
+             *
+             * The illustration uses inline fill to color and styled
+             * For instance, all un-draw: https://undraw.co/illustrations
              */
-            $elementsToDeleteConf = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style");
+            $elementsToDeleteConf = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style, title, desc");
             $elementsToDelete = StringUtility::explodeAndTrim($elementsToDeleteConf, ",");
-
             foreach ($elementsToDelete as $elementToDelete) {
-                if ($elementToDelete === "style" && $this->isInIconDirectory()) {
-                    // icon library (downloaded) have high trust
-                    // they may include style in the defs
-                    // example carbon:SQL
+                if ($elementToDelete === "style" && self::preserveStyle($tagAttributes)) {
                     continue;
                 }
-                $nodes = $this->xpath("//*[local-name()='$elementToDelete']");
-                foreach ($nodes as $node) {
-                    /** @var DOMElement $node */
-                    $node->parentNode->removeChild($node);
-                }
+                $this->deleteAllElements($elementToDelete);
             }
 
             // Delete If Empty
@@ -784,7 +964,8 @@ class SvgDocument extends XmlDocument
         }
     }
 
-    public function shouldOptimize()
+    public
+    function shouldOptimize()
     {
 
         return $this->shouldBeOptimized;
@@ -795,7 +976,8 @@ class SvgDocument extends XmlDocument
      * The name is used to add class in the svg
      * @param $name
      */
-    private function setName($name)
+    private
+    function setName($name)
     {
         $this->name = $name;
     }
@@ -804,12 +986,14 @@ class SvgDocument extends XmlDocument
      * Set the context
      * @param Path $path
      */
-    private function setPath(Path $path)
+    private
+    function setPath(Path $path)
     {
         $this->path = $path;
     }
 
-    public function __toString()
+    public
+    function __toString()
     {
         if ($this->path !== null) {
             return $this->path->__toString();
@@ -820,7 +1004,8 @@ class SvgDocument extends XmlDocument
         return "unknown";
     }
 
-    private function isInIconDirectory(): bool
+    private
+    function isInIconDirectory(): bool
     {
         if ($this->path == null) {
             return false;
@@ -830,6 +1015,29 @@ class SvgDocument extends XmlDocument
             return true;
         }
         return false;
+    }
+
+    /**
+     * An utility function to know how to remove a node
+     * @param DOMNode $nodeElement
+     */
+    private
+    function removeNode(DOMNode $nodeElement)
+    {
+        $nodeElement->parentNode->removeChild($nodeElement);
+    }
+
+    private
+    function deleteAllElements(string $elementName)
+    {
+        $svgElement = $this->xpath("//*[local-name()='$elementName']");
+        for ($i = 0; $i < $svgElement->length; $i++) {
+            /**
+             * @var DOMElement $nodeElement
+             */
+            $nodeElement = $svgElement[$i];
+            $this->removeNode($nodeElement);
+        }
     }
 
 

@@ -54,7 +54,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
     public static function createHtmlQualityNote(Page $page): Message
     {
-        if ($page->isSlot()) {
+        if ($page->isSecondarySlot()) {
             return Message::createErrorMessage("A has no quality metrics");
 
         }

@@ -78,7 +78,11 @@ class syntax_plugin_combo_codemarkdown extends DokuWiki_Syntax_Plugin
         return array();
     }
 
-    function getSort()
+    /**
+     * Order of precedence
+     * @return int
+     */
+    function getSort(): int
     {
 
         return 199;

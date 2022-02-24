@@ -179,11 +179,11 @@ class syntax_plugin_combo_pageexplorernamespace extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     $wikiId = $tagAttributes->getValueAndRemoveIfPresent(TagAttributes::WIKI_ID);
-                    $tagAttributes->addHtmlAttributeValue("data-wiki-id", $wikiId);
+                    $tagAttributes->addOutputAttributeValue("data-wiki-id", $wikiId);
                     $targetId = $tagAttributes->getValueAndRemoveIfPresent(self::TARGET_ID_ATT);
-                    $tagAttributes->addHtmlAttributeValue("data-bs-target", "#$targetId");
-                    $tagAttributes->addHtmlAttributeValue("data-bs-toggle", "collapse");
-                    $tagAttributes->addHtmlAttributeValue("aria-expanded", "false");
+                    $tagAttributes->addOutputAttributeValue("data-bs-target", "#$targetId");
+                    $tagAttributes->addOutputAttributeValue("data-bs-toggle", "collapse");
+                    $tagAttributes->addOutputAttributeValue("aria-expanded", "false");
                     $tagAttributes->addClassName("btn btn-toggle-combo align-items-center rounded");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("button");
                     break;

@@ -1,0 +1,304 @@
+{
+    "facebook": {
+        "url": "https://facebook.com",
+        "share": {
+            "web": "https://facebook.com/sharer/sharer.php?u=$url",
+            "popup": "Share this page with Facebook",
+            "doc": "https://developers.facebook.com/docs/plugins/share-button/"
+        },
+        "follow": {
+            "web": "https://facebook.com/$handle"
+        },
+        "colors": {
+            "primary": "#3b5998",
+            "secondary": "#2d4373"
+        },
+        "icons": {
+            "outline": "iconoir:facebook",
+            "outline-circle": "et:facebook",
+            "solid": "eva:facebook-fill",
+            "solid-circle": "bi:facebook"
+        }
+    },
+    "twitter": {
+        "url": "https://twitter.com",
+        "share": {
+            "web": "https://twitter.com/intent/tweet/?url=$url&text=$title%0A$description%0A&via=$via",
+            "popup": "Share this page with Twitter"
+        },
+        "follow": {
+            "web": "https://twitter.com/intent/follow?screen_name=$handle",
+            "popup": "Follow us on Twitter",
+            "doc": "https://developer.twitter.com/en/docs/twitter-for-websites/follow-button/guides/web-intent-follow-button"
+        },
+        "colors": {
+            "primary": "#55acee",
+            "secondary": "#2795e9"
+        },
+        "icons": {
+            "outline": "uit:twitter-alt",
+            "outline-circle": "et:twitter",
+            "solid": "mdi:twitter",
+            "solid-circle": "ant-design:twitter-circle-filled"
+        }
+    },
+    "tumblr": {
+        "url": "https://www.tumblr.com",
+        "share": {
+            "web": "https://www.tumblr.com/widgets/share/tool?posttype=link&title=$title&caption=$description&canonicalUrl=$url&content=$url",
+            "popup": "Share this page with Tumblr"
+        },
+        "colors": {
+            "primary": "#35465C",
+            "secondary": "#222d3c"
+        },
+        "icons": {
+            "solid": "carbon:logo-tumblr",
+            "solid-circle": "entypo-social:tumblr-with-circle",
+            "outline": "uit:tumblr-alt",
+            "outline-circle": "et:tumblr"
+        }
+    },
+    "email": {
+        "url": "mailto:",
+        "share": {
+            "web": "mailto:?subject=$title&body=$description%20$url",
+            "popup": "Share this page via Email"
+        },
+        "colors": {
+            "primary": "#777777",
+            "secondary": "#5e5e5e"
+        }
+    },
+    "github": {
+        "url": "https://github.com",
+        "doc": "https://github.com/logos",
+        "colors": {
+            "primary": "#000000",
+            "secondary": "#F4CAB1"
+        },
+        "icons": {
+            "solid": "bi:github",
+            "solid-circle": "eva:github-fill",
+            "outline": "eva:github-outline",
+            "outline-circle": "akar-icons:github-outline-fill"
+        }
+    },
+    "whatsapp": {
+        "url": "https://whatsapp.com",
+        "share": {
+            "web": "https://api.whatsapp.com/send?text=$text%20$url",
+            "mobile": "whatsapp://send?text=$description%20$url",
+            "popup": "Share this page via Whatsapp"
+        },
+        "colors": {
+            "primary": "#25D366",
+            "secondary": "#1DA851"
+        }
+    },
+    "instagram": {
+        "url": "https://www.instagram.com",
+        "follow": {
+            "web": "https://www.instagram.com/$handle/"
+        },
+        "colors": {
+            "primary": "#8a3ab9",
+            "secondary": "#cd486b"
+        },
+        "icons": {
+            "solid": "ant-design:instagram-filled",
+            "solid-circle": "entypo-social:instagram-with-circle",
+            "outline": "ant-design:instagram-outlined",
+            "outline-circle": "ant-design:instagram-outlined"
+        }
+    },
+    "wikipedia": {
+        "url": "https://wikipedia.org",
+        "colors": {
+            "primary": "#000000",
+            "secondary": "#939598",
+            "ref": "https://foundation.wikimedia.org/wiki/Visual_identity_guidelines"
+        },
+        "icons": {
+            "solid": "cib:wikipedia",
+            "solid-circle": "cib:wikipedia",
+            "outline": "cib:wikipedia",
+            "outline-circle": "cib:wikipedia"
+        }
+    },
+    "hackernews": {
+        "url": "https://news.ycombinator.com",
+        "share": {
+            "web": "https://news.ycombinator.com/submitlink?u=$url&t=$text",
+            "popup": "Share this page via Hackernews"
+        },
+        "colors": {
+            "primary": "#FF6600",
+            "secondary": "#FB6200"
+        }
+    },
+    "telegram": {
+        "url": "https://telegram.org",
+        "share": {
+            "web": "https://telegram.me/share/url?text=$text&url=$url",
+            "popup": "Share this page with Telegram"
+        },
+        "colors": {
+            "primary": "#54A9EB",
+            "secondary": "#4B97D1"
+        },
+        "icons": {
+            "solid": "bx:bxl-telegram",
+            "solid-circle": "bi:telegram",
+            "outline": "la:telegram",
+            "outline-circle": "iconoir:telegram-circled"
+        }
+    },
+    "vk": {
+        "url": "https://vk.com",
+        "share": {
+            "web": "https://vk.com/share.php?title=$text&url=$url"
+        },
+        "colors": {
+            "primary": "#507299",
+            "secondary": "#43648c"
+        },
+        "icons": {
+            "solid": "bx:bxl-vk",
+            "solid-circle": "entypo-social:vk-with-circle",
+            "outline": "simple-line-icons:social-vkontakte",
+            "outline-circle": "simple-line-icons:social-vkontakte"
+        }
+    },
+    "dribbble": {
+        "url": "https://dribbble.com",
+        "doc": "https://dribbble.com/branding",
+        "follow": {
+            "web": "https://dribbble.com/$handle"
+        },
+        "icons": {
+            "solid": "ph:dribbble-logo-fill",
+            "solid-circle": "ant-design:dribbble-circle-filled",
+            "outline": "ant-design:dribbble-outlined",
+            "outline-circle": "et:dribbble"
+        },
+        "colors": {
+            "primary": "#EA4C89",
+            "secondary": "#C32361"
+        }
+    },
+    "pinterest": {
+        "url": "https://pinterest.com",
+        "share": {
+            "web": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$text",
+            "popup": "Share this page with pinterest"
+        },
+        "follow": {
+            "web": "https://www.pinterest.com/$handle/"
+        },
+        "colors": {
+            "primary": "#bd081c",
+            "secondary": "#8c0615"
+        },
+        "icons": {
+            "solid": "entypo-social:pinterest",
+            "solid-circle": "bi:pinterest",
+            "outline": "simple-line-icons:social-pinterest",
+            "outline-circle": "icomoon-free:pinterest2"
+        }
+    },
+    "linkedin": {
+        "url": "https://www.linkedin.com",
+        "share": {
+            "web": "https://www.linkedin.com/shareArticle?mini=true&url=$url&source=$url&title=$title&summary=$description",
+            "doc": "https://developer.linkedin.com/docs/share-on-linkedin"
+        },
+        "follow": {
+            "web": "https://www.linkedin.com/company/$handle/"
+        },
+        "colors": {
+            "primary": "#0077b5",
+            "secondary": "#046293"
+        },
+        "icons": {
+            "solid": "entypo-social:linkedin",
+            "solid-circle": "entypo-social:linkedin-with-circle",
+            "outline": "uit:linkedin-alt",
+            "outline-circle": "et:linkedin"
+        }
+    },
+    "reddit": {
+        "url": "https://reddit.com",
+        "share": {
+            "web": "https://reddit.com/submit/?resubmit=true&url=$url&title=$description"
+        },
+        "colors": {
+            "primary": "#5f99cf",
+            "secondary": "#3a80c1"
+        },
+        "icons": {
+            "solid": "dashicons:reddit",
+            "solid-circle": "bi:reddit",
+            "outline": "simple-line-icons:social-reddit",
+            "outline-circle": "simple-line-icons:social-reddit"
+        }
+    },
+    "xing": {
+        "url": "https://www.xing.com",
+        "share": {
+            "web": "https://www.xing.com/spi/shares/new?url=$url",
+            "doc": "https://dev.xing.com/plugins/share_button/docs#custom-design"
+        },
+        "colors": {
+            "primary": "#1a7576",
+            "secondary": "#114C4C"
+        },
+        "icons": {
+            "solid": "carbon:logo-xing",
+            "solid-circle": "entypo-social:xing-with-circle",
+            "outline": "la:xing",
+            "outline-circle": "sharing-button"
+        }
+    },
+    "pocket": {
+        "url": "https://getpocket.com",
+        "share": {
+            "web": "https://getpocket.com/save?url=$url"
+        },
+        "colors": {
+            "primary": "#F50057",
+            "secondary": "#F50057"
+        },
+        "icons": {
+            "solid": "fe:pocket",
+            "solid-circle": "fe:pocket",
+            "outline": "iconoir:pocket",
+            "outline-circle": "iconoir:pocket"
+        }
+    },
+    "newsletter": {
+        "icons": {
+            "solid": "mdi:email-newsletter",
+            "solid-circle": "mdi:email-newsletter",
+            "outline": "fluent:news-20-regular",
+            "outline-circle": "fluent:news-20-regular"
+        }
+    },
+    "youtube": {
+        "url": "https://www.youtube.com",
+        "follow": {
+            "web": "https://www.youtube.com/channel/$handle"
+        },
+        "doc": "https://www.youtube.com/howyoutubeworks/resources/brand-resources/",
+        "icons": {
+            "solid": "entypo-social:youtube",
+            "solid-circle": "entypo-social:youtube-with-circle",
+            "outline": "ant-design:youtube-outlined",
+            "outline-circle": "ant-design:youtube-outlined"
+        },
+        "colors": {
+            "primary": "#FF0000",
+            "secondary": "#959595"
+        }
+    }
+}

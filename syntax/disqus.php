@@ -104,7 +104,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
      * @see DokuWiki_Syntax_Plugin::render()
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         switch ($format) {

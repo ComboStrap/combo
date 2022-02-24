@@ -180,7 +180,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         // The data
         switch ($format) {

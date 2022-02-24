@@ -435,7 +435,7 @@ abstract class Metadata
     public const DERIVED_METADATA = "derived";
     /**
      * A runtime metadata is created for the purpose of a process
-     * Example {@link PageScope}
+     * Example {@link CacheRuntimeDependencies2}
      */
     const RUNTIME_METADATA = "runtime";
 

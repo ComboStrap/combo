@@ -75,7 +75,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
         return array();
     }
 
-    function getSort()
+    function getSort(): int
     {
         /**
          * Should be less than the code syntax plugin

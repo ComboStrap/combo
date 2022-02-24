@@ -167,12 +167,12 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
     }
 
-    public function postConnect()
-    {
+        public function postConnect()
+        {
 
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+            $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
-    }
+        }
 
     /**
      *
@@ -194,7 +194,9 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $attributes = TagAttributes::createFromTagMatch($match);
+                $knownTypes = [];
+                $defaultAttributes = [];
+                $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
 
 
                 $callStack = CallStack::createFromHandler($handler);
@@ -431,7 +433,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
-                    $hadClassAttribute = $attributes->getBooleanValueAndRemove(self::HAD_USER_CLASS);
+                    $hadClassAttribute = $attributes->getBooleanValueAndRemoveIfPresent(self::HAD_USER_CLASS);
                     $htmlElement = $attributes->getValueAndRemove(self::HTML_TAG_ATT);
 
                     $attributes->addClassName("row");
@@ -447,7 +449,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                                 $attributes->addClassName("row-cols-auto");
                                 if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion) {
                                     // row-cols-auto is not in 4.0
-                                    PluginUtility::getSnippetManager()->attachCssSnippetForBar("row-cols-auto");
+                                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("row-cols-auto");
                                 }
                                 break;
                             case syntax_plugin_combo_row::TYPE_AUTO_VALUE:
@@ -486,7 +488,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                              * p generated should have no bottom-margin (because contained)
                              */
                             $attributes->addClassName($tagClass);
-                            PluginUtility::getSnippetManager()->attachCssSnippetForBar($tagClass);
+                            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($tagClass);
                             break;
                         case self::ROOT_CONTEXT:
                             /**
@@ -498,7 +500,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                                 $attributes->addClassName("justify-content-center");
                             }
                             $attributes->addClassName($tagClass);
-                            PluginUtility::getSnippetManager()->attachCssSnippetForBar($tagClass);
+                            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($tagClass);
                             break;
                     }
 

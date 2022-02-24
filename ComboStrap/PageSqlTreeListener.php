@@ -288,7 +288,7 @@ where
     pr.reference = ?
 
 EOF;
-                    $id = PluginUtility::getMainPageDokuwikiId();
+                    $id = PluginUtility::getRequestedWikiId();
                     if (empty($id)) {
                         LogUtility::msg("The page id is unknown. A Page SQL with backlinks should be asked within a page request scope.", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
                     }
@@ -335,6 +335,11 @@ EOF;
     function getColumns(): array
     {
         return $this->columns;
+    }
+
+    public function getTable(): ?string
+    {
+        return $this->type;
     }
 
     /**

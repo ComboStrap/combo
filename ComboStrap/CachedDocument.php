@@ -24,9 +24,9 @@ interface CachedDocument
     public function process();
 
     /**
-     * @return Path - the path where the generated content is stored
+     * @return LocalPath - the path where the generated content is stored
      */
-    public function getCachePath(): Path;
+    public function getCachePath(): LocalPath;
 
     /**
      * @return bool true if the {@link CachedDocument::process() compilation} should occurs

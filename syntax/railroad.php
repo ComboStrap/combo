@@ -181,8 +181,8 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
                         $snippetManager = PluginUtility::getSnippetManager();
                         $snippetId = self::TAG;
                         $libraryId = "rrdiagram";
-                        $snippetManager->attachCssSnippetForBar($snippetId);
-                        $snippetManager->attachJavascriptSnippetForBar($snippetId);
+                        $snippetManager->attachCssInternalStyleSheetForSlot($snippetId);
+                        $snippetManager->attachInternalJavascriptForSlot($snippetId);
 
                         /**
                          *
@@ -192,7 +192,7 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
                          * `
                          * $sha256integrity = ;
                          */
-                        $snippetManager->attachJavascriptScriptForBar(
+                        $snippetManager->attachJavascriptComboResourceForSlot(
                             $snippetId,
                             "library:$libraryId:0.9.4.1:$libraryId.js",
                             "sha256-" . "noP8Tag5vKjRfh3+8GXy5QSZqKnRt7WQe6I9rGVl+go="

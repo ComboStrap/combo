@@ -53,7 +53,7 @@ class Background
          * Backgrounds set with the {@link \syntax_plugin_combo_background} component
          */
         if ($tagAttributes->hasComponentAttribute(self::BACKGROUNDS)) {
-            PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::CANONICAL);
+            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::CANONICAL);
             $backgrounds = $tagAttributes->getValueAndRemove(self::BACKGROUNDS);
             switch (sizeof($backgrounds)) {
                 case 1:
@@ -156,17 +156,23 @@ class Background
                             break;
                     }
 
+
                     $media = MediaLink::createFromCallStackArray($backgroundImageValue);
-                    $image = $media->getDefaultImage();
-                    $url = $image->getUrl(DokuwikiUrl::AMPERSAND_CHARACTER, $image->getTargetWidth());
-                    if ($url !== false) {
-
-                        $backgroundImageStyleValue = "url(" . $url . ")";
-
-
-                    } else {
-                        LogUtility::msg("The image ($media) does not exist", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                    if ($media instanceof ThirdMediaLink) {
+                        LogUtility::msg("The background image ($media) is not supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        return;
                     }
+                    /**
+                     * @var Image $image
+                     */
+                    $image = $media->getDefaultImage();
+                    if (!FileSystems::exists($image->getPath())) {
+                        LogUtility::msg("The image ($media) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        return;
+                    }
+                    $url = $image->getUrl(DokuwikiUrl::AMPERSAND_CHARACTER);
+                    $backgroundImageStyleValue = "url(" . $url . ")";
+
                 } else {
                     LogUtility::msg("Internal Error: The background image value ($backgroundImageValue) is not a string nor an array", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 }
@@ -206,7 +212,7 @@ class Background
         if ($tagAttributes->hasComponentAttribute(self::BACKGROUND_COLOR)) {
 
             $colorValue = $tagAttributes->getValueAndRemove(self::BACKGROUND_COLOR);
-            $colorValue = ColorUtility::getColorValue($colorValue);
+
             $gradientPrefix = 'gradient-';
             if (strpos($colorValue, $gradientPrefix) === 0) {
                 /**
@@ -217,11 +223,14 @@ class Background
                     LogUtility::msg("An image and a linear gradient color are exclusive because a linear gradient color creates an image. You can't use the linear color (" . $colorValue . ") and the image (" . $backgroundImageStyleValue . ")", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
                 } else {
                     $mainColorValue = substr($colorValue, strlen($gradientPrefix));
-                    $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_IMAGE, 'linear-gradient(to top,#fff 0,' . ColorUtility::getColorValue($mainColorValue) . ' 100%)');
+                    $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_IMAGE, 'linear-gradient(to top,#fff 0,' . ColorRgb::createFromString($mainColorValue)->toCssValue() . ' 100%)');
                     $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_COLOR, 'unset!important');
                 }
             } else {
+
+                $colorValue = ColorRgb::createFromString($colorValue)->toCssValue();
                 $tagAttributes->addStyleDeclarationIfNotSet(self::BACKGROUND_COLOR, $colorValue);
+
             }
         }
 
@@ -234,7 +243,7 @@ class Background
      * @param array $mediaCallStackArray
      * @return array
      */
-    public static function fromMediaToBackgroundImageStackArray(array $mediaCallStackArray)
+    public static function fromMediaToBackgroundImageStackArray(array $mediaCallStackArray): array
     {
         $backgroundProperties = [];
         foreach ($mediaCallStackArray as $key => $property) {
@@ -275,20 +284,12 @@ class Background
             /**
              * Attach the stylesheet
              */
-            PluginUtility::getSnippetManager()->attachTagsForBar(self::PATTERN_CSS_SNIPPET_ID)
-                ->setCritical(false) // not blocking for rendering
-                ->setTags(
-                    array(
-                        "link" =>
-                            [
-                                array(
-                                    "rel" => "stylesheet",
-                                    "href" => "https://cdn.jsdelivr.net/npm/pattern.css@1.0.0/dist/pattern.min.css",
-                                    "integrity" => "sha256-Vwich3JPJa27TO9g6q+TxJGE7DNEigBaHNPm+KkMR6o=",
-                                    "crossorigin" => "anonymous"
-                                )
-                            ]
-                    ));
+            PluginUtility::getSnippetManager()->attachCssExternalStyleSheetForSlot(
+                self::PATTERN_CSS_SNIPPET_ID,
+                "https://cdn.jsdelivr.net/npm/pattern.css@1.0.0/dist/pattern.min.css",
+                "sha256-Vwich3JPJa27TO9g6q+TxJGE7DNEigBaHNPm+KkMR6o=")
+                ->setCritical(false); // not blocking for rendering
+
 
             $patternValue = strtolower($tagAttributes->getValueAndRemove(self::PATTERN_ATTRIBUTE));
 
@@ -330,7 +331,7 @@ class Background
                 LogUtility::msg("The pattern color was not set for the background with the (" . $pattern . "). It was set to the default color.", LogUtility::LVL_MSG_INFO, self::CANONICAL);
                 $patternColor = "#FDE482";
             }
-            $tagAttributes->addStyleDeclarationIfNotSet(ColorUtility::COLOR, $patternColor);
+            $tagAttributes->addStyleDeclarationIfNotSet(ColorRgb::COLOR, $patternColor);
 
         }
     }

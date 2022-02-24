@@ -33,15 +33,17 @@ class Bootstrap
 
     public static function getBootStrapMajorVersion()
     {
+        $default = PluginUtility::getConfValue(self::CONF_BOOTSTRAP_MAJOR_VERSION, self::BootStrapDefaultMajorVersion);
         if (Site::isStrapTemplate()) {
-            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            if ($loaded) {
-                $bootstrapVersion = TplUtility::getBootStrapVersion();
-                return $bootstrapVersion[0];
+            try {
+                Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            } catch (ExceptionCombo $e) {
+                return $default;
             }
+            $bootstrapVersion = TplUtility::getBootStrapVersion();
+            return $bootstrapVersion[0];
         }
-
-        return PluginUtility::getConfValue(self::CONF_BOOTSTRAP_MAJOR_VERSION, self::BootStrapDefaultMajorVersion);
+        return $default;
 
 
     }

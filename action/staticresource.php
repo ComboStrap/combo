@@ -2,10 +2,13 @@
 
 use ComboStrap\CacheMedia;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\HttpResponse;
+use ComboStrap\Identity;
 use ComboStrap\LocalPath;
+use ComboStrap\LogUtility;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use dokuwiki\Utf8\PhpString;
@@ -62,23 +65,29 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     function handleMediaStatus(Doku_Event $event, $params)
     {
 
-        if (!isset($_GET[DokuPath::WIKI_FS_TYPE])) {
+        if (!isset($_GET[DokuPath::DRIVE_ATTRIBUTE])) {
             return;
         }
-        $type = $_GET[DokuPath::WIKI_FS_TYPE];
-        if ($type !== DokuPath::RESOURCE_TYPE) {
+        $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
+        if (!in_array($drive, DokuPath::DRIVES)) {
             // The other resources have ACL
             // and this endpoint is normally only for
             $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
             return;
         }
         $mediaId = $event->data['media'];
-        $mediaPath = DokuPath::createDokuPath($mediaId, $type);
+        $mediaPath = DokuPath::createDokuPath($mediaId, $drive);
         $event->data['file'] = $mediaPath->toLocalPath()->toAbsolutePath()->toString();
         if (FileSystems::exists($mediaPath)) {
             $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
             $event->data['statusmessage'] = '';
             $event->data['mime'] = $mediaPath->getMime();
+        }
+        if ($drive === DokuPath::CACHE_DRIVE) {
+            $event->data['download'] = false;
+            if (!Identity::isManager()) {
+                $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
+            }
         }
 
     }
@@ -86,56 +95,51 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     function handleSendFile(Doku_Event $event, $params)
     {
 
-        $mediaId = $event->data["media"];
 
         /**
-         * Do we send this file
+         * If there is no buster key, the infinite cache is off
          */
-        $isStaticFileManaged = false;
+        $busterKey = $_GET[CacheMedia::CACHE_BUSTER_KEY];
+        if ($busterKey === null) {
+            return;
+        }
+
+        /**
+         * The media to send
+         */
+        $originalFile = $event->data["orig"]; // the original file
+        $physicalFile = $event->data["file"]; // the file modified
+        if (empty($physicalFile)) {
+            $physicalFile = $originalFile;
+        }
+        $mediaToSend = LocalPath::createFromPath($physicalFile);
+        if (!FileSystems::exists($mediaToSend)) {
+            return;
+        }
 
         /**
          * Combo Media
          * (Static file from the combo resources are always taken over)
          */
-        if (isset($_GET[DokuPath::WIKI_FS_TYPE])) {
+        $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
+        if ($drive === null) {
 
-            $isStaticFileManaged = $_GET[DokuPath::WIKI_FS_TYPE] === DokuPath::RESOURCE_TYPE;
-
-        }
-
-        /**
-         * DokuWiki Resource media
-         */
-        if (!$isStaticFileManaged) {
-
-            /**
-             * If there is the buster key, the infinite cache is on
-             */
-            if (isset($_GET[CacheMedia::CACHE_BUSTER_KEY])) {
-
-                /**
-                 * To avoid buggy code, we check that the value is not empty
-                 */
-                $cacheKey = $_GET[CacheMedia::CACHE_BUSTER_KEY];
-                if (!empty($cacheKey)) {
-
-                    if (PluginUtility::getConfValue(self::CONF_STATIC_CACHE_ENABLED, 1)) {
-
-                        $dokuPath = DokuPath::createMediaPathFromId($mediaId);
-                        if ($dokuPath->isPublic()) {
-                            /**
-                             * Only for public media
-                             */
-                            $isStaticFileManaged = true;
-                        }
-
-                    }
-                }
+            $confValue = PluginUtility::getConfValue(self::CONF_STATIC_CACHE_ENABLED, 1);
+            if (!$confValue) {
+                return;
             }
-        }
 
-        if (!$isStaticFileManaged) {
-            return;
+            try {
+                $dokuPath = $mediaToSend->toDokuPath();
+            } catch (ExceptionCombo $e) {
+                // not a dokuwiki file ?
+                LogUtility::msg("Error: {$e->getMessage()}");
+                return;
+            }
+            if (!$dokuPath->isPublic()) {
+                return; // Infinite static is only for public media
+            }
+
         }
 
         /**
@@ -149,16 +153,6 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          *
          * We take the control over then
          */
-
-        /**
-         * Send the file
-         */
-        $originalFile = $event->data["orig"]; // the original file
-        $physicalFile = $event->data["file"]; // the file modified
-        if (empty($physicalFile)) {
-            $physicalFile = $originalFile;
-        }
-        $mediaToSend = LocalPath::createFromPath($physicalFile);
 
 
         /**
@@ -247,7 +241,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
              * Until {@link HttpResponse} can send resource
              * TODO: integrate it in {@link HttpResponse}
              */
-            if(PluginUtility::isDevOrTest()) {
+            if (PluginUtility::isDevOrTest()) {
                 /**
                  * Add test info into the request
                  */

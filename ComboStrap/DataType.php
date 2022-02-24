@@ -67,7 +67,7 @@ class DataType
         if (is_int($targetValue)) {
             return $targetValue;
         }
-        if (!is_string($targetValue)) {
+        if (!is_string($targetValue) && !is_float($targetValue)) {
             $varExport = var_export($targetValue, true);
             throw new ExceptionCombo("The value passed is not a numeric/nor a string. We can not translate it to an integer. Value: $varExport");
         }
@@ -82,6 +82,16 @@ class DataType
             throw new ExceptionCombo("The value ($targetValue) can not be cast to an integer.");
         }
         return $int;
+    }
+
+    public static function toBoolean($value)
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    public static function toFloat($value): float
+    {
+        return floatval($value);
     }
 
 

@@ -10,10 +10,7 @@ class TextColor
     const TEXT_COLOR_ATTRIBUTE = "text-color";
     const CSS_ATTRIBUTE = "color";
     const CANONICAL = self::TEXT_COLOR_ATTRIBUTE;
-    const TEXT_TAGS = [
-        \syntax_plugin_combo_text::TAG,
-        \syntax_plugin_combo_itext::TAG
-    ];
+
     const TEXT_COLORS = array(
         'primary',
         'secondary',
@@ -40,18 +37,46 @@ class TextColor
         foreach ($colorAttributes as $colorAttribute) {
             if ($attributes->hasComponentAttribute($colorAttribute)) {
                 $colorValue = $attributes->getValueAndRemove($colorAttribute);
-                $lowerCase = strtolower($colorValue);
-                if (in_array($lowerCase, self::TEXT_COLORS)) {
+                $lowerCaseColorValue = strtolower($colorValue);
+
+                /**
+                 * text is based in the text-colorname class
+                 * Not yet on variable or color object
+                 * We overwrite it here
+                 */
+                switch ($lowerCaseColorValue) {
+                    case ColorRgb::PRIMARY_VALUE:
+                        $primaryColor = Site::getPrimaryColor();
+                        if ($primaryColor !== null) {
+                            // important because we set the text-class below and they already have an important value
+                            $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "{$primaryColor->toRgbHex()}!important");
+                        }
+                        break;
+                    case ColorRgb::SECONDARY_VALUE:
+                        $secondaryColor = Site::getSecondaryColor();
+                        if ($secondaryColor !== null) {
+                            // important because we set the text-class below and they already have an important value
+                            $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, "{$secondaryColor->toRgbHex()}!important");
+                        }
+                        break;
+                }
+
+                if (in_array($lowerCaseColorValue, self::TEXT_COLORS)) {
                     /**
                      * The bootstrap text class
                      * https://getbootstrap.com/docs/5.0/utilities/colors/#colors
                      */
-                    $attributes->addClassName("text-$lowerCase");
+                    $attributes->addClassName("text-$lowerCaseColorValue");
                 } else {
                     /**
                      * Other Text Colors
                      */
-                    $colorValue = ColorUtility::getColorValue($colorValue);
+                    try {
+                        $colorValue = ColorRgb::createFromString($colorValue)->toCssValue();
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("The text color value ($colorValue) is not a valid color. Error: {$e->getMessage()}");
+                        return;
+                    }
                     if (!empty($colorValue)) {
                         $attributes->addStyleDeclarationIfNotSet(TextColor::CSS_ATTRIBUTE, $colorValue);
                     }

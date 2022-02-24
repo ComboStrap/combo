@@ -41,6 +41,8 @@ abstract class PathAbs implements Path
                 return new Mime(Mime::HTML);
             case "png":
                 return new Mime(Mime::PNG);
+            case "css":
+                return new Mime(Mime::CSS);
             default:
                 $mime = mimetype($this->getLastName(), true)[1];
                 if ($mime === null || $mime === false) {
@@ -57,7 +59,27 @@ abstract class PathAbs implements Path
 
     public function __toString()
     {
+        return $this->toUriString();
+    }
+
+
+    public function toUriString(): string
+    {
         return $this->toString();
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    function toDokuPath(): DokuPath
+    {
+        if($this instanceof DokuPath){
+            return $this;
+        }
+        if($this instanceof LocalPath){
+            return $this->toDokuPath();
+        }
+        throw new ExceptionCombo("This is not a doku path or local path");
     }
 
 

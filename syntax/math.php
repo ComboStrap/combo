@@ -15,7 +15,6 @@ class syntax_plugin_combo_math extends DokuWiki_Syntax_Plugin
     const TAG = "math";
 
 
-
     /**
      * Syntax Type
      *
@@ -120,7 +119,8 @@ class syntax_plugin_combo_math extends DokuWiki_Syntax_Plugin
                 /**
                  * CSS
                  */
-                PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
+                $snippetManager = PluginUtility::getSnippetManager();
+                $snippetManager->attachCssInternalStyleSheetForSlot(self::TAG);
 
                 /**
                  * Javascript config
@@ -140,20 +140,18 @@ MathJax.Hub.Config({
 });
 EOD;
 
-                PluginUtility::getSnippetManager()->upsertTagsForBar(self::TAG,
-                    array("script" => [
-                        array(
-                            "type" => "text/x-mathjax-config",
-                            "_data" => $headHtmlElement
-                        ),
-                        array(
-                            "type" => "text/javascript",
-                            "src" => "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js",
-                            "async" => true
-                        )
-                    ])
-                );
-
+                $snippetManager
+                    ->attachInternalJavascriptForSlot(
+                    self::TAG,
+                    $headHtmlElement
+                )
+                    ->addHtmlAttribute("type", "text/x-mathjax-config");
+                $snippetManager
+                    ->attachJavascriptLibraryForSlot(
+                        self::TAG,
+                        "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js"
+                    )
+                    ->setDoesManipulateTheDomOnRun(false);
                 break;
 
             case 'latexport':

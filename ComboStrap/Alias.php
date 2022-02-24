@@ -77,7 +77,7 @@ class Alias
     function setType(string $type): Alias
     {
         if (!in_array($type, AliasType::ALIAS_TYPE_VALUES)) {
-            $pageAnchor = $this->getPage()->getAnchorLink();
+            $pageAnchor = $this->getPage()->getHtmlAnchorLink();
             LogUtility::msg("Bad Alias Type. The alias type value ($type) for the alias path ({$this->getPath()}) of the page ({$pageAnchor})");
             return $this;
         }

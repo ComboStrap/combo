@@ -67,6 +67,7 @@ class RasterImageLink extends ImageLink
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
      * A media can be a video also (Use
      * @return string
+     * @throws ExceptionCombo
      */
     public function renderMediaTag(): string
     {
@@ -128,11 +129,15 @@ class RasterImageLink extends ImageLink
                  * HTML height attribute is important for the ratio calculation
                  * No layout shift
                  */
-                $attributes->addHtmlAttributeValue("height", $targetHeight . $htmlLengthUnit);
+                $attributes->addOutputAttributeValue("height", $targetHeight . $htmlLengthUnit);
                 /**
                  * We don't allow the image to scale up by default
                  */
                 $attributes->addStyleDeclarationIfNotSet("max-height", $targetHeight . $cssLengthUnit);
+                /**
+                 * if the image has a class that has a `height: 100%`, the image will stretch
+                 */
+                $attributes->addStyleDeclarationIfNotSet("height", "auto");
             }
 
 
@@ -192,7 +197,7 @@ class RasterImageLink extends ImageLink
                     /**
                      * HTML Width attribute is important to avoid layout shift
                      */
-                    $attributes->addHtmlAttributeValue("width", $targetWidth . $htmlLengthUnit);
+                    $attributes->addOutputAttributeValue("width", $targetWidth . $htmlLengthUnit);
                     /**
                      * We don't allow the image to scale up by default
                      */
@@ -222,7 +227,8 @@ class RasterImageLink extends ImageLink
                             $sizes .= ", ";
                         }
                         $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
-                        $xsmUrl = $image->getUrlForSrcSetAtBreakpoint($breakpointWidthMinusMargin);
+
+                        $xsmUrl = $image->getUrlAtBreakpoint($breakpointWidthMinusMargin);
                         $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
                         $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
 
@@ -237,7 +243,7 @@ class RasterImageLink extends ImageLink
                 if (!empty($srcSet)) {
                     $srcSet .= ", ";
                     $sizes .= ", ";
-                    $srcUrl = $image->getUrlForSrcSetAtBreakpoint($targetWidth);
+                    $srcUrl = $image->getUrlAtBreakpoint($targetWidth);
                     $srcSet .= "$srcUrl {$targetWidth}w";
                     $sizes .= "{$targetWidth}px";
                 }
@@ -249,57 +255,73 @@ class RasterImageLink extends ImageLink
                 if ($lazyLoad) {
 
                     /**
-                     * Snippet Lazy loading
+                     * Html Lazy loading
                      */
-                    LazyLoad::addLozadSnippet();
-                    PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-raster");
-                    $attributes->addClassName(self::LAZY_CLASS);
-                    $attributes->addClassName(LazyLoad::LAZY_CLASS);
+                    $lazyLoadMethod = $this->getLazyLoadMethod();
+                    switch ($lazyLoadMethod) {
+                        case MediaLink::LAZY_LOAD_METHOD_HTML_VALUE:
+                            $attributes->addOutputAttributeValue("src", $srcValue);
+                            if (!empty($srcSet)) {
+                                // it the image is small, no srcset for instance
+                                $attributes->addOutputAttributeValue("srcset", $srcSet);
+                            }
+                            $attributes->addOutputAttributeValue("loading", "lazy");
+                            break;
+                        default:
+                        case MediaLink::LAZY_LOAD_METHOD_LOZAD_VALUE:
+                            /**
+                             * Snippet Lazy loading
+                             */
+                            LazyLoad::addLozadSnippet();
+                            PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot("lozad-raster");
+                            $attributes->addClassName(self::LAZY_CLASS);
+                            $attributes->addClassName(LazyLoad::LAZY_CLASS);
 
-                    /**
-                     * A small image has no srcset
-                     *
-                     */
-                    if (!empty($srcSet)) {
+                            /**
+                             * A small image has no srcset
+                             *
+                             */
+                            if (!empty($srcSet)) {
 
-                        /**
-                         * !!!!! DON'T FOLLOW THIS ADVICE !!!!!!!!!
-                         * https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
-                         * The transparent image has a fix dimension aspect ratio of 1x1 making
-                         * a bad reserved space for the image
-                         * We use a svg instead
-                         */
-                        $attributes->addHtmlAttributeValue("src", $srcValue);
-                        $attributes->addHtmlAttributeValue("srcset", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
-                        /**
-                         * We use `data-sizes` and not `sizes`
-                         * because `sizes` without `srcset`
-                         * shows the broken image symbol
-                         * Javascript changes them at the same time
-                         */
-                        $attributes->addHtmlAttributeValue("data-sizes", $sizes);
-                        $attributes->addHtmlAttributeValue("data-srcset", $srcSet);
+                                /**
+                                 * !!!!! DON'T FOLLOW THIS ADVICE !!!!!!!!!
+                                 * https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
+                                 * The transparent image has a fix dimension aspect ratio of 1x1 making
+                                 * a bad reserved space for the image
+                                 * We use a svg instead
+                                 */
+                                $attributes->addOutputAttributeValue("src", $srcValue);
+                                $attributes->addOutputAttributeValue("srcset", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
+                                /**
+                                 * We use `data-sizes` and not `sizes`
+                                 * because `sizes` without `srcset`
+                                 * shows the broken image symbol
+                                 * Javascript changes them at the same time
+                                 */
+                                $attributes->addOutputAttributeValue("data-sizes", $sizes);
+                                $attributes->addOutputAttributeValue("data-srcset", $srcSet);
 
-                    } else {
+                            } else {
 
-                        /**
-                         * Small image but there is no little improvement
-                         */
-                        $attributes->addHtmlAttributeValue("data-src", $srcValue);
-                        $attributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
+                                /**
+                                 * Small image but there is no little improvement
+                                 */
+                                $attributes->addOutputAttributeValue("data-src", $srcValue);
+                                $attributes->addOutputAttributeValue("src", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
 
+                            }
+                            LazyLoad::addPlaceholderBackground($attributes);
+                            break;
                     }
-
-                    LazyLoad::addPlaceholderBackground($attributes);
 
 
                 } else {
 
                     if (!empty($srcSet)) {
-                        $attributes->addHtmlAttributeValue("srcset", $srcSet);
-                        $attributes->addHtmlAttributeValue("sizes", $sizes);
+                        $attributes->addOutputAttributeValue("srcset", $srcSet);
+                        $attributes->addOutputAttributeValue("sizes", $sizes);
                     } else {
-                        $attributes->addHtmlAttributeValue("src", $srcValue);
+                        $attributes->addOutputAttributeValue("src", $srcValue);
                     }
 
                 }
@@ -311,8 +333,8 @@ class RasterImageLink extends ImageLink
                 if ($lazyLoad) {
 
                     LazyLoad::addPlaceholderBackground($attributes);
-                    $attributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder());
-                    $attributes->addHtmlAttributeValue("data-src", $srcValue);
+                    $attributes->addOutputAttributeValue("src", LazyLoad::getPlaceholder());
+                    $attributes->addOutputAttributeValue("data-src", $srcValue);
 
                 }
 
@@ -322,7 +344,7 @@ class RasterImageLink extends ImageLink
             /**
              * Title (ie alt)
              */
-            $attributes->addHtmlAttributeValueIfNotEmpty("alt", $image->getAltNotEmpty());
+            $attributes->addOutputAttributeValueIfNotEmpty("alt", $image->getAltNotEmpty());
 
             /**
              * TODO: Side effect of the fact that we use the same attributes

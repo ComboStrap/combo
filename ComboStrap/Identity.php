@@ -30,6 +30,8 @@ class Identity
      */
     const JS_NAVIGATION_INDICATOR = "navigation";
 
+    const FORM_IDENTITY_CLASS = "form-identity";
+
     /**
      * Is logged in
      * @return boolean
@@ -157,18 +159,6 @@ class Identity
         return is_array($USERINFO) ? $USERINFO['grps'] : array();
     }
 
-    public static function getLogoHtml()
-    {
-        /**
-         * Logo
-         */
-        $tagAttributes = TagAttributes::createEmpty("register");
-        $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "72");
-        $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, "72");
-        $tagAttributes->addClassName("logo");
-        return Site::getLogoImgHtmlTag($tagAttributes);
-    }
-
     /**
      * @param Doku_Form $form
      * @param string $classPrefix
@@ -189,7 +179,7 @@ class Identity
                 &&
                 $includeLogo === true
             ) {
-                $logoHtmlImgTag = Identity::getLogoHtml();
+                $logoHtmlImgTag = Site::getLogoHtml();
             }
             /**
              * Don't use `header` in place of
@@ -233,6 +223,50 @@ EOF;
             $perm = auth_aclcheck($pageId, '', null);
         }
         return $perm;
+    }
+
+    public static function addPrimaryColorCssRuleIfSet(?string $content): ?string
+    {
+        if ($content === null) {
+            return null;
+        }
+        $primaryColor = Site::getPrimaryColorValue();
+        if ($primaryColor !== null) {
+            $identityClass = self::FORM_IDENTITY_CLASS;
+            $content .= <<<EOF
+.$identityClass button[type="submit"]{
+   background-color: $primaryColor;
+   border-color: $primaryColor;
+}
+EOF;
+        }
+        return $content;
+    }
+
+    public static function getHtmlStyleTag(string $componentId): string
+    {
+        $loginCss = Snippet::createInternalCssSnippet($componentId);
+        $content = $loginCss->getInternalInlineAndFileContent();
+        $content = Identity::addPrimaryColorCssRuleIfSet($content);
+        $class = $loginCss->getClass();
+        return <<<EOF
+<style class="$class">
+$content
+</style>
+EOF;
+
+    }
+
+    public static function addIdentityClass(&$class, string $formClass)
+    {
+
+        $formClass = Identity::FORM_IDENTITY_CLASS . " " . $formClass;
+        if (isset($class)) {
+            $class .= " " . $formClass;
+        } else {
+            $class = $formClass;
+        }
+
     }
 
 

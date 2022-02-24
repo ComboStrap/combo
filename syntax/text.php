@@ -31,7 +31,7 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in {@link $PARSER_MODES} in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'paragraphs';
     }
@@ -45,7 +45,7 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
         return 'stack';
     }
@@ -59,12 +59,12 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array('formatting', 'substition', 'paragraphs');
     }
 
-    public function accepts($mode)
+    public function accepts($mode): bool
     {
 
         return syntax_plugin_combo_preformatted::disablePreformatted($mode);
@@ -72,9 +72,12 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
     }
 
 
-    function getSort()
+    function getSort(): int
     {
-        return 201;
+        /**
+         * Less than {@link syntax_plugin_typography_base}
+         */
+        return 65;
     }
 
 
@@ -102,6 +105,7 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
+
                 $attributes = TagAttributes::createFromTagMatch($match);
                 $callStackArray = $attributes->toCallStackArray();
 
@@ -149,7 +153,7 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         if ($format == 'xhtml') {
 

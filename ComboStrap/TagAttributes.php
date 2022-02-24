@@ -39,10 +39,17 @@ class TagAttributes
     const ID_KEY = "id";
 
     /**
+     * If not strict, no error is reported
+     */
+    const STRICT = "strict";
+
+    /**
      * The logical attributes that:
      *   * are not becoming HTML attributes
      *   * are never deleted
      * (ie internal reserved words)
+     *
+     * TODO: they should be advertised by the syntax component
      */
     const RESERVED_ATTRIBUTES = [
         self::SCRIPT_KEY, // no script attribute for security reason
@@ -54,7 +61,16 @@ class TagAttributes
         self::OPEN_TAG,
         self::HTML_BEFORE,
         self::HTML_AFTER,
-        Dimension::RATIO_ATTRIBUTE
+        Dimension::RATIO_ATTRIBUTE,
+        self::STRICT,
+        SvgDocument::PRESERVE_ATTRIBUTE,
+        \syntax_plugin_combo_link::CLICKABLE_ATTRIBUTE,
+        MarkupRef::PREVIEW_ATTRIBUTE,
+        \syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE,
+        Skin::SKIN_ATTRIBUTE,
+        ColorRgb::PRIMARY_VALUE,
+        ColorRgb::SECONDARY_VALUE,
+        Dimension::ZOOM_ATTRIBUTE
     ];
 
     /**
@@ -74,7 +90,7 @@ class TagAttributes
     const TRANSFORM = "transform";
 
     const CANONICAL = "tag";
-    const DISPLAY = "display";
+
     const CLASS_KEY = "class";
     const WIKI_ID = "wiki-id";
 
@@ -110,7 +126,15 @@ class TagAttributes
     /**
      * Attribute with multiple values
      */
-    const MULTIPLE_VALUES_ATTRIBUTES = [self::CLASS_KEY];
+    const MULTIPLE_VALUES_ATTRIBUTES = [self::CLASS_KEY, self::REL];
+
+    /**
+     * Link relation attributes
+     * https://html.spec.whatwg.org/multipage/links.html#linkTypes
+     */
+    const REL = "rel";
+    const STYLE_ATTRIBUTE = "style";
+
 
     /**
      * A global static counter
@@ -136,11 +160,10 @@ class TagAttributes
     private $componentToHtmlAttributeProcessingWasDone = false;
 
     /**
-     * @var array - html attributes set in the code. This is needed to make a difference
-     * on attribute name that are the same such as the component attribute `width` that is
-     * transformed as a style `max-width` but exists also as attribute of an image for instance
+     * @var array - output attribute are not the parsed attributes known as componentAttribute)
+     * They are created by the {@link TagAttributes::toHtmlArray()} processing mainly
      */
-    private $htmlAttributes = array();
+    private $outputAttributes = array();
 
     /**
      * @var array - the final html array
@@ -168,6 +191,11 @@ class TagAttributes
     const TEXT_HTML_MIME = "text/html";
     private $mime = TagAttributes::TEXT_HTML_MIME;
 
+    /**
+     * @var bool - adding  the default class for the logical tag
+     */
+    private $defaultStyleClassShouldBeAdded = true;
+
 
     /**
      * ComponentAttributes constructor.
@@ -178,7 +206,7 @@ class TagAttributes
      * for a {@link \syntax_plugin_combo_code} and have therefore the same logical name)
      * @param array $componentAttributes
      */
-    private function __construct($componentAttributes = array(), $tag = null)
+    private function __construct(array $componentAttributes = array(), $tag = null)
     {
         $this->logicalTag = $tag;
         $this->componentAttributesCaseInsensitive = new ArrayCaseInsensitive($componentAttributes);
@@ -190,6 +218,19 @@ class TagAttributes
         foreach ($componentAttributes as $key => $value) {
             if (is_null($value)) {
                 unset($this->componentAttributesCaseInsensitive[$key]);
+                continue;
+            }
+            if ($key === self::STYLE_ATTRIBUTE) {
+                unset($this->componentAttributesCaseInsensitive[$key]);
+                $stylingProperties = explode(";", $value);
+                foreach ($stylingProperties as $stylingProperty) {
+                    if (empty($stylingProperty)) {
+                        // case with a trailing comma. ie `width:18rem;`
+                        continue;
+                    }
+                    [$key, $value] = preg_split("/:/", $stylingProperty, 2);
+                    $this->addStyleDeclarationIfNotSet($key, $value);
+                }
             }
         }
 
@@ -198,11 +239,12 @@ class TagAttributes
     /**
      * @param $match - the {@link SyntaxPlugin::handle()} match
      * @param array $defaultAttributes
+     * @param array|null $knownTypes
      * @return TagAttributes
      */
-    public static function createFromTagMatch($match, $defaultAttributes = [])
+    public static function createFromTagMatch($match, array $defaultAttributes = [], array $knownTypes = null): TagAttributes
     {
-        $inlineHtmlAttributes = PluginUtility::getTagAttributes($match);
+        $inlineHtmlAttributes = PluginUtility::getTagAttributes($match, $knownTypes);
         $tag = PluginUtility::getTag($match);
         $mergedAttributes = PluginUtility::mergeAttributes($inlineHtmlAttributes, $defaultAttributes);
         return self::createFromCallStackArray($mergedAttributes, $tag);
@@ -219,17 +261,20 @@ class TagAttributes
     }
 
     /**
-     * @param array $renderArray - an array of key value pair
-     * @param string $logicalTag - the logical tag for which this attribute will apply
+     * @param array|null $callStackArray - an array of key value pair
+     * @param string|null $logicalTag - the logical tag for which this attribute will apply
      * @return TagAttributes
      */
-    public static function createFromCallStackArray($renderArray, $logicalTag = null)
+    public static function createFromCallStackArray(?array $callStackArray, string $logicalTag = null): TagAttributes
     {
-        if (!is_array($renderArray)) {
-            LogUtility::msg("The renderArray variable passed is not an array ($renderArray)", LogUtility::LVL_MSG_ERROR);
-            $renderArray = TagAttributes::createEmpty($logicalTag);
+        if ($callStackArray === null) {
+            $callStackArray = [];
         }
-        return new TagAttributes($renderArray, $logicalTag);
+        if (!is_array($callStackArray)) {
+            LogUtility::msg("The renderArray variable passed is not an array ($callStackArray)");
+            $callStackArray = [];
+        }
+        return new TagAttributes($callStackArray, $logicalTag);
     }
 
 
@@ -238,7 +283,7 @@ class TagAttributes
      * @param $value
      * @return string return a CSS property with pixel as unit if the unit is not specified
      */
-    public static function toQualifiedCssValue($value)
+    public static function toQualifiedCssValue($value): string
     {
         /**
          * A length value may be also `fit-content`
@@ -301,7 +346,7 @@ class TagAttributes
      * return
      *   * foo bar blue
      */
-     static function mergeClassNames(string $newNames, ?string $actualNames): string
+    static function mergeClassNames(string $newNames, ?string $actualNames): string
     {
         if (!is_string($newNames)) {
             LogUtility::msg("The value ($newNames) for the `class` attribute is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -311,7 +356,7 @@ class TagAttributes
          */
         $newValues = StringUtility::explodeAndTrim($newNames, " ");
         if (!empty($actualNames)) {
-            $actualValues = StringUtility::explodeAndTrim($actualNames, " ");
+            $actualValues = StringUtility::explodeAndTrim(trim($actualNames), " ");
         } else {
             $actualValues = [];
         }
@@ -357,12 +402,13 @@ class TagAttributes
      * Add an attribute with its value if the value is not empty
      * @param $attributeName
      * @param $attributeValue
+     * @return TagAttributes
      */
-    public function addComponentAttributeValue($attributeName, $attributeValue)
+    public function addComponentAttributeValue($attributeName, $attributeValue): TagAttributes
     {
 
         if (empty($attributeValue) && !is_bool($attributeValue)) {
-            LogUtility::msg("The value of the attribute ($attributeName) is empty. Use the nonEmpty function instead", LogUtility::LVL_MSG_WARNING, "support");
+            LogUtility::msg("The value of the attribute ($attributeName) is empty. Use the nonEmpty function instead if it's the wanted behavior", LogUtility::LVL_MSG_WARNING, "support");
         }
 
         $attLower = strtolower($attributeName);
@@ -437,17 +483,6 @@ class TagAttributes
         $this->componentToHtmlAttributeProcessingWasDone = true;
 
         /**
-         * Following the rule 2 to encode the unknown value
-         * We encode the component attribute (ie not the HTML attribute because
-         * they may have already encoded value)
-         * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
-         */
-
-        $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
-        $this->escapeComponentAttribute($originalArray);
-
-
-        /**
          * Width and height
          */
         Dimension::processWidthAndHeight($this);
@@ -464,6 +499,7 @@ class TagAttributes
          */
         Position::processStickiness($this);
         Position::processPosition($this);
+        Display::processDisplay($this);
 
         /**
          * Block processing
@@ -513,6 +549,11 @@ class TagAttributes
         }
 
         /**
+         * Tooltip
+         */
+        Tooltip::processTooltip($this);
+
+        /**
          * Add the type class used for CSS styling
          */
         StyleUtility::addStylingClass($this);
@@ -521,12 +562,12 @@ class TagAttributes
          * Add the style has html attribute
          * before processing
          */
-        $this->addHtmlAttributeValueIfNotEmpty("style", $this->getStyle());
+        $this->addOutputAttributeValueIfNotEmpty("style", $this->getStyle());
 
         /**
          * Create a non-sorted temporary html attributes array
          */
-        $tempHtmlArray = $this->htmlAttributes;
+        $tempHtmlArray = $this->outputAttributes;
 
         /**
          * copy the unknown component attributes
@@ -577,12 +618,19 @@ class TagAttributes
             foreach ($tempHtmlArray as $name => $value) {
                 $searchPattern = "^$pattern$";
                 if (preg_match("/$searchPattern/", $name)) {
-                    $sortedArray[$name] = $value;
                     unset($tempHtmlArray[$name]);
-                    if ($type == $once) {
-                        break;
+                    if ($type === $once) {
+                        $sortedArray[$name] = $value;
+                        continue 2;
+                    } else {
+                        $multipleValues[$name] = $value;
                     }
                 }
+            }
+            if (!empty($multipleValues)) {
+                ksort($multipleValues);
+                $sortedArray = array_merge($sortedArray, $multipleValues);
+                $multipleValues = [];
             }
         }
         foreach ($tempHtmlArray as $name => $value) {
@@ -595,9 +643,9 @@ class TagAttributes
                  * The value of an HTML attribute may be empty
                  * Example the wiki id of the root namespace
                  *
-                 * By default, {@link TagAttributes::addHtmlAttributeValue()}
+                 * By default, {@link TagAttributes::addOutputAttributeValue()}
                  * will not accept any value, it must be implicitly said with the
-                 * {@link TagAttributes::addHtmlAttributeValue()}
+                 * {@link TagAttributes::addOutputAttributeValue()}
                  *
                  */
                 $sortedArray[$name] = $value;
@@ -606,48 +654,36 @@ class TagAttributes
         }
         $this->finalHtmlArray = $sortedArray;
 
+        /**
+         * To Html attribute encoding
+         */
+        $this->finalHtmlArray = $this->encodeToHtmlValue($this->finalHtmlArray);
+
         return $this->finalHtmlArray;
 
     }
 
     /**
-     * HTML attribute are attributes
-     * that are not transformed to HTML
-     * (We make a difference between a high level attribute
-     * that we have in the written document set on a component
+     *
+     *
      * @param $key
      * @param $value
      * @return TagAttributes
      */
-    public function addHtmlAttributeValue($key, $value)
+    public function addOutputAttributeValue($key, $value): TagAttributes
     {
         if (blank($value)) {
-            LogUtility::msg("The value of the HTML attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("The value of the output attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
         }
-        /**
-         * We encode all HTML attribute
-         * because `Unescaped '<' not allowed in attributes values`
-         *
-         * except for url that have another encoding
-         * (ie only the query parameters value should be encoded)
-         */
-        $urlEncoding = ["href", "src", "data-src", "data-srcset"];
-        if (!in_array($key, $urlEncoding)) {
-            /**
-             * htmlencode the value `true` as `1`,
-             * We transform it first as string, then
-             */
-            $value = PluginUtility::htmlEncode(StringUtility::toString($value));
-        }
-        $this->htmlAttributes[$key] = $value;
+        $this->outputAttributes[$key] = $value;
         return $this;
     }
 
 
-    public function addHtmlAttributeValueIfNotEmpty($key, $value)
+    public function addOutputAttributeValueIfNotEmpty($key, $value)
     {
         if (!empty($value)) {
-            $this->addHtmlAttributeValue($key, $value);
+            $this->addOutputAttributeValue($key, $value);
         }
     }
 
@@ -706,7 +742,7 @@ class TagAttributes
      * @return array - an array of key string and value of the component attributes
      * This array is saved on the disk
      */
-    public function toCallStackArray()
+    public function toCallStackArray(): array
     {
         $array = array();
         $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
@@ -718,6 +754,12 @@ class TagAttributes
             if (!is_null($value)) {
                 $array[$key] = StringUtility::toString($value);
             }
+        }
+        /**
+         * html attribute may also be in the callstack
+         */
+        foreach ($this->outputAttributes as $key => $value) {
+            $array[$key] = StringUtility::toString($value);
         }
         $style = $this->getStyle();
         if ($style != null) {
@@ -745,7 +787,7 @@ class TagAttributes
 
 
     public
-    function hasStyleDeclaration($styleDeclaration)
+    function hasStyleDeclaration($styleDeclaration): bool
     {
         return isset($this->styleDeclaration[$styleDeclaration]);
     }
@@ -760,7 +802,7 @@ class TagAttributes
 
 
     public
-    function toHTMLAttributeString()
+    function toHTMLAttributeString(): string
     {
 
         $tagAttributeString = "";
@@ -804,7 +846,7 @@ class TagAttributes
     }
 
     public
-    function getComponentAttributes()
+    function getComponentAttributes(): array
     {
         return $this->toCallStackArray();
     }
@@ -819,7 +861,7 @@ class TagAttributes
     }
 
     public
-    function toHtmlEnterTag($htmlTag)
+    function toHtmlEnterTag($htmlTag): string
     {
 
         $enterTag = "<" . $htmlTag;
@@ -849,15 +891,29 @@ class TagAttributes
     }
 
     public
+    function toHtmlEmptyTag($htmlTag): string
+    {
+
+        $enterTag = "<" . $htmlTag;
+        $attributeString = $this->toHTMLAttributeString();
+        if (!empty($attributeString)) {
+            $enterTag .= " " . $attributeString;
+        }
+        return $enterTag . "/>";
+
+    }
+
+    public
     function getLogicalTag()
     {
         return $this->logicalTag;
     }
 
     public
-    function setLogicalTag($tag)
+    function setLogicalTag($tag): TagAttributes
     {
         $this->logicalTag = $tag;
+        return $this;
     }
 
     public
@@ -954,9 +1010,10 @@ class TagAttributes
     }
 
     public
-    function setType($type)
+    function setType($type): TagAttributes
     {
         $this->setComponentAttributeValue(TagAttributes::TYPE_KEY, $type);
+        return $this;
     }
 
     /**
@@ -967,8 +1024,12 @@ class TagAttributes
     function mergeWithCallStackArray($callStackArray)
     {
         foreach ($callStackArray as $key => $value) {
+
             if ($this->hasComponentAttribute($key)) {
-                $this->addComponentAttributeValue($key, $value);
+                $isMultipleAttributeValue = in_array($key, self::MULTIPLE_VALUES_ATTRIBUTES);
+                if ($isMultipleAttributeValue) {
+                    $this->addComponentAttributeValue($key, $value);
+                }
             } else {
                 $this->setComponentAttributeValue($key, $value);
             }
@@ -978,12 +1039,14 @@ class TagAttributes
 
     /**
      * @param $string
+     * @return TagAttributes
      */
     public
-    function removeAttributeIfPresent($string)
+    function removeAttributeIfPresent($string): TagAttributes
     {
         $this->removeComponentAttributeIfPresent($string);
         $this->removeHTMLAttributeIfPresent($string);
+        return $this;
 
     }
 
@@ -991,8 +1054,8 @@ class TagAttributes
     function removeHTMLAttributeIfPresent($string)
     {
         $lowerAtt = strtolower($string);
-        if (isset($this->htmlAttributes[$lowerAtt])) {
-            unset($this->htmlAttributes[$lowerAtt]);
+        if (isset($this->outputAttributes[$lowerAtt])) {
+            unset($this->outputAttributes[$lowerAtt]);
         }
     }
 
@@ -1046,10 +1109,10 @@ class TagAttributes
      * @param string $key add an html attribute with the empty string
      */
     public
-    function addEmptyHtmlAttributeValue($key)
+    function addEmptyOutputAttributeValue($key)
     {
 
-        $this->htmlAttributes[$key] = '';
+        $this->outputAttributes[$key] = '';
         return $this;
 
     }
@@ -1066,13 +1129,13 @@ class TagAttributes
      * @return mixed
      */
     public
-    function getBooleanValueAndRemove($attribute, $default = null)
+    function getBooleanValueAndRemoveIfPresent($attribute, $default = null)
     {
-        $value = $this->getValueAndRemove($attribute);
-        if ($value == null) {
+        $value = $this->getValueAndRemoveIfPresent($attribute);
+        if ($value === null) {
             return $default;
         } else {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            return DataType::toBoolean($value);
         }
     }
 
@@ -1088,20 +1151,37 @@ class TagAttributes
     }
 
     private
-    function hasHtmlAttribute($attribute)
+    function hasHtmlAttribute($attribute): bool
     {
-        return isset($this->htmlAttributes[$attribute]);
+        return isset($this->outputAttributes[$attribute]);
     }
 
     /**
-     * Component attribute are entered by the user and should be encoded
+     * Encoding should happen always to the target format output.
+     * ie HTML
+     *
+     * If it's user or not data.
+     *
+     * Sanitizing is completely useless. We follow the same principal than SQL parameters
+     *
+     * We  follows the rule 2 to encode the unknown value
+     * We encode the component attribute to the target output (ie HTML)
+     *
      * @param array $arrayToEscape
      * @param null $subKey
+     *
+     *
+     *
+     *
+     * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
+     *
+     * @return array
      */
     private
-    function escapeComponentAttribute(array $arrayToEscape, $subKey = null)
+    function encodeToHtmlValue(array $arrayToEscape, $subKey = null): array
     {
 
+        $returnedArray = [];
         foreach ($arrayToEscape as $name => $value) {
 
             $encodedName = PluginUtility::htmlEncode($name);
@@ -1111,30 +1191,79 @@ class TagAttributes
              */
             if (is_bool($value)) {
                 if ($subKey == null) {
-                    $this->componentAttributesCaseInsensitive[$encodedName] = $value;
+                    $returnedArray[$encodedName] = $value;
                 } else {
-                    $this->componentAttributesCaseInsensitive[$subKey][$encodedName] = $value;
+                    $returnedArray[$subKey][$encodedName] = $value;
                 }
                 continue;
             }
 
-            if (is_array($value)) {
-                $this->escapeComponentAttribute($value, $encodedName);
-            } else {
-
-                $value = PluginUtility::htmlEncode($value);
-                if ($subKey == null) {
-                    $this->componentAttributesCaseInsensitive[$encodedName] = $value;
-                } else {
-                    $this->componentAttributesCaseInsensitive[$subKey][$encodedName] = $value;
-                }
+            /**
+             *
+             * Browser bug in a srcset
+             *
+             * In the HTML attribute srcset (not in the img src), if we set,
+             * ```
+             * http://nico.lan/_media/docs/metadata/metadata_manager.png?w=355&amp;h=176&amp;tseed=1636624852&amp;tok=af396a 355w
+             * ```
+             * the request is encoded ***by the browser**** one more time and the server gets:
+             *   * `&amp;&amp;h  =   176`
+             *   * php create therefore the property
+             *      * `&amp;h  =   176`
+             *      * and note `h = 176`
+             */
+            $encodeValue = true;
+            if ($encodedName === "srcset" && !PluginUtility::isTest()) {
+                /**
+                 * Our test xhtml processor does not support non ampersand encoded character
+                 */
+                $encodeValue = false;
             }
+            if ($encodeValue) {
+                $value = PluginUtility::htmlEncode($value);
+            }
+            if ($subKey == null) {
+                $returnedArray[$encodedName] = $value;
+            } else {
+                $returnedArray[$subKey][$encodedName] = $value;
+            }
+
         }
+        return $returnedArray;
+
     }
 
     public function __toString()
     {
         return "TagAttributes";
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function getValueAsInteger(string $WIDTH_KEY, ?int $default = null): ?int
+    {
+        $value = $this->getValue($WIDTH_KEY, $default);
+        if ($value === null) {
+            return null;
+        }
+        return DataType::toInteger($value);
+    }
+
+    public function hasClass(string $string): bool
+    {
+        return strpos($this->getClass(), $string) !== false;
+    }
+
+    public function getDefaultStyleClassShouldBeAdded(): bool
+    {
+        return $this->defaultStyleClassShouldBeAdded;
+    }
+
+    public function setDefaultStyleClassShouldBeAdded(bool $bool): TagAttributes
+    {
+        $this->defaultStyleClassShouldBeAdded = $bool;
+        return $this;
     }
 
 

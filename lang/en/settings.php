@@ -4,11 +4,12 @@ require_once(__DIR__ . '/../../ComboStrap/PluginUtility.php');
 
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
+use ComboStrap\ColorRgb;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
 use ComboStrap\Identity;
 use ComboStrap\LazyLoad;
-use ComboStrap\LinkUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MediaLink;
 use ComboStrap\PageImages;
@@ -122,8 +123,8 @@ $lang[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = Plu
  * Link
  */
 $lang[syntax_plugin_combo_link::CONF_DISABLE_LINK] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Disable the ComboStrap link component";
-$lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
-$lang[LinkUtility::CONF_PREVIEW_LINK] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Add a page preview on all internal links when a user is hovering";
+$lang[MarkupRef::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
+$lang[MarkupRef::CONF_PREVIEW_LINK] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Add a page preview on all internal links when a user is hovering";
 
 /**
  * Twitter
@@ -259,4 +260,15 @@ $lang[syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = Plu
  */
 $lang[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_heading::CANONICAL, "If unchecked, the combo wiki heading is disabled (You cannot add extra formatting syntax)");
 
+/**
+ * Colors
+ */
+$lang[ColorRgb::PRIMARY_COLOR_CONF]= PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Set the primary branding color");
+$lang[ColorRgb::SECONDARY_COLOR_CONF]= PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Set the secondary branding color");
+$lang[ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF ]= PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Enable or disable the branding colors inheritance");
+
+/**
+ * Highlight
+ */
+$lang[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_highlightwiki::CANONICAL, "Enable or disable the wiki highlight component");
 ?>

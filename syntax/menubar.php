@@ -182,7 +182,7 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {
@@ -224,7 +224,7 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
                             $attributes["class"] .= ' ' . $fixedTopClass . '';
                             $fixedTopSnippetId = self::TAG."-".$fixedTopClass;
                             // See http://stackoverflow.com/questions/17181355/boostrap-using-fixed-navbar-and-anchor-tags-to-jump-to-sections
-                            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar($fixedTopSnippetId);
+                            PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot($fixedTopSnippetId);
                         }
                         unset($attributes["position"]);
                     }

@@ -10,6 +10,8 @@ namespace ComboStrap;
 class StringUtility
 {
 
+    public const SEPARATORS_CHARACTERS = [".", "(", ")", ",", "-"];
+
 
     /**
      * Generate a text with a max length of $length
@@ -235,6 +237,40 @@ class StringUtility
     public static function startWiths($string, $prefix)
     {
         return strrpos($string, $prefix) === 0;
+    }
+
+    /**
+     * @param $string
+     * @param null $separatorsCharacters - characters that will separate the words
+     * @return array a words
+     */
+    public static function getWords($string, $separatorsCharacters = null): array
+    {
+        // Reserved characters to space
+        if ($separatorsCharacters === null) {
+            $separatorsCharacters = StringUtility::getAllSeparators();
+        }
+        if (!is_array($separatorsCharacters)) {
+            LogUtility::msg("The separators characters are not an array, default characters used");
+            $separatorsCharacters = StringUtility::getAllSeparators();
+        }
+
+        $string = str_replace($separatorsCharacters, " ", $string);
+        // Doubles spaces to space
+        $string = preg_replace("/\s{2,}/", " ", $string);
+        // Trim space
+        $string = trim($string);
+
+        return explode(" ", $string);
+    }
+
+    private static function getAllSeparators(): array
+    {
+        return array_merge(
+            Url::RESERVED_WORDS,
+            LocalPath::RESERVED_WINDOWS_CHARACTERS,
+            StringUtility::SEPARATORS_CHARACTERS
+        );
     }
 
 }

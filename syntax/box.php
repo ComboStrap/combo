@@ -25,7 +25,7 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'container';
     }
@@ -92,11 +92,11 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
                 $defaultAttributes = array();
-                $inlineAttributes = PluginUtility::getTagAttributes($match);
-                $attributes = PluginUtility::mergeAttributes($inlineAttributes, $defaultAttributes);
+                $knownTypes = [];
+                $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED :

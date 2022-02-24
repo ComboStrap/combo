@@ -29,8 +29,11 @@ class action_plugin_combo_toolbar extends DokuWiki_Action_Plugin
     function handle_toolbar(&$event, $param)
     {
 
-
-        $imageBase = '../../plugins/' . Resources::getRelativeImagesDirectory();
+        /**
+         * Relative path against
+         * DOKUBASE/lib/images/toolbar/
+         */
+        $imageBase = '../../plugins/combo/resources/images';
 
         $unit = array(
             'type' => 'format',

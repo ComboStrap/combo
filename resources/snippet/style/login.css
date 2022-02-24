@@ -57,3 +57,8 @@
     font-weight: 500;
     line-height: 1.2;
 }
+
+.form-login .form-login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}

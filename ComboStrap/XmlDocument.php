@@ -56,7 +56,10 @@ class XmlDocument
      * XmlFile constructor.
      * @param $text
      * @param string $type - HTML or not
-     * @throws ExceptionCombo
+     * @throws ExceptionCombo - if the file does not exist or is not valid
+     *
+     * Getting the width of an error HTML document if the file was downloaded
+     * from a server has no use at all
      */
     public function __construct($text, string $type = self::XML_TYPE)
     {
@@ -231,11 +234,26 @@ class XmlDocument
         return new XmlDocument($content, $mime);
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
-    static function createXmlDocFromMarkup($string): XmlDocument
+    static function createXmlDocFromMarkup($string, $asHtml = false): XmlDocument
     {
+
         $mime = XmlDocument::XML_TYPE;
+        if ($asHtml) {
+            $mime = XmlDocument::HTML_TYPE;
+        }
         return new XmlDocument($string, $mime);
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function createHtmlDocFromMarkup($markup): XmlDocument
+    {
+        return self::createXmlDocFromMarkup($markup, true);
     }
 
     public
@@ -259,7 +277,7 @@ class XmlDocument
     public function getRootAttributeValue($name): ?string
     {
         $value = $this->xmlDom->documentElement->getAttribute($name);
-        if($value===""){
+        if ($value === "") {
             return null;
         }
         return $value;
@@ -393,11 +411,20 @@ class XmlDocument
      * @param $query
      * @param string $defaultNamespace
      * @return DOMNodeList|false
+     *
+     * Note that this is possible to do evaluation to return a string instead
+     * https://www.php.net/manual/en/domxpath.evaluate.php
      */
     public
     function xpath($query)
     {
         $xpath = new DOMXPath($this->getXmlDom());
+
+        /**
+         * Prefix mapping
+         * It is necessary to use xpath to handle documents which have default namespaces.
+         * The xpath expression will search for items with no namespace by default.
+         */
         foreach ($this->getDocNamespaces() as $prefix => $namespaceUri) {
             /**
              * You can't register an empty prefix
@@ -442,7 +469,7 @@ class XmlDocument
             $childNode = &$this->getXmlDom()->documentElement->childNodes[$i];
             if ($childNode->nodeName == $nodeName) {
                 $result = $this->getXmlDom()->documentElement->removeChild($childNode);
-                if ($result === false) {
+                if ($result == false) {
                     throw new \RuntimeException("Not able to delete the child node $nodeName");
                 }
                 break;
@@ -583,6 +610,45 @@ class XmlDocument
         if ($result === false) {
             LogUtility::msg("Not able to delete the attribute $attributeName of the node element $nodeElement in the Xml document $this");
         }
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function queryXpath(string $string): ?DOMElement
+    {
+
+        $elements = $this->queryXpaths($string);
+        if ($elements !== null && sizeof($elements) > 0) {
+            return $elements[0];
+        }
+        return null;
+    }
+
+    /**
+     * @return null|DOMElement[]
+     * @throws ExceptionCombo
+     */
+    public function queryXpaths(string $string): ?array
+    {
+        $nodes = $this->xpath($string);
+        if ($nodes === false) {
+            throw new ExceptionCombo("Bad xpath expression ($string)");
+        }
+        if ($nodes->count() === 0) {
+            return null;
+        }
+        $elements = null;
+        for ($i = 0; $i < $nodes->count(); $i++) {
+            $element = $nodes->item($i);
+            if (!($element instanceof DOMElement)) {
+                throw new ExceptionCombo("The xpath expression has selected a Node that is not an element");
+            }
+            $elements[] = $element;
+
+        }
+
+        return $elements;
     }
 
 

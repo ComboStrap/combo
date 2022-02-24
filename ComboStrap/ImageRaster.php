@@ -95,40 +95,21 @@ class ImageRaster extends Image
     }
 
 
-    public function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML)
-    {
-        return $this->getUrlAtBreakpoint($ampersand);
-    }
-
     /**
-     * In the HTML attribute srcset (not in the img src), if we set,
-     * ```
-     * http://nico.lan/_media/docs/metadata/metadata_manager.png?w=355&amp;h=176&amp;tseed=1636624852&amp;tok=af396a 355w
-     * ```
-     * the request is encoded by the browser one more time and the server gets understand
-     *   * `&amp;&amp;h  =   176`
-     *   * php create therefore the property
-     *      * `&amp;h  =   176`
-     *      * and note `h = 176`
-     *
-     * @param $breakpoint
-     * @return false|string|null
+     * @throws ExceptionCombo
      */
-    public function getUrlForSrcSetAtBreakpoint($breakpoint)
+    public function getUrl()
     {
-        if (PluginUtility::isTest()) {
-            // The test library does not support ampersand character
-            return $this->getUrlAtBreakpoint(DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML, $breakpoint);
-        }
-        return $this->getUrlAtBreakpoint(DokuwikiUrl::AMPERSAND_CHARACTER, $breakpoint);
+        return $this->getUrlAtBreakpoint();
     }
 
+
     /**
-     * @param string $ampersand - do we encode & or not (in css, you do not, in html, you do)
      * @param int|null $breakpointWidth - the breakpoint width - use for responsive image
      * @return string|null
+     * @throws ExceptionCombo
      */
-    public function getUrlAtBreakpoint(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML, int $breakpointWidth = null)
+    public function getUrlAtBreakpoint(int $breakpointWidth = null)
     {
 
         /**
@@ -190,11 +171,14 @@ class ImageRaster extends Image
             LogUtility::msg("The Url of a image not in the media library is not yet supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return "";
         }
-        return ml($this->getPath()->getDokuwikiId(), $att, $direct, $ampersand, true);
+        return ml($this->getPath()->getDokuwikiId(), $att, $direct, DokuwikiUrl::AMPERSAND_CHARACTER, true);
 
 
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function getAbsoluteUrl()
     {

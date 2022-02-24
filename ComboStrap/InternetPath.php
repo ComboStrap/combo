@@ -15,6 +15,7 @@ class InternetPath extends PathAbs
 
 
     public const scheme = "internet";
+    const PATH_SEP = "/";
 
     private $path;
 
@@ -58,10 +59,10 @@ class InternetPath extends PathAbs
         $names = explode("/", $this->path);
         // with the scheme and the hostname, the names start at the third position
         $size = sizeof($names);
-        if($size<=3){
+        if ($size <= 3) {
             return [];
         }
-        return array_slice($names,3);
+        return array_slice($names, 3);
 
     }
 
@@ -71,7 +72,7 @@ class InternetPath extends PathAbs
     }
 
 
-    function toString()
+    function toString(): string
     {
         return $this->path;
     }
@@ -81,4 +82,9 @@ class InternetPath extends PathAbs
         return new InternetPath($this->path);
     }
 
+
+    function resolve(string $name): InternetPath
+    {
+        return self::create($this->path . self::PATH_SEP . $name);
+    }
 }

@@ -40,15 +40,11 @@ class Position
                 $stickyClass = self::STICKY_CLASS;
                 $attributes->addClassName($stickyClass);
                 $snippetManager = PluginUtility::getSnippetManager();
-                $snippetManager->upsertTagsForBar(self::STICKY,
-                    array(
-                        "script" => [
-                            array(
-                                "src" => "https://cdn.jsdelivr.net/npm/sticksy@0.2.0/dist/sticksy.min.js",
-                                "integrity" => "sha256-H6uQ878/jyt6w1oBNhL6s01iAfWxACrWvVXCBjZsrGM=",
-                                "crossorigin" => "anonymous"
-                            )]
-                    ));
+                $snippetManager->attachJavascriptLibraryForSlot(
+                    self::STICKY,
+                    "https://cdn.jsdelivr.net/npm/sticksy@0.2.0/dist/sticksy.min.js",
+                    "sha256-H6uQ878/jyt6w1oBNhL6s01iAfWxACrWvVXCBjZsrGM="
+                );
                 /**
                  * If top bar
                  */
@@ -58,8 +54,8 @@ let topSpacing = fixedNavbar.offsetHeight;
 var stickyElements = Sticksy.initializeAll('.$stickyClass',{topSpacing: topSpacing})
 EOF;
                 $snippetManager
-                    ->attachJavascriptSnippetForBar(self::STICKY)
-                    ->setContent($jsSnippet);
+                    ->attachInternalJavascriptForSlot(self::STICKY)
+                    ->setInlineContent($jsSnippet);
             }
 
         }
@@ -69,13 +65,13 @@ EOF;
     /**
      * @param TagAttributes $attributes
      */
-    public static function processPosition(&$attributes)
+    public static function processPosition(TagAttributes &$attributes)
     {
         if ($attributes->hasComponentAttribute(self::POSITION_ATTRIBUTE)) {
             $position = strtolower($attributes->getValueAndRemove(self::POSITION_ATTRIBUTE));
             if (Bootstrap::getBootStrapMajorVersion() < Bootstrap::BootStrapFiveMajorVersion) {
                 $snippetManager = PluginUtility::getSnippetManager();
-                $snippetManager->attachCssSnippetForBar(self::POSITION_SNIPPET_ID);
+                $snippetManager->attachCssInternalStyleSheetForSlot(self::POSITION_SNIPPET_ID);
             }
 
             // Class value comes from
@@ -151,6 +147,6 @@ EOF;
     private static function addQuartileCss()
     {
         $snippetManager = PluginUtility::getSnippetManager();
-        $snippetManager->attachCssSnippetForBar(self::POSITION_QUARTILE_SNIPPET_ID);
+        $snippetManager->attachCssInternalStyleSheetForSlot(self::POSITION_QUARTILE_SNIPPET_ID);
     }
 }

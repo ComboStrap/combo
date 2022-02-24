@@ -109,4 +109,13 @@ class TocUtility
         }
 
     }
+
+    /**
+     * @param int $int
+     */
+    public static function setTocMinHeading(int $int)
+    {
+        global $conf;
+        $conf['tocminheads'] = $int;
+    }
 }

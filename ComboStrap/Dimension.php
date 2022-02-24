@@ -49,12 +49,13 @@ class Dimension
      * and it's also passed in the fetch url
      */
     public const RATIO_ATTRIBUTE = "ratio";
+    const ZOOM_ATTRIBUTE = "zoom";
 
 
     /**
      * @param TagAttributes $attributes
      */
-    public static function processWidthAndHeight(&$attributes)
+    public static function processWidthAndHeight(TagAttributes &$attributes)
     {
         $widthName = self::WIDTH_KEY;
         if ($attributes->hasComponentAttribute($widthName)) {
@@ -161,11 +162,11 @@ class Dimension
                                 /**
                                  * Css of the button and other standard attribute
                                  */
-                                PluginUtility::getSnippetManager()->attachCssSnippetForBar("height-toggle");
+                                PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("height-toggle");
                                 /**
                                  * Set the color dynamically to the color of the parent
                                  */
-                                PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("height-toggle");
+                                PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot("height-toggle");
                                 /**
                                  * The height when there is not the show class
                                  * is the original height
@@ -176,7 +177,7 @@ class Dimension
   transition: height .35s ease;
 }
 EOF;
-                                PluginUtility::getSnippetManager()->attachCssSnippetForBar("height-toggle-show", $css);
+                                PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("height-toggle-show", $css);
                                 $bootstrapDataNameSpace = Bootstrap::getDataNamespace();
                                 $button = <<<EOF
 <button class="height-toggle-combo" data$bootstrapDataNameSpace-toggle="collapse" data$bootstrapDataNameSpace-target="#$id" aria-expanded="false"></button>
@@ -234,7 +235,7 @@ EOF;
             }
             if (!$controlFound) {
                 $toggleOnClickId = "height-toggle-onclick";
-                PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar($toggleOnClickId);
+                PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot($toggleOnClickId);
                 $openingCall->addClassName("{$toggleOnClickId}-combo");
                 $openingCall->addCssStyle("cursor", "pointer");
             }
@@ -248,7 +249,23 @@ EOF;
      */
     public static function toPixelValue($value): int
     {
-        $targetValue = str_replace("px", "", $value);
+
+        preg_match("/[a-z]/i", $value, $matches, PREG_OFFSET_CAPTURE);
+        $unit = null;
+        if (sizeof($matches) > 0) {
+            $firstPosition = $matches[0][1];
+            $unit = strtolower(substr($value, $firstPosition));
+            $value = DataType::toFloat((substr($value, 0, $firstPosition)));
+        }
+        switch ($unit) {
+            case "rem":
+                $remValue = Site::getRem();
+                $targetValue = $value * $remValue;
+                break;
+            case "px":
+            default:
+                $targetValue = $value;
+        }
         return DataType::toInteger($targetValue);
     }
 

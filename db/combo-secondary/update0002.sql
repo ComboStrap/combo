@@ -1,0 +1,12 @@
+-- Log of cache deletion
+CREATE TABLE CACHE_LOG (
+  TIMESTAMP    TIMESTAMP,
+  EVENT        TEXT,
+  PATH         TEXT,
+  EXTENSION    TEXT,
+  OPERATION    TEXT,
+  MESSAGE      TEXT
+);
+
+create index if not exists CACHE_LOG_TIMESTAMP ON CACHE_LOG (TIMESTAMP DESC);
+

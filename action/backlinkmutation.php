@@ -1,8 +1,12 @@
 <?php
 
+use ComboStrap\CacheDependencies;
+use ComboStrap\CacheLog;
+use ComboStrap\CacheManager;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
+use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
 use ComboStrap\PagePath;
@@ -19,7 +23,7 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
 {
 
 
-    public const BACKLINK_MUTATION_EVENT_NAME = 'BACKLINK_MUTATION';
+    public const BACKLINK_MUTATION_EVENT_NAME = 'backlink_mutation';
 
 
     public function register(Doku_Event_Handler $controller)
@@ -32,7 +36,7 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         $controller->register_hook(MetadataDokuWikiStore::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'create_backlink_mutation', array());
 
         /**
-         * process the async event
+         * process the Async event
          */
         $controller->register_hook(self::BACKLINK_MUTATION_EVENT_NAME, 'AFTER', $this, 'handle_backlink_mutation');
 
@@ -46,11 +50,35 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
 
         $data = $event->data;
         $pagePath = $data[PagePath::getPersistentName()];
-        $page = Page::createPageFromQualifiedPath($pagePath);
+        $reference = Page::createPageFromQualifiedPath($pagePath);
 
-        // delete analytics
-        FileSystems::deleteIfExists($page->getAnalyticsDocument()->getCachePath());
-        $page->getDatabasePage()->replicateAnalytics();
+        if ($reference->isSecondarySlot()) {
+            return;
+        }
+
+        /**
+         * Delete and recompute analytics
+         */
+        CacheLog::deleteCacheIfExistsAndLog(
+            $reference->getAnalyticsDocument(),
+            self::BACKLINK_MUTATION_EVENT_NAME,
+            "Backlink mutation"
+        );
+        try {
+            $reference->getDatabasePage()->replicateAnalytics();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Backlink Mutation: Error while trying to replicate the analytics. Error: {$e->getMessage()}");
+        }
+
+        /**
+         * Render the (footer slot) if it has a backlink dependency
+         */
+        CacheDependencies::reRenderSecondarySlotsIfNeeded(
+            $pagePath,
+            CacheDependencies::BACKLINKS_DEPENDENCY,
+            self::BACKLINK_MUTATION_EVENT_NAME
+        );
+
 
 
     }
@@ -87,23 +115,19 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
                 if (isset($afterReferences[$beforeReference])) {
                     unset($afterReferences[$beforeReference]);
                 } else {
-                    Event::createEvent(action_plugin_combo_backlinkmutation::BACKLINK_MUTATION_EVENT_NAME, [PagePath::getPersistentName() => $beforeReference]);
-                    /**
-                     * Delete the analytics
-                     */
-                    FileSystems::deleteIfExists(Page::createPageFromQualifiedPath($beforeReference)->getAnalyticsDocument()->getCachePath());
+                    Event::createEvent(
+                        action_plugin_combo_backlinkmutation::BACKLINK_MUTATION_EVENT_NAME,
+                        [
+                            PagePath::getPersistentName() => $beforeReference
+                        ]
+                    );
                 }
             }
         }
         foreach ($afterReferences as $newReference) {
-            Page::createPageFromQualifiedPath($newReference)
-                ->getAnalyticsDocument()
-                ->deleteIfExists();
-            Event::createEvent(action_plugin_combo_backlinkmutation::BACKLINK_MUTATION_EVENT_NAME, [PagePath::getPersistentName() => $newReference]);
-            /**
-             * Delete the analytics
-             */
-            FileSystems::deleteIfExists(Page::createPageFromQualifiedPath($newReference)->getAnalyticsDocument()->getCachePath());
+            Event::createEvent(
+                action_plugin_combo_backlinkmutation::BACKLINK_MUTATION_EVENT_NAME,
+                [PagePath::getPersistentName() => $newReference]);
         }
 
 

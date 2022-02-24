@@ -142,12 +142,12 @@ class Message
     function toHtmlBox(): string
     {
 
-        PluginUtility::getSnippetManager()->upsertCssSnippetForRequest(self::TAG);
+        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
         $message = "";
 
         $tagAttributes = TagAttributes::createEmpty("message")
             ->addClassName("alert")
-            ->addHtmlAttributeValue("role", "alert");
+            ->addOutputAttributeValue("role", "alert");
         if ($this->class !== null) {
             $tagAttributes->addClassName($this->class);
         }
@@ -238,7 +238,7 @@ EOF;
     public function getDocumentationHyperLink(): ?string
     {
         if ($this->canonical !== null) {
-            $canonicalPath = DokuPath::createUnknownFromIdOrPath($this->canonical);
+            $canonicalPath = DokuPath::createFromUnknownRoot($this->canonical);
             $label = $canonicalPath->toLabel();
             return PluginUtility::getDocumentationHyperLink($this->canonical, $label, false);
         } else {

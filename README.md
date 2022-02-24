@@ -32,6 +32,9 @@
   * [Supports of International Language](https://combostrap.com/lang)
   * [Action Rail navigation bar](https://combostrap.com/railbar)
   * [Templating](https://combostrap.com/template)
+  * [Carrousel](https://combostrap.com/carrousel)
+  * [Image Gallery](https://combostrap.com/carrousel)
+
 
 
 And more. Discover them at [ComboStrap](https://combostrap.com)

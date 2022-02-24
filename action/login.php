@@ -10,6 +10,7 @@
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\Snippet;
 use dokuwiki\Menu\Item\Login;
 
@@ -64,22 +65,14 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
          * We print before the forms
          * to avoid a FOUC
          */
-        $loginCss = Snippet::createCssSnippet(self::TAG);
-        $content = $loginCss->getContent();
-        $class = $loginCss->getClass();
-        $cssHtml = <<<EOF
-<style class="$class">
-$content
-</style>
-EOF;
-        print $cssHtml;
+        print Identity::getHtmlStyleTag(self::TAG);
 
 
         /**
          * @var Doku_Form $form
          */
         $form = &$event->data;
-        $form->params["class"] = self::FORM_LOGIN_CLASS;
+        $form->params["class"] = Identity::FORM_IDENTITY_CLASS." ". self::FORM_LOGIN_CLASS;
 
 
         /**

@@ -12,6 +12,7 @@ window.addEventListener("DOMContentLoaded", function () {
                 let pageId = JSINFO.id;
                 let modalQualityMessageId = combo.toHtmlId(`combo-quality-message-page-${pageId}`);
                 let qualityMessageModal = combo.getOrCreateModal(modalQualityMessageId)
+                    .addDialogClass("modal-fullscreen-md-down");
 
                 /**
                  * Creating the form

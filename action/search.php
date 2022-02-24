@@ -1,6 +1,7 @@
 <?php
 
-use ComboStrap\LinkUtility;
+use ComboStrap\ExceptionCombo;
+use ComboStrap\MarkupRef;
 use ComboStrap\Mime;
 use ComboStrap\Page;
 
@@ -78,8 +79,12 @@ class action_plugin_combo_search extends DokuWiki_Action_Plugin
         $data = [];
         foreach ($pages as $id => $title) {
             $page = Page::createPageFromId($id);
-            $linkUtility = LinkUtility::createFromPageId($id);
-            $html = $linkUtility->renderOpenTag() . $page->getTitleOrDefault() . $linkUtility->renderClosingTag();
+            $linkUtility = MarkupRef::createFromPageId($id);
+            try {
+                $html = $linkUtility->toAttributes()->toHtmlEnterTag("a") . $page->getTitleOrDefault() . "</a>";
+            } catch (ExceptionCombo $e) {
+                $html = "Unable to render the link for the page ($id). Error: {$e->getMessage()}";
+            }
             $data[] = $html;
         }
         $dataJson = json_encode($data);

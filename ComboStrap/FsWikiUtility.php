@@ -24,7 +24,7 @@ class FsWikiUtility
     /**
      * Determine if the current page is a sidebar (a bar)
      * @return bool
-     * TODO: Duplicate of {@link Page::isSlot()}
+     * TODO: Duplicate of {@link Page::isSecondarySlot()}
      */
     public static function isSideBar()
     {
@@ -48,7 +48,7 @@ class FsWikiUtility
      * @param string $path The container of the pages
      * @return array An array of the pages for the namespace
      */
-    static function getChildren($path)
+    static function getChildren(string $path): array
     {
         require_once(__DIR__ . '/../../../../inc/search.php');
         global $conf;
@@ -126,9 +126,9 @@ class FsWikiUtility
 
     /**
      * @param $namespacePath
-     * @return string|null the page path of the parent or null if it does not exist
+     * @return Page|null the page path of the parent or null if it does not exist
      */
-    public static function getParentPagePath($namespacePath)
+    public static function getParentPagePath($namespacePath): ?Page
     {
 
         /**
@@ -149,7 +149,8 @@ class FsWikiUtility
             } else {
                 $parentNamespacePath = substr($namespacePath, 0, $pos);
             }
-            return self::getHomePagePath($parentNamespacePath);
+            return Page::getHomePageFromNamespace($parentNamespacePath);
+
         } else {
             return null;
         }

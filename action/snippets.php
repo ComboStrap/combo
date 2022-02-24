@@ -1,14 +1,13 @@
 <?php
 
 use ComboStrap\CacheManager;
-use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
+use ComboStrap\HtmlDocument;
 use ComboStrap\LogUtility;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\Resources;
-use ComboStrap\Snippet;
+use ComboStrap\RenderUtility;
 use ComboStrap\SnippetManager;
-use dokuwiki\Cache\CacheParser;
 
 if (!defined('DOKU_INC')) die();
 
@@ -20,6 +19,8 @@ if (!defined('DOKU_INC')) die();
  */
 class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 {
+
+    const CLASS_SNIPPET_IN_CONTENT = "snippet-content-combo";
 
     /**
      * @var bool - to trace if the header output was called
@@ -77,7 +78,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * Fighting the fact that in 7.2,
          * there is still a cache
          */
-        SnippetManager::init();
+        SnippetManager::reset();
 
     }
 
@@ -126,74 +127,40 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         $this->headerOutputWasCalled = true;
 
         $snippetManager = PluginUtility::getSnippetManager();
-        $cacheManager = CacheManager::getOrCreate();
 
         /**
-         * For each processed bar in the page
-         *   * retrieve the snippets from the cache or store the process one
-         *   * add the cache information in meta
+         * For each processed slot in the page, retrieve the snippets
          */
-        $slots = $cacheManager->getXhtmlCacheSlotResultsForRequestedPage();
-        foreach ($slots as $slotId => $servedFromCache) {
+        $cacheReporters = CacheManager::getOrCreate()->getCacheResults();
+        if ($cacheReporters !== null) {
+            foreach ($cacheReporters as $cacheReporter) {
 
-            /**
-             * The local file location of the slot
-             */
-            $slotLocalFilePath = DokuPath::createPagePathFromId($slotId)
-                ->toLocalPath()
-                ->toAbsolutePath()
-                ->toString();
+                foreach ($cacheReporter->getResults() as $report) {
 
-            /**
-             * Using a cache parser, set the page id and will trigger
-             * the parser cache use event in order to log/report the cache usage
-             * At {@link action_plugin_combo_cache::logCacheUsage()}
-             */
-            $cache = new CacheParser($slotId, $slotLocalFilePath, "snippet.json");
-            $cache->setEvent('PARSER_CACHE_USE'); // cache parser use already this event, just FYI
-            $dependencies = array(
-                "files" => [
-                    $slotLocalFilePath,
-                    Resources::getComboHome() . "/plugin.info.txt"
-                ]
-            );
-
-            // if the bar was served from the cache
-            if ($servedFromCache && $cache->useCache($dependencies)) {
-
-                // Retrieve snippets from previous run
-                $data = $cache->retrieveCache();
-                if (!empty($data)) {
-
-                    $jsonDecodeSnippets = json_decode($data, true);
-                    $nativeSnippets = [];
-                    foreach ($jsonDecodeSnippets as $type => $snippets) {
-                        foreach ($snippets as $snippetId => $snippetArray) {
-                            try {
-                                $nativeSnippets[$type][$snippetId] = Snippet::createFromJson($snippetArray);
-                            } catch (ExceptionCombo $e) {
-                                LogUtility::msg("The snippet json array cannot be build into a snippet object. " . $e->getMessage());
-                            }
-                        }
+                    if ($report->getMode() !== HtmlDocument::mode) {
+                        continue;
                     }
-                    $snippetManager->addSnippetsFromCacheForBar($slotId, $nativeSnippets);
+
+                    $slotId = $report->getSlotId();
+                    Page::createPageFromId($slotId)
+                        ->getHtmlDocument()
+                        ->loadSnippets();
 
                 }
 
-            } else {
-                $jsonDecodeSnippets = $snippetManager->getSnippetsForBar($slotId);
-                if ($jsonDecodeSnippets !== null) {
-                    $data1 = json_encode($jsonDecodeSnippets);
-                    $cache->storeCache($data1);
-                }
+
             }
-
         }
-
         /**
          * Snippets
+         * (Slot and request snippets)
          */
-        $allSnippets = $snippetManager->getSnippets();
+        try {
+            $allSnippets = $snippetManager->getAllSnippetsToDokuwikiArray();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error: We couldn't add the snippets in the head. Error: {$e->getMessage()}");
+            return;
+        }
         foreach ($allSnippets as $tagType => $tags) {
 
             foreach ($tags as $tag) {
@@ -226,33 +193,75 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         }
 
         /**
-         * Run only if the header output was already called
+         * Add snippet in the content
+         *  - if the header output was already called
+         *  - if this is not a page rendering (ie an admin rendering)
+         * for instance, the upgrade plugin call {@link p_cached_output()} on local file
          */
-        if ($this->headerOutputWasCalled) {
+        global $ACT;
+        if ($ACT === RenderUtility::DYNAMIC_RENDERING) {
+            return;
+        }
+        $putSnippetInContent =
+            $this->headerOutputWasCalled
+            ||
+            ($ACT !== "show" && $ACT !== null); // admin page rendering
+        if ($putSnippetInContent) {
 
             $snippetManager = PluginUtility::getSnippetManager();
-
             $xhtmlContent = &$event->data[1];
-            $snippets = $snippetManager->getSnippets();
-            foreach ($snippets as $tagType => $tags) {
+            try {
+                $snippets = $snippetManager->getAllSnippetsToDokuwikiArray();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("Error: We couldn't add the snippets in the content. Error: {$e->getMessage()}");
+                return;
+            }
+            if (sizeof($snippets) > 0) {
 
-                foreach ($tags as $tag) {
-                    $xhtmlContent .= DOKU_LF . "<$tagType";
-                    $attributes = "";
-                    $content = null;
-                    foreach ($tag as $attributeName => $attributeValue) {
-                        if ($attributeName != "_data") {
-                            $attributes .= " $attributeName=\"$attributeValue\"";
-                        } else {
-                            $content = $attributeValue;
+                $class = self::CLASS_SNIPPET_IN_CONTENT;
+                $xhtmlContent .= "<div class=\"$class\">\n";
+                foreach ($snippets as $htmlElement => $tags) {
+
+                    foreach ($tags as $tag) {
+                        $xhtmlContent .= DOKU_LF . "<$htmlElement";
+                        $attributes = "";
+                        $content = null;
+
+                        /**
+                         * This code runs in editing mode
+                         * or if the template is not strap
+                         * No preload is then supported
+                         */
+                        if ($htmlElement === "link") {
+                            $relValue = $tag["rel"];
+                            $relAs = $tag["as"];
+                            if ($relValue === "preload") {
+                                if ($relAs === "style") {
+                                    $tag["rel"] = "stylesheet";
+                                    unset($tag["as"]);
+                                }
+                            }
                         }
+
+                        /**
+                         * Print
+                         */
+                        foreach ($tag as $attributeName => $attributeValue) {
+                            if ($attributeName !== "_data") {
+                                $attributes .= " $attributeName=\"$attributeValue\"";
+                            } else {
+                                $content = $attributeValue;
+                            }
+                        }
+                        $xhtmlContent .= "$attributes>";
+                        if (!empty($content)) {
+                            $xhtmlContent .= $content;
+                        }
+                        $xhtmlContent .= "</$htmlElement>" . DOKU_LF;
                     }
-                    $xhtmlContent .= "$attributes>";
-                    if (!empty($content)) {
-                        $xhtmlContent .= $content;
-                    }
-                    $xhtmlContent .= "</$tagType>" . DOKU_LF;
+
                 }
+                $xhtmlContent .= "</div>\n";
 
             }
 

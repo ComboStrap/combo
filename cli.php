@@ -99,7 +99,7 @@ php ./bin/plugin.php combo metadata-to-database /namespace/my-page
 
 Animal: If you want to use it for an animal farm, you need to set first the animal directory name in a environment variable
 ```bash
-set animal=animal-directory-name
+animal=animal-directory-name php ./bin/plugin.php combo
 ```
 
 EOF;
@@ -161,8 +161,10 @@ EOF;
 
 
         if(isset($_REQUEST['animal'])){
+            // on linux
             echo "Animal detected: ".$_REQUEST['animal']."\n";
         } else {
+            // on windows
             echo "No Animal detected\n";
             echo "Conf: ".DOKU_CONF."\n";
         }
@@ -255,6 +257,8 @@ EOF;
         $totalNumberOfPages = sizeof($pages);
         while ($pageArray = array_shift($pages)) {
             $id = $pageArray['id'];
+            global $ID;
+            $ID = $id;
             /**
              * Indexing the page start the database replication
              * See {@link action_plugin_combo_fulldatabasereplication}
@@ -415,6 +419,8 @@ EOF;
         $notChangedCounter = 0;
         while ($pageArray = array_shift($pages)) {
             $id = $pageArray['id'];
+            global $ID;
+            $ID = $id;
             $page = Page::createPageFromId($id);
             $pageCounter++;
             LogUtility::msg("Processing page {$id} ($pageCounter / $totalNumberOfPages) ", LogUtility::LVL_MSG_INFO);

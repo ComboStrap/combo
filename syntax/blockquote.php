@@ -9,7 +9,7 @@ use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
-use ComboStrap\LinkUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
@@ -231,7 +231,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                         $actualCall->getTagName() == syntax_plugin_combo_link::TAG
                         && $actualCall->getState() == DOKU_LEXER_ENTER
                     ) {
-                        $ref = $actualCall->getAttribute(LinkUtility::ATTRIBUTE_REF);
+                        $ref = $actualCall->getAttribute(syntax_plugin_combo_link::ATTRIBUTE_HREF);
                         if (StringUtility::match($ref, "https:\/\/twitter.com\/[^\/]*\/status\/.*")) {
                             $tweetUrlFound = true;
                         }
@@ -374,7 +374,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                      * Add the CSS
                      */
                     $snippetManager = PluginUtility::getSnippetManager();
-                    $snippetManager->attachCssSnippetForBar(self::TAG);
+                    $snippetManager->attachCssInternalStyleSheetForSlot(self::TAG);
 
                     /**
                      * Create the HTML
@@ -398,17 +398,9 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
                         case self::TWEET:
 
-                            PluginUtility::getSnippetManager()->upsertTagsForBar(self::TWEET,
-                                array("script" =>
-                                    array(
-                                        array(
-                                            "id" => "twitter-wjs",
-                                            "type" => "text/javascript",
-                                            "aysnc" => true,
-                                            "src" => "https://platform.twitter.com/widgets.js",
-                                            "defer" => true
-                                        ))));
-
+                            PluginUtility::getSnippetManager()
+                                ->attachJavascriptLibraryForSlot(self::TWEET, "https://platform.twitter.com/widgets.js")
+                                ->addHtmlAttribute("id", "twitter-wjs");
 
                             $tagAttributes->addClassName("twitter-tweet");
 
@@ -416,7 +408,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             foreach ($tweetAttributesNames as $tweetAttributesName) {
                                 if ($tagAttributes->hasComponentAttribute($tweetAttributesName)) {
                                     $value = $tagAttributes->getValueAndRemove($tweetAttributesName);
-                                    $tagAttributes->addHtmlAttributeValue("data-" . $tweetAttributesName, $value);
+                                    $tagAttributes->addOutputAttributeValue("data-" . $tweetAttributesName, $value);
                                 }
                             }
 

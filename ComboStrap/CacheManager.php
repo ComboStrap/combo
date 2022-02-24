@@ -4,27 +4,44 @@
 namespace ComboStrap;
 
 
-use dokuwiki\Cache\CacheParser;
+use DateTime;
 
+/**
+ * Class CacheManager
+ * @package ComboStrap
+ *
+ * The cache manager is public static object
+ * that can be used by plugin to report cache dependency {@link CacheManager::addDependencyForCurrentSlot()}
+ * reports and influence the cache
+ * of all slot for a requested page
+ */
 class CacheManager
 {
 
-    const RESULT_STATUS = 'result';
-    const DATE_MODIFIED = 'ftime';
-    public const APPLICATION_COMBO_CACHE_JSON = "application/combo+cache+json";
+
+    const CACHE_DELETION = "deletion";
+    const CACHE_CREATION = "creation";
+
 
     /**
      * @var CacheManager
      */
     private static $cacheManager;
 
+
     /**
-     * Just an utility variable to tracks the cache result of each slot
-     * @var array the processed slot by:
-     *   * requested page id, (to avoid inconsistency  on multiple page run in one test)
-     *   * slot id
+     * The list of cache runtimes dependencies by slot {@link CacheDependencies}
      */
-    private $cacheResults = array();
+    private $slotCacheDependencies;
+    /**
+     * The list of cache results slot {@link CacheResults}
+     */
+    private $slotCacheResults;
+
+    /**
+     * @var array hold the result for slot cache expiration
+     */
+    private $slotsExpiration;
 
 
     /**
@@ -32,17 +49,58 @@ class CacheManager
      */
     public static function getOrCreate(): CacheManager
     {
-        if (self::$cacheManager === null) {
-            self::$cacheManager = new CacheManager();
+        try {
+            $page = Page::createPageFromRequestedPage();
+            $cacheKey = $page->getDokuwikiId();
+        } catch (ExceptionCombo $e) {
+            /**
+             * In test, we may generate html from snippet without
+             * request. No error in this case
+             */
+            if (!PluginUtility::isTest()) {
+                LogUtility::msg("The cache manager cannot find the requested page. Cache Errors may occurs. Error: {$e->getMessage()}");
+            }
+            $cacheKey = PluginUtility::getRequestId();
         }
-        return self::$cacheManager;
+        $cacheManager = self::$cacheManager[$cacheKey];
+        if ($cacheManager === null) {
+            // new run, delete all old cache managers
+            self::$cacheManager = [];
+            // create
+            $cacheManager = new CacheManager();
+            self::$cacheManager[$cacheKey] = $cacheManager;
+        }
+        return $cacheManager;
     }
 
+
+    public static function resetAndGet(): CacheManager
+    {
+        self::reset();
+        return self::getOrCreate();
+    }
+
+    /**
+     * @param $id
+     * @return CacheDependencies
+     */
+    public function getCacheDependenciesForSlot($id): CacheDependencies
+    {
+
+        $cacheRuntimeDependencies = $this->slotCacheDependencies[$id];
+        if ($cacheRuntimeDependencies === null) {
+            $cacheRuntimeDependencies = new CacheDependencies($id);
+            $this->slotCacheDependencies[$id] = $cacheRuntimeDependencies;
+        }
+        return $cacheRuntimeDependencies;
+
+    }
 
     /**
      * In test, we may run more than once
      * This function delete the cache manager
-     * and is called when Dokuwiki close (ie {@link \action_plugin_combo_cache::close()})
+     * and is called
+     * when a new request is created {@link \TestUtility::createTestRequest()}
      */
     public static function reset()
     {
@@ -51,137 +109,100 @@ class CacheManager
 
     }
 
+
+    public function isCacheResultPresentForSlot($slotId, $mode): bool
+    {
+        $cacheReporter = $this->getCacheResultsForSlot($slotId);
+        return $cacheReporter->hasResultForMode($mode);
+    }
+
+
+    public function hasNoCacheResult(): bool
+    {
+        if($this->slotCacheResults===null){
+            return true;
+        }
+        return sizeof($this->slotCacheResults) === 0;
+    }
+
     /**
-     * Keep track of the parsed slot (ie page in page)
-     * @param $slotId
-     * @param $result
-     * @param CacheParser $cacheParser
+     * @param string $dependencyName
+     * @return CacheManager
      */
-    public function addSlotForRequestedPage($slotId, $result, CacheParser $cacheParser)
+    public function addDependencyForCurrentSlot(string $dependencyName): CacheManager
+    {
+        $ID = PluginUtility::getCurrentSlotId();
+        $cacheDependencies = $this->getCacheDependenciesForSlot($ID);
+        $cacheDependencies->addDependency($dependencyName);
+        return $this;
+
+    }
+
+
+    public function getCacheResultsForSlot(string $id): CacheResults
+    {
+        $cacheManagerForSlot = $this->slotCacheResults[$id];
+        if ($cacheManagerForSlot === null) {
+            $cacheManagerForSlot = new CacheResults($id);
+            $this->slotCacheResults[$id] = $cacheManagerForSlot;
+        }
+        return $cacheManagerForSlot;
+    }
+
+    /**
+     * @return null|CacheResults[] - null if the page does not exists
+     */
+    public function getCacheResults(): ?array
+    {
+        return $this->slotCacheResults;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function shouldSlotExpire($pageId): bool
     {
 
-        $requestedPageSlotResults = &$this->getCacheSlotResultsForRequestedPage();
-
-
-        if (!isset($requestedPageSlotResults[$slotId])) {
-            $requestedPageSlotResults[$slotId] = [];
-        }
-
         /**
-         * Metadata and other rendering may occurs
-         * recursively in one request
+         * Because of the recursive nature of rendering
+         * inside dokuwiki, we just return a result for
+         * the first call to the function
          *
-         * We record only the first one because the second call one will use the first
-         * one
+         * We use the cache manager as scope element
+         * (ie it's {@link CacheManager::reset()} for each request
          */
-        if (!isset($requestedPageSlotResults[$slotId][$cacheParser->mode])) {
-            $date = null;
-            if (file_exists($cacheParser->cache)) {
-                $date = Iso8601Date::createFromTimestamp(filemtime($cacheParser->cache))->getDateTime();
-            }
-            $requestedPageSlotResults[$slotId][$cacheParser->mode] = [
-                self::RESULT_STATUS => $result,
-                self::DATE_MODIFIED => $date
-            ];
+        if (isset($this->slotsExpiration[$pageId])) {
+            return false;
         }
+
+        $page = Page::createPageFromId($pageId);
+        $cacheExpirationFrequency = CacheExpirationFrequency::createForPage($page)
+            ->getValue();
+        if ($cacheExpirationFrequency === null) {
+            $this->slotsExpiration[$pageId] = false;
+            return false;
+        }
+
+        $cacheExpirationDateMeta = CacheExpirationDate::createForPage($page);
+        $expirationDate = $cacheExpirationDateMeta->getValue();
+
+        if ($expirationDate === null) {
+
+            $expirationDate = Cron::getDate($cacheExpirationFrequency);
+            $cacheExpirationDateMeta->setValue($expirationDate);
+
+        }
+
+
+        $actualDate = new DateTime();
+        if ($expirationDate > $actualDate) {
+            $this->slotsExpiration[$pageId] = false;
+            return false;
+        }
+
+        $this->slotsExpiration[$pageId] = true;
+        return true;
 
     }
-
-    public function getXhtmlCacheSlotResultsForRequestedPage(): array
-    {
-        $cacheSlotResultsForRequestedPage = $this->getCacheSlotResultsForRequestedPage();
-        if ($cacheSlotResultsForRequestedPage === null) {
-            return [];
-        }
-        $xhtmlRenderResult = [];
-        foreach ($cacheSlotResultsForRequestedPage as $slotId => $modes) {
-            foreach ($modes as $mode => $values) {
-                if ($mode === "xhtml") {
-                    $xhtmlRenderResult[$slotId] = $values[self::RESULT_STATUS];
-                }
-            }
-        }
-        return $xhtmlRenderResult;
-    }
-
-    private function &getCacheSlotResultsForRequestedPage(): ?array
-    {
-        $requestedPage = $this->getRequestedPage();
-        $requestedPageSlotResults = &$this->cacheResults[$requestedPage];
-        if (!isset($requestedPageSlotResults)) {
-            $requestedPageSlotResults = [];
-        }
-        return $requestedPageSlotResults;
-    }
-
-    public function isCacheLogPresentForSlot($slotId, $mode): bool
-    {
-        $cacheSlotResultsForRequestedPage = $this->getCacheSlotResultsForRequestedPage();
-        return isset($cacheSlotResultsForRequestedPage[$slotId][$mode]);
-    }
-
-
-    /**
-     * @return array - a array that will be transformed as json HTML data block
-     * to be included in a HTML page
-     */
-    public function getCacheSlotResultsAsHtmlDataBlockArray(): array
-    {
-        $htmlDataBlock = [];
-        $cacheSlotResultsForRequestedPage = $this->getCacheSlotResultsForRequestedPage();
-        if ($cacheSlotResultsForRequestedPage === null) {
-            LogUtility::msg("No page slot results were found");
-            return [];
-        }
-        foreach ($cacheSlotResultsForRequestedPage as $pageId => $resultByFormat) {
-            foreach ($resultByFormat as $format => $result) {
-                $modifiedDate = $result[self::DATE_MODIFIED];
-                if ($modifiedDate !== null) {
-                    $modifiedDate = Iso8601Date::createFromDateTime($modifiedDate)->toString();
-                }
-                $htmlDataBlock[$pageId][$format] = [
-                    self::RESULT_STATUS => $result[self::RESULT_STATUS],
-                    "mtime" => $modifiedDate
-                ];
-            }
-
-        }
-        return $htmlDataBlock;
-    }
-
-    private function getRequestedPage()
-    {
-        global $_REQUEST;
-        $requestedPage = $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-
-        if ($requestedPage !== null) {
-            return $requestedPage;
-        }
-
-        /**
-         * We are not on a HTTP request
-         * but may be on a {@link Page::renderMetadataAndFlush() metadata rendering request}
-         */
-        global $ID;
-        if ($ID !== null) {
-            return $ID;
-        }
-
-        if(PluginUtility::isTest()) {
-            /**
-             * {@link p_get_metadata()} check the cache and is used
-             * also in several place such as {@link feed.php}
-             * where we don't have any influence
-             */
-            LogUtility::msg("The requested page should be known to register a page cache result");
-        }
-        return "unknown";
-    }
-
-    public function isEmpty(): bool
-    {
-        return sizeof($this->cacheResults) === 0;
-    }
-
 
 }

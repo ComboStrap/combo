@@ -53,7 +53,7 @@ abstract class Image extends Media
             throw new ExceptionCombo("The file ($path) has not been detected as being an image, media returned", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
 
         }
-        if (substr($mime, 6) == "svg+xml") {
+        if ($mime->toString() === Mime::SVG) {
 
             $image = new ImageSvg($path, $attributes);
 
@@ -165,7 +165,7 @@ abstract class Image extends Media
      * For a raster image, the internal width
      * for a svg, the defined viewBox
      *
-     *
+     * @throws ExceptionCombo
      * @return int in pixel
      */
     public abstract function getIntrinsicWidth(): int;
@@ -190,6 +190,7 @@ abstract class Image extends Media
      * It's needed for an img tag to set the img `width` and `height` that pass the
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
+     * @throws ExceptionCombo
      */
     public function getIntrinsicAspectRatio()
     {

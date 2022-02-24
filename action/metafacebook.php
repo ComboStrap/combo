@@ -8,7 +8,6 @@ use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
 use ComboStrap\Page;
-use ComboStrap\PageImage;
 use ComboStrap\PageImageUsage;
 use ComboStrap\PageType;
 use ComboStrap\PluginUtility;
@@ -18,12 +17,19 @@ use ComboStrap\StringUtility;
 
 /**
  *
+ * Implementation of the ogp protocol
+ *
+ * followed by:
+ *   * Facebook: https://developers.facebook.com/docs/sharing/webmasters
+ *   * Linkedin:  https://www.linkedin.com/help/linkedin/answer/a521928/making-your-website-shareable-on-linkedin?lang=en
+ *
  * For the canonical meta, see {@link action_plugin_combo_metacanonical}
  *
  * Inspiration, reference:
- * https://developers.facebook.com/docs/sharing/webmasters
  * https://github.com/twbs/bootstrap/blob/v4-dev/site/layouts/partials/social.html
  * https://github.com/mprins/dokuwiki-plugin-socialcards/blob/master/action.php
+ *
+ *
  */
 class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 {
@@ -73,7 +79,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         /**
          * No social for bars
          */
-        if ($page->isSlot()) {
+        if ($page->isSecondarySlot()) {
             return;
         }
 

@@ -172,8 +172,8 @@ $conf['disableDynamicQualityMonitoring'] = 0;
 
 /**
  * Link
- * Class in link {@link \ComboStrap\LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME}
- * Preview on link {@link \ComboStrap\LinkUtility::CONF_PREVIEW_LINK}
+ * Class in link {@link \ComboStrap\MarkupRef::CONF_USE_DOKUWIKI_CLASS_NAME}
+ * Preview on link {@link \ComboStrap\MarkupRef::CONF_PREVIEW_LINK}
  * Enable {@link syntax_plugin_combo_link::CONF_DISABLE_LINK}
  */
 $conf['useDokuwikiLinkClassName'] = 0;
@@ -246,8 +246,10 @@ $conf["svgOptimizationEnable"] = 1;
 
 /**
  * Svg Inline Max size {@link \ComboStrap\SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG}
+ * 2kb is too small for icon.
+ * For instance, the et:twitter is 2,600b
  */
-$conf["svgMaxInlineSizeKb"] = 2;
+$conf["svgMaxInlineSizeKb"] = 3;
 
 /**
  * The name of the group of user that can upload svg
@@ -267,7 +269,7 @@ $conf["svgOptimizationNamespacesToKeep"] = "";
  * {@link \ComboStrap\SvgDocument::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE}
  * The attribute to delete separates by a ,
  */
-$conf["svgOptimizationAttributesToDelete"] = "id, style";
+$conf["svgOptimizationAttributesToDelete"] = "id, style, class, data-name";
 /**
  * {@link \ComboStrap\SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE}
  */
@@ -392,3 +394,24 @@ $conf["enableFrontMatterOnSubmit"] = 0;
  * {@link syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE}
  */
 $conf["headingWikiEnable"] = 1;
+/**
+ * Highlight
+ * {@link syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE}
+ * {@link syntax_plugin_combo_highlightwiki::CONF_DEFAULT_HIGHLIGHT_WIKI_ENABLE_VALUE}
+ */
+$conf["highlightWikiEnable"] = 1;
+
+/**
+ * {@link \ComboStrap\ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF}
+ */
+$conf["brandingColorInheritanceEnable"] = 1;
+
+/**
+ * {@link \ComboStrap\ColorRgb::PRIMARY_COLOR_CONF}
+ * {@link \ComboStrap\ColorRgb::SECONDARY_COLOR_CONF}
+ */
+$conf["primaryColor"] = "";
+$conf["secondaryColor"] = "";
+
+
+

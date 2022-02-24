@@ -142,7 +142,7 @@ $mainContainerSelector > h6::before { content: "$prefix" counter(h2, $level2Coun
 EOF;
 
 
-            PluginUtility::getSnippetManager()->upsertCssSnippetForRequest(self::SNIPPET_ID, $numberingCss);
+            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::SNIPPET_ID, $numberingCss);
         }
     }
 

@@ -17,19 +17,11 @@ class ImageSvg extends Image
     const CANONICAL = "svg";
 
 
-    /**
-     * @throws ExceptionCombo
-     */
     public function __construct($path, $tagAttributes = null)
     {
 
-        /**
-         * We build the svg document immediately to validate it
-         * Getting the width of an error HTML document if the file was downloaded
-         * from a server has no use at all
-         */
-        $this->svgDocument = SvgDocument::createSvgDocumentFromPath($path);
         parent::__construct($path, $tagAttributes);
+
     }
 
 
@@ -39,6 +31,7 @@ class ImageSvg extends Image
     private $svgDocument;
 
     /**
+     *
      * @throws ExceptionCombo
      */
     public function getIntrinsicWidth(): int
@@ -55,18 +48,32 @@ class ImageSvg extends Image
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     protected function getSvgDocument(): SvgDocument
     {
+        /**
+         * We build the svg document later because the file may not exist
+         * (Case with icon for instance where they are downloaded if they don't exist)
+         *
+         */
+        if ($this->svgDocument === null) {
+            /**
+             * The svg document throw an error if the file does not exist or is not valid
+             */
+            $this->svgDocument = SvgDocument::createSvgDocumentFromPath($this->getPath());
+        }
         return $this->svgDocument;
     }
 
     /**
-     * @param string $ampersand $absolute - the & separator (should be encoded for HTML but not for CSS)
+     *
      * @return string|null
      *
      * At contrary to {@link RasterImageLink::getUrl()} this function does not need any width parameter
      */
-    public function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML): ?string
+    public function getUrl(): ?string
     {
 
 
@@ -154,7 +161,7 @@ class ImageSvg extends Image
             unset($att[PagePath::PROPERTY_NAME]);
         }
 
-        return ml($this->getPath()->getDokuwikiId(), $att, $direct, $ampersand, true);
+        return ml($this->getPath()->getDokuwikiId(), $att, $direct, DokuwikiUrl::AMPERSAND_CHARACTER, true);
 
 
     }
@@ -170,12 +177,20 @@ class ImageSvg extends Image
      * Return the svg file transformed by the attributes
      * from cache if possible. Used when making a fetch with the URL
      * @return LocalPath
+     * @throws ExceptionCombo
      */
     public function getSvgFile(): LocalPath
     {
 
         $cache = new CacheMedia($this->getPath(), $this->getAttributes());
-        if (!$cache->isCacheUsable()) {
+        global $ACT;
+        if (PluginUtility::isDev() && $ACT === "preview") {
+            // in dev mode, don't cache
+            $isCacheUsable = false;
+        } else {
+            $isCacheUsable = $cache->isCacheUsable();
+        }
+        if (!$isCacheUsable) {
             $svgDocument = $this->getSvgDocument();
             $content = $svgDocument->getXmlText($this->getAttributes());
             $cache->storeCache($content);
@@ -191,8 +206,10 @@ class ImageSvg extends Image
      * again and the browser cache should be deleted (ie the buster regenerated)
      * {@link ResourceCombo::getBuster()}
      * @return string
+     * @throws ExceptionCombo
      */
-    public function getBuster(): string
+    public
+    function getBuster(): string
     {
         $time = FileSystems::getModifiedTime($this->getSvgFile());
         return strval($time->getTimestamp());

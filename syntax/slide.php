@@ -58,12 +58,12 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    public function accepts($mode)
+    public function accepts($mode): bool
     {
 
         return syntax_plugin_combo_preformatted::disablePreformatted($mode);
@@ -182,7 +182,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                             break;
                     }
 
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
 
 
                     $renderer->doc .= $attributes->toHtmlEnterTag("section");

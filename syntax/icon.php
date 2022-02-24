@@ -5,13 +5,16 @@
  */
 
 use ComboStrap\CallStack;
+use ComboStrap\ColorRgb;
+use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
 use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\SvgImageLink;
+use ComboStrap\Site;
+use ComboStrap\SvgDocument;
 use ComboStrap\TagAttributes;
 
 
@@ -36,8 +39,9 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 {
     const TAG = "icon";
     const CANONICAL = self::TAG;
+    const ICON_NAME_ATTRIBUTE = "name";
 
-    private static function exceptionHandling(Exception $e, $tagAttribute)
+    private static function exceptionHandling(Exception $e, $tagAttribute): string
     {
         $errorClass = syntax_plugin_combo_media::SVG_RENDERING_ERROR_CLASS;
         $message = "Icon ({$tagAttribute->getValue("name")}). Error while rendering: {$e->getMessage()}";
@@ -149,10 +153,51 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL:
             case DOKU_LEXER_ENTER:
                 // Get the parameters
-                $tagAttributes = TagAttributes::createFromTagMatch($match);
+                $knownTypes = [];
+                $defaultAttributes = [];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
+                $callStack = CallStack::createFromHandler($handler);
+                $parent = $callStack->moveToParent();
+                $context = "";
+                if ($parent !== false) {
+                    $context = $parent->getTagName();
+                    if ($context === syntax_plugin_combo_link::TAG) {
+                        $context = $parent->getTagName();
+                    }
+                }
+                /**
+                 * Color setting should know the color of its parent
+                 * For now, we don't set any color if the parent is a button, note, link
+                 * As a header is not a parent, we may say that if the icon is contained, the default
+                 * branding color is not set ?
+                 */
+                $requestedColor = $tagAttributes->getValue(ColorRgb::COLOR);
+                if (
+                    $requestedColor === null &&
+                    Site::isBrandingColorInheritanceEnabled() &&
+                    !in_array($context, [
+                        syntax_plugin_combo_button::TAG,
+                        syntax_plugin_combo_note::TAG,
+                        syntax_plugin_combo_link::TAG
+                    ])
+                ) {
+                    $requestedWidth = $tagAttributes->getValue(Dimension::WIDTH_KEY, SvgDocument::DEFAULT_ICON_WIDTH);
+                    $requestedWidthInPx = Dimension::toPixelValue($requestedWidth);
+                    if ($requestedWidthInPx > 36) {
+                        // Illustrative icon
+                        $color = Site::getPrimaryColor();
+                    } else {
+                        // Character icon
+                        $color = Site::getSecondaryColor();
+                    }
+                    if ($color !== null) {
+                        $tagAttributes->setComponentAttributeValue(ColorRgb::COLOR, $color);
+                    }
+                }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
+                    PluginUtility::CONTEXT => $context
                 );
             case DOKU_LEXER_EXIT:
                 $callStack = CallStack::createFromHandler($handler);
@@ -180,7 +225,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         switch ($format) {
@@ -193,44 +238,37 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 
 
                         case DOKU_LEXER_SPECIAL:
-                            $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                            try {
-                                $renderer->doc .= Icon::create($tagAttribute)
-                                    ->render();
-                            } catch (Exception $e) {
-                                $renderer->doc .= self::exceptionHandling($e, $tagAttribute);
-                            }
+                            $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                            $renderer->doc .= $this->printIcon($tagAttributes);
                             break;
                         case DOKU_LEXER_ENTER:
-                            /**
-                             * If there is a tooltip, we need
-                             * to start with a span to wrap the svg with it
-                             */
-                            if ($data[PluginUtility::CONTEXT] == syntax_plugin_combo_tooltip::TAG) {
+
+                            $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                            $tooltip = $tagAttributes->getValueAndRemoveIfPresent(\ComboStrap\Tooltip::TOOLTIP_ATTRIBUTE);
+                            if ($tooltip !== null) {
                                 /**
-                                 * The inline block is to make the span take the whole space
-                                 * of the image (ie dimension)
+                                 * If there is a tooltip, we need
+                                 * to start with a span to wrap the svg with it
                                  */
-                                $renderer->doc .= "<span class=\"d-inline-block\"";
+
+
+                                $tooltipTag = TagAttributes::createFromCallStackArray([\ComboStrap\Tooltip::TOOLTIP_ATTRIBUTE => $tooltip])
+                                    ->addClassName(syntax_plugin_combo_tooltip::TOOLTIP_CLASS_INLINE_BLOCK);
+                                $renderer->doc .= $tooltipTag->toHtmlEnterTag("span");
                             }
-                            break;
-                        case DOKU_LEXER_EXIT:
                             /**
                              * Print the icon
                              */
-                            $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                            try {
-                                $renderer->doc .= Icon::create($tagAttribute)
-                                    ->render();
-                            } catch (ExceptionCombo $e) {
-                                $renderer->doc .= self::exceptionHandling($e, $tagAttribute);
-                            }
+                            $renderer->doc .= $this->printIcon($tagAttributes);
                             /**
                              * Close the span if we are in a tooltip context
                              */
-                            if ($data[PluginUtility::CONTEXT] == syntax_plugin_combo_tooltip::TAG) {
+                            if ($tooltip !== null) {
                                 $renderer->doc .= "</span>";
                             }
+
+                            break;
+                        case DOKU_LEXER_EXIT:
 
                             break;
                     }
@@ -243,12 +281,16 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                  */
                 $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                 try {
-                    $mediaPath = Icon::create($tagAttribute)->getPath();
+                    $name = $tagAttribute->getValueAndRemoveIfPresent("name");
+                    if ($name === null) {
+                        throw new ExceptionCombo("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
+                    }
+                    $mediaPath = Icon::create($name, $tagAttribute)->getPath();
                 } catch (ExceptionCombo $e) {
                     // error is already fired in the renderer
                     return false;
                 }
-                if ($mediaPath instanceof DokuPath) {
+                if ($mediaPath instanceof DokuPath && FileSystems::exists($mediaPath)) {
                     $mediaId = $mediaPath->getDokuwikiId();
                     syntax_plugin_combo_media::registerFirstMedia($renderer, $mediaId);
                 }
@@ -256,6 +298,24 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 
         }
         return true;
+    }
+
+    /**
+     * @param TagAttributes $tagAttributes
+     * @return string
+     */
+    private function printIcon(TagAttributes $tagAttributes): string
+    {
+        try {
+            $name = $tagAttributes->getValue("name");
+            if ($name === null) {
+                throw new ExceptionCombo("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
+            }
+            return Icon::create($name, $tagAttributes)
+                ->render();
+        } catch (ExceptionCombo $e) {
+            return self::exceptionHandling($e, $tagAttributes);
+        }
     }
 
 

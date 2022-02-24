@@ -225,7 +225,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
 
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::MARKI_TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::MARKI_TAG);
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::MARKI_TAG);
                     $tagAttributes->addClassName("list-group");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("ul") . DOKU_LF;

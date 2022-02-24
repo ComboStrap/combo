@@ -5,6 +5,7 @@ use ComboStrap\Json;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
+use ComboStrap\StringUtility;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -62,18 +63,32 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
         }
 
         $searchTerm = $event->data["id"]; // yes id is the search term
-        if (strlen($searchTerm) < 3) {
+        $minimalWordLength = 3;
+        if (strlen($searchTerm) < $minimalWordLength) {
             return;
         }
-        $pattern = "*$searchTerm*";
-        $patterns = [$pattern, $pattern, $pattern, $pattern];
-        $searchTerm = <<<EOF
-select id as "id", title as "title" from pages where id glob ? or H1 glob ? or title glob ? or name glob ? order by id ASC;
+        $searchTermWords = StringUtility::getWords($searchTerm);
+        if (sizeOf($searchTermWords) === 0) {
+            return;
+        }
+        $sqlParameters = [];
+        $sqlPredicates = [];
+        foreach ($searchTermWords as $searchTermWord) {
+            if (strlen($searchTermWord) < $minimalWordLength) {
+                continue;
+            }
+            $pattern = "%$searchTermWord%";
+            $sqlParameters = array_merge([$pattern, $pattern, $pattern, $pattern, $pattern], $sqlParameters);
+            $sqlPredicates[] = "(id like ? COLLATE NOCASE or H1 like ? COLLATE NOCASE or title like ? COLLATE NOCASE or name like ? COLLATE NOCASE or path like ? COLLATE NOCASE)";
+        }
+        $sqlPredicate = implode(" and ", $sqlPredicates);
+        $searchTermSql = <<<EOF
+select id as "id", title as "title" from pages where $sqlPredicate order by id ASC;
 EOF;
         $rows = [];
         $request = $sqlite
             ->createRequest()
-            ->setQueryParametrized($searchTerm, $patterns);
+            ->setQueryParametrized($searchTermSql, $sqlParameters);
         try {
             $rows = $request
                 ->execute()

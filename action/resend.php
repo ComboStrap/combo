@@ -7,12 +7,8 @@
  * @author     Nicolas GERARD
  */
 
-use ComboStrap\Dimension;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
-use ComboStrap\Site;
-use ComboStrap\Snippet;
-use ComboStrap\TagAttributes;
 use dokuwiki\Menu\Item\Resendpwd;
 
 if (!defined('DOKU_INC')) die();
@@ -23,7 +19,7 @@ class action_plugin_combo_resend extends DokuWiki_Action_Plugin
 {
 
     const CANONICAL = "resend";
-    const FORM_RESEND_PWD_CLASS =  "form-" .self::CANONICAL;
+    const FORM_RESEND_PWD_CLASS = "form-" . self::CANONICAL;
     const CONF_ENABLE_RESEND_PWD_FORM = "enableResendPwdForm";
 
     /**
@@ -74,15 +70,7 @@ EOF;
          * We print before the forms
          * to avoid a FOUC
          */
-        $loginCss = Snippet::createCssSnippet(self::CANONICAL);
-        $content = $loginCss->getContent();
-        $class = $loginCss->getClass();
-        $cssHtml = <<<EOF
-<style class="$class">
-$content
-</style>
-EOF;
-        print $cssHtml;
+        print Identity::getHtmlStyleTag(self::CANONICAL);
 
 
         /**
@@ -90,11 +78,7 @@ EOF;
          */
         $form = &$event->data;
         $class = &$form->params["class"];
-        if (isset($class)) {
-            $class = $class . " " . self::FORM_RESEND_PWD_CLASS;
-        } else {
-            $class = self::FORM_RESEND_PWD_CLASS;
-        }
+        Identity::addIdentityClass($class, self::FORM_RESEND_PWD_CLASS);
         $newFormContent = [];
 
 
@@ -134,7 +118,7 @@ EOF;
                 case "login":
                     $loginText = $field["_text"];
                     $loginValue = $field["value"];
-                    $loginHTML=<<<EOF
+                    $loginHTML = <<<EOF
 <div class="form-floating">
     <input type="text" id="inputUserName" class="form-control" placeholder="$loginText" required="required" autofocus="" name="u" value="$loginValue">
     <label for="inputUserName">$loginText</label>
@@ -148,8 +132,6 @@ EOF;
 
             }
         }
-
-
 
 
         /**

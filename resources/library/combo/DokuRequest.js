@@ -5,13 +5,39 @@
 import ComboModal from "./ComboModal";
 import Browser from "./Browser";
 
-class DokuAjaxUrl {
+export class DokuUrl {
 
-    constructor(call) {
-        this.url = new URL(DOKU_BASE + 'lib/exe/ajax.php', window.location.href);
-        this.url.searchParams.set("call", call);
-        this.call = call;
-        this.url.searchParams.set("id", JSINFO.id);
+    static AJAX = "AJAX";
+    static RUNNER = "RUNNER";
+    static CALL = "call";
+    static EDIT = "edit";
+    static SHOW = 'show';
+    static FETCH = 'fetch';
+
+    constructor(type) {
+        switch (type) {
+            case DokuUrl.AJAX:
+                this.url = new URL(DOKU_BASE + 'lib/exe/ajax.php', window.location.href);
+                this.url.searchParams.set("id", JSINFO.id);
+                break;
+            case DokuUrl.RUNNER:
+                this.url = new URL(DOKU_BASE + 'lib/exe/taskrunner.php', window.location.href);
+                this.url.searchParams.set("id", JSINFO.id);
+                break;
+            case DokuUrl.FETCH:
+                this.url = new URL(DOKU_BASE + 'lib/exe/fetch.php', window.location.href);
+                break;
+            case DokuUrl.EDIT:
+                this.url = new URL(DOKU_BASE + 'doku.php', window.location.href);
+                this.url.searchParams.set("do", "edit");
+                this.url.searchParams.set("id", JSINFO.id);
+                break;
+            case DokuUrl.SHOW:
+                this.url = new URL(DOKU_BASE + 'doku.php', window.location.href);
+                this.url.searchParams.set("id", JSINFO.id);
+                break;
+        }
+
     }
 
     setProperty(key, value) {
@@ -24,18 +50,47 @@ class DokuAjaxUrl {
     }
 
     getCall() {
-        return this.call;
+        return this.url.searchParams.get(DokuUrl.CALL);
+    }
+
+    static createAjax(call) {
+        return (new DokuUrl(this.AJAX))
+            .setProperty(DokuUrl.CALL, call);
+    }
+
+    static createRunner() {
+        return new DokuUrl(this.RUNNER);
+    }
+
+    static createFetch(id, drive) {
+        let dokuUrl = new DokuUrl(this.FETCH);
+        if (typeof id === 'undefined') {
+            throw new Error("The media id is mandatory")
+        }
+        dokuUrl.setProperty("media", id);
+        if (typeof drive !== 'undefined') {
+            dokuUrl.setProperty("drive", drive);
+        }
+        return dokuUrl;
+    }
+
+    static createEdit(id) {
+        let dokuUrl = new DokuUrl(this.EDIT);
+        if (typeof id !== 'undefined') {
+            dokuUrl.setProperty("id", id);
+        }
+        return dokuUrl;
     }
 }
 
-export default class DokuAjaxRequest {
+export class DokuAjaxRequest {
 
 
     method = "GET";
 
     constructor(call) {
 
-        this.url = new DokuAjaxUrl(call);
+        this.url = DokuUrl.createAjax(call);
 
     }
 

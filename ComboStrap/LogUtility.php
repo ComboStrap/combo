@@ -113,7 +113,7 @@ class LogUtility
      * @param int $logLevel
      * @param null $canonical
      */
-    static function log2file(?string $msg, int $logLevel = self::LVL_MSG_INFO, $canonical = null)
+    static function log2file(?string $msg, int $logLevel = self::LVL_MSG_ERROR, $canonical = null)
     {
 
         try {
@@ -140,7 +140,7 @@ class LogUtility
              * because it throws an error message when the environment
              * is not good, creating a recursive call.
              */
-            $id = PluginUtility::getMainPageDokuwikiId();
+            $id = PluginUtility::getRequestedWikiId();
 
             $file = $conf['cachedir'] . '/debug.log';
             $fh = fopen($file, 'a');
@@ -213,7 +213,7 @@ class LogUtility
                  * because it throws an error message when the environment
                  * is not good, creating a recursive call.
                  */
-                $id = PluginUtility::getMainPageDokuwikiId();
+                $id = PluginUtility::getRequestedWikiId();
                 if ($id != null) {
 
                     /**
@@ -266,7 +266,11 @@ class LogUtility
             $newMessage = "The passed message to the log was empty or null. BackTrace: \n";
             ob_start();
             $limit = 10;
-            debug_print_backtrace(0, $limit); // It prints also the data passed :)
+            /**
+             * DEBUG_BACKTRACE_IGNORE_ARGS options to avoid
+             * PHP Fatal error:  Allowed memory size of 2147483648 bytes exhausted (tried to allocate 1876967424 bytes)
+             */
+            debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $limit); // It prints also the data passed :)
             $trace = ob_get_contents();
             ob_end_clean();
             $newMessage .= $trace;
@@ -282,5 +286,10 @@ class LogUtility
     public static function enableThrowExceptionOnDevTest()
     {
         self::$throwExceptionOnDevTest = true;
+    }
+
+    public static function wrapInRedForHtml(string $message): string
+    {
+        return "<span class=\"text-alert\">$message</span>";
     }
 }

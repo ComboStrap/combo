@@ -7,6 +7,7 @@ namespace ComboStrap;
 abstract class MetadataStoreAbs implements MetadataStore
 {
 
+    const CANONICAL = "store";
     private $page;
 
 
@@ -38,7 +39,7 @@ abstract class MetadataStoreAbs implements MetadataStore
             return $readStore;
         }
         if (!is_string($readStore)) {
-            throw new ExceptionComboRuntime("The class value is not a string", MetadataStore::CANONICAL);
+            throw new ExceptionComboRuntime("The class value is not a string", MetadataStoreAbs::CANONICAL);
         }
         if (!is_subclass_of($readStore, MetadataStore::class)) {
             throw new ExceptionComboRuntime("The value ($readStore) is not a subclass of a store.");
@@ -57,7 +58,7 @@ abstract class MetadataStoreAbs implements MetadataStore
 
     public function getCanonical(): string
     {
-        return "store";
+        return self::CANONICAL;
     }
 
 

@@ -18,6 +18,8 @@
 // must be run within Dokuwiki
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
+use ComboStrap\Display;
+use ComboStrap\DokuwikiUrl;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -239,7 +241,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                          * on all node (enter, exit and unmatched)
                          */
                         if ($renderingMode == self::RENDERING_ONLY_RESULT) {
-                            $actualTag->addAttribute(TagAttributes::DISPLAY, "none");
+                            $actualTag->addAttribute(Display::DISPLAY, "none");
                         }
 
                         switch ($actualTag->getState()) {
@@ -320,7 +322,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
      * @see DokuWiki_Syntax_Plugin::render()
      *
      */
-    public function render($mode, Doku_Renderer $renderer, $data)
+    public function render($mode, Doku_Renderer $renderer, $data): bool
     {
         // The $data variable comes from the handle() function
         //
@@ -374,9 +376,9 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             'call' => action_plugin_combo_webcode::CALL_ID,
                             action_plugin_combo_webcode::MARKI_PARAM => $markiCode
                         );
-                        $queryString = http_build_query($queryParams);
+                        $queryString = http_build_query($queryParams,'', DokuwikiUrl::AMPERSAND_CHARACTER);
                         $url = Site::getAjaxUrl() . "?$queryString";
-                        $iFrameAttributes->addHtmlAttributeValue("src", $url);
+                        $iFrameAttributes->addOutputAttributeValue("src", $url);
 
                     } else {
 
@@ -456,7 +458,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             $iframeSrcValue .= '<script type="text/babel">' . $codes['babel'] . '</script>';
                         }
                         $iframeSrcValue .= '</body></html>';
-                        $iFrameAttributes->addHtmlAttributeValue("srcdoc", $iframeSrcValue);
+                        $iFrameAttributes->addOutputAttributeValue("srcdoc", $iframeSrcValue);
 
                         // Code bar with button
                         $bar .= '<div class="webcode-bar-item">' . PluginUtility::getDocumentationHyperLink(self::TAG, "Rendered by WebCode", false) . '</div>';
@@ -475,7 +477,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                          * of the iframe element
                          * Any styling attribute would take over
                          */
-                        PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::TAG);
+                        PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::TAG);
                         /**
                          * CSS Height auto works when an image is loaded asynchronously but not
                          * when there is only text in the iframe
@@ -488,13 +490,13 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                          * then scrolling = no if not set
                          */
                         if (!$iFrameAttributes->hasComponentAttribute("scrolling")) {
-                            $iFrameAttributes->addHtmlAttributeValue("scrolling", "no");
+                            $iFrameAttributes->addOutputAttributeValue("scrolling", "no");
                         }
 
                     }
 
 
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
 
                     /**
                      * The iframe does not have any width

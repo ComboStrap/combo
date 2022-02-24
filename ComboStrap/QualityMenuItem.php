@@ -99,13 +99,13 @@ class QualityMenuItem extends AbstractItem
 
         if ($this->page->isLowQualityPage()) {
             /** @var string icon file */
-            return Resources::getImagesDirectory() . '/quality-alert.svg';
+            return Site::getComboImagesDirectory()->resolve( 'quality-alert.svg')->toString();
         } else {
             /**
              * @var string icon file
              * !!! Same icon used in the landing page !!!
              */
-            return Resources::getImagesDirectory() . '/quality.svg';
+            return Site::getComboImagesDirectory()->resolve('quality.svg')->toString();
         }
     }
 

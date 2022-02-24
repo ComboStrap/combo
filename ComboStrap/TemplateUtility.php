@@ -84,16 +84,32 @@ class TemplateUtility
 
     /**
      * Replace placeholder
-     * @param Call[] $namespaceTemplateInstructions
-     * @param $pagePath
+     * @param Call[]|array $namespaceTemplateInstructions
+     * @param string|Page $pageValue
      * @return array
      */
-    public static function renderInstructionsTemplateFromDataPage(array $namespaceTemplateInstructions, $pagePath)
+    public static function generateInstructionsFromDataPage(array $namespaceTemplateInstructions, $pageValue): array
     {
-        $page = Page::createPageFromQualifiedPath($pagePath);
+        $page = null;
+        if (is_string($pageValue)) {
+            $page = Page::createPageFromQualifiedPath($pageValue);
+        }
+        if ($pageValue instanceof Page) {
+            $page = $pageValue;
+        }
+        if ($page === null) {
+            if (PluginUtility::isDevOrTest()) {
+                throw new ExceptionComboRuntime("The page is null meaning the page value was not recognized. Bad dev.");
+            }
+        }
+
         $instructions = [];
         foreach ($namespaceTemplateInstructions as $call) {
-            $newCall = clone $call;
+            if ($call instanceof Call) {
+                $newCall = Call::createFromCall($call);
+            } else {
+                $newCall = Call::createFromInstruction($call);
+            }
             $instructions[] = $newCall->render($page)->toCallArray();
         }
         return $instructions;
@@ -101,7 +117,7 @@ class TemplateUtility
     }
 
     /**
-     * @param Call[] $namespaceTemplateInstructions
+     * @param Call[]|array $namespaceTemplateInstructions
      * @param array $array - the data array
      * @return array - native call stack instructions
      */
@@ -110,16 +126,19 @@ class TemplateUtility
 
         $instructions = [];
         foreach ($namespaceTemplateInstructions as $call) {
-            $newCall = clone $call;
+            if (is_array($call)) {
+                $newCall = Call::createFromInstruction($call);
+            } else {
+                $newCall = Call::createFromCall($call);
+            }
             $instructions[] = $newCall->renderFromData($array)->toCallArray();
         }
         return $instructions;
 
     }
 
-    public static function renderStringTemplateForDataPage($stringTemplate, Page $page)
+    public static function renderStringTemplateForDataPage($stringTemplate, Page $page): string
     {
-
 
 
         return TemplateUtility::renderStringTemplateFromDataArray($stringTemplate, TemplateUtility::getMetadataDataFromPage($page));
@@ -157,7 +176,10 @@ class TemplateUtility
 
     }
 
-
+    public static function isVariable($ref): bool
+    {
+        return substr($ref, 0, 1) === TemplateUtility::VARIABLE_PREFIX;
+    }
 
 
 }

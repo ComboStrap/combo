@@ -4,7 +4,7 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
-use ComboStrap\LinkUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\MetadataDokuWikiStore;
@@ -49,6 +49,8 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
 
     /**
      * Store the references set for the whole page
+     * The datastore will then see a mutation
+     * processed by {@link action_plugin_combo_backlinkmutation}
      */
     function storeReference(Doku_Event $event, $params)
     {
@@ -88,9 +90,16 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
                 $actualCall->getTagName() === syntax_plugin_combo_link::TAG
                 && $actualCall->getState() === DOKU_LEXER_ENTER
             ) {
-                $ref = $actualCall->getAttribute(Reference::REF_PROPERTY);
-                $link = LinkUtility::createFromRef($ref);
-                if ($link->getType() === LinkUtility::TYPE_INTERNAL) {
+                $ref = $actualCall->getAttribute(syntax_plugin_combo_link::ATTRIBUTE_HREF);
+                if ($ref === null) {
+                    /**
+                     * The reference data is null for this link, it may be an external
+                     * link created by a component such as {@link syntax_plugin_combo_share}
+                     */
+                    continue;
+                }
+                $link = MarkupRef::createFromRef($ref);
+                if ($link->getUriType() === MarkupRef::WIKI_URI) {
                     $ref = Reference::createFromResource($page)
                         ->buildFromStoreValue($link->getInternalPage()->getPath()->toString());
                     $references->addRow([$ref]);

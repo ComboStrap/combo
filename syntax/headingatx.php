@@ -24,7 +24,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
     const EXIT_PATTERN = "\r??\n";
 
 
-    function getType()
+    function getType(): string
     {
         return 'formatting';
     }
@@ -40,7 +40,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
      * @see DokuWiki_Syntax_Plugin::getPType()
      *
      */
-    function getPType()
+    function getPType(): string
     {
         return 'block';
     }
@@ -54,7 +54,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array('formatting', 'substition', 'protected', 'disabled');
     }
@@ -63,7 +63,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
      *
      * @return int
      */
-    function getSort()
+    function getSort(): int
     {
         return 49;
     }

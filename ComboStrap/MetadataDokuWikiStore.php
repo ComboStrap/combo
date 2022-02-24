@@ -61,12 +61,13 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      * When the value of a metadata has changed
      */
     public const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
+    const NEW_VALUE_ATTRIBUTE = "new_value";
 
     /**
      *
      * @var MetadataDokuWikiStore[] a cache of store
      */
-    private static $storesByPage;
+    private static $storesByRequestedPage;
 
 
     /**
@@ -81,9 +82,24 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     public static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
 
+        $requestedId = PluginUtility::getRequestedWikiId();
+        if ($requestedId === null) {
+            if ($resourceCombo instanceof Page) {
+                $requestedId = $resourceCombo->getDokuwikiId();
+            } else {
+                $requestedId = "not-a-page";
+            }
+        }
+        $storesByRequestedId = &self::$storesByRequestedPage[$requestedId];
+        if ($storesByRequestedId === null) {
+            // delete all previous stores by requested page id
+            self::$storesByRequestedPage = null;
+            self::$storesByRequestedPage[$requestedId] = [];
+            $storesByRequestedId = &self::$storesByRequestedPage[$requestedId];
+        }
         $path = $resourceCombo->getPath()->toString();
-        if (isset(self::$storesByPage[$path])) {
-            return self::$storesByPage[$path];
+        if (isset($storesByRequestedId[$path])) {
+            return $storesByRequestedId[$path];
         }
 
         if (!($resourceCombo instanceof Page)) {
@@ -94,7 +110,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         }
 
         $metadataStore = new MetadataDokuWikiStore($resourceCombo, $data);
-        self::$storesByPage[$path] = $metadataStore;
+        $storesByRequestedId[$path] = $metadataStore;
         return $metadataStore;
 
     }
@@ -105,7 +121,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      */
     public static function getStores(): array
     {
-        return self::$storesByPage;
+        return self::$storesByRequestedPage;
     }
 
     /**
@@ -113,7 +129,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      */
     public static function resetAll()
     {
-        self::$storesByPage = [];
+        self::$storesByRequestedPage = [];
     }
 
     public function set(Metadata $metadata)
@@ -327,8 +343,9 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
              */
             $data = [
                 "name" => $key,
-                "new_value" => $value,
-                "old_value" => $oldValue
+                self::NEW_VALUE_ATTRIBUTE => $value,
+                "old_value" => $oldValue,
+                PagePath::getPersistentName() => ":$wikiId"
             ];
             Event::createAndTrigger(self::PAGE_METADATA_MUTATION_EVENT, $data);
         }
@@ -349,7 +366,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     function getMetaFilePath(): ?Path
     {
         $resource = $this->getResource();
-        if(!($resource instanceof Page)){
+        if (!($resource instanceof Page)) {
             LogUtility::msg("The resource type ({$resource->getType()}) meta file is unknown and can't be retrieved.");
             return null;
         }

@@ -6,6 +6,7 @@ namespace ComboStrap;
 
 use dokuwiki\Extension\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
+use PHPUnit\Exception;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
 
@@ -37,6 +38,7 @@ require_once(__DIR__ . '/MetadataWikiPath.php');
 require_once(__DIR__ . '/MetadataStore.php');
 require_once(__DIR__ . '/MetadataStoreAbs.php');
 require_once(__DIR__ . '/MetadataSingleArrayStore.php');
+require_once(__DIR__ . '/XmlDocument.php');
 
 /**
  * Plugin Utility is added in all Dokuwiki extension
@@ -67,30 +69,40 @@ require_once(__DIR__ . '/BacklinkMenuItem.php');
 require_once(__DIR__ . '/Boldness.php');
 require_once(__DIR__ . '/Boolean.php');
 require_once(__DIR__ . '/Bootstrap.php');
-require_once(__DIR__ . '/BreadcrumbHierarchical.php');
+require_once(__DIR__ . '/Brand.php');
+require_once(__DIR__ . '/BrandButton.php');
+require_once(__DIR__ . '/CacheDependencies.php');
 require_once(__DIR__ . '/CacheExpirationDate.php');
 require_once(__DIR__ . '/CacheExpirationFrequency.php');
-require_once(__DIR__ . '/CacheByLogicalKey.php');
-require_once(__DIR__ . '/CacheInstructionsByLogicalKey.php');
+require_once(__DIR__ . '/CacheLog.php');
 require_once(__DIR__ . '/CacheManager.php');
 require_once(__DIR__ . '/CacheMedia.php');
+require_once(__DIR__ . '/CacheMenuItem.php');
+require_once(__DIR__ . '/CacheReportHtmlDataBlockArray.php');
+require_once(__DIR__ . '/CacheResults.php');
+require_once(__DIR__ . '/CacheResult.php');
 require_once(__DIR__ . '/Call.php');
 require_once(__DIR__ . '/CallStack.php');
 require_once(__DIR__ . '/Canonical.php');
-require_once(__DIR__ . '/ColorUtility.php');
+require_once(__DIR__ . '/ColorRgb.php');
+require_once(__DIR__ . '/ColorHsl.php');
+require_once(__DIR__ . '/ComboStrap.php');
 require_once(__DIR__ . '/ConditionalValue.php');
 require_once(__DIR__ . '/Console.php');
 require_once(__DIR__ . '/Cron.php');
 require_once(__DIR__ . '/DatabasePageRow.php');
 require_once(__DIR__ . '/DataType.php');
+require_once(__DIR__ . '/Dictionary.php');
 require_once(__DIR__ . '/Dimension.php');
 require_once(__DIR__ . '/DisqusIdentifier.php');
+require_once(__DIR__ . '/Display.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/DokuwikiId.php');
 require_once(__DIR__ . '/EndDate.php');
 require_once(__DIR__ . '/Event.php');
 require_once(__DIR__ . '/ExitException.php');
 require_once(__DIR__ . '/ExceptionCombo.php');
+require_once(__DIR__ . '/ExceptionComboNotFound.php');
 require_once(__DIR__ . '/ExceptionComboRuntime.php');
 require_once(__DIR__ . '/FileSystems.php');
 require_once(__DIR__ . '/FloatAttribute.php');
@@ -130,6 +142,8 @@ require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/LowQualityPage.php');
 require_once(__DIR__ . '/LowQualityPageOverwrite.php');
 require_once(__DIR__ . '/LowQualityCalculatedIndicator.php');
+require_once(__DIR__ . '/MarkupRef.php');
+require_once(__DIR__ . '/Math.php');
 require_once(__DIR__ . '/MetaManagerForm.php');
 require_once(__DIR__ . '/MetaManagerMenuItem.php');
 require_once(__DIR__ . '/MetadataDokuWikiStore.php');
@@ -146,6 +160,7 @@ require_once(__DIR__ . '/Opacity.php');
 require_once(__DIR__ . '/Os.php');
 require_once(__DIR__ . '/Page.php');
 require_once(__DIR__ . '/PageDescription.php');
+require_once(__DIR__ . '/PageEdit.php');
 require_once(__DIR__ . '/PageId.php');
 require_once(__DIR__ . '/PageKeywords.php');
 require_once(__DIR__ . '/PageImages.php');
@@ -156,7 +171,6 @@ require_once(__DIR__ . '/PageLayout.php');
 require_once(__DIR__ . '/PagePath.php');
 require_once(__DIR__ . '/PageProtection.php');
 require_once(__DIR__ . '/PageRules.php');
-require_once(__DIR__ . '/PageScope.php');
 require_once(__DIR__ . '/PageSql.php');
 require_once(__DIR__ . '/PageSqlParser/PageSqlLexer.php');
 require_once(__DIR__ . '/PageSqlParser/PageSqlParser.php');
@@ -177,7 +191,6 @@ require_once(__DIR__ . '/RasterImageLink.php');
 require_once(__DIR__ . '/Region.php');
 require_once(__DIR__ . '/RenderUtility.php');
 require_once(__DIR__ . '/ReplicationDate.php');
-require_once(__DIR__ . '/Resources.php');
 require_once(__DIR__ . '/ResourceName.php');
 require_once(__DIR__ . '/Sanitizer.php');
 require_once(__DIR__ . '/Shadow.php');
@@ -209,6 +222,7 @@ require_once(__DIR__ . '/ThirdMediaLink.php');
 require_once(__DIR__ . '/ThirdPartyPlugins.php');
 require_once(__DIR__ . '/TocUtility.php');
 require_once(__DIR__ . '/Toggle.php');
+require_once(__DIR__ . '/Tooltip.php');
 require_once(__DIR__ . '/References.php');
 require_once(__DIR__ . '/Reference.php');
 require_once(__DIR__ . '/Underline.php');
@@ -257,8 +271,8 @@ class PluginUtility
 
 
     const EDIT_SECTION_TARGET = 'section';
-    const ERROR_MESSAGE = "errorAtt";
-    const ERROR_LEVEL = "errorLevel";
+    const EXIT_MESSAGE = "errorAtt";
+    const EXIT_CODE = "exit_code";
     const DISPLAY = "display";
 
     /**
@@ -461,9 +475,9 @@ class PluginUtility
 
     }
 
-    public static function getTagAttributes($match)
+    public static function getTagAttributes($match, $knownTypes = null): array
     {
-        return self::getQualifiedTagAttributes($match, false, "");
+        return self::getQualifiedTagAttributes($match, false, "", $knownTypes);
     }
 
     /**
@@ -473,9 +487,10 @@ class PluginUtility
      * @param $hasThirdValue - if true, the third parameter is treated as value, not a property and returned in the `third` key
      * use for the code/file/console where they accept a name as third value
      * @param $keyThirdArgument - if a third argument is found, return it with this key
+     * @param array|null $knownTypes
      * @return array
      */
-    public static function getQualifiedTagAttributes($match, $hasThirdValue, $keyThirdArgument)
+    public static function getQualifiedTagAttributes($match, $hasThirdValue, $keyThirdArgument, array $knownTypes = null): array
     {
 
         $match = PluginUtility::getPreprocessEnterTag($match);
@@ -499,7 +514,15 @@ class PluginUtility
         } else {
             $nextArgument = $match;
         }
-        if (!strpos($nextArgument, "=")) {
+
+        $isType = !strpos($nextArgument, "=");
+        if ($knownTypes !== null) {
+            if (!in_array($nextArgument, $knownTypes)) {
+                $isType = false;
+            }
+        }
+        if ($isType) {
+
             $attributes["type"] = $nextArgument;
             // Suppress the type
             $match = substr($match, strlen($nextArgument));
@@ -563,7 +586,14 @@ class PluginUtility
     public static function getEmptyTagPattern($tag): string
     {
 
-        return '<' . $tag . '[^>]*/>';
+        /**
+         * A tag should start with the tag
+         * `(?=[/ ]{1})` - a space or the / (lookahead) => to allow allow tag name with minus character
+         * `(?![^/]>)` - it's not a normal tag (ie a > with the previous character that is not /)
+         * `[^>]*` then until the > is found (dokuwiki capture greedy, don't use the point character)
+         * then until the close `/>` character
+         */
+        return '<' . $tag . '(?=[/ ]{1})(?![^/]>)[^>]*\/>';
     }
 
     /**
@@ -653,9 +683,9 @@ class PluginUtility
          * For text color, see {@link TextColor}
          */
 
-        if ($attributes->hasComponentAttribute(ColorUtility::BORDER_COLOR)) {
-            $colorValue = $attributes->getValueAndRemove(ColorUtility::BORDER_COLOR);
-            $attributes->addStyleDeclarationIfNotSet(ColorUtility::BORDER_COLOR, ColorUtility::getColorValue($colorValue));
+        if ($attributes->hasComponentAttribute(ColorRgb::BORDER_COLOR)) {
+            $colorValue = $attributes->getValueAndRemove(ColorRgb::BORDER_COLOR);
+            $attributes->addStyleDeclarationIfNotSet(ColorRgb::BORDER_COLOR, ColorRgb::createFromString($colorValue)->toCssValue());
             self::checkDefaultBorderColorAttributes($attributes);
         }
 
@@ -734,18 +764,22 @@ class PluginUtility
              * TODO: when we have made a special fetch ajax with cache
              * for application resource, we can serve it statically
              */
-            $path = LocalPath::createFromPath(Resources::getImagesDirectory() . "/logo.svg");
-            $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
-            $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
-            $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");
-            $cache = new CacheMedia($path, $tagAttributes);
-            if (!$cache->isCacheUsable()) {
-                $xhtmlIcon = SvgDocument::createSvgDocumentFromPath($path)
-                    ->setShouldBeOptimized(true)
-                    ->getXmlText($tagAttributes);
-                $cache->storeCache($xhtmlIcon);
+            $path = Site::getComboImagesDirectory()->resolve("logo.svg");
+            try {
+                $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
+                $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
+                $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");
+                $cache = new CacheMedia($path, $tagAttributes);
+                if (!$cache->isCacheUsable()) {
+                    $xhtmlIcon = SvgDocument::createSvgDocumentFromPath($path)
+                        ->setShouldBeOptimized(true)
+                        ->getXmlText($tagAttributes);
+                    $cache->storeCache($xhtmlIcon);
+                }
+                $xhtmlIcon = FileSystems::getContent($cache->getFile());
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The logo ($path) is not valid and could not be added to the documentation link. Error: {$e->getMessage()}");
             }
-            $xhtmlIcon = FileSystems::getContent($cache->getFile());
 
         }
         $urlApex = self::$URL_APEX;
@@ -856,14 +890,14 @@ class PluginUtility
      * @return string|null - null in test
      */
     public
-    static function getMainPageDokuwikiId(): ?string
+    static function getRequestedWikiId(): ?string
     {
         global $ID;
         global $INFO;
         $callingId = $ID;
         // If the component is in a sidebar, we don't want the ID of the sidebar
         // but the ID of the page.
-        if ($INFO != null) {
+        if ($INFO !== null) {
             $callingId = $INFO['id'];
         }
         /**
@@ -873,20 +907,34 @@ class PluginUtility
          */
         if ($callingId == null) {
             global $_REQUEST;
-            if (isset($_REQUEST["id"])) {
-                $callingId = $_REQUEST["id"];
+            if (isset($_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE])) {
+                $callingId = $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
             }
         }
+
         return $callingId;
 
     }
 
     /**
-     * Transform special HTML characters to entity
+     * Encode special HTML characters to entity
+     * (ie escaping)
+     *
+     * This is used to transform text that may be interpreted as HTML
+     * into a text
+     *   * that will not be interpreted as HTML
+     *   * that may be added in html attribute
+     *
+     * For instance:
+     *  * text that should go in attribute with special HTML characters (such as title)
+     *  * text that we don't create (to prevent HTML injection)
+     *
      * Example:
-     * <hello>world</hello>
+     *
+     * <script>...</script>
      * to
-     * "&lt;hello&gt;world&lt;/hello&gt;"
+     * "&lt;script&gt;...&lt;/hello&gt;"
+     *
      *
      * @param $text
      * @return string
@@ -896,10 +944,22 @@ class PluginUtility
     {
         /**
          * See https://stackoverflow.com/questions/46483/htmlentities-vs-htmlspecialchars/3614344
-         * {@link htmlentities }
+         *
+         * Not {@link htmlentities } htmlentities($text, ENT_QUOTES);
+         * Otherwise we get `Error while loading HTMLError: Entity 'hellip' not defined`
+         * when loading HTML with {@link XmlDocument}
+         *
+         * See also {@link PluginUtility::htmlDecode()}
+         *
+         * Without ENT_QUOTES
+         * <h4 class="heading-combo">
+         * is encoded as
+         * &gt;h4 class="heading-combo"&lt;
+         * and cannot be added in a attribute because of the quote
+         * This is used for {@link Tooltip}
          */
-        //return htmlspecialchars($text, ENT_QUOTES);
-        return htmlentities($text);
+        return htmlspecialchars($text, ENT_XHTML | ENT_QUOTES);
+
     }
 
     public
@@ -987,11 +1047,11 @@ class PluginUtility
     static function getConfValue($confName, $defaultValue = null)
     {
         global $conf;
-        if (isset($conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName])) {
-            return $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName];
-        } else {
+        $value = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName];
+        if ($value === null || trim($value) === "") {
             return $defaultValue;
         }
+        return $value;
     }
 
     /**
@@ -1072,7 +1132,7 @@ class PluginUtility
     public
     static function getSnippetManager(): SnippetManager
     {
-        return SnippetManager::get();
+        return SnippetManager::getOrCreate();
     }
 
 
@@ -1082,7 +1142,7 @@ class PluginUtility
      * @return string
      */
     public
-    static function renderUnmatched($data)
+    static function renderUnmatched($data): string
     {
         /**
          * Attributes
@@ -1093,8 +1153,8 @@ class PluginUtility
             $attributes = [];
         }
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-        $display = $tagAttributes->getValue(TagAttributes::DISPLAY);
-        if ($display != "none") {
+        $display = $tagAttributes->getValue(Display::DISPLAY);
+        if ($display !== "none") {
             $payload = $data[self::PAYLOAD];
             $previousTagDisplayType = $data[self::CONTEXT];
             if ($previousTagDisplayType !== Call::INLINE_DISPLAY) {
@@ -1299,56 +1359,6 @@ class PluginUtility
 
     }
 
-    /**
-     * @return bool true if loaded, false otherwise
-     * Strap is loaded only if this is the same version
-     * to avoid function, class, or members that does not exist
-     */
-    public
-    static function loadStrapUtilityTemplateIfPresentAndSameVersion(): bool
-    {
-        $templateUtilityFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
-        if (file_exists($templateUtilityFile)) {
-            /**
-             * Check the version
-             */
-            $templateInfo = confToHash(__DIR__ . '/../../../tpl/strap/template.info.txt');
-            $templateVersion = $templateInfo['version'];
-            $comboVersion = self::$INFO_PLUGIN['version'];
-            if ($templateVersion != $comboVersion) {
-                $strapName = "Strap";
-                $comboName = "Combo";
-                $strapLink = "<a href=\"https://www.dokuwiki.org/template:strap\">$strapName</a>";
-                $comboLink = "<a href=\"https://www.dokuwiki.org/plugin:combo\">$comboName</a>";
-                if ($comboVersion > $templateVersion) {
-                    $upgradeTarget = $strapName;
-                } else {
-                    $upgradeTarget = $comboName;
-                }
-                $upgradeLink = "<a href=\"" . wl() . "&do=admin&page=extension" . "\">upgrade <b>$upgradeTarget</b> via the extension manager</a>";
-                $message = "You should $upgradeLink to the latest version to get a fully functional experience. The version of $comboLink is ($comboVersion) while the version of $strapLink is ($templateVersion).";
-                LogUtility::msg($message);
-                return false;
-            } else {
-                /** @noinspection PhpIncludeInspection */
-                require_once($templateUtilityFile);
-                return true;
-            }
-        } else {
-            $level = LogUtility::LVL_MSG_DEBUG;
-            if (defined('DOKU_UNITTEST')) {
-                // fail
-                $level = LogUtility::LVL_MSG_ERROR;
-            }
-            if (Site::getTemplate() != "strap") {
-                LogUtility::msg("The strap template is not installed", $level);
-            } else {
-                LogUtility::msg("The file ($templateUtilityFile) was not found", $level);
-            }
-            return false;
-        }
-    }
-
 
     /**
      *
@@ -1362,10 +1372,17 @@ class PluginUtility
         return self::isTest();
     }
 
-    public static function isDev()
+    /**
+     * Is this a dev environment (ie laptop where the dev is working)
+     * @return bool
+     */
+    public static function isDev(): bool
     {
         global $_SERVER;
         if ($_SERVER["REMOTE_ADDR"] == "127.0.0.1") {
+            return true;
+        }
+        if ($_SERVER["COMPUTERNAME"] === "NICO") {
             return true;
         }
         return false;
@@ -1379,23 +1396,6 @@ class PluginUtility
     public static function getInstructionsWithoutRoot($markiCode)
     {
         return RenderUtility::getInstructionsAndStripPEventually($markiCode);
-    }
-
-    /**
-     * Transform a text into a valid HTML id
-     * @param $string
-     * @return string
-     */
-    public static function toHtmlId($string)
-    {
-        /**
-         * sectionId calls cleanID
-         * cleanID delete all things before a ':'
-         * we do then the replace before to not
-         * lost a minus '-' separator
-         */
-        $string = str_replace(array(':', '.'), '', $string);
-        return sectionID($string, $check);
     }
 
     public static function isTest()
@@ -1418,6 +1418,63 @@ class PluginUtility
     {
         // https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
         return getenv("CI") === "true";
+    }
+
+    public static function htmlDecode($int): string
+    {
+        return htmlspecialchars_decode($int, ENT_XHTML | ENT_QUOTES);
+    }
+
+    /**
+     * Tells if the process is to output a page
+     * @return bool
+     */
+    public static function isRenderingRequestedPageProcess(): bool
+    {
+
+        global $ID;
+        if (empty($ID)) {
+            // $ID is null
+            // case on "/lib/exe/mediamanager.php"
+            return false;
+        }
+
+        $page = Page::createPageFromId($ID);
+        if (!$page->exists()) {
+            return false;
+        }
+
+        /**
+         * No metadata for bars
+         */
+        if ($page->isSecondarySlot()) {
+            return false;
+        }
+        return true;
+
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function renderInstructionsToXhtml($callStackHeaderInstructions): ?string
+    {
+        return RenderUtility::renderInstructionsToXhtml($callStackHeaderInstructions);
+    }
+
+    /**
+     */
+    public static function getCurrentSlotId()
+    {
+        global $ID;
+        $slot = $ID;
+        if ($slot === null) {
+            if (!PluginUtility::isTest()) {
+                LogUtility::msg("The slot could not be identified (global ID is null)");
+            }
+            return RenderUtility::DEFAULT_SLOT_ID_FOR_TEST;
+        }
+        return $slot;
     }
 
 

@@ -29,7 +29,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
     const CONF_WIKI_HEADING_ENABLE = "headingWikiEnable";
     const CONF_DEFAULT_WIKI_ENABLE_VALUE = 1;
 
-    public function getSort()
+    public function getSort(): int
     {
         /**
          * It's 49 (on less than the original heading)
@@ -38,7 +38,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
         return 49;
     }
 
-    public function getType()
+    public function getType(): string
     {
         return syntax_plugin_combo_heading::SYNTAX_TYPE;
     }
@@ -56,7 +56,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
      *
      * This is the equivalent of inline or block for css
      */
-    public function getPType()
+    public function getPType(): string
     {
         return syntax_plugin_combo_heading::SYNTAX_PTYPE;
     }
@@ -70,7 +70,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array('formatting', 'substition', 'protected', 'disabled');
     }
@@ -104,7 +104,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
      * @param Doku_Handler $handler
      * @return array
      */
-    public function handle($match, $state, $pos, Doku_Handler $handler)
+    public function handle($match, $state, $pos, Doku_Handler $handler): array
     {
         switch ($state) {
 

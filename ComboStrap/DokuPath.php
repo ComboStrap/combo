@@ -7,14 +7,21 @@ require_once(__DIR__ . '/PluginUtility.php');
 /**
  * Class DokuPath
  * @package ComboStrap
- * A dokuwiki path
+ * A dokuwiki path has the same structure than a windows path
+ * with a drive and a path
+ *
+ * The drive is just a local path on the local file system
+ *
+ * Dokuwiki knows only two drives ({@link DokuPath::PAGE_DRIVE} and {@link DokuPath::MEDIA_DRIVE}
+ * but we have added a couple more such as the {@link DokuPath::COMBO_DRIVE combo resources}
+ * and the {@link DokuPath::CACHE_DRIVE}
  *
  */
 class DokuPath extends PathAbs
 {
-    const MEDIA_TYPE = "media";
-    const PAGE_TYPE = "page";
-    const UNKNOWN_TYPE = "unknown";
+    const MEDIA_DRIVE = "media";
+    const PAGE_DRIVE = "page";
+    const UNKNOWN_DRIVE = "unknown";
     const PATH_SEPARATOR = ":";
 
     // https://www.dokuwiki.org/config:useslash
@@ -29,13 +36,30 @@ class DokuPath extends PathAbs
     public const DIRECTORY_SEPARATOR = "/";
     public const SLUG_SEPARATOR = "-";
 
-    const RESOURCE_TYPE = "resource";
+
     /**
-     * Dokuwiki know as file system starts at page and media
-     * This parameters permits to add another one
-     * that starts at the resource directory
+     * Dokuwiki has a file system that starts at a page and/or media
+     * directory that depends on the used syntax.
+     *
+     * It's a little bit the same than as the icon library (we set it as library then)
+     *
+     * This parameters is an URL parameter
+     * that permits to set an another one
+     * when retrieving the file via HTTP
+     * For now, there is only one value: {@link DokuPath::COMBO_DRIVE}
      */
-    public const WIKI_FS_TYPE = "wiki-fs-type";
+    public const DRIVE_ATTRIBUTE = "drive";
+
+    /**
+     * The interwiki scheme that points to the
+     * combo resources directory ie {@link DokuPath::COMBO_DRIVE}
+     * ie
+     *   combo>library:
+     *   combo>image:
+     */
+    const COMBO_DRIVE = "combo";
+    const CACHE_DRIVE = "cache";
+    const DRIVES = [self::COMBO_DRIVE, self::CACHE_DRIVE, self::MEDIA_DRIVE];
 
     /**
      * @var string[]
@@ -56,85 +80,78 @@ class DokuPath extends PathAbs
     /**
      * @var string
      */
-    private $finalType;
+    private $drive;
     /**
      * @var string|null - ie mtime
      */
     private $rev;
 
-    /**
-     * @var string a value with an absolute id without the root
-     * used in the index (ie the id)
-     */
-    private $qualifiedId;
 
     /**
      * @var string the path scheme one constant that starts with SCHEME
      * ie
-     * {@link DokuFs::SCHEME},
-     * {@link InternetPath::scheme},
-     * {@link InterWikiPath::scheme}
+     * {@link DokuFs::SCHEME}
      */
     private $scheme;
     private $filePath;
 
+    /**
+     * The separator from the {@link DokuPath::getDrive()}
+     * Same as {@link InterWikiPath}
+     */
+    const DRIVE_SEPARATOR = ">";
 
     /**
      * DokuPath constructor.
      *
      * A path for the Dokuwiki File System
      *
-     * @param string $absolutePath - the dokuwiki absolute path (may not be relative but may be a namespace)
-     * @param string $type - the type (media, page)
+     * @param string $path - the dokuwiki absolute path (may not be relative but may be a namespace)
+     * @param string $drive - the drive (media, page, combo) - same as in windows for the drive prefix (c, d, ...)
      * @param string|null $rev - the revision (mtime)
      *
      * Thee path should be a qualified/absolute path because in Dokuwiki, a link to a {@link Page}
      * that ends with the {@link DokuPath::PATH_SEPARATOR} points to a start page
      * and not to a namespace. The qualification occurs in the transformation
      * from ref to page.
-     *   For a page: in {@link LinkUtility::getInternalPage()}
+     *   For a page: in {@link MarkupRef::getInternalPage()}
      *   For a media: in the {@link MediaLink::createMediaLinkFromId()}
      * Because this class is mostly the file representation, it should be able to
      * represents also a namespace
      */
-    protected function __construct(string $absolutePath, string $type, string $rev = null)
+    protected function __construct(string $path, string $drive, string $rev = null)
     {
-        DokuPath::addRootSeparatorIfNotPresent($absolutePath);
-        if (empty($absolutePath)) {
+
+        if (empty($path)) {
             LogUtility::msg("A null path was given", LogUtility::LVL_MSG_WARNING);
         }
-        $this->absolutePath = $absolutePath;
 
 
-        // Check whether this is a local or remote image or interwiki
-        if (media_isexternal($absolutePath)) {
+        /**
+         * Scheme determination
+         */
+        $this->scheme = $this->schemeDetermination($path);
 
-            $this->scheme = InternetPath::scheme;
-
-        } else if (link_isinterwiki($absolutePath)) {
-
-            $this->scheme = InterWikiPath::scheme;
-
-        } else {
-
-            if (substr($absolutePath, 0, 1) !== DokuPath::PATH_SEPARATOR) {
-                if (PluginUtility::isDevOrTest()) {
-                    // Feel too much the log, test are not seeing anything, may be minimap ?
-                    LogUtility::msg("The path given ($absolutePath) is not qualified", LogUtility::LVL_MSG_ERROR);
-                }
-                $this->absolutePath = ":" . $absolutePath;
-            }
-            if (substr($absolutePath, 1, 1) === DokuPath::PATH_SEPARATOR) {
+        switch ($this->scheme) {
+            case InterWikiPath::scheme:
                 /**
-                 * path given is `::path`
+                 * We use interwiki to define the combo resources
+                 * (Internal use only)
                  */
-                if (PluginUtility::isDevOrTest()) {
-                    LogUtility::msg("The path given ($absolutePath) has too much separator", LogUtility::LVL_MSG_ERROR);
-                }
-            }
-            $this->scheme = DokuFs::SCHEME;
+                $comboInterWikiScheme = "combo>";
+                if (strpos($path, $comboInterWikiScheme) === 0) {
+                    $this->scheme = DokuFs::SCHEME;
+                    $this->id = substr($path, strlen($comboInterWikiScheme));
+                    $drive = self::COMBO_DRIVE;
+                };
+                break;
+            case DokuFs::SCHEME:
+            default:
+                DokuPath::addRootSeparatorIfNotPresent($path);
+                $this->id = DokuPath::toDokuwikiId($path);
 
         }
+        $this->absolutePath = $path;
 
 
         /**
@@ -145,15 +162,15 @@ class DokuPath extends PathAbs
          * We check if there is an extension
          * If this is the case, this is a media
          */
-        if ($type == self::UNKNOWN_TYPE) {
-            $lastPosition = StringUtility::lastIndexOf($absolutePath, ".");
+        if ($drive == self::UNKNOWN_DRIVE) {
+            $lastPosition = StringUtility::lastIndexOf($path, ".");
             if ($lastPosition === FALSE) {
-                $type = self::PAGE_TYPE;
+                $drive = self::PAGE_DRIVE;
             } else {
-                $type = self::MEDIA_TYPE;
+                $drive = self::MEDIA_DRIVE;
             }
         }
-        $this->finalType = $type;
+        $this->drive = $drive;
         $this->rev = $rev;
 
         /**
@@ -162,7 +179,6 @@ class DokuPath extends PathAbs
         $filePath = $this->absolutePath;
         if ($this->scheme == DokuFs::SCHEME) {
 
-            $this->id = DokuPath::toDokuwikiId($this->absolutePath);
             $isNamespacePath = false;
             if (\mb_substr($this->absolutePath, -1) == self::PATH_SEPARATOR) {
                 $isNamespacePath = true;
@@ -172,29 +188,33 @@ class DokuPath extends PathAbs
 
             if (!$isNamespacePath) {
 
-                switch ($type) {
+                switch ($drive) {
 
-                    case self::MEDIA_TYPE:
+                    case self::MEDIA_DRIVE:
                         if (!empty($rev)) {
                             $filePath = mediaFN($this->id, $rev);
                         } else {
                             $filePath = mediaFN($this->id);
                         }
                         break;
-                    case self::PAGE_TYPE:
+                    case self::PAGE_DRIVE:
                         if (!empty($rev)) {
                             $filePath = wikiFN($this->id, $rev);
                         } else {
                             $filePath = wikiFN($this->id);
                         }
                         break;
-                    case self::RESOURCE_TYPE:
-                        $relativeFsPath = DokuPath::toFileSystemSeparator($this->id);
-                        $filePath = Resources::getAbsoluteResourcesDirectory() . DIRECTORY_SEPARATOR . $relativeFsPath;
-                        break;
                     default:
-                        LogUtility::msg("Wiki Path Type ($type) is unknown, the local file system path could not be found", LogUtility::LVL_MSG_ERROR);
-
+                        $baseDirectory = DokuPath::getDriveRoots()[$drive];
+                        if ($baseDirectory === null) {
+                            // We don't throw, the file will just not exist
+                            // this is metadata
+                            LogUtility::msg("The drive ($drive) is unknown, the local file system path could not be found");
+                        } else {
+                            $relativeFsPath = DokuPath::toFileSystemSeparator($this->id);
+                            $filePath = $baseDirectory->resolve($relativeFsPath)->toString();
+                        }
+                        break;
                 }
             } else {
                 /**
@@ -205,7 +225,7 @@ class DokuPath extends PathAbs
                  */
                 $this->id = resolve_id(getNS($ID), $this->id, true);
                 global $conf;
-                if ($type == self::MEDIA_TYPE) {
+                if ($drive == self::MEDIA_DRIVE) {
                     $filePath = $conf['mediadir'] . '/' . utf8_encodeFN($this->id);
                 } else {
                     $filePath = $conf['datadir'] . '/' . utf8_encodeFN($this->id);
@@ -223,18 +243,27 @@ class DokuPath extends PathAbs
      */
     public static function createPagePathFromPath($absolutePath): DokuPath
     {
-        return new DokuPath($absolutePath, DokuPath::PAGE_TYPE);
+        return new DokuPath($absolutePath, DokuPath::PAGE_DRIVE);
     }
 
     public static function createMediaPathFromAbsolutePath($absolutePath, $rev = ''): DokuPath
     {
-        return new DokuPath($absolutePath, DokuPath::MEDIA_TYPE, $rev);
+        return new DokuPath($absolutePath, DokuPath::MEDIA_DRIVE, $rev);
     }
 
-    public static function createUnknownFromIdOrPath($id): DokuPath
+    /**
+     * If the media may come from the
+     * dokuwiki media or combo resources media,
+     * you should use this function
+     *
+     * The constructor will determine the type based on
+     * the id structure.
+     * @param $id
+     * @return DokuPath
+     */
+    public static function createFromUnknownRoot($id): DokuPath
     {
-        DokuPath::addRootSeparatorIfNotPresent($id);
-        return new DokuPath($id, DokuPath::UNKNOWN_TYPE);
+        return new DokuPath($id, DokuPath::UNKNOWN_DRIVE);
     }
 
     /**
@@ -314,7 +343,7 @@ class DokuPath extends PathAbs
 
     public static function createPagePathFromId($id): DokuPath
     {
-        return new DokuPath(DokuPath::PATH_SEPARATOR . $id, self::PAGE_TYPE);
+        return new DokuPath(DokuPath::PATH_SEPARATOR . $id, self::PAGE_DRIVE);
     }
 
     /**
@@ -354,14 +383,28 @@ class DokuPath extends PathAbs
         return $path;
     }
 
-    public static function createResource($dokuwikiId): DokuPath
+    /**
+     */
+    public static function createComboResource($dokuwikiId): DokuPath
     {
-        return new DokuPath($dokuwikiId, self::RESOURCE_TYPE);
+        return new DokuPath($dokuwikiId, self::COMBO_DRIVE);
     }
 
-    public static function createDokuPath($mediaId, $type, $rev = ''): DokuPath
+    /**
+     */
+    public static function createDokuPath($path, $drive, $rev = ''): DokuPath
     {
-        return new DokuPath($mediaId, $type, $rev);
+        return new DokuPath($path, $drive, $rev);
+    }
+
+    public static function getDriveRoots(): array
+    {
+        return [
+            self::MEDIA_DRIVE => Site::getMediaDirectory(),
+            self::PAGE_DRIVE => Site::getPageDirectory(),
+            self::COMBO_DRIVE => Site::getComboResourcesDirectory(),
+            self::CACHE_DRIVE => Site::getCacheDirectory()
+        ];
     }
 
 
@@ -379,17 +422,18 @@ class DokuPath extends PathAbs
     }
 
     /**
-     * @return string
+     * @return null|string
      */
-    public function getLastNameWithoutExtension(): string
+    public function getLastNameWithoutExtension(): ?string
     {
         /**
          * A page doku path has no extension for now
          */
-        if ($this->finalType === self::PAGE_TYPE) {
+        if ($this->drive === self::PAGE_DRIVE) {
             return $this->getLastName();
         }
         return parent::getLastNameWithoutExtension();
+
     }
 
 
@@ -416,7 +460,7 @@ class DokuPath extends PathAbs
     {
 
         if (
-            $this->finalType === self::PAGE_TYPE
+            $this->drive === self::PAGE_DRIVE
             &&
             !$this->isGlob()
         ) {
@@ -441,7 +485,7 @@ class DokuPath extends PathAbs
     public
     function __toString()
     {
-        return $this->getDokuwikiId();
+        return $this->toUriString();
     }
 
     /**
@@ -492,14 +536,20 @@ class DokuPath extends PathAbs
      * is the {@link File::getModifiedTime()} of the file
      *
      * Let op passing a revision to Dokuwiki will
-     * make ti search to the history
+     * make it search to the history
      * The actual file will then not be found
      *
      * @return string|null
      */
     public
-    function getRevision()
+    function getRevision(): ?string
     {
+        if ($this->rev === null) {
+            $localPath = $this->toLocalPath();
+            if (FileSystems::exists($localPath)) {
+                return FileSystems::getModifiedTime($localPath)->getTimestamp();
+            }
+        }
         return $this->rev;
     }
 
@@ -508,7 +558,7 @@ class DokuPath extends PathAbs
      * @return string
      *
      * This is the local absolute path WITH the root separator.
-     * It's used in ref present in {@link LinkUtility link} or {@link MediaLink}
+     * It's used in ref present in {@link MarkupRef link} or {@link MediaLink}
      * when creating test, otherwise the ref is considered as relative
      *
      *
@@ -533,7 +583,7 @@ class DokuPath extends PathAbs
     function getReferencedBy(): array
     {
         $absoluteId = $this->getDokuwikiId();
-        if ($this->finalType == self::MEDIA_TYPE) {
+        if ($this->drive == self::MEDIA_DRIVE) {
             return idx_get_indexer()->lookupKey('relation_media', $absoluteId);
         } else {
             return idx_get_indexer()->lookupKey('relation_references', $absoluteId);
@@ -576,10 +626,7 @@ class DokuPath extends PathAbs
     public static function getReservedWords(): array
     {
         if (self::$reservedWords == null) {
-            $reservedWords = array_merge(Url::RESERVED_WORDS, LocalPath::RESERVED_WINDOWS_CHARACTERS);
-            self::$reservedWords = array_filter($reservedWords, function ($e) {
-                return $e != DokuPath::PATH_SEPARATOR;
-            });
+            self::$reservedWords = array_merge(Url::RESERVED_WORDS, LocalPath::RESERVED_WINDOWS_CHARACTERS);
         }
         return self::$reservedWords;
     }
@@ -603,6 +650,10 @@ class DokuPath extends PathAbs
         return LocalPath::create($this->filePath);
     }
 
+    /**
+     * @return string - Returns the string representation of this path (to be able to use it in url)
+     * To get the full string version see {@link DokuPath::toUriString()}
+     */
     function toString(): string
     {
         return $this->absolutePath;
@@ -610,7 +661,8 @@ class DokuPath extends PathAbs
 
     function toUriString(): string
     {
-        $string = "{$this->scheme}://$this->finalType/$this->id";
+        $driveSep = self::DRIVE_SEPARATOR;
+        $string = "{$this->scheme}://$this->drive$driveSep$this->id";
         if ($this->rev !== null) {
             return "$string?rev={$this->rev}";
         }
@@ -619,12 +671,12 @@ class DokuPath extends PathAbs
 
     function toAbsolutePath(): Path
     {
-        return new DokuPath($this->absolutePath, $this->finalType, $this->rev);
+        return new DokuPath($this->absolutePath, $this->drive, $this->rev);
     }
 
     /**
      * The parent path is a directory (namespace)
-     * The parent of page in the root does return the root namespace.
+     * The parent of page in the root does return null.
      *
      * @return DokuPath|null
      */
@@ -639,26 +691,71 @@ class DokuPath extends PathAbs
             case 0:
                 return null;
             case 1:
-                return new DokuPath(DokuPath::PATH_SEPARATOR, $this->finalType, $this->rev);
+                return new DokuPath(DokuPath::PATH_SEPARATOR, $this->drive, $this->rev);
             default:
                 $names = array_slice($names, 0, sizeof($names) - 1);
                 $path = implode(DokuPath::PATH_SEPARATOR, $names);
-                return new DokuPath($path, $this->finalType, $this->rev);
+                return new DokuPath($path, $this->drive, $this->rev);
         }
 
     }
 
     function getMime(): ?Mime
     {
-        if ($this->finalType === self::PAGE_TYPE) {
+        if ($this->drive === self::PAGE_DRIVE) {
             return new Mime(Mime::PLAIN_TEXT);
         }
         return parent::getMime();
 
     }
 
-    public function getType(): string
+    public function getLibrary(): string
     {
-        return $this->finalType;
+        return $this->drive;
+    }
+
+    private function schemeDetermination($absolutePath): string
+    {
+
+        if (media_isexternal($absolutePath)) {
+            /**
+             * This code should not be here
+             * Because it should be another path (ie http path)
+             * but for historical reason due to compatibility with
+             * dokuwiki, it's here.
+             */
+            return InternetPath::scheme;
+
+        }
+        if (link_isinterwiki($absolutePath)) {
+
+            return InterWikiPath::scheme;
+
+        }
+
+        DokuPath::addRootSeparatorIfNotPresent($absolutePath);
+        $this->absolutePath = $absolutePath;
+
+        if (substr($absolutePath, 1, 1) === DokuPath::PATH_SEPARATOR) {
+            /**
+             * path given is `::path`
+             */
+            if (PluginUtility::isDevOrTest()) {
+                LogUtility::msg("The path given ($absolutePath) has too much separator", LogUtility::LVL_MSG_ERROR);
+            }
+        }
+        return DokuFs::SCHEME;
+
+
+    }
+
+    public function getDrive(): string
+    {
+        return $this->drive;
+    }
+
+    public function resolve(string $name): DokuPath
+    {
+        return new DokuPath($this->absolutePath . self::PATH_SEPARATOR . $name, $this->getDrive());
     }
 }

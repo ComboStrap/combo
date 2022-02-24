@@ -55,6 +55,9 @@ class SvgImageLink extends ImageLink
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     private function createImgHTMLTag(): string
     {
 
@@ -65,24 +68,21 @@ class SvgImageLink extends ImageLink
         /**
          * Snippet
          */
+        $snippetManager = PluginUtility::getSnippetManager();
         if ($svgInjection) {
-            $snippetManager = PluginUtility::getSnippetManager();
 
             // Based on https://github.com/iconic/SVGInjector/
             // See also: https://github.com/iconfu/svg-inject
             // !! There is a fork: https://github.com/tanem/svg-injector !!
             // Fallback ? : https://github.com/iconic/SVGInjector/#per-element-png-fallback
-            $snippetManager->upsertTagsForBar("svg-injector",
-                array(
-                    'script' => [
-                        array(
-                            "src" => "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/svg-injector.min.js",
-                            // "integrity" => "sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk=",
-                            "crossorigin" => "anonymous"
-                        )
-                    ]
+            $snippetManager
+                ->attachJavascriptLibraryForSlot(
+                    "svg-injector",
+                    "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/dist/svg-injector.min.js",
+                    "sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk="
                 )
-            );
+                ->setDoesManipulateTheDomOnRun(false);
+
         }
 
         // Add lazy load snippet
@@ -116,7 +116,7 @@ class SvgImageLink extends ImageLink
         /**
          * Alt is mandatory
          */
-        $responseAttributes->addHtmlAttributeValue("alt", $image->getAltNotEmpty());
+        $responseAttributes->addOutputAttributeValue("alt", $image->getAltNotEmpty());
 
 
         /**
@@ -128,13 +128,13 @@ class SvgImageLink extends ImageLink
          */
         $svgFunctionalClass = "";
         if ($svgInjection && $lazyLoad) {
-            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg-injection");
+            $snippetManager->attachInternalJavascriptForSlot("lozad-svg-injection");
             $svgFunctionalClass = "lazy-svg-injection-combo";
         } else if ($lazyLoad && !$svgInjection) {
-            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg");
+            $snippetManager->attachInternalJavascriptForSlot("lozad-svg");
             $svgFunctionalClass = "lazy-svg-combo";
         } else if ($svgInjection && !$lazyLoad) {
-            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("svg-injector");
+            $snippetManager->attachInternalJavascriptForSlot("svg-injector");
             $svgFunctionalClass = "svg-injection-combo";
         }
         if ($lazyLoad) {
@@ -147,27 +147,27 @@ class SvgImageLink extends ImageLink
          * Dimension are mandatory
          * to avoid layout shift (CLS)
          */
-        $responseAttributes->addHtmlAttributeValue(Dimension::WIDTH_KEY, $image->getTargetWidth());
-        $responseAttributes->addHtmlAttributeValue(Dimension::HEIGHT_KEY, $image->getTargetHeight());
+        $responseAttributes->addOutputAttributeValue(Dimension::WIDTH_KEY, $image->getTargetWidth());
+        $responseAttributes->addOutputAttributeValue(Dimension::HEIGHT_KEY, $image->getTargetHeight());
 
         /**
          * Src call
          */
-        $srcValue = $image->getUrl(DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML);
+        $srcValue = $image->getUrl();
         if ($lazyLoad) {
 
             /**
              * Note: Responsive image srcset is not needed for svg
              */
-            $responseAttributes->addHtmlAttributeValue("data-src", $srcValue);
-            $responseAttributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder(
+            $responseAttributes->addOutputAttributeValue("data-src", $srcValue);
+            $responseAttributes->addOutputAttributeValue("src", LazyLoad::getPlaceholder(
                 $image->getTargetWidth(),
                 $image->getTargetHeight()
             ));
 
         } else {
 
-            $responseAttributes->addHtmlAttributeValue("src", $srcValue);
+            $responseAttributes->addOutputAttributeValue("src", $srcValue);
 
         }
 
@@ -194,6 +194,7 @@ class SvgImageLink extends ImageLink
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
      * A media can be a video also
      * @return string
+     * @throws ExceptionCombo
      */
     public function renderMediaTag(): string
     {
@@ -230,7 +231,13 @@ class SvgImageLink extends ImageLink
                 /**
                  * Svg tag
                  */
-                $imgHTML = FileSystems::getContent($image->getSvgFile());
+                try {
+                    $imgHTML = FileSystems::getContent($image->getSvgFile());
+                } catch (ExceptionCombo $e) {
+                    $error = "Error while retrieving the content of the svg image ($image). Error: {$e->getMessage()}";
+                    LogUtility::msg($error);
+                    return "<span class=\"text-danger\">$error</span>";
+                }
 
             }
 

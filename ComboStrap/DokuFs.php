@@ -6,8 +6,18 @@ namespace ComboStrap;
 
 use DateTime;
 
+/**
+ * Class DokuFs
+ * @package ComboStrap
+ *
+ * The file system of Dokuwiki is based
+ * on drive name (such as page and media)
+ * that locates a directory on the local file system
+ */
 class DokuFs implements FileSystem
 {
+
+
     public const SCHEME = 'doku';
 
 

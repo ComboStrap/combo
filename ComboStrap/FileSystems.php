@@ -32,7 +32,7 @@ class FileSystems
         throw new ExceptionComboRuntime("File system ($scheme) unknown");
     }
 
-    public static function getModifiedTime(Path $path)
+    public static function getModifiedTime(Path $path): ?\DateTime
     {
         $scheme = $path->getScheme();
         switch ($scheme) {

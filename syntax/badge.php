@@ -3,7 +3,12 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Bootstrap;
+use ComboStrap\ColorRgb;
+use ComboStrap\ExceptionCombo;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
+use ComboStrap\Skin;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
@@ -111,28 +116,81 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $defaultConfValue = PluginUtility::parseAttributes($this->getConf(self::CONF_DEFAULT_ATTRIBUTES_KEY));
-                $originalAttributes = PluginUtility::getTagAttributes($match);
-                $originalAttributes = PluginUtility::mergeAttributes($originalAttributes, $defaultConfValue);
-                $tagAttributes = TagAttributes::createFromCallStackArray($originalAttributes);
 
-                /**
-                 * Context Rendering attributes
-                 */
-                $tag = new Tag(self::TAG, $originalAttributes, $state, $handler);
+                $knownTypes = ["primary", "secondary", "success", "danger", "warning", "info", "tip", "light", "dark"];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultConfValue, $knownTypes);
 
 
                 /**
-                 * Type attributes
+                 * Brand and tip colors
                  */
                 $tagAttributes->addClassName("badge");
                 $type = $tagAttributes->getType();
-                if ($type != "tip") {
-                    $tagAttributes->addClassName("alert-" . $type);
-                } else {
-                    if (!$tagAttributes->hasComponentAttribute("background-color")) {
-                        $tagAttributes->addStyleDeclarationIfNotSet("background-color","#fff79f"); // lum - 195
-                        $tagAttributes->addClassName("text-dark");
+                $color = null;
+                switch ($type) {
+                    case "tip":
+                        $color = ColorRgb::TIP_COLOR;
+                        break;
+                    case ColorRgb::PRIMARY_VALUE:
+                        $color = Site::getPrimaryColorValue();
+                        break;
+                    case ColorRgb::SECONDARY_VALUE:
+                        $color = Site::getSecondaryColorValue();
+                        break;
+                    default:
+                }
+                $colorObject = null;
+                if ($color !== null) {
+                    try {
+                        $colorObject = ColorRgb::createFromString($color);
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("The color value ($color) for the badge type ($type) is not valid. Error: {$e->getMessage()}");
                     }
+                }
+                if ($colorObject !== null) {
+                    /**
+                     * https://getbootstrap.com/docs/5.0/components/alerts/
+                     * $alert-bg-scale:                -80%;
+                     * $alert-border-scale:            -70%;
+                     * $alert-color-scale:             40%;
+                     */
+                    $backgroundColor = $tagAttributes->getValue(ColorRgb::BACKGROUND_COLOR);
+                    if ($backgroundColor === null) {
+                        try {
+                            $backgroundColor = $colorObject
+                                ->scale(-80)
+                                ->toHsl()
+                                ->setLightness(80)
+                                ->toRgb()
+                                ->toCssValue();
+                        } catch (ExceptionCombo $e) {
+                            LogUtility::msg("Error while trying to set the lightness for the badge background color");
+                            $backgroundColor = $colorObject
+                                ->scale(-80)
+                                ->toCssValue();
+                        }
+                        $tagAttributes->addStyleDeclarationIfNotSet(ColorRgb::BACKGROUND_COLOR, $backgroundColor);
+                    }
+                    if (!$tagAttributes->hasComponentAttribute(ColorRgb::BORDER_COLOR)) {
+                        $borderColor = $colorObject->scale(-70)->toCssValue();
+                        $tagAttributes->addStyleDeclarationIfNotSet(ColorRgb::BORDER_COLOR, $borderColor);
+                    }
+                    if (!$tagAttributes->hasComponentAttribute(ColorRgb::COLOR)) {
+                        try {
+                            $textColor = $colorObject
+                                ->scale(40)
+                                ->toMinimumContrastRatio($backgroundColor)
+                                ->toCssValue();
+                        } catch (ExceptionCombo $e) {
+                            LogUtility::msg("Error while scaling the text color ($color) for the badge type ($type). Error: {$e->getMessage()}");
+                            $textColor = $colorObject
+                                ->scale(40)
+                                ->toCssValue();
+                        }
+                        $tagAttributes->addStyleDeclarationIfNotSet(ColorRgb::COLOR, $textColor);
+                    }
+                } else {
+                    $tagAttributes->addClassName("alert-" . $type);
                 }
 
                 $rounded = $tagAttributes->getValueAndRemove(self::ATTRIBUTE_ROUNDED);
@@ -186,10 +244,12 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
 
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
 
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
+                    // badge on boostrap does not allow
+                    $tagAttributes->addStyleDeclarationIfNotSet("white-space", "normal");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("span") . DOKU_LF;
                     break;
 
@@ -199,7 +259,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
                     $renderer->doc .= "</span>";
-                        break;
+                    break;
 
             }
             return true;

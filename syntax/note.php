@@ -4,7 +4,7 @@
 // must be run within Dokuwiki
 use ComboStrap\Background;
 use ComboStrap\CallStack;
-use ComboStrap\ColorUtility;
+use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -147,7 +147,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
                     $attributes->addClassName("alert");
                     $type = $attributes->getValue(TagAttributes::TYPE_KEY);
@@ -166,8 +166,8 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
                     } else {
                         // There is no alert-tip color
                         // base color was background color and we have modified the luminance
-                        if (!$attributes->hasComponentAttribute(ColorUtility::COLOR)) {
-                            $attributes->addComponentAttributeValue(ColorUtility::COLOR, "#6c6400"); // lum - 51
+                        if (!$attributes->hasComponentAttribute(ColorRgb::COLOR)) {
+                            $attributes->addComponentAttributeValue(ColorRgb::COLOR, "#6c6400"); // lum - 51
                         }
                         if (!$attributes->hasComponentAttribute("border-color")) {
                             $attributes->addComponentAttributeValue("border-color", "#FFF78c"); // lum - 186
@@ -177,7 +177,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
                         }
                     }
 
-                    $attributes->addHtmlAttributeValue("role", "note");
+                    $attributes->addOutputAttributeValue("role", "note");
                     $renderer->doc .= $attributes->toHtmlEnterTag('div');
                     break;
 

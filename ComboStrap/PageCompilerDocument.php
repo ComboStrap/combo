@@ -14,7 +14,7 @@ abstract class PageCompilerDocument implements CachedDocument
     /**
      * @var Page
      */
-    private $page;
+    protected $page;
 
     /**
      * @var string|null
@@ -31,6 +31,9 @@ abstract class PageCompilerDocument implements CachedDocument
     }
 
 
+    /**
+     * @return Page
+     */
     function getPage(): Page
     {
         return $this->page;
@@ -98,11 +101,6 @@ abstract class PageCompilerDocument implements CachedDocument
     }
 
 
-    public function deleteIfExists(): PageCompilerDocument
-    {
-        FileSystems::deleteIfExists($this->getCachePath());
-        return $this;
-    }
 
     /**
      * @param $content

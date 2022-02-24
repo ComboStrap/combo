@@ -3,9 +3,12 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
+use ComboStrap\PageEdit;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
@@ -173,11 +176,10 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $actualLastPosition = 0;
         while ($actualCall = $callStack->next()) {
 
-            $previousCall = $actualCall;
             $tagName = $actualCall->getTagName();
 
             /**
-             * TRack the position in the file
+             * Track the position in the file
              */
             $currentLastPosition = $actualCall->getLastMatchedCharacterPosition();
             if ($currentLastPosition > $actualLastPosition) {
@@ -345,6 +347,35 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             $this->closeOutlineSection($callStack, $actualLastPosition);
         }
 
+        /**
+         * Not heading at all
+         * No dynamic rendering (ie $ID is not null)
+         */
+        global $ID;
+        if ($ID !== null) {
+
+            $page = Page::createPageFromId($ID);
+            if ($headingTotalCounter === 0 || $page->isSecondarySlot()) {
+                try {
+                    $tag = PageEdit::create("Slot Edit")->toTag();
+                    if(!empty($tag)) { // page edit is not off
+                        $sectionEditComment = Call::createComboCall(
+                            syntax_plugin_combo_comment::TAG,
+                            DOKU_LEXER_UNMATCHED,
+                            array(),
+                            Call::INLINE_DISPLAY, // don't trim
+                            null,
+                            $tag
+                        );
+                        $callStack->insertBefore($sectionEditComment);
+                    }
+                } catch (ExceptionCombo $e) {
+                    LogUtility::msg("Error while adding the edit button. Error: {$e->getMessage()}");
+                }
+            }
+
+        }
+
 
     }
 
@@ -357,19 +388,18 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
      * @param $actualHeadingParsingState
      */
     private
-    static function insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(&$headingEntryCall, &$handler, &$callStack, &$actualSectionState, &$headingText, &$actualHeadingParsingState)
+    static function insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(&$headingEntryCall, &$handler, CallStack &$callStack, &$actualSectionState, &$headingText, &$actualHeadingParsingState)
     {
         /**
          * We are no more in a heading
          */
         $actualHeadingParsingState = DOKU_LEXER_EXIT;
 
-
         /**
          * Outline ?
          * Update the text and open a section
          */
-        if ($headingEntryCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
+        if ($headingEntryCall->getContext() === syntax_plugin_combo_heading::TYPE_OUTLINE) {
 
             /**
              * Update the entering call with the text capture
@@ -382,8 +412,6 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             }
             $headingEntryCall->addAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $headingText);
 
-            $headingText = "";
-
             /**
              * Insert an entry call
              */
@@ -393,6 +421,16 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             $callStack->next();
 
         }
+
+        /**
+         * Reset
+         * Important: If this is not an outline header, we need to reset it
+         * otherwise it comes in the {@link \ComboStrap\TocUtility::renderToc()}
+         */
+        $headingText = "";
+
+
+
     }
 
     /**

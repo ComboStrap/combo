@@ -3,6 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
+use ComboStrap\PageEdit;
 
 if (!defined('DOKU_INC')) die();
 
@@ -21,6 +22,24 @@ class syntax_plugin_combo_comment extends DokuWiki_Syntax_Plugin
      */
     const CONF_OUTPUT_COMMENT = "outputComment";
     const CANONICAL = "comment";
+
+    private static function shouldPrint($content): bool
+    {
+        /**
+         * {@link PluginUtility::startSection()} }
+         * section edit added at {@link action_plugin_combo_headingpostprocessing}
+         * if there is no heading at all
+         */
+        $normalizedContent = trim($content);
+        if (strpos($normalizedContent, PageEdit::SEC_EDIT_PREFIX)===0){
+            return true;
+        }
+        $confValue = PluginUtility::getConfValue(self::CONF_OUTPUT_COMMENT, 0);
+        if ($confValue === 1) {
+            return true;
+        }
+        return false;
+    }
 
     /**
      * Syntax Type.
@@ -114,13 +133,14 @@ class syntax_plugin_combo_comment extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
-        if(PluginUtility::getConfValue(self::CONF_OUTPUT_COMMENT,0)) {
-            if ($format === "xhtml") {
-                if ($data[PluginUtility::STATE] === DOKU_LEXER_UNMATCHED) {
-                    $renderer->doc .= "<!--" . PluginUtility::renderUnmatched($data) . "-->";
-                }
+
+        $print = self::shouldPrint($data[PluginUtility::PAYLOAD]);
+
+        if ($format === "xhtml" && $print) {
+            if ($data[PluginUtility::STATE] === DOKU_LEXER_UNMATCHED) {
+                $renderer->doc .= "<!--" . PluginUtility::renderUnmatched($data) . "-->";
             }
         }
         // unsupported $mode

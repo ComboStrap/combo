@@ -3,14 +3,11 @@
 namespace ComboStrap;
 
 
-use action_plugin_combo_metadescription;
-use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
 use DateTime;
 use Exception;
 use ModificationDate;
 use Slug;
-use syntax_plugin_combo_disqus;
 
 
 /**
@@ -47,11 +44,6 @@ class Page extends ResourceComboAbs
 
     const TYPE = "page";
 
-
-    /**
-     * @var bool Indicator to say if this is a sidebar (or sidekick bar)
-     */
-    private $isSideSlot = false;
 
     /**
      * The id requested (ie the main page)
@@ -120,10 +112,6 @@ class Page extends ResourceComboAbs
     private $slug;
 
 
-    /**
-     * @var PageScope
-     */
-    private $scope;
     /**
      * @var QualityDynamicMonitoringOverwrite
      */
@@ -209,34 +197,26 @@ class Page extends ResourceComboAbs
     public function __construct($absolutePath)
     {
 
-        /**
-         * Bars have a logical reasoning (ie such as a virtual, alias)
-         * They are logically located in the same namespace
-         * but the file may be located on the parent
-         *
-         * This block of code is processing this case
-         */
-        global $conf;
-        $sidebars = array($conf['sidebar']);
-        $strapTemplateName = 'strap';
-        if ($conf['template'] === $strapTemplateName) {
-            $sidebars[] = $conf['tpl'][$strapTemplateName]['sidekickbar'];
-        }
-        $lastPathPart = DokuPath::getLastPart($absolutePath);
-        if (in_array($lastPathPart, $sidebars)) {
+        $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath);
 
-            $this->isSideSlot = true;
+        if ($this->isSecondarySlot()) {
 
             /**
+             * Used when we want to remove the cache of slots for a requested page
+             * (ie {@link Cache::removeSideSlotCache()})
+             *
+             * The $absolutePath is the logical path and may not exists
+             *
              * Find the first physical file
              * Don't use ACL otherwise the ACL protection event 'AUTH_ACL_CHECK' will kick in
              * and we got then a recursive problem
              * with the {@link \action_plugin_combo_pageprotection}
              */
             $useAcl = false;
-            $id = page_findnearest($lastPathPart, $useAcl);
-            if ($id !== false) {
+            $id = page_findnearest($this->dokuPath->getLastNameWithoutExtension(), $useAcl);
+            if ($id !== false && $id !== $this->dokuPath->getDokuwikiId()) {
                 $absolutePath = DokuPath::PATH_SEPARATOR . $id;
+                $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath);
             }
 
         }
@@ -244,14 +224,6 @@ class Page extends ResourceComboAbs
         global $ID;
         $this->requestedId = $ID;
 
-        $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath);
-
-        /**
-         * After the parent construction because we need the id
-         * and it's set in the {@link DokuPath}
-         * When the Page will be os file system based
-         * and not dokuwiki file system based we may change that
-         */
         $this->buildPropertiesFromFileSystem();
 
     }
@@ -295,13 +267,15 @@ class Page extends ResourceComboAbs
      */
     public static function createPageFromRequestedPage(): Page
     {
-        $pageId = PluginUtility::getMainPageDokuwikiId();
-        if ($pageId !== null) {
-            return Page::createPageFromId($pageId);
-        } else {
-            LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
-            return Page::createPageFromId("unknown-requested-page");
+        $pageId = PluginUtility::getRequestedWikiId();
+        if ($pageId === null) {
+            $pageId = RenderUtility::DEFAULT_SLOT_ID_FOR_TEST;
+            if(!PluginUtility::isTest()) {
+                // should never happen, we don't throw an exception
+                LogUtility::msg("We were unable to determine the requested page from the variables environment, default non-existing page id used");
+            }
         }
+        return Page::createPageFromId($pageId);
     }
 
 
@@ -330,72 +304,6 @@ class Page extends ResourceComboAbs
     }
 
 
-    /**
-     * @var string the logical id is used with slots.
-     *
-     * A slot may exist in several node of the file system tree
-     * but they can be rendered for a page in a lowest level
-     * listing the page of the current namespace
-     *
-     * The slot is physically stored in one place but is equivalent
-     * physically to the same slot in all sub-node.
-     *
-     * This logical id does take into account this aspect.
-     *
-     * This is used also to store the HTML output in the cache
-     * If this is not a slot the logical id is the {@link DokuPath::getDokuwikiId()}
-     */
-    public
-    function getLogicalId()
-    {
-        /**
-         * Delete the first separator
-         */
-        return substr($this->getLogicalPath(), 1);
-    }
-
-    /**
-     * @return string - the logical path (requested path) of the resource
-     * This is used for sidebar component that may have another logical environment
-     * (namespace) than its storage location.
-     */
-    public function getLogicalPath(): string
-    {
-
-        /**
-         * Set the logical id
-         * When no $ID is set (for instance, test),
-         * the logical id is the id
-         *
-         * The logical id depends on the namespace attribute of the {@link \syntax_plugin_combo_pageexplorer}
-         * stored in the `scope` metadata.
-         */
-        $scopePath = $this->getScope();
-        if ($scopePath !== null) {
-
-            if ($scopePath == PageScope::SCOPE_CURRENT_VALUE) {
-                $requestPage = Page::createPageFromRequestedPage();
-                $parentPath = $requestPage->getPath()->getParent();
-                $scopePath = $parentPath->toString();
-            }
-
-            if ($scopePath !== DokuPath::PATH_SEPARATOR) {
-                return $scopePath . DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName();
-            } else {
-                return DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName();
-            }
-
-
-        } else {
-
-            return $this->dokuPath->toAbsolutePath()->toString();
-
-        }
-
-
-    }
-
-
     static function createPageFromQualifiedPath($qualifiedPath): Page
     {
         return new Page($qualifiedPath);
@@ -406,7 +314,8 @@ class Page extends ResourceComboAbs
      *
      * @throws ExceptionCombo
      */
-    public function setCanonical($canonical): Page
+    public
+    function setCanonical($canonical): Page
     {
         $this->canonical
             ->setValue($canonical)
@@ -415,29 +324,37 @@ class Page extends ResourceComboAbs
     }
 
 
-    public
-    function isSlot(): bool
+    /**
+     * @return bool true if this is not the main slot.
+     */
+    public function isSecondarySlot(): bool
     {
-        global $conf;
-        $barsName = array($conf['sidebar']);
-        $strapTemplateName = 'strap';
-        if ($conf['template'] === $strapTemplateName) {
-            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            if ($loaded) {
-                $barsName[] = TplUtility::getHeaderSlotPageName();
-                $barsName[] = TplUtility::getFooterSlotPageName();
-                $barsName[] = TplUtility::getSideKickSlotPageName();
-            }
+        $slotNames = Site::getSecondarySlotNames();
+        $name = $this->getPath()->getLastNameWithoutExtension();
+        if ($name === null) {
+            // root case
+            return false;
         }
-        return in_array($this->getPath()->getLastName(), $barsName);
+        return in_array($name, $slotNames, true);
     }
 
-    public
-    function isStrapSideSlot()
+    /**
+     * @return bool true if this is the main
+     */
+    public function isMainHeaderFooterSlot(): bool
     {
 
-        return $this->isSideSlot && Site::isStrapTemplate();
-
+        try {
+            $slotNames = [Site::getMainHeaderSlotName(), Site::getMainFooterSlotName()];
+        } catch (ExceptionCombo $e) {
+            return false;
+        }
+        $name = $this->getPath()->getLastNameWithoutExtension();
+        if ($name === null) {
+            // root case
+            return false;
+        }
+        return in_array($name, $slotNames, true);
     }
 
 
@@ -461,7 +378,8 @@ class Page extends ResourceComboAbs
      * @return string
      * @deprecated for {@link Canonical::getValueOrDefault()}
      */
-    public function getCanonicalOrDefault(): ?string
+    public
+    function getCanonicalOrDefault(): ?string
     {
         return $this->canonical->getValueFromStoreOrDefault();
 
@@ -516,19 +434,7 @@ class Page extends ResourceComboAbs
 
 
     public
-    function deleteCache()
-    {
-
-        if ($this->exists()) {
-
-            $this->getInstructionsDocument()->deleteIfExists();
-            $this->getHtmlDocument()->deleteIfExists();
-            $this->getAnalyticsDocument()->deleteIfExists();
-
-        }
-    }
-
-    public function getHtmlDocument(): HtmlDocument
+    function getHtmlDocument(): HtmlDocument
     {
         if ($this->htmlDocument === null) {
             $this->htmlDocument = new HtmlDocument($this);
@@ -590,7 +496,8 @@ class Page extends ResourceComboAbs
     }
 
 
-    public function getCanBeOfLowQuality(): ?bool
+    public
+    function getCanBeOfLowQuality(): ?bool
     {
 
         return $this->canBeOfLowQuality->getValue();
@@ -598,7 +505,8 @@ class Page extends ResourceComboAbs
     }
 
 
-    public function getH1(): ?string
+    public
+    function getH1(): ?string
     {
 
         return $this->h1->getValueFromStore();
@@ -609,7 +517,8 @@ class Page extends ResourceComboAbs
      * Return the Title
      * @deprecated for {@link PageTitle::getValue()}
      */
-    public function getTitle(): ?string
+    public
+    function getTitle(): ?string
     {
         return $this->title->getValueFromStore();
     }
@@ -722,7 +631,8 @@ class Page extends ResourceComboAbs
     /**
      * @return mixed
      */
-    public function getTypeOrDefault()
+    public
+    function getTypeOrDefault()
     {
         return $this->type->getValueFromStoreOrDefault();
     }
@@ -743,7 +653,8 @@ class Page extends ResourceComboAbs
      *
      * {@link \Doku_Renderer_metadata::externalmedia()} does not save them
      */
-    public function getMediasMetadata(): ?array
+    public
+    function getMediasMetadata(): ?array
     {
 
         $store = $this->getReadStoreOrDefault();
@@ -804,7 +715,8 @@ class Page extends ResourceComboAbs
      *
      * @return string
      */
-    public function getAuthor(): ?string
+    public
+    function getAuthor(): ?string
     {
         $store = $this->getReadStoreOrDefault();
         if (!($store instanceof MetadataDokuWikiStore)) {
@@ -819,7 +731,8 @@ class Page extends ResourceComboAbs
      *
      * @return string
      */
-    public function getAuthorID(): ?string
+    public
+    function getAuthorID(): ?string
     {
 
         $store = $this->getReadStoreOrDefault();
@@ -901,7 +814,8 @@ class Page extends ResourceComboAbs
      * @return string|null
      * @deprecated for {@link Region}
      */
-    public function getLocaleRegion(): ?string
+    public
+    function getLocaleRegion(): ?string
     {
         return $this->region->getValueFromStore();
     }
@@ -986,21 +900,19 @@ class Page extends ResourceComboAbs
      *   * in the site map
      * @param array $urlParameters
      * @param bool $absoluteUrlMandatory - by default, dokuwiki allows the canonical to be relative but it's mandatory to be absolute for the HTML meta
-     * @param string $separator - HTML encoded or not ampersand
+     * @param string $separator - TODO: delete. HTML encoded or not ampersand (the default should always be good because the encoding is done just before printing (ie {@link TagAttributes::encodeToHtmlValue()})
      * @return string|null
      */
-    public function getCanonicalUrl(array $urlParameters = [], bool $absoluteUrlMandatory = false, string $separator = DokuwikiUrl::AMPERSAND_CHARACTER): ?string
+    public
+    function getCanonicalUrl(array $urlParameters = [], bool $absoluteUrlMandatory = false, string $separator = DokuwikiUrl::AMPERSAND_CHARACTER): ?string
     {
 
         /**
          * Conf
          */
         $urlType = PageUrlType::getOrCreateForPage($this)->getValue();
-        if ($urlType === PageUrlType::CONF_VALUE_PAGE_PATH) {
-            $absolutePath = Site::getCanonicalConfForRelativeVsAbsoluteUrl();
-            if ($absolutePath === 1) {
-                $absoluteUrlMandatory = true;
-            }
+        if ($urlType === PageUrlType::CONF_VALUE_PAGE_PATH && $absoluteUrlMandatory == false) {
+            $absoluteUrlMandatory = Site::shouldUrlBeAbsolute();
         }
 
         /**
@@ -1013,6 +925,16 @@ class Page extends ResourceComboAbs
         return wl($this->getUrlId(), $urlParameters, $absoluteUrlMandatory, $separator);
 
 
+    }
+
+    public function getUrl($type = null): ?string
+    {
+        if ($type === null) {
+            return $this->getCanonicalUrl();
+        }
+        $pageUrlId = DokuPath::toDokuwikiId(PageUrlPath::createForPage($this)
+            ->getUrlPathFromType($type));
+        return wl($pageUrlId);
     }
 
 
@@ -1032,6 +954,9 @@ class Page extends ResourceComboAbs
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function toXhtml(): string
     {
@@ -1042,11 +967,19 @@ class Page extends ResourceComboAbs
 
 
     public
-    function getAnchorLink(): string
+    function getHtmlAnchorLink($logicalTag = null): string
     {
-        $url = $this->getCanonicalUrl();
-        $title = $this->getTitle();
-        return "<a href=\"$url\">$title</a>";
+        $id = $this->getPath()->getDokuwikiId();
+        try {
+            return MarkupRef::createFromPageId($id)
+                    ->toAttributes($logicalTag)
+                    ->toHtmlEnterTag("a")
+                . $this->getNameOrDefault()
+                . "</a>";
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The markup ref returns an error for the creation of the page anchor html link ($this). Error: {$e->getMessage()}");
+            return "<a href=\"{$this->getCanonicalUrl()}\" data-wiki-id=\"$id\">{$this->getNameOrDefault()}</a>";
+        }
     }
 
 
@@ -1065,39 +998,20 @@ class Page extends ResourceComboAbs
     }
 
 
-    public function getScope()
-    {
-        /**
-         * Note that the scope may change
-         * during a run, we then re-read the metadata
-         * each time
-         */
-        return $this->scope->getValueFromStore();
-
-    }
-
-    /**
-     * Return the id of the div HTML
-     * element that is added for cache debugging
-     */
-    public
-    function getCacheHtmlId(): string
-    {
-        return "cache-" . str_replace(":", "-", $this->getPath()->getDokuwikiId());
-    }
-
     /**
      * @return $this
      * @deprecated use {@link MetadataDokuWikiStore::deleteAndFlush()}
      */
-    public function deleteMetadatasAndFlush(): Page
+    public
+    function deleteMetadatasAndFlush(): Page
     {
         MetadataDokuWikiStore::getOrCreateFromResource($this)
             ->deleteAndFlush();
         return $this;
     }
 
-    public function getName(): ?string
+    public
+    function getName(): ?string
     {
 
         return $this->pageName->getValueFromStore();
@@ -1293,7 +1207,8 @@ class Page extends ResourceComboAbs
         return $this->type->getValueFromStore();
     }
 
-    public function getCanonical(): ?string
+    public
+    function getCanonical(): ?string
     {
         return $this->canonical->getValueFromStore();
     }
@@ -1349,9 +1264,9 @@ class Page extends ResourceComboAbs
     /**
      * @throws ExceptionCombo
      */
-    public function setLowQualityIndicatorCalculation($bool): Page
+    public
+    function setLowQualityIndicatorCalculation($bool): Page
     {
-
         return $this->setQualityIndicatorAndDeleteCacheIfNeeded($this->lowQualityIndicatorCalculated, $bool);
     }
 
@@ -1370,22 +1285,9 @@ class Page extends ResourceComboAbs
     {
         $actualValue = $lowQualityAttributeName->getValue();
         if ($actualValue === null || $value !== $actualValue) {
-            $beforeLowQualityPage = $this->isLowQualityPage();
             $lowQualityAttributeName
                 ->setValue($value)
                 ->persist();
-            $afterLowQualityPage = $this->isLowQualityPage();
-            if ($beforeLowQualityPage !== $afterLowQualityPage) {
-                /**
-                 * Delete the html document cache to rewrite the links
-                 * if the protection is on
-                 */
-                if (Site::isLowQualityProtectionEnable()) {
-                    foreach ($this->getBacklinks() as $backlink) {
-                        $backlink->getHtmlDocument()->deleteIfExists();
-                    }
-                }
-            }
         }
         return $this;
     }
@@ -1491,7 +1393,8 @@ class Page extends ResourceComboAbs
      * @return string|null
      *
      */
-    public function getDefaultSlug(): ?string
+    public
+    function getDefaultSlug(): ?string
     {
         return $this->slug->getDefaultValue();
     }
@@ -1581,7 +1484,8 @@ class Page extends ResourceComboAbs
     /**
      * @throws ExceptionCombo
      */
-    public function setPublishedDate($value): Page
+    public
+    function setPublishedDate($value): Page
     {
         $this->publishedDate
             ->setFromStoreValue($value)
@@ -1721,7 +1625,6 @@ class Page extends ResourceComboAbs
         $this->modifiedTime = ModificationDate::createForPage($this);
         $this->pageUrlPath = PageUrlPath::createForPage($this);
         $this->layout = PageLayout::createFromPage($this);
-        $this->scope = PageScope::createFromPage($this);
 
     }
 
@@ -1745,8 +1648,7 @@ class Page extends ResourceComboAbs
      *
      * TODO: Move to {@link HtmlDocument} ?
      */
-    public
-    function getUrlPath(): string
+    public function getUrlPath(): string
     {
 
         return $this->pageUrlPath->getValueOrDefault();
@@ -1758,7 +1660,8 @@ class Page extends ResourceComboAbs
      * @return string|null
      *
      */
-    public function getSlug(): ?string
+    public
+    function getSlug(): ?string
     {
         return $this->slug->getValue();
     }
@@ -1785,22 +1688,10 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * @param string $scope {@link PageScope::SCOPE_CURRENT_VALUE} or a namespace...
      * @throws ExceptionCombo
      */
     public
-    function setScope(string $scope): Page
-    {
-        $this->scope
-            ->setFromStoreValue($scope)
-            ->sendToWriteStore();
-        return $this;
-    }
-
-    /**
-     * @throws ExceptionCombo
-     */
-    public function setQualityMonitoringIndicator($boolean): Page
+    function setQualityMonitoringIndicator($boolean): Page
     {
         $this->qualityMonitoringIndicator
             ->setFromStoreValue($boolean)
@@ -1812,12 +1703,14 @@ class Page extends ResourceComboAbs
      *
      * @param $aliasPath - third information - the alias used to build this page
      */
-    public function setBuildAliasPath($aliasPath)
+    public
+    function setBuildAliasPath($aliasPath)
     {
         $this->buildAliasPath = $aliasPath;
     }
 
-    public function getBuildAlias(): ?Alias
+    public
+    function getBuildAlias(): ?Alias
     {
         if ($this->buildAliasPath === null) return null;
         foreach ($this->getAliases() as $alias) {
@@ -1828,7 +1721,8 @@ class Page extends ResourceComboAbs
         return null;
     }
 
-    public function isDynamicQualityMonitored(): bool
+    public
+    function isDynamicQualityMonitored(): bool
     {
         if ($this->getQualityMonitoringIndicator() !== null) {
             return $this->getQualityMonitoringIndicator();
@@ -1836,7 +1730,8 @@ class Page extends ResourceComboAbs
         return $this->getDefaultQualityMonitoring();
     }
 
-    public function getDefaultQualityMonitoring(): bool
+    public
+    function getDefaultQualityMonitoring(): bool
     {
         if (PluginUtility::getConfValue(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING) === 1) {
             return false;
@@ -1849,7 +1744,8 @@ class Page extends ResourceComboAbs
      * @param MetadataStore|string $store
      * @return $this
      */
-    public function setReadStore($store): Page
+    public
+    function setReadStore($store): Page
     {
         $this->readStore = $store;
         return $this;
@@ -1860,7 +1756,8 @@ class Page extends ResourceComboAbs
      * @param array $usages
      * @return Image[]
      */
-    public function getImagesOrDefaultForTheFollowingUsages(array $usages): array
+    public
+    function getImagesOrDefaultForTheFollowingUsages(array $usages): array
     {
         $usages = array_merge($usages, [PageImageUsage::ALL]);
         $images = [];
@@ -1877,12 +1774,14 @@ class Page extends ResourceComboAbs
     }
 
 
-    public function getKeywords(): ?array
+    public
+    function getKeywords(): ?array
     {
         return $this->keywords->getValues();
     }
 
-    public function getKeywordsOrDefault(): array
+    public
+    function getKeywordsOrDefault(): array
     {
         return $this->keywords->getValueOrDefaults();
     }
@@ -1891,7 +1790,8 @@ class Page extends ResourceComboAbs
     /**
      * @throws ExceptionCombo
      */
-    public function setKeywords($value): Page
+    public
+    function setKeywords($value): Page
     {
         $this->keywords
             ->setFromStoreValue($value)
@@ -1903,7 +1803,8 @@ class Page extends ResourceComboAbs
      * @return DateTime|null
      * @deprecated for {@link CacheExpirationDate}
      */
-    public function getCacheExpirationDate(): ?DateTime
+    public
+    function getCacheExpirationDate(): ?DateTime
     {
         return $this->cacheExpirationDate->getValue();
     }
@@ -1912,7 +1813,8 @@ class Page extends ResourceComboAbs
      * @return DateTime|null
      * @deprecated for {@link CacheExpirationDate}
      */
-    public function getDefaultCacheExpirationDate(): ?DateTime
+    public
+    function getDefaultCacheExpirationDate(): ?DateTime
     {
         return $this->cacheExpirationDate->getDefaultValue();
     }
@@ -1921,7 +1823,8 @@ class Page extends ResourceComboAbs
      * @return string|null
      * @deprecated for {@link CacheExpirationFrequency}
      */
-    public function getCacheExpirationFrequency(): ?string
+    public
+    function getCacheExpirationFrequency(): ?string
     {
         return $this->cacheExpirationFrequency->getValue();
     }
@@ -1930,10 +1833,10 @@ class Page extends ResourceComboAbs
     /**
      * @param DateTime $cacheExpirationDate
      * @return $this
-     * @throws ExceptionCombo
      * @deprecated for {@link CacheExpirationDate}
      */
-    public function setCacheExpirationDate(DateTime $cacheExpirationDate): Page
+    public
+    function setCacheExpirationDate(DateTime $cacheExpirationDate): Page
     {
         $this->cacheExpirationDate->setValue($cacheExpirationDate);
         return $this;
@@ -1943,7 +1846,8 @@ class Page extends ResourceComboAbs
      * @return bool - true if the page has changed
      * @deprecated use {@link Page::getInstructionsDocument()} instead
      */
-    public function isParseCacheUsable(): bool
+    public
+    function isParseCacheUsable(): bool
     {
         return $this->getInstructionsDocument()->shouldProcess() === false;
     }
@@ -1953,7 +1857,8 @@ class Page extends ResourceComboAbs
      * @deprecated use {@link Page::getInstructionsDocument()} instead
      * Parse a page and put the instructions in the cache
      */
-    public function parse(): Page
+    public
+    function parse(): Page
     {
 
         $this->getInstructionsDocument()
@@ -1963,7 +1868,11 @@ class Page extends ResourceComboAbs
 
     }
 
-    public function getInstructionsDocument(): InstructionsDocument
+    /**
+     *
+     */
+    public
+    function getInstructionsDocument(): InstructionsDocument
     {
         if ($this->instructionsDocument === null) {
             $this->instructionsDocument = new InstructionsDocument($this);
@@ -1972,7 +1881,8 @@ class Page extends ResourceComboAbs
 
     }
 
-    public function delete()
+    public
+    function delete()
     {
 
         Index::getOrCreate()->deletePage($this);
@@ -1983,16 +1893,23 @@ class Page extends ResourceComboAbs
     /**
      * @return string|null -the absolute canonical url
      */
-    public function getAbsoluteCanonicalUrl(): ?string
+    public
+    function getAbsoluteCanonicalUrl(): ?string
     {
         return $this->getCanonicalUrl([], true);
     }
 
 
-    public function getReadStoreOrDefault(): MetadataStore
+    public
+    function getReadStoreOrDefault(): MetadataStore
     {
         if ($this->readStore === null) {
-            $this->readStore = MetadataDokuWikiStore::getOrCreateFromResource($this);
+            /**
+             * No cache please if not set
+             * Cache should be in the MetadataDokuWikiStore
+             * that is page requested scoped and not by slot
+             */
+            return MetadataDokuWikiStore::getOrCreateFromResource($this);
         }
         if (!($this->readStore instanceof MetadataStore)) {
             $this->readStore = MetadataStoreAbs::toMetadataStore($this->readStore, $this);
@@ -2003,7 +1920,8 @@ class Page extends ResourceComboAbs
     /**
      * @return DokuPath
      */
-    public function getPath(): Path
+    public
+    function getPath(): Path
     {
         return $this->dokuPath;
     }
@@ -2012,18 +1930,21 @@ class Page extends ResourceComboAbs
     /**
      * A shortcut for {@link Page::getPath()::getDokuwikiId()}
      */
-    public function getDokuwikiId()
+    public
+    function getDokuwikiId()
     {
         return $this->getPath()->getDokuwikiId();
     }
 
-    public function getUid(): Metadata
+    public
+    function getUid(): Metadata
     {
         return $this->pageId;
     }
 
 
-    public function getAbsolutePath(): string
+    public
+    function getAbsolutePath(): string
     {
         return DokuPath::PATH_SEPARATOR . $this->getDokuwikiId();
     }
@@ -2033,9 +1954,88 @@ class Page extends ResourceComboAbs
         return self::TYPE;
     }
 
-    public function getUrlPathObject(): PageUrlPath
+    public
+    function getUrlPathObject(): PageUrlPath
     {
         return $this->pageUrlPath;
     }
+
+    public function getMainFooterSlot(): ?Page
+    {
+        if ($this->isSecondarySlot() || $this->isRootHomePage()) {
+            return null;
+        }
+
+        try {
+            Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("We can't load strap. The nearest main footer slot could not be detected, Error: {$e->getMessage()}");
+            return null;
+        }
+
+        $nearestMainFooter = $this->findNearest(TplUtility::SLOT_MAIN_FOOTER_NAME);
+        if ($nearestMainFooter === false) {
+            return null;
+        }
+        return Page::createPageFromId($nearestMainFooter);
+
+
+    }
+
+    public function getSideSlot(): ?Page
+    {
+        if ($this->isSecondarySlot() || $this->isRootHomePage()) {
+            return null;
+        }
+
+        $nearestMainFooter = $this->findNearest(Site::getSidebarName());
+        if ($nearestMainFooter === false) {
+            return null;
+        }
+        return Page::createPageFromId($nearestMainFooter);
+
+
+    }
+
+    /**
+     * @param $pageName
+     * @return false|string
+     */
+    private function findNearest($pageName)
+    {
+        global $ID;
+        $keep = $ID;
+        try {
+            $ID = $this->getDokuwikiId();
+            return page_findnearest($pageName);
+        } finally {
+            $ID = $keep;
+        }
+
+    }
+
+    /**
+     * @return Page[]
+     */
+    public function getSecondarySlots(): array
+    {
+        $secondarySlots = [];
+        $sideSlot = $this->getSideSlot();
+        if ($sideSlot !== null) {
+            $secondarySlots[] = $sideSlot;
+        }
+        $footerSlot = $this->getMainFooterSlot();
+        if ($footerSlot !== null) {
+            $secondarySlots[] = $footerSlot;
+        }
+        return $secondarySlots;
+    }
+
+
+    public function isHidden(): bool
+    {
+        return isHiddenPage($this->getDokuwikiId());
+    }
+
 
 }

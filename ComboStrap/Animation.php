@@ -28,7 +28,7 @@ class Animation
      * Based on https://wowjs.uk/
      * @param TagAttributes $attributes
      */
-    public static function processOnView(&$attributes)
+    public static function processOnView(TagAttributes &$attributes)
     {
         if ($attributes->hasComponentAttribute(self::ON_VIEW_ATTRIBUTE)) {
             $onView = $attributes->getValueAndRemove(self::ON_VIEW_ATTRIBUTE);
@@ -37,7 +37,7 @@ class Animation
             $attributes->addClassName($animateClass);
 
             $animationClass = "animate__" . $onView;
-            $attributes->addHtmlAttributeValue("data-animated-class", $animationClass);
+            $attributes->addOutputAttributeValue("data-animated-class", $animationClass);
 
             // TODO: Add attributes
             //$delay = "animate__delay-2s";
@@ -47,20 +47,13 @@ class Animation
 
             self::scrollMagicInit();
 
-            $snippetManager->attachTagsForBar(self::ON_VIEW_SNIPPET_ID)
-                ->setCritical(false)
-                ->setTags(
-                    array(
-                        "link" =>
-                            [
-                                array(
-                                    "rel" => "stylesheet",
-                                    "href" => "https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css",
-                                    "integrity" => "sha256-X7rrn44l1+AUO65h1LGALBbOc5C5bOstSYsNlv9MhT8=",
-                                    "crossorigin" => "anonymous"
-                                )
-                            ]
-                    ));
+            $snippetManager
+                ->attachCssExternalStyleSheetForSlot(
+                    self::ON_VIEW_SNIPPET_ID,
+                    "https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css",
+                    "sha256-X7rrn44l1+AUO65h1LGALBbOc5C5bOstSYsNlv9MhT8="
+                )
+                ->setCritical(false);
 
         }
 
@@ -80,7 +73,7 @@ class Animation
         $wowClass = "wow";
         $wowSnippetId = "wow";
         PluginUtility::addClass2Attributes($wowClass, $attributes);
-        $snippetManager->upsertCssSnippetForBar($wowSnippetId);
+        $snippetManager->attachCssInternalStyleSheetForSlot($wowSnippetId);
 
 
         $animateClass = self::ANIMATE_CLASS;
@@ -103,19 +96,11 @@ window.addEventListener("load", function(event) {
     wow.init();
 });
 EOF;
-        $snippetManager->attachJavascriptSnippetForBar($wowSnippetId)->setContent($js);
-        $snippetManager->attachTagsForBar($wowSnippetId)->setTags(
-            array(
-                "script" =>
-                    [
-                        array(
-                            "src" => "https://cdn.jsdelivr.net/npm/wowjs@1.1.3/dist/wow.min.js",
-                            "integrity" => "sha256-gHiUEskgBO+3ccSDRM+c5+nEwTGp64R99KYPfITpnuo=",
-                            "crossorigin" => "anonymous"
-                        )
-                    ],
-
-            )
+        $snippetManager->attachInternalJavascriptForSlot($wowSnippetId, $js);
+        $snippetManager->attachJavascriptLibraryForSlot(
+            $wowSnippetId,
+            "https://cdn.jsdelivr.net/npm/wowjs@1.1.3/dist/wow.min.js",
+            "sha256-gHiUEskgBO+3ccSDRM+c5+nEwTGp64R99KYPfITpnuo="
         );
     }
 
@@ -127,24 +112,17 @@ EOF;
         $snippetManager = PluginUtility::getSnippetManager();
 
         $scrollMagicSnippetId = "scroll-magic";
-        $snippetManager->attachJavascriptSnippetForBar($scrollMagicSnippetId);
-        $snippetManager->upsertTagsForBar($scrollMagicSnippetId,
-            array(
-                "script" =>
-                    [
-                        array(
-                            "src" => "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/ScrollMagic.min.js",
-                            "integrity" => "sha512-8E3KZoPoZCD+1dgfqhPbejQBnQfBXe8FuwL4z/c8sTrgeDMFEnoyTlH3obB4/fV+6Sg0a0XF+L/6xS4Xx1fUEg==",
-                            "crossorigin" => "anonymous"
-                        ),
-                        array(
-                            "src" => "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/debug.addIndicators.min.js",
-                            "integrity" => "sha512-RvUydNGlqYJapy0t4AH8hDv/It+zKsv4wOQGb+iOnEfa6NnF2fzjXgRy+FDjSpMfC3sjokNUzsfYZaZ8QAwIxg==",
-                            "crossorigin" => "anonymous"
-                        )
-                    ],
-
-            ));
+        $snippetManager->attachInternalJavascriptForSlot($scrollMagicSnippetId);
+        $snippetManager->attachJavascriptLibraryForSlot(
+            $scrollMagicSnippetId,
+            "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/ScrollMagic.min.js",
+            "sha512-8E3KZoPoZCD+1dgfqhPbejQBnQfBXe8FuwL4z/c8sTrgeDMFEnoyTlH3obB4/fV+6Sg0a0XF+L/6xS4Xx1fUEg=="
+        );
+        $snippetManager->attachJavascriptLibraryForSlot(
+            $scrollMagicSnippetId,
+            "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/debug.addIndicators.min.js",
+            "sha512-RvUydNGlqYJapy0t4AH8hDv/It+zKsv4wOQGb+iOnEfa6NnF2fzjXgRy+FDjSpMfC3sjokNUzsfYZaZ8QAwIxg=="
+        );
     }
 
 }

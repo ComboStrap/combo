@@ -5,9 +5,9 @@
 use ComboStrap\Background;
 use ComboStrap\CacheMedia;
 use ComboStrap\CallStack;
-use ComboStrap\ColorUtility;
+use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
-use ComboStrap\LinkUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\MediaLink;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
@@ -48,9 +48,9 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     {
 
         $attributes = PluginUtility::getTagAttributes($match);
-        if (isset($attributes[ColorUtility::COLOR])) {
-            $attributes[Background::BACKGROUND_COLOR] = $attributes[ColorUtility::COLOR];
-            unset($attributes[ColorUtility::COLOR]);
+        if (isset($attributes[ColorRgb::COLOR])) {
+            $attributes[Background::BACKGROUND_COLOR] = $attributes[ColorRgb::COLOR];
+            unset($attributes[ColorRgb::COLOR]);
         }
         return $attributes;
 
@@ -229,7 +229,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                      * Print any error
                      */
                     if (isset($data[self::ERROR])) {
-                        $class = LinkUtility::TEXT_ERROR_CLASS;
+                        $class = MarkupRef::TEXT_ERROR_CLASS;
                         $error = $data[self::ERROR];
                         $renderer->doc .= "<p class=\"$class\">$error</p>" . DOKU_LF;
                     }

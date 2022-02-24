@@ -12,9 +12,9 @@
 
 namespace ComboStrap;
 
+use dokuwiki\Action\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
 use dokuwiki\Parsing\ParserMode\Internallink;
-use syntax_plugin_combo_card;
 use syntax_plugin_combo_media;
 
 require_once(__DIR__ . '/PluginUtility.php');
@@ -115,6 +115,17 @@ abstract class MediaLink
     const LINKING_KEY = 'linking';
     const ALIGN_KEY = 'align';
 
+    /**
+     * The method to lazy load resources (Ie media)
+     */
+    const LAZY_LOAD_METHOD = "lazy-method";
+    const LAZY_LOAD_METHOD_HTML_VALUE = "html-attribute";
+    const LAZY_LOAD_METHOD_LOZAD_VALUE = "lozad";
+    const UNKNOWN_MIME = "unknwon";
+    /**
+     * @var string
+     */
+    private $lazyLoadMethod;
 
     private $lazyLoad = null;
 
@@ -124,6 +135,8 @@ abstract class MediaLink
      * @var Media[]
      */
     private $media;
+    private $linking;
+    private $linkingClass;
 
 
     /**
@@ -400,11 +413,23 @@ abstract class MediaLink
 
     /**
      * @param Path $path
-     * @param null $tagAttributes
+     * @param TagAttributes|null $tagAttributes
      * @return RasterImageLink|SvgImageLink|ThirdMediaLink
      */
-    public static function createMediaLinkFromPath(Path $path, $tagAttributes = null)
+    public static function createMediaLinkFromPath(Path $path, TagAttributes $tagAttributes = null)
     {
+
+        if ($tagAttributes === null) {
+            $tagAttributes = TagAttributes::createEmpty();
+        }
+
+        /**
+         * Get and delete the attribute for the link
+         * (The rest is for the image)
+         */
+        $lazyLoadMethod = $tagAttributes->getValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD, self::LAZY_LOAD_METHOD_LOZAD_VALUE);
+        $linking = $tagAttributes->getValueAndRemoveIfPresent(self::LINKING_KEY);
+        $linkingClass = $tagAttributes->getValueAndRemoveIfPresent(syntax_plugin_combo_media::LINK_CLASS_ATTRIBUTE);
 
         /**
          * Processing
@@ -421,26 +446,45 @@ abstract class MediaLink
         }
 
         if ($mime === null) {
-            LogUtility::msg("The mime type of the media ($path) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
-            $media = new ImageRaster($path, $tagAttributes);
-            return new RasterImageLink($media);
+            $stringMime = self::UNKNOWN_MIME;
+        } else {
+            $stringMime = $mime->toString();
         }
 
-        if (!$mime->isImage()) {
-            LogUtility::msg("The type ($mime) of media ($path) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
-            $media = new ThirdMedia($path, $tagAttributes);
-            return new ThirdMediaLink($media);
+        switch ($stringMime) {
+            case self::UNKNOWN_MIME:
+                LogUtility::msg("The mime type of the media ($path) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
+                $media = new ImageRaster($path, $tagAttributes);
+                $mediaLink = new RasterImageLink($media);
+                break;
+            case Mime::SVG:
+                $media = new ImageSvg($path, $tagAttributes);
+                $mediaLink = new SvgImageLink($media);
+                break;
+            default:
+                if (!$mime->isImage()) {
+                    LogUtility::msg("The type ($mime) of media ($path) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
+                    $media = new ThirdMedia($path, $tagAttributes);
+                    $mediaLink = new ThirdMediaLink($media);
+                } else {
+                    $media = new ImageRaster($path, $tagAttributes);
+                    $mediaLink = new RasterImageLink($media);
+                }
+                break;
         }
 
-        if ($mime->toString() === Mime::SVG) {
-            $media = new ImageSvg($path, $tagAttributes);
-            return new SvgImageLink($media);
-        }
+        $mediaLink
+            ->setLazyLoadMethod($lazyLoadMethod)
+            ->setLinking($linking)
+            ->setLinkingClass($linkingClass);
+        return $mediaLink;
 
-        $media = new ImageRaster($path, $tagAttributes);
-        return new RasterImageLink($media);
+    }
 
-
+    public function setLazyLoadMethod(string $lazyLoadMethod): MediaLink
+    {
+        $this->lazyLoadMethod = $lazyLoadMethod;
+        return $this;
     }
 
 
@@ -468,7 +512,8 @@ abstract class MediaLink
          * src is a path (not an id)
          */
         $array = array(
-            PagePath::PROPERTY_NAME => $this->getMedia()->getPath()->toString()
+            PagePath::PROPERTY_NAME => $this->getMedia()->getPath()->toString(),
+            self::LINKING_KEY => $this->getLinking()
         );
 
 
@@ -498,18 +543,32 @@ abstract class MediaLink
         }
     }
 
-    private
-    function getAlign()
-    {
-        return $this->getMedia()->getAttributes()->getComponentAttributeValue(self::ALIGN_KEY);
-    }
 
     private
     function getLinking()
     {
-        return $this->getMedia()->getAttributes()->getComponentAttributeValue(self::LINKING_KEY);
+        return $this->linking;
     }
 
+    private
+    function setLinking($value): MediaLink
+    {
+        $this->linking = $value;
+        return $this;
+    }
+
+    private
+    function getLinkingClass()
+    {
+        return $this->linkingClass;
+    }
+
+    private
+    function setLinkingClass($value): MediaLink
+    {
+        $this->linkingClass = $value;
+        return $this;
+    }
 
     /**
      * @return string - the HTML of the image inside a link if asked
@@ -526,9 +585,9 @@ abstract class MediaLink
         // https://www.dokuwiki.org/config:target
         global $conf;
         $target = $conf['target']['media'];
-        $mediaLink->addHtmlAttributeValueIfNotEmpty("target", $target);
+        $mediaLink->addOutputAttributeValueIfNotEmpty("target", $target);
         if (!empty($target)) {
-            $mediaLink->addHtmlAttributeValue("rel", 'noopener');
+            $mediaLink->addOutputAttributeValue("rel", 'noopener');
         }
 
         /**
@@ -551,7 +610,7 @@ abstract class MediaLink
                         'rev' => $dokuPath->getRevision()
                     )
                 );
-                $mediaLink->addHtmlAttributeValue("href", $src);
+                $mediaLink->addOutputAttributeValue("href", $src);
                 $title = $media->getTitle();
                 if (empty($title)) {
                     $title = $media->getType();
@@ -571,7 +630,17 @@ abstract class MediaLink
                     ),
                     true
                 );
-                $mediaLink->addHtmlAttributeValue("href", $src);
+                $mediaLink->addOutputAttributeValue("href", $src);
+                $snippetId = "lightbox";
+                $mediaLink->addClassName("{$snippetId}-combo");
+                $linkingClass = $this->getLinkingClass();
+                if ($linkingClass !== null) {
+                    $mediaLink->addClassName($linkingClass);
+                }
+                $snippetManager = PluginUtility::getSnippetManager();
+                $snippetManager->attachJavascriptComboLibrary();
+                $snippetManager->attachInternalJavascriptForSlot("lightbox");
+                $snippetManager->attachCssInternalStyleSheetForSlot("lightbox");
                 return $mediaLink->toHtmlEnterTag("a") . $this->renderMediaTag() . "</a>";
 
             case self::LINKING_DETAILS_VALUE:
@@ -585,7 +654,7 @@ abstract class MediaLink
                     ),
                     false
                 );
-                $mediaLink->addHtmlAttributeValue("href", $src);
+                $mediaLink->addOutputAttributeValue("href", $src);
                 return $mediaLink->toHtmlEnterTag("a") .
                     $this->renderMediaTag() .
                     "</a>";
@@ -613,6 +682,10 @@ abstract class MediaLink
         return $this->media;
     }
 
+    protected function getLazyLoadMethod(): string
+    {
+        return $this->lazyLoadMethod;
+    }
 
 
 }

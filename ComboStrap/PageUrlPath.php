@@ -212,7 +212,7 @@ class PageUrlPath extends MetadataWikiPath
         return null;
     }
 
-    private function getUrlPathFromType(?string $urlType)
+    public function getUrlPathFromType(?string $urlType)
     {
         $page = $this->getResource();
         if((!$page instanceof Page)){

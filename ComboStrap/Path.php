@@ -39,7 +39,15 @@ interface Path
 
     function getParent(): ?Path;
 
-    function toString();
+    /**
+     * @return string only the string representation of the path
+     */
+    function toString(): string;
+
+    /**
+     * @return string the uri string representation of this path (with all information, drive, attributes)
+     */
+    function toUriString(): string;
 
     function toAbsolutePath(): Path;
 
@@ -47,4 +55,12 @@ interface Path
      * @return Mime the mime from the extension
      */
     function getMime(): ?Mime;
+
+    function resolve(string $name);
+
+    /**
+     * @return DokuPath
+     * @throws ExceptionCombo - if the path cannot be transformed to a doku path
+     */
+    function toDokuPath(): DokuPath;
 }

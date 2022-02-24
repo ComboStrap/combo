@@ -102,6 +102,7 @@ window.addEventListener("DOMContentLoaded", function () {
              */
             let modalManagerId = combo.toHtmlId(`combo-meta-manager-page-${pageId}`);
             let managerModal = combo.getOrCreateModal(modalManagerId)
+                .addDialogClass("modal-fullscreen-md-down");
             if (managerModal.wasBuild()) {
                 managerModal.show();
                 return;
@@ -112,7 +113,8 @@ window.addEventListener("DOMContentLoaded", function () {
              * We create it here because it needs to be reset if there is a submit on the manager.
              */
             let modalViewerId = combo.toHtmlId(`combo-metadata-viewer-modal-${pageId}`);
-            let modalViewer = combo.getOrCreateModal(modalViewerId);
+            let modalViewer = combo.getOrCreateModal(modalViewerId)
+                .addDialogClass("modal-fullscreen-md-down");
 
             /**
              * Creating the form
@@ -121,49 +123,6 @@ window.addEventListener("DOMContentLoaded", function () {
                 .createDokuRequest(metaManagerCall)
                 .setProperty("id", pageId)
                 .getJson();
-            /**
-             * Add the page runtime cache metadata field
-             */
-            let cachePageInfo = document.querySelector('script[type="application/combo+cache+json"]');
-            if (cachePageInfo !== null) {
-                let cachePageJsonString = cachePageInfo
-                    .innerText
-                    .trim()
-                    .slice("/*<![CDATA[*/".length)
-                    .slice(0, -("/*!]]>*/".length));
-                let cachePageJson = JSON.parse(cachePageJsonString);
-                for (let slot in cachePageJson) {
-                    if (!cachePageJson.hasOwnProperty(slot)) {
-                        continue;
-                    }
-
-                    let formatResults = cachePageJson[slot];
-                    for (let formatResult in formatResults) {
-                        if (!formatResults.hasOwnProperty(formatResult)) {
-                            continue;
-                        }
-                        let name = `cache_slot_${slot}_${formatResult}`;
-                        let result = formatResults[formatResult];
-                        let styledFormatResult;
-                        if (formatResult === "i") {
-                            styledFormatResult = "Parse Instructions"
-                        } else {
-                            styledFormatResult = formatResult.charAt(0).toUpperCase() + formatResult.slice(1);
-                        }
-                        let hit = result["result"];
-                        formMetadata["fields"][name] =
-                            combo.createFormMetaField(name)
-                                .setMutable(false)
-                                .setLabel(`Cache Hit for ${styledFormatResult} (${slot})`)
-                                .setType("boolean")
-                                .setUrl("https://combostrap.com/page/cache")
-                                .setDescription(`${styledFormatResult} Slot Cache Information for the slot (${slot}) - (File cache time ${result["mtime"]})`)
-                                .setTab("cache")
-                                .addValue(hit,true)
-                                .toJavascriptObject();
-                    }
-                }
-            }
             let formId = combo.toHtmlId(`${modalManagerId}-form`);
             let form = combo.createFormFromJson(formId, formMetadata);
             let htmlFormElement = form.toHtmlElement();
@@ -197,6 +156,18 @@ window.addEventListener("DOMContentLoaded", function () {
                     .sendFormDataAsJson(formData);
                 managerModal.reset();
                 modalViewer.reset();
+
+                /**
+                 * Send a cron request to re-render if any
+                 */
+                fetch(combo.DokuUrl.createRunner().toString(), {method: "GET"})
+                    .then((response) => {
+                            if (response.status !== 200) {
+                                console.error('Bad runner request, status Code is: ' + response.status);
+                            }
+                        }
+                    );
+
                 await processResponse(response, () => openMetadataManager(pageId));
             })
 

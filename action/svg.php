@@ -13,6 +13,7 @@ use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Resources;
+use ComboStrap\Site;
 use ComboStrap\SvgImageLink;
 use ComboStrap\TagAttributes;
 
@@ -154,7 +155,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
              * {@link getMimeTypes()}
              */
             global $config_cascade;
-            $svgMimeConf = Resources::getConfResourceDirectory() . "/svg.mime.conf";
+            $svgMimeConf = Site::getComboResourcesDirectory()->resolve("conf")->resolve("svg.mime.conf")->toString();
             $config_cascade['mime']['local'][] = $svgMimeConf;
         }
 

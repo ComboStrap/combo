@@ -119,7 +119,11 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     }
 
 
-    public static function processHeadingMetadata($data, $renderer)
+    /**
+     * @param $data
+     * @param Doku_Renderer_metadata $renderer
+     */
+    public static function processHeadingMetadata($data, Doku_Renderer_metadata $renderer)
     {
 
         $state = $data[PluginUtility::STATE];
@@ -129,7 +133,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
              * Not component heading
              */
             $context = $data[PluginUtility::CONTEXT];
-            if ($context == self::TYPE_OUTLINE) {
+            if ($context === self::TYPE_OUTLINE) {
                 $callStackArray = $data[PluginUtility::ATTRIBUTES];
                 $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
                 $text = trim($tagAttributes->getValue(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE));
@@ -304,7 +308,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 /**
                  * Make Bootstrap display responsive
                  */
-                PluginUtility::getSnippetManager()->attachCssSnippetForBar(syntax_plugin_combo_heading::DISPLAY_BS_4_RESPONSIVE_SNIPPET_ID);
+                PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(syntax_plugin_combo_heading::DISPLAY_BS_4_RESPONSIVE_SNIPPET_ID);
 
                 if (in_array($type, self::DISPLAY_TYPES_ONLY_BS_5)) {
                     $displayClass = "display-4";
@@ -382,7 +386,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      * @param TagAttributes $tagAttributes
      * @return string
      */
-    public static function renderClosingTag($tagAttributes)
+    public static function renderClosingTag(TagAttributes $tagAttributes): string
     {
         $level = $tagAttributes->getValueAndRemove(syntax_plugin_combo_heading::LEVEL);
         if ($level == null) {
@@ -398,7 +402,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return self::SYNTAX_TYPE;
     }

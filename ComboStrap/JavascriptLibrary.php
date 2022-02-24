@@ -20,17 +20,15 @@ class JavascriptLibrary extends Media
      */
     public static function createJavascriptLibraryFromDokuwikiId($dokuwikiId): JavascriptLibrary
     {
-        $resource = DokuPath::createResource($dokuwikiId);
+        $resource = DokuPath::createComboResource($dokuwikiId);
         return new JavascriptLibrary($resource);
     }
 
 
     /**
-     *
-     * @param string $ampersand
      * @return string
      */
-    public function getUrl($ampersand = DokuwikiUrl::AMPERSAND_CHARACTER): string
+    public function getUrl(): string
     {
         /**
          * The ampersand must not be send encoded
@@ -54,14 +52,14 @@ class JavascriptLibrary extends Media
         /**
          * @var DokuPath $path
          */
-        if ($path->getType() !== DokuPath::RESOURCE_TYPE) {
+        if ($path->getLibrary() !== DokuPath::COMBO_DRIVE) {
             LogUtility::msg("Only Javascript script in the resource directory can be served, blank url returned");
             return "";
         };
         $direct = true;
         $att = [];
         $this->addCacheBusterToQueryParameters($att);
-        $att[DokuPath::WIKI_FS_TYPE] = $path->getType();
+        $att[DokuPath::DRIVE_ATTRIBUTE] = $path->getLibrary();
         return ml($path->getDokuwikiId(), $att, $direct, $ampersand, true);
     }
 

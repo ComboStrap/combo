@@ -9,6 +9,7 @@ use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
+use ComboStrap\SvgDocument;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
@@ -46,9 +47,9 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
 
     /**
-     * @var int a counter for an unknown card type
+     * @var array of a counter for the actual requested wiki id
      */
-    private $cardCounter = 0;
+    private $cardCounter = null;
     private $sectionCounter = 0;
 
 
@@ -58,7 +59,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'container';
     }
@@ -72,7 +73,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      * is used
      * ***************
      */
-    public function getAllowedTypes()
+    public function getAllowedTypes(): array
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
@@ -168,18 +169,14 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $tagAttributes = TagAttributes::createFromTagMatch($match);
+                $knownTypes = [];
+                $defaultAttributes = [];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
 
-                $this->cardCounter++;
-                $id = $this->cardCounter;
 
                 /** A card without context */
                 $tagAttributes->addClassName("card");
 
-
-                if (!$tagAttributes->hasAttribute("id")) {
-                    $tagAttributes->addComponentAttributeValue("id", self::TAG . $id);
-                }
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -226,8 +223,14 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     switch ($tagName) {
                         case $imageTag:
                             $actualCall->addClassName("card-img-top");
+                            $actualCall->setType(SvgDocument::ILLUSTRATION_TYPE);
                             $actualCall->addAttribute(MediaLink::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
+                            if (!$actualCall->hasAttribute(Dimension::RATIO_ATTRIBUTE)) {
+                                $actualCall->addAttribute(Dimension::RATIO_ATTRIBUTE, "16:9");
+                            }
                             $actualCall->setDisplay(Call::BlOCK_DISPLAY);
+                            // an image should stretch into the card
+                            $actualCall->addCssStyle("max-width", "100%");
                             break 2;
                         case "eol":
                             break;
@@ -321,7 +324,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {
@@ -336,12 +339,34 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      * Add the CSS
                      */
                     $snippetManager = PluginUtility::getSnippetManager();
-                    $snippetManager->attachCssSnippetForBar(self::TAG);
+                    $snippetManager->attachCssInternalStyleSheetForSlot(self::TAG);
 
                     /**
                      * Tag Attributes
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
+
+                    /**
+                     * Card counter that reset when an unknown request wiki id is asked
+                     */
+                    $requestedId = PluginUtility::getRequestedWikiId();
+                    $counter = &$this->cardCounter[$requestedId];
+                    if ($counter === null) {
+                        $this->cardCounter = null; // delete old counter
+                        $counter = 1;
+                        $this->cardCounter[$requestedId] = $counter;
+                    } else {
+                        $counter++;
+                    }
+
+                    if (!$tagAttributes->hasAttribute("id")) {
+                        /**
+                         * TODO: the value should normally also have the slot id (because other slot may have a card and be cached, the counter
+                         *   will then miss them)
+                         *   but do we really need this id ? Is it for testing purpose ?
+                         */
+                        $tagAttributes->addComponentAttributeValue("id", self::TAG . $counter);
+                    }
 
                     /**
                      * Section (Edit button)

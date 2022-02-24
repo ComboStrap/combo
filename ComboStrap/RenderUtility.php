@@ -14,19 +14,37 @@ namespace ComboStrap;
 
 
 use dokuwiki\Extension\SyntaxPlugin;
+use PHPUnit\Exception;
 
 class RenderUtility
 {
+    /**
+     * When the rendering is a snippet or an instructions
+     */
+    const DYNAMIC_RENDERING = "dynamic";
+    /**
+     * The id used if
+     */
+    const DEFAULT_SLOT_ID_FOR_TEST = "test-slot-id";
 
     /**
      * @param $content
      * @param bool $strip
      * @return string|null
      */
-    public static function renderText2XhtmlAndStripPEventually($content, $strip = true)
+    public static function renderText2XhtmlAndStripPEventually($content, bool $strip = true): ?string
     {
-        $instructions = self::getInstructionsAndStripPEventually($content, $strip);
-        return p_render('xhtml', $instructions, $info);
+        global $ID;
+        $keep = $ID;
+        if ($ID === null && PluginUtility::isTest()) {
+            $ID = self::DEFAULT_SLOT_ID_FOR_TEST;
+        }
+        try {
+            $instructions = self::getInstructionsAndStripPEventually($content, $strip);
+            return p_render('xhtml', $instructions, $info);
+        } finally {
+            $ID = $keep;
+        }
 
     }
 
@@ -35,7 +53,7 @@ class RenderUtility
      * @param bool $stripOpenAndEnd - to avoid the p element in test rendering
      * @return array
      */
-    public static function getInstructionsAndStripPEventually($pageContent, $stripOpenAndEnd = true): array
+    public static function getInstructionsAndStripPEventually($pageContent, bool $stripOpenAndEnd = true): array
     {
 
         $instructions = p_get_instructions($pageContent);
@@ -94,6 +112,28 @@ class RenderUtility
             return $xhtml;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function renderInstructionsToXhtml($callStackHeaderInstructions): ?string
+    {
+        global $ACT;
+        $keep = $ACT;
+        try {
+            $ACT = self::DYNAMIC_RENDERING;
+            return p_render("xhtml", $callStackHeaderInstructions, $info);
+        } catch (Exception $e) {
+            /**
+             * Example of errors;
+             * method_exists() expects parameter 2 to be string, array given
+             * inc\parserutils.php:672
+             */
+            throw new ExceptionCombo("Error while rendering instructions. Error was: {$e->getMessage()}");
+        } finally {
+            $ACT = $keep;
         }
     }
 

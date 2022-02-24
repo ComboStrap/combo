@@ -19,6 +19,7 @@ class PagePath extends MetadataWikiPath
     public const PROPERTY_NAME = "path";
 
 
+
     public static function createForPage(ResourceCombo $page): CacheExpirationDate
     {
         return (new CacheExpirationDate())

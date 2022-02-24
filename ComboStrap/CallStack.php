@@ -178,7 +178,7 @@ class CallStack
     }
 
     public
-    static function createFromMarkup($marki)
+    static function createFromMarkup($marki): CallStack
     {
 
         $modes = p_get_parsermodes();
@@ -193,6 +193,29 @@ class CallStack
         return self::createFromHandler($handler);
 
     }
+
+    public static function createEmpty(): CallStack
+    {
+        $emptyHandler = new class extends \Doku_Handler {
+            public $calls = [];
+
+            public function getCallWriter(): object
+            {
+                return new class {
+                    public $calls = array();
+                };
+            }
+        };
+        return new CallStack($emptyHandler);
+    }
+
+    public static function createFromInstructions(?array $callStackArray): CallStack
+    {
+        return CallStack::createEmpty()
+            ->appendInstructionsFromNativeArray($callStackArray);
+
+    }
+
 
     /**
      * Reset the pointer
@@ -233,11 +256,11 @@ class CallStack
     /**
      * A callstack pointer based implementation
      * that starts at the end
-     * @param Doku_Handler $handler
+     * @param mixed|Doku_Handler $handler - mixed because we test if the handler passed is not the good one (It can happen with third plugin)
      * @return CallStack
      */
     public
-    static function createFromHandler(&$handler)
+    static function createFromHandler(&$handler): CallStack
     {
         return new CallStack($handler);
     }
@@ -254,10 +277,10 @@ class CallStack
      * state of {@link SyntaxPlugin::handle()} to create paragraph
      * with the class given as parameter
      *
-     * @param $attributes - the attributes in an callstack array form passed to the paragraph
+     * @param array $attributes - the attributes in an callstack array form passed to the paragraph
      */
     public
-    function processEolToEndStack($attributes = [])
+    function processEolToEndStack(array $attributes = [])
     {
 
         \syntax_plugin_combo_para::fromEolToParagraphUntilEndOfStack($this, $attributes);
@@ -310,7 +333,7 @@ class CallStack
      * in the stack
      */
     public
-    function getActualCall()
+    function getActualCall(): ?Call
     {
         if ($this->endWasReached) {
             LogUtility::msg("The actual call cannot be ask because the end of the stack was reached", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -368,7 +391,7 @@ class CallStack
     {
 
         /**
-         * Edgde case
+         * Edge case
          */
         if (empty($this->callStack)) {
             return false;
@@ -478,7 +501,7 @@ class CallStack
             $this->startWasReached = false;
         }
         end($this->callStack);
-        $this->next();
+        return $this->next();
     }
 
     /**
@@ -496,8 +519,8 @@ class CallStack
         }
 
         $actualCall = $this->getActualCall();
-        $actualState = $actualCall->getState();
-        if (!in_array($actualState, CallStack::TAG_STATE)) {
+        $enterState = $actualCall->getState();
+        if (!in_array($enterState, CallStack::TAG_STATE)) {
             LogUtility::msg("A next sibling can be asked only from a tag call. The state is " . $actualState, LogUtility::LVL_MSG_ERROR, "support");
             return false;
         }
@@ -508,9 +531,15 @@ class CallStack
             $state = $actualCall->getState();
             switch ($state) {
                 case DOKU_LEXER_ENTER:
-                case DOKU_LEXER_SPECIAL:
                     $level++;
                     break;
+                case DOKU_LEXER_SPECIAL:
+                    if ($enterState === DOKU_LEXER_SPECIAL) {
+                        break;
+                    } else {
+                        // ENTER TAG
+                        continue 2;
+                    }
                 case DOKU_LEXER_EXIT:
                     $level--;
                     break;
@@ -674,7 +703,7 @@ class CallStack
     function moveToStart()
     {
         $this->resetPointer();
-        $this->previous();
+        return $this->previous();
     }
 
     /**
@@ -755,10 +784,12 @@ class CallStack
     /**
      * Append instructions to the callstack (ie at the end)
      * @param array $instructions
+     * @return CallStack
      */
-    public function appendInstructionsFromNativeArray($instructions)
+    public function appendInstructionsFromNativeArray(array $instructions): CallStack
     {
         array_splice($this->callStack, count($this->callStack), 0, $instructions);
+        return $this;
     }
 
     /**
@@ -778,27 +809,35 @@ class CallStack
             return false;
         }
 
+        $enterState = null;
         if (!$this->endWasReached) {
             $actualCall = $this->getActualCall();
-            $actualState = $actualCall->getState();
-            if (!in_array($actualState, CallStack::TAG_STATE)) {
+            $enterState = $actualCall->getState();
+            if (!in_array($enterState, CallStack::TAG_STATE)) {
                 LogUtility::msg("A previous sibling can be asked only from a tag call. The state is " . $actualState, LogUtility::LVL_MSG_ERROR, "support");
                 return false;
             }
         }
         $level = 0;
-        while ($this->previous()) {
+        while ($actualCall = $this->previous()) {
 
-            $actualCall = $this->getActualCall();
             $state = $actualCall->getState();
             switch ($state) {
                 case DOKU_LEXER_ENTER:
-                case DOKU_LEXER_SPECIAL:
                     $level++;
                     break;
+                case DOKU_LEXER_SPECIAL:
+                    if ($enterState === DOKU_LEXER_SPECIAL) {
+                        break;
+                    } else {
+                        continue 2;
+                    }
                 case DOKU_LEXER_EXIT:
                     $level--;
                     break;
+                default:
+                    // cdata
+                    continue 2;
             }
 
             if ($level == 0 && in_array($state, self::TAG_STATE)) {
@@ -875,6 +914,92 @@ class CallStack
         }
         return $lastEndPosition;
 
+    }
+
+    public function getStack(): array
+    {
+        return $this->callStack;
+    }
+
+    public function moveToFirstEnterTag()
+    {
+
+        while ($actualCall = $this->next()) {
+
+            if ($actualCall->getState() === DOKU_LEXER_ENTER) {
+                return $this->getActualCall();
+            }
+        }
+        return false;
+
+    }
+
+    /**
+     * Move the pointer to the corresponding exit call
+     * and return it or false if not found
+     * @return Call|false
+     */
+    public function moveToNextCorrespondingExitTag()
+    {
+        /**
+         * Edge case
+         */
+        if (empty($this->callStack)) {
+            return false;
+        }
+
+        /**
+         * Check if we are on an enter tag
+         */
+        $actualCall = $this->getActualCall();
+        if ($actualCall === null) {
+            LogUtility::msg("You are not on the stack (start or end), you can't ask for the corresponding exit call", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return false;
+        }
+        $actualState = $actualCall->getState();
+        if ($actualState != DOKU_LEXER_ENTER) {
+            LogUtility::msg("You are not on an enter tag ($actualState). You can't ask for the corresponding exit call .", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return false;
+        }
+
+        $level = 0;
+        while ($actualCall = $this->next()) {
+
+            $state = $actualCall->getState();
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+                    $level++;
+                    break;
+                case DOKU_LEXER_EXIT:
+                    $level--;
+                    break;
+            }
+            if ($level < 0) {
+                break;
+            }
+
+        }
+        if ($level < 0) {
+            return $actualCall;
+        } else {
+            return false;
+        }
+
+    }
+
+    public function moveToCall(Call $call): ?Call
+    {
+        $targetKey = $call->getKey();
+        $actualKey = $this->getActualKey();
+        $diff = $targetKey - $actualKey ;
+        for ($i = 0; $i < abs($diff); $i++) {
+            if ($diff > 0) {
+                $this->next();
+            } else {
+                $this->previous();
+            }
+        }
+        return $this->getActualCall();
     }
 
 

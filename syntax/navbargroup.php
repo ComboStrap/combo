@@ -7,15 +7,10 @@
 use ComboStrap\Bootstrap;
 use ComboStrap\NavBarUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Site;
 
-if (!defined('DOKU_INC')) {
-    die();
-}
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
-require_once(__DIR__ . '/../ComboStrap/LinkUtility.php');
-require_once(__DIR__ . '/../ComboStrap/XhtmlUtility.php');
+
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism

@@ -99,7 +99,7 @@ php ./bin/plugin.php combo metadata-to-database /namespace/my-page
 
 Animal: If you want to use it for an animal farm, you need to set first the animal directory name in a environment variable
 ```bash
-set animal=animal-directory-name
+animal=animal-directory-name php ./bin/plugin.php combo
 ```
 
 EOF;

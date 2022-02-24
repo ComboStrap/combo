@@ -41,6 +41,15 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
     const CANONICAL = "tooltip";
     public const TEXT_ATTRIBUTE = "text";
 
+    /**
+     * To see the tooltip immediately when hovering the class d-inline-block
+     *
+     * The inline block is to make the element (span) take the whole space
+     * of the image (ie dimension) otherwise it has no dimension and
+     * you can't click on it
+     *
+     * TODO: Add this to the {@link Tooltip} ???
+     */
     const TOOLTIP_CLASS_INLINE_BLOCK = "d-inline-block";
 
     /**

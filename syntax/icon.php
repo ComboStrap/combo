@@ -250,13 +250,10 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                                  * If there is a tooltip, we need
                                  * to start with a span to wrap the svg with it
                                  */
-                                /**
-                                 * The inline block is to make the span take the whole space
-                                 * of the image (ie dimension)
-                                 */
-                                $className = "d-inline-block";
+
+
                                 $tooltipTag = TagAttributes::createFromCallStackArray([\ComboStrap\Tooltip::TOOLTIP_ATTRIBUTE => $tooltip])
-                                    ->addClassName($className);
+                                    ->addClassName(syntax_plugin_combo_tooltip::TOOLTIP_CLASS_INLINE_BLOCK);
                                 $renderer->doc .= $tooltipTag->toHtmlEnterTag("span");
                             }
                             /**

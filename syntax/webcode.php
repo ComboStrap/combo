@@ -378,7 +378,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                         );
                         $queryString = http_build_query($queryParams,'', DokuwikiUrl::AMPERSAND_CHARACTER);
                         $url = Site::getAjaxUrl() . "?$queryString";
-                        $iFrameAttributes->addHtmlAttributeValue("src", $url);
+                        $iFrameAttributes->addOutputAttributeValue("src", $url);
 
                     } else {
 
@@ -458,7 +458,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             $iframeSrcValue .= '<script type="text/babel">' . $codes['babel'] . '</script>';
                         }
                         $iframeSrcValue .= '</body></html>';
-                        $iFrameAttributes->addHtmlAttributeValue("srcdoc", $iframeSrcValue);
+                        $iFrameAttributes->addOutputAttributeValue("srcdoc", $iframeSrcValue);
 
                         // Code bar with button
                         $bar .= '<div class="webcode-bar-item">' . PluginUtility::getDocumentationHyperLink(self::TAG, "Rendered by WebCode", false) . '</div>';
@@ -490,7 +490,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                          * then scrolling = no if not set
                          */
                         if (!$iFrameAttributes->hasComponentAttribute("scrolling")) {
-                            $iFrameAttributes->addHtmlAttributeValue("scrolling", "no");
+                            $iFrameAttributes->addOutputAttributeValue("scrolling", "no");
                         }
 
                     }

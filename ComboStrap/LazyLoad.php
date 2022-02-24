@@ -97,7 +97,7 @@ class LazyLoad
         if ($attributes->hasComponentAttribute(Background::BACKGROUND_COLOR)) {
             $placeholderColor = $attributes->getValueAndRemove(Background::BACKGROUND_COLOR);
         }
-        $attributes->addHtmlAttributeValue("data-placeholder-background", "$placeholderColor");
+        $attributes->addOutputAttributeValue("data-placeholder-background", "$placeholderColor");
 
 
     }

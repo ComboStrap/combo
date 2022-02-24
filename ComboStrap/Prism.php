@@ -358,12 +358,12 @@ EOD;
         // Command line
         if ($attributes->hasComponentAttribute("prompt")) {
             $attributes->addClassName("command-line");
-            $attributes->addHtmlAttributeValue("data-prompt", $attributes->getValueAndRemove("prompt"));
+            $attributes->addOutputAttributeValue("data-prompt", $attributes->getValueAndRemove("prompt"));
         } else {
             switch ($language) {
                 case "bash":
                     $attributes->addClassName("command-line");
-                    $attributes->addHtmlAttributeValue("data-prompt", $plugin->getConf(self::CONF_BASH_PROMPT));
+                    $attributes->addOutputAttributeValue("data-prompt", $plugin->getConf(self::CONF_BASH_PROMPT));
                     break;
                 case "batch":
                     $attributes->addClassName("command-line");
@@ -373,7 +373,7 @@ EOD;
                             $batch .= ">";
                         }
                     }
-                    $attributes->addHtmlAttributeValue("data-prompt", $batch);
+                    $attributes->addOutputAttributeValue("data-prompt", $batch);
                     break;
                 case "powershell":
                     $attributes->addClassName("command-line");
@@ -383,20 +383,20 @@ EOD;
                             $powerShell .= ">";
                         }
                     }
-                    $attributes->addHtmlAttributeValue("data-prompt", $powerShell);
+                    $attributes->addOutputAttributeValue("data-prompt", $powerShell);
                     break;
             }
         }
 
         // Download
-        $attributes->addHtmlAttributeValue('data-download-link', true);
+        $attributes->addOutputAttributeValue('data-download-link', true);
         if ($attributes->hasComponentAttribute(syntax_plugin_combo_code::FILE_PATH_KEY)) {
             $fileSrc = $attributes->getValueAndRemove(syntax_plugin_combo_code::FILE_PATH_KEY);
-            $attributes->addHtmlAttributeValue('data-src', $fileSrc);
-            $attributes->addHtmlAttributeValue('data-download-link-label', "Download " . $fileSrc);
+            $attributes->addOutputAttributeValue('data-src', $fileSrc);
+            $attributes->addOutputAttributeValue('data-download-link-label', "Download " . $fileSrc);
         } else {
             $fileName = "file." . $language;
-            $attributes->addHtmlAttributeValue('data-src', $fileName);
+            $attributes->addOutputAttributeValue('data-src', $fileName);
         }
         /**
          * No end of line after the pre, please, otherwise we get a new line

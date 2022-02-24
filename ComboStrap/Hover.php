@@ -91,7 +91,7 @@ class Hover
                 // Smooth Transition in and out of hover
                 $attributes->addClassName(self::COMBO_HOVER_EASING_CLASS);
 
-                $attributes->addHtmlAttributeValue("data-hover-class", trim($comboDataHoverClasses));
+                $attributes->addOutputAttributeValue("data-hover-class", trim($comboDataHoverClasses));
 
                 // The javascript that manage the hover effect by adding the class in the data-hover class
                 $snippetManager->attachInternalJavascriptForSlot(self::ON_HOVER_SNIPPET_ID);

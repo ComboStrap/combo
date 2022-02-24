@@ -37,7 +37,7 @@ class Animation
             $attributes->addClassName($animateClass);
 
             $animationClass = "animate__" . $onView;
-            $attributes->addHtmlAttributeValue("data-animated-class", $animationClass);
+            $attributes->addOutputAttributeValue("data-animated-class", $animationClass);
 
             // TODO: Add attributes
             //$delay = "animate__delay-2s";

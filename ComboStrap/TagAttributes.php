@@ -69,7 +69,8 @@ class TagAttributes
         \syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE,
         Skin::SKIN_ATTRIBUTE,
         ColorRgb::PRIMARY_VALUE,
-        ColorRgb::SECONDARY_VALUE
+        ColorRgb::SECONDARY_VALUE,
+
     ];
 
     /**
@@ -159,11 +160,10 @@ class TagAttributes
     private $componentToHtmlAttributeProcessingWasDone = false;
 
     /**
-     * @var array - html attributes set in the code. This is needed to make a difference
-     * on attribute name that are the same such as the component attribute `width` that is
-     * transformed as a style `max-width` but exists also as attribute of an image for instance
+     * @var array - output attribute are not the parsed attributes known as componentAttribute)
+     * They are created by the {@link TagAttributes::toHtmlArray()} processing mainly
      */
-    private $htmlAttributes = array();
+    private $outputAttributes = array();
 
     /**
      * @var array - the final html array
@@ -190,6 +190,11 @@ class TagAttributes
      */
     const TEXT_HTML_MIME = "text/html";
     private $mime = TagAttributes::TEXT_HTML_MIME;
+
+    /**
+     * @var bool - adding  the default class for the logical tag
+     */
+    private $defaultStyleClassShouldBeAdded = true;
 
 
     /**
@@ -219,7 +224,7 @@ class TagAttributes
                 unset($this->componentAttributesCaseInsensitive[$key]);
                 $stylingProperties = explode(";", $value);
                 foreach ($stylingProperties as $stylingProperty) {
-                    if(empty($stylingProperty)){
+                    if (empty($stylingProperty)) {
                         // case with a trailing comma. ie `width:18rem;`
                         continue;
                     }
@@ -544,6 +549,11 @@ class TagAttributes
         }
 
         /**
+         * Tooltip
+         */
+        Tooltip::processTooltip($this);
+
+        /**
          * Add the type class used for CSS styling
          */
         StyleUtility::addStylingClass($this);
@@ -552,12 +562,12 @@ class TagAttributes
          * Add the style has html attribute
          * before processing
          */
-        $this->addHtmlAttributeValueIfNotEmpty("style", $this->getStyle());
+        $this->addOutputAttributeValueIfNotEmpty("style", $this->getStyle());
 
         /**
          * Create a non-sorted temporary html attributes array
          */
-        $tempHtmlArray = $this->htmlAttributes;
+        $tempHtmlArray = $this->outputAttributes;
 
         /**
          * copy the unknown component attributes
@@ -613,14 +623,14 @@ class TagAttributes
                         $sortedArray[$name] = $value;
                         continue 2;
                     } else {
-                        $multipleValues[$name]=$value;
+                        $multipleValues[$name] = $value;
                     }
                 }
             }
-            if(!empty($multipleValues)){
+            if (!empty($multipleValues)) {
                 ksort($multipleValues);
-                $sortedArray = array_merge($sortedArray,$multipleValues);
-                $multipleValues=[];
+                $sortedArray = array_merge($sortedArray, $multipleValues);
+                $multipleValues = [];
             }
         }
         foreach ($tempHtmlArray as $name => $value) {
@@ -633,9 +643,9 @@ class TagAttributes
                  * The value of an HTML attribute may be empty
                  * Example the wiki id of the root namespace
                  *
-                 * By default, {@link TagAttributes::addHtmlAttributeValue()}
+                 * By default, {@link TagAttributes::addOutputAttributeValue()}
                  * will not accept any value, it must be implicitly said with the
-                 * {@link TagAttributes::addHtmlAttributeValue()}
+                 * {@link TagAttributes::addOutputAttributeValue()}
                  *
                  */
                 $sortedArray[$name] = $value;
@@ -654,34 +664,26 @@ class TagAttributes
     }
 
     /**
-     * HTML attribute are attributes
-     * that are not transformed to HTML
-     * (We make a difference between a markup attribute
-     * that we have in the written document set on a component
+     *
+     *
      * @param $key
      * @param $value
      * @return TagAttributes
      */
-    public function addHtmlAttributeValue($key, $value): TagAttributes
+    public function addOutputAttributeValue($key, $value): TagAttributes
     {
         if (blank($value)) {
-            LogUtility::msg("The value of the HTML attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("The value of the output attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
         }
-        /**
-         * Note: We encode the HTML attribute only when rendering
-         * it ({@link TagAttributes::toHtmlArray()} and thus {@link TagAttributes::toHTMLAttributeString()}
-         *
-         * To avoid to have a double encoding (ie &amp; becomes &amp;amp;)
-         */
-        $this->htmlAttributes[$key] = $value;
+        $this->outputAttributes[$key] = $value;
         return $this;
     }
 
 
-    public function addHtmlAttributeValueIfNotEmpty($key, $value)
+    public function addOutputAttributeValueIfNotEmpty($key, $value)
     {
         if (!empty($value)) {
-            $this->addHtmlAttributeValue($key, $value);
+            $this->addOutputAttributeValue($key, $value);
         }
     }
 
@@ -756,7 +758,7 @@ class TagAttributes
         /**
          * html attribute may also be in the callstack
          */
-        foreach ($this->htmlAttributes as $key => $value) {
+        foreach ($this->outputAttributes as $key => $value) {
             $array[$key] = StringUtility::toString($value);
         }
         $style = $this->getStyle();
@@ -1052,8 +1054,8 @@ class TagAttributes
     function removeHTMLAttributeIfPresent($string)
     {
         $lowerAtt = strtolower($string);
-        if (isset($this->htmlAttributes[$lowerAtt])) {
-            unset($this->htmlAttributes[$lowerAtt]);
+        if (isset($this->outputAttributes[$lowerAtt])) {
+            unset($this->outputAttributes[$lowerAtt]);
         }
     }
 
@@ -1110,7 +1112,7 @@ class TagAttributes
     function addEmptyHtmlAttributeValue($key)
     {
 
-        $this->htmlAttributes[$key] = '';
+        $this->outputAttributes[$key] = '';
         return $this;
 
     }
@@ -1151,27 +1153,28 @@ class TagAttributes
     private
     function hasHtmlAttribute($attribute): bool
     {
-        return isset($this->htmlAttributes[$attribute]);
+        return isset($this->outputAttributes[$attribute]);
     }
 
     /**
-     * Component attribute are entered by the user and should be encoded
+     * Encoding should happen always to the target format output.
+     * ie HTML
+     *
+     * If it's user or not data.
+     *
+     * Sanitizing is completely useless. We follow the same principal than SQL parameters
+     *
+     * We  follows the rule 2 to encode the unknown value
+     * We encode the component attribute to the target output (ie HTML)
+     *
      * @param array $arrayToEscape
      * @param null $subKey
      *
      *
-     * Following the rule 2 to encode the unknown value
-     * We encode the component attribute to the target output (ie HTML)
      *
-     * See:
-     * https://stackoverflow.com/questions/129677/how-can-i-sanitize-user-input-with-php
-     * and https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
      *
-     * TODO: the problem is that we don't know the type of attribute
-     *   When passing them through the {@link TagAttributes::toCallStackArray()}
-     *   One way to do that is by name. ie an href does not need to be encoded
-     *   but we should be sure that this is not a user entry
-     *   For now, the internal function passes the non-encoded by default
+     * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
+     *
      * @return array
      */
     private
@@ -1250,6 +1253,17 @@ class TagAttributes
     public function hasClass(string $string): bool
     {
         return strpos($this->getClass(), $string) !== false;
+    }
+
+    public function getDefaultStyleClassShouldBeAdded(): bool
+    {
+        return $this->defaultStyleClassShouldBeAdded;
+    }
+
+    public function setDefaultStyleClassShouldBeAdded(bool $bool): TagAttributes
+    {
+        $this->defaultStyleClassShouldBeAdded = $bool;
+        return $this;
     }
 
 

@@ -278,9 +278,10 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                          * The context is set on the handle exit
                          */
                         if ($context == self::TAG) {
-                            $tagAttributes = TagAttributes::createFromCallStackArray($callStackAttributes);
+                            $tagAttributes = TagAttributes::createFromCallStackArray($callStackAttributes, self::TAG)
+                                ->setDefaultStyleClassShouldBeAdded(false);
                             self::processButtonAttributesToHtmlAttributes($tagAttributes);
-                            $tagAttributes->addHtmlAttributeValue("type", "button");
+                            $tagAttributes->addOutputAttributeValue("type", "button");
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag('button');
                         }
                         break;

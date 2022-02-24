@@ -39,7 +39,7 @@ class Lang extends MetadataText
          */
         if ($attributes->hasComponentAttribute(self::PROPERTY_NAME)) {
             $langValue = $attributes->getValueAndRemove(self::PROPERTY_NAME);
-            $attributes->addHtmlAttributeValue("lang", $langValue);
+            $attributes->addOutputAttributeValue("lang", $langValue);
 
             $languageDataCache = new Cache("combo_" . $langValue, ".json");
             $cacheDataUsable = $languageDataCache->useCache();
@@ -75,9 +75,9 @@ class Lang extends MetadataText
                 }
                 $characterOrder = $languageData["main"][$langValue]["layout"]["orientation"]["characterOrder"];
                 if ($characterOrder == "right-to-left") {
-                    $attributes->addHtmlAttributeValue("dir", "rtl");
+                    $attributes->addOutputAttributeValue("dir", "rtl");
                 } else {
-                    $attributes->addHtmlAttributeValue("dir", "ltr");
+                    $attributes->addOutputAttributeValue("dir", "ltr");
                 }
             } else {
                 LogUtility::msg("The language direction cannot be set because no language data was found for the language ($langValue)", LogUtility::LVL_MSG_WARNING, self::PROPERTY_NAME);

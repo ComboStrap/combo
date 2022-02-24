@@ -129,9 +129,9 @@ class PageEdit
             $inputs = "";
             foreach ($data as $key => $val) {
                 $inputAttributes = TagAttributes::createEmpty()
-                    ->addHtmlAttributeValue("name", $key)
-                    ->addHtmlAttributeValue("value", $val)
-                    ->addHtmlAttributeValue("type", "hidden");
+                    ->addOutputAttributeValue("name", $key)
+                    ->addOutputAttributeValue("value", $val)
+                    ->addOutputAttributeValue("type", "hidden");
                 $inputs .= $inputAttributes->toHtmlEmptyTag("input");
             }
             $url = $page->getUrl(PageUrlType::CONF_VALUE_PAGE_PATH);

@@ -690,7 +690,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                              */
                             $namespaceId = DokuPath::toDokuwikiId($namespacePath);
                             if (!empty($namespaceId)) { // not root
-                                $pageExplorerTagAttributes->addHtmlAttributeValue("data-wiki-id", $namespaceId);
+                                $pageExplorerTagAttributes->addOutputAttributeValue("data-wiki-id", $namespaceId);
                             } else {
                                 $pageExplorerTagAttributes->addEmptyHtmlAttributeValue("data-wiki-id");
                             }
@@ -811,10 +811,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             $this->namespaceCounter++;
             $id = Html::toHtmlId("page-explorer-{$childDirectoryId}-{$this->namespaceCounter}-combo");
             $html .= TagAttributes::createEmpty()
-                ->addHtmlAttributeValue("data-bs-target", "#$id")
-                ->addHtmlAttributeValue("data-" . TagAttributes::WIKI_ID, $childDirectoryId)
-                ->addHtmlAttributeValue("data-bs-toggle", "collapse")
-                ->addHtmlAttributeValue("aria-expanded", "false")
+                ->addOutputAttributeValue("data-bs-target", "#$id")
+                ->addOutputAttributeValue("data-" . TagAttributes::WIKI_ID, $childDirectoryId)
+                ->addOutputAttributeValue("data-bs-toggle", "collapse")
+                ->addOutputAttributeValue("aria-expanded", "false")
                 ->addClassName("btn")
                 ->addClassName("align-items-center")
                 ->addClassName("rounded")
@@ -846,7 +846,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
              */
             $html .= TagAttributes::createEmpty()
                 ->addClassName("collapse")
-                ->addHtmlAttributeValue(TagAttributes::ID_KEY, "$id")
+                ->addOutputAttributeValue(TagAttributes::ID_KEY, "$id")
                 ->toHtmlEnterTag("div");
             $html .= "<ul>";
             self::treeProcessSubNamespace($html, $childDirectoryPath, $data);

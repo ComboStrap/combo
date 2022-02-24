@@ -54,10 +54,12 @@ class StyleUtility
      */
     public static function addStylingClass(TagAttributes &$param)
     {
-        if (!empty($param->getLogicalTag())) {
-            $param->addClassName($param->getLogicalTag() . "-combo");
+        $logicalTag = $param->getLogicalTag();
+        if ($logicalTag!==null && $param->getDefaultStyleClassShouldBeAdded() === true) {
+
+            $param->addClassName($logicalTag . "-combo");
             if (!empty($param->getType())) {
-                $param->addClassName($param->getLogicalTag() . "-" . $param->getType() . "-combo");
+                $param->addClassName($logicalTag . "-" . $param->getType() . "-combo");
             }
         }
     }

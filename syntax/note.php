@@ -177,7 +177,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
                         }
                     }
 
-                    $attributes->addHtmlAttributeValue("role", "note");
+                    $attributes->addOutputAttributeValue("role", "note");
                     $renderer->doc .= $attributes->toHtmlEnterTag('div');
                     break;
 

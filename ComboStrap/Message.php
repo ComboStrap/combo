@@ -147,7 +147,7 @@ class Message
 
         $tagAttributes = TagAttributes::createEmpty("message")
             ->addClassName("alert")
-            ->addHtmlAttributeValue("role", "alert");
+            ->addOutputAttributeValue("role", "alert");
         if ($this->class !== null) {
             $tagAttributes->addClassName($this->class);
         }

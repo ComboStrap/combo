@@ -116,7 +116,7 @@ class SvgImageLink extends ImageLink
         /**
          * Alt is mandatory
          */
-        $responseAttributes->addHtmlAttributeValue("alt", $image->getAltNotEmpty());
+        $responseAttributes->addOutputAttributeValue("alt", $image->getAltNotEmpty());
 
 
         /**
@@ -147,8 +147,8 @@ class SvgImageLink extends ImageLink
          * Dimension are mandatory
          * to avoid layout shift (CLS)
          */
-        $responseAttributes->addHtmlAttributeValue(Dimension::WIDTH_KEY, $image->getTargetWidth());
-        $responseAttributes->addHtmlAttributeValue(Dimension::HEIGHT_KEY, $image->getTargetHeight());
+        $responseAttributes->addOutputAttributeValue(Dimension::WIDTH_KEY, $image->getTargetWidth());
+        $responseAttributes->addOutputAttributeValue(Dimension::HEIGHT_KEY, $image->getTargetHeight());
 
         /**
          * Src call
@@ -159,15 +159,15 @@ class SvgImageLink extends ImageLink
             /**
              * Note: Responsive image srcset is not needed for svg
              */
-            $responseAttributes->addHtmlAttributeValue("data-src", $srcValue);
-            $responseAttributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder(
+            $responseAttributes->addOutputAttributeValue("data-src", $srcValue);
+            $responseAttributes->addOutputAttributeValue("src", LazyLoad::getPlaceholder(
                 $image->getTargetWidth(),
                 $image->getTargetHeight()
             ));
 
         } else {
 
-            $responseAttributes->addHtmlAttributeValue("src", $srcValue);
+            $responseAttributes->addOutputAttributeValue("src", $srcValue);
 
         }
 

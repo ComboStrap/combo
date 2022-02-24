@@ -312,7 +312,7 @@ class MarkupRef
          */
         $url = $this->getUrl();
         if (!empty($url)) {
-            $outputAttributes->addHtmlAttributeValue("href", $url);
+            $outputAttributes->addOutputAttributeValue("href", $url);
         }
 
 
@@ -331,15 +331,15 @@ class MarkupRef
                  */
                 $interWikiConf = $conf['target']['interwiki'];
                 if (!empty($interWikiConf)) {
-                    $outputAttributes->addHtmlAttributeValue('target', $interWikiConf);
-                    $outputAttributes->addHtmlAttributeValue('rel', 'noopener');
+                    $outputAttributes->addOutputAttributeValue('target', $interWikiConf);
+                    $outputAttributes->addOutputAttributeValue('rel', 'noopener');
                 }
                 $outputAttributes->addClassName(self::getHtmlClassInterWikiLink());
                 $wikiClass = "iw_" . preg_replace('/[^_\-a-z0-9]+/i', '_', $this->getWiki());
                 $outputAttributes->addClassName($wikiClass);
                 if (!$this->wikiExists()) {
                     $outputAttributes->addClassName(self::getHtmlClassNotExist());
-                    $outputAttributes->addHtmlAttributeValue("rel", 'nofollow');
+                    $outputAttributes->addOutputAttributeValue("rel", 'nofollow');
                 }
 
                 break;
@@ -350,13 +350,13 @@ class MarkupRef
                 // https://www.dokuwiki.org/config:target
                 $target = $conf['target']['wiki'];
                 if (!empty($target)) {
-                    $outputAttributes->addHtmlAttributeValue('target', $target);
+                    $outputAttributes->addOutputAttributeValue('target', $target);
                 }
                 /**
                  * Internal Page
                  */
                 $linkedPage = $this->getInternalPage();
-                $outputAttributes->addHtmlAttributeValue("data-wiki-id", $linkedPage->getDokuwikiId());
+                $outputAttributes->addOutputAttributeValue("data-wiki-id", $linkedPage->getDokuwikiId());
 
 
                 if (!$linkedPage->exists()) {
@@ -365,7 +365,7 @@ class MarkupRef
                      * Red color
                      */
                     $outputAttributes->addClassName(self::getHtmlClassNotExist());
-                    $outputAttributes->addHtmlAttributeValue("rel", 'nofollow');
+                    $outputAttributes->addOutputAttributeValue("rel", 'nofollow');
 
                 } else {
 
@@ -387,16 +387,16 @@ class MarkupRef
                     $previewConfig = PluginUtility::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
                     $preview = $outputAttributes->getBooleanValueAndRemoveIfPresent(self::PREVIEW_ATTRIBUTE, $previewConfig);
                     if ($preview) {
-                        syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
+                        Tooltip::addToolTipSnippetIfNeeded();
                         $tooltipHtml = <<<EOF
 <h3>{$linkedPage->getNameOrDefault()}</h3>
 <p>{$linkedPage->getDescriptionOrElseDokuWiki()}</p>
 EOF;
                         $dataAttributeNamespace = Bootstrap::getDataNamespace();
-                        $outputAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
-                        $outputAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-placement", "top");
-                        $outputAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
-                        $outputAttributes->addHtmlAttributeValue("title", $tooltipHtml);
+                        $outputAttributes->addOutputAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
+                        $outputAttributes->addOutputAttributeValue("data{$dataAttributeNamespace}-placement", "top");
+                        $outputAttributes->addOutputAttributeValue("data{$dataAttributeNamespace}-html", "true");
+                        $outputAttributes->addOutputAttributeValue("title", $tooltipHtml);
                     }
 
                     /**
@@ -424,8 +424,8 @@ EOF;
                         if (LowQualityPage::isProtectionEnabled()) {
 
                             $linkType = LowQualityPage::getLowQualityLinkType();
-                            $outputAttributes->addHtmlAttributeValue("data-$pageProtectionAcronym-link", $linkType);
-                            $outputAttributes->addHtmlAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLowQualityAcronym);
+                            $outputAttributes->addOutputAttributeValue("data-$pageProtectionAcronym-link", $linkType);
+                            $outputAttributes->addOutputAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLowQualityAcronym);
 
                             /**
                              * Low Quality Page protection javascript is only for warning or login link
@@ -450,8 +450,8 @@ EOF;
                         if (PagePublicationDate::isLatePublicationProtectionEnabled()) {
                             $acronym = PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM;
                             $lowerCaseLatePublicationAcronym = strtolower(PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM);
-                            $outputAttributes->addHtmlAttributeValue("data-$pageProtectionAcronym-link", PageProtection::PAGE_PROTECTION_LINK_LOGIN);
-                            $outputAttributes->addHtmlAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLatePublicationAcronym);
+                            $outputAttributes->addOutputAttributeValue("data-$pageProtectionAcronym-link", PageProtection::PAGE_PROTECTION_LINK_LOGIN);
+                            $outputAttributes->addOutputAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLatePublicationAcronym);
                             PageProtection::addPageProtectionSnippet();
                         }
 
@@ -474,7 +474,7 @@ EOF;
                             if (!empty($acronym)) {
                                 $description = $description . " ($acronym)";
                             }
-                            $outputAttributes->addHtmlAttributeValue("title", $description);
+                            $outputAttributes->addOutputAttributeValue("title", $description);
                         }
 
                     }
@@ -487,7 +487,7 @@ EOF;
                 // https://www.dokuwiki.org/config:target
                 $windowsTarget = $conf['target']['windows'];
                 if (!empty($windowsTarget)) {
-                    $outputAttributes->addHtmlAttributeValue('target', $windowsTarget);
+                    $outputAttributes->addOutputAttributeValue('target', $windowsTarget);
                 }
                 $outputAttributes->addClassName("windows");
                 break;
@@ -498,13 +498,13 @@ EOF;
                 break;
             case self::WEB_URI:
                 if ($conf['relnofollow']) {
-                    $outputAttributes->addHtmlAttributeValue("rel", 'nofollow ugc');
+                    $outputAttributes->addOutputAttributeValue("rel", 'nofollow ugc');
                 }
                 // https://www.dokuwiki.org/config:target
                 $externTarget = $conf['target']['extern'];
                 if (!empty($externTarget)) {
-                    $outputAttributes->addHtmlAttributeValue('target', $externTarget);
-                    $outputAttributes->addHtmlAttributeValue("rel", 'noopener');
+                    $outputAttributes->addOutputAttributeValue('target', $externTarget);
+                    $outputAttributes->addOutputAttributeValue("rel", 'noopener');
                 }
                 if ($this->type === null) {
                     /**
@@ -535,7 +535,7 @@ EOF;
          */
         if ($this->getUriType() == self::EMAIL_URI) {
             $emailAddress = $this->obfuscateEmail($this->dokuwikiUrl->getPath());
-            $outputAttributes->addHtmlAttributeValue("title", $emailAddress);
+            $outputAttributes->addOutputAttributeValue("title", $emailAddress);
         }
 
         /**

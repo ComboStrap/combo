@@ -987,5 +987,20 @@ class CallStack
 
     }
 
+    public function moveToCall(Call $call): ?Call
+    {
+        $targetKey = $call->getKey();
+        $actualKey = $this->getActualKey();
+        $diff = $targetKey - $actualKey ;
+        for ($i = 0; $i < abs($diff); $i++) {
+            if ($diff > 0) {
+                $this->next();
+            } else {
+                $this->previous();
+            }
+        }
+        return $this->getActualCall();
+    }
+
 
 }

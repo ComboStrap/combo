@@ -313,9 +313,9 @@ class SvgDocument extends XmlDocument
                  * The default unit on attribute is pixel, no need to add it
                  * as in CSS
                  */
-                $localTagAttributes->addHtmlAttributeValue("width", $appliedWidth);
+                $localTagAttributes->addOutputAttributeValue("width", $appliedWidth);
                 $height = $localTagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY, $appliedWidth);
-                $localTagAttributes->addHtmlAttributeValue("height", $height);
+                $localTagAttributes->addOutputAttributeValue("height", $height);
                 break;
             default:
                 /**
@@ -333,7 +333,7 @@ class SvgDocument extends XmlDocument
                      * Default is xMidYMid meet
                      */
                     $defaultAspectRatio = PluginUtility::getConfValue(self::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
-                    $localTagAttributes->addHTMLAttributeValue("preserveAspectRatio", $defaultAspectRatio);
+                    $localTagAttributes->addOutputAttributeValue("preserveAspectRatio", $defaultAspectRatio);
                 }
 
                 /**
@@ -441,7 +441,7 @@ class SvgDocument extends XmlDocument
                     /**
                      * Note: if fill was not set, the default color would be black
                      */
-                    $localTagAttributes->addHtmlAttributeValue("fill", self::CURRENT_COLOR);
+                    $localTagAttributes->addOutputAttributeValue("fill", self::CURRENT_COLOR);
 
                 }
 
@@ -503,7 +503,7 @@ class SvgDocument extends XmlDocument
 
                             if (!$isDoubleColor) {
 
-                                $localTagAttributes->addHtmlAttributeValue("fill", $colorValue);
+                                $localTagAttributes->addOutputAttributeValue("fill", $colorValue);
 
                                 if ($colorValue !== self::CURRENT_COLOR) {
                                     /**
@@ -539,8 +539,8 @@ class SvgDocument extends XmlDocument
 
                             break;
                         case self::COLOR_TYPE_STROKE_OUTLINE:
-                            $localTagAttributes->addHtmlAttributeValue("fill", "none");
-                            $localTagAttributes->addHtmlAttributeValue(self::STROKE_ATTRIBUTE, $colorValue);
+                            $localTagAttributes->addOutputAttributeValue("fill", "none");
+                            $localTagAttributes->addOutputAttributeValue(self::STROKE_ATTRIBUTE, $colorValue);
 
                             if ($colorValue !== self::CURRENT_COLOR) {
                                 /**
@@ -649,7 +649,7 @@ class SvgDocument extends XmlDocument
         foreach ($caseSensitives as $caseSensitive) {
             if ($localTagAttributes->hasComponentAttribute($caseSensitive)) {
                 $aspectRatio = $localTagAttributes->getValueAndRemove($caseSensitive);
-                $localTagAttributes->addHTMLAttributeValue($caseSensitive, $aspectRatio);
+                $localTagAttributes->addOutputAttributeValue($caseSensitive, $aspectRatio);
             }
         }
 

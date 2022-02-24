@@ -129,7 +129,7 @@ class RasterImageLink extends ImageLink
                  * HTML height attribute is important for the ratio calculation
                  * No layout shift
                  */
-                $attributes->addHtmlAttributeValue("height", $targetHeight . $htmlLengthUnit);
+                $attributes->addOutputAttributeValue("height", $targetHeight . $htmlLengthUnit);
                 /**
                  * We don't allow the image to scale up by default
                  */
@@ -197,7 +197,7 @@ class RasterImageLink extends ImageLink
                     /**
                      * HTML Width attribute is important to avoid layout shift
                      */
-                    $attributes->addHtmlAttributeValue("width", $targetWidth . $htmlLengthUnit);
+                    $attributes->addOutputAttributeValue("width", $targetWidth . $htmlLengthUnit);
                     /**
                      * We don't allow the image to scale up by default
                      */
@@ -260,12 +260,12 @@ class RasterImageLink extends ImageLink
                     $lazyLoadMethod = $this->getLazyLoadMethod();
                     switch ($lazyLoadMethod) {
                         case MediaLink::LAZY_LOAD_METHOD_HTML_VALUE:
-                            $attributes->addHtmlAttributeValue("src", $srcValue);
+                            $attributes->addOutputAttributeValue("src", $srcValue);
                             if (!empty($srcSet)) {
                                 // it the image is small, no srcset for instance
-                                $attributes->addHtmlAttributeValue("srcset", $srcSet);
+                                $attributes->addOutputAttributeValue("srcset", $srcSet);
                             }
-                            $attributes->addHtmlAttributeValue("loading", "lazy");
+                            $attributes->addOutputAttributeValue("loading", "lazy");
                             break;
                         default:
                         case MediaLink::LAZY_LOAD_METHOD_LOZAD_VALUE:
@@ -290,24 +290,24 @@ class RasterImageLink extends ImageLink
                                  * a bad reserved space for the image
                                  * We use a svg instead
                                  */
-                                $attributes->addHtmlAttributeValue("src", $srcValue);
-                                $attributes->addHtmlAttributeValue("srcset", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
+                                $attributes->addOutputAttributeValue("src", $srcValue);
+                                $attributes->addOutputAttributeValue("srcset", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
                                 /**
                                  * We use `data-sizes` and not `sizes`
                                  * because `sizes` without `srcset`
                                  * shows the broken image symbol
                                  * Javascript changes them at the same time
                                  */
-                                $attributes->addHtmlAttributeValue("data-sizes", $sizes);
-                                $attributes->addHtmlAttributeValue("data-srcset", $srcSet);
+                                $attributes->addOutputAttributeValue("data-sizes", $sizes);
+                                $attributes->addOutputAttributeValue("data-srcset", $srcSet);
 
                             } else {
 
                                 /**
                                  * Small image but there is no little improvement
                                  */
-                                $attributes->addHtmlAttributeValue("data-src", $srcValue);
-                                $attributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
+                                $attributes->addOutputAttributeValue("data-src", $srcValue);
+                                $attributes->addOutputAttributeValue("src", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
 
                             }
                             LazyLoad::addPlaceholderBackground($attributes);
@@ -318,10 +318,10 @@ class RasterImageLink extends ImageLink
                 } else {
 
                     if (!empty($srcSet)) {
-                        $attributes->addHtmlAttributeValue("srcset", $srcSet);
-                        $attributes->addHtmlAttributeValue("sizes", $sizes);
+                        $attributes->addOutputAttributeValue("srcset", $srcSet);
+                        $attributes->addOutputAttributeValue("sizes", $sizes);
                     } else {
-                        $attributes->addHtmlAttributeValue("src", $srcValue);
+                        $attributes->addOutputAttributeValue("src", $srcValue);
                     }
 
                 }
@@ -333,8 +333,8 @@ class RasterImageLink extends ImageLink
                 if ($lazyLoad) {
 
                     LazyLoad::addPlaceholderBackground($attributes);
-                    $attributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder());
-                    $attributes->addHtmlAttributeValue("data-src", $srcValue);
+                    $attributes->addOutputAttributeValue("src", LazyLoad::getPlaceholder());
+                    $attributes->addOutputAttributeValue("data-src", $srcValue);
 
                 }
 
@@ -344,7 +344,7 @@ class RasterImageLink extends ImageLink
             /**
              * Title (ie alt)
              */
-            $attributes->addHtmlAttributeValueIfNotEmpty("alt", $image->getAltNotEmpty());
+            $attributes->addOutputAttributeValueIfNotEmpty("alt", $image->getAltNotEmpty());
 
             /**
              * TODO: Side effect of the fact that we use the same attributes

@@ -6,6 +6,7 @@ use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\Tooltip;
 
 if (!defined('DOKU_INC')) die();
 
@@ -33,14 +34,6 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "tooltip";
-    const TEXT_ATTRIBUTE = "text";
-    const POSITION_ATTRIBUTE = "position";
-
-    /**
-     * An attribute that hold the
-     * information that a tooltip was found
-     */
-    const TOOLTIP_FOUND = "tooltipFound";
 
     /**
      * Class added to the parent
@@ -54,23 +47,13 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
 
 
     /**
-     * tooltip is used also in page protection
-     */
-    public static function addToolTipSnippetIfNeeded()
-    {
-        PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::TAG);
-        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
-    }
-
-
-    /**
      * Syntax Type.
      *
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         /**
          * You could add a tooltip to a {@link syntax_plugin_combo_itext}
@@ -88,7 +71,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
      * @see DokuWiki_Syntax_Plugin::getPType()
      * @see https://www.dokuwiki.org/devel:syntax_plugins#ptype
      */
-    function getPType()
+    function getPType(): string
     {
         return 'normal';
     }
@@ -102,12 +85,12 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array('baseonly', 'container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    function getSort()
+    function getSort(): int
     {
         return 201;
     }
@@ -137,113 +120,20 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
      * @param int $state
      * @param int $pos - byte position in the original source file
      * @param Doku_Handler $handler
-     * @return array|bool
+     * @return array
      * @see DokuWiki_Syntax_Plugin::handle()
      *
      */
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
                 $tagAttributes = TagAttributes::createFromTagMatch($match);
-
-                /**
-                 * Old Syntax
-                 */
-                if ($tagAttributes->hasComponentAttribute(self::TEXT_ATTRIBUTE)) {
-                    return array(
-                        PluginUtility::STATE => $state,
-                        PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
-                    );
-                }
-
-
-                /**
-                 * New Syntax, the tooltip attribute
-                 * are applied to the parent and is seen as an advanced attribute
-                 */
-
-                /**
-                 * Advertise that we got a tooltip
-                 * to start the {@link action_plugin_combo_tooltippostprocessing postprocessing}
-                 * or not
-                 */
-                $handler->setStatus(self::TOOLTIP_FOUND, true);
-
-                /**
-                 * Callstack manipulation
-                 */
-                $callStack = CallStack::createFromHandler($handler);
-
-                /**
-                 * Processing
-                 * We should have one parent
-                 * and no Sibling
-                 */
-                $parent = false;
-                $sibling = false;
-                while ($actualCall = $callStack->previous()) {
-                    if ($actualCall->getState() == DOKU_LEXER_ENTER) {
-                        $parent = $actualCall;
-                        $context = $parent->getTagName();
-
-                        /**
-                         * If this is an svg icon, the title attribute is not existing on a svg
-                         * the icon should be wrapped up in a span (ie {@link syntax_plugin_combo_itext})
-                         */
-                        if ($parent->getTagName() == syntax_plugin_combo_icon::TAG) {
-                            $parent->setContext(self::TAG);
-                        } else {
-
-                            /**
-                             * Do not close the tag
-                             */
-                            $parent->addAttribute(TagAttributes::OPEN_TAG, true);
-                            /**
-                             * Do not output the title
-                             */
-                            $parent->addAttribute(TagAttributes::TITLE_KEY, TagAttributes::UN_SET);
-
-                        }
-
-                        return array(
-                            PluginUtility::STATE => $state,
-                            PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
-                            PluginUtility::CONTEXT => $context
-
-                        );
-                    } else {
-                        if ($actualCall->getTagName() == "eol") {
-                            $callStack->deleteActualCallAndPrevious();
-                            $callStack->next();
-                        } else {
-                            // sibling ?
-                            // In a link, we would get the separator
-                            if ($actualCall->getState() != DOKU_LEXER_UNMATCHED) {
-                                $sibling = $actualCall;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-
-                /**
-                 * Error
-                 */
-                $errorMessage = "Error: ";
-                if ($parent == false) {
-                    $errorMessage .= "A tooltip was found without parent and this is mandatory.";
-                } else {
-                    if ($sibling != false) {
-                        $errorMessage .= "A tooltip should be just below its parent. We found a tooltip next to the other sibling component ($sibling) and this will not work";
-                    }
-                }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::EXIT_MESSAGE => $errorMessage
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
                 );
 
 
@@ -254,10 +144,36 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
 
                 $callStack = CallStack::createFromHandler($handler);
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $parent = $callStack->moveToParent();
+                if ($parent === false) {
+                    return array(
+                        PluginUtility::STATE => $state,
+                        PluginUtility::EXIT_MESSAGE => "A parent is mandatory for a tooltip",
+                        PluginUtility::EXIT_CODE => 1
+                    );
+                }
+
+                /**
+                 * Capture the callstack
+                 */
+                $callStack->moveToCall($openingTag);
+                $toolTipCallStack = null;
+                while ($actualCall = $callStack->next()) {
+                    $toolTipCallStack[] = $actualCall->toCallArray();
+                }
+                $callStack->deleteAllCallsAfter($openingTag);
+
+                /**
+                 * Set on the parent the tooltip attributes
+                 * It will be processed by the {@link Tooltip}
+                 * class at the end of {@link TagAttributes::toHtmlEnterTag()}
+                 */
+                $attributes = $openingTag->getAttributes();
+                $attributes[Tooltip::CALLSTACK] = $toolTipCallStack;
+                $parent->addAttribute(Tooltip::TOOLTIP_ATTRIBUTE, $attributes);
 
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -276,7 +192,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         if ($format == 'xhtml') {
 
@@ -285,64 +201,6 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    if (isset($data[PluginUtility::EXIT_MESSAGE])) {
-                        LogUtility::msg($data[PluginUtility::EXIT_MESSAGE], LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        return false;
-                    }
-
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-
-                    /**
-                     * Snippet
-                     */
-                    self::addToolTipSnippetIfNeeded();
-
-                    /**
-                     * Tooltip
-                     */
-                    $dataAttributeNamespace = Bootstrap::getDataNamespace();
-                    $tagAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
-
-                    /**
-                     * Position
-                     */
-                    $position = $tagAttributes->getValueAndRemove(self::POSITION_ATTRIBUTE, "top");
-                    $tagAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-placement", "${position}");
-
-
-                    /**
-                     * Old tooltip syntax
-                     */
-                    if ($tagAttributes->hasComponentAttribute(self::TEXT_ATTRIBUTE)) {
-                        $tagAttributes->addHtmlAttributeValue("title", $tagAttributes->getValueAndRemove(self::TEXT_ATTRIBUTE));
-                        $tagAttributes->addClassName("d-inline-block");
-
-                        // Arbitrary HTML elements (such as <span>s) can be made focusable by adding the tabindex="0" attribute
-                        $tagAttributes->addHtmlAttributeValue("tabindex", "0");
-
-                        $renderer->doc .= $tagAttributes->toHtmlEnterTag("span");
-                    } else {
-                        /**
-                         * New Syntax
-                         * (The new syntax add the attributes to the previous element
-                         */
-                        $tagAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
-
-                        /**
-                         * Keyboard user and assistive technology users
-                         * If not button or link (ie span), add tabindex to make the element focusable
-                         * in order to see the tooltip
-                         * Not sure, if this is a good idea
-                         */
-                        if (!in_array($data[PluginUtility::CONTEXT], [syntax_plugin_combo_link::TAG, syntax_plugin_combo_button::TAG])) {
-                            $tagAttributes->addHtmlAttributeValue("tabindex", "0");
-                        }
-
-                        $renderer->doc = rtrim($renderer->doc) . " {$tagAttributes->toHTMLAttributeString()} title=\"";
-                        $this->docCapture = $renderer->doc;
-                        $renderer->doc = "";
-                    }
-
                     break;
 
                 case DOKU_LEXER_UNMATCHED:
@@ -350,30 +208,9 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_EXIT:
-
-                    if (isset($data[PluginUtility::EXIT_MESSAGE])) {
-                        return false;
-                    }
-
-                    if (isset($data[PluginUtility::ATTRIBUTES][self::TEXT_ATTRIBUTE])) {
-
-                        $text = $data[PluginUtility::ATTRIBUTES][self::TEXT_ATTRIBUTE];
-                        if (!empty($text)) {
-                            $renderer->doc .= "</span>";
-                        }
-
-                    } else {
-                        /**
-                         * We get the doc created since the enter
-                         * We replace the " by ' to be able to add it in the title attribute
-                         */
-                        $renderer->doc = PluginUtility::htmlEncode(preg_replace("/\r|\n/", "", $renderer->doc));
-
-                        /**
-                         * We recreate the whole document
-                         */
-                        $renderer->doc = $this->docCapture . $renderer->doc . "\">";
-                        $this->docCapture = null;
+                    $message = $data[PluginUtility::EXIT_MESSAGE];
+                    if ($message !== null) {
+                        $renderer->doc .= LogUtility::wrapInRedForHtml($message);
                     }
                     break;
 

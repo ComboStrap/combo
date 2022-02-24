@@ -442,7 +442,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                              * Button link
                              */
                             case syntax_plugin_combo_button::TAG:
-                                $tagAttributes->addHtmlAttributeValue("role", "button");
+                                $tagAttributes->addOutputAttributeValue("role", "button");
                                 syntax_plugin_combo_button::processButtonAttributesToHtmlAttributes($tagAttributes);
                                 break;
                             case syntax_plugin_combo_dropdown::TAG:

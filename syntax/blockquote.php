@@ -408,7 +408,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             foreach ($tweetAttributesNames as $tweetAttributesName) {
                                 if ($tagAttributes->hasComponentAttribute($tweetAttributesName)) {
                                     $value = $tagAttributes->getValueAndRemove($tweetAttributesName);
-                                    $tagAttributes->addHtmlAttributeValue("data-" . $tweetAttributesName, $value);
+                                    $tagAttributes->addOutputAttributeValue("data-" . $tweetAttributesName, $value);
                                 }
                             }
 

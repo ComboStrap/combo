@@ -72,7 +72,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     ->set("path", $relativePath)
                     ->render();
             }
-            $tagAttributes->addHtmlAttributeValue("href", $url);
+            $tagAttributes->addOutputAttributeValue("href", $url);
         }
         $tagAttributes->mergeWithCallStackArray($brandLinkAttributes->toCallStackArray());
     }
@@ -342,7 +342,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     }
                     $context = $data[PluginUtility::CONTEXT];
                     if ($context === syntax_plugin_combo_menubar::TAG) {
-                        $tagAttributes->addHtmlAttributeValue("accesskey", "h");
+                        $tagAttributes->addOutputAttributeValue("accesskey", "h");
                         $tagAttributes->addClassName("navbar-brand");
                     }
                     // Width does not apply to link (otherwise the link got a max-width of 30)

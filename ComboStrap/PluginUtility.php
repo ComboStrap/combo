@@ -222,6 +222,7 @@ require_once(__DIR__ . '/ThirdMediaLink.php');
 require_once(__DIR__ . '/ThirdPartyPlugins.php');
 require_once(__DIR__ . '/TocUtility.php');
 require_once(__DIR__ . '/Toggle.php');
+require_once(__DIR__ . '/Tooltip.php');
 require_once(__DIR__ . '/References.php');
 require_once(__DIR__ . '/Reference.php');
 require_once(__DIR__ . '/Underline.php');
@@ -916,11 +917,24 @@ class PluginUtility
     }
 
     /**
-     * Transform special HTML characters to entity
+     * Encode special HTML characters to entity
+     * (ie escaping)
+     *
+     * This is used to transform text that may be interpreted as HTML
+     * into a text
+     *   * that will not be interpreted as HTML
+     *   * that may be added in html attribute
+     *
+     * For instance:
+     *  * text that should go in attribute with special HTML characters (such as title)
+     *  * text that we don't create (to prevent HTML injection)
+     *
      * Example:
-     * <hello>world</hello>
+     *
+     * <script>...</script>
      * to
-     * "&lt;hello&gt;world&lt;/hello&gt;"
+     * "&lt;script&gt;...&lt;/hello&gt;"
+     *
      *
      * @param $text
      * @return string
@@ -933,11 +947,18 @@ class PluginUtility
          *
          * Not {@link htmlentities } htmlentities($text, ENT_QUOTES);
          * Otherwise we get `Error while loading HTMLError: Entity 'hellip' not defined`
-         * when loading HTML
+         * when loading HTML with {@link XmlDocument}
          *
          * See also {@link PluginUtility::htmlDecode()}
+         *
+         * Without ENT_QUOTES
+         * <h4 class="heading-combo">
+         * is encoded as
+         * &gt;h4 class="heading-combo"&lt;
+         * and cannot be added in a attribute because of the quote
+         * This is used for {@link Tooltip}
          */
-        return htmlspecialchars($text, ENT_XHTML);
+        return htmlspecialchars($text, ENT_XHTML | ENT_QUOTES);
 
     }
 
@@ -1401,7 +1422,7 @@ class PluginUtility
 
     public static function htmlDecode($int): string
     {
-        return htmlspecialchars_decode($int, ENT_XHTML);
+        return htmlspecialchars_decode($int, ENT_XHTML|ENT_QUOTES);
     }
 
     /**

@@ -898,7 +898,7 @@ class Page extends ResourceComboAbs
      *   * in the site map
      * @param array $urlParameters
      * @param bool $absoluteUrlMandatory - by default, dokuwiki allows the canonical to be relative but it's mandatory to be absolute for the HTML meta
-     * @param string $separator - HTML encoded or not ampersand (the default should always be good because the encoding is done just before printing (ie {@link TagAttributes::encodeToHtmlValue()})
+     * @param string $separator - TODO: delete. HTML encoded or not ampersand (the default should always be good because the encoding is done just before printing (ie {@link TagAttributes::encodeToHtmlValue()})
      * @return string|null
      */
     public

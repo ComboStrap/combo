@@ -585,9 +585,9 @@ abstract class MediaLink
         // https://www.dokuwiki.org/config:target
         global $conf;
         $target = $conf['target']['media'];
-        $mediaLink->addHtmlAttributeValueIfNotEmpty("target", $target);
+        $mediaLink->addOutputAttributeValueIfNotEmpty("target", $target);
         if (!empty($target)) {
-            $mediaLink->addHtmlAttributeValue("rel", 'noopener');
+            $mediaLink->addOutputAttributeValue("rel", 'noopener');
         }
 
         /**
@@ -610,7 +610,7 @@ abstract class MediaLink
                         'rev' => $dokuPath->getRevision()
                     )
                 );
-                $mediaLink->addHtmlAttributeValue("href", $src);
+                $mediaLink->addOutputAttributeValue("href", $src);
                 $title = $media->getTitle();
                 if (empty($title)) {
                     $title = $media->getType();
@@ -630,7 +630,7 @@ abstract class MediaLink
                     ),
                     true
                 );
-                $mediaLink->addHtmlAttributeValue("href", $src);
+                $mediaLink->addOutputAttributeValue("href", $src);
                 $snippetId = "lightbox";
                 $mediaLink->addClassName("{$snippetId}-combo");
                 $linkingClass = $this->getLinkingClass();
@@ -654,7 +654,7 @@ abstract class MediaLink
                     ),
                     false
                 );
-                $mediaLink->addHtmlAttributeValue("href", $src);
+                $mediaLink->addOutputAttributeValue("href", $src);
                 return $mediaLink->toHtmlEnterTag("a") .
                     $this->renderMediaTag() .
                     "</a>";

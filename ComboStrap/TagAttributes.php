@@ -1109,7 +1109,7 @@ class TagAttributes
      * @param string $key add an html attribute with the empty string
      */
     public
-    function addEmptyHtmlAttributeValue($key)
+    function addEmptyOutputAttributeValue($key)
     {
 
         $this->outputAttributes[$key] = '';

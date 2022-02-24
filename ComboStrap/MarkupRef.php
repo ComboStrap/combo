@@ -585,62 +585,41 @@ EOF;
         return $this->ref;
     }
 
-    public function getLabel($navigation = false)
+    /**
+     * The label inside the anchor tag if there is none
+     * @param false $navigation
+     * @return string|null
+     */
+    public function getLabel(bool $navigation = false): ?string
     {
 
-        /**
-         * Templating
-         */
         switch ($this->getUriType()) {
             case self::WIKI_URI:
-                if (!empty($name)) {
-                    /**
-                     * With the new link syntax class, this is no more possible
-                     * because there is an enter and exit state
-                     * TODO: create a function to render on DOKU_LEXER_UNMATCHED ?
-                     */
-                    $name = TemplateUtility::renderStringTemplateForPageId($name, $this->dokuwikiUrl->getPath());
+                if ($navigation) {
+                    return $this->getInternalPage()->getNameOrDefault();
+                } else {
+                    return $this->getInternalPage()->getTitleOrDefault();
                 }
-                if (empty($name)) {
 
-                    if ($navigation) {
-                        return $this->getInternalPage()->getNameOrDefault();
-                    } else {
-                        return $this->getInternalPage()->getTitleOrDefault();
-                    }
-                }
-                break;
             case self::EMAIL_URI:
-                if (empty($name)) {
-                    global $conf;
-                    $email = $this->dokuwikiUrl->getPath();
-                    switch ($conf['mailguard']) {
-                        case 'none' :
-                            $name = $email;
-                            break;
-                        case 'visible' :
-                        default :
-                            $obfuscate = array('@' => ' [at] ', '.' => ' [dot] ', '-' => ' [dash] ');
-                            $name = strtr($email, $obfuscate);
-                    }
 
+                global $conf;
+                $email = $this->dokuwikiUrl->getPath();
+                switch ($conf['mailguard']) {
+                    case 'none' :
+                        return $email;
+                    case 'visible' :
+                    default :
+                        $obfuscate = array('@' => ' [at] ', '.' => ' [dot] ', '-' => ' [dash] ');
+                        return strtr($email, $obfuscate);
                 }
-                break;
             case self::INTERWIKI_URI:
-                if (empty($name)) {
-                    $name = $this->dokuwikiUrl->getPath();
-                }
-                break;
+                return $this->dokuwikiUrl->getPath();
             case self::LOCAL_URI:
-                if (empty($name)) {
-                    $name = $this->dokuwikiUrl->getFragment();
-                }
-                break;
+                return $this->dokuwikiUrl->getFragment();
             default:
                 return $this->getRef();
         }
-
-        return $name;
     }
 
     /**

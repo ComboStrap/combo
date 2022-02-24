@@ -692,7 +692,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             if (!empty($namespaceId)) { // not root
                                 $pageExplorerTagAttributes->addOutputAttributeValue("data-wiki-id", $namespaceId);
                             } else {
-                                $pageExplorerTagAttributes->addEmptyHtmlAttributeValue("data-wiki-id");
+                                $pageExplorerTagAttributes->addEmptyOutputAttributeValue("data-wiki-id");
                             }
 
 

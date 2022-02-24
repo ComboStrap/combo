@@ -6,6 +6,7 @@
  * @author  Nicolas GERARD
  */
 
+use ComboStrap\ExceptionCombo;
 use ComboStrap\SnippetManager;
 use ComboStrap\MarkupRef;
 use ComboStrap\PluginUtility;
@@ -20,7 +21,6 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
     const INCLUDE_DIRECTORY_PARAMETERS = 'includedirectory';
     const SHOW_HEADER = 'showheader';
     const NAMESPACE_KEY_ATT = 'namespace';
-
 
 
     function connectTo($aMode)
@@ -102,7 +102,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                 // Cache the values
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES=> $parameters
+                    PluginUtility::ATTRIBUTES => $parameters
                 );
 
         }
@@ -123,7 +123,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
             /** @var Doku_Renderer_xhtml $renderer */
 
 
-            $state=$data[PluginUtility::STATE];
+            $state = $data[PluginUtility::STATE];
 
             // As there is only one call to connect to in order to a add a pattern,
             // there is only one state entering the function
@@ -186,30 +186,39 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                             $pageId = $pageArray['id'];
 
                         }
-                        $link = new MarkupRef($pageId);
+                        $markupRef = new MarkupRef($pageId);
+
 
 
                         /**
-                         * Set special name and title
+                         * Label
                          */
-                        // If debug mode
-                        if ($attributes['debug']) {
-                            $link->setTitle($link->getTitle().' (' . $pageId . '|' . $pageNum . ')');
-                        }
-
+                        $label = $markupRef->getLabel();
                         // Suppress the parts in the name with the regexp defines in the 'suppress' params
                         if ($attributes['suppress']) {
                             $substrPattern = '/' . $attributes['suppress'] . '/i';
                             $replacement = '';
-                            $name = preg_replace($substrPattern, $replacement, $link->getLabel());
-                            $link->setName($name);
+                            $label = preg_replace($substrPattern, $replacement, $label);
+                        }
+                        // If debug mode
+                        if ($attributes['debug']) {
+                            $label .= ' (' . $pageId . '|' . $pageNum . ')';
                         }
 
+                        /**
+                         * Link attributes
+                         */
+                        try {
+                            $linkAttribute = $markupRef->toAttributes();
+                        } catch (ExceptionCombo $e) {
+                            $miniMapList .= \ComboStrap\LogUtility::wrapInRedForHtml("Error. {$e->getMessage()}");
+                            continue;
+                        }
                         // See in which page we are
                         // The style will then change
                         $active = '';
                         if ($callingId == $pageId) {
-                            $active = 'active';
+                            $linkAttribute->addEmptyOutputAttributeValue('active');
                         }
 
                         // Not all page are printed
@@ -251,9 +260,9 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                                 $miniMapList .= "<span class=\"nicon_folder_open\" aria-hidden=\"true\"></span> ";
                             }
 
-                            $miniMapList .= $link->toAttributes($renderer);
-                            $miniMapList .= $link->getLabel();
-                            $miniMapList .= $link->renderClosingTag();
+                            $miniMapList .= $linkAttribute->toHtmlEnterTag("a");
+                            $miniMapList .= $label;
+                            $miniMapList .= "</a>";
 
 
                             // Close the item
@@ -283,9 +292,13 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                         }
                     } else {
                         $startLink = new MarkupRef($startId);
-                        $panelHeaderContent = $startLink->toAttributes($renderer);
-                        $panelHeaderContent .= $startLink->getLabel();
-                        $panelHeaderContent .= $startLink->renderClosingTag();
+                        try {
+                            $panelHeaderContent = $startLink->toAttributes()->toHtmlEnterTag("a");
+                            $panelHeaderContent .= $startLink->getLabel();
+                            $panelHeaderContent .= "</a>";
+                        } catch (ExceptionCombo $e) {
+                            $panelHeaderContent = "Error: {$e->getMessage()}";
+                        }
                         // We are not counting the header page
                         $pageNum--;
                     }

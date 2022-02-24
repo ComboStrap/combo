@@ -529,8 +529,12 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             case MarkupRef::WIKI_URI:
                                 /**
                                  * The relative link should be passed (ie the original)
+                                 * Dokuwiki has a default description
+                                 * We can't pass empty or the array(title), it does not work
                                  */
-                                $renderer->internallink($href);
+                                $descriptionToDelete = "b";
+                                $renderer->internallink($href, $descriptionToDelete);
+                                $renderer->doc = substr($renderer->doc,0,-strlen($descriptionToDelete));
                                 break;
                             case MarkupRef::WEB_URI:
                                 $renderer->externallink($href, $name);

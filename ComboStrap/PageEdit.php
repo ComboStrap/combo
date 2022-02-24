@@ -71,7 +71,7 @@ class PageEdit
             self::EDIT_EDIT_ID => $id, // id of the form
             // "target" => "section", // this is the default
         ];
-        return self::SEC_EDIT_PREFIX . PluginUtility::htmlEncode(json_encode($data));
+        return self::SEC_EDIT_PREFIX . json_encode($data);
     }
 
     /**

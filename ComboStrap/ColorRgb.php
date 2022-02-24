@@ -232,6 +232,7 @@ class ColorRgb
     const MINIMUM_CONTRAST_RATIO = 5;
     const WHITE = "white";
     const TIP_COLOR = "#ffee33";
+    const CURRENT_COLOR = "currentColor";
 
     /**
      * @var array

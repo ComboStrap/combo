@@ -322,7 +322,8 @@ class BrandButton
 
                 $primary = $this->getPrimaryColor();
                 if ($primary === null) {
-                    throw new ExceptionCombo("The primary color for the brand ($this) is not set.");
+                    // custom brand default color
+                    $primary = ComboStrap::PRIMARY_COLOR;
                 }
                 $textColor = $this->getTextColor();
                 if ($textColor === null || $textColor === "") {

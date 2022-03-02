@@ -288,7 +288,7 @@ class syntax_plugin_combo_masonry extends DokuWiki_Syntax_Plugin
 
 
     public
-    static function getSyntaxTags()
+    static function getSyntaxTags(): array
     {
         return array(self::TAG, self::OLD_SYNTAX_TAG_COLUMNS, self::OLD_SYNTAX_TAG_TEASER);
     }

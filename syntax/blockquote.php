@@ -169,10 +169,21 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                 $defaultAttributes = array("type" => "card");
                 $tagAttributes = PluginUtility::getTagAttributes($match);
                 $tagAttributes = PluginUtility::mergeAttributes($tagAttributes, $defaultAttributes);
-                $tag = new Tag(self::TAG, $tagAttributes, $state, $handler);
+
+                /**
+                 * Parent
+                 */
+                $callStack = CallStack::createFromHandler($handler);
                 $context = null;
-                if ($tag->hasParent()) {
-                    $context = $tag->getParent()->getName();
+                $parent = $callStack->moveToParent();
+                if ($parent!==false) {
+                    $context = $parent->getTagName();
+                    if ($context === syntax_plugin_combo_template::TAG) {
+                        $parent = $callStack->moveToParent();
+                        if ($parent !== false) {
+                            $context = $parent->getTagName();
+                        }
+                    }
                 }
 
                 return array(
@@ -250,7 +261,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                  */
                 $type = $openingTag->getType();
                 $context = $openingTag->getContext();
-                if ($context == null) {
+                if ($context === null) {
                     $context = $type;
                 }
                 $attributes = $openingTag->getAttributes();

@@ -306,7 +306,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                      * Data Processing
                      */
                     if ($pageSql === null) {
-                        $renderer->doc .= "A data node could not be found in the iterator";
+                        $renderer->doc .= "A data node could not be found as a child of the iterator.";
                         return false;
                     }
                     if (empty($pageSql)) {

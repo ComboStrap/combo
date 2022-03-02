@@ -177,11 +177,27 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 /** A card without context */
                 $tagAttributes->addClassName("card");
 
+                /**
+                 * Context
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+                $parent = $callStack->moveToParent();
+                $context = null;
+                if ($parent !== false) {
+                    $context = $parent->getTagName();
+                    if ($context === syntax_plugin_combo_template::TAG) {
+                        $parent = $callStack->moveToParent();
+                        if ($parent !== false) {
+                            $context = $parent->getTagName();
+                        }
+                    }
+                }
 
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
-                    PluginUtility::POSITION => $pos
+                    PluginUtility::POSITION => $pos,
+                    PluginUtility::CONTEXT => $context
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -201,7 +217,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 // Processing
                 $callStack->moveToEnd();
-                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $previousOpening = $callStack->moveToPreviousCorrespondingOpeningCall();
                 /**
                  * Do we have an illustrative image ?
                  *
@@ -304,7 +320,8 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::POSITION => $endPosition
+                    PluginUtility::POSITION => $endPosition,
+                    PluginUtility::CONTEXT => $previousOpening->getContext()
                 );
 
 

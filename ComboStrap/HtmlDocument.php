@@ -58,7 +58,7 @@ class HtmlDocument extends OutputDocument
 
     /**
      */
-    public function getOrProcessContent(): string
+    public function getOrProcessContent(): ?string
     {
 
 

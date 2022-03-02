@@ -24,6 +24,11 @@ class Tooltip
             return;
         }
 
+        if(!is_array($tooltip)){
+            LogUtility::msg("The tooltip value ($tooltip) is not an array.");
+            return;
+        }
+
         /**
          * Tooltip
          */

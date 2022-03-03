@@ -111,6 +111,7 @@ class MetadataDbStore extends MetadataStoreAbs
      * @param array $row
      * @param Metadata $metadata
      * @return void
+     * @throws ExceptionCombo - if page id is null
      */
     private function addRow(array $row, Metadata $metadata): void
     {
@@ -122,7 +123,7 @@ class MetadataDbStore extends MetadataStoreAbs
         $resourceUidObject = $resourceCombo->getUidObject();
         $uidValue = $resourceUidObject->getValue();
         if ($uidValue === null) {
-            throw new ExceptionComboRuntime("The id ($resourceUidObject) is null for the resource $resourceCombo. We can't add a row in the database.");
+            throw new ExceptionCombo("The id ($resourceUidObject) is null for the resource $resourceCombo. We can't add a row in the database.");
         }
         $row[$resourceUidObject::getPersistentName()] = $uidValue;
 

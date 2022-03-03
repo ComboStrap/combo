@@ -697,7 +697,7 @@ class SvgDocument extends XmlDocument
     {
         $viewBox = $this->getXmlDom()->documentElement->getAttribute(self::VIEW_BOX);
         if ($viewBox !== "") {
-            $attributes = explode(" ", $viewBox);
+            $attributes = $this->getViewBoxAttributes($viewBox);
             $viewBoxWidth = $attributes[2];
             try {
                 return DataType::toInteger($viewBoxWidth);
@@ -730,7 +730,7 @@ class SvgDocument extends XmlDocument
     {
         $viewBox = $this->getXmlDom()->documentElement->getAttribute(self::VIEW_BOX);
         if ($viewBox !== "") {
-            $attributes = explode(" ", $viewBox);
+            $attributes = $this->getViewBoxAttributes($viewBox);
             $viewBoxHeight = $attributes[3];
             try {
                 return DataType::toInteger($viewBoxHeight);
@@ -1038,6 +1038,23 @@ class SvgDocument extends XmlDocument
             $nodeElement = $svgElement[$i];
             $this->removeNode($nodeElement);
         }
+    }
+
+    /**
+     * @param string $viewBox
+     * @return string[]
+     */
+    private function getViewBoxAttributes(string $viewBox): array
+    {
+        $attributes = explode(" ", $viewBox);
+        if(sizeof($attributes)===1){
+            /**
+             * We may find also comma. Example:
+             * viewBox="0,0,433.62,289.08"
+             */
+            $attributes = explode(",", $viewBox);
+        }
+        return $attributes;
     }
 
 

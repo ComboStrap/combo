@@ -33,6 +33,11 @@ class Site
         ':apple-touch-icon.png',
         ':android-chrome-192x192.png'
     );
+    /**
+     * Strap Template meta (version, release date, ...)
+     * @var array
+     */
+    private static $STRAP_TEMPLATE_INFO;
 
 
     /**
@@ -461,21 +466,25 @@ class Site
         return PluginUtility::getConfValue(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT) === 1;
     }
 
+
     public static function getRem(): int
     {
         $defaultRem = 16;
         if (Site::getTemplate() === self::STRAP_TEMPLATE_NAME) {
-            $loaded = self::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            if ($loaded) {
-                $value = TplUtility::getRem();
-                if ($value === null) {
-                    return $defaultRem;
-                }
-                try {
-                    return DataType::toInteger($value);
-                } catch (ExceptionCombo $e) {
-                    LogUtility::msg("The rem configuration value ($value) is not a integer. Error: {$e->getMessage()}");
-                }
+            try {
+                self::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            } catch (ExceptionCombo $e) {
+                return $defaultRem;
+            }
+
+            $value = TplUtility::getRem();
+            if ($value === null) {
+                return $defaultRem;
+            }
+            try {
+                return DataType::toInteger($value);
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The rem configuration value ($value) is not a integer. Error: {$e->getMessage()}");
             }
         }
         return $defaultRem;
@@ -574,36 +583,21 @@ class Site
     {
 
         if (class_exists("ComboStrap\TplUtility")) {
+            /**
+             * May be of bad version (loaded in memory by php-fpm)
+             */
+            Site::checkTemplateVersion();
             return;
         }
 
         $templateUtilityFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
         if (file_exists($templateUtilityFile)) {
-            /**
-             * Check the version
-             */
-            $templateInfo = confToHash(__DIR__ . '/../../../tpl/strap/template.info.txt');
-            $templateVersion = $templateInfo['version'];
-            $comboVersion = PluginUtility::$INFO_PLUGIN['version'];
-            if ($templateVersion != $comboVersion) {
-                $strapName = "Strap";
-                $comboName = "Combo";
-                $strapLink = "<a href=\"https://www.dokuwiki.org/template:strap\">$strapName</a>";
-                $comboLink = "<a href=\"https://www.dokuwiki.org/plugin:combo\">$comboName</a>";
-                if ($comboVersion > $templateVersion) {
-                    $upgradeTarget = $strapName;
-                } else {
-                    $upgradeTarget = $comboName;
-                }
-                $upgradeLink = "<a href=\"" . wl() . "&do=admin&page=extension" . "\">upgrade <b>$upgradeTarget</b> via the extension manager</a>";
-                $message = "You should $upgradeLink to the latest version to get a fully functional experience. The version of $comboLink is ($comboVersion) while the version of $strapLink is ($templateVersion).";
-                LogUtility::msg($message);
-                throw new ExceptionCombo($message);
-            } else {
-                /** @noinspection PhpIncludeInspection */
-                require_once($templateUtilityFile);
 
-            }
+            Site::checkTemplateVersion();
+            /** @noinspection PhpIncludeInspection */
+            require_once($templateUtilityFile);
+            return;
+
         }
 
         if (Site::getTemplate() !== self::STRAP_TEMPLATE_NAME) {
@@ -775,6 +769,36 @@ class Site
         }
 
         return null;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private static function checkTemplateVersion()
+    {
+        /**
+         * Check the version
+         */
+        if (self::$STRAP_TEMPLATE_INFO === null) {
+            self::$STRAP_TEMPLATE_INFO = confToHash(__DIR__ . '/../../../tpl/strap/template.info.txt');
+        }
+        $templateVersion = self::$STRAP_TEMPLATE_INFO['version'];
+        $comboVersion = PluginUtility::$INFO_PLUGIN['version'];
+        if ($templateVersion !== $comboVersion) {
+            $strapName = "Strap";
+            $comboName = "Combo";
+            $strapLink = "<a href=\"https://www.dokuwiki.org/template:strap\">$strapName</a>";
+            $comboLink = "<a href=\"https://www.dokuwiki.org/plugin:combo\">$comboName</a>";
+            if ($comboVersion > $templateVersion) {
+                $upgradeTarget = $strapName;
+            } else {
+                $upgradeTarget = $comboName;
+            }
+            $upgradeLink = "<a href=\"" . wl() . "&do=admin&page=extension" . "\">upgrade <b>$upgradeTarget</b> via the extension manager</a>";
+            $message = "You should $upgradeLink to the latest version to get a fully functional experience. The version of $comboLink is ($comboVersion) while the version of $strapLink is ($templateVersion).";
+            LogUtility::msg($message);
+            throw new ExceptionCombo($message);
+        }
     }
 
 

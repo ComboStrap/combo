@@ -68,7 +68,8 @@ class Icon extends ImageSvg
         self::PHOSPHOR_ICONS => "https://raw.githubusercontent.com/phosphor-icons/phosphor-icons/master/assets",
         self::VSCODE => "https://raw.githubusercontent.com/vscode-icons/vscode-icons/master/icons",
         self::SI_GLYPH => "https://raw.githubusercontent.com/frexy/glyph-iconset/master/svg",
-        self::AKAR_ICONS => "https://raw.githubusercontent.com/artcoholic/akar-icons/master/src/svg"
+        self::AKAR_ICONS => "https://raw.githubusercontent.com/artcoholic/akar-icons/master/src/svg",
+        self::ARCTICONS => "https://raw.githubusercontent.com/Donnnno/Arcticons/main/icons/black"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -103,7 +104,8 @@ class Icon extends ImageSvg
         self::PHOSPHOR_ICONS => "https://phosphoricons.com/",
         self::VSCODE => "https://marketplace.visualstudio.com/items?itemName=vscode-icons-team.vscode-icons",
         self::SI_GLYPH => "https://glyph.smarticons.co/",
-        self::AKAR_ICONS => "https://akaricons.com/"
+        self::AKAR_ICONS => "https://akaricons.com/",
+        self::ARCTICONS => "https://arcticons.com/"
 
     );
 
@@ -153,7 +155,8 @@ class Icon extends ImageSvg
         "ph" => self::PHOSPHOR_ICONS,
         "vscode-icons" => self::VSCODE,
         "si-glyph" => self::SI_GLYPH,
-        "akar-icons" => self::AKAR_ICONS
+        "akar-icons" => self::AKAR_ICONS,
+        "arcticons" => self::ARCTICONS
     );
 
     const FEATHER = "feather";
@@ -191,6 +194,7 @@ class Icon extends ImageSvg
     const SI_GLYPH = "si-glyph";
     const COMBO = DokuPath::COMBO_DRIVE;
     const AKAR_ICONS = "akar-icons";
+    const ARCTICONS = "articons";
 
 
     private $fullQualifiedName;

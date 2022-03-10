@@ -491,13 +491,20 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                             PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($tagClass);
                             break;
                         case self::ROOT_CONTEXT:
-                            /**
-                             * All element are centered
-                             * If their is 5 cells and the last one
-                             * is going at the line, it will be centered
-                             */
+
                             if (!$hadClassAttribute) {
+                                /**
+                                 * All element are centered
+                                 * If their is 5 cells and the last one
+                                 * is going at the line, it will be centered
+                                 */
                                 $attributes->addClassName("justify-content-center");
+                                /**
+                                 * Vertical gutter
+                                 * On a two cell grid, the content will not
+                                 * touch on a mobile
+                                 */
+                                $attributes->addClassName("gy-5");
                             }
                             $attributes->addClassName($tagClass);
                             PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($tagClass);

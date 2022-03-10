@@ -323,6 +323,10 @@ EOD;
             case "dos":
                 $language = "batch";
                 break;
+            case "jinja":
+                // https://github.com/PrismJS/prism/issues/759
+                $language = "twig";
+                break;
             case "apache":
                 $language = "apacheconf";
                 break;

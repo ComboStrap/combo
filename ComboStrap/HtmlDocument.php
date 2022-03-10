@@ -182,6 +182,15 @@ class HtmlDocument extends OutputDocument
             ->toAbsolutePath()
             ->toString();
         $this->snippetCache = new CacheParser($id, $slotLocalFilePath, "snippet.json");
+        /**
+         * Snippet.json is data dependent
+         *
+         * For instance, the carrousel may add glide or grid as snippet. It depends on the the number of backlinks.
+         *
+         * Therefore the output should be unique by rendered slot
+         * Therefore we reroute (recalculate the cache key to the same than the html file)
+         */
+        $this->cacheDependencies->rerouteCacheDestination($this->snippetCache);
         return $this->snippetCache;
     }
 

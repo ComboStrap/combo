@@ -220,7 +220,7 @@ class SvgImageLink extends ImageLink
             /**
              * Svg Style conflict:
              * when two svg are created and have a style node, they inject class
-             * that may conflict with others.
+             * that may conflict with others (ie cls-1 class, ...)
              * The svg is then inserted via an img tag to scope it.
              */
             $preserveStyle = $attributes->getValue(SvgDocument::PRESERVE_ATTRIBUTE, false);

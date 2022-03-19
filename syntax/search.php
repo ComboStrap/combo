@@ -11,17 +11,17 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
 
     const SNIPPET_ID = "search";
 
-    function getType()
+    function getType(): string
     {
         return 'substition';
     }
 
-    function getPType()
+    function getPType(): string
     {
         return 'normal';
     }
 
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array();
     }
@@ -71,7 +71,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {
@@ -86,9 +86,16 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                     global $QUERY; // $QUERY = $INPUT->str('q')
 
                     // don't print the search form if search action has been disabled
-                    if (!actionOK('search')) return false;
+                    // if (!actionOK('search')) return false;
 
                     PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot("debounce");
+                    /**
+                     * Doku Base is not defined when the
+                     * {@link \ComboStrap\TplUtility::CONF_DISABLE_BACKEND_JAVASCRIPT}
+                     * is used
+                     */
+                    $dokuBase = DOKU_BASE;
+                    PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::SNIPPET_ID,"var DOKU_BASE='$dokuBase';");
                     PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::SNIPPET_ID);
 
                     $parameters = $data[PluginUtility::ATTRIBUTES];

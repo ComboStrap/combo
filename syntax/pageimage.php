@@ -6,6 +6,7 @@ use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
+use ComboStrap\Icon;
 use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
@@ -142,7 +143,24 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                  * Image selection
                  */
                 $page = Page::createPageFromQualifiedPath($path);
-                $selectedPageImage = $page->getImage();// the default image
+                $selectedPageImage = $page->getImage();// the page image
+                $pageImages = $page->getPageImagesOrDefault(); // all images
+
+                /**
+                 * Take the image of the parent page if null
+                 */
+                if ($selectedPageImage === null) {
+                    $parentPage = $page->getParentPage();
+                    while ($parentPage !== null) {
+                        $selectedPageImage = $parentPage->getImage();
+                        if ($selectedPageImage !== null) {
+                            $pageImages = $parentPage->getPageImagesOrDefault();
+                            break;
+                        }
+                        $parentPage = $parentPage->getParentPage();
+                    }
+                }
+
                 /**
                  * We select the best image for the ratio
                  *
@@ -163,7 +181,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                             LogUtility::msg("The ratio ($stringRatio) is not a valid ratio. Error: {$e->getMessage()}");
                         }
                         if ($targetRatio !== null) {
-                            $pageImages = $page->getPageImagesOrDefault();
+
                             foreach ($pageImages as $pageImage) {
                                 $image = $pageImage->getImage();
                                 try {
@@ -231,6 +249,14 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                  * Used by svg to color by default with the primary color for instance
                  */
                 $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ILLUSTRATION_TYPE);
+
+                /**
+                 * Zoom applies only to icon, not to illustration
+                 */
+                $isIcon = Icon::isInIconDirectory($selectedPageImage->getPath());
+                if (!$isIcon) {
+                    $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
+                }
 
                 $mediaLink = MediaLink::createMediaLinkFromPath(
                     $selectedPageImage->getPath(),

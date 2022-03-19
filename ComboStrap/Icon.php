@@ -332,6 +332,19 @@ class Icon extends ImageSvg
         return self::create(self::COMBO . ":$name", $tagAttributes);
     }
 
+    public static
+    function isInIconDirectory(Path $path): bool
+    {
+        if ($path == null) {
+            return false;
+        }
+        $iconNameSpace = PluginUtility::getConfValue(Icon::CONF_ICONS_MEDIA_NAMESPACE, Icon::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
+        if (strpos($path->toString(), $iconNameSpace) !== false) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * @throws ExceptionCombo
      */

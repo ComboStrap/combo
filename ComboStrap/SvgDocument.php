@@ -262,7 +262,7 @@ class SvgDocument extends XmlDocument
             // https://github.com/ant-design/ant-design-icons/blob/master/packages/icons-svg/svg/outlined/table.svg
             // or not squared
             // if the usage is determined or the svg is in the icon directory, it just takes over.
-            if ($svgUsageType === self::ICON_TYPE || $this->isInIconDirectory()) {
+            if ($svgUsageType === self::ICON_TYPE || Icon::isInIconDirectory($this->path)) {
                 $svgStructureType = self::ICON_TYPE;
             }
 
@@ -1004,18 +1004,7 @@ class SvgDocument extends XmlDocument
         return "unknown";
     }
 
-    private
-    function isInIconDirectory(): bool
-    {
-        if ($this->path == null) {
-            return false;
-        }
-        $iconNameSpace = PluginUtility::getConfValue(Icon::CONF_ICONS_MEDIA_NAMESPACE, Icon::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
-        if (strpos($this->path->toString(), $iconNameSpace) !== false) {
-            return true;
-        }
-        return false;
-    }
+
 
     /**
      * An utility function to know how to remove a node

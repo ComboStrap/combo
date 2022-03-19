@@ -12,7 +12,6 @@ use ComboStrap\ImageSvg;
 use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Resources;
 use ComboStrap\Site;
 use ComboStrap\SvgImageLink;
 use ComboStrap\TagAttributes;

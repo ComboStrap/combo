@@ -217,9 +217,15 @@ class SvgImageLink extends ImageLink
             $attributes->removeComponentAttributeIfPresent(PageTitle::PROPERTY_NAME);
 
             $imageSize = FileSystems::getSize($image->getPath());
-            if (
-                $imageSize > $this->getMaxInlineSize()
-            ) {
+            /**
+             * Svg Style conflict:
+             * when two svg are created and have a style node, they inject class
+             * that may conflict with others.
+             * The svg is then inserted via an img tag to scope it.
+             */
+            $preserveStyle = $attributes->getValue(SvgDocument::PRESERVE_ATTRIBUTE, false);
+            $asImgTag = $imageSize > $this->getMaxInlineSize() || $preserveStyle;
+            if ($asImgTag) {
 
                 /**
                  * Img tag

@@ -87,16 +87,21 @@ final class PageSqlTreeListener implements ParseTreeListener
      * @param PageSqlLexer $lexer
      * @param PageSqlParser $parser
      * @param string $sql
+     * @param Page $pageContext
      */
-    public function __construct(PageSqlLexer $lexer, PageSqlParser $parser, string $sql)
+    public function __construct(PageSqlLexer $lexer, PageSqlParser $parser, string $sql, Page $pageContext = null)
     {
         $this->lexer = $lexer;
         $this->parser = $parser;
         $this->pageSqlString = $sql;
-        try {
-            $this->requestedPage = Page::createPageFromGlobalDokuwikiId();
-        } catch (ExceptionCombo $e) {
-            $this->requestedPage = null;
+        if ($pageContext == null) {
+            try {
+                $this->requestedPage = Page::createPageFromGlobalDokuwikiId();
+            } catch (ExceptionCombo $e) {
+                $this->requestedPage = null;
+            }
+        } else {
+            $this->requestedPage = $pageContext;
         }
     }
 
@@ -143,23 +148,13 @@ final class PageSqlTreeListener implements ParseTreeListener
                         // variable name
                         $variableName = strtolower($text);
                         $this->actualPredicateColumn = $variableName;
-                        switch ($variableName) {
-                            case self::DEPTH:
-                                if ($this->requestedPage !== null) {
-                                    $this->parameters[] = PageLevel::createForPage($this->requestedPage)->getValue();
-                                } else {
-                                    LogUtility::msg("The page is unknown. A Page SQL with a depth attribute should be asked within a page request scope. The start depth has been set to 0", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
-                                    $this->parameters[] = 0;
-                                }
-                                $this->physicalSql .= "level >= ? and\n\tlevel ";
-                                break;
-                            default:
-                                if ($this->tableName === self::BACKLINKS) {
-                                    $variableName = "p." . $variableName;
-                                }
-                                $this->physicalSql .= "{$variableName} ";
-                                break;
+                        if ($this->tableName === self::BACKLINKS) {
+                            $variableName = "p." . $variableName;
                         }
+                        if ($variableName === self::DEPTH) {
+                            $variableName = "level";
+                        }
+                        $this->physicalSql .= "{$variableName} ";
                         break;
                     case
                     PageSqlParser::RULE_orderBys:
@@ -314,16 +309,21 @@ final class PageSqlTreeListener implements ParseTreeListener
                 $this->physicalSql .= "from\n";
                 break;
             case PageSqlParser::RULE_predicates:
-                if ($this->tableName === self::BACKLINKS) {
-                    /**
-                     * Backlinks query adds already a where clause
-                     */
-                    $this->physicalSql .= "\tand ";
-                } else {
-                    $this->physicalSql .= "where\n";
+                /**
+                 * Backlinks/Descendant query adds already a where clause
+                 */
+                switch ($this->tableName) {
+                    case self::BACKLINKS:
+                    case self::DESCENDANTS:
+                        $this->physicalSql .= "\tand ";
+                        break;
+                    default:
+                        $this->physicalSql .= "where\n";
+                        break;
                 }
                 break;
-            case PageSqlParser::RULE_functionNames:
+            case
+            PageSqlParser::RULE_functionNames:
                 // Print the function name
                 $this->physicalSql .= $ctx->getText();
                 break;
@@ -349,7 +349,15 @@ EOF;
                         }
                         break;
                     case self::DESCENDANTS:
-                        $tableName = "\tpages\n";
+                        if ($this->requestedPage !== null) {
+                            $query = $this->requestedPage->getPath()->getParent()->resolve("%")->toString();
+                            $this->parameters[] = $query;
+                            $this->parameters[] = PageLevel::createForPage($this->requestedPage)->getValue();
+                        } else {
+                            LogUtility::msg("The page is unknown. A Page SQL with a depth attribute should be asked within a page request scope. The start depth has been set to 0", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
+                            $this->parameters[] = 0;
+                        }
+                        $tableName = "\tpages\nwhere\n\tpath like ?\n\tand level >= ?\n";
                         break;
                     default:
                         $tableName = "\t$tableName\n";

@@ -25,20 +25,28 @@ class PageSql
     private $listener;
 
 
-
     public function __construct($text)
     {
         $this->sql = $text;
     }
 
-    public static function create(string $string): PageSql
+    /**
+     * @param string $string
+     * @param Page|null $contextualPage - the page where the sql applies to
+     * @return PageSql
+     */
+    public static function create(string $string, Page $contextualPage = null): PageSql
     {
         $parser = new PageSql($string);
-        $parser->parse();
+        $parser->parse($contextualPage);
         return $parser;
     }
 
-    function parse(): PageSql
+    /**
+     * @param Page|null $contextualPage - for the page
+     * @return $this
+     */
+    function parse(Page $contextualPage = null): PageSql
     {
         $input = InputStream::fromString($this->sql);
         $lexer = new PageSqlLexer($input);
@@ -52,7 +60,7 @@ class PageSql
          * Performs a walk on the given parse tree starting at the root
          * and going down recursively with depth-first search.
          */
-        $this->listener = new PageSqlTreeListener($lexer, $parser,$this->sql);
+        $this->listener = new PageSqlTreeListener($lexer, $parser, $this->sql, $contextualPage);
         ParseTreeWalker::default()->walk($this->listener, $tree);
         return $this;
     }

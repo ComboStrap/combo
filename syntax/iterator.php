@@ -9,6 +9,7 @@ use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PageImages;
+use ComboStrap\PagePath;
 use ComboStrap\PageSql;
 use ComboStrap\PageSqlTreeListener;
 use ComboStrap\PluginUtility;
@@ -74,6 +75,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
      */
     const CANONICAL = "iterator";
     const PAGE_SQL = "page-sql";
+    const PAGE_SQL_ATTRIBUTES = "page-sql-attributes";
     const VARIABLE_NAMES = "variable-names";
     const COMPLEX_MARKUP_FOUND = "complex-markup-found";
     const BEFORE_TEMPLATE_CALLSTACK = "header-callstack";
@@ -195,6 +197,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                  * such as sql and template instructions
                  */
                 $pageSql = null;
+                $pageSqlAttribute = [];
                 $beforeTemplateCallStack = [];
                 $templateStack = [];
                 $afterTemplateCallStack = [];
@@ -205,8 +208,13 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     $tagName = $actualCall->getTagName();
                     switch ($tagName) {
                         case syntax_plugin_combo_iteratordata::TAG:
-                            if ($actualCall->getState() === DOKU_LEXER_UNMATCHED) {
-                                $pageSql = $actualCall->getCapturedContent();
+                            switch ($actualCall->getState()) {
+                                case DOKU_LEXER_UNMATCHED:
+                                    $pageSql = $actualCall->getCapturedContent();
+                                    break;
+                                case DOKU_LEXER_ENTER:
+                                    $pageSqlAttribute = $actualCall->getAttributes();
+                                    break;
                             }
                             continue 2;
                         case syntax_plugin_combo_template::TAG:
@@ -266,6 +274,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                 return array(
                     PluginUtility::STATE => $state,
                     self::PAGE_SQL => $pageSql,
+                    self::PAGE_SQL_ATTRIBUTES => $pageSqlAttribute,
                     self::VARIABLE_NAMES => $variableNames,
                     self::COMPLEX_MARKUP_FOUND => $complexMarkupFound,
                     self::BEFORE_TEMPLATE_CALLSTACK => $beforeTemplateCallStack,
@@ -328,7 +337,13 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                      * Create the SQL
                      */
                     try {
-                        $pageSql = PageSql::create($pageSql);
+                        $tagAttributes = TagAttributes::createFromCallStackArray($data[self::PAGE_SQL_ATTRIBUTES]);
+                        $path = $tagAttributes->getValue(PagePath::PROPERTY_NAME);
+                        $contextualPage = null;
+                        if($path!==null){
+                            $contextualPage = Page::createPageFromQualifiedPath($path);
+                        }
+                        $pageSql = PageSql::create($pageSql, $contextualPage);
                     } catch (Exception $e) {
                         $renderer->doc .= "The page sql is not valid. Error Message: {$e->getMessage()}. Page Sql: ($pageSql)";
                         return false;
@@ -375,11 +390,11 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                              * We use id until path is full in the database
                              */
                             $id = $sourceRow["ID"];
-                            $page = Page::createPageFromId($id);
-                            if ($page->isHidden()) {
+                            $contextualPage = Page::createPageFromId($id);
+                            if ($contextualPage->isHidden()) {
                                 continue;
                             }
-                            $standardMetadata = $page->getMetadataForRendering();
+                            $standardMetadata = $contextualPage->getMetadataForRendering();
 
                             $jsonArray = json_decode($analytics, true);
                             $targetRow = [];

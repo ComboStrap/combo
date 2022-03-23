@@ -26,13 +26,17 @@ window.addEventListener("load", function (event) {
                                     dataSet.class.split(" ").forEach(e => svg.classList.add(e));
                                 }
                             }
+
+                            // remove the none display or set the old value back
+                            if(svg.style !== 'undefined' ) {
+                                if (displayValue === "") {
+                                    svg.style.removeProperty("display");
+                                } else {
+                                    svg.style.setProperty("display", displayValue, displayPriority);
+                                }
+                            }
                         }
-                        // remove the none display or set the old value back
-                        if (displayValue === "") {
-                            svg.style.removeProperty("display");
-                        } else {
-                            svg.style.setProperty("display", displayValue, displayPriority);
-                        }
+
                     },
                 }
             )

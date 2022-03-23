@@ -98,7 +98,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'container';
     }
@@ -167,12 +167,12 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
     }
 
-        public function postConnect()
-        {
+    public function postConnect()
+    {
 
-            $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
-        }
+    }
 
     /**
      *

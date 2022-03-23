@@ -113,17 +113,21 @@ class ImageSvg extends Image
                 switch ($name) {
                     case Dimension::WIDTH_KEY:
                         $newName = "w";
-                        /**
-                         * We don't remove width because,
-                         * the sizing should apply to img
-                         */
+                        try {
+                            $value = Dimension::toPixelValue($value);
+                        } catch (ExceptionCombo $e) {
+                            LogUtility::msg("Error while converting the width value ($value) into pixel. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            continue 2;
+                        }
                         break;
                     case Dimension::HEIGHT_KEY:
                         $newName = "h";
-                        /**
-                         * We don't remove height because,
-                         * the sizing should apply to img
-                         */
+                        try {
+                            $value = Dimension::toPixelValue($value);
+                        } catch (ExceptionCombo $e) {
+                            LogUtility::msg("Error while converting the height value ($value) into pixel. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            continue 2;
+                        }
                         break;
                 }
 

@@ -34,9 +34,9 @@ namespace ComboStrap\PageSqlParser {
                IN = 42, IS = 43, ISNULL = 44, LIKE = 45, LIMIT = 46, NOT = 47, 
                NOTNULL = 48, NOW = 49, NULL = 50, OR = 51, ORDER = 52, SELECT = 53, 
                TRUE = 54, WHERE = 55, RANDOM = 56, DATE = 57, DATETIME = 58, 
-               PAGES = 59, BACKLINKS = 60, StringLiteral = 61, CharSetLiteral = 62, 
-               IntegralLiteral = 63, Number = 64, NumberLiteral = 65, ByteLengthLiteral = 66, 
-               SqlName = 67, SPACES = 68;
+               PAGES = 59, BACKLINKS = 60, DESCENDANTS = 61, StringLiteral = 62, 
+               CharSetLiteral = 63, IntegralLiteral = 64, Number = 65, NumberLiteral = 66, 
+               ByteLengthLiteral = 67, SqlName = 68, SPACES = 69;
 
 		public const RULE_functionNames = 0, RULE_tableNames = 1, RULE_sqlNames = 2, 
                RULE_column = 3, RULE_pattern = 4, RULE_expression = 5, RULE_predicate = 6, 
@@ -74,8 +74,8 @@ namespace ComboStrap\PageSqlParser {
 		    "DESC", "ESCAPE", "FALSE", "FROM", "GLOB", "IN", "IS", "ISNULL", "LIKE", 
 		    "LIMIT", "NOT", "NOTNULL", "NOW", "NULL", "OR", "ORDER", "SELECT", 
 		    "TRUE", "WHERE", "RANDOM", "DATE", "DATETIME", "PAGES", "BACKLINKS", 
-		    "StringLiteral", "CharSetLiteral", "IntegralLiteral", "Number", "NumberLiteral", 
-		    "ByteLengthLiteral", "SqlName", "SPACES"
+		    "DESCENDANTS", "StringLiteral", "CharSetLiteral", "IntegralLiteral", 
+		    "Number", "NumberLiteral", "ByteLengthLiteral", "SqlName", "SPACES"
 		];
 
 		/**
@@ -83,7 +83,7 @@ namespace ComboStrap\PageSqlParser {
 		 */
 		private const SERIALIZED_ATN =
 			"\u{3}\u{608B}\u{A72A}\u{8133}\u{B9ED}\u{417C}\u{3BE7}\u{7786}\u{5964}" .
-		    "\u{3}\u{46}\u{A7}\u{4}\u{2}\u{9}\u{2}\u{4}\u{3}\u{9}\u{3}\u{4}\u{4}" .
+		    "\u{3}\u{47}\u{A7}\u{4}\u{2}\u{9}\u{2}\u{4}\u{3}\u{9}\u{3}\u{4}\u{4}" .
 		    "\u{9}\u{4}\u{4}\u{5}\u{9}\u{5}\u{4}\u{6}\u{9}\u{6}\u{4}\u{7}\u{9}" .
 		    "\u{7}\u{4}\u{8}\u{9}\u{8}\u{4}\u{9}\u{9}\u{9}\u{4}\u{A}\u{9}\u{A}" .
 		    "\u{4}\u{B}\u{9}\u{B}\u{4}\u{C}\u{9}\u{C}\u{4}\u{D}\u{9}\u{D}\u{4}" .
@@ -113,8 +113,8 @@ namespace ComboStrap\PageSqlParser {
 		    "\u{A}\u{F}\u{3}\u{F}\u{5}\u{F}\u{A5}\u{A}\u{F}\u{3}\u{F}\u{2}\u{2}" .
 		    "\u{10}\u{2}\u{4}\u{6}\u{8}\u{A}\u{C}\u{E}\u{10}\u{12}\u{14}\u{16}" .
 		    "\u{18}\u{1A}\u{1C}\u{2}\u{A}\u{3}\u{2}\u{3B}\u{3C}\u{3}\u{2}\u{3D}" .
-		    "\u{3E}\u{4}\u{2}\u{42}\u{42}\u{45}\u{45}\u{4}\u{2}\u{3F}\u{3F}\u{43}" .
-		    "\u{43}\u{5}\u{2}\u{3F}\u{3F}\u{42}\u{43}\u{45}\u{45}\u{5}\u{2}\u{E}" .
+		    "\u{3F}\u{4}\u{2}\u{43}\u{43}\u{46}\u{46}\u{4}\u{2}\u{40}\u{40}\u{44}" .
+		    "\u{44}\u{5}\u{2}\u{40}\u{40}\u{43}\u{44}\u{46}\u{46}\u{5}\u{2}\u{E}" .
 		    "\u{E}\u{1B}\u{1E}\u{20}\u{20}\u{4}\u{2}\u{22}\u{22}\u{35}\u{35}\u{4}" .
 		    "\u{2}\u{24}\u{24}\u{27}\u{27}\u{2}\u{B3}\u{2}\u{1E}\u{3}\u{2}\u{2}" .
 		    "\u{2}\u{4}\u{20}\u{3}\u{2}\u{2}\u{2}\u{6}\u{22}\u{3}\u{2}\u{2}\u{2}" .
@@ -129,7 +129,7 @@ namespace ComboStrap\PageSqlParser {
 		    "\u{5}\u{6}\u{4}\u{2}\u{25}\u{26}\u{7}\u{4}\u{2}\u{2}\u{26}\u{28}\u{5}" .
 		    "\u{6}\u{4}\u{2}\u{27}\u{25}\u{3}\u{2}\u{2}\u{2}\u{27}\u{28}\u{3}\u{2}" .
 		    "\u{2}\u{2}\u{28}\u{2E}\u{3}\u{2}\u{2}\u{2}\u{29}\u{2C}\u{7}\u{23}" .
-		    "\u{2}\u{2}\u{2A}\u{2D}\u{5}\u{6}\u{4}\u{2}\u{2B}\u{2D}\u{7}\u{3F}" .
+		    "\u{2}\u{2}\u{2A}\u{2D}\u{5}\u{6}\u{4}\u{2}\u{2B}\u{2D}\u{7}\u{40}" .
 		    "\u{2}\u{2}\u{2C}\u{2A}\u{3}\u{2}\u{2}\u{2}\u{2C}\u{2B}\u{3}\u{2}\u{2}" .
 		    "\u{2}\u{2D}\u{2F}\u{3}\u{2}\u{2}\u{2}\u{2E}\u{29}\u{3}\u{2}\u{2}\u{2}" .
 		    "\u{2E}\u{2F}\u{3}\u{2}\u{2}\u{2}\u{2F}\u{9}\u{3}\u{2}\u{2}\u{2}\u{30}" .
@@ -148,7 +148,7 @@ namespace ComboStrap\PageSqlParser {
 		    "\u{47}\u{46}\u{3}\u{2}\u{2}\u{2}\u{47}\u{48}\u{3}\u{2}\u{2}\u{2}\u{48}" .
 		    "\u{49}\u{3}\u{2}\u{2}\u{2}\u{49}\u{4A}\u{7}\u{2F}\u{2}\u{2}\u{4A}" .
 		    "\u{4D}\u{5}\u{A}\u{6}\u{2}\u{4B}\u{4C}\u{7}\u{28}\u{2}\u{2}\u{4C}" .
-		    "\u{4E}\u{7}\u{3F}\u{2}\u{2}\u{4D}\u{4B}\u{3}\u{2}\u{2}\u{2}\u{4D}" .
+		    "\u{4E}\u{7}\u{40}\u{2}\u{2}\u{4D}\u{4B}\u{3}\u{2}\u{2}\u{2}\u{4D}" .
 		    "\u{4E}\u{3}\u{2}\u{2}\u{2}\u{4E}\u{52}\u{3}\u{2}\u{2}\u{2}\u{4F}\u{50}" .
 		    "\u{7}\u{2B}\u{2}\u{2}\u{50}\u{52}\u{5}\u{A}\u{6}\u{2}\u{51}\u{47}" .
 		    "\u{3}\u{2}\u{2}\u{2}\u{51}\u{4F}\u{3}\u{2}\u{2}\u{2}\u{52}\u{6C}\u{3}" .
@@ -178,14 +178,14 @@ namespace ComboStrap\PageSqlParser {
 		    "\u{3}\u{2}\u{2}\u{2}\u{7B}\u{7C}\u{3}\u{2}\u{2}\u{2}\u{7C}\u{13}\u{3}" .
 		    "\u{2}\u{2}\u{2}\u{7D}\u{7B}\u{3}\u{2}\u{2}\u{2}\u{7E}\u{7F}\u{7}\u{2A}" .
 		    "\u{2}\u{2}\u{7F}\u{80}\u{5}\u{4}\u{3}\u{2}\u{80}\u{15}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{81}\u{82}\u{7}\u{30}\u{2}\u{2}\u{82}\u{83}\u{7}\u{42}\u{2}" .
+		    "\u{2}\u{81}\u{82}\u{7}\u{30}\u{2}\u{2}\u{82}\u{83}\u{7}\u{43}\u{2}" .
 		    "\u{2}\u{83}\u{17}\u{3}\u{2}\u{2}\u{2}\u{84}\u{85}\u{7}\u{36}\u{2}" .
 		    "\u{2}\u{85}\u{86}\u{7}\u{26}\u{2}\u{2}\u{86}\u{8B}\u{5}\u{1A}\u{E}" .
 		    "\u{2}\u{87}\u{88}\u{7}\u{B}\u{2}\u{2}\u{88}\u{8A}\u{5}\u{1A}\u{E}" .
 		    "\u{2}\u{89}\u{87}\u{3}\u{2}\u{2}\u{2}\u{8A}\u{8D}\u{3}\u{2}\u{2}\u{2}" .
 		    "\u{8B}\u{89}\u{3}\u{2}\u{2}\u{2}\u{8B}\u{8C}\u{3}\u{2}\u{2}\u{2}\u{8C}" .
 		    "\u{19}\u{3}\u{2}\u{2}\u{2}\u{8D}\u{8B}\u{3}\u{2}\u{2}\u{2}\u{8E}\u{90}" .
-		    "\u{7}\u{45}\u{2}\u{2}\u{8F}\u{91}\u{9}\u{9}\u{2}\u{2}\u{90}\u{8F}" .
+		    "\u{7}\u{46}\u{2}\u{2}\u{8F}\u{91}\u{9}\u{9}\u{2}\u{2}\u{90}\u{8F}" .
 		    "\u{3}\u{2}\u{2}\u{2}\u{90}\u{91}\u{3}\u{2}\u{2}\u{2}\u{91}\u{1B}\u{3}" .
 		    "\u{2}\u{2}\u{2}\u{92}\u{94}\u{7}\u{37}\u{2}\u{2}\u{93}\u{95}\u{7}" .
 		    "\u{3A}\u{2}\u{2}\u{94}\u{93}\u{3}\u{2}\u{2}\u{2}\u{94}\u{95}\u{3}" .
@@ -315,7 +315,7 @@ namespace ComboStrap\PageSqlParser {
 
 		        $_la = $this->input->LA(1);
 
-		        if (!($_la === self::PAGES || $_la === self::BACKLINKS)) {
+		        if (!(((($_la) & ~0x3f) === 0 && ((1 << $_la) & ((1 << self::PAGES) | (1 << self::BACKLINKS) | (1 << self::DESCENDANTS))) !== 0))) {
 		        $this->errorHandler->recoverInline($this);
 		        } else {
 		        	if ($this->input->LA(1) === Token::EOF) {
@@ -491,7 +491,7 @@ namespace ComboStrap\PageSqlParser {
 
 		            	$_la = $this->input->LA(1);
 
-		            	if (!((((($_la - 61)) & ~0x3f) === 0 && ((1 << ($_la - 61)) & ((1 << (self::StringLiteral - 61)) | (1 << (self::Number - 61)) | (1 << (self::NumberLiteral - 61)) | (1 << (self::SqlName - 61)))) !== 0))) {
+		            	if (!((((($_la - 62)) & ~0x3f) === 0 && ((1 << ($_la - 62)) & ((1 << (self::StringLiteral - 62)) | (1 << (self::Number - 62)) | (1 << (self::NumberLiteral - 62)) | (1 << (self::SqlName - 62)))) !== 0))) {
 		            	$this->errorHandler->recoverInline($this);
 		            	} else {
 		            		if ($this->input->LA(1) === Token::EOF) {
@@ -1089,6 +1089,11 @@ namespace ComboStrap\PageSqlParser\Context {
 	    public function BACKLINKS() : ?TerminalNode
 	    {
 	        return $this->getToken(PageSqlParser::BACKLINKS, 0);
+	    }
+
+	    public function DESCENDANTS() : ?TerminalNode
+	    {
+	        return $this->getToken(PageSqlParser::DESCENDANTS, 0);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void

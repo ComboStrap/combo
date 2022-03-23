@@ -15,3 +15,5 @@ In the generator configuration in Idea:
   * Package: `ComboStrap\PageSqlParser`
   * Language: `PHP`
   * Lib (not yet used): `D:\dokuwiki\lib\plugins\combo\grammar`
+
+See the [documentation](https://datacadamia.com/antlr/idea#test_antlr_rule)

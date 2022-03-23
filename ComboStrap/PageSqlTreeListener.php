@@ -29,6 +29,7 @@ final class PageSqlTreeListener implements ParseTreeListener
     const BACKLINKS = "backlinks";
     const DESCENDANTS = "descendants";
     const DEPTH = "depth";
+    const CANONICAL = PageSql::CANONICAL;
     /**
      * @var PageSqlLexer
      */
@@ -70,6 +71,14 @@ final class PageSqlTreeListener implements ParseTreeListener
      * @var string
      */
     private $tableName;
+    /**
+     * @var string - to store the predicate column
+     */
+    private $actualPredicateColumn;
+    /**
+     * @var Page|null
+     */
+    private $requestedPage;
 
 
     /**
@@ -84,6 +93,11 @@ final class PageSqlTreeListener implements ParseTreeListener
         $this->lexer = $lexer;
         $this->parser = $parser;
         $this->pageSqlString = $sql;
+        try {
+            $this->requestedPage = Page::createPageFromGlobalDokuwikiId();
+        } catch (ExceptionCombo $e) {
+            $this->requestedPage = null;
+        }
     }
 
 
@@ -128,12 +142,12 @@ final class PageSqlTreeListener implements ParseTreeListener
 
                         // variable name
                         $variableName = strtolower($text);
+                        $this->actualPredicateColumn = $variableName;
                         switch ($variableName) {
                             case self::DEPTH:
-                                try {
-                                    $page = Page::createPageFromGlobalDokuwikiId();
-                                    $this->parameters[] = PageLevel::createForPage($page)->getValue();
-                                } catch (ExceptionCombo $e) {
+                                if ($this->requestedPage !== null) {
+                                    $this->parameters[] = PageLevel::createForPage($this->requestedPage)->getValue();
+                                } else {
                                     LogUtility::msg("The page is unknown. A Page SQL with a depth attribute should be asked within a page request scope. The start depth has been set to 0", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
                                     $this->parameters[] = 0;
                                 }
@@ -226,7 +240,27 @@ final class PageSqlTreeListener implements ParseTreeListener
                         $this->physicalSql .= "{$text}";
                         return;
                     case PageSqlParser::RULE_predicates:
-                        $this->parameters[] = $text;
+                        switch ($this->actualPredicateColumn) {
+                            case self::DEPTH:
+                                if ($this->requestedPage !== null) {
+                                    $level = PageLevel::createForPage($this->requestedPage)->getValue();
+                                    try {
+                                        $predicateValue = Integer::toInt($text);
+                                    } catch (ExceptionCombo $e) {
+                                        // should not happen due to the parsing but yeah
+                                        LogUtility::msg("The value of the depth attribute ($text) is not an integer", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                                        $predicateValue = 0;
+                                    }
+                                    $this->parameters[] = $predicateValue + $level;
+                                } else {
+                                    LogUtility::msg("The requested page is unknown and is mandatory with the depth attribute", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                                    $this->parameters[] = $text;
+                                }
+                                break;
+                            default:
+                                $this->parameters[] = $text;
+                                break;
+                        }
                         $this->physicalSql .= "?";
                         return;
                     default:
@@ -306,10 +340,10 @@ where
     pr.reference = ?
 
 EOF;
-                        try {
-                            $page = Page::createPageFromGlobalDokuwikiId();
-                            $this->parameters[] = $page->getPageId();
-                        } catch (ExceptionCombo $e) {
+
+                        if ($this->requestedPage !== null) {
+                            $this->parameters[] = $this->requestedPage->getPageId();
+                        } else {
                             LogUtility::msg("The page id is unknown. A Page SQL with backlinks should be asked within a page request scope.", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
                             $this->parameters[] = "unknown global id";
                         }

@@ -18,7 +18,7 @@ abstract class MetadataInteger extends Metadata
         return DataType::INTEGER_TYPE_VALUE;
     }
 
-    public function getValue(): ?string
+    public function getValue(): ?int
     {
         $this->buildCheck();
         return $this->value;
@@ -35,22 +35,8 @@ abstract class MetadataInteger extends Metadata
      */
     public function setValue($value): Metadata
     {
-        $this->value = self::toInt($value);
+        $this->value = Integer::toInt($value);
         return $this;
-    }
-
-    /**
-     * @throws ExceptionCombo
-     */
-    public static function toInt($value): int
-    {
-        if (!is_numeric($value)) {
-            throw new ExceptionCombo("The value is not a numeric");
-        }
-        if (!is_int($value)) {
-            throw new ExceptionCombo("The value is not an integer");
-        }
-        return intval($value);
     }
 
     /**

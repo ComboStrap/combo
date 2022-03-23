@@ -126,9 +126,10 @@ require_once(__DIR__ . '/ImageRaster.php');
 require_once(__DIR__ . '/ImageSvg.php');
 require_once(__DIR__ . '/Icon.php'); // icon is an image svg and should be after
 require_once(__DIR__ . '/Index.php');
-require_once(__DIR__ . '/InstructionsDocument.php');
+require_once(__DIR__ . '/Integer.php');
 require_once(__DIR__ . '/InternetPath.php');
 require_once(__DIR__ . '/InterWikiPath.php');
+require_once(__DIR__ . '/InstructionsDocument.php');
 require_once(__DIR__ . '/Iso8601Date.php');
 require_once(__DIR__ . '/Json.php');
 require_once(__DIR__ . '/JavascriptLibrary.php');

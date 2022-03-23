@@ -48,7 +48,8 @@ class MetaManagerForm
         ReplicationDate::PROPERTY_NAME,
         PageId::PROPERTY_NAME,
         CacheExpirationFrequency::PROPERTY_NAME,
-        CacheExpirationDate::PROPERTY_NAME
+        CacheExpirationDate::PROPERTY_NAME,
+        PageLevel::PROPERTY_NAME
     ];
 
     /**
@@ -72,6 +73,7 @@ class MetaManagerForm
 
     /**
      * @return FormMeta
+     * @throws ExceptionCombo
      */
     function toFormMeta(): FormMeta
     {

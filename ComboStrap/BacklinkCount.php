@@ -8,40 +8,14 @@ namespace ComboStrap;
  * @package ComboStrap
  * Internal backlink count
  */
-class BacklinkCount extends Metadata
+class BacklinkCount extends MetadataInteger
 {
     const PROPERTY_NAME = 'backlink_count';
-
-
-    /**
-     * @var int
-     */
-    private $value;
 
     public static function createFromResource(Page $page)
     {
         return (new BacklinkCount())
             ->setResource($page);
-    }
-
-
-    /**
-     * @throws ExceptionCombo
-     */
-    public function setValue($value): Metadata
-    {
-        $this->value = $this->toInt($value);
-        return $this;
-    }
-
-    public function valueIsNotNull(): bool
-    {
-        return $this->value !== null;
-    }
-
-    public function getDataType(): string
-    {
-        return DataType::INTEGER_TYPE_VALUE;
     }
 
     public function getDescription(): string
@@ -94,26 +68,6 @@ class BacklinkCount extends Metadata
 
     }
 
-
-    public function getDefaultValue(): int
-    {
-        return 0;
-    }
-
-    /**
-     * @throws ExceptionCombo
-     */
-    private function toInt($value): int
-    {
-        if (!is_numeric($value)) {
-            throw new ExceptionCombo("The value is not a numeric");
-        }
-        if (!is_int($value)) {
-            throw new ExceptionCombo("The value is not an integer");
-        }
-        return intval($value);
-    }
-
     /**
      * Sqlite is much quicker than the Dokuwiki Internal Index
      * We use it every time that we can
@@ -144,11 +98,6 @@ class BacklinkCount extends Metadata
 
     }
 
-    public function getValue()
-    {
-        $this->buildCheck();
-        return $this->value;
-    }
 
     public function buildFromStoreValue($value): Metadata
     {

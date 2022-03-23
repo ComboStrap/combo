@@ -1064,7 +1064,8 @@ class Page extends ResourceComboAbs
             EndDate::PROPERTY_NAME,
             PageLayout::PROPERTY_NAME,
             // Dokuwiki id is deprecated for path, no more advertised
-            DokuwikiId::DOKUWIKI_ID_ATTRIBUTE
+            DokuwikiId::DOKUWIKI_ID_ATTRIBUTE,
+            PageLevel::PROPERTY_NAME
         ];
 
         foreach ($metadataNames as $metadataName) {

@@ -141,22 +141,23 @@ class TemplateUtility
     {
 
 
-        return TemplateUtility::renderStringTemplateFromDataArray($stringTemplate, TemplateUtility::getMetadataDataFromPage($page));
+        $variables = TemplateUtility::getMetadataDataFromPage($page);
+        return TemplateUtility::renderStringTemplateFromDataArray($stringTemplate, $variables);
 
     }
 
     /**
      * Render a template string from a data array
      * @param $pageTemplate
-     * @param array $array
+     * @param array $variables
      * @return string
      */
-    public static function renderStringTemplateFromDataArray($pageTemplate, array $array): string
+    public static function renderStringTemplateFromDataArray($pageTemplate, array $variables): string
     {
 
         $template = Template::create($pageTemplate);
 
-        foreach ($array as $key => $val) {
+        foreach ($variables as $key => $val) {
             /**
              * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
              * @see {@link \syntax_plugin_combo_pipeline}

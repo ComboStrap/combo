@@ -147,7 +147,7 @@ class DatabasePageRow
     /**
      * @throws ExceptionCombo
      */
-    public function replicateAndRebuild()
+    public function replicateAndRebuild(): DatabasePageRow
     {
         $this->replicate();
         $this->rebuild();
@@ -711,6 +711,7 @@ class DatabasePageRow
             Lang::PROPERTY_NAME,
             PageType::PROPERTY_NAME,
             DokuwikiId::DOKUWIKI_ID_ATTRIBUTE,
+            PageLevel::PROPERTY_NAME
         );
         $metaRecord = [];
         foreach ($record as $name) {

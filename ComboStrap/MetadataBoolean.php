@@ -83,7 +83,7 @@ abstract class MetadataBoolean extends Metadata
         }
 
         if ($store->isHierarchicalTextBased()) {
-            $value = Boolean::toString($value);
+            $value = DataType::toBooleanString($value);
         }
 
         return $value;
@@ -121,7 +121,7 @@ abstract class MetadataBoolean extends Metadata
          * TODO: There is no validation
          * If the value is not a boolean, the return value is false ...
          */
-        return Boolean::toBoolean($value);
+        return DataType::toBoolean($value);
 
     }
 

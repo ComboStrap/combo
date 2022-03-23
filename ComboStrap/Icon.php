@@ -395,6 +395,7 @@ class Icon extends ImageSvg
         $iconName = $this->iconName;
         switch ($library) {
 
+            case self::VSCODE:
             case self::FLAT_COLOR_ICON:
                 $iconName = str_replace("-", "_", $iconName);
                 break;
@@ -467,9 +468,6 @@ class Icon extends ImageSvg
                     default:
                         throw new ExceptionCombo("The box-icon icon ($iconName) has a type ($iconType) that is unknown, we can't determine the location of the icon to download");
                 }
-                break;
-            case self::VSCODE:
-                $iconName = str_replace("-", "_", $iconName);
                 break;
             case self::SI_GLYPH:
                 $iconName = "si-glyph-" . $iconName;

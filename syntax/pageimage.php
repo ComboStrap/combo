@@ -251,11 +251,32 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                 $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ILLUSTRATION_TYPE);
 
                 /**
-                 * Zoom applies only to icon, not to illustration
+                 * Zoom applies only to icon not to illustration
+                 *
                  */
                 $isIcon = Icon::isInIconDirectory($selectedPageImage->getPath());
                 if (!$isIcon) {
                     $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
+                } else {
+                    /**
+                     * When the width is small, no zoom out
+                     */
+                    $width = $tagAttributes->getValue(Dimension::WIDTH_KEY);
+                    if ($width !== null) {
+                        try {
+                            $pixelWidth = Dimension::toPixelValue($width);
+                            if ($pixelWidth < 30) {
+                                /**
+                                 * Icon rendering
+                                 */
+                                $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
+                                $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
+
+                            }
+                        } catch (ExceptionCombo $e) {
+                            LogUtility::msg("The width value ($width) could not be translated in pixel value. Error: {$e->getMessage()}");
+                        }
+                    }
                 }
 
                 $mediaLink = MediaLink::createMediaLinkFromPath(

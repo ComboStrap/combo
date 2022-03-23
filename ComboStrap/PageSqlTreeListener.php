@@ -95,11 +95,7 @@ final class PageSqlTreeListener implements ParseTreeListener
         $this->parser = $parser;
         $this->pageSqlString = $sql;
         if ($pageContext == null) {
-            try {
-                $this->requestedPage = Page::createPageFromGlobalDokuwikiId();
-            } catch (ExceptionCombo $e) {
-                $this->requestedPage = null;
-            }
+            $this->requestedPage = Page::createPageFromRequestedPage();
         } else {
             $this->requestedPage = $pageContext;
         }
@@ -240,7 +236,7 @@ final class PageSqlTreeListener implements ParseTreeListener
                                 if ($this->requestedPage !== null) {
                                     $level = PageLevel::createForPage($this->requestedPage)->getValue();
                                     try {
-                                        $predicateValue = Integer::toInt($text);
+                                        $predicateValue = DataType::toInteger($text);
                                     } catch (ExceptionCombo $e) {
                                         // should not happen due to the parsing but yeah
                                         LogUtility::msg("The value of the depth attribute ($text) is not an integer", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -342,10 +338,10 @@ where
 EOF;
 
                         if ($this->requestedPage !== null) {
-                            $this->parameters[] = $this->requestedPage->getPageId();
+                            $this->parameters[] = $this->requestedPage->getPath()->toString();
                         } else {
-                            LogUtility::msg("The page id is unknown. A Page SQL with backlinks should be asked within a page request scope.", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
-                            $this->parameters[] = "unknown global id";
+                            LogUtility::msg("The page is unknown. A Page SQL with backlinks should be asked within a page request scope.", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
+                            $this->parameters[] = "unknown page";
                         }
                         break;
                     case self::DESCENDANTS:

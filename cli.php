@@ -86,15 +86,15 @@ ComboStrap Administrative Commands
 Example:
   * Replicate all pages into the database
 ```bash
-php ./bin/plugin.php combo metadata-to-database :
+php ./bin/plugin.php combo metadata-to-database --host serverHostName  --port 80 :
 # or
-php ./bin/plugin.php combo metadata-to-database /
+php ./bin/plugin.php combo metadata-to-database --host serverHostName  --port 80 /
 ```
   * Replicate only the page `:namespace:my-page`
 ```bash
-php ./bin/plugin.php combo metadata-to-database :namespace:my-page
+php ./bin/plugin.php combo metadata-to-database --host serverHostName  --port 80 :namespace:my-page
 # or
-php ./bin/plugin.php combo metadata-to-database /namespace/my-page
+php ./bin/plugin.php combo metadata-to-database --host serverHostName  --port 80 /namespace/my-page
 ```
 
 Animal: If you want to use it for an animal farm, you need to set first the animal directory name in a environment variable

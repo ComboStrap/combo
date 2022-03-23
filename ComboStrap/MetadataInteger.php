@@ -35,7 +35,7 @@ abstract class MetadataInteger extends Metadata
      */
     public function setValue($value): Metadata
     {
-        $this->value = Integer::toInt($value);
+        $this->value = DataType::toInteger($value);
         return $this;
     }
 

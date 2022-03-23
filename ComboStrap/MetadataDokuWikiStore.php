@@ -304,7 +304,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             if ($oldValue === null) {
                 $oldValue = $default;
             } else {
-                $oldValue = Boolean::toBoolean($oldValue);
+                $oldValue = DataType::toBoolean($oldValue);
             }
         }
         if ($oldValue !== $value) {

@@ -68,7 +68,6 @@ require_once(__DIR__ . '/Background.php');
 require_once(__DIR__ . '/BacklinkCount.php');
 require_once(__DIR__ . '/BacklinkMenuItem.php');
 require_once(__DIR__ . '/Boldness.php');
-require_once(__DIR__ . '/Boolean.php');
 require_once(__DIR__ . '/Bootstrap.php');
 require_once(__DIR__ . '/Brand.php');
 require_once(__DIR__ . '/BrandButton.php');
@@ -126,7 +125,6 @@ require_once(__DIR__ . '/ImageRaster.php');
 require_once(__DIR__ . '/ImageSvg.php');
 require_once(__DIR__ . '/Icon.php'); // icon is an image svg and should be after
 require_once(__DIR__ . '/Index.php');
-require_once(__DIR__ . '/Integer.php');
 require_once(__DIR__ . '/InternetPath.php');
 require_once(__DIR__ . '/InterWikiPath.php');
 require_once(__DIR__ . '/InstructionsDocument.php');

@@ -339,9 +339,10 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     try {
                         $tagAttributes = TagAttributes::createFromCallStackArray($data[self::PAGE_SQL_ATTRIBUTES]);
                         $path = $tagAttributes->getValue(PagePath::PROPERTY_NAME);
-                        $contextualPage = null;
                         if($path!==null){
                             $contextualPage = Page::createPageFromQualifiedPath($path);
+                        } else {
+                            $contextualPage = Page::createPageFromRequestedPage();
                         }
                         $pageSql = PageSql::create($pageSql, $contextualPage);
                     } catch (Exception $e) {

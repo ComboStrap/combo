@@ -4,11 +4,11 @@
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\BacklinkCount;
 use ComboStrap\Canonical;
-use ComboStrap\MarkupRef;
+use ComboStrap\ExceptionCombo;
+use ComboStrap\LogUtility;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\Page;
 use ComboStrap\PageTitle;
-use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use dokuwiki\ChangeLog\PageChangeLog;
 
@@ -138,14 +138,17 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function document_start()
     {
         $this->reset();
-        $this->page = Page::createPageFromGlobalDokuwikiId();
+        try {
+            $this->page = Page::createPageFromGlobalDokuwikiId();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The global ID is unknown, we were unable to instantiate the requested page in analytics");
+        }
 
     }
 
 
     /**
      * Here the score is calculated
-     * @throws \ComboStrap\ExceptionCombo
      */
     public function document_end() // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
@@ -517,7 +520,11 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         if ($this->page->isSecondarySlot()) {
             $lowLevel = false;
         }
-        $this->page->setLowQualityIndicatorCalculation($lowLevel);
+        try {
+            $this->page->setLowQualityIndicatorCalculation($lowLevel);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("An error has occurred while saving the low quality level. Error: {$e->getMessage()}");
+        }
 
         /**
          * Building the quality object in order
@@ -539,8 +546,13 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * Metadata
          */
-        $page = Page::createPageFromGlobalDokuwikiId();
-        $meta = $page->getMetadataForRendering();
+        try {
+            $requestedPage = Page::createPageFromGlobalDokuwikiId();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The global ID is unknown, we can't find the requested page. Analytics was stopped");
+            return;
+        }
+        $meta = $requestedPage->getMetadataForRendering();
         foreach ($meta as $key => $value) {
             /**
              * The metadata may have been set
@@ -555,7 +567,6 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * Building the Top JSON in order
          */
-        global $ID;
         $finalStats = array();
         $finalStats["date"] = date('Y-m-d H:i:s', time());
         ksort($this->metadata);
@@ -575,7 +586,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          */
         $mode = "combo_" . $this->getPluginComponent();
         p_set_metadata(
-            $ID,
+            $requestedPage->getPageId(),
             array("format" => array($mode => array("Content-Type" => 'application/json'))),
             false,
             false // Persistence is needed because there is a cache
@@ -592,7 +603,6 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     {
         return self::RENDERER_FORMAT;
     }
-
 
 
     public function header($text, $level, $pos)
@@ -687,7 +697,8 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $this->formattingBracket++;
     }
 
-    public function addToDescription($text){
+    public function addToDescription($text)
+    {
 
     }
 

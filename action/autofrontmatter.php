@@ -1,5 +1,7 @@
 <?php
 
+use ComboStrap\ExceptionCombo;
+use ComboStrap\LogUtility;
 use ComboStrap\Page;
 
 /**
@@ -32,7 +34,11 @@ class action_plugin_combo_autofrontmatter extends DokuWiki_Action_Plugin
 
     public function handle_new_page(Doku_Event $event, $param){
 
-        $page = Page::createPageFromGlobalDokuwikiId();
+        try {
+            $page = Page::createPageFromGlobalDokuwikiId();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Unable to handle a new page because the global id is unknown");
+        }
         $canonical = $page->getCanonicalOrDefault();
         $event->data["tpl"] = <<<EOF
 ---json

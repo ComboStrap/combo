@@ -228,11 +228,14 @@ class Page extends ResourceComboAbs
 
     }
 
+    /**
+     * @throws ExceptionCombo - if the global ID is unknown
+     */
     public static function createPageFromGlobalDokuwikiId(): Page
     {
         global $ID;
         if ($ID === null) {
-            LogUtility::msg("The global wiki ID is null, unable to instantiate a page");
+            throw new ExceptionCombo("The global wiki ID is null, unable to instantiate a page");
         }
         return self::createPageFromId($ID);
     }
@@ -1263,6 +1266,7 @@ class Page extends ResourceComboAbs
 
 
     /**
+     *
      * @throws ExceptionCombo
      */
     public

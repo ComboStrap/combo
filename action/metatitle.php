@@ -1,5 +1,7 @@
 <?php
 
+use ComboStrap\ExceptionCombo;
+use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -31,12 +33,17 @@ class action_plugin_combo_metatitle extends DokuWiki_Action_Plugin
 
         // Page Title
         // Root Home page
-        $currentPage = Page::createPageFromGlobalDokuwikiId();
+        try {
+            $currentPage = Page::createPageFromGlobalDokuwikiId();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The global ID is unknown, empty title was returned");
+            return "";
+        }
         $pageTitle = $currentPage->getTitleOrDefault();
 
         // Namespace name
         $parentPage = $currentPage->getParentPage();
-        if($parentPage!=null){
+        if ($parentPage != null) {
             $pageTitle .= self::TITLE_SEPARATOR . $parentPage->getNameOrDefault();
         }
         // Site name

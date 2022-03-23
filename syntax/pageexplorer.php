@@ -358,7 +358,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @param Doku_Renderer $renderer
      * @param array $data - what the function handle() return'ed
      * @return boolean - rendered correctly? (however, returned value is not used at the moment)
-     * @throws ExceptionCombo
      * @see DokuWiki_Syntax_Plugin::render()
      */
     function render($format, Doku_Renderer $renderer, $data): bool
@@ -406,7 +405,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
                                 break;
                             case self::TYPE_TREE:
-                                $renderedPage = Page::createPageFromGlobalDokuwikiId();
+                                try {
+                                    $renderedPage = Page::createPageFromGlobalDokuwikiId();
+                                } catch (ExceptionCombo $e) {
+                                    LogUtility::msg("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
+                                    return false;
+                                }
                                 $parent = $renderedPage->getPath()->getParent();
                                 if ($parent !== null) {
                                     $namespacePath = $parent->toString();

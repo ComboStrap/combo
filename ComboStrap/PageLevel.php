@@ -15,9 +15,9 @@ class PageLevel extends MetadataInteger
     public const PROPERTY_NAME = "level";
 
 
-    public static function createForPage(ResourceCombo $page): CacheExpirationDate
+    public static function createForPage(ResourceCombo $page): PageLevel
     {
-        return (new CacheExpirationDate())
+        return (new PageLevel())
             ->setResource($page);
     }
 

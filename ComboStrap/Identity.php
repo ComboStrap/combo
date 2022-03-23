@@ -97,7 +97,13 @@ class Identity
     public static function isWriter($pageId = null): bool
     {
         if ($pageId == null) {
-            $pageId = Page::createPageFromGlobalDokuwikiId();
+            try {
+                $pageId = Page::createPageFromGlobalDokuwikiId()
+                    ->getPageId();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The global ID is not defined, we couldn't detect the page requested. No writer permission given");
+                return false;
+            }
         }
         if ($_SERVER['REMOTE_USER']) {
             $perm = auth_quickaclcheck($pageId);

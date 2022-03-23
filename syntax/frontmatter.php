@@ -164,7 +164,12 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         if ($state == DOKU_LEXER_SPECIAL) {
 
             $result = [];
-            $page = Page::createPageFromGlobalDokuwikiId();
+            try {
+                $page = Page::createPageFromGlobalDokuwikiId();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
+                return false;
+            }
             try {
                 $frontMatterStore = MetadataFrontmatterStore::createFromFrontmatterString($page, $match);
                 $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;

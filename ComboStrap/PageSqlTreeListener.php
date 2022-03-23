@@ -27,6 +27,8 @@ use ComboStrap\PageSqlParser\PageSqlParser;
 final class PageSqlTreeListener implements ParseTreeListener
 {
     const BACKLINKS = "backlinks";
+    const DESCENDANTS = "descendants";
+    const DEPTH = "depth";
     /**
      * @var PageSqlLexer
      */
@@ -67,7 +69,8 @@ final class PageSqlTreeListener implements ParseTreeListener
      * backlinks or pages
      * @var string
      */
-    private $type;
+    private $tableName;
+
 
     /**
      * SqlTreeListener constructor.
@@ -119,21 +122,35 @@ final class PageSqlTreeListener implements ParseTreeListener
                 switch ($this->ruleState) {
                     case PageSqlParser::RULE_predicates:
 
-                        // variable name
-                        $variableName = strtolower($text);
                         if (substr($this->physicalSql, -1) === "\n") {
                             $this->physicalSql .= "\t";
                         }
-                        if ($this->type === self::BACKLINKS) {
-                            $variableName = "p." . $variableName;
-                        }
-                        $this->physicalSql .= "{$variableName} ";
 
+                        // variable name
+                        $variableName = strtolower($text);
+                        switch ($variableName) {
+                            case self::DEPTH:
+                                try {
+                                    $page = Page::createPageFromGlobalDokuwikiId();
+                                    $this->parameters[] = PageLevel::createForPage($page)->getValue();
+                                } catch (ExceptionCombo $e) {
+                                    LogUtility::msg("The page is unknown. A Page SQL with a depth attribute should be asked within a page request scope. The start depth has been set to 0", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
+                                    $this->parameters[] = 0;
+                                }
+                                $this->physicalSql .= "level >= ? and\n\tlevel ";
+                                break;
+                            default:
+                                if ($this->tableName === self::BACKLINKS) {
+                                    $variableName = "p." . $variableName;
+                                }
+                                $this->physicalSql .= "{$variableName} ";
+                                break;
+                        }
                         break;
                     case
                     PageSqlParser::RULE_orderBys:
                         $variableName = strtolower($text);
-                        if ($this->type === self::BACKLINKS) {
+                        if ($this->tableName === self::BACKLINKS) {
                             $variableName = "p." . $variableName;
                         }
                         $this->physicalSql .= "\t{$variableName} ";
@@ -263,7 +280,7 @@ final class PageSqlTreeListener implements ParseTreeListener
                 $this->physicalSql .= "from\n";
                 break;
             case PageSqlParser::RULE_predicates:
-                if ($this->type === self::BACKLINKS) {
+                if ($this->tableName === self::BACKLINKS) {
                     /**
                      * Backlinks query adds already a where clause
                      */
@@ -279,23 +296,30 @@ final class PageSqlTreeListener implements ParseTreeListener
             case PageSqlParser::RULE_tableNames:
                 // Print the table name
                 $tableName = strtolower($ctx->getText());
-                $this->type = $tableName;
-                if ($tableName === self::BACKLINKS) {
-                    $tableName = <<<EOF
+                $this->tableName = $tableName;
+                switch ($tableName) {
+                    case self::BACKLINKS:
+                        $tableName = <<<EOF
     pages p
     join page_references pr on pr.page_id = p.page_id
 where
     pr.reference = ?
 
 EOF;
-                    $id = PluginUtility::getRequestedWikiId();
-                    if (empty($id)) {
-                        LogUtility::msg("The page id is unknown. A Page SQL with backlinks should be asked within a page request scope.", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
-                    }
-                    DokuPath::addRootSeparatorIfNotPresent($id);
-                    $this->parameters[] = $id;
-                } else {
-                    $tableName = "\t$tableName\n";
+                        try {
+                            $page = Page::createPageFromGlobalDokuwikiId();
+                            $this->parameters[] = $page->getPageId();
+                        } catch (ExceptionCombo $e) {
+                            LogUtility::msg("The page id is unknown. A Page SQL with backlinks should be asked within a page request scope.", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
+                            $this->parameters[] = "unknown global id";
+                        }
+                        break;
+                    case self::DESCENDANTS:
+                        $tableName = "\tpages\n";
+                        break;
+                    default:
+                        $tableName = "\t$tableName\n";
+                        break;
                 }
                 $this->physicalSql .= $tableName;
                 break;
@@ -339,7 +363,7 @@ EOF;
 
     public function getTable(): ?string
     {
-        return $this->type;
+        return $this->tableName;
     }
 
     /**

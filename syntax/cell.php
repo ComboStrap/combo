@@ -146,7 +146,9 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $attributes = TagAttributes::createFromTagMatch($match)->toCallStackArray();
+                $knownTypes = [];
+                $defaultAttributes = [];
+                $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes)->toCallStackArray();
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes);

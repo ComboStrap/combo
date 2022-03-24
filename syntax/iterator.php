@@ -339,7 +339,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     try {
                         $tagAttributes = TagAttributes::createFromCallStackArray($data[self::PAGE_SQL_ATTRIBUTES]);
                         $path = $tagAttributes->getValue(PagePath::PROPERTY_NAME);
-                        if($path!==null){
+                        if ($path !== null) {
                             $contextualPage = Page::createPageFromQualifiedPath($path);
                         } else {
                             $contextualPage = Page::createPageFromRequestedPage();
@@ -357,6 +357,9 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                             $cacheManager->addDependencyForCurrentSlot(CacheDependencies::BACKLINKS_DEPENDENCY);
                             // The requested page dependency could be determined by the backlinks dependency
                             $cacheManager->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                            break;
+                        case PageSqlTreeListener::DESCENDANTS:
+                            $cacheManager->addDependencyForCurrentSlot(CacheDependencies::PAGE_SYSTEM_DEPENDENCY);
                             break;
                         default:
                     }
@@ -549,6 +552,18 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                          * We can use the calls form
                          */
 
+                        /**
+                         * Row - Preprocess that depends on the number of row
+                         */
+                        $callStack = CallStack::createFromInstructions($iteratorTemplateInstructions);
+                        $callStack->moveToStart();
+                        while ($actualCall = $callStack->next()) {
+                            if ($actualCall->getState() === DOKU_LEXER_ENTER && $actualCall->getTagName() === syntax_plugin_combo_cell::TAG) {
+                                // Hack, fix value
+                                $actualCall->addClassName("col col-12 col-sm-6 col-md-4");
+                            }
+                        }
+                        $iteratorTemplateInstructions = $callStack->getStack();
 
                         /**
                          * Append the new instructions by row

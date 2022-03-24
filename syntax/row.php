@@ -279,7 +279,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                      */
                     $hasSizeOrClass = false;
                     while ($actualCall = $callStack->next()) {
-                        if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG
+                        $tagName = $actualCall->getTagName();
+                        if ($tagName == syntax_plugin_combo_cell::TAG
                             &&
                             $actualCall->getState() == DOKU_LEXER_ENTER
                         ) {

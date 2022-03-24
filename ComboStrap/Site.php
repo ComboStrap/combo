@@ -247,18 +247,6 @@ class Site
         return $conf['allowdebug'];
     }
 
-    public static function setTemplateToStrap()
-    {
-        global $conf;
-        $conf['template'] = self::STRAP_TEMPLATE_NAME;
-    }
-
-    public static function setTemplateToDefault()
-    {
-        global $conf;
-        $conf['template'] = 'dokuwiki';
-    }
-
     public static function setCacheDefault()
     {
         // The value is -1, which disables caching

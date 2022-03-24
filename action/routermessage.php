@@ -5,7 +5,6 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\Index;
 use ComboStrap\LogUtility;
 use ComboStrap\Message;
-use ComboStrap\PagesIndex;
 use dokuwiki\Extension\ActionPlugin;
 
 

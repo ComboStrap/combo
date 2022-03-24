@@ -327,7 +327,7 @@ class CallStack
     }
 
     /**
-     * @return Call - get a reference to the actual call
+     * @return Call|null - get a reference to the actual call
      * This function returns a {@link Call call} object
      * by reference, meaning that every update will also modify the element
      * in the stack
@@ -363,15 +363,27 @@ class CallStack
             if ($result === false) {
                 return false;
             } else {
-                return $this->getActualCall();
+                try {
+                    return $this->getActualCall();
+                } catch (ExceptionCombo $e) {
+                    // should not happen because we check that we are not at the start/end of the stack
+                    LogUtility::msg($e->getMessage());
+                    return false;
+                }
             }
         } else {
             $next = next($this->callStack);
             if ($next === false) {
                 $this->endWasReached = true;
-                return $next;
+                return false;
             } else {
-                return $this->getActualCall();
+                try {
+                    return $this->getActualCall();
+                } catch (ExceptionCombo $e) {
+                    // should not happen because we check that we are at the start/end of the stack
+                    LogUtility::msg($e->getMessage());
+                    return false;
+                }
             }
         }
 
@@ -613,13 +625,14 @@ class CallStack
     }
 
     /**
-     * Insert After. The pointer stays at the current state.
-     * If you don't need to process the call that you just
+     * Insert After. The pointer stays at the current location.
+     * If you need to process the call that you just
      * inserted, you may want to call {@link CallStack::next()}
      * @param Call $call
+     * @return void - next to get the insert element
      */
     public
-    function insertAfter($call)
+    function insertAfter(Call $call): void
     {
         $actualKey = key($this->callStack);
         if ($actualKey == null) {
@@ -634,7 +647,7 @@ class CallStack
             // array splice reset the pointer
             // we move it to the actual element
             $this->moveToKey($actualKey);
-        }
+        };
     }
 
     public
@@ -991,7 +1004,7 @@ class CallStack
     {
         $targetKey = $call->getKey();
         $actualKey = $this->getActualKey();
-        $diff = $targetKey - $actualKey ;
+        $diff = $targetKey - $actualKey;
         for ($i = 0; $i < abs($diff); $i++) {
             if ($diff > 0) {
                 $this->next();
@@ -1000,6 +1013,11 @@ class CallStack
             }
         }
         return $this->getActualCall();
+    }
+
+    public function getActualCallArray()
+    {
+
     }
 
 

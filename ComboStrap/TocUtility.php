@@ -19,21 +19,35 @@ use DokuWiki_Admin_Plugin;
 class TocUtility
 {
 
-    public static function renderToc($renderer)
+    public static function renderToc($toc, $renderer): string
     {
-        global $conf;
         global $TOC;
+        if ($toc !== null) {
+            $TOC = $toc;
+            /**
+             * The {@link tpl_toc()} uses the global variable
+             */
+        } else {
 
-        // If the TOC is null (The toc may be initialized by a plugin)
-        if (!is_array($TOC) or count($TOC) == 0) {
-            $TOC = $renderer->toc;
+            $toc = $TOC;
+            // If the TOC is null (The toc may be initialized by a plugin)
+            if (!is_array($toc) or count($toc) == 0) {
+                $toc = $renderer->toc;
+            }
+
+            if ($toc === null) {
+                return LogUtility::wrapInRedForHtml("No Toc found");
+            }
+
         }
 
-        if (count($TOC) > $conf['tocminheads']) {
-            return tpl_toc($return = true);
+        global $conf;
+        if (count($toc) > $conf['tocminheads']) {
+            return tpl_toc(true);
         } else {
             return "";
         }
+
     }
 
     /**
@@ -64,7 +78,7 @@ class TocUtility
         /**
          * If this is another template such as Dokuwiki, we get two TOC.
          */
-        if (!Site::isStrapTemplate()){
+        if (!Site::isStrapTemplate()) {
             return false;
         }
 
@@ -102,7 +116,7 @@ class TocUtility
         }
 
 
-        if (isset($renderer->info['toc'])){
+        if (isset($renderer->info['toc'])) {
             return $renderer->info['toc'];
         } else {
             return true;

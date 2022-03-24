@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
+use http\Exception\RuntimeException;
 use syntax_plugin_combo_media;
 use syntax_plugin_combo_pageimage;
 
@@ -347,7 +348,7 @@ class Call
     }
 
 
-    public function getAttributes(): ?array
+    public function &getAttributes(): ?array
     {
 
         $tagName = $this->getTagName();
@@ -355,7 +356,7 @@ class Call
             case MediaLink::INTERNAL_MEDIA_CALL_NAME:
                 return $this->call[1];
             default:
-                $data = $this->getPluginData();
+                $data = &$this->getPluginData();
                 if (isset($data[PluginUtility::ATTRIBUTES])) {
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     if (!is_array($attributes)) {
@@ -511,13 +512,17 @@ class Call
 
     }
 
-    public function addAttribute($key, $value)
+    public function &addAttribute($key, $value)
     {
         $mode = $this->call[0];
         if ($mode == "plugin") {
             $this->call[1][1][PluginUtility::ATTRIBUTES][$key] = $value;
+            // keep the new reference
+            return $this->call[1][1][PluginUtility::ATTRIBUTES][$key];
         } else {
             LogUtility::msg("You can't add an attribute to the non plugin call mode (" . $mode . ")", LogUtility::LVL_MSG_WARNING, "support");
+            $whatever = [];
+            return $whatever;
         }
     }
 
@@ -573,9 +578,9 @@ class Call
      * @param null $default
      * @return array|string|null
      */
-    public function getAttribute($key, $default = null)
+    public function &getAttribute($key, $default = null)
     {
-        $attributes = $this->getAttributes();
+        $attributes = &$this->getAttributes();
         if (isset($attributes[$key])) {
             return $attributes[$key];
         }

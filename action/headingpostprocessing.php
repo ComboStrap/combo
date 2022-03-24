@@ -22,6 +22,18 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     const EDIT_SECTION_OPEN = 'section_open';
     const EDIT_SECTION_CLOSE = 'section_close';
 
+    /**
+     * The toc attribute that will store
+     * the toc data between loop in the callstack
+     * @var Call|null
+     */
+    private static $tocAttribute;
+    /**
+     * The toc call
+     * @var Call|null
+     */
+    private static $tocCall;
+
 
     /**
      * @var int a counter that should at 0
@@ -30,6 +42,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
      * -1 if an outline section was closed
      */
     private $outlineSectionBalance = 0;
+
 
     /**
      * Insert the HTML section
@@ -162,6 +175,18 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $handler->setStatus('section', false);
 
         /**
+         * Reset static
+         */
+        self::$tocCall = null;
+        self::$tocAttribute = [];
+
+        /**
+         * When running test, the class are not shutdown
+         * We reset the static toc
+         */
+        self::$tocAttribute = null;
+
+        /**
          * Processing variable about the context
          */
         $actualHeadingParsingState = DOKU_LEXER_EXIT; // enter if we have entered a heading, exit otherwise
@@ -177,6 +202,14 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         while ($actualCall = $callStack->next()) {
 
             $tagName = $actualCall->getTagName();
+
+            /**
+             * TOC
+             */
+            if ($tagName === syntax_plugin_combo_toc::TAG) {
+                self::$tocCall = $actualCall;
+                continue;
+            }
 
             /**
              * Track the position in the file
@@ -358,7 +391,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             if ($headingTotalCounter === 0 || $page->isSecondarySlot()) {
                 try {
                     $tag = PageEdit::create("Slot Edit")->toTag();
-                    if(!empty($tag)) { // page edit is not off
+                    if (!empty($tag)) { // page edit is not off
                         $sectionEditComment = Call::createComboCall(
                             syntax_plugin_combo_comment::TAG,
                             DOKU_LEXER_UNMATCHED,
@@ -376,12 +409,19 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 
         }
 
+        /**
+         * TOC
+         */
+        if (self::$tocCall !== null) {
+            self::$tocCall->addAttribute(syntax_plugin_combo_toc::TOC_ATTRIBUTE, self::$tocAttribute);
+        }
+
 
     }
 
     /**
      * @param $headingEntryCall
-     * @param $handler
+     * @param Doku_Handler $handler
      * @param CallStack $callStack
      * @param $actualSectionState
      * @param $headingText
@@ -412,6 +452,34 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             }
             $headingEntryCall->addAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $headingText);
 
+            $level = $headingEntryCall->getAttribute("level");
+
+            /**
+             * TOC
+             */
+            $tocStatus = $handler->getStatus(syntax_plugin_combo_toc::TOC_FOUND);
+            if ($tocStatus !== true) {
+                if ($level == 1) {
+                    /**
+                     * Insert the TOC call and keep the call
+                     * to update the TOC data
+                     */
+                    $callStack->insertAfter(Call::createComboCall(
+                        syntax_plugin_combo_toc::TAG,
+                        DOKU_LEXER_SPECIAL
+                    ));
+                    $callStack->next();
+                    self::$tocCall = $callStack->getActualCall();
+                }
+            }
+            self::$tocAttribute[] = [
+                'link' => "#h{$level}",
+                'title' => $headingText,
+                'type' => 'ul',
+                'level' => $level
+            ];
+
+
             /**
              * Insert an entry call
              */
@@ -428,7 +496,6 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * otherwise it comes in the {@link \ComboStrap\TocUtility::renderToc()}
          */
         $headingText = "";
-
 
 
     }
@@ -466,7 +533,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
      * @param Call $call
      */
     private
-    static function addToTextHeading(&$headingText, $call)
+    static function addToTextHeading(&$headingText, Call $call)
     {
         if ($call->isTextCall()) {
             // Building the text for the toc

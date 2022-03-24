@@ -24,6 +24,12 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
 
     const TAG = "toc";
 
+    /**
+     * The attribute to holds the toc data
+     */
+    const TOC_ATTRIBUTE = "toc";
+    const TOC_FOUND = "toc_combo_status";
+
 
     /**
      * Syntax Type.
@@ -101,7 +107,10 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_SPECIAL :
                 $attributes = PluginUtility::getTagAttributes($match);
-                return array($state, $attributes);
+                $handler->setStatus(self::TOC_FOUND, true);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $attributes);
 
         }
         return array();
@@ -128,7 +137,8 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_SPECIAL :
 
                     if (TocUtility::showToc($renderer)) {
-                        $renderer->doc .= TocUtility::renderToc($this);
+                        $toc = $data[PluginUtility::ATTRIBUTES][self::TOC_ATTRIBUTE];
+                        $renderer->doc .= TocUtility::renderToc($toc, $this);
                     }
                     break;
 

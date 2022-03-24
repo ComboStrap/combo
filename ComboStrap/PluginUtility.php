@@ -366,7 +366,7 @@ class PluginUtility
      *
      * Create a lookahead pattern for a container tag used to enter in a mode
      */
-    public static function getContainerTagPattern($tag)
+    public static function getContainerTagPattern($tag): string
     {
         // this pattern ensure that the tag
         // `accordion` will not intercept also the tag `accordionitem`

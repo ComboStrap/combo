@@ -11,6 +11,7 @@
  */
 
 use ComboStrap\PluginUtility;
+use ComboStrap\TocUtility;
 
 if (!defined('DOKU_INC')) die();
 
@@ -60,12 +61,12 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array();
     }
 
-    function getSort()
+    function getSort(): int
     {
         return 201;
     }
@@ -74,15 +75,9 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $specialPattern = PluginUtility::getEmptyTagPattern(self::TAG);
+        $this->Lexer->addSpecialPattern($specialPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
-    }
-
-    function postConnect()
-    {
-
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
@@ -104,18 +99,9 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
 
         switch ($state) {
 
-            case DOKU_LEXER_ENTER :
+            case DOKU_LEXER_SPECIAL :
                 $attributes = PluginUtility::getTagAttributes($match);
                 return array($state, $attributes);
-
-            case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
-
-            case DOKU_LEXER_EXIT :
-
-                // Important otherwise we don't get an exit in the render
-                return array($state, '');
-
 
         }
         return array();
@@ -132,26 +118,20 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
             switch ($state) {
-                case DOKU_LEXER_ENTER :
+                case DOKU_LEXER_SPECIAL :
 
-
-                    $renderer->doc = "toc";
+                    if (TocUtility::showToc($renderer)) {
+                        $renderer->doc .= TocUtility::renderToc($this);
+                    }
                     break;
 
-                case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= PluginUtility::renderUnmatched($data);
-                    break;
-
-                case DOKU_LEXER_EXIT :
-                    $renderer->doc .= '';
-                    break;
             }
             return true;
         }

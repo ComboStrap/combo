@@ -45,7 +45,7 @@ class TocUtility
      * when
      * ~~NOTOC~~
      */
-    public static function showToc($renderer)
+    public static function showToc(Doku_Renderer $renderer): bool
     {
 
         global $ACT;

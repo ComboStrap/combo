@@ -176,27 +176,6 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
 
             $sectionContent = $section['content'];
 
-
-            if ($section['level'] == 1 and $section['position'] == 1) {
-
-                // Add the hierarchical breadcrumb detail after the first header
-                global $conf;
-
-                // Deprecated
-                // As the main slot is read before the main header and footer
-                // there is no way to known at the end if it was used
-                //
-                //
-                // if ($conf['youarehere']) {
-                //    $sectionContent .= syntax_plugin_combo_breadcrumb::toBreadCrumbHtml();
-                // }
-
-                if (TocUtility::showToc($this)) {
-                    $sectionContent .= TocUtility::renderToc($this);
-                }
-
-            }
-
             # Split by element line
             # element p, h, br, tr, li, pre (one line for pre)
             $sectionLineCount = XhtmlUtility::countLines($sectionContent);

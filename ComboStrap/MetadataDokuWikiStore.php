@@ -210,10 +210,10 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         return $this;
     }
 
-    public function getData(): ?array
+    public function getData(): array
     {
         if (
-            $this->data === null
+             $this->data === null
             || sizeof($this->data[self::PERSISTENT_METADATA]) === 0 // move
         ) {
             $this->data = p_read_metadata($this->getResource()->getDokuwikiId());

@@ -18,7 +18,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
      */
     protected $hasChanged = false;
 
-    protected $data;
+    protected $data = null;
 
     /**
      * MetadataSingleArrayStore constructor.
@@ -27,7 +27,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
      */
     public function __construct(ResourceCombo $page, $data = null)
     {
-        if($data!==null) {
+        if ($data !== null) {
             foreach ($data as $key => $value) {
                 $key = $this->toNormalizedKey($key);
                 $this->data[$key] = $value;
@@ -74,8 +74,11 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
     }
 
 
-    public function getData(): ?array
+    public function getData(): array
     {
+        if ($this->data === null) {
+            return [];
+        }
         return $this->data;
     }
 

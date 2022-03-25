@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 
 use dokuwiki\Cache\Cache;
+use PHPUnit\Exception;
 
 class Lang extends MetadataText
 {
@@ -48,7 +49,12 @@ class Lang extends MetadataText
                 // Language about the data
                 $downloadUrl = "https://raw.githubusercontent.com/unicode-org/cldr-json/master/cldr-json/cldr-misc-modern/main/$langValue/layout.json";
 
-                $filePointer = @fopen($downloadUrl, 'r');
+                if (PluginUtility::isDevOrTest()) {
+                    // phpunit takes over and would catch and cache the error
+                    $filePointer = fopen($downloadUrl, 'r');
+                } else {
+                    $filePointer = @fopen($downloadUrl, 'r');
+                }
                 if ($filePointer != false) {
 
                     $numberOfByte = @file_put_contents($languageDataCache->cache, $filePointer);
@@ -61,7 +67,10 @@ class Lang extends MetadataText
 
                 } else {
 
-                    LogUtility::msg("The data for the language ($langValue) could not be found at ($downloadUrl).", LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
+                    // fopen(): Unable to find the wrapper "https" - did you forget to enable it when you configured PHP?
+                    $error_get_last = error_get_last();
+                    $message = $error_get_last['message'];
+                    LogUtility::msg("The data for the language ($langValue) could not be downloaded at (<a href=\"$downloadUrl\">$langValue</a>). Error: " . $message, LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
 
                 }
             }

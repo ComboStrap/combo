@@ -284,7 +284,11 @@ class DatabasePageRow
          * When the database version file is higher
          */
         $version = LocalPath::createFromPath(__DIR__ . "/../db/latest.version");
-        $versionModifiedTime = FileSystems::getModifiedTime($version);
+        try {
+            $versionModifiedTime = FileSystems::getModifiedTime($version);
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
         if ($versionModifiedTime > $dateReplication) {
             return true;
         }
@@ -293,7 +297,11 @@ class DatabasePageRow
          * When the class date time is higher
          */
         $code = LocalPath::createFromPath(__DIR__ . "/DatabasePageRow.php");
-        $codeModified = FileSystems::getModifiedTime($code);
+        try {
+            $codeModified = FileSystems::getModifiedTime($code);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntime("The database file does not exist");
+        }
         if ($codeModified > $dateReplication) {
             return true;
         }

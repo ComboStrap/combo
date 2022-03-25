@@ -46,6 +46,7 @@ class InstructionsDocument extends PageCompilerDocument
         $this->cache = new CacheInstructions($id, $localFile);
 
 
+
     }
 
 
@@ -127,7 +128,8 @@ class InstructionsDocument extends PageCompilerDocument
         $keep = $ID;
         try {
             $ID = $this->getPage()->getDokuwikiId();
-            return $this->cache->useCache() === false;
+            $depends = $this->getDepends();
+            return $this->cache->useCache($depends) === false;
         } finally {
             $ID = $keep;
         }

@@ -453,18 +453,9 @@ EOF;
         return $this;
     }
 
-    public function addContentHeader(string $content)
-    {
-        $this->contentWithoutFrontMatter = $content . $this->contentWithoutFrontMatter;
-    }
-
-    public function addContentFooter(string $content)
-    {
-        $this->contentWithoutFrontMatter .= $content;
-    }
 
     /**
-     * @return string - the new markup (ie the new frontmatter and the markup
+     * @return string - the new markup (ie the new frontmatter and the markup)
      */
     public function toMarkup(): string
     {
@@ -489,6 +480,11 @@ EOF;
 $targetFrontMatterJsonString$sep$this->contentWithoutFrontMatter
 EOF;
 
+    }
+
+    public function getContentWithoutFrontMatter(): string
+    {
+        return $this->contentWithoutFrontMatter;
     }
 
 

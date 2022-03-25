@@ -34,10 +34,6 @@ class HtmlDocument extends OutputDocument
         $this->cacheDependencies = CacheManager::getOrCreate()->getCacheDependenciesForSlot($page->getDokuwikiId());
         $this->cacheDependencies->rerouteCacheDestination($this->cache);
 
-        $children = $page->getChildren();
-        foreach ($children as $child){
-
-        }
 
     }
 
@@ -62,6 +58,7 @@ class HtmlDocument extends OutputDocument
     }
 
     /**
+     * @throws ExceptionNotFound
      */
     public function getOrProcessContent(): ?string
     {

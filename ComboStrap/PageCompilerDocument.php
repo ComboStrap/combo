@@ -54,7 +54,8 @@ abstract class PageCompilerDocument implements CachedDocument
      * Get the data from the cache file
      * or compile the content
      *
-     * @return mixed - array ({@link InstructionsDocument)) or string
+     * @return array|string - array ({@link InstructionsDocument)) or string
+     * @throws ExceptionNotFound
      */
     public function getOrProcessContent()
     {
@@ -74,7 +75,8 @@ abstract class PageCompilerDocument implements CachedDocument
     }
 
     /**
-     * @return array|string|null
+     * @return array|string
+     * @throws ExceptionNotFound - if the file was not found
      */
     public function getContent()
     {
@@ -90,16 +92,15 @@ abstract class PageCompilerDocument implements CachedDocument
 
     /**
      *
-     * @return null|mixed the content of the file (by default in a text format)
+     * @return array|string a string (default) or an array {@link InstructionsDocument::getFileContent()}
+     * @throws ExceptionNotFound
      */
     public function getFileContent()
     {
-        if (!FileSystems::exists($this->getCachePath())) {
-            return null;
-        }
-        return FileSystems::getContent($this->getCachePath());
-    }
 
+        return FileSystems::getContent($this->getCachePath());
+
+    }
 
 
     /**
@@ -113,5 +114,16 @@ abstract class PageCompilerDocument implements CachedDocument
         return $this;
     }
 
+    /**
+     * @return array
+     */
+    function getDepends(): array
+    {
+        $depends = [];
+        foreach ($this->getPage()->getChildren() as $child) {
+            $depends['files'][] = $child->getPath()->toLocalPath()->toString();
+        }
+        return $depends;
+    }
 
 }

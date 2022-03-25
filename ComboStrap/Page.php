@@ -637,6 +637,7 @@ class Page extends ResourceComboAbs
 
         try {
             $frontMatterPage = MetadataFrontmatterStore::createFromPage($this);
+            $markup = $frontMatterPage->getContentWithoutFrontMatter();
         } catch (ExceptionBadSyntax $e) {
             LogUtility::msg("The page ($this) has a frontmatter syntax error. Error: {$e->getMessage()}");
             return $primaryContent;
@@ -646,18 +647,18 @@ class Page extends ResourceComboAbs
         }
 
         foreach ($this->getChildren() as $child) {
-            $name = $child->getName();
+            $name = $child->getPath()->getLastName();
             switch ($name) {
                 case self::SLOT_MAIN_HEADER_NAME:
                     try {
-                        $frontMatterPage->addContentHeader(FileSystems::getContent($child->getPath()));
+                        $markup = FileSystems::getContent($child->getPath()).$markup ;
                     } catch (ExceptionNotFound $e) {
                         // Not found should not be the case because it's in the children
                     }
                     break;
                 case self::SLOT_MAIN_FOOTER_NAME:
                     try {
-                        $frontMatterPage->addContentFooter(FileSystems::getContent($child->getPath()));
+                        $markup .= FileSystems::getContent($child->getPath());
                     } catch (ExceptionNotFound $e) {
                         // Not found should not be the case because it's in the children
                     }
@@ -668,7 +669,7 @@ class Page extends ResourceComboAbs
             }
         }
 
-        return $frontMatterPage->toMarkup();
+        return $markup;
 
 
     }

@@ -80,12 +80,13 @@ class XmlUtility
 
     /**
      * @param $text
-     * @return mixed
+     * @return string
+     * @throws ExceptionBadSyntax
      */
     public static function normalize($text)
     {
         if (empty($text)) {
-            throw new \RuntimeException("The text should not be empty");
+            throw new ExceptionBadSyntax("The text should not be empty");
         }
         $xmlDoc = new XmlDocument($text, XmlDocument::XML_TYPE);
         return $xmlDoc->getXmlTextNormalized();

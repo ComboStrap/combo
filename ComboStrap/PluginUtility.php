@@ -104,6 +104,7 @@ require_once(__DIR__ . '/Event.php');
 require_once(__DIR__ . '/ExceptionExit.php');
 require_once(__DIR__ . '/ExceptionCompile.php');
 require_once(__DIR__ . '/ExceptionNotFound.php');
+require_once(__DIR__ . '/ExceptionBadSyntax.php');
 require_once(__DIR__ . '/FileSystems.php');
 require_once(__DIR__ . '/FloatAttribute.php');
 require_once(__DIR__ . '/FormMeta.php');

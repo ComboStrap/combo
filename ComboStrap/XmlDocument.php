@@ -56,7 +56,7 @@ class XmlDocument
      * XmlFile constructor.
      * @param $text
      * @param string $type - HTML or not
-     * @throws ExceptionCompile - if the file does not exist or is not valid
+     * @throws ExceptionBadSyntax - if the document is not valid
      *
      * Getting the width of an error HTML document if the file was downloaded
      * from a server has no use at all
@@ -181,7 +181,7 @@ class XmlDocument
 
                         // The xml dom object is null, we got NULL pointer exception everywhere
                         // just throw, the code will see it
-                        throw new ExceptionCompile($message, self::CANONICAL);
+                        throw new ExceptionBadSyntax($message, self::CANONICAL);
 
                     }
 
@@ -222,6 +222,8 @@ class XmlDocument
      * To not have a collusion with {@link SvgDocument::createSvgDocumentFromPath()}
      * @param Path $path
      * @return XmlDocument
+     * @throws ExceptionNotFound - if the file does not exist
+     * @throws ExceptionBadSyntax - if the content is not valid
      */
     public
     static function createXmlDocFromPath(Path $path): XmlDocument

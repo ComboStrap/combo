@@ -165,11 +165,13 @@ abstract class OutputDocument extends PageCompilerDocument
         $keep = $ID;
         $ID = $this->getPage()->getPath()->getDokuwikiId();
         try {
+
             /**
              * Use cache should be always called because it trigger
              * the event coupled to the cache (ie PARSER_CACHE_USE)
              */
-            return ($this->cache->useCache() === false);
+            $depends=$this->getDepends();
+            return ($this->cache->useCache($depends) === false);
         } finally {
             $ID = $keep;
         }

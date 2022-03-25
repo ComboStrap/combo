@@ -57,6 +57,7 @@ class DataType
         DataType::PARAGRAPH_TYPE_VALUE,
         DataType::JSON_TYPE_VALUE,
         DataType::BOOLEAN_TYPE_VALUE,
+        DataType::INTEGER_TYPE_VALUE,
     ];
 
     /**

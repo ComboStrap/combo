@@ -648,20 +648,24 @@ class Page extends ResourceComboAbs
 
         foreach ($this->getChildren() as $child) {
             $name = $child->getPath()->getLastName();
+            try {
+                $content = FileSystems::getContent($child->getPath());
+            } catch (ExceptionNotFound $e) {
+                // Not found should not be the case because it's in the children
+                continue;
+            }
             switch ($name) {
                 case self::SLOT_MAIN_HEADER_NAME:
-                    try {
-                        $markup = FileSystems::getContent($child->getPath()).$markup ;
-                    } catch (ExceptionNotFound $e) {
-                        // Not found should not be the case because it's in the children
+                    if (substr($content, -1) != "\n") {
+                        $content .= "\n";
                     }
+                    $markup = $content . $markup;
                     break;
                 case self::SLOT_MAIN_FOOTER_NAME:
-                    try {
-                        $markup .= FileSystems::getContent($child->getPath());
-                    } catch (ExceptionNotFound $e) {
-                        // Not found should not be the case because it's in the children
+                    if (substr($markup, -1) != "\n") {
+                        $markup .= "\n";
                     }
+                    $markup .= $content;
                     break;
                 default:
                     LogUtility::msg("The child ($child) of the page ($this) is unknown and was not added in the markup");

@@ -37,10 +37,11 @@ class CacheReportHtmlDataBlockArray
 
                 $modifiedDate = "";
                 if ($result->getPath() !== null) {
-                    $modifiedTime = FileSystems::getModifiedTime($result->getPath());
-                    if ($modifiedTime !== null) {
-                        // the file exists
+                    try {
+                        $modifiedTime = FileSystems::getModifiedTime($result->getPath());
                         $modifiedDate = $modifiedTime->format(Iso8601Date::getFormat());
+                    } catch (ExceptionNotFound $e) {
+                        // the file exists
                     }
                 }
                 $mode = $result->getMode();

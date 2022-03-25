@@ -75,6 +75,19 @@ class InstructionsDocument extends PageCompilerDocument
         /**
          * Get the instructions
          * Adapted from {@link p_cached_instructions()}
+         *
+         * Note that this code is almost never called
+         *
+         * Why ?
+         * Because dokuwiki asks first page information
+         * via the {@link pageinfo()} method.
+         * This function then render the metadata (ie {@link p_render_metadata()} and therefore will trigger
+         * the rendering with this function
+         * ```p_cached_instructions(wikiFN($id),false,$id)```
+         * This function calls luckily an event that we use
+         * in {@link \action_plugin_combo_mainextended}
+         * The code to extend the markup is therefore in this class
+         * See {@link \action_plugin_combo_mainextended::main_add_secondary_slot()}
          */
         try {
             $text = $this->getPage()->getMarkup();

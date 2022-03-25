@@ -87,6 +87,10 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $data = $event->data;
         $slotId = $data->page;
+        if(empty($slotId)){
+            // on edit mode, the page is emtpy
+            return;
+        }
         $cacheReporter = CacheManager::getOrCreate()->getCacheResultsForSlot($slotId);
         $cacheReporter->setData($event);
 

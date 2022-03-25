@@ -8,7 +8,7 @@ use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\Icon;
 use ComboStrap\LogUtility;
@@ -283,10 +283,10 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                 try {
                     $name = $tagAttribute->getValueAndRemoveIfPresent("name");
                     if ($name === null) {
-                        throw new ExceptionCombo("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
+                        throw new ExceptionCompile("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
                     }
                     $mediaPath = Icon::create($name, $tagAttribute)->getPath();
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     // error is already fired in the renderer
                     return false;
                 }
@@ -309,11 +309,11 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
         try {
             $name = $tagAttributes->getValue("name");
             if ($name === null) {
-                throw new ExceptionCombo("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
+                throw new ExceptionCompile("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
             }
             return Icon::create($name, $tagAttributes)
                 ->render();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             return self::exceptionHandling($e, $tagAttributes);
         }
     }

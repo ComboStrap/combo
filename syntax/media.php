@@ -4,7 +4,7 @@
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
 use ComboStrap\DokuFs;
-use ComboStrap\ExceptionComboRuntime;
+use ComboStrap\ExceptionRuntime;
 use ComboStrap\InternetPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
@@ -237,7 +237,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= $mediaLink->renderMediaTagWithLink();
                         } catch (RuntimeException $e) {
                             if (PluginUtility::isDevOrTest()) {
-                                throw new ExceptionComboRuntime("Media Rendering Error. {$e->getMessage()}", MediaLink::CANONICAL, 0, $e);
+                                throw new ExceptionRuntime("Media Rendering Error. {$e->getMessage()}", MediaLink::CANONICAL, 0, $e);
                             } else {
                                 $errorClass = self::SVG_RENDERING_ERROR_CLASS;
                                 $message = "Media ({$media->getPath()}). Error while rendering: {$e->getMessage()}";

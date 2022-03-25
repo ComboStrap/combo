@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\AnalyticsDocument;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\Message;
@@ -67,7 +67,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
         try {
             $analyticsArray = $page->getAnalyticsDocument()->getJson()->toArray();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             return Message::createErrorMessage("Error while trying to read the JSON analytics document. {$e->getMessage()}")
                 ->setStatus(HttpResponse::STATUS_INTERNAL_ERROR);
         }

@@ -14,7 +14,7 @@ abstract class MetadataJson extends MetadataText
 
     /**
      * Helper function for date metadata
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function toStoreValue()
     {
@@ -36,7 +36,7 @@ abstract class MetadataJson extends MetadataText
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setFromFormData($formData)
     {
@@ -54,14 +54,14 @@ abstract class MetadataJson extends MetadataText
     {
         try {
             parent::buildFromStoreValue($this->toInternalValue($value));
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Value in the store is not a valid json. Message:" . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
         }
         return $this;
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private function toInternalValue($value)
     {
@@ -73,7 +73,7 @@ abstract class MetadataJson extends MetadataText
             return Json::createFromArray($value)->toPrettyJsonString();
         }
         if (!is_string($value)) {
-            throw new ExceptionCombo("The json persistent value is not an array, nor a string");
+            throw new ExceptionCompile("The json persistent value is not an array, nor a string");
         }
         // the json is normalized when setting to verify
         return $value;

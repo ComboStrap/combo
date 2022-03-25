@@ -9,11 +9,11 @@ namespace ComboStrap;
  * Class RuntimeException
  * @package ComboStrap
  *
- * An exception thrown during test when the
+ * An exception thrown during test when
  * we exit
  *
  * We can then test
  * if we receive the wanted exception
  */
-class ExitException extends \RuntimeException {
+class ExceptionExit extends ExceptionRuntime {
 }

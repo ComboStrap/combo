@@ -14,8 +14,8 @@ if (!defined('DOKU_INC')) die();
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\BacklinkCount;
 use ComboStrap\Event;
-use ComboStrap\ExceptionCombo;
-use ComboStrap\ExceptionComboRuntime;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionRuntime;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataFrontmatterStore;
@@ -154,7 +154,7 @@ EOF;
     /**
      * The main entry
      * @param Options $options
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     protected function main(Options $options)
     {
@@ -237,7 +237,7 @@ EOF;
      * @param array $namespaces
      * @param bool $rebuild
      * @param int $depth recursion depth. 0 for unlimited
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private function index($namespaces = array(), $rebuild = false, $depth = 0)
     {
@@ -275,7 +275,7 @@ EOF;
                 } else {
                     LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) has an error", LogUtility::LVL_MSG_ERROR);
                 }
-            } catch (ExceptionComboRuntime $e) {
+            } catch (ExceptionRuntime $e) {
                 LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) has an error: " . $e->getMessage(), LogUtility::LVL_MSG_ERROR);
             }
         }
@@ -388,7 +388,7 @@ EOF;
             $rows = $request
                 ->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while getting the id pages. {$e->getMessage()}");
             return;
         } finally {
@@ -442,7 +442,7 @@ EOF;
                         break;
 
                 }
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 $pagesWithError[$id] = $e->getMessage();
             }
 

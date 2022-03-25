@@ -36,7 +36,7 @@ class PageId extends MetadataText
      *
      * @param string|null $value
      * @return MetadataText
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setValue($value): Metadata
     {
@@ -101,7 +101,7 @@ class PageId extends MetadataText
             if ($value !== null) {
                 return parent::buildFromStoreValue($value);
             }
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while reading the frontmatter");
             return $this;
         }
@@ -150,7 +150,7 @@ class PageId extends MetadataText
             (new DatabasePageRow())
                 ->setPage($resource)
                 ->upsertAttributes([PageId::getPersistentName() => $actualValue]);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Unable to store the page id generated. Message:" . $e->getMessage());
         }
 
@@ -242,7 +242,7 @@ class PageId extends MetadataText
     /**
      * Overwrite the page id even if it exists already
      * It should not be possible - used for now in case of conflict in page move
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setValueForce(?string $value): PageId
     {
@@ -253,29 +253,29 @@ class PageId extends MetadataText
     /**
      *
      * @param bool $force - It should not be possible - used for now in case of conflict in page move
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private function setValueWithOrWithoutForce(?string $value, bool $force = false): PageId
     {
         if ($value === null) {
-            throw new ExceptionCombo("A page id can not be set with a null value (Page: {$this->getResource()})", $this->getCanonical());
+            throw new ExceptionCompile("A page id can not be set with a null value (Page: {$this->getResource()})", $this->getCanonical());
         }
         if (!is_string($value) || !preg_match("/[" . self::PAGE_ID_ALPHABET . "]/", $value)) {
-            throw new ExceptionCombo("The page id value to set ($value) is not an alphanumeric string (Page: {$this->getResource()})", $this->getCanonical());
+            throw new ExceptionCompile("The page id value to set ($value) is not an alphanumeric string (Page: {$this->getResource()})", $this->getCanonical());
         }
         $actualId = $this->getValue();
 
         if ($force !== true) {
             if ($actualId !== null && $actualId !== $value) {
-                throw new ExceptionCombo("The page id cannot be changed, the page ({$this->getResource()}) has already an id ($actualId}) that has not the same value ($value})", $this->getCanonical());
+                throw new ExceptionCompile("The page id cannot be changed, the page ({$this->getResource()}) has already an id ($actualId}) that has not the same value ($value})", $this->getCanonical());
             }
             if ($actualId !== null) {
-                throw new ExceptionCombo("The page id cannot be changed, the page ({$this->getResource()}) has already an id ($actualId})", $this->getCanonical());
+                throw new ExceptionCompile("The page id cannot be changed, the page ({$this->getResource()}) has already an id ($actualId})", $this->getCanonical());
             }
         } else {
             if (PluginUtility::isDevOrTest()) {
                 // this should never happened (exception in test/dev)
-                throw new ExceptionComboRuntime("Forcing of the page id should not happen in dev/test", $this->getCanonical());
+                throw new ExceptionRuntime("Forcing of the page id should not happen in dev/test", $this->getCanonical());
             }
         }
         return parent::setValue($value);
@@ -291,7 +291,7 @@ class PageId extends MetadataText
         $actualStoreValue = $this->getReadStore()->get($this);
         $value = $this->getValue();
         if ($actualStoreValue !== null && $actualStoreValue !== $value) {
-            throw new ExceptionComboRuntime("The page id can not be modified once generated. The value in the store is $actualStoreValue while the new value is $value");
+            throw new ExceptionRuntime("The page id can not be modified once generated. The value in the store is $actualStoreValue while the new value is $value");
         }
         parent::sendToWriteStore();
         return $this;

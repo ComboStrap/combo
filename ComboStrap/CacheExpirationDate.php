@@ -67,7 +67,7 @@ class CacheExpirationDate extends MetadataDateTime
                 try {
                     $value = Cron::getDate($cronExpression);
                     parent::setValue($value);
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     // nothing, the cron expression is tested when set
                 }
             }

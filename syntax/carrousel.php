@@ -4,7 +4,7 @@
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
@@ -273,7 +273,7 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                         try {
                             $slideMinimalWidth = Dimension::toPixelValue($slideMinimalWidth);
                             $slideMinimalWidthData = "data-" . self::ELEMENT_WIDTH_ATTRIBUTE . "=\"$slideMinimalWidth\"";
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             $slideMinimalWidth = 250;
                             LogUtility::msg("The minimal width value ($slideMinimalWidth) is not a valid value. Error: {$e->getMessage()}");
                         }

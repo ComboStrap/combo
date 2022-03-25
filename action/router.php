@@ -6,7 +6,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\AliasType;
 use ComboStrap\DatabasePageRow;
 use ComboStrap\DokuPath;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
@@ -970,7 +970,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         try {
             $request
                 ->execute();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Redirection Log Insert Error. {$e->getMessage()}");
         } finally {
             $request->close();

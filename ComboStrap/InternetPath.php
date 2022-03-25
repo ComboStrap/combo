@@ -68,7 +68,7 @@ class InternetPath extends PathAbs
 
     function getParent(): ?Path
     {
-        throw new ExceptionComboRuntime("Not yet implemented");
+        throw new ExceptionRuntime("Not yet implemented");
     }
 
 

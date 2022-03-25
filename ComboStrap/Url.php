@@ -24,13 +24,13 @@ class Url
 
     /**
      * UrlUtility constructor.
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function __construct($url)
     {
         $this->urlComponents = parse_url($url);
         if ($this->urlComponents === false) {
-            throw new ExceptionCombo("The url ($url) is not valid");
+            throw new ExceptionCompile("The url ($url) is not valid");
         }
         parse_str($this->urlComponents['query'], $queryKeys);
         $this->query = $queryKeys;
@@ -100,7 +100,7 @@ class Url
         $urlObject = null;
         try {
             $urlObject = Url::create($url);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             return false;
         }
 
@@ -113,7 +113,7 @@ class Url
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function create(string $url): Url
     {

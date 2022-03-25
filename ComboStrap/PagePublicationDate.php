@@ -97,7 +97,7 @@ class PagePublicationDate extends MetadataDateTime
 
         try {
             $this->dateTimeValue = $this->fromPersistentDateTimeUtility($value);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
         }
 

@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\Json;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -93,7 +93,7 @@ EOF;
             $rows = $request
                 ->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while trying to retrieve a list of page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         } finally {
             $request->close();

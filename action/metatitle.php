@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -35,7 +35,7 @@ class action_plugin_combo_metatitle extends DokuWiki_Action_Plugin
         // Root Home page
         try {
             $currentPage = Page::createPageFromGlobalDokuwikiId();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("The global ID is unknown, empty title was returned");
             return "";
         }

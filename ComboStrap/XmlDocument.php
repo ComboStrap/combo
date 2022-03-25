@@ -56,7 +56,7 @@ class XmlDocument
      * XmlFile constructor.
      * @param $text
      * @param string $type - HTML or not
-     * @throws ExceptionCombo - if the file does not exist or is not valid
+     * @throws ExceptionCompile - if the file does not exist or is not valid
      *
      * Getting the width of an error HTML document if the file was downloaded
      * from a server has no use at all
@@ -181,7 +181,7 @@ class XmlDocument
 
                         // The xml dom object is null, we got NULL pointer exception everywhere
                         // just throw, the code will see it
-                        throw new ExceptionCombo($message, self::CANONICAL);
+                        throw new ExceptionCompile($message, self::CANONICAL);
 
                     }
 
@@ -235,7 +235,7 @@ class XmlDocument
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     static function createXmlDocFromMarkup($string, $asHtml = false): XmlDocument
@@ -249,7 +249,7 @@ class XmlDocument
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createHtmlDocFromMarkup($markup): XmlDocument
     {
@@ -613,7 +613,7 @@ class XmlDocument
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function queryXpath(string $string): ?DOMElement
     {
@@ -627,13 +627,13 @@ class XmlDocument
 
     /**
      * @return null|DOMElement[]
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function queryXpaths(string $string): ?array
     {
         $nodes = $this->xpath($string);
         if ($nodes === false) {
-            throw new ExceptionCombo("Bad xpath expression ($string)");
+            throw new ExceptionCompile("Bad xpath expression ($string)");
         }
         if ($nodes->count() === 0) {
             return null;
@@ -642,7 +642,7 @@ class XmlDocument
         for ($i = 0; $i < $nodes->count(); $i++) {
             $element = $nodes->item($i);
             if (!($element instanceof DOMElement)) {
-                throw new ExceptionCombo("The xpath expression has selected a Node that is not an element");
+                throw new ExceptionCompile("The xpath expression has selected a Node that is not an element");
             }
             $elements[] = $element;
 

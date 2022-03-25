@@ -2,7 +2,7 @@
 
 
 use ComboStrap\CacheExpirationFrequency;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -90,7 +90,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                     CacheExpirationFrequency::createForPage($requestPage)
                         ->setValue($value)
                         ->sendToWriteStore();
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     $status = self::PARSING_STATE_UNSUCCESSFUL;
                 }
 
@@ -138,7 +138,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                         CacheExpirationFrequency::createForPage($requestPage)
                             ->setValue($cronExpression)
                             ->sendToWriteStore();
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         // should not happen as we test for its validity
                     }
 

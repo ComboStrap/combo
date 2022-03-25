@@ -87,7 +87,7 @@ class Site
 
             try {
                 $image = ImageSvg::createImageFromId($svgLogo);
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("The svg ($svgLogo) returns an error. {$e->getMessage()}");
                 continue;
             }
@@ -295,7 +295,7 @@ class Site
          */
         $pageDirectory = $conf['datadir'];
         if ($pageDirectory === null) {
-            throw new ExceptionComboRuntime("The page directory ($pageDirectory) is null");
+            throw new ExceptionRuntime("The page directory ($pageDirectory) is null");
         }
         return LocalPath::createFromPath($pageDirectory);
     }
@@ -323,7 +323,7 @@ class Site
         global $conf;
         $dataDirectory = $conf['savedir'];
         if ($dataDirectory === null) {
-            throw new ExceptionComboRuntime("The data directory ($dataDirectory) is null");
+            throw new ExceptionRuntime("The data directory ($dataDirectory) is null");
         }
         return LocalPath::createFromPath($dataDirectory);
     }
@@ -418,7 +418,7 @@ class Site
         try {
             return ColorRgb::createFromString($value);
         } catch
-        (ExceptionCombo $e) {
+        (ExceptionCompile $e) {
             LogUtility::msg("The primary color value configuration ($value) is not valid. Error: {$e->getMessage()}");
             return null;
         }
@@ -432,7 +432,7 @@ class Site
         }
         try {
             return ColorRgb::createFromString($value);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("The secondary color value configuration ($value) is not valid. Error: {$e->getMessage()}");
             return null;
         }
@@ -461,7 +461,7 @@ class Site
         if (Site::getTemplate() === self::STRAP_TEMPLATE_NAME) {
             try {
                 self::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 return $defaultRem;
             }
 
@@ -471,7 +471,7 @@ class Site
             }
             try {
                 return DataType::toInteger($value);
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("The rem configuration value ($value) is not a integer. Error: {$e->getMessage()}");
             }
         }
@@ -501,7 +501,7 @@ class Site
                 ->setLightness(40)
                 ->toRgb()
                 ->toMinimumContrastRatioAgainstWhite();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while calculating the primary text color. {$e->getMessage()}");
             return null;
         }
@@ -525,7 +525,7 @@ class Site
                 ->setLightness(53)
                 ->toRgb()
                 ->toMinimumContrastRatioAgainstWhite();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while calculating the secondary text color. {$e->getMessage()}");
             return null;
         }
@@ -544,7 +544,7 @@ class Site
                 Site::getMainHeaderSlotName(),
                 Site::getMainFooterSlotName()
             ];
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             // We known at least this one
             return [Site::getSidebarName()];
         }
@@ -554,7 +554,7 @@ class Site
 
 
     /**
-     * @throws ExceptionCombo if the strap template is not installed or could not be loaded
+     * @throws ExceptionCompile if the strap template is not installed or could not be loaded
      */
     public static function getMainHeaderSlotName(): ?string
     {
@@ -565,7 +565,7 @@ class Site
     /**
      * Strap is loaded only if this is the same version
      * to avoid function, class, or members that does not exist
-     * @throws ExceptionCombo if strap template utility class could not be loaded
+     * @throws ExceptionCompile if strap template utility class could not be loaded
      */
     public static function loadStrapUtilityTemplateIfPresentAndSameVersion(): void
     {
@@ -593,12 +593,12 @@ class Site
         } else {
             $message = "The file ($templateUtilityFile) was not found";
         }
-        throw new ExceptionCombo($message);
+        throw new ExceptionCompile($message);
 
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getSideKickSlotPageName()
     {
@@ -609,7 +609,7 @@ class Site
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getFooterSlotPageName()
     {
@@ -618,7 +618,7 @@ class Site
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getHeaderSlotPageName()
     {
@@ -627,7 +627,7 @@ class Site
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function setConfStrapTemplate($name, $value)
     {
@@ -637,7 +637,7 @@ class Site
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getMainFooterSlotName(): string
     {
@@ -690,7 +690,7 @@ class Site
         global $conf;
         $mediaDirectory = $conf['mediadir'];
         if ($mediaDirectory === null) {
-            throw new ExceptionComboRuntime("The media directory ($mediaDirectory) is null");
+            throw new ExceptionRuntime("The media directory ($mediaDirectory) is null");
         }
         return LocalPath::createFromPath($mediaDirectory);
     }
@@ -700,7 +700,7 @@ class Site
         global $conf;
         $cacheDirectory = $conf['cachedir'];
         if ($cacheDirectory === null) {
-            throw new ExceptionComboRuntime("The cache directory ($cacheDirectory) is null");
+            throw new ExceptionRuntime("The cache directory ($cacheDirectory) is null");
         }
         return LocalPath::createFromPath($cacheDirectory);
     }
@@ -751,7 +751,7 @@ class Site
                 ->setLazyLoad(false);
             try {
                 return $mediaLink->renderMediaTag();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("Error while rendering the logo $logoImage");
             }
         }
@@ -760,7 +760,7 @@ class Site
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private static function checkTemplateVersion()
     {
@@ -772,6 +772,7 @@ class Site
         }
         $templateVersion = self::$STRAP_TEMPLATE_INFO['version'];
         $comboVersion = PluginUtility::$INFO_PLUGIN['version'];
+        /** @noinspection DuplicatedCode */
         if ($templateVersion !== $comboVersion) {
             $strapName = "Strap";
             $comboName = "Combo";
@@ -785,7 +786,7 @@ class Site
             $upgradeLink = "<a href=\"" . wl() . "&do=admin&page=extension" . "\">upgrade <b>$upgradeTarget</b> via the extension manager</a>";
             $message = "You should $upgradeLink to the latest version to get a fully functional experience. The version of $comboLink is ($comboVersion) while the version of $strapLink is ($templateVersion).";
             LogUtility::msg($message);
-            throw new ExceptionCombo($message);
+            throw new ExceptionCompile($message);
         }
     }
 

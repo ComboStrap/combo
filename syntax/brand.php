@@ -10,7 +10,7 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -54,7 +54,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function mixBrandButtonToTagAttributes(TagAttributes $tagAttributes, BrandButton $brandButton)
     {
@@ -81,7 +81,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     /**
      * An utility constructor to be sure that we build the brand button
      * with the same data in the handle and render function
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createButtonFromAttributes(TagAttributes $brandAttributes, $type = BrandButton::TYPE_BUTTON_BRAND): BrandButton
     {
@@ -277,7 +277,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                             try {
                                 $brandButton = self::createButtonFromAttributes($openTagAttributes);
                                 $actualCall->addAttribute(ColorRgb::COLOR, $brandButton->getTextColor());
-                            } catch (ExceptionCombo $e) {
+                            } catch (ExceptionCompile $e) {
                                 LogUtility::msg("Error while trying to set the icon color on exit. Error: {$e->getMessage()}");
                             }
                         }
@@ -327,7 +327,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     $brandName = $tagAttributes->getType();
                     try {
                         $brandButton = self::createButtonFromAttributes($tagAttributes);
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml("Error while reading the brand data for the brand ($brandName). Error: {$e->getMessage()}");
                         return false;
                     }
@@ -336,7 +336,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                      */
                     try {
                         self::mixBrandButtonToTagAttributes($tagAttributes, $brandButton);
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml("Error while getting the link data for the the brand ($brandName). Error: {$e->getMessage()}");
                         return false;
                     }
@@ -370,7 +370,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                             }
                             $renderer->doc .= Icon::create($name, $iconAttributes)
                                 ->render();
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
 
                             if ($brandButton->getBrand()->getName() === Brand::CURRENT_BRAND) {
 
@@ -401,13 +401,13 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     try {
                         $brandButton = self::createButtonFromAttributes($tagAttributes);
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         LogUtility::msg("The brand could not be build. Error: {$e->getMessage()}");
                         return false;
                     }
                     try {
                         $style = $brandButton->getStyle();
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         LogUtility::msg("The style of the {$this->getType()} button ($brandButton) could not be determined. Error: {$e->getMessage()}");
                         return false;
                     }
@@ -437,7 +437,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
 
     /**
      *
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     static function addIconInCallStack(CallStack $callStack, BrandButton $brandButton)

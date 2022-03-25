@@ -10,7 +10,7 @@ class Html
 
     /**
      * @param string $name
-     * @throws ExceptionComboRuntime
+     * @throws ExceptionRuntime
      * Garbage In / Garbage Out design
      */
     public static function validNameGuard(string $name)
@@ -21,7 +21,7 @@ class Html
          */
         $validName = strtolower($name);
         if ($validName != $name) {
-            throw new ExceptionComboRuntime("The name ($name) is not a valid name");
+            throw new ExceptionRuntime("The name ($name) is not a valid name");
         }
     }
 

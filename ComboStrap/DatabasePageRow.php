@@ -96,16 +96,16 @@ class DatabasePageRow
      *   * from the db use {@link self::getAnalyticsFromDb()}
      *
      *
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function replicate(): DatabasePageRow
     {
         if ($this->sqlite === null) {
-            throw new ExceptionCombo("Sqlite is mandatory for database replication");
+            throw new ExceptionCompile("Sqlite is mandatory for database replication");
         }
 
         if (!$this->page->exists()) {
-            throw new ExceptionCombo("You can't replicate the non-existing page ($this->page) on the file system");
+            throw new ExceptionCompile("You can't replicate the non-existing page ($this->page) on the file system");
         }
 
 
@@ -145,7 +145,7 @@ class DatabasePageRow
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function replicateAndRebuild(): DatabasePageRow
     {
@@ -311,7 +311,7 @@ class DatabasePageRow
             ->setQueryParametrized('delete from pages where id = ?', [$this->page->getDokuwikiId()]);
         try {
             $request->execute();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Something went wrong when deleting the page ({$this->page}) from the database");
         } finally {
             $request->close();
@@ -333,7 +333,7 @@ class DatabasePageRow
         }
         try {
             return Json::createFromString($jsonString);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while building back the analytics JSON object. {$e->getMessage()}");
             return null;
         }
@@ -399,7 +399,7 @@ class DatabasePageRow
         }
         try {
             return Iso8601Date::createFromString($dateString)->getDateTime();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while reading the replication date in the database. {$e->getMessage()}");
             return null;
         }
@@ -408,13 +408,13 @@ class DatabasePageRow
 
     /**
      * @return bool
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function replicatePage(): bool
     {
 
         if (!$this->page->exists()) {
-            throw new ExceptionCombo("You can't replicate the page ($this->page) because it does not exists.");
+            throw new ExceptionCompile("You can't replicate the page ($this->page) because it does not exists.");
         }
 
         /**
@@ -471,7 +471,7 @@ class DatabasePageRow
         $columnClauses = [];
         foreach ($attributes as $key => $value) {
             if (is_array($value)) {
-                throw new ExceptionComboRuntime("The attribute ($key) has value that is an array (" . implode(", ", $value) . ")");
+                throw new ExceptionRuntime("The attribute ($key) has value that is an array (" . implode(", ", $value) . ")");
             }
             $columnClauses[] = "$key = ?";
             $values[$key] = $value;
@@ -501,7 +501,7 @@ class DatabasePageRow
                 $countChanges = $request
                     ->execute()
                     ->getChangeCount();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("There was a problem during the page attribute updates. : {$e->getMessage()}");
                 return false;
             } finally {
@@ -554,7 +554,7 @@ class DatabasePageRow
                     ->execute()
                     ->getInsertId();
                 $this->row = array_merge($values, $this->row);
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("There was a problem during the updateAttributes insert. : {$e->getMessage()}");
                 return false;
             } finally {
@@ -717,7 +717,7 @@ class DatabasePageRow
         foreach ($record as $name) {
             $metadata = Metadata::getForName($name);
             if ($metadata === null) {
-                throw new ExceptionComboRuntime("The metadata ($name) is unknown");
+                throw new ExceptionRuntime("The metadata ($name) is unknown");
             }
             $metaRecord[$name] = $metadata
                 ->setResource($this->page)
@@ -766,7 +766,7 @@ class DatabasePageRow
             $rows = $request
                 ->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             return null;
         } finally {
@@ -835,7 +835,7 @@ class DatabasePageRow
             $rows = $request
                 ->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("An exception has occurred with the page search from CANONICAL. " . $e->getMessage());
             return null;
         } finally {
@@ -916,7 +916,7 @@ class DatabasePageRow
             $rows = $request
                 ->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("An exception has occurred with the page search from a PATH: " . $e->getMessage());
             return null;
         } finally {
@@ -994,7 +994,7 @@ class DatabasePageRow
             $rows = $request
                 ->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("An exception has occurred with the alias selection query. {$e->getMessage()}");
             return null;
         } finally {
@@ -1034,7 +1034,7 @@ class DatabasePageRow
             Aliases::createForPage($this->page)
                 ->addAlias($aliasPath)
                 ->sendToWriteStore();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             // we don't throw while getting
             LogUtility::msg("Unable to add the alias ($aliasPath) for the page ($this->page)");
         }
@@ -1064,7 +1064,7 @@ class DatabasePageRow
              * An attribute should be added to {@link DatabasePageRow::PAGE_BUILD_ATTRIBUTES}
              * or in the table
              */
-            throw new ExceptionComboRuntime("The metadata ($attribute) was not found in the returned database row.", $this->getCanonical());
+            throw new ExceptionRuntime("The metadata ($attribute) was not found in the returned database row.", $this->getCanonical());
         }
 
         $value = $this->row[$attribute];
@@ -1082,15 +1082,15 @@ class DatabasePageRow
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function replicateAnalytics()
     {
 
         try {
             $analyticsJson = $this->page->getAnalyticsDocument()->getOrProcessJson();
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("Unable to get the analytics document", self::CANONICAL, 0, $e);
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionCompile("Unable to get the analytics document", self::CANONICAL, 0, $e);
         }
 
         /**

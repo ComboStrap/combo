@@ -4,7 +4,7 @@
 use ComboStrap\CacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\DokuPath;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\MarkupRef;
 use ComboStrap\Page;

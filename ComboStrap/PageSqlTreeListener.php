@@ -237,7 +237,7 @@ final class PageSqlTreeListener implements ParseTreeListener
                                     $level = PageLevel::createForPage($this->requestedPage)->getValue();
                                     try {
                                         $predicateValue = DataType::toInteger($text);
-                                    } catch (ExceptionCombo $e) {
+                                    } catch (ExceptionCompile $e) {
                                         // should not happen due to the parsing but yeah
                                         LogUtility::msg("The value of the depth attribute ($text) is not an integer", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                                         $predicateValue = 0;

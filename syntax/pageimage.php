@@ -4,7 +4,7 @@
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\Icon;
 use ComboStrap\Image;
@@ -177,7 +177,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                         $targetRatio = null;
                         try {
                             $targetRatio = Dimension::convertTextualRatioToNumber($stringRatio);
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             LogUtility::msg("The ratio ($stringRatio) is not a valid ratio. Error: {$e->getMessage()}");
                         }
                         if ($targetRatio !== null) {
@@ -186,7 +186,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                                 $image = $pageImage->getImage();
                                 try {
                                     $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
-                                } catch (ExceptionCombo $e) {
+                                } catch (ExceptionCompile $e) {
                                     LogUtility::msg("The page image ($image) of the page ($page) returns an error. Error: {$e->getMessage()}");
                                     continue;
                                 }
@@ -214,7 +214,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                             try {
                                 $defaultId = DokuPath::toDokuwikiId($default);
                                 $selectedPageImage = Image::createImageFromId($defaultId);
-                            } catch (ExceptionCombo $e) {
+                            } catch (ExceptionCompile $e) {
                                 $renderer->doc .= LogUtility::wrapInRedForHtml("The default image value ($default) is not a valid image. Error: {$e->getMessage()}");
                                 return false;
                             }
@@ -273,7 +273,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                                 $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
 
                             }
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             LogUtility::msg("The width value ($width) could not be translated in pixel value. Error: {$e->getMessage()}");
                         }
                     }
@@ -285,7 +285,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                 );
                 try {
                     $renderer->doc .= $mediaLink->renderMediaTag();
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     $renderer->doc .= "Error while rendering: {$e->getMessage()}";
                 }
 

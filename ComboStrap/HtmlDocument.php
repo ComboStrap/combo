@@ -34,6 +34,11 @@ class HtmlDocument extends OutputDocument
         $this->cacheDependencies = CacheManager::getOrCreate()->getCacheDependenciesForSlot($page->getDokuwikiId());
         $this->cacheDependencies->rerouteCacheDestination($this->cache);
 
+        $children = $page->getChildren();
+        foreach ($children as $child){
+
+        }
+
     }
 
 
@@ -144,7 +149,7 @@ class HtmlDocument extends OutputDocument
             foreach ($jsonDecodeSnippets as $snippet) {
                 try {
                     $nativeSnippets[] = Snippet::createFromJson($snippet);
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     LogUtility::msg("The snippet json array cannot be build into a snippet object. " . $e->getMessage());
                 }
 

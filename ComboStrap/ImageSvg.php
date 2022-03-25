@@ -32,7 +32,7 @@ class ImageSvg extends Image
 
     /**
      *
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getIntrinsicWidth(): int
     {
@@ -40,7 +40,7 @@ class ImageSvg extends Image
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getIntrinsicHeight(): int
     {
@@ -49,7 +49,7 @@ class ImageSvg extends Image
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     protected function getSvgDocument(): SvgDocument
     {
@@ -115,7 +115,7 @@ class ImageSvg extends Image
                         $newName = "w";
                         try {
                             $value = Dimension::toPixelValue($value);
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             LogUtility::msg("Error while converting the width value ($value) into pixel. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                             continue 2;
                         }
@@ -124,7 +124,7 @@ class ImageSvg extends Image
                         $newName = "h";
                         try {
                             $value = Dimension::toPixelValue($value);
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             LogUtility::msg("Error while converting the height value ($value) into pixel. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                             continue 2;
                         }
@@ -181,7 +181,7 @@ class ImageSvg extends Image
      * Return the svg file transformed by the attributes
      * from cache if possible. Used when making a fetch with the URL
      * @return LocalPath
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getSvgFile(): LocalPath
     {
@@ -210,7 +210,7 @@ class ImageSvg extends Image
      * again and the browser cache should be deleted (ie the buster regenerated)
      * {@link ResourceCombo::getBuster()}
      * @return string
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function getBuster(): string

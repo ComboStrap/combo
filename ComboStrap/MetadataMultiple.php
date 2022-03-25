@@ -27,7 +27,7 @@ abstract class MetadataMultiple extends Metadata
     /**
      * @param null|array $value
      * @return Metadata
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setValue($value): Metadata
     {
@@ -36,7 +36,7 @@ abstract class MetadataMultiple extends Metadata
             return $this;
         }
         if (!is_array($value)) {
-            throw new ExceptionCombo("The value is not an array. Value: " . var_export($value, true));
+            throw new ExceptionCompile("The value is not an array. Value: " . var_export($value, true));
         }
         $this->array = $value;
         return $this;
@@ -100,7 +100,7 @@ abstract class MetadataMultiple extends Metadata
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setFromStoreValue($value): Metadata
     {
@@ -109,7 +109,7 @@ abstract class MetadataMultiple extends Metadata
         if ($possibleValues !== null) {
             foreach ($values as $value) {
                 if (!in_array($value, $possibleValues)) {
-                    throw new ExceptionCombo("The value ($value) for ($this) is not a possible value (" . implode(",", $possibleValues) . ")", $this->getCanonical());
+                    throw new ExceptionCompile("The value ($value) for ($this) is not a possible value (" . implode(",", $possibleValues) . ")", $this->getCanonical());
                 }
             }
         }
@@ -118,7 +118,7 @@ abstract class MetadataMultiple extends Metadata
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     protected function toArrayOrNull($value): ?array
     {
@@ -152,7 +152,7 @@ abstract class MetadataMultiple extends Metadata
     {
         try {
             $this->array = $this->toArrayOrNull($value);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg($e->getMessage(), $e->getCanonical());
         }
         return $this;

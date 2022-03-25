@@ -3,7 +3,7 @@
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\DataType;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\FormMeta;
 use ComboStrap\FormMetaField;
 use ComboStrap\HttpResponse;
@@ -153,7 +153,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     $jsonString = file_get_contents('php://input');
                     try {
                         $_POST = Json::createFromString($jsonString)->toArray();
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         HttpResponse::create(HttpResponse::STATUS_BAD_REQUEST)
                             ->setEvent($event)
                             ->setCanonical(self::CANONICAL)
@@ -266,7 +266,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             $frontMatterMessage = MetadataFrontmatterStore::createFromPage($page)
                 ->sync();
             $responseMessages[] = $frontMatterMessage->getPlainTextContent();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             $responseMessages[] = $e->getMessage();
         }
 

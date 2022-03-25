@@ -1,8 +1,8 @@
 <?php
 
 use ComboStrap\DokuPath;
-use ComboStrap\ExceptionCombo;
-use ComboStrap\ExceptionComboRuntime;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionRuntime;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
@@ -67,7 +67,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
                 $pageImages
                     ->addImage($targetImageId, $imageUsageValue)
                     ->persist();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             }
 
@@ -130,7 +130,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         $page = Page::createPageFromId("move-fake-id");
         try {
             $metadataFrontmatterStore = MetadataFrontmatterStore::createFromFrontmatterString($page, $match);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("The frontmatter could not be loaded. " . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             return $match;
         }
@@ -159,10 +159,10 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
 
             $pageImagesObject->sendToWriteStore();
 
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             // Could not resolve the image, image does not exist, ... return the data without modification
             if (PluginUtility::isDevOrTest()) {
-                throw new ExceptionComboRuntime($e->getMessage(), $e->getCanonical(), 0, $e);
+                throw new ExceptionRuntime($e->getMessage(), $e->getCanonical(), 0, $e);
             } else {
                 LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             }
@@ -182,7 +182,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
      * Move a single image and update the JSon
      * @param $relativeOrAbsoluteWikiId
      * @param helper_plugin_move_handler $handler
-     * @throws ExceptionCombo on bad argument
+     * @throws ExceptionCompile on bad argument
      */
     private function moveImage(&$relativeOrAbsoluteWikiId, helper_plugin_move_handler $handler)
     {
@@ -190,7 +190,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
             $newId = $handler->resolveMoves($relativeOrAbsoluteWikiId, "media");
             $relativeOrAbsoluteWikiId = DokuPath::IdToAbsolutePath($newId);
         } catch (Exception $e) {
-            throw new ExceptionCombo("A move error has occurred while trying to move the image ($relativeOrAbsoluteWikiId). The target resolution function send the following error message: " . $e->getMessage(), self::CANONICAL);
+            throw new ExceptionCompile("A move error has occurred while trying to move the image ($relativeOrAbsoluteWikiId). The target resolution function send the following error message: " . $e->getMessage(), self::CANONICAL);
         }
     }
 

@@ -3,7 +3,7 @@
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\DokuPath;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
@@ -171,7 +171,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                     try {
                         $intrinsicWidth = $facebookImage->getIntrinsicWidth();
                         $intrinsicHeight = $facebookImage->getIntrinsicHeight();
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         LogUtility::msg("No image was added for facebook. Error while retrieving the dimension of the image: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         break;
                     }

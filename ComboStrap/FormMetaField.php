@@ -105,7 +105,7 @@ class FormMetaField
      * We send an error in this case
      * @param Metadata $metadata
      * @return FormMetaField
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createFromMetadata(Metadata $metadata): FormMetaField
     {

@@ -48,7 +48,7 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
         }
         try {
             return $analyticsDocument->getJson()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while reading the json analytics. {$e->getMessage()}");
             return null;
         }

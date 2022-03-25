@@ -40,7 +40,7 @@ abstract class MetadataBoolean extends Metadata
             return $this;
         }
         if (!is_bool($value)) {
-            throw new ExceptionComboRuntime("The value is not a boolean: " . var_export($value, true));
+            throw new ExceptionRuntime("The value is not a boolean: " . var_export($value, true));
         }
         $this->value = $value;
         return $this;
@@ -91,7 +91,7 @@ abstract class MetadataBoolean extends Metadata
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setFromStoreValue($value): Metadata

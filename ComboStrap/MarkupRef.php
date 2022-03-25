@@ -269,7 +269,7 @@ class MarkupRef
      *
      *
      *
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function toAttributes($logicalTag = \syntax_plugin_combo_link::TAG): TagAttributes
     {
@@ -633,7 +633,7 @@ EOF;
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      * @var string $targetEnvironmentAmpersand
      * By default, all data are encoded
      * at {@link TagAttributes::encodeToHtmlValue()}
@@ -767,15 +767,15 @@ EOF;
                     $this->authorizedSchemes[] = "mailto";
                 }
                 if (!in_array($this->schemeUri, $this->authorizedSchemes)) {
-                    throw new ExceptionCombo("The scheme ($this->schemeUri) is not authorized as uri");
+                    throw new ExceptionCompile("The scheme ($this->schemeUri) is not authorized as uri");
                 } else {
                     $url = $this->ref;
                 }
                 break;
             case self::VARIABLE_URI:
-                throw new ExceptionCombo("A template variable uri ($this->ref) can not give back an url, it should be first be replaced");
+                throw new ExceptionCompile("A template variable uri ($this->ref) can not give back an url, it should be first be replaced");
             default:
-                throw new ExceptionCombo("The structure of the reference ($this->ref) is unknown");
+                throw new ExceptionCompile("The structure of the reference ($this->ref) is unknown");
         }
 
 

@@ -6,7 +6,7 @@
  * @author  Nicolas GERARD
  */
 
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\SnippetManager;
 use ComboStrap\MarkupRef;
 use ComboStrap\PluginUtility;
@@ -210,7 +210,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                          */
                         try {
                             $linkAttribute = $markupRef->toAttributes();
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             $miniMapList .= \ComboStrap\LogUtility::wrapInRedForHtml("Error. {$e->getMessage()}");
                             continue;
                         }
@@ -296,7 +296,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                             $panelHeaderContent = $startLink->toAttributes()->toHtmlEnterTag("a");
                             $panelHeaderContent .= $startLink->getLabel();
                             $panelHeaderContent .= "</a>";
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             $panelHeaderContent = "Error: {$e->getMessage()}";
                         }
                         // We are not counting the header page

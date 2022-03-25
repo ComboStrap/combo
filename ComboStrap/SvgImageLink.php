@@ -56,7 +56,7 @@ class SvgImageLink extends ImageLink
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private function createImgHTMLTag(): string
     {
@@ -194,7 +194,7 @@ class SvgImageLink extends ImageLink
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
      * A media can be a video also
      * @return string
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function renderMediaTag(): string
     {
@@ -239,7 +239,7 @@ class SvgImageLink extends ImageLink
                  */
                 try {
                     $imgHTML = FileSystems::getContent($image->getSvgFile());
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     $error = "Error while retrieving the content of the svg image ($image). Error: {$e->getMessage()}";
                     LogUtility::msg($error);
                     return "<span class=\"text-danger\">$error</span>";

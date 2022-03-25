@@ -67,15 +67,15 @@ abstract class Metadata
      * @param $class
      * @param Metadata|null $parent
      * @return Metadata
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function toMetadataObject($class, Metadata $parent = null): Metadata
     {
         if ($class === null) {
-            throw new ExceptionCombo("The string class is empty");
+            throw new ExceptionCompile("The string class is empty");
         }
         if (!is_subclass_of($class, Metadata::class)) {
-            throw new ExceptionCombo("The class ($class) is not a metadata class");
+            throw new ExceptionCompile("The class ($class) is not a metadata class");
         }
         return new $class($parent);
     }
@@ -203,7 +203,7 @@ abstract class Metadata
             try {
                 $this->childrenObject[] = Metadata::toMetadataObject($childrenClass)
                     ->setResource($this->getResource());
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("Unable to build the metadata children object: " . $e->getMessage());
             }
         }
@@ -222,7 +222,7 @@ abstract class Metadata
             LogUtility::msg("The read store was already set.");
         }
         if (is_string($store) && !is_subclass_of($store, MetadataStore::class)) {
-            throw new ExceptionComboRuntime("The store class ($store) is not a metadata store class");
+            throw new ExceptionRuntime("The store class ($store) is not a metadata store class");
         }
         $this->readStore = $store;
         return $this;
@@ -292,7 +292,7 @@ abstract class Metadata
      *
      * This function should be used at the end of each setter/adder function
      *
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      *
      * To persist or commit on disk, you use the {@link MetadataStore::persist()}
      * Because the metadata is stored by resource, the persist function is
@@ -614,7 +614,7 @@ abstract class Metadata
     /**
      * An utility function to {@link Metadata::sendToWriteStore()}
      * and {@link MetadataStore::persist()} at the same time in the {@link Metadata::getWriteStore() write store}
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function persist(): Metadata
     {

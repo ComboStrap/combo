@@ -89,7 +89,7 @@ class BacklinkCount extends MetadataInteger
             $count = $request
                 ->execute()
                 ->getFirstCellValue();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR);
         } finally {
             $request->close();

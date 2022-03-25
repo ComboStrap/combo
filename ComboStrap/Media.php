@@ -98,7 +98,7 @@ abstract class Media extends ResourceComboAbs
 
     public function getReadStoreOrDefault(): MetadataStore
     {
-        throw new ExceptionComboRuntime("To implement");
+        throw new ExceptionRuntime("To implement");
     }
 
     function getType(): string
@@ -109,7 +109,7 @@ abstract class Media extends ResourceComboAbs
 
     public function getUid(): Metadata
     {
-        throw new ExceptionComboRuntime("To implement");
+        throw new ExceptionRuntime("To implement");
     }
 
     public function __toString()

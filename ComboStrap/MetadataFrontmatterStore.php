@@ -6,6 +6,16 @@ namespace ComboStrap;
 
 use syntax_plugin_combo_frontmatter;
 
+/**
+ * A page represented as a frontmatter
+ *
+ * By giving a page to the constructor, you can:
+ *   * change the content of the frontmatter
+ *   * add a header/frontmatter to the content
+ *   * and persist
+ * MetadataFrontmatterStore
+ * @package ComboStrap
+ */
 class MetadataFrontmatterStore extends MetadataSingleArrayStore
 {
 
@@ -22,7 +32,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
     private $contentWithoutFrontMatter;
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private function syncData()
     {
@@ -54,7 +64,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
             $pageModifiedTime = FileSystems::getModifiedTime($resourceCombo->getPath());
             $diff = $pageModifiedTime->diff($metaModifiedTime);
             if ($diff === false) {
-                throw new ExceptionCombo("Unable to calculate the diff between the page and metadata file");
+                throw new ExceptionCompile("Unable to calculate the diff between the page and metadata file");
             }
             $secondDiff = intval($diff->format('%s'));
             if ($secondDiff > 0) {
@@ -70,7 +80,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
             if ($metadata === null) {
                 $msg = "The metadata $metaKey should be defined";
                 if (PluginUtility::isDevOrTest()) {
-                    throw new ExceptionCombo($msg);
+                    throw new ExceptionCompile($msg);
                 } else {
                     LogUtility::msg($msg);
                 }
@@ -125,7 +135,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
 
         try {
             $this->syncData();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             return Message::createInfoMessage($e->getMessage())
                 ->setStatus(syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_ERROR);
         }
@@ -201,7 +211,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionBadSyntax
      */
     public static function createFromFrontmatterString($page, $frontmatter = null): MetadataFrontmatterStore
     {
@@ -210,13 +220,14 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
         }
         $jsonArray = self::frontMatterMatchToAssociativeArray($frontmatter);
         if ($jsonArray === null) {
-            throw new ExceptionCombo("The frontmatter is not valid");
+            throw new ExceptionBadSyntax("The frontmatter is not valid");
         }
         return new MetadataFrontmatterStore($page, $jsonArray);
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionBadSyntax - if the content has a syntax problem
+     * @throws ExceptionNotFound - if the page does not exist
      */
     public static function createFromPage(Page $page): MetadataFrontmatterStore
     {
@@ -236,7 +247,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
              */
             $emptyString = array_shift($split);
             if (!empty($emptyString)) {
-                throw new ExceptionCombo("The frontmatter is not the first element");
+                throw new ExceptionBadSyntax("The frontmatter is not the first element");
             }
 
             $frontMatterMatch = array_shift($split);
@@ -296,7 +307,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
          */
         $decoding = json_decode($jsonString);
         if ($decoding === null) {
-            throw new ExceptionComboRuntime("The generated frontmatter json is no a valid json");
+            throw new ExceptionRuntime("The generated frontmatter json is no a valid json");
         }
         return $jsonString;
     }
@@ -428,6 +439,36 @@ EOF;
             LogUtility::msg("The content without frontmatter should have been set. Did you you use the createFromPage constructor");
             return $this;
         }
+        $newPageContent = $this->toMarkup();
+        $resourceCombo = $this->getResource();
+        if ($resourceCombo instanceof Page) {
+            $resourceCombo->upsertContent($newPageContent, "Metadata frontmatter store upsert");
+        }
+        return $this;
+    }
+
+    private function setContentWithoutFrontMatter(string $contentWithoutFrontMatter): MetadataFrontmatterStore
+    {
+        $this->contentWithoutFrontMatter = $contentWithoutFrontMatter;
+        return $this;
+    }
+
+    public function addContentHeader(string $content)
+    {
+        $this->contentWithoutFrontMatter = $content . $this->contentWithoutFrontMatter;
+    }
+
+    public function addContentFooter(string $content)
+    {
+        $this->contentWithoutFrontMatter .= $content;
+    }
+
+    /**
+     * @return string - the new markup (ie the new frontmatter and the markup
+     */
+    public function toMarkup(): string
+    {
+
         $targetFrontMatterJsonString = $this->toFrontmatterString();
 
         /**
@@ -444,20 +485,10 @@ EOF;
         /**
          * Build the new document
          */
-        $newPageContent = <<<EOF
+        return <<<EOF
 $targetFrontMatterJsonString$sep$this->contentWithoutFrontMatter
 EOF;
-        $resourceCombo = $this->getResource();
-        if ($resourceCombo instanceof Page) {
-            $resourceCombo->upsertContent($newPageContent, "Metadata frontmatter store upsert");
-        }
-        return $this;
-    }
 
-    private function setContentWithoutFrontMatter(string $contentWithoutFrontMatter): MetadataFrontmatterStore
-    {
-        $this->contentWithoutFrontMatter = $contentWithoutFrontMatter;
-        return $this;
     }
 
 

@@ -210,7 +210,7 @@ class Icon extends ImageSvg
 
     /**
      * Icon constructor.
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      * @var string $fullQualifiedName - generally a short icon name (but it may be media id)
      */
     public function __construct($fullQualifiedName, $tagAttributes = null)
@@ -247,7 +247,7 @@ class Icon extends ImageSvg
                 // Trying to see if it's not in the template images directory
                 $message = "The media file could not be found in the media library. If you want an icon from an icon library, indicate a name without extension.";
                 $message .= "<BR> Media File Library tested: $mediaDokuPath";
-                throw new ExceptionCombo($message, self::ICON_CANONICAL_NAME);
+                throw new ExceptionCompile($message, self::ICON_CANONICAL_NAME);
 
 
             }
@@ -315,7 +315,7 @@ class Icon extends ImageSvg
      * @param string $name - icon name
      * @param TagAttributes|null $tagAttributes -  the icon attributes
      * @return Icon
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     static public function create(string $name, TagAttributes $tagAttributes = null): Icon
     {
@@ -325,7 +325,7 @@ class Icon extends ImageSvg
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createFromComboResource(string $name, TagAttributes $tagAttributes = null): Icon
     {
@@ -346,7 +346,7 @@ class Icon extends ImageSvg
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private static function getPhysicalNameFromDictionary(string $logicalName, string $library)
     {
@@ -368,7 +368,7 @@ class Icon extends ImageSvg
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getDownloadUrl(): string
     {
@@ -384,7 +384,7 @@ class Icon extends ImageSvg
         // Get the url
         $iconLibraries = self::ICON_LIBRARY_URLS;
         if (!isset($iconLibraries[$library])) {
-            throw new ExceptionCombo("The icon library ($library) is unknown. The icon could not be downloaded.", self::ICON_CANONICAL_NAME);
+            throw new ExceptionCompile("The icon library ($library) is unknown. The icon could not be downloaded.", self::ICON_CANONICAL_NAME);
         } else {
             $iconBaseUrl = $iconLibraries[$library];
         }
@@ -402,8 +402,8 @@ class Icon extends ImageSvg
             case self::TWEET_EMOJI:
                 try {
                     $iconName = self::getEmojiCodePoint($iconName);
-                } catch (ExceptionCombo $e) {
-                    throw new ExceptionCombo("The emoji name $iconName is unknown. The emoji could not be downloaded.", self::ICON_CANONICAL_NAME, 0, $e);
+                } catch (ExceptionCompile $e) {
+                    throw new ExceptionCompile("The emoji name $iconName is unknown. The emoji could not be downloaded.", self::ICON_CANONICAL_NAME, 0, $e);
                 }
                 break;
             case self::ANT_DESIGN:
@@ -466,7 +466,7 @@ class Icon extends ImageSvg
                         $iconBaseUrl .= "/solid";
                         break;
                     default:
-                        throw new ExceptionCombo("The box-icon icon ($iconName) has a type ($iconType) that is unknown, we can't determine the location of the icon to download");
+                        throw new ExceptionCompile("The box-icon icon ($iconName) has a type ($iconType) that is unknown, we can't determine the location of the icon to download");
                 }
                 break;
             case self::SI_GLYPH:
@@ -481,14 +481,14 @@ class Icon extends ImageSvg
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function download()
     {
 
         $mediaDokuPath = $this->getPath();
         if (!($mediaDokuPath instanceof DokuPath)) {
-            throw new ExceptionCombo("The icon path ($mediaDokuPath) is not a wiki path. This is not yet supported");
+            throw new ExceptionCompile("The icon path ($mediaDokuPath) is not a wiki path. This is not yet supported");
         }
         $library = $this->getLibrary();
 
@@ -499,8 +499,8 @@ class Icon extends ImageSvg
         if (!FileSystems::exists($iconDir)) {
             try {
                 FileSystems::createDirectory($iconDir);
-            } catch (ExceptionCombo $e) {
-                throw new ExceptionCombo("The icon directory ($iconDir) could not be created.", self::ICON_CANONICAL_NAME, 0, $e);
+            } catch (ExceptionCompile $e) {
+                throw new ExceptionCompile("The icon directory ($iconDir) could not be created.", self::ICON_CANONICAL_NAME, 0, $e);
             }
         }
 
@@ -512,7 +512,7 @@ class Icon extends ImageSvg
         if ($filePointer == false) {
             // (ie no icon file found at ($downloadUrl)
             $urlLibrary = self::ICON_LIBRARY_WEBSITE_URLS[$library];
-            throw new ExceptionCombo("The library (<a href=\"$urlLibrary\">$library</a>) does not have a icon (<a href=\"$downloadUrl\">$this->iconName</a>).", self::ICON_CANONICAL_NAME);
+            throw new ExceptionCompile("The library (<a href=\"$urlLibrary\">$library</a>) does not have a icon (<a href=\"$downloadUrl\">$this->iconName</a>).", self::ICON_CANONICAL_NAME);
         }
 
         $numberOfByte = @file_put_contents($mediaDokuPath->toLocalPath()->toAbsolutePath()->toString(), $filePointer);
@@ -574,7 +574,7 @@ class Icon extends ImageSvg
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getEmojiCodePoint(string $emojiName)
     {
@@ -589,13 +589,13 @@ class Icon extends ImageSvg
      * @param string $iconName
      * @param string $sep
      * @return array
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private static function explodeInTwoPartsByLastPosition(string $iconName, string $sep = "-"): array
     {
         $index = strrpos($iconName, $sep);
         if ($index === false) {
-            throw new ExceptionCombo ("We expect that the icon name ($iconName) has two parts separated by a `-` (example: table-outlined). The icon could not be downloaded.", self::ICON_CANONICAL_NAME);
+            throw new ExceptionCompile ("We expect that the icon name ($iconName) has two parts separated by a `-` (example: table-outlined). The icon could not be downloaded.", self::ICON_CANONICAL_NAME);
         }
         $firstPart = substr($iconName, 0, $index);
         $secondPart = substr($iconName, $index + 1);
@@ -604,7 +604,7 @@ class Icon extends ImageSvg
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function render(): string
     {
@@ -612,8 +612,8 @@ class Icon extends ImageSvg
         if (!FileSystems::exists($this->getPath())) {
             try {
                 $this->download();
-            } catch (ExceptionCombo $e) {
-                throw new ExceptionCombo("The icon ($this) does not exist and could not be downloaded ({$e->getMessage()}.", self::ICON_CANONICAL_NAME);
+            } catch (ExceptionCompile $e) {
+                throw new ExceptionCompile("The icon ($this) does not exist and could not be downloaded ({$e->getMessage()}.", self::ICON_CANONICAL_NAME);
             }
         }
 

@@ -141,10 +141,10 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         $resource = $metadata->getResource();
         $this->checkResource($resource);
         if ($resource === null) {
-            throw new ExceptionComboRuntime("A resource is mandatory", self::CANONICAL);
+            throw new ExceptionRuntime("A resource is mandatory", self::CANONICAL);
         }
         if (!($resource instanceof Page)) {
-            throw new ExceptionComboRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
+            throw new ExceptionRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
         $dokuwikiId = $resource->getDokuwikiId();
         $this->setFromWikiId($dokuwikiId, $name, $persistentValue, $defaultValue);
@@ -163,10 +163,10 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         $resource = $metadata->getResource();
         $this->checkResource($resource);
         if ($resource === null) {
-            throw new ExceptionComboRuntime("A resource is mandatory", self::CANONICAL);
+            throw new ExceptionRuntime("A resource is mandatory", self::CANONICAL);
         }
         if (!($resource instanceof Page)) {
-            throw new ExceptionComboRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
+            throw new ExceptionRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
         return $this->getFromWikiId($resource->getDokuwikiId(), $metadata->getName(), $default);
 

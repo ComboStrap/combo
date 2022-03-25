@@ -38,7 +38,7 @@ class FormMeta
     private $type;
 
     /**
-     * @throws ExceptionComboRuntime
+     * @throws ExceptionRuntime
      */
     public function __construct($name)
     {
@@ -183,7 +183,7 @@ class FormMeta
     /**
      * @param Metadata $metadata
      * @return FormMeta
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function addFormFieldFromMetadata(Metadata $metadata): FormMeta
     {

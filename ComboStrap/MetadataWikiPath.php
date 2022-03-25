@@ -14,7 +14,7 @@ abstract class MetadataWikiPath extends MetadataText
     /**
      * @param string|null $value
      * @return Metadata
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setValue($value): Metadata
     {

@@ -72,7 +72,7 @@ class LogUtility
 
         try {
             self::messageNotEmpty($message);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             self::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $canonical);
         }
 
@@ -118,7 +118,7 @@ class LogUtility
 
         try {
             self::messageNotEmpty($msg);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             $msg = $e->getMessage();
             $logLevel = self::LVL_MSG_ERROR;
         }
@@ -169,7 +169,7 @@ class LogUtility
 
         try {
             self::messageNotEmpty($message);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             $message = $e->getMessage();
             $level = self::LVL_MSG_ERROR;
         }
@@ -257,7 +257,7 @@ class LogUtility
 
     /**
      * @param string|null $message
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private static function messageNotEmpty(?string $message)
     {
@@ -265,7 +265,7 @@ class LogUtility
         if ($message === null || $message === "") {
             $newMessage = "The passed message to the log was empty or null. BackTrace: \n";
             $newMessage .= LogUtility::getCallStack();
-            throw new ExceptionCombo($newMessage);
+            throw new ExceptionCompile($newMessage);
         }
     }
 

@@ -10,9 +10,6 @@ use ModificationDate;
 use Slug;
 
 
-/**
- * Page
- */
 require_once(__DIR__ . '/PluginUtility.php');
 
 /**
@@ -20,8 +17,14 @@ require_once(__DIR__ . '/PluginUtility.php');
  * Class Page
  * @package ComboStrap
  *
- * This is just a wrapper around a file with the mime Dokuwiki
- * that has a doku path (ie with the `:` separator)
+ * A page (ie slot) is a logical unit that represents
+ * one or more markdown file up to the whole HTML page
+ *
+ * For instance:
+ *   * the main slot is the main markdown file and the header and footer slot
+ *   * while the sidebar is a leaf
+ *
+ *
  */
 class Page extends ResourceComboAbs
 {
@@ -43,6 +46,14 @@ class Page extends ResourceComboAbs
 
 
     const TYPE = "page";
+    /**
+     * Name of the main header slot
+     */
+    public const SLOT_MAIN_HEADER_NAME = "slot_main_header";
+    /**
+     * Name of the main footer slot
+     */
+    public const SLOT_MAIN_FOOTER_NAME = "slot_main_footer";
 
 
     /**
@@ -229,13 +240,13 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @throws ExceptionCombo - if the global ID is unknown
+     * @throws ExceptionCompile - if the global ID is unknown
      */
     public static function createPageFromGlobalDokuwikiId(): Page
     {
         global $ID;
         if ($ID === null) {
-            throw new ExceptionCombo("The global wiki ID is null, unable to instantiate a page");
+            throw new ExceptionCompile("The global wiki ID is null, unable to instantiate a page");
         }
         return self::createPageFromId($ID);
     }
@@ -273,7 +284,7 @@ class Page extends ResourceComboAbs
         $pageId = PluginUtility::getRequestedWikiId();
         if ($pageId === null) {
             $pageId = RenderUtility::DEFAULT_SLOT_ID_FOR_TEST;
-            if(!PluginUtility::isTest()) {
+            if (!PluginUtility::isTest()) {
                 // should never happen, we don't throw an exception
                 LogUtility::msg("We were unable to determine the requested page from the variables environment, default non-existing page id used");
             }
@@ -315,7 +326,7 @@ class Page extends ResourceComboAbs
 
     /**
      *
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setCanonical($canonical): Page
@@ -349,7 +360,7 @@ class Page extends ResourceComboAbs
 
         try {
             $slotNames = [Site::getMainHeaderSlotName(), Site::getMainFooterSlotName()];
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             return false;
         }
         $name = $this->getPath()->getLastNameWithoutExtension();
@@ -358,6 +369,36 @@ class Page extends ResourceComboAbs
             return false;
         }
         return in_array($name, $slotNames, true);
+    }
+
+    /**
+     * @return Page[]
+     */
+    public function getChildren(): array
+    {
+
+        /**
+         * A secondary slot
+         */
+        if ($this->isSecondarySlot()) {
+            return [];
+        }
+
+        /**
+         * This is the main slot
+         */
+        $children = [];
+        $primaryHeader = $this->getPrimaryHeaderPage();
+        if ($primaryHeader !== null) {
+            $children[] = $primaryHeader;
+        }
+        $primaryFooter = $this->getPrimaryFooterPage();
+        if ($primaryFooter !== null) {
+            $children[] = $primaryFooter;
+        }
+        return $children;
+
+
     }
 
 
@@ -449,7 +490,7 @@ class Page extends ResourceComboAbs
     /**
      * Set the page quality
      * @param boolean $value true if this is a low quality page rank false otherwise
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setCanBeOfLowQuality(bool $value): Page
@@ -581,21 +622,60 @@ class Page extends ResourceComboAbs
 
     /**
      * @return string
-     * A wrapper around {@link FileSystems::getContent()} with {@link DokuPath}
+     * The markup that should be parsed by the parser
      */
     public
-    function getTextContent(): string
+    function getMarkup(): string
     {
-        /**
-         *
-         * use {@link io_readWikiPage(wikiFN($id, $rev), $id, $rev)};
-         */
-        return rawWiki($this->getPath()->getDokuwikiId());
+
+        try {
+            $primaryContent = FileSystems::getContent($this->getPath());
+        } catch (ExceptionNotFound $e) {
+            LogUtility::msg("The page ($this) was not found");
+            return "";
+        }
+
+        try {
+            $frontMatterPage = MetadataFrontmatterStore::createFromPage($this);
+        } catch (ExceptionBadSyntax $e) {
+            LogUtility::msg("The page ($this) has a frontmatter syntax error. Error: {$e->getMessage()}");
+            return $primaryContent;
+        } catch (ExceptionNotFound $e) {
+            // msg should already have been send when reading the content
+            return $primaryContent;
+        }
+
+        foreach ($this->getChildren() as $child) {
+            $name = $child->getName();
+            switch ($name) {
+                case self::SLOT_MAIN_HEADER_NAME:
+                    try {
+                        $frontMatterPage->addContentHeader(FileSystems::getContent($child->getPath()));
+                    } catch (ExceptionNotFound $e) {
+                        // Not found should not be the case because it's in the children
+                    }
+                    break;
+                case self::SLOT_MAIN_FOOTER_NAME:
+                    try {
+                        $frontMatterPage->addContentFooter(FileSystems::getContent($child->getPath()));
+                    } catch (ExceptionNotFound $e) {
+                        // Not found should not be the case because it's in the children
+                    }
+                    break;
+                default:
+                    LogUtility::msg("The child ($child) of the page ($this) is unknown and was not added in the markup");
+                    break;
+            }
+        }
+
+        return $frontMatterPage->toMarkup();
+
+
     }
 
 
     public
-    function isInIndex()
+    function isInIndex(): bool
     {
         $Indexer = idx_get_indexer();
         $pages = $Indexer->getPages();
@@ -979,7 +1059,7 @@ class Page extends ResourceComboAbs
                     ->toHtmlEnterTag("a")
                 . $this->getNameOrDefault()
                 . "</a>";
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("The markup ref returns an error for the creation of the page anchor html link ($this). Error: {$e->getMessage()}");
             return "<a href=\"{$this->getCanonicalUrl()}\" data-wiki-id=\"$id\">{$this->getNameOrDefault()}</a>";
         }
@@ -1191,7 +1271,7 @@ class Page extends ResourceComboAbs
      * Used when the page is moved to take the Page Id of the source
      * @param string|null $pageId
      * @return Page
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setPageId(?string $pageId): Page
@@ -1267,7 +1347,7 @@ class Page extends ResourceComboAbs
 
     /**
      *
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setLowQualityIndicatorCalculation($bool): Page
@@ -1283,7 +1363,7 @@ class Page extends ResourceComboAbs
      * @param MetadataBoolean $lowQualityAttributeName
      * @param bool $value
      * @return Page
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private
     function setQualityIndicatorAndDeleteCacheIfNeeded(MetadataBoolean $lowQualityAttributeName, bool $value): Page
@@ -1330,7 +1410,7 @@ class Page extends ResourceComboAbs
     /**
      * @param array|string $jsonLd
      * @return $this
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      * @deprecated for {@link LdJson}
      */
     public
@@ -1343,7 +1423,7 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setPageType(string $value): Page
@@ -1448,7 +1528,7 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setDescription($description): Page
@@ -1461,7 +1541,7 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      * @deprecated uses {@link EndDate} instead
      */
     public
@@ -1474,7 +1554,7 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      * @deprecated uses {@link StartDate} instead
      */
     public
@@ -1487,7 +1567,7 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setPublishedDate($value): Page
@@ -1501,7 +1581,7 @@ class Page extends ResourceComboAbs
     /**
      * Utility to {@link ResourceName::setValue()}
      * Used mostly to create page in test
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setPageName($value): Page
@@ -1514,7 +1594,7 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setTitle($value): Page
@@ -1526,7 +1606,7 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setH1($value): Page
@@ -1550,7 +1630,7 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setLang($value): Page
@@ -1563,7 +1643,7 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setLayout($value): Page
@@ -1673,7 +1753,7 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setSlug($slug): Page
@@ -1693,7 +1773,7 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setQualityMonitoringIndicator($boolean): Page
@@ -1793,7 +1873,7 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setKeywords($value): Page
@@ -1965,30 +2045,13 @@ class Page extends ResourceComboAbs
         return $this->pageUrlPath;
     }
 
-    public function getMainFooterSlot(): ?Page
-    {
-        if ($this->isSecondarySlot() || $this->isRootHomePage()) {
-            return null;
-        }
-
-        try {
-            Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("We can't load strap. The nearest main footer slot could not be detected, Error: {$e->getMessage()}");
-            return null;
-        }
-
-        $nearestMainFooter = $this->findNearest(TplUtility::SLOT_MAIN_FOOTER_NAME);
-        if ($nearestMainFooter === false) {
-            return null;
-        }
-        return Page::createPageFromId($nearestMainFooter);
-
-
-    }
 
     public function getSideSlot(): ?Page
     {
+        /**
+         * Only primary slot have a side slot
+         * Root Home page does not have one either
+         */
         if ($this->isSecondarySlot() || $this->isRootHomePage()) {
             return null;
         }
@@ -2029,10 +2092,6 @@ class Page extends ResourceComboAbs
         if ($sideSlot !== null) {
             $secondarySlots[] = $sideSlot;
         }
-        $footerSlot = $this->getMainFooterSlot();
-        if ($footerSlot !== null) {
-            $secondarySlots[] = $footerSlot;
-        }
         return $secondarySlots;
     }
 
@@ -2040,6 +2099,29 @@ class Page extends ResourceComboAbs
     public function isHidden(): bool
     {
         return isHiddenPage($this->getDokuwikiId());
+    }
+
+    private function isPrimarySlotWithHeaderAndFooter(): bool
+    {
+        return (!$this->isSecondarySlot() && !$this->isRootHomePage());
+    }
+
+    private function getPrimaryHeaderPage(): ?Page
+    {
+        $nearest = page_findnearest(self::SLOT_MAIN_HEADER_NAME);
+        if ($nearest === false) {
+            return null;
+        }
+        return Page::createPageFromId($nearest);
+    }
+
+    private function getPrimaryFooterPage(): ?Page
+    {
+        $nearest = page_findnearest(self::SLOT_MAIN_FOOTER_NAME);
+        if ($nearest === false) {
+            return null;
+        }
+        return Page::createPageFromId($nearest);
     }
 
 

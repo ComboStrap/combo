@@ -11,7 +11,7 @@ class Cron
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getDate(string $cronExpression): \DateTime
     {
@@ -19,7 +19,7 @@ class Cron
             $cron = CronExpression::factory($cronExpression);
             return $cron->getNextRunDate();
         } catch (\InvalidArgumentException $e) {
-            throw new ExceptionCombo("The cache frequency expression ($cronExpression) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>");
+            throw new ExceptionCompile("The cache frequency expression ($cronExpression) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>");
         }
     }
 }

@@ -7,7 +7,7 @@ use ComboStrap\CacheManager;
 use ComboStrap\CacheDependencies;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -154,7 +154,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                      */
                     try {
                         $brandButton = syntax_plugin_combo_brand::createButtonFromAttributes($shareAttributes, BrandButton::TYPE_BUTTON_SHARE);
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml("The brand creation returns an error ({$e->getMessage()}");
                         return false;
                     }
@@ -167,7 +167,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
                     try {
                         $requestedPage = Page::createPageFromRequestedPage();
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml("The requested page could not be determined. Error: ({$e->getMessage()}");
                         return false;
                     }
@@ -175,7 +175,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                         $linkAttributes = $brandButton->getLinkAttributes($requestedPage)
                             ->setType($shareAttributes->getType())
                             ->setLogicalTag(self::TAG);
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml("The social channel creation returns an error when creating the link ({$e->getMessage()}");
                         return false;
                     }
@@ -196,7 +196,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                             $iconAttributes = TagAttributes::createFromCallStackArray($iconAttributes);
                             $renderer->doc .= Icon::create($name, $iconAttributes)
                                 ->render();
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             $renderer->doc .= LogUtility::wrapInRedForHtml("Getting the icon for the social channel ($brandButton) returns an error ({$e->getMessage()}");
                             // don't return because the anchor link is open
                         }
@@ -210,7 +210,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
 
                     try {
                         $style = $brandButton->getStyle();
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml("The style of the share button ($brandButton) could not be determined. Error: {$e->getMessage()}");
                         return false;
                     }

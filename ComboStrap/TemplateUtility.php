@@ -99,7 +99,7 @@ class TemplateUtility
         }
         if ($page === null) {
             if (PluginUtility::isDevOrTest()) {
-                throw new ExceptionComboRuntime("The page is null meaning the page value was not recognized. Bad dev.");
+                throw new ExceptionRuntime("The page is null meaning the page value was not recognized. Bad dev.");
             }
         }
 

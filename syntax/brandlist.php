@@ -5,8 +5,8 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 use ComboStrap\Brand;
 use ComboStrap\BrandButton;
-use ComboStrap\ExceptionCombo;
-use ComboStrap\ExceptionComboRuntime;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionRuntime;
 use ComboStrap\Icon;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -106,7 +106,7 @@ class syntax_plugin_combo_brandlist extends DokuWiki_Syntax_Plugin
                 $brandDictionary = Brand::getBrandDictionary();
                 $brandNames = array_keys($brandDictionary);
                 sort($brandNames);
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 $renderer->doc .= "Error while creating the brand list. Error: {$e->getMessage()}";
                 return false;
             }
@@ -195,13 +195,13 @@ EOF;
                      * End row
                      */
                     $html .= "</tr>" . PHP_EOL;
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     $message = "Error while rendering the brand $brandName. Error: {$e->getMessage()}";
                     if (!PluginUtility::isDevOrTest()) {
                         $rowSpan = sizeof($variants)+1; // 1 for the brand column
                         $renderer->doc .= "<tr><td rowspan=\"$rowSpan\" class=\"text-danger\">$message</td></tr>";
                     } else {
-                        throw new ExceptionComboRuntime($message, self::TAG, 0, $e);
+                        throw new ExceptionRuntime($message, self::TAG, 0, $e);
                     }
                 }
             }

@@ -8,7 +8,7 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
 use ComboStrap\DokuPath;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\PageCreationDate;
 use ComboStrap\Metadata;
 use ComboStrap\PageImages;
@@ -251,7 +251,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                     $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateStack, $metadata);
                     try {
                         $renderer->doc .= PluginUtility::renderInstructionsToXhtml($instructionsInstance);
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the template instruction. Error: {$e->getMessage()}");
                     }
                     return true;

@@ -60,7 +60,7 @@ interface Path
 
     /**
      * @return DokuPath
-     * @throws ExceptionCombo - if the path cannot be transformed to a doku path
+     * @throws ExceptionCompile - if the path cannot be transformed to a doku path
      */
     function toDokuPath(): DokuPath;
 }

@@ -5,7 +5,7 @@ use ComboStrap\CacheManager;
 use ComboStrap\CacheDependencies;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PageImages;
@@ -378,7 +378,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                             $rowsInDb = $request
                                 ->execute()
                                 ->getRows();
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             $renderer->doc .= "The sql statement generated returns an error. Sql statement: $executableSql";
                             return false;
                         } finally {
@@ -615,7 +615,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
 
                         try {
                             $renderer->doc .= PluginUtility::renderInstructionsToXhtml($totalCallStack->getStack());
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             $renderer->doc .= "Error while rendering the iterators instructions. Error: {$e->getMessage()}";
                         }
                     }

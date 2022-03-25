@@ -365,7 +365,7 @@ class CallStack
             } else {
                 try {
                     return $this->getActualCall();
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     // should not happen because we check that we are not at the start/end of the stack
                     LogUtility::msg($e->getMessage());
                     return false;
@@ -379,7 +379,7 @@ class CallStack
             } else {
                 try {
                     return $this->getActualCall();
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     // should not happen because we check that we are at the start/end of the stack
                     LogUtility::msg($e->getMessage());
                     return false;

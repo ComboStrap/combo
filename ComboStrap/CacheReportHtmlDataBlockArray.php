@@ -50,7 +50,7 @@ class CacheReportHtmlDataBlockArray
                 try {
                     $dokuPath = $result->getPath()->toDokuPath();
                     $cacheFile = $dokuPath->getDokuwikiId();
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     LogUtility::msg("The path ({$result->getPath()}) could not be transformed as wiki path. Error:{$e->getMessage()}");
                 }
                 $data = [
@@ -81,13 +81,13 @@ class CacheReportHtmlDataBlockArray
      * An utility function to extract the cache data block from test responses
      * @param \TestResponse $response
      * @return mixed
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function extractFromResponse(\TestResponse $response)
     {
         $metaCacheMain = $response->queryHTML('script[type="' . CacheReportHtmlDataBlockArray::APPLICATION_COMBO_CACHE_JSON . '"]');
         if ($metaCacheMain->count() != 1) {
-            throw new ExceptionCombo("The data cache was not found");
+            throw new ExceptionCompile("The data cache was not found");
         }
         $cacheJsonTextValue = $metaCacheMain->elements[0]->childNodes->item(0)->textContent;
         return json_decode(XmlUtility::extractTextWithoutCdata($cacheJsonTextValue), true);

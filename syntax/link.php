@@ -7,7 +7,7 @@ use ComboStrap\AnalyticsDocument;
 use ComboStrap\ArrayUtility;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\MarkupRef;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -416,7 +416,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $markupRef = MarkupRef::createFromRef($href);
                                 $url = $markupRef->getUrl();
                                 $markupRefAttributes = $markupRef->toAttributes();
-                            } catch (ExceptionCombo $e) {
+                            } catch (ExceptionCompile $e) {
                                 $message = "Error while parsing the markup href ($href). Error: {$e->getMessage()}";
                                 $renderer->doc .= "<a>." . LogUtility::wrapInRedForHtml($message);
                                 return false;

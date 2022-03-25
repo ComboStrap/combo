@@ -5,7 +5,7 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\BrandButton;
@@ -107,7 +107,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                  */
                 try {
                     $brand = syntax_plugin_combo_brand::createButtonFromAttributes($shareAttributes, BrandButton::TYPE_BUTTON_FOLLOW);
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "The brand button creation returns an error ({$e->getMessage()}";
                     return $returnArray;
@@ -131,7 +131,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                         return $returnArray;
                     }
                     syntax_plugin_combo_brand::addOpenLinkTagInCallStack($callStack, $shareAttributes);
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "The brand button creation returns an error when creating the link ({$e->getMessage()}";
                     return $returnArray;
@@ -142,7 +142,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                  */
                 try {
                     syntax_plugin_combo_brand::addIconInCallStack($callStack, $brand);
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     $returnArray[PluginUtility::EXIT_CODE] = 1;
                     $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the icon for the brand ($brand) returns an error ({$e->getMessage()}";
                     return $returnArray;
@@ -209,7 +209,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     try {
                         $socialChannel = syntax_plugin_combo_brand::createButtonFromAttributes($tagAttributes, BrandButton::TYPE_BUTTON_FOLLOW);
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         LogUtility::msg("The social channel could not be build. Error: {$e->getMessage()}");
                         return false;
                     }
@@ -217,7 +217,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
 
                     try {
                         $style = $socialChannel->getStyle();
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         LogUtility::msg("The style of the share button ($socialChannel) could not be determined. Error: {$e->getMessage()}");
                         return false;
                     }

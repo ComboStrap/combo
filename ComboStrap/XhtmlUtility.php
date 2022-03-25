@@ -31,7 +31,7 @@ class XhtmlUtility
      * @return string
      * DOMDocument supports formatted XML while SimpleXMLElement does not.
      * @noinspection PhpComposerExtensionStubsInspection
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function diffMarkup($left, $right, $xhtml = true, $excludedAttributes = null): string
     {

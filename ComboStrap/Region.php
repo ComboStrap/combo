@@ -24,7 +24,7 @@ class Region extends MetadataText
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setFromStoreValue($value): Metadata
     {
@@ -37,7 +37,7 @@ class Region extends MetadataText
     /**
      * @param string|null $value
      * @return Metadata
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setValue($value): Metadata
     {
@@ -77,7 +77,7 @@ class Region extends MetadataText
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private function validityCheck($value)
     {
@@ -85,7 +85,7 @@ class Region extends MetadataText
             return;
         }
         if (!StringUtility::match($value, "^[a-zA-Z]{2}$")) {
-            throw new ExceptionCombo("The region value ($value) for the page ({$this->getResource()}) does not have two letters (ISO 3166 alpha-2 region code)", $this->getCanonical());
+            throw new ExceptionCompile("The region value ($value) for the page ({$this->getResource()}) does not have two letters (ISO 3166 alpha-2 region code)", $this->getCanonical());
         }
     }
 

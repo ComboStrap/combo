@@ -36,7 +36,7 @@ class ImageRaster extends Image
 
     /**
      * @return int - the width of the image from the file
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getIntrinsicWidth(): int
     {
@@ -46,7 +46,7 @@ class ImageRaster extends Image
 
     /**
      * @return int - the height of the image from the file
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getIntrinsicHeight(): int
     {
@@ -55,7 +55,7 @@ class ImageRaster extends Image
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private
     function analyzeImageIfNeeded()
@@ -76,15 +76,15 @@ class ImageRaster extends Image
                 }
                 $imageSize = getimagesize($path->toAbsolutePath()->toString(), $imageInfo);
                 if ($imageSize === false) {
-                    throw new ExceptionCombo("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", self::CANONICAL);
+                    throw new ExceptionCompile("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", self::CANONICAL);
                 }
                 $this->imageWidth = (int)$imageSize[0];
                 if (empty($this->imageWidth)) {
-                    throw new ExceptionCombo("We couldn't retrieve the width of the image ($this)", self::CANONICAL);
+                    throw new ExceptionCompile("We couldn't retrieve the width of the image ($this)", self::CANONICAL);
                 }
                 $this->imageWeight = (int)$imageSize[1];
                 if (empty($this->imageWeight)) {
-                    throw new ExceptionCombo("We couldn't retrieve the height of the image ($this)", self::CANONICAL);
+                    throw new ExceptionCompile("We couldn't retrieve the height of the image ($this)", self::CANONICAL);
                 }
                 $this->imageType = (int)$imageSize[2];
                 $this->mime = $imageSize[3];
@@ -96,7 +96,7 @@ class ImageRaster extends Image
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getUrl()
     {
@@ -107,7 +107,7 @@ class ImageRaster extends Image
     /**
      * @param int|null $breakpointWidth - the breakpoint width - use for responsive image
      * @return string|null
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getUrlAtBreakpoint(int $breakpointWidth = null)
     {
@@ -177,7 +177,7 @@ class ImageRaster extends Image
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function getAbsoluteUrl()
@@ -193,7 +193,7 @@ class ImageRaster extends Image
      * to not lose quality.
      *
      * @return int
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function getTargetWidth(): int
@@ -226,7 +226,7 @@ class ImageRaster extends Image
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getTargetHeight(): int
     {

@@ -4,7 +4,7 @@
  *
  */
 
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
 use ComboStrap\Page;
@@ -87,7 +87,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
                         $html .= $linkUtility->toAttributes(self::TAG)->toHtmlEnterTag("a");
                         $html .= $linkUtility->getLabel();
                         $html .= "</a>";
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         $html = "Error while trying to create the link for the page ($backlinkId). Error: {$e->getMessage()}";
                         LogUtility::msg($html);
                     }

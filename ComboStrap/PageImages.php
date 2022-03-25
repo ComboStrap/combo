@@ -55,7 +55,7 @@ class PageImages extends MetadataTabular
         }
         try {
             $defaultPageImage = $this->getDefaultImage();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while getting the default page image for the page {$this->getResource()}. The image was not used. Error: {$e->getMessage()}");
             return [];
         }
@@ -66,7 +66,7 @@ class PageImages extends MetadataTabular
             return [
                 PageImage::create($defaultPageImage, $this->getResource())
             ];
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while creating the default page image ($defaultPageImage) for the page {$this->getResource()}. The image was not used. Error: {$e->getMessage()}");
             return [];
         }
@@ -98,7 +98,7 @@ class PageImages extends MetadataTabular
     /**
      * @param $persistentValue
      * @return PageImage[]
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function toPageImageArray($persistentValue): array
     {
@@ -160,7 +160,7 @@ class PageImages extends MetadataTabular
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setFromStoreValue($value): Metadata
     {
@@ -186,7 +186,7 @@ class PageImages extends MetadataTabular
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function toStoreValue(): ?array
     {
@@ -225,7 +225,7 @@ class PageImages extends MetadataTabular
             $pageImagePath = $row[PageImagePath::getPersistentName()];
             try {
                 $pageImage = PageImage::create($pageImagePath->getValue(), $this->getResource());
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("Error while creating the page image ($pageImagePath) for the page {$this->getResource()}. The image was not used. Error: {$e->getMessage()}");
                 continue;
             }
@@ -236,7 +236,7 @@ class PageImages extends MetadataTabular
             if ($pageImageUsage !== null) {
                 try {
                     $pageImage->setUsages($pageImageUsage->getValue());
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     LogUtility::msg("Bad Usage value. Should not happen on get");
                 }
             }
@@ -246,7 +246,7 @@ class PageImages extends MetadataTabular
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function addImage(string $wikiImagePath, $usages = null): PageImages
     {
@@ -304,14 +304,14 @@ class PageImages extends MetadataTabular
      * We can then build the the pageimages with non-existing images
      * but we can't save
      *
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private function checkImageExistence()
     {
         if ($this->pageImages !== null) {
             foreach ($this->pageImages as $pageImage) {
                 if (!$pageImage->getImage()->exists()) {
-                    throw new ExceptionCombo("The image ({$pageImage->getImage()}) does not exist", $this->getCanonical());
+                    throw new ExceptionCompile("The image ({$pageImage->getImage()}) does not exist", $this->getCanonical());
                 }
             }
         }
@@ -319,7 +319,7 @@ class PageImages extends MetadataTabular
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function getDefaultImage(): ?Image
@@ -332,7 +332,7 @@ class PageImages extends MetadataTabular
 
     /**
      * @return ImageRaster|ImageSvg|null - the first image of the page
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getFirstImage()
     {

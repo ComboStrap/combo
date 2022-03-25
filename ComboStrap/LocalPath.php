@@ -83,7 +83,7 @@ class LocalPath extends PathAbs
 
     function getDokuwikiId()
     {
-        throw new ExceptionComboRuntime("Not implemented");
+        throw new ExceptionRuntime("Not implemented");
     }
 
 
@@ -130,7 +130,7 @@ class LocalPath extends PathAbs
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function toDokuPath(): DokuPath
     {
@@ -139,12 +139,12 @@ class LocalPath extends PathAbs
             try {
                 $relativePath = $this->relativize($drivePath);
                 return DokuPath::createDokuPath($relativePath->toString(), $driveRoot);
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 // not a relative path
             }
 
         }
-        throw new ExceptionCombo("The local path ($this) is not inside a doku path drive");
+        throw new ExceptionCompile("The local path ($this) is not inside a doku path drive");
 
 
     }
@@ -158,7 +158,7 @@ class LocalPath extends PathAbs
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function relativize(LocalPath $localPath): LocalPath
     {
@@ -166,7 +166,7 @@ class LocalPath extends PathAbs
         $localPath = $localPath->toCanonicalPath();
 
         if (!(strpos($actualPath->toString(), $localPath->toString()) === 0)) {
-            throw new ExceptionCombo("The path ($localPath) is not a parent path of the actual path ($actualPath)");
+            throw new ExceptionCompile("The path ($localPath) is not a parent path of the actual path ($actualPath)");
         }
         $sepCharacter = 1; // delete the sep characters
         $relativePath = substr($actualPath->toString(), strlen($localPath->toString()) + $sepCharacter);
@@ -249,7 +249,7 @@ class LocalPath extends PathAbs
             if ($counter > 200) {
                 $message = "Bad absolute local path file ($this->path)";
                 if (PluginUtility::isDevOrTest()) {
-                    throw new ExceptionComboRuntime($message);
+                    throw new ExceptionRuntime($message);
                 } else {
                     LogUtility::msg($message);
                 }

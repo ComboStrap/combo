@@ -64,7 +64,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
     public function persist()
     {
         if (PluginUtility::isDevOrTest()) {
-            throw new ExceptionComboRuntime("Not yet implemented, use sendToStore");
+            throw new ExceptionRuntime("Not yet implemented, use sendToStore");
         }
     }
 

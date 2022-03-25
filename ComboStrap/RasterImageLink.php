@@ -67,7 +67,7 @@ class RasterImageLink extends ImageLink
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
      * A media can be a video also (Use
      * @return string
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function renderMediaTag(): string
     {
@@ -120,7 +120,7 @@ class RasterImageLink extends ImageLink
              */
             try {
                 $targetHeight = $image->getTargetHeight();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("No rendering for the image ($image). The target height reports a problem: {$e->getMessage()}");
                 return "";
             }
@@ -155,7 +155,7 @@ class RasterImageLink extends ImageLink
              */
             try {
                 $mediaWidthValue = $image->getIntrinsicWidth();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("No rendering for the image ($image). The intrinsic width reports a problem: {$e->getMessage()}");
                 return "";
             }
@@ -185,7 +185,7 @@ class RasterImageLink extends ImageLink
                  */
                 try {
                     $targetWidth = $image->getTargetWidth();
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     LogUtility::msg("No rendering for the image ($image). The target width reports a problem: {$e->getMessage()}");
                     return "";
                 }

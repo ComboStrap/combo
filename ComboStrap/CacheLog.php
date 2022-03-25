@@ -37,7 +37,7 @@ class CacheLog
                     CacheManager::CACHE_DELETION,
                     $message
                 );
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 // should not fired
                 LogUtility::log2file("Error while logging cache event. Error: {$e->getMessage()}");
             }
@@ -55,14 +55,14 @@ class CacheLog
                 CacheManager::CACHE_CREATION,
                 $message
             );
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             // should not fired
             LogUtility::log2file("Error while logging cache event. Error: {$e->getMessage()}");
         }
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function logCacheEvent(string $event, string $path, string $format, string $operation, string $message)
     {
@@ -90,13 +90,13 @@ class CacheLog
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getCacheLog(): array
     {
         $sqlite = Sqlite::createOrGetBackendSqlite();
         if ($sqlite === null) {
-            throw new ExceptionCombo("Sqlite is not available");
+            throw new ExceptionCompile("Sqlite is not available");
         }
 
 
@@ -111,8 +111,8 @@ class CacheLog
         try {
             return $request->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("Unable to get the cache log. Error:" . $e->getMessage(),self::CANONICAL,0,$e);
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionCompile("Unable to get the cache log. Error:" . $e->getMessage(),self::CANONICAL,0,$e);
         } finally {
             $request->close();
         }

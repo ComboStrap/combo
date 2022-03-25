@@ -4,7 +4,7 @@
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\BacklinkCount;
 use ComboStrap\Canonical;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\Page;
@@ -140,7 +140,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $this->reset();
         try {
             $this->page = Page::createPageFromGlobalDokuwikiId();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("The global ID is unknown, we were unable to instantiate the requested page in analytics");
         }
 
@@ -522,7 +522,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         }
         try {
             $this->page->setLowQualityIndicatorCalculation($lowLevel);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("An error has occurred while saving the low quality level. Error: {$e->getMessage()}");
         }
 
@@ -548,7 +548,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          */
         try {
             $requestedPage = Page::createPageFromGlobalDokuwikiId();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("The global ID is unknown, we can't find the requested page. Analytics was stopped");
             return;
         }

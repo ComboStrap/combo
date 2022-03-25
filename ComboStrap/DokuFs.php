@@ -45,16 +45,18 @@ class DokuFs implements FileSystem
 
     /**
      * @param DokuPath $path
+     * @throws ExceptionNotFound
      */
-    function getContent(Path $path)
+    function getContent(Path $path): string
     {
         return FileSystems::getContent($path->toLocalPath());
     }
 
     /**
      * @param DokuPath $path
+     * @throws ExceptionNotFound
      */
-    function getModifiedTime(Path $path): ?DateTime
+    function getModifiedTime(Path $path): DateTime
     {
         return FileSystems::getModifiedTime($path->toLocalPath());
     }

@@ -10,8 +10,10 @@ use Throwable;
  * Class ExceptionCombo
  * @package ComboStrap
  * Adds the canonical
+ *
+ * An error that is in the code
  */
-class ExceptionCombo  extends \Exception
+class ExceptionRuntime  extends \RuntimeException
 {
     /**
      * @var mixed|string

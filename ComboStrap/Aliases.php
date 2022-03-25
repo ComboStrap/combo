@@ -162,7 +162,7 @@ class Aliases extends MetadataTabular
             $deprecatedAliasInDb = $request
                 ->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("An exception has occurred with the deprecated alias selection query. {$e->getMessage()}", LogUtility::LVL_MSG_ERROR);
             return [];
         } finally {
@@ -188,7 +188,7 @@ class Aliases extends MetadataTabular
                 ->setQueryParametrized("delete from DEPRECATED_PAGE_ALIASES where CANONICAL = ?", [$canonicalOrDefault]);
             try {
                 $request->execute();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("An exception has occurred with the delete deprecated alias statement. {$e->getMessage()}", LogUtility::LVL_MSG_ERROR);
             } finally {
                 $request->close();
@@ -238,7 +238,7 @@ class Aliases extends MetadataTabular
              */
             try {
                 $this->sendToWriteStore();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("Error while persisting the new data");
             }
         }
@@ -247,7 +247,7 @@ class Aliases extends MetadataTabular
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function addAlias(string $aliasPath, $aliasType = null): Aliases
@@ -257,7 +257,7 @@ class Aliases extends MetadataTabular
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function addAndGetAlias($aliasPath, $aliasType = null): Alias

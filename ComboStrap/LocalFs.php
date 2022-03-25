@@ -19,7 +19,7 @@ class LocalFs implements FileSystem
 
     public static function getOrCreate(): LocalFs
     {
-        if(self::$localFs === null){
+        if (self::$localFs === null) {
             self::$localFs = new LocalFs();
         }
         return self::$localFs;
@@ -31,36 +31,46 @@ class LocalFs implements FileSystem
     }
 
     /**
-     * @return string
+     * @param $path
+     * @return string - textual content
+     * @throws ExceptionNotFound - if the file does not exist
      */
-    public function getContent($path): ?string
+    public function getContent($path): string
     {
+        /**
+         * Mime check
+         */
         $mime = $path->getMime();
-        if($mime === null){
-            throw new ExceptionComboRuntime("The mime is unknown for the path ($path)");
-        }
-        if ($mime->isTextBased()) {
-            $content = @file_get_contents($path->toAbsolutePath()->toString());
-            if($content===false){
-                // file does not exists
-                return null;
+        if ($mime === null) {
+            LogUtility::msg("The mime is unknown for the path ($path)");
+        } else {
+            if (!$mime->isTextBased()) {
+                LogUtility::msg("This mime content ($mime) is not text base (for the path $path)", LogUtility::LVL_MSG_ERROR);
             }
-            return $content;
         }
-        throw new ExceptionComboRuntime("This mime content ($mime) can not yet be retrieved for the path ($path)");
+
+        $content = @file_get_contents($path->toAbsolutePath()->toString());
+        if ($content === false) {
+            // file does not exists
+            throw new ExceptionNotFound("The file ($path) does not exists");
+        }
+        return $content;
     }
 
-    public function getModifiedTime($path): ?DateTime
+    /**
+     * @throws ExceptionNotFound - if the file does not exist
+     */
+    public function getModifiedTime($path): DateTime
     {
-        if(!self::exists($path)){
-            return null;
+        if (!self::exists($path)) {
+            throw new ExceptionNotFound("The file does not exist");
         }
         return Iso8601Date::createFromTimestamp(filemtime($path->toAbsolutePath()->toString()))->getDateTime();
     }
 
     public function getCreationTime(Path $path)
     {
-        if(!$this->exists($path)){
+        if (!$this->exists($path)) {
             return null;
         }
         $filePath = $path->toAbsolutePath()->toString();
@@ -82,13 +92,13 @@ class LocalFs implements FileSystem
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function createDirectory(Path $dirPath)
     {
         $result = mkdir($dirPath->toAbsolutePath()->toString(), $mode = 0770, $recursive = true);
-        if($result===false){
-            throw new ExceptionCombo("Unable to create the directory path ($dirPath)");
+        if ($result === false) {
+            throw new ExceptionCompile("Unable to create the directory path ($dirPath)");
         }
     }
 

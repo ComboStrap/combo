@@ -258,7 +258,7 @@ class SnippetManager
      * @param array $array
      * @param string $slot
      * @return null|Snippet[]
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function getSlotSnippetsFromJsonArray(array $array, string $slot): ?array

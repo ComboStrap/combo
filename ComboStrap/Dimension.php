@@ -245,7 +245,7 @@ EOF;
 
     /**
      * @param $value - a css value to a pixel
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function toPixelValue($value): int
     {
@@ -273,23 +273,23 @@ EOF;
      * Convert 16:9, ... to a float
      * @param string $stringRatio
      * @return float
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function convertTextualRatioToNumber(string $stringRatio): float
     {
         list($width, $height) = explode(":", $stringRatio, 2);
         try {
             $width = DataType::toInteger($width);
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The width value ($width) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionCompile("The width value ($width) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
         }
         try {
             $height = DataType::toInteger($height);
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The width value ($height) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionCompile("The width value ($height) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
         }
         if ($height == 0) {
-            throw new ExceptionCombo("The height value of the ratio `$stringRatio` should not be zero", syntax_plugin_combo_pageimage::CANONICAL);
+            throw new ExceptionCompile("The height value of the ratio `$stringRatio` should not be zero", syntax_plugin_combo_pageimage::CANONICAL);
         }
         return floatval($width / $height);
 

@@ -5,7 +5,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\Alias;
 use ComboStrap\Aliases;
 use ComboStrap\DatabasePageRow;
-use ComboStrap\ExceptionComboRuntime;
+use ComboStrap\ExceptionRuntime;
 use ComboStrap\File;
 use ComboStrap\FileSystems;
 use ComboStrap\MarkupRef;

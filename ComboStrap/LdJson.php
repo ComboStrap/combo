@@ -191,7 +191,7 @@ class LdJson extends MetadataJson
         if ($value !== null) {
             try {
                 $actualValueAsArray = Json::createFromString($value)->toArray();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("The string value is not a valid Json. Value: $value");
                 return $value;
             }

@@ -84,7 +84,7 @@ class BrandButton
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function __construct(
         string $brandName,
@@ -95,7 +95,7 @@ class BrandButton
 
         $this->type = strtolower($typeButton);
         if (!in_array($this->type, self::TYPE_BUTTONS)) {
-            throw new ExceptionCombo("The button type ($this->type} is unknown.");
+            throw new ExceptionCompile("The button type ($this->type} is unknown.");
         }
 
 
@@ -120,7 +120,7 @@ class BrandButton
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createBrandButton(string $brand): BrandButton
     {
@@ -129,7 +129,7 @@ class BrandButton
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setWidget($widget): BrandButton
     {
@@ -139,13 +139,13 @@ class BrandButton
         $this->widget = $widget;
         $widget = trim(strtolower($widget));
         if (!in_array($widget, self::WIDGETS)) {
-            throw new ExceptionCombo("The {$this->type} widget ($widget} is unknown. The possible widgets value are " . implode(",", self::WIDGETS));
+            throw new ExceptionCompile("The {$this->type} widget ($widget} is unknown. The possible widgets value are " . implode(",", self::WIDGETS));
         }
         return $this;
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setIconType($iconType): BrandButton
     {
@@ -155,7 +155,7 @@ class BrandButton
         $this->iconType = $iconType;
         $iconType = trim(strtolower($iconType));
         if (!in_array($iconType, self::ICON_TYPES)) {
-            throw new ExceptionCombo("The icon type ($iconType) is unknown. The possible icons value are " . implode(",", self::ICON_TYPES));
+            throw new ExceptionCompile("The icon type ($iconType) is unknown. The possible icons value are " . implode(",", self::ICON_TYPES));
         }
         return $this;
     }
@@ -173,7 +173,7 @@ class BrandButton
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createShareButton(
         string $brandName,
@@ -188,7 +188,7 @@ class BrandButton
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createFollowButton(
         string $brandName,
@@ -205,7 +205,7 @@ class BrandButton
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      *
      * Dictionary has been made with the data found here:
      *   * https://github.com/ellisonleao/sharer.js/blob/main/sharer.js#L72
@@ -219,13 +219,13 @@ class BrandButton
          */
         $urlTemplate = $this->brand->getWebUrlTemplate($this->type);
         if ($urlTemplate === null) {
-            throw new ExceptionCombo("The brand ($this) does not support the $this->type button (The $this->type URL is unknown)");
+            throw new ExceptionCompile("The brand ($this) does not support the $this->type button (The $this->type URL is unknown)");
         }
         switch ($this->type) {
 
             case self::TYPE_BUTTON_SHARE:
                 if ($requestedPage === null) {
-                    throw new ExceptionCombo("The page requested should not be null for a share button when requesting the endpoint uri.");
+                    throw new ExceptionCompile("The page requested should not be null for a share button when requesting the endpoint uri.");
                 }
                 $canonicalUrl = $this->getSharedUrlForPage($requestedPage);
                 $templateData["url"] = $canonicalUrl;
@@ -296,7 +296,7 @@ class BrandButton
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function getStyle(): string
@@ -411,7 +411,7 @@ EOF;
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function getIconAttributes(): array
@@ -423,7 +423,7 @@ EOF;
             $iconName = $this->brand->getIconName($this->iconType);
             $brandNames = Brand::getAllKnownBrandNames();
             if ($iconName === null && in_array($this->getBrand(), $brandNames)) {
-                throw new ExceptionComboNotFound("No {$this->iconType} icon could be found for the known brand ($this)");
+                throw new ExceptionNotFound("No {$this->iconType} icon could be found for the known brand ($this)");
             }
         }
         $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
@@ -533,7 +533,7 @@ EOF;
 
     /**
      * Return the link HTML attributes
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function getLinkAttributes(Page $requestedPage = null): TagAttributes
@@ -550,7 +550,7 @@ EOF;
             case self::TYPE_BUTTON_SHARE:
 
                 if ($requestedPage === null) {
-                    throw new ExceptionCombo("The page requested should not be null for a share button");
+                    throw new ExceptionCompile("The page requested should not be null for a share button");
                 }
 
                 $ariaLabel = "Share on " . ucfirst($this->getBrand());

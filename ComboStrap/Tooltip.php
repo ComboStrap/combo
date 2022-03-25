@@ -45,7 +45,7 @@ class Tooltip
             if ($callStack !== null) {
                 try {
                     $title = PluginUtility::renderInstructionsToXhtml($callStack);
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     $title = LogUtility::wrapInRedForHtml("Error while rendering the tooltip. Error: {$e->getMessage()}");
                 }
 

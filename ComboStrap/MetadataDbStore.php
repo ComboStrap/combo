@@ -39,7 +39,7 @@ class MetadataDbStore extends MetadataStoreAbs
             return;
         }
 
-        throw new ExceptionComboRuntime("The metadata ($metadata) is not yet supported on set", self::CANONICAL);
+        throw new ExceptionRuntime("The metadata ($metadata) is not yet supported on set", self::CANONICAL);
 
     }
 
@@ -48,7 +48,7 @@ class MetadataDbStore extends MetadataStoreAbs
 
         $resource = $metadata->getResource();
         if (!($resource instanceof Page)) {
-            throw new ExceptionComboRuntime("The resource type ({$resource->getType()}) is not yet supported for the database metadata store", self::CANONICAL);
+            throw new ExceptionRuntime("The resource type ({$resource->getType()}) is not yet supported for the database metadata store", self::CANONICAL);
         }
 
         if ($metadata instanceof MetadataTabular) {
@@ -71,7 +71,7 @@ class MetadataDbStore extends MetadataStoreAbs
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private function syncTabular(MetadataTabular $metadata)
     {
@@ -79,7 +79,7 @@ class MetadataDbStore extends MetadataStoreAbs
 
         $uid = $metadata->getUidObject();
         if ($uid === null) {
-            throw new ExceptionCombo("The uid class should be defined for the metadata ($metadata)");
+            throw new ExceptionCompile("The uid class should be defined for the metadata ($metadata)");
         }
 
 
@@ -111,7 +111,7 @@ class MetadataDbStore extends MetadataStoreAbs
      * @param array $row
      * @param Metadata $metadata
      * @return void
-     * @throws ExceptionCombo - if page id is null
+     * @throws ExceptionCompile - if page id is null
      */
     private function addRow(array $row, Metadata $metadata): void
     {
@@ -123,7 +123,7 @@ class MetadataDbStore extends MetadataStoreAbs
         $resourceUidObject = $resourceCombo->getUidObject();
         $uidValue = $resourceUidObject->getValue();
         if ($uidValue === null) {
-            throw new ExceptionCombo("The id ($resourceUidObject) is null for the resource $resourceCombo. We can't add a row in the database.");
+            throw new ExceptionCompile("The id ($resourceUidObject) is null for the resource $resourceCombo. We can't add a row in the database.");
         }
         $row[$resourceUidObject::getPersistentName()] = $uidValue;
 
@@ -133,7 +133,7 @@ class MetadataDbStore extends MetadataStoreAbs
             ->setTableRow($tableName, $row);
         try {
             $request->execute();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("There was a problem during rows insertion for the table ($tableName)" . $e->getMessage());
         } finally {
             $request->close();
@@ -164,7 +164,7 @@ EOF;
             ->setQueryParametrized($delete, $row);
         try {
             $request->execute();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("There was a problem during the row delete of $tableName. Message: {$e->getMessage()}");
             return;
         } finally {
@@ -177,7 +177,7 @@ EOF;
 
     /**
      * @return null
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      * @var Metadata $metadata
      */
     private function getDbTabularData(Metadata $metadata): ?array
@@ -204,7 +204,7 @@ EOF;
         $uidAttribute = $uid::getPersistentName();
         $children = $metadata->getChildrenObject();
         if ($children === null) {
-            throw new ExceptionCombo("The children of the tabular metadata ($metadata) should be set to synchronize into the database");
+            throw new ExceptionCompile("The children of the tabular metadata ($metadata) should be set to synchronize into the database");
         }
         $attributes = [];
         foreach ($children as $child) {
@@ -221,7 +221,7 @@ EOF;
             $rows = $res
                 ->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("An exception has occurred with the $tableName ({$metadata->getResource()}) selection query. Message: {$e->getMessage()}, Query: ($query");
             return null;
         } finally {
@@ -243,7 +243,7 @@ EOF;
 
     public function reset()
     {
-        throw new ExceptionComboRuntime("To implement");
+        throw new ExceptionRuntime("To implement");
     }
 
     public function getFromPersistentName(string $name, $default = null)
@@ -258,7 +258,7 @@ EOF;
 
     public function setFromPersistentName(string $name, $value)
     {
-        throw new ExceptionComboRuntime("Not implemented");
+        throw new ExceptionRuntime("Not implemented");
     }
 
 
@@ -280,7 +280,7 @@ EOF;
         if ($row === null) {
             $page = $this->getResource();
             if (!($page instanceof Page)) {
-                throw new ExceptionComboRuntime("The resource should be a page, {$page->getType()} is not supported");
+                throw new ExceptionRuntime("The resource should be a page, {$page->getType()} is not supported");
             }
             $row = DatabasePageRow::createFromPageObject($page);
             self::$dbRows[$mapKey] = $row;

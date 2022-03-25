@@ -38,14 +38,14 @@ abstract class MetadataDateTime extends Metadata
             return $this;
         }
         if (!($value instanceof DateTime)) {
-            throw new ExceptionComboRuntime("The value is not a date time. Value: " . var_export($value, true));
+            throw new ExceptionRuntime("The value is not a date time. Value: " . var_export($value, true));
         }
         $this->dateTimeValue = $value;
         return $this;
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setFromStoreValue($value): Metadata
     {
@@ -70,14 +70,14 @@ abstract class MetadataDateTime extends Metadata
         $value = $this->getReadStore()->get($this);
         try {
             $this->dateTimeValue = $this->fromPersistentDateTimeUtility($value);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg($e->getMessage(), $this->getCanonical());
         }
         return $this;
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     protected function fromPersistentDateTimeUtility($value)
     {
@@ -85,7 +85,7 @@ abstract class MetadataDateTime extends Metadata
             return null;
         }
         if (!is_string($value)) {
-            throw new ExceptionCombo("This is not a string value");
+            throw new ExceptionCompile("This is not a string value");
         }
         return Iso8601Date::createFromString($value)->getDateTime();
     }
@@ -103,7 +103,7 @@ abstract class MetadataDateTime extends Metadata
             return null;
         }
         if (!($value instanceof DateTime)) {
-            throw new ExceptionComboRuntime("This is not a date time");
+            throw new ExceptionRuntime("This is not a date time");
         }
         return Iso8601Date::createFromDateTime($value)->toString();
     }
@@ -122,7 +122,7 @@ abstract class MetadataDateTime extends Metadata
     {
         try {
             $this->dateTimeValue = $this->fromPersistentDateTimeUtility($value);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
         }
         return $this;

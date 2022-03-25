@@ -50,12 +50,12 @@ abstract class MetadataTabular extends Metadata
             return $this;
         }
         if (!is_array($value)) {
-            throw new ExceptionComboRuntime("The data set is not an array (The tabular data is an array of rows)");
+            throw new ExceptionRuntime("The data set is not an array (The tabular data is an array of rows)");
         }
         $keys = array_keys($value);
         foreach ($keys as $key) {
             if (!is_numeric($key)) {
-                throw new ExceptionComboRuntime("The element of the array are not rows. The index ($key) should be numeric and is not");
+                throw new ExceptionRuntime("The element of the array are not rows. The index ($key) should be numeric and is not");
             }
         }
         $this->rows = $value;

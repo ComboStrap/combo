@@ -346,7 +346,7 @@ class Sqlite
                 self::$sqliteVersion = $request
                     ->execute()
                     ->getFirstCellValue();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 self::$sqliteVersion = "unknown";
             } finally {
                 $request->close();
@@ -367,7 +367,7 @@ class Sqlite
                 ->execute()
                 ->getFirstCellValueAsInt();
             return $present === 1;
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while trying to see if the sqlite option is available");
             return false;
         }

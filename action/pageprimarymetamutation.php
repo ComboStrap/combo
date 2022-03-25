@@ -75,7 +75,7 @@ class action_plugin_combo_pageprimarymetamutation extends DokuWiki_Action_Plugin
          * Build the context back before getting the slots
          */
         $path = $data[PagePath::getPersistentName()];
-        CacheDependencies::reRenderSecondarySlotsIfNeeded(
+        CacheDependencies::reRenderSideSlotIfNeeded(
             $path,
             CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY,
             self::PRIMARY_META_MUTATION_EVENT_NAME

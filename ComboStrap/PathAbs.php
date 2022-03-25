@@ -69,7 +69,7 @@ abstract class PathAbs implements Path
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     function toDokuPath(): DokuPath
     {
@@ -79,7 +79,7 @@ abstract class PathAbs implements Path
         if($this instanceof LocalPath){
             return $this->toDokuPath();
         }
-        throw new ExceptionCombo("This is not a doku path or local path");
+        throw new ExceptionCompile("This is not a doku path or local path");
     }
 
 

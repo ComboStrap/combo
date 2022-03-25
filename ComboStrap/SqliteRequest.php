@@ -56,7 +56,7 @@ class SqliteRequest
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function execute(): SqliteResult
     {
@@ -83,12 +83,12 @@ class SqliteRequest
         }
 
         if ($res === null) {
-            throw new ExceptionCombo("No Sql request was found to be executed");
+            throw new ExceptionCompile("No Sql request was found to be executed");
         }
 
         if ($res === false) {
             $message = $this->getErrorMessage();
-            throw new ExceptionCombo("Error in the $requestType. Message: {$message}");
+            throw new ExceptionCompile("Error in the $requestType. Message: {$message}");
         }
 
         $this->result = new SqliteResult($this, $res);

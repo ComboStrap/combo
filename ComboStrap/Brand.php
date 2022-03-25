@@ -40,7 +40,7 @@ class Brand
     /**
      * Brand constructor.
      * @param string $name
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function __construct(string $name)
     {
@@ -82,7 +82,7 @@ class Brand
 
     /**
      * @return string[]
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getAllKnownBrandNames(): array
     {
@@ -97,7 +97,7 @@ class Brand
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getBrandNamesFromDictionary(): array
     {
@@ -106,7 +106,7 @@ class Brand
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getBrandDictionary(): array
     {
@@ -126,7 +126,7 @@ class Brand
     private $name;
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function create(string $brandName): Brand
     {

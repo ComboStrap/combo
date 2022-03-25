@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TplConstant;
@@ -39,7 +39,7 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
         if ($conf['template'] == PluginUtility::TEMPLATE_STRAP_NAME) {
             try {
                 Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 return;
             }
 

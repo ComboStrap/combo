@@ -305,7 +305,7 @@ class Snippet implements JsonSerializable
             default:
                 $message = "Unknown snippet type ($this->extension)";
                 if (PluginUtility::isDevOrTest()) {
-                    throw new ExceptionComboRuntime($message);
+                    throw new ExceptionRuntime($message);
                 } else {
                     LogUtility::msg($message);
                 }
@@ -386,13 +386,13 @@ EOF;
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createFromJson($array): Snippet
     {
         $snippetType = $array[self::JSON_TYPE_PROPERTY];
         if ($snippetType === null) {
-            throw new ExceptionCombo("The snippet type property was not found in the json array");
+            throw new ExceptionCompile("The snippet type property was not found in the json array");
         }
         switch ($snippetType) {
             case Snippet::INTERNAL_TYPE:
@@ -402,15 +402,15 @@ EOF;
                 $identifier = $array[self::JSON_URL_PROPERTY];
                 break;
             default:
-                throw new ExceptionCombo("snippet type unknown ($snippetType");
+                throw new ExceptionCompile("snippet type unknown ($snippetType");
         }
         $extension = $array[self::JSON_EXTENSION_PROPERTY];
         if ($extension === null) {
-            throw new ExceptionCombo("The snippet extension property was not found in the json array");
+            throw new ExceptionCompile("The snippet extension property was not found in the json array");
         }
         $componentName = $array[self::JSON_COMPONENT_PROPERTY];
         if ($componentName === null) {
-            throw new ExceptionCombo("The snippet component name property was not found in the json array");
+            throw new ExceptionCompile("The snippet component name property was not found in the json array");
         }
         $snippet = Snippet::getOrCreateSnippet($identifier, $extension, $componentName);
 

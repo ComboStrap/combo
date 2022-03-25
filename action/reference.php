@@ -2,7 +2,7 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\MarkupRef;
 use ComboStrap\LogUtility;
@@ -113,7 +113,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
                 ->persist()
                 ->setWriteStore(MetadataDbStore::class)
                 ->persist();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Reference error when persisting to the file system store: " . $e->getMessage(), LogUtility::LVL_MSG_ERROR);
         }
 

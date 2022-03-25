@@ -63,7 +63,7 @@ class Event
                 if (sizeof($rows) === 0) {
                     return;
                 }
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             } finally {
                 $request->close();
@@ -92,7 +92,7 @@ class Event
                 if (sizeof($rowsSelected) === 0) {
                     return;
                 }
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("Error while retrieving the event {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, $e->getCanonical());
                 return;
             } finally {
@@ -112,7 +112,7 @@ class Event
                     } else {
                         $rows[] = $row;
                     }
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     LogUtility::msg("Error while deleting the event. Message {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, $e->getCanonical());
                     return;
                 } finally {
@@ -133,7 +133,7 @@ class Event
             if ($eventDataJson !== null) {
                 try {
                     $eventData = Json::createFromString($eventDataJson)->toArray();
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     LogUtility::msg("The stored data for the event $eventName was not in the json format");
                     continue;
                 }
@@ -183,7 +183,7 @@ class Event
             ->setTableRow(self::EVENT_TABLE_NAME, $entry);
         try {
             $request->execute();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Unable to create the event $name. Error:" . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
         } finally {
             $request->close();
@@ -211,13 +211,13 @@ class Event
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getQueue(): array
     {
         $sqlite = Sqlite::createOrGetBackendSqlite();
         if ($sqlite === null) {
-            throw new ExceptionCombo("Sqlite is not available");
+            throw new ExceptionCompile("Sqlite is not available");
         }
 
 
@@ -231,8 +231,8 @@ class Event
         try {
             return $request->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("Unable to get the queue. Error:" . $e->getMessage(),self::CANONICAL,0,$e);
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionCompile("Unable to get the queue. Error:" . $e->getMessage(),self::CANONICAL,0,$e);
         } finally {
             $request->close();
         }
@@ -240,13 +240,13 @@ class Event
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function purgeQueue(): int
     {
         $sqlite = Sqlite::createOrGetBackendSqlite();
         if ($sqlite === null) {
-            throw new ExceptionCombo("Sqlite is not available");
+            throw new ExceptionCompile("Sqlite is not available");
         }
 
 
@@ -258,8 +258,8 @@ class Event
         try {
             return $request->execute()
                 ->getChangeCount();
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("Unable to count the number of event in the queue. Error:" . $e->getMessage(),self::CANONICAL,0,$e);
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionCompile("Unable to count the number of event in the queue. Error:" . $e->getMessage(),self::CANONICAL,0,$e);
         } finally {
             $request->close();
         }

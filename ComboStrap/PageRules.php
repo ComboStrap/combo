@@ -30,7 +30,7 @@ class PageRules
             ->setQueryParametrized('delete from PAGE_RULES where id = ?', $ruleId);
         try {
             $request->execute();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Something went wrong when deleting the redirections. {$e->getMessage()}");
         } finally {
             $request->close();
@@ -57,7 +57,7 @@ class PageRules
             $count = $request
                 ->execute()
                 ->getFirstCellValueAsInt();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error during pattern exist statement. {$e->getMessage()}");
             return false;
         } finally {
@@ -85,7 +85,7 @@ class PageRules
         try {
             $count = $request->execute()
                 ->getFirstCellValueAsInt();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error during pattern exists query: {$e->getMessage()}");
             return false;
         } finally {
@@ -137,7 +137,7 @@ class PageRules
         try {
             $lastInsertId = $request->execute()
                 ->getInsertId();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("There was a problem during Pages Rule insertion. " . $e->getMessage());
             return null;
         } finally {
@@ -182,7 +182,7 @@ class PageRules
             ->setQuery("delete from PAGE_RULES");
         try {
             $request->execute();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg('Errors during delete of all redirections. ' . $e->getMessage());
         } finally {
             $request->close();
@@ -206,7 +206,7 @@ class PageRules
         try {
             $count = $request->execute()
                 ->getFirstCellValueAsInt();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Page Rules Count. {$e->getMessage()}");
             return 0;
         } finally {
@@ -231,7 +231,7 @@ class PageRules
         try {
             return $request->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Errors during select of all Page rules. {$e->getMessage()}");
             return [];
         } finally {
@@ -249,7 +249,7 @@ class PageRules
         try {
             return $request->execute()
                 ->getFirstRow();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("getRule Error {$e->getMessage()}");
             return [];
         } finally {

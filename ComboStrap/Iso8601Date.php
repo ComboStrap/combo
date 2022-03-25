@@ -59,7 +59,7 @@ class Iso8601Date
     /**
      * @param null $dateString
      * @return Iso8601Date
-     * @throws ExceptionCombo if the format is not supported
+     * @throws ExceptionCompile if the format is not supported
      */
     public static function createFromString($dateString = null): Iso8601Date
     {
@@ -126,7 +126,7 @@ class Iso8601Date
         $dateTime = DateTime::createFromFormat(self::getFormat(), $dateString);
         if ($dateTime === false) {
             $message = "The date string ($original) is not in a valid date format. (" . join(", ", self::VALID_FORMATS) . ")";
-            throw new ExceptionCombo($message, self::CANONICAL);
+            throw new ExceptionCompile($message, self::CANONICAL);
         }
         return new Iso8601Date($dateTime);
 

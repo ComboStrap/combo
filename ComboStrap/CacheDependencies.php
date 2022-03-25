@@ -127,13 +127,13 @@ class CacheDependencies
     }
 
     /**
-     * Rerender for now only the footer and slide slot if it has cache dependency
+     * Rerender for now only the slide slot if it has cache dependency
      * (ie {@link CacheDependencies::PAGE_SYSTEM_DEPENDENCY} or {@link CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY})
      * @param $path
      * @param string $dependency -  a {@link CacheDependencies} ie
      * @param string $event
      */
-    public static function reRenderSecondarySlotsIfNeeded($path, string $dependency, string $event)
+    public static function reRenderSideSlotIfNeeded($path, string $dependency, string $event)
     {
         global $ID;
         $keep = $ID;
@@ -143,7 +143,7 @@ class CacheDependencies
              * Rerender secondary slot if needed
              */
             $page = Page::createPageFromId($ID);
-            $secondarySlots = $page->getSecondarySlots();
+            $secondarySlots = [$page->getSideSlot()];
             foreach ($secondarySlots as $secondarySlot) {
                 $htmlDocument = $secondarySlot->getHtmlDocument();
                 $cacheDependencies = $htmlDocument->getCacheDependencies();
@@ -173,7 +173,7 @@ class CacheDependencies
      *
      * For example:
      *   * the ':sidebar' html output may be dependent to the namespace `ns` or `ns2`
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getValueForKey($dependenciesValue): string
     {
@@ -201,7 +201,7 @@ class CacheDependencies
             case CacheDependencies::REQUESTED_PAGE_DEPENDENCY:
                 return $requestPage->getPath()->toString();
             default:
-                throw new ExceptionCombo("The requested dependency value ($dependenciesValue) has no calculation");
+                throw new ExceptionCompile("The requested dependency value ($dependenciesValue) has no calculation");
         }
 
 
@@ -214,7 +214,7 @@ class CacheDependencies
      * for the instruction document and the output document
      *
      * See the discussion at: https://github.com/splitbrain/dokuwiki/issues/3496
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      * @var $actualKey
      */
     public function getOrCalculateDependencyKey($actualKey): string
@@ -252,7 +252,7 @@ class CacheDependencies
             if (!in_array($dependencyName, self::OUTPUT_DEPENDENCIES) &&
                 !in_array($dependencyName, self::validityDependencies)
             ) {
-                throw new ExceptionComboRuntime("Unknown dependency value ($dependencyName)");
+                throw new ExceptionRuntime("Unknown dependency value ($dependencyName)");
             }
         }
         $this->runtimeAddedDependencies[$dependencyName] = "";
@@ -291,7 +291,7 @@ class CacheDependencies
             $cache->key = $this->getOrCalculateDependencyKey($cache->key);
             $cache->cache = getCacheName($cache->key, '.' . $cache->mode);
 
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while trying to reroute the cache destination for the slot ({$this->page}). You may have cache problem. Error: {$e->getMessage()}");
         }
 

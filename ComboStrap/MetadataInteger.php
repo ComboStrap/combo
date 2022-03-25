@@ -31,7 +31,7 @@ abstract class MetadataInteger extends Metadata
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setValue($value): Metadata
     {
@@ -40,7 +40,7 @@ abstract class MetadataInteger extends Metadata
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setFromStoreValue($value): Metadata
     {

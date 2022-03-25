@@ -9,7 +9,7 @@ namespace ComboStrap;
  * @package ComboStrap
  * Adds the canonical
  */
-class ExceptionComboNotFound  extends ExceptionCombo
+class ExceptionNotFound  extends ExceptionCompile
 {
 
 }

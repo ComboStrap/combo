@@ -40,6 +40,7 @@ require_once(__DIR__ . '/MetadataStore.php');
 require_once(__DIR__ . '/MetadataStoreAbs.php');
 require_once(__DIR__ . '/MetadataSingleArrayStore.php');
 require_once(__DIR__ . '/XmlDocument.php');
+require_once(__DIR__ . '/ExceptionRuntime.php');
 
 /**
  * Plugin Utility is added in all Dokuwiki extension
@@ -100,10 +101,9 @@ require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/DokuwikiId.php');
 require_once(__DIR__ . '/EndDate.php');
 require_once(__DIR__ . '/Event.php');
-require_once(__DIR__ . '/ExitException.php');
-require_once(__DIR__ . '/ExceptionCombo.php');
-require_once(__DIR__ . '/ExceptionComboNotFound.php');
-require_once(__DIR__ . '/ExceptionComboRuntime.php');
+require_once(__DIR__ . '/ExceptionExit.php');
+require_once(__DIR__ . '/ExceptionCompile.php');
+require_once(__DIR__ . '/ExceptionNotFound.php');
 require_once(__DIR__ . '/FileSystems.php');
 require_once(__DIR__ . '/FloatAttribute.php');
 require_once(__DIR__ . '/FormMeta.php');
@@ -778,7 +778,7 @@ class PluginUtility
                     $cache->storeCache($xhtmlIcon);
                 }
                 $xhtmlIcon = FileSystems::getContent($cache->getFile());
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("The logo ($path) is not valid and could not be added to the documentation link. Error: {$e->getMessage()}");
             }
 
@@ -1456,7 +1456,7 @@ class PluginUtility
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function renderInstructionsToXhtml($callStackHeaderInstructions): ?string
     {

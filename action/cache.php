@@ -6,7 +6,7 @@ use ComboStrap\CacheMedia;
 use ComboStrap\CacheMenuItem;
 use ComboStrap\CacheReportHtmlDataBlockArray;
 use ComboStrap\Cron;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\File;
 use ComboStrap\Http;
 use ComboStrap\Identity;

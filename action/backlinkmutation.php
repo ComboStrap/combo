@@ -4,7 +4,7 @@ use ComboStrap\CacheDependencies;
 use ComboStrap\CacheLog;
 use ComboStrap\CacheManager;
 use ComboStrap\Event;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
@@ -66,14 +66,14 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         );
         try {
             $reference->getDatabasePage()->replicateAnalytics();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Backlink Mutation: Error while trying to replicate the analytics. Error: {$e->getMessage()}");
         }
 
         /**
          * Render the (footer slot) if it has a backlink dependency
          */
-        CacheDependencies::reRenderSecondarySlotsIfNeeded(
+        CacheDependencies::reRenderSideSlotIfNeeded(
             $pagePath,
             CacheDependencies::BACKLINKS_DEPENDENCY,
             self::BACKLINK_MUTATION_EVENT_NAME

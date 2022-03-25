@@ -52,7 +52,7 @@ class CacheManager
         try {
             $page = Page::createPageFromRequestedPage();
             $cacheKey = $page->getDokuwikiId();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             /**
              * In test, we may generate html from snippet without
              * request. No error in this case
@@ -158,7 +158,7 @@ class CacheManager
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function shouldSlotExpire($pageId): bool
     {

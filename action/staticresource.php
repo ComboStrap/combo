@@ -2,7 +2,7 @@
 
 use ComboStrap\CacheMedia;
 use ComboStrap\DokuPath;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\HttpResponse;
@@ -131,7 +131,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
 
             try {
                 $dokuPath = $mediaToSend->toDokuPath();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 // not a dokuwiki file ?
                 LogUtility::msg("Error: {$e->getMessage()}");
                 return;

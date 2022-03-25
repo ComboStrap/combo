@@ -16,11 +16,14 @@ class FileSystems
             case DokuFs::SCHEME:
                 return DokuFs::getOrCreate()->exists($path);
             default:
-                throw new ExceptionComboRuntime("File system ($scheme) unknown");
+                throw new ExceptionRuntime("File system ($scheme) unknown");
         }
     }
 
-    public static function getContent(Path $path)
+    /**
+     * @throws ExceptionNotFound - if the file does not exists or the mime is unknown
+     */
+    public static function getContent(Path $path): string
     {
         $scheme = $path->getScheme();
         switch ($scheme) {
@@ -29,9 +32,12 @@ class FileSystems
             case DokuFs::SCHEME:
                 return DokuFs::getOrCreate()->getContent($path);
         }
-        throw new ExceptionComboRuntime("File system ($scheme) unknown");
+        throw new ExceptionRuntime("File system ($scheme) unknown");
     }
 
+    /**
+     * @throws ExceptionNotFound - if the file does not exist
+     */
     public static function getModifiedTime(Path $path): ?\DateTime
     {
         $scheme = $path->getScheme();
@@ -41,7 +47,7 @@ class FileSystems
             case DokuFs::SCHEME:
                 return DokuFs::getOrCreate()->getModifiedTime($path);
             default:
-                throw new ExceptionComboRuntime("File system ($scheme) unknown");
+                throw new ExceptionRuntime("File system ($scheme) unknown");
         }
 
     }
@@ -55,7 +61,7 @@ class FileSystems
             case DokuFs::SCHEME:
                 return DokuFs::getOrCreate()->getCreationTime($path);
             default:
-                throw new ExceptionComboRuntime("File system ($scheme) unknown");
+                throw new ExceptionRuntime("File system ($scheme) unknown");
         }
     }
 
@@ -77,7 +83,7 @@ class FileSystems
                 DokuFs::getOrCreate()->delete($path);
                 return;
             default:
-                throw new ExceptionComboRuntime("File system ($scheme) unknown");
+                throw new ExceptionRuntime("File system ($scheme) unknown");
         }
     }
 
@@ -91,13 +97,13 @@ class FileSystems
             case DokuFs::SCHEME:
                 return DokuFs::getOrCreate()->getSize($path);
             default:
-                throw new ExceptionComboRuntime("File system ($scheme) unknown");
+                throw new ExceptionRuntime("File system ($scheme) unknown");
         }
     }
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createDirectory(Path $dirPath)
     {
@@ -108,7 +114,7 @@ class FileSystems
             case DokuFs::SCHEME:
                 return DokuFs::getOrCreate()->createDirectory($dirPath);
             default:
-                throw new ExceptionComboRuntime("File system ($scheme) unknown");
+                throw new ExceptionRuntime("File system ($scheme) unknown");
         }
     }
 }

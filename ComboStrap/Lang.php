@@ -99,7 +99,7 @@ class Lang extends MetadataText
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setFromStoreValue($value): Metadata
     {
@@ -112,7 +112,7 @@ class Lang extends MetadataText
     /**
      * @param string|null $value
      * @return Metadata
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setValue($value): Metadata
     {
@@ -152,7 +152,7 @@ class Lang extends MetadataText
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private function validityCheck($value)
     {
@@ -160,7 +160,7 @@ class Lang extends MetadataText
             return;
         }
         if (!StringUtility::match($value, "^[a-zA-Z]{2}$")) {
-            throw new ExceptionCombo("The lang value ($value) for the page ($this) does not have two letters", $this->getCanonical());
+            throw new ExceptionCompile("The lang value ($value) for the page ($this) does not have two letters", $this->getCanonical());
         }
     }
 

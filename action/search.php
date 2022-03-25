@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\MarkupRef;
 use ComboStrap\Mime;
 use ComboStrap\Page;
@@ -82,7 +82,7 @@ class action_plugin_combo_search extends DokuWiki_Action_Plugin
             $linkUtility = MarkupRef::createFromPageId($id);
             try {
                 $html = $linkUtility->toAttributes()->toHtmlEnterTag("a") . $page->getTitleOrDefault() . "</a>";
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 $html = "Unable to render the link for the page ($id). Error: {$e->getMessage()}";
             }
             $data[] = $html;

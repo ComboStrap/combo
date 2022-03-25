@@ -3,7 +3,7 @@
 use ComboStrap\CacheLog;
 use ComboStrap\CacheManager;
 use ComboStrap\Event;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\LowQualityCalculatedIndicator;

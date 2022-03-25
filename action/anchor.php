@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -88,7 +88,7 @@ main a:hover {
 EOF;
                     $snippetManager->attachCssSnippetForRequest(self::ANCHOR_HTML_SNIPPET_ID, $aCss);
                 }
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("Error while setting the branding color on text. Error: {$e->getMessage()}");
             }
 

@@ -74,7 +74,7 @@ class Json
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     static function createFromString($jsonString): Json
@@ -84,7 +84,7 @@ class Json
         }
         $jsonArray = json_decode($jsonString, true);
         if ($jsonArray === null) {
-            throw new ExceptionCombo("The string is not a valid json. Value: ($jsonString)");
+            throw new ExceptionCompile("The string is not a valid json. Value: ($jsonString)");
         }
         return new Json($jsonArray);
     }

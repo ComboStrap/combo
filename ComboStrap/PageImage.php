@@ -34,7 +34,7 @@ class PageImage
      * @param Image|string $image
      * @param Page $page
      * @return PageImage
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function create($image, ResourceCombo $page): PageImage
     {
@@ -48,7 +48,7 @@ class PageImage
     /**
      * @param array $usages
      * @return $this
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setUsages(array $usages): PageImage
     {
@@ -58,7 +58,7 @@ class PageImage
                 continue;
             }
             if (!in_array($value, PageImageUsage::getUsageValues())) {
-                throw new ExceptionCombo("The page image usage value ($value) is not valid.");
+                throw new ExceptionCompile("The page image usage value ($value) is not valid.");
             }
             $this->usages[$value] = $value;
         }

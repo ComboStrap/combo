@@ -55,7 +55,7 @@ class AnalyticsDocument extends OutputDocument
     const METADATA = 'metadata';
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getOrProcessJson(): Json
     {
@@ -71,7 +71,7 @@ class AnalyticsDocument extends OutputDocument
      * to return a json object
      *
      * @return Json
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getJson(): Json
     {

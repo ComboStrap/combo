@@ -137,13 +137,13 @@ class SvgDocument extends XmlDocument
     /**
      * @param Path $path
      * @return SvgDocument
-     * @throws ExceptionCombo - if the file does not exist or is not valid
+     * @throws ExceptionCompile - if the file does not exist or is not valid
      *
      */
     public static function createSvgDocumentFromPath(Path $path): SvgDocument
     {
         if (!FileSystems::exists($path)) {
-            throw new ExceptionCombo("The path ($path) does not exist. A svg document cannot be created", self::CANONICAL);
+            throw new ExceptionCompile("The path ($path) does not exist. A svg document cannot be created", self::CANONICAL);
         }
         $text = FileSystems::getContent($path);
         $svg = new SvgDocument($text);
@@ -153,7 +153,7 @@ class SvgDocument extends XmlDocument
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createSvgDocumentFromMarkup($markup): SvgDocument
     {
@@ -179,7 +179,7 @@ class SvgDocument extends XmlDocument
      *   This class should be merged with {@link ImageSvg}
      *   Because we use only {@link Image} function that are here not available because we loose the fact that this is an image
      *   For instance {@link Image::getCroppingDimensionsWithRatio()}
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getXmlText(TagAttributes $tagAttributes = null): string
     {
@@ -238,13 +238,13 @@ class SvgDocument extends XmlDocument
          */
         try {
             $mediaWidth = $this->getMediaWidth();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("The media width of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
             return parent::getXmlText();
         }
         try {
             $mediaHeight = $this->getMediaHeight();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("The media height of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
             return parent::getXmlText();
         }
@@ -360,7 +360,7 @@ class SvgDocument extends XmlDocument
                      */
                     try {
                         $widthInPixel = Dimension::toPixelValue($requestedWidth);
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         LogUtility::msg("The requested width $requestedWidth could not be converted to pixel. It returns the following error ({$e->getMessage()}). Processing was stopped");
                         return parent::getXmlText();
                     }
@@ -588,7 +588,7 @@ class SvgDocument extends XmlDocument
             $ratio = $localTagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
             try {
                 $targetRatio = Dimension::convertTextualRatioToNumber($ratio);
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("The target ratio attribute ($ratio) returns the following error ({$e->getMessage()}). The svg processing was stopped");
                 return parent::getXmlText();
             }
@@ -690,7 +690,7 @@ class SvgDocument extends XmlDocument
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function getMediaWidth(): int
@@ -701,8 +701,8 @@ class SvgDocument extends XmlDocument
             $viewBoxWidth = $attributes[2];
             try {
                 return DataType::toInteger($viewBoxWidth);
-            } catch (ExceptionCombo $e) {
-                throw new ExceptionCombo("The media with ($viewBoxWidth) of the svg image ($this) is not a valid integer value");
+            } catch (ExceptionCompile $e) {
+                throw new ExceptionCompile("The media with ($viewBoxWidth) of the svg image ($this) is not a valid integer value");
             }
         }
 
@@ -712,18 +712,18 @@ class SvgDocument extends XmlDocument
          */
         $width = $this->getXmlDom()->documentElement->getAttribute("width");
         if ($width === "") {
-            throw new ExceptionCombo("The svg ($this) does not have a viewBox or width attribute, the intrinsic width cannot be determined");
+            throw new ExceptionCompile("The svg ($this) does not have a viewBox or width attribute, the intrinsic width cannot be determined");
         }
         try {
             return DataType::toInteger($width);
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The media width ($width) of the svg image ($this) is not a valid integer value");
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionCompile("The media width ($width) of the svg image ($this) is not a valid integer value");
         }
 
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function getMediaHeight(): int
@@ -734,8 +734,8 @@ class SvgDocument extends XmlDocument
             $viewBoxHeight = $attributes[3];
             try {
                 return DataType::toInteger($viewBoxHeight);
-            } catch (ExceptionCombo $e) {
-                throw new ExceptionCombo("The media height of the svg image ($this) is not a valid integer value");
+            } catch (ExceptionCompile $e) {
+                throw new ExceptionCompile("The media height of the svg image ($this) is not a valid integer value");
             }
         }
         /**
@@ -744,12 +744,12 @@ class SvgDocument extends XmlDocument
          */
         $height = $this->getXmlDom()->documentElement->getAttribute("height");
         if ($height === "") {
-            throw new ExceptionCombo("The svg ($this) does not have a viewBox or height attribute, the intrinsic height cannot be determined");
+            throw new ExceptionCompile("The svg ($this) does not have a viewBox or height attribute, the intrinsic height cannot be determined");
         }
         try {
             return DataType::toInteger($height);
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The media width ($height) of the svg image ($this) is not a valid integer value");
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionCompile("The media width ($height) of the svg image ($this) is not a valid integer value");
         }
 
     }

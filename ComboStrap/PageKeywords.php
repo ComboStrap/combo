@@ -87,7 +87,7 @@ class PageKeywords extends MetadataMultiple
     {
         try {
             $this->array = $this->toArrayOrNull($value);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getMessage());
         }
         return $this;

@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\ColorRgb;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -38,7 +38,7 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
     const HTML_TAG = "mark";
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function toBackgroundColor(ColorRgb $primaryColor): ColorRgb
     {
@@ -64,7 +64,7 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
             $colorRgb = self::toBackgroundColor($primaryColor);
             $tagAttributes->addComponentAttributeValue(ColorRgb::BACKGROUND_COLOR, $colorRgb
                 ->toRgbHex());
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error on highlight color calculation");
         }
         return $tagAttributes->toHtmlEnterTag($htmlTag);

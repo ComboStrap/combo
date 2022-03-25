@@ -3,7 +3,7 @@
 
 use ComboStrap\Console;
 use ComboStrap\Event;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 
@@ -47,7 +47,7 @@ class action_plugin_combo_fulldatabasereplication extends DokuWiki_Action_Plugin
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function handle_db_replication(Doku_Event $event, $param)
     {
@@ -78,10 +78,10 @@ class action_plugin_combo_fulldatabasereplication extends DokuWiki_Action_Plugin
         if ($databasePage->shouldReplicate()) {
             try {
                 $databasePage->replicate();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 $message = "Error with the database replication for the page ($page). ".$e->getMessage();
                 if(Console::isConsoleRun()) {
-                    throw new ExceptionCombo($message);
+                    throw new ExceptionCompile($message);
                 } else {
                     LogUtility::msg($message);
                 }

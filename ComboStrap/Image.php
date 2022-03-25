@@ -41,7 +41,7 @@ abstract class Image extends Media
      * @param Path $path
      * @param null $attributes
      * @return ImageRaster|ImageSvg
-     * @throws ExceptionCombo if not valid
+     * @throws ExceptionCompile if not valid
      */
     public static function createImageFromPath(Path $path, $attributes = null)
     {
@@ -50,7 +50,7 @@ abstract class Image extends Media
 
         if (!$mime->isImage()) {
 
-            throw new ExceptionCombo("The file ($path) has not been detected as being an image, media returned", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            throw new ExceptionCompile("The file ($path) has not been detected as being an image, media returned", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
 
         }
         if ($mime->toString() === Mime::SVG) {
@@ -68,7 +68,7 @@ abstract class Image extends Media
     }
 
     /**
-     * @throws ExceptionCombo if not valid
+     * @throws ExceptionCompile if not valid
      */
     public static function createImageFromId(string $imageId, $rev = '', $attributes = null)
     {
@@ -95,7 +95,7 @@ abstract class Image extends Media
 
         try {
             $targetAspectRatio = $this->getTargetAspectRatio();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("The target ratio for the image was set to 1 because we got this error: {$e->getMessage()}");
             $targetAspectRatio = 1;
         }
@@ -165,8 +165,8 @@ abstract class Image extends Media
      * For a raster image, the internal width
      * for a svg, the defined viewBox
      *
-     * @throws ExceptionCombo
      * @return int in pixel
+     * @throws ExceptionCompile
      */
     public abstract function getIntrinsicWidth(): int;
 
@@ -190,7 +190,7 @@ abstract class Image extends Media
      * It's needed for an img tag to set the img `width` and `height` that pass the
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getIntrinsicAspectRatio()
     {
@@ -212,14 +212,14 @@ abstract class Image extends Media
      * It's needed for an img tag to set the img `width` and `height` that pass the
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getTargetAspectRatio()
     {
 
         $targetHeight = $this->getTargetHeight();
         if ($targetHeight === 0) {
-            throw new ExceptionCombo("The target height is equal to zero, we can calculate the target aspect ratio");
+            throw new ExceptionCompile("The target height is equal to zero, we can calculate the target aspect ratio");
         }
         $targetWidth = $this->getTargetWidth();
         return $targetWidth / $targetHeight;
@@ -235,7 +235,7 @@ abstract class Image extends Media
      * It's needed for an img tag to set the img `width` and `height` that pass the
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getRequestedAspectRatio()
     {
@@ -244,7 +244,7 @@ abstract class Image extends Media
         if ($requestedRatio !== null) {
             try {
                 return Dimension::convertTextualRatioToNumber($requestedRatio);
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("The requested ratio ($requestedRatio) is not a valid value ({$e->getMessage()})", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             }
         }
@@ -295,7 +295,7 @@ abstract class Image extends Media
          */
         try {
             $targetRatio = $this->getTargetAspectRatio();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Unable to check the target ratio because it returns this error: {$e->getMessage()}");
             return;
         }
@@ -361,7 +361,7 @@ abstract class Image extends Media
      *
      *
      * @return int
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getTargetHeight(): int
     {
@@ -382,7 +382,7 @@ abstract class Image extends Media
                     $ratio = $this->getIntrinsicAspectRatio();
                 }
                 return self::round($width / $ratio);
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("The intrinsic height of the image ($this) was used because retrieving the ratio returns this error: {$e->getMessage()} ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 return $this->getIntrinsicHeight();
             }
@@ -414,7 +414,7 @@ abstract class Image extends Media
      *   * with ''0x20'', the target image has a {@link Image::getTargetHeight() logical height} of 20 and a {@link Image::getTargetWidth() logical width} that is scaled down by the {@link Image::getIntrinsicAspectRatio() instrinsic ratio}
      *
      * The doc is {@link https://www.dokuwiki.org/images#resizing}
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getTargetWidth(): int
     {
@@ -440,7 +440,7 @@ abstract class Image extends Media
                     $ratio = $this->getIntrinsicAspectRatio();
                 }
                 return self::round($ratio * $height);
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("The intrinsic width of the image ($this) was used because retrieving the ratio returns this error: {$e->getMessage()} ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 return $this->getIntrinsicWidth();
             }
@@ -466,7 +466,7 @@ abstract class Image extends Media
 
     /**
      * @return int|null
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getRequestedWidth(): ?int
     {
@@ -476,14 +476,14 @@ abstract class Image extends Media
         }
         try {
             return DataType::toInteger($value);
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The width value ($value) is not a valid integer", self::CANONICAL, $e);
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionCompile("The width value ($value) is not a valid integer", self::CANONICAL, $e);
         }
     }
 
     /**
      * @return int|null
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getRequestedHeight(): ?int
     {
@@ -493,8 +493,8 @@ abstract class Image extends Media
         }
         try {
             return DataType::toInteger($value);
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The height value ($value) is not a valid integer", self::CANONICAL, $e);
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionCompile("The height value ($value) is not a valid integer", self::CANONICAL, $e);
         }
     }
 

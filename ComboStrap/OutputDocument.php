@@ -73,7 +73,7 @@ abstract class OutputDocument extends PageCompilerDocument
             && FileSystems::exists($this->getCachePath())
             && PluginUtility::isDevOrTest()
         ) {
-            throw new ExceptionComboRuntime("The file ({$this->getExtension()}) should not compile and exists already, compilation is not needed", LogUtility::LVL_MSG_ERROR);
+            throw new ExceptionRuntime("The file ({$this->getExtension()}) should not compile and exists already, compilation is not needed", LogUtility::LVL_MSG_ERROR);
         }
 
         /**
@@ -116,7 +116,7 @@ abstract class OutputDocument extends PageCompilerDocument
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function storeContent($content)
     {

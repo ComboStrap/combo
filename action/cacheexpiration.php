@@ -10,7 +10,7 @@ use ComboStrap\CacheMenuItem;
 use ComboStrap\CacheReportHtmlDataBlockArray;
 use ComboStrap\Cron;
 use ComboStrap\Event;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
@@ -96,7 +96,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
         $cacheManager = PluginUtility::getCacheManager();
         try {
             $shouldSlotExpire = $cacheManager->shouldSlotExpire($pageId);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while trying to check if the slot ($pageId) should expired. Error: {$e->getMessage()}", self::CANONICAL);
             return;
         }
@@ -140,7 +140,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
                 ->getValue();
             try {
                 $newDate = Cron::getDate($cacheExpirationFrequency);
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("Error while calculating the new expiration date. Error: {$e->getMessage()}");
                 return;
             }
@@ -151,7 +151,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
                 $cacheExpirationDateMeta
                     ->setValue($newDate)
                     ->persist();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("Error while persisting the new expiration date. Error:{$e->getMessage()}");
                 return;
             }

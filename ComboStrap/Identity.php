@@ -100,7 +100,7 @@ class Identity
             try {
                 $pageId = Page::createPageFromGlobalDokuwikiId()
                     ->getPageId();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("The global ID is not defined, we couldn't detect the page requested. No writer permission given");
                 return false;
             }

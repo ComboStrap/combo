@@ -362,7 +362,7 @@ class Call
                     if (!is_array($attributes)) {
                         $message = "The attributes value are not an array for the call ($this)";
                         if (PluginUtility::isDevOrTest()) {
-                            throw new ExceptionComboRuntime($message, self::CANONICAL);
+                            throw new ExceptionRuntime($message, self::CANONICAL);
                         }
                         LogUtility::msg($message);
                         return null;

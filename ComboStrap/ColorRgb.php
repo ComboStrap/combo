@@ -297,7 +297,7 @@ class ColorRgb
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createFromRgbChannels(int $red, int $green, int $blue): ColorRgb
     {
@@ -307,7 +307,7 @@ class ColorRgb
 
     /**
      * Utility function to get white
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getWhite(): ColorRgb
     {
@@ -321,7 +321,7 @@ class ColorRgb
 
     /**
      * Utility function to get black
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getBlack(): ColorRgb
     {
@@ -334,7 +334,7 @@ class ColorRgb
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createFromHex(string $color)
     {
@@ -348,13 +348,13 @@ class ColorRgb
 
     /**
      * @return ColorHsl
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function toHsl(): ColorHsl
     {
 
         if ($this->red === null) {
-            throw new ExceptionCombo("This color ($this) does not have any channel known, we can't transform it to hsl");
+            throw new ExceptionCompile("This color ($this) does not have any channel known, we can't transform it to hsl");
         }
         $red = $this->red / 255;
         $green = $this->green / 255;
@@ -415,7 +415,7 @@ class ColorRgb
      * https://gist.github.com/jedfoster/7939513
      *
      * This is a linear extrapolation along the segment
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     function mix($color, ?int $weight = 50): ColorRgb
     {
@@ -432,7 +432,7 @@ class ColorRgb
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     function unmix($color, ?int $weight = 50): ColorRgb
     {
@@ -443,15 +443,15 @@ class ColorRgb
         $color2 = ColorRgb::createFromString($color);
         $targetRed = self::round(Math::unlerp($color2->getRed(), $this->getRed(), $weight));
         if ($targetRed < 0) {
-            throw new ExceptionCombo("This is not possible, the red value ({$color2->getBlue()}) with the percentage $weight could not be unmixed. They were not calculated with color mixing.");
+            throw new ExceptionCompile("This is not possible, the red value ({$color2->getBlue()}) with the percentage $weight could not be unmixed. They were not calculated with color mixing.");
         }
         $targetGreen = self::round(Math::unlerp($color2->getGreen(), $this->getGreen(), $weight));
         if ($targetGreen < 0) {
-            throw new ExceptionCombo("This is not possible, the green value ({$color2->getGreen()}) with the percentage $weight could not be unmixed. They were not calculated with color mixing.");
+            throw new ExceptionCompile("This is not possible, the green value ({$color2->getGreen()}) with the percentage $weight could not be unmixed. They were not calculated with color mixing.");
         }
         $targetBlue = self::round(Math::unlerp($color2->getBlue(), $this->getBlue(), $weight));
         if ($targetBlue < 0) {
-            throw new ExceptionCombo("This is not possible, the blue value ({$color2->getBlue()}) with the percentage $weight could not be unmixed. They were not calculated with color mixing.");
+            throw new ExceptionCompile("This is not possible, the blue value ({$color2->getBlue()}) with the percentage $weight could not be unmixed. They were not calculated with color mixing.");
         }
         return ColorRgb::createFromRgbChannels($targetRed, $targetGreen, $targetBlue);
 
@@ -462,12 +462,12 @@ class ColorRgb
      *
      * @param mixed $hex
      *
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     function hex2rgb($hex = '#000000'): array
     {
         if ($hex[0] !== "#") {
-            throw new ExceptionCombo("The color value ($hex) does not start with a #, this is not valid CSS hexadecimal color value");
+            throw new ExceptionCompile("The color value ($hex) does not start with a #, this is not valid CSS hexadecimal color value");
         }
         $digits = str_replace("#", "", $hex);
         $hexLen = strlen($digits);
@@ -484,11 +484,11 @@ class ColorRgb
                 $transparency = true;
                 break;
             default:
-                throw new ExceptionCombo("The digit color value ($hex) is not 3 or 6 in length, this is not a valid CSS hexadecimal color value");
+                throw new ExceptionCompile("The digit color value ($hex) is not 3 or 6 in length, this is not a valid CSS hexadecimal color value");
         }
         $result = preg_match("/[0-9a-f]{3,8}/i", $digits);
         if ($result !== 1) {
-            throw new ExceptionCombo("The digit color value ($hex) is not a hexadecimal value, this is not a valid CSS hexadecimal color value");
+            throw new ExceptionCompile("The digit color value ($hex) is not a hexadecimal value, this is not a valid CSS hexadecimal color value");
         }
         $channelHexs = str_split($digits, $lengthColorHex);
         $rgbDec = [];
@@ -532,7 +532,7 @@ class ColorRgb
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     static function createFromString(string $color): ColorRgb
@@ -545,7 +545,7 @@ class ColorRgb
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     static function createFromName(string $color): ColorRgb
@@ -617,7 +617,7 @@ class ColorRgb
     {
         try {
             return $this->mix('black', $percentage);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             // should not happen
             LogUtility::msg("Error while shading. Error: {$e->getMessage()}");
             return $this;
@@ -664,7 +664,7 @@ class ColorRgb
     {
         try {
             return $this->mix("white", $percentage);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             // should not happen
             LogUtility::msg("Error while tinting ($this) with a percentage ($percentage. Error: {$e->getMessage()}");
             return $this;
@@ -695,7 +695,7 @@ class ColorRgb
      * The ratio that returns the chrome browser
      * @param ColorRgb $colorRgb
      * @return float
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function getContrastRatio(ColorRgb $colorRgb): float
@@ -716,7 +716,7 @@ class ColorRgb
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function toMinimumContrastRatio(string $color, float $minimum = self::MINIMUM_CONTRAST_RATIO, $darknessIncrement = 5): ColorRgb
@@ -747,7 +747,7 @@ class ColorRgb
                 ->toHsl()
                 ->toComplement()
                 ->toRgb();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while getting the complementary color of ($this). Error: {$e->getMessage()}");
             return $this;
         }
@@ -765,7 +765,7 @@ class ColorRgb
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function toMinimumContrastRatioAgainstWhite(float $minimumContrastRatio = self::MINIMUM_CONTRAST_RATIO, int $darknessIncrement = 5): ColorRgb
@@ -774,14 +774,14 @@ class ColorRgb
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private
     function setHex(string $color): ColorRgb
     {
         // Hexadecimal
         if ($color[0] !== "#") {
-            throw new ExceptionCombo("The value is not an hexadecimal color value ($color)");
+            throw new ExceptionCompile("The value is not an hexadecimal color value ($color)");
         }
         [$this->red, $this->green, $this->blue, $this->transparency] = $this->hex2rgb($color);
         $this->nameType = self::VALUE_TYPE_RGB_HEX;
@@ -790,22 +790,22 @@ class ColorRgb
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function setRgbChannels(array $colorValue): ColorRgb
     {
         if (sizeof($colorValue) != 3) {
-            throw new ExceptionCombo("A rgb color array should be of length 3");
+            throw new ExceptionCompile("A rgb color array should be of length 3");
         }
         foreach ($colorValue as $color) {
             try {
                 $channel = DataType::toInteger($color);
-            } catch (ExceptionCombo $e) {
-                throw new ExceptionCombo("The rgb color $color is not an integer. Error: {$e->getMessage()}");
+            } catch (ExceptionCompile $e) {
+                throw new ExceptionCompile("The rgb color $color is not an integer. Error: {$e->getMessage()}");
             }
             if ($channel < 0 and $channel > 255) {
-                throw new ExceptionCombo("The rgb color $color is not between 0 and 255");
+                throw new ExceptionCompile("The rgb color $color is not between 0 and 255");
             }
         }
         [$this->red, $this->green, $this->blue] = $colorValue;
@@ -822,7 +822,7 @@ class ColorRgb
 
     /**
      * Via a name
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private
     function setName(string $name): ColorRgb

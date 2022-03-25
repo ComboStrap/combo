@@ -1239,7 +1239,7 @@ class TagAttributes
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getValueAsInteger(string $WIDTH_KEY, ?int $default = null): ?int
     {

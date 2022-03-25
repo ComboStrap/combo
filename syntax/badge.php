@@ -4,7 +4,7 @@
 // must be run within Dokuwiki
 use ComboStrap\Bootstrap;
 use ComboStrap\ColorRgb;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -143,7 +143,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                 if ($color !== null) {
                     try {
                         $colorObject = ColorRgb::createFromString($color);
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         LogUtility::msg("The color value ($color) for the badge type ($type) is not valid. Error: {$e->getMessage()}");
                     }
                 }
@@ -163,7 +163,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                                 ->setLightness(80)
                                 ->toRgb()
                                 ->toCssValue();
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             LogUtility::msg("Error while trying to set the lightness for the badge background color");
                             $backgroundColor = $colorObject
                                 ->scale(-80)
@@ -181,7 +181,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                                 ->scale(40)
                                 ->toMinimumContrastRatio($backgroundColor)
                                 ->toCssValue();
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             LogUtility::msg("Error while scaling the text color ($color) for the badge type ($type). Error: {$e->getMessage()}");
                             $textColor = $colorObject
                                 ->scale(40)

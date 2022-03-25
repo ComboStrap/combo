@@ -37,7 +37,7 @@ class Bootstrap
         if (Site::isStrapTemplate()) {
             try {
                 Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 return $default;
             }
             $bootstrapVersion = TplUtility::getBootStrapVersion();

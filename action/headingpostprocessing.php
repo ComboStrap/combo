@@ -3,7 +3,7 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
@@ -402,7 +402,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                         );
                         $callStack->insertBefore($sectionEditComment);
                     }
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     LogUtility::msg("Error while adding the edit button. Error: {$e->getMessage()}");
                 }
             }

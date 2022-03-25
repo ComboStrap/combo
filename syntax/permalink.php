@@ -11,7 +11,7 @@ use ComboStrap\Canonical;
 use ComboStrap\Display;
 use ComboStrap\DokuPath;
 use ComboStrap\DokuwikiUrl;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\MarkupRef;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;

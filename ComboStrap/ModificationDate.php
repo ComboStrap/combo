@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\MetaManagerForm;
 use ComboStrap\LogUtility;

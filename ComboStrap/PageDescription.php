@@ -154,7 +154,7 @@ class PageDescription extends MetadataText
                     $this->buildFromReadStore();
                 }
                 if ($this->descriptionOrigin === PageDescription::DESCRIPTION_COMBO_ORIGIN) {
-                    throw new ExceptionCombo("The description cannot be empty", PageDescription::DESCRIPTION_PROPERTY);
+                    throw new ExceptionCompile("The description cannot be empty", PageDescription::DESCRIPTION_PROPERTY);
                 } else {
                     // The original description is from Dokuwiki, we don't send an error
                     // otherwise all page without a first description would get an error

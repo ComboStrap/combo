@@ -76,7 +76,7 @@ class InstructionsDocument extends PageCompilerDocument
          * Adapted from {@link p_cached_instructions()}
          */
         try {
-            $text = $this->getPage()->getTextContent();
+            $text = $this->getPage()->getMarkup();
             $instructions = p_get_instructions($text);
         } finally {
             // close restore ID

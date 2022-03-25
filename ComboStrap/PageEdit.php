@@ -47,7 +47,7 @@ class PageEdit
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function toTag(): string
     {
@@ -62,7 +62,7 @@ class PageEdit
          */
         global $ID;
         if ($ID === null) {
-            throw new ExceptionCombo("The global ID is not set", self::CANONICAL);
+            throw new ExceptionCompile("The global ID is not set", self::CANONICAL);
         }
         $id = $this->getNewFormId($ID);
         $data = [
@@ -75,7 +75,7 @@ class PageEdit
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function toHtmlComment(): string
     {

@@ -63,7 +63,7 @@ class LocalFs implements FileSystem
     public function getModifiedTime($path): DateTime
     {
         if (!self::exists($path)) {
-            throw new ExceptionNotFound("The file does not exist");
+            throw new ExceptionNotFound("Local File System Modified Time: The file ($path) does not exist");
         }
         return Iso8601Date::createFromTimestamp(filemtime($path->toAbsolutePath()->toString()))->getDateTime();
     }

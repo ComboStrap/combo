@@ -2,6 +2,7 @@
 
 
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\MetaManagerForm;
 use ComboStrap\LogUtility;
@@ -34,32 +35,36 @@ class ModificationDate extends MetadataDateTime
             return parent::buildFromReadStore();
         }
 
-        $modificationTime = FileSystems::getModifiedTime($this->getResource()->getPath());
-        if ($modificationTime !== null) {
+        try {
+            $modificationTime = FileSystems::getModifiedTime($this->getResource()->getPath());
             $this->setValue($modificationTime);
             return $this;
-        }
+        } catch (ExceptionNotFound $e) {
 
-        /**
-         * Dokuwiki
-         * Why do they store the date of the file while it's in the file system ?
-         */
-        $createdMeta = $store->getCurrentFromName('date')['modified'];
-        if (empty($createdMeta)) {
-            $createdMeta = $store->getFromPersistentName('date')['modified'];
+            /**
+             * Dokuwiki
+             * Why do they store the date of the file while it's in the file system ?
+             */
+            $createdMeta = $store->getCurrentFromName('date')['modified'];
             if (empty($createdMeta)) {
+                $createdMeta = $store->getFromPersistentName('date')['modified'];
+                if (empty($createdMeta)) {
+                    return $this;
+                }
+            }
+            // the data in dokuwiki is saved as timestamp
+            $datetime = new DateTime();
+            if (!is_int($createdMeta)) {
+                LogUtility::msg("The modification time in the dokuwiki meta is not an integer");
                 return $this;
             }
-        }
-        // the data in dokuwiki is saved as timestamp
-        $datetime = new DateTime();
-        if(!is_int($createdMeta)){
-            LogUtility::msg("The modification time in the dokuwiki meta is not an integer");
+            $datetime->setTimestamp($createdMeta);
+            $this->setValue($datetime);
             return $this;
+
         }
-        $datetime->setTimestamp($createdMeta);
-        $this->setValue($datetime);
-        return $this;
+
+
     }
 
 
@@ -91,11 +96,11 @@ class ModificationDate extends MetadataDateTime
     public function getDefaultValue(): ?DateTime
     {
 
-        $modificationTime = FileSystems::getModifiedTime($this->getResource()->getPath());
-        if ($modificationTime !== null) {
-            return $modificationTime;
+        try {
+            return FileSystems::getModifiedTime($this->getResource()->getPath());
+        } catch (ExceptionNotFound $e) {
+            return PageCreationDate::createForPage($this->getResource())->getValue();
         }
-        return PageCreationDate::createForPage($this->getResource())->getValue();
 
     }
 

@@ -26,7 +26,7 @@ class MetadataStoreTransfer
      * After processing, this array will have the new keys
      * Use in a frontmatter to send correct data to the rendering metadata phase
      */
-    private $normalizedData;
+    private $normalizedData = [];
     /**
      * @var array - the processing messages
      */

@@ -127,7 +127,7 @@ class CacheDependencies
     }
 
     /**
-     * Rerender for now only the slide slot if it has cache dependency
+     * Rerender for now only the secondary slot if it has cache dependency
      * (ie {@link CacheDependencies::PAGE_SYSTEM_DEPENDENCY} or {@link CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY})
      * @param $path
      * @param string $dependency -  a {@link CacheDependencies} ie
@@ -143,7 +143,7 @@ class CacheDependencies
              * Rerender secondary slot if needed
              */
             $page = Page::createPageFromId($ID);
-            $secondarySlots = [$page->getSideSlot()];
+            $secondarySlots = $page->getSecondarySlots();
             foreach ($secondarySlots as $secondarySlot) {
                 $htmlDocument = $secondarySlot->getHtmlDocument();
                 $cacheDependencies = $htmlDocument->getCacheDependencies();

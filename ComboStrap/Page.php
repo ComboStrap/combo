@@ -2083,6 +2083,8 @@ class Page extends ResourceComboAbs
     }
 
     /**
+     * The slots that are independent from the main content
+     * There is for now only one.
      * @return Page[]
      */
     public function getSecondarySlots(): array

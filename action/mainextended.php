@@ -45,7 +45,7 @@ class action_plugin_combo_mainextended extends DokuWiki_Action_Plugin
 
         global $ACT;
 
-        if($ACT!=='show'){
+        if ($ACT !== 'show') {
             return;
         }
 
@@ -63,6 +63,9 @@ class action_plugin_combo_mainextended extends DokuWiki_Action_Plugin
             $qualifiedPath = "$ns:$name";
         }
         $page = Page::createPageFromQualifiedPath($qualifiedPath);
+        if ($page->isRootHomePage()) {
+            return;
+        }
         if (!FileSystems::exists($page->getPath())) {
             /**
              * Because this function is also called
@@ -86,31 +89,34 @@ class action_plugin_combo_mainextended extends DokuWiki_Action_Plugin
 
         $data = &$event->data;
 
-        if(!is_object($data)){
+        if (!is_object($data)) {
             // should not happen
             LogUtility::msg("The cache variable is not an object. Value: $data");
             return;
         }
-        if (!property_exists($data, 'page')){
-            $class= get_class($data);
+        if (!property_exists($data, 'page')) {
+            $class = get_class($data);
             LogUtility::msg("The property `page` does not exists on the object ($class)");
             return;
         }
         $pageId = $data->page;
-        if(empty($pageId)){
+        if (empty($pageId)) {
             return;
         }
-        if (!property_exists($data, 'mode')){
-            $class= get_class($data);
+        if (!property_exists($data, 'mode')) {
+            $class = get_class($data);
             LogUtility::msg("The property `mode` does not exists on the object ($class)");
             return;
         }
         $mode = $data->mode;
-        if($mode!=="metadata"){
+        if ($mode !== "metadata") {
             return;
         }
         $page = Page::createPageFromId($pageId);
-        foreach($page->getChildren() as $child) {
+        if ($page->isRootHomePage()) {
+            return;
+        }
+        foreach ($page->getChildren() as $child) {
             $event->data->depends['files'][] = $child->getPath()->toLocalPath()->toString();
         }
 

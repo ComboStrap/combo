@@ -11,6 +11,7 @@ use ComboStrap\MediaLink;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\PageEdit;
+use ComboStrap\RenderUtility;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
@@ -432,9 +433,9 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
              *
              */
             $page = Page::createPageFromGlobalDokuwikiId();
-            global $ACT;
+            global $ACT; // may be null with ajax call
             if (
-                in_array($ACT, ["show", "preview"])
+                $ACT !== RenderUtility::DYNAMIC_RENDERING
                 && $page->isPrimarySlotWithHeaderAndFooter()
             ){
                 foreach ($page->getChildren() as $child) {

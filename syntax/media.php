@@ -4,6 +4,7 @@
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
 use ComboStrap\DokuFs;
+use ComboStrap\DokuPath;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\InternetPath;
 use ComboStrap\LogUtility;
@@ -67,14 +68,17 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      */
     const LINK_CLASS_ATTRIBUTE = "link-class";
 
-    public static function registerFirstMedia(Doku_Renderer_metadata $renderer, $src)
+    public static function registerFirstImage(Doku_Renderer_metadata $renderer, $src)
     {
         /**
          * {@link Doku_Renderer_metadata::$firstimage} is unfortunately protected
          * and {@link Doku_Renderer_metadata::internalmedia()} does not allow svg as first image
          */
         if (!isset($renderer->meta[PageImages::FIRST_IMAGE_META_RELATION])) {
-            $renderer->meta[PageImages::FIRST_IMAGE_META_RELATION] = $src;
+            $path = DokuPath::createMediaPathFromId($src);
+            if ($path->getMime()->isImage()) {
+                $renderer->meta[PageImages::FIRST_IMAGE_META_RELATION] = $src;
+            }
         }
 
     }
@@ -330,9 +334,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
         switch ($type) {
             case MediaLink::INTERNAL_MEDIA_CALL_NAME:
-                if (substr($src, -4) === ".svg") {
-                    self::registerFirstMedia($renderer, $src);
-                }
+                self::registerFirstImage($renderer, $src);
                 $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking);
                 break;
             case MediaLink::EXTERNAL_MEDIA_CALL_NAME:

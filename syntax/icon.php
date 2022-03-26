@@ -292,7 +292,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                 }
                 if ($mediaPath instanceof DokuPath && FileSystems::exists($mediaPath)) {
                     $mediaId = $mediaPath->getDokuwikiId();
-                    syntax_plugin_combo_media::registerFirstMedia($renderer, $mediaId);
+                    syntax_plugin_combo_media::registerFirstImage($renderer, $mediaId);
                 }
                 break;
 

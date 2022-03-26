@@ -820,7 +820,7 @@ class CallStack
     /**
      * @param Call $call
      */
-    public function appendCallAtTheEnd($call)
+    public function appendCallAtTheEnd(Call $call)
     {
         $this->callStack[] = $call->toCallArray();
     }

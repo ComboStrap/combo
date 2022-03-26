@@ -28,7 +28,6 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
      * The attribute to holds the toc data
      */
     const TOC_ATTRIBUTE = "toc";
-    const TOC_FOUND = "toc_combo_status";
 
 
     /**
@@ -96,21 +95,21 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
      * @param int $state
      * @param int $pos - byte position in the original source file
      * @param Doku_Handler $handler
-     * @return array|bool
+     * @return array
      * @see DokuWiki_Syntax_Plugin::handle()
      *
      */
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
         switch ($state) {
 
             case DOKU_LEXER_SPECIAL :
                 $attributes = PluginUtility::getTagAttributes($match);
-                $handler->setStatus(self::TOC_FOUND, true);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes);
+                    PluginUtility::ATTRIBUTES => $attributes
+                );
 
         }
         return array();

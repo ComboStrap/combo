@@ -23,6 +23,11 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
      */
     const EDIT_SECTION_OPEN = 'section_open';
     const EDIT_SECTION_CLOSE = 'section_close';
+    const HEADING_TAGS = [
+        syntax_plugin_combo_heading::TAG,
+        syntax_plugin_combo_headingatx::TAG,
+        syntax_plugin_combo_headingwiki::TAG
+    ];
 
     /**
      * The toc attribute that will store
@@ -448,13 +453,13 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                             //
                             $callStack->moveToStart();
                             $actualCall = $callStack->next();
-                            if($actualCall->getTagName()!==syntax_plugin_combo_frontmatter::TAG){
+                            if ($actualCall->getTagName() !== syntax_plugin_combo_frontmatter::TAG) {
                                 $callStack->previous();
                             }
                             $callStack->insertInstructionsFromNativeArrayAfterCurrentPosition($stack);
                             break;
                         case Page::SLOT_MAIN_FOOTER_NAME:
-                            //
+                            $callStack->appendInstructionsFromNativeArrayAtTheEnd($stack);
                             break;
                         default:
                             LogUtility::msg("The child ($child) of the page ($page) is unknown and was not added in the markup");
@@ -470,6 +475,49 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         /**
          * TOC
          */
+        if (self::$tocCall === null) {
+            $callStack->moveToStart();
+            while ($actualCall = $callStack->next()) {
+                if (!in_array($actualCall->getTagName(), self::HEADING_TAGS)) {
+                    continue;
+                }
+                if ($actualCall->getContext() !== "outline") {
+                    continue;
+                }
+                /**
+                 * Insert the TOC call and keep the call
+                 * to update the TOC data
+                 */
+                $level = $actualCall->getAttribute("level");
+                switch ($level) {
+                    case 1:
+                        /**
+                         * After Level 1
+                         */
+                        while($actualCall = $callStack->next()){
+                            if($actualCall->getState()===DOKU_LEXER_EXIT){
+                                break;
+                            }
+                        }
+                        $callStack->insertAfter(Call::createComboCall(
+                            syntax_plugin_combo_toc::TAG,
+                            DOKU_LEXER_SPECIAL
+                        ));
+                        $callStack->next();
+                        break;
+                    case 2:
+                        $callStack->insertBefore(Call::createComboCall(
+                            syntax_plugin_combo_toc::TAG,
+                            DOKU_LEXER_SPECIAL
+                        ));
+                        $callStack->previous();
+                        break;
+
+                }
+                self::$tocCall = $callStack->getActualCall();
+                break;
+            }
+        }
         if (self::$tocCall !== null) {
             self::$tocCall->addAttribute(syntax_plugin_combo_toc::TOC_ATTRIBUTE, self::$tocAttribute);
         }

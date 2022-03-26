@@ -426,8 +426,17 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * We parse the header/footer and add them to the callstack
          */
         try {
+            /**
+             * Be sure that this is a primary page
+             * and that the act is show/preview (and not {@link \ComboStrap\RenderUtility::DYNAMIC_RENDERING}
+             *
+             */
             $page = Page::createPageFromGlobalDokuwikiId();
-            if ($page->isPrimarySlotWithHeaderAndFooter()) {
+            global $ACT;
+            if (
+                in_array($ACT, ["show", "preview"])
+                && $page->isPrimarySlotWithHeaderAndFooter()
+            ){
                 foreach ($page->getChildren() as $child) {
                     $name = $child->getPath()->getLastName();
 
@@ -467,7 +476,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                     }
                 }
 
-            }
+        }
         } catch (ExceptionNotFound $e) {
             LogUtility::msg("Postprocessing: The running id was not found, we were unable to add the main footer/header");
         }
@@ -494,8 +503,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                         /**
                          * After Level 1
                          */
-                        while($actualCall = $callStack->next()){
-                            if($actualCall->getState()===DOKU_LEXER_EXIT){
+                        while ($actualCall = $callStack->next()) {
+                            if ($actualCall->getState() === DOKU_LEXER_EXIT) {
                                 break;
                             }
                         }

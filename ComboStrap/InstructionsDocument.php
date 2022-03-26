@@ -66,12 +66,13 @@ class InstructionsDocument extends PageCompilerDocument
         global $ID;
         $oldId = $ID;
         $ID = $this->getPage()->getPath()->getDokuwikiId();
+        global $INFO;
 
         /**
          * Get the instructions
          * Adapted from {@link p_cached_instructions()}
          *
-         * Note that this code is almost never called
+         * Note that this code may not run at first rendering
          *
          * Why ?
          * Because dokuwiki asks first page information

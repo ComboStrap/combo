@@ -2,6 +2,7 @@
 
 use ComboStrap\ExceptionCompile;
 use ComboStrap\PluginUtility;
+use ComboStrap\RenderUtility;
 use ComboStrap\Site;
 use ComboStrap\TplUtility;
 
@@ -66,8 +67,8 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
         global $ID;
         $keep = $ID;
         try {
-            $ID = "ajax_webcode_" . md5($marki);
-            $mainContent = p_render('xhtml', p_get_instructions($marki), $info);
+            $ID = "webcode_ajax_" . md5($marki);
+            $mainContent = RenderUtility::renderText2XhtmlAndStripPEventually($marki);
 
             /**
              * Html

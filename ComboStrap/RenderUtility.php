@@ -36,6 +36,9 @@ class RenderUtility
     {
         global $ID;
         $keep = $ID;
+        global $ACT;
+        $keepAct = $ACT;
+        $ACT = self::DYNAMIC_RENDERING;
         if ($ID === null && PluginUtility::isTest()) {
             $ID = self::DEFAULT_SLOT_ID_FOR_TEST;
         }
@@ -44,6 +47,7 @@ class RenderUtility
             return p_render('xhtml', $instructions, $info);
         } finally {
             $ID = $keep;
+            $ACT = $keepAct;
         }
 
     }

@@ -10,12 +10,10 @@ class InstructionsDocument extends PageCompilerDocument
 {
 
 
-
     /**
      * @var CacheInstructions
      */
     private $cache;
-
 
 
     /**
@@ -46,10 +44,7 @@ class InstructionsDocument extends PageCompilerDocument
         $this->cache = new CacheInstructions($id, $localFile);
 
 
-
     }
-
-
 
 
     function getExtension(): string
@@ -84,14 +79,18 @@ class InstructionsDocument extends PageCompilerDocument
          * This function then render the metadata (ie {@link p_render_metadata()} and therefore will trigger
          * the rendering with this function
          * ```p_cached_instructions(wikiFN($id),false,$id)```
-         * This function calls luckily an event that we use
-         * in {@link \action_plugin_combo_mainextended}
-         * The code to extend the markup is therefore in this class
-         * See {@link \action_plugin_combo_mainextended::main_add_secondary_slot()}
+         *
+         * The best way to manipulate the instructions is not before but after
+         * the parsing. See {@link \action_plugin_combo_headingpostprocessing}
+         *
          */
+        $path = $this->getPage()->getPath();
         try {
-            $text = $this->getPage()->getMarkup();
+            $text = FileSystems::getContent($path);
             $instructions = p_get_instructions($text);
+        } catch (ExceptionNotFound $e) {
+            LogUtility::msg("The file ($path) does not exists, call stack instructions was set to empty");
+            $instructions = [];
         } finally {
             // close restore ID
             $ID = $oldId;
@@ -161,8 +160,6 @@ class InstructionsDocument extends PageCompilerDocument
         return $this;
 
     }
-
-
 
 
 }

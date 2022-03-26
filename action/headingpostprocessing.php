@@ -4,6 +4,8 @@
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
@@ -159,6 +161,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
      */
     function _post_process_heading(&$event, $param)
     {
+
         /**
          * @var Doku_Handler $handler
          */
@@ -410,6 +413,61 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         }
 
         /**
+         * header / footer of primary
+         *
+         * We don't create compound text file because we would lost the position of the token in the file
+         * and the edit section would be broken
+         *
+         * We parse the header/footer and add them to the callstack
+         */
+        try {
+            $page = Page::createPageFromGlobalDokuwikiId();
+            if ($page->isPrimarySlotWithHeaderAndFooter()) {
+                foreach ($page->getChildren() as $child) {
+                    $name = $child->getPath()->getLastName();
+
+                    $childInstructions = $child->getInstructionsDocument()->getOrProcessContent();
+                    $childCallStack = CallStack::createFromInstructions($childInstructions);
+                    $childCallStack->moveToStart();
+                    while ($actualCall = $childCallStack->next()) {
+                        $tagName = $actualCall->getTagName();
+                        switch ($tagName) {
+                            case syntax_plugin_combo_toc::TAG:
+                                self::$tocCall = $actualCall;
+                                continue 2;
+                            case CallStack::DOCUMENT_START:
+                            case CallStack::DOCUMENT_END:
+                                $childCallStack->deleteActualCallAndPrevious();
+                                continue 2;
+                        }
+                    }
+                    $stack = $childCallStack->getStack();
+
+                    switch ($name) {
+                        case Page::SLOT_MAIN_HEADER_NAME:
+                            //
+                            $callStack->moveToStart();
+                            $actualCall = $callStack->next();
+                            if($actualCall->getTagName()!==syntax_plugin_combo_frontmatter::TAG){
+                                $callStack->previous();
+                            }
+                            $callStack->insertInstructionsFromNativeArrayAfterCurrentPosition($stack);
+                            break;
+                        case Page::SLOT_MAIN_FOOTER_NAME:
+                            //
+                            break;
+                        default:
+                            LogUtility::msg("The child ($child) of the page ($page) is unknown and was not added in the markup");
+                            break;
+                    }
+                }
+
+            }
+        } catch (ExceptionNotFound $e) {
+            LogUtility::msg("Postprocessing: The running id was not found, we were unable to add the main footer/header");
+        }
+
+        /**
          * TOC
          */
         if (self::$tocCall !== null) {
@@ -455,23 +513,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             $level = $headingEntryCall->getAttribute("level");
 
             /**
-             * TOC
+             * TOC Data
              */
-            $tocStatus = $handler->getStatus(syntax_plugin_combo_toc::TOC_FOUND);
-            if ($tocStatus !== true) {
-                if ($level == 1) {
-                    /**
-                     * Insert the TOC call and keep the call
-                     * to update the TOC data
-                     */
-                    $callStack->insertAfter(Call::createComboCall(
-                        syntax_plugin_combo_toc::TAG,
-                        DOKU_LEXER_SPECIAL
-                    ));
-                    $callStack->next();
-                    self::$tocCall = $callStack->getActualCall();
-                }
-            }
             self::$tocAttribute[] = [
                 'link' => "#h{$level}",
                 'title' => $headingText,

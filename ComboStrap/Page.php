@@ -240,13 +240,13 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @throws ExceptionCompile - if the global ID is unknown
+     * @throws ExceptionNotFound - if the global ID is unknown
      */
     public static function createPageFromGlobalDokuwikiId(): Page
     {
         global $ID;
         if ($ID === null) {
-            throw new ExceptionCompile("The global wiki ID is null, unable to instantiate a page");
+            throw new ExceptionNotFound("The global wiki ID is null, unable to instantiate a page");
         }
         return self::createPageFromId($ID);
     }
@@ -337,6 +337,10 @@ class Page extends ResourceComboAbs
         return $this;
     }
 
+
+    public function isPrimarySlot(){
+        return !$this->isSecondarySlot();
+    }
 
     /**
      * @return bool true if this is not the main slot.
@@ -622,59 +626,18 @@ class Page extends ResourceComboAbs
 
     /**
      * @return string
-     * The markup that should be parsed by the parser
+     * The content / markup that should be parsed by the parser
      */
     public
     function getMarkup(): string
     {
 
         try {
-            $primaryContent = FileSystems::getContent($this->getPath());
+            return FileSystems::getContent($this->getPath());
         } catch (ExceptionNotFound $e) {
             LogUtility::msg("The page ($this) was not found");
             return "";
         }
-
-        try {
-            $frontMatterPage = MetadataFrontmatterStore::createFromPage($this);
-            $markup = $frontMatterPage->getContentWithoutFrontMatter();
-        } catch (ExceptionBadSyntax $e) {
-            LogUtility::msg("The page ($this) has a frontmatter syntax error. Error: {$e->getMessage()}");
-            return $primaryContent;
-        } catch (ExceptionNotFound $e) {
-            // msg should already have been send when reading the content
-            return $primaryContent;
-        }
-
-        foreach ($this->getChildren() as $child) {
-            $name = $child->getPath()->getLastName();
-            try {
-                $content = FileSystems::getContent($child->getPath());
-            } catch (ExceptionNotFound $e) {
-                // Not found should not be the case because it's in the children
-                continue;
-            }
-            switch ($name) {
-                case self::SLOT_MAIN_HEADER_NAME:
-                    if (substr($content, -1) != "\n") {
-                        $content .= "\n";
-                    }
-                    $markup = $content . $markup;
-                    break;
-                case self::SLOT_MAIN_FOOTER_NAME:
-                    if (substr($markup, -1) != "\n") {
-                        $markup .= "\n";
-                    }
-                    $markup .= $content;
-                    break;
-                default:
-                    LogUtility::msg("The child ($child) of the page ($this) is unknown and was not added in the markup");
-                    break;
-            }
-        }
-
-        return $markup;
-
 
     }
 
@@ -2108,12 +2071,12 @@ class Page extends ResourceComboAbs
         return isHiddenPage($this->getDokuwikiId());
     }
 
-    private function isPrimarySlotWithHeaderAndFooter(): bool
+    public function isPrimarySlotWithHeaderAndFooter(): bool
     {
-        return (!$this->isSecondarySlot() && !$this->isRootHomePage());
+        return ($this->isPrimarySlot() && !$this->isRootHomePage());
     }
 
-    private function getPrimaryHeaderPage(): ?Page
+    public function getPrimaryHeaderPage(): ?Page
     {
         $nearest = page_findnearest(self::SLOT_MAIN_HEADER_NAME);
         if ($nearest === false) {

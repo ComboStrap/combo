@@ -151,6 +151,10 @@ abstract class MetadataTabular extends Metadata
                 return $this;
             }
             $i = 0;
+            if (!is_array($identifierValues)) {
+                // only one value
+                $identifierValues = [$identifierValues];
+            }
             foreach ($identifierValues as $identifierValue) {
                 $row = [];
                 if ($identifierValue === "") {
@@ -230,11 +234,11 @@ abstract class MetadataTabular extends Metadata
     }
 
     public
-    function remove($identifierValue)
+    function remove($identifierValue): MetadataTabular
     {
         $this->buildCheck();
         if ($this->rows === null) {
-            return;
+            return $this;
         }
         unset($this->rows[$identifierValue]);
         return $this;

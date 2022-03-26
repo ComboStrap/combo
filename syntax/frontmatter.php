@@ -70,6 +70,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const PARSING_STATE_SUCCESSFUL = "successful";
     const STATUS = "status";
     const CANONICAL = "frontmatter";
+    const TAG = "frontmatter";
     const CONF_ENABLE_SECTION_EDITING = 'enableFrontMatterSectionEditing';
     const CONF_ENABLE_FRONT_MATTER_ON_SUBMIT = "enableFrontMatterOnSubmit";
     const CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT = 0;

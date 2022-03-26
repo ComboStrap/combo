@@ -51,6 +51,8 @@ class CallStack
     const CALLSTACK_WRITER = "writer";
     const CALLSTACK_MAIN = "main";
     public const MESSAGE_PREFIX_CALLSTACK_NOT_CONFORM = "Your DokuWiki installation is too old or a writer plugin does not conform";
+    const DOCUMENT_START = "document_start";
+    const DOCUMENT_END = "document_end";
 
     private $handler;
 
@@ -212,7 +214,7 @@ class CallStack
     public static function createFromInstructions(?array $callStackArray): CallStack
     {
         return CallStack::createEmpty()
-            ->appendInstructionsFromNativeArray($callStackArray);
+            ->appendInstructionsFromNativeArrayAtTheEnd($callStackArray);
 
     }
 
@@ -799,9 +801,19 @@ class CallStack
      * @param array $instructions
      * @return CallStack
      */
-    public function appendInstructionsFromNativeArray(array $instructions): CallStack
+    public function appendInstructionsFromNativeArrayAtTheEnd(array $instructions): CallStack
     {
         array_splice($this->callStack, count($this->callStack), 0, $instructions);
+        return $this;
+    }
+
+    public function insertInstructionsFromNativeArrayAfterCurrentPosition(array $instructions): CallStack
+    {
+        $offset = $this->getActualKey();
+        if ($offset !== null) {
+            $offset = $offset + 1;
+        }
+        array_splice($this->callStack, $offset, 0, $instructions);
         return $this;
     }
 

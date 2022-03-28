@@ -547,8 +547,8 @@ class Site
         try {
             return [
                 Site::getSidebarName(),
-                Site::getHeaderSlotPageName(),
-                Site::getFooterSlotPageName(),
+                Site::getPageHeaderSlotName(),
+                Site::getPageFooterSlotName(),
                 Site::getPrimaryHeaderSlotName(),
                 Site::getPrimaryFooterSlotName()
             ];
@@ -619,7 +619,7 @@ class Site
     /**
      * @throws ExceptionCompile
      */
-    public static function getFooterSlotPageName()
+    public static function getPageFooterSlotName()
     {
         Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
         return TplUtility::getFooterSlotPageName();
@@ -628,7 +628,7 @@ class Site
     /**
      * @throws ExceptionCompile
      */
-    public static function getHeaderSlotPageName()
+    public static function getPageHeaderSlotName()
     {
         Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
         return TplUtility::getHeaderSlotPageName();

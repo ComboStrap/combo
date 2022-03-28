@@ -756,6 +756,13 @@ class DokuPath extends PathAbs
 
     public function resolve(string $name): DokuPath
     {
-        return new DokuPath($this->absolutePath . self::PATH_SEPARATOR . $name, $this->getDrive());
+        $absolutePath = $this->absolutePath;
+        if ($this->absolutePath === DokuPath::PATH_SEPARATOR) {
+            // Root case
+            $path = self::PATH_SEPARATOR . $name;
+        } else {
+            $path = $absolutePath . self::PATH_SEPARATOR . $name;
+        }
+        return new DokuPath($path, $this->getDrive());
     }
 }

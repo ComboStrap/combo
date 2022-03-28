@@ -79,7 +79,7 @@ class action_plugin_combo_search extends DokuWiki_Action_Plugin
         $data = [];
         foreach ($pages as $id => $title) {
             $page = Page::createPageFromId($id);
-            $linkUtility = MarkupRef::createFromPageId($id);
+            $linkUtility = MarkupRef::createFromPageIdOrPath($id);
             try {
                 $html = $linkUtility->toAttributes()->toHtmlEnterTag("a") . $page->getTitleOrDefault() . "</a>";
             } catch (ExceptionCompile $e) {

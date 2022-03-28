@@ -99,6 +99,7 @@ require_once(__DIR__ . '/DisqusIdentifier.php');
 require_once(__DIR__ . '/Display.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/DokuwikiId.php');
+require_once(__DIR__ . '/EditPageMenuItem.php');
 require_once(__DIR__ . '/EndDate.php');
 require_once(__DIR__ . '/Event.php');
 require_once(__DIR__ . '/ExceptionExit.php');

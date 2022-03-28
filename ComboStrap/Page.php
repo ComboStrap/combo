@@ -330,7 +330,8 @@ class Page extends ResourceComboAbs
     }
 
 
-    public function isPrimarySlot(){
+    public function isPrimarySlot(): bool
+    {
         return !$this->isSecondarySlot();
     }
 
@@ -1014,7 +1015,7 @@ class Page extends ResourceComboAbs
     {
         $id = $this->getPath()->getDokuwikiId();
         try {
-            return MarkupRef::createFromPageId($id)
+            return MarkupRef::createFromPageIdOrPath($id)
                     ->toAttributes($logicalTag)
                     ->toHtmlEnterTag("a")
                 . $this->getNameOrDefault()
@@ -2086,10 +2087,6 @@ class Page extends ResourceComboAbs
         return Page::createPageFromId($nearest);
     }
 
-    public function getSecondarySlots()
-    {
-
-    }
 
 
 }

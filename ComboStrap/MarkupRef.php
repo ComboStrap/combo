@@ -243,9 +243,10 @@ class MarkupRef
 
     }
 
-    public static function createFromPageId($id): MarkupRef
+    public static function createFromPageIdOrPath($id): MarkupRef
     {
-        return new MarkupRef(":$id");
+        DokuPath::addRootSeparatorIfNotPresent($id);
+        return new MarkupRef($id);
     }
 
     public static function createFromRef(string $ref): MarkupRef
@@ -269,7 +270,8 @@ class MarkupRef
      *
      *
      *
-     * @throws ExceptionCompile
+     *
+     * @throws ExceptionBadSyntax
      */
     public function toAttributes($logicalTag = \syntax_plugin_combo_link::TAG): TagAttributes
     {
@@ -633,7 +635,7 @@ EOF;
 
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax
      * @var string $targetEnvironmentAmpersand
      * By default, all data are encoded
      * at {@link TagAttributes::encodeToHtmlValue()}
@@ -767,15 +769,15 @@ EOF;
                     $this->authorizedSchemes[] = "mailto";
                 }
                 if (!in_array($this->schemeUri, $this->authorizedSchemes)) {
-                    throw new ExceptionCompile("The scheme ($this->schemeUri) is not authorized as uri");
+                    throw new ExceptionBadSyntax("The scheme ($this->schemeUri) is not authorized as uri");
                 } else {
                     $url = $this->ref;
                 }
                 break;
             case self::VARIABLE_URI:
-                throw new ExceptionCompile("A template variable uri ($this->ref) can not give back an url, it should be first be replaced");
+                throw new ExceptionBadSyntax("A template variable uri ($this->ref) can not give back an url, it should be first be replaced");
             default:
-                throw new ExceptionCompile("The structure of the reference ($this->ref) is unknown");
+                throw new ExceptionBadSyntax("The structure of the reference ($this->ref) is unknown");
         }
 
 

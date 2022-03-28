@@ -82,7 +82,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
                 $backlinkId = $backlink[self::RELATED_PAGE_ID_PROP];
                 $html .= '<li>';
                 if ($backlinkId != self::MORE_PAGE_ID) {
-                    $linkUtility = MarkupRef::createFromPageId($backlinkId);
+                    $linkUtility = MarkupRef::createFromPageIdOrPath($backlinkId);
                     try {
                         $html .= $linkUtility->toAttributes(self::TAG)->toHtmlEnterTag("a");
                         $html .= $linkUtility->getLabel();

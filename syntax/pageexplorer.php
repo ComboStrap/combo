@@ -501,7 +501,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                         }
                                     } else {
                                         try {
-                                            $renderer->doc .= MarkupRef::createFromPageId($currentHomePage->getDokuwikiId())
+                                            $renderer->doc .= MarkupRef::createFromPageIdOrPath($currentHomePage->getDokuwikiId())
                                                 ->toAttributes()
                                                 ->toHtmlEnterTag("a");
                                             $renderer->doc .= "{$currentHomePage->getNameOrDefault()}</a>";
@@ -547,7 +547,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                         }
                                     } else {
                                         try {
-                                            $renderer->doc .= MarkupRef::createFromPageId($parentPage->getDokuwikiId())
+                                            $renderer->doc .= MarkupRef::createFromPageIdOrPath($parentPage->getDokuwikiId())
                                                 ->toAttributes()
                                                 ->toHtmlEnterTag("a");
                                             $renderer->doc .= Icon::createFromComboResource(self::LEVEL_UP_ICON)
@@ -613,7 +613,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                                 }
                                             } else {
                                                 try {
-                                                    $renderer->doc .= MarkupRef::createFromPageId($subNamespacePage->getDokuwikiId())
+                                                    $renderer->doc .= MarkupRef::createFromPageIdOrPath($subNamespacePage->getDokuwikiId())
                                                         ->toAttributes()
                                                         ->toHtmlEnterTag("a");
                                                     $renderer->doc .= Icon::createFromComboResource(self::FOLDER_ICON)
@@ -657,7 +657,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                                 }
                                             } else {
                                                 try {
-                                                    $renderer->doc .= MarkupRef::createFromPageId($page->getDokuwikiId())
+                                                    $renderer->doc .= MarkupRef::createFromPageIdOrPath($page->getDokuwikiId())
                                                         ->toAttributes()
                                                         ->toHtmlEnterTag("a");
                                                     $renderer->doc .= "{$page->getNameOrDefault()}</a>";
@@ -914,7 +914,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             }
         } else {
             try {
-                $html .= MarkupRef::createFromPageId($page->getDokuwikiId())
+                $html .= MarkupRef::createFromPageIdOrPath($page->getDokuwikiId())
                     ->toAttributes()
                     ->toHtmlEnterTag("a");
                 $html .= "{$page->getNameOrDefault()}</a>";

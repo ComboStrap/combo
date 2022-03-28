@@ -19,11 +19,13 @@ use dokuwiki\Menu\Item\AbstractItem;
  * @package ComboStrap
  *
  */
-class BacklinkMenuItem extends AbstractItem
+class EditPageMenuItem extends AbstractItem
 {
 
     const CLASS_HTML = "combo-edit-page-item";
     const CANONICAL = "edit-page";
+    const EDIT_ACTION = "Edit";
+    const CREATE_ACTION = "Create";
 
     /**
      * MetadataMenuItem constructor.
@@ -63,33 +65,7 @@ class BacklinkMenuItem extends AbstractItem
         $linkAttributes["data{$dataAttributeNamespace}-title"] = "Edit this page";
 
 
-        $page = Page::createPageFromRequestedPage();
-        foreach($page->getSecondarySlots() as $secondarySlot){
-
-        };
-
-
-        /**
-         * All page should be shown,
-         * also the actual
-         * because when the user is going
-         * in admin mode, it's an easy way to get back
-         */
-
-
-        $html .= '<ol>' . PHP_EOL;
-        foreach ($pages as $id => $name) {
-
-            $html .= '<li>';
-            $html .= $this->createLink($id, $name);
-            $html .= '</li>' . PHP_EOL;
-
-        }
-        $html .= '</ol>' . PHP_EOL;
-        $html .= '</nav>' . PHP_EOL;
-
-
-        $linkAttributes["data{$dataAttributeNamespace}-content"] = $html;
+        $linkAttributes["data{$dataAttributeNamespace}-content"] = $this->createHtml();
 
         // Dismiss on next click
         // To debug, just comment this line
@@ -114,6 +90,93 @@ class BacklinkMenuItem extends AbstractItem
     {
         /** @var string icon file */
         return Site::getComboImagesDirectory()->resolve('edit-page.svg')->toString();
+    }
+
+    public function createHtml(): string
+    {
+        $secondaryPage = Page::createPageFromRequestedPage();
+        $allPaths = [];
+        foreach (Site::getSecondarySlotNames() as $secondarySlot) {
+
+            $actualPath = $secondaryPage->getPath();
+            $label = $secondarySlot;
+            try {
+                switch ($secondarySlot) {
+                    case Site::getSidebarName():
+                        $label = "Page Sidebar";
+                        break;
+                    case Site::getPrimaryHeaderSlotName():
+                        $label = "Main Header";
+                        break;
+                    case Site::getPrimaryFooterSlotName():
+                        $label = "Main Footer";
+                        break;
+                    case Site::getPageFooterSlotName():
+                        $label = "Page Footer";
+                        break;
+                    case Site::getPageHeaderSlotName():
+                        $label = "Page Header";
+                        break;
+                }
+            } catch (ExceptionCompile $e) {
+                // error if strap was not loaded
+                // should have happen before when we get the secondary name (getSecondarySlotNames)
+            }
+            while (($parentPath = $actualPath->getParent()) != null) {
+                $secondaryPath = $parentPath->resolve($secondarySlot);
+                try {
+                    $secondaryPage = Page::createPageFromQualifiedPath($secondaryPath->toString());
+                    $class = "link-combo";
+                    if (FileSystems::exists($secondaryPath)) {
+                        $action = self::EDIT_ACTION;
+                    } else {
+                        $action = self::CREATE_ACTION;
+                        $class .= " text-alert";
+                    }
+                    $url = $secondaryPage->getUrl();
+                    if (strpos($url, "?") !== false) {
+                        // without url rewrite
+                        // /./doku.php?id=slot_main_header
+                        $url .= DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML;
+                    } else {
+                        // with url rewrite, the id parameter is not seen
+                        $url .= "?";
+                    }
+                    $url .= "do=edit";
+                    $allPaths[] = "<a href=\"$url\" class=\"$class\">$action $label ({$secondaryPath->toString()})</a>";
+
+                    if ($action === self::EDIT_ACTION) {
+                        break;
+                    }
+                } catch (ExceptionBadSyntax $e) {
+                    // should not happen
+                }
+                // loop
+                $actualPath = $parentPath;
+            }
+
+        };
+
+
+        /**
+         * All page should be shown,
+         * also the actual
+         * because when the user is going
+         * in admin mode, it's an easy way to get back
+         */
+        $lis = "";
+        foreach ($allPaths as $actualPath) {
+
+            $lis .= "<li>$actualPath</li>" . PHP_EOL;
+
+        }
+        return <<<EOF
+<nav>
+    <ol>
+        $lis
+    </ol>
+</nav>
+EOF;
     }
 
 

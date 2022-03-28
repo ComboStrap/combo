@@ -6,6 +6,7 @@ use ComboStrap\CacheDependencies;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\FileSystems;
@@ -391,16 +392,20 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                      * NameSpacePath determination
                      */
                     $type = $pageExplorerTagAttributes->getType();
-                    $namespacePath = $pageExplorerTagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
+                    $namespaceAttribute = $pageExplorerTagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
+                    $namespacePath = null;
+                    if ($namespaceAttribute !== null) {
+                        DokuPath::addNamespaceEndSeparatorIfNotPresent($namespaceAttribute);
+                        $namespacePath = DokuPath::createPagePathFromPath($namespacePath);
+                    }
                     if ($namespacePath === null) {
                         switch ($type) {
                             case self::LIST_TYPE:
                                 $requestedPage = Page::createPageFromRequestedPage();
-                                $parent = $requestedPage->getPath()->getParent();
-                                if ($parent !== null) {
-                                    $namespacePath = $parent->toString();
-                                } else {
-                                    $namespacePath = "";
+                                $namespacePath = $requestedPage->getPath()->getParent();
+                                if ($namespacePath === null) {
+                                    // root
+                                    $namespacePath = $requestedPage->getPath();
                                 }
                                 CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
                                 break;
@@ -411,11 +416,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     LogUtility::msg("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
                                     return false;
                                 }
-                                $parent = $renderedPage->getPath()->getParent();
-                                if ($parent !== null) {
-                                    $namespacePath = $parent->toString();
-                                } else {
-                                    $namespacePath = "";
+                                $namespacePath = $renderedPage->getPath()->getParent();
+                                if ($namespacePath === null) {
+                                    // root
+                                    $namespacePath = $renderedPage->getPath();
                                 }
                                 break;
                             default:
@@ -465,10 +469,14 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                              */
                             $homeInstructions = $data[self::HOME_INSTRUCTIONS];
                             $parentAttributes = $data[self::HOME_ATTRIBUTES];
-                            $currentHomePage = null;
+                            try {
+                                $currentHomePage = Page::getHomePageFromNamespace($namespacePath->toString());
+                            } catch (ExceptionBadSyntax $e) {
+                                $renderer->doc .= LogUtility::wrapInRedForHtml("Error while getting the home page for the namespace. Error: {$e->getMessage()}");
+                                return false;
+                            }
                             if (!($homeInstructions === null && $parentAttributes !== null)) {
 
-                                $currentHomePage = Page::getHomePageFromNamespace($namespacePath);
                                 if ($currentHomePage->exists()) {
 
                                     try {
@@ -523,7 +531,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $parentInstructions = $data[self::PARENT_INSTRUCTIONS];
                             $parentAttributes = $data[self::PARENT_ATTRIBUTES];
                             if (!($parentInstructions === null && $parentAttributes !== null)) {
-                                $parentPage = FsWikiUtility::getParentPagePath($namespacePath);
+                                $parentPage = $currentHomePage->getParentPage();
                                 if ($parentPage !== null && $parentPage->exists()) {
 
                                     $parentAttributes = TagAttributes::createFromCallStackArray($data[self::PARENT_ATTRIBUTES]);
@@ -585,7 +593,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $pageAttributes = $data[self::PAGE_ATTRIBUTES];
                             $namespaceInstructions = $data[self::NAMESPACE_INSTRUCTIONS];
                             $namespaceAttributes = $data[self::NAMESPACE_ATTRIBUTES];
-                            $pageOrNamespaces = FsWikiUtility::getChildren($namespacePath);
+                            $pageOrNamespaces = FsWikiUtility::getChildren($namespacePath->toString());
                             $pageNum = 0;
                             foreach ($pageOrNamespaces as $pageOrNamespace) {
 
@@ -594,7 +602,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                                     // Namespace
                                     if (!($namespaceInstructions === null && $namespaceAttributes !== null)) {
-                                        $subNamespacePage = Page::getHomePageFromNamespace($pageOrNamespacePath);
+                                        try {
+                                            $subNamespacePage = Page::getHomePageFromNamespace("$pageOrNamespacePath:");
+                                        } catch (ExceptionBadSyntax $e) {
+                                            LogUtility::msg("Bad syntax for the namespace $pageOrNamespacePath. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                                            return false;
+                                        }
                                         if ($subNamespacePage->exists()) {
                                             /**
                                              * SubNamespace Enter tag
@@ -692,12 +705,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                              * javascript that open the tree
                              * to the actual page
                              */
-                            $namespaceId = DokuPath::toDokuwikiId($namespacePath);
-                            if (!empty($namespaceId)) { // not root
-                                $pageExplorerTagAttributes->addOutputAttributeValue("data-wiki-id", $namespaceId);
-                            } else {
-                                $pageExplorerTagAttributes->addEmptyOutputAttributeValue("data-wiki-id");
-                            }
+                            $namespaceId = $namespacePath->getDokuwikiId();
+                            $pageExplorerTagAttributes->addOutputAttributeValue("data-wiki-id", $namespaceId);
 
 
                             $snippetId = self::CANONICAL . "-" . $type;
@@ -713,7 +722,11 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= $pageExplorerTagAttributes->toHtmlEnterTag("nav") . DOKU_LF;
                             $renderer->doc .= "<ul>" . DOKU_LF;
 
-                            self::treeProcessSubNamespace($renderer->doc, $namespacePath, $data);
+                            try {
+                                self::treeProcessSubNamespace($renderer->doc, $namespacePath->toString(), $data);
+                            } catch (ExceptionBadSyntax $e) {
+                                $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the tree sub-namespace. Error: {$e->getMessage()}");
+                            }
 
                             $renderer->doc .= "</ul>" . DOKU_LF;
                             $renderer->doc .= "</nav>" . DOKU_LF;
@@ -736,6 +749,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @param string $html - the callstack
      * @param string $nameSpacePath
      * @param array $data
+     * @throws ExceptionBadSyntax
      */
     public
     function treeProcessSubNamespace(string &$html, string $nameSpacePath, array $data)
@@ -756,20 +770,19 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         foreach ($childPagesOrNamespaces as $pageOrNamespace) {
 
             $actualNamespaceId = $pageOrNamespace['id'];
-            $actualPageOrNamespacePath = DokuPath::IdToAbsolutePath($actualNamespaceId);
 
             /**
              * Namespace
              */
             if ($pageOrNamespace['type'] == "d") {
 
-                $childDirectoryIds[] = $actualNamespaceId;
+                $childDirectoryIds[] = "$actualNamespaceId:";
 
             } else {
                 /**
                  * Page
                  */
-                $page = Page::createPageFromQualifiedPath($actualPageOrNamespacePath);
+                $page = Page::createPageFromQualifiedPath($actualNamespaceId);
                 if ($page->isHomePage()) {
                     $homePage = $page;
                 } else {

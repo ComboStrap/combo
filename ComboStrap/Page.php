@@ -285,13 +285,14 @@ class Page extends ResourceComboAbs
     }
 
 
+    /**
+     * @throws ExceptionBadSyntax - if this is not a
+     */
     public static function getHomePageFromNamespace(string $namespacePath): Page
     {
         global $conf;
 
-        if ($namespacePath != ":") {
-            $namespacePath = $namespacePath . ":";
-        }
+        DokuPath::checkNamespacePath($namespacePath);
 
         $startPageName = $conf['start'];
         if (page_exists($namespacePath . $startPageName)) {
@@ -312,6 +313,7 @@ class Page extends ResourceComboAbs
 
     static function createPageFromQualifiedPath($qualifiedPath): Page
     {
+        DokuPath::addRootSeparatorIfNotPresent($qualifiedPath);
         return new Page($qualifiedPath);
     }
 
@@ -1483,8 +1485,13 @@ class Page extends ResourceComboAbs
         /**
          * Create the parent namespace id
          */
-        $parentNamespaceId = implode(DokuPath::PATH_SEPARATOR, $parentNames);
-        return self::getHomePageFromNamespace($parentNamespaceId);
+        $parentNamespaceId = implode(DokuPath::PATH_SEPARATOR, $parentNames).DokuPath::PATH_SEPARATOR;
+        try {
+            return self::getHomePageFromNamespace($parentNamespaceId);
+        } catch (ExceptionBadSyntax $e) {
+            LogUtility::msg("Error on getParentPage, null returned - Error: {$e->getMessage()}");
+            return null;
+        }
 
     }
 

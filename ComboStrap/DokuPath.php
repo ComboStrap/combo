@@ -407,6 +407,46 @@ class DokuPath extends PathAbs
         ];
     }
 
+    /**
+     * Wiki path system cannot make the difference between a txt file
+     * and a directory natively because there is no extension.
+     *
+     * ie `ns:name` is by default the file `ns:name.txt`
+     *
+     * To make this distinction, we add a `:` at the end
+     *
+     * TODO: May be ? We may also just check if the txt file exists
+     *   and if not if the directory exists
+     *
+     * @param string $namespacePath
+     * @return bool
+     */
+    public static function isNamespacePath(string $namespacePath): bool
+    {
+        if (substr($namespacePath, -1) !== DokuPath::PATH_SEPARATOR) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    public static function checkNamespacePath(string $namespacePath)
+    {
+        if (!self::isNamespacePath($namespacePath)) {
+            throw new ExceptionBadSyntax("The path ($namespacePath) is not a namespace path");
+        }
+    }
+
+    public static function addNamespaceEndSeparatorIfNotPresent(string &$namespaceAttribute)
+    {
+        if (substr($namespaceAttribute, -1) !== DokuPath::PATH_SEPARATOR) {
+            $namespaceAttribute = $namespaceAttribute . DokuPath::PATH_SEPARATOR;
+        }
+    }
+
 
     /**
      * The last part of the path

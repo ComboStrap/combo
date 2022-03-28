@@ -47,18 +47,22 @@ class FsWikiUtility
      *
      * @param string $path The container of the pages
      * @return array An array of the pages for the namespace
+     * @throws ExceptionBadSyntax
      */
     static function getChildren(string $path): array
     {
         require_once(__DIR__ . '/../../../../inc/search.php');
         global $conf;
 
+        DokuPath::checkNamespacePath($path);
 
         /**
-         * To a relative file system path
+         * To the wiki id form
          */
         $dokuPath = DokuPath::createPagePathFromPath($path);
-        $relativeFileSystemPath = str_replace(":", "/", $dokuPath->getDokuwikiId());
+        // delete the last separator
+        $dokuwikiId = substr( $dokuPath->getDokuwikiId(),0,-1);
+        $relativeFileSystemPath = str_replace(":", "/", $dokuwikiId);
 
 
         $data = array();

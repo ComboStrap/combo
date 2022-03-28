@@ -281,7 +281,7 @@ class LogUtility
 
     public static function wrapInRedForHtml(string $message): string
     {
-        return "<span class=\"text-alert\">$message</span>";
+        return "<span class=\"text-danger\">$message</span>";
     }
 
     /**

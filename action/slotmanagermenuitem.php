@@ -17,9 +17,9 @@ use ComboStrap\References;
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
- * Handle the edit page menu item
+ * Handle the slot manager menu item
  */
-class action_plugin_combo_editpagemenuitem extends DokuWiki_Action_Plugin
+class action_plugin_combo_slotmanagermenuitem extends DokuWiki_Action_Plugin
 {
 
 
@@ -35,8 +35,6 @@ class action_plugin_combo_editpagemenuitem extends DokuWiki_Action_Plugin
          * https://www.dokuwiki.org/devel:event:menu_items_assembly
          */
         $controller->register_hook('MENU_ITEMS_ASSEMBLY', 'AFTER', $this, 'addMenuItem');
-
-
 
 
     }
@@ -55,14 +53,13 @@ class action_plugin_combo_editpagemenuitem extends DokuWiki_Action_Plugin
         $menuItems = &$event->data["items"];
         foreach ($menuItems as $key => $menuItem) {
             if ($menuItem instanceof \dokuwiki\Menu\Item\Edit) {
-                $menuItems[$key] = new \ComboStrap\EditPageMenuItem();
+                array_splice($menuItems, $key + 1, 1, [new \ComboStrap\SlotManagerMenuItem()]);
                 break;
             }
         }
 
 
     }
-
 
 
 }

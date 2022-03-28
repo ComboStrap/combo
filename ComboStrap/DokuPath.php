@@ -223,9 +223,9 @@ class DokuPath extends PathAbs
                  * We qualify for the namespace here
                  * because there is no link or media for a namespace
                  */
-                $this->id = resolve_id(getNS($ID), $this->id, true);
+                // Why ? $this->id = resolve_id(getNS($ID), $this->id, true);
                 global $conf;
-                if ($drive == self::MEDIA_DRIVE) {
+                if ($drive === self::MEDIA_DRIVE) {
                     $filePath = $conf['mediadir'] . '/' . utf8_encodeFN($this->id);
                 } else {
                     $filePath = $conf['datadir'] . '/' . utf8_encodeFN($this->id);
@@ -438,18 +438,24 @@ class DokuPath extends PathAbs
 
 
     public
-    function getNames()
+    function getNames(): array
     {
 
-        $names = explode(self::PATH_SEPARATOR, $this->getDokuwikiId());
+        $actualNames = explode(self::PATH_SEPARATOR, $this->getDokuwikiId());
 
-        if ($names[0] === "") {
-            /**
-             * Case of only one string without path separator
-             * the first element returned is an empty string
-             */
-            $names = array_splice($names, 1);
+        /**
+         * First element can be empty
+         * Case of only one string without path separator
+         * the first element returned is an empty string
+         * Last element can be empty (namespace split, ie :ns:)
+         */
+        $names = [];
+        foreach ($actualNames as $name) {
+            if (!empty($name)) {
+                $names[] = $name;
+            }
         }
+
         return $names;
     }
 
@@ -695,6 +701,13 @@ class DokuPath extends PathAbs
             default:
                 $names = array_slice($names, 0, sizeof($names) - 1);
                 $path = implode(DokuPath::PATH_SEPARATOR, $names);
+                /**
+                 * Because DokuPath does not have the notion of extension
+                 * if this is a page, we don't known if this is a directory
+                 * or a page. To make the difference, we add a separator at the end
+                 */
+                $sep = self::PATH_SEPARATOR;
+                $path = "$sep$path$sep";
                 return new DokuPath($path, $this->drive, $this->rev);
         }
 
@@ -757,12 +770,8 @@ class DokuPath extends PathAbs
     public function resolve(string $name): DokuPath
     {
         $absolutePath = $this->absolutePath;
-        if ($this->absolutePath === DokuPath::PATH_SEPARATOR) {
-            // Root case
-            $path = self::PATH_SEPARATOR . $name;
-        } else {
-            $path = $absolutePath . self::PATH_SEPARATOR . $name;
-        }
+        // Directory have already separator at the end
+        $path = $absolutePath . $name;
         return new DokuPath($path, $this->getDrive());
     }
 }

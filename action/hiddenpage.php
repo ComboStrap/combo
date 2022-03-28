@@ -46,10 +46,10 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
             $pattern .= "|" . TplUtility::getFooterSlotPageName();
             $pattern .= "|" . TplUtility::getSideKickSlotPageName();
             $pattern .= "|" . TplUtility::getHeaderSlotPageName();
-            $pattern .= "|" . TplUtility::getMainFooterSlotName();
-            $pattern .= "|" . TplUtility::getMainHeaderSlotName();
 
         }
+        $pattern .= "|" . Site::getPrimaryFooterSlotName();
+        $pattern .= "|" . Site::getPrimaryHeaderSlotName();
         $pattern .= ")";
         if (preg_match('/' . $pattern . '/ui', ':' . $event->data['id'])) {
             $event->data['hidden'] = true;

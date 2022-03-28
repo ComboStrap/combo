@@ -313,8 +313,7 @@ EOD;
             $language = "html";
         }
         /**
-         * Language name mapping between the dokuwiki default
-         * and prism
+         * Language name mapping between the syntax name and prism
          */
         switch ($language) {
             case "rsplus":
@@ -322,6 +321,9 @@ EOD;
                 break;
             case "dos":
                 $language = "batch";
+                break;
+            case "grok":
+                $language = "regex";
                 break;
             case "jinja":
                 // https://github.com/PrismJS/prism/issues/759

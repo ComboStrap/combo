@@ -5,13 +5,13 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
-use ComboStrap\PluginUtility;
 use ComboStrap\PageEdit;
+use ComboStrap\PluginUtility;
 use ComboStrap\RenderUtility;
+use ComboStrap\Site;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
@@ -433,11 +433,18 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
              *
              */
             $page = Page::createPageFromGlobalDokuwikiId();
-            global $ACT; // may be null with ajax call
+            /**
+             * ACT only for show and preview
+             *
+             * - may be null with ajax call
+             * - not {@link RenderUtility::DYNAMIC_RENDERING}
+             * - not 'admin'
+             */
+            global $ACT;
             if (
-                $ACT !== RenderUtility::DYNAMIC_RENDERING
+                in_array($ACT, ["show", "preview"])
                 && $page->isPrimarySlotWithHeaderAndFooter()
-            ){
+            ) {
                 foreach ($page->getChildren() as $child) {
                     $name = $child->getPath()->getLastName();
 
@@ -459,7 +466,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                     $stack = $childCallStack->getStack();
 
                     switch ($name) {
-                        case Page::SLOT_MAIN_HEADER_NAME:
+                        case Site::SLOT_MAIN_HEADER_NAME:
                             //
                             $callStack->moveToStart();
                             $actualCall = $callStack->next();
@@ -468,7 +475,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                             }
                             $callStack->insertInstructionsFromNativeArrayAfterCurrentPosition($stack);
                             break;
-                        case Page::SLOT_MAIN_FOOTER_NAME:
+                        case Site::SLOT_MAIN_FOOTER_NAME:
                             $callStack->appendInstructionsFromNativeArrayAtTheEnd($stack);
                             break;
                         default:
@@ -477,7 +484,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                     }
                 }
 
-        }
+            }
         } catch (ExceptionNotFound $e) {
             LogUtility::msg("Postprocessing: The running id was not found, we were unable to add the main footer/header");
         }

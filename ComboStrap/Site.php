@@ -34,6 +34,14 @@ class Site
         ':android-chrome-192x192.png'
     );
     /**
+     * Name of the main header slot
+     */
+    public const SLOT_MAIN_HEADER_NAME = "slot_main_header";
+    /**
+     * Name of the main footer slot
+     */
+    public const SLOT_MAIN_FOOTER_NAME = "slot_main_footer";
+    /**
      * Strap Template meta (version, release date, ...)
      * @var array
      */
@@ -541,10 +549,11 @@ class Site
                 Site::getSidebarName(),
                 Site::getHeaderSlotPageName(),
                 Site::getFooterSlotPageName(),
-                Site::getMainHeaderSlotName(),
-                Site::getMainFooterSlotName()
+                Site::getPrimaryHeaderSlotName(),
+                Site::getPrimaryFooterSlotName()
             ];
         } catch (ExceptionCompile $e) {
+            LogUtility::msg("An error has occured while retrieving the name of the secondary slot. Error: {$e->getMessage()}");
             // We known at least this one
             return [Site::getSidebarName()];
         }
@@ -554,12 +563,11 @@ class Site
 
 
     /**
-     * @throws ExceptionCompile if the strap template is not installed or could not be loaded
+     *
      */
-    public static function getMainHeaderSlotName(): ?string
+    public static function getPrimaryHeaderSlotName(): ?string
     {
-        self::loadStrapUtilityTemplateIfPresentAndSameVersion();
-        return TplUtility::getMainHeaderSlotName();
+        return self::SLOT_MAIN_HEADER_NAME;
     }
 
     /**
@@ -637,12 +645,11 @@ class Site
     }
 
     /**
-     * @throws ExceptionCompile
+     *
      */
-    public static function getMainFooterSlotName(): string
+    public static function getPrimaryFooterSlotName(): string
     {
-        self::loadStrapUtilityTemplateIfPresentAndSameVersion();
-        return TplUtility::getMainFooterSlotName();
+        return self::SLOT_MAIN_FOOTER_NAME;
     }
 
     public static function getPrimaryColorValue($default = null)

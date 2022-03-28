@@ -143,8 +143,8 @@ class CacheDependencies
              * Rerender secondary slot if needed
              */
             $page = Page::createPageFromId($ID);
-            $secondarySlots = $page->getSecondarySlots();
-            foreach ($secondarySlots as $secondarySlot) {
+            $independentSlots = $page->getPrimaryIndependentSlots();
+            foreach ($independentSlots as $secondarySlot) {
                 $htmlDocument = $secondarySlot->getHtmlDocument();
                 $cacheDependencies = $htmlDocument->getCacheDependencies();
                 if ($cacheDependencies->hasDependency($dependency)) {

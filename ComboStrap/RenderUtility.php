@@ -59,8 +59,21 @@ class RenderUtility
      */
     public static function getInstructionsAndStripPEventually($pageContent, bool $stripOpenAndEnd = true): array
     {
-
-        $instructions = p_get_instructions($pageContent);
+        global $ID;
+        $keepID = $ID;
+        global $ACT;
+        $keepACT = $ACT;
+        global $ID;
+        try {
+            if ($ID === null && PluginUtility::isTest()) {
+                $ID = self::DEFAULT_SLOT_ID_FOR_TEST;
+            }
+            $ACT = self::DYNAMIC_RENDERING;
+            $instructions = p_get_instructions($pageContent);
+        } finally {
+            $ACT = $keepACT;
+            $ID = $keepID;
+        }
 
         if ($stripOpenAndEnd) {
 
@@ -124,9 +137,15 @@ class RenderUtility
      */
     public static function renderInstructionsToXhtml($callStackHeaderInstructions): ?string
     {
+        global $ID;
+        $keepID = $ID;
         global $ACT;
-        $keep = $ACT;
+        $keepACT = $ACT;
+        global $ID;
         try {
+            if ($ID === null && PluginUtility::isTest()) {
+                $ID = self::DEFAULT_SLOT_ID_FOR_TEST;
+            }
             $ACT = self::DYNAMIC_RENDERING;
             return p_render("xhtml", $callStackHeaderInstructions, $info);
         } catch (Exception $e) {
@@ -137,7 +156,8 @@ class RenderUtility
              */
             throw new ExceptionCompile("Error while rendering instructions. Error was: {$e->getMessage()}");
         } finally {
-            $ACT = $keep;
+            $ACT = $keepACT;
+            $ID = $keepID;
         }
     }
 

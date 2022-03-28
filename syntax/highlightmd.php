@@ -24,7 +24,7 @@ class syntax_plugin_combo_highlightmd extends DokuWiki_Syntax_Plugin
      * Only on one line, otherwise
      * if it's not closed, it will eat all other syntaqx
      */
-    const ENTRY_PATTERN = "`[^\n]*(?=`)(?!\n)";
+    const ENTRY_PATTERN = "`[^`\n]*(?=`)(?!\n)";
 
     const EXIT_PATTERN = "`";
     const CANONICAL = self::TAG;

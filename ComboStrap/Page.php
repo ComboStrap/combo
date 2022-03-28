@@ -46,14 +46,6 @@ class Page extends ResourceComboAbs
 
 
     const TYPE = "page";
-    /**
-     * Name of the main header slot
-     */
-    public const SLOT_MAIN_HEADER_NAME = "slot_main_header";
-    /**
-     * Name of the main footer slot
-     */
-    public const SLOT_MAIN_FOOTER_NAME = "slot_main_footer";
 
 
     /**
@@ -363,7 +355,7 @@ class Page extends ResourceComboAbs
     {
 
         try {
-            $slotNames = [Site::getMainHeaderSlotName(), Site::getMainFooterSlotName()];
+            $slotNames = [Site::getPrimaryHeaderSlotName(), Site::getPrimaryFooterSlotName()];
         } catch (ExceptionCompile $e) {
             return false;
         }
@@ -2051,11 +2043,11 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * The slots that are independent from the main content
-     * There is for now only one.
+     * The slots that are independent from the primary slot
+     *
      * @return Page[]
      */
-    public function getSecondarySlots(): array
+    public function getPrimaryIndependentSlots(): array
     {
         $secondarySlots = [];
         $sideSlot = $this->getSideSlot();
@@ -2078,7 +2070,7 @@ class Page extends ResourceComboAbs
 
     public function getPrimaryHeaderPage(): ?Page
     {
-        $nearest = page_findnearest(self::SLOT_MAIN_HEADER_NAME);
+        $nearest = page_findnearest(Site::getPrimaryHeaderSlotName());
         if ($nearest === false) {
             return null;
         }
@@ -2087,11 +2079,16 @@ class Page extends ResourceComboAbs
 
     private function getPrimaryFooterPage(): ?Page
     {
-        $nearest = page_findnearest(self::SLOT_MAIN_FOOTER_NAME);
+        $nearest = page_findnearest(Site::getPrimaryFooterSlotName());
         if ($nearest === false) {
             return null;
         }
         return Page::createPageFromId($nearest);
+    }
+
+    public function getSecondarySlots()
+    {
+
     }
 
 

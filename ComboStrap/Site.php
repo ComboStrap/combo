@@ -341,7 +341,7 @@ class Site
         return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE) === 1;
     }
 
-    public static function getHomePageName()
+    public static function getIndexPageName()
     {
         global $conf;
         return $conf["start"];
@@ -590,7 +590,6 @@ class Site
         if (file_exists($templateUtilityFile)) {
 
             Site::checkTemplateVersion();
-            /** @noinspection PhpIncludeInspection */
             require_once($templateUtilityFile);
             return;
 

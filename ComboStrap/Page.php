@@ -49,12 +49,6 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * The id requested (ie the main page)
-     * The page may be a slot
-     * @var string
-     */
-    private $requestedId;
-    /**
      * @var DatabasePageRow
      */
     private $databasePage;
@@ -223,9 +217,6 @@ class Page extends ResourceComboAbs
             }
 
         }
-
-        global $ID;
-        $this->requestedId = $ID;
 
         $this->buildPropertiesFromFileSystem();
 
@@ -409,7 +400,7 @@ class Page extends ResourceComboAbs
     public
     function isStartPage(): bool
     {
-        $startPageName = Site::getHomePageName();
+        $startPageName = Site::getIndexPageName();
         return $this->getPath()->getLastName() === $startPageName;
     }
 
@@ -1830,7 +1821,7 @@ class Page extends ResourceComboAbs
     public
     function getKeywords(): ?array
     {
-        return $this->keywords->getValues();
+        return $this->keywords->getValue();
     }
 
     public

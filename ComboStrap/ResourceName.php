@@ -65,7 +65,7 @@ class ResourceName extends MetadataText
                  * If this is a home page, the default
                  * is the parent path name
                  */
-                if ($pathName === Site::getHomePageName()) {
+                if ($pathName === Site::getIndexPageName()) {
                     $names = $resourceCombo->getPath()->getNames();
                     $namesCount = sizeof($names);
                     if ($namesCount >= 2) {
@@ -76,7 +76,7 @@ class ResourceName extends MetadataText
 
         }
 
-        $words = preg_split("/\s/", preg_replace("/-|_/", " ", $pathName));
+        $words = preg_split("/\s/", preg_replace("/[-_]/", " ", $pathName));
         $wordsUc = [];
         foreach ($words as $word) {
             $wordsUc[] = ucfirst($word);

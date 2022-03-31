@@ -23,50 +23,49 @@ class RouterBestEndPage
 
 
     /**
-     * @param $pageId
+     * @param Page $requestedPage
      * @return array - the best poge id and its score
      * The score is the number of name that matches
      */
-    public static function getBestEndPageId($pageId): array
+    public static function getBestEndPageId(Page $requestedPage): array
     {
 
         $pagesWithSameName = Index::getOrCreate()
-            ->getPagesWithSameLastName($pageId);
+            ->getPagesWithSameLastName($requestedPage);
         if (sizeof($pagesWithSameName) == 0) {
             return [];
         }
-        return self::getBestEndPageIdFromPages($pagesWithSameName, $pageId);
+        return self::getBestEndPageIdFromPages($pagesWithSameName, $requestedPage);
 
 
     }
 
 
     /**
-     * @param $missingPageId
+     * @param Page $missingPage
      * @return array with the best page and the type of redirect
      * @throws ExceptionCompile
      */
-    public static function process($missingPageId): array
+    public static function process(Page $missingPage): array
     {
 
         $return = array();
 
         $minimalScoreForARedirect = PluginUtility::getConfValue(self::CONF_MINIMAL_SCORE_FOR_REDIRECT, self::CONF_MINIMAL_SCORE_FOR_REDIRECT_DEFAULT);
 
-        list($bestPageId, $bestScore) = self::getBestEndPageId($missingPageId);
-        if ($bestPageId != null) {
+        list($bestPage, $bestScore) = self::getBestEndPageId($missingPage);
+        if ($bestPage != null) {
             $redirectType = action_plugin_combo_router::REDIRECT_NOTFOUND_METHOD;
             if ($minimalScoreForARedirect != 0 && $bestScore >= $minimalScoreForARedirect) {
-                $page = Page::createPageFromId($bestPageId);
-                Aliases::createForPage($page)
-                    ->addAlias($missingPageId, AliasType::REDIRECT)
+                Aliases::createForPage($bestPage)
+                    ->addAlias($missingPage, AliasType::REDIRECT)
                     ->sendToWriteStore()
-                    ->setReadStore(MetadataDbStore::getOrCreateFromResource($page))
+                    ->setReadStore(MetadataDbStore::getOrCreateFromResource($bestPage))
                     ->sendToWriteStore();
                 $redirectType = action_plugin_combo_router::REDIRECT_PERMANENT_METHOD;
             }
             $return = array(
-                $bestPageId,
+                $bestPage,
                 $redirectType
             );
         }
@@ -74,28 +73,42 @@ class RouterBestEndPage
 
     }
 
-    public static function getBestEndPageIdFromPages($pagesWithSameName, $requestedPageId): array
+    /**
+     * @param Page[] $candidatePagesWithSameLastName
+     * @param Page $requestedPage
+     * @return array
+     */
+    public static function getBestEndPageIdFromPages(array $candidatePagesWithSameLastName, Page $requestedPage): array
     {
         // Default value
         $bestScore = 0;
-        $bestPage = $pagesWithSameName[0];
+        $bestPage = $candidatePagesWithSameLastName[0];
 
         // The name of the dokuwiki id
-        $missingPageIdNames = explode(':', $requestedPageId);
+        $requestedPageNames = $requestedPage->getPath()->getNames();
 
         // Loop
-        foreach ($pagesWithSameName as $pageIdWithSameName => $pageTitle) {
+        foreach ($candidatePagesWithSameLastName as $candidatePage) {
 
-            $targetPageNames = explode(':', $pageIdWithSameName);
+            $candidatePageNames = $candidatePage->getPath()->getNames();
             $score = 0;
-            foreach ($targetPageNames as $targetPageName) {
-                if (in_array($targetPageName, $missingPageIdNames)) {
+            foreach ($candidatePageNames as $candidatePageName) {
+                if (in_array($candidatePageName, $requestedPageNames)) {
                     $score++;
                 }
             }
             if ($score > $bestScore) {
                 $bestScore = $score;
-                $bestPage = $pageIdWithSameName;
+                $bestPage = $candidatePage;
+            } else if ($score === $bestScore) {
+                /**
+                 * Best backlink count
+                 */
+                $candidateBacklinksCount = sizeof($candidatePage->getBacklinks());
+                $bestPageBacklinksCount = sizeof($bestPage->getBacklinks());
+                if ($candidateBacklinksCount > $bestPageBacklinksCount) {
+                    $bestPage = $candidatePage;
+                }
             }
 
         }

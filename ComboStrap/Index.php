@@ -42,10 +42,10 @@ class Index
     /**
      * Return a list of page id that have the same last name
      *
-     * @param string $pageIdSource
-     * @return array
+     * @param Page $pageToMatch
+     * @return Page[]
      */
-    public function getPagesWithSameLastName(string $pageIdSource): array
+    public function getPagesWithSameLastName(Page $pageToMatch): array
     {
         /**
          * * A shortcut to:
@@ -56,24 +56,24 @@ class Index
          */
 
         // There is two much pages with the start name
-        $name = noNS($pageIdSource);
-        if ($name === Site::getHomePageName()) {
+        $lastName = $pageToMatch->getPath()->getLastName();
+        if ($lastName === Site::getIndexPageName()) {
             return [];
         }
 
-        $pages = $this->indexer->getPages();
+        $pageIdList = $this->indexer->getPages();
 
-        $matchesPages = [];
-        foreach ($pages as $pageId) {
-            if ($pageIdSource === $pageId) {
+        $matchedPages = [];
+        foreach ($pageIdList as $pageId) {
+            if ($pageToMatch->getDokuwikiId() === $pageId) {
                 continue;
             }
-            $page = DokuPath::createPagePathFromId($pageId);
-            if ($page->getLastName() === $name) {
-                $matchesPages[] = $pageId;
+            $actualPage = Page::createPageFromId($pageId);
+            if ($actualPage->getPath()->getLastName() === $lastName) {
+                $matchedPages[] = $actualPage;
             }
         }
-        return $matchesPages;
+        return $matchedPages;
 
     }
 

@@ -508,14 +508,14 @@ class Icon extends ImageSvg
          * Download the icon
          */
         $downloadUrl = $this->getDownloadUrl();
-        $filePointer = @fopen($downloadUrl, 'r');
-        if ($filePointer == false) {
+        $filePointer = fopen($downloadUrl, 'r');
+        if ($filePointer === false) {
             // (ie no icon file found at ($downloadUrl)
             $urlLibrary = self::ICON_LIBRARY_WEBSITE_URLS[$library];
             throw new ExceptionCompile("The library (<a href=\"$urlLibrary\">$library</a>) does not have a icon (<a href=\"$downloadUrl\">$this->iconName</a>).", self::ICON_CANONICAL_NAME);
         }
 
-        $numberOfByte = @file_put_contents($mediaDokuPath->toLocalPath()->toAbsolutePath()->toString(), $filePointer);
+        $numberOfByte = file_put_contents($mediaDokuPath->toLocalPath()->toAbsolutePath()->toString(), $filePointer);
         if ($numberOfByte != false) {
             LogUtility::msg("The icon ($this) from the library ($library) was downloaded to ($mediaDokuPath)", LogUtility::LVL_MSG_INFO, self::ICON_CANONICAL_NAME);
         } else {

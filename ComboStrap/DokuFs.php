@@ -89,6 +89,7 @@ class DokuFs implements FileSystem
     /**
      * @param DokuPath $dirPath
      * @return mixed
+     * @throws ExceptionCompile
      */
     public function createDirectory(Path $dirPath)
     {

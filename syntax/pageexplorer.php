@@ -16,7 +16,6 @@ use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
 use ComboStrap\Page;
-use ComboStrap\CacheRuntimeDependencies2;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;
@@ -783,7 +782,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  * Page
                  */
                 $page = Page::createPageFromQualifiedPath($actualNamespaceId);
-                if ($page->isHomePage()) {
+                if ($page->isIndexPage()) {
                     $homePage = $page;
                 } else {
                     $nonHomePages[] = $page;

@@ -73,7 +73,7 @@ class PageType extends MetadataText
 
         if ($resource->isRootHomePage()) {
             return PageType::WEBSITE_TYPE;
-        } else if ($resource->isHomePage()) {
+        } else if ($resource->isIndexPage()) {
             return PageType::HOME_TYPE;
         } else {
             $defaultPageTypeConf = PluginUtility::getConfValue(PageType::CONF_DEFAULT_PAGE_TYPE, PageType::CONF_DEFAULT_PAGE_TYPE_DEFAULT);

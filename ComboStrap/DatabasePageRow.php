@@ -57,6 +57,9 @@ class DatabasePageRow
 
     const CANONICAL = MetadataDbStore::CANONICAL;
 
+    const IS_HOME_COLUMN = "is_home";
+    const IS_INDEX_COLUMN = "is_index";
+
     /**
      * @var Page
      */
@@ -442,7 +445,6 @@ class DatabasePageRow
          * Same data as {@link Page::getMetadataForRendering()}
          */
         $record = $this->getMetaRecord();
-        $record['IS_HOME'] = ($page->isHomePage() === true ? 1 : 0);
         $record[$replicationDate::getPersistentName()] = $replicationDate->toStoreValue();
 
         return $this->upsertAttributes($record);
@@ -738,6 +740,10 @@ class DatabasePageRow
         if ($this->page->getPageId() !== null) {
             $this->addPageIdMeta($metaRecord);
         }
+
+        // Is index
+        $metaRecord[self::IS_INDEX_COLUMN] = ($this->page->isIndexPage() === true ? 1 : 0);
+
         return $metaRecord;
     }
 

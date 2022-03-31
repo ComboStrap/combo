@@ -883,7 +883,7 @@ class Page extends ResourceComboAbs
      * @return bool
      */
     public
-    function isHomePage(): bool
+    function isIndexPage(): bool
     {
         global $conf;
         $startPageName = $conf['start'];
@@ -1455,7 +1455,7 @@ class Page extends ResourceComboAbs
             return null;
         }
         $slice = 1;
-        if ($this->isHomePage()) {
+        if ($this->isIndexPage()) {
             /**
              * The parent of a home page
              * is in the parent directory

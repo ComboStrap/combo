@@ -226,10 +226,12 @@ class DokuPath extends PathAbs
                 // Why ? $this->id = resolve_id(getNS($ID), $this->id, true);
                 global $conf;
                 if ($drive === self::MEDIA_DRIVE) {
-                    $filePath = $conf['mediadir'] . '/' . utf8_encodeFN($this->id);
+                    $filePath = $conf['mediadir'];
                 } else {
-                    $filePath = $conf['datadir'] . '/' . utf8_encodeFN($this->id);
+                    $filePath = $conf['datadir'];
                 }
+                $filePathSeparator = self::SEPARATOR_SLASH; // don't know why it's not OS specific
+                $filePath .= $filePathSeparator . utf8_encodeFN(str_replace(DokuPath::PATH_SEPARATOR, $filePathSeparator, $this->id));
             }
         }
         $this->filePath = $filePath;
@@ -683,7 +685,7 @@ class DokuPath extends PathAbs
      */
     public function toLabel(): string
     {
-        $words = preg_split("/\s/", preg_replace("/-|_|:/", " ", $this->getPath()));
+        $words = preg_split("/\s/", preg_replace("/[-_:]/", " ", $this->getPath()));
         $wordsUc = [];
         foreach ($words as $word) {
             $wordsUc[] = ucfirst($word);
@@ -693,7 +695,7 @@ class DokuPath extends PathAbs
 
     public function toLocalPath(): LocalPath
     {
-        return LocalPath::create($this->filePath);
+        return LocalPath::createFromPath($this->filePath);
     }
 
     /**

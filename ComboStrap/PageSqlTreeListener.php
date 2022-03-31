@@ -143,6 +143,12 @@ final class PageSqlTreeListener implements ParseTreeListener
 
                         // variable name
                         $variableName = strtolower($text);
+                        if ($variableName === DatabasePageRow::IS_HOME_COLUMN) {
+                            /**
+                             * Deprecation of is_home for is_index
+                             */
+                            $variableName = DatabasePageRow::IS_INDEX_COLUMN;
+                        }
                         $this->actualPredicateColumn = $variableName;
                         if ($this->tableName === self::BACKLINKS) {
                             $variableName = "p." . $variableName;

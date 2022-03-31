@@ -349,11 +349,22 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     $tagAttributes->removeComponentAttributeIfPresent(Dimension::WIDTH_KEY);
                     // Widget also
                     $tagAttributes->removeComponentAttributeIfPresent(self::WIDGET_ATTRIBUTE);
-                    $renderer->doc .= $tagAttributes
+                    $enterAnchor = $tagAttributes
                         ->setType(self::CANONICAL)
                         ->setLogicalTag(syntax_plugin_combo_link::TAG)
                         ->toHtmlEnterTag("a");
 
+                    $textFound = $data[self::BRAND_TEXT_FOUND_INDICATOR];
+
+                    /**
+                     * In a link widget, we don't want the logo inside
+                     * the anchor tag otherwise the underline make a link between the text
+                     * and the icon and that's ugly
+                     */
+                    $logoInAnchor = !($brandButton->getWidget() === BrandButton::WIDGET_LINK_VALUE && $textFound);
+                    if ($logoInAnchor) {
+                        $renderer->doc .= $enterAnchor;
+                    }
 
                     /**
                      * Logo
@@ -362,7 +373,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     if (!$brandImageFound && $brandButton->hasIcon()) {
                         try {
                             $iconAttributes = $brandButton->getIconAttributes();
-                            $textFound = $data[self::BRAND_TEXT_FOUND_INDICATOR];
+
                             $name = $iconAttributes[\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE];
                             $iconAttributes = TagAttributes::createFromCallStackArray($iconAttributes);
                             if ($textFound && $context === syntax_plugin_combo_menubar::TAG) {
@@ -385,6 +396,10 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                             }
 
                         }
+                    }
+
+                    if (!$logoInAnchor) {
+                        $renderer->doc .= $enterAnchor;
                     }
 
                     /**

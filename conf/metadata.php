@@ -26,7 +26,7 @@ use ComboStrap\Region;
 use ComboStrap\Shadow;
 use ComboStrap\SvgDocument;
 use ComboStrap\SvgImageLink;
-use ComboStrap\UrlManagerBestEndPage;
+use ComboStrap\RouterBestEndPage;
 
 
 require_once(__DIR__ . '/../syntax/related.php');
@@ -66,7 +66,7 @@ $meta['WeightFactorForSamePageName'] = array('string');
 $meta['WeightFactorForStartPage'] = array('string');
 $meta['WeightFactorForSameNamespace'] = array('string');
 
-$meta[UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = array('string');
+$meta[RouterBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = array('string');
 
 $meta[Canonical::CONF_CANONICAL_LAST_NAMES_COUNT] = array('string');
 $meta[action_plugin_combo_canonical::CONF_CANONICAL_FOR_GA_PAGE_VIEW] = array('onoff');

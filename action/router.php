@@ -20,7 +20,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\Sqlite;
 use ComboStrap\Url;
-use ComboStrap\UrlManagerBestEndPage;
+use ComboStrap\RouterBestEndPage;
 
 
 /**
@@ -494,7 +494,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
         }
 
-        /*
+        /**
          *  We are still a reader, the redirection does not exist the user is not allowed to edit the page (public of other)
          */
         if ($this->getConf('ActionReaderFirst') == self::NOTHING) {
@@ -518,7 +518,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
                 case self::GO_TO_BEST_END_PAGE_NAME:
 
-                    list($targetPage, $method) = UrlManagerBestEndPage::process($identifier);
+                    list($targetPage, $method) = RouterBestEndPage::process($identifier);
                     if ($targetPage != null) {
                         $res = false;
                         switch ($method) {
@@ -600,7 +600,6 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                     $this->redirectToSearchEngine();
 
                     return;
-                    break;
 
                 // End Switch Action
             }

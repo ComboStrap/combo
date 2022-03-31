@@ -10,7 +10,7 @@ use action_plugin_combo_router;
  *
  * A class that implements the BestEndPage Algorithm for the {@link action_plugin_combo_router urlManager}
  */
-class UrlManagerBestEndPage
+class RouterBestEndPage
 {
 
     /**
@@ -30,42 +30,13 @@ class UrlManagerBestEndPage
     public static function getBestEndPageId($pageId): array
     {
 
-        $result = array();
-
-        $pagesWithSameName = Index::getOrCreate()->getPagesWithSameLastName($pageId);
-        if (count($pagesWithSameName) > 0) {
-
-            // Default value
-            $bestScore = 0;
-            $bestPage = $pagesWithSameName[0];
-
-            // The name of the dokuwiki id
-            $missingPageIdNames = explode(':', $pageId);
-
-            // Loop
-            foreach ($pagesWithSameName as $pageIdWithSameName => $pageTitle) {
-
-                $targetPageNames = explode(':', $pageIdWithSameName);
-                $score = 0;
-                foreach($targetPageNames as $targetPageName){
-                    if(in_array($targetPageName,$missingPageIdNames)){
-                        $score++;
-                    }
-                }
-                if($score>$bestScore){
-                    $bestScore = $score;
-                    $bestPage = $pageIdWithSameName;
-                }
-
-            }
-
-            $result = array(
-                $bestPage,
-                $bestScore
-            );
-
+        $pagesWithSameName = Index::getOrCreate()
+            ->getPagesWithSameLastName($pageId);
+        if (sizeof($pagesWithSameName) == 0) {
+            return [];
         }
-        return $result;
+        return self::getBestEndPageIdFromPages($pagesWithSameName, $pageId);
+
 
     }
 
@@ -73,6 +44,7 @@ class UrlManagerBestEndPage
     /**
      * @param $missingPageId
      * @return array with the best page and the type of redirect
+     * @throws ExceptionCompile
      */
     public static function process($missingPageId): array
     {
@@ -89,7 +61,7 @@ class UrlManagerBestEndPage
                 Aliases::createForPage($page)
                     ->addAlias($missingPageId, AliasType::REDIRECT)
                     ->sendToWriteStore()
-                    ->setReadStore(MetadataDbStore::createForPage())
+                    ->setReadStore(MetadataDbStore::getOrCreateFromResource($page))
                     ->sendToWriteStore();
                 $redirectType = action_plugin_combo_router::REDIRECT_PERMANENT_METHOD;
             }
@@ -100,5 +72,37 @@ class UrlManagerBestEndPage
         }
         return $return;
 
+    }
+
+    public static function getBestEndPageIdFromPages($pagesWithSameName, $requestedPageId): array
+    {
+        // Default value
+        $bestScore = 0;
+        $bestPage = $pagesWithSameName[0];
+
+        // The name of the dokuwiki id
+        $missingPageIdNames = explode(':', $requestedPageId);
+
+        // Loop
+        foreach ($pagesWithSameName as $pageIdWithSameName => $pageTitle) {
+
+            $targetPageNames = explode(':', $pageIdWithSameName);
+            $score = 0;
+            foreach ($targetPageNames as $targetPageName) {
+                if (in_array($targetPageName, $missingPageIdNames)) {
+                    $score++;
+                }
+            }
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $bestPage = $pageIdWithSameName;
+            }
+
+        }
+
+        return array(
+            $bestPage,
+            $bestScore
+        );
     }
 }

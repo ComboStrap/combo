@@ -195,6 +195,7 @@ require_once(__DIR__ . '/Region.php');
 require_once(__DIR__ . '/RenderUtility.php');
 require_once(__DIR__ . '/ReplicationDate.php');
 require_once(__DIR__ . '/ResourceName.php');
+require_once(__DIR__ . '/RouterBestEndPage.php');
 require_once(__DIR__ . '/Sanitizer.php');
 require_once(__DIR__ . '/Shadow.php');
 require_once(__DIR__ . '/Site.php');
@@ -231,7 +232,6 @@ require_once(__DIR__ . '/Reference.php');
 require_once(__DIR__ . '/Underline.php');
 require_once(__DIR__ . '/Unit.php');
 require_once(__DIR__ . '/Url.php');
-require_once(__DIR__ . '/UrlManagerBestEndPage.php');
 require_once(__DIR__ . '/XhtmlUtility.php');
 require_once(__DIR__ . '/XmlDocument.php');
 require_once(__DIR__ . '/XmlUtility.php');
@@ -755,7 +755,6 @@ class PluginUtility
     public
     static function getDocumentationHyperLink($canonical, $label, $withIcon = true, $tooltip = ""): string
     {
-        /** @noinspection SpellCheckingInspection */
 
         $xhtmlIcon = "";
         if ($withIcon) {
@@ -1345,7 +1344,7 @@ class PluginUtility
         $handler->addPluginCall(
             $pluginName,
             $callStackArray,
-            DOKU_LEXER_END,
+            DOKU_LEXER_EXIT,
             null,
             null
         );

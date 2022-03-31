@@ -68,7 +68,7 @@ $conf['WeightFactorForStartPage'] = 3;
 $conf['WeightFactorForSameNamespace'] = 5;
 
 /**
- * See {@link UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT_DEFAULT}
+ * See {@link RouterBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT_DEFAULT}
  */
 $conf['BestEndPageMinimalScoreForAliasCreation'] = 2;
 

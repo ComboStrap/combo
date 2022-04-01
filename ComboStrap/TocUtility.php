@@ -15,9 +15,16 @@ namespace ComboStrap;
 
 use Doku_Renderer;
 use DokuWiki_Admin_Plugin;
+use syntax_plugin_combo_toc;
 
 class TocUtility
 {
+
+
+    /**
+     * The class added to the container
+     */
+    public const TOC_ID_CLASS = "dw__toc";
 
     public static function renderToc($toc, $renderer): string
     {
@@ -115,12 +122,8 @@ class TocUtility
 
         }
 
-
-        if (isset($renderer->info['toc'])) {
-            return $renderer->info['toc'];
-        } else {
-            return true;
-        }
+        // return it if set otherwise return true
+        return $renderer->info['toc'] ?? true;
 
     }
 
@@ -131,5 +134,56 @@ class TocUtility
     {
         global $conf;
         $conf['tocminheads'] = $int;
+    }
+
+    /**
+     * @throws ExceptionNotFound - when an outline is not found
+     * @return Call the toc call inserted
+     */
+    public static function insertTocCall(CallStack $callStack): ?Call
+    {
+
+        $callStack->moveToStart();
+        while ($actualCall = $callStack->next()) {
+            if (!in_array($actualCall->getTagName(), \action_plugin_combo_headingpostprocessing::HEADING_TAGS)) {
+                continue;
+            }
+            if ($actualCall->getContext() !== "outline") {
+                continue;
+            }
+            /**
+             * Insert the TOC call and keep the call
+             * to update the TOC data
+             */
+            $level = $actualCall->getAttribute("level");
+            switch ($level) {
+                case 1:
+                    /**
+                     * After Level 1
+                     */
+                    while ($actualCall = $callStack->next()) {
+                        if ($actualCall->getState() === DOKU_LEXER_EXIT) {
+                            break;
+                        }
+                    }
+                    $callStack->insertAfter(Call::createComboCall(
+                        syntax_plugin_combo_toc::TAG,
+                        DOKU_LEXER_SPECIAL
+                    ));
+                    $callStack->next();
+                    break;
+                default:
+                case 2:
+                    $callStack->insertBefore(Call::createComboCall(
+                        syntax_plugin_combo_toc::TAG,
+                        DOKU_LEXER_SPECIAL
+                    ));
+                    $callStack->previous();
+                    break;
+
+            }
+            return $callStack->getActualCall();
+        }
+        throw new ExceptionNotFound("An outline heading was not found to insert the call");
     }
 }

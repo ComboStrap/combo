@@ -13,6 +13,7 @@ use ComboStrap\PageEdit;
 use ComboStrap\PluginUtility;
 use ComboStrap\RenderUtility;
 use ComboStrap\Site;
+use ComboStrap\TocUtility;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
@@ -36,12 +37,16 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
      * the toc data between loop in the callstack
      * @var Call|null
      */
-    private static $tocAttribute;
+    private $tocData;
     /**
      * The toc call
      * @var Call|null
      */
-    private static $tocCall;
+    private $tocCall;
+    /**
+     * @var array an array to make sure that the id are unique
+     */
+    private $tocUniqueId = [];
 
 
     /**
@@ -186,15 +191,12 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 
         /**
          * Reset static
-         */
-        self::$tocCall = null;
-        self::$tocAttribute = [];
-
-        /**
          * When running test, the class are not shutdown
          * We reset the static toc
          */
-        self::$tocAttribute = null;
+        $this->tocCall = null;
+        $this->tocData = null;
+        $this->tocUniqueId = [];
 
         /**
          * Processing variable about the context
@@ -217,7 +219,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
              * TOC
              */
             if ($tagName === syntax_plugin_combo_toc::TAG) {
-                self::$tocCall = $actualCall;
+                $this->tocCall = $actualCall;
                 continue;
             }
 
@@ -274,7 +276,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                     case syntax_plugin_combo_heading::TAG:
                     case syntax_plugin_combo_headingwiki::TAG:
                         if ($actualCall->getState() == DOKU_LEXER_EXIT) {
-                            self::insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(
+                            $this->insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(
                                 $headingEnterCall,
                                 $handler,
                                 $callStack,
@@ -340,7 +342,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                                 /**
                                  * Close and section
                                  */
-                                self::insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(
+                                $this->insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(
                                     $headingEnterCall,
                                     $handler,
                                     $callStack,
@@ -422,71 +424,34 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         /**
          * Adding Main Slots to the callstack if needed
          */
-        PrimarySlots::process($callStack, self::$tocCall);
+        PrimarySlots::process($callStack, $this->tocCall);
 
         /**
          * TOC
          */
-        if (self::$tocCall === null) {
-            $callStack->moveToStart();
-            while ($actualCall = $callStack->next()) {
-                if (!in_array($actualCall->getTagName(), self::HEADING_TAGS)) {
-                    continue;
-                }
-                if ($actualCall->getContext() !== "outline") {
-                    continue;
-                }
-                /**
-                 * Insert the TOC call and keep the call
-                 * to update the TOC data
-                 */
-                $level = $actualCall->getAttribute("level");
-                switch ($level) {
-                    case 1:
-                        /**
-                         * After Level 1
-                         */
-                        while ($actualCall = $callStack->next()) {
-                            if ($actualCall->getState() === DOKU_LEXER_EXIT) {
-                                break;
-                            }
-                        }
-                        $callStack->insertAfter(Call::createComboCall(
-                            syntax_plugin_combo_toc::TAG,
-                            DOKU_LEXER_SPECIAL
-                        ));
-                        $callStack->next();
-                        break;
-                    case 2:
-                        $callStack->insertBefore(Call::createComboCall(
-                            syntax_plugin_combo_toc::TAG,
-                            DOKU_LEXER_SPECIAL
-                        ));
-                        $callStack->previous();
-                        break;
-
-                }
-                self::$tocCall = $callStack->getActualCall();
-                break;
+        if ($this->tocCall === null) {
+            try {
+                $this->tocCall = TocUtility::insertTocCall($callStack);
+            } catch (ExceptionNotFound $e) {
+                LogUtility::msg("No outline heading was found to insert the table of content");
             }
         }
-        if (self::$tocCall !== null) {
-            self::$tocCall->addAttribute(syntax_plugin_combo_toc::TOC_ATTRIBUTE, self::$tocAttribute);
+        if ($this->tocCall !== null) {
+            $this->tocCall->addAttribute(syntax_plugin_combo_toc::TOC_ATTRIBUTE, $this->tocData);
         }
 
 
     }
 
     /**
-     * @param $headingEntryCall
+     * @param Call $headingEntryCall
      * @param Doku_Handler $handler
      * @param CallStack $callStack
      * @param $actualSectionState
      * @param $headingText
      * @param $actualHeadingParsingState
      */
-    private
-    static function insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(&$headingEntryCall, &$handler, CallStack &$callStack, &$actualSectionState, &$headingText, &$actualHeadingParsingState)
+    private function insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(Call &$headingEntryCall, Doku_Handler &$handler, CallStack &$callStack, &$actualSectionState, &$headingText, &$actualHeadingParsingState)
     {
         /**
          * We are no more in a heading
@@ -512,11 +477,18 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 
             $level = $headingEntryCall->getAttribute("level");
 
+            $id = $headingEntryCall->getAttribute("id");
+            if ($id === null) {
+                $id = sectionID($headingText, $this->tocUniqueId);
+                $headingEntryCall->addAttribute("id", $id);
+            }
+
             /**
              * TOC Data
              */
-            self::$tocAttribute[] = [
-                'link' => "#h{$level}",
+
+            $this->tocData[] = [
+                'link' => "#$id",
                 'title' => $headingText,
                 'type' => 'ul',
                 'level' => $level

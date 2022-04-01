@@ -110,6 +110,8 @@ class PrimarySlots
             ));
             $stack = $childCallStack->getStack();
             switch ($name) {
+                case Site::getSideKickSlotPageName():
+
                 case Site::SLOT_MAIN_HEADER_NAME:
                     $callStack->moveToStart();
                     $actualCall = $callStack->next();

@@ -188,6 +188,7 @@ require_once(__DIR__ . '/Prism.php');
 require_once(__DIR__ . '/PagePublicationDate.php');
 require_once(__DIR__ . '/PageCreationDate.php');
 require_once(__DIR__ . '/PageH1.php');
+require_once(__DIR__ . '/PrimarySlots.php');
 require_once(__DIR__ . '/QualityDynamicMonitoringOverwrite.php');
 require_once(__DIR__ . '/QualityMenuItem.php');
 require_once(__DIR__ . '/RasterImageLink.php');
@@ -310,10 +311,6 @@ class PluginUtility
      * @var string
      */
     public static $PLUGIN_NAME;
-    /**
-     * @var mixed the version
-     */
-    private static $VERSION;
 
 
     /**
@@ -329,7 +326,7 @@ class PluginUtility
         global $lang;
         self::$PLUGIN_LANG = $lang[self::PLUGIN_BASE_NAME];
         self::$URL_APEX = "https://" . parse_url(self::$INFO_PLUGIN['url'], PHP_URL_HOST);
-        self::$VERSION = self::$INFO_PLUGIN['version'];
+        //self::$VERSION = self::$INFO_PLUGIN['version'];
 
     }
 

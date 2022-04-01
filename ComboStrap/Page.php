@@ -2062,10 +2062,6 @@ class Page extends ResourceComboAbs
         return isHiddenPage($this->getDokuwikiId());
     }
 
-    public function isPrimarySlotWithHeaderAndFooter(): bool
-    {
-        return ($this->isPrimarySlot() && !$this->isRootHomePage());
-    }
 
     public function getPrimaryHeaderPage(): ?Page
     {

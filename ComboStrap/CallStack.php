@@ -57,12 +57,6 @@ class CallStack
     private $handler;
 
     /**
-     * The max key of the calls
-     * @var int|null
-     */
-    private $maxIndex = 0;
-
-    /**
      * @var array the call stack
      */
     private $callStack = [];
@@ -83,10 +77,6 @@ class CallStack
      */
     private $startWasReached = false;
 
-    /**
-     * @var string the type of callstack
-     */
-    private $callStackType = "unknown";
 
     /**
      * A callstack is a pointer implementation to manipulate
@@ -144,11 +134,15 @@ class CallStack
          */
         if ($callsPropertyFromCallWriterExists) {
 
+            // $this->callStackType = self::CALLSTACK_WRITER;
+
             $writerCalls = &$callWriter->calls;
             $this->callStack = &$writerCalls;
-            $this->callStackType = self::CALLSTACK_WRITER;
+
 
         } else {
+
+            // $this->callStackType = self::CALLSTACK_MAIN;
 
             /**
              * Check the calls property of the handler
@@ -169,11 +163,10 @@ class CallStack
              * Initiate the callstack
              */
             $this->callStack = &$handler->calls;
-            $this->callStackType = self::CALLSTACK_MAIN;
+
 
         }
 
-        $this->maxIndex = ArrayUtility::array_key_last($this->callStack);
         $this->moveToEnd();
 
 
@@ -535,7 +528,7 @@ class CallStack
         $actualCall = $this->getActualCall();
         $enterState = $actualCall->getState();
         if (!in_array($enterState, CallStack::TAG_STATE)) {
-            LogUtility::msg("A next sibling can be asked only from a tag call. The state is " . $actualState, LogUtility::LVL_MSG_ERROR, "support");
+            LogUtility::msg("A next sibling can be asked only from a tag call. The state is $enterState", LogUtility::LVL_MSG_ERROR, "support");
             return false;
         }
         $level = 0;
@@ -637,19 +630,28 @@ class CallStack
     function insertAfter(Call $call): void
     {
         $actualKey = key($this->callStack);
-        if ($actualKey == null) {
-            if ($this->endWasReached == true) {
-                $this->callStack[] = $call->toCallArray();
-            } else {
-                LogUtility::msg("Callstack: Actual key is null, we can't insert after null");
-            }
-        } else {
+        if ($actualKey !== null) {
             $offset = array_search($actualKey, array_keys($this->callStack), true);
             array_splice($this->callStack, $offset + 1, 0, [$call->toCallArray()]);
             // array splice reset the pointer
             // we move it to the actual element
             $this->moveToKey($actualKey);
-        };
+            return;
+        }
+
+        if ($this->endWasReached === true) {
+            $this->callStack[] = $call->toCallArray();
+            return;
+        }
+        if ($this->startWasReached === true) {
+            // since 4+
+            array_unshift($this->callStack, $call->toCallArray());
+            $this->previous();
+            return;
+        }
+        LogUtility::msg("Callstack: Actual key is null, we can't insert after null");
+
+
     }
 
     public
@@ -839,7 +841,7 @@ class CallStack
             $actualCall = $this->getActualCall();
             $enterState = $actualCall->getState();
             if (!in_array($enterState, CallStack::TAG_STATE)) {
-                LogUtility::msg("A previous sibling can be asked only from a tag call. The state is " . $actualState, LogUtility::LVL_MSG_ERROR, "support");
+                LogUtility::msg("A previous sibling can be asked only from a tag call. The state is $enterState", LogUtility::LVL_MSG_ERROR, "support");
                 return false;
             }
         }

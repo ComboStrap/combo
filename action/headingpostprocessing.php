@@ -6,6 +6,7 @@ use ComboStrap\CallStack;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
+use ComboStrap\PrimarySlots;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
 use ComboStrap\PageEdit;
@@ -419,75 +420,9 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         }
 
         /**
-         * header / footer of primary
-         *
-         * We don't create compound text file because we would lost the position of the token in the file
-         * and the edit section would be broken
-         *
-         * We parse the header/footer and add them to the callstack
+         * Adding Main Slots to the callstack if needed
          */
-        try {
-            /**
-             * Be sure that this is a primary page
-             * and that the act is show/preview (and not {@link \ComboStrap\RenderUtility::DYNAMIC_RENDERING}
-             *
-             */
-            $page = Page::createPageFromGlobalDokuwikiId();
-            /**
-             * ACT only for show and preview
-             *
-             * - may be null with ajax call
-             * - not {@link RenderUtility::DYNAMIC_RENDERING}
-             * - not 'admin'
-             */
-            global $ACT;
-            if (
-                in_array($ACT, ["show", "preview"])
-                && $page->isPrimarySlotWithHeaderAndFooter()
-            ) {
-                foreach ($page->getChildren() as $child) {
-                    $name = $child->getPath()->getLastName();
-
-                    $childInstructions = $child->getInstructionsDocument()->getOrProcessContent();
-                    $childCallStack = CallStack::createFromInstructions($childInstructions);
-                    $childCallStack->moveToStart();
-                    while ($actualCall = $childCallStack->next()) {
-                        $tagName = $actualCall->getTagName();
-                        switch ($tagName) {
-                            case syntax_plugin_combo_toc::TAG:
-                                self::$tocCall = $actualCall;
-                                continue 2;
-                            case CallStack::DOCUMENT_START:
-                            case CallStack::DOCUMENT_END:
-                                $childCallStack->deleteActualCallAndPrevious();
-                                continue 2;
-                        }
-                    }
-                    $stack = $childCallStack->getStack();
-
-                    switch ($name) {
-                        case Site::SLOT_MAIN_HEADER_NAME:
-                            //
-                            $callStack->moveToStart();
-                            $actualCall = $callStack->next();
-                            if ($actualCall->getTagName() !== syntax_plugin_combo_frontmatter::TAG) {
-                                $callStack->previous();
-                            }
-                            $callStack->insertInstructionsFromNativeArrayAfterCurrentPosition($stack);
-                            break;
-                        case Site::SLOT_MAIN_FOOTER_NAME:
-                            $callStack->appendInstructionsFromNativeArrayAtTheEnd($stack);
-                            break;
-                        default:
-                            LogUtility::msg("The child ($child) of the page ($page) is unknown and was not added in the markup");
-                            break;
-                    }
-                }
-
-            }
-        } catch (ExceptionNotFound $e) {
-            LogUtility::msg("Postprocessing: The running id was not found, we were unable to add the main footer/header");
-        }
+        PrimarySlots::process($callStack, self::$tocCall);
 
         /**
          * TOC

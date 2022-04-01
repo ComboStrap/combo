@@ -27,8 +27,6 @@ class action_plugin_combo_blockpostprocessing extends DokuWiki_Action_Plugin
 
 
     /**
-     * Transform the special heading atx call
-     * in an enter and exit heading atx calls
      *
      * Code extracted and adapted from the end of {@link Doku_Handler::header()}
      *

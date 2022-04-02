@@ -13,7 +13,6 @@
 namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
-use http\Exception\RuntimeException;
 use syntax_plugin_combo_media;
 use syntax_plugin_combo_pageimage;
 
@@ -185,7 +184,7 @@ class Call
         return new Call($call);
     }
 
-    public static function createFromInstruction($instruction)
+    public static function createFromInstruction($instruction): Call
     {
         return new Call($instruction);
     }
@@ -348,6 +347,9 @@ class Call
     }
 
 
+    /**
+     *
+     */
     public function &getAttributes(): ?array
     {
 
@@ -357,20 +359,16 @@ class Call
                 return $this->call[1];
             default:
                 $data = &$this->getPluginData();
-                if (isset($data[PluginUtility::ATTRIBUTES])) {
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    if (!is_array($attributes)) {
-                        $message = "The attributes value are not an array for the call ($this)";
-                        if (PluginUtility::isDevOrTest()) {
-                            throw new ExceptionRuntime($message, self::CANONICAL);
-                        }
-                        LogUtility::msg($message);
-                        return null;
-                    }
-                    return $attributes;
-                } else {
-                    return null;
+                if (!isset($data[PluginUtility::ATTRIBUTES])) {
+                    $data[PluginUtility::ATTRIBUTES] = [];
                 }
+                $attributes = &$data[PluginUtility::ATTRIBUTES];
+                if (!is_array($attributes)) {
+                    $message = "The attributes value are not an array for the call ($this), the value was wrapped in an array";
+                    LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    $attributes = [$attributes];
+                }
+                return $attributes;
         }
     }
 

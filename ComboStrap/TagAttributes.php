@@ -14,6 +14,7 @@ namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
 use syntax_plugin_combo_cell;
+use syntax_plugin_combo_follow;
 
 /**
  * An helper to create manipulate component and html attributes
@@ -70,7 +71,8 @@ class TagAttributes
         Skin::SKIN_ATTRIBUTE,
         ColorRgb::PRIMARY_VALUE,
         ColorRgb::SECONDARY_VALUE,
-        Dimension::ZOOM_ATTRIBUTE
+        Dimension::ZOOM_ATTRIBUTE,
+        syntax_plugin_combo_follow::HANDLE_ATTRIBUTE
     ];
 
     /**
@@ -916,8 +918,11 @@ class TagAttributes
         return $this;
     }
 
-    public
-    function removeComponentAttribute($attribute)
+    /**
+     * @param $attribute
+     * @return mixed|null - the value deleted / null if it does not exist
+     */
+    public function removeComponentAttribute($attribute)
     {
         $lowerAtt = strtolower($attribute);
         if (isset($this->componentAttributesCaseInsensitive[$lowerAtt])) {
@@ -932,6 +937,8 @@ class TagAttributes
             if (!$this->getType() == $lowerAtt) {
                 LogUtility::msg("Internal Error: The component attribute ($attribute) is not present. Use the ifPresent function, if you don't want this message", LogUtility::LVL_MSG_ERROR);
             }
+            return null;
+
 
         }
 

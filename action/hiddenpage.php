@@ -4,7 +4,6 @@
 use ComboStrap\ExceptionCompile;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
-use ComboStrap\TplConstant;
 use ComboStrap\TplUtility;
 
 /**
@@ -44,12 +43,17 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
             }
 
             $pattern .= "|" . TplUtility::getFooterSlotPageName();
-            $pattern .= "|" . TplUtility::getSideKickSlotPageName();
+
             $pattern .= "|" . TplUtility::getHeaderSlotPageName();
+            $name = TplUtility::getSideKickSlotPageName();
+            if (!empty($name)) {
+                $pattern .= "|" . $name;
+            }
 
         }
         $pattern .= "|" . Site::getPrimaryFooterSlotName();
         $pattern .= "|" . Site::getPrimaryHeaderSlotName();
+        $pattern .= "|" . Site::getPrimarySideSlotName();
         $pattern .= ")";
         if (preg_match('/' . $pattern . '/ui', ':' . $event->data['id'])) {
             $event->data['hidden'] = true;

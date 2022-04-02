@@ -41,6 +41,8 @@ class Site
      * Name of the main footer slot
      */
     public const SLOT_MAIN_FOOTER_NAME = "slot_main_footer";
+
+    public const SLOT_MAIN_SIDE_NAME = "slot_main_side";
     /**
      * Strap Template meta (version, release date, ...)
      * @var array
@@ -550,12 +552,17 @@ class Site
                 Site::getPageHeaderSlotName(),
                 Site::getPageFooterSlotName(),
                 Site::getPrimaryHeaderSlotName(),
-                Site::getPrimaryFooterSlotName()
+                Site::getPrimaryFooterSlotName(),
+                Site::getPrimarySideSlotName()
             ];
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("An error has occured while retrieving the name of the secondary slot. Error: {$e->getMessage()}");
+            LogUtility::msg("An error has occurred while retrieving the name of the secondary slots. Error: {$e->getMessage()}");
             // We known at least this one
-            return [Site::getSidebarName()];
+            return [
+                Site::getSidebarName(),
+                Site::getPrimaryHeaderSlotName(),
+                Site::getPrimaryFooterSlotName()
+            ];
         }
 
 
@@ -605,13 +612,12 @@ class Site
     }
 
     /**
-     * @throws ExceptionCompile
+     *
      */
-    public static function getSideKickSlotPageName()
+    public static function getPrimarySideSlotName()
     {
 
-        Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-        return TplUtility::getSideKickSlotPageName();
+        return self::SLOT_MAIN_SIDE_NAME;
 
     }
 

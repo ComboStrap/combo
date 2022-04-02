@@ -60,14 +60,11 @@ class HttpResponse
         return $this;
     }
 
-    public function send($payload = null, $contentType = null)
+    public function send($payload = null, $contentType = Mime::PLAIN_TEXT)
     {
 
-        if ($contentType != null) {
-            Http::setMime($contentType);
-        } else {
-            Http::setMime(Mime::PLAIN_TEXT);
-        }
+        Http::setMime($contentType);
+
 
         // header should before the status
         // because for instance a `"Location` header changes the status to 302
@@ -163,6 +160,16 @@ class HttpResponse
         $message = json_encode(["message" => $messages]);
         $this->send($message, Mime::JSON);
 
+    }
+
+    public function sendTxtMessage($message)
+    {
+        $this->send($message);
+    }
+
+    public function sendHtmlMessage(string $html)
+    {
+        $this->send($html, Mime::HTML);
     }
 
 }

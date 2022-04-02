@@ -47,7 +47,7 @@ class FsWikiUtility
      *
      * @param string $path The container of the pages
      * @return array An array of the pages for the namespace
-     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadSyntax if the string is not a namespace path
      */
     static function getChildren(string $path): array
     {

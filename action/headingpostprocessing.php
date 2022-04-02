@@ -39,11 +39,6 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
      */
     private $tocData;
     /**
-     * The toc call
-     * @var Call|null
-     */
-    private $tocCall;
-    /**
      * @var array an array to make sure that the id are unique
      */
     private $tocUniqueId = [];
@@ -193,10 +188,21 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * Reset static
          * When running test, the class are not shutdown
          * We reset the static toc
+         * Because we may parse secondary slot
+         * We reset only on primary slots
          */
-        $this->tocCall = null;
-        $this->tocData = null;
-        $this->tocUniqueId = [];
+        try {
+            $pageParsed = Page::createPageFromGlobalDokuwikiId();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::msg("The running id is not set. We can't post process the page with heading and table of content");
+            return;
+        }
+        if ($pageParsed->isPrimarySlot()) {
+            $tocCall = null;
+            $this->tocData = null;
+            $this->tocUniqueId = [];
+        }
+
 
         /**
          * Processing variable about the context
@@ -219,7 +225,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
              * TOC
              */
             if ($tagName === syntax_plugin_combo_toc::TAG) {
-                $this->tocCall = $actualCall;
+                $tocCall = $actualCall;
                 continue;
             }
 
@@ -422,22 +428,26 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         }
 
         /**
-         * Adding Main Slots to the callstack if needed
+         * Main Slots and TOC to the primary slots
          */
-        PrimarySlots::process($callStack, $this->tocCall);
+        if($pageParsed->isPrimarySlot()) {
 
-        /**
-         * TOC
-         */
-        if ($this->tocCall === null) {
-            try {
-                $this->tocCall = TocUtility::insertTocCall($callStack);
-            } catch (ExceptionNotFound $e) {
-                LogUtility::msg("No outline heading was found to insert the table of content");
+            PrimarySlots::addContentSlots($callStack, $tocCall, $pageParsed);
+
+            /**
+             * TOC
+             */
+            if ($tocCall === null) {
+                try {
+                    $tocCall = TocUtility::insertTocCall($callStack);
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::msg("No outline heading was found to insert the table of content");
+                }
             }
-        }
-        if ($this->tocCall !== null) {
-            $this->tocCall->addAttribute(syntax_plugin_combo_toc::TOC_ATTRIBUTE, $this->tocData);
+            if ($tocCall !== null) {
+                $tocCall->addAttribute(syntax_plugin_combo_toc::TOC_ATTRIBUTE, $this->tocData);
+            }
+
         }
 
 
@@ -486,7 +496,6 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             /**
              * TOC Data
              */
-
             $this->tocData[] = [
                 'link' => "#$id",
                 'title' => $headingText,

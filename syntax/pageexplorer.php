@@ -592,7 +592,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $pageAttributes = $data[self::PAGE_ATTRIBUTES];
                             $namespaceInstructions = $data[self::NAMESPACE_INSTRUCTIONS];
                             $namespaceAttributes = $data[self::NAMESPACE_ATTRIBUTES];
-                            $pageOrNamespaces = FsWikiUtility::getChildren($namespacePath->toString());
+                            try {
+                                $pageOrNamespaces = FsWikiUtility::getChildren($namespacePath->toString());
+                            } catch (ExceptionBadSyntax $e) {
+                                LogUtility::msg("Bad syntax for the namespace $namespacePath. We can't get the children. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                                return false;
+                            }
                             $pageNum = 0;
                             foreach ($pageOrNamespaces as $pageOrNamespace) {
 

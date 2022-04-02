@@ -28,7 +28,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
         /**
          * https://www.dokuwiki.org/devel:event:search_query_pagelookup
          */
-        $controller->register_hook('SEARCH_QUERY_PAGELOOKUP', 'AFTER', $this, 'searchPage', array());
+        $controller->register_hook('SEARCH_QUERY_PAGELOOKUP', 'BEFORE', $this, 'searchPage', array());
 
     }
 
@@ -83,7 +83,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
         }
         $sqlPredicate = implode(" and ", $sqlPredicates);
         $searchTermSql = <<<EOF
-select id as "id", title as "title" from pages where $sqlPredicate order by id ASC;
+select id as "id", title as "title", h1 as "h1", name as "name", description as "description" from pages where $sqlPredicate order by name;
 EOF;
         $rows = [];
         $request = $sqlite
@@ -99,9 +99,52 @@ EOF;
             $request->close();
         }
 
-        foreach ($rows as $row) {
-            $event->result[$row["id"]] = $row["title"];
+
+        /**
+         * Adapted from {@link Ajax::callLinkwiz()}
+         * because it delete the pages in the same namespace and shows the group instead
+         * Breaking the flow
+         */
+
+        global $lang;
+        if (!count($rows)) {
+            \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_NOT_FOUND)
+                ->sendTxtMessage($lang['nothingfound']);
+            return;
         }
+
+        // output the found data
+        $even = 1;
+        $html = "";
+        $lowerSearchTerm = strtolower($searchTerm);
+        foreach ($rows as $row) {
+            $id = $row["id"];
+            $path = ":$id";
+            $name = $row["name"];
+            $title = $row["title"];
+            $h1 = $row["h1"];
+            $even *= -1; //zebra
+            $link = wl($id);
+            $evenOrOdd = (($even > 0) ? 'even' : 'odd');
+            $label = null;
+            if (strpos(strtolower($title), $lowerSearchTerm) !== false) {
+                $label = $title;
+            }
+            if ($label === null && strpos(strtolower($h1), $lowerSearchTerm) !== false) {
+                $label = "$h1 (h1)";
+            } else {
+                $label = $title;
+            }
+            // path is used in the title to create the link
+            $html .= <<<EOF
+<div class="$evenOrOdd">
+   <a href="$link" title="$path" class="wikilink1">$name</a>
+   <span>$label </span>
+</div>
+EOF;
+        }
+        \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
+            ->sendHtmlMessage($html);
 
 
     }

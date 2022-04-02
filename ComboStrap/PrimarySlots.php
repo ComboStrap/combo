@@ -14,7 +14,7 @@ class PrimarySlots
 {
 
 
-    const CANONICAL = "primary-slots";
+    const CANONICAL = "slot";
 
     /**
      *
@@ -29,27 +29,8 @@ class PrimarySlots
      * @param $tocCall - the toc call if found
      * @return void
      */
-    public static function process(CallStack $callStack, &$tocCall)
+    public static function addContentSlots(CallStack $callStack, &$tocCall, $page)
     {
-
-        /**
-         * Be sure that this is a primary page
-         * and that the act is show/preview (and not {@link \ComboStrap\RenderUtility::DYNAMIC_RENDERING}
-         *
-         */
-        try {
-            $page = Page::createPageFromGlobalDokuwikiId();
-        } catch (ExceptionNotFound $e) {
-            LogUtility::msg("The running id was not found, we were unable to add the main footer/header", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return;
-        }
-        /**
-         * ACT only for show and preview
-         *
-         * - may be null with ajax call
-         * - not {@link RenderUtility::DYNAMIC_RENDERING}
-         * - not 'admin'
-         */
 
 
         $isPrimarySlotWithHeaderAndFooter = $page->isPrimarySlot() && !$page->isRootHomePage();
@@ -57,8 +38,14 @@ class PrimarySlots
             return;
         }
 
+        /**
+         * ACT only for show and preview
+         *
+         * - may be null with ajax call
+         * - not {@link RenderUtility::DYNAMIC_RENDERING}
+         * - not 'admin'
+         */
         global $ACT;
-
         if (!in_array($ACT, ["show", "preview"])) {
             return;
         }
@@ -109,18 +96,19 @@ class PrimarySlots
                 DOKU_LEXER_EXIT
             ));
             $stack = $childCallStack->getStack();
-            switch ($name) {
-                case Site::getSideKickSlotPageName():
 
-                case Site::SLOT_MAIN_HEADER_NAME:
+            switch ($name) {
+                case Site::getPrimarySideSlotName():
+
+                case Site::getPrimaryHeaderSlotName():
                     $callStack->moveToStart();
                     $actualCall = $callStack->next();
-                    if ($actualCall->getTagName() !== syntax_plugin_combo_frontmatter::TAG) {
+                    if ($actualCall->getTagName() === syntax_plugin_combo_frontmatter::TAG) {
                         $callStack->next();
                     }
                     $callStack->insertInstructionsFromNativeArrayAfterCurrentPosition($stack);
                     break;
-                case Site::SLOT_MAIN_FOOTER_NAME:
+                case Site::getPrimaryFooterSlotName():
                     $stack = $childCallStack->getStack();
                     $callStack->appendInstructionsFromNativeArrayAtTheEnd($stack);
                     break;

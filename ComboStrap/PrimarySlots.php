@@ -44,9 +44,10 @@ class PrimarySlots
          * - may be null with ajax call
          * - not {@link RenderUtility::DYNAMIC_RENDERING}
          * - not 'admin'
+         * - not preview
          */
         global $ACT;
-        if (!in_array($ACT, ["show", "preview"])) {
+        if ($ACT != "show") {
             return;
         }
 

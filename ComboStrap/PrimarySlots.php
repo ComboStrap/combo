@@ -44,11 +44,23 @@ class PrimarySlots
          * - may be null with ajax call
          * - not {@link RenderUtility::DYNAMIC_RENDERING}
          * - not 'admin'
-         * - not preview
+         *
          */
         global $ACT;
-        if ($ACT != "show") {
-            return;
+        switch ($ACT) {
+            case "show":
+                break;
+            case "preview":
+                // preview only if it's the whole page
+                // ie no prefix, no suffix
+                $prefix = $_REQUEST["prefix"];
+                $suffix = $_REQUEST["suffix"];
+                if (!($prefix === "." && $suffix === "")) {
+                    return;
+                };
+                break;
+            default:
+                return;
         }
 
 

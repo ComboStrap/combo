@@ -430,14 +430,14 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         /**
          * Main Slots and TOC to the primary slots
          */
-        if($pageParsed->isPrimarySlot()) {
+        if ($pageParsed->isPrimarySlot()) {
 
             PrimarySlots::addContentSlots($callStack, $tocCall, $pageParsed);
 
             /**
              * TOC
              */
-            if ($tocCall === null) {
+            if ($tocCall === null && $this->tocData != null) {
                 try {
                     $tocCall = TocUtility::insertTocCall($callStack);
                 } catch (ExceptionNotFound $e) {

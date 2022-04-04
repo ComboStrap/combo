@@ -11,65 +11,34 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
 /**
- * Set the home of the web site documentation
+ *
+ *
+ * This action enhance the search of page in:
+ *   * linkwiz: the editor toolbar action
+ *   * qsearch: the internal search button
+ *
  */
 class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
 {
 
     const CONF_ENABLE_ENHANCED_LINK_WIZARD = "enableEnhancedLinkWizard";
     const CANONICAL = "linkwizard";
+    const LINKWIZ_CALL = "linkwiz";
 
-    /**
-     * @param Doku_Event_Handler $controller
-     */
-    function register(Doku_Event_Handler $controller)
+
+    private static function getPageRows($searchTerm)
     {
-
-        /**
-         * https://www.dokuwiki.org/devel:event:search_query_pagelookup
-         */
-        $controller->register_hook('SEARCH_QUERY_PAGELOOKUP', 'BEFORE', $this, 'searchPage', array());
-
-    }
-
-
-    /**
-     * Modify the returned pages
-     * The {@link callLinkWiz} of inc/Ajax.php do
-     * just a page search with {@link ft_pageLookup()}
-     * https://www.dokuwiki.org/search
-     * @param Doku_Event $event
-     * @param $params
-     * The path are initialized in {@link init_paths}
-     * @return void
-     */
-    function searchPage(Doku_Event $event, $params)
-    {
-        global $INPUT;
-        /**
-         * linkwiz is the editor toolbar action
-         * qsearch is the search button
-         */
-        $postCall = $INPUT->post->str('call');
-        if (!(in_array($postCall, ["linkwiz", "qsearch", action_plugin_combo_search::CALL]))) {
-            return;
-        }
-        if (PluginUtility::getConfValue(self::CONF_ENABLE_ENHANCED_LINK_WIZARD, 1) === 0) {
-            return;
-        }
-        $sqlite = Sqlite::createOrGetSqlite();
-        if ($sqlite === null) {
-            return;
-        }
-
-        $searchTerm = $event->data["id"]; // yes id is the search term
         $minimalWordLength = 3;
         if (strlen($searchTerm) < $minimalWordLength) {
-            return;
+            return [];
         }
         $searchTermWords = StringUtility::getWords($searchTerm);
         if (sizeOf($searchTermWords) === 0) {
-            return;
+            return [];
+        }
+        $sqlite = Sqlite::createOrGetSqlite();
+        if ($sqlite === null) {
+            return [];
         }
         $sqlParameters = [];
         $sqlPredicates = [];
@@ -85,24 +54,72 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
         $searchTermSql = <<<EOF
 select id as "id", title as "title", h1 as "h1", name as "name", description as "description" from pages where $sqlPredicate order by name;
 EOF;
-        $rows = [];
         $request = $sqlite
             ->createRequest()
             ->setQueryParametrized($searchTermSql, $sqlParameters);
         try {
-            $rows = $request
+            return $request
                 ->execute()
                 ->getRows();
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while trying to retrieve a list of page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            LogUtility::msg("Error while trying to retrieve a list of pages", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return [];
         } finally {
             $request->close();
         }
+    }
+
+    /**
+     * @param Doku_Event_Handler $controller
+     */
+    function register(Doku_Event_Handler $controller)
+    {
+
+        /**
+         * https://www.dokuwiki.org/devel:event:search_query_pagelookup
+         */
+        $controller->register_hook('SEARCH_QUERY_PAGELOOKUP', 'BEFORE', $this, 'linkWizard', array());
+
+        /**
+         * https://www.dokuwiki.org/devel:event:search_query_pagelookup
+         */
+        $controller->register_hook('SEARCH_QUERY_PAGELOOKUP', 'BEFORE', $this, 'pageSearch', array());
+
+    }
+
+
+    /**
+     * Modify the returned pages
+     * The {@link callLinkWiz} of inc/Ajax.php do
+     * just a page search with {@link ft_pageLookup()}
+     * https://www.dokuwiki.org/search
+     * @param Doku_Event $event
+     * @param $params
+     * The path are initialized in {@link init_paths}
+     * @return void
+     */
+    function linkWizard(Doku_Event $event, $params)
+    {
+
+        global $INPUT;
+
+        $postCall = $INPUT->post->str('call');
+        if ($postCall !== self::LINKWIZ_CALL) {
+            return;
+        }
+
+        if (PluginUtility::getConfValue(self::CONF_ENABLE_ENHANCED_LINK_WIZARD, 1) === 0) {
+            return;
+        }
+
+
+        $searchTerm = $event->data["id"]; // yes id is the search term
+        $rows = self::getPageRows($searchTerm);
 
 
         /**
          * Adapted from {@link Ajax::callLinkwiz()}
-         * because it delete the pages in the same namespace and shows the group instead
+         * because link-wizard delete the pages in the same namespace and shows the group instead
          * Breaking the flow
          */
 
@@ -146,6 +163,22 @@ EOF;
         \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
             ->sendHtmlMessage($html);
 
+    }
+
+    function pageSearch(Doku_Event $event, $params)
+    {
+
+        global $INPUT;
+        $postCall = $INPUT->post->str('call');
+        if (!(in_array($postCall, ["qsearch", action_plugin_combo_search::CALL]))) {
+            return;
+        }
+
+        $searchTerm = $event->data["id"]; // yes id is the search term
+        $rows = self::getPageRows($searchTerm);
+        foreach ($rows as $row) {
+            $event->result[$row["id"]] = $row["title"];
+        }
 
     }
 

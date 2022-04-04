@@ -12,6 +12,7 @@ window.addEventListener("DOMContentLoaded",function(){
     padding-top: ${offsetHeight}px;
     margin-top: -${marginTop}px;
     z-index: -1;
+    position: relative;
 }`;
     document.head.appendChild(style);
 });

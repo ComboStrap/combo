@@ -4,6 +4,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\Json;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Search;
 use ComboStrap\Sqlite;
 use ComboStrap\StringUtility;
 
@@ -14,8 +15,10 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  *
  *
  * This action enhance the search of page in:
- *   * linkwiz: the editor toolbar action
- *   * qsearch: the internal search button
+ * linkwiz: the editor toolbar action
+ *
+ * The entry point is in the {@link Ajax::callLinkwiz()}
+ * function
  *
  */
 class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
@@ -23,51 +26,11 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
 
     const CONF_ENABLE_ENHANCED_LINK_WIZARD = "enableEnhancedLinkWizard";
     const CANONICAL = "linkwizard";
-    const LINKWIZ_CALL = "linkwiz";
+    const CALL = "linkwiz";
+    const MINIMAL_WORD_LENGTH = 3;
 
 
-    private static function getPageRows($searchTerm)
-    {
-        $minimalWordLength = 3;
-        if (strlen($searchTerm) < $minimalWordLength) {
-            return [];
-        }
-        $searchTermWords = StringUtility::getWords($searchTerm);
-        if (sizeOf($searchTermWords) === 0) {
-            return [];
-        }
-        $sqlite = Sqlite::createOrGetSqlite();
-        if ($sqlite === null) {
-            return [];
-        }
-        $sqlParameters = [];
-        $sqlPredicates = [];
-        foreach ($searchTermWords as $searchTermWord) {
-            if (strlen($searchTermWord) < $minimalWordLength) {
-                continue;
-            }
-            $pattern = "%$searchTermWord%";
-            $sqlParameters = array_merge([$pattern, $pattern, $pattern, $pattern, $pattern], $sqlParameters);
-            $sqlPredicates[] = "(id like ? COLLATE NOCASE or H1 like ? COLLATE NOCASE or title like ? COLLATE NOCASE or name like ? COLLATE NOCASE or path like ? COLLATE NOCASE)";
-        }
-        $sqlPredicate = implode(" and ", $sqlPredicates);
-        $searchTermSql = <<<EOF
-select id as "id", title as "title", h1 as "h1", name as "name", description as "description" from pages where $sqlPredicate order by name;
-EOF;
-        $request = $sqlite
-            ->createRequest()
-            ->setQueryParametrized($searchTermSql, $sqlParameters);
-        try {
-            return $request
-                ->execute()
-                ->getRows();
-        } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while trying to retrieve a list of pages", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return [];
-        } finally {
-            $request->close();
-        }
-    }
+
 
     /**
      * @param Doku_Event_Handler $controller
@@ -80,10 +43,6 @@ EOF;
          */
         $controller->register_hook('SEARCH_QUERY_PAGELOOKUP', 'BEFORE', $this, 'linkWizard', array());
 
-        /**
-         * https://www.dokuwiki.org/devel:event:search_query_pagelookup
-         */
-        $controller->register_hook('SEARCH_QUERY_PAGELOOKUP', 'BEFORE', $this, 'pageSearch', array());
 
     }
 
@@ -104,7 +63,7 @@ EOF;
         global $INPUT;
 
         $postCall = $INPUT->post->str('call');
-        if ($postCall !== self::LINKWIZ_CALL) {
+        if ($postCall !== self::CALL) {
             return;
         }
 
@@ -114,7 +73,7 @@ EOF;
 
 
         $searchTerm = $event->data["id"]; // yes id is the search term
-        $rows = self::getPageRows($searchTerm);
+        $pages = Search::getPages($searchTerm);
 
 
         /**
@@ -124,9 +83,9 @@ EOF;
          */
 
         global $lang;
-        if (!count($rows)) {
-            \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_NOT_FOUND)
-                ->sendTxtMessage($lang['nothingfound']);
+        if (!count($pages)) {
+            \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
+                ->sendHtmlMessage("<div>".$lang['nothingfound']."</div>");
             return;
         }
 
@@ -134,29 +93,31 @@ EOF;
         $even = 1;
         $html = "";
         $lowerSearchTerm = strtolower($searchTerm);
-        foreach ($rows as $row) {
-            $id = $row["id"];
-            $path = ":$id";
-            $name = $row["name"];
-            $title = $row["title"];
-            $h1 = $row["h1"];
+        foreach ($pages as $page) {
+            $id = $page->getDokuwikiId();
+            $path = $page->getPath()->toString();
+            $name = $page->getNameOrDefault();
+            $title = $page->getTitleOrDefault();
+            $h1 = $page->getH1OrDefault();
             $even *= -1; //zebra
             $link = wl($id);
             $evenOrOdd = (($even > 0) ? 'even' : 'odd');
             $label = null;
             if (strpos(strtolower($title), $lowerSearchTerm) !== false) {
-                $label = $title;
+                $label = "Title: $title";
             }
             if ($label === null && strpos(strtolower($h1), $lowerSearchTerm) !== false) {
-                $label = "$h1 (h1)";
+                $label = "H1: $h1";
             } else {
-                $label = $title;
+                $label = "Title: $title";
             }
-            // path is used in the title to create the link
+            /**
+             * Because path is used in the title to create the link
+             * by {@link file linkwiz.js} we set a title on the span
+             */
             $html .= <<<EOF
 <div class="$evenOrOdd">
-   <a href="$link" title="$path" class="wikilink1">$name</a>
-   <span>$label </span>
+   <a href="$link" title="$path">$path</a><span title="$label">$name</span>
 </div>
 EOF;
         }
@@ -165,22 +126,6 @@ EOF;
 
     }
 
-    function pageSearch(Doku_Event $event, $params)
-    {
-
-        global $INPUT;
-        $postCall = $INPUT->post->str('call');
-        if (!(in_array($postCall, ["qsearch", action_plugin_combo_search::CALL]))) {
-            return;
-        }
-
-        $searchTerm = $event->data["id"]; // yes id is the search term
-        $rows = self::getPageRows($searchTerm);
-        foreach ($rows as $row) {
-            $event->result[$row["id"]] = $row["title"];
-        }
-
-    }
 
 
 }

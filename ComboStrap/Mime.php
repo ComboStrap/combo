@@ -11,7 +11,16 @@ class Mime
     public const HTML = "text/html";
     public const XHTML = self::HTML;
     const PLAIN_TEXT = "text/plain";
-    const HEADER_CONTENT_TYPE = "Content-Type";
+    /**
+     * The value must be `Content-type` and not `Content-Type`
+     *
+     * Php will change it this way.
+     * For instance with {@link header()}, the following:
+     * `header("Content-Type: text/html")`
+     * is rewritten as:
+     * `Content-type: text/html;charset=UTF-8`
+     */
+    const HEADER_CONTENT_TYPE = "Content-type";
     public const SVG = "image/svg+xml";
     public const JAVASCRIPT = "text/javascript";
     const PNG = "image/png";

@@ -198,6 +198,7 @@ require_once(__DIR__ . '/ReplicationDate.php');
 require_once(__DIR__ . '/ResourceName.php');
 require_once(__DIR__ . '/RouterBestEndPage.php');
 require_once(__DIR__ . '/Sanitizer.php');
+require_once(__DIR__ . '/Search.php');
 require_once(__DIR__ . '/Shadow.php');
 require_once(__DIR__ . '/Site.php');
 require_once(__DIR__ . '/Skin.php');

@@ -579,14 +579,12 @@ class Page extends ResourceComboAbs
 
     /**
      * @return mixed
-     * @deprecated for {@link PageH1::getValueOrDefault()}
      */
     public
     function getH1OrDefault()
     {
 
         return $this->h1->getValueFromStoreOrDefault();
-
 
     }
 

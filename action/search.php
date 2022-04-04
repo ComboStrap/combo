@@ -4,6 +4,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\MarkupRef;
 use ComboStrap\Mime;
 use ComboStrap\Page;
+use ComboStrap\Search;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -39,6 +40,7 @@ class action_plugin_combo_search extends DokuWiki_Action_Plugin
 
         $call = $event->data;
         if ($call !== self::CALL) {
+            // The call for dokuwiki is "qsearch"
             return;
         }
         //no other ajax call handlers needed
@@ -62,8 +64,15 @@ class action_plugin_combo_search extends DokuWiki_Action_Plugin
 
         $query = urldecode($query);
 
-        $inTitle = useHeading('navigation');
-        $pages = ft_pageLookup($query, true, $inTitle);
+        /**
+         * Ter info: Old call: how dokuwiki call it.
+         * It's then executing the SEARCH_QUERY_PAGELOOKUP event
+         *
+         * $inTitle = useHeading('navigation');
+         * $pages = ft_pageLookup($query, true, $inTitle);
+         */
+
+        $pages = Search::getPages($query);
         $count = count($pages);
         if (!$count) {
             \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
@@ -77,13 +86,12 @@ class action_plugin_combo_search extends DokuWiki_Action_Plugin
         }
 
         $data = [];
-        foreach ($pages as $id => $title) {
-            $page = Page::createPageFromId($id);
-            $linkUtility = MarkupRef::createFromPageIdOrPath($id);
+        foreach ($pages as $page) {
+            $linkUtility = MarkupRef::createFromPageIdOrPath($page->getDokuwikiId());
             try {
                 $html = $linkUtility->toAttributes()->toHtmlEnterTag("a") . $page->getTitleOrDefault() . "</a>";
             } catch (ExceptionCompile $e) {
-                $html = "Unable to render the link for the page ($id). Error: {$e->getMessage()}";
+                $html = "Unable to render the link for the page ($page). Error: {$e->getMessage()}";
             }
             $data[] = $html;
         }

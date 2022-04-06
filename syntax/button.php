@@ -40,7 +40,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  *
  * ===== For the Geek =====
-  * This is not the [[https://www.w3.org/TR/wai-aria-practices/#button|Button as describe by the Web Specification]]
+ * This is not the [[https://www.w3.org/TR/wai-aria-practices/#button|Button as describe by the Web Specification]]
  * but a styling over a [[https://www.w3.org/TR/wai-aria-practices/#link|link]]
  *
  * ===== Documentation / Reference =====
@@ -52,6 +52,17 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
 
 
     const TAG = "button";
+    const TYPES = [
+        ColorRgb::PRIMARY_VALUE,
+        ColorRgb::SECONDARY_VALUE,
+        "success",
+        "danger",
+        "warning",
+        "info",
+        "light",
+        "dark",
+        "link"
+    ];
 
 
     /**
@@ -159,7 +170,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $types = [ColorRgb::PRIMARY_VALUE, ColorRgb::SECONDARY_VALUE, "success", "danger", "warning", "info", "light", "dark"];
+                $types = self::TYPES;
                 $defaultAttributes = array(
                     Skin::SKIN_ATTRIBUTE => Skin::FILLED_VALUE,
                     TagAttributes::TYPE_KEY => ColorRgb::PRIMARY_VALUE

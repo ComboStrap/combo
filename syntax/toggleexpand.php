@@ -143,13 +143,13 @@ class syntax_plugin_combo_toggleexpand extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER:
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES])
                         ->setLogicalTag(self::TAG);
-                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("span");
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
                 case DOKU_LEXER_EXIT:
-                    $renderer->doc .= "</div>";
+                    $renderer->doc .= "</span>";
                     break;
 
             }

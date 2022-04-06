@@ -1,6 +1,6 @@
-.toggle-combo.collapsed .expand-combo {
+.toggle-combo.collapsed .collapse-combo {
     display: none;
 }
-.toggle-combo:not(.collapsed) .collapse-combo {
+.toggle-combo:not(.collapsed) .expand-combo {
     display: none;
 }

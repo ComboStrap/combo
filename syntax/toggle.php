@@ -104,7 +104,7 @@ class syntax_plugin_combo_toggle extends DokuWiki_Syntax_Plugin
                  * Default parameters, type definition and parsing
                  */
                 $defaultParameters[self::WIDGET_ATTRIBUTE] = BrandButton::WIDGET_BUTTON_VALUE;
-                $knownTypes = null;
+                $knownTypes = syntax_plugin_combo_button::TYPES;
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes)
                     ->setLogicalTag(self::TAG);
 
@@ -117,11 +117,9 @@ class syntax_plugin_combo_toggle extends DokuWiki_Syntax_Plugin
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
-                $callStack = CallStack::createFromHandler($handler);
-                $openCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $openCall->getAttributes()
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -166,6 +164,13 @@ class syntax_plugin_combo_toggle extends DokuWiki_Syntax_Plugin
                         $bootstrapNamespace = "";
                     }
                     /**
+                     * Types
+                     */
+                    $type = $tagAttributes->getType();
+                    if ($type !== null) {
+                        $tagAttributes->addClassName("btn-$type");
+                    }
+                    /**
                      * Should be in link form for bootstrap
                      */
                     if (substr($targetId, 0, 1) != "#") {
@@ -177,53 +182,31 @@ class syntax_plugin_combo_toggle extends DokuWiki_Syntax_Plugin
                     /**
                      * Aria
                      */
-                    $toggleState = $tagAttributes->getValueAndRemove(Toggle::TOGGLE_STATE);
-                    if ($toggleState !== null) {
-                        switch ($toggleState) {
-                            case Toggle::TOGGLE_STATE_EXPANDED:
-                                $tagAttributes->addComponentAttributeValue("aria-expanded", true);
-                                break;
-                            case Toggle::TOGGLE_STATE_COLLAPSED:
-                                $tagAttributes->addComponentAttributeValue("aria-expanded", false);
-                                break;
-                            default:
-                                LogUtility::msg("The toggle state ($toggleState) is unknown. It should be (expanded or collapsed)");
-                        }
+                    $toggleState = $tagAttributes->getValueAndRemove(Toggle::TOGGLE_STATE, Toggle::TOGGLE_STATE_COLLAPSED);
+                    switch ($toggleState) {
+                        case Toggle::TOGGLE_STATE_EXPANDED:
+                            $tagAttributes->addComponentAttributeValue("aria-expanded", true);
+                            break;
+                        case Toggle::TOGGLE_STATE_COLLAPSED:
+                            $tagAttributes->addComponentAttributeValue("aria-expanded", false);
+                            $tagAttributes->addClassName("collapsed");
+                            break;
                     }
+
 
                     $targetLabel = $tagAttributes->getValueAndRemoveIfPresent("targetLabel");
                     if ($targetLabel === null) {
                         $targetLabel = "Toggle $targetId";
                     }
                     $tagAttributes->addComponentAttributeValue("aria-label", $targetLabel);
-
-                    $widget = $tagAttributes->getValueAndRemove(self::WIDGET_ATTRIBUTE);
-                    switch ($widget) {
-                        case BrandButton::WIDGET_LINK_VALUE:
-                            $renderer->doc .= $tagAttributes->toHtmlEnterTag("a");
-                            break;
-                        default:
-                        case BrandButton::WIDGET_BUTTON_VALUE:
-                            $tagAttributes->addClassName("btn");
-                            $tagAttributes->addComponentAttributeValue("type", "button");
-
-                            $renderer->doc .= $tagAttributes->toHtmlEnterTag("button");
-                    }
+                    $tagAttributes->addClassName("btn");
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("button");
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
                 case DOKU_LEXER_EXIT:
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $widget = $tagAttributes->getValueAndRemove(self::WIDGET_ATTRIBUTE);
-                    switch ($widget) {
-                        case BrandButton::WIDGET_LINK_VALUE:
-                            $renderer->doc .= "</a>";
-                            break;
-                        default:
-                        case BrandButton::WIDGET_BUTTON_VALUE:
-                            $renderer->doc .= "</button>";
-                    }
+                    $renderer->doc .= "</button>";
                     break;
 
             }

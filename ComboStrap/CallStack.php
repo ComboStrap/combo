@@ -211,6 +211,24 @@ class CallStack
 
     }
 
+    /**
+     * @param CallStack $callStack
+     * @param int $int
+     * @return string - the content of the call stack as if it was in the file
+     */
+    public static function getFileContent(CallStack $callStack, int $int): string
+    {
+        $callStack->moveToStart();
+        $capturedContent = "";
+        while (strlen($capturedContent) < $int && ($actualCall = $callStack->next()) != false) {
+            $actualCapturedContent = $actualCall->getCapturedContent();
+            if ($actualCapturedContent !== null) {
+                $capturedContent .= $actualCapturedContent;
+            }
+        }
+        return $capturedContent;
+    }
+
 
     /**
      * Reset the pointer

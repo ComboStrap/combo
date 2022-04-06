@@ -17,6 +17,7 @@ class Toggle
      * The collapse attribute are the same
      * for all component except a link
      * @param TagAttributes $attributes
+     * @deprecated
      */
     public
     static function processToggle(&$attributes)

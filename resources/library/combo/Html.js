@@ -1,4 +1,4 @@
-import {customAlphabet, nanoid} from "nanoid";
+import {customAlphabet} from "nanoid";
 
 export default class Html {
 
@@ -25,7 +25,7 @@ export default class Html {
     static toEntities(text) {
         let entities = [];
         for (let i = 0; i < text.length; i++) {
-            let entity = `&#${text[i].charCodeAt()};`
+            let entity = `&#${text.charCodeAt(i)};`
             entities.push(entity);
         }
         return entities.join('');

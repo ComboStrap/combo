@@ -51,13 +51,46 @@ class PrimarySlots
             case "show":
                 break;
             case "preview":
-                // preview only if it's the whole page
-                // ie no prefix, no suffix
+                /**
+                 * preview only if it's the whole page
+                 * ie no prefix, no suffix
+                 */
                 $prefix = $_REQUEST["prefix"];
                 $suffix = $_REQUEST["suffix"];
                 if (!($prefix === "." && $suffix === "")) {
                     return;
                 };
+                /**
+                 * Unfortunately, in edit/preview page
+                 * {@link html_edit()}
+                 * They use local markup file
+                 * and parse them without context with
+                 * {@link p_locale_xhtml()}
+                 * We may have then: `dokuwiki/inc/lang/en/edit.txt`
+                 * And we don't have any pointer than the callstack (Doku_Handler)
+                 *
+                 * It does not happen often, because the output is cached
+                 *
+                 * Because a preview will also cache the generated instructions
+                 * a user that would preview a whole page would not get
+                 * the header/footer
+                 * This is not user friendly, we check them if the callstack is generated
+                 * from the locale file used in the edit admin page
+                 */
+                $localEditFileNames = ["edit", "preview"];
+                foreach ($localEditFileNames as $localEditFileName) {
+                    $previewFile = LocalPath::createFromPath(localeFN($localEditFileName));
+                    try {
+                        $text = FileSystems::getContent($previewFile);
+                    } catch (ExceptionNotFound $e) {
+                        LogUtility::msg("The $localEditFileName file ($previewFile) was not found, the main slots (header/footer/side) were not added");
+                        return;
+                    }
+                    $capturedContent = CallStack::getFileContent($callStack, 10);
+                    if (strpos($text, $capturedContent) !== false) {
+                        return;
+                    }
+                }
                 break;
             default:
                 return;

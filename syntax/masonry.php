@@ -21,6 +21,9 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  * The name of the class must follow a pattern (don't change it)
  * ie:
  *    syntax_plugin_PluginName_ComponentName
+ *
+ * TODO: when level 3 of grid
+ *   https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout/Masonry_Layout
  */
 class syntax_plugin_combo_masonry extends DokuWiki_Syntax_Plugin
 {

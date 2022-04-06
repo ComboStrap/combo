@@ -1,0 +1,6 @@
+.toggle-combo:not(.collapsed) .toggle-expanded-combo {
+    display: none;
+}
+.toggle-combo:has(.collapsed) .toggle-collapsed-combo {
+    display: none;
+}

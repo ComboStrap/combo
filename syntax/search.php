@@ -5,7 +5,11 @@ use ComboStrap\Bootstrap;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 
-
+/**
+ * Command menu / Command Palettes :
+ *   * https://uiw.tf/cmdk
+ *   * https://tailwindui.com/components/application-ui/navigation/command-palettes
+ */
 class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
 {
 

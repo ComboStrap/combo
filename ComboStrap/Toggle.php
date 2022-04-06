@@ -11,18 +11,44 @@ class Toggle
      * An indicator attribute that tells if the target element is collapsed or not (accordion)
      */
     const COLLAPSED = "collapsed";
+    const TOGGLE_STATE = "toggle-state";
+    const TOGGLE_STATE_EXPANDED = "expanded";
+    const TOGGLE_STATE_COLLAPSED = "collapsed";
 
 
     /**
      * The collapse attribute are the same
      * for all component except a link
      * @param TagAttributes $attributes
-     * @deprecated
+     *
      */
     public
     static function processToggle(&$attributes)
     {
 
+
+        /**
+         * Toggle state
+         */
+        $value = $attributes->getValueAndRemove(self::TOGGLE_STATE);
+        if ($value !== null) {
+            switch ($value) {
+                case self::TOGGLE_STATE_EXPANDED:
+                    $attributes->addClassName("collapse show");
+                    break;
+                case self::TOGGLE_STATE_COLLAPSED:
+                    $attributes->addClassName("collapse");
+                    break;
+                default:
+                    LogUtility::msg("The toggle state ($value) is unknown. It should be (expanded or collapsed)");
+            }
+        }
+
+        /**
+         * Old
+         * https://combostrap.com/release/deprecated/toggle
+         * @deprecated
+         */
         $collapse = "toggleTargetId";
         if ($attributes->hasComponentAttribute($collapse)) {
             $targetId = $attributes->getValueAndRemoveIfPresent($collapse);
@@ -45,6 +71,11 @@ class Toggle
 
         }
 
+        /**
+         * Toggle state
+         * @deprecated
+         * https://combostrap.com/release/deprecated/toggle
+         */
         $collapsed = self::COLLAPSED;
         if ($attributes->hasComponentAttribute($collapsed)) {
             $value = $attributes->getValueAndRemove($collapsed);
@@ -52,6 +83,16 @@ class Toggle
                 $attributes->addClassName("collapse");
             }
         }
+
+
+    }
+
+    public static function disableEntity(string $mode): bool
+    {
+        if ($mode === "entity") {
+            return false;
+        }
+        return true;
     }
 
 }

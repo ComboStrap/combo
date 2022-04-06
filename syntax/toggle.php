@@ -4,12 +4,11 @@
 // must be run within Dokuwiki
 use ComboStrap\Bootstrap;
 use ComboStrap\BrandButton;
-use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\Toggle;
 
 
 class syntax_plugin_combo_toggle extends DokuWiki_Syntax_Plugin
@@ -66,7 +65,8 @@ class syntax_plugin_combo_toggle extends DokuWiki_Syntax_Plugin
     public
     function accepts($mode): bool
     {
-        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode)
+            && Toggle::disableEntity($mode);
     }
 
 
@@ -177,7 +177,20 @@ class syntax_plugin_combo_toggle extends DokuWiki_Syntax_Plugin
                     /**
                      * Aria
                      */
-                    $tagAttributes->addComponentAttributeValue("aria-expanded", false);
+                    $toggleState = $tagAttributes->getValueAndRemove(Toggle::TOGGLE_STATE);
+                    if ($toggleState !== null) {
+                        switch ($toggleState) {
+                            case Toggle::TOGGLE_STATE_EXPANDED:
+                                $tagAttributes->addComponentAttributeValue("aria-expanded", true);
+                                break;
+                            case Toggle::TOGGLE_STATE_COLLAPSED:
+                                $tagAttributes->addComponentAttributeValue("aria-expanded", false);
+                                break;
+                            default:
+                                LogUtility::msg("The toggle state ($toggleState) is unknown. It should be (expanded or collapsed)");
+                        }
+                    }
+
                     $targetLabel = $tagAttributes->getValueAndRemoveIfPresent("targetLabel");
                     if ($targetLabel === null) {
                         $targetLabel = "Toggle $targetId";
@@ -227,26 +240,6 @@ class syntax_plugin_combo_toggle extends DokuWiki_Syntax_Plugin
         return self::TAG;
     }
 
-    /**
-     *
-     * @throws ExceptionCompile
-     */
-    public
-    static function addIconInCallStack(CallStack $callStack, BrandButton $brandButton)
-    {
-
-        if (!$brandButton->hasIcon()) {
-            return;
-        }
-        $iconAttributes = $brandButton->getIconAttributes();
-
-        $callStack->appendCallAtTheEnd(
-            Call::createComboCall(
-                syntax_plugin_combo_icon::TAG,
-                DOKU_LEXER_SPECIAL,
-                $iconAttributes
-            ));
-    }
 
 }
 

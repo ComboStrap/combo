@@ -10,8 +10,7 @@
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Site;
-use ComboStrap\Snippet;
+use dokuwiki\Form\Form;
 use dokuwiki\Menu\Item\Login;
 
 if (!defined('DOKU_INC')) die();
@@ -33,46 +32,23 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
     const CONF_ENABLE_LOGIN_FORM = "enableLoginForm";
 
 
-    function register(Doku_Event_Handler $controller)
+
+    /**
+     * Update the old form
+     * @param Doku_Form $form
+     * @return void
+     */
+    private static function updateDokuFormLogin(Doku_Form &$form)
     {
         /**
-         * To modify the form and add class
-         *
-         * Deprecated object passed by the event but still in use
-         * https://www.dokuwiki.org/devel:event:html_loginform_output
-         */
-        if (PluginUtility::getConfValue(self::CONF_ENABLE_LOGIN_FORM, 1)) {
-            $controller->register_hook('HTML_LOGINFORM_OUTPUT', 'BEFORE', $this, 'handle_login_html', array());
-        }
-
-        /**
-         * Event using the new object but only in use in
-         * the {@link https://codesearch.dokuwiki.org/xref/dokuwiki/lib/plugins/authad/action.php authad plugin}
-         * (ie login against active directory)
-         *
-         * https://www.dokuwiki.org/devel:event:form_login_output
-         */
-        //$controller->register_hook('FORM_LOGIN_OUTPUT', 'BEFORE', $this, 'handle_login_html_new', array());
-
-
-    }
-
-    function handle_login_html(&$event, $param)
-    {
-
-        /**
-         * The Login page is created via buffer
+         * The Login page is an admin page created via buffer
          * We print before the forms
          * to avoid a FOUC
          */
         print Identity::getHtmlStyleTag(self::TAG);
 
 
-        /**
-         * @var Doku_Form $form
-         */
-        $form = &$event->data;
-        $form->params["class"] = Identity::FORM_IDENTITY_CLASS." ". self::FORM_LOGIN_CLASS;
+        $form->params["class"] = Identity::FORM_IDENTITY_CLASS . " " . self::FORM_LOGIN_CLASS;
 
 
         /**
@@ -160,24 +136,72 @@ EOF;
          * Set the new in place of the old one
          */
         $form->_content = $newFormContent;
-
-        return true;
-
-
     }
 
-    /** @noinspection PhpUnused */
-    function handle_login_html_new(&$event, $param)
+
+    function register(Doku_Event_Handler $controller)
     {
-        // does not fire for now
-        $data = $event->data;
+        /**
+         * To modify the form and add class
+         *
+         * The event HTML_LOGINFORM_OUTPUT is deprecated
+         * for FORM_LOGIN_OUTPUT
+         *
+         * The difference is on the type of object that we got in the event
+         */
+        if (PluginUtility::getConfValue(self::CONF_ENABLE_LOGIN_FORM, 1)) {
+
+            /**
+             * Old event: Deprecated object passed by the event but still in use
+             * https://www.dokuwiki.org/devel:event:html_loginform_output
+             */
+            $controller->register_hook('HTML_LOGINFORM_OUTPUT', 'BEFORE', $this, 'handle_login_html', array());
+
+            /**
+             * New Event: using the new object but only in use in
+             * the {@link https://codesearch.dokuwiki.org/xref/dokuwiki/lib/plugins/authad/action.php authad plugin}
+             * (ie login against active directory)
+             *
+             * https://www.dokuwiki.org/devel:event:form_login_output
+             */
+            $controller->register_hook('FORM_LOGIN_OUTPUT', 'BEFORE', $this, 'handle_login_html_new', array());
+        }
+
+
     }
+
+    function handle_login_html(&$event, $param): void
+    {
+
+        $form = &$event->data;
+        $class = get_class($form);
+        switch ($class) {
+            case "Doku_Form":
+                /**
+                 * Old one
+                 * @var Doku_Form $form
+                 */
+                self::updateDokuFormLogin($form);
+                return;
+            case "dokuwiki\Form\Form";
+                /**
+                 * New One
+                 * @var Form $form
+                 */
+                self::updateNewFormLogin($form);
+                return;
+        }
+
+
+    }
+
+
 
     /**
      * Login
      * @return string
      */
-    public static function getLoginParagraphWithLinkToFormPage()
+    public static function getLoginParagraphWithLinkToFormPage(): string
     {
 
         $loginPwLink = (new Login())->asHtmlLink('', false);
@@ -188,5 +212,11 @@ EOF;
 EOF;
 
     }
+
+    private static function updateNewFormLogin(Form &$form)
+    {
+        // TODO
+    }
+
 }
 

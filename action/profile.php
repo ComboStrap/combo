@@ -4,6 +4,7 @@ use ComboStrap\Bootstrap;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use dokuwiki\Form\Form;
 
 if (!defined('DOKU_INC')) die();
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -36,6 +37,7 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
          */
         if (PluginUtility::getConfValue(self::CONF_ENABLE_PROFILE_UPDATE_FORM, 1)) {
             $controller->register_hook('HTML_UPDATEPROFILEFORM_OUTPUT', 'BEFORE', $this, 'handle_profile_update', array());
+            $controller->register_hook('FORM_UPDATEPROFILE_OUTPUT', 'BEFORE', $this, 'handle_profile_update', array());
         }
 
         /**
@@ -49,6 +51,7 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
          */
         if (PluginUtility::getConfValue(self::CONF_ENABLE_PROFILE_DELETE_FORM, 1)) {
             $controller->register_hook('HTML_PROFILEDELETEFORM_OUTPUT', 'BEFORE', $this, 'handle_profile_delete', array());
+            $controller->register_hook('FORM_PROFILEDELETE_OUTPUT', 'BEFORE', $this, 'handle_profile_delete', array());
         }
 
 
@@ -57,16 +60,151 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
     function handle_profile_update(&$event, $param)
     {
 
+        $form = &$event->data;
+        $class = get_class($form);
+        switch ($class) {
+            case "Doku_Form":
+                /**
+                 * Old one
+                 * @var Doku_Form $form
+                 */
+                self::updateDokuFormProfileUpdate($form);
+                return;
+            case "dokuwiki\Form\Form";
+                /**
+                 * New One
+                 * @var Form $form
+                 */
+                self::updateNewFormProfileUpdate($form);
+                return;
+        }
+
+
+    }
+
+    public function handle_profile_delete($event, $param)
+    {
+
+        $form = &$event->data;
+        $class = get_class($form);
+        switch ($class) {
+            case "Doku_Form":
+                /**
+                 * Old one
+                 * @var Doku_Form $form
+                 */
+                self::updateDokuFormProfileDelete($form);
+                return;
+            case "dokuwiki\Form\Form";
+                /**
+                 * New One
+                 * @var Form $form
+                 */
+                self::updateNewFormProfileDelete($form);
+                return;
+        }
+
+
+    }
+
+    private static function updateNewFormProfileDelete(Form &$form)
+    {
+        // TODO
+    }
+
+    private static function updateDokuFormProfileDelete(Doku_Form &$form)
+    {
+
+        /**
+         * The profile page is created via buffer
+         * We print before the forms to avoid a FOUC
+         */
+        print Identity::getHtmlStyleTag(self::TAG_DELETE);
+
+
+        $class = &$form->params["class"];
+        Identity::addIdentityClass($class, self::FORM_PROFILE_DELETE_CLASS);
+        $newFormContent = [];
+
+        /**
+         * Header (Logo / Title)
+         */
+        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_PROFILE_DELETE_CLASS, false);
+
+        /**
+         * Field
+         */
+        foreach ($form->_content as $field) {
+            if (!is_array($field)) {
+                continue;
+            }
+            $fieldName = $field["name"];
+            if ($fieldName == null) {
+                // this is not an input field
+                if ($field["type"] == "submit") {
+                    /**
+                     * This is important to keep the submit element intact
+                     * for forms integration such as captcha
+                     * They search the submit button to insert before it
+                     */
+                    $classes = "btn btn-primary btn-block";
+                    if (isset($field["class"])) {
+                        $field["class"] = $field["class"] . " " . $classes;
+                    } else {
+                        $field["class"] = $classes;
+                    }
+                    $newFormContent[] = $field;
+                }
+                continue;
+            }
+            switch ($fieldName) {
+                case "oldpass":
+                    $passwordText = $field["_text"];
+                    $passwordFieldHTML = <<<EOF
+<div>
+    <input type="password" class="form-control" placeholder="$passwordText" required="required" name="$fieldName">
+</div>
+EOF;
+                    $newFormContent[] = $passwordFieldHTML;
+                    break;
+                case "confirm_delete":
+                    $confirmText = $field["_text"];
+                    $ConfirmValue = $field["value"];
+                    $rememberMeHtml = <<<EOF
+<div class="checkbox rememberMe">
+    <label><input type="checkbox" name="$fieldName" value="$ConfirmValue" required="required"> $confirmText</label>
+</div>
+EOF;
+                    $newFormContent[] = $rememberMeHtml;
+                    break;
+                default:
+                    $tag = self::TAG_DELETE;
+                    LogUtility::msg("The $tag field name ($fieldName) is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+
+
+            }
+        }
+        $form->_content = $newFormContent;
+
+    }
+
+    private static function updateNewFormProfileUpdate(Form &$form)
+    {
+        // TODO
+    }
+
+
+    private static function updateDokuFormProfileUpdate(Doku_Form &$form)
+    {
+
         /**
          * The profile page is created via buffer
          * We print before the forms to avoid a FOUC
          */
         print Identity::getHtmlStyleTag(self::TAG_UPDATE);
 
-        /**
-         * @var Doku_Form $form
-         */
-        $form = &$event->data;
+
+
         $class = &$form->params["class"];
         Identity::addIdentityClass($class, self::FORM_PROFILE_UPDATE_CLASS);
         $newFormContent = [];
@@ -222,90 +360,8 @@ EOF;
          * Update
          */
         $form->_content = $newFormContent;
-        return true;
-
 
     }
-
-    public function handle_profile_delete($event, $param)
-    {
-
-        /**
-         * The profile page is created via buffer
-         * We print before the forms to avoid a FOUC
-         */
-        print Identity::getHtmlStyleTag(self::TAG_DELETE);
-
-        /**
-         * @var Doku_Form $form
-         */
-        $form = &$event->data;
-        $class = &$form->params["class"];
-        Identity::addIdentityClass($class, self::FORM_PROFILE_DELETE_CLASS);
-        $newFormContent = [];
-
-        /**
-         * Header (Logo / Title)
-         */
-        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_PROFILE_DELETE_CLASS, false);
-
-        /**
-         * Field
-         */
-        foreach ($form->_content as $field) {
-            if (!is_array($field)) {
-                continue;
-            }
-            $fieldName = $field["name"];
-            if ($fieldName == null) {
-                // this is not an input field
-                if ($field["type"] == "submit") {
-                    /**
-                     * This is important to keep the submit element intact
-                     * for forms integration such as captcha
-                     * They search the submit button to insert before it
-                     */
-                    $classes = "btn btn-primary btn-block";
-                    if (isset($field["class"])) {
-                        $field["class"] = $field["class"] . " " . $classes;
-                    } else {
-                        $field["class"] = $classes;
-                    }
-                    $newFormContent[] = $field;
-                }
-                continue;
-            }
-            switch ($fieldName) {
-                case "oldpass":
-                    $passwordText = $field["_text"];
-                    $passwordFieldHTML = <<<EOF
-<div>
-    <input type="password" class="form-control" placeholder="$passwordText" required="required" name="$fieldName">
-</div>
-EOF;
-                    $newFormContent[] = $passwordFieldHTML;
-                    break;
-                case "confirm_delete":
-                    $confirmText = $field["_text"];
-                    $ConfirmValue = $field["value"];
-                    $rememberMeHtml = <<<EOF
-<div class="checkbox rememberMe">
-    <label><input type="checkbox" name="$fieldName" value="$ConfirmValue" required="required"> $confirmText</label>
-</div>
-EOF;
-                    $newFormContent[] = $rememberMeHtml;
-                    break;
-                default:
-                    $tag = self::TAG_DELETE;
-                    LogUtility::msg("The $tag field name ($fieldName) is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-
-
-            }
-        }
-        $form->_content = $newFormContent;
-        return true;
-    }
-
 
 }
 

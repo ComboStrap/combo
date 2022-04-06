@@ -11,6 +11,7 @@ use ComboStrap\Bootstrap;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\Snippet;
+use dokuwiki\Form\Form;
 use dokuwiki\Menu\Item\Register;
 
 if (!defined('DOKU_INC')) die();
@@ -31,11 +32,56 @@ class action_plugin_combo_registration extends DokuWiki_Action_Plugin
     const CONF_ENABLE_REGISTER_FORM = "enableRegistrationForm";
 
 
+
+
+    function register(Doku_Event_Handler $controller)
+    {
+        /**
+         * To modify the register form and add class
+         *
+         * Deprecated object passed by the event but still in use
+         * https://www.dokuwiki.org/devel:event:html_registerform_output
+         */
+        $controller->register_hook('HTML_REGISTERFORM_OUTPUT', 'BEFORE', $this, 'handle_register_page', array());
+        /**
+         * New Event using the new object
+         * https://www.dokuwiki.org/devel:event:form_register_output
+         */
+        $controller->register_hook('FORM_REGISTER_OUTPUT', 'BEFORE', $this, 'handle_register', array());
+
+
+    }
+
+    function handle_register_page(&$event, $param)
+    {
+
+        $form = &$event->data;
+        $class = get_class($form);
+        switch ($class) {
+            case "Doku_Form":
+                /**
+                 * Old one
+                 * @var Doku_Form $form
+                 */
+                self::updateDokuFormRegistration($form);
+                return;
+            case "dokuwiki\Form\Form";
+                /**
+                 * New One
+                 * @var Form $form
+                 */
+                self::updateNewFormRegistration($form);
+                return;
+        }
+
+
+    }
+
     /**
      * Return the register text and link paragraph
      * @return string
      */
-    public static function getRegisterLinkAndParagraph()
+    public static function getRegisterLinkAndParagraph(): string
     {
 
 
@@ -61,28 +107,13 @@ EOF;
     }
 
 
-    function register(Doku_Event_Handler $controller)
+    private static function updateNewFormRegistration(Form &$form)
     {
-        /**
-         * To modify the register form and add class
-         *
-         * Deprecated object passed by the event but still in use
-         * https://www.dokuwiki.org/devel:event:html_registerform_output
-         */
-        $controller->register_hook('HTML_REGISTERFORM_OUTPUT', 'BEFORE', $this, 'handle_register_page', array());
-
-        /**
-         * Event using the new object but not yet used
-         * https://www.dokuwiki.org/devel:event:form_register_output
-         */
-        // $controller->register_hook('FORM_REGISTER_OUTPUT', 'BEFORE', $this, 'handle_register', array());
-
-
+        // TODO
     }
 
-    function handle_register_page(&$event, $param)
+    private static function updateDokuFormRegistration(Doku_Form &$form)
     {
-
         /**
          * The register page is created via buffer
          * We print before the forms
@@ -94,7 +125,6 @@ EOF;
         /**
          * @var Doku_Form $form
          */
-        $form = &$event->data;
         $class = &$form->params["class"];
         Identity::addIdentityClass($class, self::FORM_REGISTER_CLASS);
         $newFormContent = [];
@@ -236,8 +266,6 @@ EOF;
          * Update
          */
         $form->_content = $newFormContent;
-        return true;
-
 
     }
 

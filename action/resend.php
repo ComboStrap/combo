@@ -9,6 +9,7 @@
 
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
+use dokuwiki\Form\Form;
 use dokuwiki\Menu\Item\Resendpwd;
 
 if (!defined('DOKU_INC')) die();
@@ -25,7 +26,7 @@ class action_plugin_combo_resend extends DokuWiki_Action_Plugin
     /**
      * @return string
      */
-    public static function getResendPasswordParagraphWithLinkToFormPage()
+    public static function getResendPasswordParagraphWithLinkToFormPage(): string
     {
         /**
          * Resend pwd
@@ -42,29 +43,14 @@ EOF;
         return $resendPwdHtml;
     }
 
-
-    function register(Doku_Event_Handler $controller)
+    private static function updateNewFormResend(Form &$form)
     {
-        /**
-         * To modify the form and add class
-         *
-         * Deprecated object passed by the event but still in use
-         * https://www.dokuwiki.org/devel:event:html_resendpwdform_output
-         */
-        $controller->register_hook('HTML_RESENDPWDFORM_OUTPUT', 'BEFORE', $this, 'handle_resendpwd_html', array());
-
-        /**
-         * Event using the new object not found anywhere
-         *
-         * https://www.dokuwiki.org/devel:event:form_resendpwd_output
-         */
-
-
+        // TODO
     }
 
-    function handle_resendpwd_html(&$event, $param)
-    {
 
+    private static function updateDokuFormResend(Doku_Form &$form)
+    {
         /**
          * The Login page is created via buffer
          * We print before the forms
@@ -76,7 +62,6 @@ EOF;
         /**
          * @var Doku_Form $form
          */
-        $form = &$event->data;
         $class = &$form->params["class"];
         Identity::addIdentityClass($class, self::FORM_RESEND_PWD_CLASS);
         $newFormContent = [];
@@ -151,7 +136,51 @@ EOF;
          */
         $form->_content = $newFormContent;
 
-        return true;
+    }
+
+
+    function register(Doku_Event_Handler $controller)
+    {
+        /**
+         * To modify the form and add class
+         *
+         * Deprecated object passed by the event but still in use
+         * https://www.dokuwiki.org/devel:event:html_resendpwdform_output
+         */
+        $controller->register_hook('HTML_RESENDPWDFORM_OUTPUT', 'BEFORE', $this, 'handle_resendpwd_html', array());
+        /**
+         * New Event
+         * https://www.dokuwiki.org/devel:event:form_resendpwd_output
+         *
+         */
+        $controller->register_hook('FORM_RESENDPWD_OUTPUT', 'BEFORE', $this, 'handle_resendpwd_html', array());
+
+
+
+    }
+
+    function handle_resendpwd_html(&$event, $param)
+    {
+
+        $form = &$event->data;
+        $class = get_class($form);
+        switch ($class) {
+            case "Doku_Form":
+                /**
+                 * Old one
+                 * @var Doku_Form $form
+                 */
+                self::updateDokuFormResend($form);
+                return;
+            case "dokuwiki\Form\Form";
+                /**
+                 * New One
+                 * @var Form $form
+                 */
+                self::updateNewFormResend($form);
+                return;
+        }
+
 
 
     }

@@ -14,6 +14,7 @@ class Toggle
     const TOGGLE_STATE = "toggle-state";
     const TOGGLE_STATE_EXPANDED = "expanded";
     const TOGGLE_STATE_COLLAPSED = "collapsed";
+    const CANONICAL = "toggle";
 
 
     /**
@@ -32,15 +33,34 @@ class Toggle
          */
         $value = $attributes->getValueAndRemove(self::TOGGLE_STATE);
         if ($value !== null) {
-            switch ($value) {
-                case self::TOGGLE_STATE_EXPANDED:
-                    $attributes->addClassName("collapse show");
-                    break;
-                case self::TOGGLE_STATE_COLLAPSED:
-                    $attributes->addClassName("collapse");
-                    break;
-                default:
-                    LogUtility::msg("The toggle state ($value) is unknown. It should be (expanded or collapsed)");
+            $values = explode(" ", $value);
+            foreach ($values as $value) {
+                if (empty($value)) {
+                    continue;
+                }
+                switch ($value) {
+                    case self::TOGGLE_STATE_EXPANDED:
+                        $attributes->addClassName("collapse show");
+                        break;
+                    case self::TOGGLE_STATE_COLLAPSED:
+                        $attributes->addClassName("collapse");
+                        break;
+                    default:
+                        try {
+                            $conditionalValue = ConditionalValue::createFrom($value);
+                        } catch (ExceptionBadSyntax $e) {
+                            LogUtility::msg("The toggle state ($value) is invalid. It should be (expanded, collapsed or breakpoint-expanded)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            continue 2;
+                        }
+
+                        $toggleStateValue = $conditionalValue->getValue();
+                        if ($toggleStateValue !== self::TOGGLE_STATE_EXPANDED) {
+                            LogUtility::msg("The toggle breakpoint ($value) supports only `expanded` as value, not $toggleStateValue.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            continue 2;
+                        }
+                        $breakpoint = $conditionalValue->getBreakpointSize();
+
+                }
             }
         }
 

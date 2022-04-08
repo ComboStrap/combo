@@ -19,6 +19,7 @@ class ConditionalValue
 
     /**
      * ConditionalValue constructor.
+     * @throws ExceptionBadSyntax
      */
     public function __construct($value)
     {
@@ -39,14 +40,14 @@ class ConditionalValue
                 $this->value = $array[1];
                 break;
             default:
-                LogUtility::msg("The screen conditional value ($value) should have only one separator character `-`", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                $this->breakpoint = $array[$sizeof-2];
-                $this->value = $array[$sizeof-1];
-                break;
+                throw new ExceptionBadSyntax("The screen conditional value ($value) should have only one separator character `-`", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }
     }
 
-    public static function createFrom($value)
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    public static function createFrom($value): ConditionalValue
     {
         return new ConditionalValue($value);
     }
@@ -59,6 +60,11 @@ class ConditionalValue
     public function getValue()
     {
         return $this->value;
+    }
+
+    public function getBreakpointSize()
+    {
+
     }
 
 

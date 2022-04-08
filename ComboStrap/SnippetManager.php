@@ -448,4 +448,13 @@ class SnippetManager
     }
 
 
+    /**
+     * @return Snippet[]
+     */
+    public function getSnippets(): array
+    {
+        return   Snippet::getSnippets();
+    }
+
+
 }

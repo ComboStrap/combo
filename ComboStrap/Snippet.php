@@ -117,7 +117,7 @@ class Snippet implements JsonSerializable
     /**
      * @var string The name of the component (used for internal style sheet to retrieve the file)
      */
-    private $componentName;
+    private $internalIdentifier;
 
     /**
      * @var array - the slots that needs this snippet (as key to get only one snippet by scope)
@@ -140,13 +140,13 @@ class Snippet implements JsonSerializable
     /**
      * Snippet constructor.
      */
-    public function __construct($snippetId, $mime, $type, $url, $componentId)
+    public function __construct($snippetId, $mime, $type, $url, $internalIdentifier)
     {
         $this->snippetId = $snippetId;
         $this->extension = $mime;
         $this->type = $type;
         $this->url = $url;
-        $this->componentName = $componentId;
+        $this->internalIdentifier = $internalIdentifier;
     }
 
 
@@ -166,18 +166,19 @@ class Snippet implements JsonSerializable
         return new Snippet("unknown", "unknwon", "unknwon", "unknwon", $componentId);
     }
 
-    public static function &getOrCreateSnippet(string $identifier, string $extension, string $componentId): Snippet
+    /**
+     * The snippet id is the url for external resources (ie external javascript / stylesheet)
+     * otherwise if it's internal, it's the component id and it's type
+     * @param string $identifier - the snippet identifier - the url for an external snippet or {@link Snippet::INTERNAL_TYPE} for an internal one
+     * @param string $extension - {@link Snippet::EXTENSION_CSS css} or {@link Snippet::EXTENSION_JS js}
+     * @param string $internalIdentifier - the internal snippet identifier to resolve the file.
+     * @return Snippet
+     */
+    public static function &getOrCreateSnippet(string $identifier, string $extension, string $internalIdentifier): Snippet
     {
 
-        /**
-         * The snippet id is the url for external resources (ie external javascript / stylesheet)
-         * otherwise if it's internal, it's the component id and it's type
-         * @param string $componentId
-         * @param string $identifier
-         * @return string
-         */
         if ($identifier === Snippet::INTERNAL_TYPE) {
-            $snippetId = $identifier . "-" . $extension . "-" . $componentId;
+            $snippetId = $identifier . "-" . $extension . "-" . $internalIdentifier;
             $type = self::INTERNAL_TYPE;
             $url = null;
         } else {
@@ -202,7 +203,7 @@ class Snippet implements JsonSerializable
         }
         $snippet = &$snippets[$snippetId];
         if ($snippet === null) {
-            $snippets[$snippetId] = new Snippet($snippetId, $extension, $type, $url, $componentId);
+            $snippets[$snippetId] = new Snippet($snippetId, $extension, $type, $url, $internalIdentifier);
             $snippet = &$snippets[$snippetId];
         }
         return $snippet;
@@ -215,12 +216,12 @@ class Snippet implements JsonSerializable
     }
 
     /**
-     * @return Snippet[]|null
+     * @return Snippet[]
      */
-    public static function getSnippets(): ?array
+    public static function getSnippets(): array
     {
         if (self::$globalSnippets === null) {
-            return null;
+            return [];
         }
         $keys = array_keys(self::$globalSnippets);
         return self::$globalSnippets[$keys[0]];
@@ -313,7 +314,7 @@ class Snippet implements JsonSerializable
         }
         return Site::getComboResourceSnippetDirectory()
             ->resolve($subDirectory)
-            ->resolve(strtolower($this->componentName) . ".$extension");
+            ->resolve(strtolower($this->internalIdentifier) . ".$extension");
     }
 
     public function hasSlot($slot): bool
@@ -354,7 +355,7 @@ class Snippet implements JsonSerializable
          * the same class name, the inline `style` tag is not applied
          *
          */
-        return "snippet-" . $this->componentName . "-" . SnippetManager::COMBO_CLASS_SUFFIX;
+        return "snippet-" . $this->internalIdentifier . "-" . SnippetManager::COMBO_CLASS_SUFFIX;
 
     }
 
@@ -513,7 +514,7 @@ EOF;
     public function jsonSerialize(): array
     {
         $dataToSerialize = [
-            self::JSON_COMPONENT_PROPERTY => $this->componentName,
+            self::JSON_COMPONENT_PROPERTY => $this->internalIdentifier,
             self::JSON_EXTENSION_PROPERTY => $this->extension,
             self::JSON_TYPE_PROPERTY => $this->type
         ];
@@ -536,5 +537,10 @@ EOF;
             $dataToSerialize[self::JSON_HTML_ATTRIBUTES_PROPERTY] = $this->htmlAttributes;
         }
         return $dataToSerialize;
+    }
+
+    public function getInternalId(): string
+    {
+        return $this->internalIdentifier;
     }
 }

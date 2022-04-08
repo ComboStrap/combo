@@ -598,6 +598,7 @@ class TagAttributes
         /**
          * Sort by attribute
          * https://datacadamia.com/web/html/attribute#order
+         * https://codeguide.co/#html-attribute-order
          */
         $sortedArray = array();
         $once = "once";

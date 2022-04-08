@@ -46,6 +46,9 @@ class Toggle
                         $attributes->addClassName("collapse");
                         break;
                     default:
+                        /**
+                         * It may be a conditional breakpoint collapse
+                         */
                         try {
                             $conditionalValue = ConditionalValue::createFrom($value);
                         } catch (ExceptionBadSyntax $e) {
@@ -58,7 +61,20 @@ class Toggle
                             LogUtility::msg("The toggle breakpoint ($value) supports only `expanded` as value, not $toggleStateValue.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                             continue 2;
                         }
+                        $id = $attributes->getValue("id");
+                        if (empty($id)) {
+                            LogUtility::msg("A conditional toggle breakpoint ($value) needs an id attribute.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            continue 2;
+                        }
                         $breakpoint = $conditionalValue->getBreakpointSize();
+                        $styleSheet = <<<EOF
+@media (min-width: {$breakpoint}px) {
+   #{$id} {
+        display: block!important
+   }
+}
+EOF;
+                        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::CANONICAL, $styleSheet);
 
                 }
             }

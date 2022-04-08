@@ -88,14 +88,14 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
         $form = &$event->data;
         $class = get_class($form);
         switch ($class) {
-            case "Doku_Form":
+            case Doku_Form::class:
                 /**
                  * Old one
                  * @var Doku_Form $form
                  */
                 self::updateDokuFormProfileDelete($form);
                 return;
-            case "dokuwiki\Form\Form";
+            case dokuwiki\Form\Form::class;
                 /**
                  * New One
                  * @var Form $form

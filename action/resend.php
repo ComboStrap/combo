@@ -165,14 +165,14 @@ EOF;
         $form = &$event->data;
         $class = get_class($form);
         switch ($class) {
-            case "Doku_Form":
+            case Doku_Form::class:
                 /**
                  * Old one
                  * @var Doku_Form $form
                  */
                 self::updateDokuFormResend($form);
                 return;
-            case "dokuwiki\Form\Form";
+            case dokuwiki\Form\Form::class;
                 /**
                  * New One
                  * @var Form $form

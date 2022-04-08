@@ -4,7 +4,10 @@
  *
  */
 
+use ComboStrap\Background;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -35,7 +38,13 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
 
     const TAG = 'menubar';
     const OLD_TAG = "navbar";
-    const TAGS = [self::TAG,self::OLD_TAG];
+    const TAGS = [self::TAG, self::OLD_TAG];
+    const BREAKPOINT_ATTRIBUTE = "breakpoint";
+    const POSITION = "position";
+    const CANONICAL = self::TAG;
+    const THEME_ATTRIBUTE = "theme";
+    const ALIGN_ATTRIBUTE = "align";
+    const CONTAINER_ATTRIBUTE = "container";
 
     /**
      * Do we need to add a container
@@ -113,7 +122,7 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        foreach(self::TAGS as $tag) {
+        foreach (self::TAGS as $tag) {
             $pattern = PluginUtility::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
@@ -122,7 +131,7 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
 
     public function postConnect()
     {
-        foreach(self::TAGS as $tag) {
+        foreach (self::TAGS as $tag) {
             $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
@@ -149,10 +158,18 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $tagAttributes = PluginUtility::getTagAttributes($match);
+                $default[Background::BACKGROUND_COLOR] = 'light';
+                $default[self::BREAKPOINT_ATTRIBUTE] = "lg";
+                $default[self::THEME_ATTRIBUTE] = "light";
+                $default[self::POSITION] = "normal";
+                $default[syntax_plugin_combo_container::CONTAINER_ATTRIBUTE] = PluginUtility::getConfValue(
+                    syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF,
+                    syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE
+                );
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED:
@@ -193,74 +210,62 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
 
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $class = 'navbar';
-                    if (array_key_exists("class", $attributes)) {
-                        $attributes["class"] .= ' ' . $class;
-                    } else {
-                        $attributes["class"] = $class;
-                    }
 
-                    if (!array_key_exists("background-color", $attributes)) {
-                        $attributes["background-color"] = 'light';
-                    }
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $tagAttributes->addClassName('navbar');
+
 
                     /**
                      * Without the expand, the flex has a row direction
                      * and not a column
                      */
-                    $breakpoint = "lg";
-                    if (array_key_exists("breakpoint", $attributes)) {
-                        $breakpoint = $attributes["breakpoint"];
-                        unset($attributes["breakpoint"]);
-                    }
-                    $attributes["class"] .= ' navbar-expand-' . $breakpoint;
+                    $breakpoint = $tagAttributes->getValue(self::BREAKPOINT_ATTRIBUTE);
+                    $tagAttributes->addClassName("navbar-expand-$breakpoint");
 
                     // Grab the position
-                    if (array_key_exists("position", $attributes)) {
-                        $position = $attributes["position"];
-                        if ($position === "top") {
+
+                    $position = $tagAttributes->getValueAndRemove(self::POSITION);
+                    switch ($position) {
+                        case "top":
                             $fixedTopClass = 'fixed-top';
-                            $attributes["class"] .= ' ' . $fixedTopClass . '';
-                            $fixedTopSnippetId = self::TAG."-".$fixedTopClass;
+                            $tagAttributes->addClassName($fixedTopClass);
+                            $fixedTopSnippetId = self::TAG . "-" . $fixedTopClass;
                             // See http://stackoverflow.com/questions/17181355/boostrap-using-fixed-navbar-and-anchor-tags-to-jump-to-sections
                             PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot($fixedTopSnippetId);
-                        }
-                        unset($attributes["position"]);
+                            break;
+                        case "normal":
+                            // nothing
+                            break;
+                        default:
+                            LogUtility::error("The position value ($position) is not yet implemented", self::CANONICAL);
+                            break;
                     }
 
                     // Theming
-                    $theme = "light";
-                    if (array_key_exists("theme", $attributes)) {
-                        $theme = $attributes["theme"];
-                        unset($attributes["theme"]);
-                    }
-                    $attributes["class"] .= ' navbar-' . $theme;
+                    $theme = $tagAttributes->getValueAndRemove(self::THEME_ATTRIBUTE);
+                    $tagAttributes->addClassName("navbar-$theme");
 
                     // Align
-                    $align = "center";
-                    if (array_key_exists("align", $attributes)) {
-                        $align = $attributes["align"];
-                        unset($attributes["align"]);
+                    $align = $tagAttributes->getValueAndRemoveIfPresent(self::ALIGN_ATTRIBUTE);
+                    if ($align !== null) {
+                        LogUtility::warning("The align attribute has been deprecated, you should delete it or use the container instead", self::CANONICAL);
+
+                        // Container
+                        if ($align === "center") {
+                            $container = "container";
+                        }
                     }
 
-                    // Container
-                    if ($align === "center") {
-                        $this->containerInside = true;
-                    }
-
-
-                    $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
-
-                    $containerTag = "";
-                    if ($this->containerInside) {
-                        $containerTag = '<div class="container">';
-                    }
-
-                    $renderer->doc .= "<nav {$inlineAttributes}>" . DOKU_LF;
+                    $container = $tagAttributes->getValueAndRemoveIfPresent(self::CONTAINER_ATTRIBUTE);
 
                     // When the top is fixed, the container should be inside the navbar
-                    $renderer->doc .= "{$containerTag}" . DOKU_LF;
+                    $containerSuffix = "";
+                    if ($container !== "sm") {
+                        $containerSuffix = "-$container";
+                    }
+                    $tagAttributes->addHtmlAfterEnterTag("<div class=\"container{$containerSuffix}\">");
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("nav");
+
                     break;
 
                 case DOKU_LEXER_UNMATCHED:
@@ -268,11 +273,7 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_EXIT :
-                    $containerTag = "";
-                    if ($this->containerInside) {
-                        $containerTag = '</div>';
-                    }
-                    $renderer->doc .= "{$containerTag}</nav>" . DOKU_LF;
+                    $renderer->doc .= "</div></nav>";
                     break;
             }
             return true;

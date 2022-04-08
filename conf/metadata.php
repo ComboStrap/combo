@@ -346,3 +346,8 @@ $meta[ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF] = array("onoff");
  * Highlight
  */
 $meta[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE] = array("onoff");
+
+/**
+ * Default layout container
+ */
+$meta[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF] = array('multichoice', '_choices' => syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CHOICES);

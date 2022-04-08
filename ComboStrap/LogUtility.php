@@ -300,4 +300,14 @@ class LogUtility
         ob_end_clean();
         return $trace;
     }
+
+    public static function error(string $message, string $canonical)
+    {
+        self::msg($message, LogUtility::LVL_MSG_ERROR, $canonical);
+    }
+
+    public static function warning(string $message, string $canonical)
+    {
+        self::msg($message, LogUtility::LVL_MSG_WARNING, $canonical);
+    }
 }

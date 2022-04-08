@@ -72,7 +72,9 @@ class TagAttributes
         ColorRgb::PRIMARY_VALUE,
         ColorRgb::SECONDARY_VALUE,
         Dimension::ZOOM_ATTRIBUTE,
-        syntax_plugin_combo_follow::HANDLE_ATTRIBUTE
+        syntax_plugin_combo_follow::HANDLE_ATTRIBUTE,
+        \syntax_plugin_combo_menubar::BREAKPOINT_ATTRIBUTE,
+        \syntax_plugin_combo_container::CONTAINER_ATTRIBUTE
     ];
 
     /**

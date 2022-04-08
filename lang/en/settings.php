@@ -271,4 +271,10 @@ $lang[ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF ]= PluginUtility::getDocu
  * Highlight
  */
 $lang[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_highlightwiki::CANONICAL, "Enable or disable the wiki highlight component");
+
+/**
+ * Container
+ */
+$lang[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_container::CANONICAL, "Set the horizontal alignment of the layout");
+
 ?>

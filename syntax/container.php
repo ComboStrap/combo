@@ -11,6 +11,7 @@
  */
 
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -32,6 +33,14 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
 {
     const TAG = "container";
 
+    /**
+     * The value of the default layout container
+     */
+    const DEFAULT_LAYOUT_CONTAINER_CONF = "defaultLayoutContainer";
+    const DEFAULT_LAYOUT_CONTAINER_CHOICES = [self::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE, "md", "lg", "xl", "xxl", "fluid"];
+    const DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE = "sm";
+    const CONTAINER_ATTRIBUTE = "container";
+    const CANONICAL = self::TAG;
 
     /**
      * Syntax Type.
@@ -39,7 +48,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'container';
     }
@@ -53,7 +62,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    public function getAllowedTypes()
+    public function getAllowedTypes(): array
     {
         return array('baseonly', 'container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
@@ -67,7 +76,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
         return 'block';
     }
@@ -131,12 +140,12 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                // Suppress the component name
-
-                $tagAttributes = PluginUtility::getTagAttributes($match);
+                $knownTypes = self::DEFAULT_LAYOUT_CONTAINER_CHOICES;
+                $defaults["type"] = PluginUtility::getConfValue(self::DEFAULT_LAYOUT_CONTAINER_CONF, self::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $knownTypes, $defaults);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED:
@@ -163,7 +172,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {
@@ -173,14 +182,10 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    if (array_key_exists("class", $attributes)) {
-                        $attributes["class"] .= " " . self::TAG;
-                    } else {
-                        $attributes["class"] = self::TAG;
-                    }
-                    $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
-                    $renderer->doc .= "<div $inlineAttributes>" . DOKU_LF;
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $type = $tagAttributes->getType();
+                    $tagAttributes->addClassName("container-{$type}");
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

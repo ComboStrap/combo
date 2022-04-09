@@ -49,19 +49,9 @@ class CacheManager
      */
     public static function getOrCreate(): CacheManager
     {
-        try {
-            $page = Page::createPageFromRequestedPage();
-            $cacheKey = $page->getDokuwikiId();
-        } catch (ExceptionCompile $e) {
-            /**
-             * In test, we may generate html from snippet without
-             * request. No error in this case
-             */
-            if (!PluginUtility::isTest()) {
-                LogUtility::msg("The cache manager cannot find the requested page. Cache Errors may occurs. Error: {$e->getMessage()}");
-            }
-            $cacheKey = PluginUtility::getRequestId();
-        }
+
+        $page = Page::createPageFromRequestedPage();
+        $cacheKey = $page->getDokuwikiId();
         $cacheManager = self::$cacheManager[$cacheKey];
         if ($cacheManager === null) {
             // new run, delete all old cache managers
@@ -119,7 +109,7 @@ class CacheManager
 
     public function hasNoCacheResult(): bool
     {
-        if($this->slotCacheResults===null){
+        if ($this->slotCacheResults === null) {
             return true;
         }
         return sizeof($this->slotCacheResults) === 0;

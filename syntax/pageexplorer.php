@@ -19,6 +19,7 @@ use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;
+use ComboStrap\Toggle;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -209,7 +210,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $default = [
-                    TagAttributes::TYPE_KEY => self::LIST_TYPE
+                    TagAttributes::TYPE_KEY => self::LIST_TYPE,
+                    Toggle::TOGGLE_STATE => "collapsed md-expanded"
                 ];
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
 
@@ -377,6 +379,15 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     $pageExplorerTagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::CANONICAL);
 
                     /**
+                     * Id (id is mandatory for toggle)
+                     */
+                    $id = $pageExplorerTagAttributes->getValue(TagAttributes::ID_KEY);
+                    if($id === null){
+                        $id = IdManager::getOrCreate()->generateNewIdForComponent(self::CANONICAL);
+                        $pageExplorerTagAttributes->setComponentAttributeValue(TagAttributes::ID_KEY,$id);
+                    }
+
+                    /**
                      * The cache output is composed of primary metadata
                      * (If it changes, the content change)
                      */
@@ -395,7 +406,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     $namespacePath = null;
                     if ($namespaceAttribute !== null) {
                         DokuPath::addNamespaceEndSeparatorIfNotPresent($namespaceAttribute);
-                        $namespacePath = DokuPath::createPagePathFromPath($namespacePath);
+                        $namespacePath = DokuPath::createPagePathFromPath($namespaceAttribute);
                     }
                     if ($namespacePath === null) {
                         switch ($type) {

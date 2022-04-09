@@ -37,7 +37,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
      * The value of the default layout container
      */
     const DEFAULT_LAYOUT_CONTAINER_CONF = "defaultLayoutContainer";
-    const DEFAULT_LAYOUT_CONTAINER_CHOICES = [self::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE, "md", "lg", "xl", "xxl", "fluid"];
+    const CONTAINER_VALUES = [self::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE, "md", "lg", "xl", "xxl", "fluid"];
     const DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE = "sm";
     const CONTAINER_ATTRIBUTE = "container";
     const CANONICAL = self::TAG;
@@ -140,7 +140,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $knownTypes = self::DEFAULT_LAYOUT_CONTAINER_CHOICES;
+                $knownTypes = self::CONTAINER_VALUES;
                 $defaults["type"] = PluginUtility::getConfValue(self::DEFAULT_LAYOUT_CONTAINER_CONF, self::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $knownTypes, $defaults);
                 return array(

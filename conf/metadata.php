@@ -350,4 +350,4 @@ $meta[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE] = array("on
 /**
  * Default layout container
  */
-$meta[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF] = array('multichoice', '_choices' => syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CHOICES);
+$meta[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF] = array('multichoice', '_choices' => syntax_plugin_combo_container::CONTAINER_VALUES);

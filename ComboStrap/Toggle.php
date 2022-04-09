@@ -74,7 +74,12 @@ class Toggle
    }
 }
 EOF;
-                        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::CANONICAL, $styleSheet);
+                        /**
+                         * The snippet id is dependent on id
+                         * if there is more than one
+                         */
+                        $snippetId = "self::CANONICAL-$id";
+                        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($snippetId, $styleSheet);
 
                 }
             }

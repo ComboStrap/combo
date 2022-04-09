@@ -121,6 +121,7 @@ require_once(__DIR__ . '/Html.php');
 require_once(__DIR__ . '/Http.php');
 require_once(__DIR__ . '/HttpResponse.php');
 require_once(__DIR__ . '/Identity.php');
+require_once(__DIR__ . '/IdManager.php');
 require_once(__DIR__ . '/Image.php');
 require_once(__DIR__ . '/ImageLink.php');
 require_once(__DIR__ . '/ImageRaster.php');

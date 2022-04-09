@@ -306,7 +306,7 @@ class LogUtility
         self::msg($message, LogUtility::LVL_MSG_ERROR, $canonical);
     }
 
-    public static function warning(string $message, string $canonical)
+    public static function warning(string $message, string $canonical = "support")
     {
         self::msg($message, LogUtility::LVL_MSG_WARNING, $canonical);
     }

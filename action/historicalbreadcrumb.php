@@ -64,7 +64,7 @@ class action_plugin_combo_historicalbreadcrumb extends DokuWiki_Action_Plugin
             /**
              * Css
              */
-            PluginUtility::getSnippetManager()->attachCssSnippetForRequest(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
+            PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
 
             array_splice($event->data['items'], -1, 0, array(new HistoricalBreadcrumbMenuItem()));
 

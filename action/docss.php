@@ -3,9 +3,6 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
-use ComboStrap\ColorRgb;
-use ComboStrap\ExceptionCompile;
-use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 
@@ -34,7 +31,7 @@ class action_plugin_combo_docss extends DokuWiki_Action_Plugin
         global $ACT;
         switch ($ACT) {
             case "media":
-                PluginUtility::getSnippetManager()->attachCssSnippetForRequest("do-media");
+                PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest("do-media");
                 break;
             case "admin":
                 $defaultColor = "black";
@@ -60,7 +57,7 @@ ul.admin_tasks a:hover, ul.admin_plugins a:hover{
     fill: {$iconColor->toRgbHex()};
 }
 EOF;
-                PluginUtility::getSnippetManager()->attachCssSnippetForRequest("do-admin", $css);
+                PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest("do-admin", $css);
                 break;
         }
 

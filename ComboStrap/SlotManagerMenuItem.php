@@ -41,7 +41,7 @@ class SlotManagerMenuItem extends AbstractItem
     {
 
         PluginUtility::getSnippetManager()->attachJavascriptSnippetForRequest("popover");
-        PluginUtility::getSnippetManager()->attachCssSnippetForRequest("popover");
+        PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest("popover");
 
         $linkAttributes = parent::getLinkAttributes($classprefix);
         /**

@@ -105,7 +105,7 @@ class PageEdit
         /**
          * Request based because the button are added only if you can write
          */
-        PluginUtility::getSnippetManager()->attachCssSnippetForRequest(self::SNIPPET_ID);
+        PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest(self::SNIPPET_ID);
 
         /**
          * The callback function on all edit comment

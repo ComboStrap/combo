@@ -135,3 +135,4 @@ action/urlmessage.php
 action/tooltippostprocessing.php
 syntax/pageexplorertreesubnamespace.php
 syntax/pageexplorertreesubnamespacelist.php
+action/metalang.php

@@ -86,7 +86,7 @@ main a:hover {
     color: {$primaryColorHoverText->toRgbHex()};
 }
 EOF;
-                    $snippetManager->attachCssSnippetForRequest(self::ANCHOR_HTML_SNIPPET_ID, $aCss);
+                    $snippetManager->attachCssInternalStylesheetForRequest(self::ANCHOR_HTML_SNIPPET_ID, $aCss);
                 }
             } catch (ExceptionCompile $e) {
                 LogUtility::msg("Error while setting the branding color on text. Error: {$e->getMessage()}");

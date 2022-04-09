@@ -293,7 +293,7 @@ class SnippetManager
      * @return Snippet a snippet scoped at the request scope (not in a slot)
      */
     public
-    function &attachCssSnippetForRequest($snippetId, string $script = null): Snippet
+    function &attachCssInternalStylesheetForRequest($snippetId, string $script = null): Snippet
     {
         $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_CSS, Snippet::INTERNAL_TYPE);
         if ($script != null) {

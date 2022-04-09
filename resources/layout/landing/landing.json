@@ -1,0 +1,14 @@
+{
+    "page-core": {
+        "container": false
+    },
+    "main-header": {
+        "display": "none"
+    },
+    "main-side": {
+        "display": "none"
+    },
+    "main-footer": {
+        "display": "none"
+    }
+}

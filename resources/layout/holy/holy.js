@@ -1,3 +1,7 @@
+/**
+ * Move the side slot in the toc area
+ * on media larger than 992
+ */
 window.addEventListener("load", function () {
     let mediaListener = function (mediaQuery) {
         let side = document.getElementById("main-side");

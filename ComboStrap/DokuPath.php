@@ -225,10 +225,16 @@ class DokuPath extends PathAbs
                  */
                 // Why ? $this->id = resolve_id(getNS($ID), $this->id, true);
                 global $conf;
-                if ($drive === self::MEDIA_DRIVE) {
-                    $filePath = $conf['mediadir'];
-                } else {
-                    $filePath = $conf['datadir'];
+                switch ($drive) {
+                    case self::MEDIA_DRIVE:
+                        $filePath = $conf['mediadir'];
+                        break;
+                    case self::PAGE_DRIVE:
+                        $filePath = $conf['datadir'];
+                        break;
+                    default:
+                        $filePath = DokuPath::getDriveRoots()[$drive];
+                        break;
                 }
                 $filePathSeparator = self::SEPARATOR_SLASH; // don't know why it's not OS specific
                 $filePath .= $filePathSeparator . utf8_encodeFN(str_replace(DokuPath::PATH_SEPARATOR, $filePathSeparator, $this->id));

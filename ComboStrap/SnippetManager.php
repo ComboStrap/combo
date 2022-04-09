@@ -325,12 +325,17 @@ class SnippetManager
 
     /**
      * @param $snippetId
+     * @param string|null $script
      * @return Snippet a snippet not in a slot
      */
     public
-    function &attachJavascriptSnippetForRequest($snippetId): Snippet
+    function &attachJavascriptInternalForRequest($snippetId, string $script = null): Snippet
     {
-        return $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE);
+        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE);
+        if ($script != null) {
+            $snippet->setInlineContent($script);
+        }
+        return $snippet;
     }
 
     /**

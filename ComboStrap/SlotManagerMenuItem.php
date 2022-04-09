@@ -40,7 +40,7 @@ class SlotManagerMenuItem extends AbstractItem
     public function getLinkAttributes($classprefix = 'menuitem '): array
     {
 
-        PluginUtility::getSnippetManager()->attachJavascriptSnippetForRequest("popover");
+        PluginUtility::getSnippetManager()->attachJavascriptInternalForRequest("popover");
         PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest("popover");
 
         $linkAttributes = parent::getLinkAttributes($classprefix);

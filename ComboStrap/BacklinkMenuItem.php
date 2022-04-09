@@ -32,7 +32,7 @@ class BacklinkMenuItem extends AbstractItem
     {
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetManager->attachJavascriptComboLibrary();
-        $snippetManager->attachJavascriptSnippetForRequest(self::CANONICAL);
+        $snippetManager->attachJavascriptInternalForRequest(self::CANONICAL);
         parent::__construct();
     }
 

@@ -1,6 +1,8 @@
 <?php
 
 use ComboStrap\DatabasePageRow;
+use ComboStrap\DokuPath;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\Layout;
@@ -9,6 +11,7 @@ use ComboStrap\Page;
 use ComboStrap\PageLayout;
 use ComboStrap\PageUrlPath;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 
 /**
@@ -69,12 +72,87 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                 ->getValueOrDefault();
         }
 
-        try {
-            $layoutObject->load($layoutName);
-        } catch (ExceptionNotFound $e) {
-            LogUtility::error("Error while loading the layout ($layoutName). Error: {$e->getMessage()}", self::CANONICAL);
+        $layoutDirectory = DokuPath::createDokuPath(":layout:$layoutName:", DokuPath::COMBO_DRIVE);
+        if (!FileSystems::exists($layoutDirectory)) {
+            LogUtility::error("The layout directory ($layoutName) does not exist at $layoutDirectory", self::CANONICAL);
+            return;
         }
 
+
+        /**
+         * Css and Js
+         */
+        $layoutCssPath = $layoutDirectory->resolve("$layoutName.css");
+        try {
+            $content = FileSystems::getContent($layoutCssPath);
+            PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest(self::CANONICAL, $content);
+        } catch (ExceptionNotFound $e) {
+            // not a problem
+        }
+        $layoutJsPath = $layoutDirectory->resolve("$layoutName.js");
+        try {
+            $content = FileSystems::getContent($layoutJsPath);
+            PluginUtility::getSnippetManager()->attachJavascriptInternalForRequest(self::CANONICAL, $content);
+        } catch (ExceptionNotFound $e) {
+            // not a problem
+        }
+
+
+        /**
+         * Area
+         */
+        $layoutJsonPath = $layoutDirectory->resolve("$layoutName.json");
+        try {
+            $jsonString = FileSystems::getContent($layoutJsonPath);
+        } catch (ExceptionNotFound $e) {
+            LogUtility::error("The layout file ($layoutName) does not exist at $layoutJsonPath", self::CANONICAL);
+            return;
+        }
+        try {
+            $json = \ComboStrap\Json::createFromString($jsonString);
+        } catch (ExceptionCompile $e) {
+            LogUtility::error("The layout file ($layoutJsonPath) could not be loaded as json. Error: {$e->getMessage()}", self::CANONICAL);
+            return;
+        }
+        $jsonArray = $json->toArray();
+
+
+        $areas = ["page-core"];
+        foreach ($areas as $areaName) {
+
+
+            $layoutArea = $layoutObject->getOrCreateArea($layoutName);
+
+            $attributes = $jsonArray[$areaName];
+            $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+
+            // show
+            $show = $tagAttributes->getBooleanValueAndRemoveIfPresent("show", true);
+            $layoutArea->setShow($show);
+
+            // container
+            $container = $tagAttributes->getValueAndRemoveIfPresent("container", true);
+            if ($container) {
+                $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                $containerPrefix = "";
+                if ($container !== "sm") {
+                    $containerPrefix = "-$container";
+                }
+                $tagAttributes->addClassName("container{$containerPrefix}");
+            }
+
+            // relative
+            // Relative positioning is important for the positioning of the pagetools (page-core), secedit button
+            $tagAttributes->addClassName("position-relative");
+
+            if ($areaName === "page-core") {
+                $tagAttributes->addClassName(tpl_classes());
+            }
+
+            $layoutArea->setAttributes($tagAttributes->toCallStackArray());
+
+
+        }
 
 
     }

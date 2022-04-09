@@ -59,7 +59,7 @@ class action_plugin_combo_historicalbreadcrumb extends DokuWiki_Action_Plugin
             /**
              * Making popover active
              */
-            PluginUtility::getSnippetManager()->attachJavascriptSnippetForRequest("popover");
+            PluginUtility::getSnippetManager()->attachJavascriptInternalForRequest("popover");
 
             /**
              * Css

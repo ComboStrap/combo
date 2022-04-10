@@ -29,7 +29,7 @@ class PrimarySlots
      * @param $tocCall - the toc call if found
      * @return void
      */
-    public static function addContentSlots(CallStack $callStack, &$tocCall, $page)
+    public static function addContentSlots(CallStack $callStack, &$tocCall, Page $page)
     {
 
 
@@ -97,6 +97,12 @@ class PrimarySlots
         }
 
 
+        /**
+         * Get the main slots
+         */
+        $sideCallStack = null;
+        $headerCallStack = null;
+        $footerCallStack = null;
         foreach ($page->getChildren() as $child) {
             $name = $child->getPath()->getLastName();
 
@@ -109,13 +115,34 @@ class PrimarySlots
             $childCallStack = CallStack::createFromInstructions($childInstructions);
             $childCallStack->moveToStart();
 
+            switch ($name) {
+                case Site::getPrimarySideSlotName():
+                    $id = "main-side";
+                    $tag = "aside";
+                    $sideCallStack = $childCallStack;
+                    break;
+                case Site::getPrimaryHeaderSlotName():
+                    $id = "main-header";
+                    $tag = \syntax_plugin_combo_header::TAG;
+                    $headerCallStack = $childCallStack;
+                    break;
+                case Site::getPrimaryFooterSlotName():
+                    $id = "main-footer";
+                    $tag = \syntax_plugin_combo_footer::TAG;
+                    $footerCallStack = $childCallStack;
+                    break;
+                default:
+                    LogUtility::error("The slot ($name) was not expected", self::CANONICAL);
+                    continue 2;
+            }
+
             /**
              * Wrap the instructions in a div
              */
             $childCallStack->insertAfter(Call::createComboCall(
                 syntax_plugin_combo_box::TAG,
                 DOKU_LEXER_ENTER,
-                ["class" => $name]
+                ["class" => $name, "id" => $id, "tag" => $tag]
             ));
 
             /**
@@ -135,34 +162,49 @@ class PrimarySlots
                 }
             }
             /**
-             * Close the div box
+             * Close the element
              */
             $childCallStack->appendCallAtTheEnd(Call::createComboCall(
                 syntax_plugin_combo_box::TAG,
-                DOKU_LEXER_EXIT
+                DOKU_LEXER_EXIT,
+                ["tag" => $tag]
             ));
-            $stack = $childCallStack->getStack();
 
-            switch ($name) {
-                case Site::getPrimarySideSlotName():
-
-                case Site::getPrimaryHeaderSlotName():
-                    $callStack->moveToStart();
-                    $actualCall = $callStack->next();
-                    if ($actualCall->getTagName() === syntax_plugin_combo_frontmatter::TAG) {
-                        $callStack->next();
-                    }
-                    $callStack->insertInstructionsFromNativeArrayAfterCurrentPosition($stack);
-                    break;
-                case Site::getPrimaryFooterSlotName():
-                    $stack = $childCallStack->getStack();
-                    $callStack->appendInstructionsFromNativeArrayAtTheEnd($stack);
-                    break;
-                default:
-                    LogUtility::msg("The child ($child) of the page ($page) is unknown and was not added in the markup");
-                    break;
-            }
         }
+        /**
+         * Combining
+         */
+        /**
+         * Wrap the instructions in a div
+         */
+        $callStack->moveToStart();
+        $callStack->insertAfter(Call::createComboCall(
+            syntax_plugin_combo_box::TAG,
+            DOKU_LEXER_ENTER,
+            ["id" => "main-content"]
+        ));
+
+        if ($headerCallStack !== null) {
+            $callStack->insertInstructionsFromNativeArrayAfterCurrentPosition($headerCallStack->getStack());
+        }
+
+        /**
+         * Close main-content
+         */
+        $callStack->moveToEnd();
+        $callStack->insertBefore(Call::createComboCall(
+            syntax_plugin_combo_box::TAG,
+            DOKU_LEXER_EXIT
+        ));
+
+        if ($sideCallStack !== null) {
+            $callStack->appendInstructionsFromNativeArrayAtTheEnd($sideCallStack->getStack());
+        }
+
+        if ($footerCallStack !== null) {
+            $callStack->appendInstructionsFromNativeArrayAtTheEnd($footerCallStack->getStack());
+        }
+
 
     }
 }

@@ -64,12 +64,23 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
 
         // for the identity forms
         global $ACT;
-        if (in_array($ACT, ["login", "resendpwd", "register", "profile"])) {
-            $layoutName = "median";
-        } else {
-            $requestedPage = Page::createPageFromRequestedPage();
-            $layoutName = PageLayout::createFromPage($requestedPage)
-                ->getValueOrDefault();
+        switch ($ACT) {
+            case "login":
+            case "resendpwd":
+            case "register":
+            case "profile":
+                $layoutName = "median";
+                break;
+            case "preview":
+                $layoutName = "landing";
+                break;
+            case "show":
+                $requestedPage = Page::createPageFromRequestedPage();
+                $layoutName = PageLayout::createFromPage($requestedPage)
+                    ->getValueOrDefault();
+                break;
+            default:
+                return;
         }
 
         $layoutDirectory = DokuPath::createDokuPath(":layout:$layoutName:", DokuPath::COMBO_DRIVE);
@@ -121,7 +132,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
         foreach ($areas as $areaName) {
 
 
-            $layoutArea = $layoutObject->getOrCreateArea($layoutName);
+            $layoutArea = $layoutObject->getOrCreateArea($areaName);
 
             $attributes = $jsonArray[$areaName];
             $tagAttributes = TagAttributes::createFromCallStackArray($attributes);

@@ -18,6 +18,8 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "box";
+    const TAG_ATTRIBUTE = "tag";
+    const DEFAULT_TAG = "div";
 
     /**
      * Syntax Type.
@@ -91,7 +93,7 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $defaultAttributes = array();
+                $defaultAttributes[self::TAG_ATTRIBUTE] = self::DEFAULT_TAG;
                 $knownTypes = [];
                 $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
                 return array(
@@ -108,9 +110,11 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                  * box is constrained by height
                  */
                 $callStack = CallStack::createFromHandler($handler);
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 Dimension::addScrollToggleOnClickIfNoControl($callStack);
                 return array(
-                    PluginUtility::STATE => $state
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
                 );
 
 
@@ -129,7 +133,7 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         if ($format == 'xhtml') {
 
@@ -139,7 +143,8 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
-                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
+                    $tagName = $tagAttributes->getValueAndRemove(self::TAG_ATTRIBUTE, self::DEFAULT_TAG);
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag($tagName) . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -147,8 +152,10 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_EXIT :
-
-                    $renderer->doc .= '</div>';
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
+                    $tagName = $tagAttributes->getValueAndRemove(self::TAG_ATTRIBUTE, self::DEFAULT_TAG);
+                    $renderer->doc .= "</$tagName>";
                     break;
             }
             return true;

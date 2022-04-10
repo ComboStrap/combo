@@ -176,6 +176,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $callStack = CallStack::createFromHandler($handler);
         $callStack->moveToStart();
 
+
         /**
          * Close the section
          * for whatever reason, the section status is true
@@ -431,6 +432,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * Main Slots and TOC to the primary slots
          */
         if ($pageParsed->isPrimarySlot()) {
+
 
             PrimarySlots::addContentSlots($callStack, $tocCall, $pageParsed);
 

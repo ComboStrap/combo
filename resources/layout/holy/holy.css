@@ -17,6 +17,10 @@
                     "main-footer";
     }
 
+    #main-content {
+        min-width: 0; /* prevent overflow of pre */
+    }
+
     #main-side {
         background-color: #ffff64;
         position: static;
@@ -42,7 +46,7 @@
     main {
         grid-area: page-main;
         display: grid;
-        grid-template-columns: [main] auto [side] 250px;
+        grid-template-columns: [main] auto [side] 1fr;
         grid-auto-flow: row dense;
         gap: 1rem;
         padding: 1rem;
@@ -52,11 +56,11 @@
 
     #main-toc {
         grid-column: side;
-        grid-row: span 5;
+        grid-row: 1 / span 5;
     }
 
     #main-header {
-        grid-column: main;
+        grid-column: span 2;
     }
 
     #main-content {

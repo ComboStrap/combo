@@ -26,10 +26,10 @@ class PrimarySlots
      *  * We parse the header/footer and add them to the callstack
      *
      * @param CallStack $callStack - a callstack
-     * @param $tocCall - the toc call if found
+     * @param $tocData - the toc data
      * @return void
      */
-    public static function addContentSlots(CallStack $callStack, &$tocCall, Page $page)
+    public static function addContentSlots(CallStack $callStack, $tocData, Page $page)
     {
 
 
@@ -153,7 +153,7 @@ class PrimarySlots
                 $tagName = $actualCall->getTagName();
                 switch ($tagName) {
                     case syntax_plugin_combo_toc::TAG:
-                        $tocCall = $actualCall;
+                        $tocData = $actualCall;
                         continue 2;
                     case CallStack::DOCUMENT_START:
                     case CallStack::DOCUMENT_END:
@@ -171,9 +171,11 @@ class PrimarySlots
             ));
 
         }
+
         /**
-         * Combining
+         * Combining the areas
          */
+
         /**
          * Wrap the instructions in a div
          */
@@ -184,8 +186,38 @@ class PrimarySlots
             ["id" => "main-content"]
         ));
 
+        /**
+         * Header and toc
+         * TOC being after the header
+         */
+        $tocCall = null;
+        if ($tocData !== null) {
+            $tocCall = Call::createComboCall(
+                syntax_plugin_combo_toc::TAG,
+                DOKU_LEXER_SPECIAL,
+                [syntax_plugin_combo_toc::TOC_ATTRIBUTE => $tocData]
+            );
+        }
         if ($headerCallStack !== null) {
-            $callStack->insertInstructionsFromNativeArrayAfterCurrentPosition($headerCallStack->getStack());
+            if ($tocCall !== null) {
+                $headerCallStack->appendCallAtTheEnd($tocCall);
+            }
+            $callStack->insertAfterFromNativeArrayInstructions($headerCallStack->getStack());
+        } else {
+            if ($tocCall !== null) {
+                $callStack->insertAfter($tocCall);
+            }
+        }
+
+        /**
+         * Append side and footer
+         */
+        if ($sideCallStack !== null) {
+            $callStack->appendAtTheEndFromNativeArrayInstructions($sideCallStack->getStack());
+        }
+
+        if ($footerCallStack !== null) {
+            $callStack->appendAtTheEndFromNativeArrayInstructions($footerCallStack->getStack());
         }
 
         /**
@@ -196,14 +228,6 @@ class PrimarySlots
             syntax_plugin_combo_box::TAG,
             DOKU_LEXER_EXIT
         ));
-
-        if ($sideCallStack !== null) {
-            $callStack->appendInstructionsFromNativeArrayAtTheEnd($sideCallStack->getStack());
-        }
-
-        if ($footerCallStack !== null) {
-            $callStack->appendInstructionsFromNativeArrayAtTheEnd($footerCallStack->getStack());
-        }
 
 
     }

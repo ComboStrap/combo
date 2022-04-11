@@ -433,22 +433,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          */
         if ($pageParsed->isPrimarySlot()) {
 
-
-            PrimarySlots::addContentSlots($callStack, $tocCall, $pageParsed);
-
-            /**
-             * TOC
-             */
-            if ($tocCall === null && $this->tocData != null) {
-                try {
-                    $tocCall = TocUtility::insertTocCall($callStack);
-                } catch (ExceptionNotFound $e) {
-                    LogUtility::msg("No outline heading was found to insert the table of content");
-                }
-            }
-            if ($tocCall !== null) {
-                $tocCall->addAttribute(syntax_plugin_combo_toc::TOC_ATTRIBUTE, $this->tocData);
-            }
+            PrimarySlots::addContentSlots($callStack, $this->tocData, $pageParsed);
 
         }
 

@@ -207,7 +207,7 @@ class CallStack
     public static function createFromInstructions(?array $callStackArray): CallStack
     {
         return CallStack::createEmpty()
-            ->appendInstructionsFromNativeArrayAtTheEnd($callStackArray);
+            ->appendAtTheEndFromNativeArrayInstructions($callStackArray);
 
     }
 
@@ -624,8 +624,7 @@ class CallStack
      * Move pointer by key
      * @param $targetKey
      */
-    private
-    function moveToKey($targetKey)
+    public function moveToKey($targetKey)
     {
         $this->resetPointer();
         for ($i = 0; $i < $targetKey; $i++) {
@@ -642,7 +641,7 @@ class CallStack
      * If you need to process the call that you just
      * inserted, you may want to call {@link CallStack::next()}
      * @param Call $call
-     * @return void - next to get the insert element
+     * @return void - next to go the inserted element
      */
     public
     function insertAfter(Call $call): void
@@ -821,19 +820,28 @@ class CallStack
      * @param array $instructions
      * @return CallStack
      */
-    public function appendInstructionsFromNativeArrayAtTheEnd(array $instructions): CallStack
+    public function appendAtTheEndFromNativeArrayInstructions(array $instructions): CallStack
     {
         array_splice($this->callStack, count($this->callStack), 0, $instructions);
         return $this;
     }
 
-    public function insertInstructionsFromNativeArrayAfterCurrentPosition(array $instructions): CallStack
+    /**
+     * @param array $instructions
+     * @return $this
+     * The key is the actual
+     */
+    public function insertAfterFromNativeArrayInstructions(array $instructions): CallStack
     {
-        $offset = $this->getActualKey();
-        if ($offset !== null) {
-            $offset = $offset + 1;
+        $offset = null;
+        $actualKey = $this->getActualKey();
+        if ($actualKey !== null) {
+            $offset = $actualKey + 1;
         }
         array_splice($this->callStack, $offset, 0, $instructions);
+        if ($actualKey !== null) {
+            $this->moveToKey($actualKey);
+        }
         return $this;
     }
 

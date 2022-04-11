@@ -57,6 +57,16 @@ class PageLayout extends MetadataText
 
     public function getDefaultValue(): string
     {
+        /**
+         * @var Page $page
+         */
+        $page = $this->getResource();
+        if ($page->isRootHomePage()) {
+            return self::LANDING_LAYOUT_VALUE;
+        }
+        if ($page->isIndexPage()) {
+            return self::INDEX_LAYOUT_VALUE;
+        }
         return self::HOLY_LAYOUT_VALUE;
     }
 

@@ -64,6 +64,9 @@ class PageLayout extends MetadataText
         if ($page->isRootHomePage()) {
             return self::LANDING_LAYOUT_VALUE;
         }
+        if ($page->isSecondarySlot()) {
+            return self::MEDIAN_LAYOUT_VALUE;
+        }
         if ($page->isIndexPage()) {
             return self::INDEX_LAYOUT_VALUE;
         }

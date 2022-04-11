@@ -1,6 +1,5 @@
 <?php
 
-use ComboStrap\DatabasePageRow;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
@@ -9,7 +8,6 @@ use ComboStrap\Layout;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PageLayout;
-use ComboStrap\PageUrlPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 

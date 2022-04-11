@@ -614,7 +614,7 @@ class Site
     /**
      *
      */
-    public static function getPrimarySideSlotName()
+    public static function getPrimarySideSlotName(): string
     {
 
         return self::SLOT_MAIN_SIDE_NAME;

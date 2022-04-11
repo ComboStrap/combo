@@ -173,19 +173,28 @@ class CallStack
     }
 
     public
-    static function createFromMarkup($marki): CallStack
+    static function createFromMarkup($markup): CallStack
     {
 
-        $modes = p_get_parsermodes();
-        $handler = new Doku_Handler();
-        $parser = new Parser($handler);
-
-        //add modes to parser
-        foreach ($modes as $mode) {
-            $parser->addMode($mode['mode'], $mode['obj']);
+        global $ID;
+        $keep = $ID;
+        if ($ID === null && PluginUtility::isTest()) {
+            $ID = RenderUtility::DEFAULT_SLOT_ID_FOR_TEST;
         }
-        $parser->parse($marki);
-        return self::createFromHandler($handler);
+        try {
+            $modes = p_get_parsermodes();
+            $handler = new Doku_Handler();
+            $parser = new Parser($handler);
+
+            //add modes to parser
+            foreach ($modes as $mode) {
+                $parser->addMode($mode['mode'], $mode['obj']);
+            }
+            $parser->parse($markup);
+            return self::createFromHandler($handler);
+        } finally {
+            $ID = $keep;
+        }
 
     }
 
@@ -1055,8 +1064,25 @@ class CallStack
         return $this->getActualCall();
     }
 
-    public function getActualCallArray()
+
+    /**
+     * Delete all call before (Don't delete the passed call)
+     * @param Call $call
+     * @return void
+     */
+    public function deleteAllCallsBefore(Call $call)
     {
+        $key = $call->getKey();
+        $offset = array_search($key, array_keys($this->callStack), true);
+        if ($offset !== false) {
+            /**
+             * We delete from the next
+             * {@link array_splice()} delete also the given offset
+             */
+            array_splice($this->callStack, 0, $offset);
+        } else {
+            LogUtility::msg("The call ($call) could not be found in the callStack. We couldn't therefore delete the before");
+        }
 
     }
 

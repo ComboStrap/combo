@@ -636,7 +636,7 @@ class Call
     }
 
     public
-    function &getCall()
+    function &getInstructionCall()
     {
         return $this->call;
     }

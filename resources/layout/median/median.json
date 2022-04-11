@@ -1,5 +1,11 @@
 {
     "page-side": {
         "display": "none"
+    },
+    "page-main": {
+        "class": "col-md-8 mx-auto"
+    },
+    "page-core": {
+        "class": "justify-content-md-center mt-3"
     }
 }

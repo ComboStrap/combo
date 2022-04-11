@@ -5,15 +5,12 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\LayoutManager;
 use ComboStrap\LogUtility;
-use ComboStrap\PrimarySlots;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
 use ComboStrap\PageEdit;
 use ComboStrap\PluginUtility;
-use ComboStrap\RenderUtility;
-use ComboStrap\Site;
-use ComboStrap\TocUtility;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
@@ -162,6 +159,9 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
      *
      * Add the section close / open
      *
+     * Build the toc
+     * And create the main are
+     *
      * Code extracted and adapted from the end of {@link Doku_Handler::header()}
      *
      * @param   $event Doku_Event
@@ -198,8 +198,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             LogUtility::msg("The running id is not set. We can't post process the page with heading and table of content");
             return;
         }
+
         if ($pageParsed->isPrimarySlot()) {
-            $tocCall = null;
             $this->tocData = null;
             $this->tocUniqueId = [];
         }
@@ -299,7 +299,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 
                     case "internalmedia":
                         // no link for media in heading
-                        $actualCall->getCall()[1][6] = MediaLink::LINKING_NOLINK_VALUE;
+                        $actualCall->getInstructionCall()[1][6] = MediaLink::LINKING_NOLINK_VALUE;
                         continue 2;
 
                     case "header":
@@ -431,9 +431,9 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         /**
          * Main Slots and TOC to the primary slots
          */
-        if ($pageParsed->isPrimarySlot()) {
+        if (LayoutManager::shouldMainAreaBeBuild($callStack, $pageParsed)) {
 
-            PrimarySlots::addContentSlots($callStack, $this->tocData, $pageParsed);
+            LayoutManager::buildMainArea($callStack, $this->tocData, $pageParsed);
 
         }
 

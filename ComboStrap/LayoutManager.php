@@ -10,32 +10,23 @@ use syntax_plugin_combo_toc;
  * Class that handle the addition of the slots
  * in the primary slot (ie in the main content)
  */
-class PrimarySlots
+class LayoutManager
 {
 
 
-    const CANONICAL = "slot";
+    const CANONICAL = "layout";
 
-    /**
-     *
-     * This function will add header / footer / sidekick of
-     * the primary/main page into its stack
-     *
-     *  * We don't create compound text file because we would lost the position of the token in the file
-     * and the edit section would be broken
-     *  * We parse the header/footer and add them to the callstack
-     *
-     * @param CallStack $callStack - a callstack
-     * @param $tocData - the toc data
-     * @return void
-     */
-    public static function addContentSlots(CallStack $callStack, $tocData, Page $page)
+
+    public static function shouldMainAreaBeBuild(CallStack $callStack, Page $page): bool
     {
 
+        if (!$page->isPrimarySlot()) {
+            return false;
+        }
 
-        $isPrimarySlotWithHeaderAndFooter = $page->isPrimarySlot() && !$page->isRootHomePage();
-        if (!$isPrimarySlotWithHeaderAndFooter) {
-            return;
+        $layout = PageLayout::createFromPage($page)->getValueOrDefault();
+        if ($layout === PageLayout::LANDING_LAYOUT_VALUE) {
+            return false;
         }
 
         /**
@@ -49,7 +40,7 @@ class PrimarySlots
         global $ACT;
         switch ($ACT) {
             case "show":
-                break;
+                return true;
             case "preview":
                 /**
                  * preview only if it's the whole page
@@ -58,7 +49,7 @@ class PrimarySlots
                 $prefix = $_REQUEST["prefix"];
                 $suffix = $_REQUEST["suffix"];
                 if (!($prefix === "." && $suffix === "")) {
-                    return;
+                    return false;
                 };
                 /**
                  * Unfortunately, in edit/preview page
@@ -84,17 +75,34 @@ class PrimarySlots
                         $text = FileSystems::getContent($previewFile);
                     } catch (ExceptionNotFound $e) {
                         LogUtility::msg("The $localEditFileName file ($previewFile) was not found, the main slots (header/footer/side) were not added");
-                        return;
+                        return false;
                     }
                     $capturedContent = CallStack::getFileContent($callStack, 10);
                     if (strpos($text, $capturedContent) !== false) {
-                        return;
+                        return false;
                     }
                 }
-                break;
+                return true;
             default:
-                return;
+                return false;
         }
+    }
+
+    /**
+     *
+     * This function will add header / footer / sidekick of
+     * the primary/main page into its stack
+     *
+     *  * We don't create compound text file because we would lost the position of the token in the file
+     * and the edit section would be broken
+     *  * We parse the header/footer and add them to the callstack
+     *
+     * @param CallStack $mainCallStack - a callstack
+     * @param $tocData - the toc data
+     * @return void
+     */
+    public static function buildMainArea(CallStack $mainCallStack, $tocData, Page $page)
+    {
 
 
         /**
@@ -123,12 +131,12 @@ class PrimarySlots
                     break;
                 case Site::getPrimaryHeaderSlotName():
                     $id = "main-header";
-                    $tag = \syntax_plugin_combo_header::TAG;
+                    $tag = "header";
                     $headerCallStack = $childCallStack;
                     break;
                 case Site::getPrimaryFooterSlotName():
                     $id = "main-footer";
-                    $tag = \syntax_plugin_combo_footer::TAG;
+                    $tag = "footer";
                     $footerCallStack = $childCallStack;
                     break;
                 default:
@@ -173,14 +181,67 @@ class PrimarySlots
         }
 
         /**
+         * Get:
+         *   * the header from the main callstack
+         *   * the frontmatter if any
+         *
+         */
+        $mainCallStack->moveToStart();
+        $headerInstructionStack = null;
+        $breakingHeadingFound = false;
+        $frontMatterCall = null;
+        while ($actualCall = $mainCallStack->next()) {
+            if (in_array($actualCall->getTagName(), \action_plugin_combo_headingpostprocessing::HEADING_TAGS)
+                && in_array($actualCall->getState(), [DOKU_LEXER_ENTER, DOKU_LEXER_SPECIAL])) {
+                $context = $actualCall->getContext();
+                if ($context !== \syntax_plugin_combo_heading::TYPE_OUTLINE) {
+                    break;
+                }
+                $level = $actualCall->getAttribute(\syntax_plugin_combo_heading::LEVEL);
+                if ($level !== 1) {
+                    if ($level === 2) {
+                        $breakingHeadingFound = true;
+                    }
+                    break;
+                }
+            }
+            if ($actualCall->getTagName() === syntax_plugin_combo_frontmatter::TAG) {
+                $frontMatterCall = $mainCallStack->deleteActualCallAndPrevious();
+            } else {
+                $headerInstructionStack[] = $actualCall->getInstructionCall();
+            }
+        }
+        if ($breakingHeadingFound) {
+            if ($headerCallStack === null) {
+                $headerCallStack = CallStack::createFromInstructions($headerInstructionStack);
+            }
+            // delete the header in the main callStack
+            if ($actualCall !== null) {
+                /**
+                 * If the previous call is a section delete from
+                 */
+                $previousCall = $mainCallStack->previous();
+                if($previousCall->getTagName()===\syntax_plugin_combo_section::TAG) {
+                    $mainCallStack->deleteAllCallsBefore($previousCall);
+                } else {
+                    $mainCallStack->deleteAllCallsBefore($actualCall);
+                }
+            }
+        }
+
+
+        /**
          * Combining the areas
          */
-
+        $mainCallStack->moveToStart();
+        if ($frontMatterCall !== null) {
+            $mainCallStack->insertAfter($frontMatterCall);
+            $mainCallStack->next();
+        }
         /**
          * Wrap the instructions in a div
          */
-        $callStack->moveToStart();
-        $callStack->insertAfter(Call::createComboCall(
+        $mainCallStack->insertAfter(Call::createComboCall(
             syntax_plugin_combo_box::TAG,
             DOKU_LEXER_ENTER,
             ["id" => "main-content"]
@@ -202,10 +263,10 @@ class PrimarySlots
             if ($tocCall !== null) {
                 $headerCallStack->appendCallAtTheEnd($tocCall);
             }
-            $callStack->insertAfterFromNativeArrayInstructions($headerCallStack->getStack());
+            $mainCallStack->insertAfterFromNativeArrayInstructions($headerCallStack->getStack());
         } else {
             if ($tocCall !== null) {
-                $callStack->insertAfter($tocCall);
+                $mainCallStack->insertAfter($tocCall);
             }
         }
 
@@ -213,18 +274,18 @@ class PrimarySlots
          * Append side and footer
          */
         if ($sideCallStack !== null) {
-            $callStack->appendAtTheEndFromNativeArrayInstructions($sideCallStack->getStack());
+            $mainCallStack->appendAtTheEndFromNativeArrayInstructions($sideCallStack->getStack());
         }
 
         if ($footerCallStack !== null) {
-            $callStack->appendAtTheEndFromNativeArrayInstructions($footerCallStack->getStack());
+            $mainCallStack->appendAtTheEndFromNativeArrayInstructions($footerCallStack->getStack());
         }
 
         /**
          * Close main-content
          */
-        $callStack->moveToEnd();
-        $callStack->insertBefore(Call::createComboCall(
+        $mainCallStack->moveToEnd();
+        $mainCallStack->insertBefore(Call::createComboCall(
             syntax_plugin_combo_box::TAG,
             DOKU_LEXER_EXIT
         ));

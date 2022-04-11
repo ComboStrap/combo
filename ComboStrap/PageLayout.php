@@ -11,6 +11,7 @@ class PageLayout extends MetadataText
     public const HOLY_LAYOUT_VALUE = "holy";
     public const MEDIAN_LAYOUT_VALUE = "median";
     public const LANDING_LAYOUT_VALUE = "landing";
+    public const INDEX_LAYOUT_VALUE = "index";
 
     public static function createFromPage(Page $page)
     {
@@ -35,7 +36,7 @@ class PageLayout extends MetadataText
 
     public function getPossibleValues(): ?array
     {
-        return [self::HOLY_LAYOUT_VALUE, self::MEDIAN_LAYOUT_VALUE, self::LANDING_LAYOUT_VALUE];
+        return [self::HOLY_LAYOUT_VALUE, self::MEDIAN_LAYOUT_VALUE, self::LANDING_LAYOUT_VALUE, self::INDEX_LAYOUT_VALUE];
     }
 
 

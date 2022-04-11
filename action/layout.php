@@ -38,6 +38,32 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
 {
 
     const CANONICAL = "layout";
+    const PAGE_CORE_AREA = "page-core";
+    const PAGE_SIDE_AREA = "page-side";
+    const PAGE_HEADER_AREA = "page-header";
+    const PAGE_FOOTER_AREA = "page-footer";
+    const PAGE_MAIN_AREA = "page-main";
+    const MAIN_SIDE_AREA = "main-side";
+    const MAIN_CONTENT_AREA = "main-content";
+    const MAIN_HEADER_AREA = "main-header";
+    const MAIN_FOOTER_AREA = "main-header";
+    const areas = [
+        self::PAGE_CORE_AREA,
+        self::PAGE_SIDE_AREA,
+        self::PAGE_HEADER_AREA,
+        self::PAGE_MAIN_AREA,
+        self::PAGE_FOOTER_AREA,
+        self::MAIN_HEADER_AREA,
+        self::MAIN_CONTENT_AREA,
+        self::MAIN_SIDE_AREA,
+        self::MAIN_FOOTER_AREA,
+    ];
+
+    const rowAreas = [
+        self::PAGE_CORE_AREA,
+        self::PAGE_HEADER_AREA,
+        self::PAGE_FOOTER_AREA,
+    ];
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -128,7 +154,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
         $jsonArray = $json->toArray();
 
 
-        $areas = ["page-core"];
+        $areas = self::areas;
         foreach ($areas as $areaName) {
 
 
@@ -142,22 +168,35 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
             $layoutArea->setShow($show);
 
             // container
-            $container = $tagAttributes->getValueAndRemoveIfPresent("container", true);
-            if ($container) {
-                $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
-                $containerPrefix = "";
-                if ($container !== "sm") {
-                    $containerPrefix = "-$container";
+            if (in_array($areaName, self::rowAreas)) {
+                $container = $tagAttributes->getValueAndRemoveIfPresent("container", true);
+                if ($container) {
+                    $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                    $containerPrefix = "";
+                    if ($container !== "sm") {
+                        $containerPrefix = "-$container";
+                    }
+                    $tagAttributes->addClassName("container{$containerPrefix}");
                 }
-                $tagAttributes->addClassName("container{$containerPrefix}");
             }
 
             // relative
             // Relative positioning is important for the positioning of the pagetools (page-core), secedit button
             $tagAttributes->addClassName("position-relative");
 
-            if ($areaName === "page-core") {
-                $tagAttributes->addClassName(tpl_classes());
+            switch ($areaName) {
+                case self::PAGE_HEADER_AREA:
+                case self::PAGE_FOOTER_AREA:
+                    $tagAttributes->addClassName("d-print-none");
+                    break;
+                case self::PAGE_CORE_AREA:
+                    $tagAttributes->addClassName(tpl_classes());
+                    break;
+                case self::MAIN_SIDE_AREA:
+                case self::PAGE_SIDE_AREA:
+                    $tagAttributes->addComponentAttributeValue("role", "complementary");
+                    $tagAttributes->addClassName("d-print-none");
+                    break;
             }
 
             $layoutArea->setAttributes($tagAttributes->toCallStackArray());

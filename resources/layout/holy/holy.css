@@ -1,37 +1,23 @@
+
+main > *, #page-core {
+    min-width: 0; /** not auto */
+}
+
 @media (min-width: 768px) {
-
-
-    #page-side {
-        grid-area: page-side;
-    }
-
-
-    main {
-        display: grid;
-        grid-area: page-main;
-        grid-template-areas:
-                    "main-header"
-                    "main-toc"
-                    "main-content"
-                    "main-side"
-                    "main-footer";
-    }
-
-    #main-content {
-        min-width: 0; /* prevent overflow of pre */
-    }
-
-    #main-side {
-        background-color: #ffff64;
-        position: static;
-        grid-area: main-side;
-    }
 
     #page-core {
         display: grid;
         gap: 1.5rem;
         grid-template-areas: "page-side page-main";
         grid-template-columns: 1fr 3fr;
+    }
+
+    #page-side {
+        grid-area: page-side;
+    }
+
+    #page-main {
+        grid-area: page-main;
     }
 
 }
@@ -46,12 +32,12 @@
     main {
         grid-area: page-main;
         display: grid;
-        grid-template-columns: [main] auto [side] 1fr;
+        grid-template-columns: [main] 5fr [side] auto;
         grid-auto-flow: row dense;
         gap: 1rem;
         padding: 1rem;
         grid-template-areas: unset;
-        grid-template-rows: auto 1fr;
+
     }
 
     #main-toc {

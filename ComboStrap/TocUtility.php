@@ -22,10 +22,15 @@ class TocUtility
 
 
     /**
-     * The class added to the container
+     * The id of the container area
      */
-    public const TOC_ID_CLASS = "main-toc";
+    public const TOC_AREA_ID = "main-toc";
+    /**
+     * The id of the toc (nav)
+     */
+    const TOC_ID = "toc";
     const CANONICAL = syntax_plugin_combo_toc::TAG;
+
 
     public static function renderToc($toc): string
     {
@@ -38,6 +43,22 @@ class TocUtility
         if (count($toc) < $tocMinHeads) {
             return "";
         }
+
+        /**
+         * Adding toc number style
+         */
+        try {
+            $css = \action_plugin_combo_outlinenumbering::getCssOutlineNumberingRuleFor(\action_plugin_combo_outlinenumbering::TOC_NUMBERING);
+            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(\action_plugin_combo_outlinenumbering::TOC_NUMBERING, $css);
+        } catch (ExceptionNotEnabled $e) {
+            // not enabled
+        } catch (ExceptionBadSyntax $e) {
+            LogUtility::error("The toc numbering type was unknown", self::CANONICAL);
+        }
+
+        /**
+         * Creating the html
+         */
         \dokuwiki\Extension\Event::createAndTrigger('TPL_TOC_RENDER', $toc, null, false);
         global $lang;
 
@@ -86,7 +107,7 @@ class TocUtility
         // closing
         $ulMarkup .= str_repeat("</li></ul>", $previousLevel - $rootLevel);
         $tocHeaderLang = $lang['toc'];
-        $tocAreaId = self::TOC_ID_CLASS;
+        $tocAreaId = self::TOC_AREA_ID;
         return <<<EOF
 <div id="$tocAreaId">
 <p id="toc-header">$tocHeaderLang</p>
@@ -95,6 +116,7 @@ $ulMarkup
 </nav>
 </div>
 EOF;
+
 
     }
 

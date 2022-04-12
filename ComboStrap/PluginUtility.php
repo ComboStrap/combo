@@ -100,6 +100,7 @@ require_once(__DIR__ . '/Display.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/DokuwikiId.php');
 require_once(__DIR__ . '/SlotManagerMenuItem.php');
+require_once(__DIR__ . '/EditorSection.php');
 require_once(__DIR__ . '/EndDate.php');
 require_once(__DIR__ . '/Event.php');
 require_once(__DIR__ . '/ExceptionExit.php');
@@ -164,7 +165,6 @@ require_once(__DIR__ . '/Opacity.php');
 require_once(__DIR__ . '/Os.php');
 require_once(__DIR__ . '/Page.php');
 require_once(__DIR__ . '/PageDescription.php');
-require_once(__DIR__ . '/PageEdit.php');
 require_once(__DIR__ . '/PageId.php');
 require_once(__DIR__ . '/PageKeywords.php');
 require_once(__DIR__ . '/PageImages.php');
@@ -1281,7 +1281,7 @@ class PluginUtility
      * @param $name
      */
     public
-    static function startSection($renderer, $position, $name)
+    static function startSection(\Doku_Renderer_xhtml $renderer, $position, $name)
     {
 
 

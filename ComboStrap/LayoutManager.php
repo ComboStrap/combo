@@ -233,14 +233,11 @@ class LayoutManager
         /**
          * Combining the areas
          */
-        $mainCallStack->moveToStart();
-        if ($frontMatterCall !== null) {
-            $mainCallStack->insertAfter($frontMatterCall);
-            $mainCallStack->next();
-        }
+
         /**
-         * Wrap the instructions in a div
+         * Wrap the main instructions in a div
          */
+        $mainCallStack->moveToStart();
         $mainCallStack->insertAfter(Call::createComboCall(
             syntax_plugin_combo_box::TAG,
             DOKU_LEXER_ENTER,
@@ -248,26 +245,38 @@ class LayoutManager
         ));
 
         /**
-         * Header and toc
+         * Frontmatter should be inside the main-content
+         * to not be seen as a grid-item
+         */
+        if ($frontMatterCall !== null) {
+            $mainCallStack->next();
+            $mainCallStack->insertAfter($frontMatterCall);
+        }
+
+        /**
+         * Close main-content
+         */
+        $mainCallStack->moveToEnd();
+        $mainCallStack->insertBefore(Call::createComboCall(
+            syntax_plugin_combo_box::TAG,
+            DOKU_LEXER_EXIT
+        ));
+
+        /**
+         * Header and toc (before)
          * TOC being after the header
          */
-        $tocCall = null;
-        if ($tocData !== null) {
-            $tocCall = Call::createComboCall(
-                syntax_plugin_combo_toc::TAG,
-                DOKU_LEXER_SPECIAL,
-                [syntax_plugin_combo_toc::TOC_ATTRIBUTE => $tocData]
-            );
-        }
         if ($headerCallStack !== null) {
-            if ($tocCall !== null) {
+            if ($tocData !== null) {
+                $tocCall = Call::createComboCall(
+                    syntax_plugin_combo_toc::TAG,
+                    DOKU_LEXER_SPECIAL,
+                    [syntax_plugin_combo_toc::TOC_ATTRIBUTE => $tocData]
+                );
                 $headerCallStack->appendCallAtTheEnd($tocCall);
             }
+            $mainCallStack->moveToStart();
             $mainCallStack->insertAfterFromNativeArrayInstructions($headerCallStack->getStack());
-        } else {
-            if ($tocCall !== null) {
-                $mainCallStack->insertAfter($tocCall);
-            }
         }
 
         /**
@@ -281,14 +290,7 @@ class LayoutManager
             $mainCallStack->appendAtTheEndFromNativeArrayInstructions($footerCallStack->getStack());
         }
 
-        /**
-         * Close main-content
-         */
-        $mainCallStack->moveToEnd();
-        $mainCallStack->insertBefore(Call::createComboCall(
-            syntax_plugin_combo_box::TAG,
-            DOKU_LEXER_EXIT
-        ));
+
 
 
     }

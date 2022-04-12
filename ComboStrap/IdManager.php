@@ -4,6 +4,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\Html;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\Path;
 
 /**
  * A manager to return an unique id
@@ -45,16 +46,20 @@ class IdManager
         self::$idManagers = null;
     }
 
-    public function generateNewIdForComponent(string $canonical): string
+    public function generateNewIdForComponent(string $canonical, Path $slotPath = null): string
     {
-        try {
-            $slot = Page::createPageFromGlobalDokuwikiId()->getPath()->getLastName();
-        } catch (ExceptionNotFound $e) {
-            LogUtility::warning(self::CANONICAL . " - The global ID was not found, the slot seen was set to unknown");
-            $slot = "unknown-slot";
+        if($slotPath===null) {
+            try {
+                $slotName = Page::createPageFromGlobalDokuwikiId()->getPath()->getLastName();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::warning(self::CANONICAL . " - The global ID was not found, the slot seen was set to unknown");
+                $slotName = "unknown-slot";
+            }
+        } else {
+            $slotName = $slotPath->getLastName();
         }
 
-        $idScope = "$canonical-$slot";
+        $idScope = "$canonical-$slotName";
         $lastId = $this->lastIdByCanonical[$idScope];
         if ($lastId === null) {
             $lastId = 1;

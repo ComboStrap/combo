@@ -8,7 +8,7 @@ namespace ComboStrap;
  * @package ComboStrap
  * Manage the section edit button
  */
-class PageEdit
+class EditorSection
 {
 
 
@@ -19,7 +19,7 @@ class PageEdit
     const EDIT_EDIT_ID = "id";
     const EDIT_MESSAGE = "message";
 
-    const CANONICAL = "support";
+    const CANONICAL = "editor-section";
     const ENTER_HTML_COMMENT = "<!--";
     const CLOSE_HTML_COMMENT = "-->";
     const CLASS_PAGE_EDIT = "page-edit-combo";
@@ -27,9 +27,13 @@ class PageEdit
     public const PAGE_EDIT_BUTTON_CONF = "page-edit-button";
 
 
-    private static $countersByWikiId = array();
+
 
     private $name;
+    /**
+     * @var string
+     */
+    private $id;
 
 
     /**
@@ -41,9 +45,9 @@ class PageEdit
     }
 
 
-    public static function create($name): PageEdit
+    public static function create($name): EditorSection
     {
-        return new PageEdit($name);
+        return new EditorSection($name);
     }
 
     /**
@@ -51,7 +55,7 @@ class PageEdit
      */
     public function toTag(): string
     {
-        $pageEditButton = PluginUtility::getConfValue(PageEdit::PAGE_EDIT_BUTTON_CONF, 1);
+        $pageEditButton = PluginUtility::getConfValue(EditorSection::PAGE_EDIT_BUTTON_CONF, 1);
         if ($pageEditButton !== 1) {
             return "";
         }
@@ -60,15 +64,19 @@ class PageEdit
          * The following data are mandatory from:
          * {@link html_secedit_get_button}
          */
-        global $ID;
-        if ($ID === null) {
-            throw new ExceptionCompile("The global ID is not set", self::CANONICAL);
+        $markupId = $this->id;
+        if($markupId===null) {
+            global $ID;
+            if ($ID === null) {
+                throw new ExceptionCompile("A markup id could was not set", self::CANONICAL);
+            }
         }
-        $id = $this->getNewFormId($ID);
+        $slotPath = DokuPath::createPagePathFromId($markupId);
+        $htmlId = \IdManager::getOrCreate()->generateNewIdForComponent(self::CANONICAL, $slotPath);
         $data = [
-            self::WIKI_ID => $ID,
+            self::WIKI_ID => $markupId,
             self::EDIT_MESSAGE => $this->name,
-            self::EDIT_EDIT_ID => $id, // id of the form
+            self::EDIT_EDIT_ID => $htmlId, // id of the form
             // "target" => "section", // this is the default
         ];
         return self::SEC_EDIT_PREFIX . json_encode($data);
@@ -153,17 +161,11 @@ EOF;
         return preg_replace_callback(self::SEC_EDIT_PATTERN, $editFormCallBack, $html);
     }
 
-    private function getNewFormId($wikiId): int
+
+
+    public function setId(string $id): EditorSection
     {
-        $counter = self::$countersByWikiId[$wikiId];
-        if ($counter === null) {
-            // be sure that there is no cache problem from old run
-            // if the id has changed, reset
-            self::$countersByWikiId = [];
-            $counter = 0;
-        }
-        $counter++;
-        self::$countersByWikiId[$wikiId] = $counter;
-        return $counter;
+        $this->id = $id;
+        return $this;
     }
 }

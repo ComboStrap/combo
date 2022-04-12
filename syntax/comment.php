@@ -3,7 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
-use ComboStrap\PageEdit;
+use ComboStrap\EditorSection;
 
 if (!defined('DOKU_INC')) die();
 
@@ -31,7 +31,7 @@ class syntax_plugin_combo_comment extends DokuWiki_Syntax_Plugin
          * if there is no heading at all
          */
         $normalizedContent = trim($content);
-        if (strpos($normalizedContent, PageEdit::SEC_EDIT_PREFIX)===0){
+        if (strpos($normalizedContent, EditorSection::SEC_EDIT_PREFIX)===0){
             return true;
         }
         $confValue = PluginUtility::getConfValue(self::CONF_OUTPUT_COMMENT, 0);

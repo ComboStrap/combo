@@ -28,6 +28,7 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
      * The attribute to holds the toc data
      */
     const TOC_ATTRIBUTE = "toc";
+    const CANONICAL = "toc";
 
 
     /**
@@ -137,6 +138,7 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
 
                     if (TocUtility::showToc($renderer)) {
                         $toc = $data[PluginUtility::ATTRIBUTES][self::TOC_ATTRIBUTE];
+                        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::CANONICAL);
                         $renderer->doc .= TocUtility::renderToc($toc, $this);
                     }
                     break;

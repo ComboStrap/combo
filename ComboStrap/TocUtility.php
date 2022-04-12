@@ -24,7 +24,8 @@ class TocUtility
     /**
      * The class added to the container
      */
-    public const TOC_ID_CLASS = "dw__toc";
+    public const TOC_ID_CLASS = "main-toc";
+    const CANONICAL = syntax_plugin_combo_toc::TAG;
 
     public static function renderToc($toc, $renderer): string
     {
@@ -50,7 +51,20 @@ class TocUtility
 
         global $conf;
         if (count($toc) > $conf['tocminheads']) {
-            return tpl_toc(true);
+            \dokuwiki\Extension\Event::createAndTrigger('TPL_TOC_RENDER', $toc, null, false);
+            global $lang;
+            $tocList = html_buildlist($toc, 'toc', 'html_list_toc', 'html_li_default', true);
+            $tocHeaderLang = $lang['toc'];
+            $tocAreaId = self::TOC_ID_CLASS;
+            return <<<EOF
+<div id="$tocAreaId">
+<p id="toc-header">$tocHeaderLang</p>
+<nav id="toc">
+$tocList
+<nav>
+</div>
+EOF;
+
         } else {
             return "";
         }

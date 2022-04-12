@@ -30,9 +30,10 @@ main > *, #page-core {
     }
 
     main {
+
         grid-area: page-main;
         display: grid;
-        grid-template-columns: [main] 5fr [side] auto;
+        grid-template-columns: [main] 7fr [side] 2fr;
         grid-auto-flow: row dense;
         gap: 1rem;
         padding: 1rem;

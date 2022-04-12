@@ -10,6 +10,7 @@
  *
  */
 
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TocUtility;
 
@@ -38,7 +39,7 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
      * @see https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'formatting';
     }
@@ -137,9 +138,37 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_SPECIAL :
 
                     if (TocUtility::showToc($renderer)) {
-                        $toc = $data[PluginUtility::ATTRIBUTES][self::TOC_ATTRIBUTE];
+
                         PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::CANONICAL);
-                        $renderer->doc .= TocUtility::renderToc($toc, $this);
+
+                        /**
+                         * Toc data
+                         */
+                        global $TOC;
+                        $toc = $data[PluginUtility::ATTRIBUTES][self::TOC_ATTRIBUTE];
+                        if ($toc !== null) {
+                            $TOC = $toc;
+                            /**
+                             * The {@link tpl_toc()} uses the global variable
+                             */
+                        } else {
+
+                            $toc = $TOC;
+                            // If the TOC is null (The toc may be initialized by a plugin)
+                            if (!is_array($toc) or count($toc) == 0) {
+                                $toc = $renderer->toc;
+                            }
+
+                            if ($toc === null) {
+                                $renderer->doc .= LogUtility::wrapInRedForHtml("No Toc found");
+                                return false;
+                            }
+
+                        }
+                        /**
+                         * Toc rendering
+                         */
+                        $renderer->doc .= TocUtility::renderToc($toc);
                     }
                     break;
 

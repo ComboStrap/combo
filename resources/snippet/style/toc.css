@@ -1,4 +1,10 @@
+#toc {
+    --bs-text-opacity: 1;
+    color: #6c757d!important;
+}
 #toc ul {
-    padding-left: 0;
     list-style: none;
+}
+#toc ul:first-child {
+    padding-left: 0;
 }

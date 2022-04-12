@@ -34,7 +34,7 @@ main > *, #page-core {
         grid-area: page-main;
         display: grid;
         grid-template-columns: [main] 7fr [side] 2fr;
-        grid-auto-flow: row dense;
+        grid-auto-flow: row;
         gap: 1rem;
         padding: 1rem;
         grid-template-areas: unset;
@@ -43,11 +43,11 @@ main > *, #page-core {
 
     #main-toc {
         grid-column: side;
-        grid-row: 1 / span 5;
+        grid-row: 2;
     }
 
     #main-header {
-        grid-column: span 2;
+        grid-column: main / span 2;
     }
 
     #main-content {

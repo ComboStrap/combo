@@ -27,49 +27,77 @@ class TocUtility
     public const TOC_ID_CLASS = "main-toc";
     const CANONICAL = syntax_plugin_combo_toc::TAG;
 
-    public static function renderToc($toc, $renderer): string
+    public static function renderToc($toc): string
     {
-        global $TOC;
-        if ($toc !== null) {
-            $TOC = $toc;
-            /**
-             * The {@link tpl_toc()} uses the global variable
-             */
-        } else {
-
-            $toc = $TOC;
-            // If the TOC is null (The toc may be initialized by a plugin)
-            if (!is_array($toc) or count($toc) == 0) {
-                $toc = $renderer->toc;
-            }
-
-            if ($toc === null) {
-                return LogUtility::wrapInRedForHtml("No Toc found");
-            }
-
-        }
 
         global $conf;
-        if (count($toc) > $conf['tocminheads']) {
-            \dokuwiki\Extension\Event::createAndTrigger('TPL_TOC_RENDER', $toc, null, false);
-            global $lang;
-            $tocList = html_buildlist($toc, 'toc', 'html_list_toc', 'html_li_default', true);
-            $tocHeaderLang = $lang['toc'];
-            $tocAreaId = self::TOC_ID_CLASS;
-            return <<<EOF
+        $tocMinHeads = $conf['tocminheads'];
+        if ($tocMinHeads === null) {
+            $tocMinHeads = 0;
+        }
+        if (count($toc) < $tocMinHeads) {
+            return "";
+        }
+        \dokuwiki\Extension\Event::createAndTrigger('TPL_TOC_RENDER', $toc, null, false);
+        global $lang;
+
+        $previousLevel = 0;
+        $rootLevel = 1;
+        $ulMarkup = "";
+        foreach ($toc as $tocItem) {
+
+            $actualLevel = $tocItem["level"];
+            if ($actualLevel <= $rootLevel) {
+                continue;
+            }
+
+            /**
+             * Closing
+             */
+
+            if ($previousLevel !== $rootLevel) {
+                /**
+                 * Same level
+                 */
+                if ($actualLevel === $previousLevel) {
+                    $ulMarkup .= "</li>";
+                }
+                /**
+                 * One level down
+                 */
+                if ($actualLevel < $previousLevel) {
+                    $ulMarkup .= "</li></ul>";
+                }
+            }
+            /**
+             * One level up
+             */
+            if ($actualLevel > $previousLevel) {
+                $ulMarkup .= "<ul>";
+            }
+            $href = $tocItem['link'];
+            $label = $tocItem['title'];
+            $ulMarkup .= "<li><a href=\"$href\">$label</a>";
+            /**
+             * Close
+             */
+            $previousLevel = $actualLevel;
+        }
+        // closing
+        $ulMarkup .= str_repeat("</li></ul>", $previousLevel - $rootLevel);
+        $tocHeaderLang = $lang['toc'];
+        $tocAreaId = self::TOC_ID_CLASS;
+        return <<<EOF
 <div id="$tocAreaId">
 <p id="toc-header">$tocHeaderLang</p>
 <nav id="toc">
-$tocList
-<nav>
+$ulMarkup
+</nav>
 </div>
 EOF;
 
-        } else {
-            return "";
-        }
-
     }
+
 
     /**
      * @param Doku_Renderer $renderer
@@ -80,7 +108,8 @@ EOF;
      * when
      * ~~NOTOC~~
      */
-    public static function showToc(Doku_Renderer $renderer): bool
+    public
+    static function showToc(Doku_Renderer $renderer): bool
     {
 
         global $ACT;
@@ -144,10 +173,12 @@ EOF;
     /**
      * @param int $int
      */
-    public static function setTocMinHeading(int $int)
+    public
+    static function setTocMinHeading(int $int)
     {
         global $conf;
         $conf['tocminheads'] = $int;
     }
+
 
 }

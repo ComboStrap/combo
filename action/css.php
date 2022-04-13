@@ -104,6 +104,8 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
             $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'handle_css_metaheader');
         }
 
+        $controller->register_hook('TPL_ACT_RENDER', 'BEFORE', $this, 'addAllCssSnippet', array());
+
     }
 
     /**
@@ -287,6 +289,18 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
                 break;
         }
     }
+
+    /**
+     * Add the all css snippet (ie all.css)
+     * The css that is always used whatever
+     */
+    public function addAllCssSnippet(Doku_Event &$event, $param)
+    {
+
+        PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest("all");
+
+    }
+
 }
 
 

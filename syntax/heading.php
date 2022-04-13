@@ -292,7 +292,6 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         $type = $tagAttributes->getType();
 
 
-
         /**
          * Level
          */
@@ -339,6 +338,8 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         if (in_array($context, [syntax_plugin_combo_blockquote::TAG, syntax_plugin_combo_card::TAG])) {
             $tagAttributes->addClassName("card-title");
         }
+
+        $tagAttributes->addClassName("$context-heading");
 
         $headingWikiEnabled = syntax_plugin_combo_headingwiki::isEnabled();
         if (!$headingWikiEnabled && $context == self::TYPE_OUTLINE) {

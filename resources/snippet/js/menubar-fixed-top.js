@@ -1,5 +1,6 @@
 window.addEventListener("DOMContentLoaded",function(){
 
+
     /**
      * The request animation frame is there to
      * update the class on the navbar and the padding on the
@@ -13,10 +14,10 @@ window.addEventListener("DOMContentLoaded",function(){
         document.body.style.setProperty("padding-top",offsetHeight+"px");
         // correct direct navigation via fragment to heading
         let style = document.createElement("style");
-        let marginTop = offsetHeight - 16; // give more space at the top (ie 1rem)
+        let marginTop = offsetHeight - 2; // adjustment to not see the text above
         style.classList.add("menubar-fixed-top")
         // no main > h1, we never jump on h1 and it would add a space with the main header
-        style.innerText = `main > h2, main > h3, main > h4, main > h5, #dokuwiki__top, .fn_top {
+        style.innerText = `.outline-heading, #dokuwiki__top, .fn_top {
     padding-top: ${offsetHeight}px;
     margin-top: -${marginTop}px;
     z-index: -1;

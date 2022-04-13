@@ -1,4 +1,3 @@
-
 main > *, #page-core {
     min-width: 0; /** not auto */
 }
@@ -36,8 +35,9 @@ main > *, #page-core {
         grid-template-columns: [main] 7fr [side] 2fr;
         grid-auto-flow: row;
         gap: 1rem;
-        padding: 1rem;
         grid-template-areas: unset;
+        margin-left: 1rem;
+        margin-right: 1rem;
 
     }
 

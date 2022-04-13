@@ -292,6 +292,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         $type = $tagAttributes->getType();
 
 
+
         /**
          * Level
          */

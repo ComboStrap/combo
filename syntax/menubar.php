@@ -228,7 +228,19 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
                     switch ($position) {
                         case "top":
                             $fixedTopClass = 'fixed-top';
-                            $tagAttributes->addClassName($fixedTopClass);
+                            /**
+                             * We don't set the class directly
+                             * because bootstrap uses `position: fixed`
+                             * Meaning that the content comes below
+                             *
+                             * We calculate the padding-top via the javascript but
+                             * it will then create a non-wanted layout-shift
+                             *
+                             * https://getbootstrap.com/docs/5.0/components/navbar/#placement
+                             *
+                             * We set the class and padding-top with the javascript
+                             */
+                            $tagAttributes->addComponentAttributeValue("data-type", $fixedTopClass);
                             $fixedTopSnippetId = self::TAG . "-" . $fixedTopClass;
                             // See http://stackoverflow.com/questions/17181355/boostrap-using-fixed-navbar-and-anchor-tags-to-jump-to-sections
                             PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot($fixedTopSnippetId);

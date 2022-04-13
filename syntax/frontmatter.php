@@ -23,6 +23,7 @@
 use ComboStrap\Aliases;
 use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\Canonical;
+use ComboStrap\EditButton;
 use ComboStrap\EndDate;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionRuntime;
@@ -53,6 +54,7 @@ use ComboStrap\QualityDynamicMonitoringOverwrite;
 use ComboStrap\Region;
 use ComboStrap\ResourceName;
 use ComboStrap\StartDate;
+use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -109,7 +111,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         return 'baseonly';
     }
 
-    public function getPType()
+    public function getPType(): string
     {
         /**
          * This element create a section
@@ -162,82 +164,82 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
 
-        if ($state == DOKU_LEXER_SPECIAL) {
 
-            $result = [];
-            try {
-                $page = Page::createPageFromGlobalDokuwikiId();
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
-                return false;
-            }
-            try {
-                $frontMatterStore = MetadataFrontmatterStore::createFromFrontmatterString($page, $match);
-                $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
-            } catch (ExceptionCompile $e) {
-                // Decode problem
-                $result[self::STATUS] = self::PARSING_STATE_ERROR;
-                $result[PluginUtility::PAYLOAD] = $match;
-                return $result;
-            }
+        if ($state !== DOKU_LEXER_SPECIAL) {
+            return [];
+        }
+        $result = [];
 
-            /**
-             * Empty string
-             * Rare case, we delete all mutable meta if present
-             */
-            $frontmatterData = $frontMatterStore->getData();
-            if ($frontmatterData === null) {
-                global $ID;
-                $meta = p_read_metadata($ID);
-                foreach (Metadata::MUTABLE_METADATA as $metaKey) {
-                    if (isset($meta['persistent'][$metaKey])) {
-                        unset($meta['persistent'][$metaKey]);
-                    }
-                }
-                p_save_metadata($ID, $meta);
-                return array(self::STATUS => self::PARSING_STATE_EMPTY);
-            }
-
-
-            /**
-             * Sync
-             */
-            $targetStore = MetadataDokuWikiStore::getOrCreateFromResource($page);
-            $transfer = MetadataStoreTransfer::createForPage($page)
-                ->fromStore($frontMatterStore)
-                ->toStore($targetStore)
-                ->process($frontmatterData);
-
-            $messages = $transfer->getMessages();
-            $dataForRenderer = $transfer->getNormalizedDataArray();
-
-
-            /**
-             * Database update
-             */
-            try {
-                $databasePage = $page->getDatabasePage();
-                $databasePage->replicateMetaAttributes();
-            } catch (Exception $e) {
-                $message = Message::createErrorMessage($e->getMessage());
-                if ($e instanceof ExceptionCompile) {
-                    $message->setCanonical($e->getCanonical());
-                }
-                $messages[] = $message;
-            }
-
-
-            foreach ($messages as $message) {
-                $message->sendLogMsg();
-            }
-
-            /**
-             * Return them for metadata rendering
-             */
-            $result[PluginUtility::ATTRIBUTES] = $dataForRenderer;
-
+        try {
+            $parsedPage = Page::createPageFromGlobalDokuwikiId();
+        } catch (ExceptionCompile $e) {
+            LogUtility::msg("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
+            return false;
+        }
+        try {
+            $frontMatterStore = MetadataFrontmatterStore::createFromFrontmatterString($parsedPage, $match);
+            $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
+        } catch (ExceptionCompile $e) {
+            // Decode problem
+            $result[self::STATUS] = self::PARSING_STATE_ERROR;
+            $result[PluginUtility::PAYLOAD] = $match;
+            return $result;
         }
 
+        /**
+         * Empty string
+         * Rare case, we delete all mutable meta if present
+         */
+        $frontmatterData = $frontMatterStore->getData();
+        if ($frontmatterData === null) {
+            global $ID;
+            $meta = p_read_metadata($ID);
+            foreach (Metadata::MUTABLE_METADATA as $metaKey) {
+                if (isset($meta['persistent'][$metaKey])) {
+                    unset($meta['persistent'][$metaKey]);
+                }
+            }
+            p_save_metadata($ID, $meta);
+            return array(self::STATUS => self::PARSING_STATE_EMPTY);
+        }
+
+
+        /**
+         * Sync
+         */
+        $targetStore = MetadataDokuWikiStore::getOrCreateFromResource($parsedPage);
+        $transfer = MetadataStoreTransfer::createForPage($parsedPage)
+            ->fromStore($frontMatterStore)
+            ->toStore($targetStore)
+            ->process($frontmatterData);
+
+        $messages = $transfer->getMessages();
+        $dataForRenderer = $transfer->getNormalizedDataArray();
+
+
+        /**
+         * Database update
+         */
+        try {
+            $databasePage = $parsedPage->getDatabasePage();
+            $databasePage->replicateMetaAttributes();
+        } catch (Exception $e) {
+            $message = Message::createErrorMessage($e->getMessage());
+            if ($e instanceof ExceptionCompile) {
+                $message->setCanonical($e->getCanonical());
+            }
+            $messages[] = $message;
+        }
+
+
+        foreach ($messages as $message) {
+            $message->sendLogMsg();
+        }
+
+        /**
+         * Return them for metadata rendering
+         */
+        $result[PluginUtility::ATTRIBUTES] = $dataForRenderer;
 
         /**
          * End position is the length of the match + 1 for the newline
@@ -245,6 +247,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         $newLine = 1;
         $endPosition = $pos + strlen($match) + $newLine;
         $result[PluginUtility::POSITION] = [$pos, $endPosition];
+        $result[TagAttributes::WIKI_ID] = $parsedPage->getDokuwikiId();
 
         return $result;
 
@@ -281,7 +284,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                     $position = $startPosition;
                     $name = self::CANONICAL;
-                    PluginUtility::startSection($renderer, $position, $name);
+                    EditButton::startSection($renderer, $position, $name);
                     $renderer->finishSectionEdit($endPosition);
                 }
                 break;

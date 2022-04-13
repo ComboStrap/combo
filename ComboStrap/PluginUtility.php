@@ -100,7 +100,7 @@ require_once(__DIR__ . '/Display.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/DokuwikiId.php');
 require_once(__DIR__ . '/SlotManagerMenuItem.php');
-require_once(__DIR__ . '/EditorSection.php');
+require_once(__DIR__ . '/EditButton.php');
 require_once(__DIR__ . '/EndDate.php');
 require_once(__DIR__ . '/Event.php');
 require_once(__DIR__ . '/ExceptionExit.php');
@@ -276,7 +276,6 @@ class PluginUtility
     const CENTER_CLASS = "mx-auto";
 
 
-    const EDIT_SECTION_TARGET = 'section';
     const EXIT_MESSAGE = "errorAtt";
     const EXIT_CODE = "exit_code";
     const DISPLAY = "display";
@@ -1273,38 +1272,6 @@ class PluginUtility
             return trim(substr(0, $spacePosition));
         }
 
-    }
-
-    /**
-     * @param \Doku_Renderer_xhtml $renderer
-     * @param $position
-     * @param $name
-     */
-    public
-    static function startSection(\Doku_Renderer_xhtml $renderer, $position, $name)
-    {
-
-
-        if (empty($position)) {
-            LogUtility::msg("The position for a start section should not be empty", LogUtility::LVL_MSG_ERROR, "support");
-        }
-        if (empty($name)) {
-            LogUtility::msg("The name for a start section should not be empty", LogUtility::LVL_MSG_ERROR, "support");
-        }
-
-        /**
-         * New Dokuwiki Version
-         * for DokuWiki Greebo and more recent versions
-         */
-        if (defined('SEC_EDIT_PATTERN')) {
-            $renderer->startSectionEdit($position, array('target' => self::EDIT_SECTION_TARGET, 'name' => $name));
-        } else {
-            /**
-             * Old version
-             */
-            /** @noinspection PhpParamsInspection */
-            $renderer->startSectionEdit($position, self::EDIT_SECTION_TARGET, $name);
-        }
     }
 
     /**

@@ -4,6 +4,7 @@
  *
  */
 
+use ComboStrap\EditButton;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -364,7 +365,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                         $position = $data[PluginUtility::POSITION];
                         $this->sectionCounter++;
                         $name = "section" . self::TAG . $this->sectionCounter;
-                        PluginUtility::startSection($renderer, $position, $name);
+                        EditButton::startSection($renderer, $position, $name);
                     }
 
                     $context = $data[PluginUtility::CONTEXT];

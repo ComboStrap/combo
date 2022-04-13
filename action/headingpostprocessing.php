@@ -9,7 +9,7 @@ use ComboStrap\LayoutManager;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
-use ComboStrap\EditorSection;
+use ComboStrap\EditButton;
 use ComboStrap\PluginUtility;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
@@ -408,8 +408,9 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 
             $page = Page::createPageFromId($ID);
             if ($headingTotalCounter === 0 || $page->isSecondarySlot()) {
+
                 try {
-                    $tag = EditorSection::create("Slot Edit")->toTag();
+                    $tag = EditButton::create("Slot Edit")->toTag();
                     if (!empty($tag)) { // page edit is not off
                         $sectionEditComment = Call::createComboCall(
                             syntax_plugin_combo_comment::TAG,
@@ -424,6 +425,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                 } catch (ExceptionCompile $e) {
                     LogUtility::msg("Error while adding the edit button. Error: {$e->getMessage()}");
                 }
+
             }
 
         }

@@ -7,6 +7,7 @@
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
+use ComboStrap\EditButton;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\SvgDocument;
@@ -392,7 +393,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                         $position = $data[PluginUtility::POSITION];
                         $this->sectionCounter++;
                         $name = "section" . self::TAG . $this->sectionCounter;
-                        PluginUtility::startSection($renderer, $position, $name);
+                        EditButton::startSection($renderer, $position, $name);
                     }
 
                     $context = $data[PluginUtility::CONTEXT];

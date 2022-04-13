@@ -2,6 +2,7 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\EditButton;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -150,7 +151,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                         $position = $data[PluginUtility::POSITION];
                         $this->slideCounter++;
                         $name = self::TAG . $this->slideCounter;
-                        PluginUtility::startSection($renderer, $position, $name);
+                        EditButton::startSection($renderer, $position, $name);
                     }
 
                     /**

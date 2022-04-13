@@ -3,7 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
-use ComboStrap\EditorSection;
+use ComboStrap\EditButton;
 
 if (!defined('DOKU_INC')) die();
 
@@ -26,12 +26,12 @@ class syntax_plugin_combo_comment extends DokuWiki_Syntax_Plugin
     private static function shouldPrint($content): bool
     {
         /**
-         * {@link PluginUtility::startSection()} }
+         * {@link EditButton::startSection()} }
          * section edit added at {@link action_plugin_combo_headingpostprocessing}
          * if there is no heading at all
          */
         $normalizedContent = trim($content);
-        if (strpos($normalizedContent, EditorSection::SEC_EDIT_PREFIX)===0){
+        if (strpos($normalizedContent, EditButton::EDIT_BUTTON_PREFIX)===0){
             return true;
         }
         $confValue = PluginUtility::getConfValue(self::CONF_OUTPUT_COMMENT, 0);

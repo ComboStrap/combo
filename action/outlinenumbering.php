@@ -63,17 +63,18 @@ class action_plugin_combo_outlinenumbering extends DokuWiki_Action_Plugin
                 } else {
                     $mainContainerSelector = "#main-content";
                 }
+                $wikiEnabled = syntax_plugin_combo_headingwiki::isEnabled();
+                $sectionElement = "";
+                if($wikiEnabled){
+                    $sectionElement = "section";
+                }
                 return <<<EOF
-$mainContainerSelector > h2 { counter-increment: h2; counter-reset: h3}
-$mainContainerSelector > h3 { counter-increment: h3; }
-$mainContainerSelector > h4 { counter-increment: h4; }
-$mainContainerSelector > h5 { counter-increment: h5; }
-$mainContainerSelector > h6 { counter-increment: h6; }
-$mainContainerSelector > h2::before { content: "$prefix" counter(h2, $level2CounterStyle) "$suffix\A"; }
-$mainContainerSelector > h3::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$suffix\A"; }
-$mainContainerSelector > h4::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$suffix\A"; }
-$mainContainerSelector > h5::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$suffix\A"; }
-$mainContainerSelector > h6::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$counterSeparator" counter(h6,$level6CounterStyle) "$suffix\A"; }
+$mainContainerSelector { counter-set: h2 h3 h4 h5 h6; }
+$mainContainerSelector $sectionElement h2::before { counter-increment: h2; content: "$prefix" counter(h2, $level2CounterStyle) "$suffix\A"; }
+$mainContainerSelector $sectionElement $sectionElement h3::before { counter-increment: h3; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$suffix\A"; }
+$mainContainerSelector $sectionElement $sectionElement $sectionElement h4::before { counter-increment: h4; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$suffix\A"; }
+$mainContainerSelector $sectionElement $sectionElement $sectionElement $sectionElement h5::before { counter-increment: h5; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$suffix\A"; }
+$mainContainerSelector $sectionElement $sectionElement $sectionElement $sectionElement $sectionElement h6::before { counter-increment: h6; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$counterSeparator" counter(h6,$level6CounterStyle) "$suffix\A"; }
 EOF;
             case self::TOC_NUMBERING:
                 /**
@@ -88,7 +89,7 @@ EOF;
 
                 $tocSelector = "#" . TocUtility::TOC_ID;
                 return <<<EOF
-$tocSelector li  { counter-increment: toc2; }
+$tocSelector li { counter-increment: toc2; }
 $tocSelector li li { counter-increment: toc3; }
 $tocSelector li li li { counter-increment: toc4; }
 $tocSelector li li li li { counter-increment: toc5; }

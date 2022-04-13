@@ -197,6 +197,10 @@ class EditButton
                 return "";
             }
             $wikiId = $data[self::WIKI_ID];
+            if($wikiId===null){
+                LogUtility::error("A wiki id should be present to create an edit button", self::CANONICAL);
+                return "";
+            }
             unset($data[self::WIKI_ID]);
             $formId = $data[self::FORM_ID];
             unset($data[self::FORM_ID]);

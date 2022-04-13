@@ -41,6 +41,7 @@ class EditButton
      */
     const TARGET_ATTRIBUTE_NAME = "target";
     const TARGET_SECTION_VALUE = "section";
+    const TARGET_TABLE_VALUE = "table"; // not yet used
     public const EDIT_SECTION_TARGET = 'section';
 
 

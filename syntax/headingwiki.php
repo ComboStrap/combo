@@ -29,6 +29,18 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
     const CONF_WIKI_HEADING_ENABLE = "headingWikiEnable";
     const CONF_DEFAULT_WIKI_ENABLE_VALUE = 1;
 
+
+    /**
+     * When we takes over the dokuwiki heading
+     * we are also taking over the sectioning
+     * and allows {@link syntax_plugin_combo_section}
+     * @return int - 1 or 0
+     */
+    public static function isEnabled(): int
+    {
+        return PluginUtility::getConfValue(self::CONF_WIKI_HEADING_ENABLE, self::CONF_DEFAULT_WIKI_ENABLE_VALUE);
+    }
+
     public function getSort(): int
     {
         /**
@@ -158,64 +170,69 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
     public function render($format, Doku_Renderer $renderer, $data): bool
     {
 
-        if ($format == "xhtml") {
-            /**
-             * @var Doku_Renderer_xhtml $renderer
-             */
-            $state = $data[PluginUtility::STATE];
-            switch ($state) {
+        switch ($format) {
+            case "xhtml":
+                /**
+                 * @var Doku_Renderer_xhtml $renderer
+                 */
+                $state = $data[PluginUtility::STATE];
+                switch ($state) {
 
-                case DOKU_LEXER_ENTER:
-                    $callStackArray = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray, syntax_plugin_combo_heading::TAG);
-                    $context = $data[PluginUtility::CONTEXT];
-                    $pos = $data[PluginUtility::POSITION];
-                    syntax_plugin_combo_heading::renderOpeningTag($context, $tagAttributes, $renderer, $pos);
-                    return true;
-                case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::renderUnmatched($data);
-                    return true;
-                case DOKU_LEXER_EXIT:
-                    $callStackArray = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
-                    $renderer->doc .= syntax_plugin_combo_heading::renderClosingTag($tagAttributes);
-                    return true;
+                    case DOKU_LEXER_ENTER:
+                        $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                        $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray, syntax_plugin_combo_heading::TAG);
+                        $context = $data[PluginUtility::CONTEXT];
+                        $pos = $data[PluginUtility::POSITION];
+                        syntax_plugin_combo_heading::renderOpeningTag($context, $tagAttributes, $renderer, $pos);
+                        return true;
+                    case DOKU_LEXER_UNMATCHED:
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
+                        return true;
+                    case DOKU_LEXER_EXIT:
+                        $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                        $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
+                        $renderer->doc .= syntax_plugin_combo_heading::renderClosingTag($tagAttributes);
+                        return true;
 
-            }
-        } else if ($format == renderer_plugin_combo_analytics::RENDERER_FORMAT) {
+                }
+                return false;
+            case renderer_plugin_combo_analytics::RENDERER_FORMAT:
 
-            /**
-             * @var renderer_plugin_combo_analytics $renderer
-             */
-            syntax_plugin_combo_heading::processMetadataAnalytics($data, $renderer);
+                /**
+                 * @var renderer_plugin_combo_analytics $renderer
+                 */
+                syntax_plugin_combo_heading::processMetadataAnalytics($data, $renderer);
+                return true;
 
-        } else if ($format == "metadata") {
+            case "metadata":
 
-            /**
-             * @var Doku_Renderer_metadata $renderer
-             */
-            syntax_plugin_combo_heading::processHeadingMetadata($data, $renderer);
+                /**
+                 * @var Doku_Renderer_metadata $renderer
+                 */
+                syntax_plugin_combo_heading::processHeadingMetadata($data, $renderer);
+                return true;
 
-        } else if ($format == renderer_plugin_combo_xml::FORMAT) {
-            $state = $data[PluginUtility::STATE];
-            switch ($state) {
-                case DOKU_LEXER_ENTER:
-                    $level = $data[PluginUtility::ATTRIBUTES][syntax_plugin_combo_heading::LEVEL];
-                    $renderer->doc .= "<h$level>";
-                    break;
-                case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::renderUnmatchedXml($data);
-                    break;
-                case DOKU_LEXER_EXIT:
-                    $level = $data[PluginUtility::ATTRIBUTES][syntax_plugin_combo_heading::LEVEL];
-                    $renderer->doc .= "</h$level>";
-                    break;
+            case renderer_plugin_combo_xml::FORMAT:
+                $state = $data[PluginUtility::STATE];
+                switch ($state) {
+                    case DOKU_LEXER_ENTER:
+                        $level = $data[PluginUtility::ATTRIBUTES][syntax_plugin_combo_heading::LEVEL];
+                        $renderer->doc .= "<h$level>";
+                        return true;
+                    case DOKU_LEXER_UNMATCHED:
+                        $renderer->doc .= PluginUtility::renderUnmatchedXml($data);
+                        return true;
+                    case DOKU_LEXER_EXIT:
+                        $level = $data[PluginUtility::ATTRIBUTES][syntax_plugin_combo_heading::LEVEL];
+                        $renderer->doc .= "</h$level>";
+                        return true;
 
-            }
-
+                }
+                return false;
+            default:
+                return false;
         }
 
-        return false;
     }
 
     /**

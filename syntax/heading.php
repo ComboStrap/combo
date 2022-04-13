@@ -66,15 +66,17 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     public const CONF_SECTION_LAYOUT = 'section_layout';
     const CONF_SECTION_LAYOUT_COMBO = "combo";
     const CONF_SECTION_LAYOUT_DOKUWIKI = "dokuwiki";
+
     const CONF_SECTION_LAYOUT_VALUES = [self::CONF_SECTION_LAYOUT_COMBO, self::CONF_SECTION_LAYOUT_DOKUWIKI];
     const CONF_SECTION_LAYOUT_DEFAULT = self::CONF_SECTION_LAYOUT_COMBO;
+
 
     /**
      * A common function used to handle exit of headings
      * @param CallStack $callStack
      * @return array
      */
-    public static function handleExit(CallStack $callStack)
+    public static function handleExit(CallStack $callStack): array
     {
         /**
          * Delete the last space if any
@@ -337,12 +339,18 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
             $tagAttributes->addClassName("card-title");
         }
 
-        if ($context == self::TYPE_OUTLINE) {
+        $headingWikiEnabled = syntax_plugin_combo_headingwiki::isEnabled();
+        if (!$headingWikiEnabled && $context == self::TYPE_OUTLINE) {
 
             /**
+             * Dokuwiki Section Editing
+             *
              * Calling the {@link Doku_Renderer_xhtml::header()}
              * with the captured text to be Dokuwiki Template compatible
-             * It will create the toc and the section editing
+             *
+             * It will create:
+             *   * the toc
+             *   * and the section editing
              */
             if ($tagAttributes->hasComponentAttribute(self::HEADING_TEXT_ATTRIBUTE)) {
                 $tocText = $tagAttributes->getValueAndRemove(self::HEADING_TEXT_ATTRIBUTE);

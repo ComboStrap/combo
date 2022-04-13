@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 
 
 /**
@@ -33,7 +34,7 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
         return 'stack';
     }
@@ -96,33 +97,43 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
     {
 
         /**
-         * As of today, we don't render on XHTML
-         * because it would go in the way
-         * of the {@link html_secedit()} function
          *
          * The rendering is used only when exporting to another format
          * (XML) to render on another platform such as mobile
          */
-        if ($format === renderer_plugin_combo_xml::FORMAT) {
 
-            /** @var renderer_plugin_combo_xml $renderer */
-            $state = $data[PluginUtility::STATE];
-            switch ($state) {
-                case DOKU_LEXER_ENTER :
-                    $renderer->doc .= '<section>'.DOKU_LF;
-                    break;
-                case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= PluginUtility::renderUnmatched($data);
-                    break;
-                case DOKU_LEXER_EXIT :
-                    $renderer->doc .= '</section>'.DOKU_LF;
-                    break;
+        if ($format === "xhtml") {
+            /**
+             *
+             * The actual dokuwiki heading is to
+             * add the edit section comment
+             * when rendering the next heading
+             * See {@link Doku_Renderer_xhtml::header()}
+             * that calls {@link Doku_Renderer_xhtml::finishSectionEdit()}
+             *
+             * It means that the edit button of the previous section would be
+             * between the next section and next heading
+             */
+            $wikiHeadingEnabled = syntax_plugin_combo_headingwiki::isEnabled();
+            if (!$wikiHeadingEnabled) {
+                return false;
             }
-            return true;
         }
 
-        // unsupported $mode
-        return false;
+        $state = $data[PluginUtility::STATE];
+        switch ($state) {
+            case DOKU_LEXER_ENTER :
+                $renderer->doc .= '<section>' . DOKU_LF;
+                break;
+            case DOKU_LEXER_UNMATCHED :
+                $renderer->doc .= PluginUtility::renderUnmatched($data);
+                break;
+            case DOKU_LEXER_EXIT :
+                $renderer->doc .= '</section>' . DOKU_LF;
+                break;
+        }
+        return true;
+
     }
 
 

@@ -20,7 +20,6 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
 
 
     const TAG = "headingatx";
-    const LEVEL = 'level';
     const EXIT_PATTERN = "\r??\n";
 
 

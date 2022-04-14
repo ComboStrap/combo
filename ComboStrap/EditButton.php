@@ -273,13 +273,13 @@ EOF;
         return $this;
     }
 
-    public function setStartPosition(int $startPosition): EditButton
+    public function setStartPosition(?int $startPosition): EditButton
     {
         $this->startPosition = $startPosition;
         return $this;
     }
 
-    public function setEndPosition(int $endPosition): EditButton
+    public function setEndPosition(?int $endPosition): EditButton
     {
         $this->endPosition = $endPosition;
         return $this;

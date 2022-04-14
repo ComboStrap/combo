@@ -73,7 +73,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             );
             $callStack->insertBefore($call);
             $this->outlineSectionBalance++;
-            $this->outlineSectionOpenTagPosition[] = $actualLastPosition;
+            $this->outlineSectionOpenTagPosition[] = $actualCall->getFirstMatchedCharacterPosition();
         }
     }
 
@@ -112,7 +112,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     {
 
         $wikiHeadingEnabled = syntax_plugin_combo_headingwiki::isEnabled();
-        if(!$wikiHeadingEnabled) {
+        if (!$wikiHeadingEnabled) {
             $call = Call::createNativeCall(
                 self::EDIT_SECTION_CLOSE,
                 array(),
@@ -414,7 +414,14 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         if ($ID !== null) {
 
             $page = Page::createPageFromId($ID);
-            if ($headingTotalCounter === 0 || $page->isSecondarySlot()) {
+            global $ACT;
+            if (
+                (
+                    $headingTotalCounter === 0
+                || $page->isSecondarySlot()
+                )
+                && $ACT === "show" // not dynamic in case of webcode or other
+            ) {
 
                 try {
                     $tag = EditButton::create("Slot Edit")->toTag();
@@ -565,13 +572,23 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         }
     }
 
-    private function closeOutlineSection($callStack, $position)
+    /**
+     * @param CallStack $callStack
+     * @param $position
+     * @return void
+     */
+    private function closeOutlineSection(CallStack $callStack, $position)
     {
         $start = array_pop($this->outlineSectionOpenTagPosition);
+        $call = $callStack->getActualCall();
+        $end = null;
+        if ($call !== null) {
+            $end = $call->getFirstMatchedCharacterPosition();
+        }
         $openSectionCall = Call::createComboCall(
             syntax_plugin_combo_section::TAG,
             DOKU_LEXER_EXIT,
-            array(PluginUtility::POSITION=>[$start, $position]),
+            array(PluginUtility::POSITION => [$start, $end]),
             null,
             null,
             null,

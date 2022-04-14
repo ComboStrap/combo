@@ -3,19 +3,24 @@ window.addEventListener("load", function () {
     let inOutOnHover = function (event) {
         const element = event.currentTarget;
         let dataHoverClass = element.getAttribute("data-hover-class");
-        if (element.classList.contains(dataHoverClass)){
-            element.classList.remove(dataHoverClass);
-        } else {
-            element.classList.add(dataHoverClass);
+        let classes = dataHoverClass.split(' ');
+        for(let classValue of classes) {
+            if (element.classList.contains(classValue)) {
+                element.classList.remove(classValue);
+            } else {
+                element.classList.add(classValue);
+            }
         }
     };
 
     /**
      * Bind hover class to a toggle element
      * @param event
-     * https://api.jquery.com/hover/
      */
-    jQuery("[data-hover-class]").hover(inOutOnHover,inOutOnHover);
+    document.querySelectorAll('[data-hover-class]').forEach(dataHoverElement => {
+        dataHoverElement.addEventListener("mouseenter",inOutOnHover);
+        dataHoverElement.addEventListener("mouseleave",inOutOnHover);
+    });
 
 
     /**
@@ -28,9 +33,10 @@ window.addEventListener("load", function () {
 
             for (let index in mutation.addedNodes) {
                 let node = mutation.addedNodes[index];
-                if (node.nodeType === Node.ELEMENT_NODE) {
-                    if (node.dataset.hasOwnProperty("hoverClass")) {
-                        jQuery(node).hover(inOutOnHover,inOutOnHover);
+                if (node instanceof HTMLElement) {
+                    if ("hoverClass" in node.dataset) {
+                        node.addEventListener("mouseenter",inOutOnHover);
+                        node.addEventListener("mouseleave",inOutOnHover);
                     }
                 }
 

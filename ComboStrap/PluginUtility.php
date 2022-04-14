@@ -40,6 +40,7 @@ require_once(__DIR__ . '/MetadataStore.php');
 require_once(__DIR__ . '/MetadataStoreAbs.php');
 require_once(__DIR__ . '/MetadataSingleArrayStore.php');
 require_once(__DIR__ . '/XmlDocument.php');
+require_once(__DIR__ . '/ExceptionCompile.php');
 require_once(__DIR__ . '/ExceptionRuntime.php');
 
 /**
@@ -103,10 +104,11 @@ require_once(__DIR__ . '/SlotManagerMenuItem.php');
 require_once(__DIR__ . '/EditButton.php');
 require_once(__DIR__ . '/EndDate.php');
 require_once(__DIR__ . '/Event.php');
-require_once(__DIR__ . '/ExceptionExit.php');
-require_once(__DIR__ . '/ExceptionCompile.php');
-require_once(__DIR__ . '/ExceptionNotFound.php');
+require_once(__DIR__ . '/ExceptionBadArgument.php');
 require_once(__DIR__ . '/ExceptionBadSyntax.php');
+require_once(__DIR__ . '/ExceptionExit.php');
+require_once(__DIR__ . '/ExceptionNotEnabled.php');
+require_once(__DIR__ . '/ExceptionNotFound.php');
 require_once(__DIR__ . '/FileSystems.php');
 require_once(__DIR__ . '/FloatAttribute.php');
 require_once(__DIR__ . '/FormMeta.php');

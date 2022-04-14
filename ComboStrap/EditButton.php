@@ -57,6 +57,14 @@ class EditButton
      * This is the default
      */
     private $target = self::TARGET_SECTION_VALUE;
+    /**
+     * @var int
+     */
+    private $startPosition;
+    /**
+     * @var int
+     */
+    private $endPosition;
 
 
     /**
@@ -105,7 +113,9 @@ class EditButton
     }
 
     /**
-     * @throws ExceptionCompile
+     *
+     * @throws ExceptionBadArgument
+     * @throws ExceptionNotEnabled
      */
     public function toTag(): string
     {
@@ -117,7 +127,7 @@ class EditButton
          */
         $pageEditButton = PluginUtility::getConfValue(EditButton::EDIT_BUTTON_ENABLED_INTERNAL_CONF, 1);
         if ($pageEditButton !== 1) {
-            return "";
+            throw new ExceptionNotEnabled("Edit button functionality is not enabled");
         }
 
         /**
@@ -128,7 +138,7 @@ class EditButton
         if ($wikiId === null) {
             global $ID;
             if ($ID === null) {
-                throw new ExceptionCompile("A wiki id was not set nor found", self::CANONICAL);
+                throw new ExceptionBadArgument("A wiki id was not set nor found", self::CANONICAL);
             }
         }
         $slotPath = DokuPath::createPagePathFromId($wikiId);
@@ -143,7 +153,9 @@ class EditButton
     }
 
     /**
-     * @throws ExceptionCompile
+     *
+     * @throws ExceptionBadArgument - if the wiki id could not be found
+     * @throws ExceptionNotEnabled
      */
     public function toHtmlComment(): string
     {
@@ -251,6 +263,18 @@ EOF;
     public function setTarget(string $target): EditButton
     {
         $this->target = $target;
+        return $this;
+    }
+
+    public function setStartPosition(int $startPosition): EditButton
+    {
+        $this->startPosition = $startPosition;
+        return $this;
+    }
+
+    public function setEndPosition(int $endPosition): EditButton
+    {
+        $this->endPosition = $endPosition;
         return $this;
     }
 }

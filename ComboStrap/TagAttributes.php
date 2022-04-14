@@ -1195,7 +1195,7 @@ class TagAttributes
         $returnedArray = [];
         foreach ($arrayToEscape as $name => $value) {
 
-            $encodedName = PluginUtility::htmlEncode($name);
+            $encodedName = Html::encode($name);
 
             /**
              * Boolean does not need to be encoded
@@ -1231,7 +1231,7 @@ class TagAttributes
                 $encodeValue = false;
             }
             if ($encodeValue) {
-                $value = PluginUtility::htmlEncode($value);
+                $value = Html::encode($value);
             }
             if ($subKey == null) {
                 $returnedArray[$encodedName] = $value;

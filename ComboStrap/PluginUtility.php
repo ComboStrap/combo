@@ -918,52 +918,6 @@ class PluginUtility
 
     }
 
-    /**
-     * Encode special HTML characters to entity
-     * (ie escaping)
-     *
-     * This is used to transform text that may be interpreted as HTML
-     * into a text
-     *   * that will not be interpreted as HTML
-     *   * that may be added in html attribute
-     *
-     * For instance:
-     *  * text that should go in attribute with special HTML characters (such as title)
-     *  * text that we don't create (to prevent HTML injection)
-     *
-     * Example:
-     *
-     * <script>...</script>
-     * to
-     * "&lt;script&gt;...&lt;/hello&gt;"
-     *
-     *
-     * @param $text
-     * @return string
-     */
-    public
-    static function htmlEncode($text): string
-    {
-        /**
-         * See https://stackoverflow.com/questions/46483/htmlentities-vs-htmlspecialchars/3614344
-         *
-         * Not {@link htmlentities } htmlentities($text, ENT_QUOTES);
-         * Otherwise we get `Error while loading HTMLError: Entity 'hellip' not defined`
-         * when loading HTML with {@link XmlDocument}
-         *
-         * See also {@link PluginUtility::htmlDecode()}
-         *
-         * Without ENT_QUOTES
-         * <h4 class="heading-combo">
-         * is encoded as
-         * &gt;h4 class="heading-combo"&lt;
-         * and cannot be added in a attribute because of the quote
-         * This is used for {@link Tooltip}
-         */
-        return htmlspecialchars($text, ENT_XHTML | ENT_QUOTES);
-
-    }
-
     public
     static function xmlEncode($text)
     {
@@ -1100,7 +1054,7 @@ class PluginUtility
     public
     static function addAsHtmlComment($string)
     {
-        print_r('<!-- ' . self::htmlEncode($string) . '-->');
+        print_r('<!-- ' . Html::encode($string) . '-->');
     }
 
     public
@@ -1162,7 +1116,7 @@ class PluginUtility
             if ($previousTagDisplayType !== Call::INLINE_DISPLAY) {
                 $payload = ltrim($payload);
             }
-            return PluginUtility::htmlEncode($payload);
+            return Html::encode($payload);
         } else {
             return "";
         }
@@ -1388,11 +1342,6 @@ class PluginUtility
     {
         // https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
         return getenv("CI") === "true";
-    }
-
-    public static function htmlDecode($int): string
-    {
-        return htmlspecialchars_decode($int, ENT_XHTML | ENT_QUOTES);
     }
 
     /**

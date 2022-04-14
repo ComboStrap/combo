@@ -48,7 +48,7 @@ class IdManager
 
     public function generateNewIdForComponent(string $canonical, Path $slotPath = null): string
     {
-        if($slotPath===null) {
+        if(empty($slotPath)) {
             try {
                 $slotName = Page::createPageFromGlobalDokuwikiId()->getPath()->getLastName();
             } catch (ExceptionNotFound $e) {
@@ -59,7 +59,12 @@ class IdManager
             $slotName = $slotPath->getLastName();
         }
 
-        $idScope = "$canonical-$slotName";
+        if($slotName!==null) {
+            // root
+            $idScope = "$canonical-$slotName";
+        } else {
+            $idScope = "$canonical";
+        }
         $lastId = $this->lastIdByCanonical[$idScope];
         if ($lastId === null) {
             $lastId = 1;

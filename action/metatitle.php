@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\ExceptionCompile;
+use ComboStrap\Html;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -51,6 +52,6 @@ class action_plugin_combo_metatitle extends DokuWiki_Action_Plugin
             $pageTitle .= self::TITLE_SEPARATOR . Site::getName();
         }
 
-        return PluginUtility::htmlEncode($pageTitle);
+        return Html::encode($pageTitle);
     }
 }

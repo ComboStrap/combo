@@ -351,7 +351,8 @@ class DokuPath extends PathAbs
 
     public static function createPagePathFromId($id): DokuPath
     {
-        return new DokuPath(DokuPath::PATH_SEPARATOR . $id, self::PAGE_DRIVE);
+        DokuPath::addRootSeparatorIfNotPresent($id);
+        return new DokuPath( $id, self::PAGE_DRIVE);
     }
 
     /**

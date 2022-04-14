@@ -6,6 +6,7 @@
 // must be run within Dokuwiki
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
+use ComboStrap\Html;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\Tag;
@@ -184,7 +185,7 @@ class syntax_plugin_combo_file extends DokuWiki_Syntax_Plugin
                         // Delete the eol at the beginning and end
                         // otherwise we get a big block
                         $payload = trim($data[PluginUtility::PAYLOAD], "\n\r");
-                        $renderer->doc .= PluginUtility::htmlEncode($payload);
+                        $renderer->doc .= Html::encode($payload);
                     }
                     break;
 

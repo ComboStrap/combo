@@ -146,6 +146,8 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
                         $editButton->setWikiId($wikiId);
                     }
                     $renderer->doc .= $editButton->toHtmlComment();
+                    // section should be relative to position the edit button absolutely
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
                 } catch (ExceptionBadArgument $e) {
                     LogUtility::error("Error while adding a section edit button. Error: {$e->getMessage()}", self::CANONICAL);
                 } catch (ExceptionNotEnabled $e) {

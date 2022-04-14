@@ -51,7 +51,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     /**
      * The position in the text file
      * when a section was started
-     * @var int
+     * @var int[]
      */
     private $outlineSectionOpenTagPosition;
 
@@ -73,7 +73,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             );
             $callStack->insertBefore($call);
             $this->outlineSectionBalance++;
-            $this->outlineSectionOpenTagPosition = $actualLastPosition;
+            $this->outlineSectionOpenTagPosition[] = $actualLastPosition;
         }
     }
 
@@ -567,10 +567,11 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 
     private function closeOutlineSection($callStack, $position)
     {
+        $start = array_pop($this->outlineSectionOpenTagPosition);
         $openSectionCall = Call::createComboCall(
             syntax_plugin_combo_section::TAG,
             DOKU_LEXER_EXIT,
-            array(PluginUtility::POSITION=>[$this->outlineSectionOpenTagPosition, $position]),
+            array(PluginUtility::POSITION=>[$start, $position]),
             null,
             null,
             null,

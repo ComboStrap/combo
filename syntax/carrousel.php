@@ -5,6 +5,7 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\Html;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
@@ -351,8 +352,8 @@ EOF;
                             if ($control !== "none") {
                                 // move per view
                                 // https://github.com/glidejs/glide/issues/346#issuecomment-1046137773
-                                $escapedLessThan = PluginUtility::htmlEncode("|<");
-                                $escapedGreaterThan = PluginUtility::htmlEncode("|>");
+                                $escapedLessThan = Html::encode("|<");
+                                $escapedGreaterThan = Html::encode("|>");
 
                                 $minimumWidth = $tagAttributes->getValue(self::ELEMENT_WIDTH_ATTRIBUTE);
                                 $classDontShowOnSmallDevice = "";

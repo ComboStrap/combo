@@ -43,6 +43,7 @@ class EditButton
     const TARGET_SECTION_VALUE = "section";
     const TARGET_TABLE_VALUE = "table"; // not yet used
     public const EDIT_SECTION_TARGET = 'section';
+    const RANGE = "range";
 
 
     private $name;
@@ -140,6 +141,7 @@ class EditButton
             if ($ID === null) {
                 throw new ExceptionBadArgument("A wiki id was not set nor found", self::CANONICAL);
             }
+            $wikiId = $ID;
         }
         $slotPath = DokuPath::createPagePathFromId($wikiId);
         $formId = \IdManager::getOrCreate()->generateNewIdForComponent(self::CANONICAL, $slotPath);
@@ -148,6 +150,7 @@ class EditButton
             self::EDIT_MESSAGE => $this->name,
             self::FORM_ID => $formId,
             self::TARGET_ATTRIBUTE_NAME => $this->target,
+            self::RANGE => $this->getRange()
         ];
         return self::EDIT_BUTTON_PREFIX . json_encode($data);
     }
@@ -159,6 +162,10 @@ class EditButton
      */
     public function toHtmlComment(): string
     {
+        /**
+         * We don't encode there is only internal information
+         * and this is easier to see / debug the output
+         */
         return self::ENTER_HTML_COMMENT . " " . $this->toTag() . " " . self::CLOSE_HTML_COMMENT;
     }
 
@@ -203,13 +210,13 @@ class EditButton
          * @return string
          */
         $editFormCallBack = function ($matches) {
-            $json = PluginUtility::htmlDecode($matches[1]);
+            $json = Html::decode($matches[1]);
             $data = json_decode($json, true);
             if ($data === NULL) {
                 return "";
             }
             $wikiId = $data[self::WIKI_ID];
-            if($wikiId===null){
+            if ($wikiId === null) {
                 LogUtility::error("A wiki id should be present to create an edit button", self::CANONICAL);
                 return "";
             }
@@ -276,5 +283,22 @@ EOF;
     {
         $this->endPosition = $endPosition;
         return $this;
+    }
+
+    /**
+     * @return string the file character position range of the section to edit
+     */
+    private function getRange(): string
+    {
+        $range = "";
+        if ($this->startPosition !== null) {
+            $range = $this->startPosition;
+        }
+        $range = "$range-";
+        if ($this->endPosition !== null) {
+            $range = "$range{$this->endPosition}";
+        }
+        return $range;
+
     }
 }

@@ -140,9 +140,10 @@ class syntax_plugin_combo_inote extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
 
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
                     $tagAttributes->addClassName("badge");
 
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
 
                     $type = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
 

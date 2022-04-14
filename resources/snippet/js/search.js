@@ -37,8 +37,6 @@ window.addEventListener('load', function () {
             }
         }
         autoCompletionUlElement.classList.remove("show");
-
-
     });
 
 
@@ -64,7 +62,7 @@ window.addEventListener('load', function () {
             autoCompletionUlElement.firstChild.remove()
         }
         autoCompletionUlElement.classList.add("show");
-        popperInstance.update();
+        await popperInstance.update();
         for (let index in data) {
             if (!data.hasOwnProperty(index)) {
                 continue;

@@ -918,5 +918,10 @@ class Call
         return $this;
     }
 
+    public function getId()
+    {
+        return $this->getAttribute(TagAttributes::ID_KEY);
+    }
+
 
 }

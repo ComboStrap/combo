@@ -418,7 +418,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             if (
                 (
                     $headingTotalCounter === 0
-                || $page->isSecondarySlot()
+                    || $page->isSecondarySlot()
                 )
                 && $ACT === "show" // not dynamic in case of webcode or other
             ) {
@@ -580,9 +580,10 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     private function closeOutlineSection(CallStack $callStack, $position)
     {
         $start = array_pop($this->outlineSectionOpenTagPosition);
-        $call = $callStack->getActualCall();
+
         $end = null;
-        if ($call !== null) {
+        if (!$callStack->isAtEnd()) {
+            $call = $callStack->getActualCall();
             $end = $call->getFirstMatchedCharacterPosition();
         }
         $openSectionCall = Call::createComboCall(

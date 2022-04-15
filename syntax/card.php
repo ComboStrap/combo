@@ -163,11 +163,11 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      * @param int $state
      * @param int $pos
      * @param Doku_Handler $handler
-     * @return array|bool
+     * @return array
      * @see DokuWiki_Syntax_Plugin::handle()
      *
      */
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
         switch ($state) {
@@ -198,11 +198,14 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     }
                 }
 
+                $id = IdManager::getOrCreate()->generateNewIdForComponent(self::TAG);
+
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
                     PluginUtility::POSITION => $pos,
-                    PluginUtility::CONTEXT => $context
+                    PluginUtility::CONTEXT => $context,
+                    TagAttributes::ID_KEY => $id
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -314,18 +317,28 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     )
                 );
 
-                // close
-                $callStack->closeAndResetPointer();
 
                 /**
-                 * Section editing
-                 * +1 to go at the line ?
+                 * File Section editing
                  */
-                $endPosition = $pos + strlen($match) + 1;
+                if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
+                    /**
+                     * +1 to go at the line ?
+                     */
+                    $endPosition = $pos + strlen($match) + 1;
+                    $position = $previousOpening->getAttribute(PluginUtility::POSITION);
+                    $id = $previousOpening->getAttribute(TagAttributes::ID_KEY);
+                    $editButtonCall = EditButton::create("Edit Card $id")
+                        ->setStartPosition($position)
+                        ->setEndPosition($endPosition)
+                        ->toComboCall();
+                    $callStack->moveToEnd();
+                    $callStack->insertBefore($editButtonCall);
+
+                }
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::POSITION => $endPosition,
                     PluginUtility::CONTEXT => $previousOpening->getContext()
                 );
 
@@ -390,14 +403,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                         $tagAttributes->addComponentAttributeValue("id", self::TAG . $counter);
                     }
 
-                    /**
-                     * Section (Edit button)
-                     */
-                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
-                        $position = $data[PluginUtility::POSITION];
-                        $name = IdManager::getOrCreate()->generateNewIdForComponent(self::TAG);
-                        EditButtonManager::getOrCreate()->createAndAddEditButtonToStack($name, $position);
-                    }
 
                     $context = $data[PluginUtility::CONTEXT];
                     if ($context === syntax_plugin_combo_masonry::TAG) {
@@ -414,19 +419,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT:
 
-                    /**
-                     * End section
-                     */
-                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
-                        $editButton = EditButtonManager::getOrCreate()->popEditButtonFromStack($data[PluginUtility::POSITION]);
-                        try {
-                            $renderer->doc .= $editButton->toHtmlComment();
-                        } catch (ExceptionBadArgument $e) {
-                            LogUtility::error("Card Edit Button Error: {$e->getMessage()}", self::CANONICAL);
-                        } catch (ExceptionNotEnabled $e) {
-                            // ok
-                        }
-                    }
 
                     /**
                      * End card

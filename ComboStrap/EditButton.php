@@ -46,7 +46,7 @@ class EditButton
     const RANGE = "range";
 
 
-    private $name;
+    private $label;
     /**
      * @var string
      */
@@ -71,15 +71,28 @@ class EditButton
     /**
      * Section constructor.
      */
-    public function __construct($name)
+    public function __construct($label)
     {
-        $this->name = $name;
+        $this->label = $label;
     }
 
 
-    public static function create($name): EditButton
+    public static function create($label): EditButton
     {
-        return new EditButton($name);
+        return new EditButton($label);
+    }
+
+    public static function createFromCallStackArray($attributes): EditButton
+    {
+        $label = $attributes[\syntax_plugin_combo_edit::LABEL];
+        $startPosition = $attributes[\syntax_plugin_combo_edit::START_POSITION];
+        $endPosition = $attributes[\syntax_plugin_combo_edit::END_POSITION];
+        $wikiId = $attributes[TagAttributes::WIKI_ID];
+        return EditButton::create($label)
+            ->setStartPosition($startPosition)
+            ->setEndPosition($endPosition)
+            ->setWikiId($wikiId);
+
     }
 
     /**
@@ -104,19 +117,12 @@ class EditButton
          * The following data are mandatory from:
          * {@link html_secedit_get_button}
          */
-        $wikiId = $this->wikiId;
-        if ($wikiId === null) {
-            global $ID;
-            if ($ID === null) {
-                throw new ExceptionBadArgument("A wiki id was not set nor found", self::CANONICAL);
-            }
-            $wikiId = $ID;
-        }
+        $wikiId = $this->getWikiId();
         $slotPath = DokuPath::createPagePathFromId($wikiId);
         $formId = \IdManager::getOrCreate()->generateNewIdForComponent(self::CANONICAL, $slotPath);
         $data = [
             self::WIKI_ID => $wikiId,
-            self::EDIT_MESSAGE => $this->name,
+            self::EDIT_MESSAGE => $this->label,
             self::FORM_ID => $formId,
             self::TARGET_ATTRIBUTE_NAME => $this->target,
             self::RANGE => $this->getRange()
@@ -131,6 +137,14 @@ class EditButton
      */
     public function toHtmlComment(): string
     {
+        global $ACT;
+        if ($ACT === RenderUtility::DYNAMIC_RENDERING) {
+            // ie weblog, they are generated via dynamic markup
+            // meaning that there is no button to edit the file
+            if(!PluginUtility::isTest()) {
+                return "";
+            }
+        }
         /**
          * We don't encode there is only internal information
          * and this is easier to see / debug the output
@@ -140,7 +154,7 @@ class EditButton
 
     public function __toString()
     {
-        return "Section Edit $this->name";
+        return "Section Edit $this->label";
     }
 
 
@@ -268,6 +282,34 @@ EOF;
             $range = "$range{$this->endPosition}";
         }
         return $range;
+
+    }
+
+    public function toComboCall(): Call
+    {
+        return Call::createComboCall(
+            \syntax_plugin_combo_edit::TAG,
+            DOKU_LEXER_SPECIAL,
+            [
+                \syntax_plugin_combo_edit::START_POSITION => $this->startPosition,
+                \syntax_plugin_combo_edit::END_POSITION => $this->endPosition,
+                \syntax_plugin_combo_edit::LABEL => $this->label,
+                TagAttributes::WIKI_ID => $this->getWikiId()
+            ]
+        );
+    }
+
+    /**
+     *
+     */
+    private function getWikiId(): string
+    {
+
+        $wikiId = $this->wikiId;
+        if ($wikiId !== null) {
+            return $wikiId;
+        }
+        return PluginUtility::getCurrentSlotId();
 
     }
 }

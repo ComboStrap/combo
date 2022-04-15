@@ -2,6 +2,7 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\CallStack;
 use ComboStrap\EditButton;
 use ComboStrap\EditButtonManager;
 use ComboStrap\ExceptionBadArgument;
@@ -98,12 +99,13 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $defaultAttributes = array();
-                $inlineAttributes = PluginUtility::getTagAttributes($match);
-                $attributes = PluginUtility::mergeAttributes($inlineAttributes, $defaultAttributes);
+
+                $tagAttributes = TagAttributes::createFromTagMatch($match)
+                    ->setLogicalTag(self::TAG);
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
                     PluginUtility::POSITION => $pos
                 );
 
@@ -112,11 +114,27 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                // +1 to go at the line ?
-                $endPosition = $pos + strlen($match) + 1;
+
+                /**
+                 * End section
+                 */
+                if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
+                    $callStack = CallStack::createFromHandler($handler);
+                    $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                    $startPosition = $openingTag->getAttribute(PluginUtility::POSITION);
+                    $id = $openingTag->getId();
+                    // +1 to go at the line
+                    $endPosition = $pos + strlen($match) + 1;
+                    $editButtonCall = EditButton::create("Edit slide $id")
+                        ->setStartPosition($startPosition)
+                        ->setEndPosition($endPosition)
+                        ->toComboCall();
+                    $callStack->moveToEnd();
+                    $callStack->insertBefore($editButtonCall);
+                }
+
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::POSITION => $endPosition
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -199,19 +217,6 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                      * End body
                      */
                     $renderer->doc .= '</div>';
-                    /**
-                     * End section
-                     */
-                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
-                        $editButton = EditButtonManager::getOrCreate()->popEditButtonFromStack($data[PluginUtility::POSITION]);
-                        try {
-                            $renderer->doc .= $editButton->toHtmlComment();
-                        } catch (ExceptionBadArgument $e) {
-                            LogUtility::error("Slide Edit Button Error: {$e->getMessage()}", self::CANONICAL);
-                        } catch (ExceptionNotEnabled $e) {
-                            // ok
-                        }
-                    }
 
                     /**
                      * End component

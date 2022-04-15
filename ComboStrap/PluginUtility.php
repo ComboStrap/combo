@@ -101,6 +101,7 @@ require_once(__DIR__ . '/Display.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/DokuwikiId.php');
 require_once(__DIR__ . '/SlotManagerMenuItem.php');
+require_once(__DIR__ . '/EditButtonManager.php');
 require_once(__DIR__ . '/EditButton.php');
 require_once(__DIR__ . '/EndDate.php');
 require_once(__DIR__ . '/Event.php');
@@ -1383,7 +1384,7 @@ class PluginUtility
 
     /**
      */
-    public static function getCurrentSlotId()
+    public static function getCurrentSlotId(): string
     {
         global $ID;
         $slot = $ID;

@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
+use IdManager;
 use syntax_plugin_combo_cell;
 use syntax_plugin_combo_follow;
 
@@ -750,6 +751,11 @@ class TagAttributes
      */
     public function toCallStackArray(): array
     {
+        $id = $this->getId();
+        if ($id === null) {
+            $id = IdManager::getOrCreate()->generateNewIdForComponent($this->logicalTag);
+            $this->addComponentAttributeValue(TagAttributes::ID_KEY, $id);
+        }
         $array = array();
         $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
         foreach ($originalArray as $key => $value) {
@@ -771,6 +777,7 @@ class TagAttributes
         if ($style != null) {
             $array["style"] = $style;
         }
+
         return $array;
     }
 
@@ -1275,6 +1282,11 @@ class TagAttributes
     {
         $this->defaultStyleClassShouldBeAdded = $bool;
         return $this;
+    }
+
+    public function getId()
+    {
+        return $this->getValue(TagAttributes::ID_KEY);
     }
 
 

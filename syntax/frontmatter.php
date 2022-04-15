@@ -22,6 +22,7 @@
 
 use ComboStrap\Aliases;
 use ComboStrap\CacheExpirationFrequency;
+use ComboStrap\CallStack;
 use ComboStrap\Canonical;
 use ComboStrap\EditButton;
 use ComboStrap\EditButtonManager;
@@ -160,15 +161,35 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
      * @param int $state
      * @param int $pos
      * @param Doku_Handler $handler
-     * @return array|bool
+     * @return array
      * @see DokuWiki_Syntax_Plugin::handle()
      *
      */
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
+        /**
+         * Section
+         */
+        if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
+
+            /**
+             * End position is the length of the match + 1 for the newline
+             */
+            $newLine = 1;
+            $endPosition = $pos + strlen($match) + $newLine;
+            $position = $pos;
+            $comboCall = EditButton::create("Edit frontmatter")
+                ->setStartPosition($position)
+                ->setEndPosition($endPosition)
+                ->toComboCall();
+            $callStack = CallStack::createFromHandler($handler);
+            $callStack->insertBefore($comboCall);
+
+        }
 
         if ($state !== DOKU_LEXER_SPECIAL) {
+            LogUtility::error("Frontmatter was not called with a special state", self::CANONICAL);
             return [];
         }
         $result = [];
@@ -176,8 +197,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         try {
             $parsedPage = Page::createPageFromGlobalDokuwikiId();
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
-            return false;
+            LogUtility::error("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
+            return [];
         }
         try {
             $frontMatterStore = MetadataFrontmatterStore::createFromFrontmatterString($parsedPage, $match);
@@ -194,7 +215,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
          * Rare case, we delete all mutable meta if present
          */
         $frontmatterData = $frontMatterStore->getData();
-        if ($frontmatterData === null) {
+        if (sizeof($frontmatterData) === 0) {
             global $ID;
             $meta = p_read_metadata($ID);
             foreach (Metadata::MUTABLE_METADATA as $metaKey) {
@@ -244,14 +265,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
          */
         $result[PluginUtility::ATTRIBUTES] = $dataForRenderer;
 
-        /**
-         * End position is the length of the match + 1 for the newline
-         */
-        $newLine = 1;
-        $endPosition = $pos + strlen($match) + $newLine;
-        $result[PluginUtility::POSITION] = [$pos, $endPosition];
-        $result[TagAttributes::WIKI_ID] = $parsedPage->getDokuwikiId();
-
         return $result;
 
     }
@@ -280,24 +293,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     LogUtility::msg("Front Matter: The json object for the page ($ID) is not valid. " . \ComboStrap\Json::getValidationLink($json), LogUtility::LVL_MSG_ERROR);
                 }
 
-                /**
-                 * Section
-                 */
-                list($startPosition, $endPosition) = $data[PluginUtility::POSITION];
-                if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
-                    $position = $startPosition;
-                    $name = self::CANONICAL;
-                    EditButtonManager::getOrCreate()->createAndAddEditButtonToStack($name, $position);
-                    $editButton = EditButtonManager::getOrCreate()->popEditButtonFromStack($endPosition);
-                    try {
-                        $renderer->doc .= $editButton->toHtmlComment();
-                    } catch (ExceptionBadArgument $e) {
-                        LogUtility::error("Frontmatter edit button error: " . $e->getMessage(), self::CANONICAL);
-                    } catch (ExceptionNotEnabled $e) {
-                        // Ok
-                    }
-
-                }
                 break;
 
             case renderer_plugin_combo_analytics::RENDERER_FORMAT:

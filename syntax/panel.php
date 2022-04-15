@@ -4,6 +4,7 @@
  *
  */
 
+use ComboStrap\CallStack;
 use ComboStrap\EditButton;
 use ComboStrap\EditButtonManager;
 use ComboStrap\ExceptionBadArgument;
@@ -291,12 +292,13 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                     }
                 }
 
-
+                $id = IdManager::getOrCreate()->generateNewIdForComponent(self::TAG);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes,
                     PluginUtility::CONTEXT => $context,
-                    PluginUtility::POSITION => $pos
+                    PluginUtility::POSITION => $pos,
+                    TagAttributes::ID_KEY => $id
                 );
 
             case DOKU_LEXER_UNMATCHED:
@@ -306,31 +308,50 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG, array(), $state, $handler);
-                $openingTag = $tag->getOpeningTag();
+                $callStack = CallStack::createFromHandler($handler);
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
 
                 /**
                  * Label Mandatory check
                  * (Only the presence of at minimum 1 and not the presence in each panel)
                  */
-                if ($match != "</" . self::OLD_TAB_PANEL_TAG . ">") {
-                    $labelTag = $openingTag->getDescendant(syntax_plugin_combo_label::TAG);
-                    if (empty($labelTag)) {
+                if ($match !== "</" . self::OLD_TAB_PANEL_TAG . ">") {
+                    $labelCall = null;
+                    while ($actualCall = $callStack->next()) {
+                        if ($actualCall->getTagName() === syntax_plugin_combo_label::TAG) {
+                            $labelCall = $actualCall;
+                            break;
+                        }
+                    }
+                    if ($labelCall === null) {
                         LogUtility::msg("No label was found in the panel (number " . $this->tabCounter . "). They are mandatory to create tabs or accordion", LogUtility::LVL_MSG_ERROR, self::TAG);
                     }
                 }
 
+
                 /**
-                 * Section
-                 * +1 to go at the line
+                 * End section
                  */
-                $endPosition = $pos + strlen($match) + 1;
+                if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
+                    /**
+                     * Section
+                     * +1 to go at the line
+                     */
+                    $startPosition = $openingTag->getAttribute(PluginUtility::POSITION);
+                    $id = $openingTag->getAttribute(TagAttributes::ID_KEY);
+                    $endPosition = $pos + strlen($match) + 1;
+                    $editButtonCall = EditButton::create("Edit panel $id")
+                        ->setStartPosition($startPosition)
+                        ->setEndPosition($endPosition)
+                        ->toComboCall();
+                    $callStack->moveToEnd();
+                    $callStack->insertBefore($editButtonCall);
+                }
 
                 return
                     array(
                         PluginUtility::STATE => $state,
-                        PluginUtility::CONTEXT => $openingTag->getContext(),
-                        PluginUtility::POSITION => $endPosition
+                        PluginUtility::CONTEXT => $openingTag->getContext()
                     );
 
 
@@ -415,20 +436,6 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= syntax_plugin_combo_tabs::closeTabPanelsElement($aloneVariable);
                             break;
 
-                    }
-
-                    /**
-                     * End section
-                     */
-                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
-                        $editButton = EditButtonManager::getOrCreate()->popEditButtonFromStack($data[PluginUtility::POSITION]);
-                        try {
-                            $renderer->doc .= $editButton->toHtmlComment();
-                        } catch (ExceptionBadArgument $e) {
-                            LogUtility::error("Panel Edit Button Error: {$e->getMessage()}", self::CANONICAL);
-                        } catch (ExceptionNotEnabled $e) {
-                            // ok
-                        }
                     }
 
                     /**

@@ -1086,5 +1086,10 @@ class CallStack
 
     }
 
+    public function isAtEnd(): bool
+    {
+        return $this->endWasReached;
+    }
+
 
 }

@@ -22,7 +22,7 @@ class syntax_plugin_combo_hr extends DokuWiki_Syntax_Plugin
 
     const TAG = "hr";
 
-    function getType()
+    function getType(): string
     {
         return 'substition';
     }

@@ -1053,6 +1053,14 @@ class CallStack
     {
         $targetKey = $call->getKey();
         $actualKey = $this->getActualKey();
+        if ($actualKey === null) {
+            if ($this->endWasReached) {
+                $actualKey = sizeof($this->callStack);
+            }
+            if ($this->startWasReached) {
+                $actualKey = -1;
+            }
+        }
         $diff = $targetKey - $actualKey;
         for ($i = 0; $i < abs($diff); $i++) {
             if ($diff > 0) {

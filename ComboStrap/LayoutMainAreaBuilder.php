@@ -109,8 +109,9 @@ class LayoutMainAreaBuilder
          * Get the main slots
          */
         $sideCallStack = null;
-        $headerCallStack = null;
+        $mainHeaderCallStack = null;
         $footerCallStack = null;
+        $mainHeaderHasHeading = false;
         foreach ($page->getChildren() as $child) {
             $name = $child->getPath()->getLastName();
 
@@ -132,7 +133,13 @@ class LayoutMainAreaBuilder
                 case Site::getPrimaryHeaderSlotName():
                     $id = "main-header";
                     $tag = "header";
-                    $headerCallStack = $childCallStack;
+                    $mainHeaderCallStack = $childCallStack;
+                    while ($actualCall = $mainHeaderCallStack->next()) {
+                        if (in_array($actualCall->getTagName(), \action_plugin_combo_headingpostprocessing::HEADING_TAGS)) {
+                            $mainHeaderHasHeading = true;
+                            break;
+                        }
+                    }
                     break;
                 case Site::getPrimaryFooterSlotName():
                     $id = "main-footer";
@@ -169,6 +176,7 @@ class LayoutMainAreaBuilder
                         continue 2;
                 }
             }
+
             /**
              * Close the element
              */
@@ -181,59 +189,120 @@ class LayoutMainAreaBuilder
         }
 
         /**
-         * Get:
-         *   * the header from the main callstack
-         *   * the frontmatter if any
-         *
+         * Scan the main content
+         *   - Get the header from the main callstack (may be deleted)
+         *   - Extract the frontmatter calls (should not be deleted)
          */
         $mainCallStack->moveToStart();
-        $headerInstructionStack = null;
-        $breakingHeadingFound = false;
-        $frontMatterCall = null;
+        $mainContentFirstHeadingInstructionStack = [];
+        $mainContentHeaderInstructionStack = [];
+        $mainContentHeaderFound = false;
+        $frontMatterCalls = [];
+        $actualHeadingLevel = 0;
+        $deleteFromCall = null;
         while ($actualCall = $mainCallStack->next()) {
-            if (in_array($actualCall->getTagName(), \action_plugin_combo_headingpostprocessing::HEADING_TAGS)
-                && in_array($actualCall->getState(), [DOKU_LEXER_ENTER, DOKU_LEXER_SPECIAL])) {
-                $context = $actualCall->getContext();
-                if ($context !== \syntax_plugin_combo_heading::TYPE_OUTLINE) {
-                    break;
-                }
-                $level = $actualCall->getAttribute(\syntax_plugin_combo_heading::LEVEL);
-                if ($level !== 1) {
-                    if ($level === 2) {
-                        $breakingHeadingFound = true;
+
+            /**
+             * Collect frontmatter
+             */
+            switch ($actualCall->getTagName()) {
+                case \syntax_plugin_combo_edit::CANONICAL:
+                    if ($mainContentHeaderInstructionStack === null) {
+                        // special case frontmatter edit button
+                        $frontMatterCalls[] = $mainCallStack->deleteActualCallAndPrevious();
+                        continue 2;
                     }
                     break;
-                }
+                case syntax_plugin_combo_frontmatter::TAG:
+                    $frontMatterCalls[] = $mainCallStack->deleteActualCallAndPrevious();
+                    continue 2;
             }
-            if ($actualCall->getTagName() === syntax_plugin_combo_frontmatter::TAG) {
-                $frontMatterCall = $mainCallStack->deleteActualCallAndPrevious();
+
+            /**
+             * Heading processing
+             */
+            if (in_array($actualCall->getTagName(), \action_plugin_combo_headingpostprocessing::HEADING_TAGS)) {
+
+                $level = $actualCall->getAttribute(\syntax_plugin_combo_heading::LEVEL);
+                if ($level !== null) {
+                    $actualHeadingLevel = $level;
+                }
+                if (in_array($actualCall->getState(), [DOKU_LEXER_ENTER, DOKU_LEXER_SPECIAL])) {
+                    $context = $actualCall->getContext();
+                    if ($context !== \syntax_plugin_combo_heading::TYPE_OUTLINE) {
+                        break;
+                    }
+                }
+                switch ($actualHeadingLevel) {
+                    case 1:
+                        /**
+                         * Collect the heading 1
+                         */
+                        $mainContentFirstHeadingInstructionStack[] = $actualCall->getInstructionCall();
+                        $deleteFromCall = $actualCall;
+                        continue 2;
+                    default:
+                    case 2:
+                        /**
+                         * Only if we found a level 2
+                         * we validate the collected call has a valid header
+                         */
+                        $mainContentHeaderFound = true;
+                        $deleteFromCall = $actualCall;
+                        break 2;
+                }
+
+            }
+            $mainContentHeaderInstructionStack[] = $actualCall->getInstructionCall();
+
+        }
+        if (!$mainContentHeaderFound) {
+            $mainContentHeaderInstructionStack = [];
+        }
+
+        /**
+         * Delete from the last heading 1 or the first heading 2
+         */
+        if ($deleteFromCall !== null) {
+            $mainCallStack->moveToCall($deleteFromCall);
+            /**
+             * If the previous call is a section delete before the section
+             */
+            $previousCall = $mainCallStack->previous();
+            if ($previousCall->getTagName() === \syntax_plugin_combo_section::TAG) {
+                $mainCallStack->deleteAllCallsBefore($previousCall);
             } else {
-                $headerInstructionStack[] = $actualCall->getInstructionCall();
+                $mainCallStack->deleteAllCallsBefore($deleteFromCall);
             }
         }
-        if ($breakingHeadingFound) {
-            if ($headerCallStack === null) {
-                $headerCallStack = CallStack::createFromInstructions($headerInstructionStack);
-            }
-            // delete the header in the main callStack
-            if ($actualCall !== null) {
-                /**
-                 * If the previous call is a section delete from
-                 */
-                $previousCall = $mainCallStack->previous();
-                if($previousCall->getTagName()===\syntax_plugin_combo_section::TAG) {
-                    $mainCallStack->deleteAllCallsBefore($previousCall);
-                } else {
-                    $mainCallStack->deleteAllCallsBefore($actualCall);
-                }
-            }
+
+
+        /**
+         * Header building
+         */
+        $finalHeaderCallStack = CallStack::createEmpty();
+        if (sizeof($frontMatterCalls) > 0) {
+            /**
+             * Adding the front matter edit button if any in the header
+             * to not get problem with the layout grid
+             */
+            $finalHeaderCallStack->moveToStart();
+            $finalHeaderCallStack->appendInstructionsFromCallObjects($frontMatterCalls);
+        }
+        if ($mainHeaderCallStack !== null) {
+            $finalHeaderCallStack->appendAtTheEndFromNativeArrayInstructions($mainHeaderCallStack->getStack());
+        }
+        if (!$mainHeaderHasHeading && sizeof($mainContentHeaderInstructionStack) > 0) {
+            /**
+             * The heading is in the main content header
+             */
+            $finalHeaderCallStack->appendAtTheEndFromNativeArrayInstructions($mainContentHeaderInstructionStack);
         }
 
 
         /**
          * Combining the areas
          */
-
         /**
          * Wrap the main instructions in a div
          */
@@ -243,15 +312,6 @@ class LayoutMainAreaBuilder
             DOKU_LEXER_ENTER,
             ["id" => "main-content"]
         ));
-
-        /**
-         * Frontmatter should be inside the main-content
-         * to not be seen as a grid-item
-         */
-        if ($frontMatterCall !== null) {
-            $mainCallStack->next();
-            $mainCallStack->insertAfter($frontMatterCall);
-        }
 
         /**
          * Close main-content
@@ -266,18 +326,17 @@ class LayoutMainAreaBuilder
          * Header and toc (before)
          * TOC being after the header
          */
-        if ($headerCallStack !== null) {
-            if ($tocData !== null) {
-                $tocCall = Call::createComboCall(
-                    syntax_plugin_combo_toc::TAG,
-                    DOKU_LEXER_SPECIAL,
-                    [syntax_plugin_combo_toc::TOC_ATTRIBUTE => $tocData]
-                );
-                $headerCallStack->appendCallAtTheEnd($tocCall);
-            }
-            $mainCallStack->moveToStart();
-            $mainCallStack->insertAfterFromNativeArrayInstructions($headerCallStack->getStack());
+        if ($tocData !== null) {
+            $tocCall = Call::createComboCall(
+                syntax_plugin_combo_toc::TAG,
+                DOKU_LEXER_SPECIAL,
+                [syntax_plugin_combo_toc::TOC_ATTRIBUTE => $tocData]
+            );
+            $finalHeaderCallStack->appendCallAtTheEnd($tocCall);
         }
+        $mainCallStack->moveToStart();
+        $mainCallStack->insertAfterFromNativeArrayInstructions($finalHeaderCallStack->getStack());
+
 
         /**
          * Append side and footer
@@ -289,8 +348,6 @@ class LayoutMainAreaBuilder
         if ($footerCallStack !== null) {
             $mainCallStack->appendAtTheEndFromNativeArrayInstructions($footerCallStack->getStack());
         }
-
-
 
 
     }

@@ -48,18 +48,24 @@ class IdManager
 
     public function generateNewIdForComponent(string $canonical, Path $slotPath = null): string
     {
-        if(empty($slotPath)) {
+        $slotName = null;
+        if (empty($slotPath)) {
             try {
                 $slotName = Page::createPageFromGlobalDokuwikiId()->getPath()->getLastName();
             } catch (ExceptionNotFound $e) {
-                LogUtility::warning(self::CANONICAL . " - The global ID was not found, the slot seen was set to unknown");
-                $slotName = "unknown-slot";
+                /**
+                 * not found
+                 * we don't send an login error, otherwise we get a recursive problem
+                 * with the icon created for the log
+                 * at {@link \ComboStrap\PluginUtility::getDocumentationHyperLink()}
+                 * that uses TagAttributes on test
+                 */
             }
         } else {
             $slotName = $slotPath->getLastName();
         }
 
-        if($slotName!==null) {
+        if ($slotName !== null) {
             // root
             $idScope = "$canonical-$slotName";
         } else {

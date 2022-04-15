@@ -1055,7 +1055,7 @@ class CallStack
         $actualKey = $this->getActualKey();
         if ($actualKey === null) {
             if ($this->endWasReached) {
-                $actualKey = sizeof($this->callStack);
+                $actualKey = sizeof($this->callStack) - 1; // 0 based array
             }
             if ($this->startWasReached) {
                 $actualKey = -1;
@@ -1068,6 +1068,12 @@ class CallStack
             } else {
                 $this->previous();
             }
+        }
+        if ($this->endWasReached) {
+            return null;
+        }
+        if ($this->startWasReached) {
+            return null;
         }
         return $this->getActualCall();
     }
@@ -1097,6 +1103,11 @@ class CallStack
     public function isAtEnd(): bool
     {
         return $this->endWasReached;
+    }
+
+    public function empty()
+    {
+        $this->callStack = [];
     }
 
 

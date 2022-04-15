@@ -10,7 +10,7 @@ use syntax_plugin_combo_toc;
  * Class that handle the addition of the slots
  * in the primary slot (ie in the main content)
  */
-class LayoutManager
+class LayoutMainAreaBuilder
 {
 
 

@@ -5,7 +5,7 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\LayoutManager;
+use ComboStrap\LayoutMainAreaBuilder;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
@@ -440,9 +440,9 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         /**
          * Main Slots and TOC to the primary slots
          */
-        if (LayoutManager::shouldMainAreaBeBuild($callStack, $pageParsed)) {
+        if (LayoutMainAreaBuilder::shouldMainAreaBeBuild($callStack, $pageParsed)) {
 
-            LayoutManager::buildMainArea($callStack, $this->tocData, $pageParsed);
+            LayoutMainAreaBuilder::buildMainArea($callStack, $this->tocData, $pageParsed);
 
         }
 

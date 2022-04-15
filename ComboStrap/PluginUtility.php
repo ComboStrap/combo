@@ -139,7 +139,7 @@ require_once(__DIR__ . '/Iso8601Date.php');
 require_once(__DIR__ . '/Json.php');
 require_once(__DIR__ . '/JavascriptLibrary.php');
 require_once(__DIR__ . '/Lang.php');
-require_once(__DIR__ . '/LayoutManager.php');
+require_once(__DIR__ . '/LayoutMainAreaBuilder.php');
 require_once(__DIR__ . '/LdJson.php');
 require_once(__DIR__ . '/LineSpacing.php');
 require_once(__DIR__ . '/Locale.php');

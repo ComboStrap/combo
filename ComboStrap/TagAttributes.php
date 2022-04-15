@@ -141,6 +141,7 @@ class TagAttributes
      */
     const REL = "rel";
     const STYLE_ATTRIBUTE = "style";
+
     /**
      * The default id if no one is specified
      */

@@ -3,6 +3,7 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\DataType;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\LayoutMainAreaBuilder;
@@ -28,6 +29,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         syntax_plugin_combo_headingatx::TAG,
         syntax_plugin_combo_headingwiki::TAG
     ];
+
+    const CANONICAL = action_plugin_combo_layout::CANONICAL;
 
     /**
      * The toc attribute that will store
@@ -70,6 +73,26 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     private function openOutlineSection(CallStack $callStack, Call $actualCall, int $actualLastPosition)
     {
         if ($actualCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
+            try {
+                $level = DataType::toInteger($actualCall->getAttribute(syntax_plugin_combo_heading::LEVEL));
+            } catch (ExceptionCompile $e) {
+                LogUtility::error("The level in the call ($actualCall) is not an integer",self::CANONICAL);
+                return;
+            }
+            if ($level === 1) {
+                /**
+                 * no root section
+                 * because we will delete the callstack
+                 * until the header content if present
+                 * It's easier and don't mess with the outline
+                 *
+                 * You also don't need to have a edit button document
+                 * on the whole document
+                 */
+                return;
+            }
+            $this->outlineSectionBalance++;
+
             $call = Call::createComboCall(
                 syntax_plugin_combo_section::TAG,
                 DOKU_LEXER_ENTER,
@@ -77,7 +100,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                 $actualLastPosition
             );
             $callStack->insertBefore($call);
-            $this->outlineSectionBalance++;
+
             $this->editButtonStartCalls[] = $actualCall;
         }
     }
@@ -573,12 +596,10 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     private function closeOutlineSection(CallStack $callStack, $position)
     {
 
-
-        $end = null;
-        if (!$callStack->isAtEnd()) {
-            $call = $callStack->getActualCall();
-            $end = $call->getFirstMatchedCharacterPosition();
+        if ($this->outlineSectionBalance <= 0) {
+            return;
         }
+
 
         /**
          * Edit button
@@ -586,11 +607,17 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $startCall = array_pop($this->editButtonStartCalls);
         if ($startCall !== null) {
             $text = $startCall->getAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE);
+            $end = null;
+            if (!$callStack->isAtEnd()) {
+                $call = $callStack->getActualCall();
+                $end = $call->getFirstMatchedCharacterPosition();
+            }
             $editButton = EditButton::create("Edit the section $text")
                 ->setStartPosition($startCall->getFirstMatchedCharacterPosition())
                 ->setEndPosition($end);
             $callStack->insertBefore($editButton->toComboCall());
         }
+
 
         $openSectionCall = Call::createComboCall(
             syntax_plugin_combo_section::TAG,

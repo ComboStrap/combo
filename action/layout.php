@@ -197,7 +197,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                     break;
             }
 
-            $layoutArea->setAttributes($tagAttributes->toCallStackArray());
+            $layoutArea->setAttributes($tagAttributes->toHtmlArray());
 
 
         }

@@ -39,8 +39,6 @@ class LayoutMainAreaBuilder
          */
         global $ACT;
         switch ($ACT) {
-            case "show":
-                return true;
             case "preview":
                 /**
                  * preview only if it's the whole page
@@ -83,8 +81,9 @@ class LayoutMainAreaBuilder
                     }
                 }
                 return true;
+            case "show":
             default:
-                return false;
+                return true;
         }
     }
 

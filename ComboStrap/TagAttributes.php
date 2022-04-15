@@ -76,7 +76,8 @@ class TagAttributes
         syntax_plugin_combo_follow::HANDLE_ATTRIBUTE,
         \syntax_plugin_combo_menubar::BREAKPOINT_ATTRIBUTE,
         \syntax_plugin_combo_container::CONTAINER_ATTRIBUTE,
-        \syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE
+        \syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE,
+        self::GENERATED_ID_KEY
     ];
 
     /**
@@ -140,6 +141,10 @@ class TagAttributes
      */
     const REL = "rel";
     const STYLE_ATTRIBUTE = "style";
+    /**
+     * The default id if no one is specified
+     */
+    const GENERATED_ID_KEY = "generated_id";
 
 
     /**
@@ -751,11 +756,19 @@ class TagAttributes
      */
     public function toCallStackArray(): array
     {
-        $id = $this->getId();
-        if ($id === null) {
-            $id = IdManager::getOrCreate()->generateNewIdForComponent($this->logicalTag);
-            $this->addComponentAttributeValue(TagAttributes::ID_KEY, $id);
+
+        $generatedId = $this->getValue(TagAttributes::GENERATED_ID_KEY);
+        if ($generatedId === null) {
+
+            $componentName = $this->logicalTag;
+            if ($componentName === null) {
+                $componentName = "unknown-component";
+            }
+            $id = IdManager::getOrCreate()->generateNewIdForComponent($componentName);
+            $this->addComponentAttributeValue(TagAttributes::GENERATED_ID_KEY, $id);
+
         }
+
         $array = array();
         $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
         foreach ($originalArray as $key => $value) {
@@ -1284,9 +1297,13 @@ class TagAttributes
         return $this;
     }
 
-    public function getId()
+    public function getIdOrDefault()
     {
-        return $this->getValue(TagAttributes::ID_KEY);
+        $id = $this->getValue(TagAttributes::ID_KEY);
+        if ($id !== null) {
+            return $id;
+        }
+        return $this->getValue(TagAttributes::GENERATED_ID_KEY);
     }
 
 

@@ -48,12 +48,17 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
      * -1 if an outline section was closed
      */
     private $outlineSectionBalance = 0;
+
     /**
-     * The position in the text file
-     * when a section was started
-     * @var int[]
+     * A Stack of start call used
+     * to create {@link EditButton}
+     * We capture the call because they are mostly heading
+     * and the heading label is known at the end tag
+     *
+     * The call is popped off to create an edit section
+     * @var Call[]
      */
-    private $outlineSectionOpenTagPosition;
+    private $editButtonStartCalls;
 
 
     /**
@@ -73,7 +78,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             );
             $callStack->insertBefore($call);
             $this->outlineSectionBalance++;
-            $this->outlineSectionOpenTagPosition[] = $actualCall->getFirstMatchedCharacterPosition();
+            $this->editButtonStartCalls[] = $actualCall;
         }
     }
 
@@ -423,22 +428,10 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                 && $ACT === "show" // not dynamic in case of webcode or other
             ) {
 
-                try {
-                    $tag = EditButton::create("Slot Edit")->toTag();
-                    if (!empty($tag)) { // page edit is not off
-                        $sectionEditComment = Call::createComboCall(
-                            syntax_plugin_combo_comment::TAG,
-                            DOKU_LEXER_UNMATCHED,
-                            array(),
-                            Call::INLINE_DISPLAY, // don't trim
-                            null,
-                            $tag
-                        );
-                        $callStack->insertBefore($sectionEditComment);
-                    }
-                } catch (ExceptionCompile $e) {
-                    LogUtility::msg("Error while adding the edit button. Error: {$e->getMessage()}");
-                }
+                $callStack->insertBefore(
+                    EditButton::create("Edit Slot {$page->getPath()->getLastName()}")
+                        ->toComboCall()
+                );
 
             }
 
@@ -579,18 +572,30 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
      */
     private function closeOutlineSection(CallStack $callStack, $position)
     {
-        $start = array_pop($this->outlineSectionOpenTagPosition);
+
 
         $end = null;
         if (!$callStack->isAtEnd()) {
             $call = $callStack->getActualCall();
             $end = $call->getFirstMatchedCharacterPosition();
         }
+
+        /**
+         * Edit button
+         */
+        $startCall = array_pop($this->editButtonStartCalls);
+        if ($startCall !== null) {
+            $text = $startCall->getAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE);
+            $editButton = EditButton::create("Edit the section $text")
+                ->setStartPosition($startCall->getFirstMatchedCharacterPosition())
+                ->setEndPosition($end);
+            $callStack->insertBefore($editButton->toComboCall());
+        }
+
         $openSectionCall = Call::createComboCall(
             syntax_plugin_combo_section::TAG,
             DOKU_LEXER_EXIT,
-            array(PluginUtility::POSITION => [$start, $end]),
-            null,
+            [],
             null,
             null,
             $position

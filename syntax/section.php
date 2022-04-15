@@ -135,25 +135,6 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
                 $renderer->doc .= PluginUtility::renderUnmatched($data);
                 break;
             case DOKU_LEXER_EXIT :
-                [$startPosition, $endPosition] = $data[PluginUtility::ATTRIBUTES][PluginUtility::POSITION];
-
-                try {
-                    $editButton = EditButton::create("section")
-                        ->setStartPosition($startPosition)
-                        ->setEndPosition($endPosition);
-                    $wikiId = $data[TagAttributes::WIKI_ID];
-                    if ($wikiId !== null) {
-                        $editButton->setWikiId($wikiId);
-                    }
-                    $renderer->doc .= $editButton->toHtmlComment();
-                    // section should be relative to position the edit button absolutely
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
-                } catch (ExceptionBadArgument $e) {
-                    LogUtility::error("Error while adding a section edit button. Error: {$e->getMessage()}", self::CANONICAL);
-                } catch (ExceptionNotEnabled $e) {
-                    LogUtility::error($e->getMessage(), self::CANONICAL);
-                }
-
 
                 $renderer->doc .= '</section>' . DOKU_LF;
                 break;

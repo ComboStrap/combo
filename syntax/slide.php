@@ -122,7 +122,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                     $callStack = CallStack::createFromHandler($handler);
                     $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                     $startPosition = $openingTag->getAttribute(PluginUtility::POSITION);
-                    $id = $openingTag->getId();
+                    $id = $openingTag->getIdOrDefault();
                     // +1 to go at the line
                     $endPosition = $pos + strlen($match) + 1;
                     $editButtonCall = EditButton::create("Edit slide $id")

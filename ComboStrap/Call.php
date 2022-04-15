@@ -918,9 +918,13 @@ class Call
         return $this;
     }
 
-    public function getId()
+    public function getIdOrDefault()
     {
-        return $this->getAttribute(TagAttributes::ID_KEY);
+        $id = $this->getAttribute(TagAttributes::ID_KEY);
+        if ($id !== null) {
+            return $id;
+        }
+        return $this->getAttribute(TagAttributes::GENERATED_ID_KEY);
     }
 
 

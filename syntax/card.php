@@ -327,7 +327,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      */
                     $endPosition = $pos + strlen($match) + 1;
                     $position = $previousOpening->getAttribute(PluginUtility::POSITION);
-                    $id = $previousOpening->getAttribute(TagAttributes::ID_KEY);
+                    $id = $previousOpening->getIdOrDefault();
                     $editButtonCall = EditButton::create("Edit Card $id")
                         ->setStartPosition($position)
                         ->setEndPosition($endPosition)

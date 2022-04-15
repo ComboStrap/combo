@@ -310,4 +310,9 @@ class LogUtility
     {
         self::msg($message, LogUtility::LVL_MSG_WARNING, $canonical);
     }
+
+    public static function info(string $message, string $canonical = "support")
+    {
+        self::msg($message, LogUtility::LVL_MSG_INFO, $canonical);
+    }
 }

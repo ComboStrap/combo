@@ -124,9 +124,13 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                 /**
                  * Title regexp
                  */
-                $attributes[syntax_plugin_combo_heading::LEVEL] = $this->getLevelFromMatch($match);
-                $callStack = CallStack::createFromHandler($handler);
+                $level = $this->getLevelFromMatch($match);
 
+                $attributes = TagAttributes::createEmpty(self::TAG)
+                    ->addComponentAttributeValue(syntax_plugin_combo_heading::LEVEL,$level)
+                    ->toCallStackArray();
+
+                $callStack = CallStack::createFromHandler($handler);
                 $context = syntax_plugin_combo_heading::getContext($callStack);
 
                 return array(

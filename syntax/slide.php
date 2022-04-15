@@ -3,6 +3,10 @@
 
 // must be run within Dokuwiki
 use ComboStrap\EditButton;
+use ComboStrap\EditButtonManager;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionNotEnabled;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -18,11 +22,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 
     const TAG = "slide";
     const CONF_ENABLE_SECTION_EDITING = "enableSlideSectionEditing";
-
-    /**
-     * @var int a slide counter
-     */
-    var $slideCounter = 0;
+    const CANONICAL = self::TAG;
 
 
     /**
@@ -135,7 +135,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         if ($format == 'xhtml') {
 
@@ -149,9 +149,8 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                      */
                     if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                         $position = $data[PluginUtility::POSITION];
-                        $this->slideCounter++;
-                        $name = self::TAG . $this->slideCounter;
-                        EditButton::startSection($renderer, $position, $name);
+                        $name = IdManager::getOrCreate()->generateNewIdForComponent(self::TAG);
+                        EditButtonManager::getOrCreate()->createAndAddEditButtonToStack($name, $position);
                     }
 
                     /**
@@ -204,7 +203,14 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                      * End section
                      */
                     if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
-                        $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
+                        $editButton = EditButtonManager::getOrCreate()->popEditButtonFromStack($data[PluginUtility::POSITION]);
+                        try {
+                            $renderer->doc .= $editButton->toHtmlComment();
+                        } catch (ExceptionBadArgument $e) {
+                            LogUtility::error("Slide Edit Button Error: {$e->getMessage()}", self::CANONICAL);
+                        } catch (ExceptionNotEnabled $e) {
+                            // ok
+                        }
                     }
 
                     /**

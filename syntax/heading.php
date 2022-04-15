@@ -339,10 +339,17 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
             $tagAttributes->addClassName("card-title");
         }
 
-        $tagAttributes->addClassName("$context-heading");
+        /**
+         * Add an outline class to be able to style them at once
+         *
+         * The context is by default the parent name or outline.
+         */
+        if ($context === self::TYPE_OUTLINE) {
+            $tagAttributes->addClassName("$context-heading");
+        }
 
         $headingWikiEnabled = syntax_plugin_combo_headingwiki::isEnabled();
-        if (!$headingWikiEnabled && $context == self::TYPE_OUTLINE) {
+        if (!$headingWikiEnabled && $context === self::TYPE_OUTLINE) {
 
             /**
              * Dokuwiki Section Editing

@@ -1,7 +1,7 @@
 form.edit-button-combo {
-    position: absolute;
-    right: 0;
+    float: right;
     z-index: 1040;
+    position: relative;
 }
 
 form.edit-button-combo button {

@@ -2,6 +2,7 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\EditButtonManager;
 use ComboStrap\PluginUtility;
 use ComboStrap\EditButton;
 
@@ -26,7 +27,7 @@ class syntax_plugin_combo_comment extends DokuWiki_Syntax_Plugin
     private static function shouldPrint($content): bool
     {
         /**
-         * {@link EditButton::startSection()} }
+         * {@link EditButtonManager::createAndAddEditButtonToStack()} }
          * section edit added at {@link action_plugin_combo_headingpostprocessing}
          * if there is no heading at all
          */

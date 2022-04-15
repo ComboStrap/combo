@@ -5,6 +5,9 @@
  */
 
 use ComboStrap\EditButton;
+use ComboStrap\EditButtonManager;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -41,6 +44,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
     );
 
     const CONF_ENABLE_SECTION_EDITING = "panelEnableSectionEditing";
+    const CANONICAL = self::TAG;
 
     /**
      * @var int a counter to give an id to the accordion panel
@@ -48,7 +52,6 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
     private $accordionCounter = 0;
     private $tabCounter = 0;
 
-    private $sectionCounter = 0;
 
     static function getSelectedValue(&$attributes)
     {
@@ -363,9 +366,8 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                      */
                     if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                         $position = $data[PluginUtility::POSITION];
-                        $this->sectionCounter++;
-                        $name = "section" . self::TAG . $this->sectionCounter;
-                        EditButton::startSection($renderer, $position, $name);
+                        $name = IdManager::getOrCreate()->generateNewIdForComponent(self::TAG);
+                        EditButtonManager::getOrCreate()->createAndAddEditButtonToStack($name, $position);
                     }
 
                     $context = $data[PluginUtility::CONTEXT];
@@ -419,7 +421,14 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                      * End section
                      */
                     if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
-                        $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
+                        $editButton = EditButtonManager::getOrCreate()->popEditButtonFromStack($data[PluginUtility::POSITION]);
+                        try {
+                            $renderer->doc .= $editButton->toHtmlComment();
+                        } catch (ExceptionBadArgument $e) {
+                            LogUtility::error("Panel Edit Button Error: {$e->getMessage()}", self::CANONICAL);
+                        } catch (ExceptionNotEnabled $e) {
+                            // ok
+                        }
                     }
 
                     /**

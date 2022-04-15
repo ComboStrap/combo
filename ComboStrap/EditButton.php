@@ -83,37 +83,6 @@ class EditButton
     }
 
     /**
-     * @param \Doku_Renderer_xhtml $renderer
-     * @param $position
-     * @param $name
-     */
-    public static function startSection(\Doku_Renderer_xhtml $renderer, $position, $name)
-    {
-
-
-        if (empty($position)) {
-            LogUtility::msg("The position for a start section should not be empty", LogUtility::LVL_MSG_ERROR, "support");
-        }
-        if (empty($name)) {
-            LogUtility::msg("The name for a start section should not be empty", LogUtility::LVL_MSG_ERROR, "support");
-        }
-
-        /**
-         * New Dokuwiki Version
-         * for DokuWiki Greebo and more recent versions
-         */
-        if (defined('SEC_EDIT_PATTERN')) {
-            $renderer->startSectionEdit($position, array('target' => self::EDIT_SECTION_TARGET, 'name' => $name));
-        } else {
-            /**
-             * Old version
-             */
-            /** @noinspection PhpParamsInspection */
-            $renderer->startSectionEdit($position, self::EDIT_SECTION_TARGET, $name);
-        }
-    }
-
-    /**
      *
      * @throws ExceptionBadArgument
      * @throws ExceptionNotEnabled

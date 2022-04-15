@@ -8,6 +8,10 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\EditButton;
+use ComboStrap\EditButtonManager;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionNotEnabled;
+use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\SvgDocument;
@@ -45,13 +49,13 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
 
     const CONF_ENABLE_SECTION_EDITING = "enableCardSectionEditing";
+    const CANONICAL = self::TAG;
 
 
     /**
      * @var array of a counter for the actual requested wiki id
      */
     private $cardCounter = null;
-    private $sectionCounter = 0;
 
 
     /**
@@ -391,9 +395,8 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      */
                     if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                         $position = $data[PluginUtility::POSITION];
-                        $this->sectionCounter++;
-                        $name = "section" . self::TAG . $this->sectionCounter;
-                        EditButton::startSection($renderer, $position, $name);
+                        $name = IdManager::getOrCreate()->generateNewIdForComponent(self::TAG);
+                        EditButtonManager::getOrCreate()->createAndAddEditButtonToStack($name, $position);
                     }
 
                     $context = $data[PluginUtility::CONTEXT];
@@ -415,7 +418,14 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      * End section
                      */
                     if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
-                        $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
+                        $editButton = EditButtonManager::getOrCreate()->popEditButtonFromStack($data[PluginUtility::POSITION]);
+                        try {
+                            $renderer->doc .= $editButton->toHtmlComment();
+                        } catch (ExceptionBadArgument $e) {
+                            LogUtility::error("Card Edit Button Error: {$e->getMessage()}", self::CANONICAL);
+                        } catch (ExceptionNotEnabled $e) {
+                            // ok
+                        }
                     }
 
                     /**
@@ -454,7 +464,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
 
     public
-    static function getTags()
+    static function getTags(): array
     {
         $elements[] = self::TAG;
         $elements[] = 'teaser';

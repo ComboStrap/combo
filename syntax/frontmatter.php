@@ -24,8 +24,11 @@ use ComboStrap\Aliases;
 use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\Canonical;
 use ComboStrap\EditButton;
+use ComboStrap\EditButtonManager;
 use ComboStrap\EndDate;
+use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\FileSystems;
 use ComboStrap\Lang;
@@ -284,8 +287,16 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                     $position = $startPosition;
                     $name = self::CANONICAL;
-                    EditButton::startSection($renderer, $position, $name);
-                    $renderer->finishSectionEdit($endPosition);
+                    EditButtonManager::getOrCreate()->createAndAddEditButtonToStack($name, $position);
+                    $editButton = EditButtonManager::getOrCreate()->popEditButtonFromStack($endPosition);
+                    try {
+                        $renderer->doc .= $editButton->toHtmlComment();
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::error("Frontmatter edit button error: " . $e->getMessage(), self::CANONICAL);
+                    } catch (ExceptionNotEnabled $e) {
+                        // Ok
+                    }
+
                 }
                 break;
 

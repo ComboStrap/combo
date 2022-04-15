@@ -206,6 +206,14 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                 $variableNames = [];
                 while ($actualCall = $callStack->next()) {
                     $tagName = $actualCall->getTagName();
+
+                    if ($tagName === syntax_plugin_combo_edit::TAG) {
+                        /**
+                         * Not capturing the edit button because the markup is generated
+                         */
+                        continue;
+                    }
+
                     switch ($tagName) {
                         case syntax_plugin_combo_iteratordata::TAG:
                             switch ($actualCall->getState()) {

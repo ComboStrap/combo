@@ -16,7 +16,9 @@ use ComboStrap\TagAttributes;
  * This is created in the parse tree for the following reason
  *
  *   * We need the start and end position (easier to catch at the parse tree creation because they are given in the handle function)
- *   * A component may not allow them (for instance, an iterator will not allow edit button and delete them)
+ *   * A component may not allow them (for instance:
+ *       * an iterator will not allow edit button and delete them
+ *       * or {@link syntax_plugin_combo_webcode}
  *   * The wiki id is mandatory and is given as global id in the handle function. In render, we may compose several parse tree (call stack)
  *
  */

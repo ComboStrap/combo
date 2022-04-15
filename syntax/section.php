@@ -102,6 +102,10 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data): bool
     {
 
+        if (!in_array($format, ["xhtml", renderer_plugin_combo_xml::FORMAT])) {
+            return false;
+        }
+
         /**
          *
          * The rendering is used only when exporting to another format
@@ -125,6 +129,7 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
                 return false;
             }
         }
+
 
         $state = $data[PluginUtility::STATE];
         switch ($state) {

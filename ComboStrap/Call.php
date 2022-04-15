@@ -353,22 +353,27 @@ class Call
     public function &getAttributes(): ?array
     {
 
-        $tagName = $this->getTagName();
-        switch ($tagName) {
-            case MediaLink::INTERNAL_MEDIA_CALL_NAME:
-                return $this->call[1];
-            default:
-                $data = &$this->getPluginData();
-                if (!isset($data[PluginUtility::ATTRIBUTES])) {
-                    $data[PluginUtility::ATTRIBUTES] = [];
-                }
-                $attributes = &$data[PluginUtility::ATTRIBUTES];
-                if (!is_array($attributes)) {
-                    $message = "The attributes value are not an array for the call ($this), the value was wrapped in an array";
-                    LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    $attributes = [$attributes];
-                }
-                return $attributes;
+
+        $isPluginCall = $this->isPluginCall();
+        if (!$isPluginCall) {
+            return $this->call[1];
+        } else {
+            $data = &$this->getPluginData();
+            if (!is_array($data)) {
+                LogUtility::error("The handle data is not an array for the call ($this), correct the returned data from the handle syntax plugin function", self::CANONICAL);
+                $data = [];
+                return $data;
+            }
+            if (!isset($data[PluginUtility::ATTRIBUTES])) {
+                $data[PluginUtility::ATTRIBUTES] = [];
+            }
+            $attributes = &$data[PluginUtility::ATTRIBUTES];
+            if (!is_array($attributes)) {
+                $message = "The attributes value are not an array for the call ($this), the value was wrapped in an array";
+                LogUtility::error($message, self::CANONICAL);
+                $attributes = [$attributes];
+            }
+            return $attributes;
         }
     }
 
@@ -793,13 +798,15 @@ class Call
     {
 
         /**
-         * Render all attributes
+         * Render all plugin attributes
          */
-        $attributes = $this->getAttributes();
-        if ($attributes !== null) {
-            foreach ($attributes as $key => $value) {
-                if (is_string($value)) {
-                    $this->addAttribute($key, TemplateUtility::renderStringTemplateFromDataArray($value, $array));
+        if ($this->isPluginCall()) {
+            $attributes = $this->getAttributes();
+            if ($attributes !== null) {
+                foreach ($attributes as $key => $value) {
+                    if (is_string($value)) {
+                        $this->addAttribute($key, TemplateUtility::renderStringTemplateFromDataArray($value, $array));
+                    }
                 }
             }
         }

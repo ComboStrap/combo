@@ -39,11 +39,8 @@ class LayoutMainAreaBuilder
          */
         global $ACT;
         switch ($ACT) {
-            case RenderUtility::DYNAMIC_RENDERING:
-                /**
-                 * Not with dynamic content
-                 */
-                return false;
+            case "show":
+                return true;
             case "preview":
                 /**
                  * preview only if it's the whole page
@@ -87,8 +84,16 @@ class LayoutMainAreaBuilder
                 }
                 return true;
             default:
-            case "show":
-                return true;
+            case RenderUtility::DYNAMIC_RENDERING:
+            case "edit":
+                /**
+                 * Not on edit page
+                 * Not with dynamic content
+                 *
+                 * Not for all other action:
+                 * https://www.dokuwiki.org/devel:action_modes
+                 */
+                return false;
         }
     }
 

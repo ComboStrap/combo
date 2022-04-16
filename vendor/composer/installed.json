@@ -55,6 +55,52 @@
             "install-path": "../antlr/antlr4-php-runtime"
         },
         {
+            "name": "carica/phpcss",
+            "version": "2.0.0",
+            "version_normalized": "2.0.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ThomasWeinert/PhpCss.git",
+                "reference": "944cdd0cf21655ceb1bd3262dee9b33602020c09"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ThomasWeinert/PhpCss/zipball/944cdd0cf21655ceb1bd3262dee9b33602020c09",
+                "reference": "944cdd0cf21655ceb1bd3262dee9b33602020c09",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2"
+            },
+            "time": "2021-04-25T14:14:13+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "files": [
+                    "src/PhpCss.php"
+                ],
+                "psr-4": {
+                    "PhpCss\\": "src/PhpCss"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Thomas Weinert",
+                    "email": "thomas@weinert.info"
+                }
+            ],
+            "description": "An css selector parser and converter",
+            "support": {
+                "issues": "https://github.com/ThomasWeinert/PhpCss/issues",
+                "source": "https://github.com/ThomasWeinert/PhpCss/tree/2.0.0"
+            },
+            "install-path": "../carica/phpcss"
+        },
+        {
             "name": "dragonmantank/cron-expression",
             "version": "v1.2.1",
             "version_normalized": "1.2.1.0",

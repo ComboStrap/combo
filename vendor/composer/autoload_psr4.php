@@ -6,6 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'PhpCss\\' => array($vendorDir . '/carica/phpcss/src/PhpCss'),
     'Hidehalo\\Nanoid\\' => array($vendorDir . '/hidehalo/nanoid-php/src'),
     'Cron\\' => array($vendorDir . '/dragonmantank/cron-expression/src/Cron'),
     'Antlr\\Antlr4\\Runtime\\' => array($vendorDir . '/antlr/antlr4-php-runtime/src'),

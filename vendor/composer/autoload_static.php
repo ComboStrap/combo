@@ -6,7 +6,15 @@ namespace Composer\Autoload;
 
 class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
 {
+    public static $files = array (
+        'd7c9a5138b45deb428e175ae748db2c5' => __DIR__ . '/..' . '/carica/phpcss/src/PhpCss.php',
+    );
+
     public static $prefixLengthsPsr4 = array (
+        'P' => 
+        array (
+            'PhpCss\\' => 7,
+        ),
         'H' => 
         array (
             'Hidehalo\\Nanoid\\' => 16,
@@ -22,6 +30,10 @@ class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
     );
 
     public static $prefixDirsPsr4 = array (
+        'PhpCss\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/carica/phpcss/src/PhpCss',
+        ),
         'Hidehalo\\Nanoid\\' => 
         array (
             0 => __DIR__ . '/..' . '/hidehalo/nanoid-php/src',

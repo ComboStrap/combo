@@ -27,12 +27,12 @@ class InstalledVersions
 private static $installed = array (
   'root' => 
   array (
-    'pretty_version' => '1.22.x-dev',
-    'version' => '1.22.9999999.9999999-dev',
+    'pretty_version' => '1.25.x-dev',
+    'version' => '1.25.9999999.9999999-dev',
     'aliases' => 
     array (
     ),
-    'reference' => '70c0e03a7f16e199a3dc6c79fcc5b7e3edaf6886',
+    'reference' => 'd825d03a68a17bb2f119e67c9b27073572a4f750',
     'name' => 'combostrap/combo',
   ),
   'versions' => 
@@ -46,14 +46,23 @@ private static $installed = array (
       ),
       'reference' => '0cb16628b575b50bd087a81d11bd961ac3b8e9e9',
     ),
-    'combostrap/combo' => 
+    'carica/phpcss' => 
     array (
-      'pretty_version' => '1.22.x-dev',
-      'version' => '1.22.9999999.9999999-dev',
+      'pretty_version' => '2.0.0',
+      'version' => '2.0.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => '70c0e03a7f16e199a3dc6c79fcc5b7e3edaf6886',
+      'reference' => '944cdd0cf21655ceb1bd3262dee9b33602020c09',
+    ),
+    'combostrap/combo' => 
+    array (
+      'pretty_version' => '1.25.x-dev',
+      'version' => '1.25.9999999.9999999-dev',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'd825d03a68a17bb2f119e67c9b27073572a4f750',
     ),
     'dragonmantank/cron-expression' => 
     array (

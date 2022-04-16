@@ -25,10 +25,6 @@ class TocUtility
      * The id of the container area
      */
     public const TOC_AREA_ID = "main-toc";
-    /**
-     * The id of the toc (nav)
-     */
-    const TOC_ID = "toc";
     const CANONICAL = syntax_plugin_combo_toc::TAG;
 
 
@@ -109,12 +105,10 @@ class TocUtility
         $tocHeaderLang = $lang['toc'];
         $tocAreaId = self::TOC_AREA_ID;
         return <<<EOF
-<div id="$tocAreaId">
+<nav id="$tocAreaId">
 <p id="toc-header">$tocHeaderLang</p>
-<nav id="toc">
 $ulMarkup
 </nav>
-</div>
 EOF;
 
 

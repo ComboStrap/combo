@@ -1,16 +1,18 @@
-#toc ul {
+#main-toc ul {
     list-style: none;
 }
-
-#toc ul:first-child {
+#main-toc > ul {
     padding-left: 0;
 }
 
-#toc li {
+
+
+#main-toc li {
     margin-bottom: 0.25rem;
+    padding-left: initial;
 }
 
-#toc a:not(:hover) {
+#main-toc a:not(:hover) {
     text-decoration: none;
 }
 

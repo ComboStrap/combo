@@ -654,7 +654,7 @@ class PluginUtility
      * @param $pageContent
      * @return string|null
      */
-    public static function render($pageContent)
+    public static function render($pageContent): ?string
     {
         return RenderUtility::renderText2XhtmlAndStripPEventually($pageContent, false);
     }

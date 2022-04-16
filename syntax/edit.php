@@ -53,7 +53,7 @@ class syntax_plugin_combo_edit extends DokuWiki_Syntax_Plugin
      */
     function getPType(): string
     {
-        return 'normal';
+        return 'block';
     }
 
     /**

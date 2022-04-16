@@ -39,6 +39,8 @@ class LayoutMainAreaBuilder
          */
         global $ACT;
         switch ($ACT) {
+            case "show":
+                return true;
             case "preview":
                 /**
                  * preview only if it's the whole page
@@ -81,9 +83,14 @@ class LayoutMainAreaBuilder
                     }
                 }
                 return true;
-            case "show":
             default:
-                return true;
+            case RenderUtility::DYNAMIC_RENDERING:
+                /**
+                 * Apart of show and preview,
+                 * there is not so much
+                 * where we want to restructure the document
+                 */
+                return false;
         }
     }
 
@@ -144,7 +151,6 @@ class LayoutMainAreaBuilder
             }
 
 
-
             /**
              * Delete the start and end call
              * and capture the toc if any
@@ -172,7 +178,7 @@ class LayoutMainAreaBuilder
          *   - Get the header from the main callstack (may be deleted)
          *   - Get the content
          */
-        $frontMatterCalls = [];
+        $frontMatterInstructions = [];
         $mainContentFirstHeadingInstructions = [];
         $mainContentHeaderInstructionsWithoutHeading1 = [];
         $mainContentContentInstructions = [];
@@ -189,12 +195,12 @@ class LayoutMainAreaBuilder
                 case \syntax_plugin_combo_edit::CANONICAL:
                     if ($mainContentHeaderInstructionsWithoutHeading1 === null) {
                         // special case frontmatter edit button
-                        $frontMatterCalls[] = $mainCallStack->deleteActualCallAndPrevious()->getInstructionCall();
+                        $frontMatterInstructions[] = $mainCallStack->deleteActualCallAndPrevious()->getInstructionCall();
                         continue 2;
                     }
                     break;
                 case syntax_plugin_combo_frontmatter::TAG:
-                    $frontMatterCalls[] = $mainCallStack->deleteActualCallAndPrevious()->getInstructionCall();
+                    $frontMatterInstructions[] = $mainCallStack->deleteActualCallAndPrevious()->getInstructionCall();
                     continue 2;
             }
 
@@ -257,12 +263,12 @@ class LayoutMainAreaBuilder
             DOKU_LEXER_ENTER,
             ["id" => "main-header", "tag" => $headerHtmlTag]
         ));
-        if (sizeof($frontMatterCalls) > 0) {
+        if (sizeof($frontMatterInstructions) > 0) {
             /**
              * Adding the front matter edit button if any in the header
              * to not get problem with the layout grid
              */
-            $mainCallStack->appendInstructionsFromCallObjects($frontMatterCalls);
+            $mainCallStack->appendAtTheEndFromNativeArrayInstructions($frontMatterInstructions);
         }
         if ($mainHeaderCallStack !== null) {
             $mainCallStack->appendAtTheEndFromNativeArrayInstructions($mainHeaderCallStack->getStack());
@@ -270,6 +276,11 @@ class LayoutMainAreaBuilder
         if (!$mainHeaderHasHeading && sizeof($mainContentFirstHeadingInstructions) > 0) {
             /**
              * The heading is in the main content header
+             *
+             * The H1 heading should not go into the main content
+             * but into the main header
+             * because we rely on the html structure for
+             * {@link \action_plugin_combo_outlinenumbering::getCssOutlineNumberingRuleFor()}
              */
             $mainCallStack->appendAtTheEndFromNativeArrayInstructions($mainContentFirstHeadingInstructions);
         }

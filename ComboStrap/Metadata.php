@@ -21,7 +21,6 @@ abstract class Metadata
     ];
 
 
-
     /**
      * @var bool
      */
@@ -67,15 +66,15 @@ abstract class Metadata
      * @param $class
      * @param Metadata|null $parent
      * @return Metadata
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument
      */
     public static function toMetadataObject($class, Metadata $parent = null): Metadata
     {
         if ($class === null) {
-            throw new ExceptionCompile("The string class is empty");
+            throw new ExceptionBadArgument("The string class is empty");
         }
         if (!is_subclass_of($class, Metadata::class)) {
-            throw new ExceptionCompile("The class ($class) is not a metadata class");
+            throw new ExceptionBadArgument("The class ($class) is not a metadata class");
         }
         return new $class($parent);
     }
@@ -734,11 +733,16 @@ abstract class Metadata
         return $this->writeStore;
     }
 
+    /**
+     * @throws ExceptionBadArgument - if the class string of the children are not good
+     */
     public function getUidObject(): Metadata
     {
         if ($this->uidObject === null) {
+
             $this->uidObject = Metadata::toMetadataObject($this->getUidClass())
                 ->setResource($this->getResource());
+
         }
         return $this->uidObject;
     }

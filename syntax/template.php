@@ -106,12 +106,12 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
      * @see DokuWiki_Syntax_Plugin::getPType()
      * @see https://www.dokuwiki.org/devel:syntax_plugins#ptype
      */
-    function getPType()
+    function getPType(): string
     {
         /**
          * No P please
          */
-        return 'normal';
+        return 'stack';
     }
 
     /**

@@ -4,7 +4,10 @@
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
+use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\Page;
 use ComboStrap\PageH1;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -109,13 +112,15 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          */
         if ($level == 1) {
 
-            global $ID;
-            p_set_metadata(
-                $ID,
-                array(PageH1::H1_PARSED => trim($text)),
-                false,
-                false // runtime meta
-            );
+            try {
+                $page = Page::createPageFromGlobalDokuwikiId();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::error("Unable to save the h1 heading text because the global Id was not found", self::CANONICAL);
+                return;
+            }
+            MetadataDokuWikiStore::getOrCreateFromResource($page)
+                ->setFromPersistentName(PageH1::H1_PARSED, trim($text))
+                ->persist();
 
         }
     }

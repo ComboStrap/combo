@@ -39,8 +39,11 @@ class LayoutMainAreaBuilder
          */
         global $ACT;
         switch ($ACT) {
-            case "show":
-                return true;
+            case RenderUtility::DYNAMIC_RENDERING:
+                /**
+                 * Not with dynamic content
+                 */
+                return false;
             case "preview":
                 /**
                  * preview only if it's the whole page
@@ -84,13 +87,8 @@ class LayoutMainAreaBuilder
                 }
                 return true;
             default:
-            case RenderUtility::DYNAMIC_RENDERING:
-                /**
-                 * Apart of show and preview,
-                 * there is not so much
-                 * where we want to restructure the document
-                 */
-                return false;
+            case "show":
+                return true;
         }
     }
 
@@ -117,7 +115,8 @@ class LayoutMainAreaBuilder
         $sideCallStack = null;
         $mainHeaderCallStack = null;
         $footerCallStack = null;
-        $mainHeaderHasHeading = false;
+        $mainHeaderHasNormalHeading = false; // normal heading is an heading that is not in a template
+        $mainHeaderHasTemplateHeading = false; // an heading in a template
         foreach ($page->getChildren() as $child) {
             $name = $child->getPath()->getLastName();
 
@@ -137,8 +136,19 @@ class LayoutMainAreaBuilder
                     $childCallStack->moveToStart();
                     while ($actualCall = $mainHeaderCallStack->next()) {
                         if (in_array($actualCall->getTagName(), \action_plugin_combo_headingpostprocessing::HEADING_TAGS)) {
-                            $mainHeaderHasHeading = true;
+                            $mainHeaderHasNormalHeading = true;
                             break;
+                        }
+                        if ($actualCall->getTagName() === \syntax_plugin_combo_template::TAG && $actualCall->getState() === DOKU_LEXER_EXIT) {
+                            $instructions = $actualCall->getPluginData(\syntax_plugin_combo_template::CALLSTACK);
+                            $templateCallStack = CallStack::createFromInstructions($instructions);
+                            $templateCallStack->moveToStart();
+                            while ($actualTemplateCall = $templateCallStack->next()) {
+                                if (in_array($actualTemplateCall->getTagName(), \action_plugin_combo_headingpostprocessing::HEADING_TAGS)) {
+                                    $mainHeaderHasTemplateHeading = true;
+                                    break;
+                                }
+                            }
                         }
                     }
                     break;
@@ -273,7 +283,7 @@ class LayoutMainAreaBuilder
         if ($mainHeaderCallStack !== null) {
             $mainCallStack->appendAtTheEndFromNativeArrayInstructions($mainHeaderCallStack->getStack());
         }
-        if (!$mainHeaderHasHeading && sizeof($mainContentFirstHeadingInstructions) > 0) {
+        if (!$mainHeaderHasNormalHeading && !$mainHeaderHasTemplateHeading && sizeof($mainContentFirstHeadingInstructions) > 0) {
             /**
              * The heading is in the main content header
              *

@@ -505,6 +505,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             $headingEntryCall->addAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $headingText);
 
             $level = $headingEntryCall->getAttribute("level");
+            syntax_plugin_combo_heading::processHeadingMetadataH1($level,$headingText);
 
             $id = $headingEntryCall->getAttribute("id");
             if ($id === null) {

@@ -3,9 +3,11 @@
 
 // must be run within Dokuwiki
 use ComboStrap\CallStack;
+use ComboStrap\DataType;
 use ComboStrap\EditButton;
 use ComboStrap\EditButtonManager;
 use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -121,7 +123,12 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                 if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                     $callStack = CallStack::createFromHandler($handler);
                     $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
-                    $startPosition = $openingTag->getAttribute(PluginUtility::POSITION);
+                    try {
+                        $startPosition = DataType::toInteger($openingTag->getAttribute(PluginUtility::POSITION));
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::error("The position of the slide is not an integer", self::CANONICAL);
+                        $startPosition = null;
+                    }
                     $id = $openingTag->getIdOrDefault();
                     // +1 to go at the line
                     $endPosition = $pos + strlen($match) + 1;

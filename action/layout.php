@@ -184,9 +184,14 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
 
             $wikiIdArea = "";
             switch ($areaName) {
-                case self::PAGE_HEADER_AREA:
                 case self::PAGE_FOOTER_AREA:
+                case self::PAGE_HEADER_AREA:
                     $tagAttributes->addClassName("d-print-none");
+                    // no print
+                    $tagAttributes->addClassName("position-relative");
+                    //position relative to place the edit button
+                    $wikiIdArea = page_findnearest($layoutArea->getSlotName());
+                    $showArea = $wikiIdArea !== false;
                     break;
                 case self::PAGE_CORE_AREA:
                     $tagAttributes->addClassName(tpl_classes());
@@ -203,7 +208,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
 
             $layoutArea->setShow($showArea);
             if ($showArea) {
-                $layoutObject->setPageSideHtml($this->render($wikiIdArea));
+                $layoutArea->setHtml($this->render($wikiIdArea));
             }
             $layoutArea->setAttributes($tagAttributes->toHtmlArray());
 

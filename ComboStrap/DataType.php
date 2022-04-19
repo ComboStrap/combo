@@ -61,7 +61,8 @@ class DataType
     ];
 
     /**
-     * @throws ExceptionCompile
+     *
+     * @throws ExceptionBadArgument
      */
     public static function toInteger($targetValue): int
     {
@@ -70,7 +71,7 @@ class DataType
         }
         if (!is_string($targetValue) && !is_float($targetValue)) {
             $varExport = var_export($targetValue, true);
-            throw new ExceptionCompile("The value passed is not a numeric/nor a string. We can not translate it to an integer. Value: $varExport");
+            throw new ExceptionBadArgument("The value passed is not a numeric/nor a string. We can not translate it to an integer. Value: $varExport");
         }
         /**
          * Float 12.845 will return 12
@@ -80,7 +81,7 @@ class DataType
             $int === 0 &&
             "$targetValue" !== "0"
         ) {
-            throw new ExceptionCompile("The value ($targetValue) can not be cast to an integer.");
+            throw new ExceptionBadArgument("The value ($targetValue) can not be cast to an integer.");
         }
         return $int;
     }

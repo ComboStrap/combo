@@ -15,6 +15,7 @@ use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\TagAttributes;
 use ComboStrap\Template;
 use ComboStrap\TemplateUtility;
@@ -228,7 +229,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
-                    PluginUtility::CONTEXT => $context
+                    PluginUtility::CONTEXT => $context,
+                    self::BRAND_TEXT_FOUND_INDICATOR => false
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -361,8 +363,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                      * the anchor tag otherwise the underline make a link between the text
                      * and the icon and that's ugly
                      */
-                    $logoInAnchor = !($brandButton->getWidget() === BrandButton::WIDGET_LINK_VALUE && $textFound);
-                    if ($logoInAnchor) {
+                    $logoShouldBeInAnchorElement = !($brandButton->getWidget() === BrandButton::WIDGET_LINK_VALUE && $textFound);
+                    if ($logoShouldBeInAnchorElement) {
                         $renderer->doc .= $enterAnchor;
                     }
 
@@ -398,8 +400,21 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                         }
                     }
 
-                    if (!$logoInAnchor) {
+                    if (!$logoShouldBeInAnchorElement) {
                         $renderer->doc .= $enterAnchor;
+                    }
+
+                    /**
+                     * Special case:
+                     * Current brand, no logo, no text
+                     * For current brand
+                     */
+                    if (
+                        $brandButton->getBrand()->getName() === Brand::CURRENT_BRAND
+                        && !$brandButton->hasIcon()
+                        && $textFound === false
+                    ) {
+                        $renderer->doc .= Site::getName();
                     }
 
                     /**

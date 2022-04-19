@@ -33,6 +33,7 @@ class CacheManager
      * The list of cache runtimes dependencies by slot {@link CacheDependencies}
      */
     private $slotCacheDependencies;
+
     /**
      * The list of cache results slot {@link CacheResults}
      */

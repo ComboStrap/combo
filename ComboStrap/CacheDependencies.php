@@ -6,11 +6,18 @@ namespace ComboStrap;
 use dokuwiki\Cache\CacheParser;
 
 /**
- * Class CacheManagerForSlot
- * @package ComboStrap
- * Render Cache dependencies on slot level (not instructions cache)
  *
- * * This is mostly used on
+ * @package ComboStrap
+ *
+ * Manage the cache dependencies for a slot level (not instructions cache).
+ *
+ * The dependencies are stored on a file system.
+ *
+ * Cache dependencies are used:
+ *   * to generate the cache key output
+ *   * to add cache validity dependency such as requested page,
+ *
+ * For cache key generation, this is mostly used on
  *   * side slots to have several output of a list {@link \syntax_plugin_combo_pageexplorer navigation pane} for different namespace (ie there is one cache by namespace)
  *   * header and footer main slot to have one output for each requested main page
  */
@@ -69,6 +76,7 @@ class CacheDependencies
      * See {@link \action_plugin_combo_pageprimarymetamutation}
      */
     const PAGE_PRIMARY_META_DEPENDENCY = "page_primary_meta";
+
     /**
      * If a page is added or deleted
      * See {@link \action_plugin_combo_pagesystemmutation}

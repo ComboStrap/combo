@@ -348,39 +348,5 @@ class LayoutMainAreaBuilder
         ));
 
 
-        /**
-         * Append side and footer
-         */
-        if ($sideCallStack !== null) {
-            $sideHtmlTag = "aside";
-            $mainCallStack->appendCallAtTheEnd(Call::createComboCall(
-                syntax_plugin_combo_box::TAG,
-                DOKU_LEXER_ENTER,
-                ["id" => "main-side", "tag" => $sideHtmlTag]
-            ));
-            $mainCallStack->appendAtTheEndFromNativeArrayInstructions($sideCallStack->getStack());
-            $mainCallStack->appendCallAtTheEnd(Call::createComboCall(
-                syntax_plugin_combo_box::TAG,
-                DOKU_LEXER_EXIT,
-                ["tag" => $sideHtmlTag]
-            ));
-        }
-
-        if ($footerCallStack !== null) {
-            $footerHtmlTag = "footer";
-            $mainCallStack->appendCallAtTheEnd(Call::createComboCall(
-                syntax_plugin_combo_box::TAG,
-                DOKU_LEXER_ENTER,
-                ["id" => "main-footer", "tag" => $footerHtmlTag]
-            ));
-            $mainCallStack->appendAtTheEndFromNativeArrayInstructions($footerCallStack->getStack());
-            $mainCallStack->appendCallAtTheEnd(Call::createComboCall(
-                syntax_plugin_combo_box::TAG,
-                DOKU_LEXER_EXIT,
-                ["tag" => $footerHtmlTag]
-            ));
-        }
-
-
     }
 }

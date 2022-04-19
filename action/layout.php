@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\DokuPath;
+use ComboStrap\EditButton;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
@@ -44,7 +45,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
     const MAIN_SIDE_AREA = "main-side";
     const MAIN_CONTENT_AREA = "main-content";
     const MAIN_HEADER_AREA = "main-header";
-    const MAIN_FOOTER_AREA = "main-header";
+    const MAIN_FOOTER_AREA = "main-footer";
     const areas = [
         self::PAGE_CORE_AREA,
         self::PAGE_SIDE_AREA,
@@ -155,15 +156,14 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
         $areas = self::areas;
         foreach ($areas as $areaName) {
 
-
             $layoutArea = $layoutObject->getOrCreateArea($areaName);
 
             $attributes = $jsonArray[$areaName];
             $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
 
             // show
-            $show = $tagAttributes->getBooleanValueAndRemoveIfPresent("show", true);
-            $layoutArea->setShow($show);
+            $showArea = $tagAttributes->getBooleanValueAndRemoveIfPresent("show", true);
+            $layoutArea->setShow($showArea);
 
             // container
             if (in_array($areaName, self::rowAreas)) {
@@ -182,6 +182,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
             // Relative positioning is important for the positioning of the pagetools (page-core), secedit button
             $tagAttributes->addClassName("position-relative");
 
+            $wikiIdArea = "";
             switch ($areaName) {
                 case self::PAGE_HEADER_AREA:
                 case self::PAGE_FOOTER_AREA:
@@ -190,19 +191,36 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                 case self::PAGE_CORE_AREA:
                     $tagAttributes->addClassName(tpl_classes());
                     break;
-                case self::MAIN_SIDE_AREA:
+                case self::MAIN_FOOTER_AREA:
                 case self::PAGE_SIDE_AREA:
+                case self::MAIN_SIDE_AREA:
                     $tagAttributes->addComponentAttributeValue("role", "complementary");
                     $tagAttributes->addClassName("d-print-none");
+                    $wikiIdArea = page_findnearest($layoutArea->getSlotName());
+                    $showArea = $wikiIdArea !== false && ($ACT === 'show');
                     break;
             }
 
+            $layoutArea->setShow($showArea);
+            if ($showArea) {
+                $layoutObject->setPageSideHtml($this->render($wikiIdArea));
+            }
             $layoutArea->setAttributes($tagAttributes->toHtmlArray());
-
 
         }
 
+    }
 
+    private function render(string $wikiId)
+    {
+        try {
+            $page = Page::createPageFromId($wikiId);
+            $html = $page->toXhtml();
+            $finalHtml = EditButton::replaceAll($html);
+        } catch (Exception $e) {
+            $finalHtml = "Rendering the slot ($wikiId), returns an error. {$e->getMessage()}";
+        }
+        return $finalHtml;
     }
 
 

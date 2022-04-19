@@ -45,7 +45,7 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
             $pattern .= "|" . TplUtility::getFooterSlotPageName();
 
             $pattern .= "|" . TplUtility::getHeaderSlotPageName();
-            $name = TplUtility::getSideKickSlotPageName();
+            $name = TplUtility::getMainSideSlotName();
             if (!empty($name)) {
                 $pattern .= "|" . $name;
             }

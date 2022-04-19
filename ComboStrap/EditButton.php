@@ -141,7 +141,7 @@ class EditButton
         if ($ACT === RenderUtility::DYNAMIC_RENDERING) {
             // ie weblog, they are generated via dynamic markup
             // meaning that there is no button to edit the file
-            if(!PluginUtility::isTest()) {
+            if (!PluginUtility::isTest()) {
                 return "";
             }
         }
@@ -171,14 +171,13 @@ class EditButton
         $writable =
             (
                 isset($INFO)
-                && $INFO['writable'] // true if writable See https://www.dokuwiki.org/devel:environment#info
-            )
-            ||
-            (
-                isset($INFO)
+                && $INFO['writable'] === true // true if writable See https://www.dokuwiki.org/devel:environment#info
                 && !$INFO['rev'] // the page is not a revision page
             );
         if (!$writable) {
+            // Dokuwiki way is to delete
+            // but because they are comment, they are not shown
+            // We delete to serve clean page to search engine
             return preg_replace(SEC_EDIT_PATTERN, '', $html);
         }
 

@@ -155,12 +155,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * Snippets
          * (Slot and request snippets)
          */
-        try {
-            $allSnippets = $snippetManager->getAllSnippetsToDokuwikiArray();
-        } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error: We couldn't add the snippets in the head. Error: {$e->getMessage()}");
-            return;
-        }
+        $allSnippets = $snippetManager->getAllSnippetsInDokuwikiArrayFormat();
         foreach ($allSnippets as $tagType => $tags) {
 
             foreach ($tags as $tag) {
@@ -203,19 +198,27 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             return;
         }
         $putSnippetInContent =
-            $this->headerOutputWasCalled
+            $this->headerOutputWasCalled === false
             ||
             ($ACT !== "show" && $ACT !== null); // admin page rendering
         if ($putSnippetInContent) {
 
             $snippetManager = PluginUtility::getSnippetManager();
             $xhtmlContent = &$event->data[1];
-            try {
-                $snippets = $snippetManager->getAllSnippetsToDokuwikiArray();
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("Error: We couldn't add the snippets in the content. Error: {$e->getMessage()}");
-                return;
-            }
+            /**
+             * What fucked up is fucked up
+             *
+             * In admin page, as we don't know the source of the processing text
+             * (It may be a partial (ie markup) to create the admin page
+             * We may have several times the same global request slot
+             *
+             * We can't make the difference.
+             *
+             * For now, we add therefore only the snippet for the slots.
+             * The snippet for the request should have been already added with the
+             * DOKUWIKI_STARTED hook
+             */
+            $snippets = $snippetManager->getSlotSnippetsInDokuwikiArrayFormat();
             if (sizeof($snippets) > 0) {
 
                 $class = self::CLASS_SNIPPET_IN_CONTENT;

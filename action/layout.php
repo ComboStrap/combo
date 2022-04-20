@@ -87,17 +87,20 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
          */
         $layoutObject = &$event->data;
 
-        // for the identity forms
+
         global $ACT;
         switch ($ACT) {
             case "login":
             case "resendpwd":
             case "register":
             case "profile":
+                // for the identity forms
                 $layoutName = "median";
                 break;
             case "preview":
-                $layoutName = "holy";
+            case "edit":
+            case "admin":
+                $layoutName = "hamburger";
                 // Note: the slot does not render because the act is not show
                 break;
             case "show":

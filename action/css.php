@@ -100,11 +100,15 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
          *   * one public
          *   * one private (logged in)
          */
-        if (PluginUtility::getRequestScript() == "doku.php") {
+        if (PluginUtility::getRequestScript() === "doku.php") {
             $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'handle_css_metaheader');
         }
 
-        $controller->register_hook('TPL_ACT_RENDER', 'BEFORE', $this, 'addAllCssSnippet', array());
+        /**
+         * It should be present in edit, preview, show, ...
+         * That's why it's called with DOKUWIKI_STARTED
+         */
+        $controller->register_hook('DOKUWIKI_STARTED', 'BEFORE', $this, 'addAllCssSnippet', array());
 
     }
 

@@ -36,7 +36,10 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
 
     public function register(Doku_Event_Handler $controller)
     {
-        $controller->register_hook('TPL_ACT_RENDER', 'BEFORE', $this, 'anchor', array());
+        /**
+         * DOKUWIKI_STARTED: Edit, preview, show mode
+         */
+        $controller->register_hook('DOKUWIKI_STARTED', 'BEFORE', $this, 'anchor', array());
     }
 
     /**

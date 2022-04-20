@@ -103,12 +103,34 @@ class SnippetManager
      *
      * @return array of node type and an array of array of html attributes
      */
-    public function getAllSnippetsToDokuwikiArray(): array
+    public function getAllSnippetsInDokuwikiArrayFormat(): array
     {
         $snippets = Snippet::getSnippets();
-        if ($snippets === null) {
-            return [];
+        return $this->snippetsToDokuwikiArray($snippets);
+    }
+
+    /**
+     * @return array - the slot snippets (not the request snippet)
+     */
+    public function getSlotSnippetsInDokuwikiArrayFormat(): array
+    {
+        $snippets = Snippet::getSnippets();
+        $slotSnippets = [];
+        foreach ($snippets as $snippet) {
+            if ($snippet->hasSlot(Snippet::REQUEST_SLOT)) {
+                continue;
+            }
+            $slotSnippets[] = $snippet;
         }
+        return $this->snippetsToDokuwikiArray($slotSnippets);
+    }
+
+    /**
+     * @param Snippet[] $snippets
+     * @return array
+     */
+    public function snippetsToDokuwikiArray(array $snippets): array
+    {
         /**
          * The returned array in dokuwiki format
          */
@@ -239,9 +261,6 @@ class SnippetManager
     function getJsonArrayFromSlotSnippets($slot): ?array
     {
         $snippets = Snippet::getSnippets();
-        if ($snippets === null) {
-            return null;
-        }
         $snippetsForSlot = array_filter($snippets,
             function ($s) use ($slot) {
                 return $s->hasSlot($slot);
@@ -291,6 +310,10 @@ class SnippetManager
      * @param $snippetId
      * @param string|null $script -  the css if any, otherwise the css file will be taken
      * @return Snippet a snippet scoped at the request scope (not in a slot)
+     *
+     * This function should be called with a DOKUWIKI_STARTED event.
+     *
+     * If you need to split the css by type of action, see {@link \action_plugin_combo_docss::handleCssForDoAction()}
      */
     public
     function &attachCssInternalStylesheetForRequest($snippetId, string $script = null): Snippet
@@ -458,7 +481,20 @@ class SnippetManager
      */
     public function getSnippets(): array
     {
-        return   Snippet::getSnippets();
+        return Snippet::getSnippets();
+    }
+
+    public function getRequestSnippetsInDokuwikiArrayFormat(): array
+    {
+        $snippets = Snippet::getSnippets();
+        $slotSnippets = [];
+        foreach ($snippets as $snippet) {
+            if (!$snippet->hasSlot(Snippet::REQUEST_SLOT)) {
+                continue;
+            }
+            $slotSnippets[] = $snippet;
+        }
+        return $this->snippetsToDokuwikiArray($slotSnippets);
     }
 
 

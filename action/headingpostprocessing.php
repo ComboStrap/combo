@@ -76,7 +76,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             try {
                 $level = DataType::toInteger($actualCall->getAttribute(syntax_plugin_combo_heading::LEVEL));
             } catch (ExceptionCompile $e) {
-                LogUtility::error("The level in the call ($actualCall) is not an integer",self::CANONICAL);
+                LogUtility::error("The level in the call ($actualCall) is not an integer", self::CANONICAL);
                 return;
             }
             if ($level === 1) {
@@ -505,7 +505,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             $headingEntryCall->addAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $headingText);
 
             $level = $headingEntryCall->getAttribute("level");
-            syntax_plugin_combo_heading::processHeadingMetadataH1($level,$headingText);
+            syntax_plugin_combo_heading::processHeadingMetadataH1($level, $headingText);
 
             $id = $headingEntryCall->getAttribute("id");
             if ($id === null) {
@@ -606,7 +606,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * Edit button
          */
         $startCall = array_pop($this->editButtonStartCalls);
-        if ($startCall !== null) {
+        $enabled = PluginUtility::getConfValue(EditButton::EDIT_BUTTON_ENABLED_INTERNAL_CONF, 1);
+        if ($startCall !== null && $enabled === 1) {
             $text = $startCall->getAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE);
             $end = null;
             if (!$callStack->isAtEnd()) {

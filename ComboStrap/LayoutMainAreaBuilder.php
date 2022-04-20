@@ -117,9 +117,7 @@ class LayoutMainAreaBuilder
         /**
          * Get the main slots
          */
-        $sideCallStack = null;
         $mainHeaderCallStack = null;
-        $footerCallStack = null;
         $mainHeaderHasNormalHeading = false; // normal heading is an heading that is not in a template
         $mainHeaderHasTemplateHeading = false; // an heading in a template
         foreach ($page->getChildren() as $child) {
@@ -133,9 +131,6 @@ class LayoutMainAreaBuilder
             }
             $childCallStack = CallStack::createFromInstructions($childInstructions);
             switch ($name) {
-                case Site::getPrimarySideSlotName():
-                    $sideCallStack = $childCallStack;
-                    break;
                 case Site::getPrimaryHeaderSlotName():
                     $mainHeaderCallStack = $childCallStack;
                     $childCallStack->moveToStart();
@@ -157,9 +152,6 @@ class LayoutMainAreaBuilder
                         }
                     }
                     break;
-                case Site::getPrimaryFooterSlotName():
-                    $footerCallStack = $childCallStack;
-                    break;
                 default:
                     LogUtility::error("The slot ($name) was not expected", self::CANONICAL);
                     continue 2;
@@ -167,7 +159,7 @@ class LayoutMainAreaBuilder
 
 
             /**
-             * Delete the start and end call
+             * Delete the start, end call and frontmatter
              * and capture the toc if any
              */
             $childCallStack->moveToStart();
@@ -175,12 +167,14 @@ class LayoutMainAreaBuilder
                 $tagName = $actualCall->getTagName();
                 switch ($tagName) {
                     case syntax_plugin_combo_toc::TAG:
-                        $tocData = $actualCall;
-                        continue 2;
                     case CallStack::DOCUMENT_START:
                     case CallStack::DOCUMENT_END:
+                    case syntax_plugin_combo_frontmatter::TAG:
+                        if ($tagName === syntax_plugin_combo_toc::TAG) {
+                            $tocData = $actualCall;
+                        }
                         $childCallStack->deleteActualCallAndPrevious();
-                        continue 2;
+                    break;
                 }
             }
 
@@ -193,7 +187,7 @@ class LayoutMainAreaBuilder
          *   - Get the header from the main callstack (may be deleted)
          *   - Get the content
          */
-        $frontMatterInstructions = [];
+        $frontMatterCall = null;
         $mainContentFirstHeadingInstructions = [];
         $mainContentHeaderInstructionsWithoutHeading1 = [];
         $mainContentContentInstructions = [];
@@ -206,17 +200,9 @@ class LayoutMainAreaBuilder
             /**
              * Collect frontmatter
              */
-            switch ($actualCall->getTagName()) {
-                case \syntax_plugin_combo_edit::CANONICAL:
-                    if ($mainContentHeaderInstructionsWithoutHeading1 === null) {
-                        // special case frontmatter edit button
-                        $frontMatterInstructions[] = $mainCallStack->deleteActualCallAndPrevious()->getInstructionCall();
-                        continue 2;
-                    }
-                    break;
-                case syntax_plugin_combo_frontmatter::TAG:
-                    $frontMatterInstructions[] = $mainCallStack->deleteActualCallAndPrevious()->getInstructionCall();
-                    continue 2;
+            if ($actualCall->getTagName() == syntax_plugin_combo_frontmatter::TAG) {
+                $frontMatterCall = $mainCallStack->deleteActualCallAndPrevious();
+                continue;
             }
 
             /**
@@ -278,12 +264,12 @@ class LayoutMainAreaBuilder
             DOKU_LEXER_ENTER,
             ["id" => "main-header", "tag" => $headerHtmlTag]
         ));
-        if (sizeof($frontMatterInstructions) > 0) {
+        if ($frontMatterCall!==null) {
             /**
              * Adding the front matter edit button if any in the header
              * to not get problem with the layout grid
              */
-            $mainCallStack->appendAtTheEndFromNativeArrayInstructions($frontMatterInstructions);
+            $mainCallStack->appendCallAtTheEnd($frontMatterCall);
         }
         if ($mainHeaderCallStack !== null) {
             $mainCallStack->appendAtTheEndFromNativeArrayInstructions($mainHeaderCallStack->getStack());

@@ -616,10 +616,18 @@ class CallStack
     /**
      * Move pointer by offset
      * @param $offset
+     * @throws ExceptionBadArgument
      */
     private
     function moveToOffset($offset)
     {
+        if ($offset < 0) {
+            if($offset===-1) {
+                $this->moveToStart();
+                return;
+            }
+            throw new ExceptionBadArgument("The offset value of ($offset) is off limit");
+        }
         $this->resetPointer();
         for ($i = 0; $i < $offset; $i++) {
             $result = $this->next();

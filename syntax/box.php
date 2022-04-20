@@ -4,6 +4,7 @@
 // must be run within Dokuwiki
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -20,6 +21,8 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
     const TAG = "box";
     const TAG_ATTRIBUTE = "tag";
     const DEFAULT_TAG = "div";
+    // Tag that may make external http requests are not authorized
+    const NON_AUTHORIZED_TAG = ["script", "style", "img", "video"];
 
     /**
      * Syntax Type.
@@ -96,6 +99,11 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                 $defaultAttributes[self::TAG_ATTRIBUTE] = self::DEFAULT_TAG;
                 $knownTypes = [];
                 $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
+                $tag = $attributes->getValue(self::TAG_ATTRIBUTE);
+                if (in_array($tag, self::NON_AUTHORIZED_TAG)) {
+                    LogUtility::error("The html tag ($tag) is not authorized.");
+                    $attributes->setComponentAttributeValue(self::TAG_ATTRIBUTE, self::DEFAULT_TAG);
+                }
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()

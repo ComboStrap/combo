@@ -97,7 +97,8 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                 $layoutName = "median";
                 break;
             case "preview":
-                $layoutName = "landing";
+                $layoutName = "holy";
+                // Note: the slot does not render because the act is not show
                 break;
             case "show":
                 $requestedPage = Page::createPageFromRequestedPage();
@@ -170,11 +171,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                 $container = $tagAttributes->getValueAndRemoveIfPresent("container", true);
                 if ($container) {
                     $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
-                    $containerPrefix = "";
-                    if ($container !== "sm") {
-                        $containerPrefix = "-$container";
-                    }
-                    $tagAttributes->addClassName("container{$containerPrefix}");
+                    $tagAttributes->addClassName(syntax_plugin_combo_container::getClassName($container));
                 }
             }
 
@@ -182,7 +179,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
             // Relative positioning is important for the positioning of the pagetools (page-core), secedit button
             $tagAttributes->addClassName("position-relative");
 
-            $wikiIdArea = "";
+            $wikiIdArea = null;
             switch ($areaName) {
                 case self::PAGE_FOOTER_AREA:
                 case self::PAGE_HEADER_AREA:
@@ -195,6 +192,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                     break;
                 case self::PAGE_CORE_AREA:
                     $tagAttributes->addClassName(tpl_classes());
+                    $showArea = true;
                     break;
                 case self::MAIN_FOOTER_AREA:
                 case self::PAGE_SIDE_AREA:
@@ -207,7 +205,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
             }
 
             $layoutArea->setShow($showArea);
-            if ($showArea) {
+            if ($showArea && $wikiIdArea !== null) {
                 $layoutArea->setHtml($this->render($wikiIdArea));
             }
             $layoutArea->setAttributes($tagAttributes->toHtmlArray());

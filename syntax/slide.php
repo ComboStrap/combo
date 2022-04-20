@@ -107,8 +107,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
-                    PluginUtility::POSITION => $pos
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -116,15 +115,15 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-
                 /**
                  * End section
                  */
                 if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                     $callStack = CallStack::createFromHandler($handler);
                     $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                    $position = $openingTag->getFirstMatchedCharacterPosition();
                     try {
-                        $startPosition = DataType::toInteger($openingTag->getAttribute(PluginUtility::POSITION));
+                        $startPosition = DataType::toInteger($position);
                     } catch (ExceptionBadArgument $e) {
                         LogUtility::error("The position of the slide is not an integer", self::CANONICAL);
                         $startPosition = null;
@@ -168,15 +167,6 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-
-                    /**
-                     * Section Edit
-                     */
-                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
-                        $position = $data[PluginUtility::POSITION];
-                        $name = IdManager::getOrCreate()->generateNewIdForComponent(self::TAG);
-                        EditButtonManager::getOrCreate()->createAndAddEditButtonToStack($name, $position);
-                    }
 
                     /**
                      * Attributes

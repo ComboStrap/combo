@@ -42,10 +42,10 @@ class LocalFs implements FileSystem
          */
         $mime = $path->getMime();
         if ($mime === null) {
-            LogUtility::msg("The mime is unknown for the path ($path)");
+            LogUtility::info("The mime is unknown for the path ($path)");
         } else {
             if (!$mime->isTextBased()) {
-                LogUtility::msg("This mime content ($mime) is not text base (for the path $path)", LogUtility::LVL_MSG_ERROR);
+                LogUtility::error("This mime content ($mime) is not text base (for the path $path)");
             }
         }
 

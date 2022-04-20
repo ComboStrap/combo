@@ -382,10 +382,6 @@ class Page extends ResourceComboAbs
         if ($primaryHeader !== null) {
             $children[] = $primaryHeader;
         }
-        $primaryFooter = $this->getPrimaryFooterPage();
-        if ($primaryFooter !== null) {
-            $children[] = $primaryFooter;
-        }
         return $children;
 
 

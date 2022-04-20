@@ -130,7 +130,7 @@ class syntax_plugin_combo_edit extends DokuWiki_Syntax_Plugin
 
         $editButton = EditButton::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
         try {
-            $renderer->doc .= $editButton->toHtmlComment();
+            $renderer->doc .= " ".$editButton->toHtmlComment();
         } catch (ExceptionBadArgument $e) {
             LogUtility::error("Error while rendering the edit button ($editButton). Error: {$e->getMessage()}", self::CANONICAL);
             return false;

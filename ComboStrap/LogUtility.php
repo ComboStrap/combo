@@ -301,7 +301,7 @@ class LogUtility
         return $trace;
     }
 
-    public static function error(string $message, string $canonical)
+    public static function error(string $message, string $canonical = "support")
     {
         self::msg($message, LogUtility::LVL_MSG_ERROR, $canonical);
     }

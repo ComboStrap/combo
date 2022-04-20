@@ -42,6 +42,16 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
     const CONTAINER_ATTRIBUTE = "container";
     const CANONICAL = self::TAG;
 
+
+    public static function getClassName(?string $type): string
+    {
+        $containerPrefix = "";
+        if ($type !== "sm") {
+            $containerPrefix = "-$type";
+        }
+        return "container{$containerPrefix}";
+    }
+
     /**
      * Syntax Type.
      *
@@ -142,7 +152,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
 
                 $knownTypes = self::CONTAINER_VALUES;
                 $defaults["type"] = PluginUtility::getConfValue(self::DEFAULT_LAYOUT_CONTAINER_CONF, self::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
-                $tagAttributes = TagAttributes::createFromTagMatch($match, $knownTypes, $defaults);
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaults, $knownTypes);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
@@ -184,7 +194,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     $type = $tagAttributes->getType();
-                    $tagAttributes->addClassName("container-{$type}");
+                    $tagAttributes->addClassName(self::getClassName($type));
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
                     break;
 
@@ -195,7 +205,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
 
-                    $renderer->doc .= '</div>' . DOKU_LF;
+                    $renderer->doc .= '</div>';
                     break;
             }
             return true;

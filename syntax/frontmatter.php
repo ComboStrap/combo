@@ -77,7 +77,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const STATUS = "status";
     const CANONICAL = "frontmatter";
     const TAG = "frontmatter";
-    const CONF_ENABLE_SECTION_EDITING = 'enableFrontMatterSectionEditing';
     const CONF_ENABLE_FRONT_MATTER_ON_SUBMIT = "enableFrontMatterOnSubmit";
     const CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT = 0;
 
@@ -167,26 +166,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
      */
     function handle($match, $state, $pos, Doku_Handler $handler): array
     {
-
-        /**
-         * Section
-         */
-        if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
-
-            /**
-             * End position is the length of the match + 1 for the newline
-             */
-            $newLine = 1;
-            $endPosition = $pos + strlen($match) + $newLine;
-            $position = $pos;
-            $comboCall = EditButton::create("Edit frontmatter")
-                ->setStartPosition($position)
-                ->setEndPosition($endPosition)
-                ->toComboCall();
-            $callStack = CallStack::createFromHandler($handler);
-            $callStack->insertBefore($comboCall);
-
-        }
 
         if ($state !== DOKU_LEXER_SPECIAL) {
             LogUtility::error("Frontmatter was not called with a special state", self::CANONICAL);

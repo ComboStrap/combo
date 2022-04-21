@@ -210,10 +210,6 @@ class Snippet implements JsonSerializable
 
     }
 
-    public static function reset()
-    {
-        self::$globalSnippets = null;
-    }
 
     /**
      * @return Snippet[]

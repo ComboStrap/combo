@@ -1,9 +1,15 @@
 /* global anchors */
-document.addEventListener('DOMContentLoaded', (event) => {
+document.addEventListener('DOMContentLoaded', () => {
     anchors.options = {
         placement: 'right',
         icon: '#',
         class: 'anchor-combo'
     };
-    anchors.add("main > h2").add("main > h3").add("main > h4").add("main > h5").add("main > h6");
+    anchors
+        .add(".outline-heading")
+        .add("main section > h2")
+        .add("main section > h3")
+        .add("main section > h4")
+        .add("main section > h5")
+        .add("main section > h6")
 });

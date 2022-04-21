@@ -46,21 +46,24 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
         $page = Page::createPageFromId($id);
         if (!FileSystems::exists($page->getPath())) {
             // Is it a permanent link
-            $pageId = PageUrlPath::decodePageId($page->getPath()->getLastName());
-            if ($pageId !== null) {
-                $page = DatabasePageRow::createFromPageIdAbbr($pageId)->getPage();
-                if ($page === null) {
-                    return;
-                }
-                if (!FileSystems::exists($page->getPath())) {
-                    return;
-                }
-                if ($id === $page->getUrlId()) {
+            $encodedPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($page->getPath()->getLastName());
+            if ($encodedPageId !== null) {
+                $pageId = PageUrlPath::decodePageId($encodedPageId);
+                if ($pageId !== null) {
+                    $page = DatabasePageRow::createFromPageIdAbbr($pageId)->getPage();
+                    if ($page === null) {
+                        return;
+                    }
+                    if (!FileSystems::exists($page->getPath())) {
+                        return;
+                    }
+
                     /**
                      * hack as {@link getID()} invoked later reads the id from the input variable
                      */
                     global $INPUT;
                     $INPUT->set("id", $page->getPath()->getDokuwikiId());
+
                 }
             }
         }
@@ -101,7 +104,7 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
          */
         global $lang;
         if ($lang['direction'] === "rtl") {
-            PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest(self::CANONICAL."-rtl");
+            PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest(self::CANONICAL . "-rtl");
         }
 
 

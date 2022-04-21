@@ -106,9 +106,10 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
 
         /**
          * It should be present in edit, preview, show, ...
-         * That's why it's called with DOKUWIKI_STARTED
+         * See {@link \ComboStrap\SnippetManager::attachCssInternalStylesheetForRequest()}
+         * for more explanation
          */
-        $controller->register_hook('DOKUWIKI_STARTED', 'BEFORE', $this, 'addAllCssSnippet', array());
+        $controller->register_hook('ACTION_HEADERS_SEND', 'AFTER', $this, 'addAllCssSnippet', array());
 
     }
 

@@ -41,9 +41,11 @@ class IdManager
         return $idManager;
     }
 
+    /**
+     * @deprecated as the id manager is scoped to the requested page id
+     */
     public static function reset()
     {
-        self::$idManagers = null;
     }
 
     public function generateNewIdForComponent(string $canonical, Path $slotPath = null): string

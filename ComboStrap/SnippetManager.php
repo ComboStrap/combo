@@ -46,16 +46,12 @@ class SnippetManager
     private static $globalSnippetManager;
 
     /**
-     * Empty the snippets
-     * This is used to render the snippet only once
-     * The snippets renders first in the head
-     * and otherwise at the end of the document
-     * if the user are using another template or are in edit mode
+     * @deprecated
+     * Not needed anymore as we scope the global object to the requested id
+     * We let the function to document the static object
      */
     public static function reset()
     {
-        self::$globalSnippetManager = null;
-        Snippet::reset();
     }
 
 
@@ -246,16 +242,6 @@ class SnippetManager
         return $returnedDokuWikiFormat;
     }
 
-    /**
-     * @deprecated see {@link SnippetManager::reset()}
-     *
-     */
-    public
-    function close()
-    {
-        self::reset();
-    }
-
 
     public
     function getJsonArrayFromSlotSnippets($slot): ?array
@@ -311,7 +297,9 @@ class SnippetManager
      * @param string|null $script -  the css if any, otherwise the css file will be taken
      * @return Snippet a snippet scoped at the request scope (not in a slot)
      *
-     * This function should be called with a DOKUWIKI_STARTED event.
+     * This function should be called with a ACTION_HEADERS_SEND event
+     * (not DOKUWIKI_STARTED because the {@link \action_plugin_combo_router} should
+     * have run to set back the wiki id propertly
      *
      * If you need to split the css by type of action, see {@link \action_plugin_combo_docss::handleCssForDoAction()}
      */

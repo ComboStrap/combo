@@ -88,16 +88,10 @@ class CacheManager
     }
 
     /**
-     * In test, we may run more than once
-     * This function delete the cache manager
-     * and is called
-     * when a new request is created {@link \TestUtility::createTestRequest()}
+     * @deprecated as the cache manager is now scoped to the requested page
      */
     public static function reset()
     {
-
-        self::$cacheManager = null;
-
     }
 
 

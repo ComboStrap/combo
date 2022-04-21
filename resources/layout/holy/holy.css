@@ -44,6 +44,11 @@ main > *, #page-core {
     #main-toc {
         grid-column: side;
         grid-row: 2;
+        position: -webkit-sticky;
+        position: sticky;
+        top: 5rem;
+        z-index: 2;
+        height: fit-content;
     }
 
     #main-header {

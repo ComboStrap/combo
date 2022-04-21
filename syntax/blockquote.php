@@ -176,7 +176,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $context = null;
                 $parent = $callStack->moveToParent();
-                if ($parent!==false) {
+                if ($parent !== false) {
                     $context = $parent->getTagName();
                     if ($context === syntax_plugin_combo_template::TAG) {
                         $parent = $callStack->moveToParent();
@@ -210,9 +210,9 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
                 /**
                  * Pre-parsing:
-                 *    Cite: A cite should be wrapped into a {@link syntax_plugin_combo_footer}
+                 *    Cite: A cite should be wrapped into a footer
                  *          This should happens before the p processing because we
-                 *          are adding a {@link syntax_plugin_combo_footer} which is a stack
+                 *          are adding a {@link syntax_plugin_combo_box} which is a stack
                  *    Tweet blockquote: If a link has tweet link status, this is a tweet blockquote
                  */
                 $callStack->moveToEnd();
@@ -224,16 +224,22 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             case DOKU_LEXER_ENTER:
                                 // insert before
                                 $callStack->insertBefore(Call::createComboCall(
-                                    syntax_plugin_combo_footer::TAG,
+                                    syntax_plugin_combo_box::TAG,
                                     DOKU_LEXER_ENTER,
-                                    array("class" => "blockquote-footer")
+                                    array(
+                                        "class" => "blockquote-footer",
+                                        syntax_plugin_combo_box::TAG_ATTRIBUTE => "footer"
+                                    )
                                 ));
                                 break;
                             case DOKU_LEXER_EXIT:
                                 // insert after
                                 $callStack->insertAfter(Call::createComboCall(
-                                    syntax_plugin_combo_footer::TAG,
-                                    DOKU_LEXER_EXIT
+                                    syntax_plugin_combo_box::TAG,
+                                    DOKU_LEXER_EXIT,
+                                    array(
+                                        syntax_plugin_combo_box::TAG_ATTRIBUTE => "footer"
+                                    )
                                 ));
                                 break;
                         }

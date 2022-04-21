@@ -38,13 +38,15 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
     {
         /**
          * DOKUWIKI_STARTED: Edit, preview, show mode
+         *
+         * See {@link \ComboStrap\SnippetManager::attachCssInternalStylesheetForRequest()}
+         * for more explanation on the choice of the event
          */
-        $controller->register_hook('DOKUWIKI_STARTED', 'BEFORE', $this, 'anchor', array());
+        $controller->register_hook('ACTION_HEADERS_SEND', 'BEFORE', $this, 'anchor', array());
     }
 
     /**
-     * Dokuwiki has already a canonical methodology
-     * https://www.dokuwiki.org/canonical
+     *
      *
      * @param $event
      */
@@ -54,12 +56,13 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
         /**
          * Anchor on id
          */
-        PluginUtility::getSnippetManager()->attachJavascriptLibraryForRequest(
+        $snippetManager = PluginUtility::getSnippetManager();
+        $snippetManager->attachJavascriptLibraryForRequest(
             self::ANCHOR_LIBRARY_SNIPPET_ID,
             "https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js",
             "sha256-LGOWMG4g6/zc0chji4hZP1d8RxR2bPvXMzl/7oPZqjs="
         );
-        PluginUtility::getSnippetManager()->attachJavascriptInternalForRequest(self::ANCHOR_LIBRARY_SNIPPET_ID);
+        $snippetManager->attachJavascriptInternalForRequest(self::ANCHOR_LIBRARY_SNIPPET_ID);
 
         /**
          * Default Link Color
@@ -75,13 +78,10 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
         $primaryColor = Site::getPrimaryColor();
         if (Site::isBrandingColorInheritanceEnabled() && $primaryColor !== null) {
 
-            $snippetManager = PluginUtility::getSnippetManager();
-            try {
-
-                $primaryColorText = Site::getPrimaryColorForText();
-                $primaryColorHoverText = Site::getPrimaryColorTextHover();
-                if ($primaryColorText !== null) {
-                    $aCss = <<<EOF
+            $primaryColorText = Site::getPrimaryColorForText();
+            $primaryColorHoverText = Site::getPrimaryColorTextHover();
+            if ($primaryColorText !== null) {
+                $aCss = <<<EOF
 main a {
     color: {$primaryColorText->toRgbHex()};
 }
@@ -89,11 +89,8 @@ main a:hover {
     color: {$primaryColorHoverText->toRgbHex()};
 }
 EOF;
-                    $snippetManager->attachCssInternalStylesheetForRequest(self::ANCHOR_HTML_SNIPPET_ID, $aCss);
-                }
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("Error while setting the branding color on text. Error: {$e->getMessage()}");
-            }
+    $snippetManager->attachCssInternalStylesheetForRequest(self::ANCHOR_HTML_SNIPPET_ID, $aCss);
+}
 
         }
 

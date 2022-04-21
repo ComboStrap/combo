@@ -895,27 +895,50 @@ class PluginUtility
     public
     static function getRequestedWikiId(): ?string
     {
-        global $ID;
+        /**
+         * {@link getID()} reads the id from the input variable
+         *
+         * The {@link \action_plugin_combo_lang::load_lang()}
+         * set it back right
+         */
+        global $INPUT;
+        $id = $INPUT->str("id");
+        if (!empty($id)) {
+            return $id;
+        }
+
+        /**
+         * This should be less used
+         * but shows where the requested id is spilled in dokuwiki
+         *
+         * If the component is in a sidebar, we don't want the ID of the sidebar
+         * but the ID of the page.
+         */
         global $INFO;
-        $callingId = $ID;
-        // If the component is in a sidebar, we don't want the ID of the sidebar
-        // but the ID of the page.
         if ($INFO !== null) {
             $callingId = $INFO['id'];
+            if (!empty($callingId)) {
+                return $callingId;
+            }
         }
+
+
+        global $ID;
+        if ($ID !== null) {
+            return $ID;
+        }
+
         /**
          * This is the case with event triggered
          * before DokuWiki such as
          * https://www.dokuwiki.org/devel:event:init_lang_load
          */
-        if ($callingId == null) {
-            global $_REQUEST;
-            if (isset($_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE])) {
-                $callingId = $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-            }
+        global $_REQUEST;
+        if (isset($_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE])) {
+            return $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
         }
 
-        return $callingId;
+        return null;
 
     }
 
@@ -1240,8 +1263,8 @@ class PluginUtility
     public
     static function addEnterCall(
         \Doku_Handler &$handler,
-        $tagName,
-        $callStackArray = array()
+                      $tagName,
+                      $callStackArray = array()
     )
     {
         $pluginName = PluginUtility::getComponentName($tagName);

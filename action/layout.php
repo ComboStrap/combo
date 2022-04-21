@@ -122,17 +122,18 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
         /**
          * Css and Js
          */
+        $snippetManager = PluginUtility::getSnippetManager();
         $layoutCssPath = $layoutDirectory->resolve("$layoutName.css");
         try {
             $content = FileSystems::getContent($layoutCssPath);
-            PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest(self::CANONICAL, $content);
+            $snippetManager->attachCssInternalStylesheetForRequest(self::CANONICAL, $content);
         } catch (ExceptionNotFound $e) {
             // not a problem
         }
         $layoutJsPath = $layoutDirectory->resolve("$layoutName.js");
         try {
             $content = FileSystems::getContent($layoutJsPath);
-            PluginUtility::getSnippetManager()->attachJavascriptInternalForRequest(self::CANONICAL, $content);
+            $snippetManager->attachJavascriptInternalForRequest(self::CANONICAL, $content);
         } catch (ExceptionNotFound $e) {
             // not a problem
         }
@@ -195,6 +196,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                     break;
                 case self::PAGE_CORE_AREA:
                     $tagAttributes->addClassName(tpl_classes());
+                    $tagAttributes->addClassName("layout-$layoutName-combo");
                     $showArea = true;
                     break;
                 case self::MAIN_FOOTER_AREA:

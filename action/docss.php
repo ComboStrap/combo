@@ -16,7 +16,11 @@ class action_plugin_combo_docss extends DokuWiki_Action_Plugin
     public function register(Doku_Event_Handler $controller)
     {
 
-        $controller->register_hook('DOKUWIKI_STARTED', 'BEFORE', $this, 'handleCssForDoAction');
+        /**
+         * See {@link \ComboStrap\SnippetManager::attachCssInternalStylesheetForRequest()}
+         * for more explanation on the choice of the event
+         */
+        $controller->register_hook('ACTION_HEADERS_SEND', 'BEFORE', $this, 'handleCssForDoAction');
 
     }
 

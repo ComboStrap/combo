@@ -216,6 +216,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     {
 
         if (PluginUtility::getConfValue(self::ROUTER_ENABLE_CONF, 1)) {
+
             /**
              * This will call the function {@link action_plugin_combo_router::_router()}
              * The event is not DOKUWIKI_STARTED because this is not the first one
@@ -223,7 +224,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
              * https://www.dokuwiki.org/devel:event:init_lang_load
              */
             $controller->register_hook('DOKUWIKI_STARTED',
-                'AFTER',
+                'BEFORE',
                 $this,
                 'router',
                 array());
@@ -302,7 +303,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Unfortunately, DOKUWIKI_STARTED is not the first event
          * The id may have been changed by
-         * {@link action_plugin_combo_metalang::load_lang()}
+         * {@link action_plugin_combo_lang::load_lang()}
          * function, that's why we check against the {@link $_REQUEST}
          * and not the global ID
          */

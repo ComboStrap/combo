@@ -13,11 +13,10 @@ window.addEventListener("DOMContentLoaded",function(){
         document.body.style.setProperty("padding-top",offsetHeight+"px");
         // correct direct navigation via fragment to heading
         let style = document.createElement("style");
-        let marginTop = offsetHeight; // adjustment to not see the text above
         style.classList.add("menubar-fixed-top")
-        // textContent and not innerText (add br)
+        // textContent and not innerText (it adds br elements)
         style.textContent = `:target {
-  scroll-margin-top: ${marginTop}px;
+  scroll-margin-top: ${offsetHeight}px;
 }`;
         document.head.appendChild(style);
     });

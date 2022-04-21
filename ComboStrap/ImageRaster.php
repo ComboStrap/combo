@@ -237,7 +237,7 @@ class ImageRaster extends Image
             $mediaHeight = $this->getIntrinsicHeight();
             if (!empty($mediaHeight)) {
                 if ($requestedHeight > $mediaHeight) {
-                    LogUtility::msg("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    LogUtility::info("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", self::CANONICAL);
                     return $mediaHeight;
                 }
             }

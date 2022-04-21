@@ -435,32 +435,6 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         }
 
         /**
-         * Not heading at all
-         * No dynamic rendering (ie $ID is not null)
-         */
-        global $ID;
-        if ($ID !== null) {
-
-            $page = Page::createPageFromId($ID);
-            global $ACT;
-            if (
-                (
-                    $headingTotalCounter === 0
-                    || $page->isSecondarySlot()
-                )
-                && $ACT === "show" // not dynamic in case of webcode or other
-            ) {
-
-                $callStack->insertBefore(
-                    EditButton::create("Edit Slot {$page->getPath()->getLastName()}")
-                        ->toComboCall()
-                );
-
-            }
-
-        }
-
-        /**
          * Main Slots and TOC to the primary slots
          */
         if (LayoutMainAreaBuilder::shouldMainAreaBeBuild($callStack, $pageParsed)) {

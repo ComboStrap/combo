@@ -298,7 +298,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 global $ID;
                 /** @var Doku_Renderer_metadata $renderer */
                 if ($data[self::STATUS] === self::PARSING_STATE_ERROR) {
-                    if (PluginUtility::isDevOrTest()) {
+                    if (PluginUtility::isTest()) {
                         // fail if test
                         throw new ExceptionRuntime("Front Matter: The json object for the page ($ID) is not valid.", LogUtility::LVL_MSG_ERROR);
                     }

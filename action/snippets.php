@@ -190,10 +190,11 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         if ($ACT === RenderUtility::DYNAMIC_RENDERING) {
             return;
         }
+        // Admin page rendering
         $putSnippetInContent =
-            $this->headerOutputWasCalled === false
+            $this->headerOutputWasCalled === true
             ||
-            ($ACT !== "show" && $ACT !== null); // admin page rendering
+            ($ACT !== "show" && $ACT !== null);
         if ($putSnippetInContent) {
 
             $snippetManager = PluginUtility::getSnippetManager();

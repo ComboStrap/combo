@@ -1,8 +1,4 @@
-main > h2 { position: relative }
-main > h3 { position: relative }
-main > h4 { position: relative }
-main > h5 { position: relative }
-main > h6 { position: relative }
+.outline-heading { position: relative }
 
 .anchorjs-link {
     font-weight: 400;

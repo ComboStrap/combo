@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     anchors.options = {
         placement: 'right',
         icon: '#',
-        class: 'anchor-combo'
+        class: 'anchor-combo',
+        visible: "hover"
     };
     anchors
         .add(".outline-heading")

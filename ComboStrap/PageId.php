@@ -30,6 +30,11 @@ class PageId extends MetadataText
             ->setResource($resource);
     }
 
+    public static function getAbbreviated(string $pageId)
+    {
+        return substr($pageId, 0, PageId::PAGE_ID_ABBREV_LENGTH);
+    }
+
 
     /**
      *
@@ -233,7 +238,9 @@ class PageId extends MetadataText
          */
         $nanoIdClient = new Client();
         $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
-        while (DatabasePageRow::createFromPageId($pageId)->exists()) {
+        while (
+            DatabasePageRow::createFromPageIdAbbr(self::getAbbreviated($pageId))->exists()
+        ) {
             $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
         }
         return $pageId;

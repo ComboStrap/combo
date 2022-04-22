@@ -83,7 +83,7 @@ class action_plugin_combo_fulldatabasereplication extends DokuWiki_Action_Plugin
                 if(Console::isConsoleRun()) {
                     throw new ExceptionCompile($message);
                 } else {
-                    LogUtility::msg($message);
+                    LogUtility::error($message);
                 }
             }
         }

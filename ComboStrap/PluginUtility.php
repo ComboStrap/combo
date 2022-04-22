@@ -106,6 +106,7 @@ require_once(__DIR__ . '/EditButton.php');
 require_once(__DIR__ . '/EndDate.php');
 require_once(__DIR__ . '/Event.php');
 require_once(__DIR__ . '/ExceptionBadArgument.php');
+require_once(__DIR__ . '/ExceptionBadState.php');
 require_once(__DIR__ . '/ExceptionBadSyntax.php');
 require_once(__DIR__ . '/ExceptionExit.php');
 require_once(__DIR__ . '/ExceptionNotEnabled.php');

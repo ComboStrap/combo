@@ -9,7 +9,9 @@ use ComboStrap\EditButtonManager;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotEnabled;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -24,9 +26,13 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 {
 
     const TAG_OLD = "slide";
-    const CONF_ENABLE_SECTION_EDITING = "enableSlideSectionEditing";
+    const CONF_ENABLE_BAR_EDITING = "enableBarEditing";
     const CANONICAL = self::TAG_OLD;
-    private static $tags = ["bar", self::TAG_OLD];
+    const TAG = "bar";
+    const HTML_TAG_ATTRIBUTES = "html_tag";
+    const HTML_SECTION_TAG = "section";
+    const SIZE_ATTRIBUTE = "size";
+    private static $tags = [self::TAG, self::TAG_OLD];
 
 
     /**
@@ -84,7 +90,7 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        foreach(self::$tags as $tag) {
+        foreach (self::$tags as $tag) {
             $pattern = PluginUtility::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
@@ -93,10 +99,24 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 
     function postConnect()
     {
-        foreach(self::$tags as $tag) {
+        foreach (self::$tags as $tag) {
             $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
+    }
+
+    private static function getHtmlTag(): string
+    {
+        $tag = "div";
+        try {
+            $page = Page::createPageFromGlobalDokuwikiId();
+            if ($page->isPrimarySlot()) {
+                $tag = self::HTML_SECTION_TAG;
+            }
+            return $tag;
+        } catch (ExceptionNotFound $e) {
+            return $tag;
+        }
     }
 
     function handle($match, $state, $pos, Doku_Handler $handler)
@@ -107,24 +127,45 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $tagAttributes = TagAttributes::createFromTagMatch($match)
-                    ->setLogicalTag(self::TAG_OLD);
+                    ->setLogicalTag(self::TAG);
+
+                $htmlTag = self::getHtmlTag();
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
+                    self::HTML_TAG_ATTRIBUTES => $htmlTag
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG_OLD, $match, $handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
+                $callStack = CallStack::createFromHandler($handler);
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+
                 /**
-                 * End section
+                 * Section heading control
                  */
-                if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
-                    $callStack = CallStack::createFromHandler($handler);
-                    $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $htmlTag = $openingTag->getPluginData(self::HTML_TAG_ATTRIBUTES);
+                $message = null;
+                if ($htmlTag === self::HTML_SECTION_TAG) {
+                    $headingFound = false;
+                    while ($actualCall = $callStack->next()) {
+                        if (in_array($actualCall->getTagName(), action_plugin_combo_headingpostprocessing::HEADING_TAGS)) {
+                            $headingFound = true;
+                            break;
+                        }
+                    }
+                    if (!$headingFound) {
+                        $id = $openingTag->getIdOrDefault();
+                        $message = "No heading was found in the section bar ($id). An heading is mandatory for navigation within device.";
+                    }
+                }
+
+                if (PluginUtility::getConfValue(self::CONF_ENABLE_BAR_EDITING, 1)) {
+
                     $position = $openingTag->getFirstMatchedCharacterPosition();
                     try {
                         $startPosition = DataType::toInteger($position);
@@ -135,7 +176,8 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
                     $id = $openingTag->getIdOrDefault();
                     // +1 to go at the line
                     $endPosition = $pos + strlen($match) + 1;
-                    $editButtonCall = EditButton::create("Edit slide $id")
+                    $tag = self::TAG;
+                    $editButtonCall = EditButton::create("Edit $tag $id")
                         ->setStartPosition($startPosition)
                         ->setEndPosition($endPosition)
                         ->toComboCall();
@@ -143,8 +185,11 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
                     $callStack->insertBefore($editButtonCall);
                 }
 
+
                 return array(
-                    PluginUtility::STATE => $state
+                    PluginUtility::STATE => $state,
+                    self::HTML_TAG_ATTRIBUTES => $htmlTag,
+                    PluginUtility::EXIT_MESSAGE => $message
                 );
 
 
@@ -175,10 +220,13 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
                     /**
                      * Attributes
                      */
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $attributes->addClassName(self::TAG_OLD);
+                    $barTag = self::TAG;
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES])
+                        ->setLogicalTag($barTag);
 
-                    $sizeAttribute = "size";
+                    $attributes->addClassName($barTag);
+
+                    $sizeAttribute = self::SIZE_ATTRIBUTE;
                     $size = "md";
                     if ($attributes->hasComponentAttribute($sizeAttribute)) {
                         $size = $attributes->getValueAndRemove($sizeAttribute);
@@ -186,26 +234,30 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
                     switch ($size) {
                         case "lg":
                         case "large":
-                            $attributes->addClassName(self::TAG_OLD . "-lg");
+                            $attributes->addClassName($barTag . "-lg");
                             break;
                         case "sm":
                         case "small":
-                            $attributes->addClassName(self::TAG_OLD . "-sm");
+                            $attributes->addClassName($barTag . "-sm");
                             break;
                         case "xl":
                         case "extra-large":
-                            $attributes->addClassName(self::TAG_OLD . "-xl");
+                            $attributes->addClassName($barTag . "-xl");
+                            break;
+                        case "md":
+                        case "medium":
+                            $attributes->addClassName($barTag . "-md");
                             break;
                         default:
-                            $attributes->addClassName(self::TAG_OLD . "-md");
                             break;
                     }
 
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG_OLD);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($barTag);
 
+                    $htmlTag = $attributes->getValueAndRemove(self::HTML_TAG_ATTRIBUTES);
+                    $renderer->doc .= $attributes->toHtmlEnterTag($htmlTag);
 
-                    $renderer->doc .= $attributes->toHtmlEnterTag("section");
-                    $renderer->doc .= "<div class=\"slide-body\" style=\"z-index:1;position: relative;\">";
+                    $renderer->doc .= "<div class=\"$barTag-body position-relative\">";
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -214,6 +266,7 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
 
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     /**
                      * End body
                      */
@@ -222,7 +275,8 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
                     /**
                      * End component
                      */
-                    $renderer->doc .= '</section>';
+                    $htmlTag = $attributes->getValueAndRemove(self::HTML_TAG_ATTRIBUTES);
+                    $renderer->doc .= "</$htmlTag>";
 
                     break;
             }

@@ -253,6 +253,8 @@ class DatabasePageRow
     function shouldReplicate(): bool
     {
 
+
+
         $dateReplication = $this->getReplicationDate();
         if ($dateReplication === null) {
             return true;
@@ -261,10 +263,15 @@ class DatabasePageRow
         /**
          * When the replication date is older than the actual document
          */
-        $modifiedTime = FileSystems::getModifiedTime($this->page->getPath());
-        if ($modifiedTime > $dateReplication) {
-            return true;
+        try {
+            $modifiedTime = FileSystems::getModifiedTime($this->page->getPath());
+            if ($modifiedTime > $dateReplication) {
+                return true;
+            }
+        } catch (ExceptionNotFound $e) {
+            return false;
         }
+
 
         /**
          * When the file does not exist
@@ -277,9 +284,13 @@ class DatabasePageRow
         /**
          * When the analytics document is older
          */
-        $modifiedTime = FileSystems::getModifiedTime($this->page->getAnalyticsDocument()->getCachePath());
-        if ($modifiedTime > $dateReplication) {
-            return true;
+        try {
+            $modifiedTime = FileSystems::getModifiedTime($this->page->getAnalyticsDocument()->getCachePath());
+            if ($modifiedTime > $dateReplication) {
+                return true;
+            }
+        } catch (ExceptionNotFound $e) {
+            //
         }
 
 
@@ -436,12 +447,6 @@ class DatabasePageRow
             ->setValue(new DateTime());
 
         /**
-         * Convenient variable
-         */
-        $page = $this->page;
-
-
-        /**
          * Same data as {@link Page::getMetadataForRendering()}
          */
         $record = $this->getMetaRecord();
@@ -465,6 +470,10 @@ class DatabasePageRow
 
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadState
+     */
     public function upsertAttributes(array $attributes): bool
     {
 
@@ -527,9 +536,19 @@ class DatabasePageRow
              * Creation
              */
             if ($this->page === null) {
-                LogUtility::msg("The page should be defined to create a page row");
-                return false;
+                throw new ExceptionBadState("The page should be defined to create a page database row");
             }
+
+            /**
+             * If the user copy a frontmatter with the same page id abbr, we got a problem
+             */
+            $pageIdAbbr = $values[PageId::PAGE_ID_ABBR_ATTRIBUTE];
+            $databasePage = DatabasePageRow::createFromPageIdAbbr($pageIdAbbr);
+            if($databasePage->exists()){
+                $duplicatePage = $databasePage->getPage();
+                throw new ExceptionBadState("The page ($this->page) cannot be replicated to the database because it has the same page id abbreviation ($pageIdAbbr) than the page ($duplicatePage)");
+            }
+
             $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getPath()->getDokuwikiId();
             $values[PagePath::PROPERTY_NAME] = $this->page->getPath()->toAbsolutePath()->toString();
             /**
@@ -973,7 +992,7 @@ class DatabasePageRow
                         },
                         $existingPages);
                     $existingPages = implode(", ", $existingPageIds);
-                    LogUtility::msg("The existing pages ($existingPages) have all the same $attribute ($value)", LogUtility::LVL_MSG_ERROR);
+                    LogUtility::msg("The existing pages ($existingPages) have all the same attribute $attribute with the value ($value)", LogUtility::LVL_MSG_ERROR);
                     return null;
                 }
         }

@@ -8,7 +8,7 @@ main > *, #page-core {
         display: grid;
         gap: 1.5rem;
         grid-template-areas: "page-side page-main";
-        grid-template-columns: minmax(max-content,1fr) 3fr;
+        grid-template-columns: minmax(min-content,1fr) 3fr;
     }
 
     #page-side {
@@ -25,14 +25,14 @@ main > *, #page-core {
 @media (min-width: 992px) {
 
     #page-core {
-        grid-template-columns: minmax(max-content,1fr) 5fr;
+        grid-template-columns: minmax(min-content,1fr) 5fr;
     }
 
     main {
 
         grid-area: page-main;
         display: grid;
-        grid-template-columns: [main] 7fr [side] minmax(max-content,2fr);
+        grid-template-columns: [main] 7fr [side] minmax(min-content,2fr);
         grid-auto-flow: row;
         gap: 1rem;
         grid-template-areas: unset;

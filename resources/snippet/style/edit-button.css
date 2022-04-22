@@ -1,5 +1,4 @@
 form.edit-button-combo {
-    float: right;
     z-index: 1040;
     position: relative;
 }
@@ -23,9 +22,10 @@ form.edit-button-combo svg {
 section_highlight is a node added when hovering around the edit button by the page.js file
 See sectionHighlight function
 We have just disable this function in script.js because it was moving element around
+Better solution would be to change the styling (background) with css
 */
 
 /* style for section highlighting */
-.strap_section_highlight {
+.edit-button-highlight-combo {
     background: #f8f9fa;
 }

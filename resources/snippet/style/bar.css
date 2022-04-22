@@ -1,7 +1,7 @@
 
-.slide {
+.bar {
     position: relative;
-    overflow: hidden;
+    overflow: auto;
     margin: 0;
     width: 100%;
     display: block;
@@ -10,19 +10,19 @@
 
 @media (max-width:576px) {
 
-    .slide-sm {
+    .bar-sm {
         padding: 1rem 1rem
     }
 
-    .slide-md {
+    .bar-md {
         padding: 2rem 1rem;
     }
 
-    .slide-xl {
+    .bar-xl {
         padding: 4rem 1rem;
     }
 
-    .slide-lg {
+    .bar-lg {
         padding: 3rem 1rem;
     }
 
@@ -30,56 +30,56 @@
 
 @media (min-width: 576px) {
 
-    .slide-sm {
+    .bar-sm {
         padding: 1rem 1rem
     }
 
-    .slide-md {
+    .bar-md {
         padding: 2rem 1rem;
     }
 
-    .slide-xl {
+    .bar-xl {
         padding: 4rem 1rem;
     }
 
-    .slide-lg {
+    .bar-lg {
         padding: 3rem 1rem;
     }
 }
 
 @media (min-width: 768px) {
-    .slide-sm {
+    .bar-sm {
         padding: 1rem 2rem
     }
 
-    .slide-md {
+    .bar-md {
         padding: 2rem 4rem;
     }
 
-    .slide-xl {
+    .bar-xl {
         padding: 4rem 8rem;
     }
 
-    .slide-lg {
+    .bar-lg {
         padding: 3rem 6rem;
     }
 }
 
 
 
-.bg-slide-light {
+.bg-bar-light {
     background-color: #e0e6ed;
 }
 
-.bg-slide-dark {
+.bg-bar-dark {
     background-color: #1a232d;
 }
 
-.bg-slide-primary {
+.bg-bar-primary {
     background-color: #fff;
 }
 
-.bg-slide-secondary {
+.bg-bar-secondary {
     background-color: #fafbfe;
 }
 

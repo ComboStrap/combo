@@ -184,7 +184,9 @@ class EditButton
         /**
          * Request based because the button are added only for a user that can write
          */
-        PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest(self::SNIPPET_ID);
+        $snippetManager = PluginUtility::getSnippetManager();
+        $snippetManager->attachCssInternalStylesheetForRequest(self::SNIPPET_ID);
+        $snippetManager->attachJavascriptInternalForRequest(self::SNIPPET_ID);
 
         /**
          * The callback function on all edit comment

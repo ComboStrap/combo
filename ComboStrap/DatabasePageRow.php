@@ -967,7 +967,12 @@ class DatabasePageRow
                 if (sizeof($existingPages) === 1) {
                     return $existingPages[0];
                 } else {
-                    $existingPages = implode(", ", $existingPages);
+                    $existingPageIds = array_map(
+                        function ($row) {
+                            return $row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
+                        },
+                        $existingPages);
+                    $existingPages = implode(", ", $existingPageIds);
                     LogUtility::msg("The existing pages ($existingPages) have all the same $attribute ($value)", LogUtility::LVL_MSG_ERROR);
                     return null;
                 }

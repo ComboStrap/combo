@@ -20,12 +20,13 @@ if (!defined('DOKU_INC')) die();
  * Implementation of a div
  *
  */
-class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "slide";
+    const TAG_OLD = "slide";
     const CONF_ENABLE_SECTION_EDITING = "enableSlideSectionEditing";
-    const CANONICAL = self::TAG;
+    const CANONICAL = self::TAG_OLD;
+    private static $tags = ["bar", self::TAG_OLD];
 
 
     /**
@@ -34,7 +35,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'container';
     }
@@ -48,9 +49,9 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
-        return 'block';
+        return 'stack';
     }
 
     /**
@@ -74,7 +75,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 
     }
 
-    function getSort()
+    function getSort(): int
     {
         return 200;
     }
@@ -83,15 +84,18 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        foreach(self::$tags as $tag) {
+            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        }
     }
 
 
     function postConnect()
     {
-
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        foreach(self::$tags as $tag) {
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        }
 
     }
 
@@ -103,7 +107,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $tagAttributes = TagAttributes::createFromTagMatch($match)
-                    ->setLogicalTag(self::TAG);
+                    ->setLogicalTag(self::TAG_OLD);
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -111,7 +115,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG_OLD, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
@@ -172,7 +176,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                      * Attributes
                      */
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $attributes->addClassName(self::TAG);
+                    $attributes->addClassName(self::TAG_OLD);
 
                     $sizeAttribute = "size";
                     $size = "md";
@@ -182,22 +186,22 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                     switch ($size) {
                         case "lg":
                         case "large":
-                            $attributes->addClassName(self::TAG . "-lg");
+                            $attributes->addClassName(self::TAG_OLD . "-lg");
                             break;
                         case "sm":
                         case "small":
-                            $attributes->addClassName(self::TAG . "-sm");
+                            $attributes->addClassName(self::TAG_OLD . "-sm");
                             break;
                         case "xl":
                         case "extra-large":
-                            $attributes->addClassName(self::TAG . "-xl");
+                            $attributes->addClassName(self::TAG_OLD . "-xl");
                             break;
                         default:
-                            $attributes->addClassName(self::TAG . "-md");
+                            $attributes->addClassName(self::TAG_OLD . "-md");
                             break;
                     }
 
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG_OLD);
 
 
                     $renderer->doc .= $attributes->toHtmlEnterTag("section");

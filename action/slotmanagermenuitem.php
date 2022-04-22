@@ -53,7 +53,7 @@ class action_plugin_combo_slotmanagermenuitem extends DokuWiki_Action_Plugin
         $menuItems = &$event->data["items"];
         foreach ($menuItems as $key => $menuItem) {
             if ($menuItem instanceof \dokuwiki\Menu\Item\Edit) {
-                array_splice($menuItems, $key + 1, 1, [new \ComboStrap\SlotManagerMenuItem()]);
+                array_splice($menuItems, $key + 1, 0, [new \ComboStrap\SlotManagerMenuItem()]);
                 break;
             }
         }

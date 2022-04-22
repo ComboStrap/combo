@@ -90,18 +90,12 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
 
         global $ACT;
         switch ($ACT) {
-            case "login":
-            case "resendpwd":
-            case "register":
-            case "profile":
-                // for the identity forms
-                $layoutName = "median";
-                break;
-            case "preview":
-            case "edit":
-            case "admin":
+            case "preview": // edit preview
+            case "edit": // edit
+            case "admin": // admin page
+            case "media": // media manager
+                // Note: the secondary slot will not render because the act is not show
                 $layoutName = "hamburger";
-                // Note: the slot does not render because the act is not show
                 break;
             case "show":
                 $requestedPage = Page::createPageFromRequestedPage();
@@ -109,7 +103,17 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                     ->getValueOrDefault();
                 break;
             default:
-                return;
+            case "login": // login
+            case "resendpwd": // passwd resend
+            case "register": // register form
+            case "profile": // profile form
+            case "search": // search
+            case "recent": // the revisions for the website
+            case "index": // the website index
+            case "diff": // diff between revisions
+            case "revisions": // Known as old revisions (old version of the page)
+                $layoutName = "median";
+                break;
         }
 
         $layoutDirectory = DokuPath::createDokuPath(":layout:$layoutName:", DokuPath::COMBO_DRIVE);

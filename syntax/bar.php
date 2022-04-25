@@ -19,9 +19,7 @@ use ComboStrap\TagAttributes;
 if (!defined('DOKU_INC')) die();
 
 /**
- * Class syntax_plugin_combo_box
- * Implementation of a div
- *
+ * Separator: See: https://getwaves.io/
  */
 class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 {
@@ -127,7 +125,8 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                $tagAttributes = TagAttributes::createFromTagMatch($match)
+                $defaults = [Hero::ATTRIBUTE=>"sm"];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaults)
                     ->setLogicalTag(self::TAG);
 
                 $htmlTag = self::getHtmlTag();
@@ -240,8 +239,9 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 
                     $htmlTag = $data[self::HTML_TAG_ATTRIBUTES];
                     $renderer->doc .= $attributes->toHtmlEnterTag($htmlTag);
-
-                    $renderer->doc .= "<div class=\"$barTag-body position-relative\">";
+                    $layoutContainer = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                    $containerClass = syntax_plugin_combo_container::getClassName($layoutContainer);
+                    $renderer->doc .= "<div class=\"$barTag-body position-relative $containerClass\">";
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

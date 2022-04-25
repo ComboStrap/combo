@@ -10,6 +10,7 @@
  *
  */
 
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -196,6 +197,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
                     $type = $tagAttributes->getType();
                     $tagAttributes->addClassName(self::getClassName($type));
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
+                    LogUtility::warning("The container syntax has been deprecated", ":container:deprecated");
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

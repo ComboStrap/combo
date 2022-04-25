@@ -58,11 +58,6 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
         self::MAIN_FOOTER_AREA,
     ];
 
-    const rowAreas = [
-        self::PAGE_CORE_AREA,
-        self::PAGE_HEADER_AREA,
-        self::PAGE_FOOTER_AREA,
-    ];
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -174,8 +169,11 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
             $showArea = $tagAttributes->getBooleanValueAndRemoveIfPresent("show", true);
             $layoutArea->setShow($showArea);
 
-            // container
-            if (in_array($areaName, self::rowAreas)) {
+            // Container
+            if ($areaName === self::PAGE_CORE_AREA) {
+                // Page Header and Footer have a bar that permits to set the container
+                // Page core does not have any
+                // It's by default contained for all layout
                 $container = $tagAttributes->getValueAndRemoveIfPresent("container", true);
                 if ($container) {
                     $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);

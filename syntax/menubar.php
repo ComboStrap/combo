@@ -274,20 +274,12 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
                         }
                     }
 
-                    if ($container == null) {
+                    if ($container === null) {
                         $container = $tagAttributes->getValueAndRemoveIfPresent(self::CONTAINER_ATTRIBUTE);
                     }
-
-                    // When the top is fixed, the container should be inside the navbar
-                    $containerSuffix = "";
-                    if ($container !== "sm" && $container !== "") {
-                        if (!in_array($container, syntax_plugin_combo_container::CONTAINER_VALUES)) {
-                            LogUtility::warning("The container value ($container) is not a valid value. It should be one of this values: " . implode(", ", syntax_plugin_combo_container::CONTAINER_VALUES), self::CANONICAL);
-                        } else {
-                            $containerSuffix = "-$container";
-                        }
-                    }
-                    $tagAttributes->addHtmlAfterEnterTag("<div class=\"container{$containerSuffix}\">");
+                    $containerClass = syntax_plugin_combo_container::getClassName($container);
+                    // The container should always be be inside to allow background
+                    $tagAttributes->addHtmlAfterEnterTag("<div class=\"$containerClass\">");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("nav");
 
                     break;

@@ -227,10 +227,7 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
                     $attributes->addClassName($barTag);
 
                     $sizeAttribute = self::SIZE_ATTRIBUTE;
-                    $size = "md";
-                    if ($attributes->hasComponentAttribute($sizeAttribute)) {
-                        $size = $attributes->getValueAndRemove($sizeAttribute);
-                    }
+                    $size = $attributes->getValueAndRemove($sizeAttribute);
                     switch ($size) {
                         case "lg":
                         case "large":
@@ -254,7 +251,7 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 
                     PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($barTag);
 
-                    $htmlTag = $attributes->getValueAndRemove(self::HTML_TAG_ATTRIBUTES);
+                    $htmlTag = $data[self::HTML_TAG_ATTRIBUTES];
                     $renderer->doc .= $attributes->toHtmlEnterTag($htmlTag);
 
                     $renderer->doc .= "<div class=\"$barTag-body position-relative\">";
@@ -275,7 +272,7 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
                     /**
                      * End component
                      */
-                    $htmlTag = $attributes->getValueAndRemove(self::HTML_TAG_ATTRIBUTES);
+                    $htmlTag = $data[self::HTML_TAG_ATTRIBUTES];
                     $renderer->doc .= "</$htmlTag>";
 
                     break;
@@ -284,15 +281,16 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
         } elseif ($format == 'xml') {
             /** @var renderer_plugin_combo_xml $renderer */
             $state = $data[PluginUtility::STATE];
+            $tag = self::TAG;
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $renderer->doc .= "<slide>";
+                    $renderer->doc .= "<$tag>";
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= "</slide>";
+                    $renderer->doc .= "</$tag>";
                     break;
             }
         }

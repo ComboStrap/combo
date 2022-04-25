@@ -238,6 +238,10 @@ class PageId extends MetadataText
          */
         $nanoIdClient = new Client();
         $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
+        /**
+         * The real id is the abbreviated one
+         * Test if there is not yet a page with this value
+         */
         while (
             DatabasePageRow::createFromPageIdAbbr(self::getAbbreviated($pageId))->exists()
         ) {

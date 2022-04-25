@@ -254,7 +254,6 @@ class DatabasePageRow
     {
 
 
-
         $dateReplication = $this->getReplicationDate();
         if ($dateReplication === null) {
             return true;
@@ -543,8 +542,16 @@ class DatabasePageRow
              * If the user copy a frontmatter with the same page id abbr, we got a problem
              */
             $pageIdAbbr = $values[PageId::PAGE_ID_ABBR_ATTRIBUTE];
+            if ($pageIdAbbr == null) {
+                $pageId = $values[PageId::getPersistentName()];
+                if ($pageId === null) {
+                    throw new ExceptionBadState("You can't insert a page in the database without a page id");
+                }
+                $pageIdAbbr = PageId::getAbbreviated($pageId);
+                $values[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $pageIdAbbr;
+            }
             $databasePage = DatabasePageRow::createFromPageIdAbbr($pageIdAbbr);
-            if($databasePage->exists()){
+            if ($databasePage->exists()) {
                 $duplicatePage = $databasePage->getPage();
                 throw new ExceptionBadState("The page ($this->page) cannot be replicated to the database because it has the same page id abbreviation ($pageIdAbbr) than the page ($duplicatePage)");
             }
@@ -1023,6 +1030,7 @@ class DatabasePageRow
                 return "p.{$element}";
             }
         }, null);
+        /** @noinspection SqlResolve */
         $query = "select {$fields} from PAGES p, PAGE_ALIASES pa where p.{$pageIdAttribute} = pa.{$pageIdAttribute} and pa.PATH = ? ";
         $request = $this->sqlite
             ->createRequest()

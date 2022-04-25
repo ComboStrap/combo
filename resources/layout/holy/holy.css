@@ -32,7 +32,7 @@ main > *, #page-core {
 
         grid-area: page-main;
         display: grid;
-        grid-template-columns: [main] 7fr [side] minmax(min-content,2fr);
+        grid-template-columns: [main] 7fr [side] minmax(auto,2fr);
         grid-auto-flow: row;
         gap: 1rem;
         grid-template-areas: unset;

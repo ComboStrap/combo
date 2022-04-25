@@ -162,18 +162,28 @@ abstract class OutputDocument extends PageCompilerDocument
          * result
          */
         global $ID;
-        $keep = $ID;
+        $keepID = $ID;
         $ID = $this->getPage()->getPath()->getDokuwikiId();
+        global $ACT;
+        $keepAct = $ACT;
+        if ($ACT === null) {
+            /**
+             * ACT is the usage of the parsed instructions
+             * and is needed for {@link LayoutMainAreaBuilder::shouldMainAreaBeBuild()}
+             */
+            $ACT = "show";
+        }
         try {
 
             /**
              * Use cache should be always called because it trigger
              * the event coupled to the cache (ie PARSER_CACHE_USE)
              */
-            $depends=$this->getDepends();
+            $depends = $this->getDepends();
             return ($this->cache->useCache($depends) === false);
         } finally {
-            $ID = $keep;
+            $ID = $keepID;
+            $ACT = $keepAct;
         }
 
 

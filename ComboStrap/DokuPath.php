@@ -352,7 +352,7 @@ class DokuPath extends PathAbs
     public static function createPagePathFromId($id): DokuPath
     {
         DokuPath::addRootSeparatorIfNotPresent($id);
-        return new DokuPath( $id, self::PAGE_DRIVE);
+        return new DokuPath($id, self::PAGE_DRIVE);
     }
 
     /**
@@ -803,7 +803,7 @@ class DokuPath extends PathAbs
              * path given is `::path`
              */
             if (PluginUtility::isDevOrTest()) {
-                LogUtility::msg("The path given ($absolutePath) has too much separator", LogUtility::LVL_MSG_ERROR);
+                LogUtility::warning("The path given ($absolutePath) has too much separator");
             }
         }
         return DokuFs::SCHEME;

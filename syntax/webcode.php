@@ -252,7 +252,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                                 $actualCodeType = strtolower(trim($actualTag->getType()));
 
                                 // Xml is html
-                                if ($actualCodeType == 'xml') {
+                                if ($actualCodeType === 'xml') {
                                     $actualCodeType = 'html';
                                 }
 
@@ -384,10 +384,14 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
 
                         // Js, Html, Css
-                        $iframeSrcValue = '<html><head>';
-                        $iframeSrcValue .= '<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>';
-                        $iframeSrcValue .= '<title>Made by WebCode</title>';
-                        $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css"/>';
+                        /** @noinspection JSUnresolvedLibraryURL */
+                        $iframeSrcValue =<<<EOF
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <title>Made by WebCode</title>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css">
+EOF;
 
 
                         // External Resources such as css stylesheet or js
@@ -602,9 +606,9 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
     }
 
     /**
-     * @param $codes the array containing the codes
-     * @param $attributes the attributes of a call (for now the externalResources)
-     * @return string the HTML form code
+     * @param $codes - the array containing the codes
+     * @param $attributes - the attributes of a call (for now the externalResources)
+     * @return void the HTML form code
      */
     public function addCodePenButton($codes, $attributes)
     {

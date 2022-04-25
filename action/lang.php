@@ -42,7 +42,17 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
          * they will be overwritten by calling the {@link getID()} function
          *
          */
-        $id = getID();
+        /**
+         * Arabic characters should not be deleted, otherwise the page id abbr becomes the last name
+         * when URL encoding is used with arabic language
+         * ie:
+         * locale:%F8%B5%F9%81%F8%AD%F8%A9-id1tgpx9
+         * becomes
+         * locale:id1tgpx9
+         */
+        $clean = false;
+        /** @noinspection PhpConditionAlreadyCheckedInspection */
+        $id = getID("id", $clean);
         $page = Page::createPageFromId($id);
         if (!FileSystems::exists($page->getPath())) {
             // Is it a permanent link

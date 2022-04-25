@@ -20,6 +20,7 @@ class LayoutMainAreaBuilder
     public static function shouldMainAreaBeBuild(CallStack $callStack, Page $page): bool
     {
 
+
         if (!$page->isPrimarySlot()) {
             return false;
         }
@@ -30,14 +31,23 @@ class LayoutMainAreaBuilder
         }
 
         /**
-         * ACT only for show and preview
          *
-         * - may be null with ajax call
+         * Page does not have the concept of content type
+         * (ie page content, admin content, ...)
+         *
+         * We use ACT for this purpose.
+         *
+         * ACT only for show and preview
          * - not {@link RenderUtility::DYNAMIC_RENDERING}
          * - not 'admin'
          *
+         * - not all other undetermined actions (
          */
         global $ACT;
+        if ($ACT === null) {
+            $ACT = "show";
+            LogUtility::error("The action variable was not set. We have set it to be `show`", self::CANONICAL);
+        }
         switch ($ACT) {
             case "show":
                 return true;
@@ -86,6 +96,8 @@ class LayoutMainAreaBuilder
             default:
             case RenderUtility::DYNAMIC_RENDERING:
             case "edit":
+            case "admin":
+            case "backlink":
                 /**
                  * Not on edit page
                  * Not with dynamic content
@@ -174,7 +186,7 @@ class LayoutMainAreaBuilder
                             $tocData = $actualCall;
                         }
                         $childCallStack->deleteActualCallAndPrevious();
-                    break;
+                        break;
                 }
             }
 
@@ -264,7 +276,7 @@ class LayoutMainAreaBuilder
             DOKU_LEXER_ENTER,
             ["id" => "main-header", "tag" => $headerHtmlTag]
         ));
-        if ($frontMatterCall!==null) {
+        if ($frontMatterCall !== null) {
             /**
              * Adding the front matter edit button if any in the header
              * to not get problem with the layout grid

@@ -41,19 +41,19 @@
 @media (min-width: 768px) {
 
     .hero-sm {
-        padding: 1rem 2rem
+        padding: 2rem 1rem;
     }
 
     .hero-md {
-        padding: 2rem 4rem;
+        padding: 4rem 2rem;
     }
 
     .hero-lg {
-        padding: 3rem 6rem;
+        padding: 6rem 3rem;
     }
 
     .hero-xl {
-        padding: 4rem 8rem;
+        padding: 8rem 4rem;
     }
 
 }

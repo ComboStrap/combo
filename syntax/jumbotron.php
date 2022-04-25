@@ -4,9 +4,11 @@
  *
  */
 
+use ComboStrap\Background;
 use ComboStrap\Bootstrap;
 use ComboStrap\Hero;
 use ComboStrap\PluginUtility;
+use ComboStrap\Spacing;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
@@ -136,7 +138,11 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $defaults = [Hero::ATTRIBUTE => "md"];
+                $defaults = [
+                    Hero::ATTRIBUTE => "md",
+                    Background::BACKGROUND_COLOR => "#e9ecef",
+                    Spacing::SPACING_ATTRIBUTE => "m-2"
+                ];
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaults)
                     ->setLogicalTag(self::TAG);
 
@@ -193,7 +199,7 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
                             break;
                         default:
                         case Bootstrap::BootStrapFiveMajorVersion:
-                            $jumbotronClass = "bg-light rounded m-2";
+                            $jumbotronClass = "rounded";
                     }
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES])
                         ->setLogicalTag(self::TAG)

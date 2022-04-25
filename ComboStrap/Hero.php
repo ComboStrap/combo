@@ -35,6 +35,8 @@ class Hero
                 case "extra-large":
                     $attributes->addClassName(self::COMPONENT_NAME . "-xl");
                     break;
+                case "none":
+                    return;
                 default:
                     throw new ExceptionBadArgument("The hero value ($hero) is unknown and was not applied");
             }

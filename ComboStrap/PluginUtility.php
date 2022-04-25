@@ -143,6 +143,7 @@ require_once(__DIR__ . '/JavascriptLibrary.php');
 require_once(__DIR__ . '/Lang.php');
 require_once(__DIR__ . '/LayoutMainAreaBuilder.php');
 require_once(__DIR__ . '/LdJson.php');
+require_once(__DIR__ . '/Length.php');
 require_once(__DIR__ . '/LineSpacing.php');
 require_once(__DIR__ . '/Locale.php');
 require_once(__DIR__ . '/LocalFs.php');
@@ -754,9 +755,11 @@ class PluginUtility
      * @param $label -  the text of the link
      * @param bool $withIcon - used to break the recursion with the message in the {@link Icon}
      * @return string - an url
+     * @throws ExceptionNotFound
+     * @throws ExceptionBadSyntax
      */
     public
-    static function getDocumentationHyperLink($canonical, $label, $withIcon = true, $tooltip = ""): string
+    static function getDocumentationHyperLink($canonical, $label, bool $withIcon = true, $tooltip = ""): string
     {
 
         $xhtmlIcon = "";
@@ -770,21 +773,17 @@ class PluginUtility
              * for application resource, we can serve it statically
              */
             $path = Site::getComboImagesDirectory()->resolve("logo.svg");
-            try {
-                $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
-                $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
-                $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");
-                $cache = new CacheMedia($path, $tagAttributes);
-                if (!$cache->isCacheUsable()) {
-                    $xhtmlIcon = SvgDocument::createSvgDocumentFromPath($path)
-                        ->setShouldBeOptimized(true)
-                        ->getXmlText($tagAttributes);
-                    $cache->storeCache($xhtmlIcon);
-                }
-                $xhtmlIcon = FileSystems::getContent($cache->getFile());
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("The logo ($path) is not valid and could not be added to the documentation link. Error: {$e->getMessage()}");
+            $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
+            $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
+            $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");
+            $cache = new CacheMedia($path, $tagAttributes);
+            if (!$cache->isCacheUsable()) {
+                $xhtmlIcon = SvgDocument::createSvgDocumentFromPath($path)
+                    ->setShouldBeOptimized(true)
+                    ->getXmlText($tagAttributes);
+                $cache->storeCache($xhtmlIcon);
             }
+            $xhtmlIcon = FileSystems::getContent($cache->getFile());
 
         }
         $urlApex = self::$URL_APEX;

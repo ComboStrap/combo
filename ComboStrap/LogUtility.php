@@ -201,10 +201,20 @@ class LogUtility
             case "phpunit":
             case "browser":
             default:
-                $htmlMsg = PluginUtility::getDocumentationHyperLink("", PluginUtility::$PLUGIN_NAME, $withIconURL);
-                if ($canonical != null) {
-                    $htmlMsg = PluginUtility::getDocumentationHyperLink($canonical, ucfirst(str_replace(":", " ", $canonical)));
+                $htmlMsg = "";
+                try {
+                    if ($canonical !== null) {
+                        $htmlMsg = PluginUtility::getDocumentationHyperLink($canonical, ucfirst(str_replace(":", " ", $canonical)));
+                    } else {
+
+                        $htmlMsg = PluginUtility::getDocumentationHyperLink("", PluginUtility::$PLUGIN_NAME, $withIconURL);
+                    }
+                } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+                    if (PluginUtility::isTest()) {
+                        throw new ExceptionRuntime("Hyperlink document Error", "log", 0, $e);
+                    }
                 }
+
 
                 /**
                  * Adding page - context information

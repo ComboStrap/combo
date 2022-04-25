@@ -11,8 +11,10 @@
  */
 
 use ComboStrap\Bootstrap;
+use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
+use ComboStrap\Length;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -90,6 +92,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      * helps to see if the user has enter any class
      */
     const HAD_USER_CLASS = "hasClass";
+    const TYPE_WIDTH_SPECIFIED = "width-specified";
 
 
     /**
@@ -209,7 +212,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     $value = $attributes->getType();
                     if ($value == self::TYPE_FIT_OLD_VALUE) {
                         $attributes->setType(self::TYPE_FIT_VALUE);
-                        LogUtility::msg("Deprecation: The type value (" . self::TYPE_FIT_OLD_VALUE . ") for the row component should be been renamed to (" . self::TYPE_FIT_VALUE . ")", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                        LogUtility::warning("Deprecation: The type value (" . self::TYPE_FIT_OLD_VALUE . ") for the row component should be been renamed to (" . self::TYPE_FIT_VALUE . ")", self::CANONICAL);
                     }
                 }
 
@@ -222,19 +225,6 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 if ($parent != false
                     && !in_array($parent->getTagName(), [syntax_plugin_combo_container::TAG, syntax_plugin_combo_cell::TAG, syntax_plugin_combo_iterator::TAG])) {
                     $context = self::CONTAINED_CONTEXT;
-                }
-
-                /**
-                 * Type
-                 */
-                if (!$attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)
-                    && !$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
-
-                    if ($context == self::CONTAINED_CONTEXT) {
-                        $attributes->setType(self::TYPE_FIT_VALUE);
-                    } else {
-                        $attributes->setType(self::TYPE_AUTO_VALUE);
-                    }
                 }
 
 
@@ -265,139 +255,194 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
                 $callStack = CallStack::createFromHandler($handler);
-                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
-                $type = $openingCall->getType();
+
 
                 /**
-                 * Auto width calculation
+                 * Sizing Type mode determination
                  */
-                if ($type == syntax_plugin_combo_row::TYPE_AUTO_VALUE) {
-                    $numberOfColumns = 0;
-                    /**
-                     * If the size or the class is set, we don't
-                     * apply the automatic sizing
-                     */
-                    $hasSizeOrClass = false;
-                    while ($actualCall = $callStack->next()) {
-                        $tagName = $actualCall->getTagName();
-                        if ($tagName == syntax_plugin_combo_cell::TAG
-                            &&
-                            $actualCall->getState() == DOKU_LEXER_ENTER
-                        ) {
-                            $numberOfColumns++;
-                            if ($actualCall->hasAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE)) {
-                                $hasSizeOrClass = true;
-                            }
-                            if ($actualCall->hasAttribute(TagAttributes::CLASS_KEY)) {
-                                $hasSizeOrClass = true;
-                            }
+                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $type = $openingCall->getType();
+                /**
+                 * @var Call[] $childCellOpeningTags
+                 */
+                $childCellOpeningTags = [];
+                if ($type === null) {
 
+                    /**
+                     * Do we have a width set
+                     */
+                    while ($actualCall = $callStack->next()) {
+                        if ($actualCall->getTagName() === syntax_plugin_combo_cell::TAG
+                            && $actualCall->getState() === DOKU_LEXER_ENTER
+                        ) {
+                            $childCellOpeningTags[] = $actualCall;
+                            if ($actualCall->getAttribute(Dimension::WIDTH_KEY) !== null) {
+                                $widthLength = $actualCall->getAttribute(Dimension::WIDTH_KEY,"1fr");
+                                $length = Length::createFromString($widthLength);
+                                $unit =  $length->getUnit();
+                                if($unit!=="fr"){
+                                    $type = null;
+                                    LogUtility::error("A cell width should have the unit 'fr' (fraction) and not $unit");
+                                    break;
+                                } else {
+                                    $type = self::TYPE_WIDTH_SPECIFIED;
+                                }
+                            }
                         }
                     }
-                    if (!$hasSizeOrClass && $numberOfColumns > 1) {
-                        /**
-                         * Parameters
-                         */
-                        $minimalWidth = self::MINIMAL_WIDTH;
-                        $numberOfGridColumns = self::GRID_TOTAL_COLUMNS;
-                        $breakpoints =
-                            [
-                                "xs" => 270,
-                                "sm" => 540,
-                                "md" => 720,
-                                "lg" => 960,
-                                "xl" => 1140,
-                                "xxl" => 1320
-                            ];
-                        /**
-                         * Calculation of the sizes value
-                         */
-                        $sizes = [];
-                        $previousRatio = null;
-                        foreach ($breakpoints as $breakpoint => $value) {
-                            $spaceByColumn = $value / $numberOfColumns;
-                            if ($spaceByColumn < $minimalWidth) {
-                                $spaceByColumn = $minimalWidth;
-                            }
-                            $ratio = floor($numberOfGridColumns / ($value / $spaceByColumn));
-                            if ($ratio > $numberOfGridColumns) {
-                                $ratio = $numberOfGridColumns;
-                            }
-                            // be sure that it's divisible by the number of grids columns
-                            // if for 3 columns, we get a ratio of 5, we want 4;
-                            while (($numberOfGridColumns % $ratio) != 0) {
-                                $ratio = $ratio - 1;
-                            }
 
-                            // Closing
-                            if ($ratio != $previousRatio) {
-                                $sizes[] = "$breakpoint-$ratio";
-                                $previousRatio = $ratio;
+                    /**
+                     * Type
+                     */
+                    if ($type === null) {
+                        if ($openingCall->getAttribute(TagAttributes::CLASS_KEY) === null) {
+                            if ($openingCall->getContext() == self::CONTAINED_CONTEXT) {
+                                $type = self::TYPE_FIT_VALUE;
                             } else {
-                                break;
-                            }
-                        }
-                        $sizeValue = implode(" ", $sizes);
-                        $callStack->moveToPreviousCorrespondingOpeningCall();
-                        while ($actualCall = $callStack->next()) {
-                            if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG
-                                &&
-                                $actualCall->getState() == DOKU_LEXER_ENTER
-                            ) {
-                                $actualCall->addAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE, $sizeValue);
+                                $type = self::TYPE_AUTO_VALUE;
                             }
                         }
                     }
                 }
 
-                if ($openingCall->getContext() == self::CONTAINED_CONTEXT || $openingCall->getType() == self::TYPE_FIT_VALUE) {
-                    /**
-                     * No link for the media image by default
-                     */
-                    $callStack->moveToEnd();
-                    $callStack->moveToPreviousCorrespondingOpeningCall();
-                    $callStack->processNoLinkOnImageToEndStack();
 
-                    /**
-                     * Process the P to make them container friendly
-                     * Needed to make the diff between a p added
-                     * by the user via the {@link syntax_plugin_combo_para text}
-                     * and a p added automatically by Dokuwiki
-                     *
-                     */
-                    $callStack->moveToPreviousCorrespondingOpeningCall();
-                    // Follow the bootstrap and combo convention
-                    // ie text for bs and combo as suffix
-                    $class = "row-contained-text-combo";
-                    $callStack->processEolToEndStack(["class" => $class]);
-
-                    /**
-                     * If the type is fit value (ie flex auto),
-                     * we constraint the cell that have text
-                     */
-                    $callStack->moveToEnd();
-                    $callStack->moveToPreviousCorrespondingOpeningCall();
-                    $hasText = false;
-                    while ($actualCall = $callStack->next()) {
-                        if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG) {
-                            switch ($actualCall->getState()) {
-                                case DOKU_LEXER_ENTER:
-                                    $actualCellOpenTag = $actualCall;
-                                    $hasText = false;
-                                    break;
-                                case DOKU_LEXER_EXIT:
-                                    if ($hasText) {
-                                        if (isset($actualCellOpenTag) && !$actualCellOpenTag->hasAttribute(Dimension::WIDTH_KEY)) {
-                                            $actualCellOpenTag->addAttribute(Dimension::WIDTH_KEY, self::MINIMAL_WIDTH);
-                                        }
-                                    };
-                                    break;
-                            }
-                        } else if ($actualCall->isTextCall()) {
-                            $hasText = true;
+                /**
+                 * Auto width calculation
+                 */
+                switch ($type) {
+                    case self::TYPE_WIDTH_SPECIFIED:
+                        // Total calculation
+                        foreach($childCellOpeningTags as $cellOpeningTag){
+                            throw new \ComboStrap\ExceptionBadSyntax("To continue");
                         }
+                        break;
+                    case syntax_plugin_combo_row::TYPE_AUTO_VALUE:
+                        $numberOfColumns = 0;
+                        /**
+                         * If the size or the class is set, we don't
+                         * apply the automatic sizing
+                         */
+                        $hasSizeOrClass = false;
+                        while ($actualCall = $callStack->next()) {
+                            $tagName = $actualCall->getTagName();
+                            if ($tagName == syntax_plugin_combo_cell::TAG
+                                &&
+                                $actualCall->getState() == DOKU_LEXER_ENTER
+                            ) {
+                                $numberOfColumns++;
+                                if ($actualCall->hasAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE)) {
+                                    $hasSizeOrClass = true;
+                                }
+                                if ($actualCall->hasAttribute(TagAttributes::CLASS_KEY)) {
+                                    $hasSizeOrClass = true;
+                                }
 
-                    }
+                            }
+                        }
+                        if (!$hasSizeOrClass && $numberOfColumns > 1) {
+                            /**
+                             * Parameters
+                             */
+                            $minimalWidth = self::MINIMAL_WIDTH;
+                            $numberOfGridColumns = self::GRID_TOTAL_COLUMNS;
+                            $breakpoints =
+                                [
+                                    "xs" => 270,
+                                    "sm" => 540,
+                                    "md" => 720,
+                                    "lg" => 960,
+                                    "xl" => 1140,
+                                    "xxl" => 1320
+                                ];
+                            /**
+                             * Calculation of the sizes value
+                             */
+                            $sizes = [];
+                            $previousRatio = null;
+                            foreach ($breakpoints as $breakpoint => $value) {
+                                $spaceByColumn = $value / $numberOfColumns;
+                                if ($spaceByColumn < $minimalWidth) {
+                                    $spaceByColumn = $minimalWidth;
+                                }
+                                $ratio = floor($numberOfGridColumns / ($value / $spaceByColumn));
+                                if ($ratio > $numberOfGridColumns) {
+                                    $ratio = $numberOfGridColumns;
+                                }
+                                // be sure that it's divisible by the number of grids columns
+                                // if for 3 columns, we get a ratio of 5, we want 4;
+                                while (($numberOfGridColumns % $ratio) != 0) {
+                                    $ratio = $ratio - 1;
+                                }
+
+                                // Closing
+                                if ($ratio != $previousRatio) {
+                                    $sizes[] = "$breakpoint-$ratio";
+                                    $previousRatio = $ratio;
+                                } else {
+                                    break;
+                                }
+                            }
+                            $sizeValue = implode(" ", $sizes);
+                            $callStack->moveToPreviousCorrespondingOpeningCall();
+                            while ($actualCall = $callStack->next()) {
+                                if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG
+                                    &&
+                                    $actualCall->getState() == DOKU_LEXER_ENTER
+                                ) {
+                                    $actualCall->addAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE, $sizeValue);
+                                }
+                            }
+                        };
+                        break;
+                    case self::TYPE_FIT_VALUE:
+                        /**
+                         * No link for the media image by default
+                         */
+                        $callStack->moveToEnd();
+                        $callStack->moveToPreviousCorrespondingOpeningCall();
+                        $callStack->processNoLinkOnImageToEndStack();
+
+                        /**
+                         * Process the P to make them container friendly
+                         * Needed to make the diff between a p added
+                         * by the user via the {@link syntax_plugin_combo_para text}
+                         * and a p added automatically by Dokuwiki
+                         *
+                         */
+                        $callStack->moveToPreviousCorrespondingOpeningCall();
+                        // Follow the bootstrap and combo convention
+                        // ie text for bs and combo as suffix
+                        $class = "row-contained-text-combo";
+                        $callStack->processEolToEndStack(["class" => $class]);
+
+                        /**
+                         * If the type is fit value (ie flex auto),
+                         * we constraint the cell that have text
+                         */
+                        $callStack->moveToEnd();
+                        $callStack->moveToPreviousCorrespondingOpeningCall();
+                        $hasText = false;
+                        while ($actualCall = $callStack->next()) {
+                            if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG) {
+                                switch ($actualCall->getState()) {
+                                    case DOKU_LEXER_ENTER:
+                                        $actualCellOpenTag = $actualCall;
+                                        $hasText = false;
+                                        break;
+                                    case DOKU_LEXER_EXIT:
+                                        if ($hasText) {
+                                            if (isset($actualCellOpenTag) && !$actualCellOpenTag->hasAttribute(Dimension::WIDTH_KEY)) {
+                                                $actualCellOpenTag->addAttribute(Dimension::WIDTH_KEY, self::MINIMAL_WIDTH);
+                                            }
+                                        };
+                                        break;
+                                }
+                            } else if ($actualCall->isTextCall()) {
+                                $hasText = true;
+                            }
+
+                        };
+                        break;
                 }
 
                 return array(

@@ -179,6 +179,7 @@ class Dimension
 EOF;
                                 PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("height-toggle-show", $css);
                                 $bootstrapDataNameSpace = Bootstrap::getDataNamespace();
+                                /** @noinspection HtmlUnknownAttribute */
                                 $button = <<<EOF
 <button class="height-toggle-combo" data$bootstrapDataNameSpace-toggle="collapse" data$bootstrapDataNameSpace-target="#$id" aria-expanded="false"></button>
 EOF;
@@ -250,23 +251,8 @@ EOF;
     public static function toPixelValue($value): int
     {
 
-        preg_match("/[a-z]/i", $value, $matches, PREG_OFFSET_CAPTURE);
-        $unit = null;
-        if (sizeof($matches) > 0) {
-            $firstPosition = $matches[0][1];
-            $unit = strtolower(substr($value, $firstPosition));
-            $value = DataType::toFloat((substr($value, 0, $firstPosition)));
-        }
-        switch ($unit) {
-            case "rem":
-                $remValue = Site::getRem();
-                $targetValue = $value * $remValue;
-                break;
-            case "px":
-            default:
-                $targetValue = $value;
-        }
-        return DataType::toInteger($targetValue);
+        return Length::createFromString($value)->toPixelValue();
+
     }
 
     /**

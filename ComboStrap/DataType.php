@@ -92,8 +92,19 @@ class DataType
         return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 
+    /**
+     * @throws ExceptionBadSyntax - if the value is not a numeric
+     */
     public static function toFloat($value): float
     {
+        if (is_float($value)) {
+            return $value;
+        }
+
+        if (!is_numeric($value)) {
+            throw new ExceptionBadSyntax("The value ($value) is not a numeric");
+        }
+
         return floatval($value);
     }
 

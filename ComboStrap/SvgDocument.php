@@ -137,13 +137,13 @@ class SvgDocument extends XmlDocument
     /**
      * @param Path $path
      * @return SvgDocument
-     * @throws ExceptionCompile - if the file does not exist or is not valid
+     * @throws ExceptionNotFound|ExceptionBadSyntax - if the file does not exist or is not valid
      *
      */
     public static function createSvgDocumentFromPath(Path $path): SvgDocument
     {
         if (!FileSystems::exists($path)) {
-            throw new ExceptionCompile("The path ($path) does not exist. A svg document cannot be created", self::CANONICAL);
+            throw new ExceptionNotFound("The path ($path) does not exist. A svg document cannot be created", self::CANONICAL);
         }
         $text = FileSystems::getContent($path);
         $svg = new SvgDocument($text);
@@ -179,7 +179,6 @@ class SvgDocument extends XmlDocument
      *   This class should be merged with {@link ImageSvg}
      *   Because we use only {@link Image} function that are here not available because we loose the fact that this is an image
      *   For instance {@link Image::getCroppingDimensionsWithRatio()}
-     * @throws ExceptionCompile
      */
     public function getXmlText(TagAttributes $tagAttributes = null): string
     {

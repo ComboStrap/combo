@@ -72,6 +72,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
     const CONF_SECTION_LAYOUT_VALUES = [self::CONF_SECTION_LAYOUT_COMBO, self::CONF_SECTION_LAYOUT_DOKUWIKI];
     const CONF_SECTION_LAYOUT_DEFAULT = self::CONF_SECTION_LAYOUT_COMBO;
+    const OUTLINE_HEADING_CLASS = "outline-heading";
 
 
     /**
@@ -350,7 +351,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          * The context is by default the parent name or outline.
          */
         if ($context === self::TYPE_OUTLINE) {
-            $tagAttributes->addClassName("$context-heading");
+            $tagAttributes->addClassName(self::OUTLINE_HEADING_CLASS);
         }
 
         $headingWikiEnabled = syntax_plugin_combo_headingwiki::isEnabled();

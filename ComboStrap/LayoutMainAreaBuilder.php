@@ -44,11 +44,12 @@ class LayoutMainAreaBuilder
          * - not all other undetermined actions (
          */
         global $ACT;
-        if ($ACT === null) {
-            $ACT = "show";
+        $localAct = $ACT;
+        if ($localAct === null) {
+            $localAct = "show";
             LogUtility::error("The action variable was not set. We have set it to be `show`", self::CANONICAL);
         }
-        switch ($ACT) {
+        switch ($localAct) {
             case "show":
                 return true;
             case "preview":

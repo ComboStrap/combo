@@ -5,8 +5,10 @@
  */
 
 use ComboStrap\Bootstrap;
+use ComboStrap\Hero;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -134,19 +136,13 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $attributes = PluginUtility::getTagAttributes($match);
+                $defaults = [Hero::ATTRIBUTE => "md"];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaults)
+                    ->setLogicalTag(self::TAG);
 
-                $jumbotronClass = "jumbotron";
-                if (Bootstrap::getBootStrapMajorVersion() == Bootstrap::BootStrapFiveMajorVersion) {
-                    $jumbotronClass = "bg-light rounded px-4 py-2 m-2";
-                }
-
-                PluginUtility::addClass2Attributes($jumbotronClass, $attributes);
-                $html = '<div ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '>' . DOKU_LF;
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -155,10 +151,8 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
 
 
             case DOKU_LEXER_EXIT :
-                $html = '</div>' . DOKU_LF;
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -178,7 +172,7 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {
@@ -186,9 +180,26 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_EXIT :
+                    $renderer->doc .= "</div>";
+                    break;
+
                 case DOKU_LEXER_ENTER:
                     /** @var Doku_Renderer_xhtml $renderer */
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
+
+                    $bsVersion = Bootstrap::getBootStrapMajorVersion();
+                    switch ($bsVersion) {
+                        case Bootstrap::BootStrapFourMajorVersion:
+                            $jumbotronClass = "jumbotron";
+                            break;
+                        default:
+                        case Bootstrap::BootStrapFiveMajorVersion:
+                            $jumbotronClass = "bg-light rounded m-2";
+                    }
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES])
+                        ->setLogicalTag(self::TAG)
+                        ->addClassName($jumbotronClass);
+
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

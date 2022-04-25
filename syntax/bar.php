@@ -10,6 +10,7 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\Hero;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -131,6 +132,15 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 
                 $htmlTag = self::getHtmlTag();
 
+                /**
+                 * Deprecation
+                 */
+                $size = $tagAttributes->getValueAndRemoveIfPresent(self::SIZE_ATTRIBUTE);
+                if ($size !== null) {
+                    LogUtility::warning("The size attribute on bar/slide has been deprecated for the hero attribute");
+                    $tagAttributes->setComponentAttributeValue(Hero::ATTRIBUTE, $size);
+                }
+
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
@@ -225,29 +235,6 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
                         ->setLogicalTag($barTag);
 
                     $attributes->addClassName($barTag);
-
-                    $sizeAttribute = self::SIZE_ATTRIBUTE;
-                    $size = $attributes->getValueAndRemove($sizeAttribute);
-                    switch ($size) {
-                        case "lg":
-                        case "large":
-                            $attributes->addClassName($barTag . "-lg");
-                            break;
-                        case "sm":
-                        case "small":
-                            $attributes->addClassName($barTag . "-sm");
-                            break;
-                        case "xl":
-                        case "extra-large":
-                            $attributes->addClassName($barTag . "-xl");
-                            break;
-                        case "md":
-                        case "medium":
-                            $attributes->addClassName($barTag . "-md");
-                            break;
-                        default:
-                            break;
-                    }
 
                     PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($barTag);
 

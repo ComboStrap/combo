@@ -1,4 +1,3 @@
-
 .bar {
     position: relative;
     overflow: auto;
@@ -6,81 +5,6 @@
     width: 100%;
     display: block;
     border-radius: 0; /* not rounded */
-}
-
-@media (max-width:576px) {
-
-    .bar-sm {
-        padding: 1rem 1rem
-    }
-
-    .bar-md {
-        padding: 2rem 1rem;
-    }
-
-    .bar-xl {
-        padding: 4rem 1rem;
-    }
-
-    .bar-lg {
-        padding: 3rem 1rem;
-    }
-
-}
-
-@media (min-width: 576px) {
-
-    .bar-sm {
-        padding: 1rem 1rem
-    }
-
-    .bar-md {
-        padding: 2rem 1rem;
-    }
-
-    .bar-xl {
-        padding: 4rem 1rem;
-    }
-
-    .bar-lg {
-        padding: 3rem 1rem;
-    }
-}
-
-@media (min-width: 768px) {
-    .bar-sm {
-        padding: 1rem 2rem
-    }
-
-    .bar-md {
-        padding: 2rem 4rem;
-    }
-
-    .bar-xl {
-        padding: 4rem 8rem;
-    }
-
-    .bar-lg {
-        padding: 3rem 6rem;
-    }
-}
-
-
-
-.bg-bar-light {
-    background-color: #e0e6ed;
-}
-
-.bg-bar-dark {
-    background-color: #1a232d;
-}
-
-.bg-bar-primary {
-    background-color: #fff;
-}
-
-.bg-bar-secondary {
-    background-color: #fafbfe;
 }
 
 

@@ -119,6 +119,7 @@ require_once(__DIR__ . '/FormMetaField.php');
 require_once(__DIR__ . '/FontSize.php');
 require_once(__DIR__ . '/FsWikiUtility.php');
 require_once(__DIR__ . '/HeaderUtility.php');
+require_once(__DIR__ . '/Hero.php');
 require_once(__DIR__ . '/HtmlDocument.php');
 require_once(__DIR__ . '/HistoricalBreadcrumbMenuItem.php');
 require_once(__DIR__ . '/Hover.php');

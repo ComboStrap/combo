@@ -23,7 +23,7 @@ class Hover
      * Process hover animation
      * @param TagAttributes $attributes
      */
-    public static function processOnHover(&$attributes)
+    public static function processOnHover(TagAttributes &$attributes)
     {
         if ($attributes->hasComponentAttribute(self::ON_HOVER_ATTRIBUTE)) {
             $hover = strtolower($attributes->getValueAndRemove(self::ON_HOVER_ATTRIBUTE));

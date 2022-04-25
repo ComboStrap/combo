@@ -521,6 +521,7 @@ class TagAttributes
         FloatAttribute::processFloat($this);
         Align::processAlignAttributes($this);
         Spacing::processSpacingAttributes($this);
+        Hero::processHero($this);
         Opacity::processOpacityAttribute($this);
         Background::processBackgroundAttributes($this);
         Shadow::process($this);

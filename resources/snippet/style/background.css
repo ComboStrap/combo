@@ -7,10 +7,8 @@
     overflow: hidden;
     width: 100%;
     height: 100%;
-    z-index: 1;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    -webkit-transform: translate3d(0px, 0px, 0px);
     transform: translate3d(0px, 0px, 0px);
     -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
@@ -29,7 +27,6 @@
     /* background-color: #464646; /* the color while the image is loading or the transparent-color if any */
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    -webkit-transform: translate3d(0px, 0px, 0px);
     transform: translate3d(0px, 0px, 0px);
     -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;

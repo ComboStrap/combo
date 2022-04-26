@@ -54,8 +54,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
     const GRID_TOTAL_COLUMNS = 12;
 
 
-    const CANONICAL = self::GRID;
-    const GRID = "grid";
+    const CANONICAL = self::ROW;
+    const ROW = "row";
 
     /**
      * A row can be used as a grid
@@ -98,6 +98,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
     const HAD_USER_CLASS = "hasClass";
     const TYPE_WIDTH_SPECIFIED = "width";
     const KNOWN_TYPES = [self::TYPE_WIDTH_SPECIFIED, self::TYPE_AUTO_VALUE, self::TYPE_FIT_VALUE, self::TYPE_FIT_OLD_VALUE];
+    const MAX_CELLS_ATTRIBUTE = "max-cells";
+    const TYPE_CELLS = "cells";
 
     private static function getFraction(Call $cellOpeningTag)
     {
@@ -289,6 +291,34 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  */
                 $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $type = $openingCall->getType();
+
+                /**
+                 * Max-Cells ?
+                 */
+                $maxCells = $openingCall->getAttribute(self::MAX_CELLS_ATTRIBUTE);
+                /**
+                 * @var Length[] $maxCellsArray
+                 */
+                $maxCellsArray = [];
+                if($maxCells!==null){
+                    $maxCellsValues =  explode(" ",$maxCells);
+                    foreach($maxCellsValues as $maxCellsValue) {
+                        try {
+                            $maxCellLength = Length::createFromString($maxCellsValue);
+                        } catch (ExceptionBadArgument $e) {
+                            LogUtility::error("The max-cells attribute value ($maxCellsValue) is not a valid length value. Error: {$e->getMessage()}", self::CANONICAL);
+                            continue;
+                        }
+                        $number =  $maxCellLength->getNumber();
+                        if ($number > 12) {
+                            LogUtility::error("The max-cells attribute value ($maxCellsValue) should be less than 12.", self::CANONICAL);
+                        }
+                        $maxCellsArray[] = $maxCellLength;
+                    }
+                    $openingCall->removeAttribute(self::MAX_CELLS_ATTRIBUTE);
+                    $type = self::TYPE_CELLS;
+                }
+
                 /**
                  * @var Call[] $childCellOpeningTags
                  */
@@ -310,7 +340,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                                 $widthLength = $actualCall->getAttribute(Dimension::WIDTH_KEY);
                                 try {
                                     $length = Length::createFromString($widthLength);
-                                } catch (ExceptionBadSyntax $e) {
+                                } catch (ExceptionBadArgument $e) {
                                     $type = null;
                                     LogUtility::error("The width length $widthLength is not a valid length value.");
                                     break;
@@ -371,6 +401,15 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  * Auto width calculation
                  */
                 switch ($type) {
+                    case self::TYPE_CELLS:
+                        foreach ($maxCellsArray as $maxCell) {
+                            try {
+                                $openingCall->addClassName($maxCell->toRowColsClass());
+                            } catch (ExceptionBadArgument $e) {
+                                LogUtility::error("Error while adding the row-col class. Error: {$e->getMessage()}");
+                            }
+                        }
+                        break;
                     case self::TYPE_WIDTH_SPECIFIED:
                         // Total calculation
                         switch ($lengthUnitUsedOnCells) {

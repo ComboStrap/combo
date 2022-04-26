@@ -136,4 +136,19 @@ class Length
 
 
     }
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public function toRowColsClass(): string
+    {
+        if ($this->unit !== null) {
+            throw new ExceptionBadArgument("A row col class can be calculated only from a number without unit ({$this->unit})");
+        }
+        $colsNumber = intval($this->number);
+        if ($this->breakpoint === "xs" || $this->breakpoint === null) {
+            return "row-cols-$colsNumber";
+        }
+        return "row-cols-{$this->breakpoint}-$colsNumber";
+    }
 }

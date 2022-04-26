@@ -32,7 +32,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
     const WIDTH_ATTRIBUTE = Dimension::WIDTH_KEY;
     const VERTICAL_ATTRIBUTE = "vertical";
 
-    static function getTags()
+    static function getTags(): array
     {
         return [self::TAG, "col", "column"];
     }
@@ -199,31 +199,6 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
                         if ($value == "center") {
                             //$attributes->addClassName("d-inline-flex");
                             $attributes->addClassName("align-self-center");
-                        }
-                    }
-                    if ($attributes->hasComponentAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE)) {
-                        $sizeValues = $attributes->getValuesAndRemove(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE);
-                        foreach ($sizeValues as $sizeValue) {
-                            $conditionalValue = ConditionalValue::createFrom($sizeValue);
-                            if ($conditionalValue->getBreakpoint() == "xs") {
-                                $attributes->addClassName("col-" . $conditionalValue->getValue());
-                            } else {
-                                if ($conditionalValue->getBreakpoint() != null) {
-                                    $attributes->addClassName("col-$sizeValue");
-                                } else {
-                                    /**
-                                     * No breakpoint given
-                                     * If this is a number between 1 and 12,
-                                     * we take the assumption that this is a ratio
-                                     * otherwise, this a width in CSS length
-                                     */
-                                    if ($sizeValue >= 1 && $sizeValue <= syntax_plugin_combo_row::GRID_TOTAL_COLUMNS) {
-                                        $attributes->addClassName("col-$sizeValue");
-                                    } else {
-                                        $attributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $sizeValue);
-                                    }
-                                }
-                            }
                         }
                     }
                     $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;

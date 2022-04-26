@@ -46,11 +46,16 @@ class ConditionalValue
                 break;
             case 2:
                 $this->breakpoint = strtolower($array[0]);
-                if (!key_exists($this->breakpoint, $this->breakpoints)) {
-                    throw new ExceptionBadSyntax("The breakpoint ($this->breakpoint) is not a valid breakpoint prefix", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                if (key_exists($this->breakpoint, $this->breakpoints)) {
+                    $this->value = $array[1];
+                    break;
                 }
-                $this->value = $array[1];
-                break;
+                $this->breakpoint = strtolower($array[1]);
+                if (key_exists($this->breakpoint, $this->breakpoints)) {
+                    $this->value = $array[0];
+                    break;
+                }
+                throw new ExceptionBadSyntax("The breakpoint ($this->breakpoint) is not a valid breakpoint prefix", self::CANONICAL);
             default:
                 throw new ExceptionBadSyntax("The screen conditional value ($value) should have only one separator character `-`", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }

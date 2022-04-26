@@ -14,7 +14,15 @@ class Length
     const FRACTION = "fr";
     const PERCENTAGE = "%";
 
-    private $length;
+    /**
+     * @var string - the length value (may be breakpoint conditional)
+     */
+    private $lengthWithBreakpoint;
+
+    /**
+     * @var string - the length value without breakpoint
+     */
+    private $lengthWithoutBreakpoint;
     /**
      * @var string
      */
@@ -23,17 +31,32 @@ class Length
      * @var float
      */
     private $number;
+    /**
+     * @var string
+     */
+    private $breakpoint;
+
 
     /**
-     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
      */
-    public function __construct($length)
+    public function __construct($value)
     {
-        $this->length = $length;
+        $this->lengthWithBreakpoint = $value;
+
+
+        $this->lengthWithoutBreakpoint = $value;
+        try {
+            $conditionalValue = ConditionalValue::createFrom($value);
+            $this->lengthWithoutBreakpoint = $conditionalValue->getValue();
+            $this->breakpoint = $conditionalValue->getBreakpoint();
+        } catch (ExceptionBadSyntax $e) {
+            // not conditional
+        }
 
         try {
 
-            $this->number = DataType::toFloat($length);
+            $this->number = DataType::toFloat($this->lengthWithoutBreakpoint);
 
         } catch (ExceptionBadSyntax $e) {
 
@@ -41,16 +64,16 @@ class Length
              * Not a numeric alone
              * Does the length value has an unit ?
              */
-            preg_match("/([0-9.]*)(.*)/i", $this->length, $matches, PREG_OFFSET_CAPTURE);
+            preg_match("/([0-9.]*)(.*)/i", $this->lengthWithoutBreakpoint, $matches, PREG_OFFSET_CAPTURE);
             if (sizeof($matches) === 0) {
-                throw new ExceptionBadSyntax("The value ($length) is not a valid length value.");
+                throw new ExceptionBadArgument("The value ($value) is not a valid length value.");
             }
             $localNumber = $matches[1][0];
             try {
                 $this->number = DataType::toFloat($localNumber);
             } catch (ExceptionBadSyntax $e) {
                 // should not happen due to the match but yeah
-                throw new ExceptionBadSyntax("The number value ($localNumber) o the length value ($length) is not a valid float format.");
+                throw new ExceptionBadArgument("The number value ($localNumber) o the length value ($value) is not a valid float format.");
             }
             $this->unit = $matches[2][0];
 
@@ -60,7 +83,7 @@ class Length
     }
 
     /**
-     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
      */
     public static function createFromString(string $widthLength): Length
     {
@@ -94,5 +117,23 @@ class Length
     public function getNumber(): float
     {
         return $this->number;
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public function toColClass(): string
+    {
+
+        if ($this->unit !== self::PERCENTAGE) {
+            throw new ExceptionBadArgument("A col class can be calculated only from a percentage not from a ({$this->unit})");
+        }
+        $colsNumber = floor(\syntax_plugin_combo_row::GRID_TOTAL_COLUMNS * $this->number / 100);
+        if ($this->breakpoint === "xs" || $this->breakpoint === null) {
+            return "col-$colsNumber";
+        }
+        return "col-{$this->breakpoint}-$colsNumber";
+
+
     }
 }

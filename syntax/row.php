@@ -13,6 +13,7 @@
 use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\ConditionalValue;
 use ComboStrap\DataType;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionBadArgument;
@@ -97,6 +98,23 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
     const HAD_USER_CLASS = "hasClass";
     const TYPE_WIDTH_SPECIFIED = "width";
     const KNOWN_TYPES = [self::TYPE_WIDTH_SPECIFIED, self::TYPE_AUTO_VALUE, self::TYPE_FIT_VALUE, self::TYPE_FIT_OLD_VALUE];
+
+    private static function getFraction(Call $cellOpeningTag)
+    {
+        $width = $cellOpeningTag->getAttribute(Dimension::WIDTH_KEY);
+        switch ($width) {
+            case null:
+                return 1;
+            default:
+                try {
+                    return Length::createFromString($width)->getNumber();
+                } catch (ExceptionBadSyntax $e) {
+                    LogUtility::error("The width value ($width) is not valid length. Error: {$e->getMessage()}");
+                    return 1;
+                }
+        }
+
+    }
 
 
     /**
@@ -227,7 +245,12 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  */
                 $context = self::ROOT_CONTEXT;
                 if ($parent != false
-                    && !in_array($parent->getTagName(), [syntax_plugin_combo_container::TAG, syntax_plugin_combo_cell::TAG, syntax_plugin_combo_iterator::TAG])) {
+                    && !in_array($parent->getTagName(), [
+                        syntax_plugin_combo_bar::TAG,
+                        syntax_plugin_combo_container::TAG,
+                        syntax_plugin_combo_cell::TAG,
+                        syntax_plugin_combo_iterator::TAG
+                    ])) {
                     $context = self::CONTAINED_CONTEXT;
                 }
 
@@ -352,28 +375,46 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         // Total calculation
                         switch ($lengthUnitUsedOnCells) {
                             case Length::FRACTION:
+                                $totalFraction = 0;
                                 foreach ($childCellOpeningTags as $cellOpeningTag) {
-                                    throw new \ComboStrap\ExceptionRuntime("Todo");
+                                    $fraction = self::getFraction($cellOpeningTag);
+                                    $totalFraction = $totalFraction + $fraction;
+                                }
+                                foreach ($childCellOpeningTags as $cellOpeningTag) {
+                                    $fraction = self::getFraction($cellOpeningTag);
+                                    $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
+                                    $percentage = $fraction / $totalFraction;
+                                    try {
+                                        $colsNumber = DataType::toInteger(self::GRID_TOTAL_COLUMNS * $percentage);
+                                    } catch (ExceptionBadArgument $e) {
+                                        LogUtility::error("We were unable to get an integer for the fraction cols number calculation. Error: {$e->getMessage()}");
+                                        continue;
+                                    }
+                                    $cellOpeningTag->addClassName("col-sm-$colsNumber");
+                                    $cellOpeningTag->addClassName("col-12");
                                 }
                                 break;
-                            case Length::PERCENTAGE:
-                                $totalCols = 12;
+                            case
+                            Length::PERCENTAGE:
                                 foreach ($childCellOpeningTags as $cellOpeningTag) {
                                     $width = $cellOpeningTag->getAttribute(Dimension::WIDTH_KEY);
-                                    $length = Length::createFromString($width);
+                                    if ($width === null) {
+                                        continue;
+                                    }
+                                    try {
+                                        $length = Length::createFromString($width);
+                                    } catch (ExceptionBadSyntax $e) {
+                                        $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
+                                        LogUtility::error("The width value ($width) is not valid length. Error: {$e->getMessage()}");
+                                        continue;
+                                    }
                                     $value = $length->getNumber();
                                     try {
-                                        $colsNumber = DataType::toInteger(12 * $value / 100);
+                                        $colsNumber = DataType::toInteger(self::GRID_TOTAL_COLUMNS * $value / 100);
                                     } catch (ExceptionBadArgument $e) {
                                         $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
                                         LogUtility::error("We were unable to get an integer for the cols number calculation. Error: {$e->getMessage()}");
                                         continue;
-                                    }
-                                    if ($totalCols > $colsNumber) {
-                                        $totalCols = $totalCols - $colsNumber;
-                                    } else {
-                                        $colsNumber = $totalCols;
-                                        $totalCols = 0;
                                     }
                                     $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
                                     $cellOpeningTag->addClassName("col-sm-$colsNumber");
@@ -390,6 +431,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                          * apply the automatic sizing
                          */
                         $hasSizeOrClass = false;
+                        $callStack->moveToCall($openingCall);
                         while ($actualCall = $callStack->next()) {
                             $tagName = $actualCall->getTagName();
                             if ($tagName == syntax_plugin_combo_cell::TAG
@@ -411,7 +453,6 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                              * Parameters
                              */
                             $minimalWidth = self::MINIMAL_WIDTH;
-                            $numberOfGridColumns = self::GRID_TOTAL_COLUMNS;
                             $breakpoints =
                                 [
                                     "xs" => 270,
@@ -425,38 +466,44 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                              * Calculation of the sizes value
                              */
                             $sizes = [];
-                            $previousRatio = null;
-                            foreach ($breakpoints as $breakpoint => $value) {
-                                $spaceByColumn = $value / $numberOfColumns;
+                            $previousPercentage = null;
+                            foreach ($breakpoints as $breakpoint => $viewPortWidth) {
+                                $spaceByColumn = $viewPortWidth / $numberOfColumns;
                                 if ($spaceByColumn < $minimalWidth) {
                                     $spaceByColumn = $minimalWidth;
                                 }
-                                $ratio = floor($numberOfGridColumns / ($value / $spaceByColumn));
-                                if ($ratio > $numberOfGridColumns) {
-                                    $ratio = $numberOfGridColumns;
+                                try {
+                                    $percentage = DataType::toInteger(floor($spaceByColumn / $viewPortWidth * 100));
+                                } catch (ExceptionBadArgument $e) {
+                                    LogUtility::error("Internal error when calculating the auto percentage. {$e->getMessage()}");
+                                    continue;
                                 }
-                                // be sure that it's divisible by the number of grids columns
-                                // if for 3 columns, we get a ratio of 5, we want 4;
-                                while (($numberOfGridColumns % $ratio) != 0) {
-                                    $ratio = $ratio - 1;
+                                if ($percentage > 100) {
+                                    $percentage = 100;
                                 }
-
-                                // Closing
-                                if ($ratio != $previousRatio) {
-                                    $sizes[] = "$breakpoint-$ratio";
-                                    $previousRatio = $ratio;
+                                if ($percentage !== $previousPercentage) {
+                                    $sizes[] = "$percentage%-$breakpoint";
+                                    $previousPercentage = $percentage;
                                 } else {
                                     break;
                                 }
                             }
-                            $sizeValue = implode(" ", $sizes);
                             $callStack->moveToPreviousCorrespondingOpeningCall();
                             while ($actualCall = $callStack->next()) {
                                 if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG
                                     &&
                                     $actualCall->getState() == DOKU_LEXER_ENTER
                                 ) {
-                                    $actualCall->addAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE, $sizeValue);
+                                    foreach ($sizes as $sizeValue) {
+                                        try {
+                                            $colClass = Length::createFromString($sizeValue)->toColClass();
+                                        } catch (ExceptionBadArgument $e) {
+                                            LogUtility::error("We can't transform the size ($sizeValue) to a col class. Error: {$e->getMessage()}");
+                                            continue;
+                                        }
+                                        $actualCall->addClassName($colClass);
+                                    }
+
                                 }
                             }
                         };
@@ -535,7 +582,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {

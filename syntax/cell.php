@@ -194,11 +194,22 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
                     $callStackArray = $data[PluginUtility::ATTRIBUTES];
                     $attributes = TagAttributes::createFromCallStackArray($callStackArray, self::TAG);
                     $attributes->addClassName("col");
+                    /**
+                     * A flex to be able to align the children (horizontal/vertical)
+                     * if they are constraint in width
+                     */
+                    $attributes->addClassName("d-flex");
+                    /**
+                     * Horizontal (center)
+                     */
+                    $attributes->addClassName("justify-content-center");
                     if ($attributes->hasComponentAttribute(self::VERTICAL_ATTRIBUTE)) {
                         $value = $attributes->getValue(self::VERTICAL_ATTRIBUTE);
                         if ($value == "center") {
-                            //$attributes->addClassName("d-inline-flex");
-                            $attributes->addClassName("align-self-center");
+                            /**
+                             * Vertical (center)
+                             */
+                            $attributes->addClassName("align-items-center");
                         }
                     }
                     $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;

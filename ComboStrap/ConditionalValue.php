@@ -17,7 +17,7 @@ class ConditionalValue
      */
     private $breakpoint;
 
-    private $breakpoints = [
+    private static $breakpoints = [
         "xs" => 0,
         "sm" => 576,
         "md" => 768,
@@ -37,21 +37,21 @@ class ConditionalValue
         switch ($sizeof) {
             case 0:
                 LogUtility::msg("There is no value in ($value)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                $this->breakpoint = "";
+                $this->breakpoint = null;
                 $this->value = "";
                 break;
             case 1:
-                $this->breakpoint = "";
+                $this->breakpoint = null;
                 $this->value = $array[0];
                 break;
             case 2:
                 $this->breakpoint = strtolower($array[0]);
-                if (key_exists($this->breakpoint, $this->breakpoints)) {
+                if (array_key_exists($this->breakpoint, self::$breakpoints)) {
                     $this->value = $array[1];
                     break;
                 }
                 $this->breakpoint = strtolower($array[1]);
-                if (key_exists($this->breakpoint, $this->breakpoints)) {
+                if (array_key_exists($this->breakpoint, self::$breakpoints)) {
                     $this->value = $array[0];
                     break;
                 }
@@ -69,7 +69,17 @@ class ConditionalValue
         return new ConditionalValue($value);
     }
 
-    public function getBreakpoint(): string
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public static function checkValidBreakpoint(string $breakpoint)
+    {
+        if (!array_key_exists($breakpoint, self::$breakpoints)) {
+            throw new ExceptionBadArgument("$breakpoint is not a valid breakpoint value");
+        }
+    }
+
+    public function getBreakpoint(): ?string
     {
         return $this->breakpoint;
     }
@@ -81,7 +91,7 @@ class ConditionalValue
 
     public function getBreakpointSize(): int
     {
-        return $this->breakpoints[$this->breakpoint];
+        return self::$breakpoints[$this->breakpoint];
     }
 
 

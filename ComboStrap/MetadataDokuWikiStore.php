@@ -275,13 +275,17 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         $actualMeta = $this->getData();
         global $ID;
         $keep = $ID;
+        global $ACT;
+        $keepACT = $ACT;
         try {
             $ID = $dokuwikiId;
+            $ACT = "show";
             $newMetadata = p_render_metadata($dokuwikiId, $actualMeta);
             p_save_metadata($dokuwikiId, $newMetadata);
             $this->data = $newMetadata;
         } finally {
             $ID = $keep;
+            $ACT = $keepACT;
         }
         return $this;
     }

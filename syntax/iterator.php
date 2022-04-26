@@ -561,19 +561,6 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                          */
 
                         /**
-                         * Row - Preprocess that depends on the number of row
-                         */
-                        $callStack = CallStack::createFromInstructions($iteratorTemplateInstructions);
-                        $callStack->moveToStart();
-                        while ($actualCall = $callStack->next()) {
-                            if ($actualCall->getState() === DOKU_LEXER_ENTER && $actualCall->getTagName() === syntax_plugin_combo_cell::TAG) {
-                                // Hack, fix value
-                                $actualCall->addClassName("col col-12 col-sm-6 col-md-4");
-                            }
-                        }
-                        $iteratorTemplateInstructions = $callStack->getStack();
-
-                        /**
                          * Append the new instructions by row
                          */
                         foreach ($rows as $row) {

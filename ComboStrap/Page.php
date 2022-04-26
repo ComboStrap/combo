@@ -649,11 +649,15 @@ class Page extends ResourceComboAbs
          */
         global $ID;
         $keep = $ID;
+        global $ACT;
+        $keepACT = $ACT;
         try {
+            $ACT = "show";
             $ID = $this->getPath()->getDokuwikiId();
             idx_addPage($ID);
         } finally {
             $ID = $keep;
+            $ACT = $keepACT;
         }
         return $this;
 

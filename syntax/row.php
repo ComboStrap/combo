@@ -300,20 +300,38 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  * @var Length[] $maxCellsArray
                  */
                 $maxCellsArray = [];
-                if($maxCells!==null){
-                    $maxCellsValues =  explode(" ",$maxCells);
-                    foreach($maxCellsValues as $maxCellsValue) {
+
+
+                if ($maxCells !== null) {
+
+                    try {
+                        $maxCellsArray["xs"] = Length::createFromString("1-xs");
+                        $maxCellsArray["sm"] = Length::createFromString("2-sm");
+                        $maxCellsArray["md"] = Length::createFromString("3-md");
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::error("Bad default value initialization", self::CANONICAL);
+                    }
+
+                    $maxCellsValues = explode(" ", $maxCells);
+                    foreach ($maxCellsValues as $maxCellsValue) {
                         try {
                             $maxCellLength = Length::createFromString($maxCellsValue);
                         } catch (ExceptionBadArgument $e) {
                             LogUtility::error("The max-cells attribute value ($maxCellsValue) is not a valid length value. Error: {$e->getMessage()}", self::CANONICAL);
                             continue;
                         }
-                        $number =  $maxCellLength->getNumber();
+                        $number = $maxCellLength->getNumber();
                         if ($number > 12) {
                             LogUtility::error("The max-cells attribute value ($maxCellsValue) should be less than 12.", self::CANONICAL);
                         }
-                        $maxCellsArray[] = $maxCellLength;
+                        if ($maxCellLength->getBreakpoint() === null) {
+                            try {
+                                $maxCellLength->setBreakpoint("lg");
+                            } catch (ExceptionBadArgument $e) {
+                                LogUtility::error("Bad breakpoint. Error: {$e->getMessage()}");
+                            }
+                        }
+                        $maxCellsArray[$maxCellLength->getBreakpoint()] = $maxCellLength;
                     }
                     $openingCall->removeAttribute(self::MAX_CELLS_ATTRIBUTE);
                     $type = self::TYPE_CELLS;
@@ -442,7 +460,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                                     }
                                     try {
                                         $length = Length::createFromString($width);
-                                    } catch (ExceptionBadSyntax $e) {
+                                    } catch (ExceptionBadArgument $e) {
                                         $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
                                         LogUtility::error("The width value ($width) is not valid length. Error: {$e->getMessage()}");
                                         continue;

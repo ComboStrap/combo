@@ -151,4 +151,18 @@ class Length
         }
         return "row-cols-{$this->breakpoint}-$colsNumber";
     }
+
+    public function getBreakpoint(): ?string
+    {
+        return $this->breakpoint;
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public function setBreakpoint(string $breakpoint)
+    {
+        ConditionalValue::checkValidBreakpoint($breakpoint);
+        $this->breakpoint = $breakpoint;
+    }
 }

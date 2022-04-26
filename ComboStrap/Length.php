@@ -9,6 +9,11 @@ class Length
 {
 
 
+    const RATIONAL_UNITS = [self::FRACTION, self::PERCENTAGE];
+
+    const FRACTION = "fr";
+    const PERCENTAGE = "%";
+
     private $length;
     /**
      * @var string
@@ -17,7 +22,7 @@ class Length
     /**
      * @var float
      */
-    private $value;
+    private $number;
 
     /**
      * @throws ExceptionBadSyntax
@@ -28,7 +33,7 @@ class Length
 
         try {
 
-            $this->value = DataType::toFloat($length);
+            $this->number = DataType::toFloat($length);
 
         } catch (ExceptionBadSyntax $e) {
 
@@ -36,22 +41,27 @@ class Length
              * Not a numeric alone
              * Does the length value has an unit ?
              */
-            try {
-                preg_match("/[a-z]/i", $this->length, $matches, PREG_OFFSET_CAPTURE);
-                if (sizeof($matches) > 0) {
-                    $firstPosition = $matches[0][1];
-                    $this->unit = strtolower(substr($this->length, $firstPosition));
-                    $stringValue = substr($this->length, 0, $firstPosition);
-                    $this->value = DataType::toFloat($stringValue);
-                }
-            } catch (ExceptionBadSyntax $e) {
+            preg_match("/([0-9.]*)(.*)/i", $this->length, $matches, PREG_OFFSET_CAPTURE);
+            if (sizeof($matches) === 0) {
                 throw new ExceptionBadSyntax("The value ($length) is not a valid length value.");
             }
+            $localNumber = $matches[1][0];
+            try {
+                $this->number = DataType::toFloat($localNumber);
+            } catch (ExceptionBadSyntax $e) {
+                // should not happen due to the match but yeah
+                throw new ExceptionBadSyntax("The number value ($localNumber) o the length value ($length) is not a valid float format.");
+            }
+            $this->unit = $matches[2][0];
+
         }
 
 
     }
 
+    /**
+     * @throws ExceptionBadSyntax
+     */
     public static function createFromString(string $widthLength): Length
     {
         return new Length($widthLength);
@@ -65,19 +75,24 @@ class Length
     /**
      * @throws ExceptionBadArgument
      */
-    public function toPixelValue(): int
+    public function toPixelNumber(): int
     {
 
         switch ($this->unit) {
             case "rem":
                 $remValue = Site::getRem();
-                $targetValue = $this->value * $remValue;
+                $targetValue = $this->number * $remValue;
                 break;
             case "px":
             default:
-                $targetValue = $this->value;
+                $targetValue = $this->number;
         }
         return DataType::toInteger($targetValue);
 
+    }
+
+    public function getNumber(): float
+    {
+        return $this->number;
     }
 }

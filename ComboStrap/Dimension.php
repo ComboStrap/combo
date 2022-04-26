@@ -61,7 +61,10 @@ class Dimension
         if ($attributes->hasComponentAttribute($widthName)) {
 
             $widthValue = trim($attributes->getValueAndRemove($widthName));
-
+            if ($widthValue === "") {
+                LogUtility::error("The width value is empty for the tag ({$attributes->getLogicalTag()})");
+                return;
+            }
             if ($widthValue == "0") {
 
                 /**
@@ -247,11 +250,12 @@ EOF;
     /**
      * @param $value - a css value to a pixel
      * @throws ExceptionCompile
+     * @deprecated for {@link Length::toPixelNumber()}
      */
     public static function toPixelValue($value): int
     {
 
-        return Length::createFromString($value)->toPixelValue();
+        return Length::createFromString($value)->toPixelNumber();
 
     }
 

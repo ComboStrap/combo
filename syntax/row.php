@@ -13,7 +13,10 @@
 use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\DataType;
 use ComboStrap\Dimension;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\Length;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -92,7 +95,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      * helps to see if the user has enter any class
      */
     const HAD_USER_CLASS = "hasClass";
-    const TYPE_WIDTH_SPECIFIED = "width-specified";
+    const TYPE_WIDTH_SPECIFIED = "width";
+    const KNOWN_TYPES = [self::TYPE_WIDTH_SPECIFIED, self::TYPE_AUTO_VALUE, self::TYPE_FIT_VALUE, self::TYPE_FIT_OLD_VALUE];
 
 
     /**
@@ -197,7 +201,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $knownTypes = [];
+                $knownTypes = self::KNOWN_TYPES;
                 $defaultAttributes = [];
                 $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
 
@@ -266,27 +270,59 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  * @var Call[] $childCellOpeningTags
                  */
                 $childCellOpeningTags = [];
+                $lengthUnitUsedOnCells = null;
                 if ($type === null) {
 
                     /**
                      * Do we have a width set
                      */
+                    $cellWithoutWidthFound = false;
                     while ($actualCall = $callStack->next()) {
                         if ($actualCall->getTagName() === syntax_plugin_combo_cell::TAG
                             && $actualCall->getState() === DOKU_LEXER_ENTER
                         ) {
                             $childCellOpeningTags[] = $actualCall;
                             if ($actualCall->getAttribute(Dimension::WIDTH_KEY) !== null) {
-                                $widthLength = $actualCall->getAttribute(Dimension::WIDTH_KEY,"1fr");
-                                $length = Length::createFromString($widthLength);
-                                $unit =  $length->getUnit();
-                                if($unit!=="fr"){
+                                $type = self::TYPE_WIDTH_SPECIFIED;
+                                $widthLength = $actualCall->getAttribute(Dimension::WIDTH_KEY);
+                                try {
+                                    $length = Length::createFromString($widthLength);
+                                } catch (ExceptionBadSyntax $e) {
                                     $type = null;
-                                    LogUtility::error("A cell width should have the unit 'fr' (fraction) and not $unit");
+                                    LogUtility::error("The width length $widthLength is not a valid length value.");
                                     break;
-                                } else {
-                                    $type = self::TYPE_WIDTH_SPECIFIED;
                                 }
+                                $unit = $length->getUnit();
+                                switch ($unit) {
+                                    case Length::PERCENTAGE:
+                                        // All cells should have a percentage
+                                        if ($cellWithoutWidthFound) {
+                                            $type = null;
+                                            LogUtility::error("In a row where cells width are defined via percentage, all cells should have a width attribute.");
+                                            break 2;
+                                        }
+                                        break;
+                                    case Length::FRACTION:
+                                        break;
+                                    default:
+                                        $type = null;
+                                        $percentage = Length::PERCENTAGE;
+                                        $fraction = Length::FRACTION;
+                                        LogUtility::error("A cell width should have a rationale unit ($fraction or $percentage). Not $unit");
+                                        break 2;
+                                }
+                                if ($lengthUnitUsedOnCells === null) {
+                                    $lengthUnitUsedOnCells = $unit;
+                                } else {
+                                    if ($lengthUnitUsedOnCells !== $unit) {
+                                        $type = null;
+                                        LogUtility::error("All cells of a row should have the same unit. We found the units ($lengthUnitUsedOnCells and $unit)");
+                                        break;
+                                    }
+                                }
+
+                            } else {
+                                $cellWithoutWidthFound = true;
                             }
                         }
                     }
@@ -296,7 +332,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                      */
                     if ($type === null) {
                         if ($openingCall->getAttribute(TagAttributes::CLASS_KEY) === null) {
-                            if ($openingCall->getContext() == self::CONTAINED_CONTEXT) {
+                            if ($openingCall->getContext() === self::CONTAINED_CONTEXT) {
                                 $type = self::TYPE_FIT_VALUE;
                             } else {
                                 $type = self::TYPE_AUTO_VALUE;
@@ -304,6 +340,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         }
                     }
                 }
+                // setting the type on the opening tag to see it in html attribute
+                $openingCall->setType($type);
 
 
                 /**
@@ -312,9 +350,38 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 switch ($type) {
                     case self::TYPE_WIDTH_SPECIFIED:
                         // Total calculation
-                        foreach($childCellOpeningTags as $cellOpeningTag){
-                            throw new \ComboStrap\ExceptionBadSyntax("To continue");
+                        switch ($lengthUnitUsedOnCells) {
+                            case Length::FRACTION:
+                                foreach ($childCellOpeningTags as $cellOpeningTag) {
+                                    throw new \ComboStrap\ExceptionRuntime("Todo");
+                                }
+                                break;
+                            case Length::PERCENTAGE:
+                                $totalCols = 12;
+                                foreach ($childCellOpeningTags as $cellOpeningTag) {
+                                    $width = $cellOpeningTag->getAttribute(Dimension::WIDTH_KEY);
+                                    $length = Length::createFromString($width);
+                                    $value = $length->getNumber();
+                                    try {
+                                        $colsNumber = DataType::toInteger(12 * $value / 100);
+                                    } catch (ExceptionBadArgument $e) {
+                                        $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
+                                        LogUtility::error("We were unable to get an integer for the cols number calculation. Error: {$e->getMessage()}");
+                                        continue;
+                                    }
+                                    if ($totalCols > $colsNumber) {
+                                        $totalCols = $totalCols - $colsNumber;
+                                    } else {
+                                        $colsNumber = $totalCols;
+                                        $totalCols = 0;
+                                    }
+                                    $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
+                                    $cellOpeningTag->addClassName("col-sm-$colsNumber");
+                                    $cellOpeningTag->addClassName("col-12");
+                                }
+                                break;
                         }
+
                         break;
                     case syntax_plugin_combo_row::TYPE_AUTO_VALUE:
                         $numberOfColumns = 0;
@@ -478,7 +545,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG)
+                        ->setKnownTypes(self::KNOWN_TYPES);
                     $hadClassAttribute = $attributes->getBooleanValueAndRemoveIfPresent(self::HAD_USER_CLASS);
                     $htmlElement = $attributes->getValueAndRemove(self::HTML_TAG_ATT);
 

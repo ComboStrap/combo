@@ -207,6 +207,7 @@ class TagAttributes
      * @var bool - adding  the default class for the logical tag
      */
     private $defaultStyleClassShouldBeAdded = true;
+    private $knownTypes;
 
 
     /**
@@ -259,7 +260,8 @@ class TagAttributes
         $inlineHtmlAttributes = PluginUtility::getTagAttributes($match, $knownTypes);
         $tag = PluginUtility::getTag($match);
         $mergedAttributes = PluginUtility::mergeAttributes($inlineHtmlAttributes, $defaultAttributes);
-        return self::createFromCallStackArray($mergedAttributes, $tag);
+        return self::createFromCallStackArray($mergedAttributes, $tag)
+            ->setKnownTypes($knownTypes);
     }
 
 
@@ -464,13 +466,14 @@ class TagAttributes
     public function hasComponentAttribute($attributeName)
     {
         $isset = isset($this->componentAttributesCaseInsensitive[$attributeName]);
-        if ($isset === false) {
+        if ($isset === false && $this->knownTypes === null) {
             /**
              * Edge effect
              * if this is a boolean value and the first value, it may be stored in the type
              */
             if (isset($this->componentAttributesCaseInsensitive[TagAttributes::TYPE_KEY])) {
                 if ($attributeName == $this->componentAttributesCaseInsensitive[TagAttributes::TYPE_KEY]) {
+                    LogUtility::warning("Internal Error: The tag ({$this->getLogicalTag()}) has a the boolean attribute ($attributeName) defined as a type. The possible types should be defined for this tag as it's deprecated.");
                     return true;
                 }
             }
@@ -1306,6 +1309,12 @@ class TagAttributes
             return $id;
         }
         return $this->getValue(TagAttributes::GENERATED_ID_KEY);
+    }
+
+    public function setKnownTypes(?array $knownTypes): TagAttributes
+    {
+        $this->knownTypes = $knownTypes;
+        return $this;
     }
 
 

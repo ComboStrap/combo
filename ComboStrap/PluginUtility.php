@@ -120,6 +120,7 @@ require_once(__DIR__ . '/FontSize.php');
 require_once(__DIR__ . '/FsWikiUtility.php');
 require_once(__DIR__ . '/HeaderUtility.php');
 require_once(__DIR__ . '/Hero.php');
+require_once(__DIR__ . '/Horizontal.php');
 require_once(__DIR__ . '/HtmlDocument.php');
 require_once(__DIR__ . '/HistoricalBreadcrumbMenuItem.php');
 require_once(__DIR__ . '/Hover.php');
@@ -241,6 +242,7 @@ require_once(__DIR__ . '/Reference.php');
 require_once(__DIR__ . '/Underline.php');
 require_once(__DIR__ . '/Unit.php');
 require_once(__DIR__ . '/Url.php');
+require_once(__DIR__ . '/Vertical.php');
 require_once(__DIR__ . '/XhtmlUtility.php');
 require_once(__DIR__ . '/XmlDocument.php');
 require_once(__DIR__ . '/XmlUtility.php');
@@ -275,11 +277,6 @@ class PluginUtility
 
     const PARENT = "parent";
     const POSITION = "position";
-
-    /**
-     * Class to center an element
-     */
-    const CENTER_CLASS = "mx-auto";
 
 
     const EXIT_MESSAGE = "errorAtt";

@@ -6,6 +6,10 @@ namespace ComboStrap;
 
 class Align
 {
+    /**
+     * Class to center an element
+     */
+    public const CENTER_CLASS = "mx-auto";
 
     /**
      * @param TagAttributes $attributes
@@ -21,7 +25,7 @@ class Align
             if ($alignValue !== null && $alignValue !== "") {
                 switch ($alignValue) {
                     case "center":
-                        $attributes->addClassName(PluginUtility::CENTER_CLASS);
+                        $attributes->addClassName(self::CENTER_CLASS);
                         break;
                     case "right":
                     case "end":

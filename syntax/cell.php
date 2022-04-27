@@ -16,12 +16,16 @@ use ComboStrap\ConditionalValue;
 use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\Vertical;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
- * The {@link https://combostrap.com/column column} of a {@link https://combostrap.com/grid grid}
+ * A flex item
+ *
+ * Used in combination with a {@link syntax_plugin_combo_row}
+ * for powerful layout
  *
  *
  * Note: The name of the class must follow this pattern ie syntax_plugin_PluginName_ComponentName
@@ -32,7 +36,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
     const TAG = "cell";
 
     const WIDTH_ATTRIBUTE = Dimension::WIDTH_KEY;
-    const VERTICAL_ATTRIBUTE = "vertical";
+    const FLEX_CLASS = "d-flex";
 
 
     static function getTags(): array
@@ -46,7 +50,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'container';
     }
@@ -56,12 +60,12 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
      * Allow which kind of plugin inside
      * All
      */
-    public function getAllowedTypes()
+    public function getAllowedTypes(): array
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    public function accepts($mode)
+    public function accepts($mode): bool
     {
 
         /**
@@ -231,25 +235,16 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
                     PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
                     $callStackArray = $data[PluginUtility::ATTRIBUTES];
                     $attributes = TagAttributes::createFromCallStackArray($callStackArray, self::TAG);
-                    $attributes->addClassName("col");
                     /**
                      * A flex to be able to align the children (horizontal/vertical)
                      * if they are constraint in width
                      */
-                    $attributes->addClassName("d-flex");
+                    $attributes->addClassName(self::FLEX_CLASS);
                     /**
                      * Horizontal (center)
                      */
                     $attributes->addClassName("justify-content-center");
-                    if ($attributes->hasComponentAttribute(self::VERTICAL_ATTRIBUTE)) {
-                        $value = $attributes->getValue(self::VERTICAL_ATTRIBUTE);
-                        if ($value == "center") {
-                            /**
-                             * Vertical (center)
-                             */
-                            $attributes->addClassName("align-items-center");
-                        }
-                    }
+
                     $renderer->doc .= $attributes->toHtmlEnterTag("div");
                     break;
 

@@ -59,7 +59,7 @@ class TagAttributes
         MediaLink::LINKING_KEY, // internal to image
         CacheMedia::CACHE_KEY, // internal also
         \syntax_plugin_combo_webcode::RENDERING_MODE_ATTRIBUTE,
-        syntax_plugin_combo_cell::VERTICAL_ATTRIBUTE,
+        Vertical::VERTICAL_ATTRIBUTE,
         self::OPEN_TAG,
         self::HTML_BEFORE,
         self::HTML_AFTER,
@@ -524,6 +524,8 @@ class TagAttributes
         Position::processStickiness($this);
         Position::processPosition($this);
         Display::processDisplay($this);
+        Vertical::processVertical($this);
+        Horizontal::processHorizontal($this);
 
         /**
          * Block processing

@@ -18,6 +18,7 @@ use ComboStrap\DataType;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\Horizontal;
 use ComboStrap\Length;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -222,7 +223,14 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER:
 
                 $knownTypes = self::KNOWN_TYPES;
-                $defaultAttributes = [];
+                /**
+                 * All element are centered
+                 * If their is 5 cells and the last one
+                 * is going at the line, it will be centered
+                 */
+                $defaultAttributes = [
+                    Horizontal::HORIZONTAL_ATTRIBUTE => "center"
+                ];
                 $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
 
                 $type = $attributes->getType();
@@ -307,7 +315,6 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  */
                 $maxCellsArray = [];
 
-
                 if ($maxCells !== null) {
 
                     $maxCellsValues = explode(" ", $maxCells);
@@ -335,99 +342,107 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     $type = self::TYPE_CELLS;
                 }
 
+
                 /**
+                 * Scan the cells children
+                 * Add the col class
+                 * Do the cells have a width set ...
+                 *
                  * @var Call[] $childCellOpeningTags
                  */
                 $childCellOpeningTags = [];
                 $lengthUnitUsedOnCells = null;
-                if ($type === null) {
-
-                    /**
-                     * Do we have a width set
-                     */
-                    $cellWithoutWidthFound = false;
-                    while ($actualCall = $callStack->next()) {
-                        if ($actualCall->getTagName() === syntax_plugin_combo_cell::TAG
-                            && $actualCall->getState() === DOKU_LEXER_ENTER
-                        ) {
-                            $childCellOpeningTags[] = $actualCall;
-                            if ($actualCall->getAttribute(Dimension::WIDTH_KEY) !== null) {
-                                $type = self::TYPE_WIDTH_SPECIFIED;
-                                $widthLength = $actualCall->getAttribute(Dimension::WIDTH_KEY);
-                                try {
-                                    $length = Length::createFromString($widthLength);
-                                } catch (ExceptionBadArgument $e) {
+                $cellWithoutWidthFound = false;
+                while ($actualCall = $callStack->next()) {
+                    if ($actualCall->getTagName() === syntax_plugin_combo_cell::TAG
+                        && $actualCall->getState() === DOKU_LEXER_ENTER
+                    ) {
+                        $actualCall->addClassName("col");
+                        $childCellOpeningTags[] = $actualCall;
+                        if ($actualCall->getAttribute(Dimension::WIDTH_KEY) !== null) {
+                            $type = self::TYPE_WIDTH_SPECIFIED;
+                            $widthLength = $actualCall->getAttribute(Dimension::WIDTH_KEY);
+                            try {
+                                $length = Length::createFromString($widthLength);
+                            } catch (ExceptionBadArgument $e) {
+                                $type = null;
+                                LogUtility::error("The width length $widthLength is not a valid length value.");
+                                break;
+                            }
+                            $unit = $length->getUnit();
+                            switch ($unit) {
+                                case Length::PERCENTAGE:
+                                    // All cells should have a percentage
+                                    if ($cellWithoutWidthFound) {
+                                        $type = null;
+                                        LogUtility::error("In a row where cells width are defined via percentage, all cells should have a width attribute.");
+                                        break 2;
+                                    }
+                                    break;
+                                case Length::FRACTION:
+                                    break;
+                                default:
                                     $type = null;
-                                    LogUtility::error("The width length $widthLength is not a valid length value.");
+                                    $percentage = Length::PERCENTAGE;
+                                    $fraction = Length::FRACTION;
+                                    LogUtility::error("A cell width should have a rationale unit ($fraction or $percentage). Not $unit");
+                                    break 2;
+                            }
+                            if ($lengthUnitUsedOnCells === null) {
+                                $lengthUnitUsedOnCells = $unit;
+                            } else {
+                                if ($lengthUnitUsedOnCells !== $unit) {
+                                    $type = null;
+                                    LogUtility::error("All cells of a row should have the same unit. We found the units ($lengthUnitUsedOnCells and $unit)");
                                     break;
                                 }
-                                $unit = $length->getUnit();
-                                switch ($unit) {
-                                    case Length::PERCENTAGE:
-                                        // All cells should have a percentage
-                                        if ($cellWithoutWidthFound) {
-                                            $type = null;
-                                            LogUtility::error("In a row where cells width are defined via percentage, all cells should have a width attribute.");
-                                            break 2;
-                                        }
-                                        break;
-                                    case Length::FRACTION:
-                                        break;
-                                    default:
-                                        $type = null;
-                                        $percentage = Length::PERCENTAGE;
-                                        $fraction = Length::FRACTION;
-                                        LogUtility::error("A cell width should have a rationale unit ($fraction or $percentage). Not $unit");
-                                        break 2;
-                                }
-                                if ($lengthUnitUsedOnCells === null) {
-                                    $lengthUnitUsedOnCells = $unit;
-                                } else {
-                                    if ($lengthUnitUsedOnCells !== $unit) {
-                                        $type = null;
-                                        LogUtility::error("All cells of a row should have the same unit. We found the units ($lengthUnitUsedOnCells and $unit)");
-                                        break;
-                                    }
-                                }
-
-                            } else {
-                                $cellWithoutWidthFound = true;
                             }
+
+                        } else {
+                            $cellWithoutWidthFound = true;
                         }
                     }
+                }
 
-                    /**
-                     * Type
-                     */
-                    if ($type === null) {
-                        if ($openingCall->getAttribute(TagAttributes::CLASS_KEY) === null) {
-                            if ($openingCall->getContext() === self::CONTAINED_CONTEXT) {
-                                $type = self::TYPE_FIT_VALUE;
-                            } else {
-                                $type = self::TYPE_CELLS;
-                            }
-                        }
+                if ($type === null) {
+
+                    if ($openingCall->getContext() === self::CONTAINED_CONTEXT) {
+                        $type = self::TYPE_FIT_VALUE;
+                    } else {
+                        $type = self::TYPE_CELLS;
                     }
+
                 }
                 // setting the type on the opening tag to see it in html attribute
                 $openingCall->setType($type);
 
 
                 /**
-                 * Auto width calculation
+                 * Distribution calculation
                  */
                 switch ($type) {
                     case self::TYPE_CELLS:
-                        $maxCellsDefault = [];
+                        $maxCellDefaults = [];
                         try {
-                            $maxCellsDefault["xs"] = Length::createFromString("1-xs");
-                            $maxCellsDefault["sm"] = Length::createFromString("2-sm");
-                            $maxCellsDefault["md"] = Length::createFromString("3-md");
-                            $maxCellsDefault["lg"] = Length::createFromString("4-lg");
+                            $maxCellDefaults["xs"] = Length::createFromString("1-xs");
+                            $maxCellDefaults["sm"] = Length::createFromString("2-sm");
+                            $maxCellDefaults["md"] = Length::createFromString("3-md");
+                            $maxCellDefaults["lg"] = Length::createFromString("4-lg");
                         } catch (ExceptionBadArgument $e) {
                             LogUtility::error("Bad default value initialization. Error:{$e->getMessage()}", self::CANONICAL);
                         }
-                        $maxCellsArray = array_merge($maxCellsDefault, $maxCellsArray);
+                        // Delete the default that are bigger than the asked max-cells number
+                        $maxCellDefaultsFiltered = [];
+                        if ($maxCells !== null) {
+                            foreach ($maxCellDefaults as $breakpoint => $maxCellDefault) {
+                                if ($maxCellDefault->getNumber() < $maxCells) {
+                                    $maxCellDefaultsFiltered[$breakpoint] = $maxCellDefault;
+                                }
+                            }
+                        } else {
+                            $maxCellDefaultsFiltered = $maxCellDefaults;
+                        }
+                        $maxCellsArray = array_merge($maxCellDefaultsFiltered, $maxCellsArray);
                         foreach ($maxCellsArray as $maxCell) {
                             try {
                                 $openingCall->addClassName($maxCell->toRowColsClass());
@@ -699,7 +714,6 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                              * All element are centered vertically and horizontally
                              */
                             if (!$hadClassAttribute) {
-                                $attributes->addClassName("justify-content-center");
                                 $attributes->addClassName("align-items-center");
                                 if (Bootstrap::getBootStrapMajorVersion() === Bootstrap::BootStrapFiveMajorVersion) {
                                     $attributes->addClassName("g-0");
@@ -719,12 +733,6 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         case self::ROOT_CONTEXT:
 
                             if (!$hadClassAttribute) {
-                                /**
-                                 * All element are centered
-                                 * If their is 5 cells and the last one
-                                 * is going at the line, it will be centered
-                                 */
-                                $attributes->addClassName("justify-content-center");
                                 /**
                                  * Vertical gutter
                                  * On a two cell grid, the content will not

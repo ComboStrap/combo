@@ -84,7 +84,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      * and is just below the root
      * We set a value
      */
-    const TYPE_AUTO_VALUE = "auto";
+    const TYPE_AUTO_VALUE_DEPRECATED = "auto";
     const TYPE_FIT_OLD_VALUE = "natural";
     const TYPE_FIT_VALUE = "fit";
     const MINIMAL_WIDTH = 300;
@@ -97,7 +97,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      */
     const HAD_USER_CLASS = "hasClass";
     const TYPE_WIDTH_SPECIFIED = "width";
-    const KNOWN_TYPES = [self::TYPE_WIDTH_SPECIFIED, self::TYPE_AUTO_VALUE, self::TYPE_FIT_VALUE, self::TYPE_FIT_OLD_VALUE];
+    const KNOWN_TYPES = [self::TYPE_WIDTH_SPECIFIED, self::TYPE_AUTO_VALUE_DEPRECATED, self::TYPE_FIT_VALUE, self::TYPE_FIT_OLD_VALUE];
     const MAX_CELLS_ATTRIBUTE = "max-cells";
     const TYPE_CELLS = "cells";
 
@@ -225,6 +225,12 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 $defaultAttributes = [];
                 $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
 
+                $type = $attributes->getType();
+                if (($type === self::TYPE_AUTO_VALUE_DEPRECATED)) {
+                    LogUtility::warning("The auto rows type has been deprecated.", self::CANONICAL);
+                    $attributes->removeType();
+                }
+
 
                 $callStack = CallStack::createFromHandler($handler);
                 $parent = $callStack->moveToParent();
@@ -303,14 +309,6 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
 
                 if ($maxCells !== null) {
-
-                    try {
-                        $maxCellsArray["xs"] = Length::createFromString("1-xs");
-                        $maxCellsArray["sm"] = Length::createFromString("2-sm");
-                        $maxCellsArray["md"] = Length::createFromString("3-md");
-                    } catch (ExceptionBadArgument $e) {
-                        LogUtility::error("Bad default value initialization", self::CANONICAL);
-                    }
 
                     $maxCellsValues = explode(" ", $maxCells);
                     foreach ($maxCellsValues as $maxCellsValue) {
@@ -406,7 +404,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                             if ($openingCall->getContext() === self::CONTAINED_CONTEXT) {
                                 $type = self::TYPE_FIT_VALUE;
                             } else {
-                                $type = self::TYPE_AUTO_VALUE;
+                                $type = self::TYPE_CELLS;
                             }
                         }
                     }
@@ -420,6 +418,16 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  */
                 switch ($type) {
                     case self::TYPE_CELLS:
+                        $maxCellsDefault = [];
+                        try {
+                            $maxCellsDefault["xs"] = Length::createFromString("1-xs");
+                            $maxCellsDefault["sm"] = Length::createFromString("2-sm");
+                            $maxCellsDefault["md"] = Length::createFromString("3-md");
+                            $maxCellsDefault["lg"] = Length::createFromString("4-lg");
+                        } catch (ExceptionBadArgument $e) {
+                            LogUtility::error("Bad default value initialization. Error:{$e->getMessage()}", self::CANONICAL);
+                        }
+                        $maxCellsArray = array_merge($maxCellsDefault, $maxCellsArray);
                         foreach ($maxCellsArray as $maxCell) {
                             try {
                                 $openingCall->addClassName($maxCell->toRowColsClass());
@@ -481,7 +489,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         }
 
                         break;
-                    case syntax_plugin_combo_row::TYPE_AUTO_VALUE:
+                    case syntax_plugin_combo_row::TYPE_AUTO_VALUE_DEPRECATED:
                         $numberOfColumns = 0;
                         /**
                          * If the size or the class is set, we don't
@@ -670,7 +678,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                                     PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("row-cols-auto");
                                 }
                                 break;
-                            case syntax_plugin_combo_row::TYPE_AUTO_VALUE:
+                            case syntax_plugin_combo_row::TYPE_AUTO_VALUE_DEPRECATED:
                                 /**
                                  * The class are set on the cells, not on the row,
                                  * nothing to do

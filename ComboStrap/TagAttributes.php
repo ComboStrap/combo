@@ -1326,5 +1326,11 @@ class TagAttributes
         return $this;
     }
 
+    public function removeType(): TagAttributes
+    {
+        $this->removeAttributeIfPresent(self::TYPE_KEY);
+        return $this;
+    }
+
 
 }

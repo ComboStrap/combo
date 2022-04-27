@@ -90,9 +90,18 @@ class TagAttributes
         ImageRaster::CANONICAL,
         Image::CANONICAL,
         \syntax_plugin_combo_link::TAG, // link button for instance
-        \syntax_plugin_combo_button::TAG,
-        \syntax_plugin_combo_heading::TAG
+        \syntax_plugin_combo_button::TAG
     ];
+    /**
+     * Container
+     * Heading is a block but not a container
+     */
+    const CONTAINER_LOGICAL_ELEMENTS = [
+        \syntax_plugin_combo_box::TAG,
+        \syntax_plugin_combo_card::TAG,
+        \syntax_plugin_combo_blockquote::TAG,
+    ];
+
     const SCRIPT_KEY = "script";
     const TRANSFORM = "transform";
 

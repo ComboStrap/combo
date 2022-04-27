@@ -10,6 +10,8 @@
  *
  */
 
+use ComboStrap\Call;
+use ComboStrap\CallStack;
 use ComboStrap\ConditionalValue;
 use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
@@ -31,6 +33,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
 
     const WIDTH_ATTRIBUTE = Dimension::WIDTH_KEY;
     const VERTICAL_ATTRIBUTE = "vertical";
+
 
     static function getTags(): array
     {
@@ -158,6 +161,41 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
+                $callStack = CallStack::createFromHandler($handler);
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $firstChild = $callStack->moveToFirstChildTag();
+
+                /**
+                 * A cell is a flex container that helps place its children
+                 * It should contain one or more container
+                 * It should have at minimum one
+                 */
+                $addChildContainer = true;
+                if ($firstChild !== false) {
+                    if (in_array($firstChild->getTagName(), TagAttributes::CONTAINER_LOGICAL_ELEMENTS)) {
+                        $addChildContainer = false;
+                    }
+                }
+                if ($addChildContainer === true) {
+                    /**
+                     * A cell should have one or more container as child
+                     * If the container is not in the markup, we add it
+                     */
+                    $callStack->moveToCall($openingTag);
+                    $callStack->insertAfter(
+                        Call::createComboCall(
+                            syntax_plugin_combo_box::TAG,
+                            DOKU_LEXER_ENTER
+                        ));
+                    $callStack->moveToEnd();
+                    $callStack->insertBefore(
+                        Call::createComboCall(
+                            syntax_plugin_combo_box::TAG,
+                            DOKU_LEXER_EXIT
+                        ));
+                }
+
+
                 return array(
                     PluginUtility::STATE => $state
                 );
@@ -179,7 +217,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {
@@ -212,7 +250,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
                             $attributes->addClassName("align-items-center");
                         }
                     }
-                    $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;
+                    $renderer->doc .= $attributes->toHtmlEnterTag("div");
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -222,7 +260,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
 
-                    $renderer->doc .= '</div>' . DOKU_LF;
+                    $renderer->doc .= '</div>';
                     break;
             }
             return true;

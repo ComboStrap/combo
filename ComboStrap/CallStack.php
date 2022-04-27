@@ -546,7 +546,7 @@ class CallStack
     {
 
         /**
-         * Edgde case
+         * Edge case
          */
         if (empty($this->callStack)) {
             return false;
@@ -1063,7 +1063,7 @@ class CallStack
         $actualKey = $this->getActualKey();
         if ($actualKey === null) {
             if ($this->endWasReached) {
-                $actualKey = sizeof($this->callStack) - 1; // 0 based array
+                $actualKey = sizeof($this->callStack);
             }
             if ($this->startWasReached) {
                 $actualKey = -1;

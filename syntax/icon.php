@@ -71,10 +71,15 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
      * No one of array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
      * because we manage self the content and we call self the parser
      */
-    public function getAllowedTypes()
+    public function getAllowedTypes(): array
     {
         // You can't put anything in a icon
         return array('formatting');
+    }
+
+    public function accepts($mode): bool
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
 
     /**

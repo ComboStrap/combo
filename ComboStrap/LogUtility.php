@@ -59,6 +59,10 @@ class LogUtility
      * @var bool
      */
     private static $throwExceptionOnDevTest = true;
+    /**
+     * @var int
+     */
+    private static $exceptionLevelOnTest = self::LVL_MSG_WARNING;
 
     /**
      * Send a message to a manager and log it
@@ -258,7 +262,7 @@ class LogUtility
     private static function throwErrorIfTest($level, $message)
     {
         if (PluginUtility::isTest()
-            && ($level >= self::LVL_MSG_WARNING)
+            && ($level >= self::$exceptionLevelOnTest)
             && self::$throwExceptionOnDevTest
         ) {
             throw new LogException($message);
@@ -324,5 +328,15 @@ class LogUtility
     public static function info(string $message, string $canonical = "support")
     {
         self::msg($message, LogUtility::LVL_MSG_INFO, $canonical);
+    }
+
+    public static function setTestExceptionLevel(int $level)
+    {
+        self::$exceptionLevelOnTest = $level;
+    }
+
+    public static function resetThrowExceptionOnDevTest()
+    {
+        self::$exceptionLevelOnTest = self::LVL_MSG_WARNING;
     }
 }

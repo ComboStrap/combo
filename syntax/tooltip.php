@@ -96,6 +96,11 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
         return array('baseonly', 'container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
+    public function accepts($mode): bool
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+    }
+
     function getSort(): int
     {
         return 201;

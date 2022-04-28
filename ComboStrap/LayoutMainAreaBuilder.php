@@ -193,6 +193,7 @@ class LayoutMainAreaBuilder
 
         }
 
+
         /**
          * Split the main content
          *   - Extract the frontmatter calls (should not be deleted)
@@ -346,6 +347,57 @@ class LayoutMainAreaBuilder
             DOKU_LEXER_EXIT
         ));
 
+
+    }
+
+    public static function headingDisplayNone(CallStack $callStack, Page $page)
+    {
+
+        $mainHeaderPage = $page->getPrimaryHeaderPage();
+        if ($mainHeaderPage === null) {
+            return;
+        }
+        try {
+            $mainHeaderCallStack = CallStack::createFromInstructions($mainHeaderPage->getInstructionsDocument()->getOrProcessContent());
+        } catch (ExceptionNotFound $e) {
+            return;
+        }
+        $mainHeaderHasTemplateHeading = false;
+        $mainHeaderCallStack->moveToStart();
+        while ($actualCall = $mainHeaderCallStack->next()) {
+            if (in_array($actualCall->getTagName(), \action_plugin_combo_headingpostprocessing::HEADING_TAGS)) {
+                $mainHeaderHasNormalHeading = true;
+                break;
+            }
+            if ($actualCall->getTagName() === \syntax_plugin_combo_template::TAG && $actualCall->getState() === DOKU_LEXER_EXIT) {
+                $instructions = $actualCall->getPluginData(\syntax_plugin_combo_template::CALLSTACK);
+                $templateCallStack = CallStack::createFromInstructions($instructions);
+                $templateCallStack->moveToStart();
+                while ($actualTemplateCall = $templateCallStack->next()) {
+                    if (in_array($actualTemplateCall->getTagName(), \action_plugin_combo_headingpostprocessing::HEADING_TAGS)) {
+                        $mainHeaderHasTemplateHeading = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!$mainHeaderHasTemplateHeading) {
+            return;
+        }
+        $callStack->moveToStart();
+        while ($actualCall = $callStack->next()) {
+            if (in_array($actualCall->getTagName(), \action_plugin_combo_headingpostprocessing::HEADING_TAGS)) {
+                try {
+                    $level = DataType::toInteger($actualCall->getAttribute(\syntax_plugin_combo_heading::LEVEL));
+                    if ($level === 1) {
+                        $callStack->deleteActualCallAndPrevious();
+                    }
+                    return;
+                } catch (ExceptionBadArgument $e) {
+                    return;
+                }
+            }
+        }
 
     }
 }

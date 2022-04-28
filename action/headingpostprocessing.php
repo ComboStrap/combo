@@ -438,11 +438,9 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * Main Slots and TOC to the primary slots
          */
         if (LayoutMainAreaBuilder::shouldMainAreaBeBuild($callStack, $pageParsed)) {
-
-            LayoutMainAreaBuilder::buildMainArea($callStack, $this->tocData, $pageParsed);
-
+            LayoutMainAreaBuilder::headingDisplayNone($callStack, $pageParsed);
+            //LayoutMainAreaBuilder::buildMainArea($callStack, $this->tocData, $pageParsed);
         }
-
 
     }
 

@@ -66,7 +66,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
         return 201;
     }
 
-    public function accepts($mode)
+    public function accepts($mode): bool
     {
         /**
          * header mode is disable to take over

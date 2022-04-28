@@ -32,33 +32,36 @@ class ConditionalValue
      */
     public function __construct($value)
     {
-        $array = explode("-", $value);
-        $sizeof = sizeof($array);
-        switch ($sizeof) {
-            case 0:
-                LogUtility::msg("There is no value in ($value)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                $this->breakpoint = null;
-                $this->value = "";
-                break;
-            case 1:
-                $this->breakpoint = null;
-                $this->value = $array[0];
-                break;
-            case 2:
-                $this->breakpoint = strtolower($array[0]);
-                if (array_key_exists($this->breakpoint, self::$breakpoints)) {
-                    $this->value = $array[1];
-                    break;
-                }
-                $this->breakpoint = strtolower($array[1]);
-                if (array_key_exists($this->breakpoint, self::$breakpoints)) {
-                    $this->value = $array[0];
-                    break;
-                }
-                throw new ExceptionBadSyntax("The breakpoint ($this->breakpoint) is not a valid breakpoint prefix", self::CANONICAL);
-            default:
-                throw new ExceptionBadSyntax("The screen conditional value ($value) should have only one separator character `-`", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+        $lastIndex = strrpos($value, "-");
+        if ($lastIndex === false) {
+            $this->breakpoint = null;
+            $this->value = $value;
+            return;
         }
+        $breakpoint = substr($value, $lastIndex + 1);
+        if (array_key_exists($breakpoint, self::$breakpoints)) {
+            $this->breakpoint = $breakpoint;
+            $this->value = substr($value, 0, $lastIndex);
+            return;
+        }
+        // Old the breakpoints may be in the middle
+        $parts = explode("-", $value);
+        $valueFromParts = [];
+        foreach ($parts as $key => $part) {
+            if (array_key_exists($part, self::$breakpoints)) {
+                $this->breakpoint = $part;
+            } else {
+                $valueFromParts[] = $part;
+            }
+        }
+        if ($this->breakpoint === null) {
+            $this->breakpoint = null;
+            $this->value = $value;
+            return;
+        }
+        $this->value = implode("-", $valueFromParts);
+        LogUtility::warning("The breakpoint conditional value format ($value) will be deprecated in the next releases. It should be written ($this->value-$this->breakpoint)");
+
     }
 
     /**

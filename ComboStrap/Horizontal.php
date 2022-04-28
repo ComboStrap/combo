@@ -11,7 +11,14 @@ class Horizontal
     public const HORIZONTAL_ATTRIBUTE = "horizontal";
     const CANONICAL = self::HORIZONTAL_ATTRIBUTE;
 
-    const VALUES = ["start", "end", "center", "between", "around", "evenly"];
+    const VALUES = [
+        "start-items",
+        "end",
+        "center-children",
+        "between",
+        "around",
+        "evenly"
+    ];
 
     public static function processHorizontal(TagAttributes &$tagAttributes)
     {
@@ -22,6 +29,7 @@ class Horizontal
 
     static function processFlexAttribute(string $attributeName, $tagAttributes)
     {
+
         $value = $tagAttributes->getValueAndRemove($attributeName);
         if ($value === null) {
             return;

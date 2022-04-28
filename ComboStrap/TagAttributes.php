@@ -308,17 +308,7 @@ class TagAttributes
      */
     public static function toQualifiedCssValue($value): string
     {
-        /**
-         * A length value may be also `fit-content`
-         * we just check that if there is only number,
-         * we add the pixel
-         * Same as {@link is_numeric()} ?
-         */
-        if (is_numeric($value)) {
-            return $value . "px";
-        } else {
-            return $value;
-        }
+        return ConditionalLength::createFromString($value)->toCssLength();
 
     }
 

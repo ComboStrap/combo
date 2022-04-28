@@ -4,6 +4,9 @@
 namespace ComboStrap;
 
 
+/**
+ * @deprecated use conditional length instead
+ */
 class ConditionalValue
 {
 

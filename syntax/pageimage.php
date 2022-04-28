@@ -264,7 +264,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     $width = $tagAttributes->getValue(Dimension::WIDTH_KEY);
                     if ($width !== null) {
                         try {
-                            $pixelWidth = \ComboStrap\Length::createFromString($width)->toPixelNumber();
+                            $pixelWidth = \ComboStrap\ConditionalLength::createFromString($width)->toPixelNumber();
                             if ($pixelWidth < 30) {
                                 /**
                                  * Icon rendering

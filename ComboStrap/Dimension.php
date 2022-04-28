@@ -51,68 +51,15 @@ class Dimension
     public const RATIO_ATTRIBUTE = "ratio";
     const ZOOM_ATTRIBUTE = "zoom";
 
+    const CANONICAL = "dimension";
+
 
     /**
      * @param TagAttributes $attributes
      */
     public static function processWidthAndHeight(TagAttributes &$attributes)
     {
-        $widthName = self::WIDTH_KEY;
-        if ($attributes->hasComponentAttribute($widthName)) {
-
-            $widthValue = trim($attributes->getValueAndRemove($widthName));
-            if ($widthValue === "") {
-                LogUtility::error("The width value is empty for the tag ({$attributes->getLogicalTag()})");
-                return;
-            }
-            if ($widthValue == "0") {
-
-                /**
-                 * For an image, the dimension are restricted by height
-                 */
-                if ($attributes->hasComponentAttribute(self::HEIGHT_KEY)) {
-                    $attributes->addStyleDeclarationIfNotSet("width", "auto");
-                }
-
-            } else {
-
-
-                if ($widthValue == "fit") {
-                    $widthValue = "fit-content";
-                } else {
-                    /** Numeric value */
-                    $widthValue = TagAttributes::toQualifiedCssValue($widthValue);
-                }
-
-
-                /**
-                 * For an image (png, svg)
-                 * They have width and height **element** attribute
-                 */
-                if (in_array($attributes->getLogicalTag(), self::NATURAL_SIZING_ELEMENT)) {
-
-                    /**
-                     * If the image is not ask as static resource (ie HTTP request)
-                     * but added in HTML
-                     * (ie {@link \action_plugin_combo_svg})
-                     */
-                    $requestedMime = $attributes->getMime();
-                    if ($requestedMime == TagAttributes::TEXT_HTML_MIME) {
-                        $attributes->addStyleDeclarationIfNotSet('max-width', $widthValue);
-                        $attributes->addStyleDeclarationIfNotSet('width', "100%");
-                    }
-
-                } else {
-
-                    /**
-                     * For a block
-                     */
-                    $attributes->addStyleDeclarationIfNotSet('max-width', $widthValue);
-
-                }
-            }
-
-        }
+        self::processWidth($attributes);
 
         $heightName = self::HEIGHT_KEY;
         if ($attributes->hasComponentAttribute($heightName)) {
@@ -250,12 +197,12 @@ EOF;
     /**
      * @param $value - a css value to a pixel
      * @throws ExceptionCompile
-     * @deprecated for {@link Length::toPixelNumber()}
+     * @deprecated for {@link ConditionalLength::toPixelNumber()}
      */
     public static function toPixelValue($value): int
     {
 
-        return Length::createFromString($value)->toPixelNumber();
+        return ConditionalLength::createFromString($value)->toPixelNumber();
 
     }
 
@@ -282,6 +229,99 @@ EOF;
             throw new ExceptionCompile("The height value of the ratio `$stringRatio` should not be zero", syntax_plugin_combo_pageimage::CANONICAL);
         }
         return floatval($width / $height);
+
+    }
+
+    private static function processWidth(TagAttributes $attributes)
+    {
+        $widthValueAsString = $attributes->getValueAndRemoveIfPresent(self::WIDTH_KEY);
+        if ($widthValueAsString === null) {
+            return;
+        }
+
+        $widthValueAsString = trim($widthValueAsString);
+        if ($widthValueAsString === "") {
+            LogUtility::error("The width value is empty for the tag ({$attributes->getLogicalTag()})");
+            return;
+        }
+        $widthValues = explode(" ", $widthValueAsString);
+        foreach ($widthValues as $widthValue) {
+
+            try {
+                $conditionalWidthLength = ConditionalLength::createFromString($widthValue);
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::error("The width value ($widthValue) is not a valid length. Error: {$e->getMessage()}");
+                continue;
+            }
+
+
+
+            /**
+             * For an image (png, svg)
+             * They have width and height **element** attribute
+             */
+            if (in_array($attributes->getLogicalTag(), self::NATURAL_SIZING_ELEMENT)) {
+
+                /**
+                 * If the image is not asked as static resource (ie HTTP request)
+                 * but added in HTML
+                 * (ie {@link \action_plugin_combo_svg})
+                 */
+                $requestedMime = $attributes->getMime();
+                if ($requestedMime == TagAttributes::TEXT_HTML_MIME) {
+
+                    $length = $conditionalWidthLength->getLength();
+                    if ($length === "0") {
+
+                        /**
+                         * For an image, the dimension are restricted by height
+                         */
+                        if ($attributes->hasComponentAttribute(self::HEIGHT_KEY)) {
+                            $attributes->addStyleDeclarationIfNotSet("width", "auto");
+                        }
+                        return;
+
+                    }
+
+                    /**
+                     * For an image, the dimension are restricted by width
+                     * (max-width or 100% of the container )
+                     */
+                    try {
+                        $attributes->addStyleDeclarationIfNotSet('max-width', $conditionalWidthLength->toCssLength());
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::error("The conditional length ($conditionalWidthLength) could not be transformed as CSS value. Error", self::CANONICAL);
+                        $attributes->addStyleDeclarationIfNotSet('max-width', $conditionalWidthLength->getLength());
+                    }
+                    $attributes->addStyleDeclarationIfNotSet('width', "100%");
+                }
+                return;
+            }
+
+            /**
+             * For a element without natural sizing
+             */
+            $unit = $conditionalWidthLength->getLengthUnit();
+            switch ($unit) {
+                case ConditionalLength::PERCENTAGE:
+                    try {
+                        $attributes->addClassName($conditionalWidthLength->toColClass());
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::error("The conditional length ($conditionalWidthLength) could not be converted to a col class. Error: {$e->getMessage()}");
+                    }
+                    break;
+                default:
+                    try {
+                        $attributes->addStyleDeclarationIfNotSet('max-width', $conditionalWidthLength->toCssLength());
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::error("The conditional length ($conditionalWidthLength) could not be transformed as CSS value. Error", self::CANONICAL);
+                        $attributes->addStyleDeclarationIfNotSet('max-width', $conditionalWidthLength->getLength());
+                    }
+                    break;
+            }
+
+
+        }
 
     }
 

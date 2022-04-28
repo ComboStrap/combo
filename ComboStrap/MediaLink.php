@@ -63,7 +63,7 @@ abstract class MediaLink
      * or internal
      */
     const NON_URL_ATTRIBUTES = [
-        MediaLink::ALIGN_KEY,
+        Align::ALIGN_ATTRIBUTE,
         MediaLink::LINKING_KEY,
         TagAttributes::TITLE_KEY,
         Hover::ON_HOVER_ATTRIBUTE,
@@ -113,7 +113,6 @@ abstract class MediaLink
      * @var
      */
     const LINKING_KEY = 'linking';
-    const ALIGN_KEY = 'align';
 
     /**
      * The method to lazy load resources (Ie media)
@@ -172,7 +171,7 @@ abstract class MediaLink
 
         $tagAttributes = TagAttributes::createEmpty();
         $tagAttributes->addComponentAttributeValue(TagAttributes::TITLE_KEY, $title);
-        $tagAttributes->addComponentAttributeValue(self::ALIGN_KEY, $align);
+        $tagAttributes->addComponentAttributeValue(Align::ALIGN_ATTRIBUTE, $align);
         $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
         $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $height);
         $tagAttributes->addComponentAttributeValue(CacheMedia::CACHE_KEY, $cache);
@@ -260,7 +259,7 @@ abstract class MediaLink
          *   * Delete the opening and closing character
          *   * create the url and description
          */
-        $match = preg_replace(array('/^\{\{/', '/\}\}$/u'), '', $match);
+        $match = preg_replace(array('/^{{/', '/}}$/u'), '', $match);
         $parts = explode('|', $match, 2);
         $description = null;
         $url = $parts[0];
@@ -334,7 +333,7 @@ abstract class MediaLink
             Dimension::HEIGHT_KEY => $parsedAttributes[Dimension::HEIGHT_KEY],
             CacheMedia::CACHE_KEY => $parsedAttributes[CacheMedia::CACHE_KEY],
             TagAttributes::TITLE_KEY => $description,
-            MediaLink::ALIGN_KEY => $align,
+            Align::ALIGN_ATTRIBUTE => $align,
             MediaLink::LINKING_KEY => $parsedAttributes[MediaLink::LINKING_KEY],
         );
 
@@ -356,8 +355,8 @@ abstract class MediaLink
              * is a float right
              * ComboStrap does a difference between a block right and a float right
              */
-            if ($mergedAttributes[self::ALIGN_KEY] === "right") {
-                unset($mergedAttributes[self::ALIGN_KEY]);
+            if ($mergedAttributes[Align::ALIGN_ATTRIBUTE] === "right") {
+                unset($mergedAttributes[Align::ALIGN_ATTRIBUTE]);
                 $mergedAttributes[FloatAttribute::FLOAT_KEY] = "right";
             }
 

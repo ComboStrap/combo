@@ -10,6 +10,7 @@
  *
  */
 
+use ComboStrap\Align;
 use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
@@ -229,7 +230,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  * is going at the line, it will be centered
                  */
                 $defaultAttributes = [
-                    Horizontal::HORIZONTAL_ATTRIBUTE => "center"
+                    Align::ALIGN_ATTRIBUTE => "x-center-children"
                 ];
                 $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
 
@@ -314,13 +315,12 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  * @var ConditionalLength[] $maxCellsArray
                  */
                 $maxCellsArray = [];
-
                 if ($maxCells !== null) {
 
                     $maxCellsValues = explode(" ", $maxCells);
                     foreach ($maxCellsValues as $maxCellsValue) {
                         try {
-                            $maxCellLength = ConditionalLength::createFromString($maxCellsValue);
+                            $maxCellLength = ConditionalLength::createFromString($maxCellsValue,"sm");
                         } catch (ExceptionBadArgument $e) {
                             LogUtility::error("The max-cells attribute value ($maxCellsValue) is not a valid length value. Error: {$e->getMessage()}", self::CANONICAL);
                             continue;
@@ -329,14 +329,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         if ($number > 12) {
                             LogUtility::error("The max-cells attribute value ($maxCellsValue) should be less than 12.", self::CANONICAL);
                         }
-                        if ($maxCellLength->getBreakpoint() === null) {
-                            try {
-                                $maxCellLength->setBreakpoint("lg");
-                            } catch (ExceptionBadArgument $e) {
-                                LogUtility::error("Bad breakpoint. Error: {$e->getMessage()}");
-                            }
-                        }
-                        $maxCellsArray[$maxCellLength->getBreakpoint()] = $maxCellLength;
+                        $maxCellsArray[$maxCellLength->getBreakpointOrDefault()] = $maxCellLength;
                     }
                     $openingCall->removeAttribute(self::MAX_CELLS_ATTRIBUTE);
                     $type = self::TYPE_CELLS;
@@ -359,47 +352,42 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     ) {
                         $actualCall->addClassName("col");
                         $childCellOpeningTags[] = $actualCall;
-                        if ($actualCall->getAttribute(Dimension::WIDTH_KEY) !== null) {
+                        $widthAttributeValue = $actualCall->getAttribute(Dimension::WIDTH_KEY);
+                        if ($widthAttributeValue !== null) {
                             $type = self::TYPE_WIDTH_SPECIFIED;
-                            $widthLength = $actualCall->getAttribute(Dimension::WIDTH_KEY);
-                            try {
-                                $length = ConditionalLength::createFromString($widthLength);
-                            } catch (ExceptionBadArgument $e) {
-                                $type = null;
-                                LogUtility::error("The width length $widthLength is not a valid length value.");
-                                break;
-                            }
-                            $unit = $length->getLengthUnit();
-                            switch ($unit) {
-                                case ConditionalLength::PERCENTAGE:
-                                    // All cells should have a percentage
-                                    if ($cellWithoutWidthFound) {
-                                        $type = null;
-                                        LogUtility::error("In a row where cells width are defined via percentage, all cells should have a width attribute.");
-                                        break 2;
-                                    }
-                                    break;
-                                case ConditionalLength::FRACTION:
-                                    break;
-                                default:
+                            $conditionalWidthsLengths = explode(" ", $widthAttributeValue);
+                            foreach ($conditionalWidthsLengths as $conditionalWidthsLength) {
+                                try {
+                                    $conditionalLengthObject = ConditionalLength::createFromString($conditionalWidthsLength);
+                                } catch (ExceptionBadArgument $e) {
                                     $type = null;
-                                    $percentage = ConditionalLength::PERCENTAGE;
-                                    $fraction = ConditionalLength::FRACTION;
-                                    LogUtility::error("A cell width should have a rationale unit ($fraction or $percentage). Not $unit");
-                                    break 2;
-                            }
-                            if ($lengthUnitUsedOnCells === null) {
-                                $lengthUnitUsedOnCells = $unit;
-                            } else {
-                                if ($lengthUnitUsedOnCells !== $unit) {
-                                    $type = null;
-                                    LogUtility::error("All cells of a row should have the same unit. We found the units ($lengthUnitUsedOnCells and $unit)");
+                                    LogUtility::error("The width length $conditionalWidthsLength is not a valid length value. Error: {$e->getMessage()}");
                                     break;
                                 }
+                                $unit = $conditionalLengthObject->getLengthUnit();
+                                switch ($unit) {
+                                    case ConditionalLength::PERCENTAGE:
+                                        // It's not mandatory that all cells have a percentage
+                                        break;
+                                    case ConditionalLength::FRACTION:
+                                        break;
+                                    default:
+                                        $type = null;
+                                        $percentage = ConditionalLength::PERCENTAGE;
+                                        $fraction = ConditionalLength::FRACTION;
+                                        LogUtility::error("A cell width should have a rationale unit ($fraction or $percentage). Not $unit");
+                                        break 2;
+                                }
+                                if ($lengthUnitUsedOnCells === null) {
+                                    $lengthUnitUsedOnCells = $unit;
+                                } else {
+                                    if ($lengthUnitUsedOnCells !== $unit) {
+                                        $type = null;
+                                        LogUtility::error("All cells of a row should have the same unit. We found the units ($lengthUnitUsedOnCells and $unit)");
+                                        break;
+                                    }
+                                }
                             }
-
-                        } else {
-                            $cellWithoutWidthFound = true;
                         }
                     }
                 }
@@ -444,6 +432,9 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         }
                         $maxCellsArray = array_merge($maxCellDefaultsFiltered, $maxCellsArray);
                         foreach ($maxCellsArray as $maxCell) {
+                            /**
+                             * @var ConditionalLength $maxCell
+                             */
                             try {
                                 $openingCall->addClassName($maxCell->toRowColsClass());
                             } catch (ExceptionBadArgument $e) {
@@ -477,28 +468,30 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                             case
                             ConditionalLength::PERCENTAGE:
                                 foreach ($childCellOpeningTags as $cellOpeningTag) {
-                                    $width = $cellOpeningTag->getAttribute(Dimension::WIDTH_KEY);
-                                    if ($width === null) {
-                                        continue;
-                                    }
-                                    try {
-                                        $length = ConditionalLength::createFromString($width);
-                                    } catch (ExceptionBadArgument $e) {
-                                        $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
-                                        LogUtility::error("The width value ($width) is not valid length. Error: {$e->getMessage()}");
-                                        continue;
-                                    }
-                                    $value = $length->getLengthNumber();
-                                    try {
-                                        $colsNumber = DataType::toInteger(self::GRID_TOTAL_COLUMNS * $value / 100);
-                                    } catch (ExceptionBadArgument $e) {
-                                        $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
-                                        LogUtility::error("We were unable to get an integer for the cols number calculation. Error: {$e->getMessage()}");
-                                        continue;
-                                    }
+                                    $widthAttributeValue = $cellOpeningTag->getAttribute(Dimension::WIDTH_KEY);
                                     $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
-                                    $cellOpeningTag->addClassName("col-sm-$colsNumber");
-                                    $cellOpeningTag->addClassName("col-12");
+                                    if ($widthAttributeValue === null) {
+                                        continue;
+                                    }
+                                    $widthValues = explode(" ", $widthAttributeValue);
+                                    $widthClasses["xs"] = "col-12";
+                                    foreach ($widthValues as $width) {
+                                        try {
+                                            $conditionalLengthObject = ConditionalLength::createFromString($width,"sm");
+                                        } catch (ExceptionBadArgument $e) {
+                                            LogUtility::error("The width value ($width) is not valid length. Error: {$e->getMessage()}");
+                                            continue;
+                                        }
+                                        $breakpoint = $conditionalLengthObject->getBreakpointOrDefault();
+                                        try {
+                                            $widthClasses[$breakpoint] = $conditionalLengthObject->toColClass();
+                                        } catch (ExceptionBadArgument $e) {
+                                            LogUtility::error("The conditional length $conditionalLengthObject could not be transformed as col class. Error: {$e->getMessage()}");
+                                        }
+                                    }
+                                    foreach ($widthClasses as $widthClass) {
+                                        $cellOpeningTag->addClassName($widthClass);
+                                    }
                                 }
                                 break;
                         }

@@ -250,7 +250,7 @@ class Background
             switch ($key) {
                 case MediaLink::LINKING_KEY:
                 case TagAttributes::TITLE_KEY:
-                case MediaLink::ALIGN_KEY:
+                case Align::ALIGN_ATTRIBUTE:
                 case FloatAttribute::FLOAT_KEY: // Float is when the image is at the right
                     /**
                      * Attributes not taken

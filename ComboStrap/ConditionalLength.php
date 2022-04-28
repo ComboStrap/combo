@@ -36,14 +36,18 @@ class ConditionalLength
      * @var string
      */
     private $breakpoint;
+    private $defaultBreakpoint = "lg";
 
 
     /**
      * @throws ExceptionBadArgument
      */
-    public function __construct($value)
+    public function __construct($value, $defaultBreakpoint)
     {
         $this->conditionalLength = $value;
+        if($defaultBreakpoint!==null) {
+            $this->defaultBreakpoint = $defaultBreakpoint;
+        }
 
 
         $this->length = $value;
@@ -87,9 +91,9 @@ class ConditionalLength
     /**
      * @throws ExceptionBadArgument
      */
-    public static function createFromString(string $widthLength): ConditionalLength
+    public static function createFromString(string $widthLength, string $defaultBreakpoint = null): ConditionalLength
     {
-        return new ConditionalLength($widthLength);
+        return new ConditionalLength($widthLength, $defaultBreakpoint);
     }
 
     public function getLengthUnit(): ?string
@@ -131,10 +135,11 @@ class ConditionalLength
             throw new ExceptionBadArgument("A col class can be calculated only from a percentage not from a ({$this->unitInLength})");
         }
         $colsNumber = floor(\syntax_plugin_combo_row::GRID_TOTAL_COLUMNS * $this->numberInLength / 100);
-        if ($this->breakpoint === "xs" || $this->breakpoint === null) {
+        $breakpoint = $this->getBreakpointOrDefault();
+        if ($breakpoint === "xs") {
             return "col-$colsNumber";
         }
-        return "col-{$this->breakpoint}-$colsNumber";
+        return "col-{$breakpoint}-$colsNumber";
 
 
     }
@@ -148,10 +153,11 @@ class ConditionalLength
             throw new ExceptionBadArgument("A row col class can be calculated only from a number without unit ({$this->unitInLength})");
         }
         $colsNumber = intval($this->numberInLength);
-        if ($this->breakpoint === "xs" || $this->breakpoint === null) {
+        $breakpoint = $this->getBreakpointOrDefault();
+        if ($breakpoint === "xs") {
             return "row-cols-$colsNumber";
         }
-        return "row-cols-{$this->breakpoint}-$colsNumber";
+        return "row-cols-{$breakpoint}-$colsNumber";
     }
 
     public function getBreakpoint(): ?string
@@ -197,6 +203,14 @@ class ConditionalLength
             }
             return $this->length;
         }
+    }
+
+    public function getBreakpointOrDefault(): string
+    {
+        if ($this->breakpoint !== null){
+            return $this->breakpoint;
+        }
+        return $this->defaultBreakpoint;
     }
 
 

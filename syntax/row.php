@@ -320,7 +320,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     $maxCellsValues = explode(" ", $maxCells);
                     foreach ($maxCellsValues as $maxCellsValue) {
                         try {
-                            $maxCellLength = ConditionalLength::createFromString($maxCellsValue,"sm");
+                            $maxCellLength = ConditionalLength::createFromString($maxCellsValue, "sm");
                         } catch (ExceptionBadArgument $e) {
                             LogUtility::error("The max-cells attribute value ($maxCellsValue) is not a valid length value. Error: {$e->getMessage()}", self::CANONICAL);
                             continue;
@@ -345,7 +345,6 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  */
                 $childCellOpeningTags = [];
                 $lengthUnitUsedOnCells = null;
-                $cellWithoutWidthFound = false;
                 while ($actualCall = $callStack->next()) {
                     if ($actualCall->getTagName() === syntax_plugin_combo_cell::TAG
                         && $actualCall->getState() === DOKU_LEXER_ENTER
@@ -364,28 +363,17 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                                     LogUtility::error("The width length $conditionalWidthsLength is not a valid length value. Error: {$e->getMessage()}");
                                     break;
                                 }
-                                $unit = $conditionalLengthObject->getLengthUnit();
-                                switch ($unit) {
-                                    case ConditionalLength::PERCENTAGE:
-                                        // It's not mandatory that all cells have a percentage
-                                        break;
-                                    case ConditionalLength::FRACTION:
-                                        break;
-                                    default:
+                                try {
+                                    $ratio = $conditionalLengthObject->getRatio();
+                                    if ($ratio > 1) {
                                         $type = null;
-                                        $percentage = ConditionalLength::PERCENTAGE;
-                                        $fraction = ConditionalLength::FRACTION;
-                                        LogUtility::error("A cell width should have a rationale unit ($fraction or $percentage). Not $unit");
-                                        break 2;
-                                }
-                                if ($lengthUnitUsedOnCells === null) {
-                                    $lengthUnitUsedOnCells = $unit;
-                                } else {
-                                    if ($lengthUnitUsedOnCells !== $unit) {
-                                        $type = null;
-                                        LogUtility::error("All cells of a row should have the same unit. We found the units ($lengthUnitUsedOnCells and $unit)");
+                                        LogUtility::error("The ratio ($ratio) of the width ($conditionalLengthObject) should not be greater than 1 on the children of the row", self::CANONICAL);
                                         break;
                                     }
+                                } catch (ExceptionBadArgument $e) {
+                                    $type = null;
+                                    LogUtility::error("The ratio of the width ($conditionalLengthObject) is not a valid. Error: {$e->getMessage()}");
+                                    break;
                                 }
                             }
                         }
@@ -444,58 +432,34 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         break;
                     case self::TYPE_WIDTH_SPECIFIED:
                         // Total calculation
-                        switch ($lengthUnitUsedOnCells) {
-                            case ConditionalLength::FRACTION:
-                                $totalFraction = 0;
-                                foreach ($childCellOpeningTags as $cellOpeningTag) {
-                                    $fraction = self::getFraction($cellOpeningTag);
-                                    $totalFraction = $totalFraction + $fraction;
-                                }
-                                foreach ($childCellOpeningTags as $cellOpeningTag) {
-                                    $fraction = self::getFraction($cellOpeningTag);
-                                    $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
-                                    $percentage = $fraction / $totalFraction;
-                                    try {
-                                        $colsNumber = DataType::toInteger(self::GRID_TOTAL_COLUMNS * $percentage);
-                                    } catch (ExceptionBadArgument $e) {
-                                        LogUtility::error("We were unable to get an integer for the fraction cols number calculation. Error: {$e->getMessage()}");
-                                        continue;
-                                    }
-                                    $cellOpeningTag->addClassName("col-sm-$colsNumber");
-                                    $cellOpeningTag->addClassName("col-12");
-                                }
-                                break;
-                            case
-                            ConditionalLength::PERCENTAGE:
-                                foreach ($childCellOpeningTags as $cellOpeningTag) {
-                                    $widthAttributeValue = $cellOpeningTag->getAttribute(Dimension::WIDTH_KEY);
-                                    $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
-                                    if ($widthAttributeValue === null) {
-                                        continue;
-                                    }
-                                    $widthValues = explode(" ", $widthAttributeValue);
-                                    $widthClasses["xs"] = "col-12";
-                                    foreach ($widthValues as $width) {
-                                        try {
-                                            $conditionalLengthObject = ConditionalLength::createFromString($width,"sm");
-                                        } catch (ExceptionBadArgument $e) {
-                                            LogUtility::error("The width value ($width) is not valid length. Error: {$e->getMessage()}");
-                                            continue;
-                                        }
-                                        $breakpoint = $conditionalLengthObject->getBreakpointOrDefault();
-                                        try {
-                                            $widthClasses[$breakpoint] = $conditionalLengthObject->toColClass();
-                                        } catch (ExceptionBadArgument $e) {
-                                            LogUtility::error("The conditional length $conditionalLengthObject could not be transformed as col class. Error: {$e->getMessage()}");
-                                        }
-                                    }
-                                    foreach ($widthClasses as $widthClass) {
-                                        $cellOpeningTag->addClassName($widthClass);
-                                    }
-                                }
-                                break;
-                        }
 
+
+                        foreach ($childCellOpeningTags as $cellOpeningTag) {
+                            $widthAttributeValue = $cellOpeningTag->getAttribute(Dimension::WIDTH_KEY);
+                            $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
+                            if ($widthAttributeValue === null) {
+                                continue;
+                            }
+                            $widthValues = explode(" ", $widthAttributeValue);
+                            $widthClasses["xs"] = "col-12";
+                            foreach ($widthValues as $width) {
+                                try {
+                                    $conditionalLengthObject = ConditionalLength::createFromString($width, "sm");
+                                } catch (ExceptionBadArgument $e) {
+                                    LogUtility::error("The width value ($width) is not valid length. Error: {$e->getMessage()}");
+                                    continue;
+                                }
+                                $breakpoint = $conditionalLengthObject->getBreakpointOrDefault();
+                                try {
+                                    $widthClasses[$breakpoint] = $conditionalLengthObject->toColClass();
+                                } catch (ExceptionBadArgument $e) {
+                                    LogUtility::error("The conditional length $conditionalLengthObject could not be transformed as col class. Error: {$e->getMessage()}");
+                                }
+                            }
+                            foreach ($widthClasses as $widthClass) {
+                                $cellOpeningTag->addClassName($widthClass);
+                            }
+                        }
                         break;
                     case syntax_plugin_combo_row::TYPE_AUTO_VALUE_DEPRECATED:
                         $numberOfColumns = 0;

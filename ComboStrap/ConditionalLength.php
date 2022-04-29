@@ -9,9 +9,6 @@ class ConditionalLength
 {
 
 
-    const RATIONAL_UNITS = [self::FRACTION, self::PERCENTAGE];
-
-    const FRACTION = "fr";
     const PERCENTAGE = "%";
 
     /**
@@ -36,7 +33,7 @@ class ConditionalLength
      * @var string
      */
     private $breakpoint;
-    private $defaultBreakpoint = "lg";
+    private $defaultBreakpoint = "sm";
     private $denominator;
 
 
@@ -116,10 +113,11 @@ class ConditionalLength
     public function toColClass(): string
     {
 
-        if ($this->unitInLength !== self::PERCENTAGE) {
-            throw new ExceptionBadArgument("A col class can be calculated only from a percentage not from a ({$this->unitInLength})");
+        $ratio = $this->getRatio();
+        if ($ratio > 1) {
+            throw new ExceptionBadArgument("The length ratio ($ratio) is greater than 1. It should be less than 1 to get a col class.");
         }
-        $colsNumber = floor(\syntax_plugin_combo_row::GRID_TOTAL_COLUMNS * $this->numerator / 100);
+        $colsNumber = floor(\syntax_plugin_combo_row::GRID_TOTAL_COLUMNS * $this->numerator / $this->denominator);
         $breakpoint = $this->getBreakpointOrDefault();
         if ($breakpoint === "xs") {
             return "col-$colsNumber";
@@ -134,10 +132,16 @@ class ConditionalLength
      */
     public function toRowColsClass(): string
     {
-        if ($this->unitInLength !== null) {
-            throw new ExceptionBadArgument("A row col class can be calculated only from a number without unit ({$this->unitInLength})");
+
+        if ($this->numerator === null) {
+            throw new ExceptionBadArgument("A row col class can be calculated only from a number ({$this})");
         }
+
         $colsNumber = intval($this->numerator);
+        $totalColumns = \syntax_plugin_combo_row::GRID_TOTAL_COLUMNS;
+        if ($colsNumber > $totalColumns) {
+            throw new ExceptionBadArgument("A row col class can be calculated only from a number below $totalColumns ({$this}");
+        }
         $breakpoint = $this->getBreakpointOrDefault();
         if ($breakpoint === "xs") {
             return "row-cols-$colsNumber";
@@ -145,26 +149,22 @@ class ConditionalLength
         return "row-cols-{$breakpoint}-$colsNumber";
     }
 
-    public function getBreakpoint(): ?string
+    public
+    function getBreakpoint(): ?string
     {
         return $this->breakpoint;
     }
 
-    /**
-     * @throws ExceptionBadArgument
-     */
-    public function setBreakpoint(string $breakpoint)
-    {
-        ConditionalValue::checkValidBreakpoint($breakpoint);
-        $this->breakpoint = $breakpoint;
-    }
 
-    public function getLength()
+
+    public
+    function getLength()
     {
         return $this->length;
     }
 
-    public function __toString()
+    public
+    function __toString()
     {
         return $this->conditionalLength;
     }
@@ -173,7 +173,8 @@ class ConditionalLength
      * For CSS a unit is mandatory (not for HTML or SVG attributes)
      * @throws ExceptionBadArgument
      */
-    public function toCssLength()
+    public
+    function toCssLength()
     {
         /**
          * A length value may be also `fit-content`
@@ -190,7 +191,8 @@ class ConditionalLength
         }
     }
 
-    public function getBreakpointOrDefault(): string
+    public
+    function getBreakpointOrDefault(): string
     {
         if ($this->breakpoint !== null) {
             return $this->breakpoint;
@@ -199,7 +201,8 @@ class ConditionalLength
     }
 
 
-    public function getDenominator(): ?float
+    public
+    function getDenominator(): ?float
     {
         return $this->denominator;
     }
@@ -207,7 +210,8 @@ class ConditionalLength
     /**
      * @throws ExceptionBadSyntax
      */
-    private function parseAsNumberWithOptionalUnit()
+    private
+    function parseAsNumberWithOptionalUnit()
     {
         /**
          * Not a numeric alone
@@ -224,11 +228,15 @@ class ConditionalLength
             // should not happen due to the match but yeah
             throw new ExceptionBadSyntax("The number value ($localNumber) of the length value ($this->length) is not a valid float format.");
         }
-        $this->unitInLength = $matches[2][0];
+        $this->denominator = 1;
+
+        $secondMatch = $matches[2][0];
+        if ($secondMatch == "") {
+            return;
+        }
+        $this->unitInLength = $secondMatch;
         if ($this->unitInLength === self::PERCENTAGE) {
             $this->denominator = 100;
-        } else {
-            $this->denominator = 1;
         }
 
     }
@@ -236,7 +244,8 @@ class ConditionalLength
     /**
      * @throws ExceptionBadSyntax
      */
-    private function parseAsRatio()
+    private
+    function parseAsRatio()
     {
         preg_match("/^([0-9]+):([0-9]+)$/i", $this->length, $matches, PREG_OFFSET_CAPTURE);
         if (sizeof($matches) === 0) {
@@ -256,6 +265,24 @@ class ConditionalLength
             // should not happen due to the match but yeah
             throw new ExceptionBadSyntax("The number value ($denominator) of the length value ($this->length) is not a valid float format.");
         }
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public
+    function getRatio()
+    {
+        if ($this->numerator == null) {
+            return null;
+        }
+        if ($this->denominator == null) {
+            return null;
+        }
+        if ($this->denominator == 0) {
+            throw new ExceptionBadArgument("The denominator of the conditional length ($this) is 0. You can't ask a ratio.");
+        }
+        return $this->numerator / $this->denominator;
     }
 
 

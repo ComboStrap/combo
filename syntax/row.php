@@ -111,7 +111,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 return 1;
             default:
                 try {
-                    return ConditionalLength::createFromString($width)->getLengthNumber();
+                    return ConditionalLength::createFromString($width)->getNumerator();
                 } catch (ExceptionBadSyntax $e) {
                     LogUtility::error("The width value ($width) is not valid length. Error: {$e->getMessage()}");
                     return 1;
@@ -325,7 +325,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                             LogUtility::error("The max-cells attribute value ($maxCellsValue) is not a valid length value. Error: {$e->getMessage()}", self::CANONICAL);
                             continue;
                         }
-                        $number = $maxCellLength->getLengthNumber();
+                        $number = $maxCellLength->getNumerator();
                         if ($number > 12) {
                             LogUtility::error("The max-cells attribute value ($maxCellsValue) should be less than 12.", self::CANONICAL);
                         }
@@ -423,7 +423,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         $maxCellDefaultsFiltered = [];
                         if ($maxCells !== null) {
                             foreach ($maxCellDefaults as $breakpoint => $maxCellDefault) {
-                                if ($maxCellDefault->getLengthNumber() < $maxCells) {
+                                if ($maxCellDefault->getNumerator() < $maxCells) {
                                     $maxCellDefaultsFiltered[$breakpoint] = $maxCellDefault;
                                 }
                             }

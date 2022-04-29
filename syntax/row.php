@@ -252,6 +252,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 /**
                  * By default, div but used in a ul, it could be a li
                  * This is modified in the callstack by the other component
+                 * @deprecated with the new {@link Align}
                  */
                 $attributes->addComponentAttributeValue(self::HTML_TAG_ATT, "div");
 
@@ -278,6 +279,11 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 $callStack = CallStack::createFromHandler($handler);
 
+                /**
+                 * The returned array
+                 * (filed while processing)
+                 */
+                $returnArray = array(PluginUtility::STATE => $state);
 
                 /**
                  * Sizing Type mode determination
@@ -315,15 +321,48 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
 
                 /**
-                 * Scan the cells children
-                 * Add the col class
-                 * Do the cells have a width set ...
-                 *
+                 * Gather the cells children
+                 * Is there a template callstack
                  */
-                $childCellOpeningTags = $callStack->getChildren();
-                foreach ($childCellOpeningTags as $actualCall) {
+                $firstChildTag = $callStack->moveToFirstChildTag();
+                $childrenOpeningTags = [];
+
+                $templateEndTag = null; // the template end tag that has the instructions
+                $callStackTemplate = null; // the instructions in callstack form to modify the children
+                if ($firstChildTag->getTagName() === syntax_plugin_combo_template::TAG && $firstChildTag->getState() === DOKU_LEXER_ENTER) {
+                    $templateEndTag = $callStack->next();
+                    if ($templateEndTag->getTagName() !== syntax_plugin_combo_template::TAG || $templateEndTag->getState() !== DOKU_LEXER_EXIT) {
+                        LogUtility::error("Error internal: We were unable to find the closing template tag.", self::CANONICAL);
+                        return $returnArray;
+                    }
+                    $templateInstructions = $templateEndTag->getPluginData(syntax_plugin_combo_template::CALLSTACK);
+                    $callStackTemplate = CallStack::createFromInstructions($templateInstructions);
+                    $callStackTemplate->moveToStart();
+                    $firstChildTag = $callStackTemplate->moveToFirstChildTag();
+                    if ($firstChildTag !== false) {
+                        $childrenOpeningTags[] = $firstChildTag;
+                        while ($actualCall = $callStackTemplate->moveToNextSiblingTag()) {
+                            $childrenOpeningTags[] = $actualCall;
+                        }
+                    }
+
+                } else {
+
+                    $childrenOpeningTags[] = $firstChildTag;
+                    while ($actualCall = $callStack->moveToNextSiblingTag()) {
+                        $childrenOpeningTags[] = $actualCall;
+                    }
+
+                }
+
+                /**
+                 * Scan and process the children
+                 * - Add the col class
+                 * - Do the cells have a width set ...
+                 */
+                foreach ($childrenOpeningTags as $actualCall) {
                     $actualCall->addClassName("col");
-                    $childCellOpeningTags[] = $actualCall;
+                    $childrenOpeningTags[] = $actualCall;
                     $widthAttributeValue = $actualCall->getAttribute(Dimension::WIDTH_KEY);
                     if ($widthAttributeValue !== null) {
                         $type = self::TYPE_WIDTH_SPECIFIED;
@@ -367,7 +406,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
 
                 /**
-                 * Distribution calculation
+                 * Type is now known
+                 * Do the Distribution calculation
                  */
                 switch ($type) {
                     case self::TYPE_MAX_CHILDREN:
@@ -404,10 +444,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         }
                         break;
                     case self::TYPE_WIDTH_SPECIFIED:
-                        // Total calculation
 
-
-                        foreach ($childCellOpeningTags as $cellOpeningTag) {
+                        foreach ($childrenOpeningTags as $cellOpeningTag) {
                             $widthAttributeValue = $cellOpeningTag->getAttribute(Dimension::WIDTH_KEY);
                             $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
                             if ($widthAttributeValue === null) {
@@ -567,6 +605,13 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                         };
                         break;
+                }
+
+                /**
+                 * Template child callstack ?
+                 */
+                if ($templateEndTag !== null && $callStackTemplate !== null) {
+                    $templateEndTag->setPluginData(syntax_plugin_combo_template::CALLSTACK, $callStackTemplate->getStack());
                 }
 
                 return array(

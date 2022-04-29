@@ -18,7 +18,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
     const DOKU_TAG = "contentlistitem";
     const MARKI_TAG = "content-list-item";
     const ALL_TAGS = array(self::MARKI_TAG, "list-item", "li");
-
+    const LIST_GROUP_ITEM_CLASS = "list-group-item";
 
 
     /**
@@ -176,7 +176,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::MARKI_TAG);
-                    $tagAttributes->addClassName("list-group-item");
+                    $tagAttributes->addClassName(self::LIST_GROUP_ITEM_CLASS);
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("li");
                     break;
                 case DOKU_LEXER_EXIT :

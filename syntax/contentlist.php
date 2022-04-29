@@ -50,6 +50,11 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
     const COMBO_TAG_OLD = "list";
     const COMBO_TAGS = [self::MARKI_TAG, self::COMBO_TAG_OLD];
 
+    /**
+     * With number, this a li, without a div
+     */
+    const HTML_TAG_ATTRIBUTE = "html-tag";
+
 
     /**
      * Syntax Type.
@@ -58,7 +63,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
      * @see https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'container';
     }
@@ -73,9 +78,9 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
      * @see DokuWiki_Syntax_Plugin::getPType()
      * @see https://www.dokuwiki.org/devel:syntax_plugins#ptype
      */
-    function getPType()
+    function getPType(): string
     {
-        return 'block';
+        return 'stack';
     }
 
     /**
@@ -87,12 +92,12 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    public function accepts($mode)
+    public function accepts($mode): bool
     {
 
         return syntax_plugin_combo_preformatted::disablePreformatted($mode);
@@ -100,7 +105,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
     }
 
 
-    function getSort()
+    function getSort(): int
     {
         return 15;
     }
@@ -157,7 +162,8 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                 }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray(),
+                    self::HTML_TAG_ATTRIBUTE => "div"
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -170,35 +176,43 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                  * Add to all row the list-group-item
                  */
                 $callStack = CallStack::createFromHandler($handler);
-                $callStack->moveToPreviousCorrespondingOpeningCall();
-                while ($actualCall = $callStack->next()) {
-                    if ($actualCall->getTagName() == syntax_plugin_combo_contentlistitem::DOKU_TAG) {
-                        // List item were added by the user
-                        break;
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $firstChild = $callStack->moveToFirstChildTag();
+                if ($firstChild !== false) {
+                    $firstChild->addClassName(syntax_plugin_combo_contentlistitem::LIST_GROUP_ITEM_CLASS);
+                    while ($actualCall = $callStack->moveToNextSiblingTag()) {
+                        $actualCall->addClassName(syntax_plugin_combo_contentlistitem::LIST_GROUP_ITEM_CLASS);
                     }
-                    if ($actualCall->getTagName() == syntax_plugin_combo_row::TAG) {
-                        $actualState = $actualCall->getState();
-                        switch ($actualState) {
-                            case DOKU_LEXER_ENTER:
-                                $callStack->insertBefore(Call::createComboCall(
-                                    syntax_plugin_combo_contentlistitem::DOKU_TAG,
-                                    DOKU_LEXER_ENTER
-                                ));
-                                break;
-                            case DOKU_LEXER_EXIT:
-                                $callStack->insertAfter(Call::createComboCall(
-                                    syntax_plugin_combo_contentlistitem::DOKU_TAG,
-                                    DOKU_LEXER_EXIT
-                                ));
-                                $callStack->next();
-                                break;
-                        }
-
-                    }
+//                        if ($actualCall->getTagName() == syntax_plugin_combo_contentlistitem::DOKU_TAG) {
+//                            // List item were added by the user
+//                            break;
+//                        }
+//                        if ($actualCall->getTagName() == syntax_plugin_combo_row::TAG) {
+//                            $actualState = $actualCall->getState();
+//                            switch ($actualState) {
+//                                case DOKU_LEXER_ENTER:
+//                                    $callStack->insertBefore(Call::createComboCall(
+//                                        syntax_plugin_combo_contentlistitem::DOKU_TAG,
+//                                        DOKU_LEXER_ENTER
+//                                    ));
+//                                    break;
+//                                case DOKU_LEXER_EXIT:
+//                                    $callStack->insertAfter(Call::createComboCall(
+//                                        syntax_plugin_combo_contentlistitem::DOKU_TAG,
+//                                        DOKU_LEXER_EXIT
+//                                    ));
+//                                    $callStack->next();
+//                                    break;
+//                            }
+//
+//                        }
+//                    }
                 }
 
-
-                return array(PluginUtility::STATE => $state);
+                return array(
+                    PluginUtility::STATE => $state,
+                    self::HTML_TAG_ATTRIBUTE => $openingTag->getPluginData(self::HTML_TAG_ATTRIBUTE)
+                );
 
 
         }
@@ -228,11 +242,13 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                     PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::MARKI_TAG);
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::MARKI_TAG);
                     $tagAttributes->addClassName("list-group");
-                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("ul") . DOKU_LF;
+                    $tag = $data[self::HTML_TAG_ATTRIBUTE];
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag($tag);
 
                     break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= "</ul>" . DOKU_LF;
+                    $tag = $data[self::HTML_TAG_ATTRIBUTE];
+                    $renderer->doc .= "</$tag>";
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);

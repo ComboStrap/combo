@@ -46,7 +46,12 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
      */
     function getPType(): string
     {
-        return 'stack';
+        /**
+         * not stack, otherwise it creates p
+         * and as box is used mostly for layout purpose, it breaks the
+         * {@link \ComboStrap\Align} flex css attribute
+         */
+        return 'block';
     }
 
     /**
@@ -57,19 +62,19 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    public function accepts($mode)
+    public function accepts($mode): bool
     {
 
         return syntax_plugin_combo_preformatted::disablePreformatted($mode);
 
     }
 
-    function getSort()
+    function getSort(): int
     {
         return 201;
     }

@@ -14,13 +14,11 @@ use ComboStrap\Align;
 use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\ConditionalValue;
+use ComboStrap\ConditionalLength;
 use ComboStrap\DataType;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
-use ComboStrap\Horizontal;
-use ComboStrap\ConditionalLength;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -100,25 +98,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
     const HAD_USER_CLASS = "hasClass";
     const TYPE_WIDTH_SPECIFIED = "width";
     const KNOWN_TYPES = [self::TYPE_WIDTH_SPECIFIED, self::TYPE_AUTO_VALUE_DEPRECATED, self::TYPE_FIT_VALUE, self::TYPE_FIT_OLD_VALUE];
-    const MAX_CELLS_ATTRIBUTE = "max-cells";
-    const TYPE_CELLS = "cells";
-
-    private static function getFraction(Call $cellOpeningTag)
-    {
-        $width = $cellOpeningTag->getAttribute(Dimension::WIDTH_KEY);
-        switch ($width) {
-            case null:
-                return 1;
-            default:
-                try {
-                    return ConditionalLength::createFromString($width)->getNumerator();
-                } catch (ExceptionBadSyntax $e) {
-                    LogUtility::error("The width value ($width) is not valid length. Error: {$e->getMessage()}");
-                    return 1;
-                }
-        }
-
-    }
+    const MAX_CHILDREN_ATTRIBUTE = "max-line";
+    const TYPE_MAX_CHILDREN = "max";
 
 
     /**
@@ -139,11 +120,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      */
     public function getAllowedTypes(): array
     {
-        /**
-         * Only column.
-         * See {@link syntax_plugin_combo_cell::getType()}
-         */
-        return array('container');
+        return array('container', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
 
@@ -166,7 +143,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      */
     function getPType(): string
     {
-        return 'block';
+        return 'stack';
     }
 
     /**
@@ -298,6 +275,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
+
                 $callStack = CallStack::createFromHandler($handler);
 
 
@@ -310,7 +288,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 /**
                  * Max-Cells ?
                  */
-                $maxCells = $openingCall->getAttribute(self::MAX_CELLS_ATTRIBUTE);
+                $maxCells = $openingCall->getAttribute(self::MAX_CHILDREN_ATTRIBUTE);
                 /**
                  * @var ConditionalLength[] $maxCellsArray
                  */
@@ -331,8 +309,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         }
                         $maxCellsArray[$maxCellLength->getBreakpointOrDefault()] = $maxCellLength;
                     }
-                    $openingCall->removeAttribute(self::MAX_CELLS_ATTRIBUTE);
-                    $type = self::TYPE_CELLS;
+                    $openingCall->removeAttribute(self::MAX_CHILDREN_ATTRIBUTE);
+                    $type = self::TYPE_MAX_CHILDREN;
                 }
 
 
@@ -341,43 +319,38 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  * Add the col class
                  * Do the cells have a width set ...
                  *
-                 * @var Call[] $childCellOpeningTags
                  */
-                $childCellOpeningTags = [];
-                $lengthUnitUsedOnCells = null;
-                while ($actualCall = $callStack->next()) {
-                    if ($actualCall->getTagName() === syntax_plugin_combo_cell::TAG
-                        && $actualCall->getState() === DOKU_LEXER_ENTER
-                    ) {
-                        $actualCall->addClassName("col");
-                        $childCellOpeningTags[] = $actualCall;
-                        $widthAttributeValue = $actualCall->getAttribute(Dimension::WIDTH_KEY);
-                        if ($widthAttributeValue !== null) {
-                            $type = self::TYPE_WIDTH_SPECIFIED;
-                            $conditionalWidthsLengths = explode(" ", $widthAttributeValue);
-                            foreach ($conditionalWidthsLengths as $conditionalWidthsLength) {
-                                try {
-                                    $conditionalLengthObject = ConditionalLength::createFromString($conditionalWidthsLength);
-                                } catch (ExceptionBadArgument $e) {
+                $childCellOpeningTags = $callStack->getChildren();
+                foreach ($childCellOpeningTags as $actualCall) {
+                    $actualCall->addClassName("col");
+                    $childCellOpeningTags[] = $actualCall;
+                    $widthAttributeValue = $actualCall->getAttribute(Dimension::WIDTH_KEY);
+                    if ($widthAttributeValue !== null) {
+                        $type = self::TYPE_WIDTH_SPECIFIED;
+                        $conditionalWidthsLengths = explode(" ", $widthAttributeValue);
+                        foreach ($conditionalWidthsLengths as $conditionalWidthsLength) {
+                            try {
+                                $conditionalLengthObject = ConditionalLength::createFromString($conditionalWidthsLength);
+                            } catch (ExceptionBadArgument $e) {
+                                $type = null;
+                                LogUtility::error("The width length $conditionalWidthsLength is not a valid length value. Error: {$e->getMessage()}");
+                                break;
+                            }
+                            try {
+                                $ratio = $conditionalLengthObject->getRatio();
+                                if ($ratio > 1) {
                                     $type = null;
-                                    LogUtility::error("The width length $conditionalWidthsLength is not a valid length value. Error: {$e->getMessage()}");
+                                    LogUtility::error("The ratio ($ratio) of the width ($conditionalLengthObject) should not be greater than 1 on the children of the row", self::CANONICAL);
                                     break;
                                 }
-                                try {
-                                    $ratio = $conditionalLengthObject->getRatio();
-                                    if ($ratio > 1) {
-                                        $type = null;
-                                        LogUtility::error("The ratio ($ratio) of the width ($conditionalLengthObject) should not be greater than 1 on the children of the row", self::CANONICAL);
-                                        break;
-                                    }
-                                } catch (ExceptionBadArgument $e) {
-                                    $type = null;
-                                    LogUtility::error("The ratio of the width ($conditionalLengthObject) is not a valid. Error: {$e->getMessage()}");
-                                    break;
-                                }
+                            } catch (ExceptionBadArgument $e) {
+                                $type = null;
+                                LogUtility::error("The ratio of the width ($conditionalLengthObject) is not a valid. Error: {$e->getMessage()}");
+                                break;
                             }
                         }
                     }
+
                 }
 
                 if ($type === null) {
@@ -385,7 +358,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     if ($openingCall->getContext() === self::CONTAINED_CONTEXT) {
                         $type = self::TYPE_FIT_VALUE;
                     } else {
-                        $type = self::TYPE_CELLS;
+                        $type = self::TYPE_MAX_CHILDREN;
                     }
 
                 }
@@ -397,7 +370,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  * Distribution calculation
                  */
                 switch ($type) {
-                    case self::TYPE_CELLS:
+                    case self::TYPE_MAX_CHILDREN:
                         $maxCellDefaults = [];
                         try {
                             $maxCellDefaults["xs"] = ConditionalLength::createFromString("1-xs");

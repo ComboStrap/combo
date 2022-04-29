@@ -622,7 +622,7 @@ class CallStack
     function moveToOffset($offset)
     {
         if ($offset < 0) {
-            if($offset===-1) {
+            if ($offset === -1) {
                 $this->moveToStart();
                 return;
             }
@@ -1116,6 +1116,23 @@ class CallStack
     public function empty()
     {
         $this->callStack = [];
+    }
+
+    /**
+     * @return Call[]
+     */
+    public function getChildren(): array
+    {
+        $children = [];
+        $firstChildTag = $this->moveToFirstChildTag();
+        if ($firstChildTag == false) {
+            return $children;
+        }
+        $children[] = $firstChildTag;
+        while ($actualCall = $this->moveToNextSiblingTag()) {
+            $children[] = $actualCall;
+        }
+        return $children;
     }
 
 

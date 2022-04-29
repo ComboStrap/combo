@@ -12,23 +12,20 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\ConditionalValue;
 use ComboStrap\Dimension;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
-use ComboStrap\Vertical;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
- * A flex item
- *
- * Used in combination with a {@link syntax_plugin_combo_row}
- * for powerful layout
  *
  *
- * Note: The name of the class must follow this pattern ie syntax_plugin_PluginName_ComponentName
+ *
+ * @deprecated - flex item are created now with the {@link \ComboStrap\Align} attribute
+ * and the col class is set now on the row class.
  */
 class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
 {
@@ -156,6 +153,8 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
                 $knownTypes = [];
                 $defaultAttributes = [];
                 $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes)->toCallStackArray();
+
+                LogUtility::warning("Cell/Col has been deprecated. You can use now any component in a row.", syntax_plugin_combo_row::TAG);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes);

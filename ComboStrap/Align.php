@@ -38,6 +38,7 @@ class Align
                         $attributes->addStyleDeclarationIfNotSet("width", "fit-content");
                         break;
                     case "x-center-children":
+                    case "center-children":
                         $attributes->addClassName("justify-content-center");
                         if ($attributes->getLogicalTag() !== \syntax_plugin_combo_row::TAG) {
                             $attributes->addClassName("d-flex");

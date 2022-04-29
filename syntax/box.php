@@ -44,7 +44,7 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
         return 'stack';
     }

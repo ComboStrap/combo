@@ -10,6 +10,8 @@ class ConditionalLength
 
 
     const PERCENTAGE = "%";
+    const X_AXIS = "x";
+    const Y_AXIS = "y";
 
     /**
      * @var string - the length value (may be breakpoint conditional)
@@ -35,6 +37,14 @@ class ConditionalLength
     private $breakpoint;
     private $defaultBreakpoint = "sm";
     private $denominator;
+    /**
+     * @var string
+     */
+    private $axis;
+    /**
+     * @var bool
+     */
+    private $isRatio = false;
 
 
     /**
@@ -47,7 +57,9 @@ class ConditionalLength
             $this->defaultBreakpoint = $defaultBreakpoint;
         }
 
-
+        /**
+         * Breakpoint Suffix
+         */
         $this->length = $value;
         try {
             $conditionalValue = ConditionalValue::createFrom($value);
@@ -55,6 +67,19 @@ class ConditionalLength
             $this->breakpoint = $conditionalValue->getBreakpoint();
         } catch (ExceptionBadSyntax $e) {
             // not conditional
+        }
+
+        /**
+         * Axis prefix
+         */
+        $axis = substr($value, 0, 2);
+        switch ($axis) {
+            case "x-":
+                $this->axis = "x";
+                break;
+            case "y-";
+                $this->axis = "y";
+                break;
         }
 
         try {
@@ -271,6 +296,7 @@ class ConditionalLength
             // should not happen due to the match but yeah
             throw new ExceptionBadSyntax("The number value ($denominator) of the length value ($this->length) is not a valid float format.");
         }
+        $this->isRatio = true;
     }
 
     /**
@@ -279,6 +305,9 @@ class ConditionalLength
     public
     function getRatio()
     {
+        if (!$this->isRatio()) {
+            return null;
+        }
         if ($this->numerator == null) {
             return null;
         }
@@ -289,6 +318,19 @@ class ConditionalLength
             throw new ExceptionBadArgument("The denominator of the conditional length ($this) is 0. You can't ask a ratio.");
         }
         return $this->numerator / $this->denominator;
+    }
+
+    public function getAxis(): string
+    {
+        return $this->axis;
+    }
+
+    public function isRatio(): bool
+    {
+        if ($this->getLengthUnit() === self::PERCENTAGE) {
+            return true;
+        }
+        return $this->isRatio;
     }
 
 

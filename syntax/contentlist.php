@@ -55,6 +55,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
      * With number, this a li, without a div
      */
     const HTML_TAG_ATTRIBUTE = "html-tag";
+    const FLUSH_TYPE = "flush";
 
 
     /**
@@ -151,12 +152,13 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
+                $knownType = [self::FLUSH_TYPE];
                 $default = [Dimension::WIDTH_KEY => "fit"];
-                $attributes = TagAttributes::createFromTagMatch($match, $default, []);
+                $attributes = TagAttributes::createFromTagMatch($match, $default, $knownType);
 
                 if ($attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)) {
                     $type = trim(strtolower($attributes->getType()));
-                    if ($type === "flush") {
+                    if ($type === self::FLUSH_TYPE) {
                         // https://getbootstrap.com/docs/5.0/components/list-group/#flush
                         // https://getbootstrap.com/docs/4.1/components/list-group/#flush
                         $attributes->addClassName("list-group-flush");

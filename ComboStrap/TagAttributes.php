@@ -1027,22 +1027,17 @@ class TagAttributes
 
     /**
      * @param $attributeName
-     * @return false|string[] - an array of values
+     * @return null|string[] - an array of values
+     * @throws ExceptionBadArgument
      */
     public
-    function getValuesAndRemove($attributeName)
+    function getValuesAndRemove($attributeName, $default = null): ?array
     {
 
-        /**
-         * Trim
-         */
-        $trim = trim($this->getValueAndRemove($attributeName));
+        $trim = $this->getValues($attributeName, $default);
+        $this->removeAttributeIfPresent($attributeName);
+        return $trim;
 
-        /**
-         * Replace all suite of space that have more than 2 characters
-         */
-        $value = preg_replace("/\s{2,}/", " ", $trim);
-        return explode(" ", $value);
 
     }
 
@@ -1322,6 +1317,29 @@ class TagAttributes
     {
         $this->removeAttributeIfPresent(self::TYPE_KEY);
         return $this;
+    }
+
+    /**
+     * @param $attributeName
+     * @param null $default
+     * @return string[]|null
+     * @throws ExceptionBadArgument
+     */
+    public function getValues($attributeName, $default = null): ?array
+    {
+        /**
+         * Replace all suite of space that have more than 2 characters
+         */
+        $value = $this->getValue($attributeName);
+        if ($value === null) {
+            return $default;
+        }
+        if (!is_string($value)) {
+            throw new ExceptionBadArgument("The attribute ($attributeName) does not contain a string, we can't return multiple values");
+        }
+        $value = preg_replace("/\s{2,}/", " ", trim($value));
+        return explode(" ", $value);
+
     }
 
 

@@ -230,7 +230,7 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                     $scannedType = self::ROW_TAG;
                 } else {
                     $scannedType = self::TAG;
-                    if($isRowTag) {
+                    if ($isRowTag) {
                         LogUtility::warning("A non-contained row has been deprecated for grid. You should rename the <row> tag to <grid>");
                     }
                 }
@@ -257,6 +257,16 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                     $defaultAttributes = [
                         Align::ALIGN_ATTRIBUTE => $defaultAlign,
                         self::GUTTER => $defaultGutter
+                    ];
+                } else {
+                    /**
+                     * Row is for now mainly use in a content-list and the content
+                     * should be centered on y
+                     * Why ? Because by default, a flex place text at the top and if a badge is added
+                     * for instance, it will shift the text towards the top
+                     */
+                    $defaultAttributes = [
+                        Align::ALIGN_ATTRIBUTE => "align-items-center"
                     ];
                 }
                 $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
@@ -401,11 +411,12 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                                     break;
                                 }
                                 try {
-                                    $ratio = $conditionalLengthObject->getRatio();
-                                    if ($ratio > 1) {
-                                        $type = null;
-                                        LogUtility::error("The ratio ($ratio) of the width ($conditionalLengthObject) should not be greater than 1 on the children of the row", self::CANONICAL);
-                                        break;
+                                    if ($conditionalLengthObject->isRatio()) {
+                                        $ratio = $conditionalLengthObject->getRatio();
+                                        if ($ratio > 1) {
+                                            LogUtility::warning("The ratio ($ratio) of the width ($conditionalLengthObject) should not be greater than 1 on the children of the row", self::CANONICAL);
+                                            break;
+                                        }
                                     }
                                 } catch (ExceptionBadArgument $e) {
                                     $type = null;
@@ -468,12 +479,11 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
 
                         foreach ($childrenOpeningTags as $cellOpeningTag) {
                             $widthAttributeValue = $cellOpeningTag->getAttribute(Dimension::WIDTH_KEY);
-                            $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
                             if ($widthAttributeValue === null) {
                                 continue;
                             }
                             $widthValues = explode(" ", $widthAttributeValue);
-                            $widthClasses["xs"] = "col-12";
+                            $widthColClasses = null;
                             foreach ($widthValues as $width) {
                                 try {
                                     $conditionalLengthObject = ConditionalLength::createFromString($width);
@@ -481,15 +491,24 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                                     LogUtility::error("The width value ($width) is not valid length. Error: {$e->getMessage()}");
                                     continue;
                                 }
+                                if (!$conditionalLengthObject->isRatio()) {
+                                    continue;
+                                }
                                 $breakpoint = $conditionalLengthObject->getBreakpointOrDefault();
                                 try {
-                                    $widthClasses[$breakpoint] = $conditionalLengthObject->toColClass();
+                                    $widthColClasses[$breakpoint] = $conditionalLengthObject->toColClass();
+                                    $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
                                 } catch (ExceptionBadArgument $e) {
                                     LogUtility::error("The conditional length $conditionalLengthObject could not be transformed as col class. Error: {$e->getMessage()}");
                                 }
                             }
-                            foreach ($widthClasses as $widthClass) {
-                                $cellOpeningTag->addClassName($widthClass);
+                            if ($widthColClasses !== null) {
+                                if (!isset($widthColClasses["xs"])) {
+                                    $widthColClasses["xs"] = "col-12";
+                                }
+                                foreach ($widthColClasses as $widthClass) {
+                                    $cellOpeningTag->addClassName($widthClass);
+                                }
                             }
                         }
                         break;

@@ -30,9 +30,11 @@ if (!defined('DOKU_INC')) {
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
- * The implementation of row/col system of Boostrap
- *
- *
+ * The implementation of row/col system of Boostrap is called a grid because:
+ *   * the children may create may be layout on more than one line
+ *   * you can define gutter between the children
+ *   * even if this is a layout component that works only on one axis and not two. There is little chance that a user will use the css grid layout system
+ * to layout content
  *
  */
 class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin

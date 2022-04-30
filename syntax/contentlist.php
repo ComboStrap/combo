@@ -3,6 +3,7 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -150,11 +151,12 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                $attributes = TagAttributes::createFromTagMatch($match);
+                $default = [Dimension::WIDTH_KEY => "fit"];
+                $attributes = TagAttributes::createFromTagMatch($match, $default, []);
 
                 if ($attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)) {
                     $type = trim(strtolower($attributes->getType()));
-                    if ($type == "flush") {
+                    if ($type === "flush") {
                         // https://getbootstrap.com/docs/5.0/components/list-group/#flush
                         // https://getbootstrap.com/docs/4.1/components/list-group/#flush
                         $attributes->addClassName("list-group-flush");

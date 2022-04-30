@@ -41,8 +41,8 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "grid";
-    const TAGS = [self::TAG, self::TAG_OLD];
-    const TAG_OLD = "row";
+    const TAGS = [self::TAG, self::ROW_TAG];
+    const ROW_TAG = "row";
 
     /**
      * The strap template permits to
@@ -88,6 +88,15 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
     const TYPE_MAX_CHILDREN = "max";
     const GUTTER = "gutter";
 
+    /**
+     * The type row is a hack to be able
+     * to support a row tag (ie flex div)
+     *
+     * Ie we migrate row to grid smoothly without loosing
+     * the possibility to use row as component
+     */
+    const TYPE_ROW_TAG = "row";
+
 
     /**
      * Syntax Type.
@@ -130,7 +139,11 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
      */
     function getPType(): string
     {
-        return 'stack';
+        /**
+         * Not stack, otherwise you get extra p's
+         * and it will fucked up the flex layout
+         */
+        return 'block';
     }
 
     /**
@@ -191,34 +204,66 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $knownTypes = self::KNOWN_TYPES;
-                /**
-                 * All element are centered
-                 * If their is 5 cells and the last one
-                 * is going at the line, it will be centered
-                 */
-                $defaultAlign = "x-center-children";
-                /**
-                 * Vertical gutter
-                 * On a two cell grid, the content will not
-                 * touch on a mobile
-                 *
-                 * https://getbootstrap.com/docs/4.3/layout/grid/#no-gutters
-                 * $attributes->addClassName("no-gutters");
-                 */
-                $defaultGutter = "y-5";
-                $defaultAttributes = [
-                    Align::ALIGN_ATTRIBUTE => $defaultAlign,
-                    self::GUTTER => $defaultGutter
-                ];
-                $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
 
+                $callStack = CallStack::createFromHandler($handler);
+                $parent = $callStack->moveToParent();
+
+                /**
+                 * We have split row in two:
+                 *   * grid for a bootstrap grid
+                 *   * row for a flex item (contained for now)
+                 *
+                 * We check
+                 */
                 $rowMatchPrefix = "<row";
                 $isRowTag = substr($match, 0, strlen($rowMatchPrefix)) == $rowMatchPrefix;
-                if ($isRowTag) {
-                    LogUtility::warning("row has been deprecated for grid. You should rename the <row> tag with <grid>");
+                if ($parent != false
+                    && !in_array($parent->getTagName(), [
+                        syntax_plugin_combo_bar::TAG,
+                        syntax_plugin_combo_container::TAG,
+                        syntax_plugin_combo_cell::TAG,
+                        syntax_plugin_combo_iterator::TAG,
+                    ])
+                    && $isRowTag
+                ) {
+                    // contained not in one
+                    $scannedType = self::ROW_TAG;
+                } else {
+                    $scannedType = self::TAG;
+                    if($isRowTag) {
+                        LogUtility::warning("A non-contained row has been deprecated for grid. You should rename the <row> tag to <grid>");
+                    }
                 }
 
+                $knownTypes = self::KNOWN_TYPES;
+
+                $defaultAttributes = [];
+                if ($scannedType === self::TAG) {
+                    /**
+                     * All element are centered
+                     * If their is 5 cells and the last one
+                     * is going at the line, it will be centered
+                     */
+                    $defaultAlign = "x-center-children";
+                    /**
+                     * Vertical gutter
+                     * On a two cell grid, the content will not
+                     * touch on a mobile
+                     *
+                     * https://getbootstrap.com/docs/4.3/layout/grid/#no-gutters
+                     * $attributes->addClassName("no-gutters");
+                     */
+                    $defaultGutter = "y-5";
+                    $defaultAttributes = [
+                        Align::ALIGN_ATTRIBUTE => $defaultAlign,
+                        self::GUTTER => $defaultGutter
+                    ];
+                }
+                $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
+
+                if ($scannedType === self::ROW_TAG) {
+                    $attributes->setType(self::TYPE_ROW_TAG);
+                }
 
                 /**
                  * The deprecations
@@ -230,31 +275,8 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                 }
                 if ($type === self::TYPE_FIT_OLD_VALUE || $type === self::TYPE_FIT_VALUE) {
                     // in case it's the old value
-                    $attributes->setType(self::TYPE_FIT_VALUE);
-                    LogUtility::warning("Deprecation: The type value (" . self::TYPE_FIT_VALUE . " and " . self::TYPE_FIT_OLD_VALUE . ") for the align attribute and/or the grow/shrink width value with a box.", self::CANONICAL);
-                }
-
-
-                $callStack = CallStack::createFromHandler($handler);
-                $parent = $callStack->moveToParent();
-
-
-                /**
-                 * Context
-                 *   To add or not a margin-bottom,
-                 *   To delete the image link or not
-                 */
-                if ($parent != false
-                    && !in_array($parent->getTagName(), [
-                        syntax_plugin_combo_bar::TAG,
-                        syntax_plugin_combo_container::TAG,
-                        syntax_plugin_combo_cell::TAG,
-                        syntax_plugin_combo_iterator::TAG
-                    ])
-                    && $isRowTag
-                ) {
-                    $attributes->setType(self::TYPE_FIT_VALUE);
-                    LogUtility::warning("The old row tag was used inside a component. We have deleted the grid layout. Rename your tag to a `grid` or `box` to delete this warning", self::CANONICAL);
+                    $attributes->setType(self::TYPE_ROW_TAG);
+                    LogUtility::warning("Deprecation: The type value (" . self::TYPE_FIT_VALUE . " and " . self::TYPE_FIT_OLD_VALUE . ") for a contained row tag.", self::CANONICAL);
                 }
 
 
@@ -353,43 +375,46 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
 
                 }
 
-                /**
-                 * Scan and process the children
-                 * - Add the col class
-                 * - Do the cells have a width set ...
-                 */
-                foreach ($childrenOpeningTags as $actualCall) {
-                    if ($type !== self::TYPE_FIT_VALUE) {
+
+                if ($type !== self::TYPE_ROW_TAG) {
+
+                    /**
+                     * Scan and process the children for a grid tag
+                     * - Add the col class
+                     * - Do the cells have a width set ...
+                     */
+                    foreach ($childrenOpeningTags as $actualCall) {
+
                         $actualCall->addClassName("col");
-                    }
-                    $childrenOpeningTags[] = $actualCall;
-                    $widthAttributeValue = $actualCall->getAttribute(Dimension::WIDTH_KEY);
-                    if ($widthAttributeValue !== null) {
-                        $type = self::TYPE_WIDTH_SPECIFIED;
-                        $conditionalWidthsLengths = explode(" ", $widthAttributeValue);
-                        foreach ($conditionalWidthsLengths as $conditionalWidthsLength) {
-                            try {
-                                $conditionalLengthObject = ConditionalLength::createFromString($conditionalWidthsLength);
-                            } catch (ExceptionBadArgument $e) {
-                                $type = null;
-                                LogUtility::error("The width length $conditionalWidthsLength is not a valid length value. Error: {$e->getMessage()}");
-                                break;
-                            }
-                            try {
-                                $ratio = $conditionalLengthObject->getRatio();
-                                if ($ratio > 1) {
+
+                        $childrenOpeningTags[] = $actualCall;
+                        $widthAttributeValue = $actualCall->getAttribute(Dimension::WIDTH_KEY);
+                        if ($widthAttributeValue !== null) {
+                            $type = self::TYPE_WIDTH_SPECIFIED;
+                            $conditionalWidthsLengths = explode(" ", $widthAttributeValue);
+                            foreach ($conditionalWidthsLengths as $conditionalWidthsLength) {
+                                try {
+                                    $conditionalLengthObject = ConditionalLength::createFromString($conditionalWidthsLength);
+                                } catch (ExceptionBadArgument $e) {
                                     $type = null;
-                                    LogUtility::error("The ratio ($ratio) of the width ($conditionalLengthObject) should not be greater than 1 on the children of the row", self::CANONICAL);
+                                    LogUtility::error("The width length $conditionalWidthsLength is not a valid length value. Error: {$e->getMessage()}");
                                     break;
                                 }
-                            } catch (ExceptionBadArgument $e) {
-                                $type = null;
-                                LogUtility::error("The ratio of the width ($conditionalLengthObject) is not a valid. Error: {$e->getMessage()}");
-                                break;
+                                try {
+                                    $ratio = $conditionalLengthObject->getRatio();
+                                    if ($ratio > 1) {
+                                        $type = null;
+                                        LogUtility::error("The ratio ($ratio) of the width ($conditionalLengthObject) should not be greater than 1 on the children of the row", self::CANONICAL);
+                                        break;
+                                    }
+                                } catch (ExceptionBadArgument $e) {
+                                    $type = null;
+                                    LogUtility::error("The ratio of the width ($conditionalLengthObject) is not a valid. Error: {$e->getMessage()}");
+                                    break;
+                                }
                             }
                         }
                     }
-
                 }
 
                 if ($type === null) {
@@ -468,7 +493,7 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                             }
                         }
                         break;
-                    case self::TYPE_FIT_VALUE:
+                    case self::TYPE_ROW_TAG:
                         break;
                     default:
                         LogUtility::error("The grid type ($type) is unknown.", self::CANONICAL);
@@ -521,26 +546,29 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                      * Type
                      */
                     $type = $attributes->getType();
-                    if ($type === self::TYPE_FIT_VALUE) {
+                    if ($type === self::TYPE_ROW_TAG) {
+
                         $attributes->addClassName("d-flex");
+
                     } else {
+
                         $attributes->addClassName("row");
-                    }
 
-                    /**
-                     * Gutter
-                     */
-                    $gutterAttributeValue = $attributes->getValueAndRemoveIfPresent(self::GUTTER);
-                    $gutters = explode(" ", $gutterAttributeValue);
-                    foreach ($gutters as $gutter) {
-                        $attributes->addClassName("g$gutter");
-                    }
+                        /**
+                         * Gutter
+                         */
+                        $gutterAttributeValue = $attributes->getValueAndRemoveIfPresent(self::GUTTER);
+                        $gutters = explode(" ", $gutterAttributeValue);
+                        foreach ($gutters as $gutter) {
+                            $attributes->addClassName("g$gutter");
+                        }
 
+                    }
 
                     /**
                      * Render
                      */
-                    $htmlElement = $attributes->getValueAndRemove(self::HTML_TAG_ATT,"div");
+                    $htmlElement = $attributes->getValueAndRemove(self::HTML_TAG_ATT, "div");
                     $renderer->doc .= $attributes->toHtmlEnterTag($htmlElement);
                     break;
 

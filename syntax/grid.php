@@ -244,7 +244,7 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                      * If their is 5 cells and the last one
                      * is going at the line, it will be centered
                      */
-                    $defaultAlign = "x-center-children";
+                    $defaultAlign = "x-center-children y-top-children";
                     /**
                      * Vertical gutter
                      * On a two cell grid, the content will not

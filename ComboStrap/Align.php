@@ -12,6 +12,7 @@ class Align
     public const CENTER_CLASS = "mx-auto";
     const ALIGN_ATTRIBUTE = "align";
     const Y_CENTER_CHILDREN = "y-center-children";
+    const Y_TOP_CHILDREN = "y-top-children";
 
     /**
      * @param TagAttributes $attributes
@@ -58,6 +59,10 @@ class Align
                 case self::Y_CENTER_CHILDREN:
                     $flexAxis[ConditionalLength::Y_AXIS] = true;
                     $attributes->addClassName("align-items-center");
+                    break;
+                case self::Y_TOP_CHILDREN:
+                    $flexAxis[ConditionalLength::Y_AXIS] = true;
+                    $attributes->addClassName("align-items-start");
                     break;
             }
 

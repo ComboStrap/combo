@@ -43,20 +43,20 @@ class Align
                 case "x-center-children":
                 case "center-children":
                     $attributes->addClassName("justify-content-center");
-                    if ($attributes->getLogicalTag() !== \syntax_plugin_combo_row::TAG) {
+                    if ($attributes->getLogicalTag() !== \syntax_plugin_combo_grid::TAG) {
                         $attributes->addClassName("d-flex");
                     }
                     break;
                 case "x-between-children":
                 case "between-children":
                     $attributes->addClassName("justify-content-between");
-                    if ($attributes->getLogicalTag() !== \syntax_plugin_combo_row::TAG) {
+                    if ($attributes->getLogicalTag() !== \syntax_plugin_combo_grid::TAG) {
                         $attributes->addClassName("d-flex");
                     }
                     break;
                 case "y-center-children":
                     $attributes->addClassName("align-items-center");
-                    if ($attributes->getLogicalTag() !== \syntax_plugin_combo_row::TAG) {
+                    if ($attributes->getLogicalTag() !== \syntax_plugin_combo_grid::TAG) {
                         $attributes->addClassName("d-flex");
                     }
                     break;

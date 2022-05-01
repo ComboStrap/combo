@@ -69,7 +69,8 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
 
         $callStack->insertBefore(Call::createComboCall(
             syntax_plugin_combo_box::TAG,
-            DOKU_LEXER_EXIT
+            DOKU_LEXER_EXIT,
+            [syntax_plugin_combo_box::TAG_ATTRIBUTE => "li"]
         ));
 
     }
@@ -85,7 +86,8 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
     {
         $attributesNumberedWrapper = [
             Align::ALIGN_ATTRIBUTE => Align::Y_TOP_CHILDREN, // To have the number at the top and not centered as for a combostrap flex
-            TagAttributes::CLASS_KEY => syntax_plugin_combo_contentlistitem::LIST_GROUP_ITEM_CLASS
+            TagAttributes::CLASS_KEY => syntax_plugin_combo_contentlistitem::LIST_GROUP_ITEM_CLASS,
+            syntax_plugin_combo_box::TAG_ATTRIBUTE => "li"
         ];
         $callStack->insertBefore(Call::createComboCall(
             syntax_plugin_combo_box::TAG,
@@ -248,6 +250,9 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                 } else {
                     foreach ($callStack->getChildren() as $child) {
                         $child->addClassName(syntax_plugin_combo_contentlistitem::LIST_GROUP_ITEM_CLASS);
+                        if ($child->getTagName() === syntax_plugin_combo_box::TAG_ATTRIBUTE) {
+                            $child->addAttribute(syntax_plugin_combo_box::TAG_ATTRIBUTE, "li");
+                        }
                     }
                 }
 

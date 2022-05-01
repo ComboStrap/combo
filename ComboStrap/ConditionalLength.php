@@ -10,8 +10,6 @@ class ConditionalLength
 
 
     const PERCENTAGE = "%";
-    const X_AXIS = "x";
-    const Y_AXIS = "y";
 
     /**
      * @var string - the length value (may be breakpoint conditional)
@@ -323,6 +321,14 @@ class ConditionalLength
     public function getAxis(): string
     {
         return $this->axis;
+    }
+
+    public function getAxisOrDefault(): string
+    {
+        if ($this->axis !== null) {
+            return $this->axis;
+        }
+        return Align::DEFAULT_AXIS;
     }
 
     public function isRatio(): bool

@@ -11,8 +11,17 @@ class Align
      */
     public const CENTER_CLASS = "mx-auto";
     const ALIGN_ATTRIBUTE = "align";
+
+    /**
+     * Children are also known as items in HTML/CSS
+     * ie list items, align-center-items, ...
+     */
     const Y_CENTER_CHILDREN = "y-center-children";
     const Y_TOP_CHILDREN = "y-top-children";
+    const X_CENTER_CHILDREN = "x-center-children";
+    const DEFAULT_AXIS = self::X_AXIS;
+    public const X_AXIS = "x";
+    public const Y_AXIS = "y";
 
     /**
      * @param TagAttributes $attributes
@@ -48,20 +57,20 @@ class Align
                     break;
                 case "x-center-children":
                 case "center-children":
-                    $flexAxis[ConditionalLength::X_AXIS] = true;
+                    $flexAxis[self::X_AXIS] = true;
                     $attributes->addClassName("justify-content-center");
                     break;
                 case "x-between-children":
                 case "between-children":
-                    $flexAxis[ConditionalLength::X_AXIS] = true;
+                    $flexAxis[self::X_AXIS] = true;
                     $attributes->addClassName("justify-content-between");
                     break;
                 case self::Y_CENTER_CHILDREN:
-                    $flexAxis[ConditionalLength::Y_AXIS] = true;
+                    $flexAxis[self::Y_AXIS] = true;
                     $attributes->addClassName("align-items-center");
                     break;
                 case self::Y_TOP_CHILDREN:
-                    $flexAxis[ConditionalLength::Y_AXIS] = true;
+                    $flexAxis[self::Y_AXIS] = true;
                     $attributes->addClassName("align-items-start");
                     break;
             }
@@ -78,14 +87,6 @@ class Align
              */
             if ($attributes->getLogicalTag() !== \syntax_plugin_combo_grid::TAG) {
                 $attributes->addClassName("d-flex");
-            }
-            if (!isset($flexAxis[ConditionalLength::Y_AXIS])) {
-                /**
-                 * Why ? Because by default, a flex place text at the top and if a badge is added
-                 * for instance, it will shift the text towards the top
-                 * If a flex attribute on the x-axis is used, we still want the y-axis centered
-                 */
-                $attributes->addClassName("align-items-center");
             }
         }
 

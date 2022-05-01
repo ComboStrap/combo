@@ -239,12 +239,7 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
 
                 $defaultAttributes = [];
                 if ($scannedType === self::TAG) {
-                    /**
-                     * All element are centered
-                     * If their is 5 cells and the last one
-                     * is going at the line, it will be centered
-                     */
-                    $defaultAlign = "x-center-children y-top-children";
+
                     /**
                      * Vertical gutter
                      * On a two cell grid, the content will not
@@ -255,9 +250,15 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                      */
                     $defaultGutter = "y-5";
                     $defaultAttributes = [
-                        Align::ALIGN_ATTRIBUTE => $defaultAlign,
                         self::GUTTER => $defaultGutter
                     ];
+                    /**
+                     * All element are centered
+                     * If their is 5 cells and the last one
+                     * is going at the line, it will be centered
+                     * Y = top (the default of css)
+                     */
+                    $defaultAlign[Align::X_AXIS] = Align::X_CENTER_CHILDREN;
                 } else {
                     /**
                      * Row is for now mainly use in a content-list and the content
@@ -265,15 +266,34 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                      * Why ? Because by default, a flex place text at the top and if a badge is added
                      * for instance, it will shift the text towards the top
                      */
-                    $defaultAttributes = [
-                        Align::ALIGN_ATTRIBUTE => "align-items-center"
-                    ];
+                    $defaultAlign[Align::Y_AXIS] = "y-center-children";
                 }
                 $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
+
 
                 if ($scannedType === self::ROW_TAG) {
                     $attributes->setType(self::TYPE_ROW_TAG);
                 }
+
+                /**
+                 * Align
+                 */
+                try {
+                    $aligns = $attributes->getValues(Align::ALIGN_ATTRIBUTE, []);
+                    $alignsByAxis = [];
+                    foreach ($aligns as $align) {
+                        $alignObject = ConditionalLength::createFromString($align);
+                        $alignsByAxis[$alignObject->getAxisOrDefault()] = $align;
+                    }
+                    foreach ($defaultAlign as $axis => $value) {
+                        if (!isset($alignsByAxis[$axis])) {
+                            $attributes->addComponentAttributeValue(Align::ALIGN_ATTRIBUTE, $value);
+                        }
+                    }
+                } catch (ExceptionBadArgument $e) {
+                    LogUtility::error("The align attribute default values could not be processed. Error: {$e->getMessage()}");
+                }
+
 
                 /**
                  * The deprecations
@@ -320,17 +340,17 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                 /**
                  * Max-Cells Type ?
                  */
-                $maxCells = null; // variable declaration to not have a linter warning
+                $maxLineAttributeValue = null; // variable declaration to not have a linter warning
                 /**
-                 * @var ConditionalLength[] $maxCellsArray
+                 * @var ConditionalLength[] $maxLineArray
                  */
-                $maxCellsArray = []; // variable declaration to not have a linter warning
+                $maxLineArray = []; // variable declaration to not have a linter warning
                 if ($type == null) {
 
-                    $maxCells = $openingCall->getAttribute(self::MAX_CHILDREN_ATTRIBUTE);
-                    if ($maxCells !== null) {
+                    $maxLineAttributeValue = $openingCall->getAttribute(self::MAX_CHILDREN_ATTRIBUTE);
+                    if ($maxLineAttributeValue !== null) {
 
-                        $maxCellsValues = explode(" ", $maxCells);
+                        $maxCellsValues = explode(" ", $maxLineAttributeValue);
                         foreach ($maxCellsValues as $maxCellsValue) {
                             try {
                                 $maxCellLength = ConditionalLength::createFromString($maxCellsValue);
@@ -342,7 +362,7 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                             if ($number > 12) {
                                 LogUtility::error("The max-cells attribute value ($maxCellsValue) should be less than 12.", self::CANONICAL);
                             }
-                            $maxCellsArray[$maxCellLength->getBreakpointOrDefault()] = $maxCellLength;
+                            $maxLineArray[$maxCellLength->getBreakpointOrDefault()] = $maxCellLength;
                         }
                         $openingCall->removeAttribute(self::MAX_CHILDREN_ATTRIBUTE);
                         $type = self::TYPE_MAX_CHILDREN;
@@ -397,7 +417,6 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
 
                         $actualCall->addClassName("col");
 
-                        $childrenOpeningTags[] = $actualCall;
                         $widthAttributeValue = $actualCall->getAttribute(Dimension::WIDTH_KEY);
                         if ($widthAttributeValue !== null) {
                             $type = self::TYPE_WIDTH_SPECIFIED;
@@ -443,28 +462,32 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                  */
                 switch ($type) {
                     case self::TYPE_MAX_CHILDREN:
-                        $maxCellDefaults = [];
+                        $maxLineDefaults = [];
                         try {
-                            $maxCellDefaults["xs"] = ConditionalLength::createFromString("1-xs");
-                            $maxCellDefaults["sm"] = ConditionalLength::createFromString("2-sm");
-                            $maxCellDefaults["md"] = ConditionalLength::createFromString("3-md");
-                            $maxCellDefaults["lg"] = ConditionalLength::createFromString("4-lg");
+                            $maxLineDefaults["xs"] = ConditionalLength::createFromString("1-xs");
+                            $maxLineDefaults["sm"] = ConditionalLength::createFromString("2-sm");
+                            $maxLineDefaults["md"] = ConditionalLength::createFromString("3-md");
+                            $maxLineDefaults["lg"] = ConditionalLength::createFromString("4-lg");
                         } catch (ExceptionBadArgument $e) {
                             LogUtility::error("Bad default value initialization. Error:{$e->getMessage()}", self::CANONICAL);
                         }
-                        // Delete the default that are bigger than the asked max-cells number
-                        $maxCellDefaultsFiltered = [];
-                        if ($maxCells !== null) {
-                            foreach ($maxCellDefaults as $breakpoint => $maxCellDefault) {
-                                if ($maxCellDefault->getNumerator() < $maxCells) {
-                                    $maxCellDefaultsFiltered[$breakpoint] = $maxCellDefault;
-                                }
-                            }
-                        } else {
-                            $maxCellDefaultsFiltered = $maxCellDefaults;
+                        /**
+                         * Delete the default that are bigger than:
+                         *   * the asked max-line number
+                         *   * or the number of children (ie if there is two children, they split the space in two)
+                         */
+                        $maxLineDefaultsFiltered = [];
+                        $maxLineUsedToFilter = sizeof($childrenOpeningTags);
+                        if ($maxLineAttributeValue !== null && $maxLineUsedToFilter > $maxLineAttributeValue) {
+                            $maxLineUsedToFilter = $maxLineAttributeValue;
                         }
-                        $maxCellsArray = array_merge($maxCellDefaultsFiltered, $maxCellsArray);
-                        foreach ($maxCellsArray as $maxCell) {
+                        foreach ($maxLineDefaults as $breakpoint => $maxLineDefault) {
+                            if ($maxLineDefault->getNumerator() <= $maxLineUsedToFilter) {
+                                $maxLineDefaultsFiltered[$breakpoint] = $maxLineDefault;
+                            }
+                        }
+                        $maxLineArray = array_merge($maxLineDefaultsFiltered, $maxLineArray);
+                        foreach ($maxLineArray as $maxCell) {
                             /**
                              * @var ConditionalLength $maxCell
                              */

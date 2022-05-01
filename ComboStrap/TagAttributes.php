@@ -142,7 +142,7 @@ class TagAttributes
     /**
      * Attribute with multiple values
      */
-    const MULTIPLE_VALUES_ATTRIBUTES = [self::CLASS_KEY, self::REL];
+    const MULTIPLE_VALUES_ATTRIBUTES = [self::CLASS_KEY, self::REL, Align::ALIGN_ATTRIBUTE];
 
     /**
      * Link relation attributes

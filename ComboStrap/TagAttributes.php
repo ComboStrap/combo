@@ -1163,12 +1163,19 @@ class TagAttributes
     public
     function getBooleanValueAndRemoveIfPresent($attribute, $default = null)
     {
-        $value = $this->getValueAndRemoveIfPresent($attribute);
-        if ($value === null) {
-            return $default;
-        } else {
+        $value = $this->getBooleanValue($attribute, $default);
+        $this->removeAttributeIfPresent($attribute);
+        return $value;
+    }
+
+    public
+    function getBooleanValue($attribute, $default = null)
+    {
+        $value = $this->getValue($attribute);
+        if ($value !== null) {
             return DataType::toBoolean($value);
         }
+        return $default;
     }
 
     public

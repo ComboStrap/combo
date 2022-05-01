@@ -26,7 +26,7 @@ class Align
     /**
      * @param TagAttributes $attributes
      */
-    public static function processAlignAttributes(&$attributes)
+    public static function processAlignAttributes(TagAttributes &$attributes)
     {
         // The class shortcut
         $align = self::ALIGN_ATTRIBUTE;
@@ -87,6 +87,17 @@ class Align
              */
             if ($attributes->getLogicalTag() !== \syntax_plugin_combo_grid::TAG) {
                 $attributes->addClassName("d-flex");
+                if(!isset($flexAxis[self::Y_AXIS])){
+                    /**
+                     * flex box change the line center of where the text is written
+                     * if a flex align attribute is used in a row, a itext or any other
+                     * component that is not a grid, we set it to center
+                     *
+                     * You can see this effect for instance on a badge, where the text will jump
+                     * to the top (the flex default), without centering the flex on y
+                     */
+                    $attributes->addClassName("align-items-center");
+                }
             }
         }
 

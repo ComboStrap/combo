@@ -593,6 +593,7 @@ class CallStack
     /**
      * @param Call $call
      * @return Call the inserted call
+     * @throws ExceptionBadArgument
      */
     public
     function insertBefore(Call $call): Call

@@ -58,7 +58,7 @@ class action_plugin_combo_outlinenumbering extends DokuWiki_Action_Plugin
 
             case self::HEADING_NUMBERING:
                 global $ACT;
-                if ($ACT == "preview") {
+                if ($ACT === "preview") {
                     $mainContainerSelector = ".pad";
                 } else {
                     $mainContainerSelector = "#main-content";
@@ -115,7 +115,13 @@ EOF;
 
     public function register(Doku_Event_Handler $controller)
     {
-        $controller->register_hook('TPL_ACT_RENDER', 'BEFORE', $this, '_outline_numbering', array());
+        /**
+         * DOKUWIKI_STARTED: Edit, preview, show mode
+         *
+         * See {@link \ComboStrap\SnippetManager::attachCssInternalStylesheetForRequest()}
+         * for more explanation on the choice of the event
+         */
+        $controller->register_hook('ACTION_HEADERS_SEND', 'BEFORE', $this, '_outline_numbering', array());
     }
 
     /**

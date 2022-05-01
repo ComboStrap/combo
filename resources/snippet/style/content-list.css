@@ -2,14 +2,19 @@
     margin-bottom: 1rem;
 }
 
-
-/* Spacing is too little on the y and there is a default color */
-.content-list-item-combo {
-    color: inherit;
-    padding: 1rem 1rem;
-    display: flex;
+.list-group-item {
+    display: list-item;
 }
 
+.list-group-item p:last-child{
+    margin-bottom: 0;
+}
+
+.list-group-numbered>*::before {
+    content: counters(section, ".") ". ";
+    counter-increment: section;
+    margin-right: 0.5rem;
+}
 
 
 

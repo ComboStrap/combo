@@ -1,9 +1,13 @@
 <?php
 
 
+use ComboStrap\Align;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\DataType;
 use ComboStrap\Dimension;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -51,11 +55,44 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
     const COMBO_TAG_OLD = "list";
     const COMBO_TAGS = [self::MARKI_TAG, self::COMBO_TAG_OLD];
 
-    /**
-     * With number, this a li, without a div
-     */
-    const HTML_TAG_ATTRIBUTE = "html-tag";
+
     const FLUSH_TYPE = "flush";
+    const NUMBERED = "numbered";
+    const NUMBERED_DEFAULT = false;
+    const CANONICAL = self::MARKI_TAG;
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    private static function insertNumberedWrapperCloseTag(CallStack $callStack)
+    {
+
+        $callStack->insertBefore(Call::createComboCall(
+            syntax_plugin_combo_box::TAG,
+            DOKU_LEXER_EXIT
+        ));
+
+    }
+
+
+    /**
+     *
+     * @param CallStack $callStack
+     * @return void
+     * @throws ExceptionBadArgument
+     */
+    private static function insertNumberedWrapperOpenTag(CallStack $callStack)
+    {
+        $attributesNumberedWrapper = [
+            Align::ALIGN_ATTRIBUTE => Align::Y_TOP_CHILDREN, // To have the number at the top and not centered as for a combostrap flex
+            TagAttributes::CLASS_KEY => syntax_plugin_combo_contentlistitem::LIST_GROUP_ITEM_CLASS
+        ];
+        $callStack->insertBefore(Call::createComboCall(
+            syntax_plugin_combo_box::TAG,
+            DOKU_LEXER_ENTER,
+            $attributesNumberedWrapper
+        ));
+    }
 
 
     /**
@@ -141,11 +178,11 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
      * @param int $state
      * @param int $pos - byte position in the original source file
      * @param Doku_Handler $handler
-     * @return array|bool
+     * @return array
      * @see DokuWiki_Syntax_Plugin::handle()
      *
      */
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
         switch ($state) {
@@ -153,7 +190,10 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $knownType = [self::FLUSH_TYPE];
-                $default = [Dimension::WIDTH_KEY => "fit"];
+                $default = [
+                    Dimension::WIDTH_KEY => "fit",
+                    self::NUMBERED => self::NUMBERED_DEFAULT
+                ];
                 $attributes = TagAttributes::createFromTagMatch($match, $default, $knownType);
 
                 if ($attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)) {
@@ -164,10 +204,10 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                         $attributes->addClassName("list-group-flush");
                     }
                 }
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray(),
-                    self::HTML_TAG_ATTRIBUTE => "div"
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -177,45 +217,43 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
 
                 /**
-                 * Add to all row the list-group-item
+                 * Add to all children the list-group-item
                  */
                 $callStack = CallStack::createFromHandler($handler);
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
-                $firstChild = $callStack->moveToFirstChildTag();
-                if ($firstChild !== false) {
-                    $firstChild->addClassName(syntax_plugin_combo_contentlistitem::LIST_GROUP_ITEM_CLASS);
-                    while ($actualCall = $callStack->moveToNextSiblingTag()) {
-                        $actualCall->addClassName(syntax_plugin_combo_contentlistitem::LIST_GROUP_ITEM_CLASS);
+
+                /**
+                 * The number are inside (this is a **content** list)
+                 * and not as with a marker box, outside.
+                 *
+                 * It's in the `before` box and is therefore a invisible box
+                 * To make it easy for the user (it does need to known that),
+                 * we wrap the user markup in a flex with a top placement
+                 */
+                $numbered = DataType::toBoolean($openingTag->getAttribute(self::NUMBERED, self::NUMBERED_DEFAULT));
+                if ($numbered === true) {
+                    $firstChild = $callStack->moveToFirstChildTag();
+                    if ($firstChild !== false) {
+                        try {
+                            self::insertNumberedWrapperOpenTag($callStack);
+                            while ($callStack->moveToNextSiblingTag()) {
+                                self::insertNumberedWrapperCloseTag($callStack);
+                                self::insertNumberedWrapperOpenTag($callStack);
+                            }
+                            self::insertNumberedWrapperCloseTag($callStack);
+                        } catch (ExceptionBadArgument $e) {
+                            LogUtility::error("We were unable to wrap the content list to enable numbering placement. Error: {$e->getMessage()}", self::CANONICAL);
+                        }
                     }
-//                        if ($actualCall->getTagName() == syntax_plugin_combo_contentlistitem::DOKU_TAG) {
-//                            // List item were added by the user
-//                            break;
-//                        }
-//                        if ($actualCall->getTagName() == syntax_plugin_combo_row::TAG) {
-//                            $actualState = $actualCall->getState();
-//                            switch ($actualState) {
-//                                case DOKU_LEXER_ENTER:
-//                                    $callStack->insertBefore(Call::createComboCall(
-//                                        syntax_plugin_combo_contentlistitem::DOKU_TAG,
-//                                        DOKU_LEXER_ENTER
-//                                    ));
-//                                    break;
-//                                case DOKU_LEXER_EXIT:
-//                                    $callStack->insertAfter(Call::createComboCall(
-//                                        syntax_plugin_combo_contentlistitem::DOKU_TAG,
-//                                        DOKU_LEXER_EXIT
-//                                    ));
-//                                    $callStack->next();
-//                                    break;
-//                            }
-//
-//                        }
-//                    }
+                } else {
+                    foreach ($callStack->getChildren() as $child) {
+                        $child->addClassName(syntax_plugin_combo_contentlistitem::LIST_GROUP_ITEM_CLASS);
+                    }
                 }
 
                 return array(
                     PluginUtility::STATE => $state,
-                    self::HTML_TAG_ATTRIBUTE => $openingTag->getPluginData(self::HTML_TAG_ATTRIBUTE)
+                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
                 );
 
 
@@ -234,7 +272,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         if ($format == 'xhtml') {
 
@@ -246,16 +284,30 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                     PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::MARKI_TAG);
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::MARKI_TAG);
                     $tagAttributes->addClassName("list-group");
-                    $tag = $data[self::HTML_TAG_ATTRIBUTE];
-                    $renderer->doc .= $tagAttributes->toHtmlEnterTag($tag);
 
-                    break;
-                case DOKU_LEXER_EXIT :
-                    $tag = $data[self::HTML_TAG_ATTRIBUTE];
-                    $renderer->doc .= "</$tag>";
+                    $numbered = $tagAttributes->getBooleanValueAndRemoveIfPresent(self::NUMBERED, self::NUMBERED_DEFAULT);
+
+                    $htmlElement = "ul";
+                    if ($numbered) {
+                        $tagAttributes->addClassName("list-group-numbered");
+                        $htmlElement = "ol";
+                    }
+
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag($htmlElement);
                     break;
                 case DOKU_LEXER_UNMATCHED :
+
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    break;
+
+                case DOKU_LEXER_EXIT :
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::MARKI_TAG);
+                    $numbered = $tagAttributes->getValueAndRemoveIfPresent(self::NUMBERED, self::NUMBERED_DEFAULT);
+                    $htmlElement = "ul";
+                    if ($numbered) {
+                        $htmlElement = "ol";
+                    }
+                    $renderer->doc .= "</$htmlElement>";
                     break;
             }
             return true;

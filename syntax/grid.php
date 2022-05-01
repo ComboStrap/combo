@@ -21,6 +21,7 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Spacing;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
@@ -500,8 +501,8 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                         break;
                     case self::TYPE_WIDTH_SPECIFIED:
 
-                        foreach ($childrenOpeningTags as $cellOpeningTag) {
-                            $widthAttributeValue = $cellOpeningTag->getAttribute(Dimension::WIDTH_KEY);
+                        foreach ($childrenOpeningTags as $childOpeningTag) {
+                            $widthAttributeValue = $childOpeningTag->getAttribute(Dimension::WIDTH_KEY);
                             if ($widthAttributeValue === null) {
                                 continue;
                             }
@@ -520,7 +521,7 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                                 $breakpoint = $conditionalLengthObject->getBreakpointOrDefault();
                                 try {
                                     $widthColClasses[$breakpoint] = $conditionalLengthObject->toColClass();
-                                    $cellOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
+                                    $childOpeningTag->removeAttribute(Dimension::WIDTH_KEY);
                                 } catch (ExceptionBadArgument $e) {
                                     LogUtility::error("The conditional length $conditionalLengthObject could not be transformed as col class. Error: {$e->getMessage()}");
                                 }
@@ -530,12 +531,26 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                                     $widthColClasses["xs"] = "col-12";
                                 }
                                 foreach ($widthColClasses as $widthClass) {
-                                    $cellOpeningTag->addClassName($widthClass);
+                                    $childOpeningTag->addClassName($widthClass);
                                 }
                             }
                         }
                         break;
                     case self::TYPE_ROW_TAG:
+                        /**
+                         * For all box children that is not the last
+                         * one, add a padding right
+                         */
+                        $length = sizeof($childrenOpeningTags) - 1;
+                        for ($i = 0; $i < $length; $i++) {
+                            $childOpeningTag = $childrenOpeningTags[$i];
+                            if ($childOpeningTag->getDisplay() === Call::BlOCK_DISPLAY) {
+                                $spacing = $childOpeningTag->getAttribute(Spacing::SPACING_ATTRIBUTE);
+                                if ($spacing === null) {
+                                    $childOpeningTag->setAttribute(Spacing::SPACING_ATTRIBUTE, "me-3");
+                                }
+                            }
+                        }
                         break;
                     default:
                         LogUtility::error("The grid type ($type) is unknown.", self::CANONICAL);

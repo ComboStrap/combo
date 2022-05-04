@@ -332,8 +332,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  */
                 $callStack->deleteAllCallsAfter($openingTag);
 
-                $type = $openingTag->getType();
-                $componentClassPrefix = self::getClassPrefix($type);
 
                 return array(
                     PluginUtility::STATE => $state,

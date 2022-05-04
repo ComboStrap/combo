@@ -67,6 +67,7 @@ class TreeNode
         return $this->appendNode($identifier)
             ->setType(self::CONTAINER);
     }
+
     private function appendNode(string $string): TreeNode
     {
         $treeNode = $this->children[$string];
@@ -110,6 +111,25 @@ class TreeNode
         }
         echo "$tree\n";
 
+    }
+
+    public static function createFromWikiPath(string $id = ":"): TreeNode
+    {
+        $rootSpace = DokuPath::createPagePathFromId($id);
+        $ids = [];
+        self::gatherWikiIdRecursively($rootSpace, $ids);
+        return TreeNode::createFromIds($ids);
+    }
+
+    private static function gatherWikiIdRecursively(DokuPath $dokuPath, array &$ids)
+    {
+        foreach ($dokuPath->getChildren() as $child) {
+            if (FileSystems::isDirectory($child)) {
+                self::gatherWikiIdRecursively($child, $ids);
+            } else {
+                $ids[] = $child->getDokuwikiId();
+            }
+        }
     }
 
     public function __toString()

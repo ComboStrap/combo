@@ -27,6 +27,9 @@ class LocalPath extends PathAbs
      */
     public const RESERVED_WINDOWS_CHARACTERS = ["\\", "/", ":", "*", "?", "\"", "<", ">", "|"];
 
+    const RELATIVE_CURRENT = ".";
+    const RELATIVE_PARENT = "..";
+
     private $path;
 
     /**
@@ -138,11 +141,14 @@ class LocalPath extends PathAbs
         foreach ($driveRoots as $driveRoot => $drivePath) {
             try {
                 $relativePath = $this->relativize($drivePath);
-                return DokuPath::createDokuPath($relativePath->toString(), $driveRoot);
+                $wikiPath = $relativePath->toString();
+                if (FileSystems::isDirectory($this)) {
+                    $wikiPath .= DokuPath::PATH_SEPARATOR;
+                }
+                return DokuPath::createDokuPath($wikiPath, $driveRoot);
             } catch (ExceptionCompile $e) {
                 // not a relative path
             }
-
         }
         throw new ExceptionCompile("The local path ($this) is not inside a doku path drive");
 
@@ -167,6 +173,9 @@ class LocalPath extends PathAbs
 
         if (!(strpos($actualPath->toString(), $localPath->toString()) === 0)) {
             throw new ExceptionCompile("The path ($localPath) is not a parent path of the actual path ($actualPath)");
+        }
+        if ($actualPath->toString() === $localPath->toString()) {
+            return LocalPath::createFromPath(self::RELATIVE_CURRENT);
         }
         $sepCharacter = 1; // delete the sep characters
         $relativePath = substr($actualPath->toString(), strlen($localPath->toString()) + $sepCharacter);
@@ -268,6 +277,25 @@ class LocalPath extends PathAbs
             $realPath .= implode(self::PHP_SYSTEM_DIRECTORY_SEPARATOR, $parts);
         }
         return LocalPath::createFromPath($realPath);
+    }
+
+    /**
+     * @return LocalPath[]
+     */
+    public function getChildren(): array
+    {
+        $children = scandir($this->path);
+        if ($children === false) {
+            return [];
+        }
+        $localChildren = [];
+        foreach ($children as $child) {
+            if (in_array($child, [self::RELATIVE_CURRENT, self::RELATIVE_PARENT])) {
+                continue;
+            }
+            $localChildren[] = LocalPath::createFromPath($this->path . $child);
+        }
+        return $localChildren;
     }
 
 

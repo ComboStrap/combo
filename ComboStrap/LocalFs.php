@@ -94,12 +94,18 @@ class LocalFs implements FileSystem
     /**
      * @throws ExceptionCompile
      */
-    public function createDirectory(Path $dirPath)
+    public function createDirectory(Path $dirPath): Path
     {
         $result = mkdir($dirPath->toAbsolutePath()->toString(), $mode = 0770, $recursive = true);
         if ($result === false) {
             throw new ExceptionCompile("Unable to create the directory path ($dirPath)");
         }
+        return $dirPath;
+    }
+
+    public function isDirectory(Path $path): bool
+    {
+        return is_dir($path->toAbsolutePath());
     }
 
 }

@@ -95,4 +95,13 @@ class DokuFs implements FileSystem
     {
         return FileSystems::createDirectory($dirPath->toLocalPath());
     }
+
+    /**
+     * @param DokuPath $path
+     * @return bool
+     */
+    public function isDirectory(Path $path): bool
+    {
+        return FileSystems::isDirectory($path->toLocalPath());
+    }
 }

@@ -117,4 +117,17 @@ class FileSystems
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }
     }
+
+    public static function isDirectory(Path $path): bool
+    {
+        $scheme = $path->getScheme();
+        switch ($scheme) {
+            case LocalFs::SCHEME:
+                return LocalFs::getOrCreate()->isDirectory($path);
+            case DokuFs::SCHEME:
+                return DokuFs::getOrCreate()->isDirectory($path);
+            default:
+                throw new ExceptionRuntime("File system ($scheme) unknown");
+        }
+    }
 }

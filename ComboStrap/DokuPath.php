@@ -126,6 +126,11 @@ class DokuPath extends PathAbs
             LogUtility::msg("A null path was given", LogUtility::LVL_MSG_WARNING);
         }
 
+        if ($path === LocalPath::RELATIVE_CURRENT) {
+            // There is no notion of relative point path in a wiki path
+            // and as a directory path ends with `:`
+            $path = self::PATH_SEPARATOR;
+        }
 
         /**
          * Scheme determination
@@ -148,7 +153,7 @@ class DokuPath extends PathAbs
             case DokuFs::SCHEME:
             default:
                 DokuPath::addRootSeparatorIfNotPresent($path);
-                $this->id = DokuPath::toDokuwikiId($path);
+                $this->id = DokuPath::toDokuwikiId($path, $drive);
 
         }
         $this->absolutePath = $path;
@@ -183,8 +188,6 @@ class DokuPath extends PathAbs
             if (\mb_substr($this->absolutePath, -1) == self::PATH_SEPARATOR) {
                 $isNamespacePath = true;
             }
-
-            global $ID;
 
             if (!$isNamespacePath) {
 
@@ -329,14 +332,20 @@ class DokuPath extends PathAbs
     }
 
     public
-    static function toDokuwikiId($absolutePath)
+    static function toDokuwikiId($absolutePath, $drive = null)
     {
         // Root ?
         if ($absolutePath == DokuPath::PATH_SEPARATOR) {
             return "";
         }
         if ($absolutePath[0] === DokuPath::PATH_SEPARATOR) {
-            return substr($absolutePath, 1);
+            $absolutePath = substr($absolutePath, 1);
+        }
+        if ($drive === self::PAGE_DRIVE) {
+            $pageFileExtension = ".txt";
+            if (substr($absolutePath, -strlen($pageFileExtension)) === $pageFileExtension) {
+                $absolutePath = substr($absolutePath, 0, strlen($absolutePath) - strlen($pageFileExtension));
+            }
         }
         return $absolutePath;
 
@@ -822,5 +831,24 @@ class DokuPath extends PathAbs
         // Directory have already separator at the end
         $path = $absolutePath . $name;
         return new DokuPath($path, $this->getDrive());
+    }
+
+    /**
+     * @return DokuPath[]
+     */
+    public function getChildren(): array
+    {
+        $localPath = $this->toLocalPath();
+        $children = $localPath->getChildren();
+        $childrenWiki = [];
+        foreach ($children as $child) {
+            try {
+                $childrenWiki[] = $child->toDokuPath();
+            } catch (ExceptionCompile $e) {
+                // Should not happen
+                LogUtility::error("Unable to get back the wiki path from the local path. Error: {$e->getMessage()}");
+            }
+        }
+        return $childrenWiki;
     }
 }

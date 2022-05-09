@@ -142,6 +142,9 @@ class LocalPath extends PathAbs
             try {
                 $relativePath = $this->relativize($drivePath);
                 $wikiPath = $relativePath->toString();
+                if ($wikiPath === self::RELATIVE_CURRENT) {
+                    $wikiPath = "";
+                }
                 if (FileSystems::isDirectory($this)) {
                     $wikiPath .= DokuPath::PATH_SEPARATOR;
                 }
@@ -278,7 +281,6 @@ class LocalPath extends PathAbs
         }
         return LocalPath::createFromPath($realPath);
     }
-
 
 
 }

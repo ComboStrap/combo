@@ -183,7 +183,7 @@ class DokuPath extends PathAbs
             case DokuFs::SCHEME:
             default:
                 DokuPath::addRootSeparatorIfNotPresent($this->path);
-                $this->id = DokuPath::toDokuwikiId($this->path, $drive);
+                $this->id = DokuPath::toDokuwikiId($this->path);
 
         }
 
@@ -278,16 +278,21 @@ class DokuPath extends PathAbs
     }
 
     public
-    static function toDokuwikiId($absolutePath, $drive = null)
+    static function toDokuwikiId($path)
     {
-        // Root ?
-        if ($absolutePath == DokuPath::PATH_SEPARATOR) {
-            return "";
+        /**
+         * Delete the first separator
+         */
+        if ($path[0] === DokuPath::PATH_SEPARATOR) {
+            $path = substr($path, 1);
         }
-        if ($absolutePath[0] === DokuPath::PATH_SEPARATOR) {
-            $absolutePath = substr($absolutePath, 1);
+        /**
+         * Delete the extra separator from namespace
+         */
+        if (substr($path, - 1) === DokuPath::PATH_SEPARATOR) {
+            $path = substr($path,0, strlen($path) -1);
         }
-        return $absolutePath;
+        return $path;
 
     }
 

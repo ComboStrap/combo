@@ -103,18 +103,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     }
 
     /**
-     * @param $namespacePath
+     * @param DokuPath $namespacePath
      * @return string the last part with a uppercase letter and where underscore became a space
      */
-    private static function toNamespaceName($namespacePath): string
+    private static function toNamespaceName(DokuPath $namespacePath): string
     {
-        $sepPosition = strrpos($namespacePath, DokuPath::PATH_SEPARATOR);
-        if ($sepPosition !== false) {
-            $namespaceName = ucfirst(trim(str_replace("_", " ", substr($namespacePath, $sepPosition + 1))));
-        } else {
-            $namespaceName = $namespacePath;
-        }
-        return $namespaceName;
+        return ucfirst(trim(str_replace("_", " ", $namespacePath->getLastNameWithoutExtension())));
     }
 
 
@@ -722,9 +716,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                              */
                             $namespaceId = $namespacePath->getDokuwikiId();
                             if (!blank($namespaceId)) {
-                                $pageExplorerTagAttributes->addOutputAttributeValue("data-".TagAttributes::WIKI_ID, $namespaceId);
+                                $pageExplorerTagAttributes->addOutputAttributeValue("data-" . TagAttributes::WIKI_ID, $namespaceId);
                             } else {
-                                $pageExplorerTagAttributes->addEmptyComponentAttributeValue("data-".TagAttributes::WIKI_ID);
+                                $pageExplorerTagAttributes->addEmptyComponentAttributeValue("data-" . TagAttributes::WIKI_ID);
                             }
 
 
@@ -865,6 +859,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 ->toHtmlEnterTag("button");
 
             // Button label
+
             $subHomePage = Page::getHomePageFromNamespace($containerPath->toString());
             if ($subHomePage->exists()) {
                 if ($namespaceInstructions !== null) {
@@ -878,7 +873,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     $html .= $subHomePage->getNameOrDefault();
                 }
             } else {
-                $namespaceName = self::toNamespaceName($containerPath->toString());
+                $namespaceName = self::toNamespaceName($containerPath);
                 $html .= $namespaceName;
             }
             // End button

@@ -289,8 +289,8 @@ class DokuPath extends PathAbs
         /**
          * Delete the extra separator from namespace
          */
-        if (substr($path, - 1) === DokuPath::PATH_SEPARATOR) {
-            $path = substr($path,0, strlen($path) -1);
+        if (substr($path, -1) === DokuPath::PATH_SEPARATOR) {
+            $path = substr($path, 0, strlen($path) - 1);
         }
         return $path;
 
@@ -371,6 +371,7 @@ class DokuPath extends PathAbs
     }
 
     /**
+     *
      * Wiki path system cannot make the difference between a txt file
      * and a directory natively because there is no extension.
      *
@@ -388,9 +389,9 @@ class DokuPath extends PathAbs
     {
         if (substr($namespacePath, -1) !== DokuPath::PATH_SEPARATOR) {
             return false;
-        } else {
-            return true;
         }
+        return true;
+
     }
 
     /**
@@ -662,11 +663,7 @@ class DokuPath extends PathAbs
         $filePath = $this->path;
         if ($this->scheme == DokuFs::SCHEME) {
 
-            $isNamespacePath = false;
-            if (\mb_substr($this->path, -1) == self::PATH_SEPARATOR) {
-                $isNamespacePath = true;
-            }
-
+            $isNamespacePath = self::isNamespacePath($this->path);
             if (!$isNamespacePath) {
 
                 switch ($this->drive) {

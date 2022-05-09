@@ -279,24 +279,6 @@ class LocalPath extends PathAbs
         return LocalPath::createFromPath($realPath);
     }
 
-    /**
-     * @return LocalPath[]
-     */
-    public function getChildren(): array
-    {
-        $children = scandir($this->path);
-        if ($children === false) {
-            return [];
-        }
-        $localChildren = [];
-        foreach ($children as $child) {
-            if (in_array($child, [self::RELATIVE_CURRENT, self::RELATIVE_PARENT])) {
-                continue;
-            }
-            $localChildren[] = LocalPath::createFromPath($this->path . $child);
-        }
-        return $localChildren;
-    }
 
 
 }

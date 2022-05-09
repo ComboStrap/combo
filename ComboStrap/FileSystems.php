@@ -130,4 +130,17 @@ class FileSystems
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }
     }
+
+    public static function getChildren(Path $path)
+    {
+        $scheme = $path->getScheme();
+        switch ($scheme) {
+            case LocalFs::SCHEME:
+                return LocalFs::getOrCreate()->getChildren($path);
+            case DokuFs::SCHEME:
+                return DokuFs::getOrCreate()->getChildren($path);
+            default:
+                throw new ExceptionRuntime("File system ($scheme) unknown");
+        }
+    }
 }

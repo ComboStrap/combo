@@ -108,4 +108,32 @@ class LocalFs implements FileSystem
         return is_dir($path->toAbsolutePath());
     }
 
+    /**
+     * @param LocalPath $path
+     * @return LocalPath[]
+     */
+    public function getChildren(Path $path): array
+    {
+
+        /**
+         * Same as {@link scandir()}, they output
+         * the current and parent relative directory (ie `.` and `..`)
+         */
+        $directoryHandle = opendir($path->toAbsolutePath());
+        if (!$directoryHandle) return [];
+        try {
+            $localChildren = [];
+            while (($fileName = readdir($directoryHandle)) !== false) {
+                if (in_array($fileName, [LocalPath::RELATIVE_CURRENT, LocalPath::RELATIVE_PARENT])) {
+                    continue;
+                }
+                $localChildren[] = $path->resolve($fileName);
+            }
+            return $localChildren;
+        } finally {
+            closedir($directoryHandle);
+        }
+
+    }
+
 }

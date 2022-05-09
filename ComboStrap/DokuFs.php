@@ -104,4 +104,25 @@ class DokuFs implements FileSystem
     {
         return FileSystems::isDirectory($path->toLocalPath());
     }
+
+    /**
+     * @param DokuPath $path
+     * @return DokuPath[]
+     */
+    public function getChildren(Path $path): array
+    {
+
+        $children = FileSystems::getChildren($path->toLocalPath());
+        $childrenWiki = [];
+        foreach ($children as $child) {
+            try {
+                $childrenWiki[] = $child->toDokuPath();
+            } catch (ExceptionCompile $e) {
+                // Should not happen
+                LogUtility::error("Unable to get back the wiki path from the local path. Error: {$e->getMessage()}");
+            }
+        }
+        return $childrenWiki;
+
+    }
 }

@@ -160,7 +160,7 @@ class Page extends ResourceComboAbs
      */
     private $instructionsDocument;
 
-    private $dokuPath;
+    private $path;
     /**
      * @var PageDescription $description
      */
@@ -188,13 +188,13 @@ class Page extends ResourceComboAbs
 
     /**
      * Page constructor.
-     * @param $absolutePath - the qualified path (may be not relative)
+     * @param Path $path - the qualified path (may be not relative)
      *
      */
-    public function __construct($absolutePath)
+    public function __construct(Path $path)
     {
 
-        $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath);
+        $this->path = $path;
 
         if ($this->isSecondarySlot()) {
 
@@ -210,10 +210,10 @@ class Page extends ResourceComboAbs
              * with the {@link \action_plugin_combo_pageprotection}
              */
             $useAcl = false;
-            $id = page_findnearest($this->dokuPath->getLastNameWithoutExtension(), $useAcl);
-            if ($id !== false && $id !== $this->dokuPath->getDokuwikiId()) {
-                $absolutePath = DokuPath::PATH_SEPARATOR . $id;
-                $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath);
+            $id = page_findnearest($this->path->getLastNameWithoutExtension(), $useAcl);
+            if ($id !== false && $id !== $this->path->getDokuwikiId()) {
+                $path = DokuPath::PATH_SEPARATOR . $id;
+                $this->path = DokuPath::createPagePathFromPath($path);
             }
 
         }
@@ -236,8 +236,8 @@ class Page extends ResourceComboAbs
 
     public static function createPageFromId($id): Page
     {
-        DokuPath::addRootSeparatorIfNotPresent($id);
-        return new Page($id);
+        $path = DokuPath::createPagePathFromId($id);
+        return new Page($path);
     }
 
     public static function createPageFromNonQualifiedPath($pathOrId): Page
@@ -275,8 +275,14 @@ class Page extends ResourceComboAbs
         return Page::createPageFromId($pageId);
     }
 
+    public static function createPageFromPathObject(Path $path): Page
+    {
+        return new Page($path);
+    }
+
 
     /**
+     *
      * @throws ExceptionBadSyntax - if this is not a
      */
     public static function getHomePageFromNamespace(string $namespacePath): Page
@@ -304,8 +310,8 @@ class Page extends ResourceComboAbs
 
     static function createPageFromQualifiedPath($qualifiedPath): Page
     {
-        DokuPath::addRootSeparatorIfNotPresent($qualifiedPath);
-        return new Page($qualifiedPath);
+        $path = DokuPath::createPagePathFromPath($qualifiedPath);
+        return new Page($path);
     }
 
 
@@ -888,7 +894,7 @@ class Page extends ResourceComboAbs
         if ($this->getPath()->getLastName() == $startPageName) {
             return true;
         } else {
-            $namespace = $this->dokuPath->getParent();
+            $namespace = $this->path->getParent();
             if ($namespace->getLastName() === $this->getPath()->getLastName()) {
                 /**
                  * page named like the NS inside the NS
@@ -1028,7 +1034,7 @@ class Page extends ResourceComboAbs
     function getNamespacePath(): string
     {
 
-        return $this->dokuPath->getParent()->toString();
+        return $this->path->getParent()->toString();
 
     }
 
@@ -1141,7 +1147,7 @@ class Page extends ResourceComboAbs
     public
     function __toString()
     {
-        return $this->dokuPath->toUriString();
+        return $this->path->toUriString();
     }
 
 
@@ -1965,7 +1971,7 @@ class Page extends ResourceComboAbs
     public
     function getPath(): Path
     {
-        return $this->dokuPath;
+        return $this->path;
     }
 
 
@@ -1973,7 +1979,7 @@ class Page extends ResourceComboAbs
      * A shortcut for {@link Page::getPath()::getDokuwikiId()}
      */
     public
-    function getDokuwikiId()
+    function getDokuwikiId(): string
     {
         return $this->getPath()->getDokuwikiId();
     }

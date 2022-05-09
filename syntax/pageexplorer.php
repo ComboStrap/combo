@@ -741,16 +741,16 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= $pageExplorerTagAttributes->toHtmlEnterTag("nav") . DOKU_LF;
                             $renderer->doc .= "<ul>" . DOKU_LF;
 
-                            TreeNode::createFromWikiPath($namespacePath);
+                            $tree = TreeNode::createFromWikiPath($namespacePath->getDokuwikiId());
 
                             try {
-                                self::treeProcessSubNamespace($renderer->doc, $namespacePath, $data);
+                                self::treeProcessSubNamespace($renderer->doc, $tree, $data);
                             } catch (ExceptionBadSyntax $e) {
                                 $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the tree sub-namespace. Error: {$e->getMessage()}");
                             }
 
-                            $renderer->doc .= "</ul>" . DOKU_LF;
-                            $renderer->doc .= "</nav>" . DOKU_LF;
+                            $renderer->doc .= "</ul>";
+                            $renderer->doc .= "</nav>";
                             break;
 
                     }
@@ -768,12 +768,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     /**
      * Process the
      * @param string $html - the callstack
-     * @param DokuPath $nameSpacePath
-     * @param array $data
+     * @param TreeNode $treeNode
+     * @param array $data - the data array from the handler
      * @throws ExceptionBadSyntax
      */
     public
-    function treeProcessSubNamespace(string &$html, DokuPath $nameSpacePath, array $data)
+    function treeProcessSubNamespace(string &$html, TreeNode $treeNode, array $data)
     {
 
         /**
@@ -782,33 +782,33 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
          */
         $homePage = null;
         /**
-         * @var Path[] $childrenDirectory
+         * @var TreeNode[] $containerTreeNodes
          */
-        $childrenDirectory = [];
+        $containerTreeNodes = [];
         /**
          * @var Page[] $nonHomePages
          */
         $nonHomePages = [];
 
         /**
-         * Scanning the directory to
-         * categorize the children as home, page or namespace
+         * Scanning the tree node to
+         * categorize the children as home, page or namespace (container)
          */
-        $children = FileSystems::getChildren($nameSpacePath);
+        $children = $treeNode->getChildren();
         foreach ($children as $child) {
 
             /**
              * Namespace
              */
-            if (FileSystems::isDirectory($child)) {
+            if ($child->hasChildren()) {
 
-                $childrenDirectory[] = $child;
+                $containerTreeNodes[] = $child;
 
             } else {
                 /**
                  * Page
                  */
-                $page = Page::createPageFromPathObject($child);
+                $page = Page::createPageFromPathObject($child->getContent());
                 if ($page->isIndexPage()) {
                     $homePage = $page;
                 } else {
@@ -830,7 +830,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
          * The subdirectories
          */
         $namespaceInstructions = $data[self::NAMESPACE_INSTRUCTIONS];
-        foreach ($childrenDirectory as $childDirectory) {
+        foreach ($containerTreeNodes as $containerTreeNode) {
+
+            $containerPath = $containerTreeNode->getContent();
 
             /**
              * Entering: Creating in instructions form
@@ -852,10 +854,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
             // button
             $this->namespaceCounter++;
-            $id = Html::toHtmlId("page-explorer-{$childDirectory->getDokuwikiId()}-{$this->namespaceCounter}-combo");
+            $id = Html::toHtmlId("page-explorer-{$containerPath->getDokuwikiId()}-{$this->namespaceCounter}-combo");
             $html .= TagAttributes::createEmpty()
                 ->addOutputAttributeValue("data-bs-target", "#$id")
-                ->addOutputAttributeValue("data-" . TagAttributes::WIKI_ID, $childDirectory->getDokuwikiId())
+                ->addOutputAttributeValue("data-" . TagAttributes::WIKI_ID, $containerPath->getDokuwikiId())
                 ->addOutputAttributeValue("data-bs-toggle", "collapse")
                 ->addOutputAttributeValue("aria-expanded", "false")
                 ->addClassName("btn")
@@ -864,7 +866,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 ->toHtmlEnterTag("button");
 
             // Button label
-            $subHomePage = Page::getHomePageFromNamespace($childDirectory->toString());
+            $subHomePage = Page::getHomePageFromNamespace($containerPath->toString());
             if ($subHomePage->exists()) {
                 if ($namespaceInstructions !== null) {
                     $namespaceInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($namespaceInstructions, $subHomePage);
@@ -877,7 +879,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     $html .= $subHomePage->getNameOrDefault();
                 }
             } else {
-                $namespaceName = self::toNamespaceName($childDirectory->toString());
+                $namespaceName = self::toNamespaceName($containerPath->toString());
                 $html .= $namespaceName;
             }
             // End button
@@ -891,7 +893,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 ->addOutputAttributeValue(TagAttributes::ID_KEY, "$id")
                 ->toHtmlEnterTag("div");
             $html .= "<ul>";
-            self::treeProcessSubNamespace($html, $childDirectory, $data);
+            self::treeProcessSubNamespace($html, $containerTreeNode, $data);
             $html .= "</ul>";
             $html .= "</div>";
 
@@ -919,7 +921,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     /**
      * @param string $html
      * @param Page $page
-     * @param array $data
+     * @param array $data - the data array from the handler
      * @param string $type
      */
     private static function treeProcessLeaf(string &$html, Page $page, array $data, string $type)

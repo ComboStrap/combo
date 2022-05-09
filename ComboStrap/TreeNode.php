@@ -84,12 +84,13 @@ class TreeNode
     private
     static function buildTreeFromWikiFileSystemRecursively(TreeNode $treeNode)
     {
-        $nodePath = $treeNode->getContent();
-        foreach (FileSystems::getChildren($nodePath) as $childPath) {
+        $wikiPath = $treeNode->getContent();
+        $wikiPathChildren = FileSystems::getChildren($wikiPath);
+        foreach ($wikiPathChildren as $wikiPathChild) {
             $childNode = $treeNode
-                ->appendNode($childPath->getLastName())
-                ->setContent($childPath);
-            if (FileSystems::isDirectory($childPath)) {
+                ->appendNode($wikiPathChild->getLastName())
+                ->setContent($wikiPathChild);
+            if (FileSystems::isDirectory($wikiPathChild)) {
                 self::buildTreeFromWikiFileSystemRecursively($childNode);
             }
         }
@@ -109,7 +110,7 @@ class TreeNode
     }
 
     /**
-     * @return array - empty array for a leaf
+     * @return TreeNode[] - empty array for a leaf
      */
     public
     function getChildren(): array
@@ -136,7 +137,7 @@ class TreeNode
     /**
      * @return mixed
      */
-    private function getContent()
+    public function getContent()
     {
         return $this->content;
     }

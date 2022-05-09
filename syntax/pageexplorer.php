@@ -722,9 +722,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                              */
                             $namespaceId = $namespacePath->getDokuwikiId();
                             if (!blank($namespaceId)) {
-                                $pageExplorerTagAttributes->addOutputAttributeValue("data-wiki-id", $namespaceId);
+                                $pageExplorerTagAttributes->addOutputAttributeValue("data-".TagAttributes::WIKI_ID, $namespaceId);
                             } else {
-                                $pageExplorerTagAttributes->addEmptyComponentAttributeValue("data-wiki-id");
+                                $pageExplorerTagAttributes->addEmptyComponentAttributeValue("data-".TagAttributes::WIKI_ID);
                             }
 
 
@@ -741,10 +741,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= $pageExplorerTagAttributes->toHtmlEnterTag("nav") . DOKU_LF;
                             $renderer->doc .= "<ul>" . DOKU_LF;
 
-                            $tree = TreeNode::createFromWikiPath($namespacePath->getDokuwikiId());
-
                             try {
-                                self::treeProcessSubNamespace($renderer->doc, $tree, $data);
+                                $tree = TreeNode::createFromWikiPath($namespacePath->getDokuwikiId());
+                                self::treeProcessTree($renderer->doc, $tree, $data);
                             } catch (ExceptionBadSyntax $e) {
                                 $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the tree sub-namespace. Error: {$e->getMessage()}");
                             }
@@ -773,7 +772,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @throws ExceptionBadSyntax
      */
     public
-    function treeProcessSubNamespace(string &$html, TreeNode $treeNode, array $data)
+    function treeProcessTree(string &$html, TreeNode $treeNode, array $data)
     {
 
         /**
@@ -893,7 +892,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 ->addOutputAttributeValue(TagAttributes::ID_KEY, "$id")
                 ->toHtmlEnterTag("div");
             $html .= "<ul>";
-            self::treeProcessSubNamespace($html, $containerTreeNode, $data);
+            self::treeProcessTree($html, $containerTreeNode, $data);
             $html .= "</ul>";
             $html .= "</div>";
 

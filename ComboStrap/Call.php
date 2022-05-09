@@ -788,7 +788,7 @@ class Call
      * @return Call
      */
     public
-    function render(Page $page)
+    function render(Page $page): Call
     {
         return $this->renderFromData(TemplateUtility::getMetadataDataFromPage($page));
     }

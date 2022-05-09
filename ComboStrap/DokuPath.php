@@ -330,10 +330,6 @@ class DokuPath extends PathAbs
         return preg_replace('/[\\\\\/]/', ":", $relativePath);
     }
 
-    public static function toFileSystemSeparator($dokuPath)
-    {
-        return str_replace(":", self::DIRECTORY_SEPARATOR, $dokuPath);
-    }
 
     /**
      * @param $path - a manual path value
@@ -360,6 +356,9 @@ class DokuPath extends PathAbs
         return new DokuPath($path, $drive, $rev);
     }
 
+    /**
+     * @return LocalPath[]
+     */
     public static function getDriveRoots(): array
     {
         return [
@@ -655,12 +654,13 @@ class DokuPath extends PathAbs
         return implode(" ", $wordsUc);
     }
 
+
     public function toLocalPath(): LocalPath
     {
         /**
          * File path
          */
-        $filePath = $this->path;
+        $filePathString = $this->path;
         if ($this->scheme == DokuFs::SCHEME) {
 
             $isNamespacePath = self::isNamespacePath($this->path);
@@ -670,9 +670,9 @@ class DokuPath extends PathAbs
 
                     case self::MEDIA_DRIVE:
                         if (!empty($rev)) {
-                            $filePath = mediaFN($this->id, $rev);
+                            $filePathString = mediaFN($this->id, $rev);
                         } else {
-                            $filePath = mediaFN($this->id);
+                            $filePathString = mediaFN($this->id);
                         }
                         break;
                     case self::PAGE_DRIVE:
@@ -681,9 +681,9 @@ class DokuPath extends PathAbs
                          *   and returns the directory path in place if the txt file does not exist
                          */
                         if (!empty($rev)) {
-                            $filePath = wikiFN($this->id, $rev);
+                            $filePathString = wikiFN($this->id, $rev);
                         } else {
-                            $filePath = wikiFN($this->id);
+                            $filePathString = wikiFN($this->id);
                         }
                         break;
                     default:
@@ -693,8 +693,11 @@ class DokuPath extends PathAbs
                             // this is metadata
                             LogUtility::msg("The drive ($this->drive) is unknown, the local file system path could not be found");
                         } else {
-                            $relativeFsPath = DokuPath::toFileSystemSeparator($this->id);
-                            $filePath = $baseDirectory->resolve($relativeFsPath)->toString();
+                            $filePath = $baseDirectory;
+                            foreach ($this->getNames() as $name) {
+                                $filePath = $filePath->resolve($name);
+                            }
+                            $filePathString = $filePath->toString();
                         }
                         break;
                 }
@@ -705,25 +708,24 @@ class DokuPath extends PathAbs
                  * We qualify for the namespace here
                  * because there is no link or media for a namespace
                  */
-                // Why ? $this->id = resolve_id(getNS($ID), $this->id, true);
                 global $conf;
                 switch ($this->drive) {
                     case self::MEDIA_DRIVE:
-                        $filePath = $conf['mediadir'];
+                        $filePathString = $conf['mediadir'];
                         break;
                     case self::PAGE_DRIVE:
-                        $filePath = $conf['datadir'];
+                        $filePathString = $conf['datadir'];
                         break;
                     default:
-                        $filePath = DokuPath::getDriveRoots()[$this->drive];
+                        $filePathString = DokuPath::getDriveRoots()[$this->drive];
                         break;
                 }
                 $filePathSeparator = self::SEPARATOR_SLASH; // don't know why it's not OS specific
-                $filePath .= $filePathSeparator . utf8_encodeFN(str_replace(DokuPath::PATH_SEPARATOR, $filePathSeparator, $this->id));
+                $filePathString .= $filePathSeparator . utf8_encodeFN(str_replace(DokuPath::PATH_SEPARATOR, $filePathSeparator, $this->id));
             }
         }
 
-        return LocalPath::createFromPath($filePath);
+        return LocalPath::createFromPath($filePathString);
     }
 
     /**

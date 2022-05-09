@@ -72,10 +72,10 @@ class TreeNode
 
 
     public
-    static function createFromWikiPath(string $id = ":"): TreeNode
+    static function createFromWikiPath(string $wikiPath = ":"): TreeNode
     {
-        $rootSpace = DokuPath::createPagePathFromId($id);
-        $root = TreeNode::createTreeRoot($id)
+        $rootSpace = DokuPath::createPagePathFromId($wikiPath);
+        $root = TreeNode::createTreeRoot($wikiPath)
             ->setContent($rootSpace);
         self::buildTreeFromWikiFileSystemRecursively($root);
         return $root;

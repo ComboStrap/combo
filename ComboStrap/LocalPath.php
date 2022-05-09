@@ -11,15 +11,6 @@ namespace ComboStrap;
 class LocalPath extends PathAbs
 {
 
-    /**
-     * For whatever reason, it seems that php uses always the / separator on windows also
-     * but not always (ie  https://www.php.net/manual/en/function.realpath.php output \ on windows)
-     *
-     * Because we want to be able to copy the path and to be able to use
-     * it directly, we {@link LocalPath::normalizedToOs() normalize} it to the OS separator
-     * at build time
-     */
-    public const PHP_SYSTEM_DIRECTORY_SEPARATOR = DIRECTORY_SEPARATOR;
 
     /**
      * The characters that cannot be in the path for windows
@@ -29,16 +20,30 @@ class LocalPath extends PathAbs
 
     const RELATIVE_CURRENT = ".";
     const RELATIVE_PARENT = "..";
+    const LINUX_SEPARATOR = "/";
+    const WINDOWS_SEPARATOR = '\\';
 
     private $path;
+    /**
+     * @var mixed
+     */
+    private $sep = DIRECTORY_SEPARATOR;
 
     /**
      * LocalPath constructor.
      * @param $path - relative or absolute
+     * @param null $sep - the directory separator - it permits to test to test linux path on windows, and vice-versa
      */
-    public function __construct($path)
+    public function __construct($path, $sep = null)
     {
-        $this->path = $path;
+        if ($sep != null) {
+            $this->sep = $sep;
+        }
+        $this->path = self::normalizeToOsSeparator($path);
+        if(is_link($this->path)){
+            $this->path = readlink($this->path);
+            $this->path = self::normalizeToOsSeparator($this->path);
+        }
     }
 
 
@@ -52,9 +57,31 @@ class LocalPath extends PathAbs
         return new LocalPath($filePath);
     }
 
-    public static function createFromPath(string $string): LocalPath
+    /**
+     * @param $path
+     * @return array|string|string[]
+     *
+     * For whatever reason, it seems that php/dokuwiki uses always the / separator on windows also
+     * but not always (ie  https://www.php.net/manual/en/function.realpath.php output \ on windows)
+     *
+     * Because we want to be able to copy the path value and to be able to use
+     * it directly, we normalize it to the OS separator at build time
+     */
+    private function normalizeToOsSeparator($path)
     {
-        return new LocalPath($string);
+
+        $directorySeparator = $this->getDirectorySeparator();
+        if ($directorySeparator === self::WINDOWS_SEPARATOR) {
+            return str_replace(self::LINUX_SEPARATOR, self::WINDOWS_SEPARATOR, $path);
+        } else {
+            return str_replace(self::WINDOWS_SEPARATOR, self::LINUX_SEPARATOR, $path);
+        }
+    }
+
+
+    public static function createFromPath(string $string, string $sep = null): LocalPath
+    {
+        return new LocalPath($string, $sep);
     }
 
     function getScheme(): string
@@ -115,22 +142,6 @@ class LocalPath extends PathAbs
 
     }
 
-    /**
-     * @return string
-     */
-    private function getDirectorySeparator(): string
-    {
-        $directorySeparator = self::PHP_SYSTEM_DIRECTORY_SEPARATOR;
-        if (
-            $directorySeparator === '\\'
-            &&
-            strpos($this->path, "/") !== false
-        ) {
-            $directorySeparator = "/";
-        }
-        return $directorySeparator;
-    }
-
 
     /**
      * @throws ExceptionCompile
@@ -153,7 +164,7 @@ class LocalPath extends PathAbs
                 // not a relative path
             }
         }
-        throw new ExceptionCompile("The local path ($this) is not inside a doku path drive");
+        throw new ExceptionCompile("The local path ($this) is not inside a wiki path drive");
 
 
     }
@@ -161,7 +172,7 @@ class LocalPath extends PathAbs
     public function resolve(string $name): LocalPath
     {
 
-        $newPath = $this->toCanonicalPath()->toString() . self::PHP_SYSTEM_DIRECTORY_SEPARATOR . $name;
+        $newPath = $this->toCanonicalPath()->toString() . $this->getDirectorySeparator() . $name;
         return self::createFromPath($newPath);
 
     }
@@ -182,7 +193,7 @@ class LocalPath extends PathAbs
         }
         $sepCharacter = 1; // delete the sep characters
         $relativePath = substr($actualPath->toString(), strlen($localPath->toString()) + $sepCharacter);
-        $relativePath = str_replace(self::PHP_SYSTEM_DIRECTORY_SEPARATOR, DokuPath::PATH_SEPARATOR, $relativePath);
+        $relativePath = str_replace($this->getDirectorySeparator(), DokuPath::PATH_SEPARATOR, $relativePath);
         return LocalPath::createFromPath($relativePath);
 
     }
@@ -191,11 +202,9 @@ class LocalPath extends PathAbs
     {
         /**
          * /
-         * \
-         * or a:/
-         * or z:\
+         * or a-z:\
          */
-        if (preg_match("/^\/|[a-z]:[\\\\\/]|\\\\/i", $this->path)) {
+        if (preg_match("/^(\/|[a-z]:\\\\?).*/i", $this->path)) {
             return true;
         }
         return false;
@@ -274,12 +283,17 @@ class LocalPath extends PathAbs
         }
         if ($parts !== null) {
             if (!$isRoot) {
-                $realPath .= self::PHP_SYSTEM_DIRECTORY_SEPARATOR;
+                $realPath .= $this->getDirectorySeparator();
             }
             $parts = array_reverse($parts);
-            $realPath .= implode(self::PHP_SYSTEM_DIRECTORY_SEPARATOR, $parts);
+            $realPath .= implode($this->getDirectorySeparator(), $parts);
         }
         return LocalPath::createFromPath($realPath);
+    }
+
+    public function getDirectorySeparator()
+    {
+        return $this->sep;
     }
 
 

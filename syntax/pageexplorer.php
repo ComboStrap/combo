@@ -736,7 +736,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "<ul>" . DOKU_LF;
 
                             try {
-                                $tree = TreeNode::createFromWikiPath($namespacePath->getDokuwikiId());
+                                $wikiPath = $namespacePath->getPath();
+                                $tree = TreeNode::createFromWikiPath($wikiPath);
                                 self::treeProcessTree($renderer->doc, $tree, $data);
                             } catch (ExceptionBadSyntax $e) {
                                 $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the tree sub-namespace. Error: {$e->getMessage()}");

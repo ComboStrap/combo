@@ -474,7 +474,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $homeInstructions = $data[self::HOME_INSTRUCTIONS];
                             $parentAttributes = $data[self::HOME_ATTRIBUTES];
                             try {
-                                $currentHomePage = Page::getHomePageFromNamespace($namespacePath->toString());
+                                $currentHomePage = Page::getIndexPageFromNamespace($namespacePath->toString());
                             } catch (ExceptionBadSyntax $e) {
                                 $renderer->doc .= LogUtility::wrapInRedForHtml("Error while getting the home page for the namespace. Error: {$e->getMessage()}");
                                 return false;
@@ -483,16 +483,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                                 if ($currentHomePage->exists()) {
 
-                                    try {
-                                        $homeAttributes = TagAttributes::createFromCallStackArray($data[self::HOME_ATTRIBUTES]);
-                                    } catch (ExceptionCompile $e) {
-                                        $message = "Error on home rendering. Error: {$e->getMessage()}";
-                                        if (PluginUtility::isDevOrTest()) {
-                                            throw new ExceptionRuntime($message, self::CANONICAL, 0, $e);
-                                        }
-                                        $renderer->doc .= $message;
-                                        return false;
-                                    }
+
+                                    $homeAttributes = TagAttributes::createFromCallStackArray($data[self::HOME_ATTRIBUTES]);
+
 
                                     /**
                                      * Enter home tag
@@ -579,42 +572,35 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Children (Namespaces/Pages)
                              */
-                            try {
-                                $namespaceEnterTag = TagAttributes::createFromCallStackArray($data[self::NAMESPACE_ATTRIBUTES])
-                                    ->addClassName($classItem)
-                                    ->setLogicalTag(self::CANONICAL . "-{$type}-namespace")
-                                    ->toHtmlEnterTag("li");
-                                $pageEnterTag = TagAttributes::createFromCallStackArray($data[self::PAGE_ATTRIBUTES])
-                                    ->addClassName($classItem)
-                                    ->setLogicalTag(self::CANONICAL . "-{$type}-page")
-                                    ->toHtmlEnterTag("li");
-                            } catch (ExceptionCompile $e) {
-                                $renderer->doc .= LogUtility::wrapInRedForHtml("Error while creating the li for namespace and page. Error: {$e->getMessage()}");
-                                return false;
-                            }
+
+                            $namespaceEnterTag = TagAttributes::createFromCallStackArray($data[self::NAMESPACE_ATTRIBUTES])
+                                ->addClassName($classItem)
+                                ->setLogicalTag(self::CANONICAL . "-{$type}-namespace")
+                                ->toHtmlEnterTag("li");
+                            $pageEnterTag = TagAttributes::createFromCallStackArray($data[self::PAGE_ATTRIBUTES])
+                                ->addClassName($classItem)
+                                ->setLogicalTag(self::CANONICAL . "-{$type}-page")
+                                ->toHtmlEnterTag("li");
+
 
                             $pageInstructions = $data[self::PAGE_INSTRUCTIONS];
                             $pageAttributes = $data[self::PAGE_ATTRIBUTES];
                             $namespaceInstructions = $data[self::NAMESPACE_INSTRUCTIONS];
                             $namespaceAttributes = $data[self::NAMESPACE_ATTRIBUTES];
-                            try {
-                                $pageOrNamespaces = FsWikiUtility::getChildren($namespacePath->toString());
-                            } catch (ExceptionBadSyntax $e) {
-                                LogUtility::msg("Bad syntax for the namespace $namespacePath. We can't get the children. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                                return false;
-                            }
-                            $pageNum = 0;
-                            foreach ($pageOrNamespaces as $pageOrNamespace) {
 
-                                $pageOrNamespacePath = DokuPath::IdToAbsolutePath($pageOrNamespace['id']);
-                                if ($pageOrNamespace['type'] == "d") {
+                            $children = FileSystems::getChildren($namespacePath);
+
+                            $pageNum = 0;
+                            foreach ($children as $childWikiPath) {
+
+                                if (FileSystems::isDirectory($childWikiPath) ) {
 
                                     // Namespace
                                     if (!($namespaceInstructions === null && $namespaceAttributes !== null)) {
                                         try {
-                                            $subNamespacePage = Page::getHomePageFromNamespace("$pageOrNamespacePath:");
+                                            $subNamespacePage = Page::getIndexPageFromNamespace($namespacePath->getPath());
                                         } catch (ExceptionBadSyntax $e) {
-                                            LogUtility::msg("Bad syntax for the namespace $pageOrNamespacePath. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                                            LogUtility::msg("Bad syntax for the namespace $namespacePath. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                                             return false;
                                         }
                                         if ($subNamespacePage->exists()) {
@@ -658,10 +644,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                                     if (!($pageInstructions === null && $pageAttributes !== null)) {
                                         $pageNum++;
-                                        $page = Page::createPageFromQualifiedPath($pageOrNamespacePath);
                                         if ($currentHomePage !== null
-                                            && $page->getDokuwikiId() !== $currentHomePage->getDokuwikiId()
-                                            && FileSystems::exists($page->getPath())
+                                            && $childWikiPath->getDokuwikiId() !== $currentHomePage->getDokuwikiId()
+                                            && FileSystems::exists($childWikiPath)
                                         ) {
                                             /**
                                              * Page Enter tag
@@ -671,7 +656,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                              * Page Content
                                              */
                                             if ($namespaceInstructions !== null) {
-                                                $pageInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($pageInstructions, $page);
+                                                $pageInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($pageInstructions, $childWikiPath);
                                                 try {
                                                     $renderer->doc .= PluginUtility::renderInstructionsToXhtml($pageInstructionsInstance);
                                                 } catch (ExceptionCompile $e) {
@@ -679,10 +664,11 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                                 }
                                             } else {
                                                 try {
-                                                    $renderer->doc .= MarkupRef::createFromPageIdOrPath($page->getDokuwikiId())
+                                                    $renderer->doc .= MarkupRef::createFromPageIdOrPath($childWikiPath->getDokuwikiId())
                                                         ->toAttributes()
                                                         ->toHtmlEnterTag("a");
-                                                    $renderer->doc .= "{$page->getNameOrDefault()}</a>";
+                                                    $childPage = Page::createPageFromPathObject($childWikiPath);
+                                                    $renderer->doc .= "{$childPage->getNameOrDefault()}</a>";
                                                 } catch (ExceptionCompile $e) {
                                                     $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default page. Error: {$e->getMessage()}");
                                                 }
@@ -861,7 +847,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
             // Button label
 
-            $subHomePage = Page::getHomePageFromNamespace($containerPath->toString());
+            $subHomePage = Page::getIndexPageFromNamespace($containerPath->toString());
             if ($subHomePage->exists()) {
                 if ($namespaceInstructions !== null) {
                     $namespaceInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($namespaceInstructions, $subHomePage);
@@ -934,6 +920,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         }
         if (!FileSystems::exists($page->getPath())) {
             LogUtility::error("The given leaf page ($page) does not exist and was not added to the page-explorer tree", self::CANONICAL);
+            return;
+        }
+        if ($page->isHidden()) {
             return;
         }
 

@@ -285,7 +285,7 @@ class Page extends ResourceComboAbs
      *
      * @throws ExceptionBadSyntax - if this is not a
      */
-    public static function getHomePageFromNamespace(string $namespacePath): Page
+    public static function getIndexPageFromNamespace(string $namespacePath): Page
     {
         global $conf;
 
@@ -1482,7 +1482,7 @@ class Page extends ResourceComboAbs
          */
         $parentNamespaceId = implode(DokuPath::PATH_SEPARATOR, $parentNames).DokuPath::PATH_SEPARATOR;
         try {
-            return self::getHomePageFromNamespace($parentNamespaceId);
+            return self::getIndexPageFromNamespace($parentNamespaceId);
         } catch (ExceptionBadSyntax $e) {
             LogUtility::msg("Error on getParentPage, null returned - Error: {$e->getMessage()}");
             return null;

@@ -94,11 +94,11 @@ class FsWikiUtility
      * ie the index.html
      * @param $namespacePath - in dokuwiki format
      * @return string - the dokuwiki path
-     * @deprecated use {@link Page::getHomePageFromNamespace()} instead
+     * @deprecated use {@link Page::getIndexPageFromNamespace()} instead
      */
     public static function getHomePagePath($namespacePath): ?string
     {
-        $homePage = Page::getHomePageFromNamespace($namespacePath);
+        $homePage = Page::getIndexPageFromNamespace($namespacePath);
         if ($homePage->exists()) {
             return $homePage->getAbsolutePath();
         } else {
@@ -153,7 +153,7 @@ class FsWikiUtility
             } else {
                 $parentNamespacePath = substr($namespacePath, 0, $pos);
             }
-            return Page::getHomePageFromNamespace($parentNamespacePath);
+            return Page::getIndexPageFromNamespace($parentNamespacePath);
 
         } else {
             return null;

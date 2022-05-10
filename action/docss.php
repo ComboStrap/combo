@@ -37,6 +37,10 @@ class action_plugin_combo_docss extends DokuWiki_Action_Plugin
             case "media":
                 PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest("do-media");
                 break;
+            case "edit":
+            case "preview":
+                PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest("do-edit");
+                break;
             case "admin":
                 $defaultColor = "black";
                 $iconColor = Site::getPrimaryColor($defaultColor);

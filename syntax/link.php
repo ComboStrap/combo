@@ -101,7 +101,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     {
 
         // Strip the opening and closing markup
-        $linkString = preg_replace(array('/^\[\[/', '/\]\]$/u'), '', $match);
+        $linkString = preg_replace(array('/^\[\[/', '/]]$/u'), '', $match);
 
         // Split title from URL
         $linkArray = explode('|', $linkString, 2);
@@ -115,7 +115,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
             $attributes[self::ATTRIBUTE_LABEL] = null;
         } else {
             // An image in the title
-            if (preg_match('/^\{\{[^\}]+\}\}$/', $linkArray[1])) {
+            if (preg_match('/^{{[^}]+}}$/', $linkArray[1])) {
                 // If the title is an image, convert it to an array containing the image details
                 $attributes[self::ATTRIBUTE_IMAGE_IN_LABEL] = Doku_Handler_Parse_Media($linkArray[1]);
             } else {
@@ -413,6 +413,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         $hrefSource = $tagAttributes->getValueAndRemoveIfPresent(self::ATTRIBUTE_HREF_TYPE);
                         if ($hrefSource !== null) {
                             try {
+                                $href = \ComboStrap\TemplateUtility::renderFromContext($href);
                                 $markupRef = MarkupRef::createFromRef($href);
                                 $url = $markupRef->getUrl();
                                 $markupRefAttributes = $markupRef->toAttributes();

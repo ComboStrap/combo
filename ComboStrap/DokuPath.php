@@ -381,6 +381,8 @@ class DokuPath extends PathAbs
      * TODO: May be ? We may also just check if the txt file exists
      *   and if not if the directory exists
      *
+     * Also related {@link DokuPath::addNamespaceEndSeparatorIfNotPresent()}
+     *
      * @param string $namespacePath
      * @return bool
      */
@@ -403,6 +405,13 @@ class DokuPath extends PathAbs
         }
     }
 
+    /**
+     * Add a end separator to the wiki path to pass the fact that this is a directory/namespace
+     * See {@link DokuPath::isNamespacePath()} for more info
+     *
+     * @param string $namespaceAttribute
+     * @return void
+     */
     public static function addNamespaceEndSeparatorIfNotPresent(string &$namespaceAttribute)
     {
         if (substr($namespaceAttribute, -1) !== DokuPath::PATH_SEPARATOR) {
@@ -549,6 +558,7 @@ class DokuPath extends PathAbs
      * The actual file will then not be found
      *
      * @return string|null
+     * @throws ExceptionNotFound
      */
     public
     function getRevision(): ?string
@@ -606,7 +616,7 @@ class DokuPath extends PathAbs
      * @return string
      */
     public
-    function toRelativeFileSystemPath()
+    function toRelativeFileSystemPath(): string
     {
         $relativeSystemPath = ".";
         if (!empty($this->getDokuwikiId())) {

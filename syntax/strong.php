@@ -24,12 +24,12 @@ class syntax_plugin_combo_strong extends DokuWiki_Syntax_Plugin
     const TAG = "strong";
     /**
      * Explanation
-     *   * `\n?` to take over the listblock
+     *   * `\n?` to take over the listblock {@link \dokuwiki\Parsing\ParserMode\Listblock}
      *
      *   * Only on one line
      *
      */
-    const ENTRY_PATTERN = "\n?[ \t]*\*\*(?=[^\n]*\*\*)(?!\n)";
+    const ENTRY_PATTERN = "[ \t]*\*\*(?=[^\n]*\*\*)(?!\n)";
     const EXIT_PATTERN = "\*\*";
 
     const CANONICAL = Boldness::CANONICAL;

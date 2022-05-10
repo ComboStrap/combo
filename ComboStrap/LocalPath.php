@@ -40,10 +40,6 @@ class LocalPath extends PathAbs
             $this->sep = $sep;
         }
         $this->path = self::normalizeToOsSeparator($path);
-        if(is_link($this->path)){
-            $this->path = readlink($this->path);
-            $this->path = self::normalizeToOsSeparator($this->path);
-        }
     }
 
 
@@ -150,19 +146,33 @@ class LocalPath extends PathAbs
     {
         $driveRoots = DokuPath::getDriveRoots();
         foreach ($driveRoots as $driveRoot => $drivePath) {
+
             try {
                 $relativePath = $this->relativize($drivePath);
-                $wikiPath = $relativePath->toString();
-                if ($wikiPath === self::RELATIVE_CURRENT) {
-                    $wikiPath = "";
-                }
-                if (FileSystems::isDirectory($this)) {
-                    $wikiPath .= DokuPath::PATH_SEPARATOR;
-                }
-                return DokuPath::createDokuPath($wikiPath, $driveRoot);
             } catch (ExceptionCompile $e) {
-                // not a relative path
+                /**
+                 * May be a symlink link
+                 */
+                if (!is_link($drivePath->toString())) {
+                    continue;
+                }
+                try {
+                    $realPath = readlink($drivePath->toString());
+                    $drivePath = LocalPath::createFromPath($realPath);
+                    $relativePath = $this->relativize($drivePath);
+                } catch (ExceptionCompile $e) {
+                    // not a relative path
+                    continue;
+                }
             }
+            $wikiPath = $relativePath->toString();
+            if ($wikiPath === self::RELATIVE_CURRENT) {
+                $wikiPath = "";
+            }
+            if (FileSystems::isDirectory($this)) {
+                DokuPath::addNamespaceEndSeparatorIfNotPresent($wikiPath);
+            }
+            return DokuPath::createDokuPath($wikiPath, $driveRoot);
         }
         throw new ExceptionCompile("The local path ($this) is not inside a wiki path drive");
 
@@ -186,6 +196,14 @@ class LocalPath extends PathAbs
         $localPath = $localPath->toCanonicalPath();
 
         if (!(strpos($actualPath->toString(), $localPath->toString()) === 0)) {
+            /**
+             * May be a symlink link
+             */
+            if (is_link($this->path)) {
+                $realPath = readlink($this->path);
+                return LocalPath::createFromPath($realPath)
+                    ->relativize($localPath);
+            }
             throw new ExceptionCompile("The path ($localPath) is not a parent path of the actual path ($actualPath)");
         }
         if ($actualPath->toString() === $localPath->toString()) {

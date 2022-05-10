@@ -54,7 +54,7 @@ class PipelineUtility
             $leftParenthesis = strpos($command, "(");
             $commandName = substr($command, 0, $leftParenthesis);
             $signature = substr($command, $leftParenthesis + 1);
-            $commandArgs = preg_split("/,/", $signature);
+            $commandArgs = preg_split("/\s*,\s*/", $signature);
             $commandArgs = array_map(
                 'trim',
                 $commandArgs,
@@ -132,6 +132,7 @@ class PipelineUtility
                 return $value . $string;
             default:
                 LogUtility::msg("The side value ($side) is unknown", LogUtility::LVL_MSG_ERROR, "pipeline");
+                return $value . $string;
         }
 
 

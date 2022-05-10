@@ -182,5 +182,17 @@ class TemplateUtility
         return substr($ref, 0, 1) === TemplateUtility::VARIABLE_PREFIX;
     }
 
+    /**
+     * Template rendering will be context based
+     * (first step to delete the template tag)
+     * @param string $string
+     * @return string
+     */
+    public static function renderFromContext(string $string): string
+    {
+        $metadata = Page::createPageFromRequestedPage()->getMetadataForRendering();
+        return TemplateUtility::renderStringTemplateFromDataArray($string, $metadata);
+    }
+
 
 }

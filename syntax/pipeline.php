@@ -11,6 +11,7 @@ require_once(__DIR__ . '/../ComboStrap/PipelineUtility.php');
  */
 class syntax_plugin_combo_pipeline extends DokuWiki_Syntax_Plugin
 {
+
     const TAG = "pipeline";
 
 

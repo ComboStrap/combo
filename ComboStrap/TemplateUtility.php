@@ -87,6 +87,8 @@ class TemplateUtility
      * @param Call[]|array $namespaceTemplateInstructions
      * @param string|Page $pageValue
      * @return array
+     *
+     * TODO: deprecate it
      */
     public static function generateInstructionsFromDataPage(array $namespaceTemplateInstructions, $pageValue): array
     {

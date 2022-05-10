@@ -13,6 +13,7 @@ class syntax_plugin_combo_pipeline extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "pipeline";
+    const CANONICAL = self::TAG;
 
 
     /**
@@ -88,6 +89,7 @@ class syntax_plugin_combo_pipeline extends DokuWiki_Syntax_Plugin
     {
         $script = PluginUtility::getTagContent($match);
         $string = PipelineUtility::execute($script);
+        \ComboStrap\LogUtility::warning("The pipeline component has been deprecated for the variable syntax", self::CANONICAL);
         return array(
             PluginUtility::STATE => $state,
             PluginUtility::PAYLOAD=> $string);

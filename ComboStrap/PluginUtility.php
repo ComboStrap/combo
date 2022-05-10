@@ -755,8 +755,6 @@ class PluginUtility
      * @param $label -  the text of the link
      * @param bool $withIcon - used to break the recursion with the message in the {@link Icon}
      * @return string - an url
-     * @throws ExceptionNotFound
-     * @throws ExceptionBadSyntax
      */
     public
     static function getDocumentationHyperLink($canonical, $label, bool $withIcon = true, $tooltip = ""): string
@@ -765,25 +763,25 @@ class PluginUtility
         $xhtmlIcon = "";
         if ($withIcon) {
 
-            /**
-             * We don't include it as an external resource via url
-             * because it then make a http request for every logo
-             * in the configuration page and makes it really slow
-             * TODO: when we have made a special fetch ajax with cache
-             * for application resource, we can serve it statically
-             */
-            $path = Site::getComboImagesDirectory()->resolve("logo.svg");
+            $logoPath = DokuPath::createComboResource("images:logo.svg");
             $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
             $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
             $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");
-            $cache = new CacheMedia($path, $tagAttributes);
-            if (!$cache->isCacheUsable()) {
-                $xhtmlIcon = SvgDocument::createSvgDocumentFromPath($path)
-                    ->setShouldBeOptimized(true)
-                    ->getXmlText($tagAttributes);
-                $cache->storeCache($xhtmlIcon);
+            try {
+                $xhtmlIcon = SvgImageLink::createMediaLinkFromPath($logoPath, $tagAttributes)
+                    ->renderMediaTag();
+            } catch (ExceptionCompile $e) {
+                /**
+                 * We don't throw because this function
+                 * is also used by:
+                 *   * the log functionality to show link to the documentation creating a loop
+                 *   * inside the configuration description crashing the page
+                 */
+                if(PluginUtility::isDevOrTest()){
+                    // shows errors in the html only on dev/test
+                    $xhtmlIcon = "Error: {$e->getMessage()}";
+                }
             }
-            $xhtmlIcon = FileSystems::getContent($cache->getFile());
 
         }
         $urlApex = self::$URL_APEX;

@@ -56,7 +56,6 @@ class SvgImageLink extends ImageLink
 
 
     /**
-     * @throws ExceptionCompile
      */
     private function createImgHTMLTag(): string
     {
@@ -194,7 +193,7 @@ class SvgImageLink extends ImageLink
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
      * A media can be a video also
      * @return string
-     * @throws ExceptionCompile
+     * @throws ExceptionNotFound
      */
     public function renderMediaTag(): string
     {
@@ -203,57 +202,49 @@ class SvgImageLink extends ImageLink
          * @var ImageSvg $image
          */
         $image = $this->getDefaultImage();
-        if ($image->exists()) {
+        if (!$image->exists()) {
+            throw new ExceptionNotFound("The image ($image) does not exist");
+        }
+
+        /**
+         * This attributes should not be in the render
+         */
+        $attributes = $this->getDefaultImage()->getAttributes();
+        $attributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
+        $attributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
+        /**
+         * TODO: Title should be a node just below SVG
+         */
+        $attributes->removeComponentAttributeIfPresent(PageTitle::PROPERTY_NAME);
+
+        $imageSize = FileSystems::getSize($image->getPath());
+        /**
+         * Svg Style conflict:
+         * when two svg are created and have a style node, they inject class
+         * that may conflict with others (ie cls-1 class, ...)
+         * The svg is then inserted via an img tag to scope it.
+         */
+        $preserveStyle = $attributes->getValue(SvgDocument::PRESERVE_ATTRIBUTE, false);
+        $asImgTag = $imageSize > $this->getMaxInlineSize() || $preserveStyle;
+        if ($asImgTag) {
 
             /**
-             * This attributes should not be in the render
+             * Img tag
              */
-            $attributes = $this->getDefaultImage()->getAttributes();
-            $attributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
-            $attributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
-            /**
-             * TODO: Title should be a node just below SVG
-             */
-            $attributes->removeComponentAttributeIfPresent(PageTitle::PROPERTY_NAME);
-
-            $imageSize = FileSystems::getSize($image->getPath());
-            /**
-             * Svg Style conflict:
-             * when two svg are created and have a style node, they inject class
-             * that may conflict with others (ie cls-1 class, ...)
-             * The svg is then inserted via an img tag to scope it.
-             */
-            $preserveStyle = $attributes->getValue(SvgDocument::PRESERVE_ATTRIBUTE, false);
-            $asImgTag = $imageSize > $this->getMaxInlineSize() || $preserveStyle;
-            if ($asImgTag) {
-
-                /**
-                 * Img tag
-                 */
-                $imgHTML = $this->createImgHTMLTag();
-
-            } else {
-
-                /**
-                 * Svg tag
-                 */
-                try {
-                    $imgHTML = FileSystems::getContent($image->getSvgFile());
-                } catch (ExceptionCompile $e) {
-                    $error = "Error while retrieving the content of the svg image ($image). Error: {$e->getMessage()}";
-                    LogUtility::msg($error);
-                    return "<span class=\"text-danger\">$error</span>";
-                }
-
-            }
-
+            $imgHTML = $this->createImgHTMLTag();
 
         } else {
 
-            $imgHTML = "<span class=\"text-danger\">The svg ($this) does not exist</span>";
+            /**
+             * Svg tag
+             */
+            $imgHTML = FileSystems::getContent($image->getSvgFile());
+
 
         }
+
         return $imgHTML;
+
     }
 
     private function getMaxInlineSize()

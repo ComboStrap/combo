@@ -73,7 +73,7 @@ class action_plugin_combo_outlinenumbering extends DokuWiki_Action_Plugin
                  */
                 $outlineClass = syntax_plugin_combo_heading::OUTLINE_HEADING_CLASS;
                 return <<<EOF
-$mainContainerSelector { counter-set: h2 h3 h4 h5 h6; }
+$mainContainerSelector { counter-set: h2 0 h3 0 h4 0 h5 0 h6 0; }
 $mainContainerSelector h2.$outlineClass::before { counter-increment: h2; counter-set: h3 0 h4 0 h5 0 h6 0; content: "$prefix" counter(h2, $level2CounterStyle) "$suffix\A"; }
 $mainContainerSelector h3.$outlineClass::before { counter-increment: h3; counter-set: h4 0 h5 0 h6 0; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$suffix\A"; }
 $mainContainerSelector h4.$outlineClass::before { counter-increment: h4; counter-set: h5 0 h6 0; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$suffix\A"; }

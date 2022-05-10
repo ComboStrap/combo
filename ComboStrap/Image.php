@@ -166,7 +166,7 @@ abstract class Image extends Media
      * for a svg, the defined viewBox
      *
      * @return int in pixel
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument - when the viewBox value for instance is not good
      */
     public abstract function getIntrinsicWidth(): int;
 
@@ -190,7 +190,7 @@ abstract class Image extends Media
      * It's needed for an img tag to set the img `width` and `height` that pass the
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument
      */
     public function getIntrinsicAspectRatio()
     {
@@ -235,7 +235,7 @@ abstract class Image extends Media
      * It's needed for an img tag to set the img `width` and `height` that pass the
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument
      */
     public function getRequestedAspectRatio()
     {
@@ -414,7 +414,7 @@ abstract class Image extends Media
      *   * with ''0x20'', the target image has a {@link Image::getTargetHeight() logical height} of 20 and a {@link Image::getTargetWidth() logical width} that is scaled down by the {@link Image::getIntrinsicAspectRatio() instrinsic ratio}
      *
      * The doc is {@link https://www.dokuwiki.org/images#resizing}
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument when the width height value are not valid value
      */
     public function getTargetWidth(): int
     {
@@ -440,7 +440,7 @@ abstract class Image extends Media
                     $ratio = $this->getIntrinsicAspectRatio();
                 }
                 return self::round($ratio * $height);
-            } catch (ExceptionCompile $e) {
+            } catch (ExceptionBadArgument $e) {
                 LogUtility::msg("The intrinsic width of the image ($this) was used because retrieving the ratio returns this error: {$e->getMessage()} ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 return $this->getIntrinsicWidth();
             }
@@ -466,7 +466,7 @@ abstract class Image extends Media
 
     /**
      * @return int|null
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument
      */
     public function getRequestedWidth(): ?int
     {
@@ -476,14 +476,14 @@ abstract class Image extends Media
         }
         try {
             return DataType::toInteger($value);
-        } catch (ExceptionCompile $e) {
-            throw new ExceptionCompile("The width value ($value) is not a valid integer", self::CANONICAL, $e);
+        } catch (ExceptionBadArgument $e) {
+            throw new ExceptionBadArgument("The width value ($value) is not a valid integer", self::CANONICAL, $e);
         }
     }
 
     /**
      * @return int|null
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument
      */
     public function getRequestedHeight(): ?int
     {
@@ -493,8 +493,8 @@ abstract class Image extends Media
         }
         try {
             return DataType::toInteger($value);
-        } catch (ExceptionCompile $e) {
-            throw new ExceptionCompile("The height value ($value) is not a valid integer", self::CANONICAL, $e);
+        } catch (ExceptionBadArgument $e) {
+            throw new ExceptionBadArgument("The height value ($value) is not a valid integer", self::CANONICAL, $e);
         }
     }
 

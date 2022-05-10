@@ -168,7 +168,7 @@ class LogUtility
      * @param string $canonical
      * @param bool $withIconURL
      */
-    public static function log2FrontEnd($message, $level, $canonical = "support", $withIconURL = true)
+    public static function log2FrontEnd($message, $level, $canonical = "support", bool $withIconURL = true)
     {
 
         try {
@@ -208,10 +208,11 @@ class LogUtility
                 $htmlMsg = "";
                 try {
                     if ($canonical !== null) {
-                        $htmlMsg = PluginUtility::getDocumentationHyperLink($canonical, ucfirst(str_replace(":", " ", $canonical)));
+                        $label = ucfirst(str_replace(":", " ", $canonical));
+                        $htmlMsg = PluginUtility::getDocumentationHyperLink($canonical, $label, false);
                     } else {
 
-                        $htmlMsg = PluginUtility::getDocumentationHyperLink("", PluginUtility::$PLUGIN_NAME, $withIconURL);
+                        $htmlMsg = PluginUtility::getDocumentationHyperLink("", PluginUtility::$PLUGIN_NAME, false);
                     }
                 } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
                     if (PluginUtility::isTest()) {

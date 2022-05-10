@@ -112,7 +112,6 @@ class XmlDocument
              *
              * https://www.php.net/manual/en/function.libxml-use-internal-errors.php
              *
-             * @noinspection PhpComposerExtensionStubsInspection
              */
             libxml_use_internal_errors(true);
 
@@ -146,7 +145,6 @@ class XmlDocument
                 /**
                  * Error
                  */
-                /** @noinspection PhpComposerExtensionStubsInspection */
                 $errors = libxml_get_errors();
 
                 foreach ($errors as $error) {
@@ -175,7 +173,6 @@ class XmlDocument
                          * We clean the errors, otherwise
                          * in a test series, they failed the next test
                          *
-                         * @noinspection PhpComposerExtensionStubsInspection
                          */
                         libxml_clear_errors();
 
@@ -190,7 +187,6 @@ class XmlDocument
 
             /**
              * We clean the known errors (otherwise they are added in a queue)
-             * @noinspection PhpComposerExtensionStubsInspection
              */
             libxml_clear_errors();
 
@@ -233,11 +229,12 @@ class XmlDocument
             $mime = XmlDocument::HTML_TYPE;
         }
         $content = FileSystems::getContent($path);
-        return new XmlDocument($content, $mime);
+        return (new XmlDocument($content, $mime));
     }
 
     /**
-     * @throws ExceptionCompile
+     *
+     * @throws ExceptionBadSyntax
      */
     public
     static function createXmlDocFromMarkup($string, $asHtml = false): XmlDocument
@@ -355,19 +352,28 @@ class XmlDocument
          * finds all nodes that have a namespace node called $ns where their parent node doesn't also have the same namespace.
          * @var DOMNodeList $nodes
          */
-        $nodes = $this->xpath("//*[namespace-uri()='$namespaceUri']");
-        foreach ($nodes as $node) {
-            /** @var DOMElement $node */
-            $node->parentNode->removeChild($node);
+        try {
+            $nodes = $this->xpath("//*[namespace-uri()='$namespaceUri']");
+            foreach ($nodes as $node) {
+                /** @var DOMElement $node */
+                $node->parentNode->removeChild($node);
+            }
+        } catch (ExceptionBadSyntax $e) {
+            LogUtility::error("Internal Error on xpath: {$e->getMessage()}");
         }
 
-        $nodes = $this->xpath("//@*[namespace-uri()='$namespaceUri']");
-        foreach ($nodes as $node) {
-            /** @var DOMAttr $node */
-            /** @var DOMElement $DOMNode */
-            $DOMNode = $node->parentNode;
-            $DOMNode->removeAttributeNode($node);
+        try {
+            $nodes = $this->xpath("//@*[namespace-uri()='$namespaceUri']");
+            foreach ($nodes as $node) {
+                /** @var DOMAttr $node */
+                /** @var DOMElement $DOMNode */
+                $DOMNode = $node->parentNode;
+                $DOMNode->removeAttributeNode($node);
+            }
+        } catch (ExceptionBadSyntax $e) {
+            LogUtility::error("Internal Error on xpath: {$e->getMessage()}");
         }
+
 
         //Node namespace can be select only from the document
         $xpath = new DOMXPath($this->getXmlDom());
@@ -384,7 +390,7 @@ class XmlDocument
     }
 
     public
-    function getDocNamespaces()
+    function getDocNamespaces(): array
     {
         $xpath = new DOMXPath($this->getXmlDom());
         // `namespace::*` means selects all the namespace attribute of the context node
@@ -411,14 +417,14 @@ class XmlDocument
      * See comment:
      * https://www.php.net/manual/en/domxpath.registernamespace.php#51480
      * @param $query
-     * @param string $defaultNamespace
-     * @return DOMNodeList|false
+     * @return DOMNodeList
      *
      * Note that this is possible to do evaluation to return a string instead
      * https://www.php.net/manual/en/domxpath.evaluate.php
+     * @throws ExceptionBadSyntax - if the query is invalid
      */
     public
-    function xpath($query)
+    function xpath($query): DOMNodeList
     {
         $xpath = new DOMXPath($this->getXmlDom());
 
@@ -440,7 +446,11 @@ class XmlDocument
             }
         }
 
-        return $xpath->query($query);
+        $domList = $xpath->query($query);
+        if ($domList === false) {
+            throw new ExceptionBadSyntax("The query expression ($query) may be malformed");
+        }
+        return $domList;
 
     }
 
@@ -610,7 +620,7 @@ class XmlDocument
         }
         $result = $nodeElement->removeAttributeNode($attr);
         if ($result === false) {
-            LogUtility::msg("Not able to delete the attribute $attributeName of the node element $nodeElement in the Xml document $this");
+            LogUtility::msg("Not able to delete the attribute $attributeName of the node element $nodeElement->tagName in the Xml document");
         }
     }
 
@@ -652,6 +662,7 @@ class XmlDocument
 
         return $elements;
     }
+
 
 
 }

@@ -206,8 +206,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $default = [
-                    TagAttributes::TYPE_KEY => self::LIST_TYPE,
-                    Toggle::TOGGLE_STATE => "collapsed expanded-md"
+                    TagAttributes::TYPE_KEY => self::LIST_TYPE
                 ];
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
 
@@ -328,19 +327,21 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  */
                 $callStack->deleteAllCallsAfter($openingTag);
 
+                /**
+                 * The container/block should have at minimum an enter tag
+                 * to be able to set the {@link action_plugin_combo_sideslotpostprocessing} auto collapsible
+                 * parameter
+                 */
+                $openingTag->setPluginData(self::NAMESPACE_INSTRUCTIONS, $namespaceInstructions);
+                $openingTag->setPluginData(self::NAMESPACE_ATTRIBUTES, $namespaceAttributes);
+                $openingTag->setPluginData(self::PAGE_INSTRUCTIONS, $templatePageInstructions);
+                $openingTag->setPluginData(self::PAGE_ATTRIBUTES, $pageAttributes);
+                $openingTag->setPluginData(self::HOME_INSTRUCTIONS, $templateHomeInstructions);
+                $openingTag->setPluginData(self::HOME_ATTRIBUTES, $homeAttributes);
+                $openingTag->setPluginData(self::PARENT_INSTRUCTIONS, $parentInstructions);
+                $openingTag->setPluginData(self::PARENT_ATTRIBUTES, $parentAttributes);
 
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes(),
-                    self::NAMESPACE_INSTRUCTIONS => $namespaceInstructions,
-                    self::NAMESPACE_ATTRIBUTES => $namespaceAttributes,
-                    self::PAGE_INSTRUCTIONS => $templatePageInstructions,
-                    self::PAGE_ATTRIBUTES => $pageAttributes,
-                    self::HOME_INSTRUCTIONS => $templateHomeInstructions,
-                    self::HOME_ATTRIBUTES => $homeAttributes,
-                    self::PARENT_INSTRUCTIONS => $parentInstructions,
-                    self::PARENT_ATTRIBUTES => $parentAttributes
-                );
+                return [PluginUtility::STATE => $state];
 
 
         }
@@ -363,12 +364,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
             switch ($state) {
-                case DOKU_LEXER_ENTER :
+                case DOKU_LEXER_EXIT :
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
-                case DOKU_LEXER_EXIT :
+                case DOKU_LEXER_ENTER :
 
                     $pageExplorerTagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::CANONICAL);
 
@@ -593,7 +594,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $pageNum = 0;
                             foreach ($children as $childWikiPath) {
 
-                                if (FileSystems::isDirectory($childWikiPath) ) {
+                                if (FileSystems::isDirectory($childWikiPath)) {
 
                                     // Namespace
                                     if (!($namespaceInstructions === null && $namespaceAttributes !== null)) {

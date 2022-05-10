@@ -349,6 +349,20 @@ class Page extends ResourceComboAbs
     }
 
     /**
+     * @return bool true if this is the side slot
+     */
+    public function isSideSlot(): bool
+    {
+        $slotNames = Site::getSidebarName();
+        $name = $this->getPath()->getLastNameWithoutExtension();
+        if ($name === null) {
+            // root case
+            return false;
+        }
+        return $name === $slotNames;
+    }
+
+    /**
      * @return bool true if this is the main
      */
     public function isMainHeaderFooterSlot(): bool
@@ -1480,7 +1494,7 @@ class Page extends ResourceComboAbs
         /**
          * Create the parent namespace id
          */
-        $parentNamespaceId = implode(DokuPath::PATH_SEPARATOR, $parentNames).DokuPath::PATH_SEPARATOR;
+        $parentNamespaceId = implode(DokuPath::PATH_SEPARATOR, $parentNames) . DokuPath::PATH_SEPARATOR;
         try {
             return self::getIndexPageFromNamespace($parentNamespaceId);
         } catch (ExceptionBadSyntax $e) {
@@ -2084,7 +2098,6 @@ class Page extends ResourceComboAbs
         }
         return Page::createPageFromId($nearest);
     }
-
 
 
 }

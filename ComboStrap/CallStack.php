@@ -593,7 +593,6 @@ class CallStack
     /**
      * @param Call $call
      * @return Call the inserted call
-     * @throws ExceptionBadArgument
      */
     public
     function insertBefore(Call $call): Call
@@ -608,7 +607,17 @@ class CallStack
             array_splice($this->callStack, $offset, 0, [$call->toCallArray()]);
             // array splice reset the pointer
             // we move it to the actual element (ie the key is offset +1)
-            $this->moveToOffset($offset + 1);
+            try {
+                $targetOffset = $offset + 1;
+                $this->moveToOffset($targetOffset);
+            } catch (ExceptionBadArgument $e) {
+                /**
+                 * We don't throw because we should be able to add before at any index
+                 */
+                if(PluginUtility::isDevOrTest()){
+                    LogUtility::error("Unable to move the callback pointer to the offset ($targetOffset)", self::CANONICAL);
+                }
+            }
 
         }
         return $call;

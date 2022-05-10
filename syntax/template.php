@@ -180,6 +180,13 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
+                $callStack = CallStack::createFromHandler($handler);
+                $parent = $callStack->moveToParent();
+                if($parent!==false){
+                    if($parent->getTagName()!==syntax_plugin_combo_iterator::TAG){
+                        LogUtility::warning("A template component is no more required to show variables.", self::CANONICAL);
+                    }
+                }
                 $attributes = PluginUtility::getTagAttributes($match);
                 return array(
                     PluginUtility::STATE => $state,

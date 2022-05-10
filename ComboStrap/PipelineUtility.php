@@ -122,7 +122,7 @@ class PipelineUtility
         return $headValue;
     }
 
-    private static function concat(array $commandArgs, $value, $side)
+    private static function concat(array $commandArgs, $value, $side): string
     {
         $string = $commandArgs[0];
         switch ($side) {

@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\LogUtility;
 use ComboStrap\PipelineUtility;
 use ComboStrap\PluginUtility;
 
@@ -85,11 +86,11 @@ class syntax_plugin_combo_pipeline extends DokuWiki_Syntax_Plugin
      * @param Doku_Handler $handler The Doku_Handler object
      * @return  array Return an array with all data you want to use in render
      */
-    public function handle($match, $state, $pos, Doku_Handler $handler)
+    public function handle($match, $state, $pos, Doku_Handler $handler): array
     {
         $script = PluginUtility::getTagContent($match);
         $string = PipelineUtility::execute($script);
-        \ComboStrap\LogUtility::warning("The pipeline component has been deprecated for the variable syntax", self::CANONICAL);
+        LogUtility::warning("The pipeline component has been deprecated for the variable syntax", self::CANONICAL);
         return array(
             PluginUtility::STATE => $state,
             PluginUtility::PAYLOAD=> $string);

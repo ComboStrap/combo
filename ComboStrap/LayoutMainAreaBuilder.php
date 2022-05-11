@@ -38,7 +38,7 @@ class LayoutMainAreaBuilder
          * We use ACT for this purpose.
          *
          * ACT only for show and preview
-         * - not {@link RenderUtility::DYNAMIC_RENDERING}
+         * - not {@link DynamicRender::DYNAMIC_RENDERING}
          * - not 'admin'
          *
          * - not all other undetermined actions (
@@ -95,7 +95,7 @@ class LayoutMainAreaBuilder
                 }
                 return true;
             default:
-            case RenderUtility::DYNAMIC_RENDERING:
+            case DynamicRender::DYNAMIC_RENDERING:
             case "edit":
             case "admin":
             case "backlink":

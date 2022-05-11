@@ -6,6 +6,7 @@ use ComboStrap\HtmlDocument;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
+use ComboStrap\DynamicRender;
 use ComboStrap\RenderUtility;
 use ComboStrap\SnippetManager;
 
@@ -187,7 +188,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * for instance, the upgrade plugin call {@link p_cached_output()} on local file
          */
         global $ACT;
-        if ($ACT === RenderUtility::DYNAMIC_RENDERING) {
+        if ($ACT === DynamicRender::DYNAMIC_RENDERING) {
             return;
         }
         // Admin page rendering

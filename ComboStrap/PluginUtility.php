@@ -102,6 +102,7 @@ require_once(__DIR__ . '/DisqusIdentifier.php');
 require_once(__DIR__ . '/Display.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/DokuwikiId.php');
+require_once(__DIR__ . '/DynamicRender.php');
 require_once(__DIR__ . '/SlotManagerMenuItem.php');
 require_once(__DIR__ . '/EditButtonManager.php');
 require_once(__DIR__ . '/EditButton.php');
@@ -1414,7 +1415,7 @@ class PluginUtility
             if (!PluginUtility::isTest()) {
                 LogUtility::msg("The slot could not be identified (global ID is null)");
             }
-            return RenderUtility::DEFAULT_SLOT_ID_FOR_TEST;
+            return DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
         }
         return $slot;
     }

@@ -266,7 +266,7 @@ class Page extends ResourceComboAbs
     {
         $pageId = PluginUtility::getRequestedWikiId();
         if ($pageId === null) {
-            $pageId = RenderUtility::DEFAULT_SLOT_ID_FOR_TEST;
+            $pageId = DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
             if (!PluginUtility::isTest()) {
                 // should never happen, we don't throw an exception
                 LogUtility::msg("We were unable to determine the requested page from the variables environment, default non-existing page id used");

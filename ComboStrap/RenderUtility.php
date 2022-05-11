@@ -18,14 +18,6 @@ use PHPUnit\Exception;
 
 class RenderUtility
 {
-    /**
-     * When the rendering is a snippet or an instructions
-     */
-    const DYNAMIC_RENDERING = "dynamic";
-    /**
-     * The id used if
-     */
-    const DEFAULT_SLOT_ID_FOR_TEST = "test-slot-id";
 
     /**
      * @param $content
@@ -38,9 +30,9 @@ class RenderUtility
         $keep = $ID;
         global $ACT;
         $keepAct = $ACT;
-        $ACT = self::DYNAMIC_RENDERING;
+        $ACT = DynamicRender::DYNAMIC_RENDERING;
         if ($ID === null && PluginUtility::isTest()) {
-            $ID = self::DEFAULT_SLOT_ID_FOR_TEST;
+            $ID = DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
         }
         try {
             $instructions = self::getInstructionsAndStripPEventually($content, $strip);
@@ -66,9 +58,9 @@ class RenderUtility
         global $ID;
         try {
             if ($ID === null && PluginUtility::isTest()) {
-                $ID = self::DEFAULT_SLOT_ID_FOR_TEST;
+                $ID = DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
             }
-            $ACT = self::DYNAMIC_RENDERING;
+            $ACT = DynamicRender::DYNAMIC_RENDERING;
             $instructions = p_get_instructions($pageContent);
         } finally {
             $ACT = $keepACT;
@@ -152,9 +144,9 @@ class RenderUtility
         try {
 
             if ($ID === null && PluginUtility::isTest()) {
-                $ID = self::DEFAULT_SLOT_ID_FOR_TEST;
+                $ID = DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
             }
-            $ACT = self::DYNAMIC_RENDERING;
+            $ACT = DynamicRender::DYNAMIC_RENDERING;
             $output = p_render("xhtml", $callStackHeaderInstructions, $info);
             if ($output === null) {
                 throw new ExceptionBadState("The rendering output was null");

@@ -13,6 +13,7 @@ use ComboStrap\PagePath;
 use ComboStrap\PageSql;
 use ComboStrap\PageSqlTreeListener;
 use ComboStrap\PluginUtility;
+use ComboStrap\DynamicRender;
 use ComboStrap\RenderUtility;
 use ComboStrap\Sqlite;
 use ComboStrap\TagAttributes;
@@ -279,15 +280,20 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                  */
                 $callStack->deleteAllCallsAfter($openTag);
 
+                /**
+                 * Enter Tag is the driver tag
+                 * (To be able to add class by third party component)
+                 */
+                $openTag->setPluginData(self::PAGE_SQL, $pageSql);
+                $openTag->setPluginData(self::PAGE_SQL_ATTRIBUTES, $pageSqlAttribute);
+                $openTag->setPluginData(self::VARIABLE_NAMES, $variableNames);
+                $openTag->setPluginData(self::COMPLEX_MARKUP_FOUND, $complexMarkupFound);
+                $openTag->setPluginData(self::BEFORE_TEMPLATE_CALLSTACK, $beforeTemplateCallStack);
+                $openTag->setPluginData(self::AFTER_TEMPLATE_CALLSTACK, $afterTemplateCallStack);
+                $openTag->setPluginData(self::TEMPLATE_CALLSTACK, $templateStack);
+
                 return array(
-                    PluginUtility::STATE => $state,
-                    self::PAGE_SQL => $pageSql,
-                    self::PAGE_SQL_ATTRIBUTES => $pageSqlAttribute,
-                    self::VARIABLE_NAMES => $variableNames,
-                    self::COMPLEX_MARKUP_FOUND => $complexMarkupFound,
-                    self::BEFORE_TEMPLATE_CALLSTACK => $beforeTemplateCallStack,
-                    self::AFTER_TEMPLATE_CALLSTACK => $afterTemplateCallStack,
-                    self::TEMPLATE_CALLSTACK => $templateStack
+                    PluginUtility::STATE => $state
                 );
 
         }
@@ -310,12 +316,12 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
         if ($format === "xhtml") {
             $state = $data[PluginUtility::STATE];
             switch ($state) {
-                case DOKU_LEXER_ENTER:
+                case DOKU_LEXER_EXIT:
                     return true;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     return true;
-                case DOKU_LEXER_EXIT:
+                case DOKU_LEXER_ENTER:
 
                     $pageSql = $data[self::PAGE_SQL];
 
@@ -523,7 +529,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     /**
                      * Rendering
                      */
-                    $htmlOutput = "";
+                    $render = DynamicRender::createXhtml();
 
                     /**
                      * Header
@@ -548,7 +554,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                             }
                         }
                         try {
-                            $htmlOutput .= RenderUtility::renderInstructionsToXhtml($iteratorHeaderInstructions);
+                            $render->processInstructions($iteratorHeaderInstructions);
                         } catch (ExceptionCompile $e) {
                             LogUtility::error("Error while rendering the iterator header. Error: {$e->getMessage()}", self::CANONICAL);
                             return false;
@@ -559,21 +565,21 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                      * Template
                      */
                     try {
-                        $htmlOutput .= RenderUtility::renderInstructionsToXhtml($templateHeader);
+                        $render->processInstructions($templateHeader);
                     } catch (ExceptionCompile $e) {
                         LogUtility::error("Error while rendering the template header. Error: {$e->getMessage()}", self::CANONICAL);
                         return false;
                     }
                     foreach ($rows as $row) {
                         try {
-                            $htmlOutput .= RenderUtility::renderInstructionsToXhtml($templateMain, $row);
+                            $render->processInstructions($templateMain, $row);
                         } catch (ExceptionCompile $e) {
                             LogUtility::error("Error while rendering a data row. Error: {$e->getMessage()}", self::CANONICAL);
                             continue;
                         }
                     }
                     try {
-                        $htmlOutput .= RenderUtility::renderInstructionsToXhtml($templateFooter);
+                        $render->processInstructions($templateFooter);
                     } catch (ExceptionCompile $e) {
                         LogUtility::error("Error while rendering the template footer. Error: {$e->getMessage()}", self::CANONICAL);
                         return false;
@@ -586,7 +592,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     $callStackFooterInstructions = $data[self::AFTER_TEMPLATE_CALLSTACK];
                     if (!empty($callStackFooterInstructions)) {
                         try {
-                            $htmlOutput .= RenderUtility::renderInstructionsToXhtml($callStackFooterInstructions);
+                            $render->processInstructions($callStackFooterInstructions);
                         } catch (ExceptionCompile $e) {
                             LogUtility::error("Error while rendering the iterator footer. Error: {$e->getMessage()}", self::CANONICAL);
                             return false;
@@ -596,7 +602,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     /**
                      * Renderer
                      */
-                    $renderer->doc .= $htmlOutput;
+                    $renderer->doc .= $render->getOutput();
                     return true;
 
             }

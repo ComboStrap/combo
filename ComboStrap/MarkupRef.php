@@ -18,6 +18,7 @@ use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
 use dokuwiki\Utf8\Conversion;
 use syntax_plugin_combo_tooltip;
+use syntax_plugin_combo_variable;
 
 require_once(__DIR__ . '/PluginUtility.php');
 
@@ -198,7 +199,7 @@ class MarkupRef
              * because it can also be a wiki id
              * For instance, `mailto:` is also a valid page
              */
-            if (preg_match('#^([a-z0-9\-\.+]+?)://#i', $ref)) {
+            if (preg_match('#^([a-z0-9\-.+]+?)://#i', $ref)) {
                 $this->uriType = self::WEB_URI;
                 $this->schemeUri = strtolower(substr($ref, 0, strpos($ref, ":")));
                 $this->ref = $ref;
@@ -226,7 +227,7 @@ class MarkupRef
             /**
              * It can be a link with a ref template
              */
-            if (TemplateUtility::isVariable($ref)) {
+            if (syntax_plugin_combo_variable::isVariable($ref)) {
                 $this->uriType = self::VARIABLE_URI;
             } else {
                 $this->uriType = self::WIKI_URI;
@@ -831,10 +832,14 @@ EOF;
     }
 
 
+    /**
+     * @return bool
+     * @deprecated should not be here ref does not have the notion of relative
+     */
     public
     function isRelative(): bool
     {
-        return strpos($this->path, ':') !== 0;
+        return strpos($this->ref, DokuPath::PATH_SEPARATOR) !== 0;
     }
 
     public
@@ -947,7 +952,7 @@ EOF;
         }
 
         //replace placeholder
-        if (preg_match('#\{(URL|NAME|SCHEME|HOST|PORT|PATH|QUERY)\}#', $url)) {
+        if (preg_match('#{(URL|NAME|SCHEME|HOST|PORT|PATH|QUERY)}#', $url)) {
             //use placeholders
             $url = str_replace('{URL}', rawurlencode($reference), $url);
             //wiki names will be cleaned next, otherwise urlencode unsafe chars

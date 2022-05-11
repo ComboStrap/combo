@@ -133,21 +133,33 @@ class RenderUtility
     }
 
     /**
+     * @param $callStackHeaderInstructions
+     * @param $contextData - the page id used to render this instructions (it's not the global ID that represents the document, inside a document, for a dynamic component, you may loop through pages, this is the page id of the loop)
+     * @return string|null
      * @throws ExceptionCompile
      */
-    public static function renderInstructionsToXhtml($callStackHeaderInstructions): ?string
+    public static function renderInstructionsToXhtml($callStackHeaderInstructions, array $contextData = null): string
     {
         global $ID;
         $keepID = $ID;
         global $ACT;
         $keepACT = $ACT;
         global $ID;
+        $contextManager = ContextManager::getOrCreate();
+        if ($contextData !== null) {
+            $contextManager->setContextData($contextData);
+        }
         try {
+
             if ($ID === null && PluginUtility::isTest()) {
                 $ID = self::DEFAULT_SLOT_ID_FOR_TEST;
             }
             $ACT = self::DYNAMIC_RENDERING;
-            return p_render("xhtml", $callStackHeaderInstructions, $info);
+            $output = p_render("xhtml", $callStackHeaderInstructions, $info);
+            if ($output === null) {
+                throw new ExceptionBadState("The rendering output was null");
+            }
+            return $output;
         } catch (Exception $e) {
             /**
              * Example of errors;
@@ -158,7 +170,16 @@ class RenderUtility
         } finally {
             $ACT = $keepACT;
             $ID = $keepID;
+            $contextManager->reset();
         }
+    }
+
+    /**
+     * @throws ExceptionCompile
+     */
+    public static function renderInstructionsToXhtmlFromPage($callStackHeaderInstructions, Page $renderingPageId): string
+    {
+        return self::renderInstructionsToXhtml($callStackHeaderInstructions, $renderingPageId->getMetadataForRendering());
     }
 
 

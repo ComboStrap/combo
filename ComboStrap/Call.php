@@ -783,65 +783,6 @@ class Call
         }
     }
 
-    /**
-     * @param Page $page
-     * @return Call
-     */
-    public
-    function render(Page $page): Call
-    {
-        return $this->renderFromData(TemplateUtility::getMetadataDataFromPage($page));
-    }
-
-    public
-    function renderFromData(array $array): Call
-    {
-
-        /**
-         * Render all plugin attributes
-         */
-        if ($this->isPluginCall()) {
-            $attributes = $this->getAttributes();
-            if ($attributes !== null) {
-                foreach ($attributes as $key => $value) {
-                    if (is_string($value)) {
-                        $this->addAttribute($key, TemplateUtility::renderStringTemplateFromDataArray($value, $array));
-                    }
-                }
-            }
-        }
-
-        /**
-         * Content rendering
-         */
-        $state = $this->getState();
-        if ($state == DOKU_LEXER_UNMATCHED) {
-            if ($this->isPluginCall()) {
-                $payload = $this->getPayload();
-                if (!empty($payload)) {
-                    $this->setPayload(TemplateUtility::renderStringTemplateFromDataArray($payload, $array));
-                }
-            }
-        } else {
-            $tagName = $this->getTagName();
-            switch ($tagName) {
-                case "eol":
-                    break;
-                case "cdata":
-                    $payload = $this->getCapturedContent();
-                    $this->setCapturedContent(TemplateUtility::renderStringTemplateFromDataArray($payload, $array));
-                    break;
-                case \syntax_plugin_combo_pipeline::TAG:
-                    $pageTemplate = PluginUtility::getTagContent($this->getCapturedContent());
-                    $script = TemplateUtility::renderStringTemplateFromDataArray($pageTemplate, $array);
-                    $string = PipelineUtility::execute($script);
-                    $this->setPayload($string);
-                    break;
-            }
-        }
-
-        return $this;
-    }
 
     public
     function setCapturedContent($content)

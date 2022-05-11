@@ -251,14 +251,14 @@ class BrandButton
                     $templateData[$key] = urlencode($value);
                 }
 
-                return TemplateUtility::renderStringTemplateFromDataArray($urlTemplate, $templateData);
+                return Template::create($urlTemplate)->setProperties($templateData)->render();
 
             case self::TYPE_BUTTON_FOLLOW:
                 if ($this->handle === null) {
                     return $urlTemplate;
                 }
                 $templateData[syntax_plugin_combo_follow::HANDLE_ATTRIBUTE] = $this->handle;
-                return TemplateUtility::renderStringTemplateFromDataArray($urlTemplate, $templateData);
+                return Template::create($urlTemplate)->setProperties($templateData)->render();
             default:
                 // The type is mandatory and checked at creation,
                 // it should not happen, we don't throw an error

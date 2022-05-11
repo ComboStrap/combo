@@ -178,10 +178,13 @@ class CallStack
 
         global $ID;
         $keep = $ID;
+        global $ACT;
+        $keepAct = $ACT;
         if ($ID === null && PluginUtility::isTest()) {
             $ID = RenderUtility::DEFAULT_SLOT_ID_FOR_TEST;
         }
         try {
+            $ACT = "show";
             $modes = p_get_parsermodes();
             $handler = new Doku_Handler();
             $parser = new Parser($handler);
@@ -194,6 +197,7 @@ class CallStack
             return self::createFromHandler($handler);
         } finally {
             $ID = $keep;
+            $ACT = $keepAct;
         }
 
     }
@@ -614,7 +618,7 @@ class CallStack
                 /**
                  * We don't throw because we should be able to add before at any index
                  */
-                if(PluginUtility::isDevOrTest()){
+                if (PluginUtility::isDevOrTest()) {
                     LogUtility::error("Unable to move the callback pointer to the offset ($targetOffset)", self::CANONICAL);
                 }
             }

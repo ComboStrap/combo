@@ -8,9 +8,8 @@ use ComboStrap\ArrayUtility;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionCompile;
-use ComboStrap\MarkupRef;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
+use ComboStrap\MarkupRef;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\ThirdPartyPlugins;
@@ -413,7 +412,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         $hrefSource = $tagAttributes->getValueAndRemoveIfPresent(self::ATTRIBUTE_HREF_TYPE);
                         if ($hrefSource !== null) {
                             try {
-                                $href = \ComboStrap\TemplateUtility::renderFromContext($href);
+                                $href = syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($href);
                                 $markupRef = MarkupRef::createFromRef($href);
                                 $url = $markupRef->getUrl();
                                 $markupRefAttributes = $markupRef->toAttributes();

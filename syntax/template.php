@@ -1,28 +1,19 @@
 <?php
 
 
-use ComboStrap\AnalyticsDocument;
-use ComboStrap\CacheManager;
 use ComboStrap\CacheDependencies;
-use ComboStrap\Call;
+use ComboStrap\CacheManager;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
-use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCompile;
-use ComboStrap\PageCreationDate;
-use ComboStrap\Metadata;
-use ComboStrap\PageImages;
-use ComboStrap\ResourceName;
-use ComboStrap\PagePath;
-use ComboStrap\PageSql;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
-use ComboStrap\Path;
-use ComboStrap\PluginUtility;
+use ComboStrap\PageCreationDate;
+use ComboStrap\PagePath;
 use ComboStrap\PagePublicationDate;
-use ComboStrap\Sqlite;
-use ComboStrap\Template;
-use ComboStrap\TemplateUtility;
+use ComboStrap\PluginUtility;
+use ComboStrap\RenderUtility;
+use ComboStrap\ResourceName;
 
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
@@ -61,27 +52,8 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
         ResourceName::PROPERTY_NAME
     ];
 
-    const CANONICAL = "template";
+    const CANONICAL = syntax_plugin_combo_variable::CANONICAL;
     const CALLSTACK = "callstack";
-
-    /**
-     * @param Call $call
-     */
-    public static function getCapturedTemplateContent($call)
-    {
-        $content = $call->getCapturedContent();
-        if (!empty($content)) {
-            if ($content[0] === DOKU_LF) {
-                $content = substr($content, 1);
-            }
-            /**
-             * To allow the template to be indented
-             * without triggering a {@link syntax_plugin_combo_preformatted}
-             */
-            $content = rtrim($content, " ");
-        }
-        return $content;
-    }
 
 
     /**
@@ -91,7 +63,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
      * @see https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'formatting';
     }
@@ -111,7 +83,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
         /**
          * No P please
          */
-        return 'stack';
+        return 'normal';
     }
 
     /**
@@ -182,8 +154,8 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
                 $callStack = CallStack::createFromHandler($handler);
                 $parent = $callStack->moveToParent();
-                if($parent!==false){
-                    if($parent->getTagName()!==syntax_plugin_combo_iterator::TAG){
+                if ($parent !== false) {
+                    if ($parent->getTagName() !== syntax_plugin_combo_iterator::TAG) {
                         LogUtility::warning("A template component is no more required to show variables.", self::CANONICAL);
                     }
                 }
@@ -255,12 +227,12 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                     }
                     $page = Page::createPageFromRequestedPage();
                     $metadata = $page->getMetadataForRendering();
-                    $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateStack, $metadata);
                     try {
-                        $renderer->doc .= PluginUtility::renderInstructionsToXhtml($instructionsInstance);
+                        $renderer->doc .= RenderUtility::renderInstructionsToXhtml($templateStack, $metadata);
                     } catch (ExceptionCompile $e) {
-                        $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the template instruction. Error: {$e->getMessage()}");
+                        $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the instruction. Error: {$e->getMessage()}");
                     }
+                    LogUtility::warning("There is no need anymore to use a template to render variable", self::CANONICAL);
                     return true;
             }
         }

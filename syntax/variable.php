@@ -1,15 +1,7 @@
 <?php
 
-use ComboStrap\Boldness;
-use ComboStrap\ColorRgb;
-use ComboStrap\ExceptionCompile;
-use ComboStrap\LogUtility;
-use ComboStrap\Page;
 use ComboStrap\PipelineUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Site;
-use ComboStrap\TagAttributes;
-use ComboStrap\TemplateUtility;
 
 
 /**
@@ -33,6 +25,24 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
     const ENTRY_PATTERN_LONG = self::DOLLAR_ESCAPE . self::PREFIX_LONG . "[^}\r\n]+}";
     const EXPRESSION_ATTRIBUTE = "expression";
     const DOLLAR_ESCAPE = '\\';
+
+    public static function isVariable($ref): bool
+    {
+        return substr($ref, 0, 1) === syntax_plugin_combo_variable::PREFIX_SHORT;
+    }
+
+    /**
+     * Template rendering will be context based
+     * (first step to delete the template tag)
+     * @param string $string
+     * @return string
+     */
+    public static function replaceVariablesWithValuesFromContext(string $string): string
+    {
+
+        $metadata = \ComboStrap\ContextManager::getOrCreate()->getContextData();
+        return \ComboStrap\Template::create($string)->setProperties($metadata)->render();
+    }
 
 
     public function getSort(): int
@@ -135,7 +145,7 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
                 $state = $data[PluginUtility::STATE];
                 if ($state == DOKU_LEXER_SPECIAL) {
                     $expression = $data[self::EXPRESSION_ATTRIBUTE];
-                    $pipelineExpression = TemplateUtility::renderFromContext($expression);
+                    $pipelineExpression = self::replaceVariablesWithValuesFromContext($expression);
                     $execute = PipelineUtility::execute($pipelineExpression);
                     $renderer->doc .= $execute;
                     return true;

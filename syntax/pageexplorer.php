@@ -1,26 +1,22 @@
 <?php
 
 
-use ComboStrap\CacheManager;
 use ComboStrap\CacheDependencies;
+use ComboStrap\CacheManager;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
-use ComboStrap\ExceptionRuntime;
 use ComboStrap\FileSystems;
-use ComboStrap\FsWikiUtility;
 use ComboStrap\Html;
 use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
 use ComboStrap\Page;
-use ComboStrap\Path;
 use ComboStrap\PluginUtility;
+use ComboStrap\RenderUtility;
 use ComboStrap\TagAttributes;
-use ComboStrap\TemplateUtility;
-use ComboStrap\Toggle;
 use ComboStrap\TreeNode;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -193,12 +189,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @param int $state
      * @param int $pos - byte position in the original source file
      * @param Doku_Handler $handler
-     * @return array|bool
+     * @return array
      * @throws Exception
      * @see DokuWiki_Syntax_Plugin::handle()
      *
      */
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
         switch ($state) {
@@ -499,9 +495,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                      * Content
                                      */
                                     if ($homeInstructions !== null) {
-                                        $instructions = TemplateUtility::generateInstructionsFromDataPage($homeInstructions, $currentHomePage);
                                         try {
-                                            $renderer->doc .= PluginUtility::renderInstructionsToXhtml($instructions);
+                                            $renderer->doc .= RenderUtility::renderInstructionsToXhtml($homeInstructions, $currentHomePage->getMetadataForRendering());
                                         } catch (ExceptionCompile $e) {
                                             $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the home. Error: {$e->getMessage()}");
                                         }
@@ -544,10 +539,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                      * Content
                                      */
                                     if ($parentInstructions !== null) {
-
-                                        $parentInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($parentInstructions, $parentPage);
                                         try {
-                                            $renderer->doc .= PluginUtility::renderInstructionsToXhtml($parentInstructionsInstance);
+                                            $renderer->doc .= RenderUtility::renderInstructionsToXhtml($parentInstructions, $parentPage->getMetadataForRendering());
                                         } catch (ExceptionCompile $e) {
                                             $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the parent instructions. Error: {$e->getMessage()}");
                                         }
@@ -614,9 +607,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                              * SubNamespace Content
                                              */
                                             if ($namespaceInstructions !== null) {
-                                                $namespaceInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($namespaceInstructions, $subNamespacePage);
                                                 try {
-                                                    $renderer->doc .= PluginUtility::renderInstructionsToXhtml($namespaceInstructionsInstance);
+                                                    $renderer->doc .= RenderUtility::renderInstructionsToXhtml($namespaceInstructions, $subNamespacePage->getMetadataForRendering());
                                                 } catch (ExceptionCompile $e) {
                                                     $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the sub-namespace. Error: {$e->getMessage()}");
                                                 }
@@ -656,10 +648,11 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                             /**
                                              * Page Content
                                              */
-                                            if ($namespaceInstructions !== null) {
-                                                $pageInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($pageInstructions, $childWikiPath);
+                                            if ($pageInstructions !== null) {
+
                                                 try {
-                                                    $renderer->doc .= PluginUtility::renderInstructionsToXhtml($pageInstructionsInstance);
+                                                    $childPage = Page::createPageFromPathObject($childWikiPath);
+                                                    $renderer->doc .= RenderUtility::renderInstructionsToXhtmlFromPage($pageInstructions, $childPage);
                                                 } catch (ExceptionCompile $e) {
                                                     $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the page. Error: {$e->getMessage()}");
                                                 }
@@ -835,7 +828,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
             // button
             $this->namespaceCounter++;
-            $id = Html::toHtmlId("page-explorer-{$containerPath->getDokuwikiId()}-{$this->namespaceCounter}-combo");
+            $id = Html::toHtmlId("page-explorer-{$containerPath->getDokuwikiId()}-$this->namespaceCounter-combo");
             $html .= TagAttributes::createEmpty()
                 ->addOutputAttributeValue("data-bs-target", "#$id")
                 ->addOutputAttributeValue("data-" . TagAttributes::WIKI_ID, $containerPath->getDokuwikiId())
@@ -851,9 +844,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             $subHomePage = Page::getIndexPageFromNamespace($containerPath->toString());
             if ($subHomePage->exists()) {
                 if ($namespaceInstructions !== null) {
-                    $namespaceInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($namespaceInstructions, $subHomePage);
                     try {
-                        $html .= PluginUtility::renderInstructionsToXhtml($namespaceInstructionsInstance);
+                        $html .= RenderUtility::renderInstructionsToXhtml($namespaceInstructions, $subHomePage->getMetadataForRendering());
                     } catch (ExceptionCompile $e) {
                         $html .= LogUtility::wrapInRedForHtml("Error while rendering the child directory. Error: {$e->getMessage()}");
                     }
@@ -928,14 +920,13 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         }
 
         $listItemEnterTag = TagAttributes::createEmpty()
-            ->setLogicalTag(self::CANONICAL . "-tree-{$type}")
+            ->setLogicalTag(self::CANONICAL . "-tree-$type")
             ->toHtmlEnterTag("li");
 
         $listItemContent = "";
         if ($pageInstructions !== null) {
-            $pageInstructionsInstance = TemplateUtility::generateInstructionsFromDataPage($pageInstructions, $page);
             try {
-                $listItemContent = PluginUtility::renderInstructionsToXhtml($pageInstructionsInstance);
+                $listItemContent = RenderUtility::renderInstructionsToXhtml($pageInstructions, $page->getMetadataForRendering());
             } catch (ExceptionCompile $e) {
                 LogUtility::error("Error while rendering the leaf. Error: {$e->getMessage()}", self::CANONICAL);
                 return;
@@ -950,6 +941,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 LogUtility::error("Error while rendering the default tree page. Error: {$e->getMessage()}", self::CANONICAL);
             }
         }
+        /** @noinspection PhpUnnecessaryCurlyVarSyntaxInspection */
         $html .= "{$listItemEnterTag}{$listItemContent}</li>";
 
     }

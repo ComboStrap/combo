@@ -29,12 +29,12 @@ class Template
      * @param $string
      * @return Template
      */
-    public static function create($string)
+    public static function create($string): Template
     {
         return new Template($string);
     }
 
-    public function set($key, $value)
+    public function setProperty($key, $value): Template
     {
         $this->_data[$key] = $value;
         return $this;
@@ -93,4 +93,19 @@ class Template
 
 
     }
+
+    public function setProperties(array $properties): Template
+    {
+        foreach ($properties as $key => $val) {
+            /**
+             * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
+             * @see {@link \syntax_plugin_combo_pipeline}
+             */
+            $val = str_replace('"', "'", $val);
+            $this->setProperty($key, $val);
+        }
+        return $this;
+
+    }
+
 }

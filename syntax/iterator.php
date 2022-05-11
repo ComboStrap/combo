@@ -13,10 +13,10 @@ use ComboStrap\PagePath;
 use ComboStrap\PageSql;
 use ComboStrap\PageSqlTreeListener;
 use ComboStrap\PluginUtility;
+use ComboStrap\RenderUtility;
 use ComboStrap\Sqlite;
 use ComboStrap\TagAttributes;
 use ComboStrap\Template;
-use ComboStrap\TemplateUtility;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -545,7 +545,12 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                             $iteratorTemplateGeneratedInstructions[] = $templateHeaderCall->toCallArray();
                         }
                         foreach ($rows as $row) {
-                            $templateInstructionForInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateMain, $row);
+                            try {
+                                $templateInstructionForInstance = RenderUtility::renderInstructionsToXhtml($templateMain, $row);
+                            } catch (ExceptionCompile $e) {
+                                LogUtility::error("Error while rendering a data row. Error: {$e->getMessage()}", self::CANONICAL);
+                                continue;
+                            }
                             $iteratorTemplateGeneratedInstructions = array_merge($iteratorTemplateGeneratedInstructions, $templateInstructionForInstance);
                         }
                         foreach ($templateFooter as $templateFooterCall) {
@@ -564,7 +569,12 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                          * Append the new instructions by row
                          */
                         foreach ($rows as $row) {
-                            $templateInstructionForInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($iteratorTemplateInstructions, $row);
+                            try {
+                                $templateInstructionForInstance = RenderUtility::renderInstructionsToXhtml($iteratorTemplateInstructions, $row);
+                            } catch (ExceptionCompile $e) {
+                                LogUtility::error("Error while rendering a row. Error: {$e->getMessage()}");
+                                continue;
+                            }
                             $iteratorTemplateGeneratedInstructions = array_merge($iteratorTemplateGeneratedInstructions, $templateInstructionForInstance);
                         }
 

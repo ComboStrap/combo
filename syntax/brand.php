@@ -18,7 +18,6 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
 use ComboStrap\Template;
-use ComboStrap\TemplateUtility;
 
 if (!defined('DOKU_INC')) die();
 
@@ -70,7 +69,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 $page = Page::createPageFromRequestedPage();
                 $relativePath = str_replace(":", "/", $page->getDokuwikiId());
                 $url = $urlTemplate
-                    ->set("path", $relativePath)
+                    ->setProperty("path", $relativePath)
                     ->render();
             }
             $tagAttributes->addOutputAttributeValue("href", $url);

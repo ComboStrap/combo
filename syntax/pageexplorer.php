@@ -286,7 +286,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     $parentAttributes = $actualCall->getAttributes();
                                     continue 3;
                                 default:
-                                    $actualInstructionsStack[] = $actualCall;
+                                    $actualInstructionsStack[] = $actualCall->toCallArray();
                                     continue 3;
                             }
                         case DOKU_LEXER_EXIT:
@@ -308,12 +308,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     $actualInstructionsStack = [];
                                     continue 3;
                                 default:
-                                    $actualInstructionsStack[] = $actualCall;
+                                    $actualInstructionsStack[] = $actualCall->toCallArray();
                                     continue 3;
 
                             }
                         default:
-                            $actualInstructionsStack[] = $actualCall;
+                            $actualInstructionsStack[] = $actualCall->toCallArray();
                             break;
 
                     }

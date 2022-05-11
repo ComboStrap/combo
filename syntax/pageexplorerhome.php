@@ -29,9 +29,9 @@ class syntax_plugin_combo_pageexplorerhome extends DokuWiki_Syntax_Plugin
     /**
      * The pattern
      */
-    const HOME_TAG = "home";
-    const HOME_OLD_TAG = "index";
-    const HOMES_TAG = [self::HOME_TAG, self::HOME_OLD_TAG];
+    const OLD_HOME_TAG = "home";
+    const INDEX_TAG = "index";
+    const INDEXES_TAG = [self::OLD_HOME_TAG, self::INDEX_TAG];
 
 
     /**
@@ -89,7 +89,7 @@ class syntax_plugin_combo_pageexplorerhome extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
         if ($mode == PluginUtility::getModeFromTag(syntax_plugin_combo_pageexplorer::TAG)) {
-            foreach (self::HOMES_TAG as $homeTag) {
+            foreach (self::INDEXES_TAG as $homeTag) {
                 $pattern = PluginUtility::getContainerTagPattern($homeTag);
                 $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
             }
@@ -100,7 +100,7 @@ class syntax_plugin_combo_pageexplorerhome extends DokuWiki_Syntax_Plugin
 
     public function postConnect()
     {
-        foreach (self::HOMES_TAG as $homeTag) {
+        foreach (self::INDEXES_TAG as $homeTag) {
             $this->Lexer->addExitPattern('</' . $homeTag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 

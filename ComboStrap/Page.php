@@ -1095,8 +1095,7 @@ class Page extends ResourceComboAbs
 
     /**
      * @return array - return the standard / generated metadata
-     * used in templating with the value or default
-     * TODO: should move in the templating class
+     * used to create a variable environment (context) in rendering
      */
     public
     function getMetadataForRendering(): array

@@ -1,7 +1,9 @@
 <?php
 
+use ComboStrap\ContextManager;
 use ComboStrap\PipelineUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Template;
 
 
 /**
@@ -40,8 +42,8 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
     public static function replaceVariablesWithValuesFromContext(string $string): string
     {
 
-        $metadata = \ComboStrap\ContextManager::getOrCreate()->getContextData();
-        return \ComboStrap\Template::create($string)->setProperties($metadata)->render();
+        $metadata = ContextManager::getOrCreate()->getContextData();
+        return Template::create($string)->setProperties($metadata)->render();
     }
 
 

@@ -1,23 +1,20 @@
 <?php
 
 
-use ComboStrap\CacheManager;
 use ComboStrap\CacheDependencies;
+use ComboStrap\CacheManager;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\DynamicRender;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
-use ComboStrap\PageImages;
 use ComboStrap\PagePath;
 use ComboStrap\PageSql;
 use ComboStrap\PageSqlTreeListener;
 use ComboStrap\PluginUtility;
-use ComboStrap\DynamicRender;
-use ComboStrap\RenderUtility;
 use ComboStrap\Sqlite;
 use ComboStrap\TagAttributes;
-use ComboStrap\Template;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -77,7 +74,6 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
     const CANONICAL = "iterator";
     const PAGE_SQL = "page-sql";
     const PAGE_SQL_ATTRIBUTES = "page-sql-attributes";
-    const VARIABLE_NAMES = "variable-names";
     const COMPLEX_MARKUP_FOUND = "complex-markup-found";
     const BEFORE_TEMPLATE_CALLSTACK = "header-callstack";
     const AFTER_TEMPLATE_CALLSTACK = "footer-callstack";
@@ -204,7 +200,6 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                 $afterTemplateCallStack = [];
                 $parsingState = "before";
                 $complexMarkupFound = false;
-                $variableNames = [];
                 while ($actualCall = $callStack->next()) {
                     $tagName = $actualCall->getTagName();
 
@@ -242,25 +237,6 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                                         $complexMarkupFound = true;
                                     }
 
-                                    /**
-                                     * Capture variable names
-                                     * to be able to find their value
-                                     * in the metadata if they are not in sql
-                                     */
-                                    $textWithVariables = $templateCall->getCapturedContent();
-                                    $attributes = $templateCall->getAttributes();
-                                    if ($attributes !== null) {
-                                        $sep = " ";
-                                        foreach ($attributes as $key => $attribute) {
-                                            $textWithVariables .= $sep . $key . $sep . $attribute;
-                                        }
-                                    }
-
-                                    if (!empty($textWithVariables)) {
-                                        $template = Template::create($textWithVariables);
-                                        $variablesDetected = $template->getVariablesDetected();
-                                        $variableNames = array_merge($variableNames, $variablesDetected);
-                                    }
                                 }
                             }
                             continue 2;
@@ -273,7 +249,6 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                             break;
                     }
                 }
-                $variableNames = array_unique($variableNames);
 
                 /**
                  * Wipe the content of iterator
@@ -286,7 +261,6 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                  */
                 $openTag->setPluginData(self::PAGE_SQL, $pageSql);
                 $openTag->setPluginData(self::PAGE_SQL_ATTRIBUTES, $pageSqlAttribute);
-                $openTag->setPluginData(self::VARIABLE_NAMES, $variableNames);
                 $openTag->setPluginData(self::COMPLEX_MARKUP_FOUND, $complexMarkupFound);
                 $openTag->setPluginData(self::BEFORE_TEMPLATE_CALLSTACK, $beforeTemplateCallStack);
                 $openTag->setPluginData(self::AFTER_TEMPLATE_CALLSTACK, $afterTemplateCallStack);
@@ -399,10 +373,9 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                             $request->close();
                         }
 
-                        $variableNames = $data[self::VARIABLE_NAMES];
                         $rows = [];
                         foreach ($rowsInDb as $sourceRow) {
-                            $analytics = $sourceRow["ANALYTICS"];
+
                             /**
                              * @deprecated
                              * We use id until path is full in the database
@@ -413,52 +386,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                                 continue;
                             }
                             $standardMetadata = $contextualPage->getMetadataForRendering();
-
-                            $jsonArray = json_decode($analytics, true);
-                            $targetRow = [];
-                            foreach ($variableNames as $variableName) {
-
-                                if ($variableName === PageImages::PROPERTY_NAME) {
-                                    LogUtility::msg("To add an image, you must use the page image component, not the image metadata", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_pageimage::CANONICAL);
-                                    continue;
-                                }
-
-                                /**
-                                 * Data in the pages tables
-                                 */
-                                if (isset($sourceRow[strtoupper($variableName)])) {
-                                    $variableValue = $sourceRow[strtoupper($variableName)];
-                                    $targetRow[$variableName] = $variableValue;
-                                    continue;
-                                }
-
-                                /**
-                                 * In the analytics
-                                 */
-                                $value = $jsonArray["metadata"][$variableName];
-                                if (!empty($value)) {
-                                    $targetRow[$variableName] = $value;
-                                    continue;
-                                }
-
-                                /**
-                                 * Computed
-                                 * (if the table is empty because of migration)
-                                 */
-                                $value = $standardMetadata[$variableName];
-                                if (isset($value)) {
-                                    $targetRow[$variableName] = $value;
-                                    continue;
-                                }
-
-                                /**
-                                 * Bad luck
-                                 */
-                                $targetRow[$variableName] = "$variableName attribute is unknown.";
-
-
-                            }
-                            $rows[] = $targetRow;
+                            $rows[] = $standardMetadata;
                         }
                     } catch (Exception $e) {
                         $renderer->doc .= "Error during Sql Execution. Error: {$e->getMessage()}";

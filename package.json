@@ -33,13 +33,15 @@
             "userAgent": "Agent/007"
         },
         "testMatch": [
-            "**/resources/library/combo/__tests__/*.[jt]s?(x)"
+            "**/resources/library/combo/__tests__/**/*.[jt]s?(x)"
         ],
         "setupFilesAfterEnv": [
             "./resources/library/combo/jest/JestExtend.js"
         ]
     },
-    "browserslist": "> 0.5%, last 2 versions, not dead",
+    "browserslist": [
+        "> 0.5%, last 2 versions, not dead"
+    ],
     "combo": "./resources/library/combo/dist/combo.min.js",
     "targets": {
         "combo": {

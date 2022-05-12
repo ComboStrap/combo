@@ -18,6 +18,9 @@
 import {diff} from 'jest-diff';
 import Xml from "../Xml";
 
+// adds special assertions like toHaveClass
+import '@testing-library/jest-dom'
+
 expect.extend({
 
     /**

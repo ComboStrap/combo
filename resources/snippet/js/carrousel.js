@@ -1,6 +1,8 @@
 /* global Glide */
 document.addEventListener('DOMContentLoaded', function () {
 
+    document.body.appendChild(document.createElement("hr"));
+
     let selector = '.carrousel-combo';
     const carrousels = [...document.querySelectorAll(selector)];
 

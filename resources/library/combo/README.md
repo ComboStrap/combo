@@ -82,32 +82,6 @@ getting-started/migration/#--global), we then used `window``explicitly to set th
   https://github.com/parcel-bundler/parcel/discussions/6437
   https://github.com/parcel-bundler/parcel/discussions/5583
 
-## Jest JsDom Execution Environment
+## Test
 
-In the `jest` [package.json](package.json) conf, all test are started
-
-* in the `jsdom` [environment](https://jestjs.io/docs/configuration#testenvironment-string)
-* configured via the [test environment options](https://jestjs.io/docs/configuration#testenvironmentoptions-object) and
-  the [possible configuration value of jsdom](https://github.com/jsdom/jsdom#customizing-jsdom)
-
-```json
-{
-    "jest": {
-        "testEnvironment": "jsdom",
-        "testEnvironmentOptions": {
-            "userAgent": "Agent/007"
-        }
-    }
-}
-```
-
-You can change it by test with `jsdoc` annotation
-
-```javascript
-/**
- * @jest-environment jsdom
- */
-```
-
-The jsdom jest environment code can be
-found [here](https://github.com/facebook/jest/blob/main/packages/jest-environment-jsdom/src/index.ts)
+See [Test Readme](./__tests__/README.md)

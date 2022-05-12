@@ -146,6 +146,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
             }
         }
+
         /**
          * Snippets
          * (Slot and request snippets)

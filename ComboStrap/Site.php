@@ -720,7 +720,7 @@ class Site
 
     public static function getComboHome(): LocalPath
     {
-        return LocalPath::create(DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME);
+        return LocalPath::createFromPath(DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME);
     }
 
     public static function getComboImagesDirectory(): LocalPath

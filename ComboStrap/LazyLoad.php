@@ -198,4 +198,11 @@ class LazyLoad
         }
         return $image;
     }
+
+    public static function disable()
+    {
+        PluginUtility::setConf(SvgImageLink::CONF_LAZY_LOAD_ENABLE,0);
+        PluginUtility::setConf(RasterImageLink::CONF_LAZY_LOADING_ENABLE,0);
+    }
+
 }

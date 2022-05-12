@@ -120,8 +120,10 @@ class syntax_plugin_combo_strong extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT:
             case DOKU_LEXER_ENTER:
+                $beforeSpaces = str_replace("**", "", $match);
                 return array(
-                    PluginUtility::STATE => $state
+                    PluginUtility::STATE => $state,
+                    PluginUtility::PAYLOAD => $beforeSpaces
                 );
             case DOKU_LEXER_UNMATCHED :
 
@@ -144,7 +146,8 @@ class syntax_plugin_combo_strong extends DokuWiki_Syntax_Plugin
                 switch ($state) {
 
                     case DOKU_LEXER_ENTER:
-                        $renderer->doc .= "<strong>";
+
+                        $renderer->doc .= $data[PluginUtility::PAYLOAD] . "<strong>";
                         return true;
                     case DOKU_LEXER_UNMATCHED:
                         $renderer->doc .= PluginUtility::renderUnmatched($data);
@@ -164,9 +167,8 @@ class syntax_plugin_combo_strong extends DokuWiki_Syntax_Plugin
                  * @var Doku_Renderer_metadata $renderer
                  */
                 $state = $data[PluginUtility::STATE];
-                switch ($state) {
-                    case DOKU_LEXER_UNMATCHED:
-                        $renderer->doc .= PluginUtility::renderUnmatched($data);
+                if ($state == DOKU_LEXER_UNMATCHED) {
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                 }
                 break;
         }

@@ -17,17 +17,20 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         let childrenCount = elementChildNodes.length;
+        let elementsMin = carrousel.dataset.elementsMin;
+        let isGallery = false; // more than one element is visible
         if (elementMinimalWidth !== undefined) {
-            let elementsMin = carrousel.dataset.elementsMin;
             if (childrenCount < elementsMin) {
                 glideCarrousel = carrouselGridType;
             }
+        } else {
+            isGallery = true;
         }
         switch (glideCarrousel) {
             case carrouselGridType:
                 // we can't set the height of the container to have same height component
                 // because this is a grid and in small mobile screen, the height would be double
-                carrousel.classList.add("row", `row-cols-${childrenCount}`, "justify-content-center");
+                carrousel.classList.add("row", "row-cols-1", `row-cols-sm-${elementsMin}`, "justify-content-center");
                 elementChildNodes.forEach(element => {
                     let gridColContainer = document.createElement("div");
                     gridColContainer.classList.add("col");
@@ -64,16 +67,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (control !== "none") {
                     // move per view |< and |>
                     // https://github.com/glidejs/glide/issues/346#issuecomment-1046137773
+                    let controlArrowContainer = document.createElement("div");
+                    controlArrowContainer.dataset.glideEl = "controls";
+                    if (!isGallery) {
+                        controlArrowContainer.classList.add("d-none", "d-sm-block");
+                    }
+                    carrousel.insertAdjacentElement('beforeend', controlArrowContainer);
                     let controlArrows = `
-<div class="d-none d-sm-block" data-glide-el="controls">
-    <button class="glide__arrow glide__arrow--left" data-glide-dir="|<">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path d="M0 12l10.975 11 2.848-2.828-6.176-6.176H24v-3.992H7.646l6.176-6.176L10.975 1 0 12z"></path></svg>
-    </button>
-    <button class="glide__arrow glide__arrow--right" data-glide-dir="|>">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"></path></svg>
-    </button>
-</div>`;
-                    carrousel.insertAdjacentHTML('beforeend', controlArrows);
+<button class="glide__arrow glide__arrow--left" data-glide-dir="|<">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path d="M0 12l10.975 11 2.848-2.828-6.176-6.176H24v-3.992H7.646l6.176-6.176L10.975 1 0 12z"></path></svg>
+</button>
+<button class="glide__arrow glide__arrow--right" data-glide-dir="|>">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"></path></svg>
+</button>
+`;
+                    controlArrowContainer.insertAdjacentHTML('beforeend', controlArrows);
+
 
                     let controlBulletContainer = document.createElement("div");
                     carrousel.insertAdjacentElement('beforeend', controlBulletContainer);
@@ -90,7 +99,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
 
-
+                /**
+                 * To be sure that the first layout calculation has occurred
+                 */
                 window.requestAnimationFrame(function () {
 
                     let perView = 1;
@@ -98,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (typeof elementMinimalWidth !== 'undefined') {
                         let offsetWidth = carrousel.offsetWidth;
                         perView = Math.floor(offsetWidth / elementMinimalWidth);
-                        perView += 0.5; // mobile to show that there is elements
+                        perView += 0.5; // mobile to show that there is further element on the right side
                     }
                     let glide = new Glide(carrousel, {
                         type: 'carousel',

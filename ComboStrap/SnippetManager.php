@@ -485,5 +485,57 @@ class SnippetManager
         return $this->snippetsToDokuwikiArray($slotSnippets);
     }
 
+    /**
+     * Output the snippe in HTML format
+     * @return string - html string
+     */
+    public function toHtml(): string
+    {
+        $snippets = $this->getSlotSnippetsInDokuwikiArrayFormat();
+        $xhtmlContent = "";
+        foreach ($snippets as $htmlElement => $tags) {
+
+            foreach ($tags as $tag) {
+                $xhtmlContent .= DOKU_LF . "<$htmlElement";
+                $attributes = "";
+                $content = null;
+
+                /**
+                 * This code runs in editing mode
+                 * or if the template is not strap
+                 * No preload is then supported
+                 */
+                if ($htmlElement === "link") {
+                    $relValue = $tag["rel"];
+                    $relAs = $tag["as"];
+                    if ($relValue === "preload") {
+                        if ($relAs === "style") {
+                            $tag["rel"] = "stylesheet";
+                            unset($tag["as"]);
+                        }
+                    }
+                }
+
+                /**
+                 * Print
+                 */
+                foreach ($tag as $attributeName => $attributeValue) {
+                    if ($attributeName !== "_data") {
+                        $attributes .= " $attributeName=\"$attributeValue\"";
+                    } else {
+                        $content = $attributeValue;
+                    }
+                }
+                $xhtmlContent .= "$attributes>";
+                if (!empty($content)) {
+                    $xhtmlContent .= $content;
+                }
+                $xhtmlContent .= "</$htmlElement>" . DOKU_LF;
+            }
+
+        }
+        return $xhtmlContent;
+    }
+
 
 }

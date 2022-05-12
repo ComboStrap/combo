@@ -214,53 +214,15 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
              * The snippet for the request should have been already added with the
              * DOKUWIKI_STARTED hook
              */
-            $snippets = $snippetManager->getSlotSnippetsInDokuwikiArrayFormat();
-            if (sizeof($snippets) > 0) {
+
+            if (sizeof($snippetManager->getSnippets()) > 0) {
 
                 $class = self::CLASS_SNIPPET_IN_CONTENT;
-                $xhtmlContent .= "<div class=\"$class\">\n";
-                foreach ($snippets as $htmlElement => $tags) {
-
-                    foreach ($tags as $tag) {
-                        $xhtmlContent .= DOKU_LF . "<$htmlElement";
-                        $attributes = "";
-                        $content = null;
-
-                        /**
-                         * This code runs in editing mode
-                         * or if the template is not strap
-                         * No preload is then supported
-                         */
-                        if ($htmlElement === "link") {
-                            $relValue = $tag["rel"];
-                            $relAs = $tag["as"];
-                            if ($relValue === "preload") {
-                                if ($relAs === "style") {
-                                    $tag["rel"] = "stylesheet";
-                                    unset($tag["as"]);
-                                }
-                            }
-                        }
-
-                        /**
-                         * Print
-                         */
-                        foreach ($tag as $attributeName => $attributeValue) {
-                            if ($attributeName !== "_data") {
-                                $attributes .= " $attributeName=\"$attributeValue\"";
-                            } else {
-                                $content = $attributeValue;
-                            }
-                        }
-                        $xhtmlContent .= "$attributes>";
-                        if (!empty($content)) {
-                            $xhtmlContent .= $content;
-                        }
-                        $xhtmlContent .= "</$htmlElement>" . DOKU_LF;
-                    }
-
-                }
-                $xhtmlContent .= "</div>\n";
+                $xhtmlContent .= <<<EOF
+<div class="$class">
+    {$snippetManager->toHtml()}
+</div>
+EOF;
 
             }
 

@@ -3,9 +3,8 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\Dimension;
+use ComboStrap\ConditionalLength;
 use ComboStrap\ExceptionCompile;
-use ComboStrap\Html;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
@@ -36,15 +35,9 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
     const TAG = 'carrousel';
     const CANONICAL = self::TAG;
     const ELEMENT_WIDTH_ATTRIBUTE = "element-width";
-    const CONTROL_ATTRIBUTE = "control";
+
     const GLIDE_SLIDE_CLASS = "glide__slide";
 
-    /**
-     * The number of element
-     * (we get it by scanning the element or
-     * via the {@link syntax_plugin_combo_iterator} that set it up)
-     */
-    const ELEMENT_COUNT = "bullet-count";
 
     /**
      * To center the image inside a link in a carrousel
@@ -52,31 +45,8 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
     const MEDIA_CENTER_LINK_CLASS = "justify-content-center align-items-center d-flex";
     const ELEMENTS_MIN_ATTRIBUTE = "elements-min";
     const ELEMENTS_MIN_DEFAULT = 3;
+    const CONTROL_ATTRIBUTE = "control";
 
-    private static function isCarrousel($data, TagAttributes $tagAttributes): bool
-    {
-        $elementCount = $data[self::ELEMENT_COUNT];
-        $elementWidth = $tagAttributes->getValue(self::ELEMENT_WIDTH_ATTRIBUTE);
-        if ($elementWidth !== null) {
-            $elementsMin = $tagAttributes->getValue(self::ELEMENTS_MIN_ATTRIBUTE, self::ELEMENTS_MIN_DEFAULT);
-            if ($elementCount < $elementsMin) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-
-    private static function madeChildElementCarrouselAware(?Call $childCarrouselElement)
-    {
-        $tagName = $childCarrouselElement->getTagName();
-        if ($tagName === syntax_plugin_combo_media::TAG) {
-            $childCarrouselElement->setAttribute(syntax_plugin_combo_media::LINK_CLASS_ATTRIBUTE, self::GLIDE_SLIDE_CLASS . " " . self::MEDIA_CENTER_LINK_CLASS);
-        } else {
-            $childCarrouselElement->addClassName(self::GLIDE_SLIDE_CLASS);
-        }
-
-    }
 
     /**
      * Glide copy the HTML element and lozad does not see element that are not visible
@@ -178,7 +148,9 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $tagAttributes = TagAttributes::createFromTagMatch($match);
+
+                $defaultAttributes = [];
+                $tagAttributes = TagAttributes::createFromTagMatch($match,$defaultAttributes);
                 $callStack = CallStack::createFromHandler($handler);
                 $parent = $callStack->moveToParent();
                 $context = null;
@@ -201,32 +173,18 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $actualCall = $callStack->moveToFirstChildTag();
-                $childrenCount = null;
                 if ($actualCall !== false) {
                     if ($actualCall->getTagName() === syntax_plugin_combo_template::TAG) {
                         $templateEndCall = $callStack->moveToNextCorrespondingExitTag();
                         $templateCallStackInstructions = $templateEndCall->getPluginData(syntax_plugin_combo_template::CALLSTACK);
                         if ($templateCallStackInstructions !== null) {
                             $templateCallStack = CallStack::createFromInstructions($templateCallStackInstructions);
-                            // The glide class
-                            $templateCallStack->moveToStart();
-                            $firstTemplateEnterTag = $templateCallStack->moveToFirstEnterTag();
-                            if ($firstTemplateEnterTag !== false) {
-                                self::madeChildElementCarrouselAware($firstTemplateEnterTag);
-                            }
                             // Lazy load
                             $templateCallStack->moveToStart();
                             self::setLazyLoadToHtmlOnImageTagUntilTheEndOfTheStack($templateCallStack);
                             $templateEndCall->setPluginData(syntax_plugin_combo_template::CALLSTACK, $templateCallStack->getStack());
                         }
                     } else {
-                        self::madeChildElementCarrouselAware($actualCall);
-                        $childrenCount = 1;
-                        while ($actualCall = $callStack->moveToNextSiblingTag()) {
-                            self::madeChildElementCarrouselAware($actualCall);
-                            $childrenCount++;
-                        }
-                        $openingCall->setPluginData(self::ELEMENT_COUNT, $childrenCount);
                         // Lazy load
                         $callStack->moveToEnd();
                         $callStack->moveToPreviousCorrespondingOpeningCall();
@@ -235,8 +193,7 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                 }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $openingCall->getAttributes(),
-                    self::ELEMENT_COUNT => $childrenCount,
+                    PluginUtility::ATTRIBUTES => $openingCall->getAttributes()
                 );
 
 
@@ -268,61 +225,66 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
 
-                    $slideMinimalWidth = $tagAttributes->getValue(self::ELEMENT_WIDTH_ATTRIBUTE);
-                    $slideMinimalWidthData = "";
+                    /**
+                     * Control
+                     */
+                    $control = $tagAttributes->getValueAndRemoveIfPresent(self::CONTROL_ATTRIBUTE);
+                    if ($control !== null) {
+                        $tagAttributes->addComponentAttributeValue("data-" . self::CONTROL_ATTRIBUTE, $control);
+                    }
+
+                    /**
+                     * Element Min
+                     */
+                    $elementsMin = $tagAttributes->getValueAndRemoveIfPresent(self::ELEMENTS_MIN_ATTRIBUTE, self::ELEMENTS_MIN_DEFAULT);
+                    $tagAttributes->addComponentAttributeValue("data-" . self::ELEMENTS_MIN_ATTRIBUTE, $elementsMin);
+
+                    /**
+                     * Minimal Width
+                     */
+                    $slideMinimalWidth = $tagAttributes->getValueAndRemoveIfPresent(self::ELEMENT_WIDTH_ATTRIBUTE);
                     if ($slideMinimalWidth !== null) {
                         try {
-                            $slideMinimalWidth = Dimension::toPixelValue($slideMinimalWidth);
-                            $slideMinimalWidthData = "data-" . self::ELEMENT_WIDTH_ATTRIBUTE . "=\"$slideMinimalWidth\"";
+                            $slideMinimalWidth = ConditionalLength::createFromString($slideMinimalWidth)->toPixelNumber();
+                            $tagAttributes->addComponentAttributeValue("data-" . self::ELEMENT_WIDTH_ATTRIBUTE, $slideMinimalWidth);
                         } catch (ExceptionCompile $e) {
-                            $slideMinimalWidth = 250;
                             LogUtility::msg("The minimal width value ($slideMinimalWidth) is not a valid value. Error: {$e->getMessage()}");
                         }
                     }
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
+
+
                     $snippetManager = PluginUtility::getSnippetManager();
                     $snippetId = self::TAG;
-                    $carrouselClass = "carrousel-combo";
-                    $isCarrousel = self::isCarrousel($data, $tagAttributes);
-                    if ($isCarrousel) {
+                    $snippetManager->attachCssInternalStyleSheetForSlot($snippetId);
+                    // https://www.jsdelivr.com/package/npm/@glidejs/glide
+                    $snippetManager->attachCssExternalStyleSheetForSlot($snippetId,
+                        "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
+                        "sha256-bmdlmBAVo1Q6XV2cHiyaBuBfe9KgYQhCrfQmoRq8+Sg="
+                    );
+                    if (PluginUtility::isDev()) {
 
-                        $renderer->doc .= <<<EOF
-<div class="$carrouselClass glide" $slideMinimalWidthData>
-  <div class="glide__track" data-glide-el="track">
-    <div class="glide__slides">
-EOF;
-
-                        $snippetManager->attachCssInternalStyleSheetForSlot($snippetId);
-                        // https://www.jsdelivr.com/package/npm/@glidejs/glide
-                        $snippetManager->attachCssExternalStyleSheetForSlot($snippetId,
-                            "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
-                            "sha256-bmdlmBAVo1Q6XV2cHiyaBuBfe9KgYQhCrfQmoRq8+Sg="
+                        $javascriptSnippet = $snippetManager->attachJavascriptLibraryForSlot($snippetId,
+                            "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.js",
+                            "sha256-zkYoJ1XwwGA4FbdmSdTz28y5PtHT8O/ZKzUAuQsmhKg="
                         );
-                        if (PluginUtility::isDev()) {
 
-                            $javascriptSnippet = $snippetManager->attachJavascriptLibraryForSlot($snippetId,
-                                "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.js",
-                                "sha256-zkYoJ1XwwGA4FbdmSdTz28y5PtHT8O/ZKzUAuQsmhKg="
-                            );
-
-                        } else {
-                            $javascriptSnippet = $snippetManager->attachJavascriptLibraryForSlot($snippetId,
-                                "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.min.js",
-                                "sha256-cXguqBvlUaDoW4nGjs4YamNC2mlLGJUOl64bhts/ztU="
-                            );
-                        }
-                        $javascriptSnippet->setDoesManipulateTheDomOnRun(false);
-
-                        // Theme customized from the below official theme
-                        // https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.theme.css
-                        $snippetManager->attachCssInternalStyleSheetForSlot($snippetId)
-                            ->setCritical(false);
                     } else {
-                        // gutter is done with the margin because we don't wrap the child in a cell container.
-                        $renderer->doc .= <<<EOF
-<div class="$carrouselClass row justify-content-center" $slideMinimalWidthData>
-EOF;
+                        $javascriptSnippet = $snippetManager->attachJavascriptLibraryForSlot($snippetId,
+                            "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.min.js",
+                            "sha256-cXguqBvlUaDoW4nGjs4YamNC2mlLGJUOl64bhts/ztU="
+                        );
                     }
+                    $javascriptSnippet->setDoesManipulateTheDomOnRun(false);
+
+
+                    // Theme customized from the below official theme
+                    // https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.theme.css
+                    $snippetManager->attachCssInternalStyleSheetForSlot($snippetId)
+                        ->setCritical(false);
+
                     $snippetManager->attachInternalJavascriptForSlot($snippetId);
+
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -332,72 +294,7 @@ EOF;
 
                 case DOKU_LEXER_EXIT :
 
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $isCarrousel = self::isCarrousel($data, $tagAttributes);
-
-                    switch ($isCarrousel) {
-                        case false:
-                            // grid
-                            $renderer->doc .= "</div>";
-                            break;
-                        default:
-                        case true:
-                            $renderer->doc .= <<<EOF
-</div>
-  </div>
-EOF;
-
-                            $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                            $control = $tagAttributes->getValue(self::CONTROL_ATTRIBUTE);
-                            if ($control !== "none") {
-                                // move per view
-                                // https://github.com/glidejs/glide/issues/346#issuecomment-1046137773
-                                $escapedLessThan = Html::encode("|<");
-                                $escapedGreaterThan = Html::encode("|>");
-
-                                $minimumWidth = $tagAttributes->getValue(self::ELEMENT_WIDTH_ATTRIBUTE);
-                                $classDontShowOnSmallDevice = "";
-                                if ($minimumWidth !== null) {
-                                    // not a one by one (not a gallery)
-                                    $classDontShowOnSmallDevice = "class=\"d-none d-sm-block\"";
-                                }
-                                $renderer->doc .= <<<EOF
-<div>
-  <div $classDontShowOnSmallDevice data-glide-el="controls">
-    <button class="glide__arrow glide__arrow--left" data-glide-dir="$escapedLessThan">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-        <path d="M0 12l10.975 11 2.848-2.828-6.176-6.176H24v-3.992H7.646l6.176-6.176L10.975 1 0 12z"></path>
-      </svg>
-    </button>
-    <button class="glide__arrow glide__arrow--right" data-glide-dir="$escapedGreaterThan">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-        <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"></path>
-      </svg>
-    </button>
-  </div>
-  <div class="glide__bullets d-none d-sm-block" data-glide-el="controls[nav]">
-EOF;
-                                $elementCount = $data[self::ELEMENT_COUNT];
-                                for ($i = 0; $i < $elementCount; $i++) {
-                                    $activeClass = "";
-                                    if ($i === 0) {
-                                        $activeClass = " glide__bullet--activeClass";
-                                    }
-                                    $renderer->doc .= <<<EOF
-    <button class="glide__bullet{$activeClass}" data-glide-dir="={$i}"></button>
-EOF;
-                                }
-                                $renderer->doc .= <<<EOF
-  </div>
-</div>
-EOF;
-                            }
-                            $renderer->doc .= "</div>";
-                            break;
-
-                    }
-
-
+                    $renderer->doc .= "</div>";
                     break;
 
             }

@@ -249,6 +249,7 @@ require_once(__DIR__ . '/Url.php');
 require_once(__DIR__ . '/Vertical.php');
 require_once(__DIR__ . '/XhtmlUtility.php');
 require_once(__DIR__ . '/XmlDocument.php');
+require_once(__DIR__ . '/XmlElement.php');
 require_once(__DIR__ . '/XmlUtility.php');
 
 

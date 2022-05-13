@@ -19,6 +19,8 @@ use DOMNodeList;
 use DOMXPath;
 use Exception;
 use LibXMLError;
+use PhpCss;
+use PHPUnit\Util\Xml;
 
 
 require_once(__DIR__ . '/File.php');
@@ -51,6 +53,10 @@ class XmlDocument
      * @var DOMDocument
      */
     private $xmlDom = null;
+    /**
+     * @var DOMXPath
+     */
+    private $domXpath;
 
     /**
      * XmlFile constructor.
@@ -417,6 +423,7 @@ class XmlDocument
      * See comment:
      * https://www.php.net/manual/en/domxpath.registernamespace.php#51480
      * @param $query
+     * @param DOMElement|null $contextNode
      * @return DOMNodeList
      *
      * Note that this is possible to do evaluation to return a string instead
@@ -424,29 +431,34 @@ class XmlDocument
      * @throws ExceptionBadSyntax - if the query is invalid
      */
     public
-    function xpath($query): DOMNodeList
+    function xpath($query, DOMElement $contextNode = null): DOMNodeList
     {
-        $xpath = new DOMXPath($this->getXmlDom());
+        if ($this->domXpath === null) {
+            $this->domXpath = new DOMXPath($this->getXmlDom());
 
-        /**
-         * Prefix mapping
-         * It is necessary to use xpath to handle documents which have default namespaces.
-         * The xpath expression will search for items with no namespace by default.
-         */
-        foreach ($this->getDocNamespaces() as $prefix => $namespaceUri) {
             /**
-             * You can't register an empty prefix
-             * Default namespace (without a prefix) can only be accessed by the local-name() and namespace-uri() attributes.
+             * Prefix mapping
+             * It is necessary to use xpath to handle documents which have default namespaces.
+             * The xpath expression will search for items with no namespace by default.
              */
-            if (!empty($prefix)) {
-                $result = $xpath->registerNamespace($prefix, $namespaceUri);
-                if (!$result) {
-                    LogUtility::msg("Not able to register the prefix ($prefix) for the namespace uri ($namespaceUri)");
+            foreach ($this->getDocNamespaces() as $prefix => $namespaceUri) {
+                /**
+                 * You can't register an empty prefix
+                 * Default namespace (without a prefix) can only be accessed by the local-name() and namespace-uri() attributes.
+                 */
+                if (!empty($prefix)) {
+                    $result = $this->domXpath->registerNamespace($prefix, $namespaceUri);
+                    if (!$result) {
+                        LogUtility::msg("Not able to register the prefix ($prefix) for the namespace uri ($namespaceUri)");
+                    }
                 }
             }
         }
 
-        $domList = $xpath->query($query);
+        if ($contextNode === null) {
+            $contextNode = $this->xmlDom;
+        }
+        $domList = $this->domXpath->query($query, $contextNode);
         if ($domList === false) {
             throw new ExceptionBadSyntax("The query expression ($query) may be malformed");
         }
@@ -624,45 +636,49 @@ class XmlDocument
         }
     }
 
-    /**
-     * @throws ExceptionCompile
-     */
-    public function queryXpath(string $string): ?DOMElement
-    {
 
-        $elements = $this->queryXpaths($string);
-        if ($elements !== null && sizeof($elements) > 0) {
-            return $elements[0];
+    /**
+     * @throws ExceptionBadSyntax - if the selector is not valid
+     * @throws ExceptionNotFound - if the selector selects nothing
+     */
+    public function querySelector(string $selector): XmlElement
+    {
+        $domNodeList = $this->querySelectorAll($selector);
+        if (sizeof($domNodeList) >= 1) {
+            return $domNodeList[0];
         }
-        return null;
+        throw new ExceptionNotFound("No element was found with the selector $selector");
+
     }
 
     /**
-     * @return null|DOMElement[]
-     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax
      */
-    public function queryXpaths(string $string): ?array
+    public function querySelectorAll(string $selector): array
     {
-        $nodes = $this->xpath($string);
-        if ($nodes === false) {
-            throw new ExceptionCompile("Bad xpath expression ($string)");
-        }
-        if ($nodes->count() === 0) {
-            return null;
-        }
-        $elements = null;
-        for ($i = 0; $i < $nodes->count(); $i++) {
-            $element = $nodes->item($i);
-            if (!($element instanceof DOMElement)) {
-                throw new ExceptionCompile("The xpath expression has selected a Node that is not an element");
+        $xpath = $this->cssSelectorToXpath($selector);
+        $domNodeList = $this->xpath($xpath);
+        $domNodes = [];
+        foreach ($domNodeList as $domNode) {
+            if ($domNode instanceof DOMElement) {
+                $domNodes[] = new XmlElement($domNode, $this);
             }
-            $elements[] = $element;
-
         }
+        return $domNodes;
 
-        return $elements;
     }
 
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    public function cssSelectorToXpath(string $selector): string
+    {
+        try {
+            return PhpCss::toXpath($selector);
+        } catch (PhpCss\Exception\ParserException $e) {
+            throw new ExceptionBadSyntax("The selector ($selector) is not valid. Error: {$e->getMessage()}");
+        }
+    }
 
 
 }

@@ -34,10 +34,13 @@ before_script:
     # - set | grep TRAVIS # env variable
     - bash .travis-boot.sh
     - bash boot.sh
+    - npm install --global yarn
+    - yarn
 
 script:
     # with verbose, you see the configuration file used at the beginning
     - cd _test && ./phpunit.phar --stderr --group plugin_combo --verbose --debug
+    - yarn test
 
 notifications:
     email:

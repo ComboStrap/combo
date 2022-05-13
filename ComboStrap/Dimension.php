@@ -234,7 +234,7 @@ EOF;
 
     private static function processWidth(TagAttributes $attributes)
     {
-        $widthValueAsString = $attributes->getValueAndRemoveIfPresent(self::WIDTH_KEY);
+        $widthValueAsString = $attributes->getComponentAttributeValueAndRemoveIfPresent(self::WIDTH_KEY);
         if ($widthValueAsString === null) {
             return;
         }
@@ -255,11 +255,6 @@ EOF;
                 continue;
             }
 
-
-            if($logicalTag === SvgImageLink::CANONICAL){
-                // width should be specified on the tag for svg
-                $attributes->addComponentAttributeValue("width",$widthValue);
-            }
 
             /**
              * For an image (png, svg)

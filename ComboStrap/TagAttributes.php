@@ -1349,5 +1349,12 @@ class TagAttributes
 
     }
 
+    public function getComponentAttributeValueAndRemoveIfPresent(string $attribute, $default = null)
+    {
+        $value = $this->getComponentAttributeValue($attribute, $default);
+        $this->removeComponentAttributeIfPresent($attribute);
+        return $value;
+    }
+
 
 }

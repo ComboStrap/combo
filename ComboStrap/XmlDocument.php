@@ -694,10 +694,10 @@ class XmlDocument
 
     /**
      * An utility function to know how to remove a node
-     * @param \DOMElement $nodeElement
+     * @param \DOMNode $nodeElement
      * @deprecated use {@link XmlElement::remove} instead
      */
-    public function removeNode(DOMElement $nodeElement)
+    public function removeNode(\DOMNode $nodeElement)
     {
 
         $nodeElement->parentNode->removeChild($nodeElement);

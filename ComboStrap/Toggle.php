@@ -12,6 +12,7 @@ class Toggle
      */
     const COLLAPSED = "collapsed";
     const TOGGLE_STATE = "toggle-state";
+    const TOGGLE_STATE_NONE = "none";
     const TOGGLE_STATE_EXPANDED = "expanded";
     const TOGGLE_STATE_COLLAPSED = "collapsed";
     const CANONICAL = "toggle";
@@ -33,6 +34,9 @@ class Toggle
          */
         $value = $attributes->getValueAndRemove(self::TOGGLE_STATE);
         if ($value !== null) {
+            if ($value === self::TOGGLE_STATE_NONE) {
+                return;
+            }
             $values = explode(" ", $value);
             foreach ($values as $value) {
                 if (empty($value)) {

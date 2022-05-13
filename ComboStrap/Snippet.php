@@ -223,6 +223,21 @@ class Snippet implements JsonSerializable
         return self::$globalSnippets[$keys[0]];
     }
 
+    /**
+     * When the snippets have been added to the page
+     * the snippets are cleared
+     *
+     * It can happens that some snippet are in the head
+     * and other are in the content
+     * when the template is not strap
+     *
+     * @return void
+     */
+    public static function clearSnippets()
+    {
+        self::$globalSnippets = [];
+    }
+
 
     /**
      * @param $bool - if the snippet is critical, it would not be deferred or preloaded

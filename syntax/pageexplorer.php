@@ -582,100 +582,102 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $namespaceInstructions = $data[self::NAMESPACE_INSTRUCTIONS];
                             $namespaceAttributes = $data[self::NAMESPACE_ATTRIBUTES];
 
-                            $children = FileSystems::getChildren($namespacePath);
 
                             $pageNum = 0;
-                            foreach ($children as $childWikiPath) {
+                            foreach (FileSystems::getChildrenContainer($namespacePath) as $subNamespacePath) {
 
-                                if (FileSystems::isDirectory($childWikiPath)) {
+                                // Namespace
+                                if (!($namespaceInstructions === null && $namespaceAttributes !== null)) {
+                                    try {
+                                        $subNamespacePage = Page::getIndexPageFromNamespace($subNamespacePath->toString());
+                                    } catch (ExceptionBadSyntax $e) {
+                                        LogUtility::msg("Bad syntax for the namespace $namespacePath. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                                        return false;
+                                    }
+                                    if ($subNamespacePage->isHidden()) {
+                                        continue;
+                                    }
+                                    if ($subNamespacePage->exists()) {
+                                        /**
+                                         * SubNamespace Enter tag
+                                         */
+                                        $renderer->doc .= $namespaceEnterTag;
 
-                                    // Namespace
-                                    if (!($namespaceInstructions === null && $namespaceAttributes !== null)) {
-                                        try {
-                                            $subNamespacePage = Page::getIndexPageFromNamespace($namespacePath->getPath());
-                                        } catch (ExceptionBadSyntax $e) {
-                                            LogUtility::msg("Bad syntax for the namespace $namespacePath. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                                            return false;
-                                        }
-                                        if ($subNamespacePage->exists()) {
-                                            /**
-                                             * SubNamespace Enter tag
-                                             */
-                                            $renderer->doc .= $namespaceEnterTag;
-
-                                            /**
-                                             * SubNamespace Content
-                                             */
-                                            if ($namespaceInstructions !== null) {
-                                                try {
-                                                    $renderer->doc .= RenderUtility::renderInstructionsToXhtml($namespaceInstructions, $subNamespacePage->getMetadataForRendering());
-                                                } catch (ExceptionCompile $e) {
-                                                    $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the sub-namespace. Error: {$e->getMessage()}");
-                                                }
-                                            } else {
-                                                try {
-                                                    $renderer->doc .= MarkupRef::createFromPageIdOrPath($subNamespacePage->getDokuwikiId())
-                                                        ->toAttributes()
-                                                        ->toHtmlEnterTag("a");
-                                                    $renderer->doc .= Icon::createFromComboResource(self::FOLDER_ICON)
-                                                        ->render();
-                                                    $renderer->doc .= " {$subNamespacePage->getNameOrDefault()}</a>";
-                                                } catch (ExceptionCompile $e) {
-                                                    $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default namespace. Error: {$e->getMessage()}");
-                                                }
-
+                                        /**
+                                         * SubNamespace Content
+                                         */
+                                        if ($namespaceInstructions !== null) {
+                                            try {
+                                                $renderer->doc .= RenderUtility::renderInstructionsToXhtml($namespaceInstructions, $subNamespacePage->getMetadataForRendering());
+                                            } catch (ExceptionCompile $e) {
+                                                $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the sub-namespace. Error: {$e->getMessage()}");
                                             }
-                                            /**
-                                             * SubNamespace Exit tag
-                                             */
-                                            $renderer->doc .= "</li>";
-                                        }
+                                        } else {
+                                            try {
+                                                $renderer->doc .= MarkupRef::createFromPageIdOrPath($subNamespacePage->getDokuwikiId())
+                                                    ->toAttributes()
+                                                    ->toHtmlEnterTag("a");
+                                                $renderer->doc .= Icon::createFromComboResource(self::FOLDER_ICON)
+                                                    ->render();
+                                                $renderer->doc .= " {$subNamespacePage->getNameOrDefault()}</a>";
+                                            } catch (ExceptionCompile $e) {
+                                                $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default namespace. Error: {$e->getMessage()}");
+                                            }
 
+                                        }
+                                        /**
+                                         * SubNamespace Exit tag
+                                         */
+                                        $renderer->doc .= "</li>";
                                     }
 
-                                } else {
-
-                                    if (!($pageInstructions === null && $pageAttributes !== null)) {
-                                        $pageNum++;
-                                        if ($currentHomePage !== null
-                                            && $childWikiPath->getDokuwikiId() !== $currentHomePage->getDokuwikiId()
-                                            && FileSystems::exists($childWikiPath)
-                                        ) {
-                                            /**
-                                             * Page Enter tag
-                                             */
-                                            $renderer->doc .= $pageEnterTag;
-                                            /**
-                                             * Page Content
-                                             */
-                                            if ($pageInstructions !== null) {
-
-                                                try {
-                                                    $childPage = Page::createPageFromPathObject($childWikiPath);
-                                                    $renderer->doc .= RenderUtility::renderInstructionsToXhtmlFromPage($pageInstructions, $childPage);
-                                                } catch (ExceptionCompile $e) {
-                                                    $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the page. Error: {$e->getMessage()}");
-                                                }
-                                            } else {
-                                                try {
-                                                    $renderer->doc .= MarkupRef::createFromPageIdOrPath($childWikiPath->getDokuwikiId())
-                                                        ->toAttributes()
-                                                        ->toHtmlEnterTag("a");
-                                                    $childPage = Page::createPageFromPathObject($childWikiPath);
-                                                    $renderer->doc .= "{$childPage->getNameOrDefault()}</a>";
-                                                } catch (ExceptionCompile $e) {
-                                                    $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default page. Error: {$e->getMessage()}");
-                                                }
-                                            }
-                                            /**
-                                             * Page Exit tag
-                                             */
-                                            $renderer->doc .= "</li>";
-                                        }
-                                    }
                                 }
 
                             }
+
+                            foreach (FileSystems::getChildrenLeaf($namespacePath) as $childPagePath) {
+                                $childPage = Page::createPageFromPathObject($childPagePath);
+                                if ($childPage->isHidden()) {
+                                    continue;
+                                }
+                                if (!($pageInstructions === null && $pageAttributes !== null)) {
+                                    $pageNum++;
+                                    if ($currentHomePage !== null
+                                        && $childPagePath->getDokuwikiId() !== $currentHomePage->getDokuwikiId()
+                                        && FileSystems::exists($childPagePath)
+                                    ) {
+                                        /**
+                                         * Page Enter tag
+                                         */
+                                        $renderer->doc .= $pageEnterTag;
+                                        /**
+                                         * Page Content
+                                         */
+                                        if ($pageInstructions !== null) {
+
+                                            try {
+                                                $renderer->doc .= RenderUtility::renderInstructionsToXhtmlFromPage($pageInstructions, $childPage);
+                                            } catch (ExceptionCompile $e) {
+                                                $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the page. Error: {$e->getMessage()}");
+                                            }
+                                        } else {
+                                            try {
+                                                $renderer->doc .= MarkupRef::createFromPageIdOrPath($childPagePath->getDokuwikiId())
+                                                    ->toAttributes()
+                                                    ->toHtmlEnterTag("a");
+                                                $renderer->doc .= "{$childPage->getNameOrDefault()}</a>";
+                                            } catch (ExceptionCompile $e) {
+                                                $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default page. Error: {$e->getMessage()}");
+                                            }
+                                        }
+                                        /**
+                                         * Page Exit tag
+                                         */
+                                        $renderer->doc .= "</li>";
+                                    }
+                                }
+                            }
+
 
                             /**
                              * End container tag
@@ -685,7 +687,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                             break;
                         case self::TYPE_TREE:
-
 
                             /**
                              * Printing the tree
@@ -898,7 +899,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @param array $data - the data array from the handler
      * @param string $type
      */
-    private static function treeProcessLeaf(string &$html, Page $page, array $data, string $type)
+    private
+    static function treeProcessLeaf(string &$html, Page $page, array $data, string $type)
     {
         /**
          * In callstack instructions

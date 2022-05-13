@@ -110,9 +110,11 @@ class LocalFs implements FileSystem
 
     /**
      * @param LocalPath $path
+     * @param string|null $type container / leaf (ie directory / file or namespace/page)
      * @return LocalPath[]
+     * @throws ExceptionBadArgument
      */
-    public function getChildren(Path $path): array
+    public function getChildren(Path $path, string $type = null): array
     {
 
         /**
@@ -127,7 +129,28 @@ class LocalFs implements FileSystem
                 if (in_array($fileName, [LocalPath::RELATIVE_CURRENT, LocalPath::RELATIVE_PARENT])) {
                     continue;
                 }
-                $localChildren[] = $path->resolve($fileName);
+                $childPath = $path->resolve($fileName);
+                if ($type === null) {
+                    $localChildren[] = $childPath;
+                    continue;
+                }
+                /**
+                 * Filter is not null, filter
+                 */
+                switch ($type) {
+                    case FileSystems::CONTAINER:
+                        if (FileSystems::isDirectory($childPath)) {
+                            $localChildren[] = $childPath;
+                        }
+                        break;
+                    case FileSystems::LEAF:
+                        if (!FileSystems::isDirectory($childPath)) {
+                            $localChildren[] = $childPath;
+                        }
+                        break;
+                    default:
+                        throw new ExceptionBadArgument("The type of file ($type) is unknown. It should be `" . FileSystems::CONTAINER . "` or `" . FileSystems::LEAF . "`");
+                }
             }
             return $localChildren;
         } finally {

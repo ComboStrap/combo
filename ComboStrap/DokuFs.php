@@ -107,12 +107,14 @@ class DokuFs implements FileSystem
 
     /**
      * @param DokuPath $path
+     * @param string|null $type
      * @return DokuPath[]
+     * @throws ExceptionBadArgument
      */
-    public function getChildren(Path $path): array
+    public function getChildren(Path $path, string $type = null): array
     {
 
-        $children = FileSystems::getChildren($path->toLocalPath());
+        $children = FileSystems::getChildren($path->toLocalPath(), $type);
         $childrenWiki = [];
         foreach ($children as $child) {
             try {

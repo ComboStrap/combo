@@ -537,5 +537,10 @@ class SnippetManager
         return $xhtmlContent;
     }
 
+    public function clearSnippets()
+    {
+        Snippet::clearSnippets();
+    }
+
 
 }

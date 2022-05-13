@@ -92,7 +92,7 @@ class PipelineUtility
                 }
             }
         }
-        return $value;
+        return trim($value);
     }
 
     private static function replace(array $commandArgs, $value)

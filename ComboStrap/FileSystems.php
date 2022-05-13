@@ -7,6 +7,9 @@ namespace ComboStrap;
 class FileSystems
 {
 
+    public const CONTAINER = "container";
+    public const LEAF = "leaf";
+
     static function exists(Path $path): bool
     {
         $scheme = $path->getScheme();
@@ -131,16 +134,48 @@ class FileSystems
         }
     }
 
-    public static function getChildren(Path $path)
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public static function getChildren(Path $path, string $type = null): array
     {
         $scheme = $path->getScheme();
         switch ($scheme) {
             case LocalFs::SCHEME:
-                return LocalFs::getOrCreate()->getChildren($path);
+                return LocalFs::getOrCreate()->getChildren($path, $type);
             case DokuFs::SCHEME:
-                return DokuFs::getOrCreate()->getChildren($path);
+                return DokuFs::getOrCreate()->getChildren($path, $type);
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
+        }
+    }
+
+    /**
+     * @param Path $namespacePath
+     * @return Path[]
+     */
+    public static function getChildrenContainer(Path $namespacePath): array
+    {
+        try {
+            return self::getChildren($namespacePath, FileSystems::CONTAINER);
+        } catch (ExceptionBadArgument $e) {
+            // as we path the type, it should not happen
+            throw new ExceptionRuntime("Error getting the children. Error: {$e->getMessage()}");
+        }
+    }
+
+    /**
+     * @param Path $namespacePath
+     * @return Path[]
+     */
+    public static function getChildrenLeaf(Path $namespacePath): array
+    {
+        try {
+            return self::getChildren($namespacePath, FileSystems::LEAF);
+        } catch (ExceptionBadArgument $e) {
+            // as we path the type, it should not happen
+            throw new ExceptionRuntime("Error getting the children. Error: {$e->getMessage()}");
         }
     }
 }

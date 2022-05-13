@@ -26,7 +26,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
     /**
      * @var bool - to trace if the header output was called
      */
-    private $componentSnippetHeadOrContentWasCalled = false;
+    private $headerOutputWasCalled = false;
 
     function __construct()
     {
@@ -73,7 +73,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
     function close()
     {
 
-        $this->componentSnippetHeadOrContentWasCalled = false;
+        $this->headerOutputWasCalled = false;
 
     }
 
@@ -85,6 +85,15 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
      */
     function componentSnippetHead($event)
     {
+
+        /**
+         * Advertise that this event has occured
+         * In a strap template, this event is last because head are added after content rendering
+         * In another template, this event is first
+         * The function {@link action_plugin_combo_snippets::componentSnippetContent()} used it to determine if
+         * the snippets should be added into the content
+         */
+        $this->headerOutputWasCalled = true;
 
         global $ID;
         if (empty($ID)) {
@@ -138,23 +147,6 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             }
         }
 
-        /**
-         * Snippets
-         * (Slot and request snippets)
-         *
-         * Advertise that the function {@link action_plugin_combo_snippets::componentSnippetContent()}
-         * was already called.
-         *
-         * Therefore the snippet were already added
-         *
-         * If the user is using another template
-         * than strap that does not put the component snippet two times
-         */
-        if ($this->componentSnippetHeadOrContentWasCalled) {
-            return;
-        }
-        $this->componentSnippetHeadOrContentWasCalled = true;
-
         $allSnippets = $snippetManager->getAllSnippetsInDokuwikiArrayFormat();
         foreach ($allSnippets as $tagType => $tags) {
 
@@ -163,36 +155,26 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             }
 
         }
-
+        $snippetManager->clearSnippets();
 
     }
 
     /**
-     * Add the snippet in the content if the head function was not called
      *
-     * We store them in the HTML and they
-     * follows then the HTML cache of DokuWiki
+     * This function store the snippets in the HTML content when needed
+     * (mostly admin page or any other template than strap ...)
+     *
+     * In the strap template, this event/function is called first
+     * because strap parse the page first (the page is the driver)
+     *
+     * In any other template, they follows the creation of the page, the
+     * header are called first, then the page
+     *
+     *
      * @param $event
      */
     function componentSnippetContent($event)
     {
-
-        /**
-         * Advertise that the function {@link action_plugin_combo_snippets::componentSnippetHead()}
-         * was already called.
-         *
-         * Therefore the snippet were already added
-         * Don't put the component snippet two times
-         */
-        if ($this->componentSnippetHeadOrContentWasCalled) {
-            return;
-        }
-        $this->componentSnippetHeadOrContentWasCalled = true;
-
-        $format = $event->data[0];
-        if ($format !== "xhtml") {
-            return;
-        }
 
         /**
          * Add snippet in the content
@@ -200,11 +182,36 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          *  - if this is not a page rendering (ie an admin rendering)
          * for instance, the upgrade plugin call {@link p_cached_output()} on local file
          */
+
+        /**
+         * Dynamic rendering call this event
+         * We don't add any component at this moment
+         */
         global $ACT;
         if ($ACT === DynamicRender::DYNAMIC_RENDERING) {
             return;
         }
 
+
+        $format = $event->data[0];
+        if ($format !== "xhtml") {
+            return;
+        }
+
+        /**
+         * Put snippet in the content
+         * if this is not a show (ie Admin page rendering)
+         *
+         * And if the header output was already called
+         * (case that the template is not strap)
+         */
+        $putSnippetInContent =
+            $this->headerOutputWasCalled === true
+            ||
+            ($ACT !== "show" && $ACT !== null);
+        if (!$putSnippetInContent) {
+            return;
+        }
 
         $snippetManager = PluginUtility::getSnippetManager();
         $xhtmlContent = &$event->data[1];
@@ -224,12 +231,14 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
         if (sizeof($snippetManager->getSnippets()) > 0) {
 
+            $this->headerOutputWasCalled = true;
             $class = self::CLASS_SNIPPET_IN_CONTENT;
             $xhtmlContent .= <<<EOF
 <div class="$class">
     {$snippetManager->toHtml()}
 </div>
 EOF;
+            $snippetManager->clearSnippets();
 
         }
 

@@ -35,7 +35,7 @@
         },
         "testMatch": [
             "**/resources/library/combo/__tests__/**/*.[jt]s?(x)",
-            "**/resources/snippet/js/*.test.[jt]s?(x)"
+            "**/_test/js/*.test.[jt]s?(x)"
         ],
         "setupFilesAfterEnv": [
             "./resources/library/combo/jest/JestExtend.js"

@@ -240,8 +240,9 @@ EOF;
         }
 
         $widthValueAsString = trim($widthValueAsString);
+        $logicalTag = $attributes->getLogicalTag();
         if ($widthValueAsString === "") {
-            LogUtility::error("The width value is empty for the tag ({$attributes->getLogicalTag()})");
+            LogUtility::error("The width value is empty for the tag ({$logicalTag})");
             return;
         }
         $widthValues = explode(" ", $widthValueAsString);
@@ -255,12 +256,16 @@ EOF;
             }
 
 
+            if($logicalTag === SvgImageLink::CANONICAL){
+                // width should be specified on the tag for svg
+                $attributes->addComponentAttributeValue("width",$widthValue);
+            }
 
             /**
              * For an image (png, svg)
              * They have width and height **element** attribute
              */
-            if (in_array($attributes->getLogicalTag(), self::NATURAL_SIZING_ELEMENT)) {
+            if (in_array($logicalTag, self::NATURAL_SIZING_ELEMENT)) {
 
                 /**
                  * If the image is not asked as static resource (ie HTTP request)

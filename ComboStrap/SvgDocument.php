@@ -18,7 +18,7 @@ use DOMElement;
 use DOMNode;
 
 
-class SvgDocument extends XmlDocument
+class SvgDocument
 {
 
 
@@ -125,11 +125,18 @@ class SvgDocument extends XmlDocument
      * @var Path
      */
     private $path;
+    /**
+     * @var XmlDocument
+     */
+    private $xmlDocument;
 
 
+    /**
+     * @throws ExceptionBadSyntax
+     */
     public function __construct($text)
     {
-        parent::__construct($text);
+        $this->xmlDocument = XmlDocument::createXmlDocFromMarkup($text);
         $this->shouldBeOptimized = PluginUtility::getConfValue(self::CONF_SVG_OPTIMIZATION_ENABLE, 1);
 
     }
@@ -179,6 +186,7 @@ class SvgDocument extends XmlDocument
      *   This class should be merged with {@link ImageSvg}
      *   Because we use only {@link Image} function that are here not available because we loose the fact that this is an image
      *   For instance {@link Image::getCroppingDimensionsWithRatio()}
+     * @throws ExceptionBadSyntax
      */
     public function getXmlText(TagAttributes $tagAttributes = null): string
     {
@@ -197,12 +205,12 @@ class SvgDocument extends XmlDocument
             $width = $this->getXmlDom()->documentElement->getAttribute("width");
             if ($width === "") {
                 LogUtility::msg("Svg processing stopped. Bad svg: We can't determine the width of the svg ($this) (The viewBox and the width does not exist) ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                return parent::getXmlText();
+                return $this->xmlDocument->getXmlText();
             }
             $height = $this->getXmlDom()->documentElement->getAttribute("height");
             if ($height === "") {
                 LogUtility::msg("Svg processing stopped. Bad svg: We can't determine the height of the svg ($this) (The viewBox and the height does not exist) ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                return parent::getXmlText();
+                return $this->xmlDocument->getXmlText();
             }
             $this->getXmlDom()->documentElement->setAttribute(self::VIEW_BOX, "0 0 $width $height");
         }
@@ -214,7 +222,7 @@ class SvgDocument extends XmlDocument
         // Set the name (icon) attribute for test selection
         if ($localTagAttributes->hasComponentAttribute("name")) {
             $name = $localTagAttributes->getValueAndRemove("name");
-            $this->setRootAttribute('data-name', $name);
+            $this->xmlDocument->setRootAttribute('data-name', $name);
         }
 
         // Handy variable
@@ -239,13 +247,13 @@ class SvgDocument extends XmlDocument
             $mediaWidth = $this->getMediaWidth();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("The media width of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
-            return parent::getXmlText();
+            return $this->xmlDocument->getXmlText();
         }
         try {
             $mediaHeight = $this->getMediaHeight();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("The media height of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
-            return parent::getXmlText();
+            return $this->xmlDocument->getXmlText();
         }
         if ($mediaWidth !== null
             && $mediaHeight !== null
@@ -361,7 +369,7 @@ class SvgDocument extends XmlDocument
                         $widthInPixel = Dimension::toPixelValue($requestedWidth);
                     } catch (ExceptionCompile $e) {
                         LogUtility::msg("The requested width $requestedWidth could not be converted to pixel. It returns the following error ({$e->getMessage()}). Processing was stopped");
-                        return parent::getXmlText();
+                        return $this->xmlDocument->getXmlText();
                     }
                     $localTagAttributes->addStyleDeclarationIfNotSet("max-width", "{$widthInPixel}px");
 
@@ -370,7 +378,7 @@ class SvgDocument extends XmlDocument
                      * and not shrink on the css property `width: auto !important;`
                      * of a table
                      */
-                    $this->setRootAttribute("width", $widthInPixel);
+                    $this->xmlDocument->setRootAttribute("width", $widthInPixel);
 
                 }
 
@@ -402,7 +410,7 @@ class SvgDocument extends XmlDocument
                  */
                 $isDoubleColor = false;
                 if ($svgColorType === self::COLOR_TYPE_FILL_SOLID) {
-                    $svgFillsElement = $this->xpath("//*[@fill]");
+                    $svgFillsElement = $this->xmlDocument->xpath("//*[@fill]");
                     $fillColors = [];
                     for ($i = 0; $i < $svgFillsElement->length; $i++) {
                         /**
@@ -511,7 +519,7 @@ class SvgDocument extends XmlDocument
                                      *
                                      * fill may be set on group or whatever
                                      */
-                                    $svgPaths = $this->xpath("//*[local-name()='path' or local-name()='g']");
+                                    $svgPaths = $this->xmlDocument->xpath("//*[local-name()='path' or local-name()='g']");
                                     for ($i = 0; $i < $svgPaths->length; $i++) {
                                         /**
                                          * @var DOMElement $nodeElement
@@ -522,7 +530,7 @@ class SvgDocument extends XmlDocument
                                             if ($nodeElement->parentNode->tagName !== "svg") {
                                                 $nodeElement->setAttribute("fill", self::CURRENT_COLOR);
                                             } else {
-                                                $this->removeAttributeValue("fill", $nodeElement);
+                                                $this->xmlDocument->removeAttributeValue("fill", $nodeElement);
                                             }
                                         }
                                     }
@@ -530,7 +538,7 @@ class SvgDocument extends XmlDocument
                                 }
                             } else {
                                 // double color
-                                $firsFillElement = $this->xpath("//*[@fill][1]")->item(0);
+                                $firsFillElement = $this->xmlDocument->xpath("//*[@fill][1]")->item(0);
                                 if ($firsFillElement instanceof DOMElement) {
                                     $firsFillElement->setAttribute("fill", $colorValue);
                                 }
@@ -546,7 +554,7 @@ class SvgDocument extends XmlDocument
                                  * Delete the stroke property on sub-path
                                  */
                                 // if the fill is set on sub-path, it will not work
-                                $svgPaths = $this->xpath("//*[local-name()='path']");
+                                $svgPaths = $this->xmlDocument->xpath("//*[local-name()='path']");
                                 for ($i = 0; $i < $svgPaths->length; $i++) {
                                     /**
                                      * @var DOMElement $nodeElement
@@ -554,9 +562,9 @@ class SvgDocument extends XmlDocument
                                     $nodeElement = $svgPaths[$i];
                                     $value = $nodeElement->getAttribute(self::STROKE_ATTRIBUTE);
                                     if ($value !== "none") {
-                                        $this->removeAttributeValue(self::STROKE_ATTRIBUTE, $nodeElement);
+                                        $this->xmlDocument->removeAttributeValue(self::STROKE_ATTRIBUTE, $nodeElement);
                                     } else {
-                                        $this->removeNode($nodeElement);
+                                        $this->xmlDocument->removeNode($nodeElement);
                                     }
                                 }
 
@@ -589,11 +597,11 @@ class SvgDocument extends XmlDocument
                 $targetRatio = Dimension::convertTextualRatioToNumber($ratio);
             } catch (ExceptionCompile $e) {
                 LogUtility::msg("The target ratio attribute ($ratio) returns the following error ({$e->getMessage()}). The svg processing was stopped");
-                return parent::getXmlText();
+                return $this->xmlDocument->getXmlText();
             }
             [$processedWidth, $processedHeight] = Image::getCroppingDimensionsWithRatio($targetRatio, $mediaWidth, $mediaHeight);
 
-            $this->setRootAttribute(self::VIEW_BOX, "0 0 $processedWidth $processedHeight");
+            $this->xmlDocument->setRootAttribute(self::VIEW_BOX, "0 0 $processedWidth $processedHeight");
 
         }
 
@@ -621,19 +629,19 @@ class SvgDocument extends XmlDocument
             $actualHeight = $mediaHeight;
             $x = -($processedWidth - $actualWidth) / 2;
             $y = -($processedHeight - $actualHeight) / 2;
-            $this->setRootAttribute(self::VIEW_BOX, "$x $y $processedWidth $processedHeight");
+            $this->xmlDocument->setRootAttribute(self::VIEW_BOX, "$x $y $processedWidth $processedHeight");
         }
 
 
         // Add a class on each path for easy styling
         if (!empty($this->name)) {
-            $svgPaths = $this->xpath("//*[local-name()='path']");
+            $svgPaths = $this->xmlDocument->xpath("//*[local-name()='path']");
             for ($i = 0;
                  $i < $svgPaths->length;
                  $i++) {
 
                 $stylingClass = $this->name . "-" . $i;
-                $this->addAttributeValue("class", $stylingClass, $svgPaths[$i]);
+                $this->xmlDocument->addAttributeValue("class", $stylingClass, $svgPaths[$i]);
 
             }
         }
@@ -664,15 +672,15 @@ class SvgDocument extends XmlDocument
         $toHtmlArray = $localTagAttributes->toHtmlArray();
         foreach ($toHtmlArray as $name => $value) {
             if (in_array($name, TagAttributes::MULTIPLE_VALUES_ATTRIBUTES)) {
-                $actualValue = $this->getRootAttributeValue($name);
+                $actualValue = $this->xmlDocument->getRootAttributeValue($name);
                 if ($actualValue !== null) {
                     $value = TagAttributes::mergeClassNames($value, $actualValue);
                 }
             }
-            $this->setRootAttribute($name, $value);
+            $this->xmlDocument->setRootAttribute($name, $value);
         }
 
-        return parent::getXmlText();
+        return $this->xmlDocument->getXmlText();
 
     }
 
@@ -753,24 +761,28 @@ class SvgDocument extends XmlDocument
 
     }
 
-
     private
     function getSvgPaths()
     {
-        if ($this->isXmlExtensionLoaded()) {
+        if ($this->xmlDocument->isXmlExtensionLoaded()) {
 
             /**
              * If the file was optimized, the svg namespace
              * does not exist anymore
              */
-            $namespace = $this->getDocNamespaces();
+            $namespace = $this->xmlDocument->getDocNamespaces();
             if (isset($namespace[self::SVG_NAMESPACE_PREFIX])) {
                 $svgNamespace = self::SVG_NAMESPACE_PREFIX;
                 $query = "//$svgNamespace:path";
             } else {
                 $query = "//*[local-name()='path']";
             }
-            return $this->xpath($query);
+            try {
+                return $this->xmlDocument->xpath($query);
+            } catch (ExceptionBadSyntax $e) {
+                // should not happen on prod, only on dev
+                throw new ExceptionRuntime("Internal error, the xpath query $query is not good", self::CANONICAL, $e);
+            }
         } else {
             return array();
         }
@@ -796,14 +808,14 @@ class SvgDocument extends XmlDocument
              */
             $confNamespaceToKeeps = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP);
             $namespaceToKeep = StringUtility::explodeAndTrim($confNamespaceToKeeps, ",");
-            foreach ($this->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
+            foreach ($this->xmlDocument->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
                 if (
                     !empty($namespacePrefix)
                     && $namespacePrefix != "svg"
                     && !in_array($namespacePrefix, $namespaceToKeep)
                     && in_array($namespaceUri, self::EDITOR_NAMESPACE)
                 ) {
-                    $this->removeNamespace($namespaceUri);
+                    $this->xmlDocument->removeNamespace($namespaceUri);
                 }
             }
 
@@ -811,9 +823,9 @@ class SvgDocument extends XmlDocument
              * Delete empty namespace rules
              */
             $documentElement = &$this->getXmlDom()->documentElement;
-            foreach ($this->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
-                $nodes = $this->xpath("//*[namespace-uri()='$namespaceUri']");
-                $attributes = $this->xpath("//@*[namespace-uri()='$namespaceUri']");
+            foreach ($this->xmlDocument->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
+                $nodes = $this->xmlDocument->xpath("//*[namespace-uri()='$namespaceUri']");
+                $attributes = $this->xmlDocument->xpath("//@*[namespace-uri()='$namespaceUri']");
                 if ($nodes->length == 0 && $attributes->length == 0) {
                     $result = $documentElement->removeAttributeNS($namespaceUri, $namespacePrefix);
                     if ($result === false) {
@@ -825,9 +837,9 @@ class SvgDocument extends XmlDocument
             /**
              * Delete comments
              */
-            $commentNodes = $this->xpath("//comment()");
+            $commentNodes = $this->xmlDocument->xpath("//comment()");
             foreach ($commentNodes as $commentNode) {
-                $this->removeNode($commentNode);
+                $this->xmlDocument->removeNode($commentNode);
             }
 
             /**
@@ -856,7 +868,7 @@ class SvgDocument extends XmlDocument
                     continue;
                 }
 
-                $nodes = $this->xpath("//@$value");
+                $nodes = $this->xmlDocument->xpath("//@$value");
                 foreach ($nodes as $node) {
                     /** @var DOMAttr $node */
                     /** @var DOMElement $DOMNode */
@@ -943,7 +955,7 @@ class SvgDocument extends XmlDocument
             $elementsToDeleteIfEmptyConf = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY, "metadata, defs, g");
             $elementsToDeleteIfEmpty = StringUtility::explodeAndTrim($elementsToDeleteIfEmptyConf);
             foreach ($elementsToDeleteIfEmpty as $elementToDeleteIfEmpty) {
-                $elementNodeList = $this->xpath("//*[local-name()='$elementToDeleteIfEmpty']");
+                $elementNodeList = $this->xmlDocument->xpath("//*[local-name()='$elementToDeleteIfEmpty']");
                 foreach ($elementNodeList as $element) {
                     /** @var DOMElement $element */
                     if (!$element->hasChildNodes()) {
@@ -1004,27 +1016,22 @@ class SvgDocument extends XmlDocument
     }
 
 
-
-    /**
-     * An utility function to know how to remove a node
-     * @param DOMNode $nodeElement
-     */
-    private
-    function removeNode(DOMNode $nodeElement)
-    {
-        $nodeElement->parentNode->removeChild($nodeElement);
-    }
-
     private
     function deleteAllElements(string $elementName)
     {
-        $svgElement = $this->xpath("//*[local-name()='$elementName']");
+        $xpathQuery = "//*[local-name()='$elementName']";
+        try {
+            $svgElement = $this->xmlDocument->xpath($xpathQuery);
+        } catch (ExceptionBadSyntax $e) {
+            // should not happen on prod
+            throw new ExceptionRuntime("xpath query error ($xpathQuery");
+        }
         for ($i = 0; $i < $svgElement->length; $i++) {
             /**
              * @var DOMElement $nodeElement
              */
             $nodeElement = $svgElement[$i];
-            $this->removeNode($nodeElement);
+            $this->xmlDocument->removeNode($nodeElement);
         }
     }
 
@@ -1035,7 +1042,7 @@ class SvgDocument extends XmlDocument
     private function getViewBoxAttributes(string $viewBox): array
     {
         $attributes = explode(" ", $viewBox);
-        if(sizeof($attributes)===1){
+        if (sizeof($attributes) === 1) {
             /**
              * We may find also comma. Example:
              * viewBox="0,0,433.62,289.08"
@@ -1043,6 +1050,11 @@ class SvgDocument extends XmlDocument
             $attributes = explode(",", $viewBox);
         }
         return $attributes;
+    }
+
+    public function getXmlDom(): ?\DOMDocument
+    {
+        return $this->xmlDocument->getXmlDom();
     }
 
 

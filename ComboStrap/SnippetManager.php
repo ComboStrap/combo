@@ -58,7 +58,7 @@ class SnippetManager
     /**
      * @param $tag
      * @return string
-     * @deprecated create a {@link Snippet} instead and use the {@link Snippet::getClass()} function instead
+     * See also {@link Snippet::getClass()} function
      */
     public static function getClassFromSnippetId($tag): string
     {

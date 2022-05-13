@@ -52,7 +52,7 @@ class XmlDocument
     /**
      * @var DOMDocument
      */
-    private $xmlDom = null;
+    private $xmlDom;
     /**
      * @var DOMXPath
      */
@@ -262,7 +262,7 @@ class XmlDocument
     }
 
     public
-    function &getXmlDom()
+    function &getXmlDom(): DOMDocument
     {
         return $this->xmlDom;
     }
@@ -288,11 +288,14 @@ class XmlDocument
         return $value;
     }
 
-    public function getXmlText()
+    public function getXmlText(DOMElement $element = null): string
     {
 
+        if ($element === null) {
+            $element = $this->getXmlDom()->documentElement;
+        }
         $xmlText = $this->getXmlDom()->saveXML(
-            $this->getXmlDom()->documentElement,
+            $element,
             LIBXML_NOXMLDECL // no xml declaration
         );
         // Delete doctype (for svg optimization)
@@ -553,11 +556,11 @@ class XmlDocument
      * We do it with the function {@link XmlDocument::mandatoryFormatConfigBeforeLoading()}
      *
      */
-    public function getXmlTextFormatted()
+    public function getXmlTextFormatted(DOMElement $element = null)
     {
 
         $this->xmlDom->formatOutput = true;
-        return $this->getXmlText();
+        return $this->getXmlText($element);
 
     }
 
@@ -569,7 +572,7 @@ class XmlDocument
      * See also {@link XmlDocument::processTextBeforeLoading()}
      * that is needed before loading
      */
-    public function getXmlTextNormalized()
+    public function getXmlTextNormalized(DOMElement $element = null)
     {
 
         /**
@@ -588,8 +591,11 @@ class XmlDocument
 //            }
 //        }
 
-        $this->xmlDom->documentElement->normalize();
-        return $this->getXmlTextFormatted();
+        if ($element == null) {
+            $element = $this->xmlDom->documentElement;
+        }
+        $element->normalize();
+        return $this->getXmlTextFormatted($element);
     }
 
     /**
@@ -624,6 +630,12 @@ class XmlDocument
         $this->xmlDom->preserveWhiteSpace = false;
     }
 
+    /**
+     * @param string $attributeName
+     * @param DOMElement $nodeElement
+     * @return void
+     * @deprecated use the {@link XmlElement::removeAttribute()} if possible
+     */
     public function removeAttributeValue(string $attributeName, DOMElement $nodeElement)
     {
         $attr = $nodeElement->getAttributeNode($attributeName);
@@ -678,6 +690,18 @@ class XmlDocument
         } catch (PhpCss\Exception\ParserException $e) {
             throw new ExceptionBadSyntax("The selector ($selector) is not valid. Error: {$e->getMessage()}");
         }
+    }
+
+    /**
+     * An utility function to know how to remove a node
+     * @param \DOMElement $nodeElement
+     * @deprecated use {@link XmlElement::remove} instead
+     */
+    public function removeNode(DOMElement $nodeElement)
+    {
+
+        $nodeElement->parentNode->removeChild($nodeElement);
+
     }
 
 

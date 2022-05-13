@@ -81,4 +81,29 @@ class XmlElement
         return $nodes;
     }
 
+    public function getXmlTextNormalized(): string
+    {
+
+        return $this->document->getXmlTextNormalized($this->element);
+
+    }
+
+    public function removeAttribute($attributeName): XmlElement
+    {
+        $attr = $this->element->getAttributeNode($attributeName);
+        if ($attr == false) {
+            return $this;
+        }
+        $result = $this->element->removeAttributeNode($attr);
+        if ($result === false) {
+            throw new ExceptionRuntime("Not able to delete the attribute $attributeName of the node element {$this->element->tagName} in the Xml document");
+        }
+        return $this;
+    }
+
+    public function remove(): XmlElement
+    {
+        $this->element->parentNode->removeChild($this->element);
+        return $this;
+    }
 }

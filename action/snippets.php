@@ -26,7 +26,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
     /**
      * @var bool - to trace if the header output was called
      */
-    private $headerOutputWasCalled = false;
+    private $componentSnippetHeadOrContentWasCalled = false;
 
     function __construct()
     {
@@ -73,19 +73,18 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
     function close()
     {
 
-        $this->headerOutputWasCalled = false;
+        $this->componentSnippetHeadOrContentWasCalled = false;
 
     }
 
     /**
-     * Dokuwiki has already a canonical methodology
-     * https://www.dokuwiki.org/canonical
+     *
+     * Add the snippets in the head
      *
      * @param $event
      */
     function componentSnippetHead($event)
     {
-
 
         global $ID;
         if (empty($ID)) {
@@ -112,14 +111,6 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             }
         }
 
-        /**
-         * Advertise that the header output was called
-         * If the user is using another template
-         * than strap that does not put the component snippet
-         * in the head
-         * Used in
-         */
-        $this->headerOutputWasCalled = true;
 
         $snippetManager = PluginUtility::getSnippetManager();
 
@@ -150,7 +141,20 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         /**
          * Snippets
          * (Slot and request snippets)
+         *
+         * Advertise that the function {@link action_plugin_combo_snippets::componentSnippetContent()}
+         * was already called.
+         *
+         * Therefore the snippet were already added
+         *
+         * If the user is using another template
+         * than strap that does not put the component snippet two times
          */
+        if ($this->componentSnippetHeadOrContentWasCalled) {
+            return;
+        }
+        $this->componentSnippetHeadOrContentWasCalled = true;
+
         $allSnippets = $snippetManager->getAllSnippetsInDokuwikiArrayFormat();
         foreach ($allSnippets as $tagType => $tags) {
 
@@ -164,11 +168,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
     }
 
     /**
-     * Used if the template does not run the content
-     * before the calling of the header as strap does.
-     *
-     * In this case, the {@link \ComboStrap\SnippetManager::close()} has
-     * not run, and the snippets are still in memory.
+     * Add the snippet in the content if the head function was not called
      *
      * We store them in the HTML and they
      * follows then the HTML cache of DokuWiki
@@ -176,6 +176,18 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
      */
     function componentSnippetContent($event)
     {
+
+        /**
+         * Advertise that the function {@link action_plugin_combo_snippets::componentSnippetHead()}
+         * was already called.
+         *
+         * Therefore the snippet were already added
+         * Don't put the component snippet two times
+         */
+        if ($this->componentSnippetHeadOrContentWasCalled) {
+            return;
+        }
+        $this->componentSnippetHeadOrContentWasCalled = true;
 
         $format = $event->data[0];
         if ($format !== "xhtml") {
@@ -192,40 +204,32 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         if ($ACT === DynamicRender::DYNAMIC_RENDERING) {
             return;
         }
-        // Admin page rendering
-        $putSnippetInContent =
-            $this->headerOutputWasCalled === true
-            ||
-            ($ACT !== "show" && $ACT !== null);
-        if ($putSnippetInContent) {
 
-            $snippetManager = PluginUtility::getSnippetManager();
-            $xhtmlContent = &$event->data[1];
-            /**
-             * What fucked up is fucked up
-             *
-             * In admin page, as we don't know the source of the processing text
-             * (It may be a partial (ie markup) to create the admin page
-             * We may have several times the same global request slot
-             *
-             * We can't make the difference.
-             *
-             * For now, we add therefore only the snippet for the slots.
-             * The snippet for the request should have been already added with the
-             * DOKUWIKI_STARTED hook
-             */
 
-            if (sizeof($snippetManager->getSnippets()) > 0) {
+        $snippetManager = PluginUtility::getSnippetManager();
+        $xhtmlContent = &$event->data[1];
+        /**
+         * What fucked up is fucked up
+         *
+         * In admin page, as we don't know the source of the processing text
+         * (It may be a partial (ie markup) to create the admin page
+         * We may have several times the same global request slot
+         *
+         * We can't make the difference.
+         *
+         * For now, we add therefore only the snippet for the slots.
+         * The snippet for the request should have been already added with the
+         * DOKUWIKI_STARTED hook
+         */
 
-                $class = self::CLASS_SNIPPET_IN_CONTENT;
-                $xhtmlContent .= <<<EOF
+        if (sizeof($snippetManager->getSnippets()) > 0) {
+
+            $class = self::CLASS_SNIPPET_IN_CONTENT;
+            $xhtmlContent .= <<<EOF
 <div class="$class">
     {$snippetManager->toHtml()}
 </div>
 EOF;
-
-            }
-
 
         }
 

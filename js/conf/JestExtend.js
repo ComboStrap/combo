@@ -16,7 +16,7 @@
  *
  */
 import {diff} from 'jest-diff';
-import Xml from "../Xml";
+import Xml from "../packages/combo/Xml";
 
 // adds special assertions like toHaveClass
 import '@testing-library/jest-dom'

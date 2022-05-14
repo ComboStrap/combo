@@ -40,6 +40,7 @@ export default class Xml {
          * @type {Document}
          */
         this.xmlDoc = new DOMParser().parseFromString(this.xmlString, type);
+        // noinspection CssInvalidHtmlTagReference
         const errorNode = this.xmlDoc.querySelector('parsererror');
         if (errorNode) {
             // parsing failed

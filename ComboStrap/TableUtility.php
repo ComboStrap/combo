@@ -41,12 +41,13 @@ class TableUtility
         $bootResponsiveClass = 'table-responsive';
 
         // Add non-fluid to not have a table that takes 100% of the space
-        // Otherwise we can't have floating element at the right and the visual space is to big
+        // Otherwise we can't have floating element at the right and the visual space is too big
         PluginUtility::getSnippetManager()->attachCssInternalStylesheetForSlot(self::TABLE_SNIPPET_ID);
 
         $bootTableClass = 'table table-non-fluid table-hover table-striped';
 
         $renderer->doc .= '<div class="' . $class . ' ' . $bootResponsiveClass . '"><table class="inline ' . $bootTableClass . '">' . DOKU_LF;
+
     }
 
 }

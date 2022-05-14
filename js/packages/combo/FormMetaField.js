@@ -104,7 +104,7 @@ export default class FormMetaField {
     getLabel() {
         if (this.label === undefined) {
             return this.getName()
-                .split(/_|-/)
+                .split(/[_\-]/)
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(" ");
         }
@@ -322,7 +322,7 @@ export default class FormMetaField {
 
     toHtmlLabel(forId, customClass) {
         let label = this.getLabelAnchor();
-        let classLabel = "";
+        let classLabel;
         if (this.getType() === FormMetaField.BOOLEAN) {
             classLabel = "form-check-label"
         } else {

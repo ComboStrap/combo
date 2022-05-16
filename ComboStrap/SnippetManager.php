@@ -413,9 +413,9 @@ class SnippetManager
     }
 
     public
-    function attachJavascriptComboLibrary()
+    function attachJavascriptComboLibrary(): Snippet
     {
-        return $this->attachJavascriptScriptForRequest("combo", "library:combo:dist:combo.min.js");
+        return $this->attachJavascriptScriptForRequest("combo", "library:combo:combo.min.js");
     }
 
     public

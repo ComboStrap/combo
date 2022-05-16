@@ -17,7 +17,7 @@ window.addEventListener('load', function () {
         }
     );
 
-    searchBox.addEventListener("input", debounce(
+    searchBox.addEventListener("input", combos.debounce(
         async function () {
             await buildAutoCompletionList(this)
         },

@@ -14,6 +14,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
 {
 
     const SNIPPET_ID = "search";
+    const COMBO_DEBOUNCE = "combo-debounce";
 
     function getType(): string
     {
@@ -92,7 +93,11 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                     // don't print the search form if search action has been disabled
                     // if (!actionOK('search')) return false;
 
-                    PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot("debounce");
+                    /**
+                     * Add the debounce dependency first
+                     */
+                    PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::COMBO_DEBOUNCE);
+
                     /**
                      * Doku Base is not defined when the
                      * {@link \ComboStrap\TplUtility::CONF_DISABLE_BACKEND_JAVASCRIPT}

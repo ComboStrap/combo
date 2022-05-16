@@ -1,4 +1,6 @@
 /* global Glide */
+
+
 document.addEventListener('DOMContentLoaded', function () {
 
     let selector = '.carrousel-combo';
@@ -111,16 +113,41 @@ document.addEventListener('DOMContentLoaded', function () {
                         perView = Math.floor(offsetWidth / elementMinimalWidth);
                         perView += 0.5; // mobile to show that there is further element on the right side
                     }
-                    let glide = new Glide(carrousel, {
-                        type: 'carousel',
-                        perView: perView
-                    });
-                    glide.mount();
 
                     /**
-                     * To be able to set percentage height value on the child elements.
+                     * https://www.jsdelivr.com/package/npm/@glidejs/glide
+                     * Dev:
+                     * "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.js",
+                     * "sha256-zkYoJ1XwwGA4FbdmSdTz28y5PtHT8O/ZKzUAuQsmhKg="
                      */
-                    glideSlidesContainer.style.height = `${glideSlidesContainer.offsetHeight}px`;
+                    combos.loader.loadExternalScript(
+                        "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.min.js",
+                        "sha256-cXguqBvlUaDoW4nGjs4YamNC2mlLGJUOl64bhts/ztU=",
+                        function(){
+                            combos.loader.loadExternalStylesheet(
+                                "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
+                                "sha256-bmdlmBAVo1Q6XV2cHiyaBuBfe9KgYQhCrfQmoRq8+Sg=",
+                                function(){
+
+                                    let glide = new Glide(carrousel, {
+                                        type: 'carousel',
+                                        perView: perView
+                                    });
+                                    glide.mount();
+
+                                    /**
+                                     * To be able to set percentage height value on the child elements.
+                                     */
+                                    glideSlidesContainer.style.height = `${glideSlidesContainer.offsetHeight}px`;
+                                }
+                            );
+
+                        }
+                    );
+
+
+
+
 
                 });
                 break;

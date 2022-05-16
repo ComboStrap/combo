@@ -23,7 +23,7 @@
     "browserslist": [
         "> 0.5%, last 2 versions, not dead"
     ],
-    "combo": "./dist/combo.min.js",
+    "combo": "../../../resources/library/combo/combo.min.js",
     "targets": {
         "combo": {
             "source": "./combo.js",

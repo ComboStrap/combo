@@ -150,7 +150,7 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $defaultAttributes = [];
-                $tagAttributes = TagAttributes::createFromTagMatch($match,$defaultAttributes);
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes);
                 $callStack = CallStack::createFromHandler($handler);
                 $parent = $callStack->moveToParent();
                 $context = null;
@@ -256,33 +256,16 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
                     $snippetManager = PluginUtility::getSnippetManager();
                     $snippetId = self::TAG;
-                    $snippetManager->attachCssInternalStyleSheetForSlot($snippetId);
-                    // https://www.jsdelivr.com/package/npm/@glidejs/glide
-                    $snippetManager->attachCssExternalStyleSheetForSlot($snippetId,
-                        "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
-                        "sha256-bmdlmBAVo1Q6XV2cHiyaBuBfe9KgYQhCrfQmoRq8+Sg="
-                    );
-                    if (PluginUtility::isDev()) {
-
-                        $javascriptSnippet = $snippetManager->attachJavascriptLibraryForSlot($snippetId,
-                            "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.js",
-                            "sha256-zkYoJ1XwwGA4FbdmSdTz28y5PtHT8O/ZKzUAuQsmhKg="
-                        );
-
-                    } else {
-                        $javascriptSnippet = $snippetManager->attachJavascriptLibraryForSlot($snippetId,
-                            "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.min.js",
-                            "sha256-cXguqBvlUaDoW4nGjs4YamNC2mlLGJUOl64bhts/ztU="
-                        );
-                    }
-                    $javascriptSnippet->setDoesManipulateTheDomOnRun(false);
-
 
                     // Theme customized from the below official theme
                     // https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.theme.css
                     $snippetManager->attachCssInternalStyleSheetForSlot($snippetId)
                         ->setCritical(false);
 
+                    /**
+                     * The dependency first
+                     */
+                    $snippetManager->attachInternalJavascriptForSlot("combo-loader");
                     $snippetManager->attachInternalJavascriptForSlot($snippetId);
 
                     break;

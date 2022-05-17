@@ -235,7 +235,7 @@ class Snippet implements JsonSerializable
      */
     public static function clearSnippets()
     {
-        self::$globalSnippets = [];
+        self::$globalSnippets = null;
     }
 
 

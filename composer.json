@@ -8,6 +8,7 @@
         "hidehalo/nanoid-php": "^1.1",
         "carica/phpcss": "^2.0",
         "ext-dom": "*",
-        "ext-json": "*"
+        "ext-json": "*",
+        "jalle19/php-yui-compressor": "^1.0"
     }
 }

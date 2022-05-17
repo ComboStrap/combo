@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'd825d03a68a17bb2f119e67c9b27073572a4f750',
+    'reference' => '4b20225648b8e8cf698fe86193035277ef9e2fa7',
     'name' => 'combostrap/combo',
   ),
   'versions' => 
@@ -36,7 +36,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'd825d03a68a17bb2f119e67c9b27073572a4f750',
+      'reference' => '4b20225648b8e8cf698fe86193035277ef9e2fa7',
     ),
     'dragonmantank/cron-expression' => 
     array (
@@ -55,6 +55,24 @@
       array (
       ),
       'reference' => '14187ab7a5affa34078b6a54df94176bb7a21227',
+    ),
+    'jalle19/php-yui-compressor' => 
+    array (
+      'pretty_version' => '1.0.1',
+      'version' => '1.0.1.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'eb88c4f7fd8d7c8bd15a1970611d67cca11f71a0',
+    ),
+    'nervo/yuicompressor' => 
+    array (
+      'pretty_version' => '2.4.8',
+      'version' => '2.4.8.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'e6e3b215c3998cf6092613c002ae533ae75d7ada',
     ),
     'paragonie/random_compat' => 
     array (

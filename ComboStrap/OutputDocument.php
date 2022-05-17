@@ -60,6 +60,7 @@ abstract class OutputDocument extends PageCompilerDocument
     /**
      * @return OutputDocument
      * @noinspection PhpMissingReturnTypeInspection
+     * @throws ExceptionNotFound
      */
     function process()
     {
@@ -84,8 +85,12 @@ abstract class OutputDocument extends PageCompilerDocument
          */
         global $ID;
         $keep = $ID;
+        global $ACT;
+        $keepACT = $ACT;
         try {
+
             $ID = $this->getPage()->getPath()->getDokuwikiId();
+            $ACT = "show";
 
             /**
              * The code below is adapted from {@link p_cached_output()}
@@ -102,8 +107,9 @@ abstract class OutputDocument extends PageCompilerDocument
 
 
         } finally {
-            // restore ID
+            // restore
             $ID = $keep;
+            $ACT = $keepACT;
         }
 
         /**

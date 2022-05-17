@@ -26,6 +26,13 @@ require_once(__DIR__ . '/Snippet.php');
  * All function with the suffix
  *   * `ForSlot` are snippets for a bar (ie page, sidebar, ...) - cached
  *   * `ForRequests` are snippets added for the HTTP request - not cached. Example of request component: message, anchor
+ *
+ *
+ * Minification:
+ * Wrapper: https://packagist.org/packages/jalle19/php-yui-compressor
+ * Require Yui compressor: https://packagist.org/packages/nervo/yuicompressor
+ * sudo apt-get install default-jre
+ *
  */
 class SnippetManager
 {

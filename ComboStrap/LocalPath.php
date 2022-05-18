@@ -140,7 +140,7 @@ class LocalPath extends PathAbs
 
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionBadState - if the path is not inside a drive
      */
     public function toDokuPath(): DokuPath
     {
@@ -149,7 +149,7 @@ class LocalPath extends PathAbs
 
             try {
                 $relativePath = $this->relativize($drivePath);
-            } catch (ExceptionCompile $e) {
+            } catch (ExceptionBadArgument $e) {
                 /**
                  * May be a symlink link
                  */
@@ -160,7 +160,7 @@ class LocalPath extends PathAbs
                     $realPath = readlink($drivePath->toString());
                     $drivePath = LocalPath::createFromPath($realPath);
                     $relativePath = $this->relativize($drivePath);
-                } catch (ExceptionCompile $e) {
+                } catch (ExceptionBadArgument $e) {
                     // not a relative path
                     continue;
                 }
@@ -174,7 +174,7 @@ class LocalPath extends PathAbs
             }
             return DokuPath::createDokuPath($wikiPath, $driveRoot);
         }
-        throw new ExceptionCompile("The local path ($this) is not inside a wiki path drive");
+        throw new ExceptionBadState("The local path ($this) is not inside a wiki path drive");
 
 
     }
@@ -188,7 +188,7 @@ class LocalPath extends PathAbs
     }
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument - if the path cannot be relativized
      */
     public function relativize(LocalPath $localPath): LocalPath
     {
@@ -204,7 +204,7 @@ class LocalPath extends PathAbs
                 return LocalPath::createFromPath($realPath)
                     ->relativize($localPath);
             }
-            throw new ExceptionCompile("The path ($localPath) is not a parent path of the actual path ($actualPath)");
+            throw new ExceptionBadArgument("The path ($localPath) is not a parent path of the actual path ($actualPath)");
         }
         if ($actualPath->toString() === $localPath->toString()) {
             return LocalPath::createFromPath(self::RELATIVE_CURRENT);
@@ -314,5 +314,13 @@ class LocalPath extends PathAbs
         return $this->sep;
     }
 
+    /**
+     * @throws ExceptionNotFound - if the file is not found
+     * @throws ExceptionBadState - if the path is not inside a drive
+     */
+    public function getUrl($att = []): string
+    {
+        return $this->toDokuPath()->getUrl($att);
+    }
 
 }

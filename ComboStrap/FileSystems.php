@@ -178,4 +178,14 @@ class FileSystems
             throw new ExceptionRuntime("Error getting the children. Error: {$e->getMessage()}");
         }
     }
+
+    /**
+     * Return a cache buster
+     * @throws ExceptionNotFound
+     */
+    public static function getCacheBuster(Path $getPath): string
+    {
+        $time = FileSystems::getModifiedTime($getPath);
+        return strval($time->getTimestamp());
+    }
 }

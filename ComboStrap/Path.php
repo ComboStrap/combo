@@ -63,4 +63,11 @@ interface Path
      * @throws ExceptionCompile - if the path cannot be transformed to a doku path
      */
     function toDokuPath(): DokuPath;
+
+    /**
+     * @param $att
+     * @return mixed
+     */
+    function getUrl($att = []);
+
 }

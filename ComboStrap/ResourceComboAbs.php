@@ -21,11 +21,12 @@ abstract class ResourceComboAbs implements ResourceCombo
     /**
      * A buster cache
      * @return string
+     * @throws ExceptionNotFound
      */
     public function getBuster(): string
     {
-        $time = FileSystems::getModifiedTime($this->getPath());
-        return strval($time->getTimestamp());
+        return FileSystems::getCacheBuster($this->getPath());
+
     }
 
     /**

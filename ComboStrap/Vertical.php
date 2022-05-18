@@ -12,7 +12,7 @@ class Vertical
     const CANONICAL = self::VERTICAL_ATTRIBUTE;
 
     const VALUES = ["start", "end", "center", "baseline", "stretch"];
-    const COMPONENTS = [\syntax_plugin_combo_grid::TAG, \syntax_plugin_combo_cell::TAG];
+    const COMPONENTS = [\syntax_plugin_combo_grid::TAG, ];
 
     public static function processVertical(TagAttributes &$tagAttributes)
     {

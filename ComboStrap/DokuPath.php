@@ -857,5 +857,18 @@ class DokuPath extends PathAbs
         return new DokuPath($path, $this->getDrive());
     }
 
+    /**
+     * @return string - an URL to download the media
+     * @throws ExceptionNotFound -  if the file does not exist
+     */
+    public function getUrl($att = []): string
+    {
+        $drive = $this->getDrive();
+        if($drive!==self::MEDIA_DRIVE) {
+            $att[DokuPath::DRIVE_ATTRIBUTE] = $this->getDrive();
+        }
+        $att[CacheMedia::CACHE_BUSTER_KEY] = FileSystems::getCacheBuster($this);
+        return ml($this->getDokuwikiId(), $att, true, DokuwikiUrl::AMPERSAND_CHARACTER, true);
+    }
 
 }

@@ -205,6 +205,11 @@ class ConditionalLength
     public
     function toCssLength()
     {
+        switch ($this->unitInLength){
+            case "vh":
+            case "wh":
+                return $this->length;
+        }
         /**
          * A length value may be also `fit-content`
          * we just check that if there is a number,

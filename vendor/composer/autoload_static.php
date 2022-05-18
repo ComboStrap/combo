@@ -48,16 +48,6 @@ class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
         ),
     );
 
-    public static $prefixesPsr0 = array (
-        'Y' => 
-        array (
-            'YUI' => 
-            array (
-                0 => __DIR__ . '/..' . '/jalle19/php-yui-compressor/lib',
-            ),
-        ),
-    );
-
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
     );
@@ -67,7 +57,6 @@ class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764::$prefixesPsr0;
             $loader->classMap = ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764::$classMap;
 
         }, null, ClassLoader::class);

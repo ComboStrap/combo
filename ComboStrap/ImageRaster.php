@@ -160,18 +160,12 @@ class ImageRaster extends Image
             $att[CacheMedia::CACHE_KEY] = $this->getCache();
         }
 
-        /**
-         * Smart Cache
-         */
-        $this->addCacheBusterToQueryParameters($att);
-
-        $direct = true;
 
         if ($this->getPath() === null) {
             LogUtility::msg("The Url of a image not in the media library is not yet supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return "";
         }
-        return ml($this->getPath()->getDokuwikiId(), $att, $direct, DokuwikiUrl::AMPERSAND_CHARACTER, true);
+        return $this->getPath()->getUrl($att);
 
 
     }

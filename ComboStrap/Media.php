@@ -84,6 +84,7 @@ abstract class Media extends ResourceComboAbs
     /**
      * The URL will change if the file change
      * @param $queryParameters
+     * @throws ExceptionNotFound
      */
     protected function addCacheBusterToQueryParameters(&$queryParameters)
     {

@@ -199,7 +199,7 @@ EOD;
         /**
          * Add prism theme
          */
-        $theme = $plugin->getConf(Prism::CONF_PRISM_THEME);
+        $theme = $plugin->getConf(Prism::CONF_PRISM_THEME,Prism::PRISM_THEME_DEFAULT);
         Prism::addSnippet($theme);
 
         /**

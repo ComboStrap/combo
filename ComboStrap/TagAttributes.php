@@ -305,6 +305,7 @@ class TagAttributes
      * For CSS a unit is mandatory (not for HTML or SVG attributes)
      * @param $value
      * @return string return a CSS property with pixel as unit if the unit is not specified
+     * @throws ExceptionBadArgument
      */
     public static function toQualifiedCssValue($value): string
     {

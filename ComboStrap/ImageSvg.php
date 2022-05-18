@@ -144,13 +144,6 @@ class ImageSvg extends Image
 
         }
 
-        /**
-         * Cache bursting
-         */
-        $this->addCacheBusterToQueryParameters($att);
-
-        $direct = true;
-
         if ($this->getPath() === null) {
             LogUtility::msg("The Url of a image not in the media library is not yet supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return "";
@@ -165,7 +158,8 @@ class ImageSvg extends Image
             unset($att[PagePath::PROPERTY_NAME]);
         }
 
-        return ml($this->getPath()->getDokuwikiId(), $att, $direct, DokuwikiUrl::AMPERSAND_CHARACTER, true);
+        return $this->getPath()->getUrl($att);
+
 
 
     }

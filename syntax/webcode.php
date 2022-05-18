@@ -19,7 +19,9 @@
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\Display;
+use ComboStrap\DokuPath;
 use ComboStrap\DokuwikiUrl;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -67,6 +69,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
     const MARKI_LANG = 'marki';
     const DOKUWIKI_LANG = 'dw';
     const MARKIS = [self::MARKI_LANG, self::DOKUWIKI_LANG];
+    const CANONICAL = self::TAG;
 
     /**
      * Syntax Type.
@@ -376,7 +379,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             'call' => action_plugin_combo_webcode::CALL_ID,
                             action_plugin_combo_webcode::MARKI_PARAM => $markiCode
                         );
-                        $queryString = http_build_query($queryParams,'', DokuwikiUrl::AMPERSAND_CHARACTER);
+                        $queryString = http_build_query($queryParams, '', DokuwikiUrl::AMPERSAND_CHARACTER);
                         $url = Site::getAjaxUrl() . "?$queryString";
                         $iFrameAttributes->addOutputAttributeValue("src", $url);
 
@@ -385,7 +388,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                         // Js, Html, Css
                         /** @noinspection JSUnresolvedLibraryURL */
-                        $iframeSrcValue =<<<EOF
+                        $iframeSrcValue = <<<EOF
 <html lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
@@ -424,9 +427,13 @@ EOF;
                             }
                         }
 
-
                         // WebConsole style sheet
-                        $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-iframe.css?ver=' . self::WEB_CSS_VERSION . '"/>';
+                        try {
+                            $cssUrl = DokuPath::createComboResource("webcode:webcode-iframe.css")->getUrl();
+                            $iframeSrcValue .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"$cssUrl\"/>";
+                        } catch (ExceptionNotFound $e) {
+                            LogUtility::error("The web console stylesheet was not found", self::CANONICAL);
+                        }
 
                         // A little margin to make it neater
                         // that can be overwritten via cascade
@@ -437,19 +444,34 @@ EOF;
                             $iframeSrcValue .= '<!-- The CSS code -->';
                             $iframeSrcValue .= '<style>' . $codes['css'] . '</style>';
                         };
+
+                        // The javascript console script should be first to handle console.log in the content
+                        $useConsole = $data[self::USE_CONSOLE_ATTRIBUTE];
+                        if ($useConsole) {
+                            try {
+                                $url = DokuPath::createComboResource("webcode:webcode-console.js")->getUrl();
+                                $iframeSrcValue .= <<<EOF
+<script type="text/javascript" src="$url"></script>
+EOF;
+                            } catch (ExceptionNotFound $e) {
+                                LogUtility::error("The webcode console  was not found");
+                            }
+
+                        }
                         $iframeSrcValue .= '</head><body>';
                         if (array_key_exists('html', $codes)) {
                             $iframeSrcValue .= '<!-- The HTML code -->';
                             $iframeSrcValue .= $codes['html'];
                         }
                         // The javascript console area is based at the end of the HTML document
-                        $useConsole = $data[self::USE_CONSOLE_ATTRIBUTE];
                         if ($useConsole) {
-                            $iframeSrcValue .= '<!-- WebCode Console -->';
-                            $iframeSrcValue .= '<div><p class="webConsoleTitle">Console Output:</p>';
-                            $iframeSrcValue .= '<div id="webCodeConsole"></div>';
-                            $iframeSrcValue .= '<script type="text/javascript" src="' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-console.js?ver=' . self::WEB_CONSOLE_JS_VERSION . '"></script>';
-                            $iframeSrcValue .= '</div>';
+
+                            $iframeSrcValue .= <<<EOF
+<div>
+    <p class="webConsoleTitle">Console Output:</p>
+    <div id="webCodeConsole"></div>
+</div>
+EOF;
                         }
                         // The javascript comes at the end because it may want to be applied on previous HTML element
                         // as the page load in the IO order, javascript must be placed at the end
@@ -508,7 +530,7 @@ EOF;
                      * constraint with the `width` attributes that will
                      * set a a max-width
                      */
-                    $iFrameAttributes->addStyleDeclarationIfNotSet("width","100%");
+                    $iFrameAttributes->addStyleDeclarationIfNotSet("width", "100%");
 
                     $iFrameHtml = $iFrameAttributes->toHtmlEnterTag("iframe") . '</iframe>';
                     $bar .= '</div>'; // close the bar

@@ -29,24 +29,9 @@ require_once(__DIR__ . '/PluginUtility.php');
 class Page extends ResourceComboAbs
 {
 
-
-    // The page id abbreviation is used in the url
-    // to make them unique.
-    //
-    // A website is not git but an abbreviation of 7
-    // is enough for a website.
-    //
-    // 7 is also the initial length of the git has abbreviation
-    //
-    // It gives a probability of collision of 1 percent
-    // for 24 pages creation by day over a period of 100 year
-    // (You need to create 876k pages).
-    // with the 36 alphabet
-    // https://datacadamia.com/crypto/hash/collision
-
+    private $path;
 
     const TYPE = "page";
-
 
     /**
      * @var DatabasePageRow
@@ -160,7 +145,6 @@ class Page extends ResourceComboAbs
      */
     private $instructionsDocument;
 
-    private $path;
     /**
      * @var PageDescription $description
      */
@@ -894,11 +878,11 @@ class Page extends ResourceComboAbs
     {
         global $conf;
         $startPageName = $conf['start'];
-        if ($this->getPath()->getLastName() == $startPageName) {
+        if ($this->getPath()->getLastNameWithoutExtension() == $startPageName) {
             return true;
         } else {
             $namespace = $this->path->getParent();
-            if ($namespace->getLastName() === $this->getPath()->getLastName()) {
+            if ($namespace->getLastNameWithoutExtension() === $this->getPath()->getLastNameWithoutExtension()) {
                 /**
                  * page named like the NS inside the NS
                  * ie ns:ns

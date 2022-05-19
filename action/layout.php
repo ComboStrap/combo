@@ -9,6 +9,7 @@ use ComboStrap\Layout;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PageLayout;
+use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -185,7 +186,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
             // Relative positioning is important for the positioning of the pagetools (page-core), secedit button
             $tagAttributes->addClassName("position-relative");
 
-            $wikiIdArea = null;
+            $closesPath = null;
             switch ($areaName) {
                 case self::PAGE_FOOTER_AREA:
                 case self::PAGE_HEADER_AREA:
@@ -194,8 +195,16 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                     // position relative to place the edit button
                     $tagAttributes->addClassName("position-relative");
 
-                    $wikiIdArea = FileSystems::closest($requestedPage->getPath(),$layoutArea->getSlotName());
-                    $showArea = $wikiIdArea !== false;
+                    try {
+                        $closesPath = FileSystems::closest($requestedPage->getPath(), $layoutArea->getSlotName() . DokuPath::PAGE_FILE_TXT_EXTENSION);
+                    } catch (ExceptionNotFound $e) {
+                        $closesPath = DokuPath::createComboResource(":pages:$areaName.md");
+                        if (!FileSystems::exists($closesPath)) {
+                            $closesPath = null;
+                            LogUtility::errorIfDevOrTest("The default $areaName page could does not exist.");
+                        }
+                    }
+                    $showArea = $closesPath !== null;
                     break;
                 case self::PAGE_CORE_AREA:
                     $tagAttributes->addClassName(tpl_classes());
@@ -207,14 +216,18 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                 case self::MAIN_SIDE_AREA:
                     $tagAttributes->addComponentAttributeValue("role", "complementary");
                     $tagAttributes->addClassName("d-print-none");
-                    $wikiIdArea = page_findnearest($layoutArea->getSlotName());
-                    $showArea = $wikiIdArea !== false && ($ACT === 'show');
+                    try {
+                        $closesPath = FileSystems::closest($requestedPage->getPath(), $layoutArea->getSlotName(). DokuPath::PAGE_FILE_TXT_EXTENSION);
+                    } catch (ExceptionNotFound $e) {
+                        // ok
+                    }
+                    $showArea = $closesPath !== null && ($ACT === 'show');
                     break;
             }
 
             $layoutArea->setShow($showArea);
-            if ($showArea && $wikiIdArea !== null) {
-                $layoutArea->setHtml($this->render($wikiIdArea));
+            if ($showArea && $closesPath !== null) {
+                $layoutArea->setHtml($this->render($closesPath));
             }
             $layoutArea->setAttributes($tagAttributes->toHtmlArray());
 
@@ -222,14 +235,14 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
 
     }
 
-    private function render(string $wikiId)
+    private function render(Path $path)
     {
         try {
-            $page = Page::createPageFromId($wikiId);
+            $page = Page::createPageFromPathObject($path);
             $html = $page->toXhtml();
             $finalHtml = EditButton::replaceAll($html);
         } catch (Exception $e) {
-            $finalHtml = "Rendering the slot ($wikiId), returns an error. {$e->getMessage()}";
+            $finalHtml = "Rendering the slot ($path), returns an error. {$e->getMessage()}";
         }
         return $finalHtml;
     }

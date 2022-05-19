@@ -340,4 +340,11 @@ class LogUtility
     {
         self::$exceptionLevelOnTest = self::LVL_MSG_WARNING;
     }
+
+    public static function errorIfDevOrTest($message, $canonical= "support")
+    {
+        if(PluginUtility::isDevOrTest()){
+            LogUtility::error($message, $canonical);
+        }
+    }
 }

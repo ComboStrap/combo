@@ -463,22 +463,6 @@ class DokuPath extends PathAbs
         return $lastName;
     }
 
-    /**
-     * @return null|string
-     */
-    public function getLastNameWithoutExtension(): ?string
-    {
-        /**
-         * A page doku path has no extension for now
-         */
-        if ($this->drive === self::PAGE_DRIVE) {
-            return $this->getLastName();
-        }
-        return parent::getLastNameWithoutExtension();
-
-    }
-
-
     public
     function getNames(): array
     {
@@ -891,14 +875,14 @@ class DokuPath extends PathAbs
      * @return string - an URL to download the media
      * @throws ExceptionNotFound -  if the file does not exist
      */
-    public function getUrl($att = []): string
+    public function getUrl(array $queryParameters = []): string
     {
         $drive = $this->getDrive();
         if ($drive !== self::MEDIA_DRIVE) {
-            $att[DokuPath::DRIVE_ATTRIBUTE] = $this->getDrive();
+            $queryParameters[DokuPath::DRIVE_ATTRIBUTE] = $this->getDrive();
         }
-        $att[CacheMedia::CACHE_BUSTER_KEY] = FileSystems::getCacheBuster($this);
-        return ml($this->getDokuwikiId(), $att, true, DokuwikiUrl::AMPERSAND_CHARACTER, true);
+        $queryParameters[CacheMedia::CACHE_BUSTER_KEY] = FileSystems::getCacheBuster($this);
+        return ml($this->getDokuwikiId(), $queryParameters, true, DokuwikiUrl::AMPERSAND_CHARACTER, true);
     }
 
 }

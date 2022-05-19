@@ -8,9 +8,11 @@ namespace ComboStrap;
  * Interface ComboResource
  * @package ComboStrap
  *
- * Not Resource
- * because
+ * It's called ResourceCombo and not Resource because of
  * https://www.php.net/manual/en/language.types.resource.php
+ *
+ * A resource is a just a wrapper around path that adds metadata functionalities
+ *
  */
 interface ResourceCombo
 {
@@ -33,6 +35,8 @@ interface ResourceCombo
      * to avoid cache (cache bursting)
      *
      * It should be unique for each version of the resource
+     *
+     * @deprecated Possible duplicate with {@link FileSystems::getCacheBuster()}
      *
      * @return string
      */
@@ -60,7 +64,7 @@ interface ResourceCombo
     /**
      * @return Metadata
      */
-    public function getUidObject();
+    public function getUidObject(): Metadata;
 
 
 }

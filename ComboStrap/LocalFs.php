@@ -40,15 +40,15 @@ class LocalFs implements FileSystem
         /**
          * Mime check
          */
-        $mime = $path->getMime();
-        if ($mime === null) {
-            LogUtility::info("The mime is unknown for the path ($path)");
-        } else {
+        try {
+            $mime = FileSystems::getMime($path);
             if (!$mime->isTextBased()) {
-                LogUtility::error("This mime content ($mime) is not text base (for the path $path)");
+                LogUtility::error("This mime content ($mime) is not text based (for the path $path). We can't return a text.");
+                return "";
             }
+        } catch (ExceptionNotFound $e) {
+            LogUtility::error("The mime is unknown for the path ($path). Trying to returning the content as text.");
         }
-
         $content = @file_get_contents($path->toAbsolutePath()->toString());
         if ($content === false) {
             // file does not exists
@@ -167,6 +167,12 @@ class LocalFs implements FileSystem
      */
     public function closest(Path $path, string $lastFullName): Path
     {
+        if(FileSystems::isDirectory($path)) {
+            $closest = $path->resolve($lastFullName);
+            if (FileSystems::exists($closest)) {
+                return $closest;
+            }
+        }
         $currentPath = $path;
         while (($parent = $currentPath->getParent()) !== null) {
             $closest = $parent->resolve($lastFullName);
@@ -182,7 +188,7 @@ class LocalFs implements FileSystem
      * @param LocalPath $path
      * @return void
      */
-    public function create(Path $path)
+    public function createRegularFile(Path $path)
     {
         touch($path->toString());
     }

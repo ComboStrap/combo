@@ -107,11 +107,6 @@ class LocalPath extends PathAbs
         return explode($directorySeparator, $this->path);
     }
 
-    function getDokuwikiId()
-    {
-        throw new ExceptionRuntime("Not implemented");
-    }
-
 
     function toString(): string
     {
@@ -319,9 +314,9 @@ class LocalPath extends PathAbs
      * @throws ExceptionNotFound - if the file is not found
      * @throws ExceptionBadState - if the path is not inside a drive
      */
-    public function getUrl($att = []): string
+    public function getUrl(array $queryParameters = []): string
     {
-        return $this->toDokuPath()->getUrl($att);
+        return $this->toDokuPath()->getUrl($queryParameters);
     }
 
 }

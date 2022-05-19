@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use renderer_plugin_combo_analytics;
+
 class FileSystems
 {
 
@@ -205,18 +207,56 @@ class FileSystems
         }
     }
 
-    public static function create(Path $path)
+    public static function createRegularFile(Path $path)
     {
         $scheme = $path->getScheme();
         switch ($scheme) {
             case LocalFs::SCHEME:
-                LocalFs::getOrCreate()->create($path);
+                LocalFs::getOrCreate()->createRegularFile($path);
                 break;
             case DokuFs::SCHEME:
-                DokuFs::getOrCreate()->create($path);
+                DokuFs::getOrCreate()->createRegularFile($path);
                 break;
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
+        }
+    }
+
+    /**
+     * @throws ExceptionNotFound - if the mime is unknown and was not found
+     */
+    public static function getMime(Path $path): Mime
+    {
+        $extension = $path->getExtension();
+        switch ($extension) {
+            case ImageSvg::EXTENSION:
+                /**
+                 * Svg is authorized when viewing but is not part
+                 * of the {@link File::getKnownMime()}
+                 */
+                return new Mime(Mime::SVG);
+            case JavascriptLibrary::EXTENSION:
+                return new Mime(Mime::JAVASCRIPT);
+            case renderer_plugin_combo_analytics::RENDERER_NAME_MODE:
+            case Json::EXTENSION:
+                return new Mime(Mime::JSON);
+            case "md":
+                return new Mime(Mime::MARKDOWN);
+            case "txt":
+                return new Mime(Mime::PLAIN_TEXT);
+            case "xhtml":
+            case "html":
+                return new Mime(Mime::HTML);
+            case "png":
+                return new Mime(Mime::PNG);
+            case "css":
+                return new Mime(Mime::CSS);
+            default:
+                $mime = mimetype($path->getLastName(), true)[1];
+                if ($mime === null || $mime === false) {
+                    throw new ExceptionNotFound("No mime found for path ($path)");
+                }
+                return new Mime($mime);
         }
     }
 

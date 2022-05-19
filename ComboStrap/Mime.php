@@ -29,6 +29,7 @@ class Mime
     const BMP = "image/bmp";
     const WEBP = "image/webp";
     const CSS = "text/css";
+    const MARKDOWN = "text/markdown";
     /**
      * @var array|null
      */

@@ -7,6 +7,7 @@ namespace ComboStrap;
 use Hidehalo\Nanoid\Client;
 use RuntimeException;
 
+
 class PageId extends MetadataText
 {
 
@@ -21,6 +22,23 @@ class PageId extends MetadataText
      * Length to get the same probability than uuid v4. Too much ?
      */
     public const PAGE_ID_LENGTH = 21;
+    /**
+     *
+     * The page id abbreviation is used in the url to make them unique.
+     *
+     * A website is not git but an abbreviation of 7
+     * is enough for a website.
+     *
+     * 7 is also the initial length of the git has abbreviation
+     *
+     * It gives a probability of collision of 1 percent
+     * for 24 pages creation by day over a period of 100 year
+     * (You need to create 876k pages).
+     *  with the 36 alphabet
+     * Furthermore, we test on creation the uniqueness on the 7 page id abbreviation
+     *
+     * more ... https://datacadamia.com/crypto/hash/collision
+     */
     public const PAGE_ID_ABBREV_LENGTH = 7;
     public const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
 

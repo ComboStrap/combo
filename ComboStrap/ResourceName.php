@@ -58,22 +58,18 @@ class ResourceName extends MetadataText
         $resourceCombo = $this->getResource();
 
         $pathName = $resourceCombo->getPath()->getLastNameWithoutExtension();
-        switch ($resourceCombo->getType()) {
-
-            case Page::TYPE:
-                /**
-                 * If this is a home page, the default
-                 * is the parent path name
-                 */
-                if ($pathName === Site::getIndexPageName()) {
-                    $names = $resourceCombo->getPath()->getNames();
-                    $namesCount = sizeof($names);
-                    if ($namesCount >= 2) {
-                        $pathName = $names[$namesCount - 2];
-                    }
+        /**
+         * If this is a home page, the default
+         * is the parent path name
+         */
+        if ($resourceCombo->getType() == Page::TYPE) {
+            if ($pathName === Site::getIndexPageName()) {
+                $names = $resourceCombo->getPath()->getNames();
+                $namesCount = sizeof($names);
+                if ($namesCount >= 2) {
+                    $pathName = $names[$namesCount - 2];
                 }
-                break;
-
+            }
         }
 
         $words = preg_split("/\s/", preg_replace("/[-_]/", " ", $pathName));

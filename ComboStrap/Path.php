@@ -7,13 +7,12 @@ namespace ComboStrap;
  * Interface Path
  * @package ComboStrap
  *
- * An interface that implements path operation
+ * An interface that represents a path.
+ *
+ * For the path operations, see {@link FileSystems}
  *
  * The {@link Path::toString()} function is just the path part (no other URI query parameters)
  *
- * TODO: because a path should be able to go to an URI format, it should also allow query parameters
- *  We could then add a `toPath` function to {@link DokuwikiUrl} and delete the tag attributes
- *  as parameter of all {@link MediaLink::createMediaLinkFromPath()} creator function
  */
 interface Path
 {
@@ -53,21 +52,16 @@ interface Path
 
     /**
      * @return Mime the mime from the extension
+     * @deprecated Uses {@link FileSystems::getMime()} instead
      */
     function getMime(): ?Mime;
 
     function resolve(string $name);
 
     /**
-     * @return DokuPath
-     * @throws ExceptionCompile - if the path cannot be transformed to a doku path
-     */
-    function toDokuPath(): DokuPath;
-
-    /**
-     * @param $att
+     * @param array $queryParameters
      * @return mixed
      */
-    function getUrl($att = []);
+    function getUrl(array $queryParameters = []);
 
 }

@@ -40,7 +40,10 @@ abstract class ResourceComboAbs implements ResourceCombo
         return $this;
     }
 
-    public function getUidObject()
+    /**
+     *
+     */
+    public function getUidObject(): Metadata
     {
         if ($this->uidObject === null) {
             $this->uidObject = Metadata::toMetadataObject($this->getUid())

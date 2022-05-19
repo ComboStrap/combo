@@ -69,7 +69,7 @@ class InterWikiPath extends PathAbs
         return self::create($this->path . "/" . $name);
     }
 
-    function getUrl($att = [])
+    function getUrl(array $queryParameters = [])
     {
         throw new ExceptionRuntime("Not implemented");
     }

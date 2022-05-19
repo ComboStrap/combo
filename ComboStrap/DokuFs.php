@@ -127,4 +127,24 @@ class DokuFs implements FileSystem
         return $childrenWiki;
 
     }
+
+    /**
+     * @param DokuPath $path
+     * @param string $lastFullName
+     * @return Path
+     * @throws ExceptionNotFound
+     */
+    public function closest(Path $path, string $lastFullName): Path
+    {
+        return FileSystems::closest($path->toLocalPath(), $lastFullName);
+    }
+
+    /**
+     * @param DokuPath $path
+     * @return void
+     */
+    public function create(Path $path)
+    {
+        FileSystems::create($path->toLocalPath());
+    }
 }

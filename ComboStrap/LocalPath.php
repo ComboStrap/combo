@@ -121,7 +121,8 @@ class LocalPath extends PathAbs
     public function getParent(): ?Path
     {
         $absolutePath = pathinfo($this->path, PATHINFO_DIRNAME);
-        if (empty($absolutePath)) {
+        if ($absolutePath === $this->path || empty($absolutePath)) {
+            // the directory on windows of the root (ie C:\) is (C:\), yolo !
             return null;
         }
         return new LocalPath($absolutePath);

@@ -159,4 +159,32 @@ class LocalFs implements FileSystem
 
     }
 
+    /**
+     * @param LocalPath $path
+     * @param string $lastFullName
+     * @return Path
+     * @throws ExceptionNotFound
+     */
+    public function closest(Path $path, string $lastFullName): Path
+    {
+        $currentPath = $path;
+        while (($parent = $currentPath->getParent()) !== null) {
+            $closest = $parent->resolve($lastFullName);
+            if (FileSystems::exists($closest)) {
+                return $closest;
+            }
+            $currentPath = $parent;
+        }
+        throw new ExceptionNotFound("No closest was found for the file name ($lastFullName) from the path ($path)");
+    }
+
+    /**
+     * @param LocalPath $path
+     * @return void
+     */
+    public function create(Path $path)
+    {
+        touch($path->toString());
+    }
+
 }

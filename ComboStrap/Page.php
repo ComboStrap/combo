@@ -227,11 +227,8 @@ class Page extends ResourceComboAbs
      */
     public static function createPageFromGlobalDokuwikiId(): Page
     {
-        global $ID;
-        if ($ID === null) {
-            throw new ExceptionNotFound("The global wiki ID is null, unable to instantiate a page");
-        }
-        return self::createPageFromId($ID);
+        $dokuPath = DokuPath::createPagePathFromGlobalId();
+        return self::createPageFromPathObject($dokuPath);
     }
 
     public static function createPageFromId($id): Page
@@ -264,15 +261,7 @@ class Page extends ResourceComboAbs
      */
     public static function createPageFromRequestedPage(): Page
     {
-        $pageId = PluginUtility::getRequestedWikiId();
-        if ($pageId === null) {
-            $pageId = DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
-            if (!PluginUtility::isTest()) {
-                // should never happen, we don't throw an exception
-                LogUtility::msg("We were unable to determine the requested page from the variables environment, default non-existing page id used");
-            }
-        }
-        return Page::createPageFromId($pageId);
+        return Page::createPageFromPathObject(DokuPath::createPagePathFromRequestedPage());
     }
 
     public static function createPageFromPathObject(Path $path): Page

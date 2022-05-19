@@ -183,9 +183,41 @@ class FileSystems
      * Return a cache buster
      * @throws ExceptionNotFound
      */
-    public static function getCacheBuster(Path $getPath): string
+    public static function getCacheBuster(Path $path): string
     {
-        $time = FileSystems::getModifiedTime($getPath);
+        $time = FileSystems::getModifiedTime($path);
         return strval($time->getTimestamp());
     }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function closest(Path $path, string $name): Path
+    {
+        $scheme = $path->getScheme();
+        switch ($scheme) {
+            case LocalFs::SCHEME:
+                return LocalFs::getOrCreate()->closest($path, $name);
+            case DokuFs::SCHEME:
+                return DokuFs::getOrCreate()->closest($path, $name);
+            default:
+                throw new ExceptionRuntime("File system ($scheme) unknown");
+        }
+    }
+
+    public static function create(Path $path)
+    {
+        $scheme = $path->getScheme();
+        switch ($scheme) {
+            case LocalFs::SCHEME:
+                LocalFs::getOrCreate()->create($path);
+                break;
+            case DokuFs::SCHEME:
+                DokuFs::getOrCreate()->create($path);
+                break;
+            default:
+                throw new ExceptionRuntime("File system ($scheme) unknown");
+        }
+    }
+
 }

@@ -60,6 +60,7 @@ class DokuPath extends PathAbs
     const COMBO_DRIVE = "combo";
     const CACHE_DRIVE = "cache";
     const DRIVES = [self::COMBO_DRIVE, self::CACHE_DRIVE, self::MEDIA_DRIVE];
+    const PAGE_FILE_TXT_EXTENSION = ".txt";
 
     /**
      * @var string[]
@@ -148,7 +149,7 @@ class DokuPath extends PathAbs
          */
         $this->path = $path;
         if ($drive === self::PAGE_DRIVE) {
-            $textExtension = ".txt";
+            $textExtension = self::PAGE_FILE_TXT_EXTENSION;
             $textExtensionLength = strlen($textExtension);
             $pathExtension = substr($this->path, -$textExtensionLength);
             if ($pathExtension === $textExtension) {
@@ -357,6 +358,31 @@ class DokuPath extends PathAbs
     }
 
     /**
+     * @throws ExceptionNotFound - if the page was not found
+     */
+    public static function createPagePathFromGlobalId(): DokuPath
+    {
+        global $ID;
+        if ($ID === null) {
+            throw new ExceptionNotFound("The global wiki ID is null, unable to create a path");
+        }
+        return DokuPath::createPagePathFromId($ID);
+    }
+
+    public static function createPagePathFromRequestedPage(): DokuPath
+    {
+        $pageId = PluginUtility::getRequestedWikiId();
+        if ($pageId === null) {
+            $pageId = DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
+            if (!PluginUtility::isTest()) {
+                // should never happen, we don't throw an exception
+                LogUtility::msg("We were unable to determine the requested page from the variables environment, default non-existing page id used");
+            }
+        }
+        return DokuPath::createPagePathFromId($pageId);
+    }
+
+    /**
      * @return LocalPath[]
      */
     public static function getDriveRoots(): array
@@ -430,7 +456,11 @@ class DokuPath extends PathAbs
          * See also {@link noNSorNS}
          */
         $names = $this->getNames();
-        return $names[sizeOf($names) - 1];
+        $lastName = $names[sizeOf($names) - 1];
+        if ($this->getDrive() === self::PAGE_DRIVE) {
+            return $lastName . self::PAGE_FILE_TXT_EXTENSION;
+        }
+        return $lastName;
     }
 
     /**
@@ -864,7 +894,7 @@ class DokuPath extends PathAbs
     public function getUrl($att = []): string
     {
         $drive = $this->getDrive();
-        if($drive!==self::MEDIA_DRIVE) {
+        if ($drive !== self::MEDIA_DRIVE) {
             $att[DokuPath::DRIVE_ATTRIBUTE] = $this->getDrive();
         }
         $att[CacheMedia::CACHE_BUSTER_KEY] = FileSystems::getCacheBuster($this);

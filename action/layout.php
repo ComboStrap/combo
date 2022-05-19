@@ -82,6 +82,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
          */
         $layoutObject = &$event->data;
 
+        $requestedPage = Page::createPageFromRequestedPage();
 
         global $ACT;
         switch ($ACT) {
@@ -93,7 +94,6 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                 $layoutName = "hamburger";
                 break;
             case "show":
-                $requestedPage = Page::createPageFromRequestedPage();
                 $layoutName = PageLayout::createFromPage($requestedPage)
                     ->getValueOrDefault();
                 break;
@@ -189,11 +189,12 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
             switch ($areaName) {
                 case self::PAGE_FOOTER_AREA:
                 case self::PAGE_HEADER_AREA:
-                    $tagAttributes->addClassName("d-print-none");
                     // no print
+                    $tagAttributes->addClassName("d-print-none");
+                    // position relative to place the edit button
                     $tagAttributes->addClassName("position-relative");
-                    //position relative to place the edit button
-                    $wikiIdArea = page_findnearest($layoutArea->getSlotName());
+
+                    $wikiIdArea = FileSystems::closest($requestedPage->getPath(),$layoutArea->getSlotName());
                     $showArea = $wikiIdArea !== false;
                     break;
                 case self::PAGE_CORE_AREA:

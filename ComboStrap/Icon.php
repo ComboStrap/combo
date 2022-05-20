@@ -238,7 +238,8 @@ class Icon extends ImageSvg
          * Otherwise, it's an icon from a library
          */
         $mediaDokuPath = DokuPath::createFromUnknownRoot($fullQualifiedName);
-        if (!empty($mediaDokuPath->getExtension())) {
+        $extension = $mediaDokuPath->getExtension();
+        if (!empty($extension) && $extension === "svg") {
 
             // loop through candidates until a match was found:
             // May be an icon from the templates

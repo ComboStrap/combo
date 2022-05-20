@@ -195,8 +195,8 @@ class Page extends ResourceComboAbs
              */
             $useAcl = false;
             $id = page_findnearest($this->path->getLastNameWithoutExtension(), $useAcl);
-            if ($id !== false && $id !== $this->path->getDokuwikiId()) {
-                $path = DokuPath::PATH_SEPARATOR . $id;
+            $path = DokuPath::PATH_SEPARATOR . $id;
+            if ($id !== false && $id !== $this->path->toString()) {
                 $this->path = DokuPath::createPagePathFromPath($path);
             }
 

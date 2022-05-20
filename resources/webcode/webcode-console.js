@@ -171,7 +171,7 @@ let WEBCODE = (function () {
             data: input
         })
     }
-    exp.printLogs = function () {
+    exp.flushLogs = function () {
         let webConsole = new WebConsole();
         for (const log of logs) {
             let {type, data} = log;
@@ -181,6 +181,7 @@ let WEBCODE = (function () {
                 webConsole.printTable(data);
             }
         }
+        logs = [];
     }
     return exp;
 })();
@@ -195,7 +196,9 @@ window.console.table = function (input) {
     WEBCODE.addTableEntry(input);
 };
 
-window.addEventListener("load", function () {
-    WEBCODE.printLogs();
+window.addEventListener("DOMContentLoaded", function () {
+    WEBCODE.flushLogs();
+    // log may be added later, flush the logs at interval
+    window.setInterval(WEBCODE.flushLogs,2000)
 })
 

@@ -96,7 +96,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             $call = Call::createComboCall(
                 syntax_plugin_combo_section::TAG,
                 DOKU_LEXER_ENTER,
-                array(),
+                array(syntax_plugin_combo_heading::LEVEL => $level),
                 $actualLastPosition
             );
             $callStack->insertBefore($call);

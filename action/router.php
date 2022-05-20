@@ -347,7 +347,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Page Id Website / root Permalink ?
          */
-        $shortPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($requestedPage->getPath()->getLastName());
+        $shortPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($requestedPage->getPath()->getLastNameWithoutExtension());
         if ($shortPageId !== null) {
             $pageId = PageUrlPath::decodePageId($shortPageId);
             if ($requestedPage->getParentPage() === null && $pageId !== null) {

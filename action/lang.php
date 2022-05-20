@@ -56,7 +56,7 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
         $page = Page::createPageFromId($id);
         if (!FileSystems::exists($page->getPath())) {
             // Is it a permanent link
-            $encodedPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($page->getPath()->getLastName());
+            $encodedPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($page->getPath()->getLastNameWithoutExtension());
             if ($encodedPageId !== null) {
                 $pageId = PageUrlPath::decodePageId($encodedPageId);
                 if ($pageId !== null) {

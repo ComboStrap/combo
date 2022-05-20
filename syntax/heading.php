@@ -10,6 +10,7 @@ use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
 use ComboStrap\PageH1;
 use ComboStrap\PluginUtility;
+use ComboStrap\SnippetManager;
 use ComboStrap\TagAttributes;
 
 
@@ -352,6 +353,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          */
         if ($context === self::TYPE_OUTLINE) {
             $tagAttributes->addClassName(self::OUTLINE_HEADING_CLASS);
+            SnippetManager::getOrCreate()->attachCssInternalStyleSheetForSlot(self::TYPE_OUTLINE);
         }
 
         $headingWikiEnabled = syntax_plugin_combo_headingwiki::isEnabled();

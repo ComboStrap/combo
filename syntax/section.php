@@ -134,7 +134,13 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
         $state = $data[PluginUtility::STATE];
         switch ($state) {
             case DOKU_LEXER_ENTER :
-                $renderer->doc .= '<section>' . DOKU_LF;
+                $tag = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                $level = $tag->getComponentAttributeValueAndRemoveIfPresent(syntax_plugin_combo_heading::LEVEL);
+                if ($level !== null) {
+                    $tag->addClassName("outline-section");
+                    $tag->addClassName("outline-level-$level");
+                }
+                $renderer->doc .= $tag->toHtmlEnterTag("section");
                 break;
             case DOKU_LEXER_UNMATCHED :
                 $renderer->doc .= PluginUtility::renderUnmatched($data);

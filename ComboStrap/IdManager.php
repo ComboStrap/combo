@@ -1,10 +1,12 @@
 <?php
 
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExceptionRuntime;
 use ComboStrap\Html;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\Path;
+use ComboStrap\PluginUtility;
 
 /**
  * A manager to return an unique id
@@ -50,10 +52,9 @@ class IdManager
 
     public function generateNewIdForComponent(string $canonical, Path $slotPath = null): string
     {
-        $slotName = null;
-        if (empty($slotPath)) {
+        if ($slotPath === null) {
             try {
-                $slotName = Page::createPageFromGlobalDokuwikiId()->getPath()->getLastName();
+                $slotPath = Page::createPageFromGlobalDokuwikiId()->getPath();
             } catch (ExceptionNotFound $e) {
                 /**
                  * not found
@@ -61,14 +62,17 @@ class IdManager
                  * with the icon created for the log
                  * at {@link \ComboStrap\PluginUtility::getDocumentationHyperLink()}
                  * that uses TagAttributes on test
+                 *
+                 * As it should never happen, we don't throw any error
                  */
+                if (PluginUtility::isDevOrTest()) {
+                    throw new ExceptionRuntime("global ID is mandatory to get an component id", self::CANONICAL, 0, $e);
+                }
             }
-        } else {
-            $slotName = $slotPath->getLastName();
         }
 
-        if ($slotName !== null) {
-            // root
+        if ($slotPath !== null) {
+            $slotName = $slotPath->getLastNameWithoutExtension();
             $idScope = "$canonical-$slotName";
         } else {
             $idScope = "$canonical";

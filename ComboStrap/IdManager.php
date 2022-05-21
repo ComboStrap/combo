@@ -57,17 +57,11 @@ class IdManager
                 $slotPath = Page::createPageFromGlobalDokuwikiId()->getPath();
             } catch (ExceptionNotFound $e) {
                 /**
-                 * not found
-                 * we don't send an login error, otherwise we get a recursive problem
-                 * with the icon created for the log
-                 * at {@link \ComboStrap\PluginUtility::getDocumentationHyperLink()}
-                 * that uses TagAttributes on test
+                 * Not found
                  *
-                 * As it should never happen, we don't throw any error
+                 * It can happen in case of ajax call.
+                 *
                  */
-                if (PluginUtility::isDevOrTest()) {
-                    throw new ExceptionRuntime("global ID is mandatory to get an component id", self::CANONICAL, 0, $e);
-                }
             }
         }
 

@@ -64,8 +64,19 @@ class PageLayout extends MetadataText
         if ($page->isRootHomePage()) {
             return self::LANDING_LAYOUT_VALUE;
         }
-        if ($page->isSecondarySlot()) {
-            return self::MEDIAN_LAYOUT_VALUE;
+        try {
+            switch ($page->getPath()->getLastNameWithoutExtension()) {
+                case Site::getSidebarName():
+                case Site::getPrimaryHeaderSlotName():
+                case Site::getPrimaryFooterSlotName():
+                case Site::getPrimarySideSlotName():
+                    return self::MEDIAN_LAYOUT_VALUE;
+                case Site::getPageHeaderSlotName():
+                case Site::getPageFooterSlotName():
+                    return self::INDEX_LAYOUT_VALUE;
+            }
+        } catch (ExceptionCompile $e) {
+            // Strap not installed
         }
         if ($page->isIndexPage()) {
             return self::INDEX_LAYOUT_VALUE;

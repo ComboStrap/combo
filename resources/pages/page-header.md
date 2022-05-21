@@ -4,10 +4,12 @@
     </brand>
     <collapse>
         <group expand="true">
-            [[:docs:docs?preview&color=secondary|Docs]]
-            [[support?preview&color=secondary|Contact]]
+            [[:slot_header?do=edit|Edit this menu]]
+            <dropdown name="ComboStrap">
+                [[https://combostrap.com/docs/how-to-configure-and-get-started-with-a-combostrap-website-m3i8vga8|Get Started]]
+                [[https://combostrap.com/combostrap-documentation-mqltri27|Docs]]
+            </dropdown>
         </group>
-        <btn elevation="true">[[howto:getting_started:getting_started?preview|Get Started <icon name="arrow-right-drop-circle-outline" width="1.5rem"/>]]</btn>
         <search/>
     </collapse>
 </menubar>

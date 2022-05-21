@@ -24,7 +24,6 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
 
     const TAG = "dropdown";
 
-    private $linkCounter = 0;
     private $dropdownCounter = 0;
 
     /**
@@ -34,9 +33,14 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
      * @see https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'container';
+    }
+
+    public function accepts($mode): bool
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
 
     /**
@@ -45,7 +49,7 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
      *
      * An array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
      */
-    public function getAllowedTypes()
+    public function getAllowedTypes(): array
     {
         return array('formatting', 'substition');
     }
@@ -192,10 +196,11 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
                     /**
                      * New namespace for data attribute
                      */
-                    $dataToggleAttributeName = Bootstrap::getDataNamespace();
+                    $bootstrapNameSpace = Bootstrap::getDataNamespace();
+                    $dataToggleAttribute = "data${$bootstrapNameSpace}-toggle";
                     $htmlAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
                     $renderer->doc .= "<li $htmlAttributes>" . DOKU_LF
-                        . "<a id=\"$dropDownId\" href=\"#\" class=\"nav-link dropdown-toggle active\" data{$dataToggleAttributeName}-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\" title=\"$name\">$name </a>" . DOKU_LF
+                        . "<a id=\"$dropDownId\" href=\"#\" class=\"nav-link dropdown-toggle active\" {$dataToggleAttribute}=\"dropdown\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\" title=\"$name\">$name </a>" . DOKU_LF
                         . '<div class="dropdown-menu" aria-labelledby="' . $dropDownId . '">' . DOKU_LF;
                     break;
 

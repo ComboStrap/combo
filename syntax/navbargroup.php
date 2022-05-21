@@ -44,7 +44,7 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
      * Allow which kind of plugin inside
      * All
      */
-    public function getAllowedTypes()
+    public function getAllowedTypes(): array
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
@@ -58,11 +58,15 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
         return 'normal';
     }
 
+    public function accepts($mode): bool
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+    }
     /**
      * @see Doku_Parser_Mode::getSort()
      *

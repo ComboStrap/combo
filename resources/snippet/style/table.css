@@ -1,3 +1,4 @@
 .table-non-fluid {
-    width: auto !important;
+    /*no-cell wrap*/
+    width: max-content !important;
 }

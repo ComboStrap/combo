@@ -216,7 +216,9 @@ predicate: sqlNames
 
 columns: column (COMMA column)*;
 
-predicates: WHERE predicate ((AND|OR) predicate)*;
+predicateGroup: LPAREN predicate ((AND|OR) predicate)* RPAREN;
+
+predicates: WHERE (predicate|predicateGroup) ((AND|OR) (predicate|predicateGroup))*;
 
 tables: FROM tableNames;
 

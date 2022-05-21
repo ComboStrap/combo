@@ -32,19 +32,19 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => 'cd0f2a786e0a95a1b33196fb97964a8ad3dd9184',
+    'reference' => '433c26436fe4ab7a29d120dab2e31aca5abf71dd',
     'name' => 'combostrap/combo',
   ),
   'versions' => 
   array (
     'antlr/antlr4-php-runtime' => 
     array (
-      'pretty_version' => '0.5.0',
-      'version' => '0.5.0.0',
+      'pretty_version' => '0.5.1',
+      'version' => '0.5.1.0',
       'aliases' => 
       array (
       ),
-      'reference' => '0cb16628b575b50bd087a81d11bd961ac3b8e9e9',
+      'reference' => '73790bc994cec4b18a414865234ab0db198b065d',
     ),
     'carica/phpcss' => 
     array (
@@ -62,7 +62,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => 'cd0f2a786e0a95a1b33196fb97964a8ad3dd9184',
+      'reference' => '433c26436fe4ab7a29d120dab2e31aca5abf71dd',
     ),
     'dragonmantank/cron-expression' => 
     array (

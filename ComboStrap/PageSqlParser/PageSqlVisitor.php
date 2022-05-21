@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.1
+ * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.2
  */
 
 namespace ComboStrap\PageSqlParser;
@@ -84,6 +84,15 @@ interface PageSqlVisitor extends ParseTreeVisitor
 	 * @return mixed The visitor result.
 	 */
 	public function visitColumns(Context\ColumnsContext $context);
+
+	/**
+	 * Visit a parse tree produced by {@see PageSqlParser::predicateGroup()}.
+	 *
+	 * @param Context\PredicateGroupContext $context The parse tree.
+	 *
+	 * @return mixed The visitor result.
+	 */
+	public function visitPredicateGroup(Context\PredicateGroupContext $context);
 
 	/**
 	 * Visit a parse tree produced by {@see PageSqlParser::predicates()}.

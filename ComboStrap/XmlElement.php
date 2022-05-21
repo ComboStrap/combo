@@ -106,4 +106,9 @@ class XmlElement
         $this->element->parentNode->removeChild($this->element);
         return $this;
     }
+
+    public function getStyle(): string
+    {
+        return $this->element->getAttribute("style");
+    }
 }

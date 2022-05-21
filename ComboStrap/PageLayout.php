@@ -69,7 +69,7 @@ class PageLayout extends MetadataText
          */
         $page = $this->getResource();
         if ($page->isRootHomePage()) {
-            return self::LANDING_LAYOUT_VALUE;
+            return self::HAMBURGER_LAYOUT_VALUE;
         }
         try {
             switch ($page->getPath()->getLastNameWithoutExtension()) {

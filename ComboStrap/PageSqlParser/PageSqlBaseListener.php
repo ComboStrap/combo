@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.1
+ * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.2
  */
 
 namespace ComboStrap\PageSqlParser;
@@ -121,6 +121,19 @@ class PageSqlBaseListener implements PageSqlListener
 	 * The default implementation does nothing.
 	 */
 	public function exitColumns(Context\ColumnsContext $context) : void {}
+	/**
+	 * {@inheritdoc}
+	 *
+	 * The default implementation does nothing.
+	 */
+	public function enterPredicateGroup(Context\PredicateGroupContext $context) : void {}
+
+	/**
+	 * {@inheritdoc}
+	 *
+	 * The default implementation does nothing.
+	 */
+	public function exitPredicateGroup(Context\PredicateGroupContext $context) : void {}
 	/**
 	 * {@inheritdoc}
 	 *

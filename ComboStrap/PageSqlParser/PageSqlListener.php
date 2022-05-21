@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.1
+ * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.2
  */
 
 namespace ComboStrap\PageSqlParser;
@@ -92,6 +92,16 @@ interface PageSqlListener extends ParseTreeListener {
 	 * @param $context The parse tree.
 	 */
 	public function exitColumns(Context\ColumnsContext $context) : void;
+	/**
+	 * Enter a parse tree produced by {@see PageSqlParser::predicateGroup()}.
+	 * @param $context The parse tree.
+	 */
+	public function enterPredicateGroup(Context\PredicateGroupContext $context) : void;
+	/**
+	 * Exit a parse tree produced by {@see PageSqlParser::predicateGroup()}.
+	 * @param $context The parse tree.
+	 */
+	public function exitPredicateGroup(Context\PredicateGroupContext $context) : void;
 	/**
 	 * Enter a parse tree produced by {@see PageSqlParser::predicates()}.
 	 * @param $context The parse tree.

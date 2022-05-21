@@ -3,7 +3,7 @@
 namespace ComboStrap;
 
 /**
- * Represents a length
+ * Represents a conditional length / value
  */
 class ConditionalLength
 {

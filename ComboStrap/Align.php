@@ -44,6 +44,9 @@ class Align
                 case "center":
                     $blockAlign = true;
                     $attributes->addClassName(self::CENTER_CLASS);
+                    if (in_array($attributes->getLogicalTag(), TagAttributes::INLINE_LOGICAL_ELEMENTS)) {
+                        $attributes->addStyleDeclarationIfNotSet(Dimension::WIDTH_KEY, "fit-content");
+                    }
                     break;
                 case "y-center":
                     $flexAxis[self::Y_AXIS] = true;
@@ -91,7 +94,7 @@ class Align
              */
             if ($attributes->getLogicalTag() !== \syntax_plugin_combo_grid::TAG) {
                 $attributes->addClassName("d-flex");
-                if(!isset($flexAxis[self::Y_AXIS])){
+                if (!isset($flexAxis[self::Y_AXIS])) {
                     /**
                      * flex box change the line center of where the text is written
                      * if a flex align attribute is used in a row, a itext or any other

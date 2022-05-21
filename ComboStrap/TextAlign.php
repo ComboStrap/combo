@@ -19,17 +19,27 @@ class TextAlign
 
         if ($attributes->hasComponentAttribute(self::ATTRIBUTE_NAME)) {
 
-            $textAlignValues = $attributes->getValuesAndRemove(self::ATTRIBUTE_NAME);
+            try {
+                $textAlignValues = $attributes->getValuesAndRemove(self::ATTRIBUTE_NAME);
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::error("Unable to retrieve the tex-align attribute. Error: {$e->getMessage()}", self::CANONICAL);
+                return;
+            }
             foreach ($textAlignValues as $textAlignValue) {
-                $conditionalTextAlignValue = ConditionalValue::createFrom($textAlignValue);
+                try {
+                    $conditionalTextAlignValue = ConditionalLength::createFromString($textAlignValue);
+                } catch (ExceptionBadArgument $e) {
+                    LogUtility::error("The text-align value($textAlignValue) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
+                    return;
+                }
 
                 $bootstrapMajorVersion = Bootstrap::getBootStrapMajorVersion();
-                if ($bootstrapMajorVersion == Bootstrap::BootStrapFourMajorVersion) {
+                if ($bootstrapMajorVersion === Bootstrap::BootStrapFourMajorVersion) {
                     $breakpoint = $conditionalTextAlignValue->getBreakpoint();
                     if (!empty($breakpoint)) {
                         LogUtility::msg("Bootstrap 4 does not support conditional value for the attribute (" . self::ATTRIBUTE_NAME . "). Therefore, the value ($textAlignValue) cannot be applied", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
                     }
-                    $value = $conditionalTextAlignValue->getValue();
+                    $value = $conditionalTextAlignValue->getLength();
                     // Bootstrap 4
                     switch ($value) {
                         case "left":
@@ -75,7 +85,7 @@ class TextAlign
                                 break;
                         }
                     }
-                    $value = $conditionalTextAlignValue->getValue();
+                    $value = $conditionalTextAlignValue->getLength();
                     // Bootstrap 5
                     switch ($value) {
                         case "start":

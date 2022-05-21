@@ -1028,11 +1028,12 @@ class TagAttributes
 
     /**
      * @param $attributeName
+     * @param null $default
      * @return null|string[] - an array of values
      * @throws ExceptionBadArgument
      */
     public
-    function getValuesAndRemove($attributeName, $default = null): ?array
+    function getValuesAndRemove($attributeName, $default = null): array
     {
 
         $trim = $this->getValues($attributeName, $default);
@@ -1329,11 +1330,11 @@ class TagAttributes
 
     /**
      * @param $attributeName
-     * @param null $default
-     * @return string[]|null
+     * @param array|null $default
+     * @return string[]
      * @throws ExceptionBadArgument
      */
-    public function getValues($attributeName, $default = null): ?array
+    public function getValues($attributeName, ?array $default = null): ?array
     {
         /**
          * Replace all suite of space that have more than 2 characters

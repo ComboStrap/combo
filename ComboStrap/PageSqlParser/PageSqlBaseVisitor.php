@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.1
+ * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.2
  */
 
 namespace ComboStrap\PageSqlParser;
@@ -98,6 +98,17 @@ class PageSqlBaseVisitor extends AbstractParseTreeVisitor implements PageSqlVisi
 	 * {@see self::visitChildren()} on `context`.
 	 */
 	public function visitColumns(Context\ColumnsContext $context)
+	{
+	    return $this->visitChildren($context);
+	}
+
+	/**
+	 * {@inheritdoc}
+	 *
+	 * The default implementation returns the result of calling
+	 * {@see self::visitChildren()} on `context`.
+	 */
+	public function visitPredicateGroup(Context\PredicateGroupContext $context)
 	{
 	    return $this->visitChildren($context);
 	}

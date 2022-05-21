@@ -251,9 +251,15 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                      * $attributes->addClassName("no-gutters");
                      */
                     $defaultGutter = "y-5";
+                    /**
+                     * This is a block
+                     * as we give it the same spacing than
+                     * a paragraph
+                     */
+                    $spacing = "mb-3";
                     $defaultAttributes = [
                         self::GUTTER => $defaultGutter,
-                        Spacing::SPACING_ATTRIBUTE => "mb-3"
+                        Spacing::SPACING_ATTRIBUTE => $spacing
                     ];
                     /**
                      * All element are centered

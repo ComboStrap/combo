@@ -43,6 +43,10 @@ class action_plugin_combo_slotmanagermenuitem extends DokuWiki_Action_Plugin
     {
 
 
+        if (!Identity::isWriter()) {
+            return;
+        }
+
         /**
          * The `view` property defines the menu that is currently built
          * https://www.dokuwiki.org/devel:menus

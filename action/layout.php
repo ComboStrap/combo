@@ -169,6 +169,9 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
             // show
             $showArea = $tagAttributes->getBooleanValueAndRemoveIfPresent("show", true);
             $layoutArea->setShow($showArea);
+            if($showArea===false){
+                continue;
+            }
 
             // Container
             if ($areaName === self::PAGE_CORE_AREA) {

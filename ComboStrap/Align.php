@@ -45,6 +45,10 @@ class Align
                     $blockAlign = true;
                     $attributes->addClassName(self::CENTER_CLASS);
                     break;
+                case "y-center":
+                    $flexAxis[self::Y_AXIS] = true;
+                    $attributes->addClassName("align-self-center");
+                    break;
                 case "right":
                 case "end":
                     $blockAlign = true;

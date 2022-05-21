@@ -3,12 +3,12 @@
         "container": false
     },
     "main-header": {
-        "display": "none"
+        "show": false
     },
     "main-side": {
-        "display": "none"
+        "show": false
     },
     "main-footer": {
-        "display": "none"
+        "show": false
     }
 }

@@ -41,7 +41,8 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "grid";
+    const TAG = self::GRID_TAG;
+    const GRID_TAG = "grid";
     const TAGS = [self::TAG, self::ROW_TAG];
     const ROW_TAG = "row";
 
@@ -230,7 +231,7 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                     // contained not in one
                     $scannedType = self::ROW_TAG;
                 } else {
-                    $scannedType = self::TAG;
+                    $scannedType = self::GRID_TAG;
                     if ($isRowTag) {
                         LogUtility::warning("A non-contained row has been deprecated for grid. You should rename the <row> tag to <grid>");
                     }
@@ -239,7 +240,7 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                 $knownTypes = self::KNOWN_TYPES;
 
                 $defaultAttributes = [];
-                if ($scannedType === self::TAG) {
+                if ($scannedType === self::GRID_TAG) {
 
                     /**
                      * Vertical gutter
@@ -251,7 +252,8 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                      */
                     $defaultGutter = "y-5";
                     $defaultAttributes = [
-                        self::GUTTER => $defaultGutter
+                        self::GUTTER => $defaultGutter,
+                        Spacing::SPACING_ATTRIBUTE => "mb-3"
                     ];
                     /**
                      * All element are centered

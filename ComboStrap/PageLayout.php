@@ -12,6 +12,7 @@ class PageLayout extends MetadataText
     public const MEDIAN_LAYOUT_VALUE = "median";
     public const LANDING_LAYOUT_VALUE = "landing";
     public const INDEX_LAYOUT_VALUE = "index";
+    public const HAMBURGER_LAYOUT_VALUE = "hamburger";
 
     public static function createFromPage(Page $page)
     {
@@ -36,7 +37,13 @@ class PageLayout extends MetadataText
 
     public function getPossibleValues(): ?array
     {
-        return [self::HOLY_LAYOUT_VALUE, self::MEDIAN_LAYOUT_VALUE, self::LANDING_LAYOUT_VALUE, self::INDEX_LAYOUT_VALUE];
+        return [
+            self::HOLY_LAYOUT_VALUE,
+            self::MEDIAN_LAYOUT_VALUE,
+            self::LANDING_LAYOUT_VALUE,
+            self::INDEX_LAYOUT_VALUE,
+            self::HAMBURGER_LAYOUT_VALUE
+        ];
     }
 
 
@@ -73,7 +80,14 @@ class PageLayout extends MetadataText
                     return self::MEDIAN_LAYOUT_VALUE;
                 case Site::getPageHeaderSlotName():
                 case Site::getPageFooterSlotName():
-                    return self::INDEX_LAYOUT_VALUE;
+                    /**
+                     * Header and footer contains bar
+                     * {@link \syntax_plugin_combo_menubar menubar} or
+                     * {@link \syntax_plugin_combo_bar}
+                     * They therefore should not be constrained
+                     * Landing page is perfect
+                     */
+                    return self::LANDING_LAYOUT_VALUE;
             }
         } catch (ExceptionCompile $e) {
             // Strap not installed

@@ -1,5 +1,17 @@
 {
     "page-core": {
         "container": true
+    },
+    "main-header": {
+        "show": false
+    },
+    "main-side": {
+        "show": false
+    },
+    "main-footer": {
+        "show": false
+    },
+    "page-main": {
+        "class": "mb-3"
     }
 }

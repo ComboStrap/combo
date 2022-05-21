@@ -1,6 +1,6 @@
 {
     "page-side": {
-        "display": "none"
+        "show": false
     },
     "page-main": {
         "class": "col-md-8 mx-auto"

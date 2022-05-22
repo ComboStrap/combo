@@ -45,9 +45,8 @@ class Align
                 case "x-center":
                     $blockAlign = true;
                     $attributes->addClassName(self::CENTER_CLASS);
-                    if (in_array($attributes->getLogicalTag(), TagAttributes::INLINE_LOGICAL_ELEMENTS)) {
-                        $attributes->addStyleDeclarationIfNotSet(Dimension::WIDTH_KEY, "fit-content");
-                    }
+                    // valid for inline (link) but also for block such as (heading)
+                    $attributes->addStyleDeclarationIfNotSet(Dimension::WIDTH_KEY, "fit-content");
                     break;
                 case "y-center":
                     $flexAxis[self::Y_AXIS] = true;

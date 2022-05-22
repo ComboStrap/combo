@@ -57,18 +57,14 @@ class Iso8601Date
     }
 
     /**
-     * @param null $dateString
+     * @param $dateString
      * @return Iso8601Date
-     * @throws ExceptionCompile if the format is not supported
+     * @throws ExceptionBadSyntax if the format is not supported
      */
-    public static function createFromString($dateString = null): Iso8601Date
+    public static function createFromString(string $dateString): Iso8601Date
     {
 
         $original = $dateString;
-
-        if ($dateString === null) {
-            return new Iso8601Date();
-        }
 
         /**
          * Time ?
@@ -126,7 +122,7 @@ class Iso8601Date
         $dateTime = DateTime::createFromFormat(self::getFormat(), $dateString);
         if ($dateTime === false) {
             $message = "The date string ($original) is not in a valid date format. (" . join(", ", self::VALID_FORMATS) . ")";
-            throw new ExceptionCompile($message, self::CANONICAL);
+            throw new ExceptionBadSyntax($message, self::CANONICAL);
         }
         return new Iso8601Date($dateTime);
 
@@ -154,10 +150,17 @@ class Iso8601Date
         return DATE_ATOM;
     }
 
+    /**
+     *
+     */
     public static function isValid($value): bool
     {
-        $dateObject = Iso8601Date::createFromString($value);
-        return $dateObject->isValidDateEntry();
+        try {
+            $dateObject = Iso8601Date::createFromString($value);
+            return $dateObject->isValidDateEntry(); // ??? Validation seems to be at construction
+        } catch (ExceptionBadSyntax $e) {
+            return false;
+        }
     }
 
     public function isValidDateEntry(): bool

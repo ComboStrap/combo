@@ -351,10 +351,12 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          *
          * The context is by default the parent name or outline.
          */
+        $snippetManager = SnippetManager::getOrCreate();
         if ($context === self::TYPE_OUTLINE) {
             $tagAttributes->addClassName(self::OUTLINE_HEADING_CLASS);
-            SnippetManager::getOrCreate()->attachCssInternalStyleSheetForSlot(self::TYPE_OUTLINE);
+            $snippetManager->attachCssInternalStyleSheetForSlot(self::TYPE_OUTLINE);
         }
+        $snippetManager->attachCssInternalStyleSheetForSlot(syntax_plugin_combo_heading::TAG);
 
         $headingWikiEnabled = syntax_plugin_combo_headingwiki::isEnabled();
         if (!$headingWikiEnabled && $context === self::TYPE_OUTLINE) {

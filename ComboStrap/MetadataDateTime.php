@@ -77,7 +77,8 @@ abstract class MetadataDateTime extends Metadata
     }
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax - if the string is not a date string
+     * @throws ExceptionBadArgument - if this is not a string
      */
     protected function fromPersistentDateTimeUtility($value)
     {
@@ -85,7 +86,7 @@ abstract class MetadataDateTime extends Metadata
             return null;
         }
         if (!is_string($value)) {
-            throw new ExceptionCompile("This is not a string value");
+            throw new ExceptionBadArgument("This is not a string value");
         }
         return Iso8601Date::createFromString($value)->getDateTime();
     }

@@ -27,7 +27,7 @@ class PipelineUtility
      * @param $input
      * @return string
      */
-    static public function execute($input)
+    static public function execute($input): string
     {
 
         /**
@@ -86,6 +86,9 @@ class PipelineUtility
                         break;
                     case "capitalize":
                         $value = ucwords($value);
+                        break;
+                    case "date":
+                        $value = self::date($commandArgs, $value);
                         break;
                     default:
                         LogUtility::msg("command ($commandName) is unknown", LogUtility::LVL_MSG_ERROR, "pipeline");
@@ -182,6 +185,29 @@ class PipelineUtility
         } else {
             return "An error occurred: could not split with the pattern `$pattern`, the value `$value`.";
         }
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    private static function date(array $commandArgs, $value): string
+    {
+        $size = sizeof($commandArgs);
+        $format = null;
+        $locale = null;
+        switch ($size) {
+            case 0:
+                break;
+            case 1:
+                $format = $commandArgs[0];
+                break;
+            case 2:
+            default:
+                $format = $commandArgs[0];
+                $locale = $commandArgs[1];
+                break;
+        }
+        return \syntax_plugin_combo_date::formatDateString($value, $format, $locale);
     }
 
 }

@@ -3,9 +3,15 @@
 
 use ComboStrap\CacheManager;
 use ComboStrap\CallStack;
+use ComboStrap\ContextManager;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
+use ComboStrap\Page;
+use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\TagAttributes;
 
 
@@ -31,6 +37,63 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
 
     const FORMAT_ATTRIBUTE = "format";
     const DATE_ATTRIBUTE = "date";
+
+    /**
+     * @param string $date
+     * @param string $format
+     * @param string|null $locale
+     * @return string
+     * @throws ExceptionBadSyntax
+     */
+    public static function formatDateString(string $date, string $format = syntax_plugin_combo_date::DEFAULT_FORMAT, string $locale = null): string
+    {
+        // https://www.php.net/manual/en/function.date.php
+        // To format dates in other languages, you should use the setlocale() and strftime() functions instead of date().
+        $localeSeparator = '_';
+        if ($locale === null) {
+            $path = ContextManager::getOrCreate()->getAttribute(PagePath::PROPERTY_NAME);
+            if ($path === null) {
+                // should never happen bu yeah
+                LogUtility::error("Internal Error: The page content was not set. We were unable to get the page locale. Defaulting to the site locale");
+                $locale = Site::getLocale($localeSeparator);
+            } else {
+                $page = Page::createPageFromQualifiedPath($path);
+                $locale = \ComboStrap\Locale::createForPage($page)->getValueOrDefault();
+            }
+        }
+        $actualLocale = setlocale(LC_ALL, 0);
+        try {
+            if ($locale !== null && trim($locale) !== "") {
+                // Set local takes several possible locales value
+                // The lang just works fine but the second argument can be seen in the doc
+                if (strlen(trim($locale)) === 2) {
+                    $derivedLocale = strtolower($locale) . $localeSeparator . strtoupper($locale);
+                } else {
+                    $derivedLocale = $locale;
+                }
+                $newLocale = setlocale(LC_TIME, $locale, $derivedLocale);
+                if ($newLocale === false) {
+                    throw new ExceptionBadSyntax("The language ($locale) is not available as locale on the server. You can't then format the value ($date) in this language.");
+                }
+            }
+            $date = syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($date);
+            $timeStamp = Iso8601Date::createFromString($date)->getDateTime()->getTimestamp();
+            $formatted = strftime($format, $timeStamp);
+            if ($formatted === false) {
+                if ($locale === null) {
+                    $locale = "";
+                }
+                throw new ExceptionBadSyntax("Unable to format the date ($date) with the format ($format) and lang ($locale)");
+            }
+            return $formatted;
+        } finally {
+            /**
+             * Restore the locale
+             */
+            setlocale(LC_ALL, $actualLocale);
+        }
+
+    }
 
 
     function getType(): string
@@ -85,11 +148,10 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
     }
 
 
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
         switch ($state) {
-
 
             case DOKU_LEXER_SPECIAL :
             case DOKU_LEXER_ENTER:
@@ -137,53 +199,35 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
                     case DOKU_LEXER_SPECIAL:
                     case DOKU_LEXER_ENTER:
 
-                        // https://www.php.net/manual/en/function.date.php
-                        // To format dates in other languages, you should use the setlocale() and strftime() functions instead of date().
-
                         $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
 
                         /**
-                         * Lang ?
+                         * Locale
                          */
-                        $actualLocale = setlocale(LC_ALL, 0);
-                        $lang = null;
-                        if ($tagAttributes->hasComponentAttribute("lang")) {
-                            $lang = $tagAttributes->getComponentAttributeValue("lang");
-                            // Set local takes several possible locales value
-                            // The lang just works fine but the second argument can be seen in the doc
-                            setlocale(LC_TIME, $lang, strtolower($lang) . '_' . strtoupper($lang));
-                        }
-                        /**
-                         * The date (null if none)
-                         */
-                        $date = $tagAttributes->getComponentAttributeValue(self::DATE_ATTRIBUTE);
-                        $date = syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($date);
-
-                        /**
-                         * Date may be wrong
-                         */
-                        try {
-                            $dateTime = Iso8601Date::createFromString($date);
-                        } catch (Exception $e) {
-                            LogUtility::msg("The string date ($date) is not a valid date", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                            $renderer->doc .= "<span class=\"text-danger\">String Date value not valid ($date)</span>";
-                            return false;
+                        $locale = $tagAttributes->getComponentAttributeValue(\ComboStrap\Locale::PROPERTY_NAME);
+                        if ($locale === null) {
+                            $locale = $tagAttributes->getComponentAttributeValue("lang");
+                            if ($locale !== null) {
+                                LogUtility::warning("The `lang` attribute of the date component has been deprecated for the `locale` attribute. You should change it.", self::CANONICAL);
+                            }
                         }
 
-                        $timeStamp = $dateTime->getDateTime()->getTimestamp();
                         /**
                          * The format
                          */
                         $format = $tagAttributes->getValue(self::FORMAT_ATTRIBUTE, self::DEFAULT_FORMAT);
                         /**
-                         * Render
+                         * The date
                          */
-                        $renderer->doc .= strftime($format, $timeStamp);
-                        /**
-                         * Restore the locale
-                         */
-                        if ($lang != null) {
-                            setlocale(LC_ALL, $actualLocale);
+                        $defaultDateTime = Iso8601Date::createFromNow()->toString();
+                        $date = $tagAttributes->getComponentAttributeValue(self::DATE_ATTRIBUTE, $defaultDateTime);
+                        try {
+                            $renderer->doc .= self::formatDateString($date, $format, $locale);
+                        } catch (ExceptionBadSyntax $e) {
+                            $message = "Error while formatting a date. Error: {$e->getMessage()}";
+                            LogUtility::error($message, self::CANONICAL);
+                            $renderer->doc .= LogUtility::wrapInRedForHtml($message);
+                            return false;
                         }
                         break;
                 }

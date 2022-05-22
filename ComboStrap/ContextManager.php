@@ -22,6 +22,7 @@ class ContextManager
 {
 
 
+
     /**
      * @var ContextManager array that contains one element (one {@link ContextManager} scoped to the requested id
      */
@@ -31,6 +32,18 @@ class ContextManager
      * @var array
      */
     private $contextData;
+    /**
+     * @var array
+     */
+    private $defaultContextData;
+
+    /**
+     * @param array $defaultContextData
+     */
+    public function __construct(array $defaultContextData)
+    {
+        $this->defaultContextData = $defaultContextData;
+    }
 
 
     /**
@@ -51,7 +64,8 @@ class ContextManager
         $context = self::$globalContext[$id];
         if ($context === null) {
             self::$globalContext = null; // delete old snippet manager for other request
-            $context = new ContextManager();
+            $defaultContextData = Page::createPageFromRequestedPage()->getMetadataForRendering();
+            $context = new ContextManager($defaultContextData);
             self::$globalContext[$id] = $context;
         }
         return $context;
@@ -60,7 +74,7 @@ class ContextManager
     public function getContextData(): array
     {
         if ($this->contextData === null) {
-            return Page::createPageFromRequestedPage()->getMetadataForRendering();
+            return $this->defaultContextData;
         }
         return $this->contextData;
     }

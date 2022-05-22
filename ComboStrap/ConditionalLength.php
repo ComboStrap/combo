@@ -258,7 +258,7 @@ class ConditionalLength
         $localNumber = $matches[1][0];
         try {
             $this->numerator = DataType::toFloat($localNumber);
-        } catch (ExceptionBadSyntax $e) {
+        } catch (ExceptionBadArgument $e) {
             // should not happen due to the match but yeah
             throw new ExceptionBadSyntax("The number value ($localNumber) of the length value ($this->length) is not a valid float format.");
         }
@@ -288,14 +288,14 @@ class ConditionalLength
         $numerator = $matches[1][0];
         try {
             $this->numerator = DataType::toFloat($numerator);
-        } catch (ExceptionBadSyntax $e) {
+        } catch (ExceptionBadArgument $e) {
             // should not happen due to the match but yeah
             throw new ExceptionBadSyntax("The number value ($numerator) of the length value ($this->length) is not a valid float format.");
         }
         $denominator = $matches[2][0];
         try {
             $this->denominator = DataType::toFloat($denominator);
-        } catch (ExceptionBadSyntax $e) {
+        } catch (ExceptionBadArgument $e) {
             // should not happen due to the match but yeah
             throw new ExceptionBadSyntax("The number value ($denominator) of the length value ($this->length) is not a valid float format.");
         }

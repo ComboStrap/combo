@@ -255,7 +255,16 @@ final class PageSqlTreeListener implements ParseTreeListener
                                 }
                                 break;
                             default:
-                                $this->parameters[] = $text;
+                                try {
+                                    if(strpos($text,".")!==false) {
+                                        $this->parameters[] = DataType::toFloat($text);
+                                    } else {
+                                        $this->parameters[] = DataType::toInteger($text);
+                                    }
+                                } catch (ExceptionBadArgument $e) {
+                                    LogUtility::error("The value of the column $this->actualPredicateColumn ($text) could not be transformed as a number. Error: {$e->getMessage()}", self::CANONICAL);
+                                    $this->parameters[] = $text;
+                                }
                                 break;
                         }
                         $this->physicalSql .= "?";
@@ -316,8 +325,10 @@ final class PageSqlTreeListener implements ParseTreeListener
                  */
                 switch ($this->tableName) {
                     case self::BACKLINKS:
-                    case self::DESCENDANTS:
                         $this->physicalSql .= "\tand ";
+                        break;
+                    case self::DESCENDANTS:
+                        $this->physicalSql .= "\tand (";
                         break;
                     default:
                         $this->physicalSql .= "where\n";
@@ -385,8 +396,13 @@ EOF;
     {
         $ruleIndex = $ctx->getRuleIndex();
         switch ($ruleIndex) {
-            case PageSqlParser::RULE_predicates:
             case PageSqlParser::RULE_orderBys:
+                $this->physicalSql .= "\n";
+                break;
+            case PageSqlParser::RULE_predicates:
+                if ($this->tableName == self::DESCENDANTS) {
+                    $this->physicalSql .= ")";
+                }
                 $this->physicalSql .= "\n";
                 break;
         }

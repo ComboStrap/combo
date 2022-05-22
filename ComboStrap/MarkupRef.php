@@ -26,9 +26,11 @@ require_once(__DIR__ . '/PluginUtility.php');
  *
  * @package ComboStrap
  *
- * Parse the ref found in a markup link
+ * Parse the ref found in a markup link or media
  * and return an XHTML compliant array
  * with href, style, ... attributes
+ *
+ * TODO: Merge with {@link DokuwikiUrl}
  */
 class MarkupRef
 {

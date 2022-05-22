@@ -92,7 +92,10 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                  * The calculation are done in the {@link syntax_plugin_combo_pageimage::render render function}
                  *
                  */
-                $tagAttributes = TagAttributes::createFromTagMatch($match);
+                $defaultsAttribute = [
+                    PagePath::PROPERTY_NAME => ":" . PluginUtility::getRequestedWikiId()
+                ];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultsAttribute);
                 $callStack = CallStack::createFromHandler($handler);
                 $context = self::TAG;
                 $parent = $callStack->moveToParent();
@@ -133,10 +136,6 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
 
 
                 $path = $tagAttributes->getValueAndRemove(PagePath::PROPERTY_NAME);
-                if ($path === null) {
-                    LogUtility::msg("The path attribute is mandatory for a page image");
-                    return false;
-                }
                 DokuPath::addRootSeparatorIfNotPresent($path);
 
                 /**

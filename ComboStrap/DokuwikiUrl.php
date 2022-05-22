@@ -4,11 +4,12 @@
 namespace ComboStrap;
 
 /**
- * Parse a wiki URL that you can found in the first part of a link
+ * Parse a wiki URL that you can found in the first part of a media
  *
- * This class takes care of the
- * fact that a color can have a #
- * and of the special syntax for an image
+ * This class takes care of the fact
+ * that a color can have a # and of the special syntax for an image
+ *
+ * TODO: Merge with {@link MarkupRef}
  */
 class DokuwikiUrl
 {
@@ -64,6 +65,8 @@ class DokuwikiUrl
      */
     public function __construct($url)
     {
+        $url=trim($url);
+
         $this->queryParameters = [];
 
         /**

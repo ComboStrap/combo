@@ -93,7 +93,7 @@ class DataType
     }
 
     /**
-     * @throws ExceptionBadSyntax - if the value is not a numeric
+     * @throws ExceptionBadArgument - if the value is not a numeric
      */
     public static function toFloat($value): float
     {
@@ -102,7 +102,7 @@ class DataType
         }
 
         if (!is_numeric($value)) {
-            throw new ExceptionBadSyntax("The value ($value) is not a numeric");
+            throw new ExceptionBadArgument("The value ($value) is not a numeric");
         }
 
         return floatval($value);

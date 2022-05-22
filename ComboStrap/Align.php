@@ -42,6 +42,7 @@ class Align
 
             switch ($alignValue) {
                 case "center":
+                case "x-center":
                     $blockAlign = true;
                     $attributes->addClassName(self::CENTER_CLASS);
                     if (in_array($attributes->getLogicalTag(), TagAttributes::INLINE_LOGICAL_ELEMENTS)) {

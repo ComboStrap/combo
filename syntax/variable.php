@@ -23,7 +23,7 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
     const CANONICAL = self::TAG;
     const PREFIX_LONG = '${';
     const PREFIX_SHORT = '$';
-    const ENTRY_PATTERN_SHORT = self::DOLLAR_ESCAPE . self::PREFIX_SHORT . "[a-z]+";
+    const ENTRY_PATTERN_SHORT = self::DOLLAR_ESCAPE . self::PREFIX_SHORT . "[a-z0-9]+";
     const ENTRY_PATTERN_LONG = self::DOLLAR_ESCAPE . self::PREFIX_LONG . "[^}\r\n]+}";
     const EXPRESSION_ATTRIBUTE = "expression";
     const DOLLAR_ESCAPE = '\\';
@@ -145,7 +145,7 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
                  * @var Doku_Renderer_xhtml $renderer
                  */
                 $state = $data[PluginUtility::STATE];
-                if ($state == DOKU_LEXER_SPECIAL) {
+                if ($state === DOKU_LEXER_SPECIAL) {
                     $expression = $data[self::EXPRESSION_ATTRIBUTE];
                     $pipelineExpression = self::replaceVariablesWithValuesFromContext($expression);
                     $execute = PipelineUtility::execute($pipelineExpression);

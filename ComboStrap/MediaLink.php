@@ -267,23 +267,6 @@ abstract class MediaLink
             $description = $parts[1];
         }
 
-        /**
-         * Media Alignment
-         */
-        $rightAlign = (bool)preg_match('/^ /', $url);
-        $leftAlign = (bool)preg_match('/ $/', $url);
-        $url = trim($url);
-
-        // Logic = what's that ;)...
-        if ($leftAlign & $rightAlign) {
-            $align = 'center';
-        } else if ($rightAlign) {
-            $align = 'right';
-        } else if ($leftAlign) {
-            $align = 'left';
-        } else {
-            $align = null;
-        }
 
         /**
          * The combo attributes array
@@ -296,6 +279,23 @@ abstract class MediaLink
             $linkingKey = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::LINKING_DIRECT_VALUE);
         }
         $parsedAttributes[MediaLink::LINKING_KEY] = $linkingKey;
+
+        /**
+         * Media Alignment
+         */
+        $align = $parsedAttributes[Align::ALIGN_ATTRIBUTE];
+        if ($align == null) {
+            $rightAlign = (bool)preg_match('/^ /', $url);
+            $leftAlign = (bool)preg_match('/ $/', $url);
+            // Logic = what's that ;)...
+            if ($leftAlign & $rightAlign) {
+                $align = 'center';
+            } else if ($rightAlign) {
+                $align = 'right';
+            } else if ($leftAlign) {
+                $align = 'left';
+            }
+        }
 
         /**
          * Media Type

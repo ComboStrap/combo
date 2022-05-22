@@ -191,13 +191,13 @@ class PageImages extends MetadataTabular
     /**
      * @return PageImage[]
      */
-    public function getValueAsPageImages(): ?array
+    public function getValueAsPageImages(): array
     {
         $this->buildCheck();
 
         $rows = parent::getValue();
         if ($rows === null) {
-            return null;
+            return [];
         }
         $pageImages = [];
         foreach ($rows as $row) {
@@ -299,7 +299,7 @@ class PageImages extends MetadataTabular
 
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionNotFound - if there is no default image
      */
     public
     function getDefaultImage(): Image
@@ -311,15 +311,15 @@ class PageImages extends MetadataTabular
     }
 
     /**
-     * @return ImageRaster|ImageSvg|null - the first image of the page
-     * @throws ExceptionCompile
+     * @return ImageRaster|ImageSvg - the first image of the page
+     * @throws ExceptionNotFound - if there is no image
      */
     public function getFirstImage()
     {
 
         $store = $this->getReadStore();
         if (!($store instanceof MetadataDokuWikiStore)) {
-            return null;
+            throw new ExceptionNotFound("First image are only supported with file metadata store", self::CANONICAL);
         }
         /**
          * Our first image metadata
@@ -334,12 +334,12 @@ class PageImages extends MetadataTabular
         if (empty($firstImageId)) {
             $relation = $store->getCurrentFromName('relation');
             if (!isset($relation[PageImages::FIRST_IMAGE_META_RELATION])) {
-                return null;
+                throw new ExceptionNotFound("No relation key was found in the page metadata");
             }
 
             $firstImageId = $relation[PageImages::FIRST_IMAGE_META_RELATION];
             if (empty($firstImageId)) {
-                return null;
+                throw new ExceptionNotFound("No first image was found");
             }
         }
 
@@ -347,9 +347,17 @@ class PageImages extends MetadataTabular
          * Image Id check
          */
         if (media_isexternal($firstImageId)) {
-            return null;
+            throw new ExceptionNotFound("The first image is not a local image");
         }
-        return Image::createImageFromId($firstImageId);
+        try {
+            return Image::createImageFromId($firstImageId);
+        } catch (ExceptionBadArgument $e) {
+            $message = "The image ($firstImageId) of the page ({$this->getResource()} is not seen as an image. Error: {$e->getMessage()}";
+            // Log to see it in the log and to trigger an error in dev/test
+            LogUtility::error($message, self::CANONICAL);
+            // Exception not found because this is a state problem that we should not have in production
+            throw new ExceptionNotFound("The first image is not a local image");
+        }
 
     }
 
@@ -365,19 +373,24 @@ class PageImages extends MetadataTabular
     }
 
 
-    public function getDefaultValue(): ?array
+    /**
+     * @return array|array[] - the default row
+     */
+    public function getDefaultValue(): array
     {
 
-        $defaultImage = $this->getDefaultImage();
-        $pageImagePath = null;
-        if ($defaultImage !== null) {
-            $pageImagePath = PageImagePath::createFromParent($this)
-                ->buildFromStoreValue($defaultImage->getPath()->toString());
+        try {
+            $defaultImage = $this->getDefaultImage();
+            $pageImagePath = PageImagePath::createFromParent($this)->buildFromStoreValue($defaultImage->getPath()->toString());
+        } catch (ExceptionNotFound $e) {
+            $pageImagePath = null;
         }
+
+        $pageImageUsage = PageImageUsage::createFromParent($this)->buildFromStoreValue([PageImageUsage::DEFAULT]);
         return [
             [
                 PageImagePath::getPersistentName() => $pageImagePath,
-                PageImageUsage::getPersistentName() => PageImageUsage::createFromParent($this)->buildFromStoreValue([PageImageUsage::DEFAULT])
+                PageImageUsage::getPersistentName() => $pageImageUsage
             ]
         ];
 

@@ -9,7 +9,7 @@ class AliasType extends MetadataText
 
 
     private const PROPERTY_NAME = "alias-type";
-    private const PERSISTENT_NAME = "type";
+    public const PERSISTENT_NAME = "type";
     const REDIRECT = "redirect";
     const ALIAS_TYPE_VALUES = [AliasType::SYNONYM, AliasType::REDIRECT];
     const SYNONYM = "synonym";

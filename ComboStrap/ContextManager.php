@@ -94,5 +94,10 @@ class ContextManager
         return $this->getContextData()[$name];
     }
 
+    public function addContextData($name, $value)
+    {
+        $this->contextData[$name] = $value;
+    }
+
 
 }

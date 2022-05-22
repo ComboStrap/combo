@@ -94,11 +94,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                  * The calculation are done in the {@link syntax_plugin_combo_pageimage::render render function}
                  *
                  */
-                $contextManager = ContextManager::getOrCreate();
-                $defaultsAttribute = [
-                    PagePath::PROPERTY_NAME => $contextManager->getAttribute(PagePath::PROPERTY_NAME)
-                ];
-                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultsAttribute);
+                $tagAttributes = TagAttributes::createFromTagMatch($match);
                 $callStack = CallStack::createFromHandler($handler);
                 $context = self::TAG;
                 $parent = $callStack->moveToParent();
@@ -139,6 +135,15 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
 
 
                 $path = $tagAttributes->getValueAndRemove(PagePath::PROPERTY_NAME);
+                if ($path === null) {
+                    $contextManager = ContextManager::getOrCreate();
+                    $path = $contextManager->getAttribute(PagePath::PROPERTY_NAME);
+                    if ($path === null) {
+                        // It should never happen, dev error
+                        LogUtility::error("Internal Error: Bad state: page image cannot retrieve the page path from the context", self::CANONICAL);
+                        return false;
+                    }
+                }
                 DokuPath::addRootSeparatorIfNotPresent($path);
 
                 /**

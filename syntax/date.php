@@ -102,7 +102,7 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $call = $callStack->next();
-                if($call!==false) {
+                if ($call !== false) {
                     $date = $call->getCapturedContent();
                     $openingTag->addAttribute(self::DATE_ATTRIBUTE, $date);
                     $callStack->deleteActualCallAndPrevious();
@@ -157,13 +157,15 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
                          * The date (null if none)
                          */
                         $date = $tagAttributes->getComponentAttributeValue(self::DATE_ATTRIBUTE);
+                        $date = syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($date);
+
                         /**
                          * Date may be wrong
                          */
                         try {
                             $dateTime = Iso8601Date::createFromString($date);
                         } catch (Exception $e) {
-                            LogUtility::msg("The string date ($date) is not a valid date",LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+                            LogUtility::msg("The string date ($date) is not a valid date", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                             $renderer->doc .= "<span class=\"text-danger\">String Date value not valid ($date)</span>";
                             return false;
                         }

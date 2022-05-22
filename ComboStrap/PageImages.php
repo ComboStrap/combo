@@ -53,6 +53,9 @@ class PageImages extends MetadataTabular
         if ($pageImages !== null) {
             return $pageImages;
         }
+        /**
+         * Default
+         */
         try {
             $defaultPageImage = $this->getDefaultImage();
         } catch (ExceptionCompile $e) {
@@ -73,27 +76,6 @@ class PageImages extends MetadataTabular
 
     }
 
-    /**
-     * @return array
-     */
-    private function toMetadataArray(): ?array
-    {
-        if ($this->pageImages === null) {
-            return null;
-        }
-        $pageImagesMeta = [];
-        ksort($this->pageImages);
-        foreach ($this->pageImages as $pageImage) {
-            $absolutePath = $pageImage->getImage()->getPath()->toAbsolutePath()->toString();
-            $pageImagesMeta[$absolutePath] = [
-                PageImagePath::PERSISTENT_NAME => $absolutePath
-            ];
-            if ($pageImage->getUsages() !== null && $pageImage->getUsages() !== $pageImage->getDefaultUsage()) {
-                $pageImagesMeta[$absolutePath][PageImageUsage::PERSISTENT_NAME] = implode(", ", $pageImage->getUsages());
-            }
-        };
-        return array_values($pageImagesMeta);
-    }
 
     /**
      * @param $persistentValue
@@ -308,11 +290,9 @@ class PageImages extends MetadataTabular
      */
     private function checkImageExistence()
     {
-        if ($this->pageImages !== null) {
-            foreach ($this->pageImages as $pageImage) {
-                if (!$pageImage->getImage()->exists()) {
-                    throw new ExceptionCompile("The image ({$pageImage->getImage()}) does not exist", $this->getCanonical());
-                }
+        foreach ($this->getValueAsPageImages() as $pageImage) {
+            if (!$pageImage->getImage()->exists()) {
+                throw new ExceptionCompile("The image ({$pageImage->getImage()}) does not exist", $this->getCanonical());
             }
         }
     }
@@ -322,12 +302,12 @@ class PageImages extends MetadataTabular
      * @throws ExceptionCompile
      */
     public
-    function getDefaultImage(): ?Image
+    function getDefaultImage(): Image
     {
         if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
             return $this->getFirstImage();
         }
-        return null;
+        throw new ExceptionNotFound("The page has no default image");
     }
 
     /**

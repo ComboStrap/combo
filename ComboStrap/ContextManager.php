@@ -22,7 +22,6 @@ class ContextManager
 {
 
 
-
     /**
      * @var ContextManager array that contains one element (one {@link ContextManager} scoped to the requested id
      */
@@ -40,7 +39,7 @@ class ContextManager
     /**
      * @param array $defaultContextData
      */
-    public function __construct(array $defaultContextData)
+    public function __construct(array $defaultContextData = [])
     {
         $this->defaultContextData = $defaultContextData;
     }
@@ -80,7 +79,6 @@ class ContextManager
     }
 
 
-
     public function reset()
     {
         $this->contextData = null;
@@ -89,6 +87,11 @@ class ContextManager
     public function setContextData(array $contextData)
     {
         $this->contextData = $contextData;
+    }
+
+    public function getAttribute(string $name)
+    {
+        return $this->getContextData()[$name];
     }
 
 

@@ -2,9 +2,11 @@
 
 
 use ComboStrap\CallStack;
+use ComboStrap\ContextManager;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\Icon;
 use ComboStrap\Image;
@@ -92,8 +94,9 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                  * The calculation are done in the {@link syntax_plugin_combo_pageimage::render render function}
                  *
                  */
+                $contextManager = ContextManager::getOrCreate();
                 $defaultsAttribute = [
-                    PagePath::PROPERTY_NAME => ":" . PluginUtility::getRequestedWikiId()
+                    PagePath::PROPERTY_NAME => $contextManager->getAttribute(PagePath::PROPERTY_NAME)
                 ];
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultsAttribute);
                 $callStack = CallStack::createFromHandler($handler);
@@ -142,23 +145,52 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                  * Image selection
                  */
                 $page = Page::createPageFromQualifiedPath($path);
-                $selectedPageImage = $page->getImage();// the page image
-                $pageImages = $page->getPageImagesOrDefault(); // all images
+
 
                 /**
-                 * Take the image of the parent page if null
+                 * Take the image and the page images
+                 * of the first page with an image
                  */
-                if ($selectedPageImage === null) {
+                $pageImages = $page->getPageImagesOrDefault(); // all images
+                $selectedPageImage = null;
+                try {
+                    $selectedPageImage = $page->getImage();
+                } catch (ExceptionNotFound $e) {
+
+                    /**
+                     * No page image
+                     * Parent is for now the default
+                     */
                     $parentPage = $page->getParentPage();
                     while ($parentPage !== null) {
-                        $selectedPageImage = $parentPage->getImage();
-                        if ($selectedPageImage !== null) {
+                        /**
+                         * The page image of the root page is the logo if not set
+                         */
+                        if ($parentPage->isRootHomePage()) {
                             $pageImages = $parentPage->getPageImagesOrDefault();
+                            try {
+                                $selectedPageImage = $parentPage->getImage();
+                            } catch (ExceptionNotFound $e) {
+                                try {
+                                    $selectedPageImage = Site::getLogoImage();
+                                } catch (ExceptionNotFound $e) {
+                                    LogUtility::warning("No logo was installed, we could find a default page image for the page ($page) ", "logo");
+                                }
+                            }
                             break;
                         }
+                        try {
+                            $selectedPageImage = $parentPage->getImage();
+                            $pageImages = $parentPage->getPageImagesOrDefault();
+                            break;
+                        } catch (ExceptionNotFound $e) {
+                            // ok
+                        }
+                        // next one
                         $parentPage = $parentPage->getParentPage();
                     }
                 }
+
 
                 /**
                  * We select the best image for the ratio

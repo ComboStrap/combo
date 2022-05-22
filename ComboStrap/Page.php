@@ -724,17 +724,17 @@ class Page extends ResourceComboAbs
 
     /**
      * @return Image
+     * @throws ExceptionNotFound
      */
     public
-    function getImage(): ?Image
+    function getImage(): Image
     {
 
         $images = $this->getPageImagesOrDefault();
         if (sizeof($images) >= 1) {
             return $images[0]->getImage();
-        } else {
-            return null;
         }
+        throw new ExceptionNotFound("No page image was set for this page ($this)");
 
     }
 

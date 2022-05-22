@@ -14,6 +14,7 @@ namespace ComboStrap;
 
 
 use Exception;
+use http\Exception\RuntimeException;
 
 class Site
 {
@@ -107,6 +108,7 @@ class Site
         }
         return null;
     }
+
 
     public static function getLogoUrlAsPng()
     {
@@ -800,6 +802,18 @@ class Site
             LogUtility::msg($message);
             throw new ExceptionCompile($message);
         }
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function getLogoImage(): Image
+    {
+        $logosImages = Site::getLogoImages();
+        if(empty($logosImages)){
+           throw new ExceptionNotFound("No logo image was installed", "logo");
+        }
+        return $logosImages[0];
     }
 
 

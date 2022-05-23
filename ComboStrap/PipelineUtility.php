@@ -24,10 +24,12 @@ use IntlDateFormatter;
  */
 class PipelineUtility
 {
+    const QUOTES_CHARACTERS = "\"'";
 
     /**
      * @param $input
      * @return string
+     * @throws ExceptionBadSyntax - if there is any syntax error
      */
     static public function execute($input): string
     {
@@ -60,7 +62,7 @@ class PipelineUtility
             $commandArgs = array_map(
                 'trim',
                 $commandArgs,
-                array_fill(0, sizeof($commandArgs), "\"")
+                array_fill(0, sizeof($commandArgs), self::QUOTES_CHARACTERS)
             );
             $commandName = trim($commandName);
             if (!empty($commandName)) {
@@ -89,7 +91,7 @@ class PipelineUtility
                     case "capitalize":
                         $value = ucwords($value);
                         break;
-                    case "date":
+                    case "format":
                         $value = self::format($commandArgs, $value);
                         break;
                     default:
@@ -191,12 +193,17 @@ class PipelineUtility
 
     /**
      * @throws ExceptionBadSyntax
-     * @throws ExceptionBadArgument
      */
     public static function format(array $commandArgs, $value): string
     {
-        if (!($value instanceof \DateTime)) {
-            throw new ExceptionBadArgument("The format function format for now only date. The value ($value) is not a date");
+
+        /**
+         * For now only date time are
+         */
+        try {
+            $dateTime = Iso8601Date::createFromString($value)->getDateTime();
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionBadSyntax("The format method allows for now only date. The value ($value) is not a date.", \syntax_plugin_combo_pipeline::CANONICAL);
         }
 
         $size = sizeof($commandArgs);
@@ -261,6 +268,9 @@ class PipelineUtility
          * are used to format date with the locale
          * when the pattern is null
          * Doc: https://unicode-org.github.io/icu/userguide/format_parse/datetime/#producing-normal-date-formats-for-a-locale
+         *
+         * They may be null by the way.
+         *
          */
         $dateType = IntlDateFormatter::TRADITIONAL;
         $timeType = IntlDateFormatter::SHORT;
@@ -272,17 +282,16 @@ class PipelineUtility
             $derivedLocale,
             $dateType,
             $timeType,
-            $value->getTimezone(),
+            $dateTime->getTimezone(),
             IntlDateFormatter::GREGORIAN,
             $pattern
         );
-        $formatted = datefmt_format($formatter, $value);
+        $formatted = datefmt_format($formatter, $dateTime);
         if ($formatted === false) {
             if ($locale === null) {
                 $locale = "";
             }
-            $dateString = Iso8601Date::createFromDateTime($value)->toString();
-            throw new ExceptionBadSyntax("Unable to format the date ($dateString) with the pattern ($pattern) and locale ($locale)");
+            throw new ExceptionBadSyntax("Unable to format the date ($value) with the pattern ($pattern) and locale ($locale)");
         }
 
         return $formatted;

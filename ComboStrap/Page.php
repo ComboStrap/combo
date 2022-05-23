@@ -1127,7 +1127,7 @@ class Page extends ResourceComboAbs
         }
 
         $array["url"] = $this->getCanonicalUrl();
-        $array["now"] = new DateTime();
+        $array["now"] = Iso8601Date::createFromNow()->toString();
         return $array;
 
     }

@@ -66,6 +66,8 @@ class Iso8601Date
 
         $original = $dateString;
 
+        $dateString = trim($dateString);
+
         /**
          * Time ?
          * (ie only YYYY-MM-DD)

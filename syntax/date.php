@@ -7,6 +7,7 @@ use ComboStrap\ContextManager;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\Iso8601Date;
+use ComboStrap\Lang;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PagePath;
@@ -27,7 +28,7 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
     const TAG = "date";
 
 
-    const CANONICAL = "content:date";
+    const CANONICAL = "variable:date";
 
     /**
      * https://www.php.net/manual/en/function.strftime.php
@@ -41,49 +42,49 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
     /**
      * @param string $date
      * @param string $format
-     * @param string|null $locale
+     * @param string|null $lang
      * @return string
      * @throws ExceptionBadSyntax
      */
-    public static function formatDateString(string $date, string $format = syntax_plugin_combo_date::DEFAULT_FORMAT, string $locale = null): string
+    public static function formatDateString(string $date, string $format = syntax_plugin_combo_date::DEFAULT_FORMAT, string $lang = null): string
     {
         // https://www.php.net/manual/en/function.date.php
         // To format dates in other languages, you should use the setlocale() and strftime() functions instead of date().
         $localeSeparator = '_';
-        if ($locale === null) {
+        if ($lang === null) {
             $path = ContextManager::getOrCreate()->getAttribute(PagePath::PROPERTY_NAME);
             if ($path === null) {
-                // should never happen bu yeah
-                LogUtility::error("Internal Error: The page content was not set. We were unable to get the page locale. Defaulting to the site locale");
-                $locale = Site::getLocale($localeSeparator);
+                // should never happen but yeah
+                LogUtility::error("Internal Error: The page content was not set. We were unable to get the page language. Defaulting to the site language");
+                $lang = Site::getLang();
             } else {
                 $page = Page::createPageFromQualifiedPath($path);
-                $locale = \ComboStrap\Locale::createForPage($page)->getValueOrDefault();
+                $lang = Lang::createForPage($page)->getValueOrDefault();
             }
         }
         $actualLocale = setlocale(LC_ALL, 0);
         try {
-            if ($locale !== null && trim($locale) !== "") {
+            if ($lang !== null && trim($lang) !== "") {
                 // Set local takes several possible locales value
                 // The lang just works fine but the second argument can be seen in the doc
-                if (strlen(trim($locale)) === 2) {
-                    $derivedLocale = strtolower($locale) . $localeSeparator . strtoupper($locale);
+                if (strlen(trim($lang)) === 2) {
+                    $derivedLocale = strtolower($lang) . $localeSeparator . strtoupper($lang);
                 } else {
-                    $derivedLocale = $locale;
+                    $derivedLocale = $lang;
                 }
-                $newLocale = setlocale(LC_TIME, $locale, $derivedLocale);
+                $newLocale = setlocale(LC_TIME, $lang, $derivedLocale);
                 if ($newLocale === false) {
-                    throw new ExceptionBadSyntax("The language ($locale) is not available as locale on the server. You can't then format the value ($date) in this language.");
+                    throw new ExceptionBadSyntax("The language ($lang) is not available as locale on the server. You can't then format the value ($date) in this language.");
                 }
             }
             $date = syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($date);
             $timeStamp = Iso8601Date::createFromString($date)->getDateTime()->getTimestamp();
             $formatted = strftime($format, $timeStamp);
             if ($formatted === false) {
-                if ($locale === null) {
-                    $locale = "";
+                if ($lang === null) {
+                    $lang = "";
                 }
-                throw new ExceptionBadSyntax("Unable to format the date ($date) with the format ($format) and lang ($locale)");
+                throw new ExceptionBadSyntax("Unable to format the date ($date) with the format ($format) and lang ($lang)");
             }
             return $formatted;
         } finally {
@@ -156,6 +157,7 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL :
             case DOKU_LEXER_ENTER:
                 $attributes = TagAttributes::createFromTagMatch($match);
+                LogUtility::warning("The date component has been deprecated for the date variable", self::CANONICAL);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
@@ -204,13 +206,7 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
                         /**
                          * Locale
                          */
-                        $locale = $tagAttributes->getComponentAttributeValue(\ComboStrap\Locale::PROPERTY_NAME);
-                        if ($locale === null) {
-                            $locale = $tagAttributes->getComponentAttributeValue("lang");
-                            if ($locale !== null) {
-                                LogUtility::warning("The `lang` attribute of the date component has been deprecated for the `locale` attribute. You should change it.", self::CANONICAL);
-                            }
-                        }
+                        $lang = $tagAttributes->getComponentAttributeValue(Lang::PROPERTY_NAME);
 
                         /**
                          * The format
@@ -222,7 +218,7 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
                         $defaultDateTime = Iso8601Date::createFromNow()->toString();
                         $date = $tagAttributes->getComponentAttributeValue(self::DATE_ATTRIBUTE, $defaultDateTime);
                         try {
-                            $renderer->doc .= self::formatDateString($date, $format, $locale);
+                            $renderer->doc .= self::formatDateString($date, $format, $lang);
                         } catch (ExceptionBadSyntax $e) {
                             $message = "Error while formatting a date. Error: {$e->getMessage()}";
                             LogUtility::error($message, self::CANONICAL);

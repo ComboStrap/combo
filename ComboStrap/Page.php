@@ -1125,7 +1125,9 @@ class Page extends ResourceComboAbs
             }
             $array[$metadataName] = $value;
         }
+
         $array["url"] = $this->getCanonicalUrl();
+        $array["now"] = new DateTime();
         return $array;
 
     }

@@ -12,6 +12,8 @@
 
 namespace ComboStrap;
 
+use IntlDateFormatter;
+
 /**
  * Class PipelineUtility
  * @package ComboStrap
@@ -88,7 +90,7 @@ class PipelineUtility
                         $value = ucwords($value);
                         break;
                     case "date":
-                        $value = self::date($commandArgs, $value);
+                        $value = self::format($commandArgs, $value);
                         break;
                     default:
                         LogUtility::msg("command ($commandName) is unknown", LogUtility::LVL_MSG_ERROR, "pipeline");
@@ -189,25 +191,101 @@ class PipelineUtility
 
     /**
      * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
      */
-    private static function date(array $commandArgs, $value): string
+    public static function format(array $commandArgs, $value): string
     {
+        if (!($value instanceof \DateTime)) {
+            throw new ExceptionBadArgument("The format function format for now only date. The value ($value) is not a date");
+        }
+
         $size = sizeof($commandArgs);
-        $format = null;
+        $pattern = null;
         $locale = null;
         switch ($size) {
             case 0:
                 break;
             case 1:
-                $format = $commandArgs[0];
+                $pattern = $commandArgs[0];
                 break;
             case 2:
             default:
-                $format = $commandArgs[0];
+                $pattern = $commandArgs[0];
                 $locale = $commandArgs[1];
                 break;
         }
-        return \syntax_plugin_combo_date::formatDateString($value, $format, $locale);
+        $localeSeparator = '_';
+        if ($locale === null) {
+            $path = ContextManager::getOrCreate()->getAttribute(PagePath::PROPERTY_NAME);
+            if ($path === null) {
+                // should never happen but yeah
+                LogUtility::error("Internal Error: The page content was not set. We were unable to get the page locale. Defaulting to the site locale");
+                $locale = Site::getLocale();
+            } else {
+                $page = Page::createPageFromQualifiedPath($path);
+                $locale = Locale::createForPage($page)->getValueOrDefault();
+            }
+        }
+
+        if ($locale === null) {
+            // should never happen but yeah
+            $locale = 'en_US';
+            LogUtility::error("Internal Error: No default locale could be determined. The locale was set to $locale", \syntax_plugin_combo_date::CANONICAL);
+        }
+
+        /**
+         * If the user has set a lang
+         * Transform it as locale
+         */
+        if (strlen(trim($locale)) === 2) {
+            $derivedLocale = strtolower($locale) . $localeSeparator . strtoupper($locale);
+        } else {
+            $derivedLocale = $locale;
+        }
+
+        /**
+         * https://www.php.net/manual/en/function.strftime.php
+         * As been deprecated
+         * The only alternative with local is
+         * https://www.php.net/manual/en/intldateformatter.format.php
+         *
+         * Based on ISO date
+         * ICU Date formatter: https://unicode-org.github.io/icu-docs/#/icu4c/udat_8h.html
+         * ICU Date formats: https://unicode-org.github.io/icu/userguide/format_parse/datetime/#datetime-format-syntax
+         * ICU User Guide: https://unicode-org.github.io/icu/userguide/
+         * ICU Formatting Dates and Times: https://unicode-org.github.io/icu/userguide/format_parse/datetime/
+         */
+
+        /**
+         * This parameters
+         * are used to format date with the locale
+         * when the pattern is null
+         * Doc: https://unicode-org.github.io/icu/userguide/format_parse/datetime/#producing-normal-date-formats-for-a-locale
+         */
+        $dateType = IntlDateFormatter::TRADITIONAL;
+        $timeType = IntlDateFormatter::SHORT;
+
+        /**
+         * Formatter instantiation
+         */
+        $formatter = datefmt_create(
+            $derivedLocale,
+            $dateType,
+            $timeType,
+            $value->getTimezone(),
+            IntlDateFormatter::GREGORIAN,
+            $pattern
+        );
+        $formatted = datefmt_format($formatter, $value);
+        if ($formatted === false) {
+            if ($locale === null) {
+                $locale = "";
+            }
+            $dateString = Iso8601Date::createFromDateTime($value)->toString();
+            throw new ExceptionBadSyntax("Unable to format the date ($dateString) with the pattern ($pattern) and locale ($locale)");
+        }
+
+        return $formatted;
     }
 
 }

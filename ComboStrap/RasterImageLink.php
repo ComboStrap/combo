@@ -41,6 +41,12 @@ class RasterImageLink extends ImageLink
     const CONF_RETINA_SUPPORT_ENABLED = "retinaRasterImageEnable";
     const LAZY_CLASS = "lazy-raster-combo";
 
+    /**
+     * When the container query are a thing, we may change the breakpoint
+     * https://twitter.com/addyosmani/status/1524039090655481857
+     * https://groups.google.com/a/chromium.org/g/blink-dev/c/gwzxnTJDLJ8
+     *
+     */
     const BREAKPOINTS =
         array(
             "xs" => 375,

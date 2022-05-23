@@ -96,7 +96,7 @@ class DynamicRender
         global $ID;
         $contextManager = ContextManager::getOrCreate();
         if ($contextData !== null) {
-            $contextManager->setContextData($contextData);
+            $contextManager->setContextArrayData($contextData);
         }
         try {
 

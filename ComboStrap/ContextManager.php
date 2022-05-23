@@ -84,7 +84,7 @@ class ContextManager
         $this->contextData = null;
     }
 
-    public function setContextData(array $contextData)
+    public function setContextArrayData(array $contextData)
     {
         $this->contextData = $contextData;
     }
@@ -94,7 +94,7 @@ class ContextManager
         return $this->getContextData()[$name];
     }
 
-    public function addContextData($name, $value)
+    public function setContextData($name, $value)
     {
         $this->contextData[$name] = $value;
     }

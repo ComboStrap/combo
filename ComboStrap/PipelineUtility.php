@@ -25,34 +25,30 @@ use IntlDateFormatter;
 class PipelineUtility
 {
     const QUOTES_CHARACTERS = "\"'";
+    const SPACE = " ";
 
     /**
-     * @param $input
+     * @param $expression
      * @return string
      * @throws ExceptionBadSyntax - if there is any syntax error
      */
-    static public function execute($input): string
+    static public function execute($expression): string
     {
 
-        /**
-         * Get the value
-         */
-        $firstQuoteChar = strpos($input, '"');
-        $input = substr($input, $firstQuoteChar + 1);
-        $secondQuoteChar = strpos($input, '"');
-        $value = substr($input, 0, $secondQuoteChar);
-        $input = substr($input, $secondQuoteChar + 1);
-
-        /**
-         * Go to the first | and delete it from the input
-         */
-        $pipeChar = strpos($input, '|');
-        $input = substr($input, $pipeChar + 1);
+        $expression = \syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($expression);
 
         /**
          * Get the command and applies them
          */
-        $commands = preg_split("/\|/", $input);
+        $parts = preg_split("/\|/", $expression);
+        $input = $parts[0];
+        $commands = array_splice($parts, 1);
+
+
+        /**
+         * Get the value
+         */
+        $message = trim($input, self::QUOTES_CHARACTERS . self::SPACE);
         foreach ($commands as $command) {
             $command = trim($command, " )");
             $leftParenthesis = strpos($command, "(");
@@ -62,44 +58,44 @@ class PipelineUtility
             $commandArgs = array_map(
                 'trim',
                 $commandArgs,
-                array_fill(0, sizeof($commandArgs), self::QUOTES_CHARACTERS)
+                array_fill(0, sizeof($commandArgs), self::QUOTES_CHARACTERS . self::SPACE)
             );
             $commandName = trim($commandName);
             if (!empty($commandName)) {
                 switch ($commandName) {
                     case "replace":
-                        $value = self::replace($commandArgs, $value);
+                        $message = self::replace($commandArgs, $message);
                         break;
                     case "head":
-                        $value = self::head($commandArgs, $value);
+                        $message = self::head($commandArgs, $message);
                         break;
                     case "tail":
-                        $value = self::tail($commandArgs, $value);
+                        $message = self::tail($commandArgs, $message);
                         break;
                     case "rconcat":
-                        $value = self::concat($commandArgs, $value, "right");
+                        $message = self::concat($commandArgs, $message, "right");
                         break;
                     case "lconcat":
-                        $value = self::concat($commandArgs, $value, "left");
+                        $message = self::concat($commandArgs, $message, "left");
                         break;
                     case "cut":
-                        $value = self::cut($commandArgs, $value);
+                        $message = self::cut($commandArgs, $message);
                         break;
                     case "trim":
-                        $value = trim($value);
+                        $message = trim($message);
                         break;
                     case "capitalize":
-                        $value = ucwords($value);
+                        $message = ucwords($message);
                         break;
                     case "format":
-                        $value = self::format($commandArgs, $value);
+                        $message = self::format($commandArgs, $message);
                         break;
                     default:
                         LogUtility::msg("command ($commandName) is unknown", LogUtility::LVL_MSG_ERROR, "pipeline");
                 }
             }
         }
-        return trim($value);
+        return trim($message);
     }
 
     private static function replace(array $commandArgs, $value)
@@ -226,7 +222,7 @@ class PipelineUtility
             $path = ContextManager::getOrCreate()->getAttribute(PagePath::PROPERTY_NAME);
             if ($path === null) {
                 // should never happen but yeah
-                LogUtility::error("Internal Error: The page content was not set. We were unable to get the page locale. Defaulting to the site locale");
+                LogUtility::warning("Internal Error: The page content was not set. We were unable to get the page locale. Defaulting to the site locale");
                 $locale = Site::getLocale();
             } else {
                 $page = Page::createPageFromQualifiedPath($path);

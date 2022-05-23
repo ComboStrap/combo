@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\ContextManager;
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\PipelineUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Template;
@@ -147,8 +148,12 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
                 $state = $data[PluginUtility::STATE];
                 if ($state === DOKU_LEXER_SPECIAL) {
                     $expression = $data[self::EXPRESSION_ATTRIBUTE];
-                    $pipelineExpression = self::replaceVariablesWithValuesFromContext($expression);
-                    $execute = PipelineUtility::execute($pipelineExpression);
+                    try {
+                        $execute = PipelineUtility::execute($expression);
+                    } catch (ExceptionBadSyntax $e) {
+                        $renderer->doc .= $e->getMessage();
+                        return false;
+                    }
                     $renderer->doc .= $execute;
                     return true;
                 }

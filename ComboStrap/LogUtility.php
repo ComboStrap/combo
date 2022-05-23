@@ -347,4 +347,9 @@ class LogUtility
             LogUtility::error($message, $canonical);
         }
     }
+
+    public static function setTestExceptionLevelToError()
+    {
+        self::setTestExceptionLevel(self::LVL_MSG_ERROR);
+    }
 }

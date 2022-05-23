@@ -174,15 +174,15 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                 $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $actualCall = $callStack->moveToFirstChildTag();
                 if ($actualCall !== false) {
-                    if ($actualCall->getTagName() === syntax_plugin_combo_template::TAG) {
+                    if ($actualCall->getTagName() === syntax_plugin_combo_fragment::TAG) {
                         $templateEndCall = $callStack->moveToNextCorrespondingExitTag();
-                        $templateCallStackInstructions = $templateEndCall->getPluginData(syntax_plugin_combo_template::CALLSTACK);
+                        $templateCallStackInstructions = $templateEndCall->getPluginData(syntax_plugin_combo_fragment::CALLSTACK);
                         if ($templateCallStackInstructions !== null) {
                             $templateCallStack = CallStack::createFromInstructions($templateCallStackInstructions);
                             // Lazy load
                             $templateCallStack->moveToStart();
                             self::setLazyLoadToHtmlOnImageTagUntilTheEndOfTheStack($templateCallStack);
-                            $templateEndCall->setPluginData(syntax_plugin_combo_template::CALLSTACK, $templateCallStack->getStack());
+                            $templateEndCall->setPluginData(syntax_plugin_combo_fragment::CALLSTACK, $templateCallStack->getStack());
                         }
                     } else {
                         // Lazy load

@@ -260,7 +260,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 /**
                  * Href needs to be passed to the
                  * instructions stack (because we support)
-                 * dynamic link call href with {@link syntax_plugin_combo_template}
+                 * dynamic link call href with {@link syntax_plugin_combo_fragment}
                  */
                 $href = $parsedArray[self::ATTRIBUTE_HREF];
                 if ($href !== null) {

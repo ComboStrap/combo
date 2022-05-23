@@ -388,13 +388,13 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
 
                 $templateEndTag = null; // the template end tag that has the instructions
                 $callStackTemplate = null; // the instructions in callstack form to modify the children
-                if ($firstChildTag->getTagName() === syntax_plugin_combo_template::TAG && $firstChildTag->getState() === DOKU_LEXER_ENTER) {
+                if ($firstChildTag->getTagName() === syntax_plugin_combo_fragment::TAG && $firstChildTag->getState() === DOKU_LEXER_ENTER) {
                     $templateEndTag = $callStack->next();
-                    if ($templateEndTag->getTagName() !== syntax_plugin_combo_template::TAG || $templateEndTag->getState() !== DOKU_LEXER_EXIT) {
+                    if ($templateEndTag->getTagName() !== syntax_plugin_combo_fragment::TAG || $templateEndTag->getState() !== DOKU_LEXER_EXIT) {
                         LogUtility::error("Error internal: We were unable to find the closing template tag.", self::CANONICAL);
                         return $returnArray;
                     }
-                    $templateInstructions = $templateEndTag->getPluginData(syntax_plugin_combo_template::CALLSTACK);
+                    $templateInstructions = $templateEndTag->getPluginData(syntax_plugin_combo_fragment::CALLSTACK);
                     $callStackTemplate = CallStack::createFromInstructions($templateInstructions);
                     $callStackTemplate->moveToStart();
                     $firstChildTag = $callStackTemplate->moveToFirstChildTag();
@@ -568,7 +568,7 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                  * Template child callstack ?
                  */
                 if ($templateEndTag !== null && $callStackTemplate !== null) {
-                    $templateEndTag->setPluginData(syntax_plugin_combo_template::CALLSTACK, $callStackTemplate->getStack());
+                    $templateEndTag->setPluginData(syntax_plugin_combo_fragment::CALLSTACK, $callStackTemplate->getStack());
                 }
 
                 return array(

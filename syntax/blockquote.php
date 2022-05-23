@@ -178,7 +178,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                 $parent = $callStack->moveToParent();
                 if ($parent !== false) {
                     $context = $parent->getTagName();
-                    if ($context === syntax_plugin_combo_template::TAG) {
+                    if ($context === syntax_plugin_combo_fragment::TAG) {
                         $parent = $callStack->moveToParent();
                         if ($parent !== false) {
                             $context = $parent->getTagName();

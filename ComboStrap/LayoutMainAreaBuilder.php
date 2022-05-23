@@ -152,8 +152,8 @@ class LayoutMainAreaBuilder
                             $mainHeaderHasNormalHeading = true;
                             break;
                         }
-                        if ($actualCall->getTagName() === \syntax_plugin_combo_template::TAG && $actualCall->getState() === DOKU_LEXER_EXIT) {
-                            $instructions = $actualCall->getPluginData(\syntax_plugin_combo_template::CALLSTACK);
+                        if ($actualCall->getTagName() === \syntax_plugin_combo_fragment::TAG && $actualCall->getState() === DOKU_LEXER_EXIT) {
+                            $instructions = $actualCall->getPluginData(\syntax_plugin_combo_fragment::CALLSTACK);
                             $templateCallStack = CallStack::createFromInstructions($instructions);
                             $templateCallStack->moveToStart();
                             while ($actualTemplateCall = $templateCallStack->next()) {
@@ -369,8 +369,8 @@ class LayoutMainAreaBuilder
                 $mainHeaderHasNormalHeading = true;
                 break;
             }
-            if ($actualCall->getTagName() === \syntax_plugin_combo_template::TAG && $actualCall->getState() === DOKU_LEXER_EXIT) {
-                $instructions = $actualCall->getPluginData(\syntax_plugin_combo_template::CALLSTACK);
+            if ($actualCall->getTagName() === \syntax_plugin_combo_fragment::TAG && $actualCall->getState() === DOKU_LEXER_EXIT) {
+                $instructions = $actualCall->getPluginData(\syntax_plugin_combo_fragment::CALLSTACK);
                 $templateCallStack = CallStack::createFromInstructions($instructions);
                 $templateCallStack->moveToStart();
                 while ($actualTemplateCall = $templateCallStack->next()) {

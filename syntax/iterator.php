@@ -221,10 +221,10 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                                     break;
                             }
                             continue 2;
-                        case syntax_plugin_combo_template::TAG:
+                        case syntax_plugin_combo_fragment::TAG:
                             $parsingState = "after";
                             if ($actualCall->getState() === DOKU_LEXER_EXIT) {
-                                $templateStack = $actualCall->getPluginData(syntax_plugin_combo_template::CALLSTACK);
+                                $templateStack = $actualCall->getPluginData(syntax_plugin_combo_fragment::CALLSTACK);
                                 /**
                                  * Do we have markup where the instructions should be generated at once
                                  * and not line by line

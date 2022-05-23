@@ -14,6 +14,7 @@ use ComboStrap\PagePublicationDate;
 use ComboStrap\PluginUtility;
 use ComboStrap\RenderUtility;
 use ComboStrap\ResourceName;
+use ComboStrap\TagAttributes;
 
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
@@ -36,11 +37,12 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
  * We create then the markup and we parse it.
  *
  */
-class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
 {
 
 
-    const TAG = "template";
+    const TAG = "fragment";
+    const TAG_OLD = "template";
 
     const ATTRIBUTES_IN_PAGE_TABLE = [
         "id",
@@ -54,6 +56,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
     const CANONICAL = syntax_plugin_combo_variable::CANONICAL;
     const CALLSTACK = "callstack";
+    const TAGS = [self::TAG, self::TAG_OLD];
 
 
     /**
@@ -115,8 +118,10 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        foreach (self::TAGS as $tag) {
+            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        }
 
 
     }
@@ -124,8 +129,9 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
     public function postConnect()
     {
-
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        foreach (self::TAGS as $tag) {
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        }
 
 
     }
@@ -152,10 +158,13 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                $attributes = PluginUtility::getTagAttributes($match);
+                if (substr($match, 1, strlen(self::TAG_OLD)) === self::TAG_OLD) {
+                    LogUtility::warning("The template component has been deprecated and replaced by the fragment component. Why ? Because a whole page is now a template. ", syntax_plugin_combo_iterator::CANONICAL);
+                }
+                $tagAttributes = TagAttributes::createFromTagMatch($match);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED :

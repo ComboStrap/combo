@@ -190,7 +190,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 $context = null;
                 if ($parent !== false) {
                     $context = $parent->getTagName();
-                    if ($context === syntax_plugin_combo_template::TAG) {
+                    if ($context === syntax_plugin_combo_fragment::TAG) {
                         $parent = $callStack->moveToParent();
                         if ($parent !== false) {
                             $context = $parent->getTagName();

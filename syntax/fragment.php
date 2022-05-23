@@ -21,20 +21,17 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 /**
  *
- * Template
+ * Fragment
  *
- * A template capture the string
- * and does not let the parser create the instructions.
+ * A fragment is a part of a markup file.
  *
- * Why ?
- * Because when you create a list with an {@link syntax_plugin_combo_iterator}
- * A single list item such as
- * `
- *   * list
- * `
- * would be parsed as a complete list
+ * It can be then rendered with different {@link \ComboStrap\ContextManager} (page)
  *
- * We create then the markup and we parse it.
+ * Used inside an iterator.
+ *
+ * The content is the
+ *
+ *
  *
  */
 class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
@@ -44,15 +41,6 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
     const TAG = "fragment";
     const TAG_OLD = "template";
 
-    const ATTRIBUTES_IN_PAGE_TABLE = [
-        "id",
-        Canonical::PROPERTY_NAME,
-        PagePath::PROPERTY_NAME,
-        ModificationDate::PROPERTY_NAME,
-        PageCreationDate::PROPERTY_NAME,
-        PagePublicationDate::PROPERTY_NAME,
-        ResourceName::PROPERTY_NAME
-    ];
 
     const CANONICAL = syntax_plugin_combo_variable::CANONICAL;
     const CALLSTACK = "callstack";
@@ -98,13 +86,13 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
 
         return array('baseonly', 'container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    function getSort()
+    function getSort(): int
     {
         return 201;
     }
@@ -146,12 +134,12 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
      * @param int $state
      * @param int $pos - byte position in the original source file
      * @param Doku_Handler $handler
-     * @return array|bool
+     * @return array
      * @throws Exception
      * @see DokuWiki_Syntax_Plugin::handle()
      *
      */
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
         switch ($state) {

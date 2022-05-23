@@ -24,8 +24,10 @@ use IntlDateFormatter;
  */
 class PipelineUtility
 {
-    const QUOTES_CHARACTERS = "\"'";
+    const QUOTES_CHARACTERS = ['"', '\''];
     const SPACE = " ";
+    const DATE_FORMATEER_TYPE = IntlDateFormatter::TRADITIONAL;
+    const TIME_FORMATTER_TYPE = IntlDateFormatter::SHORT;
 
     /**
      * @param $expression
@@ -48,7 +50,8 @@ class PipelineUtility
         /**
          * Get the value
          */
-        $message = trim($input, self::QUOTES_CHARACTERS . self::SPACE);
+        $separatorCharacters = implode("", self::QUOTES_CHARACTERS) . self::SPACE;
+        $message = trim($input, $separatorCharacters);
         foreach ($commands as $command) {
             $command = trim($command, " )");
             $leftParenthesis = strpos($command, "(");
@@ -58,7 +61,7 @@ class PipelineUtility
             $commandArgs = array_map(
                 'trim',
                 $commandArgs,
-                array_fill(0, sizeof($commandArgs), self::QUOTES_CHARACTERS . self::SPACE)
+                array_fill(0, sizeof($commandArgs), $separatorCharacters)
             );
             $commandName = trim($commandName);
             if (!empty($commandName)) {
@@ -268,8 +271,8 @@ class PipelineUtility
          * They may be null by the way.
          *
          */
-        $dateType = IntlDateFormatter::TRADITIONAL;
-        $timeType = IntlDateFormatter::SHORT;
+        $dateType = self::DATE_FORMATEER_TYPE;
+        $timeType = self::TIME_FORMATTER_TYPE;
 
         /**
          * Formatter instantiation

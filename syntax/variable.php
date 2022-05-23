@@ -121,10 +121,10 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
              * Recreating a pipeline expression
              */
             if (substr($match, 0, $lengthLongPrefix) === self::PREFIX_LONG) {
-                $matchWithoutPreAndSuffix = trim(substr($match, $lengthLongPrefix, -1));
-                $expressions = explode("|", $matchWithoutPreAndSuffix);
-                $expressions[0] = "\"\$$expressions[0]\"";
-                $expression = implode("|", $expressions);
+                $expression = trim(substr($match, $lengthLongPrefix, -1));
+                if(!in_array($expression[0],PipelineUtility::QUOTES_CHARACTERS)){
+                    $expression = "\${$expression}";
+                }
             } else {
                 $expression = "\"$match\"";
             }

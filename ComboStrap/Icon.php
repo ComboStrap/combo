@@ -69,7 +69,8 @@ class Icon extends ImageSvg
         self::VSCODE => "https://raw.githubusercontent.com/vscode-icons/vscode-icons/master/icons",
         self::SI_GLYPH => "https://raw.githubusercontent.com/frexy/glyph-iconset/master/svg",
         self::AKAR_ICONS => "https://raw.githubusercontent.com/artcoholic/akar-icons/master/src/svg",
-        self::ARCTICONS => "https://raw.githubusercontent.com/Donnnno/Arcticons/main/icons/black"
+        self::ARCTICONS => "https://raw.githubusercontent.com/Donnnno/Arcticons/main/icons/black",
+        self::HEALTH_ICONS => "https://raw.githubusercontent.com/resolvetosavelives/healthicons/main/public/icons/svg"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -105,8 +106,8 @@ class Icon extends ImageSvg
         self::VSCODE => "https://marketplace.visualstudio.com/items?itemName=vscode-icons-team.vscode-icons",
         self::SI_GLYPH => "https://glyph.smarticons.co/",
         self::AKAR_ICONS => "https://akaricons.com/",
-        self::ARCTICONS => "https://arcticons.com/"
-
+        self::ARCTICONS => "https://arcticons.com/",
+        self::HEALTH_ICONS => "https://healthicons.org/"
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
@@ -195,6 +196,7 @@ class Icon extends ImageSvg
     const COMBO = DokuPath::COMBO_DRIVE;
     const AKAR_ICONS = "akar-icons";
     const ARCTICONS = "articons";
+    const HEALTH_ICONS = "healthicons";
 
 
     private $fullQualifiedName;
@@ -336,9 +338,6 @@ class Icon extends ImageSvg
     public static
     function isInIconDirectory(Path $path): bool
     {
-        if ($path == null) {
-            return false;
-        }
         $iconNameSpace = PluginUtility::getConfValue(Icon::CONF_ICONS_MEDIA_NAMESPACE, Icon::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
         if (strpos($path->toString(), $iconNameSpace) !== false) {
             return true;
@@ -473,6 +472,21 @@ class Icon extends ImageSvg
             case self::SI_GLYPH:
                 $iconName = "si-glyph-" . $iconName;
                 break;
+            case self::HEALTH_ICONS:
+                [$extractedIconName,$iconType] = self::explodeInTwoPartsByLastPosition($iconName, "-");
+                switch ($iconType) {
+                    case "outline":
+                    case "negative":
+                        $iconBaseUrl .= "/$iconType";
+                        $iconName = $extractedIconName;
+                        break;
+                    default:
+                        // no
+                        $iconBaseUrl .= "/filled";
+                }
+                $iconName = self::getPhysicalNameFromDictionary($iconName, self::HEALTH_ICONS);
+                break;
+
         }
 
 

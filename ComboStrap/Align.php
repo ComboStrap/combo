@@ -80,6 +80,9 @@ class Align
                     $flexAxis[self::Y_AXIS] = true;
                     $attributes->addClassName("align-items-start");
                     break;
+                case "text-center":
+                    $attributes->addStyleDeclarationIfNotSet(TextAlign::ATTRIBUTE_NAME, "center");
+                    break;
             }
 
 

@@ -22,6 +22,7 @@ class Align
     const DEFAULT_AXIS = self::X_AXIS;
     public const X_AXIS = "x";
     public const Y_AXIS = "y";
+    const CANONICAL = self::ALIGN_ATTRIBUTE;
 
     /**
      * @param TagAttributes $attributes
@@ -38,9 +39,15 @@ class Align
         $flexAxis = null;
         $blockAlign = false;
         $alignValues = explode(" ", $alignAttributeValues);
-        foreach ($alignValues as $alignValue) {
+        foreach ($alignValues as $alignStringValue) {
 
-            switch ($alignValue) {
+            try {
+                $conditionalAlignValue = ConditionalLength::createFromString($alignStringValue);
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::error("The align value ($alignStringValue) is not a valid conditional value and was skipped", self::CANONICAL);
+                continue;
+            }
+            switch ($conditionalAlignValue->getLength()) {
                 case "center":
                 case "x-center":
                     $blockAlign = true;
@@ -50,7 +57,8 @@ class Align
                     break;
                 case "y-center":
                     $flexAxis[self::Y_AXIS] = true;
-                    $attributes->addClassName("align-self-center");
+                    $breakpoint = $conditionalAlignValue->getBreakpointForBootstrapClass();
+                    $attributes->addClassName("align-self{$breakpoint}-center");
                     break;
                 case "right":
                 case "end":
@@ -62,26 +70,81 @@ class Align
                     }
                     $attributes->addStyleDeclarationIfNotSet("width", "fit-content");
                     break;
+                case "x-left-children":
+                case "left-children":
+                case "start-children":
+                case "x-start-children":
+                    $flexAxis[self::X_AXIS] = true;
+                    $breakpoint = $conditionalAlignValue->getBreakpointForBootstrapClass();
+                    switch (Bootstrap::getBootStrapMajorVersion()) {
+                        case Bootstrap::BootStrapFourMajorVersion:
+                            $attributes->addClassName("justify-content{$breakpoint}-left");
+                            break;
+                        default:
+                            $attributes->addClassName("justify-content{$breakpoint}-start");
+                    }
+                    break;
+                case "x-right-children":
+                case "right-children":
+                case "end-children":
+                case "x-end-children":
+                    $flexAxis[self::X_AXIS] = true;
+                    $breakpoint = $conditionalAlignValue->getBreakpointForBootstrapClass();
+                    switch (Bootstrap::getBootStrapMajorVersion()) {
+                        case Bootstrap::BootStrapFourMajorVersion:
+                            $attributes->addClassName("justify-content{$breakpoint}-right");
+                            break;
+                        default:
+                            $attributes->addClassName("justify-content{$breakpoint}-end");
+                    }
+                    break;
                 case "x-center-children":
                 case "center-children":
                     $flexAxis[self::X_AXIS] = true;
-                    $attributes->addClassName("justify-content-center");
+                    $breakpoint = $conditionalAlignValue->getBreakpointForBootstrapClass();
+                    $attributes->addClassName("justify-content{$breakpoint}-center");
                     break;
                 case "x-between-children":
                 case "between-children":
                     $flexAxis[self::X_AXIS] = true;
-                    $attributes->addClassName("justify-content-between");
+                    $breakpoint = $conditionalAlignValue->getBreakpointForBootstrapClass();
+                    $attributes->addClassName("justify-content{$breakpoint}-between");
                     break;
                 case self::Y_CENTER_CHILDREN:
                     $flexAxis[self::Y_AXIS] = true;
-                    $attributes->addClassName("align-items-center");
+                    $breakpoint = $conditionalAlignValue->getBreakpointForBootstrapClass();
+                    $attributes->addClassName("align-items{$breakpoint}-center");
                     break;
                 case self::Y_TOP_CHILDREN:
                     $flexAxis[self::Y_AXIS] = true;
-                    $attributes->addClassName("align-items-start");
+                    $breakpoint = $conditionalAlignValue->getBreakpointForBootstrapClass();
+                    $attributes->addClassName("align-items{$breakpoint}-start");
                     break;
                 case "text-center":
-                    $attributes->addStyleDeclarationIfNotSet(TextAlign::ATTRIBUTE_NAME, "center");
+                    $breakpoint = $conditionalAlignValue->getBreakpointForBootstrapClass();
+                    $attributes->addClassName("text{$breakpoint}-center");
+                    break;
+                case "text-left":
+                case "text-start":
+                    $breakpoint = $conditionalAlignValue->getBreakpointForBootstrapClass();
+                    switch (Bootstrap::getBootStrapMajorVersion()) {
+                        case Bootstrap::BootStrapFourMajorVersion:
+                            $attributes->addClassName("text{$breakpoint}-left");
+                            break;
+                        default:
+                            $attributes->addClassName("text{$breakpoint}-start");
+                    }
+                    break;
+                case "text-right":
+                case "text-end":
+                    $breakpoint = $conditionalAlignValue->getBreakpointForBootstrapClass();
+                    switch (Bootstrap::getBootStrapMajorVersion()) {
+                        case Bootstrap::BootStrapFourMajorVersion:
+                            $attributes->addClassName("text{$breakpoint}-right");
+                            break;
+                        default:
+                            $attributes->addClassName("text{$breakpoint}-end");
+                    }
                     break;
             }
 

@@ -344,5 +344,24 @@ class ConditionalLength
         return $this->isRatio;
     }
 
+    /**
+     * @return string - the breakpoint value that should be added into a bootstrap class
+     *
+     * For instance, for ''xs'', you would get ''-xs''
+     * If there is no breakpoint, the empty string is returned
+     */
+    public function getBreakpointForBootstrapClass(): string
+    {
+
+        if ($this->breakpoint !== null) {
+            if($this->breakpoint==="xs"){
+                return "";
+            }
+            return "-{$this->breakpoint}";
+        } else {
+            return "";
+        }
+    }
+
 
 }

@@ -2,6 +2,8 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\Align;
+use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\LogUtility;
@@ -124,6 +126,19 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                  */
                 $callStack = CallStack::createFromHandler($handler);
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+
+                /**
+                 * Check children align
+                 */
+                $align = $openingTag->getAttribute(Align::ALIGN_ATTRIBUTE);
+                if ($align !== null && strpos($align, "children") !== false) {
+                    // You can't use children align value against inline
+                    $firstChildTag = $callStack->moveToFirstChildTag();
+                    if ($firstChildTag !== false && $firstChildTag->getDisplay() == Call::INLINE_DISPLAY) {
+                        LogUtility::warning("The `children` align attribute ($align) on the box component should apply only to text/inline element. Are you sure you don't want to use a text align value ?");
+                    }
+                }
+
                 Dimension::addScrollToggleOnClickIfNoControl($callStack);
                 return array(
                     PluginUtility::STATE => $state,

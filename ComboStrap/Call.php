@@ -421,7 +421,11 @@ class Call
         return isset($this->call[1][1][PluginUtility::DISPLAY]);
     }
 
-    public function getDisplay()
+    /**
+     * @return string|null
+     * {@link Call::INLINE_DISPLAY} or {@link Call::BlOCK_DISPLAY}
+     */
+    public function getDisplay(): ?string
     {
         $mode = $this->getMode();
         if ($mode == "plugin") {

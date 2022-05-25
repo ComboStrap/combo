@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => '433c26436fe4ab7a29d120dab2e31aca5abf71dd',
+    'reference' => 'abd46d23b0da5cff85a22e46b6d9cd3db0eb2cbe',
     'name' => 'combostrap/combo',
   ),
   'versions' => 
@@ -36,7 +36,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => '433c26436fe4ab7a29d120dab2e31aca5abf71dd',
+      'reference' => 'abd46d23b0da5cff85a22e46b6d9cd3db0eb2cbe',
     ),
     'dragonmantank/cron-expression' => 
     array (
@@ -46,6 +46,13 @@
       array (
       ),
       'reference' => '9504fa9ea681b586028adaaa0877db4aecf32bad',
+    ),
+    'facebook/webdriver' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '*',
+      ),
     ),
     'hidehalo/nanoid-php' => 
     array (
@@ -64,6 +71,42 @@
       array (
       ),
       'reference' => '996434e5492cb4c3edcb9168db6fbb1359ef965a',
+    ),
+    'php-webdriver/webdriver' => 
+    array (
+      'pretty_version' => '1.12.1',
+      'version' => '1.12.1.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'b27ddf458d273c7d4602106fcaf978aa0b7fe15a',
+    ),
+    'symfony/polyfill-mbstring' => 
+    array (
+      'pretty_version' => 'v1.25.0',
+      'version' => '1.25.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '0abb51d2f102e00a4eefcf46ba7fec406d245825',
+    ),
+    'symfony/polyfill-php80' => 
+    array (
+      'pretty_version' => 'v1.25.0',
+      'version' => '1.25.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '4407588e0d3f1f52efb65fbe92babe41f37fe50c',
+    ),
+    'symfony/process' => 
+    array (
+      'pretty_version' => 'v5.4.8',
+      'version' => '5.4.8.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '597f3fff8e3e91836bb0bd38f5718b56ddbde2f3',
     ),
   ),
 );

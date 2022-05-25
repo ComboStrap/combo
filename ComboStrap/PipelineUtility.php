@@ -275,6 +275,18 @@ class PipelineUtility
          */
         $dateType = self::DATE_FORMATTER_TYPE;
         $timeType = self::TIME_FORMATTER_TYPE;
+        if ($pattern !== null) {
+            $normalFormat = explode(" ", $pattern);
+            if(sizeof($normalFormat)===2){
+                try {
+                    $dateType = self::getInternationalFormatter($normalFormat[0]);
+                    $timeType = self::getInternationalFormatter($normalFormat[1]);
+                    $pattern = null;
+                } catch (ExceptionNotFound $e) {
+                    // ok
+                }
+            }
+        }
 
         /**
          * Formatter instantiation
@@ -296,6 +308,36 @@ class PipelineUtility
         }
 
         return $formatted;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private static function getInternationalFormatter($constant): int
+    {
+        $constantNormalized = trim(strtolower($constant));
+        switch ($constantNormalized){
+            case "none":
+                return IntlDateFormatter::NONE;
+            case "full":
+                return IntlDateFormatter::FULL;
+            case "relativefull":
+                return IntlDateFormatter::RELATIVE_FULL;
+            case "long":
+                return IntlDateFormatter::LONG;
+            case "relativelong":
+                return IntlDateFormatter::RELATIVE_LONG;
+            case "medium":
+                return IntlDateFormatter::MEDIUM;
+            case "relativemedium":
+                return IntlDateFormatter::RELATIVE_MEDIUM;
+            case "short":
+                return IntlDateFormatter::SHORT;
+            case "relativeshortmedium":
+                return IntlDateFormatter::RELATIVE_SHORT;
+            default:
+                throw new ExceptionNotFound("The constant ($constant) is not a valid constant", \syntax_plugin_combo_pipeline::CANONICAL);
+        }
     }
 
 }

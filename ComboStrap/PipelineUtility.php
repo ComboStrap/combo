@@ -26,8 +26,10 @@ class PipelineUtility
 {
     const QUOTES_CHARACTERS = ['"', '\''];
     const SPACE = " ";
-    const DATE_FORMATEER_TYPE = IntlDateFormatter::TRADITIONAL;
-    const TIME_FORMATTER_TYPE = IntlDateFormatter::SHORT;
+
+
+    const DATE_FORMATTER_TYPE = IntlDateFormatter::TRADITIONAL;
+    const TIME_FORMATTER_TYPE = IntlDateFormatter::NONE;
 
     /**
      * @param $expression
@@ -271,7 +273,7 @@ class PipelineUtility
          * They may be null by the way.
          *
          */
-        $dateType = self::DATE_FORMATEER_TYPE;
+        $dateType = self::DATE_FORMATTER_TYPE;
         $timeType = self::TIME_FORMATTER_TYPE;
 
         /**

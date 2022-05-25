@@ -1,8 +1,10 @@
 <?php
 
 use ComboStrap\ExceptionCompile;
+use ComboStrap\FileSystems;
 use ComboStrap\Json;
 use ComboStrap\LogUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\PluginUtility;
 use ComboStrap\Search;
 use ComboStrap\Sqlite;
@@ -28,8 +30,6 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
     const CANONICAL = "linkwizard";
     const CALL = "linkwiz";
     const MINIMAL_WORD_LENGTH = 3;
-
-
 
 
     /**
@@ -85,7 +85,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
         global $lang;
         if (!count($pages)) {
             \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
-                ->sendHtmlMessage("<div>".$lang['nothingfound']."</div>");
+                ->sendHtmlMessage("<div>" . $lang['nothingfound'] . "</div>");
             return;
         }
 
@@ -96,7 +96,13 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
         foreach ($pages as $page) {
             $id = $page->getDokuwikiId();
             $path = $page->getPath()->toString();
-            $name = $page->getNameOrDefault();
+            /**
+             * The name is the label that is put
+             * punt in the markup link
+             * We set it in lowercase then.
+             * Nobody want uppercase letter in their link label
+             */
+            $name = strtolower($page->getNameOrDefault());
             $title = $page->getTitleOrDefault();
             $h1 = $page->getH1OrDefault();
             $even *= -1; //zebra
@@ -111,13 +117,18 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
             } else {
                 $label = "Title: $title";
             }
+            $class = "";
+            if (!FileSystems::exists($page->getPath())) {
+                $errorClass = MarkupRef::getHtmlClassNotExist();
+                $class = "class=\"$errorClass\"";
+            }
             /**
              * Because path is used in the title to create the link
              * by {@link file linkwiz.js} we set a title on the span
              */
             $html .= <<<EOF
 <div class="$evenOrOdd">
-   <a href="$link" title="$path">$path</a><span title="$label">$name</span>
+   <a href="$link" title="$path" $class>$path</a><span title="$label">$name</span>
 </div>
 EOF;
         }
@@ -125,7 +136,6 @@ EOF;
             ->sendHtmlMessage($html);
 
     }
-
 
 
 }

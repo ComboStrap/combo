@@ -117,6 +117,18 @@ class PagePublicationDate extends MetadataDateTime
 
     public function getDefaultValue(): ?\DateTime
     {
+        $lastName = $this->getResource()->getPath()->getLastNameWithoutExtension();
+        $result = preg_match("/(\d{4}-\d{2}-\d{2}).*/i", $lastName, $matches);
+        if ($result === 1) {
+            $date = $matches[1];
+            try {
+                return Iso8601Date::createFromString($date)->getDateTime();
+            } catch (ExceptionBadSyntax $e) {
+                // should not happen
+                LogUtility::error("Internal Error: the date format is not valid. Error: {$e->getMessage()}", self::CANONICAL);
+            }
+        }
+
         return PageCreationDate::create()
             ->setResource($this->getResource())
             ->getValueOrDefault();

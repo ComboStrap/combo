@@ -685,71 +685,74 @@ class DokuPath extends PathAbs
          * File path
          */
         $filePathString = $this->path;
-        if ($this->scheme == DokuFs::SCHEME) {
-
-            $isNamespacePath = self::isNamespacePath($this->path);
-            if (!$isNamespacePath) {
-
-                switch ($this->drive) {
-
-                    case self::MEDIA_DRIVE:
-                        if (!empty($rev)) {
-                            $filePathString = mediaFN($this->id, $rev);
-                        } else {
-                            $filePathString = mediaFN($this->id);
-                        }
-                        break;
-                    case self::PAGE_DRIVE:
-                        /**
-                         * TODO handle it to check if the id point to a directory
-                         *   and returns the directory path in place if the txt file does not exist
-                         */
-                        if (!empty($rev)) {
-                            $filePathString = wikiFN($this->id, $rev);
-                        } else {
-                            $filePathString = wikiFN($this->id);
-                        }
-                        break;
-                    default:
-                        $baseDirectory = DokuPath::getDriveRoots()[$this->drive];
-                        if ($baseDirectory === null) {
-                            // We don't throw, the file will just not exist
-                            // this is metadata
-                            LogUtility::msg("The drive ($this->drive) is unknown, the local file system path could not be found");
-                        } else {
-                            $filePath = $baseDirectory;
-                            foreach ($this->getNames() as $name) {
-                                $filePath = $filePath->resolve($name);
-                            }
-                            $filePathString = $filePath->toString();
-                        }
-                        break;
-                }
-            } else {
-                /**
-                 * Namespace
-                 * (Fucked up is fucked up)
-                 * We qualify for the namespace here
-                 * because there is no link or media for a namespace
-                 */
-                global $conf;
-                switch ($this->drive) {
-                    case self::MEDIA_DRIVE:
-                        $filePathString = $conf['mediadir'];
-                        break;
-                    case self::PAGE_DRIVE:
-                        $filePathString = $conf['datadir'];
-                        break;
-                    default:
-                        $filePathString = DokuPath::getDriveRoots()[$this->drive];
-                        break;
-                }
-                $filePathSeparator = self::SEPARATOR_SLASH; // don't know why it's not OS specific
-                $filePathString .= $filePathSeparator . utf8_encodeFN(str_replace(DokuPath::PATH_SEPARATOR, $filePathSeparator, $this->id));
-            }
+        if ($this->scheme !== DokuFs::SCHEME) {
+            return LocalPath::createFromPath($filePathString);
         }
 
+        $isNamespacePath = self::isNamespacePath($this->path);
+        if ($isNamespacePath) {
+            /**
+             * Namespace
+             * (Fucked up is fucked up)
+             * We qualify for the namespace here
+             * because there is no link or media for a namespace
+             */
+            global $conf;
+            switch ($this->drive) {
+                case self::MEDIA_DRIVE:
+                    $localPath = LocalPath::createFromPath($conf['mediadir']);
+                    break;
+                case self::PAGE_DRIVE:
+                    $localPath = LocalPath::createFromPath($conf['datadir']);
+                    break;
+                default:
+                    $localPath = DokuPath::getDriveRoots()[$this->drive];
+                    break;
+            }
+
+            foreach ($this->getNames() as $name) {
+                $localPath = $localPath->resolve($name);
+            }
+            return $localPath;
+        }
+
+        // File
+        switch ($this->drive) {
+            case self::MEDIA_DRIVE:
+                if (!empty($rev)) {
+                    $filePathString = mediaFN($this->id, $rev);
+                } else {
+                    $filePathString = mediaFN($this->id);
+                }
+                break;
+            case self::PAGE_DRIVE:
+                /**
+                 * TODO handle it to check if the id point to a directory
+                 *   and returns the directory path in place if the txt file does not exist
+                 */
+                if (!empty($rev)) {
+                    $filePathString = wikiFN($this->id, $rev);
+                } else {
+                    $filePathString = wikiFN($this->id);
+                }
+                break;
+            default:
+                $baseDirectory = DokuPath::getDriveRoots()[$this->drive];
+                if ($baseDirectory === null) {
+                    // We don't throw, the file will just not exist
+                    // this is metadata
+                    LogUtility::msg("The drive ($this->drive) is unknown, the local file system path could not be found");
+                } else {
+                    $filePath = $baseDirectory;
+                    foreach ($this->getNames() as $name) {
+                        $filePath = $filePath->resolve($name);
+                    }
+                    $filePathString = $filePath->toString();
+                }
+                break;
+        }
         return LocalPath::createFromPath($filePathString);
+
     }
 
     /**
@@ -818,12 +821,14 @@ class DokuPath extends PathAbs
 
     }
 
-    public function getLibrary(): string
+    public
+    function getLibrary(): string
     {
         return $this->drive;
     }
 
-    private function schemeDetermination($absolutePath): string
+    private
+    function schemeDetermination($absolutePath): string
     {
 
         if (media_isexternal($absolutePath)) {
@@ -858,12 +863,14 @@ class DokuPath extends PathAbs
 
     }
 
-    public function getDrive(): string
+    public
+    function getDrive(): string
     {
         return $this->drive;
     }
 
-    public function resolve(string $name): DokuPath
+    public
+    function resolve(string $name): DokuPath
     {
         $absolutePath = $this->path;
         // Directory have already separator at the end
@@ -875,7 +882,8 @@ class DokuPath extends PathAbs
      * @return string - an URL to download the media
      * @throws ExceptionNotFound -  if the file does not exist
      */
-    public function getUrl(array $queryParameters = []): string
+    public
+    function getUrl(array $queryParameters = []): string
     {
         $drive = $this->getDrive();
         if ($drive !== self::MEDIA_DRIVE) {

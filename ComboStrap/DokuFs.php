@@ -39,8 +39,7 @@ class DokuFs implements FileSystem
      */
     function exists(Path $path): bool
     {
-        $localAbsolutePath = $path->toLocalPath()->toAbsolutePath()->toString();
-        return file_exists($localAbsolutePath);
+        return FileSystems::exists($path->toLocalPath());
     }
 
     /**

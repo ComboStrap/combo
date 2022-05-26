@@ -24,7 +24,7 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
     const CANONICAL = self::TAG;
     const PREFIX_LONG = '${';
     const PREFIX_SHORT = '$';
-    const ENTRY_PATTERN_SHORT = self::DOLLAR_ESCAPE . self::PREFIX_SHORT . "[a-z0-9_]+";
+    const ENTRY_PATTERN_SHORT = self::DOLLAR_ESCAPE . self::PREFIX_SHORT . "[A-Za-z0-9_]+";
     const ENTRY_PATTERN_LONG = self::DOLLAR_ESCAPE . self::PREFIX_LONG . "[^}\r\n]+}";
     const EXPRESSION_ATTRIBUTE = "expression";
     const DOLLAR_ESCAPE = '\\';

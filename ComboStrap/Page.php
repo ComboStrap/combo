@@ -1128,6 +1128,14 @@ class Page extends ResourceComboAbs
 
         $array["url"] = $this->getCanonicalUrl();
         $array["now"] = Iso8601Date::createFromNow()->toString();
+        $parentPage = $this->getParentPage();
+        if($parentPage!==null) {
+            $array["parentName"] = $parentPage->getNameOrDefault();
+            $array["parentTitle"] = $parentPage->getTitleOrDefault();
+        } else {
+            $array["parentName"] = "";
+            $array["parentTitle"] = "";
+        }
         return $array;
 
     }

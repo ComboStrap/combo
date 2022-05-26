@@ -18,7 +18,7 @@ class Snapshot
      * @throws ExceptionNotFound
      * @throws \Facebook\WebDriver\Exception\UnsupportedOperationException
      */
-    static public function snapshot(Page $page = null)
+    static public function snapshot(Path $path): LocalPath
     {
 
         $capabilities = DesiredCapabilities::chrome();
@@ -37,15 +37,12 @@ class Snapshot
         );
         try {
 
-
             // navigate to the page
-            //$localUri = LocalPath::createHomeDirectory()->resolve("Desktop")->resolve("test.html")->toUriString();
-            $localUri = "https://datacadamia.com";
-            $webDriver->get($localUri);
+            $webDriver->get($path->toUriString());
 
             // wait until the target page is loaded
             // https://github.com/php-webdriver/php-webdriver/wiki/HowTo-Wait
-            $webDriver->wait()->until(
+            $webDriver->wait(2, 500)->until(
                 function () use ($webDriver) {
                     $state = $webDriver->executeScript("return document.readyState");
                     return $state === "complete";
@@ -69,8 +66,14 @@ class Snapshot
                 ->setSize($fullPageDimension);
 
 
-            $localPath = LocalPath::createHomeDirectory()->resolve("Desktop")->resolve("screenshot.png");
-            $webDriver->takeScreenshot($localPath);
+            $lastNameWithoutExtension = $path->getLastNameWithoutExtension();
+            if(empty($lastNameWithoutExtension)){
+                // TODO: get the real url to get the domain if there is not path
+                $lastNameWithoutExtension = "empty";
+            }
+            $screenShotPath = LocalPath::createHomeDirectory()->resolve("Desktop")->resolve($lastNameWithoutExtension .".png");
+            $webDriver->takeScreenshot($screenShotPath);
+            return $screenShotPath;
 
         } finally {
             /**

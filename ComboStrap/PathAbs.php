@@ -4,8 +4,6 @@
 namespace ComboStrap;
 
 
-use renderer_plugin_combo_analytics;
-
 abstract class PathAbs implements Path
 {
 
@@ -30,7 +28,8 @@ abstract class PathAbs implements Path
 
     public function getLastNameWithoutExtension()
     {
-        return pathinfo($this->getLastName(), PATHINFO_FILENAME);
+        $lastName = $this->getLastName();
+        return pathinfo($lastName, PATHINFO_FILENAME);
     }
 
     public function __toString()

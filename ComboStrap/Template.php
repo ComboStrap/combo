@@ -49,7 +49,7 @@ class Template
         $rendered = "";
         foreach ($splits as $part) {
             if (substr($part, 0, 1) === self::VARIABLE_PREFIX) {
-                $variable = trim(substr($part, 1));
+                $variable =  trim(substr($part, 1));
                 if(isset($this->_data[$variable])) {
                     $value = $this->_data[$variable];
                 } else  {

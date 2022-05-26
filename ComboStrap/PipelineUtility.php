@@ -116,21 +116,34 @@ class PipelineUtility
      * @return false|string
      * See also: https://getbootstrap.com/docs/5.0/helpers/text-truncation/
      */
-    private static function head(array $commandArgs, $value)
+    public static function head(array $commandArgs, $value)
     {
         $length = $commandArgs[0];
         if (strlen($value) < $length) {
             return $value;
         }
-        $headValue = substr($value, 0, $length);
+        $words = explode(" ", $value);
+        $headValue = "";
+        for ($i = 0; $i < sizeof($words); $i++) {
+            if ($i != 0) {
+                $headValue .= " ";
+            }
+            $headValue .= $words[$i];
+            if (strlen($headValue) > $length) {
+                break;
+            }
+        }
+
         $tail = $commandArgs[1];
         if ($tail !== null) {
             $headValue .= $tail;
         }
+
         return $headValue;
     }
 
-    private static function concat(array $commandArgs, $value, $side): string
+    private
+    static function concat(array $commandArgs, $value, $side): string
     {
         $string = $commandArgs[0];
         switch ($side) {
@@ -146,13 +159,15 @@ class PipelineUtility
 
     }
 
-    private static function tail(array $commandArgs, $value)
+    private
+    static function tail(array $commandArgs, $value)
     {
         $length = $commandArgs[0];
         return substr($value, strlen($value) - $length);
     }
 
-    private static function cut(array $commandArgs, $value)
+    private
+    static function cut(array $commandArgs, $value)
     {
         $pattern = $commandArgs[0];
         $words = preg_split("/$pattern/i", $value);
@@ -195,7 +210,8 @@ class PipelineUtility
     /**
      * @throws ExceptionBadSyntax
      */
-    public static function format(array $commandArgs, $value): string
+    public
+    static function format(array $commandArgs, $value): string
     {
 
         /**
@@ -277,7 +293,7 @@ class PipelineUtility
         $timeType = self::TIME_FORMATTER_TYPE;
         if ($pattern !== null) {
             $normalFormat = explode(" ", $pattern);
-            if(sizeof($normalFormat)===2){
+            if (sizeof($normalFormat) === 2) {
                 try {
                     $dateType = self::getInternationalFormatter($normalFormat[0]);
                     $timeType = self::getInternationalFormatter($normalFormat[1]);
@@ -313,10 +329,11 @@ class PipelineUtility
     /**
      * @throws ExceptionNotFound
      */
-    private static function getInternationalFormatter($constant): int
+    private
+    static function getInternationalFormatter($constant): int
     {
         $constantNormalized = trim(strtolower($constant));
-        switch ($constantNormalized){
+        switch ($constantNormalized) {
             case "none":
                 return IntlDateFormatter::NONE;
             case "full":

@@ -194,7 +194,7 @@ class LocalPath extends PathAbs
     public function resolve(string $name): LocalPath
     {
 
-        $newPath = $this->toCanonicalPath()->toString() . $this->getDirectorySeparator() . $name;
+        $newPath = $this->toCanonicalPath()->toString() . $this->getDirectorySeparator() . utf8_encodeFN($name);
         return self::createFromPath($newPath);
 
     }
@@ -338,6 +338,7 @@ class LocalPath extends PathAbs
     public function toUriString(): string
     {
         return self::SCHEME . ':///' . str_replace(self::WINDOWS_SEPARATOR, self::LINUX_SEPARATOR, $this->path);
+
     }
 
 

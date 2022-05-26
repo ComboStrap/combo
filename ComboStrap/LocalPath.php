@@ -22,6 +22,7 @@ class LocalPath extends PathAbs
     const RELATIVE_PARENT = "..";
     const LINUX_SEPARATOR = "/";
     const WINDOWS_SEPARATOR = '\\';
+    const SCHEME = "file";
 
     private $path;
     /**
@@ -72,6 +73,21 @@ class LocalPath extends PathAbs
         } else {
             return str_replace(self::WINDOWS_SEPARATOR, self::LINUX_SEPARATOR, $path);
         }
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function createHomeDirectory(): LocalPath
+    {
+        $home = getenv("HOME");
+        if ($home === false) {
+            $home = getenv("USERPROFILE");
+        }
+        if ($home === false) {
+            throw new ExceptionNotFound(" The home directory could not be found");
+        }
+        return LocalPath::createFromPath($home);
     }
 
 
@@ -318,5 +334,11 @@ class LocalPath extends PathAbs
     {
         return $this->toDokuPath()->getUrl($queryParameters);
     }
+
+    public function toUriString(): string
+    {
+        return self::SCHEME . ':///' . str_replace(self::WINDOWS_SEPARATOR, self::LINUX_SEPARATOR, $this->path);
+    }
+
 
 }

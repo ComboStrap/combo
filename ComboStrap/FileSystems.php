@@ -260,4 +260,19 @@ class FileSystems
         }
     }
 
+    public static function setContent(Path $path, string $content)
+    {
+        $scheme = $path->getScheme();
+        switch ($scheme) {
+            case LocalFs::SCHEME:
+                LocalFs::getOrCreate()->setContent($path, $content);
+                break;
+            case DokuFs::SCHEME:
+                DokuFs::getOrCreate()->setContent($path, $content);
+                break;
+            default:
+                throw new ExceptionRuntime("File system ($scheme) unknown");
+        }
+    }
+
 }

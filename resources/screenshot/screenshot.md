@@ -2,7 +2,7 @@
     <box style="width:900px" >
         <grid align="y-children-center" >
             <box width="75%">
-                <text font-size="h2" color="muted" >$parentName</text>
+                <text font-size="h2" color="muted" >$parent_name</text>
                 <heading d4 boldness="bold">${title|head(55,"..." )}</heading>
             </box>
             <box>

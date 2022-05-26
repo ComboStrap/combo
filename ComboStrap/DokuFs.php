@@ -146,4 +146,14 @@ class DokuFs implements FileSystem
     {
         FileSystems::createRegularFile($path->toLocalPath());
     }
+
+    /**
+     * @param DokuPath $path
+     * @param string $content
+     * @return void
+     */
+    public function setContent(Path $path, string $content)
+    {
+        FileSystems::setContent($path->toLocalPath(), $content);
+    }
 }

@@ -193,4 +193,9 @@ class LocalFs implements FileSystem
         touch($path->toString());
     }
 
+    public function setContent(Path $path, string $content)
+    {
+        io_saveFile($path->toString(), $content, false);
+    }
+
 }

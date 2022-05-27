@@ -121,7 +121,7 @@ abstract class PageCompilerDocument implements CachedDocument
     {
         $depends = [];
         foreach ($this->getPage()->getChildren() as $child) {
-            $depends['files'][] = $child->getPath()->toLocalPath()->toString();
+            $depends['files'][] = $child->getPath()->toLocalPath()->toPathString();
         }
         return $depends;
     }

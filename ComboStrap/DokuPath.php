@@ -747,7 +747,7 @@ class DokuPath extends PathAbs
                     foreach ($this->getNames() as $name) {
                         $filePath = $filePath->resolve($name);
                     }
-                    $filePathString = $filePath->toString();
+                    $filePathString = $filePath->toPathString();
                 }
                 break;
         }
@@ -759,7 +759,7 @@ class DokuPath extends PathAbs
      * @return string - Returns the string representation of this path (to be able to use it in url)
      * To get the full string version see {@link DokuPath::toUriString()}
      */
-    function toString(): string
+    function toPathString(): string
     {
         return $this->path;
     }
@@ -893,4 +893,8 @@ class DokuPath extends PathAbs
         return ml($this->getDokuwikiId(), $queryParameters, true, DokuwikiUrl::AMPERSAND_CHARACTER, true);
     }
 
+    public function getHost(): string
+    {
+        return "localhost";
+    }
 }

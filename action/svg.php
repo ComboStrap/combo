@@ -116,7 +116,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
 
         try {
             $svgImage = new ImageSvg($dokuPath,  $tagAttributes);
-            $event->data['file'] =  $svgImage->getSvgFile()->toAbsolutePath()->toString();
+            $event->data['file'] =  $svgImage->getSvgFile()->toAbsolutePath()->toPathString();
         } catch (ExceptionCompile $e) {
 
             $event->data['file'] = PluginUtility::getResourceBaseUrl()."/images/error-bad-format.svg";
@@ -154,7 +154,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
              * {@link getMimeTypes()}
              */
             global $config_cascade;
-            $svgMimeConf = Site::getComboResourcesDirectory()->resolve("conf")->resolve("svg.mime.conf")->toString();
+            $svgMimeConf = Site::getComboResourcesDirectory()->resolve("conf")->resolve("svg.mime.conf")->toPathString();
             $config_cascade['mime']['local'][] = $svgMimeConf;
         }
 

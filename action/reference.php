@@ -101,7 +101,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
                 $link = MarkupRef::createFromRef($ref);
                 if ($link->getUriType() === MarkupRef::WIKI_URI) {
                     $ref = Reference::createFromResource($page)
-                        ->buildFromStoreValue($link->getInternalPage()->getPath()->toString());
+                        ->buildFromStoreValue($link->getInternalPage()->getPath()->toPathString());
                     $references->addRow([$ref]);
                 }
             }

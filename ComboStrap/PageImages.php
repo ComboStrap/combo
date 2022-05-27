@@ -381,7 +381,7 @@ class PageImages extends MetadataTabular
 
         try {
             $defaultImage = $this->getDefaultImage();
-            $pageImagePath = PageImagePath::createFromParent($this)->buildFromStoreValue($defaultImage->getPath()->toString());
+            $pageImagePath = PageImagePath::createFromParent($this)->buildFromStoreValue($defaultImage->getPath()->toPathString());
         } catch (ExceptionNotFound $e) {
             $pageImagePath = null;
         }

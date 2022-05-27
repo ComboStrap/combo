@@ -320,7 +320,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                         ->buildFromStoreValue($value);
                     $pageImagesObject = $pageImages->getValueAsPageImages();
                     foreach ($pageImagesObject as $imageValue) {
-                        $imagePath = $imageValue->getImage()->getPath()->toAbsolutePath()->toString();
+                        $imagePath = $imageValue->getImage()->getPath()->toAbsolutePath()->toPathString();
                         $attributes = [PagePath::PROPERTY_NAME => $imagePath];
                         if (media_isexternal($imagePath)) {
                             $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::EXTERNAL_MEDIA_CALL_NAME;

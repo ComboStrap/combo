@@ -182,7 +182,7 @@ class HtmlDocument extends OutputDocument
             ->getPath()
             ->toLocalPath()
             ->toAbsolutePath()
-            ->toString();
+            ->toPathString();
         $this->snippetCache = new CacheParser($id, $slotLocalFilePath, "snippet.json");
         /**
          * Snippet.json is data dependent

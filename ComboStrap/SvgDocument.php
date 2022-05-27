@@ -468,7 +468,7 @@ class SvgDocument
                  * If the rectangle stay, we just see a black rectangle
                  */
                 if ($this->path !== null) {
-                    $pathString = $this->path->toAbsolutePath()->toString();
+                    $pathString = $this->path->toAbsolutePath()->toPathString();
                     if (
                         preg_match("/carbon|eva/i", $pathString) === 1
                     ) {

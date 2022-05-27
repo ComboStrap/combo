@@ -77,7 +77,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         }
         $mediaId = $event->data['media'];
         $mediaPath = DokuPath::createDokuPath($mediaId, $drive);
-        $event->data['file'] = $mediaPath->toLocalPath()->toAbsolutePath()->toString();
+        $event->data['file'] = $mediaPath->toLocalPath()->toAbsolutePath()->toPathString();
         if (FileSystems::exists($mediaPath)) {
             $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
             $event->data['statusmessage'] = '';
@@ -227,12 +227,12 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Use x-sendfile header to pass the delivery to compatible web servers
          * (Taken over from SendFile)
          */
-        http_sendfile($mediaToSend->toAbsolutePath()->toString());
+        http_sendfile($mediaToSend->toAbsolutePath()->toPathString());
 
         /**
          * Send the file
          */
-        $filePointer = @fopen($mediaToSend->toAbsolutePath()->toString(), "rb");
+        $filePointer = @fopen($mediaToSend->toAbsolutePath()->toPathString(), "rb");
         if ($filePointer) {
             http_rangeRequest($filePointer, FileSystems::getSize($mediaToSend), $mime->toString());
             /**

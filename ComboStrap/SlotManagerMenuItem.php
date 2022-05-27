@@ -88,7 +88,7 @@ class SlotManagerMenuItem extends AbstractItem
     public function getSvg(): string
     {
         /** @var string icon file */
-        return Site::getComboImagesDirectory()->resolve('entypo-text-document-inverted.svg')->toString();
+        return Site::getComboImagesDirectory()->resolve('entypo-text-document-inverted.svg')->toPathString();
     }
 
     public function createHtml(): string
@@ -130,7 +130,7 @@ class SlotManagerMenuItem extends AbstractItem
             while ($parentPath !== null) {
                 $secondaryPath = $parentPath->resolve($secondarySlot);
                 try {
-                    $secondaryPage = Page::createPageFromQualifiedPath($secondaryPath->toString());
+                    $secondaryPage = Page::createPageFromQualifiedPath($secondaryPath->toPathString());
                     $class = "link-combo";
                     if (FileSystems::exists($secondaryPath)) {
                         $action = self::EDIT_ACTION;
@@ -149,7 +149,7 @@ class SlotManagerMenuItem extends AbstractItem
                         $url .= "?";
                     }
                     $url .= "do=edit";
-                    $html .= "<tr><td class='pe-2'>$action</td><td><a href=\"$url\" class=\"$class\"$style>{$secondaryPath->toString()}</a></td></tr>";
+                    $html .= "<tr><td class='pe-2'>$action</td><td><a href=\"$url\" class=\"$class\"$style>{$secondaryPath->toPathString()}</a></td></tr>";
 
                     if ($action === self::EDIT_ACTION) {
                         break;

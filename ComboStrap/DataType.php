@@ -64,8 +64,12 @@ class DataType
      *
      * @throws ExceptionBadArgument
      */
-    public static function toInteger($targetValue): int
+    public static function toInteger($targetValue, $ifNull = null): int
     {
+        if($targetValue===null){
+            return $ifNull;
+        }
+
         if (is_int($targetValue)) {
             return $targetValue;
         }
@@ -86,9 +90,9 @@ class DataType
         return $int;
     }
 
-    public static function toBoolean($value)
+    public static function toBoolean($value, $ifNull = null)
     {
-        if ($value === null) return null;
+        if ($value === null) return $ifNull;
         return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 

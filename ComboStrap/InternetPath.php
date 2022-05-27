@@ -17,28 +17,37 @@ class InternetPath extends PathAbs
     public const scheme = "internet";
     const PATH_SEP = "/";
 
+    private $url;
+    /**
+     * @var array|false|int|string|null
+     */
+    private $component;
     private $path;
 
     /**
      * InterWikiPath constructor.
      */
-    public function __construct($path)
+    public function __construct($url)
     {
-        if (!media_isexternal($path)) {
-            LogUtility::msg("The path ($path) is not an internet path");
+        if (!media_isexternal($url)) {
+            LogUtility::msg("The path ($url) is not an internet path");
         }
-        $this->path = $path;
+        $this->url = $url;
+
+        $this->component = parse_url($url);
+        $this->path = $this->component["path"];
+
     }
 
 
-    public static function create(string $path): InternetPath
+    public static function create(string $uri): InternetPath
     {
-        return new InternetPath($path);
+        return new InternetPath($uri);
     }
 
     function getScheme(): string
     {
-        return self::scheme;
+        return $this->component[PHP_URL_SCHEME];
     }
 
     function getLastName()
@@ -73,25 +82,38 @@ class InternetPath extends PathAbs
     }
 
 
-    function toString(): string
+    function toPathString(): string
     {
         return $this->path;
     }
 
+    public function toUriString(): string
+    {
+        return $this->url;
+    }
+
+
     function toAbsolutePath(): Path
     {
-        return new InternetPath($this->path);
+        return new InternetPath($this->url);
     }
 
 
     function resolve(string $name): InternetPath
     {
-        return self::create($this->path . self::PATH_SEP . $name);
+        /**
+         * Not really good if there is any query string or fragment but yeah
+         */
+        return self::create($this->url . self::PATH_SEP . $name);
     }
 
     function getUrl(array $queryParameters = [])
     {
-        return $this->path;
+        return $this->url;
     }
 
+    public function getHost(): string
+    {
+        return $this->component["host"];
+    }
 }

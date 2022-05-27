@@ -113,7 +113,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
     public function getSvg()
     {
         /** @var string icon file */
-        return Site::getComboImagesDirectory()->resolve('history.svg')->toString();
+        return Site::getComboImagesDirectory()->resolve('history.svg')->toPathString();
     }
 
     /**

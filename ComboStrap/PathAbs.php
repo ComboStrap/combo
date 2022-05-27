@@ -40,7 +40,7 @@ abstract class PathAbs implements Path
 
     public function toUriString(): string
     {
-        return $this->toString();
+        return $this->toPathString();
     }
 
     /**

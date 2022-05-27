@@ -3,12 +3,10 @@
 namespace ComboStrap;
 
 use Facebook\WebDriver\Chrome\ChromeOptions;
-use Facebook\WebDriver\JavaScriptExecutor;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverDimension;
-use Facebook\WebDriver\WebDriverExpectedCondition;
 
 class Snapshot
 {
@@ -50,7 +48,33 @@ class Snapshot
                 'The page was not loaded'
             );
 
+            /**
+             * Scroll to the end to download the image
+             */
             $body = $webDriver->findElement(WebDriverBy::tagName('body'));
+            $webDriver->executeScript("window.scrollTo(0, document.body.scrollHeight)");
+            // Scrolling by sending keys does not work to download lazy loaded image
+            // $body->sendKeys(WebDriverKeys::encode([WebDriverKeys::CONTROL, WebDriverKeys::END]));
+            // Let the time to the image to download, we could also scroll to each image and get the status ?
+            $webDriver->wait(2, 500)->until(
+                function () use ($webDriver) {
+                    $images = $webDriver->findElements(WebDriverBy::tagName("img"));
+                    foreach ($images as $img){
+                        $complete = DataType::toBoolean($img->getAttribute("complete"),false);
+                        if($complete === true){
+                            $naturalHeight = DataType::toInteger($img->getAttribute("naturalHeight"),0);
+                            if($naturalHeight !== 0 )
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                'The image were not loaded on time'
+            );
+
+            /**
+             * Get the new dimension
+             */
             $bodyOffsetHeight = $body->getDomProperty("offsetHeight");
             $bodyOffsetWidth = $body->getDomProperty("offsetWidth");
 
@@ -60,18 +84,16 @@ class Snapshot
              * the DOM has rendered
              */
             $heightCorrection = 15; // don't know why but yeah
-            $fullPageDimension = new WebDriverDimension($bodyOffsetWidth, $bodyOffsetHeight+ $heightCorrection);
+            $fullPageDimension = new WebDriverDimension($bodyOffsetWidth, $bodyOffsetHeight + $heightCorrection);
             $webDriver->manage()
                 ->window()
                 ->setSize($fullPageDimension);
 
-
             $lastNameWithoutExtension = $path->getLastNameWithoutExtension();
-            if(empty($lastNameWithoutExtension)){
-                // TODO: get the real url to get the domain if there is not path
-                $lastNameWithoutExtension = "empty";
+            if (empty($lastNameWithoutExtension)) {
+                $lastNameWithoutExtension = $path->getHost();
             }
-            $screenShotPath = LocalPath::createHomeDirectory()->resolve("Desktop")->resolve($lastNameWithoutExtension .".png");
+            $screenShotPath = LocalPath::createHomeDirectory()->resolve("Desktop")->resolve($lastNameWithoutExtension . ".png");
             $webDriver->takeScreenshot($screenShotPath);
             return $screenShotPath;
 

@@ -471,7 +471,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $homeInstructions = $data[self::HOME_INSTRUCTIONS];
                             $parentAttributes = $data[self::HOME_ATTRIBUTES];
                             try {
-                                $currentHomePage = Page::getIndexPageFromNamespace($namespacePath->toString());
+                                $currentHomePage = Page::getIndexPageFromNamespace($namespacePath->toPathString());
                             } catch (ExceptionBadSyntax $e) {
                                 $renderer->doc .= LogUtility::wrapInRedForHtml("Error while getting the home page for the namespace. Error: {$e->getMessage()}");
                                 return false;
@@ -589,7 +589,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 // Namespace
                                 if (!($namespaceInstructions === null && $namespaceAttributes !== null)) {
                                     try {
-                                        $subNamespacePage = Page::getIndexPageFromNamespace($subNamespacePath->toString());
+                                        $subNamespacePage = Page::getIndexPageFromNamespace($subNamespacePath->toPathString());
                                     } catch (ExceptionBadSyntax $e) {
                                         LogUtility::msg("Bad syntax for the namespace $namespacePath. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                                         return false;

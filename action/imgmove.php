@@ -148,7 +148,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
                 if (!($path instanceof DokuPath)) {
                     continue;
                 }
-                $imageId = $path->toAbsolutePath()->toString();
+                $imageId = $path->toAbsolutePath()->toPathString();
                 $before = $imageId;
                 $this->moveImage($imageId, $handler);
                 if ($before != $imageId) {

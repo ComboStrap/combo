@@ -124,7 +124,7 @@ class LocalPath extends PathAbs
     }
 
 
-    function toString(): string
+    function toPathString(): string
     {
         return $this->path;
     }
@@ -165,11 +165,11 @@ class LocalPath extends PathAbs
                 /**
                  * May be a symlink link
                  */
-                if (!is_link($drivePath->toString())) {
+                if (!is_link($drivePath->toPathString())) {
                     continue;
                 }
                 try {
-                    $realPath = readlink($drivePath->toString());
+                    $realPath = readlink($drivePath->toPathString());
                     $drivePath = LocalPath::createFromPath($realPath);
                     $relativePath = $this->relativize($drivePath);
                 } catch (ExceptionBadArgument $e) {
@@ -177,7 +177,7 @@ class LocalPath extends PathAbs
                     continue;
                 }
             }
-            $wikiPath = $relativePath->toString();
+            $wikiPath = $relativePath->toPathString();
             if ($wikiPath === self::RELATIVE_CURRENT) {
                 $wikiPath = "";
             }
@@ -194,7 +194,7 @@ class LocalPath extends PathAbs
     public function resolve(string $name): LocalPath
     {
 
-        $newPath = $this->toCanonicalPath()->toString() . $this->getDirectorySeparator() . utf8_encodeFN($name);
+        $newPath = $this->toCanonicalPath()->toPathString() . $this->getDirectorySeparator() . utf8_encodeFN($name);
         return self::createFromPath($newPath);
 
     }
@@ -207,7 +207,7 @@ class LocalPath extends PathAbs
         $actualPath = $this->toCanonicalPath();
         $localPath = $localPath->toCanonicalPath();
 
-        if (!(strpos($actualPath->toString(), $localPath->toString()) === 0)) {
+        if (!(strpos($actualPath->toPathString(), $localPath->toPathString()) === 0)) {
             /**
              * May be a symlink link
              */
@@ -218,11 +218,11 @@ class LocalPath extends PathAbs
             }
             throw new ExceptionBadArgument("The path ($localPath) is not a parent path of the actual path ($actualPath)");
         }
-        if ($actualPath->toString() === $localPath->toString()) {
+        if ($actualPath->toPathString() === $localPath->toPathString()) {
             return LocalPath::createFromPath(self::RELATIVE_CURRENT);
         }
         $sepCharacter = 1; // delete the sep characters
-        $relativePath = substr($actualPath->toString(), strlen($localPath->toString()) + $sepCharacter);
+        $relativePath = substr($actualPath->toPathString(), strlen($localPath->toPathString()) + $sepCharacter);
         $relativePath = str_replace($this->getDirectorySeparator(), DokuPath::PATH_SEPARATOR, $relativePath);
         return LocalPath::createFromPath($relativePath);
 
@@ -342,4 +342,8 @@ class LocalPath extends PathAbs
     }
 
 
+    public function getHost(): string
+    {
+        return "localhost";
+    }
 }

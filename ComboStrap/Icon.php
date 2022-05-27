@@ -339,7 +339,7 @@ class Icon extends ImageSvg
     function isInIconDirectory(Path $path): bool
     {
         $iconNameSpace = PluginUtility::getConfValue(Icon::CONF_ICONS_MEDIA_NAMESPACE, Icon::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
-        if (strpos($path->toString(), $iconNameSpace) !== false) {
+        if (strpos($path->toPathString(), $iconNameSpace) !== false) {
             return true;
         }
         return false;
@@ -530,7 +530,7 @@ class Icon extends ImageSvg
             throw new ExceptionCompile("The library (<a href=\"$urlLibrary\">$library</a>) does not have a icon (<a href=\"$downloadUrl\">$this->iconName</a>).", self::ICON_CANONICAL_NAME);
         }
 
-        $numberOfByte = file_put_contents($mediaDokuPath->toLocalPath()->toAbsolutePath()->toString(), $filePointer);
+        $numberOfByte = file_put_contents($mediaDokuPath->toLocalPath()->toAbsolutePath()->toPathString(), $filePointer);
         if ($numberOfByte != false) {
             LogUtility::msg("The icon ($this) from the library ($library) was downloaded to ($mediaDokuPath)", LogUtility::LVL_MSG_INFO, self::ICON_CANONICAL_NAME);
         } else {

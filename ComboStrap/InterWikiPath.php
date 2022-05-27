@@ -51,7 +51,7 @@ class InterWikiPath extends PathAbs
     }
 
 
-    function toString(): string
+    function toPathString(): string
     {
         return $this->path;
     }
@@ -69,8 +69,16 @@ class InterWikiPath extends PathAbs
         return self::create($this->path . "/" . $name);
     }
 
-    function getUrl(array $queryParameters = [])
+    function getUrl(array $queryParameters = []): string
     {
-        throw new ExceptionRuntime("Not implemented");
+        LogUtility::errorIfDevOrTest("Not implemented");
+        return "";
+    }
+
+
+    function getHost(): string
+    {
+        LogUtility::errorIfDevOrTest("Not implemented");
+        return "unknown";
     }
 }

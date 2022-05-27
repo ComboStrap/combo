@@ -23,6 +23,7 @@ class CacheLog
         self::OPERATION_ATT,
         self::MESSAGE_ATT
         ];
+    const CANONICAL = "support";
 
     public static function deleteCacheIfExistsAndLog(PageCompilerDocument $outputDocument, string $event, string $message)
     {
@@ -32,7 +33,7 @@ class CacheLog
             try {
                 CacheLog::logCacheEvent(
                     $event,
-                    $outputDocument->getPage()->getPath()->toString(),
+                    $outputDocument->getPage()->getPath()->toPathString(),
                     $outputDocument->getExtension(),
                     CacheManager::CACHE_DELETION,
                     $message
@@ -50,7 +51,7 @@ class CacheLog
         try {
             CacheLog::logCacheEvent(
                 $event,
-                $outputDocument->getPage()->getPath()->toString(),
+                $outputDocument->getPage()->getPath()->toPathString(),
                 $outputDocument->getExtension(),
                 CacheManager::CACHE_CREATION,
                 $message

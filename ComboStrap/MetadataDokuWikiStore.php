@@ -97,7 +97,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             self::$storesByRequestedPage[$requestedId] = [];
             $storesByRequestedId = &self::$storesByRequestedPage[$requestedId];
         }
-        $path = $resourceCombo->getPath()->toString();
+        $path = $resourceCombo->getPath()->toPathString();
         if (isset($storesByRequestedId[$path])) {
             return $storesByRequestedId[$path];
         }

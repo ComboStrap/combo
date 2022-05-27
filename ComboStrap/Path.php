@@ -11,7 +11,7 @@ namespace ComboStrap;
  *
  * For the path operations, see {@link FileSystems}
  *
- * The {@link Path::toString()} function is just the path part (no other URI query parameters)
+ * The {@link Path::toPathString()} function is just the path part (no other URI query parameters)
  *
  */
 interface Path
@@ -41,7 +41,7 @@ interface Path
     /**
      * @return string only the string representation of the path
      */
-    function toString(): string;
+    function toPathString(): string;
 
     /**
      * @return string the uri string representation of this path (with all information, drive, attributes)
@@ -63,5 +63,10 @@ interface Path
      * @return mixed
      */
     function getUrl(array $queryParameters = []);
+
+    /**
+     * @return string domain
+     */
+    function getHost(): string;
 
 }

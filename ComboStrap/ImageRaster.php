@@ -74,7 +74,7 @@ class ImageRaster extends Image
                 if ($path instanceof DokuPath) {
                     $path = $path->toLocalPath();
                 }
-                $imageSize = getimagesize($path->toAbsolutePath()->toString(), $imageInfo);
+                $imageSize = getimagesize($path->toAbsolutePath()->toPathString(), $imageInfo);
                 if ($imageSize === false) {
                     throw new ExceptionCompile("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", self::CANONICAL);
                 }

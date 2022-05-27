@@ -220,7 +220,7 @@ class PageUrlPath extends MetadataWikiPath
             return null;
         }
 
-        $pagePath = $page->getPath()->toString();
+        $pagePath = $page->getPath()->toPathString();
         switch ($urlType) {
             case PageUrlType::CONF_VALUE_PAGE_PATH:
                 // the default

@@ -204,10 +204,10 @@ class CacheDependencies
                 if ($parentPath === null) {
                     return ":";
                 } else {
-                    return $parentPath->toString();
+                    return $parentPath->toPathString();
                 }
             case CacheDependencies::REQUESTED_PAGE_DEPENDENCY:
-                return $requestPage->getPath()->toString();
+                return $requestPage->getPath()->toPathString();
             default:
                 throw new ExceptionCompile("The requested dependency value ($dependenciesValue) has no calculation");
         }
@@ -287,7 +287,7 @@ class CacheDependencies
     public
     function getDefaultKey(): string
     {
-        return $this->page->getPath()->toLocalPath()->toString() . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
+        return $this->page->getPath()->toLocalPath()->toPathString() . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
     }
 
     public
@@ -342,7 +342,7 @@ class CacheDependencies
             ->getPath()
             ->toLocalPath()
             ->toAbsolutePath()
-            ->toString();
+            ->toPathString();
         $this->dependenciesCacheStore = new CacheParser($id, $slotLocalFilePath, "deps.json");
         return $this->dependenciesCacheStore;
     }

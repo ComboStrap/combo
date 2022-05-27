@@ -115,7 +115,7 @@ abstract class Media extends ResourceComboAbs
 
     public function __toString()
     {
-        return $this->getPath()->toString();
+        return $this->getPath()->toPathString();
     }
 
 

@@ -30,7 +30,7 @@ class PageUrlType extends MetadataText
 
     public static function getOrCreateForPage(ResourceCombo $page): PageUrlType
     {
-        $path = $page->getPath()->toString();
+        $path = $page->getPath()->toPathString();
         $urlType = self::$urlTypeInstanceCache[$path];
         if ($urlType === null) {
             $urlType = self::createFromPage($page);

@@ -190,9 +190,9 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                     if ($toSmall) {
                         $message = "The facebook image ($facebookImage) is too small (" . $intrinsicWidth . " x " . $intrinsicHeight . "). The minimum size constraint is 200px by 200px";
                         if (
-                            $facebookImage->getPath()->toAbsolutePath()->toString()
+                            $facebookImage->getPath()->toAbsolutePath()->toPathString()
                             !==
-                            $page->getFirstImage()->getPath()->toAbsolutePath()->toString()
+                            $page->getFirstImage()->getPath()->toAbsolutePath()->toPathString()
                         ) {
                             LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         } else {

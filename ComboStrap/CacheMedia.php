@@ -59,7 +59,7 @@ class CacheMedia
         /**
          * Cache Key Construction
          */
-        $cacheKey = $this->path->toAbsolutePath()->toString();
+        $cacheKey = $this->path->toAbsolutePath()->toPathString();
         foreach ($tagAttributes->getComponentAttributes() as $name => $value) {
 
             /**
@@ -133,10 +133,10 @@ class CacheMedia
             if ($this->path->getExtension() === "svg") {
                 // svg generation depends on configuration
                 $files = getConfigFiles('main');
-                $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve("SvgDocument.php")->toString();
-                $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve( "XmlDocument.php")->toString();
+                $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve("SvgDocument.php")->toPathString();
+                $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve( "XmlDocument.php")->toPathString();
             }
-            $files[] = $this->path->toAbsolutePath()->toString();
+            $files[] = $this->path->toAbsolutePath()->toPathString();
             $files[] = Site::getComboHome()->resolve("plugin.info.txt");
             $dependencies = array('files' => $files);
             if ($this->maxAge != null) {

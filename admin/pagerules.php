@@ -94,7 +94,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 
     public function getMenuIcon()
     {
-        return Site::getComboImagesDirectory()->resolve('page-next.svg')->toString();
+        return Site::getComboImagesDirectory()->resolve('page-next.svg')->toPathString();
     }
 
 
@@ -223,7 +223,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 
         } else {
 
-            ptln('<h2><a name="" id="pagerules_list">' . 'Rules' . '</a></h2>');
+            ptln('<h2><a id="pagerules_list">' . 'Rules' . '</a></h2>');
             ptln('<div class="level2">');
 
             ptln('<form class="pt-3 pb-3" action="" method="post">');
@@ -268,7 +268,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
                     ptln('			<form action="" method="post" style="display: inline-block">');
                     ptln('<input type="hidden" name="sectok" value="' . getSecurityToken() . '" />');
                     ptln('<button style="background: none;border: 0;">');
-                    ptln(inlineSVG(Site::getComboImagesDirectory()->resolve('delete.svg')->toString()));
+                    ptln(inlineSVG(Site::getComboImagesDirectory()->resolve('delete.svg')->toPathString()));
                     ptln('</button>');
                     ptln('				<input type="hidden" name="Delete"  value="Yes" />');
                     ptln('				<input type="hidden" name="' . PageRules::ID_NAME . '"  value="' . $id . '" />');
@@ -276,7 +276,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
                     ptln('			<form action="" method="post" style="display: inline-block">');
                     ptln('<input type="hidden" name="sectok" value="' . getSecurityToken() . '" />');
                     ptln('<button style="background: none;border: 0;">');
-                    ptln(inlineSVG(Site::getComboImagesDirectory()->resolve('file-document-edit-outline.svg')->toString()));
+                    ptln(inlineSVG(Site::getComboImagesDirectory()->resolve('file-document-edit-outline.svg')->toPathString()));
                     ptln('</button>');
                     ptln('				<input type="hidden" name="upsert"  value="Yes" />');
                     ptln('				<input type="hidden" name="' . PageRules::ID_NAME . '"  value="' . $id . '" />');

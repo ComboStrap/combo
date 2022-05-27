@@ -511,7 +511,7 @@ abstract class MediaLink
          * src is a path (not an id)
          */
         $array = array(
-            PagePath::PROPERTY_NAME => $this->getMedia()->getPath()->toString(),
+            PagePath::PROPERTY_NAME => $this->getMedia()->getPath()->toPathString(),
             self::LINKING_KEY => $this->getLinking()
         );
 

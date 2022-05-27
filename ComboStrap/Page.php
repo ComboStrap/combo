@@ -196,7 +196,7 @@ class Page extends ResourceComboAbs
             $useAcl = false;
             $id = page_findnearest($this->path->getLastNameWithoutExtension(), $useAcl);
             $path = DokuPath::PATH_SEPARATOR . $id;
-            if ($id !== false && $id !== $this->path->toString()) {
+            if ($id !== false && $id !== $this->path->toPathString()) {
                 $this->path = DokuPath::createPagePathFromPath($path);
             }
 
@@ -1021,7 +1021,7 @@ class Page extends ResourceComboAbs
     function getNamespacePath(): string
     {
 
-        return $this->path->getParent()->toString();
+        return $this->path->getParent()->toPathString();
 
     }
 
@@ -1132,7 +1132,7 @@ class Page extends ResourceComboAbs
         if($parentPage!==null) {
             $array["parent_name"] = $parentPage->getNameOrDefault();
             $array["parent_title"] = $parentPage->getTitleOrDefault();
-            $array["parent_path"] = $parentPage->getPath()->toString();
+            $array["parent_path"] = $parentPage->getPath()->toPathString();
         } else {
             $array["parent_name"] = "";
             $array["parent_title"] = "";
@@ -1219,7 +1219,7 @@ class Page extends ResourceComboAbs
     {
         global $conf;
         $startPageName = $conf['start'];
-        return $this->getPath()->toString() === ":$startPageName";
+        return $this->getPath()->toPathString() === ":$startPageName";
 
     }
 

@@ -1,12 +1,6 @@
 <?php
 
-use ComboStrap\ExceptionNotFound;
-use ComboStrap\ExceptionRuntime;
-use ComboStrap\Html;
-use ComboStrap\LogUtility;
-use ComboStrap\Page;
-use ComboStrap\Path;
-use ComboStrap\PluginUtility;
+namespace ComboStrap;
 
 /**
  * A manager to return an unique id

@@ -5,8 +5,6 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_metadescription;
-use ModificationDate;
-use Slug;
 
 abstract class Metadata
 {

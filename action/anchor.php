@@ -1,8 +1,6 @@
 <?php
 
 
-use ComboStrap\ExceptionCompile;
-use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 

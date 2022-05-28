@@ -6,8 +6,6 @@ namespace ComboStrap;
 use action_plugin_combo_qualitymessage;
 use DateTime;
 use Exception;
-use ModificationDate;
-use Slug;
 
 
 require_once(__DIR__ . '/PluginUtility.php');
@@ -1664,11 +1662,11 @@ class Page extends ResourceComboAbs
         $this->locale = Locale::createForPage($this);
         $this->lang = Lang::createForPage($this);
         $this->region = Region::createForPage($this);
-        $this->slug = Slug::createForPage($this);
+        $this->slug = \ComboStrap\Slug::createForPage($this);
         $this->canBeOfLowQuality = LowQualityPageOverwrite::createForPage($this);
         $this->lowQualityIndicatorCalculated = LowQualityCalculatedIndicator::createFromPage($this);
         $this->qualityMonitoringIndicator = QualityDynamicMonitoringOverwrite::createFromPage($this);
-        $this->modifiedTime = ModificationDate::createForPage($this);
+        $this->modifiedTime = \ComboStrap\ModificationDate::createForPage($this);
         $this->pageUrlPath = PageUrlPath::createForPage($this);
         $this->layout = PageLayout::createFromPage($this);
 

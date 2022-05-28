@@ -1,13 +1,6 @@
 <?php
 
-
-use ComboStrap\DokuPath;
-use ComboStrap\MetaManagerForm;
-use ComboStrap\Metadata;
-use ComboStrap\MetadataWikiPath;
-use ComboStrap\PageTitle;
-use ComboStrap\ResourceCombo;
-use ComboStrap\StringUtility;
+namespace ComboStrap;
 
 class Slug extends MetadataWikiPath
 {

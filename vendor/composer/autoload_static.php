@@ -35,6 +35,7 @@ class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
         'C' => 
         array (
             'Cron\\' => 5,
+            'ComboStrap\\' => 11,
         ),
         'A' => 
         array (
@@ -70,6 +71,10 @@ class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
         'Cron\\' => 
         array (
             0 => __DIR__ . '/..' . '/dragonmantank/cron-expression/src/Cron',
+        ),
+        'ComboStrap\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/ComboStrap',
         ),
         'Antlr\\Antlr4\\Runtime\\' => 
         array (

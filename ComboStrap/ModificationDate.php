@@ -1,16 +1,8 @@
 <?php
 
+namespace ComboStrap;
 
-use ComboStrap\ExceptionCompile;
-use ComboStrap\ExceptionNotFound;
-use ComboStrap\FileSystems;
-use ComboStrap\MetaManagerForm;
-use ComboStrap\LogUtility;
-use ComboStrap\Metadata;
-use ComboStrap\MetadataDateTime;
-use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\Page;
-use ComboStrap\PageCreationDate;
+use DateTime;
 
 class ModificationDate extends MetadataDateTime
 {

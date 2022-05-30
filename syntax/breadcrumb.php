@@ -3,13 +3,20 @@
 
 use ComboStrap\CacheDependencies;
 use ComboStrap\CacheManager;
+use ComboStrap\ContextManager;
+use ComboStrap\DataType;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
+use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
 use ComboStrap\Page;
+use ComboStrap\PagePath;
+use ComboStrap\PageSqlTreeListener;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\TagAttributes;
 
 
 /**
@@ -22,6 +29,19 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
 
     public const CANONICAL_HIERARCHICAL = "breadcrumb-hierarchical";
     const HTML_CLASS = self::CANONICAL_HIERARCHICAL . "-combo";
+
+    /**
+     * The type of breadcrumb
+     *
+     * Navigation is a markup that should be present
+     * only once in a page
+     */
+    const NAVIGATION_TYPE = "navigation";
+    /**
+     * Typography is when a breadcrumb is used in a iterator
+     * for instance as sub-title
+     */
+    const TYPOGRAPHY_TYPE = "typography";
 
 
     /**
@@ -36,34 +56,88 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
      * Metadata comes from here
      * https://developers.google.com/search/docs/data-types/breadcrumb
      *
+     * @param TagAttributes|null $tagAttributes
      * @return string
      */
-    public static function toBreadCrumbHtml(): string
+    public static function toBreadCrumbHtml(TagAttributes $tagAttributes = null): string
     {
 
+        if ($tagAttributes === null) {
+            $tagAttributes = TagAttributes::createEmpty();
+        }
 
-        // print intermediate namespace links
 
+        try {
+            $requiredDepth = DataType::toInteger($tagAttributes->getComponentAttributeValue(PageSqlTreeListener::DEPTH));
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::error("We were unable to get the depth attribute. Error: {$e->getMessage()}");
+            $requiredDepth = null;
+        }
 
         /**
-         * https://www.w3.org/TR/wai-aria-practices/examples/breadcrumb/index.html
-         * Arial-label Provides a label that describes the type of navigation provided in the nav element.
+         * Get the page
+         */
+        $path = ContextManager::getOrCreate()->getAttribute(PagePath::PROPERTY_NAME);
+        if ($path === null) {
+            // should never happen but yeah
+            LogUtility::error("Internal Error: The page context was not set. Defaulting to the requested page", self::CANONICAL_HIERARCHICAL);
+            $actual = Page::createPageFromRequestedPage();
+        } else {
+            $actual = Page::createPageFromQualifiedPath($path);
+        }
+
+        /**
+         * Type
+         */
+        if ($requiredDepth === null) {
+            /**
+             * TODO: we should not be able to use it in second time
+             */
+            $type = self::NAVIGATION_TYPE;
+        } else {
+            $type = self::TYPOGRAPHY_TYPE;
+        }
+
+        /**
+         * Print in function of the depth
          */
         $class = self::HTML_CLASS;
-        $htmlOutput = "<nav aria-label=\"Hierarchical breadcrumb\" class=\"$class\">" . PHP_EOL;
-        $htmlOutput .= '<ol class="breadcrumb">' . PHP_EOL;
+        switch ($type) {
+            case self::NAVIGATION_TYPE:
+                /**
+                 * https://www.w3.org/TR/wai-aria-practices/examples/breadcrumb/index.html
+                 * Arial-label Provides a label that describes the type of navigation provided in the nav element.
+                 */
+                $htmlOutput = "<nav aria-label=\"Hierarchical breadcrumb\" class=\"$class\">" . PHP_EOL;
+                $htmlOutput .= '<ol class="breadcrumb">' . PHP_EOL;
 
+                $lisHtmlOutput = self::getLiHtmlOutput($actual, true);
+                while ($actual = $actual->getParentPage()) {
+                    $liHtmlOutput = self::getLiHtmlOutput($actual);
+                    $lisHtmlOutput = $liHtmlOutput . $lisHtmlOutput;
+                }
+                $htmlOutput .= $lisHtmlOutput;
+                // close the breadcrumb
+                $htmlOutput .= '</ol>' . PHP_EOL;
+                $htmlOutput .= '</nav>' . PHP_EOL;
+                break;
+            default:
+                $htmlOutput = "<ol class=\"breadcrumb $class\">";
+                $lisHtmlOutput = "";
+                $actualDepth = 0;
+                while ($actual = $actual->getParentPage()) {
+                    $actualDepth = $actualDepth + 1;
+                    $liHtmlOutput = self::getLiHtmlOutput($actual, false,false);
+                    $lisHtmlOutput = $liHtmlOutput . $lisHtmlOutput;
+                    if ($actualDepth >= $requiredDepth) {
+                        break;
+                    }
+                }
+                $htmlOutput .= $lisHtmlOutput;
+                $htmlOutput .= '</ol>' . PHP_EOL;
 
-        $actual = Page::createPageFromRequestedPage();
-        $lisHtmlOutput = self::getLiHtmlOutput($actual, true);
-        while ($actual = $actual->getParentPage()) {
-            $liHtmlOutput = self::getLiHtmlOutput($actual);
-            $lisHtmlOutput = $liHtmlOutput . $lisHtmlOutput;
         }
-        $htmlOutput .= $lisHtmlOutput;
-        // close the breadcrumb
-        $htmlOutput .= '</ol>' . PHP_EOL;
-        $htmlOutput .= '</nav>' . PHP_EOL;
+
 
         return $htmlOutput;
 
@@ -74,22 +148,26 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
      * @param bool $current
      * @return string - the list item for the page
      */
-    private static function getLiHtmlOutput(Page $page, bool $current = false): string
+    private static function getLiHtmlOutput(Page $page, bool $current = false, bool $link = true): string
     {
         $liClass = "";
         $liArial = "";
         if ($current) {
             $liClass = " active";
             /**
-             * https://www.w3.org/TR/wai-aria-practices/examples/breadcrumb/index.html
-             * Applied to a link in the breadcrumd set to indicate that it represents the current page.
+             * https://www.w3.org/WAI/ARIA/apg/patterns/breadcrumb/
+             * Applied to a link in the breadcrumb set to indicate that it represents the current page.
              */
             $liArial = " aria-current=\"page\"";
         }
         $liHtmlOutput = "<li class=\"breadcrumb-item$liClass\"$liArial>";
 
         if (FileSystems::exists($page->getPath()) && $current === false) {
-            $liHtmlOutput .= $page->getHtmlAnchorLink(self::CANONICAL_HIERARCHICAL);
+            if ($link) {
+                $liHtmlOutput .= $page->getHtmlAnchorLink(self::CANONICAL_HIERARCHICAL);
+            } else {
+                $liHtmlOutput .= $page->getNameOrDefault();
+            }
         } else {
             $liHtmlOutput .= $page->getNameOrDefault();
         }
@@ -175,19 +253,19 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
      */
     function render($format, Doku_Renderer $renderer, $data): bool
     {
-        switch ($format) {
+        if ($format === 'xhtml') {
+            $state = $data[PluginUtility::STATE];
+            if ($state === DOKU_LEXER_SPECIAL) {
+                $cacheManager = CacheManager::getOrCreate();
+                // the output has the data from the requested page
+                $cacheManager->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                // the data from the requested page is dependent on the name, title or description of the page
+                $cacheManager->addDependencyForCurrentSlot(CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
 
-            case 'xhtml':
-                $state = $data[PluginUtility::STATE];
-                if ($state === DOKU_LEXER_SPECIAL) {
-                    $cacheManager = CacheManager::getOrCreate();
-                    // the output has the data from the requested page
-                    $cacheManager->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
-                    // the data from the requested page is dependent on the name, title or description of the page
-                    $cacheManager->addDependencyForCurrentSlot(CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
-                    $renderer->doc .= self::toBreadCrumbHtml();
-                }
-                return true;
+                $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                $renderer->doc .= self::toBreadCrumbHtml($tagAttributes);
+            }
+            return true;
         }
         return false;
 

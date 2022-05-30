@@ -64,9 +64,9 @@ class DataType
      *
      * @throws ExceptionBadArgument
      */
-    public static function toInteger($targetValue, $ifNull = null): int
+    public static function toInteger($targetValue, $ifNull = null): ?int
     {
-        if($targetValue===null){
+        if ($targetValue === null) {
             return $ifNull;
         }
 

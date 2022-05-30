@@ -4,8 +4,6 @@
 namespace ComboStrap;
 
 
-use Slug;
-
 /**
  * Class PageUrlPath
  * @package ComboStrap

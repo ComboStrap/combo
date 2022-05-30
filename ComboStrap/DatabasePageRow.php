@@ -4,7 +4,6 @@
 namespace ComboStrap;
 
 use DateTime;
-use ModificationDate;
 
 /**
  * The class that manage the replication
@@ -45,7 +44,7 @@ class DatabasePageRow
             PageType::PROPERTY_NAME,
             PageId::PROPERTY_NAME,
             PageId::PAGE_ID_ABBR_ATTRIBUTE,
-            \ReplicationDate::PROPERTY_NAME,
+            ReplicationDate::PROPERTY_NAME,
             BacklinkCount::PROPERTY_NAME
         ];
     const ANALYTICS_ATTRIBUTE = "analytics";
@@ -414,7 +413,7 @@ class DatabasePageRow
      */
     public function getReplicationDate(): ?DateTime
     {
-        $dateString = $this->getFromRow(\ReplicationDate::getPersistentName());
+        $dateString = $this->getFromRow(ReplicationDate::getPersistentName());
         if ($dateString === null) {
             return null;
         }
@@ -441,7 +440,7 @@ class DatabasePageRow
         /**
          * Replication Date
          */
-        $replicationDate = \ReplicationDate::createFromPage($this->page)
+        $replicationDate = ReplicationDate::createFromPage($this->page)
             ->setWriteStore(MetadataDbStore::class)
             ->setValue(new DateTime());
 
@@ -1142,7 +1141,7 @@ class DatabasePageRow
         /**
          * Replication Date
          */
-        $replicationDateMeta = \ReplicationDate::createFromPage($this->page)
+        $replicationDateMeta = ReplicationDate::createFromPage($this->page)
             ->setWriteStore(MetadataDbStore::class)
             ->setValue(new DateTime());
 

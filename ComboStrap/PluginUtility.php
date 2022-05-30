@@ -8,8 +8,6 @@ use dokuwiki\Extension\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
 use PHPUnit\Exception;
 
-$loader = require_once(__DIR__ . '/../vendor/autoload.php');
-
 
 
 /**

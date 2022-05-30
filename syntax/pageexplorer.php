@@ -11,9 +11,11 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\Html;
 use ComboStrap\Icon;
+use ComboStrap\IdManager;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
 use ComboStrap\Page;
+use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\RenderUtility;
 use ComboStrap\TagAttributes;
@@ -807,6 +809,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         $namespaceInstructions = $data[self::NAMESPACE_INSTRUCTIONS];
         foreach ($containerTreeNodes as $containerTreeNode) {
 
+            /**
+             * @var DokuPath $containerPath
+             */
             $containerPath = $containerTreeNode->getContent();
 
             /**
@@ -842,7 +847,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
             // Button label
 
-            $subHomePage = Page::getIndexPageFromNamespace($containerPath->toString());
+            $subHomePage = Page::getIndexPageFromNamespace($containerPath->toPathString());
             if ($subHomePage->exists()) {
                 if ($namespaceInstructions !== null) {
                     try {

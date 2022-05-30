@@ -22,9 +22,22 @@ class Snapshot
         $capabilities = DesiredCapabilities::chrome();
         $options = new ChromeOptions();
         $options->addArguments(['--headless']);
-//        $options->addArguments(['--start-fullscreen']);
-//        $options->addArguments(["window-size=750,450"]);
-//        $options->addArguments(['--start-maximized']);
+        $options->addArguments(["window-size=1024,768"]);
+
+        /**
+         *
+         * https://docs.travis-ci.com/user/chrome#sandboxing
+         * For security reasons, Google Chrome is unable to provide sandboxing when it is running in the container-based environment.
+         * Error:
+         *  * unknown error: Chrome failed to start: crashed
+         *  * The SUID sandbox helper binary was found, but is not configured correctly
+         */
+        if (PluginUtility::isCi()) {
+            $options->addArguments(["--no-sandbox"]);
+        }
+
+//      $options->addArguments(['--start-fullscreen']);
+//      $options->addArguments(['--start-maximized']);
 
         $capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
 
@@ -59,12 +72,12 @@ class Snapshot
             $webDriver->wait(2, 500)->until(
                 function () use ($webDriver) {
                     $images = $webDriver->findElements(WebDriverBy::tagName("img"));
-                    foreach ($images as $img){
-                        $complete = DataType::toBoolean($img->getAttribute("complete"),false);
-                        if($complete === true){
-                            $naturalHeight = DataType::toInteger($img->getAttribute("naturalHeight"),0);
-                            if($naturalHeight !== 0 )
-                            return false;
+                    foreach ($images as $img) {
+                        $complete = DataType::toBoolean($img->getAttribute("complete"), false);
+                        if ($complete === true) {
+                            $naturalHeight = DataType::toInteger($img->getAttribute("naturalHeight"), 0);
+                            if ($naturalHeight !== 0)
+                                return false;
                         }
                     }
                     return true;

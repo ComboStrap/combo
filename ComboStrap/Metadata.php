@@ -165,8 +165,8 @@ abstract class Metadata
                 return new Locale();
             case CacheExpirationDate::PROPERTY_NAME:
                 return new CacheExpirationDate();
-            case \ReplicationDate::getName():
-                return new \ReplicationDate();
+            case ReplicationDate::getName():
+                return new ReplicationDate();
             case PageLevel::PROPERTY_NAME:
                 return new PageLevel();
             case DisqusIdentifier::PROPERTY_NAME:

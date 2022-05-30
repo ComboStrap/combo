@@ -119,7 +119,7 @@ class EditButton
          */
         $wikiId = $this->getWikiId();
         $slotPath = DokuPath::createPagePathFromId($wikiId);
-        $formId = \IdManager::getOrCreate()->generateNewIdForComponent(self::CANONICAL, $slotPath);
+        $formId = IdManager::getOrCreate()->generateNewIdForComponent(self::CANONICAL, $slotPath);
         $data = [
             self::WIKI_ID => $wikiId,
             self::EDIT_MESSAGE => $this->label,

@@ -85,10 +85,11 @@ class LocalFs implements FileSystem
 
     /**
      * @return false|int
+     *@var LocalPath $path
      */
-    public function getSize($path)
+    public function getSize(Path $path)
     {
-        return filesize($path->toAbsolutePath()->toString());
+        return filesize($path->toAbsolutePath()->toPathString());
     }
 
     /**

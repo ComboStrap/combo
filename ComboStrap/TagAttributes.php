@@ -13,8 +13,6 @@
 namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
-use IdManager;
-use syntax_plugin_combo_cell;
 use syntax_plugin_combo_follow;
 
 /**

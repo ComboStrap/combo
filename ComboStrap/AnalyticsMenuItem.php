@@ -12,6 +12,7 @@
 
 namespace ComboStrap;
 
+
 use dokuwiki\Menu\Item\AbstractItem;
 use renderer_plugin_combo_analytics;
 
@@ -36,24 +37,24 @@ class AnalyticsMenuItem extends AbstractItem
      *
      * @return string
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         return "Analytics";
     }
 
-    public function getLinkAttributes($classprefix = 'menuitem ')
+    public function getLinkAttributes($classprefix = 'menuitem '): array
     {
         $linkAttributes = parent::getLinkAttributes($classprefix);
         $linkAttributes['id'] = self::ITEM_ID;
         return $linkAttributes;
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return "Show the ComboStrap analytics";
     }
 
-    public function getSvg()
+    public function getSvg(): string
     {
         /** @var string icon file */
         return Site::getComboImagesDirectory()->resolve('file-chart.svg')->toPathString();

@@ -1,10 +1,6 @@
 <?php
 
-
-use ComboStrap\MetaManagerForm;
-use ComboStrap\Metadata;
-use ComboStrap\MetadataDateTime;
-use ComboStrap\Page;
+namespace ComboStrap;
 
 /**
  * Class ReplicationDate

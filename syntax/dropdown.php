@@ -197,11 +197,13 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
                      * New namespace for data attribute
                      */
                     $bootstrapNameSpace = Bootstrap::getDataNamespace();
-                    $dataToggleAttribute = "data${$bootstrapNameSpace}-toggle";
+                    $dataToggleAttribute = "data{$bootstrapNameSpace}-toggle";
                     $htmlAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
-                    $renderer->doc .= "<li $htmlAttributes>" . DOKU_LF
-                        . "<a id=\"$dropDownId\" href=\"#\" class=\"nav-link dropdown-toggle active\" {$dataToggleAttribute}=\"dropdown\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\" title=\"$name\">$name </a>" . DOKU_LF
-                        . '<div class="dropdown-menu" aria-labelledby="' . $dropDownId . '">' . DOKU_LF;
+                    $renderer->doc .=<<<EOF
+<li $htmlAttributes>
+    <a id="$dropDownId" href="#" class="nav-link dropdown-toggle active" {$dataToggleAttribute}="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="$name">$name</a>
+    <div class="dropdown-menu" aria-labelledby="$dropDownId">
+EOF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

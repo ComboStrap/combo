@@ -19,6 +19,8 @@ class TextAlign
 
         if ($attributes->hasComponentAttribute(self::ATTRIBUTE_NAME)) {
 
+            LogUtility::warning("The text-align attribute has been deprecated for the align attribute.", self::CANONICAL);
+
             try {
                 $textAlignValues = $attributes->getValuesAndRemove(self::ATTRIBUTE_NAME);
             } catch (ExceptionBadArgument $e) {

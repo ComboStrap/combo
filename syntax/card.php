@@ -1,29 +1,16 @@
 <?php
-/**
- * DokuWiki Syntax Plugin Combostrap.
- *
- */
+
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\EditButton;
-use ComboStrap\EditButtonManager;
-use ComboStrap\ExceptionBadArgument;
-use ComboStrap\ExceptionNotEnabled;
-use ComboStrap\LogUtility;
+use ComboStrap\IdManager;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\SvgDocument;
 use ComboStrap\TagAttributes;
 
-if (!defined('DOKU_INC')) {
-    die();
-}
-
-if (!defined('DOKU_PLUGIN')) {
-    define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
-}
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 

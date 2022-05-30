@@ -2,6 +2,7 @@
 
 use ComboStrap\DokuPath;
 use ComboStrap\EditButton;
+use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
@@ -11,6 +12,7 @@ use ComboStrap\Page;
 use ComboStrap\PageLayout;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\TagAttributes;
 
 
@@ -58,6 +60,27 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
         self::MAIN_SIDE_AREA,
         self::MAIN_FOOTER_AREA,
     ];
+
+    /**
+     * @throws ExceptionBadArgument - when the area name is unknown
+     * @throws ExceptionCompile - when the strap template is not available
+     */
+    public static function getSlotNameForArea($area)
+    {
+        switch ($area){
+            case self::PAGE_HEADER_AREA:
+                return Site::getPageHeaderSlotName();
+            case self::PAGE_FOOTER_AREA:
+                return Site::getPageFooterSlotName();
+            default:
+                throw new ExceptionBadArgument("The area ($area) is unknown");
+        }
+    }
+
+    public static function getDefaultAreaContentPath($areaName): DokuPath
+    {
+        return DokuPath::createComboResource(":pages:$areaName.md");
+    }
 
 
     public function register(Doku_Event_Handler $controller)
@@ -201,7 +224,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                     try {
                         $closesPath = FileSystems::closest($requestedPage->getPath(), $layoutArea->getSlotName() . DokuPath::PAGE_FILE_TXT_EXTENSION);
                     } catch (ExceptionNotFound $e) {
-                        $closesPath = DokuPath::createComboResource(":pages:$areaName.md");
+                        $closesPath = self::getDefaultAreaContentPath($areaName);
                         if (!FileSystems::exists($closesPath)) {
                             $closesPath = null;
                             LogUtility::errorIfDevOrTest("The default $areaName page could does not exist.");

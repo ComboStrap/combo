@@ -368,9 +368,12 @@ class MarkupRef
 
                     /**
                      * Red color
+                     * if not `do=edit`
                      */
-                    $outputAttributes->addClassName(self::getHtmlClassNotExist());
-                    $outputAttributes->addOutputAttributeValue("rel", 'nofollow');
+                    if(!$this->dokuwikiUrl->hasQueryParameter("do")) {
+                        $outputAttributes->addClassName(self::getHtmlClassNotExist());
+                        $outputAttributes->addOutputAttributeValue("rel", 'nofollow');
+                    }
 
                 } else {
 

@@ -111,4 +111,9 @@ class XmlElement
     {
         return $this->element->getAttribute("style");
     }
+
+    public function getNodeValue()
+    {
+        return $this->element->nodeValue;
+    }
 }

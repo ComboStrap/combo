@@ -233,7 +233,7 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                 } else {
                     $scannedType = self::GRID_TAG;
                     if ($isRowTag) {
-                        LogUtility::warning("A non-contained row has been deprecated for grid. You should rename the <row> tag to <grid>");
+                        LogUtility::warning("A non-contained row has been deprecated for grid. You should rename the row tag to grid");
                     }
                 }
 

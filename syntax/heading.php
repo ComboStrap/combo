@@ -446,7 +446,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      *
      * This is the equivalent of inline or block for css
      */
-    function getPType()
+    function getPType(): string
     {
         return self::SYNTAX_PTYPE;
     }

@@ -2,21 +2,18 @@
 
 
 use ComboStrap\Breadcrumb;
-use ComboStrap\CacheDependencies;
-use ComboStrap\CacheManager;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
 
 /**
- *
+ * The difference with {@link syntax_plugin_combo_breadcrumb}
+ * is the {@link syntax_plugin_combo_ibreadcrumb::getPType()}
  */
-class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_ibreadcrumb extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "breadcrumb";
-
-    public const CANONICAL_HIERARCHICAL = "breadcrumb-hierarchical";
+    const TAG = "ibreadcrumb";
 
 
     /**
@@ -41,7 +38,7 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
      */
     function getPType(): string
     {
-        return 'block';
+        return 'normal';
     }
 
     /**
@@ -76,7 +73,8 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
 
     function handle($match, $state, $pos, Doku_Handler $handler): array
     {
-        $default = [TagAttributes::TYPE_KEY => Breadcrumb::NAVIGATION_TYPE];
+
+        $default = [TagAttributes::TYPE_KEY => Breadcrumb::TYPOGRAPHY_TYPE];
         $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
         return array(
             PluginUtility::STATE => $state,
@@ -97,34 +95,7 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
      */
     function render($format, Doku_Renderer $renderer, $data): bool
     {
-        return self::processRendering($format, $data, $renderer);
-
-    }
-
-    /**
-     * Same rendering for typographic or navigational breadcrumb
-     * @param string $format
-     * @param array $data
-     * @param Doku_Renderer $renderer
-     * @return bool
-     */
-    public static function processRendering(string $format, array $data, Doku_Renderer $renderer): bool
-    {
-        if ($format === 'xhtml') {
-            $state = $data[PluginUtility::STATE];
-            if ($state === DOKU_LEXER_SPECIAL) {
-                $cacheManager = CacheManager::getOrCreate();
-                // the output has the data from the requested page
-                $cacheManager->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
-                // the data from the requested page is dependent on the name, title or description of the page
-                $cacheManager->addDependencyForCurrentSlot(CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
-
-                $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
-                $renderer->doc .= Breadcrumb::toBreadCrumbHtml($tagAttributes);
-            }
-            return true;
-        }
-        return false;
+        return syntax_plugin_combo_breadcrumb::processRendering($format, $data, $renderer);
     }
 
 

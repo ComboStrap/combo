@@ -40,16 +40,16 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
     /**
      * How Dokuwiki will add P element
      *
-     * * 'normal' - The plugin can be used inside paragraphs
-     *  * 'block'  - Open paragraphs need to be closed before plugin output - block should not be inside paragraphs
-     *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
+     *  * 'normal' - Inline
+     *  * 'block' - Block (p are not created inside)
+     *  * 'stack' - Block (p can be created inside)
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
     function getPType(): string
     {
         /**
-         * not stack, otherwise it creates p
+         * Not stack, otherwise it creates p
          * and as box is used mostly for layout purpose, it breaks the
          * {@link \ComboStrap\Align} flex css attribute
          */
@@ -120,16 +120,13 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
-                /**
-                 * Check and add a scroll toggle if the
-                 * box is constrained by height
-                 */
+
                 $callStack = CallStack::createFromHandler($handler);
-                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
 
                 /**
                  * Check children align
                  */
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $align = $openingTag->getAttribute(Align::ALIGN_ATTRIBUTE);
                 if ($align !== null && strpos($align, "children") !== false) {
                     // You can't use children align value against inline
@@ -139,7 +136,15 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                     }
                 }
 
+                /**
+                 * Add a scroll toggle if the
+                 * box is constrained by height
+                 */
                 Dimension::addScrollToggleOnClickIfNoControl($callStack);
+
+                /**
+                 *
+                 */
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $openingTag->getAttributes()

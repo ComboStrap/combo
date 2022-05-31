@@ -47,6 +47,8 @@ class ColorRgb
     );
     /**
      * https://drafts.csswg.org/css-color/#color-keywords
+     *
+     * See also: https://www.w3.org/TR/SVG11/types.html#ColorKeywords
      */
     const CSS_COLOR_NAMES = array(
         'aliceblue' => '#F0F8FF',

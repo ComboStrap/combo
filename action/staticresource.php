@@ -3,6 +3,7 @@
 use ComboStrap\CacheMedia;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\HttpResponse;
@@ -38,6 +39,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
      * Enable an infinite cache on static resources (image, script, ...) with a {@link CacheMedia::CACHE_BUSTER_KEY}
      */
     public const CONF_STATIC_CACHE_ENABLED = "staticCacheEnabled";
+    const PAGE_VIGNETTE_DRIVE = "page-vignette";
 
 
     /**
@@ -69,26 +71,55 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             return;
         }
         $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
-        if (!in_array($drive, DokuPath::DRIVES)) {
+        if (!in_array($drive, DokuPath::DRIVES) && $drive !== self::PAGE_VIGNETTE_DRIVE) {
             // The other resources have ACL
             // and this endpoint is normally only for
             $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
             return;
         }
-        $mediaId = $event->data['media'];
-        $mediaPath = DokuPath::createDokuPath($mediaId, $drive);
-        $event->data['file'] = $mediaPath->toLocalPath()->toAbsolutePath()->toPathString();
-        if (FileSystems::exists($mediaPath)) {
-            $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
-            $event->data['statusmessage'] = '';
-            $event->data['mime'] = $mediaPath->getMime();
+        switch ($drive) {
+            case self::PAGE_VIGNETTE_DRIVE:
+                $mediaId = $event->data['media'];
+                $cacheKey = $mediaId;
+                $cache = new dokuwiki\Cache\Cache($cacheKey, ".vignette.png");
+                if (!$cache->useCache()) {
+
+                    $im = imagecreate(200, 200);
+                    try {
+                        $orange = imagecolorallocate($im, 220, 210, 60);
+                        $string = "$mediaId";
+                        $px = (imagesx($im) - 7.5 * strlen($string)) / 2;
+                        imagestring($im, 3, $px, 9, $string, $orange);
+                        imagepng($im, $cache->cache);
+                    } finally {
+                        imagedestroy($im);
+                    }
+
+                }
+                $event->data['file'] = $cache->cache;
+                $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
+                $event->data['statusmessage'] = '';
+                $event->data['mime'] = "image/png";
+                break;
+
+            default:
+                $mediaId = $event->data['media'];
+                $mediaPath = DokuPath::createDokuPath($mediaId, $drive);
+                $event->data['file'] = $mediaPath->toLocalPath()->toAbsolutePath()->toPathString();
+                if (FileSystems::exists($mediaPath)) {
+                    $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
+                    $event->data['statusmessage'] = '';
+                    $event->data['mime'] = $mediaPath->getMime();
+                }
+                if ($drive === DokuPath::CACHE_DRIVE) {
+                    $event->data['download'] = false;
+                    if (!Identity::isManager()) {
+                        $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
+                    }
+                }
+                break;
         }
-        if ($drive === DokuPath::CACHE_DRIVE) {
-            $event->data['download'] = false;
-            if (!Identity::isManager()) {
-                $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
-            }
-        }
+
 
     }
 
@@ -181,8 +212,18 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Last-Modified is not needed for the same reason
          *
          */
-        $etag = self::getEtagValue($mediaToSend, $_REQUEST);
-        header("ETag: $etag");
+        try {
+            $etag = self::getEtagValue($mediaToSend, $_REQUEST);
+            header("ETag: $etag");
+        } catch (ExceptionNotFound $e) {
+            // internal error
+            HttpResponse::create(HttpResponse::STATUS_INTERNAL_ERROR)
+                ->setEvent($event)
+                ->setCanonical(self::CANONICAL)
+                ->sendMessage("We were unable to get the etag because the media was not found. Error: {$e->getMessage()}");
+            return;
+        }
+
 
         /**
          * Conditional Request ?
@@ -191,7 +232,6 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
             $ifNoneMatch = stripslashes($_SERVER['HTTP_IF_NONE_MATCH']);
             if ($ifNoneMatch && $ifNoneMatch === $etag) {
-
                 HttpResponse::create(HttpResponse::STATUS_NOT_MODIFIED)
                     ->setEvent($event)
                     ->setCanonical(self::CANONICAL)
@@ -205,7 +245,15 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Download or display feature
          * (Taken over from SendFile)
          */
-        $mime = $mediaToSend->getMime();
+        try {
+            $mime = FileSystems::getMime($mediaToSend);
+        } catch (ExceptionNotFound $e) {
+            HttpResponse::create(HttpResponse::STATUS_INTERNAL_ERROR)
+                ->setEvent($event)
+                ->setCanonical(self::CANONICAL)
+                ->sendMessage("Mime not found");
+            return;
+        }
         $download = $event->data["download"];
         if ($download && $mime->toString() !== "image/svg+xml") {
             header('Content-Disposition: attachment;' . rfc2231_encode(
@@ -266,6 +314,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
      * @param Path $mediaFile
      * @param Array $properties - the query properties
      * @return string
+     * @throws ExceptionNotFound
      */
     public
     static function getEtagValue(Path $mediaFile, array $properties): string

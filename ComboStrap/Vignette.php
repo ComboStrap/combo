@@ -111,7 +111,7 @@ class Vignette
                 $yTitleActual = $yTitleStart;
                 $lineSpace = 25;
                 $words = explode(" ", $title);
-                $maxCharacterByLine = 25;
+                $maxCharacterByLine = 20;
                 $actualLine = "";
                 $lineCount = 0;
                 $maxNumberOfLines = 3;
@@ -174,7 +174,7 @@ class Vignette
                     $targetLogoHandler = imagescale($gdOriginalLogo, $targetLogoWidth);
                     imageAlphaBlending($targetLogoHandler, true);
                     imageSaveAlpha($targetLogoHandler, true);
-                    imagecopy($vignetteImageHandler, $targetLogoHandler, 900, 130, 0, 0, $targetLogoWidth, imagesy($targetLogoHandler));
+                    imagecopy($vignetteImageHandler, $targetLogoHandler, 950, 130, 0, 0, $targetLogoWidth, imagesy($targetLogoHandler));
 
                 } catch (ExceptionNotFound $e) {
                     // no logo installed, mime not found, extension not supported

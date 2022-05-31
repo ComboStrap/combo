@@ -1082,8 +1082,7 @@ class TagAttributes
 
     }
 
-    private
-    function removeHTMLAttributeIfPresent($string)
+    public function removeHTMLAttributeIfPresent($string)
     {
         $lowerAtt = strtolower($string);
         if (isset($this->outputAttributes[$lowerAtt])) {
@@ -1178,8 +1177,7 @@ class TagAttributes
         return $default;
     }
 
-    public
-    function hasAttribute($attribute)
+    public function hasAttribute($attribute): bool
     {
         $hasAttribute = $this->hasComponentAttribute($attribute);
         if ($hasAttribute === true) {
@@ -1189,7 +1187,6 @@ class TagAttributes
         }
     }
 
-    private
     function hasHtmlAttribute($attribute): bool
     {
         return isset($this->outputAttributes[$attribute]);

@@ -28,7 +28,6 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
     const TAG = "breadcrumb";
 
     public const CANONICAL_HIERARCHICAL = "breadcrumb-hierarchical";
-    const HTML_CLASS = self::CANONICAL_HIERARCHICAL . "-combo";
 
     /**
      * The type of breadcrumb
@@ -63,12 +62,12 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
     {
 
         if ($tagAttributes === null) {
-            $tagAttributes = TagAttributes::createEmpty();
+            $tagAttributes = TagAttributes::createEmpty(self::TAG);
         }
 
 
         try {
-            $requiredDepth = DataType::toInteger($tagAttributes->getComponentAttributeValue(PageSqlTreeListener::DEPTH));
+            $requiredDepth = DataType::toInteger($tagAttributes->getValueAndRemoveIfPresent(PageSqlTreeListener::DEPTH));
         } catch (ExceptionBadArgument $e) {
             LogUtility::error("We were unable to get the depth attribute. Error: {$e->getMessage()}");
             $requiredDepth = null;
@@ -101,15 +100,15 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
         /**
          * Print in function of the depth
          */
-        $class = self::HTML_CLASS;
         switch ($type) {
             case self::NAVIGATION_TYPE:
                 /**
                  * https://www.w3.org/TR/wai-aria-practices/examples/breadcrumb/index.html
                  * Arial-label Provides a label that describes the type of navigation provided in the nav element.
                  */
-                $htmlOutput = "<nav aria-label=\"Hierarchical breadcrumb\" class=\"$class\">" . PHP_EOL;
-                $htmlOutput .= '<ol class="breadcrumb">' . PHP_EOL;
+                $tagAttributes->addOutputAttributeValue("aria-label", "Hierarchical breadcrumb");
+                $htmlOutput = $tagAttributes->toHtmlEnterTag("nav");
+                $htmlOutput .= '<ol class="breadcrumb">';
 
                 $lisHtmlOutput = self::getLiHtmlOutput($actual, true);
                 while ($actual = $actual->getParentPage()) {
@@ -118,16 +117,17 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
                 }
                 $htmlOutput .= $lisHtmlOutput;
                 // close the breadcrumb
-                $htmlOutput .= '</ol>' . PHP_EOL;
-                $htmlOutput .= '</nav>' . PHP_EOL;
+                $htmlOutput .= '</ol>';
+                $htmlOutput .= '</nav>';
                 break;
             default:
-                $htmlOutput = "<ol class=\"breadcrumb $class\">";
+                $tagAttributes->addClassName("breadcrumb");
+                $htmlOutput = $tagAttributes->toHtmlEnterTag("ol");
                 $lisHtmlOutput = "";
                 $actualDepth = 0;
                 while ($actual = $actual->getParentPage()) {
                     $actualDepth = $actualDepth + 1;
-                    $liHtmlOutput = self::getLiHtmlOutput($actual, false,false);
+                    $liHtmlOutput = self::getLiHtmlOutput($actual, false, false);
                     $lisHtmlOutput = $liHtmlOutput . $lisHtmlOutput;
                     if ($actualDepth >= $requiredDepth) {
                         break;
@@ -262,7 +262,7 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
                 // the data from the requested page is dependent on the name, title or description of the page
                 $cacheManager->addDependencyForCurrentSlot(CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
 
-                $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
                 $renderer->doc .= self::toBreadCrumbHtml($tagAttributes);
             }
             return true;

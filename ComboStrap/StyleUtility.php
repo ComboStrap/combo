@@ -50,17 +50,22 @@ class StyleUtility
      * Add class for user styling
      * See
      * https://combostrap.com/styling/userstyle#class
-     * @param TagAttributes $param
+     * @param TagAttributes $tagAttributes
      */
-    public static function addStylingClass(TagAttributes &$param)
+    public static function addStylingClass(TagAttributes &$tagAttributes)
     {
-        $logicalTag = $param->getLogicalTag();
-        if ($logicalTag!==null && $param->getDefaultStyleClassShouldBeAdded() === true) {
+        $logicalTag = $tagAttributes->getLogicalTag();
+        if ($logicalTag!==null && $tagAttributes->getDefaultStyleClassShouldBeAdded() === true) {
 
-            $param->addClassName($logicalTag . "-combo");
-            if (!empty($param->getType())) {
-                $param->addClassName($logicalTag . "-" . $param->getType() . "-combo");
+            $tagAttributes->addClassName(self::getStylingClassForTag($logicalTag));
+            if (!empty($tagAttributes->getType())) {
+                $tagAttributes->addClassName($logicalTag . "-" . $tagAttributes->getType() . "-combo");
             }
         }
+    }
+
+    public static function getStylingClassForTag($logicalTag): string
+    {
+        return $logicalTag . "-combo";
     }
 }

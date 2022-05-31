@@ -93,27 +93,33 @@ class Breadcrumb
                 // close the breadcrumb
                 $htmlOutput .= '</ol>';
                 $htmlOutput .= '</nav>';
-                break;
-            default:
+                return $htmlOutput;
+            case self::TYPOGRAPHY_TYPE:
+                if ($requiredDepth > 1) {
+                    SnippetManager::getOrCreate()->attachCssInternalStyleSheetForSlot("breadcrumb-$type");
+                }
                 $htmlOutput = $tagAttributes->toHtmlEnterTag("span");
                 $lisHtmlOutput = "";
                 $actualDepth = 0;
                 while ($actual = $actual->getParentPage()) {
                     $actualDepth = $actualDepth + 1;
                     $nameOrDefault = $actual->getNameOrDefault();
-                    $liHtmlOutput = "<span>$nameOrDefault</span>";
+                    $liHtmlOutput = "<span class=\"breadcrumb-typography-item\">$nameOrDefault</span>";
                     $lisHtmlOutput = $liHtmlOutput . $lisHtmlOutput;
                     if ($actualDepth >= $requiredDepth) {
                         break;
                     }
                 }
                 $htmlOutput .= $lisHtmlOutput;
-                $htmlOutput .= '</span>' . PHP_EOL;
+                $htmlOutput .= '</span>';
+                return $htmlOutput;
+            default:
+                // internal error
+                LogUtility::error("The breadcrumb type ($type) is unknown");
+                return "";
 
         }
 
-
-        return $htmlOutput;
 
     }
 

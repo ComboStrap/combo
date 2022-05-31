@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use renderer_plugin_combo_analytics;
+
 class Mime
 {
 
@@ -56,6 +58,57 @@ class Mime
         return new Mime($mime);
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function createFromExtension($extension): Mime
+    {
+        switch ($extension) {
+            case ImageSvg::EXTENSION:
+                /**
+                 * Svg is authorized when viewing but is not part
+                 * of the {@link File::getKnownMime()}
+                 */
+                return new Mime(Mime::SVG);
+            case JavascriptLibrary::EXTENSION:
+                return new Mime(Mime::JAVASCRIPT);
+            case renderer_plugin_combo_analytics::RENDERER_NAME_MODE:
+            case Json::EXTENSION:
+                return new Mime(Mime::JSON);
+            case "md":
+                return new Mime(Mime::MARKDOWN);
+            case "txt":
+                return new Mime(Mime::PLAIN_TEXT);
+            case "xhtml":
+            case "html":
+                return new Mime(Mime::HTML);
+            case "png":
+                return new Mime(Mime::PNG);
+            case "css":
+                return new Mime(Mime::CSS);
+            case "webp":
+                return new Mime(Mime::WEBP);
+            case "bmp":
+                return new Mime(Mime::BMP);
+            default:
+                $mtypes = getMimeTypes();
+                $mimeString = $mtypes[$extension];
+                if ($mimeString === null) {
+                    throw new ExceptionNotFound("No mime was found for the extension ($extension)");
+                } else {
+                    /**
+                     * Delete the special dokuwiki character `!`
+                     * that means that the media should be downloaded
+                     */
+                    if ($mimeString[0] === "!") {
+                        $mimeString = substr($mimeString, 1);
+                    }
+                    return new Mime($mimeString);
+                }
+
+        }
+    }
+
     public function __toString()
     {
         return $this->mime;
@@ -95,6 +148,11 @@ class Mime
     public function toString(): string
     {
         return $this->__toString();
+    }
+
+    public function getExtension()
+    {
+        return explode("/", $this->mime)[1];
     }
 
 

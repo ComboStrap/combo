@@ -2,6 +2,8 @@
 
 use ComboStrap\CacheMedia;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionBadState;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
@@ -10,8 +12,10 @@ use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\LocalPath;
 use ComboStrap\LogUtility;
+use ComboStrap\Page;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
+use ComboStrap\Vignette;
 use dokuwiki\Utf8\PhpString;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -77,36 +81,40 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
             return;
         }
+        $mediaId = $event->data['media'];
         switch ($drive) {
             case self::PAGE_VIGNETTE_DRIVE:
-                $mediaId = $event->data['media'];
-                $cacheKey = $mediaId;
-                $cache = new dokuwiki\Cache\Cache($cacheKey, ".vignette.png");
-//                if (!$cache->useCache()) {
-
-                    $im = imagecreate(1200, 600);
-                    try {
-                        // The first call to imagecolorallocate() fills the background color in palette-based images
-                        imagecolorallocate($im, 255, 255, 255);
-                        $orange = imagecolorallocate($im, 220, 210, 60);
-                        $black = imagecolorallocate($im, 0, 0, 0);
-                        $string = "$mediaId";
-                        $px = (imagesx($im) - 7.5 * strlen($string)) / 2;
-                        imagestring($im, 3, $px, 9, $string, $black);
-                        imagepng($im, $cache->cache);
-                    } finally {
-                        imagedestroy($im);
-                    }
-
-//                }
-                $event->data['file'] = $cache->cache;
+                $lastPoint = strrpos($mediaId, ".");
+                $extension = substr($mediaId, $lastPoint + 1);
+                $wikiId = substr($mediaId, 0, $lastPoint);
+                $page = Page::createPageFromId($wikiId);
+                try {
+                    $vignette = Vignette::createForPage($page)
+                        ->setExtension($extension)
+                        ->setUseCache(false);
+                    $path = $vignette->getPath();
+                } catch (ExceptionBadArgument|ExceptionBadState|ExceptionNotFound $e) {
+                    $event->data['status'] = HttpResponse::STATUS_INTERNAL_ERROR;
+                    $event->data['statusmessage'] = "Error while creating the vignette. Error: {$e->getMessage()}";
+                    return;
+                }
+                $event->data['file'] = $path->toPathString();
                 $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
                 $event->data['statusmessage'] = '';
-                $event->data['mime'] = "image/png";
+                $event->data['download'] = false;
+                try {
+                    $event->data['mime'] = FileSystems::getMime($path)->toString();
+                } catch (ExceptionNotFound $e) {
+                    // It should not happen because we should have a problem earlier while creating the vignette
+                    $message = "Error while getting the mime. Error: {$e->getMessage()}";
+                    LogUtility::errorIfDevOrTest("Internal error: $message");
+                    $event->data['status'] = HttpResponse::STATUS_INTERNAL_ERROR;
+                    $event->data['statusmessage'] = $message;
+                    return;
+                }
                 break;
 
             default:
-                $mediaId = $event->data['media'];
                 $mediaPath = DokuPath::createDokuPath($mediaId, $drive);
                 $event->data['file'] = $mediaPath->toLocalPath()->toAbsolutePath()->toPathString();
                 if (FileSystems::exists($mediaPath)) {

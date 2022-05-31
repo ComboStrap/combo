@@ -228,35 +228,14 @@ class FileSystems
     public static function getMime(Path $path): Mime
     {
         $extension = $path->getExtension();
-        switch ($extension) {
-            case ImageSvg::EXTENSION:
-                /**
-                 * Svg is authorized when viewing but is not part
-                 * of the {@link File::getKnownMime()}
-                 */
-                return new Mime(Mime::SVG);
-            case JavascriptLibrary::EXTENSION:
-                return new Mime(Mime::JAVASCRIPT);
-            case renderer_plugin_combo_analytics::RENDERER_NAME_MODE:
-            case Json::EXTENSION:
-                return new Mime(Mime::JSON);
-            case "md":
-                return new Mime(Mime::MARKDOWN);
-            case "txt":
-                return new Mime(Mime::PLAIN_TEXT);
-            case "xhtml":
-            case "html":
-                return new Mime(Mime::HTML);
-            case "png":
-                return new Mime(Mime::PNG);
-            case "css":
-                return new Mime(Mime::CSS);
-            default:
-                $mime = mimetype($path->getLastName(), true)[1];
-                if ($mime === null || $mime === false) {
-                    throw new ExceptionNotFound("No mime found for path ($path)");
-                }
-                return new Mime($mime);
+        try {
+            return Mime::createFromExtension($extension);
+        } catch (ExceptionNotFound $e) {
+            $mime = mimetype($path->getLastName(), true)[1];
+            if ($mime === null || $mime === false) {
+                throw new ExceptionNotFound("No mime found for path ($path)");
+            }
+            return new Mime($mime);
         }
     }
 

@@ -66,7 +66,9 @@ class LocalPath extends PathAbs
      */
     private function normalizeToOsSeparator($path)
     {
-
+        if ($path === self::RELATIVE_CURRENT || $path === self::RELATIVE_PARENT) {
+            return realpath($path);
+        }
         $directorySeparator = $this->getDirectorySeparator();
         if ($directorySeparator === self::WINDOWS_SEPARATOR) {
             return str_replace(self::LINUX_SEPARATOR, self::WINDOWS_SEPARATOR, $path);

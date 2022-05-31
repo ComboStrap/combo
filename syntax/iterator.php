@@ -385,6 +385,11 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                             if ($contextualPage->isHidden()) {
                                 continue;
                             }
+                            if(!$contextualPage->exists()){
+                                LogUtility::error("Internal Error: the page selected ($contextualPage) was not added. It does not exist and was deleted from the database index.", self::CANONICAL);
+                                $contextualPage->getDatabasePage()->delete();
+                                continue;
+                            }
                             $standardMetadata = $contextualPage->getMetadataForRendering();
                             $rows[] = $standardMetadata;
                         }

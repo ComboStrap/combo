@@ -57,42 +57,129 @@ class Vignette
         $cache = new Cache($this->page->getPath()->toPathString(), ".vignette.{$extension}");
         if (!$cache->useCache() || $this->useCache === false) {
 
-            $imageHandler = imagecreate(1200, 600);
+            $width = 1200;
+            $height = 600;
+            /**
+             * Don't use {@link imagecreate()} otherwise
+             * we get color problem while importing the logo
+             */
+            $vignetteImageHandler = imagecreatetruecolor($width, $height);
             try {
 
                 $gdInfo = gd_info();
+
                 /**
                  * Background
                  * The first call to  {@link imagecolorallocate} fills the background color in palette-based images
                  */
-                imagecolorallocate($imageHandler, 255, 255, 255);
+                $whiteGdColor = imagecolorallocate($vignetteImageHandler, 255, 255, 255);
+                imagefill($vignetteImageHandler,0,0,$whiteGdColor);
+
+                /**
+                 * Common variable
+                 */
+                $margin = 80;
+                $x = $margin;
+                $normalFont = Font::getLiberationSansFontRegularPath()->toPathString();
+                $boldFont = Font::getLiberationSansFontBoldPath()->toPathString();
+                try {
+                    $mutedRgb = ColorRgb::createFromString("gray");
+                    $blackGdColor = imagecolorallocate($vignetteImageHandler, 0, 0, 0);
+                    $mutedGdColor = imagecolorallocate($vignetteImageHandler, $mutedRgb->getRed(), $mutedRgb->getGreen(), $mutedRgb->getBlue());
+                } catch (ExceptionCompile $e) {
+                    // internal error, should not happen
+                    throw new ExceptionBadState("Error while getting the muted color. Error: {$e->getMessage()}", self::CANONICAL);
+                }
+
+                /**
+                 * Category
+                 */
+                $parentPage = $this->page->getParentPage();
+                if ($parentPage !== null) {
+                    $yCategory = 120;
+                    $categoryFontSize = 35;
+                    $lineToPrint = $parentPage->getNameOrDefault();
+                    imagettftext($vignetteImageHandler, $categoryFontSize, 0, $x, $yCategory, $mutedGdColor, $normalFont, $lineToPrint);
+                }
 
                 /**
                  * Title
                  */
-                $black = imagecolorallocate($imageHandler, 0, 0, 0);
-                $string = $this->page->getTitleOrDefault();
-                $fontSize = 30;
-                $x = (imagesx($imageHandler) - 20 * strlen($string)) / 2;
-                $y = 300;
+                $title = trim($this->page->getTitleOrDefault());
+                $titleFontSize = 47;
+                $yTitleStart = 210;
+                $yTitleActual = $yTitleStart;
+                $lineSpace = 25;
+                $words = explode(" ", $title);
+                $maxCharacterByLine = 25;
+                $actualLine = "";
+                $lineCount = 0;
+                $maxNumberOfLines = 3;
+                $break = false;
+                foreach ($words as $word) {
+                    $actualLength = strlen($actualLine);
+                    if ($actualLength + strlen($word) > $maxCharacterByLine) {
+                        $lineCount = $lineCount + 1;
+                        $lineToPrint = $actualLine;
+                        if ($lineCount >= $maxNumberOfLines) {
+                            $lineToPrint = $actualLine . "...";
+                            $actualLine = "";
+                            $break = true;
+                        } else {
+                            $actualLine = $word;
+                        }
+                        imagettftext($vignetteImageHandler, $titleFontSize, 0, $x, $yTitleActual, $blackGdColor, $boldFont, $lineToPrint);
+                        $yTitleActual = $yTitleActual + $titleFontSize + $lineSpace;
+                        if ($break) {
+                            break;
+                        }
+                    } else {
+                        if ($actualLine === "") {
+                            $actualLine = $word;
+                        } else {
+                            $actualLine = "$actualLine $word";
+                        }
+                    }
+                }
+                if ($actualLine !== "") {
+                    imagettftext($vignetteImageHandler, $titleFontSize, 0, $x, $yTitleActual, $blackGdColor, $boldFont, $actualLine);
+                }
 
                 /**
-                 * Font
-                 * https://github.com/dompdf/php-font-lib
-                 *
-                 * linux: /usr/share/fonts or ~/.fonts
-                 * UBUNTU_XFSTT="/usr/share/fonts/truetype/"
-                 * RHL52_XFS="/usr/X11R6/lib/X11/fonts/ttfonts/"
-                 * RHL6_XFSTT="/usr/X11R6/lib/X11/fonts/"
-                 * DEBIAN_XFSTT="/usr/share/fonts/truetype/"
-                 *
+                 * Date
                  */
-                $assignment = 'GDFONTPATH=' . realpath('.');
-                putenv($assignment);
-                $path = LocalPath::createFromPath('c:\windows\fonts\Arial.ttf');
-                $fontFilename = $path->toPathString();
-                $fontFilename = "Arial";
-                imagettftext($imageHandler, $fontSize, 0, $x, $y, $black, $fontFilename, $string);
+                $yDate = $yTitleStart + 3 * ($titleFontSize + $lineSpace) + 2 * $lineSpace;
+                $dateFontSize = 25;
+                $mutedGdColor = imagecolorallocate($vignetteImageHandler, $mutedRgb->getRed(), $mutedRgb->getGreen(), $mutedRgb->getBlue());
+                $locale = Locale::createForPage($this->page)->getValueOrDefault();
+                try {
+                    $lineToPrint = Iso8601Date::createFromDateTime($this->page->getModifiedTime())->formatLocale(null, $locale);
+                } catch (ExceptionBadSyntax $e) {
+                    // should not happen
+                    LogUtility::errorIfDevOrTest("Error while formatting the modified date. Error: {$e->getMessage()}", self::CANONICAL);
+                    $lineToPrint = $this->page->getModifiedTime()->format('Y-m-d H:i:s');
+                }
+                imagettftext($vignetteImageHandler, $dateFontSize, 0, $x, $yDate, $mutedGdColor, $normalFont, $lineToPrint);
+
+                /**
+                 * Logo
+                 */
+                try {
+                    $imagePath = Site::getLogoAsRasterImage()->getPath();
+                    if ($imagePath instanceof DokuPath) {
+                        $imagePath = $imagePath->toLocalPath();
+                    }
+                    $gdOriginalLogo = $this->getGdImageHandler($imagePath);
+                    $targetLogoWidth = 120;
+                    $targetLogoHandler = imagescale($gdOriginalLogo, $targetLogoWidth);
+                    imageAlphaBlending($targetLogoHandler, true);
+                    imageSaveAlpha($targetLogoHandler, true);
+                    imagecopy($vignetteImageHandler, $targetLogoHandler, 900, 130, 0, 0, $targetLogoWidth, imagesy($targetLogoHandler));
+
+                } catch (ExceptionNotFound $e) {
+                    // no logo installed, mime not found, extension not supported
+                    LogUtility::error("An error has occurred while adding the logo to the vignette. Error: {$e->getMessage()}");
+                }
 
                 /**
                  * Store
@@ -102,14 +189,15 @@ class Vignette
                         if (!$gdInfo["PNG Support"]) {
                             throw new ExceptionBadState("The extension($extension) is not supported by the GD library", self::CANONICAL);
                         }
-                        imagepng($imageHandler, $cache->cache);
+                        imagetruecolortopalette($vignetteImageHandler, false, 255);
+                        imagepng($vignetteImageHandler, $cache->cache);
                         break;
                     case "jpg":
                     case "jpeg":
                         if (!$gdInfo["JPEG Support"]) {
                             throw new ExceptionBadState("The extension($extension) is not supported by the GD library", self::CANONICAL);
                         }
-                        imagejpeg($imageHandler, $cache->cache);
+                        imagejpeg($vignetteImageHandler, $cache->cache);
                         break;
                     case "webp":
                         if (!$gdInfo["WebP Support"]) {
@@ -118,18 +206,17 @@ class Vignette
                         /**
                          * To True Color to avoid:
                          * `
-                         * Fatal error: Paletter image not supported by webp
+                         * Fatal error: Palette image not supported by webp
                          * `
                          */
-                        imagepalettetotruecolor($imageHandler);
-                        imagewebp($imageHandler, $cache->cache);
+                        imagewebp($vignetteImageHandler, $cache->cache);
                         break;
                     default:
                         throw new ExceptionBadState("The extension($extension) is unknown or not yet supported", self::CANONICAL);
                 }
 
             } finally {
-                imagedestroy($imageHandler);
+                imagedestroy($vignetteImageHandler);
             }
 
         }
@@ -140,6 +227,37 @@ class Vignette
     {
         $this->useCache = $false;
         return $this;
+    }
+
+    /**
+     * @throws ExceptionNotFound - unknown mime or unknown extension
+     */
+    private function getGdImageHandler(Path $imagePath)
+    {
+        $extension = FileSystems::getMime($imagePath)->getExtension();
+
+        switch ($extension) {
+            case "png":
+                $gdLogo = imagecreatefrompng($imagePath->toPathString());
+                /**
+                 * What the fuck ?
+                 * First comment at https://www.php.net/manual/en/function.imagecreatefrompng.php
+                 * If you're trying to load a translucent png-24 image but are finding an absence of transparency (like it's black), you need to enable alpha channel AND save the setting
+                 */
+                imageAlphaBlending($gdLogo, true);
+                imageSaveAlpha($gdLogo, true);
+                break;
+            case "jpg":
+            case "jpeg":
+                $gdLogo = imagecreatefromjpeg($imagePath->toPathString());
+                break;
+            case "webp":
+                $gdLogo = imagecreatefromwebp($imagePath->toPathString());
+                break;
+            default:
+                throw new ExceptionNotFound("Extension ($extension) is not a supported image format to load as Gd image", self::CANONICAL);
+        }
+        return $gdLogo;
     }
 
 

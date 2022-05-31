@@ -109,6 +109,26 @@ class Site
         return null;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function getLogoAsRasterImage(): ImageRaster
+    {
+        foreach (self::PNG_LOGO_IDS as $pngLogo) {
+
+            try {
+                $image = ImageRaster::createImageFromId($pngLogo);
+            } catch (ExceptionCompile $e) {
+                LogUtility::msg("The png Logo ($pngLogo) returns an error. {$e->getMessage()}");
+                continue;
+            }
+            if ($image->exists()) {
+                return $image;
+            }
+        }
+        throw new ExceptionNotFound("No raster logo image was found");
+    }
+
 
     public static function getLogoUrlAsPng()
     {

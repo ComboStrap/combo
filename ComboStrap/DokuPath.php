@@ -679,6 +679,10 @@ class DokuPath extends PathAbs
     }
 
 
+    /**
+     * @return LocalPath
+     * TODO: change it for a constructor on LocalPath
+     */
     public function toLocalPath(): LocalPath
     {
         /**

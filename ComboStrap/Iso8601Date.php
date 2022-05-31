@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 
 use DateTime;
+use IntlDateFormatter;
 
 
 /**
@@ -19,6 +20,8 @@ use DateTime;
 class Iso8601Date
 {
     public const CANONICAL = "date";
+    public const TIME_FORMATTER_TYPE = IntlDateFormatter::NONE;
+    public const DATE_FORMATTER_TYPE = IntlDateFormatter::TRADITIONAL;
     /**
      * @var DateTime|false
      */
@@ -184,6 +187,38 @@ class Iso8601Date
         return new Iso8601Date();
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function getInternationalFormatter($constant): int
+    {
+        $constantNormalized = trim(strtolower($constant));
+        switch ($constantNormalized) {
+            case "none":
+                return IntlDateFormatter::NONE;
+            case "full":
+                return IntlDateFormatter::FULL;
+            case "relativefull":
+                return IntlDateFormatter::RELATIVE_FULL;
+            case "long":
+                return IntlDateFormatter::LONG;
+            case "relativelong":
+                return IntlDateFormatter::RELATIVE_LONG;
+            case "medium":
+                return IntlDateFormatter::MEDIUM;
+            case "relativemedium":
+                return IntlDateFormatter::RELATIVE_MEDIUM;
+            case "short":
+                return IntlDateFormatter::SHORT;
+            case "relativeshort":
+                return IntlDateFormatter::RELATIVE_SHORT;
+            case "traditional":
+                return IntlDateFormatter::TRADITIONAL;
+            default:
+                throw new ExceptionNotFound("The constant ($constant) is not a valid constant", \syntax_plugin_combo_pipeline::CANONICAL);
+        }
+    }
+
     public function getDateTime()
     {
         return $this->dateTime;
@@ -196,6 +231,7 @@ class Iso8601Date
 
     /**
      * Shortcut to {@link DateTime::format()}
+     * Format only in English
      * @param $string
      * @return string
      * @link https://php.net/manual/en/datetime.format.php
@@ -210,7 +246,72 @@ class Iso8601Date
         return $this->__toString();
     }
 
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    public function formatLocale($pattern = null, $locale = null)
+    {
 
+        /**
+         * https://www.php.net/manual/en/function.strftime.php
+         * As been deprecated
+         * The only alternative with local is
+         * https://www.php.net/manual/en/intldateformatter.format.php
+         *
+         * Based on ISO date
+         * ICU Date formatter: https://unicode-org.github.io/icu-docs/#/icu4c/udat_8h.html
+         * ICU Date formats: https://unicode-org.github.io/icu/userguide/format_parse/datetime/#datetime-format-syntax
+         * ICU User Guide: https://unicode-org.github.io/icu/userguide/
+         * ICU Formatting Dates and Times: https://unicode-org.github.io/icu/userguide/format_parse/datetime/
+         */
+
+        /**
+         * This parameters
+         * are used to format date with the locale
+         * when the pattern is null
+         * Doc: https://unicode-org.github.io/icu/userguide/format_parse/datetime/#producing-normal-date-formats-for-a-locale
+         *
+         * They may be null by the way.
+         *
+         */
+        $dateType = self::DATE_FORMATTER_TYPE;
+        $timeType = self::TIME_FORMATTER_TYPE;
+        if ($pattern !== null) {
+            $normalFormat = explode(" ", $pattern);
+            if (sizeof($normalFormat) === 2) {
+                try {
+                    $dateType = self::getInternationalFormatter($normalFormat[0]);
+                    $timeType = self::getInternationalFormatter($normalFormat[1]);
+                    $pattern = null;
+                } catch (ExceptionNotFound $e) {
+                    // ok
+                }
+            }
+        }
+
+        /**
+         * Formatter instantiation
+         */
+        $formatter = datefmt_create(
+            $locale,
+            $dateType,
+            $timeType,
+            $this->dateTime->getTimezone(),
+            IntlDateFormatter::GREGORIAN,
+            $pattern
+        );
+        $formatted = datefmt_format($formatter, $this->dateTime);
+        if ($formatted === false) {
+            if ($locale === null) {
+                $locale = "";
+            }
+            if ($pattern === null) {
+                $pattern = "";
+            }
+            throw new ExceptionBadSyntax("Unable to format the date with the pattern ($pattern) and locale ($locale)");
+        }
+        return $formatted;
+    }
 
 
 }

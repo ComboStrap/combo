@@ -97,7 +97,7 @@ class Vignette
                 $parentPage = $this->page->getParentPage();
                 if ($parentPage !== null) {
                     $yCategory = 120;
-                    $categoryFontSize = 35;
+                    $categoryFontSize = 40;
                     $lineToPrint = $parentPage->getNameOrDefault();
                     imagettftext($vignetteImageHandler, $categoryFontSize, 0, $x, $yCategory, $mutedGdColor, $normalFont, $lineToPrint);
                 }
@@ -106,7 +106,7 @@ class Vignette
                  * Title
                  */
                 $title = trim($this->page->getTitleOrDefault());
-                $titleFontSize = 47;
+                $titleFontSize = 55;
                 $yTitleStart = 210;
                 $yTitleActual = $yTitleStart;
                 $lineSpace = 25;
@@ -149,7 +149,7 @@ class Vignette
                  * Date
                  */
                 $yDate = $yTitleStart + 3 * ($titleFontSize + $lineSpace) + 2 * $lineSpace;
-                $dateFontSize = 25;
+                $dateFontSize = 30;
                 $mutedGdColor = imagecolorallocate($vignetteImageHandler, $mutedRgb->getRed(), $mutedRgb->getGreen(), $mutedRgb->getBlue());
                 $locale = Locale::createForPage($this->page)->getValueOrDefault();
                 try {

@@ -82,20 +82,23 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
                 $mediaId = $event->data['media'];
                 $cacheKey = $mediaId;
                 $cache = new dokuwiki\Cache\Cache($cacheKey, ".vignette.png");
-                if (!$cache->useCache()) {
+//                if (!$cache->useCache()) {
 
-                    $im = imagecreate(200, 200);
+                    $im = imagecreate(1200, 600);
                     try {
+                        // The first call to imagecolorallocate() fills the background color in palette-based images
+                        imagecolorallocate($im, 255, 255, 255);
                         $orange = imagecolorallocate($im, 220, 210, 60);
+                        $black = imagecolorallocate($im, 0, 0, 0);
                         $string = "$mediaId";
                         $px = (imagesx($im) - 7.5 * strlen($string)) / 2;
-                        imagestring($im, 3, $px, 9, $string, $orange);
+                        imagestring($im, 3, $px, 9, $string, $black);
                         imagepng($im, $cache->cache);
                     } finally {
                         imagedestroy($im);
                     }
 
-                }
+//                }
                 $event->data['file'] = $cache->cache;
                 $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
                 $event->data['statusmessage'] = '';

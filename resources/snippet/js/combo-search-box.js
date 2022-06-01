@@ -85,7 +85,7 @@ window.combos = (function (combos) {
                 }
             );
 
-            this.searchBoxElement.addEventListener("input", function () {
+            this.searchBoxElement.addEventListener("input",
                 combos.debounce(
                     async function () {
                         let searchTerm = searchBoxInstance.searchBoxElement.value;
@@ -93,8 +93,8 @@ window.combos = (function (combos) {
                     },
                     searchBoxInstance.debounceInterval,
                     searchBoxInstance.debounceLeadingExecution
-                )();
-            });
+                )
+            );
 
             this.searchBoxElement.addEventListener("blur", function (event) {
                 let relatedTarget = event.relatedTarget;
@@ -108,7 +108,7 @@ window.combos = (function (combos) {
                         }
                     }
                 }
-                searchBoxInstance.hideAutoComplete()
+                searchBoxInstance.hideAutoComplete();
             });
 
 
@@ -126,6 +126,7 @@ window.combos = (function (combos) {
             if (searchTerm.length < 3) {
                 return;
             }
+            this.hideAutoComplete();
             let data = await this.searchFunction(searchTerm);
             this.searchResultContainer.classList.add("show");
             for (let index in data) {

@@ -4,6 +4,19 @@ namespace ComboStrap;
 
 use dokuwiki\Cache\Cache;
 
+/**
+ *
+ * Vignette:
+ * http://host/lib/exe/fetch.php?media=id:of:page.png&drive=page-vignette
+ * where:
+ *   * 'id:of:page' is the page wiki id
+ *   * 'png' is the format (may be jpeg or webp)
+ *
+ * Example:
+ * http://combo.nico.lan/lib/exe/fetch.php?media=howto:getting_started:getting_started.png&drive=page-vignette
+ * http://combo.nico.lan/lib/exe/fetch.php?media=howto:howto.webp&drive=page-vignette
+ *
+ */
 class Vignette
 {
 
@@ -172,8 +185,6 @@ class Vignette
                     $gdOriginalLogo = $this->getGdImageHandler($imagePath);
                     $targetLogoWidth = 120;
                     $targetLogoHandler = imagescale($gdOriginalLogo, $targetLogoWidth);
-                    imageAlphaBlending($targetLogoHandler, true);
-                    imageSaveAlpha($targetLogoHandler, true);
                     imagecopy($vignetteImageHandler, $targetLogoHandler, 950, 130, 0, 0, $targetLogoWidth, imagesy($targetLogoHandler));
 
                 } catch (ExceptionNotFound $e) {
@@ -239,13 +250,6 @@ class Vignette
         switch ($extension) {
             case "png":
                 $gdLogo = imagecreatefrompng($imagePath->toPathString());
-                /**
-                 * What the fuck ?
-                 * First comment at https://www.php.net/manual/en/function.imagecreatefrompng.php
-                 * If you're trying to load a translucent png-24 image but are finding an absence of transparency (like it's black), you need to enable alpha channel AND save the setting
-                 */
-                imageAlphaBlending($gdLogo, true);
-                imageSaveAlpha($gdLogo, true);
                 break;
             case "jpg":
             case "jpeg":

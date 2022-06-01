@@ -100,7 +100,7 @@ window.combos = (function (combos) {
                 let relatedTarget = event.relatedTarget;
                 // Only if it's not a node of the search form
                 // ie deleting show will prevent click navigation from a page list suggestion
-                if (relatedTarget !== null) {
+                if (relatedTarget !== null && relatedTarget instanceof Element) {
                     let form = relatedTarget.closest("form");
                     if (form !== null) {
                         if (form.classList.contains("search")) {
@@ -129,6 +129,7 @@ window.combos = (function (combos) {
             this.hideAutoComplete();
             let data = await this.searchFunction(searchTerm);
             this.searchResultContainer.classList.add("show");
+            let searchBoxInstance = this;
             for (let index in data) {
                 if (!data.hasOwnProperty(index)) {
                     continue;
@@ -138,6 +139,9 @@ window.combos = (function (combos) {
                 li.classList.add("dropdown-item");
                 li.setAttribute("tabindex", "1");
                 li.innerHTML = anchor;
+                li.addEventListener("blur", function(){
+                    searchBoxInstance.hideAutoComplete();
+                });
                 this.searchResultContainer.appendChild(li);
             }
 

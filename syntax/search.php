@@ -106,7 +106,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                      * is used
                      */
                     $dokuBase = DOKU_BASE;
-                    PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::SNIPPET_ID,"var DOKU_BASE='$dokuBase';");
+                    PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::SNIPPET_ID, "var DOKU_BASE='$dokuBase';");
                     PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::SNIPPET_ID);
 
                     $parameters = $data[PluginUtility::ATTRIBUTES];
@@ -142,16 +142,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
 <input type="hidden" name="do" value="search" />
 <input type="hidden" name="id" value="$id" />
 <label class="$visuallyHidden" for="$inputSearchId">Search Term</label>
-<input
-    id="$inputSearchId"
-    name="q"
-    type="text"
-    $valueKeyProp
-    placeholder="{$lang['btn_search']}..."
-    autocomplete="$browserAutoComplete"
-    accesskey="f"
-    class="edit form-control"
-    title="[F]"/>
+<input class="edit form-control" type="text" id="$inputSearchId"  name="q" $valueKeyProp placeholder="{$lang['btn_search']}... (Alt+Shift+F)" autocomplete="$browserAutoComplete" accesskey="f" title="[F]"/>
 </form>
 EOF;
                     break;

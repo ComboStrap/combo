@@ -37,18 +37,38 @@ window.combos = (function (combos) {
             return this;
         }
 
+        /**
+         * Permits to pass a specific popper
+         * @param popper
+         * @returns {Window.combos.SearchBox}
+         */
+        setPopper(popper) {
+            this.popper = popper;
+            return this;
+        }
+
+        getPopper() {
+            if (this.popper !== null) {
+                return this.popper;
+            }
+            if (typeof Popper != 'undefined') {
+                return Popper
+            }
+            throw Error("Popper was not found");
+        }
+
         init() {
 
             let searchBoxInstance = this;
             this.searchBoxElement = document.getElementById(this.idSelector);
-            if(this.searchBoxElement===null){
+            if (this.searchBoxElement === null) {
                 throw Error(`The search box ${this.idSelector} was not found`);
             }
             this.autoCompletionUlElement = document.createElement("ul");
             this.autoCompletionUlElement.classList.add("dropdown-menu");
-            this.searchBoxElement.insertAdjacentElement('afterend',this.autoCompletionUlElement);
+            this.searchBoxElement.insertAdjacentElement('afterend', this.autoCompletionUlElement);
 
-            this.popperInstance = Popper.createPopper(
+            this.popperInstance = this.getPopper().createPopper(
                 this.searchBoxElement,
                 this.autoCompletionUlElement,
                 {

@@ -1,6 +1,13 @@
 // noinspection ES6ConvertVarToLetConst
 var combos = (function (module){
 
+    /**
+     *
+     * @param callBack - the function to debounce
+     * @param interval - in ms
+     * @param leadingExecution - if true, the execution happens before the interval
+     * @returns {(function(): void)|*}
+     */
     module.debounce = function (callBack, interval, leadingExecution) {
 
         // the schedule identifier, if it's not null/undefined, a callBack function was scheduled

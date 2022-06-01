@@ -1,51 +1,10 @@
+
+
 window.addEventListener('load', function () {
 
-    let searchBox = document.getElementById("internal-search-box");
-    let autoCompletionUlElement = searchBox.nextElementSibling;
-    const popperInstance = Popper.createPopper(
-        searchBox,
-        autoCompletionUlElement,
-        {
-            modifiers: [
-                {
-                    name: 'offset', // to be below the box-shadow on focus
-                    options: {
-                        offset: [0, 4],
-                    },
-                },
-            ]
-        }
-    );
 
-    searchBox.addEventListener("input", combos.debounce(
-        async function () {
-            await buildAutoCompletionList(this)
-        },
-        500
-    ));
+    let searchFunction = async function (searchTerm) {
 
-    searchBox.addEventListener("blur", function (event) {
-        let relatedTarget = event.relatedTarget;
-        // Only if it's not a node of the search form
-        // ie deleting show will prevent click navigation from a page list suggestion
-        if (relatedTarget !== null) {
-            let form = relatedTarget.closest("form");
-            if (form !== null) {
-                if (form.classList.contains("search")) {
-                    return;
-                }
-            }
-        }
-        autoCompletionUlElement.classList.remove("show");
-    });
-
-
-    let buildAutoCompletionList = async function (searchBox) {
-
-        let searchTerm = searchBox.value;
-        if (searchTerm.length < 3) {
-            return;
-        }
         let formData = new URLSearchParams();
         formData.append('call', 'combo-search');
         formData.append('q', searchTerm);
@@ -57,25 +16,11 @@ window.addEventListener('load', function () {
                     'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
                 },
             });
-        let data = await response.json();
-        while (autoCompletionUlElement.firstChild) {
-            autoCompletionUlElement.firstChild.remove()
-        }
-        autoCompletionUlElement.classList.add("show");
-        await popperInstance.update();
-        for (let index in data) {
-            if (!data.hasOwnProperty(index)) {
-                continue;
-            }
-            let anchor = data[index];
-            let li = document.createElement("li");
-            li.classList.add("dropdown-item");
-            li.setAttribute("tabindex", "0");
-            li.innerHTML = anchor;
-            autoCompletionUlElement.append(li);
-        }
+        return response.json();
 
     }
+    combos.searchBox
+        .create("internal-search-box", searchFunction)
+        .init();
 
-})
-;
+});

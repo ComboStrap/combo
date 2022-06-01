@@ -15,6 +15,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
 
     const SNIPPET_ID = "search";
     const COMBO_DEBOUNCE = "combo-debounce";
+    const COMBO_SEARCH_BOX = "combo-search-box";
 
     function getType(): string
     {
@@ -97,6 +98,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                      * Add the debounce dependency first
                      */
                     PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::COMBO_DEBOUNCE);
+                    PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::COMBO_SEARCH_BOX);
 
                     /**
                      * Doku Base is not defined when the
@@ -148,7 +150,6 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
     id="$inputSearchId"
     name="q"
     type="text"
-    tabindex="1"
     $valueKeyProp
     placeholder="{$lang['btn_search']}..."
     autocomplete="$browserAutoComplete"

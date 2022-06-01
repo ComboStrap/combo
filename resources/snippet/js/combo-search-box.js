@@ -5,6 +5,8 @@ window.combos = (function (combos) {
         debounceInterval = 500;
         debounceLeadingExecution = false;
         searchResultContainer;
+        containerClass = `combo-search-box-container`;
+        itemClass = `combo-search-box-item`;
 
         /**
          *
@@ -60,10 +62,24 @@ window.combos = (function (combos) {
         init() {
 
             let searchBoxInstance = this;
-            this.searchBoxElement = document.getElementById(this.idSelector);
-            if (this.searchBoxElement === null) {
-                throw Error(`The search box ${this.idSelector} was not found`);
+            let elementSelected = document.getElementById(this.idSelector);
+            if (elementSelected === null) {
+                throw Error(`No element was found with the selector ${this.idSelector}`);
             }
+            if (elementSelected instanceof HTMLInputElement) {
+                this.searchBoxElement = elementSelected;
+                this.searchBoxContainer = document.createElement("div");
+                this.searchBoxElement.insertAdjacentElement('afterend', this.searchBoxContainer);
+                this.searchBoxContainer.appendChild(this.searchBoxElement);
+            } else {
+                this.searchBoxContainer = elementSelected;
+                this.searchBoxElement = this.searchBoxContainer.querySelector("input");
+                if (this.searchBoxElement === null) {
+                    throw Error(`No search box input element found inside the element selected with the selector ${this.idSelector}`);
+                }
+            }
+            this.searchBoxContainer.classList.add(this.containerClass);
+
             this.searchResultContainer = document.createElement("ul");
             this.searchResultContainer.classList.add("dropdown-menu");
             this.searchBoxElement.insertAdjacentElement('afterend', this.searchResultContainer);
@@ -85,6 +101,9 @@ window.combos = (function (combos) {
                 }
             );
 
+            /**
+             * Build the list when typing
+             */
             this.searchBoxElement.addEventListener("input",
                 combos.debounce(
                     async function () {
@@ -95,26 +114,33 @@ window.combos = (function (combos) {
                     searchBoxInstance.debounceLeadingExecution
                 )
             );
+            /**
+             * Build the list in focus if there is any value already
+             */
+            this.searchBoxElement.addEventListener("focus",
+                async function () {
+                    let searchTerm = searchBoxInstance.searchBoxElement.value;
+                    await searchBoxInstance.buildAutoCompletionList(searchTerm)
+                }
+            );
 
             this.searchBoxElement.addEventListener("blur", function (event) {
-                let relatedTarget = event.relatedTarget;
-                // Only if it's not a node of the search form
-                // ie deleting show will prevent click navigation from a page list suggestion
-                if (relatedTarget !== null && relatedTarget instanceof Element) {
-                    let form = relatedTarget.closest("form");
-                    if (form !== null) {
-                        if (form.classList.contains("search")) {
-                            return;
-                        }
-                    }
-                }
-                searchBoxInstance.hideAutoComplete();
+                searchBoxInstance.hideAutoComplete(event.relatedTarget);
             });
 
 
         }
 
-        hideAutoComplete() {
+        hideAutoComplete(relatedTarget) {
+            // Only if it's not an item of the list
+            // ie deleting the item will prevent click navigation from a page list suggestion
+            if (relatedTarget !== null && relatedTarget instanceof Element) {
+                // the target may be a link inside a list item
+                let closestLi = relatedTarget.closest(`li`);
+                if (closestLi != null && closestLi.classList.contains(this.itemClass)) {
+                    return;
+                }
+            }
             this.searchResultContainer.classList.remove("show");
             while (this.searchResultContainer.firstChild) {
                 this.searchResultContainer.firstChild.remove()
@@ -137,11 +163,14 @@ window.combos = (function (combos) {
                 let anchor = data[index];
                 let li = document.createElement("li");
                 li.classList.add("dropdown-item");
-                li.setAttribute("tabindex", "1");
+                li.classList.add(this.itemClass);
                 li.innerHTML = anchor;
-                li.addEventListener("blur", function(){
-                    searchBoxInstance.hideAutoComplete();
-                });
+                // Anchors are added in the tab order, no need to add tabindex - 1
+                li.querySelectorAll("a").forEach(anchor => {
+                    anchor.addEventListener("blur", function (event) {
+                        searchBoxInstance.hideAutoComplete(event.relatedTarget);
+                    });
+                })
                 this.searchResultContainer.appendChild(li);
             }
 
@@ -152,5 +181,6 @@ window.combos = (function (combos) {
 
     return combos;
 
-})(window.combos || {});
+})
+(window.combos || {});
 

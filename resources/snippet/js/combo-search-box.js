@@ -5,7 +5,6 @@ window.combos = (function (combos) {
         debounceInterval = 500;
         debounceLeadingExecution = false;
         searchResultContainer;
-        containerClass = `combo-search-box-container`;
         itemClass = `combo-search-box-item`;
 
         /**
@@ -25,17 +24,6 @@ window.combos = (function (combos) {
 
         setDebounceInterval(debounceInterval) {
             this.debounceInterval = debounceInterval;
-            return this;
-        }
-
-        /**
-         * In test in node, the execution should be immediate
-         * This function permits to set the immediate execution
-         * @param debounceLeadingExecution
-         * @returns {Window.combos.SearchBox}
-         */
-        setDebounceLeadingExecution(debounceLeadingExecution) {
-            this.debounceLeadingExecution = debounceLeadingExecution;
             return this;
         }
 
@@ -68,17 +56,9 @@ window.combos = (function (combos) {
             }
             if (elementSelected instanceof HTMLInputElement) {
                 this.searchBoxElement = elementSelected;
-                this.searchBoxContainer = document.createElement("div");
-                this.searchBoxElement.insertAdjacentElement('afterend', this.searchBoxContainer);
-                this.searchBoxContainer.appendChild(this.searchBoxElement);
             } else {
-                this.searchBoxContainer = elementSelected;
-                this.searchBoxElement = this.searchBoxContainer.querySelector("input");
-                if (this.searchBoxElement === null) {
-                    throw Error(`No search box input element found inside the element selected with the selector ${this.idSelector}`);
-                }
+                throw Error(`No search box input element found with the selector ${this.idSelector}`);
             }
-            this.searchBoxContainer.classList.add(this.containerClass);
 
             this.searchResultContainer = document.createElement("ul");
             this.searchResultContainer.classList.add("dropdown-menu");

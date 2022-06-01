@@ -4,7 +4,7 @@ window.combos = (function (combos) {
 
         debounceInterval = 500;
         debounceLeadingExecution = false;
-
+        searchResultContainer;
 
         /**
          *
@@ -48,7 +48,7 @@ window.combos = (function (combos) {
         }
 
         getPopper() {
-            if (this.popper !== null) {
+            if (typeof this.popper != 'undefined') {
                 return this.popper;
             }
             if (typeof Popper != 'undefined') {
@@ -64,13 +64,14 @@ window.combos = (function (combos) {
             if (this.searchBoxElement === null) {
                 throw Error(`The search box ${this.idSelector} was not found`);
             }
-            this.autoCompletionUlElement = document.createElement("ul");
-            this.autoCompletionUlElement.classList.add("dropdown-menu");
-            this.searchBoxElement.insertAdjacentElement('afterend', this.autoCompletionUlElement);
+            this.searchResultContainer = document.createElement("ul");
+            this.searchResultContainer.classList.add("dropdown-menu");
+            this.searchBoxElement.insertAdjacentElement('afterend', this.searchResultContainer);
+
 
             this.popperInstance = this.getPopper().createPopper(
                 this.searchBoxElement,
-                this.autoCompletionUlElement,
+                this.searchResultContainer,
                 {
                     placement: 'bottom',
                     modifiers: [
@@ -84,7 +85,7 @@ window.combos = (function (combos) {
                 }
             );
 
-            this.searchBoxElement.addEventListener("input",
+            this.searchBoxElement.addEventListener("input", function () {
                 combos.debounce(
                     async function () {
                         let searchTerm = searchBoxInstance.searchBoxElement.value;
@@ -92,7 +93,8 @@ window.combos = (function (combos) {
                     },
                     searchBoxInstance.debounceInterval,
                     searchBoxInstance.debounceLeadingExecution
-                ));
+                )();
+            });
 
             this.searchBoxElement.addEventListener("blur", function (event) {
                 let relatedTarget = event.relatedTarget;
@@ -113,9 +115,9 @@ window.combos = (function (combos) {
         }
 
         hideAutoComplete() {
-            this.autoCompletionUlElement.classList.remove("show");
-            while (this.autoCompletionUlElement.firstChild) {
-                this.autoCompletionUlElement.firstChild.remove()
+            this.searchResultContainer.classList.remove("show");
+            while (this.searchResultContainer.firstChild) {
+                this.searchResultContainer.firstChild.remove()
             }
         }
 
@@ -125,8 +127,7 @@ window.combos = (function (combos) {
                 return;
             }
             let data = await this.searchFunction(searchTerm);
-            this.autoCompletionUlElement.classList.add("show");
-            await this.popperInstance.update();
+            this.searchResultContainer.classList.add("show");
             for (let index in data) {
                 if (!data.hasOwnProperty(index)) {
                     continue;
@@ -136,10 +137,12 @@ window.combos = (function (combos) {
                 li.classList.add("dropdown-item");
                 li.setAttribute("tabindex", "1");
                 li.innerHTML = anchor;
-                this.autoCompletionUlElement.append(li);
+                this.searchResultContainer.appendChild(li);
             }
 
+            await this.popperInstance.update();
         }
+
     };
 
     return combos;

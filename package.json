@@ -15,14 +15,15 @@
         "clean": "turbo run clean && rm -rf node_modules"
     },
     "devDependencies": {
-        "@testing-library/dom": "8.11",
-        "@testing-library/jest-dom": "5.15",
-        "@testing-library/user-event": "13.5",
-        "jest": "27.3",
-        "jsdom": ">=16.7",
-        "turbo": "^1.2.9",
         "@babel/core": "7.16",
         "@babel/preset-env": "7.16",
-        "babel-jest": "27.3"
+        "@testing-library/dom": ">=8.11",
+        "@testing-library/jest-dom": ">=5.15",
+        "@testing-library/user-event": ">=13.5",
+        "babel-jest": "27.3",
+        "jest": ">=28.1.0",
+        "jest-environment-jsdom": ">=28.1.0",
+        "jsdom": ">=19.0",
+        "turbo": "^1.2.9"
     }
 }

@@ -1,5 +1,5 @@
 // noinspection ES6ConvertVarToLetConst
-var combos = (function (module){
+window.combos = (function (module){
 
     /**
      *
@@ -8,7 +8,7 @@ var combos = (function (module){
      * @param leadingExecution - if true, the execution happens before the interval
      * @returns {(function(): void)|*}
      */
-    module.debounce = function (callBack, interval, leadingExecution) {
+    module.debounce = function (callBack, interval, leadingExecution = false) {
 
         // the schedule identifier, if it's not null/undefined, a callBack function was scheduled
         let timerId;
@@ -48,7 +48,7 @@ var combos = (function (module){
     }
 
     return module;
-}(combos || {}));
+}(window.combos || {}));
 
 
 

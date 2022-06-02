@@ -85,7 +85,10 @@ class ModificationDate extends MetadataDateTime
         return false;
     }
 
-    public function getDefaultValue(): ?DateTime
+    /**
+     * @throws ExceptionNotFound - if the file does not exists
+     */
+    public function getDefaultValue(): DateTime
     {
 
         try {

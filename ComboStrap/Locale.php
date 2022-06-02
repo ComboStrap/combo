@@ -30,12 +30,12 @@ class Locale extends MetadataText
         return "Locale";
     }
 
-    public function getValue(): ?string
+    public function getValue(): string
     {
 
         $resourceCombo = $this->getResource();
         if (!($resourceCombo instanceof Page)) {
-            return null;
+            throw new ExceptionNotFound("The locale is only implemented for page resources");
         }
         $lang = $resourceCombo->getLangOrDefault();
         if (!empty($lang)) {
@@ -46,7 +46,8 @@ class Locale extends MetadataText
             }
             return $lang . "_" . strtoupper($country);
         }
-        return null;
+        throw new ExceptionNotFound("No locale was found for the resource ($resourceCombo)");
+
     }
 
 

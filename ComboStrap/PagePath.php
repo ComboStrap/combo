@@ -31,7 +31,7 @@ class PagePath extends MetadataWikiPath
         return null;
     }
 
-    public function getValue(): ?string
+    public function getValue(): string
     {
         return $this->getResource()->getPath()->toPathString();
     }

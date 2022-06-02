@@ -39,7 +39,7 @@ class CacheExpirationDate extends MetadataDateTime
         }
 
         $cacheIntervalInSecond = Site::getCacheTime();
-        if($cacheIntervalInSecond===-1){
+        if ($cacheIntervalInSecond === -1) {
             return null;
         }
 
@@ -57,22 +57,27 @@ class CacheExpirationDate extends MetadataDateTime
     }
 
 
-    public function getValue(): ?DateTime
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getValue(): DateTime
     {
 
-        $value = parent::getValue();
-        if ($value === null) {
+        try {
+            return parent::getValue();
+        } catch (ExceptionNotFound $e) {
             $cronExpression = $this->getResource()->getCacheExpirationFrequency();
-            if ($cronExpression !== null) {
-                try {
-                    $value = Cron::getDate($cronExpression);
-                    parent::setValue($value);
-                } catch (ExceptionCompile $e) {
-                    // nothing, the cron expression is tested when set
-                }
+            if ($cronExpression === null) {
+                throw $e;
+            }
+            try {
+                $value = Cron::getDate($cronExpression);
+                parent::setValue($value);
+                return $value;
+            } catch (ExceptionBadArgument $badArgument) {
+                throw $e;
             }
         }
-        return $value;
 
     }
 

@@ -775,16 +775,19 @@ class Page extends ResourceComboAbs
 
     /**
      *
-     * @return null|DateTime
+     * @return DateTime
      */
     public
-    function getModifiedTime(): ?\DateTime
+    function getModifiedTime(): DateTime
     {
         return $this->modifiedTime->getValueFromStore();
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
-    function getModifiedTimeOrDefault(): ?\DateTime
+    function getModifiedTimeOrDefault(): DateTime
     {
         return $this->modifiedTime->getValueFromStoreOrDefault();
     }
@@ -885,8 +888,11 @@ class Page extends ResourceComboAbs
     }
 
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
-    function getPublishedTime(): ?DateTime
+    function getPublishedTime(): DateTime
     {
         return $this->publishedDate->getValueFromStore();
     }
@@ -894,9 +900,10 @@ class Page extends ResourceComboAbs
 
     /**
      * @return DateTime
+     * @throws ExceptionNotFound
      */
     public
-    function getPublishedElseCreationTime(): ?DateTime
+    function getPublishedElseCreationTime(): DateTime
     {
         return $this->publishedDate->getValueFromStoreOrDefault();
     }
@@ -905,7 +912,11 @@ class Page extends ResourceComboAbs
     public
     function isLatePublication(): bool
     {
-        $dateTime = $this->getPublishedElseCreationTime();
+        try {
+            $dateTime = $this->getPublishedElseCreationTime();
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
         return $dateTime > new DateTime('now');
     }
 
@@ -1026,8 +1037,11 @@ class Page extends ResourceComboAbs
         return $this;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
-    function getName(): ?string
+    function getName(): string
     {
 
         return $this->pageName->getValueFromStore();
@@ -1037,7 +1051,15 @@ class Page extends ResourceComboAbs
     public
     function getNameOrDefault(): string
     {
-        return $this->pageName->getValueFromStoreOrDefault();
+
+        try {
+            return $this->pageName->getValueFromStoreOrDefault();
+        } catch (ExceptionNotFound $e) {
+            // Internal error: The default name is the path
+            LogUtility::error("Internal Error: The page name or default was not returned.");
+            return $this->getPath()->getLastNameWithoutExtension();
+        }
+
     }
 
     /**
@@ -1117,7 +1139,7 @@ class Page extends ResourceComboAbs
         $array["url"] = $this->getCanonicalUrl();
         $array["now"] = Iso8601Date::createFromNow()->toString();
         $parentPage = $this->getParentPage();
-        if($parentPage!==null) {
+        if ($parentPage !== null) {
             $array["parent_name"] = $parentPage->getNameOrDefault();
             $array["parent_title"] = $parentPage->getTitleOrDefault();
             $array["parent_path"] = $parentPage->getPath()->toPathString();

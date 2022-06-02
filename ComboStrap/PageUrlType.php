@@ -46,7 +46,7 @@ class PageUrlType extends MetadataText
             ->setResource($page);
     }
 
-    public function getValue(): ?string
+    public function getValue(): string
     {
 
         $resourceCombo = $this->getResource();

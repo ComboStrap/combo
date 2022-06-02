@@ -22,9 +22,12 @@ abstract class MetadataText extends Metadata
         return DataType::TEXT_TYPE_VALUE;
     }
 
-    public function getValue(): ?string
+    public function getValue(): string
     {
         $this->buildCheck();
+        if($this->value===null){
+            throw new ExceptionNotFound("The value was not found for the metadata ($this)");
+        }
         return $this->value;
     }
 

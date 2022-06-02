@@ -40,6 +40,8 @@ class LdJson extends MetadataJson
     public const DATE_PUBLISHED_KEY = "datePublished";
     public const DATE_MODIFIED_KEY = "dateModified";
 
+    public const CANONICAL = action_plugin_combo_metagoogle::CANONICAL;
+
     public static function createForPage(Page $page): LdJson
     {
         return (new LdJson())
@@ -161,7 +163,7 @@ class LdJson extends MetadataJson
                 // Deprecated, old organization syntax
                 if ($resourceCombo->getTypeOrDefault() === PageType::ORGANIZATION_TYPE) {
                     $store = $this->getReadStore();
-                    $metadata = $store->getFromPersistentName( self::OLD_ORGANIZATION_PROPERTY);
+                    $metadata = $store->getFromPersistentName(self::OLD_ORGANIZATION_PROPERTY);
                     if ($metadata !== null) {
                         $organization = array(
                             "organization" => $metadata
@@ -186,15 +188,16 @@ class LdJson extends MetadataJson
     public function getLdJsonMergedWithDefault()
     {
 
-        $value = $this->getValue();
-        $actualValueAsArray = null;
-        if ($value !== null) {
+        try {
+            $value = $this->getValue();
             try {
                 $actualValueAsArray = Json::createFromString($value)->toArray();
             } catch (ExceptionCompile $e) {
-                LogUtility::msg("The string value is not a valid Json. Value: $value");
+                LogUtility::error("The string value is not a valid Json. Value: $value", self::CANONICAL);
                 return $value;
             }
+        } catch (ExceptionNotFound $e) {
+            $actualValueAsArray = [];
         }
         $actualValueAsArray = $this->mergeWithDefaultValueAndGet($actualValueAsArray);
         return Json::createFromArray($actualValueAsArray)->toPrettyJsonString();
@@ -301,16 +304,28 @@ class LdJson extends MetadataJson
                     "@type" => $schemaType,
                     'url' => $page->getAbsoluteCanonicalUrl(),
                     "headline" => $page->getTitleOrDefault(),
-                    self::DATE_PUBLISHED_KEY => $page->getPublishedElseCreationTime()->format(Iso8601Date::getFormat())
+
                 );
+
+                try {
+                    $ldJson[self::DATE_PUBLISHED_KEY] = $page
+                        ->getPublishedElseCreationTime()
+                        ->format(Iso8601Date::getFormat());
+                } catch (ExceptionNotFound $e) {
+                    // Internal error, the page should exist
+                    LogUtility::error("Internal Error: We were unable to define the publication date for the page ($page)", self::CANONICAL);
+                }
 
                 /**
                  * Modified Time
                  */
-                $modifiedTime = $page->getModifiedTimeOrDefault();
-                if ($modifiedTime != null) {
+                try {
+                    $modifiedTime = $page->getModifiedTimeOrDefault();
                     $ldJson[self::DATE_MODIFIED_KEY] = $modifiedTime->format(Iso8601Date::getFormat());
-                };
+                } catch (ExceptionNotFound $e) {
+                    // Internal error, the page should exist
+                    LogUtility::error("Internal Error: We were unable to define the modification date for the page ($page)", self::CANONICAL);
+                }
 
                 /**
                  * Publisher info
@@ -407,7 +422,6 @@ class LdJson extends MetadataJson
         }
         return $ldJson;
     }
-
 
 
 }

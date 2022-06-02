@@ -4,6 +4,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
@@ -109,11 +110,22 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         switch ($pageType) {
             case PageType::ARTICLE_TYPE:
                 // https://ogp.me/#type_article
-                $facebookMeta["article:published_time"] = $page->getPublishedElseCreationTime()->format(DATE_ISO8601);
-                $modifiedTime = $page->getModifiedTimeOrDefault();
-                if ($modifiedTime !== null) {
-                    $facebookMeta["article:modified_time"] = $modifiedTime->format(DATE_ISO8601);
+                try {
+                    $facebookMeta["article:published_time"] = $page->getPublishedElseCreationTime()->format(DATE_ISO8601);
+                } catch (ExceptionNotFound $e) {
+                    // Internal error, the page should exist
+                    LogUtility::error("Internal Error: We were unable to define the publication date for the page ($page)", self::CANONICAL);
+
                 }
+                try {
+                    $modifiedTime = $page->getModifiedTimeOrDefault();
+                    $facebookMeta["article:modified_time"] = $modifiedTime->format(DATE_ISO8601);
+                } catch (ExceptionNotFound $e) {
+                    // Internal error, the page should exist
+                    LogUtility::error("Internal Error: We were unable to define the modification date for the page ($page)", self::CANONICAL);
+                }
+
+
                 $facebookMeta["og:type"] = $pageType;
                 break;
             default:

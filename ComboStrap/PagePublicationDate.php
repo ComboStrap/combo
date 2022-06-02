@@ -13,6 +13,8 @@
 namespace ComboStrap;
 
 
+use DateTime;
+
 /**
  *
  * Publication Date
@@ -115,7 +117,7 @@ class PagePublicationDate extends MetadataDateTime
         return true;
     }
 
-    public function getDefaultValue(): ?\DateTime
+    public function getDefaultValue(): DateTime
     {
         $lastName = $this->getResource()->getPath()->getLastNameWithoutExtension();
         $result = preg_match("/(\d{4}-\d{2}-\d{2}).*/i", $lastName, $matches);

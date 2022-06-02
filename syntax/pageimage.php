@@ -6,6 +6,7 @@ use ComboStrap\ConditionalLength;
 use ComboStrap\ContextManager;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
@@ -14,6 +15,7 @@ use ComboStrap\Icon;
 use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\Mime;
 use ComboStrap\Page;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
@@ -214,7 +216,11 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                         try {
                             $selectedPageImage = $this->getMetaImage($parent, $tagAttributes);
                         } catch (ExceptionNotFound $e) {
-                            continue;
+                            try {
+                                $selectedPageImage = FirstImage::createForPage($parent)->getImageObject();
+                            } catch (ExceptionNotFound $e) {
+                                continue;
+                            }
                         }
                         break;
                     }
@@ -228,14 +234,17 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     break;
                 case self::VIGNETTE_TYPE:
 
-                    $selectedPageImage = Vignette::createForPage($page);
+                    try {
+                        $selectedPageImage = Vignette::createForPage($page);
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::error("Error while creating the vignette for the page ($page). Error: {$e->getMessage()}");
+                    }
                     break;
 
                 case self::LOGO_TYPE:
                     $selectedPageImage = Site::getLogoAsSvgImage();
                     if ($selectedPageImage === null) {
                         LogUtility::msg("No page image could be find for the page ($path)", LogUtility::LVL_MSG_INFO, self::CANONICAL);
-                        return false;
                     }
                     break;
                 case self::NONE_TYPE:

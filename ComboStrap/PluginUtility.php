@@ -77,6 +77,10 @@ class PluginUtility
      * @var string
      */
     public static $PLUGIN_NAME;
+    /**
+     * @var LocalPath
+     */
+    private static $PLUGIN_INFO_FILE;
 
 
     /**
@@ -89,6 +93,7 @@ class PluginUtility
         $pluginInfoFile = __DIR__ . '/../plugin.info.txt';
         self::$INFO_PLUGIN = confToHash($pluginInfoFile);
         self::$PLUGIN_NAME = 'ComboStrap';
+        self::$PLUGIN_INFO_FILE = LocalPath::createFromPath($pluginInfoFile);
         global $lang;
         self::$PLUGIN_LANG = $lang[self::PLUGIN_BASE_NAME];
         self::$URL_APEX = "https://" . parse_url(self::$INFO_PLUGIN['url'], PHP_URL_HOST);
@@ -1176,6 +1181,11 @@ class PluginUtility
             return DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
         }
         return $slot;
+    }
+
+    public static function getPluginInfoFile(): LocalPath
+    {
+        return self::$PLUGIN_INFO_FILE;
     }
 
 

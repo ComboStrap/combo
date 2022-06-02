@@ -70,22 +70,23 @@ class PageUrlPath extends MetadataWikiPath
         return MetaManagerForm::TAB_REDIRECTION_VALUE;
     }
 
-    public function getValue(): ?string
+    public function getValue(): string
     {
 
         $page = $this->getResource();
         if (!($page instanceof Page)) {
-            LogUtility::msg("The Url Path is not implemented for the resource type (" . $page->getType() . ")");
-            return null;
+            throw new ExceptionNotFound("The Url Path is not implemented for the resource type (" . $page->getType() . ")");
         }
 
         /**
          * Type of Url
          */
-        $urlType = PageUrlType::getOrCreateForPage($page)->getValue();
-        $urlTypeDefault = PageUrlType::getOrCreateForPage($page)->getDefaultValue();
+        $pageUrlType = PageUrlType::getOrCreateForPage($page);
+        $urlType = $pageUrlType->getValue();
+        $urlTypeDefault = $pageUrlType->getDefaultValue();
         if ($urlType === $urlTypeDefault) {
-            return null;
+            // not sure why ? may be to not store the value if it has the same default
+            throw new ExceptionNotFound("Same value as default");
         }
         return $this->getUrlPathFromType($urlType);
 

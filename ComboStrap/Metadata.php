@@ -684,13 +684,19 @@ abstract class Metadata
 
     /**
      * @return mixed - the memory value
+     * @throws ExceptionNotFound
      */
     public abstract function getValue();
 
+    /**
+     * @return mixed
+     * @throws ExceptionNotFound
+     */
     public abstract function getDefaultValue();
 
     /**
      * @return mixed - set the memory value from the store and return ut
+     * @throws ExceptionNotFound
      */
     public function getValueFromStore()
     {
@@ -699,19 +705,30 @@ abstract class Metadata
     }
 
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public function getValueFromStoreOrDefault()
     {
         $this->buildFromStoreValue($this->getReadStore()->get($this));
         return $this->getValueOrDefault();
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public function getValueOrDefault()
     {
 
-        $value = $this->getValue();
-        if ($value === null || $value === "") {
+        try {
+            $value = $this->getValue();
+            if ($value === "") {
+                return $this->getDefaultValue();
+            }
+        } catch (ExceptionNotFound $e) {
             return $this->getDefaultValue();
         }
+
         return $value;
 
     }

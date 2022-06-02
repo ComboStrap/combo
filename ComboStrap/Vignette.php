@@ -39,19 +39,23 @@ class Vignette extends ImageRaster
 
 
     /**
-     * @throws ExceptionBadState
+     *
+     * @throws ExceptionBadArgument
      */
     public function __construct(Page $page, Mime $mime = null)
     {
         $this->page = $page;
         $this->mime = $mime;
         if ($mime === null) {
-            $this->mime = Mime::create(Mime::PNG);
+            $this->mime = Mime::create(Mime::WEBP);
         }
         $path = $this->getPhysicalPath();
         parent::__construct($path);
     }
 
+    /**
+     * @throws ExceptionBadArgument - if the mime is not supported
+     */
     public static function createForPage(Page $page, Mime $mime = null): Vignette
     {
         return new Vignette($page, $mime);
@@ -59,14 +63,32 @@ class Vignette extends ImageRaster
 
 
     /**
-     * @throws ExceptionBadState - if the extension is not supported
+     * @throws ExceptionBadArgument - if the vignette extension is not supported
      */
     public function getPhysicalPath(): LocalPath
     {
 
         $extension = $this->mime->getExtension();
         $cache = new Cache($this->page->getPath()->toPathString(), ".vignette.{$extension}");
-        if ($cache->useCache() && $this->useCache === true) {
+
+        /**
+         * Building the cache dependencies
+         */
+        $fileDependencies = [
+            $this->page->getPath()->toLocalPath()->toPathString(),
+            PluginUtility::getPluginInfoFile()->toPathString()
+        ];
+        try {
+            $fileDependencies[] = ClassUtility::getClassPath($this)->toPathString();
+        } catch (\ReflectionException $e) {
+            // It should not happen but yeah
+            LogUtility::error("The path of the actual class cannot be determined", self::CANONICAL);
+        }
+
+        /**
+         * Can we use the cache ?
+         */
+        if ($cache->useCache(['files' => $fileDependencies]) && $this->useCache === true) {
             return LocalPath::createFromPath($cache->cache);
         }
 
@@ -101,7 +123,7 @@ class Vignette extends ImageRaster
                 $mutedGdColor = imagecolorallocate($vignetteImageHandler, $mutedRgb->getRed(), $mutedRgb->getGreen(), $mutedRgb->getBlue());
             } catch (ExceptionCompile $e) {
                 // internal error, should not happen
-                throw new ExceptionBadState("Error while getting the muted color. Error: {$e->getMessage()}", self::CANONICAL);
+                throw new ExceptionBadArgument("Error while getting the muted color. Error: {$e->getMessage()}", self::CANONICAL);
             }
 
             /**
@@ -166,11 +188,11 @@ class Vignette extends ImageRaster
             $mutedGdColor = imagecolorallocate($vignetteImageHandler, $mutedRgb->getRed(), $mutedRgb->getGreen(), $mutedRgb->getBlue());
             $locale = Locale::createForPage($this->page)->getValueOrDefault();
             try {
-                $lineToPrint = Iso8601Date::createFromDateTime($this->page->getModifiedTime())->formatLocale(null, $locale);
+                $lineToPrint = Iso8601Date::createFromDateTime($this->page->getModifiedTimeOrDefault())->formatLocale(null, $locale);
             } catch (ExceptionBadSyntax $e) {
                 // should not happen
                 LogUtility::errorIfDevOrTest("Error while formatting the modified date. Error: {$e->getMessage()}", self::CANONICAL);
-                $lineToPrint = $this->page->getModifiedTime()->format('Y-m-d H:i:s');
+                $lineToPrint = $this->page->getModifiedTimeOrDefault()->format('Y-m-d H:i:s');
             }
             imagettftext($vignetteImageHandler, $dateFontSize, 0, $x, $yDate, $mutedGdColor, $normalFont, $lineToPrint);
 
@@ -198,7 +220,7 @@ class Vignette extends ImageRaster
             switch ($extension) {
                 case "png":
                     if (!$gdInfo["PNG Support"]) {
-                        throw new ExceptionBadState("The extension($extension) is not supported by the GD library", self::CANONICAL);
+                        throw new ExceptionBadArgument("The extension ($extension) is not supported by the GD library", self::CANONICAL);
                     }
                     imagetruecolortopalette($vignetteImageHandler, false, 255);
                     imagepng($vignetteImageHandler, $cache->cache);
@@ -206,13 +228,13 @@ class Vignette extends ImageRaster
                 case "jpg":
                 case "jpeg":
                     if (!$gdInfo["JPEG Support"]) {
-                        throw new ExceptionBadState("The extension($extension) is not supported by the GD library", self::CANONICAL);
+                        throw new ExceptionBadArgument("The extension ($extension) is not supported by the GD library", self::CANONICAL);
                     }
                     imagejpeg($vignetteImageHandler, $cache->cache);
                     break;
                 case "webp":
                     if (!$gdInfo["WebP Support"]) {
-                        throw new ExceptionBadState("The extension($extension) is not supported by the GD library", self::CANONICAL);
+                        throw new ExceptionBadArgument("The extension ($extension) is not supported by the GD library", self::CANONICAL);
                     }
                     /**
                      * To True Color to avoid:
@@ -223,7 +245,7 @@ class Vignette extends ImageRaster
                     imagewebp($vignetteImageHandler, $cache->cache);
                     break;
                 default:
-                    throw new ExceptionBadState("The extension($extension) is unknown or not yet supported", self::CANONICAL);
+                    throw new ExceptionBadArgument("The extension ($extension) is unknown or not yet supported", self::CANONICAL);
             }
 
         } finally {

@@ -91,9 +91,15 @@ abstract class MetadataDateTime extends Metadata
         return Iso8601Date::createFromString($value)->getDateTime();
     }
 
-    public function getValue(): ?DateTime
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getValue(): DateTime
     {
         $this->buildCheck();
+        if ($this->dateTimeValue === null) {
+            throw new ExceptionNotFound("The resource does not have this date time ($this)");
+        }
         return $this->dateTimeValue;
     }
 

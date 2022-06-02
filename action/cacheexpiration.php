@@ -97,7 +97,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
         try {
             $shouldSlotExpire = $cacheManager->shouldSlotExpire($pageId);
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while trying to check if the slot ($pageId) should expired. Error: {$e->getMessage()}", self::CANONICAL);
+            LogUtility::error("Error while trying to check if the slot ($pageId) should expired. Error: {$e->getMessage()}", self::CANONICAL);
             return;
         }
         if ($shouldSlotExpire) {

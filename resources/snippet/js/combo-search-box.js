@@ -10,16 +10,16 @@ window.combos = (function (combos) {
         /**
          *
          * @param idSelector - an element id to select the input box
-         * @param dataFunction - the data function that should return a content
+         * @param getSuggestedItems - the data function with a search term as argument. It should return an array of elements to add to the suggested list.
          * @returns {combos.SearchBox}
          */
-        static create(idSelector, dataFunction) {
-            return new SearchBox(idSelector, dataFunction);
+        static create(idSelector, getSuggestedItems) {
+            return new SearchBox(idSelector, getSuggestedItems);
         }
 
-        constructor(idSelector, dataFunction) {
+        constructor(idSelector, getSuggestedItems) {
             this.idSelector = idSelector;
-            this.searchFunction = dataFunction;
+            this.getSuggesteditems = getSuggestedItems;
         }
 
         setDebounceInterval(debounceInterval) {
@@ -133,24 +133,26 @@ window.combos = (function (combos) {
                 return;
             }
             this.hideAutoComplete();
-            let data = await this.searchFunction(searchTerm);
+            let data = await this.getSuggesteditems(searchTerm);
             this.searchResultContainer.classList.add("show");
             let searchBoxInstance = this;
             for (let index in data) {
                 if (!data.hasOwnProperty(index)) {
                     continue;
                 }
-                let anchor = data[index];
+                let element = data[index];
+                if (!(element instanceof HTMLElement)) {
+                    throw Error("The suggested links data function should return HTML element");
+                }
                 let li = document.createElement("li");
                 li.classList.add("dropdown-item");
                 li.classList.add(this.itemClass);
-                li.innerHTML = anchor;
-                // Anchors are added in the tab order, no need to add tabindex - 1
-                li.querySelectorAll("a").forEach(anchor => {
-                    anchor.addEventListener("blur", function (event) {
-                        searchBoxInstance.hideAutoComplete(event.relatedTarget);
-                    });
-                })
+                li.appendChild(element);
+                // Note: HTML element such as anchors are added in the tab order, no need to add tabindex - 1
+                element.addEventListener("blur", function (event) {
+                    searchBoxInstance.hideAutoComplete(event.relatedTarget);
+                });
+
                 this.searchResultContainer.appendChild(li);
             }
 

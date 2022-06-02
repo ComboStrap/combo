@@ -100,16 +100,19 @@ abstract class MetadataMultiple extends Metadata
     }
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument
      */
     public function setFromStoreValue($value): Metadata
     {
         $values = $this->toArrayOrNull($value);
+        if ($values === null) {
+            return $this;
+        }
         $possibleValues = $this->getPossibleValues();
         if ($possibleValues !== null) {
             foreach ($values as $value) {
                 if (!in_array($value, $possibleValues)) {
-                    throw new ExceptionCompile("The value ($value) for ($this) is not a possible value (" . implode(",", $possibleValues) . ")", $this->getCanonical());
+                    throw new ExceptionBadArgument("The value ($value) for ($this) is not a possible value (" . implode(",", $possibleValues) . ")", $this->getCanonical());
                 }
             }
         }
@@ -118,10 +121,13 @@ abstract class MetadataMultiple extends Metadata
     }
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument
      */
     protected function toArrayOrNull($value): ?array
     {
+        /**
+         * Empty String is the default for HTML form
+         */
         if ($value === null || $value === "") {
             return null;
         }
@@ -137,12 +143,9 @@ abstract class MetadataMultiple extends Metadata
          * String
          */
         if (!is_string($value)) {
-            LogUtility::msg("The value for $this is not an array, nor a string (value: $value)");
+            throw new ExceptionBadArgument("The value for $this is not an array, nor a string (value: $value)",get_class($this));
         }
         $stringSeparator = $this->getStringSeparator();
-        if ($stringSeparator === null) {
-            LogUtility::msg("This array value is a string but has no separator defined. Value: $value");
-        }
         return explode($stringSeparator, $value);
 
     }

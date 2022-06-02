@@ -46,12 +46,14 @@ abstract class Image extends Media
     public static function createImageFromPath(Path $path, $attributes = null)
     {
 
-        $mime = $path->getMime();
+        try {
+            $mime = FileSystems::getMime($path);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionBadArgument("The file ($path) has an unknown mime, we can't verify if we support it", self::CANONICAL);
+        }
 
         if (!$mime->isImage()) {
-
-            throw new ExceptionBadArgument("The file ($path) has not been detected as being an image, media returned", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-
+            throw new ExceptionBadArgument("The file ($path) has not been detected as being an image, media returned", self::CANONICAL);
         }
         if ($mime->toString() === Mime::SVG) {
 

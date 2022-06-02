@@ -129,10 +129,42 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $align = $openingTag->getAttribute(Align::ALIGN_ATTRIBUTE);
                 if ($align !== null && strpos($align, "children") !== false) {
-                    // You can't use children align value against inline
-                    $firstChildTag = $callStack->moveToFirstChildTag();
-                    if ($firstChildTag !== false && $firstChildTag->getDisplay() == Call::INLINE_DISPLAY) {
-                        LogUtility::warning("The `children` align attribute ($align) on the box component should apply only to text/inline element. Are you sure you don't want to use a text align value ?");
+
+                    /**
+                     * Scan to see the type of content
+                     * children can be use against one inline element or more block element
+                     * Not against more than one inline children element
+                     *
+                     * Retrieve the number of inline element
+                     * ie enter, special and box unmatched
+                     */
+                    $inlineTagFounds = [];
+                    while ($actual = $callStack->next()) {
+
+                        switch ($actual->getState()) {
+                            case DOKU_LEXER_EXIT:
+                                continue 2;
+                            case DOKU_LEXER_UNMATCHED:
+                                if ($actual->getTagName() !== self::TAG) {
+                                    continue 2;
+                                } else {
+                                    // Not a problem is the text are only space
+                                    if (trim($actual->getCapturedContent()) === "") {
+                                        continue 2;
+                                    }
+                                }
+                        }
+                        if ($actual->getDisplay() == Call::INLINE_DISPLAY) {
+                            $tagName = $actual->getTagName();
+                            if ($actual->getTagName() === self::TAG && $actual->getState() === DOKU_LEXER_UNMATCHED) {
+                                $tagName = "$tagName text";
+                            }
+                            $inlineTagFounds[] = $tagName;
+                        }
+                    }
+                    if (count($inlineTagFounds) > 1) {
+                        // You can't use children align value against inline
+                        LogUtility::warning("The `children` align attribute ($align) on the box component was apply against more than one inline elements (ie " . implode(", ", $inlineTagFounds) . "). If you don't get what you want use a text align value such as `text-center`");
                     }
                 }
 

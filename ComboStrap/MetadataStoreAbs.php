@@ -14,7 +14,6 @@ abstract class MetadataStoreAbs implements MetadataStore
     /**
      * MetadataFormStore constructor.
      * @param ResourceCombo $page
-     * @param array $data
      */
     public function __construct(ResourceCombo $page)
     {
@@ -59,6 +58,11 @@ abstract class MetadataStoreAbs implements MetadataStore
     public function getCanonical(): string
     {
         return self::CANONICAL;
+    }
+
+    public function __toString()
+    {
+        return get_class($this);
     }
 
 

@@ -150,7 +150,7 @@ abstract class MetadataTabular extends Metadata
                 // No data
                 return $this;
             }
-            $i = 0;
+            $index = 0;
             if (!is_array($identifierValues)) {
                 // only one value
                 $identifierValues = [$identifierValues];
@@ -164,7 +164,7 @@ abstract class MetadataTabular extends Metadata
                 $row[$identifierPersistentName] = Metadata::toMetadataObject($identifierMetadataObject, $this)
                     ->setFromStoreValue($identifierValue);
                 foreach ($this->getChildrenClass() as $childClass) {
-                    if ($childClass === $identifierMetadataObject) {
+                    if ($childClass === get_class($identifierMetadataObject)) {
                         continue;
                     }
                     $metadataChildObject = Metadata::toMetadataObject($childClass, $this);
@@ -172,7 +172,8 @@ abstract class MetadataTabular extends Metadata
                     if ($identifierNameType === self::IDENTIFIER_NAME) {
                         $name = $metadataChildObject::getName();
                     }
-                    $childValue = $value[$name][$i];
+                    $childValue = $value[$name][$index];
+                    $index++;
                     $metadataChildObject->setFromStoreValue($childValue);
                     $row[$metadataChildObject::getPersistentName()] = $metadataChildObject;
                 }

@@ -36,7 +36,7 @@ class PageImages extends MetadataTabular
 
     }
 
-    public static function create(): Metadata
+    public static function create(): PageImages
     {
         return new PageImages();
     }
@@ -217,7 +217,10 @@ class PageImages extends MetadataTabular
             $pageImageUsage = $row[PageImageUsage::getPersistentName()];
             if ($pageImageUsage !== null) {
                 try {
-                    $pageImage->setUsages($pageImageUsage->getValue());
+                    $usages = $pageImageUsage->getValue();
+                    if ($usages !== null) {
+                        $pageImage->setUsages($usages);
+                    }
                 } catch (ExceptionCompile $e) {
                     LogUtility::msg("Bad Usage value. Should not happen on get");
                 }

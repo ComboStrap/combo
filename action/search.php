@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\ExceptionCompile;
+use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
 use ComboStrap\Mime;
 use ComboStrap\Page;
@@ -71,22 +72,19 @@ class action_plugin_combo_search extends DokuWiki_Action_Plugin
          * $inTitle = useHeading('navigation');
          * $pages = ft_pageLookup($query, true, $inTitle);
          */
-
         $pages = Search::getPages($query);
-        $count = count($pages);
-        if (!$count) {
-            \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
-                ->sendMessage(["No pages found"]);
-            return;
-        }
-
         $maxElements = 50;
-        if ($count > $maxElements) {
+        if (count($pages) > $maxElements) {
             array_splice($pages, 0, $maxElements);
         }
 
         $data = [];
         foreach ($pages as $page) {
+            if (!$page->exists()) {
+                $page->getDatabasePage()->delete();
+                LogUtility::log2file("The page ($page) returned from the search query does not exist and was deleted from the database");
+                continue;
+            }
             $linkUtility = MarkupRef::createFromPageIdOrPath($page->getDokuwikiId());
             try {
                 $html = $linkUtility->toAttributes()->toHtmlEnterTag("a") . $page->getTitleOrDefault() . "</a>";
@@ -95,6 +93,13 @@ class action_plugin_combo_search extends DokuWiki_Action_Plugin
             }
             $data[] = $html;
         }
+        $count = count($data);
+        if (!$count) {
+            \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
+                ->sendMessage(["No pages found"]);
+            return;
+        }
+
         $dataJson = json_encode($data);
         \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
             ->send($dataJson, Mime::JSON);

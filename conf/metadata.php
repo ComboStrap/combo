@@ -8,6 +8,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
+use ComboStrap\FirstImage;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
 use ComboStrap\Identity;
@@ -165,10 +166,6 @@ $meta[action_plugin_combo_metatwitter::CONF_DONT_NOT_TRACK] = array('multichoice
 $meta[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME] = array('string');
 $meta[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER] = array('string');
 
-/**
- * Page Image
- */
-$meta[PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = array('onoff');
 
 /**
  * Facebook

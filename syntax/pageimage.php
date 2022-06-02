@@ -2,12 +2,14 @@
 
 
 use ComboStrap\CallStack;
+use ComboStrap\ConditionalLength;
 use ComboStrap\ContextManager;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
+use ComboStrap\FirstImage;
 use ComboStrap\Icon;
 use ComboStrap\Image;
 use ComboStrap\LogUtility;
@@ -18,6 +20,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\SvgDocument;
 use ComboStrap\TagAttributes;
+use ComboStrap\Vignette;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -39,6 +42,22 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
 
     const CANONICAL = self::TAG;
     const DEFAULT_ATTRIBUTE = "default";
+
+    const META_TYPE = "meta";
+    const DESCENDANT_TYPE = "descendant";
+    const VIGNETTE_TYPE = "vignette";
+    const FIRST_TYPE = "first";
+    const LOGO_TYPE = "logo";
+    const NONE_TYPE = "none";
+
+    const DEFAULT_ORDER = [
+        self::META_TYPE,
+        self::FIRST_TYPE,
+        self::DESCENDANT_TYPE,
+        self::VIGNETTE_TYPE,
+        self::LOGO_TYPE
+    ];
+    const ORDER_OF_PREFERENCE = "order";
 
 
     function getType(): string
@@ -82,36 +101,59 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
-        switch ($state) {
-
-
-            case DOKU_LEXER_SPECIAL :
-
-                /**
-                 * Because the pageimage can also be used
-                 * in a template
-                 *
-                 * The calculation are done in the {@link syntax_plugin_combo_pageimage::render render function}
-                 *
-                 */
-                $tagAttributes = TagAttributes::createFromTagMatch($match);
-                $callStack = CallStack::createFromHandler($handler);
-                $context = self::TAG;
-                $parent = $callStack->moveToParent();
-                if ($parent !== false) {
-                    $context = $parent->getTagName();
-                }
-
-
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
-                    PluginUtility::CONTEXT => $context
-                );
-
-
+        /**
+         * Because the pageimage can also be used
+         * in a template
+         *
+         * The calculation are done in the {@link syntax_plugin_combo_pageimage::render render function}
+         *
+         */
+        if ($state !== DOKU_LEXER_SPECIAL) {
+            return [];
         }
-        return array();
+
+        $knownTypes = [self::META_TYPE, self::FIRST_TYPE, self::VIGNETTE_TYPE, self::DESCENDANT_TYPE, self::LOGO_TYPE];
+        $tagAttributes = TagAttributes::createFromTagMatch($match, [], $knownTypes);
+
+        /**
+         * Page Image Order Calculation
+         */
+        $type = $tagAttributes->getComponentAttributeValue(TagAttributes::TYPE_KEY, self::META_TYPE);
+        // the type is first
+        $orderOfPreference[] = $type;
+        // then the default one
+        $default = $tagAttributes->getValueAndRemoveIfPresent(self::DEFAULT_ATTRIBUTE);
+        if ($default === null) {
+            $defaultOrderOfPrecedence = self::DEFAULT_ORDER;
+        } else {
+            $defaultOrderOfPrecedence = implode("|", $default);
+        }
+        foreach ($defaultOrderOfPrecedence as $defaultImageOrder) {
+            if ($defaultImageOrder === $type) {
+                continue;
+            }
+            $orderOfPreference[] = $defaultImageOrder;
+        }
+
+
+        /**
+         * Context
+         */
+        $callStack = CallStack::createFromHandler($handler);
+        $context = self::TAG;
+        $parent = $callStack->moveToParent();
+        if ($parent !== false) {
+            $context = $parent->getTagName();
+        }
+
+
+        return array(
+            PluginUtility::STATE => $state,
+            PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
+            PluginUtility::CONTEXT => $context,
+            self::ORDER_OF_PREFERENCE => $orderOfPreference
+        );
+
 
     }
 
@@ -127,210 +169,210 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data): bool
     {
 
-        switch ($format) {
+        if ($format !== 'xhtml') {
+            // unsupported $mode
+            return false;
+        }
 
-            case 'xhtml':
-
-                $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+        $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
 
 
-                $path = $tagAttributes->getValueAndRemove(PagePath::PROPERTY_NAME);
-                if ($path === null) {
-                    $contextManager = ContextManager::getOrCreate();
-                    $path = $contextManager->getAttribute(PagePath::PROPERTY_NAME);
-                    if ($path === null) {
-                        // It should never happen, dev error
-                        LogUtility::error("Internal Error: Bad state: page image cannot retrieve the page path from the context", self::CANONICAL);
+        $path = $tagAttributes->getValueAndRemove(PagePath::PROPERTY_NAME);
+        if ($path === null) {
+            $contextManager = ContextManager::getOrCreate();
+            $path = $contextManager->getAttribute(PagePath::PROPERTY_NAME);
+            if ($path === null) {
+                // It should never happen, dev error
+                LogUtility::error("Internal Error: Bad state: page image cannot retrieve the page path from the context", self::CANONICAL);
+                return false;
+            }
+        }
+
+        /**
+         * Image selection
+         */
+        DokuPath::addRootSeparatorIfNotPresent($path);
+        $page = Page::createPageFromQualifiedPath($path);
+
+        /**
+         * Image Order of precedence
+         */
+        $order = $data[self::ORDER_OF_PREFERENCE];
+        $selectedPageImage = null;
+        foreach ($order as $pageImageProcessing) {
+            switch ($pageImageProcessing) {
+                case self::META_TYPE:
+                    try {
+                        $selectedPageImage = $this->getMetaImage($page, $tagAttributes);
+                    } catch (ExceptionNotFound $e) {
+                        // ok
+                    }
+                    break;
+                case self::DESCENDANT_TYPE:
+                    $parent = $page;
+                    while ($parent = $parent->getParentPage()) {
+                        try {
+                            $selectedPageImage = $this->getMetaImage($parent, $tagAttributes);
+                        } catch (ExceptionNotFound $e) {
+                            continue;
+                        }
+                        break;
+                    }
+                    break;
+                case self::FIRST_TYPE:
+                    try {
+                        $selectedPageImage = FirstImage::createForPage($page)->getImageObject();
+                    } catch (ExceptionNotFound $e) {
+                        continue 2;
+                    }
+                    break;
+                case self::VIGNETTE_TYPE:
+
+                    $selectedPageImage = Vignette::createForPage($page);
+                    break;
+
+                case self::LOGO_TYPE:
+                    $selectedPageImage = Site::getLogoAsSvgImage();
+                    if ($selectedPageImage === null) {
+                        LogUtility::msg("No page image could be find for the page ($path)", LogUtility::LVL_MSG_INFO, self::CANONICAL);
                         return false;
                     }
-                }
-                DokuPath::addRootSeparatorIfNotPresent($path);
-
-                /**
-                 * Image selection
-                 */
-                $page = Page::createPageFromQualifiedPath($path);
-
-
-                /**
-                 * Take the image and the page images
-                 * of the first page with an image
-                 */
-                $pageImages = $page->getPageImagesOrDefault(); // all images
-                $selectedPageImage = null;
-                try {
-                    $selectedPageImage = $page->getImage();
-                } catch (ExceptionNotFound $e) {
-
-                    /**
-                     * No page image
-                     * Parent is for now the default
-                     */
-                    $parentPage = $page->getParentPage();
-                    while ($parentPage !== null) {
-                        /**
-                         * The page image of the root page is the logo if not set
-                         */
-                        if ($parentPage->isRootHomePage()) {
-                            $pageImages = $parentPage->getPageImagesOrDefault();
-                            try {
-                                $selectedPageImage = $parentPage->getImage();
-                            } catch (ExceptionNotFound $e) {
-                                try {
-                                    $selectedPageImage = Site::getLogoImage();
-                                } catch (ExceptionNotFound $e) {
-                                    LogUtility::warning("No logo was installed, we could find a default page image for the page ($page) ", "logo");
-                                }
-                            }
-                            break;
-                        }
-                        try {
-                            $selectedPageImage = $parentPage->getImage();
-                            $pageImages = $parentPage->getPageImagesOrDefault();
-                            break;
-                        } catch (ExceptionNotFound $e) {
-                            // ok
-                        }
-                        // next one
-                        $parentPage = $parentPage->getParentPage();
-                    }
-                }
-
-
-                /**
-                 * We select the best image for the ratio
-                 *
-                 */
-                if ($tagAttributes->hasComponentAttribute(Dimension::RATIO_ATTRIBUTE)) {
-                    $stringRatio = $tagAttributes->getValue(Dimension::RATIO_ATTRIBUTE);
-                    if (empty($stringRatio)) {
-
-                        LogUtility::msg("The ratio value is empty and was therefore not taken into account", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-
-                    } else {
-
-                        $bestRatioDistance = 9999;
-                        $targetRatio = null;
-                        try {
-                            $targetRatio = Dimension::convertTextualRatioToNumber($stringRatio);
-                        } catch (ExceptionCompile $e) {
-                            LogUtility::msg("The ratio ($stringRatio) is not a valid ratio. Error: {$e->getMessage()}");
-                        }
-                        if ($targetRatio !== null) {
-
-                            foreach ($pageImages as $pageImage) {
-                                $image = $pageImage->getImage();
-                                try {
-                                    $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
-                                } catch (ExceptionCompile $e) {
-                                    LogUtility::msg("The page image ($image) of the page ($page) returns an error. Error: {$e->getMessage()}");
-                                    continue;
-                                }
-                                if ($ratioDistance < $bestRatioDistance) {
-                                    $bestRatioDistance = $ratioDistance;
-                                    $selectedPageImage = $image;
-                                }
-                            }
-                        }
-                    }
-                }
-                if ($selectedPageImage === null) {
-                    $default = $tagAttributes->getValue(self::DEFAULT_ATTRIBUTE);
-                    switch ($default) {
-                        case null:
-                            $selectedPageImage = Site::getLogoAsSvgImage();
-                            if ($selectedPageImage === null) {
-                                LogUtility::msg("No page image could be find for the page ($path)", LogUtility::LVL_MSG_INFO, self::CANONICAL);
-                                return false;
-                            }
-                            break;
-                        case "none":
-                            break;
-                        default:
-                            try {
-                                $defaultId = DokuPath::toDokuwikiId($default);
-                                $selectedPageImage = Image::createImageFromId($defaultId);
-                            } catch (ExceptionCompile $e) {
-                                $renderer->doc .= LogUtility::wrapInRedForHtml("The default image value ($default) is not a valid image. Error: {$e->getMessage()}");
-                                return false;
-                            }
-                            if (!FileSystems::exists($selectedPageImage->getPath())) {
-                                $renderer->doc .= LogUtility::wrapInRedForHtml("The default image ($default) does not exist.");
-                                return false;
-                            }
-                            break;
-                    }
-                }
-
-                /**
-                 * {@link Dimension::RATIO_ATTRIBUTE Ratio} is part of the request
-                 * because in svg it is the definition of the viewBox
-                 * The rendering function takes care of it
-                 * and it's also passed in the fetch url
-                 */
-
-
-                /**
-                 * Used as an illustration in a card
-                 * If the image is too small, we allow that it will stretch
-                 * to take the whole space
-                 */
-                if ($data[PluginUtility::CONTEXT] === syntax_plugin_combo_card::TAG) {
-                    $tagAttributes->addStyleDeclarationIfNotSet("max-width", "100%");
-                    $tagAttributes->addStyleDeclarationIfNotSet("max-height", "unset");
-                }
-
-                /**
-                 * This is an illustration image
-                 * Used by svg to color by default with the primary color for instance
-                 */
-                $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ILLUSTRATION_TYPE);
-
-                /**
-                 * Zoom applies only to icon not to illustration
-                 *
-                 */
-                $isIcon = Icon::isInIconDirectory($selectedPageImage->getPath());
-                if (!$isIcon) {
-                    $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
-                } else {
-                    /**
-                     * When the width is small, no zoom out
-                     */
-                    $width = $tagAttributes->getValue(Dimension::WIDTH_KEY);
-                    if ($width !== null) {
-                        try {
-                            $pixelWidth = \ComboStrap\ConditionalLength::createFromString($width)->toPixelNumber();
-                            if ($pixelWidth < 30) {
-                                /**
-                                 * Icon rendering
-                                 */
-                                $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
-                                $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
-
-                            }
-                        } catch (ExceptionCompile $e) {
-                            LogUtility::msg("The width value ($width) could not be translated in pixel value. Error: {$e->getMessage()}");
-                        }
-                    }
-                }
-
-                $mediaLink = MediaLink::createMediaLinkFromPath(
-                    $selectedPageImage->getPath(),
-                    $tagAttributes
-                );
-                try {
-                    $renderer->doc .= $mediaLink->renderMediaTag();
-                } catch (ExceptionCompile $e) {
-                    $renderer->doc .= "Error while rendering: {$e->getMessage()}";
-                }
-
+                    break;
+                case self::NONE_TYPE:
+                    return false;
+                default:
+                    LogUtility::error("The image ($pageImageProcessing) is an unknown page image type", self::CANONICAL);
+                    continue 2;
+            }
+            if ($selectedPageImage !== null) {
                 break;
-
-
+            }
         }
-        // unsupported $mode
-        return false;
+
+        if ($selectedPageImage === null) {
+            return false;
+        }
+
+        /**
+         * Image Path was found, no create the request
+         */
+
+        /**
+         * {@link Dimension::RATIO_ATTRIBUTE Ratio} is part of the request
+         * because in svg it is the definition of the viewBox
+         * The rendering function takes care of it
+         * and it's also passed in the fetch url
+         */
+
+
+        /**
+         * Used as an illustration in a card
+         * If the image is too small, we allow that it will stretch
+         * to take the whole space
+         */
+        if ($data[PluginUtility::CONTEXT] === syntax_plugin_combo_card::TAG) {
+            $tagAttributes->addStyleDeclarationIfNotSet("max-width", "100%");
+            $tagAttributes->addStyleDeclarationIfNotSet("max-height", "unset");
+        }
+
+        /**
+         * This is an illustration image
+         * Used by svg to color by default with the primary color for instance
+         */
+        $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ILLUSTRATION_TYPE);
+
+        /**
+         * Zoom applies only to icon not to illustration
+         *
+         */
+        $isIcon = Icon::isInIconDirectory($selectedPageImage->getPath());
+        if (!$isIcon) {
+            $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
+        } else {
+            /**
+             * When the width is small, no zoom out
+             */
+            $width = $tagAttributes->getValue(Dimension::WIDTH_KEY);
+            if ($width !== null) {
+                try {
+                    $pixelWidth = ConditionalLength::createFromString($width)->toPixelNumber();
+                    if ($pixelWidth < 30) {
+                        /**
+                         * Icon rendering
+                         */
+                        $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
+                        $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
+
+                    }
+                } catch (ExceptionCompile $e) {
+                    LogUtility::msg("The width value ($width) could not be translated in pixel value. Error: {$e->getMessage()}");
+                }
+            }
+        }
+
+        $mediaLink = MediaLink::createMediaLinkFromPath(
+            $selectedPageImage->getPath(),
+            $tagAttributes
+        );
+        try {
+            $renderer->doc .= $mediaLink->renderMediaTag();
+        } catch (ExceptionCompile $e) {
+            $renderer->doc .= "Error while rendering: {$e->getMessage()}";
+        }
+        return true;
+
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getMetaImage(Page $page, TagAttributes $tagAttributes): Image
+    {
+        /**
+         * Take the image and the page images
+         * of the first page with an image
+         */
+        $selectedPageImage = $page->getImage();
+        if (!$tagAttributes->hasComponentAttribute(Dimension::RATIO_ATTRIBUTE)) {
+            return $selectedPageImage;
+        }
+
+        /**
+         * We select the best image for the ratio
+         */
+        $stringRatio = $tagAttributes->getValue(Dimension::RATIO_ATTRIBUTE);
+        if (empty($stringRatio)) {
+
+            LogUtility::msg("The ratio value is empty and was therefore not taken into account", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+
+        } else {
+
+            $bestRatioDistance = 9999;
+            $targetRatio = null;
+            try {
+                $targetRatio = Dimension::convertTextualRatioToNumber($stringRatio);
+            } catch (ExceptionCompile $e) {
+                LogUtility::msg("The ratio ($stringRatio) is not a valid ratio. Error: {$e->getMessage()}");
+            }
+            if ($targetRatio !== null) {
+                $pageImages = $page->getPageImages();
+                foreach ($pageImages as $pageImage) {
+                    $image = $pageImage->getImage();
+                    try {
+                        $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
+                    } catch (ExceptionCompile $e) {
+                        LogUtility::msg("The page image ($image) of the page ($page) returns an error. Error: {$e->getMessage()}");
+                        continue;
+                    }
+                    if ($ratioDistance < $bestRatioDistance) {
+                        $bestRatioDistance = $ratioDistance;
+                        $selectedPageImage = $image;
+                    }
+                }
+            }
+        }
+        return $selectedPageImage;
+
     }
 
 

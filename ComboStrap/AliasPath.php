@@ -33,7 +33,7 @@ class AliasPath extends MetadataWikiPath
 
     public function getPersistenceType(): string
     {
-        return DataTYpe::TEXT_TYPE_VALUE;
+        return DataType::TEXT_TYPE_VALUE;
     }
 
     public function getMutable(): bool

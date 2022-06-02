@@ -664,10 +664,14 @@ class Page extends ResourceComboAbs
     }
 
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
     function getFirstImage()
     {
-        return $this->pageImages->getFirstImage();
+        $firstImage = FirstImage::createForPage($this);
+        return $firstImage->getImageObject();
     }
 
     /**
@@ -705,20 +709,6 @@ class Page extends ResourceComboAbs
         return $medias;
     }
 
-    /**
-     * An array of local/internal images that represents the same image
-     * but in different dimension and ratio
-     * (may be empty)
-     * @return PageImage[]
-     */
-    public
-    function getPageImagesOrDefault(): array
-    {
-
-        return $this->pageImages->getValueAsPageImagesOrDefault();
-
-    }
-
 
     /**
      * @return Image
@@ -728,7 +718,7 @@ class Page extends ResourceComboAbs
     function getImage(): Image
     {
 
-        $images = $this->getPageImagesOrDefault();
+        $images = $this->getPageImages();
         if (sizeof($images) >= 1) {
             return $images[0]->getImage();
         }
@@ -1801,11 +1791,11 @@ class Page extends ResourceComboAbs
      * @return Image[]
      */
     public
-    function getImagesOrDefaultForTheFollowingUsages(array $usages): array
+    function getImagesForTheFollowingUsages(array $usages): array
     {
         $usages = array_merge($usages, [PageImageUsage::ALL]);
         $images = [];
-        foreach ($this->getPageImagesOrDefault() as $pageImage) {
+        foreach ($this->getPageImages() as $pageImage) {
             foreach ($usages as $usage) {
                 if (in_array($usage, $pageImage->getUsages())) {
                     $images[] = $pageImage->getImage();

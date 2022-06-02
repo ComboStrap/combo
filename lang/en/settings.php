@@ -5,6 +5,7 @@ require_once(__DIR__ . '/../../ComboStrap/PluginUtility.php');
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
+use ComboStrap\FirstImage;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
 use ComboStrap\Identity;
@@ -136,10 +137,6 @@ $lang[action_plugin_combo_metatwitter::CONF_DONT_NOT_TRACK] = PluginUtility::get
 $lang[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME] = PluginUtility::getDocumentationHyperLink("tweet", "Tweet") . " - Set the theme for embedded twitter widget";
 $lang[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER] = PluginUtility::getDocumentationHyperLink("tweet", "Tweet") . " - Set the border-color for embedded twitter widget";
 
-/**
- * Page Image
- */
-$lang[PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_frontmatter::METADATA_IMAGE_CANONICAL, "Metadata Image") . " - Disable the use of the first image as a page image";
 
 /**
  * Default

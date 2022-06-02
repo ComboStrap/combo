@@ -12,6 +12,7 @@ use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\LocalPath;
 use ComboStrap\LogUtility;
+use ComboStrap\Mime;
 use ComboStrap\Page;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
@@ -43,7 +44,6 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
      * Enable an infinite cache on static resources (image, script, ...) with a {@link CacheMedia::CACHE_BUSTER_KEY}
      */
     public const CONF_STATIC_CACHE_ENABLED = "staticCacheEnabled";
-    const PAGE_VIGNETTE_DRIVE = "page-vignette";
 
 
     /**
@@ -75,7 +75,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             return;
         }
         $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
-        if (!in_array($drive, DokuPath::DRIVES) && $drive !== self::PAGE_VIGNETTE_DRIVE) {
+        if (!in_array($drive, DokuPath::DRIVES) && $drive !== Vignette::DRIVE) {
             // The other resources have ACL
             // and this endpoint is normally only for
             $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
@@ -83,17 +83,17 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         }
         $mediaId = $event->data['media'];
         switch ($drive) {
-            case self::PAGE_VIGNETTE_DRIVE:
+            case Vignette::DRIVE:
                 $lastPoint = strrpos($mediaId, ".");
                 $extension = substr($mediaId, $lastPoint + 1);
                 $wikiId = substr($mediaId, 0, $lastPoint);
                 $page = Page::createPageFromId($wikiId);
                 try {
-                    $vignette = Vignette::createForPage($page)
-                        ->setExtension($extension)
+                    $mime = Mime::createFromExtension($extension);
+                    $vignette = Vignette::createForPage($page, $mime)
                         ->setUseCache(false);
-                    $path = $vignette->getPath();
-                } catch (ExceptionBadArgument|ExceptionBadState|ExceptionNotFound $e) {
+                    $path = $vignette->getPhysicalPath();
+                } catch (ExceptionBadState|ExceptionNotFound $e) {
                     $event->data['status'] = HttpResponse::STATUS_INTERNAL_ERROR;
                     $event->data['statusmessage'] = "Error while creating the vignette. Error: {$e->getMessage()}";
                     return;

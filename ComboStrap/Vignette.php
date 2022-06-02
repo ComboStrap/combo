@@ -17,10 +17,11 @@ use dokuwiki\Cache\Cache;
  * http://combo.nico.lan/lib/exe/fetch.php?media=howto:howto.webp&drive=page-vignette
  *
  */
-class Vignette
+class Vignette extends ImageRaster
 {
 
     const CANONICAL = "page-vignette";
+    public const DRIVE = "page-vignette";
 
 
     /**
@@ -36,35 +37,29 @@ class Vignette
      */
     private $useCache;
 
-    public function __construct(Page $page)
+    public function __construct(Page $page, Mime $mime = null)
     {
         $this->page = $page;
-        $this->mime = Mime::create(Mime::PNG);
-    }
-
-    public static function createForPage(Page $page): Vignette
-    {
-        return new Vignette($page);
-    }
-
-    /**
-     * @throws ExceptionBadArgument - if this is not an image
-     * @throws ExceptionNotFound - if the mime was not found
-     */
-    public function setExtension(string $extension): Vignette
-    {
-
-        $this->mime = Mime::createFromExtension($extension);
-        if (!$this->mime->isImage()) {
-            throw new ExceptionBadArgument("The extension ($extension) is not an image");
+        $this->mime = $mime;
+        if ($mime === null) {
+            $this->mime = Mime::create(Mime::PNG);
         }
-        return $this;
+        $path = "{$this->page->getPath()->toPathString()}.{$this->mime->getExtension()}";
+        $logicalPath = DokuPath::createDokuPath($path, self::DRIVE);
+        parent::__construct($logicalPath);
     }
+
+    public static function createForPage(Page $page, Mime $mime = null): Vignette
+    {
+        return new Vignette($page, $mime);
+    }
+
+
 
     /**
      * @throws ExceptionBadState - if the extension is not supported
      */
-    public function getPath(): LocalPath
+    public function getPhysicalPath(): LocalPath
     {
         $extension = $this->mime->getExtension();
         $cache = new Cache($this->page->getPath()->toPathString(), ".vignette.{$extension}");
@@ -86,7 +81,7 @@ class Vignette
                  * The first call to  {@link imagecolorallocate} fills the background color in palette-based images
                  */
                 $whiteGdColor = imagecolorallocate($vignetteImageHandler, 255, 255, 255);
-                imagefill($vignetteImageHandler,0,0,$whiteGdColor);
+                imagefill($vignetteImageHandler, 0, 0, $whiteGdColor);
 
                 /**
                  * Common variable

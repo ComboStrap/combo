@@ -11,8 +11,6 @@ class PageImages extends MetadataTabular
     const CANONICAL = "page:image";
     public const PROPERTY_NAME = 'images';
     public const PERSISTENT_NAME = 'images';
-    public const FIRST_IMAGE_META_RELATION = "firstimage";
-    public const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
 
     /**
      * The name should be plural, this one was not
@@ -39,41 +37,6 @@ class PageImages extends MetadataTabular
     public static function create(): PageImages
     {
         return new PageImages();
-    }
-
-    /**
-     * Google accepts several images dimension and ratios
-     * for the same image
-     * We may get an array then
-     */
-    public function getValueAsPageImagesOrDefault(): array
-    {
-
-        $pageImages = $this->getValueAsPageImages();
-        if ($pageImages !== null) {
-            return $pageImages;
-        }
-        /**
-         * Default
-         */
-        try {
-            $defaultPageImage = $this->getDefaultImage();
-        } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while getting the default page image for the page {$this->getResource()}. The image was not used. Error: {$e->getMessage()}");
-            return [];
-        }
-        if ($defaultPageImage === null) {
-            return [];
-        }
-        try {
-            return [
-                PageImage::create($defaultPageImage, $this->getResource())
-            ];
-        } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while creating the default page image ($defaultPageImage) for the page {$this->getResource()}. The image was not used. Error: {$e->getMessage()}");
-            return [];
-        }
-
     }
 
 
@@ -301,70 +264,6 @@ class PageImages extends MetadataTabular
     }
 
 
-    /**
-     * @throws ExceptionNotFound - if there is no default image
-     */
-    public
-    function getDefaultImage(): Image
-    {
-        if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
-            return $this->getFirstImage();
-        }
-        throw new ExceptionNotFound("The page has no default image");
-    }
-
-    /**
-     * @return ImageRaster|ImageSvg - the first image of the page
-     * @throws ExceptionNotFound - if there is no image
-     */
-    public function getFirstImage()
-    {
-
-        $store = $this->getReadStore();
-        if (!($store instanceof MetadataDokuWikiStore)) {
-            throw new ExceptionNotFound("First image are only supported with file metadata store", self::CANONICAL);
-        }
-        /**
-         * Our first image metadata
-         * We can't overwrite the {@link \Doku_Renderer_metadata::$firstimage first image}
-         * We put it then in directly under the root
-         */
-        $firstImageId = $store->getCurrentFromName(PageImages::FIRST_IMAGE_META_RELATION);
-
-        /**
-         * Dokuwiki first image metadata
-         */
-        if (empty($firstImageId)) {
-            $relation = $store->getCurrentFromName('relation');
-            if (!isset($relation[PageImages::FIRST_IMAGE_META_RELATION])) {
-                throw new ExceptionNotFound("No relation key was found in the page metadata");
-            }
-
-            $firstImageId = $relation[PageImages::FIRST_IMAGE_META_RELATION];
-            if (empty($firstImageId)) {
-                throw new ExceptionNotFound("No first image was found");
-            }
-        }
-
-        /**
-         * Image Id check
-         */
-        if (media_isexternal($firstImageId)) {
-            throw new ExceptionNotFound("The first image is not a local image");
-        }
-        try {
-            return Image::createImageFromId($firstImageId);
-        } catch (ExceptionBadArgument $e) {
-            $message = "The image ($firstImageId) of the page ({$this->getResource()} is not seen as an image. Error: {$e->getMessage()}";
-            // Log to see it in the log and to trigger an error in dev/test
-            LogUtility::error($message, self::CANONICAL);
-            // Exception not found because this is a state problem that we should not have in production
-            throw new ExceptionNotFound("The first image is not a local image");
-        }
-
-    }
-
-
     function getChildrenClass(): array
     {
         return [PageImagePath::class, PageImageUsage::class];
@@ -382,13 +281,12 @@ class PageImages extends MetadataTabular
     public function getDefaultValue(): array
     {
 
-        try {
-            $defaultImage = $this->getDefaultImage();
-            $pageImagePath = PageImagePath::createFromParent($this)->buildFromStoreValue($defaultImage->getPath()->toPathString());
-        } catch (ExceptionNotFound $e) {
-            $pageImagePath = null;
+        $pageImagePath = null;
+        // Not really the default value but yeah
+        $firstImage = FirstImage::createForPage($this->getResource())->getValue();
+        if ($firstImage !== null) {
+            $pageImagePath = PageImagePath::createFromParent($this)->buildFromStoreValue($firstImage);
         }
-
         $pageImageUsage = PageImageUsage::createFromParent($this)->buildFromStoreValue([PageImageUsage::DEFAULT]);
         return [
             [

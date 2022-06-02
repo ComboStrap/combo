@@ -6,6 +6,7 @@ use ComboStrap\CallStack;
 use ComboStrap\DokuFs;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionRuntime;
+use ComboStrap\FirstImage;
 use ComboStrap\InternetPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
@@ -74,10 +75,10 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
          * {@link Doku_Renderer_metadata::$firstimage} is unfortunately protected
          * and {@link Doku_Renderer_metadata::internalmedia()} does not allow svg as first image
          */
-        if (!isset($renderer->meta[PageImages::FIRST_IMAGE_META_RELATION])) {
+        if (!isset($renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION])) {
             $path = DokuPath::createMediaPathFromId($src);
             if ($path->getMime()->isImage()) {
-                $renderer->meta[PageImages::FIRST_IMAGE_META_RELATION] = $src;
+                $renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION] = $src;
             }
         }
 

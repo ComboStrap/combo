@@ -4,6 +4,7 @@
 use ComboStrap\Breadcrumb;
 use ComboStrap\CacheDependencies;
 use ComboStrap\CacheManager;
+use ComboStrap\PageSqlTreeListener;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -17,6 +18,8 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
     const TAG = "breadcrumb";
 
     public const CANONICAL_HIERARCHICAL = "breadcrumb-hierarchical";
+
+    const DEPTH_ATTRIBUTE = "depth";
 
 
     /**

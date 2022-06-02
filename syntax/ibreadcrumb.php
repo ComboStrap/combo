@@ -74,7 +74,10 @@ class syntax_plugin_combo_ibreadcrumb extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
-        $default = [TagAttributes::TYPE_KEY => Breadcrumb::TYPOGRAPHY_TYPE];
+        $default = [
+            TagAttributes::TYPE_KEY => Breadcrumb::TYPOGRAPHY_TYPE,
+            syntax_plugin_combo_breadcrumb::DEPTH_ATTRIBUTE => 1
+        ];
         $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
         return array(
             PluginUtility::STATE => $state,

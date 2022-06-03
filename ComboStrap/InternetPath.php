@@ -7,8 +7,7 @@ namespace ComboStrap;
  * Class InternetPath
  * @package ComboStrap
  * A class that takes over the notion of external path
- * (ie https or ftp scheme)
- * This class does not make the difference
+ * url (ie https or ftp scheme)
  */
 class InternetPath extends PathAbs
 {
@@ -47,16 +46,19 @@ class InternetPath extends PathAbs
 
     function getScheme(): string
     {
-        return $this->component[PHP_URL_SCHEME];
+        return $this->component['scheme'];
     }
 
+    /**
+     * @throws ExceptionNotExists
+     */
     function getLastName()
     {
 
         $names = $this->getNames();
         $size = sizeof($names);
         if ($size === 0) {
-            return null;
+            throw new ExceptionNotExists("The url has no last name");
         }
         return $names[$size - 1];
 
@@ -67,12 +69,7 @@ class InternetPath extends PathAbs
     {
 
         $names = explode("/", $this->path);
-        // with the scheme and the hostname, the names start at the third position
-        $size = sizeof($names);
-        if ($size <= 3) {
-            return [];
-        }
-        return array_slice($names, 3);
+        return array_slice($names, 1);
 
     }
 

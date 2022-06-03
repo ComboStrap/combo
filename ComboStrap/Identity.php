@@ -94,21 +94,22 @@ class Identity
     /**
      * @return bool if edit auth
      */
-    public static function isWriter($pageId = null): bool
+    public static function isWriter($wikiId = null): bool
     {
-        if ($pageId == null) {
+        if ($wikiId === null) {
             try {
-                $pageId = Page::createPageFromGlobalDokuwikiId()
-                    ->getPageId();
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("The global ID is not defined, we couldn't detect the page requested. No writer permission given");
+                $wikiId = Page::createPageFromGlobalDokuwikiId()
+                    ->getPath()
+                    ->getDokuwikiId();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::msg("Internal Error: The global ID is not defined, we couldn't detect the page requested. No writer permission given");
                 return false;
             }
         }
         if ($_SERVER['REMOTE_USER']) {
-            $perm = auth_quickaclcheck($pageId);
+            $perm = auth_quickaclcheck($wikiId);
         } else {
-            $perm = auth_aclcheck($pageId, '', null);
+            $perm = auth_aclcheck($wikiId, '', null);
         }
 
         if ($perm >= AUTH_EDIT) {

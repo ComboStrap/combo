@@ -3,7 +3,13 @@
 
 namespace ComboStrap;
 
-
+/**
+ * TODO: What messed up is messed up
+ *   This class should only wrap up the gd library
+ *   to get information about the image
+ *   But has also {@link RasterImageLink function} such as {@link ImageRaster::getUrlAtBreakpoint()}
+ *   and {@link ImageRaster::getTargetHeight()}
+ */
 class ImageRaster extends Image
 {
 
@@ -21,18 +27,11 @@ class ImageRaster extends Image
      * @var int
      */
     private $imageWeight = null;
-    /**
-     * See {@link image_type_to_mime_type}
-     * @var int
-     */
-    private $imageType;
+
     private $wasAnalyzed = false;
 
 
-    /**
-     * @var mixed - the mime from the {@link RasterImageLink::analyzeImageIfNeeded()}
-     */
-    private $mime;
+
 
     /**
      * @return int - the width of the image from the file
@@ -69,12 +68,11 @@ class ImageRaster extends Image
                  * Based on {@link media_image_preview_size()}
                  * $dimensions = media_image_preview_size($this->id, '', false);
                  */
-                $imageInfo = array();
                 $path = $this->getPath();
                 if ($path instanceof DokuPath) {
                     $path = $path->toLocalPath();
                 }
-                $imageSize = getimagesize($path->toAbsolutePath()->toPathString(), $imageInfo);
+                $imageSize = getimagesize($path->toAbsolutePath()->toPathString());
                 if ($imageSize === false) {
                     throw new ExceptionCompile("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", self::CANONICAL);
                 }
@@ -86,8 +84,6 @@ class ImageRaster extends Image
                 if (empty($this->imageWeight)) {
                     throw new ExceptionCompile("We couldn't retrieve the height of the image ($this)", self::CANONICAL);
                 }
-                $this->imageType = (int)$imageSize[2];
-                $this->mime = $imageSize[3];
 
             }
         }

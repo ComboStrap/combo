@@ -90,6 +90,8 @@ class Mime
                 return new Mime(Mime::WEBP);
             case "bmp":
                 return new Mime(Mime::BMP);
+            case "gif":
+                return new Mime(Mime::GIF);
             default:
                 $mtypes = getMimeTypes();
                 $mimeString = $mtypes[$extension];

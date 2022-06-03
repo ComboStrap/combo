@@ -120,7 +120,7 @@ abstract class MediaLink
     const LAZY_LOAD_METHOD = "lazy-method";
     const LAZY_LOAD_METHOD_HTML_VALUE = "html-attribute";
     const LAZY_LOAD_METHOD_LOZAD_VALUE = "lozad";
-    const UNKNOWN_MIME = "unknwon";
+
     /**
      * @var string
      */
@@ -413,13 +413,42 @@ abstract class MediaLink
     /**
      * @param Path $path
      * @param TagAttributes|null $tagAttributes
-     * @return RasterImageLink|SvgImageLink|ThirdMediaLink
+     * @return RasterImageLink|SvgImageLink|ThirdMediaLink|MediaLink
      */
     public static function createMediaLinkFromPath(Path $path, TagAttributes $tagAttributes = null)
     {
 
         if ($tagAttributes === null) {
             $tagAttributes = TagAttributes::createEmpty();
+        }
+
+
+        /**
+         * Processing
+         */
+        try {
+            $mime = FileSystems::getMime($path);
+            switch ($mime->toString()) {
+                case Mime::SVG:
+                    $media = new ImageSvg($path, $tagAttributes);
+                    $mediaLink = new SvgImageLink($media);
+                    break;
+                default:
+                    if (!$mime->isImage()) {
+                        LogUtility::msg("The type ($mime) of media ($path) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
+                        $media = new ThirdMedia($path, $tagAttributes);
+                        $mediaLink = new ThirdMediaLink($media);
+                    } else {
+                        $media = new ImageRaster($path, $tagAttributes);
+                        $mediaLink = new RasterImageLink($media);
+                    }
+                    break;
+            }
+        } catch (ExceptionNotFound $e) {
+            // no mime
+            LogUtility::msg("The mime type of the media ($path) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
+            $media = new ImageRaster($path, $tagAttributes);
+            $mediaLink = new RasterImageLink($media);
         }
 
         /**
@@ -429,54 +458,11 @@ abstract class MediaLink
         $lazyLoadMethod = $tagAttributes->getValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD, self::LAZY_LOAD_METHOD_LOZAD_VALUE);
         $linking = $tagAttributes->getValueAndRemoveIfPresent(self::LINKING_KEY);
         $linkingClass = $tagAttributes->getValueAndRemoveIfPresent(syntax_plugin_combo_media::LINK_CLASS_ATTRIBUTE);
-
-        /**
-         * Processing
-         */
-        $mime = $path->getMime();
-        if ($path->getExtension() === "svg") {
-            /**
-             * The mime type is set when uploading, not when
-             * viewing.
-             * Because they are internal image, the svg was already uploaded
-             * Therefore, no authorization scheme here
-             */
-            $mime = Mime::create(Mime::SVG);
-        }
-
-        if ($mime === null) {
-            $stringMime = self::UNKNOWN_MIME;
-        } else {
-            $stringMime = $mime->toString();
-        }
-
-        switch ($stringMime) {
-            case self::UNKNOWN_MIME:
-                LogUtility::msg("The mime type of the media ($path) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
-                $media = new ImageRaster($path, $tagAttributes);
-                $mediaLink = new RasterImageLink($media);
-                break;
-            case Mime::SVG:
-                $media = new ImageSvg($path, $tagAttributes);
-                $mediaLink = new SvgImageLink($media);
-                break;
-            default:
-                if (!$mime->isImage()) {
-                    LogUtility::msg("The type ($mime) of media ($path) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
-                    $media = new ThirdMedia($path, $tagAttributes);
-                    $mediaLink = new ThirdMediaLink($media);
-                } else {
-                    $media = new ImageRaster($path, $tagAttributes);
-                    $mediaLink = new RasterImageLink($media);
-                }
-                break;
-        }
-
-        $mediaLink
+        return $mediaLink
             ->setLazyLoadMethod($lazyLoadMethod)
             ->setLinking($linking)
             ->setLinkingClass($linkingClass);
-        return $mediaLink;
+
 
     }
 

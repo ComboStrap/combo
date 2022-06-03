@@ -47,7 +47,7 @@ class StartDate extends MetadataDateTime
 
     public function getDefaultValue()
     {
-        return null;
+        throw new ExceptionNotFound("Start date does not have any default value");
     }
 
     public function getCanonical(): string

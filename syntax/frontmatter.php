@@ -230,6 +230,10 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 $databasePage = $parsedPage->getDatabasePage();
                 $databasePage->replicateMetaAttributes();
             } catch (Exception $e) {
+                if(PluginUtility::isDevOrTest()){
+                    /** @noinspection PhpUnhandledExceptionInspection */
+                    throw $e;
+                }
                 $message = Message::createErrorMessage($e->getMessage());
                 if ($e instanceof ExceptionCompile) {
                     $message->setCanonical($e->getCanonical());

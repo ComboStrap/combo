@@ -397,6 +397,7 @@ class Page extends ResourceComboAbs
      * by taking the last two parts
      *
      * @return string
+     * @throws ExceptionNotFound
      * @deprecated for {@link Canonical::getValueOrDefault()}
      */
     public

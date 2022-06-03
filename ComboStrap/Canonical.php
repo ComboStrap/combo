@@ -57,55 +57,65 @@ class Canonical extends MetadataWikiPath
 
     public function getDefaultValue(): ?string
     {
+
+        $resourceCombo = $this->getResource();
+        if (!($resourceCombo instanceof Page)) {
+            throw new ExceptionNotFound("No default value for other resources than page");
+        }
+
         /**
          * The last part of the id as canonical
          */
         // How many last parts are taken into account in the canonical processing (2 by default)
         $canonicalLastNamesCount = PluginUtility::getConfValue(self::CONF_CANONICAL_LAST_NAMES_COUNT, 0);
-        if ($canonicalLastNamesCount > 0) {
-            /**
-             * Takes the last names part
-             */
-            $namesOriginal = $this->getResource()->getPath()->getNames();
-            /**
-             * Delete the identical names at the end
-             * To resolve this problem
-             * The page (viz:viz) and the page (data:viz:viz) have the same canonical.
-             * The page (viz:viz) will get the canonical viz
-             * The page (data:viz) will get the canonical  data:viz
-             */
-            $i = sizeof($namesOriginal) - 1;
-            $names = $namesOriginal;
-            while ($namesOriginal[$i] == $namesOriginal[$i - 1]) {
-                unset($names[$i]);
-                $i--;
-                if ($i <= 0) {
-                    break;
-                }
-            }
-            /**
-             * Minimal length check
-             */
-            $namesLength = sizeof($names);
-            if ($namesLength > $canonicalLastNamesCount) {
-                $names = array_slice($names, $namesLength - $canonicalLastNamesCount);
-            }
-            /**
-             * If this is a `start` page, delete the name
-             * ie javascript:start will become javascript
-             * (Not a home page)
-             */
-            if ($this->getResource()->isStartPage()) {
-                $names = array_slice($names, 0, $namesLength - 1);
-            }
-            $calculatedCanonical = implode(":", $names);
-            DokuPath::addRootSeparatorIfNotPresent($calculatedCanonical);
-            return $calculatedCanonical;
+        if ($canonicalLastNamesCount <= 0) {
+            throw new ExceptionNotFound("Default canonical value is not enabled");
         }
-        return null;
+
+        /**
+         * Takes the last names part
+         */
+        $namesOriginal = $this->getResource()->getPath()->getNames();
+        /**
+         * Delete the identical names at the end
+         * To resolve this problem
+         * The page (viz:viz) and the page (data:viz:viz) have the same canonical.
+         * The page (viz:viz) will get the canonical viz
+         * The page (data:viz) will get the canonical  data:viz
+         */
+        $i = sizeof($namesOriginal) - 1;
+        $names = $namesOriginal;
+        while ($namesOriginal[$i] == $namesOriginal[$i - 1]) {
+            unset($names[$i]);
+            $i--;
+            if ($i <= 0) {
+                break;
+            }
+        }
+        /**
+         * Minimal length check
+         */
+        $namesLength = sizeof($names);
+        if ($namesLength > $canonicalLastNamesCount) {
+            $names = array_slice($names, $namesLength - $canonicalLastNamesCount);
+        }
+        /**
+         * If this is a `start` page, delete the name
+         * ie javascript:start will become javascript
+         * (Not a home page)
+         */
+
+        if ($resourceCombo->isStartPage()) {
+            $names = array_slice($names, 0, $namesLength - 1);
+        }
+        $calculatedCanonical = implode(":", $names);
+        DokuPath::addRootSeparatorIfNotPresent($calculatedCanonical);
+        return $calculatedCanonical;
+
     }
 
-    public function getCanonical(): string
+    public
+    function getCanonical(): string
     {
         return self::CANONICAL;
     }

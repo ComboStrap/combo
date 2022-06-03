@@ -260,10 +260,11 @@ class PageId extends MetadataText
          * Test if there is not yet a page with this value
          */
         while (
-            DatabasePageRow::createFromPageIdAbbr(self::getAbbreviated($pageId))->exists()
+        DatabasePageRow::createFromPageIdAbbr(self::getAbbreviated($pageId))->exists()
         ) {
             $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
         }
+
         return $pageId;
     }
 

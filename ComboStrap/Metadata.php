@@ -184,11 +184,12 @@ abstract class Metadata
      */
     public function toStoreValueOrDefault()
     {
-        $value = $this->toStoreValue();
-        if ($value !== null) {
-            return $value;
+        try {
+            return $this->toStoreValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->toStoreDefaultValue();
         }
-        return $this->toStoreDefaultValue();
+
     }
 
     public function getChildrenObject()
@@ -409,7 +410,8 @@ abstract class Metadata
     /**
      * @return string|array the value to be persisted by the store
      * the reverse action is {@link Metadata::setFromStoreValue()}
-     * @throws ExceptionNotFound - if there is no value (ie null)
+     *
+     * @throws ExceptionNotFound - if there is no value to store
      */
     public function toStoreValue()
     {
@@ -422,7 +424,7 @@ abstract class Metadata
      * The store default value is used to
      * see if the value set is the same than the default one
      * It this is the case, the data is not stored
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotFound -  if there is no value to store
      */
     public function toStoreDefaultValue()
     {

@@ -48,7 +48,7 @@ class EndDate extends MetadataDateTime
 
     public function getDefaultValue()
     {
-        return null;
+        throw new ExceptionNotFound("The end date does not have any default value");
     }
 
     public function getCanonical(): string

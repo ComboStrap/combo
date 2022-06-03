@@ -332,5 +332,17 @@ class PageId extends MetadataText
         return $this->getReadStore()->get($this);
     }
 
+    /**
+     * @throws ExceptionNotExists
+     */
+    public function getValue(): string
+    {
+        try {
+            return parent::getValue();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionNotExists("The resource does not exist");
+        }
+    }
+
 
 }

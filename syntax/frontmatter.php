@@ -222,21 +222,23 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
         /**
          * Database update
+         * TODO: Database update here ?
+         *
          */
-        try {
-            $databasePage = $parsedPage->getDatabasePage();
-            $databasePage->replicateMetaAttributes();
-        } catch (Exception $e) {
-            $message = Message::createErrorMessage($e->getMessage());
-            if ($e instanceof ExceptionCompile) {
-                $message->setCanonical($e->getCanonical());
+        if ($parsedPage->exists()) {
+            try {
+                $databasePage = $parsedPage->getDatabasePage();
+                $databasePage->replicateMetaAttributes();
+            } catch (Exception $e) {
+                $message = Message::createErrorMessage($e->getMessage());
+                if ($e instanceof ExceptionCompile) {
+                    $message->setCanonical($e->getCanonical());
+                }
+                $messages[] = $message;
             }
-            $messages[] = $message;
-        }
-
-
-        foreach ($messages as $message) {
-            $message->sendLogMsg();
+            foreach ($messages as $message) {
+                $message->sendLogMsg();
+            }
         }
 
         /**

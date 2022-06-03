@@ -19,7 +19,7 @@ interface MetadataStore
      * Set the {@link Metadata::getValue()} for a {@link Metadata::getResource()}
      * with the name {@link Metadata::getName()}
      * @param Metadata $metadata
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument
      */
     public function set(Metadata $metadata);
 

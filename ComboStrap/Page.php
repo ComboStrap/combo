@@ -1185,23 +1185,24 @@ class Page extends ResourceComboAbs
         return $this->getStartDate() !== null ? $this->getStartDate()->format(Iso8601Date::getFormat()) : null;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
-    function getStartDate(): ?DateTime
+    function getStartDate(): DateTime
     {
         return $this->startDate->getValueFromStore();
     }
 
     /**
-     * A page id or null if the page id does not exists
-     * @return string|null
-     * @throws ExceptionNotFound
+     * A page id
+     * @return string
+     * @throws ExceptionNotExists - when the page does not exist
      */
     public
-    function getPageId(): ?string
+    function getPageId(): string
     {
-
         return $this->pageId->getValue();
-
     }
 
 
@@ -1887,6 +1888,7 @@ class Page extends ResourceComboAbs
 
     /**
      * @return DateTime|null
+     * @throws ExceptionNotFound
      * @deprecated for {@link CacheExpirationDate}
      */
     public

@@ -179,9 +179,11 @@ class DatabasePageRow
     {
 
         $databasePage = new DatabasePageRow();
-        $row = $databasePage->getDatabaseRowFromPage($page);
-        if ($row !== null) {
+        try {
+            $row = $databasePage->getDatabaseRowFromPage($page);
             $databasePage->setRow($row);
+        } catch (ExceptionSqliteNotAvailable|ExceptionNotExists $e) {
+            // ok
         }
         return $databasePage;
     }
@@ -367,24 +369,24 @@ class DatabasePageRow
      * Return the database row
      *
      *
+     * @throws ExceptionNotExists - if the row does not exists
+     * @throws ExceptionSqliteNotAvailable
      */
     private
-    function getDatabaseRowFromPage(Page $page): ?array
+    function getDatabaseRowFromPage(Page $page): array
     {
 
         $this->setPage($page);
 
-        if ($this->sqlite === null) return null;
+        if ($this->sqlite === null) {
+            throw new ExceptionSqliteNotAvailable();
+        }
 
         // Do we have a page attached to this page id
-        try {
-            $pageId = $page->getPageId();
-            $row = $this->getDatabaseRowFromPageId($pageId);
-            if ($row !== null) {
-                return $row;
-            }
-        } catch (ExceptionNotFound $e) {
-            // ok
+        $pageId = $page->getPageId();
+        $row = $this->getDatabaseRowFromPageId($pageId);
+        if ($row !== null) {
+            return $row;
         }
 
 
@@ -477,7 +479,6 @@ class DatabasePageRow
     }
 
     /**
-     * @throws ExceptionBadArgument
      * @throws ExceptionBadState
      */
     public function upsertAttributes(array $attributes): bool
@@ -1149,7 +1150,7 @@ class DatabasePageRow
         try {
             $analyticsJson = $this->page->getAnalyticsDocument()->getOrProcessJson();
         } catch (ExceptionCompile $e) {
-            if(PluginUtility::isDevOrTest()){
+            if (PluginUtility::isDevOrTest()) {
                 throw $e;
             }
             throw new ExceptionCompile("Unable to get the analytics document", self::CANONICAL, 0, $e);

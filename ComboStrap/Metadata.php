@@ -292,12 +292,12 @@ abstract class Metadata
      *
      * This function should be used at the end of each setter/adder function
      *
-     * @throws ExceptionCompile
      *
      * To persist or commit on disk, you use the {@link MetadataStore::persist()}
      * Because the metadata is stored by resource, the persist function is
      * also made available on the resource level
      *
+     * @throws ExceptionBadArgument - if the value cannot be persisted
      */
     public function sendToWriteStore(): Metadata
     {
@@ -617,7 +617,8 @@ abstract class Metadata
     /**
      * An utility function to {@link Metadata::sendToWriteStore()}
      * and {@link MetadataStore::persist()} at the same time in the {@link Metadata::getWriteStore() write store}
-     * @throws ExceptionCompile
+     *
+     * @throws ExceptionBadArgument - if the value can not be persisted
      */
     public function persist(): Metadata
     {

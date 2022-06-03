@@ -2,6 +2,8 @@
 
 
 use ComboStrap\CacheExpirationFrequency;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -90,8 +92,11 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                     CacheExpirationFrequency::createForPage($requestPage)
                         ->setValue($value)
                         ->sendToWriteStore();
-                } catch (ExceptionCompile $e) {
+                } catch (ExceptionBadSyntax $e) {
                     $status = self::PARSING_STATE_UNSUCCESSFUL;
+                } catch (ExceptionBadArgument $e) {
+                    // It should not happen
+                    LogUtility::error("Internal Error: {$e->getMessage()}");
                 }
 
                 LogUtility::msg("The cache syntax component has been deprecated for the cache frequency metadata", LogUtility::LVL_MSG_INFO, CacheExpirationFrequency::PROPERTY_NAME);

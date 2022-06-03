@@ -27,7 +27,8 @@ class CacheExpirationFrequency extends MetadataText
     /**
      * @param string|null $value
      * @return Metadata
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument - if the value cannot be persisted
+     * @throws ExceptionBadSyntax - if the frequency has not the good syntax
      */
     public function setValue($value): Metadata
     {
@@ -45,15 +46,16 @@ class CacheExpirationFrequency extends MetadataText
 
         try {
             $cacheExpirationCalculatedDate = Cron::getDate($value);
-            $cacheExpirationDate = CacheExpirationDate::createForPage($this->getResource());
-            $cacheExpirationDate
-                ->setValue($cacheExpirationCalculatedDate)
-                ->persist();
-            parent::setValue($value);
-            return $this;
-        } catch (ExceptionCompile $e) {
-            throw new ExceptionCompile("The cache frequency expression ($value) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheExpirationFrequency::PROPERTY_NAME, 0, $e);
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionBadSyntax("The cache frequency expression ($value) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheExpirationFrequency::PROPERTY_NAME, 0, $e);
         }
+        $cacheExpirationDate = CacheExpirationDate::createForPage($this->getResource());
+        $cacheExpirationDate
+            ->setValue($cacheExpirationCalculatedDate)
+            ->persist();
+        parent::setValue($value);
+        return $this;
+
 
     }
 

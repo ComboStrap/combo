@@ -40,12 +40,12 @@ abstract class MetadataText extends Metadata
     /**
      * @param null|string $value
      * @return $this
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument
      */
     public function setValue($value): Metadata
     {
         if ($value !== null && !is_string($value)) {
-            throw new ExceptionCompile("The value of the metadata ($this) is not a string", $this->getCanonical());
+            throw new ExceptionBadArgument("The value of the metadata ($this) is not a string", $this->getCanonical());
         }
         $value = trim($value);
         if ($value === "") {
@@ -57,9 +57,9 @@ abstract class MetadataText extends Metadata
             return $this;
         }
         $possibleValues = $this->getPossibleValues();
-        if ($possibleValues !== null && $value !== null && $value !== "") {
+        if ($possibleValues !== null) {
             if (!in_array($value, $possibleValues)) {
-                throw new ExceptionCompile("The value ($value) for the metadata ({$this->getName()}) is not one of the possible following values: " . implode(", ", $possibleValues) . ".");
+                throw new ExceptionBadArgument("The value ($value) for the metadata ({$this->getName()}) is not one of the possible following values: " . implode(", ", $possibleValues) . ".");
             }
         }
         $this->value = $value;

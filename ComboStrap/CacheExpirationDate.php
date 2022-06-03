@@ -27,20 +27,20 @@ class CacheExpirationDate extends MetadataDateTime
             ->setResource($page);
     }
 
-    public function getDefaultValue(): ?DateTime
+    public function getDefaultValue(): DateTime
     {
         $resourceCombo = $this->getResource();
         if (!($resourceCombo instanceof Page)) {
-            return null;
+            throw new ExceptionNotFound("Cache expiration is only available for page");
         }
         $path = $resourceCombo->getHtmlDocument()->getCachePath();
         if (!FileSystems::exists($path)) {
-            return null;
+            throw new ExceptionNotFound("There is no HTML document to expire");
         }
 
         $cacheIntervalInSecond = Site::getCacheTime();
         if ($cacheIntervalInSecond === -1) {
-            return null;
+            throw new ExceptionNotFound("Cache has been disabled globally on the site");
         }
 
         /**

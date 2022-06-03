@@ -132,19 +132,30 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         self::$storesByRequestedPage = [];
     }
 
+    /**
+     * @throws ExceptionBadState - if for any reason, it's not possible to store the data
+     */
     public function set(Metadata $metadata)
     {
 
         $name = $metadata->getName();
-        $persistentValue = $metadata->toStoreValue();
-        $defaultValue = $metadata->toStoreDefaultValue();
+        try {
+            $persistentValue = $metadata->toStoreValue();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionBadState("There is no value to store", self::CANONICAL);
+        }
+        try {
+            $defaultValue = $metadata->toStoreDefaultValue();
+        } catch (ExceptionNotFound $e) {
+            $defaultValue = null;
+        }
         $resource = $metadata->getResource();
         $this->checkResource($resource);
         if ($resource === null) {
-            throw new ExceptionRuntime("A resource is mandatory", self::CANONICAL);
+            throw new ExceptionBadState("A resource is mandatory", self::CANONICAL);
         }
         if (!($resource instanceof Page)) {
-            throw new ExceptionRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
+            throw new ExceptionBadState("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
         $dokuwikiId = $resource->getDokuwikiId();
         $this->setFromWikiId($dokuwikiId, $name, $persistentValue, $defaultValue);

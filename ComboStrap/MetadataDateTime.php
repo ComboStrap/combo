@@ -53,7 +53,10 @@ abstract class MetadataDateTime extends Metadata
         return $this->setValue($this->fromPersistentDateTimeUtility($value));
     }
 
-    public function toStoreDefaultValue(): ?string
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function toStoreDefaultValue(): string
     {
 
         return $this->toPersistentDateTimeUtility($this->getDefaultValue());

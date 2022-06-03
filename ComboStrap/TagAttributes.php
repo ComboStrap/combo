@@ -780,16 +780,18 @@ class TagAttributes
             /**
              * Only null value are not passed
              * width can be zero, wiki-id can be the empty string (ie root namespace)
+             *
+             * Value can be array, number, string
              */
             if (!is_null($value)) {
-                $array[$key] = StringUtility::toString($value);
+                $array[$key] = $value;
             }
         }
         /**
          * html attribute may also be in the callstack
          */
         foreach ($this->outputAttributes as $key => $value) {
-            $array[$key] = StringUtility::toString($value);
+            $array[$key] = $value;
         }
         $style = $this->getStyle();
         if ($style != null) {

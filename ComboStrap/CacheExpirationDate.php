@@ -27,15 +27,21 @@ class CacheExpirationDate extends MetadataDateTime
             ->setResource($page);
     }
 
+    /**
+     *
+     * @throws ExceptionNotFound - if their is no default value, the HTML document does not exists, the cache is disabled
+     *
+     */
     public function getDefaultValue(): DateTime
     {
         $resourceCombo = $this->getResource();
         if (!($resourceCombo instanceof Page)) {
             throw new ExceptionNotFound("Cache expiration is only available for page");
         }
+
         $path = $resourceCombo->getHtmlDocument()->getCachePath();
         if (!FileSystems::exists($path)) {
-            throw new ExceptionNotFound("There is no HTML document to expire");
+            throw new ExceptionNotFound("There is no HTML document created to expire");
         }
 
         $cacheIntervalInSecond = Site::getCacheTime();

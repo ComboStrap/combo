@@ -413,9 +413,7 @@ abstract class Metadata
      */
     public function toStoreValue()
     {
-
         return $this->getValue();
-
     }
 
 
@@ -424,6 +422,7 @@ abstract class Metadata
      * The store default value is used to
      * see if the value set is the same than the default one
      * It this is the case, the data is not stored
+     * @throws ExceptionNotFound
      */
     public function toStoreDefaultValue()
     {

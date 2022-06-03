@@ -244,7 +244,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
      * @return int
      */
     public
-    function getLevelFromMatch($match)
+    function getLevelFromMatch($match): int
     {
         return 7 - strlen(trim($match));
     }

@@ -96,7 +96,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                     $status = self::PARSING_STATE_UNSUCCESSFUL;
                 } catch (ExceptionBadArgument $e) {
                     // It should not happen
-                    LogUtility::error("Internal Error: {$e->getMessage()}");
+                    LogUtility::error("Internal Error: The cache expiration date could not be stored: {$e->getMessage()}", self::TAG);
                 }
 
                 LogUtility::msg("The cache syntax component has been deprecated for the cache frequency metadata", LogUtility::LVL_MSG_INFO, CacheExpirationFrequency::PROPERTY_NAME);

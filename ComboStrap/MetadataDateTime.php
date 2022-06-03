@@ -16,7 +16,8 @@ abstract class MetadataDateTime extends Metadata
 
     /**
      * Helper function for date metadata
-     * @return array|string|null
+     * @return array|string
+     * @throws ExceptionNotFound
      */
     public function toStoreValue()
     {

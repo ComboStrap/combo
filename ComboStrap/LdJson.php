@@ -332,7 +332,7 @@ class LdJson extends MetadataJson
                  */
                 $publisher = array(
                     "@type" => "Organization",
-                    "name" => Site::getTitle()
+                    "name" => Site::getName()
                 );
                 $logoUrlAsPng = Site::getLogoUrlAsPng();
                 if (!empty($logoUrlAsPng)) {
@@ -351,18 +351,21 @@ class LdJson extends MetadataJson
                 $ldJson = array(
                     "@context" => "https://schema.org",
                     "@type" => "Event");
-                $eventName = $page->getName();
-                if (!blank($eventName)) {
+                try {
+                    $eventName = $page->getName();
                     $ldJson["name"] = $eventName;
-                } else {
+                } catch (ExceptionNotFound $e) {
                     LogUtility::msg("The name metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return null;
                 }
-                $eventDescription = $page->getDescription();
-                if (blank($eventDescription)) {
+
+                try {
+                    $eventDescription = $page->getDescription();
+                } catch (ExceptionNotFound $e) {
                     LogUtility::msg("The description metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return null;
                 }
+
                 $ldJson["description"] = $eventDescription;
                 $startDate = $page->getStartDateAsString();
                 if ($startDate === null) {
@@ -399,15 +402,21 @@ class LdJson extends MetadataJson
          * https://developers.google.com/search/docs/data-types/speakable
          */
         $speakableXpath = array();
-        if (!empty($page->getTitleOrDefault())) {
+        try {
+            $page->getTitleOrDefault();
             $speakableXpath[] = "/html/head/title";
+        } catch (ExceptionNotFound $e) {
+            // ok no title
         }
-        if (!empty($page->getDescription())) {
+        try {
+            $page->getDescription();
             /**
              * Only the description written otherwise this is not speakable
              * you can have link and other strangeness
              */
             $speakableXpath[] = "/html/head/meta[@name='description']/@content";
+        } catch (ExceptionNotFound $e) {
+            // ok, no description
         }
         $ldJson[self::SPEAKABLE] = array(
             "@type" => "SpeakableSpecification",

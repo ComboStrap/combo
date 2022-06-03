@@ -143,7 +143,6 @@ class CacheManager
     }
 
     /**
-     * @throws ExceptionCompile
      */
     public function shouldSlotExpire($pageId): bool
     {
@@ -161,23 +160,21 @@ class CacheManager
         }
 
         $page = Page::createPageFromId($pageId);
-        $cacheExpirationFrequency = CacheExpirationFrequency::createForPage($page)
-            ->getValue();
-        if ($cacheExpirationFrequency === null) {
+        try {
+            $cacheExpirationFrequency = CacheExpirationFrequency::createForPage($page)
+                ->getValue();
+        } catch (ExceptionNotFound $e) {
             $this->slotsExpiration[$pageId] = false;
             return false;
         }
 
         $cacheExpirationDateMeta = CacheExpirationDate::createForPage($page);
-        $expirationDate = $cacheExpirationDateMeta->getValue();
-
-        if ($expirationDate === null) {
-
+        try {
+            $expirationDate = $cacheExpirationDateMeta->getValue();
+        } catch (ExceptionNotFound $e) {
             $expirationDate = Cron::getDate($cacheExpirationFrequency);
-            $cacheExpirationDateMeta->setValue($expirationDate);
-
         }
-
+        $cacheExpirationDateMeta->setValue($expirationDate);
 
         $actualDate = new DateTime();
         if ($expirationDate > $actualDate) {

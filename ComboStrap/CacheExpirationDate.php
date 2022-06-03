@@ -66,10 +66,7 @@ class CacheExpirationDate extends MetadataDateTime
         try {
             return parent::getValue();
         } catch (ExceptionNotFound $e) {
-            $cronExpression = $this->getResource()->getCacheExpirationFrequency();
-            if ($cronExpression === null) {
-                throw $e;
-            }
+            $cronExpression = CacheExpirationFrequency::createForPage($this->getResource())->getValue();
             try {
                 $value = Cron::getDate($cronExpression);
                 parent::setValue($value);

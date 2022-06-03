@@ -5,6 +5,7 @@ use ComboStrap\AnalyticsDocument;
 use ComboStrap\BacklinkCount;
 use ComboStrap\Canonical;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\Page;
@@ -406,9 +407,13 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * If the dokuwiki index is not up to date, we may got
          * inconsistency
          */
-        $countBacklinks = BacklinkCount::createFromResource($this->page)
-            ->setReadStore(MetadataDbStore::class)
-            ->getValueOrDefault();
+        try {
+            $countBacklinks = BacklinkCount::createFromResource($this->page)
+                ->setReadStore(MetadataDbStore::class)
+                ->getValueOrDefault();
+        } catch (ExceptionNotFound $e) {
+            $countBacklinks = 0;
+        }
         $statExport[BacklinkCount::getPersistentName()] = $countBacklinks;
         $backlinkScore = $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_BACKLINK_FACTOR, 1);
         if ($countBacklinks == 0) {

@@ -57,6 +57,9 @@ class FileSystems
 
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public static function getCreationTime(Path $path)
     {
         $scheme = $path->getScheme();
@@ -66,6 +69,7 @@ class FileSystems
             case DokuFs::SCHEME:
                 return DokuFs::getOrCreate()->getCreationTime($path);
             default:
+                // Internal Error: should not happen
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }
     }

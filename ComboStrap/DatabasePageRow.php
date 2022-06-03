@@ -156,6 +156,9 @@ class DatabasePageRow
         return $this;
     }
 
+    /**
+     * @throws ExceptionNotFound - no page id to add
+     */
     private function addPageIdMeta(array &$metaRecord)
     {
         $metaRecord[PageId::PROPERTY_NAME] = $this->page->getPageId();
@@ -374,21 +377,26 @@ class DatabasePageRow
         if ($this->sqlite === null) return null;
 
         // Do we have a page attached to this page id
-        $pageId = $page->getPageId();
-        if ($pageId !== null) {
+        try {
+            $pageId = $page->getPageId();
             $row = $this->getDatabaseRowFromPageId($pageId);
             if ($row !== null) {
                 return $row;
             }
+        } catch (ExceptionNotFound $e) {
+            // ok
         }
 
+
         // Do we have a page attached to the canonical
-        $canonical = $page->getCanonical();
-        if ($canonical != null) {
+        try {
+            $canonical = $page->getCanonical();
             $row = $this->getDatabaseRowFromCanonical($canonical);
             if ($row !== null) {
                 return $row;
             }
+        } catch (ExceptionNotFound $e) {
+            // ok
         }
 
         // Do we have a page attached to the path
@@ -754,16 +762,22 @@ class DatabasePageRow
             if ($metadata === null) {
                 throw new ExceptionRuntime("The metadata ($name) is unknown");
             }
-            $metaRecord[$name] = $metadata
-                ->setResource($this->page)
-                ->setReadStore($sourceStore)
-                ->buildFromReadStore()
-                ->setWriteStore($targetStore)
-                ->toStoreValueOrDefault(); // used by the template, the value is or default
+            try {
+                $metaRecord[$name] = $metadata
+                    ->setResource($this->page)
+                    ->setReadStore($sourceStore)
+                    ->buildFromReadStore()
+                    ->setWriteStore($targetStore)
+                    ->toStoreValueOrDefault(); // used by the template, the value is or default
+            } catch (ExceptionNotFound $e) {
+                $metaRecord[$name] = null;
+            }
         }
 
-        if ($this->page->getPageId() !== null) {
+        try {
             $this->addPageIdMeta($metaRecord);
+        } catch (ExceptionNotFound $e) {
+            // no page id - ok
         }
 
         // Is index
@@ -1135,6 +1149,9 @@ class DatabasePageRow
         try {
             $analyticsJson = $this->page->getAnalyticsDocument()->getOrProcessJson();
         } catch (ExceptionCompile $e) {
+            if(PluginUtility::isDevOrTest()){
+                throw $e;
+            }
             throw new ExceptionCompile("Unable to get the analytics document", self::CANONICAL, 0, $e);
         }
 

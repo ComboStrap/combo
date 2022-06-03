@@ -36,8 +36,6 @@ class PipelineUtility
     static public function execute($expression): string
     {
 
-        $expression = \syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($expression);
-
         /**
          * Get the command and applies them
          */
@@ -51,6 +49,9 @@ class PipelineUtility
          */
         $separatorCharacters = implode("", self::QUOTES_CHARACTERS) . self::SPACE;
         $message = trim($input, $separatorCharacters);
+        // we replace after the split to be sure that there is not a | separator in the variable value
+        // that would fuck up the process
+        $message = \syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($message);
         foreach ($commands as $command) {
             $command = trim($command, " )");
             $leftParenthesis = strpos($command, "(");

@@ -31,7 +31,7 @@ class PageCreationDate extends MetadataDateTime
         return new PageCreationDate();
     }
 
-    public function getDefaultValue(): ?DateTime
+    public function getDefaultValue(): DateTime
     {
         $path = $this->getResource()->getPath();
         return FileSystems::getCreationTime($path);

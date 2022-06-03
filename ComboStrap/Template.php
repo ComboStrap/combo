@@ -97,11 +97,6 @@ class Template
     public function setProperties(array $properties): Template
     {
         foreach ($properties as $key => $val) {
-            /**
-             * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
-             * @see {@link \syntax_plugin_combo_pipeline}
-             */
-            $val = str_replace('"', "'", $val);
             $this->setProperty($key, $val);
         }
         return $this;

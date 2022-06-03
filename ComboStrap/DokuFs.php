@@ -62,9 +62,10 @@ class DokuFs implements FileSystem
 
     /**
      * @param DokuPath $path
-     * @return DateTime|false|mixed|null
+     * @return DateTime
+     * @throws ExceptionNotFound
      */
-    public function getCreationTime(Path $path)
+    public function getCreationTime(Path $path): DateTime
     {
         return FileSystems::getCreationTime($path->toLocalPath());
     }

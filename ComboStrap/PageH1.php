@@ -63,10 +63,11 @@ class PageH1 extends MetadataText
                 return $h1;
             }
         }
-        $title = PageTitle::createForPage($this->getResource())
-            ->getValue();
-        if (!empty($title)) {
-            return $title;
+        try {
+            return PageTitle::createForPage($this->getResource())
+                ->getValue();
+        } catch (ExceptionNotFound $e) {
+            // ok
         }
 
         return ResourceName::createForResource($this->getResource())

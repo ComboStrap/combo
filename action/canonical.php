@@ -2,6 +2,7 @@
 
 use ComboStrap\Canonical;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 
@@ -36,7 +37,6 @@ class action_plugin_combo_canonical extends DokuWiki_Action_Plugin
     }
 
 
-
     /**
      * Add the canonical value to JSON
      * to be able to report only on canonical value and not on path
@@ -48,24 +48,30 @@ class action_plugin_combo_canonical extends DokuWiki_Action_Plugin
 
         global $JSINFO;
         $page = Page::createPageFromRequestedPage();
-        if ($page->getCanonical() !== null) {
-            $JSINFO[Canonical::PROPERTY_NAME] = $page->getCanonical();
-            if (isset($JSINFO["ga"]) && PluginUtility::getConfValue(self::CONF_CANONICAL_FOR_GA_PAGE_VIEW, 1)) {
-                //
-                // The path portion of a URL. This value should start with a slash (/) character.
-                // As said here
-                // https://developers.google.com/analytics/devguides/collection/analyticsjs/pages#pageview_fields
-                //
-                //
-                // For the modification instructions
-                // https://developers.google.com/analytics/devguides/collection/analyticsjs/pages#pageview_fields
-                $pageViewCanonical = str_replace(DokuPath::PATH_SEPARATOR, "/", $page->getCanonical());
-                if ($pageViewCanonical[0] != "/") {
-                    $pageViewCanonical = "/$pageViewCanonical";
-                }
-                $JSINFO["ga"]["pageview"] = $pageViewCanonical;
-            }
+
+        try {
+            $canonical = $page->getCanonical();
+            $JSINFO[Canonical::PROPERTY_NAME] = $canonical;
+        } catch (ExceptionNotFound $e) {
+            return;
         }
+
+        if (isset($JSINFO["ga"]) && PluginUtility::getConfValue(self::CONF_CANONICAL_FOR_GA_PAGE_VIEW, 1)) {
+            //
+            // The path portion of a URL. This value should start with a slash (/) character.
+            // As said here
+            // https://developers.google.com/analytics/devguides/collection/analyticsjs/pages#pageview_fields
+            //
+            //
+            // For the modification instructions
+            // https://developers.google.com/analytics/devguides/collection/analyticsjs/pages#pageview_fields
+            $pageViewCanonical = str_replace(DokuPath::PATH_SEPARATOR, "/", $canonical);
+            if ($pageViewCanonical[0] != "/") {
+                $pageViewCanonical = "/$pageViewCanonical";
+            }
+            $JSINFO["ga"]["pageview"] = $pageViewCanonical;
+        }
+
     }
 
 }

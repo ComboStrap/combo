@@ -179,6 +179,9 @@ abstract class Metadata
 
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public function toStoreValueOrDefault()
     {
         $value = $this->toStoreValue();
@@ -404,12 +407,15 @@ abstract class Metadata
 
 
     /**
-     * @return string|array|null the value to be persisted by the store
+     * @return string|array the value to be persisted by the store
      * the reverse action is {@link Metadata::setFromStoreValue()}
+     * @throws ExceptionNotFound - if there is no value (ie null)
      */
     public function toStoreValue()
     {
+
         return $this->getValue();
+
     }
 
 
@@ -725,11 +731,10 @@ abstract class Metadata
             if ($value === "") {
                 return $this->getDefaultValue();
             }
+            return $value;
         } catch (ExceptionNotFound $e) {
             return $this->getDefaultValue();
         }
-
-        return $value;
 
     }
 

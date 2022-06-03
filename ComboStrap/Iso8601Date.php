@@ -215,7 +215,7 @@ class Iso8601Date
             case "traditional":
                 return IntlDateFormatter::TRADITIONAL;
             default:
-                throw new ExceptionNotFound("The constant ($constant) is not a valid constant", \syntax_plugin_combo_pipeline::CANONICAL);
+                throw new ExceptionNotFound("The constant ($constant) is not a valid constant", self::CANONICAL);
         }
     }
 

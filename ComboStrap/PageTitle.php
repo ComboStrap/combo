@@ -50,21 +50,24 @@ class PageTitle extends MetadataText
      * `title` is created by DokuWiki
      * in current but not persistent
      * and hold the heading 1, see {@link p_get_first_heading}
+     * @throws ExceptionNotFound
      */
-    public function getDefaultValue(): ?string
+    public function getDefaultValue(): string
     {
 
         $resource = $this->getResource();
-        if ($resource instanceof Page) {
-            if ($resource->isRootHomePage() && !empty(Site::getTagLine())) {
-                return Site::getTagLine();
-            }
-            if (!empty($resource->getH1OrDefault())) {
-                return $resource->getH1OrDefault();
-            }
-            return $resource->getNameOrDefault();
+        if (!($resource instanceof Page)) {
+            throw new ExceptionNotFound("Resource that are not page have no title");
         }
-        return null;
+        if ($resource->isRootHomePage() && !empty(Site::getTagLine())) {
+            return Site::getTagLine();
+        }
+        try {
+            return $resource->getH1OrDefault();
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        return $resource->getNameOrDefault();
 
     }
 

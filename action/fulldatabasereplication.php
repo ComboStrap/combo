@@ -6,6 +6,7 @@ use ComboStrap\Event;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PluginUtility;
 
 /**
  * Copyright (c) 2021. ComboStrap, Inc. and its affiliates. All Rights Reserved.
@@ -79,8 +80,12 @@ class action_plugin_combo_fulldatabasereplication extends DokuWiki_Action_Plugin
             try {
                 $databasePage->replicate();
             } catch (ExceptionCompile $e) {
-                $message = "Error with the database replication for the page ($page). ".$e->getMessage();
-                if(Console::isConsoleRun()) {
+                if (PluginUtility::isDevOrTest()) {
+                    // to get the stack trace
+                    throw $e;
+                }
+                $message = "Error with the database replication for the page ($page). " . $e->getMessage();
+                if (Console::isConsoleRun()) {
                     throw new ExceptionCompile($message);
                 } else {
                     LogUtility::error($message);
@@ -104,9 +109,6 @@ class action_plugin_combo_fulldatabasereplication extends DokuWiki_Action_Plugin
 
 
     }
-
-
-
 
 
 }

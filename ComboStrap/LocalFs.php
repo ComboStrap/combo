@@ -9,7 +9,7 @@ use DateTime;
 class LocalFs implements FileSystem
 {
 
-    // same as java
+    // same as the uri: ie local file os system
     public const SCHEME = "file";
 
     /**
@@ -68,10 +68,13 @@ class LocalFs implements FileSystem
         return Iso8601Date::createFromTimestamp(filemtime($path->toAbsolutePath()->toPathString()))->getDateTime();
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public function getCreationTime(Path $path)
     {
         if (!$this->exists($path)) {
-            return null;
+            throw new ExceptionNotFound("The path ($path) does not exists, no creation time");
         }
         $filePath = $path->toAbsolutePath()->toPathString();
         $timestamp = filectime($filePath);

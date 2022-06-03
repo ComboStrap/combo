@@ -557,15 +557,18 @@ class Page extends ResourceComboAbs
     /**
      * @return string the title, or h1 if empty or the id if empty
      * Shortcut to {@link PageTitle::getValueOrDefault()}
+     * @throws ExceptionNotFound
      */
     public
-    function getTitleOrDefault(): ?string
+    function getTitleOrDefault(): string
     {
-        return $this->title->getValueFromStoreOrDefault();
+        return $this->title->getValueOrDefault();
+
     }
 
     /**
      * @return mixed
+     * @throws ExceptionNotFound
      */
     public
     function getH1OrDefault()
@@ -577,9 +580,10 @@ class Page extends ResourceComboAbs
 
     /**
      * @return mixed
+     * @throws ExceptionNotFound
      */
     public
-    function getDescription(): ?string
+    function getDescription(): string
     {
         return $this->description->getValueFromStore();
     }
@@ -1121,17 +1125,15 @@ class Page extends ResourceComboAbs
              * ToStoreValue to get the string format of date/boolean in the {@link PipelineUtility}
              * If we want the native value, we need to change the pipeline
              */
-            $value = $metadata
-                ->setResource($this)
-                ->setWriteStore(TemplateStore::class)
-                ->toStoreValueOrDefault();
-            if ($metadata->getDataType() === DataType::TEXT_TYPE_VALUE) {
+            try {
+                $value = $metadata
+                    ->setResource($this)
+                    ->setWriteStore(TemplateStore::class)
+                    ->toStoreValueOrDefault();
 
-                /**
-                 * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
-                 * @see {@link \syntax_plugin_combo_pipeline}
-                 */
-                $value = str_replace('"', "'", $value);
+
+            } catch (ExceptionNotFound $e) {
+                $value = null;
             }
             $array[$metadataName] = $value;
         }
@@ -1192,6 +1194,7 @@ class Page extends ResourceComboAbs
     /**
      * A page id or null if the page id does not exists
      * @return string|null
+     * @throws ExceptionNotFound
      */
     public
     function getPageId(): ?string
@@ -1251,14 +1254,20 @@ class Page extends ResourceComboAbs
 
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
-    function getPageType(): ?string
+    function getPageType(): string
     {
         return $this->type->getValueFromStore();
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
-    function getCanonical(): ?string
+    function getCanonical(): string
     {
         return $this->canonical->getValueFromStore();
     }
@@ -1267,6 +1276,7 @@ class Page extends ResourceComboAbs
      * Create a canonical from the last page path part.
      *
      * @return string|null
+     * @throws ExceptionNotFound
      */
     public
     function getDefaultCanonical(): ?string
@@ -1274,12 +1284,18 @@ class Page extends ResourceComboAbs
         return $this->canonical->getDefaultValue();
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
     function getLayout()
     {
         return $this->layout->getValueFromStore();
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
     function getDefaultPageName(): string
     {
@@ -1292,6 +1308,9 @@ class Page extends ResourceComboAbs
         return $this->title->getDefaultValue();
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
     function getDefaultH1()
     {
@@ -1857,6 +1876,7 @@ class Page extends ResourceComboAbs
 
     /**
      * @return DateTime|null
+     * @throws ExceptionNotFound
      * @deprecated for {@link CacheExpirationDate}
      */
     public
@@ -1877,10 +1897,11 @@ class Page extends ResourceComboAbs
 
     /**
      * @return string|null
+     * @throws ExceptionNotFound
      * @deprecated for {@link CacheExpirationFrequency}
      */
     public
-    function getCacheExpirationFrequency(): ?string
+    function getCacheExpirationFrequency(): string
     {
         return $this->cacheExpirationFrequency->getValue();
     }

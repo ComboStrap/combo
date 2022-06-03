@@ -46,7 +46,6 @@ class BrandButton
     const CANONICAL = "social";
 
 
-
     /**
      * @var string
      */
@@ -181,7 +180,7 @@ class BrandButton
         string $brandName,
         string $widget = self::WIDGET_BUTTON_VALUE,
         string $icon = self::ICON_SOLID_VALUE,
-        ?int $width = null): BrandButton
+        ?int   $width = null): BrandButton
     {
         return (new BrandButton($brandName, self::TYPE_BUTTON_SHARE))
             ->setWidget($widget)
@@ -197,7 +196,7 @@ class BrandButton
         string $handle = null,
         string $widget = self::WIDGET_BUTTON_VALUE,
         string $icon = self::ICON_SOLID_VALUE,
-        ?int $width = null): BrandButton
+        ?int   $width = null): BrandButton
     {
         return (new BrandButton($brandName, self::TYPE_BUTTON_FOLLOW))
             ->setHandle($handle)
@@ -207,11 +206,12 @@ class BrandButton
     }
 
     /**
-     * @throws ExceptionCompile
+     *
      *
      * Dictionary has been made with the data found here:
      *   * https://github.com/ellisonleao/sharer.js/blob/main/sharer.js#L72
      *   * and
+     * @throws ExceptionBadArgument
      */
     public function getBrandEndpointForPage(Page $requestedPage = null): ?string
     {
@@ -221,28 +221,37 @@ class BrandButton
          */
         $urlTemplate = $this->brand->getWebUrlTemplate($this->type);
         if ($urlTemplate === null) {
-            throw new ExceptionCompile("The brand ($this) does not support the $this->type button (The $this->type URL is unknown)");
+            throw new ExceptionBadArgument("The brand ($this) does not support the $this->type button (The $this->type URL is unknown)");
         }
         switch ($this->type) {
 
             case self::TYPE_BUTTON_SHARE:
                 if ($requestedPage === null) {
-                    throw new ExceptionCompile("The page requested should not be null for a share button when requesting the endpoint uri.");
+                    throw new ExceptionBadArgument("The page requested should not be null for a share button when requesting the endpoint uri.");
                 }
                 $canonicalUrl = $this->getSharedUrlForPage($requestedPage);
                 $templateData["url"] = $canonicalUrl;
-                $templateData["title"] = $requestedPage->getTitleOrDefault();
-                $description = $requestedPage->getDescription();
-                if ($description === null) {
-                    $description = "";
+                try {
+                    $templateData["title"] = $requestedPage->getTitleOrDefault();
+                } catch (ExceptionNotFound $e) {
+                    $templateData["title"] = "";
                 }
-                $templateData["description"] = $description;
-                $templateData["text"] = $this->getTextForPage($requestedPage);
+
+                try {
+                    $templateData["description"] = $requestedPage->getDescription();
+                } catch (ExceptionNotFound $e) {
+                    $templateData["description"] = "";
+                }
+
+                try {
+                    $templateData["text"] = $this->getTextForPage($requestedPage);
+                } catch (ExceptionNotFound $e) {
+                    $templateData["text"] = "";
+                }
+
                 $via = null;
-                switch ($this->brand->getName()) {
-                    case \action_plugin_combo_metatwitter::CANONICAL:
-                        $via = substr(action_plugin_combo_metatwitter::COMBO_STRAP_TWITTER_HANDLE, 1);
-                        break;
+                if ($this->brand->getName() == \action_plugin_combo_metatwitter::CANONICAL) {
+                    $via = substr(action_plugin_combo_metatwitter::COMBO_STRAP_TWITTER_HANDLE, 1);
                 }
                 if ($via !== null && $via !== "") {
                     $templateData["via"] = $via;
@@ -515,15 +524,20 @@ EOF;
         return true;
     }
 
+
+    /**
+     * @throws ExceptionNotFound
+     */
     public
-    function getTextForPage(Page $requestedPage): ?string
+    function getTextForPage(Page $requestedPage): string
     {
-        $text = $requestedPage->getTitleOrDefault();
-        $description = $requestedPage->getDescription();
-        if ($description !== null) {
-            $text .= " > $description";
+
+        try {
+            return "{$requestedPage->getTitleOrDefault()} > {$requestedPage->getDescription()}";
+        } catch (ExceptionNotFound $e) {
+            // no description, may be ?
+            return $requestedPage->getTitleOrDefault();
         }
-        return $text;
 
     }
 

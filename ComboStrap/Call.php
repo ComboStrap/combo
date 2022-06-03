@@ -88,6 +88,7 @@ class Call
         \syntax_plugin_combo_button::TAG,
         \syntax_plugin_combo_tooltip::TAG,
         \syntax_plugin_combo_pipeline::TAG,
+        \syntax_plugin_combo_ibreadcrumb::TAG,
     );
 
 
@@ -100,6 +101,8 @@ class Call
         "listcontent_close",
         "table_open",
         "table_close",
+        "p_open",
+        "p_close"
     );
 
     /**

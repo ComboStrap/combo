@@ -104,8 +104,7 @@ class Canonical extends MetadataWikiPath
          * ie javascript:start will become javascript
          * (Not a home page)
          */
-
-        if ($resourceCombo->isStartPage()) {
+        if ($resourceCombo->isIndexPage()) {
             $names = array_slice($names, 0, $namesLength - 1);
         }
         $calculatedCanonical = implode(":", $names);

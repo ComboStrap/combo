@@ -379,17 +379,6 @@ class Page extends ResourceComboAbs
     }
 
 
-    /**
-     *
-     * @return bool
-     * Used to delete the part path of a page for default name or canonical value
-     */
-    public
-    function isStartPage(): bool
-    {
-        $startPageName = Site::getIndexPageName();
-        return $this->getPath()->getLastName() === $startPageName;
-    }
 
     /**
      * Return a canonical if set
@@ -401,7 +390,7 @@ class Page extends ResourceComboAbs
      * @deprecated for {@link Canonical::getValueOrDefault()}
      */
     public
-    function getCanonicalOrDefault(): ?string
+    function getCanonicalOrDefault(): string
     {
         return $this->canonical->getValueFromStoreOrDefault();
 

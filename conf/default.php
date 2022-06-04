@@ -191,10 +191,6 @@ $conf['twitter:dnt'] = "on";
 $conf['twitter:widgets:theme'] = "light";
 $conf['twitter:widgets:border-color'] = "#55acee";
 
-/**
- * Page Image {@link Metadata::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE}
- */
-$conf['disableFirstImageAsPageImage'] = 0;
 
 /**
  * Facebook

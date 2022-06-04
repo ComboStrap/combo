@@ -341,9 +341,9 @@ class LogUtility
         self::$exceptionLevelOnTest = self::LVL_MSG_WARNING;
     }
 
-    public static function errorIfDevOrTest($message, $canonical= "support")
+    public static function errorIfDevOrTest($message, $canonical = "support")
     {
-        if(PluginUtility::isDevOrTest()){
+        if (PluginUtility::isDevOrTest()) {
             LogUtility::error($message, $canonical);
         }
     }
@@ -351,5 +351,17 @@ class LogUtility
     public static function setTestExceptionLevelToError()
     {
         self::setTestExceptionLevel(self::LVL_MSG_ERROR);
+    }
+
+    /**
+     * Advertise an error that should not take place if the code was
+     * written properly
+     * @param string $message
+     * @param string $canonical
+     * @return void
+     */
+    public static function internalError(string $message, string $canonical)
+    {
+        self::error($message, $canonical);
     }
 }

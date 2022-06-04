@@ -106,6 +106,11 @@ class Identity
                 return false;
             }
         }
+        /**
+         * There is also
+         * $INFO['writable'] === true
+         * See true if writable See https://www.dokuwiki.org/devel:environment#info
+         */
         if ($_SERVER['REMOTE_USER']) {
             $perm = auth_quickaclcheck($wikiId);
         } else {

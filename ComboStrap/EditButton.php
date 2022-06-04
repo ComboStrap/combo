@@ -95,6 +95,23 @@ class EditButton
 
     }
 
+    public static function deleteAll(string $html)
+    {
+        // Dokuwiki way is to delete
+        // but because they are comment, they are not shown
+        // We delete to serve clean page to search engine
+        return preg_replace(SEC_EDIT_PATTERN, '', $html);
+    }
+
+    public static function replaceOrDeleteAll(string $html_output)
+    {
+        try {
+            return EditButton::replaceAll($html_output);
+        } catch (ExceptionNotAuthorized|ExceptionBadState $e) {
+            return EditButton::deleteAll($html_output);
+        }
+    }
+
     /**
      *
      * @throws ExceptionBadArgument
@@ -123,10 +140,12 @@ class EditButton
         $data = [
             self::WIKI_ID => $wikiId,
             self::EDIT_MESSAGE => $this->label,
-            self::FORM_ID => $formId,
-            self::TARGET_ATTRIBUTE_NAME => $this->target,
-            self::RANGE => $this->getRange()
+            self::FORM_ID => $formId
         ];
+        if ($this->hasRange()) {
+            $data[self::TARGET_ATTRIBUTE_NAME] = $this->target;
+            $data[self::RANGE] = $this->getRange();
+        }
         return self::EDIT_BUTTON_PREFIX . json_encode($data);
     }
 
@@ -158,9 +177,16 @@ class EditButton
     }
 
 
+    /**
+     * @throws ExceptionNotAuthorized - if the user cannot modify the page
+     * @throws ExceptionBadState - if the page is a revision page or the HTML is not the output of a page
+     */
     public static function replaceAll($html)
     {
 
+        if (!Identity::isWriter()) {
+            throw new ExceptionNotAuthorized("Page is not writable by the user");
+        }
         /**
          * Delete the edit comment
          *   * if not writable
@@ -168,17 +194,19 @@ class EditButton
          * Original: {@link html_secedit()}
          */
         global $INFO;
-        $writable =
-            (
-                isset($INFO)
-                && $INFO['writable'] === true // true if writable See https://www.dokuwiki.org/devel:environment#info
-                && !$INFO['rev'] // the page is not a revision page
-            );
-        if (!$writable) {
-            // Dokuwiki way is to delete
-            // but because they are comment, they are not shown
-            // We delete to serve clean page to search engine
-            return preg_replace(SEC_EDIT_PATTERN, '', $html);
+        if (!isset($INFO)) {
+            $message = "Internal Error: Global Info variable is not available. We can't get the page revision";
+            LogUtility::internalError($message, self::CANONICAL);
+            throw new ExceptionNotAuthorized($message);
+        }
+        // the page is a revision page
+        if ($INFO['rev']) {
+            throw new ExceptionBadState("The page is a revision page");
+        }
+
+        global $ACT;
+        if ($ACT !== "show") {
+            throw new ExceptionBadState("The HTML is not the rendering of a page (ACT is not show)");
         }
 
         /**
@@ -313,4 +341,10 @@ EOF;
         return PluginUtility::getCurrentSlotId();
 
     }
+
+    private function hasRange(): bool
+    {
+        return $this->startPosition !== null || $this->endPosition !== null;
+    }
+
 }

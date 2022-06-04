@@ -3,7 +3,9 @@
 use ComboStrap\DokuPath;
 use ComboStrap\EditButton;
 use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionBadState;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotAuthorized;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\Layout;
@@ -67,7 +69,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
      */
     public static function getSlotNameForArea($area)
     {
-        switch ($area){
+        switch ($area) {
             case self::PAGE_HEADER_AREA:
                 return Site::getPageHeaderSlotName();
             case self::PAGE_FOOTER_AREA:
@@ -192,7 +194,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
             // show
             $showArea = $tagAttributes->getBooleanValueAndRemoveIfPresent("show", true);
             $layoutArea->setShow($showArea);
-            if($showArea===false){
+            if ($showArea === false) {
                 continue;
             }
 
@@ -243,7 +245,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                     $tagAttributes->addComponentAttributeValue("role", "complementary");
                     $tagAttributes->addClassName("d-print-none");
                     try {
-                        $closesPath = FileSystems::closest($requestedPage->getPath(), $layoutArea->getSlotName(). DokuPath::PAGE_FILE_TXT_EXTENSION);
+                        $closesPath = FileSystems::closest($requestedPage->getPath(), $layoutArea->getSlotName() . DokuPath::PAGE_FILE_TXT_EXTENSION);
                     } catch (ExceptionNotFound $e) {
                         // ok
                     }
@@ -266,11 +268,13 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
         try {
             $page = Page::createPageFromPathObject($path);
             $html = $page->toXhtml();
-            $finalHtml = EditButton::replaceAll($html);
+            return EditButton::replaceOrDeleteAll($html);
         } catch (Exception $e) {
-            $finalHtml = "Rendering the slot ($path), returns an error. {$e->getMessage()}";
+            return "Rendering the slot ($path), returns an error. {$e->getMessage()}";
         }
-        return $finalHtml;
+
+
+
     }
 
 

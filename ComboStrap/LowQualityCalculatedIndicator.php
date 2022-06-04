@@ -26,31 +26,34 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
         return "The indicator calculated by the analytics process that tells if a page is of a low quality";
     }
 
-    public function getValue(): ?bool
+    public function getValue(): bool
     {
-        $value = parent::getValue();
-        if ($value !== null) {
-            return $value;
-        }
 
-        /**
-         * Migration code
-         * The indicator {@link LowQualityCalculatedIndicator::LOW_QUALITY_INDICATOR_CALCULATED} is new
-         * but if the analytics was done, we can get it
-         */
-        $resource = $this->getResource();
-        if (!($resource instanceof Page)) {
-            return null;
-        }
-        $analyticsDocument = $resource->getAnalyticsDocument();
-        if (!FileSystems::exists($analyticsDocument->getCachePath())) {
-            return null;
-        }
         try {
-            return $analyticsDocument->getJson()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
-        } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while reading the json analytics. {$e->getMessage()}");
-            return null;
+            return parent::getValue();
+        } catch (ExceptionNotFound $e) {
+
+            /**
+             * Migration code
+             * The indicator {@link LowQualityCalculatedIndicator::LOW_QUALITY_INDICATOR_CALCULATED} is new
+             * but if the analytics was done, we can get it
+             */
+            $resource = $this->getResource();
+            if (!($resource instanceof Page)) {
+                throw new ExceptionNotFound("Low Quality is only for page resources");
+            }
+            $analyticsDocument = $resource->getAnalyticsDocument();
+            if (!FileSystems::exists($analyticsDocument->getCachePath())) {
+                throw new ExceptionNotFound("No analytics document could be found");
+            }
+            try {
+                return $analyticsDocument->getJson()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
+            } catch (ExceptionCompile $e) {
+                $message = "Error while reading the json analytics. {$e->getMessage()}";
+                LogUtility::internalError($message, self::CANONICAL);
+                throw new ExceptionNotFound($message);
+            }
+
         }
 
     }

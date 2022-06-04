@@ -379,7 +379,6 @@ class Page extends ResourceComboAbs
     }
 
 
-
     /**
      * Return a canonical if set
      * otherwise derive it from the id
@@ -494,35 +493,33 @@ class Page extends ResourceComboAbs
     function isLowQualityPage(): bool
     {
 
-        $canBeOfLowQuality = $this->getCanBeOfLowQuality();
-        if ($canBeOfLowQuality === false) {
-            return false;
+        try {
+            return $this->getCanBeOfLowQuality();
+        } catch (ExceptionNotFound $e) {
+            if (!Site::isLowQualityProtectionEnable()) {
+                return false;
+            }
+            try {
+                return $this->getLowQualityIndicatorCalculated();
+            } catch (ExceptionNotFound $e) {
+                // We were returning null but null used in a condition is falsy
+                // we return false
+                return false;
+            }
         }
-        if (!Site::isLowQualityProtectionEnable()) {
-            return false;
-        }
-        return $this->getLowQualityIndicatorCalculated();
 
 
     }
 
 
-    public
-    function getCanBeOfLowQuality(): ?bool
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getCanBeOfLowQuality(): bool
     {
-
         return $this->canBeOfLowQuality->getValue();
-
     }
 
-
-    public
-    function getH1(): ?string
-    {
-
-        return $this->h1->getValueFromStore();
-
-    }
 
     /**
      * Return the Title
@@ -1354,6 +1351,9 @@ class Page extends ResourceComboAbs
     }
 
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
     function getLowQualityIndicatorCalculated()
     {

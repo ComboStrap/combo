@@ -24,7 +24,7 @@ class OutlineSection extends TreeNode
 
 
     private int $startFileIndex;
-    private int $endFileIndex;
+    private ?int $endFileIndex=null;
 
     private ?Call $headingEnterCall;
     /**
@@ -95,14 +95,16 @@ class OutlineSection extends TreeNode
         return $label;
     }
 
-    public function setStartPosition(int $startPosition)
+    public function setStartPosition(int $startPosition): OutlineSection
     {
         $this->startFileIndex = $startPosition;
+        return $this;
     }
 
-    public function setEndPosition(int $endFileIndex)
+    public function setEndPosition(int $endFileIndex): OutlineSection
     {
         $this->endFileIndex = $endFileIndex;
+        return $this;
     }
 
     /**
@@ -170,7 +172,7 @@ class OutlineSection extends TreeNode
         return $this->startFileIndex;
     }
 
-    public function getEndPosition(): int
+    public function getEndPosition(): ?int
     {
         return $this->endFileIndex;
     }

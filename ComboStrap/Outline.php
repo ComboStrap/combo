@@ -36,7 +36,8 @@ class Outline
         /**
          * Processing variable about the context
          */
-        $this->rootSection = OutlineSection::createOutlineRoot();
+        $this->rootSection = OutlineSection::createOutlineRoot()
+            ->setStartPosition(0);
         $this->actualSection = $this->rootSection;
         $actualLastPosition = 0;
         $callStack->moveToStart();
@@ -44,15 +45,6 @@ class Outline
 
             $tagName = $actualCall->getTagName();
 
-
-            /**
-             * Track the position in the file
-             */
-            $currentLastPosition = $actualCall->getLastMatchedCharacterPosition();
-            if ($currentLastPosition > $actualLastPosition) {
-                // the position in the stack is not always good
-                $actualLastPosition = $currentLastPosition;
-            }
 
             /**
              * Enter new section ?
@@ -82,12 +74,25 @@ class Outline
                     break;
             }
             if ($newSection) {
-                $this->actualSection->setEndPosition($actualLastPosition);
+                if ($this->actualSection->hasParent()) {
+                    // -1 because the actual position is the start of the next section
+                    $this->actualSection->setEndPosition($actualLastPosition - 1);
+                }
                 $childSection = OutlineSection::createChildOutlineSection($this->actualSection, $actualCall);
                 $childSection->addHeadingCall($actualCall);
                 $this->actualSection = $childSection;
                 continue;
             }
+
+            /**
+             * Track the position in the file
+             */
+            $currentLastPosition = $actualCall->getLastMatchedCharacterPosition();
+            if ($currentLastPosition > $actualLastPosition) {
+                // the position in the stack is not always good
+                $actualLastPosition = $currentLastPosition;
+            }
+
 
             switch ($actualCall->getComponentName()) {
                 case \action_plugin_combo_headingpostprocessing::EDIT_SECTION_OPEN:
@@ -152,7 +157,7 @@ class Outline
             }
             $this->addCallToSection($actualCall);
         }
-        $this->actualSection->setEndPosition($actualLastPosition);
+
     }
 
     public function getRootSection(): OutlineSection

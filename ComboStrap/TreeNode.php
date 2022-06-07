@@ -73,6 +73,16 @@ class TreeNode
         return $treeNode;
     }
 
+    public function appendChild(TreeNode $treeNode): TreeNode
+    {
+        $identifier = $treeNode->getIdentifier();
+        $actualTreeNode = $this->children[$identifier];
+        if ($actualTreeNode === null) {
+            $this->children[$identifier] = $treeNode;
+        }
+        return $this;
+    }
+
 
     public
     static function createFromWikiPath(string $wikiPath = ":"): TreeNode
@@ -166,6 +176,11 @@ class TreeNode
             throw new ExceptionNotFound("This node has no child");
         }
         return $this->children[$childrenKeys[0]];
+    }
+
+    private function getIdentifier(): string
+    {
+        return $this->id;
     }
 
 }

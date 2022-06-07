@@ -3,7 +3,7 @@
 namespace ComboStrap;
 
 
-class OutlineSection
+class OutlineSection extends TreeNode
 {
 
 
@@ -15,16 +15,31 @@ class OutlineSection
 
     private array $headingTagNames = [\syntax_plugin_combo_heading::TAG, "header", \syntax_plugin_combo_headingwiki::TAG, \syntax_plugin_combo_headingatx::TAG];
 
-    /**
-     */
-    public function __construct()
+
+    private int $startFileIndex;
+    private int $endFileIndex;
+
+
+    public static function createOutlineRoot(): OutlineSection
     {
+        return new OutlineSection('root', null);
     }
 
-    public static function create(): OutlineSection
+    public static function createChildOutlineSection(string $identifier, OutlineSection $parentSection): OutlineSection
     {
-        return new OutlineSection();
+        $outlineSection = new OutlineSection($identifier, $parentSection);
+        $parentSection->appendChild($outlineSection);
+        return $outlineSection;
     }
+
+    public function getFirstChild(): OutlineSection
+    {
+
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return parent::getFirstChild();
+
+    }
+
 
     public function addCall(Call $actualCall): OutlineSection
     {
@@ -43,5 +58,23 @@ class OutlineSection
         }
         return $label;
     }
+
+    public function setStartPosition(int $startPosition)
+    {
+        $this->startFileIndex = $startPosition;
+    }
+    public function setEndPosition(int $endFileIndex)
+    {
+        $this->endFileIndex = $endFileIndex;
+    }
+
+    /**
+     * @return Call[]
+     */
+    public function getCalls(): array
+    {
+        return $this->calls;
+    }
+
 
 }

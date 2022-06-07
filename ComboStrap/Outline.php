@@ -12,7 +12,7 @@ class Outline
 {
 
 
-    private TreeNode $tree;
+    private OutlineSection $rootSection;
 
     public function __construct(CallStack $callStack)
     {
@@ -32,17 +32,11 @@ class Outline
         /**
          * Processing variable about the context
          */
-        $this->tree = TreeNode::createTreeRoot();
-        $actualSection = OutlineSection::create();
-        $this->tree->setContent($actualSection);
-        $outlineParsingState = null; // null if root, enter if we have entered a section
+        $this->rootSection = OutlineSection::createOutlineRoot();
+        $actualSection = $this->rootSection;
         $headingParsingState = DOKU_LEXER_EXIT; // enter if we have entered an heading, exit if not
         $headingEnterCall = null; // the enter call to be able to get attribute back
-
-        $headingText = ""; // text only content in the heading
-
         $actualLastPosition = 0;
-        $actualTreeNode = $this->tree;
         $callStack->moveToStart();
         while ($actualCall = $callStack->next()) {
 
@@ -77,28 +71,22 @@ class Outline
                     }
                     break;
                 case "header":
+                    // Should happen only on outline section
+                    // we take over inside a component
                     $newSection = true;
                     break;
             }
             if ($newSection) {
                 $level = $actualCall->getAttribute(syntax_plugin_combo_heading::LEVEL);
-                $actualTreeNode = $actualTreeNode->appendNode($level);
-                $actualSection = OutlineSection::create();
-                $actualSection->addCall($actualCall);
-                $actualTreeNode->setContent($actualSection);
+                $actualSection->setEndPosition($actualLastPosition);
+                $childSection = OutlineSection::createChildOutlineSection($level, $actualSection);
+                $childSection->addCall($actualCall);
+                $childSection->setStartPosition($actualLastPosition);
+                $actualSection = $childSection;
                 $headingParsingState = DOKU_LEXER_ENTER;
                 $headingEnterCall = $actualCall;
                 continue;
             }
-
-            /**
-             * Still on the root ?
-             */
-            if (!$actualTreeNode->hasParent()) {
-                $actualSection->addCall($actualCall);
-                continue;
-            }
-
 
             /**
              * Close/Process the heading description
@@ -153,10 +141,23 @@ class Outline
         }
     }
 
-    public function getTree(): TreeNode
+    public function getRootSection(): OutlineSection
     {
-        return $this->tree;
+        return $this->rootSection;
 
+    }
+
+    public function getInstructionCalls(): array
+    {
+        $totalInstructionCalls = [];
+        $collectCalls = function (OutlineSection $outlineSection) use (&$totalInstructionCalls) {
+            $instructionCalls = array_map(function (Call $element) {
+                return $element->getInstructionCall();
+            }, $outlineSection->getCalls());
+            $totalInstructionCalls = array_merge($totalInstructionCalls,$instructionCalls);
+        };
+        TreeVisit::visit($this->rootSection, $collectCalls);
+        return $totalInstructionCalls;
     }
 
 

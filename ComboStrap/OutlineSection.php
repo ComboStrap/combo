@@ -175,5 +175,10 @@ class OutlineSection extends TreeNode
         return $this->endFileIndex;
     }
 
+    public function hasContentCall(): bool
+    {
+        return sizeof($this->contentCalls) > 0;
+    }
+
 
 }

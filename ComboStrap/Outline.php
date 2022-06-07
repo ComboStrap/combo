@@ -14,6 +14,10 @@ class Outline
 
     private OutlineSection $rootSection;
 
+    private OutlineSection $actualSection; // the actual section that is created
+    private Call $actualHeadingCall; // the heading that is parsed
+    private int $actualHeadingParsingState = DOKU_LEXER_EXIT;  // the state of the heading parsed (enter, closed), enter if we have entered an heading, exit if not;
+
     public function __construct(CallStack $callStack)
     {
 
@@ -33,8 +37,7 @@ class Outline
          * Processing variable about the context
          */
         $this->rootSection = OutlineSection::createOutlineRoot();
-        $actualSection = $this->rootSection;
-        $headingParsingState = DOKU_LEXER_EXIT; // enter if we have entered an heading, exit if not
+        $this->actualSection = $this->rootSection;
         $actualLastPosition = 0;
         $callStack->moveToStart();
         while ($actualCall = $callStack->next()) {
@@ -61,6 +64,7 @@ class Outline
                     if ($actualCall->getContext() === syntax_plugin_combo_heading::TYPE_OUTLINE) {
                         $newSection = true;
                     }
+                    $this->enterHeading($actualCall);
                     break;
                 case syntax_plugin_combo_heading::TAG:
                 case syntax_plugin_combo_headingwiki::TAG:
@@ -68,19 +72,20 @@ class Outline
                         && $actualCall->getContext() === syntax_plugin_combo_heading::TYPE_OUTLINE) {
                         $newSection = true;
                     }
+                $this->enterHeading($actualCall);
                     break;
                 case "header":
                     // Should happen only on outline section
                     // we take over inside a component
                     $newSection = true;
+                    $this->enterHeading($actualCall);
                     break;
             }
             if ($newSection) {
-                $actualSection->setEndPosition($actualLastPosition);
-                $childSection = OutlineSection::createChildOutlineSection($actualSection, $actualCall);
+                $this->actualSection->setEndPosition($actualLastPosition);
+                $childSection = OutlineSection::createChildOutlineSection($this->actualSection, $actualCall);
                 $childSection->addHeadingCall($actualCall);
-                $actualSection = $childSection;
-                $headingParsingState = DOKU_LEXER_ENTER;
+                $this->actualSection = $childSection;
                 continue;
             }
 
@@ -94,13 +99,13 @@ class Outline
             /**
              * Close/Process the heading description
              */
-            if ($headingParsingState == DOKU_LEXER_ENTER) {
+            if ($this->actualHeadingParsingState === DOKU_LEXER_ENTER) {
                 switch ($actualCall->getTagName()) {
 
                     case syntax_plugin_combo_heading::TAG:
                     case syntax_plugin_combo_headingwiki::TAG:
                         if ($actualCall->getState() == DOKU_LEXER_EXIT) {
-                            $headingParsingState = DOKU_LEXER_EXIT;
+                            $this->exitHeading();
                         }
                         break;
 
@@ -121,7 +126,7 @@ class Outline
 
                     case "p":
 
-                        if ($actualSection->getHeadingCall()->getTagName() == syntax_plugin_combo_headingatx::TAG) {
+                        if ($this->actualHeadingCall->getTagName() === syntax_plugin_combo_headingatx::TAG) {
                             // A new p is the end of an atx call
                             switch ($actualCall->getComponentName()) {
                                 case "p_open":
@@ -132,10 +137,10 @@ class Outline
                                     $endAtxCall = Call::createComboCall(
                                         syntax_plugin_combo_headingatx::TAG,
                                         DOKU_LEXER_EXIT,
-                                        $actualSection->getHeadingCall()->getAttributes()
+                                        $this->actualHeadingCall->getAttributes()
                                     );
-                                    $actualSection->addHeadingCall($endAtxCall);
-                                    $headingParsingState = DOKU_LEXER_EXIT;
+                                    $this->addCallToSection($endAtxCall);
+                                    $this->exitHeading();
                                     // We don't take the p tag inside atx heading
                                     // therefore we continue
                                     continue 3;
@@ -145,13 +150,9 @@ class Outline
 
                 }
             }
-            if ($headingParsingState === DOKU_LEXER_EXIT) {
-                $actualSection->addContentCall($actualCall);
-            } else {
-                $actualSection->addHeadingCall($actualCall);
-            }
+            $this->addCallToSection($actualCall);
         }
-        $actualSection->setEndPosition($actualLastPosition);
+        $this->actualSection->setEndPosition($actualLastPosition);
     }
 
     public function getRootSection(): OutlineSection
@@ -208,6 +209,27 @@ class Outline
         };
         TreeVisit::visit($this->rootSection, $collectCalls);
         return $totalInstructionCalls;
+    }
+
+    private function addCallToSection(Call $actualCall)
+    {
+        if ($this->actualHeadingParsingState === DOKU_LEXER_ENTER && !$this->actualSection->hasContentCall()) {
+            $this->actualSection->addHeadingCall($actualCall);
+        } else {
+            // an content heading (not outline) or another call
+            $this->actualSection->addContentCall($actualCall);
+        }
+    }
+
+    private function enterHeading(Call $actualCall)
+    {
+        $this->actualHeadingParsingState = DOKU_LEXER_ENTER;
+        $this->actualHeadingCall = $actualCall;
+    }
+
+    private function exitHeading()
+    {
+        $this->actualHeadingParsingState = DOKU_LEXER_EXIT;
     }
 
 

@@ -84,7 +84,7 @@ class Outline
                 continue;
             }
 
-            switch ($actualCall->getComponentName()){
+            switch ($actualCall->getComponentName()) {
                 case \action_plugin_combo_headingpostprocessing::EDIT_SECTION_OPEN:
                 case \action_plugin_combo_headingpostprocessing::EDIT_SECTION_CLOSE:
                     // we don't store them
@@ -188,6 +188,7 @@ class Outline
                 array(),
                 $outlineSection->getEndPosition()
             );
+
             if ($outlineSection->hasParent()) {
                 $sectionCalls = array_merge(
                     $outlineSection->getHeadingCalls(),

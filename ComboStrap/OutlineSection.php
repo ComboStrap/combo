@@ -27,6 +27,10 @@ class OutlineSection extends TreeNode
     private int $endFileIndex;
 
     private ?Call $headingEnterCall;
+    /**
+     * @var array an array to make sure that the id are unique
+     */
+    private array $tocUniqueId = [];
 
 
     /**
@@ -106,11 +110,20 @@ class OutlineSection extends TreeNode
      */
     public function getHeadingCalls(): array
     {
+
+        if ($this->headingEnterCall !== null && $this->headingEnterCall->isPluginCall()) {
+            $id = $this->headingEnterCall->getAttribute("id");
+            if ($id === null) {
+                $label = $this->getLabel();
+                $id = sectionID($label, $this->tocUniqueId);
+                $this->headingEnterCall->addAttribute("id", $id);
+            }
+        }
         return $this->headingCalls;
     }
 
 
-    public function getHeadingCall(): Call
+    public function getHeadingCall(): ?Call
     {
         return $this->headingEnterCall;
     }

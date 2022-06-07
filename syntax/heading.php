@@ -178,7 +178,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      * @param CallStack $callStack
      * @return string
      */
-    public static function getContext($callStack)
+    public static function getContext($callStack): string
     {
 
         /**

@@ -33,7 +33,8 @@ class Outline
          * Processing variable about the context
          */
         $this->tree = TreeNode::createTreeRoot();
-        $this->tree->setContent(OutlineNode::create());
+        $actualSection = OutlineSection::create();
+        $this->tree->setContent($actualSection);
         $outlineParsingState = null; // null if root, enter if we have entered a section
         $headingParsingState = DOKU_LEXER_EXIT; // enter if we have entered an heading, exit if not
         $headingEnterCall = null; // the enter call to be able to get attribute back
@@ -64,11 +65,14 @@ class Outline
             switch ($tagName) {
                 case syntax_plugin_combo_headingatx::TAG:
                     $actualCall->setState(DOKU_LEXER_ENTER);
-                    $newSection = true;
+                    if ($actualCall->getContext() === syntax_plugin_combo_heading::TYPE_OUTLINE) {
+                        $newSection = true;
+                    }
                     break;
                 case syntax_plugin_combo_heading::TAG:
                 case syntax_plugin_combo_headingwiki::TAG:
-                    if ($actualCall->getState() == DOKU_LEXER_ENTER) {
+                    if ($actualCall->getState() == DOKU_LEXER_ENTER
+                        && $actualCall->getContext() === syntax_plugin_combo_heading::TYPE_OUTLINE) {
                         $newSection = true;
                     }
                     break;
@@ -77,10 +81,13 @@ class Outline
                     break;
             }
             if ($newSection) {
-                $headingEnterCall = $callStack->getActualCall();
-                $level = $actualCall->getAttribute("level");
+                $level = $actualCall->getAttribute(syntax_plugin_combo_heading::LEVEL);
                 $actualTreeNode = $actualTreeNode->appendNode($level);
-                $actualTreeNode->setContent(OutlineNode::create());
+                $actualSection = OutlineSection::create();
+                $actualSection->addCall($actualCall);
+                $actualTreeNode->setContent($actualSection);
+                $headingParsingState = DOKU_LEXER_ENTER;
+                $headingEnterCall = $actualCall;
                 continue;
             }
 
@@ -88,28 +95,32 @@ class Outline
              * Still on the root ?
              */
             if (!$actualTreeNode->hasParent()) {
-                /**
-                 * @var OutlineNode $outlineNode
-                 */
-                $outlineNode = $actualTreeNode->getContent();
-                $outlineNode->addCall($actualCall);
+                $actualSection->addCall($actualCall);
+                continue;
             }
 
-            /**
-             * Close and Inside the heading description
-             */
-            if ($headingParsingState === DOKU_LEXER_ENTER) {
 
+            /**
+             * Close/Process the heading description
+             */
+            if ($headingParsingState == DOKU_LEXER_ENTER) {
                 switch ($actualCall->getTagName()) {
+
+                    case syntax_plugin_combo_heading::TAG:
+                    case syntax_plugin_combo_headingwiki::TAG:
+                        if ($actualCall->getState() == DOKU_LEXER_EXIT) {
+                            $headingParsingState = DOKU_LEXER_EXIT;
+                        }
+                        break;
 
                     case "internalmedia":
                         // no link for media in heading
                         $actualCall->getInstructionCall()[1][6] = MediaLink::LINKING_NOLINK_VALUE;
-                        continue 2;
+                        break;
                     case syntax_plugin_combo_media::TAG:
                         // no link for media in heading
                         $actualCall->addAttribute(MediaLink::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
-                        continue 2;
+                        break;
 
                     case "header":
                         if (PluginUtility::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE, syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE) == 1) {
@@ -117,10 +128,27 @@ class Outline
                         }
                         break;
 
+                    case "p":
+
+                        if ($actualCall->getTagName() == syntax_plugin_combo_headingatx::TAG) {
+                            // A new p is the end of an atx call
+                            $headingParsingState = DOKU_LEXER_EXIT;
+                            $endAtxCall = Call::createComboCall(
+                                syntax_plugin_combo_headingatx::TAG,
+                                DOKU_LEXER_EXIT,
+                                $headingEnterCall->getAttributes()
+                            );
+                            $actualSection->addCall($endAtxCall);
+                            // We don't take the p tag inside atx heading
+                            // therefore we continue
+                            continue 2;
+
+                        }
+                        break;
+
                 }
-
-
             }
+            $actualSection->addCall($actualCall);
 
         }
     }

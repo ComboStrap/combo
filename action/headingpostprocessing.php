@@ -546,8 +546,9 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     /**
      * @param $headingText
      * @param Call $call
+     * @deprecated for {@link \ComboStrap\OutlineSection::getLabel()}
      */
-    private
+    public
     static function addToTextHeading(&$headingText, Call $call)
     {
         if ($call->isTextCall()) {

@@ -9,6 +9,9 @@ class TreeNode
 {
 
     private $id;
+    /**
+     * @var TreeNode[]
+     */
     private array $children = [];
 
     private ?TreeNode $parent;
@@ -150,6 +153,19 @@ class TreeNode
     public function hasParent(): bool
     {
         return $this->parent !== null;
+    }
+
+    /**
+     * @return TreeNode
+     * @throws ExceptionNotFound
+     */
+    public function getFirstChild(): TreeNode
+    {
+        $childrenKeys = array_keys($this->children);
+        if (sizeof($childrenKeys) === 0) {
+            throw new ExceptionNotFound("This node has no child");
+        }
+        return $this->children[$childrenKeys[0]];
     }
 
 }

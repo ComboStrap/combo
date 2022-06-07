@@ -18,16 +18,17 @@ class OutlineSection extends TreeNode
 
     private int $startFileIndex;
     private int $endFileIndex;
+    private Call $headingEnterCall;
 
 
     public static function createOutlineRoot(): OutlineSection
     {
-        return new OutlineSection('root', null);
+        return new OutlineSection(null);
     }
 
-    public static function createChildOutlineSection(string $identifier, OutlineSection $parentSection): OutlineSection
+    public static function createChildOutlineSection(OutlineSection $parentSection): OutlineSection
     {
-        $outlineSection = new OutlineSection($identifier, $parentSection);
+        $outlineSection = new OutlineSection($parentSection);
         $parentSection->appendChild($outlineSection);
         return $outlineSection;
     }
@@ -74,6 +75,17 @@ class OutlineSection extends TreeNode
     public function getCalls(): array
     {
         return $this->calls;
+    }
+
+    public function setHeadingCall(Call $actualCall): OutlineSection
+    {
+        $this->headingEnterCall = $actualCall;
+        return $this;
+    }
+
+    public function getHeadingCall(): Call
+    {
+        return $this->headingEnterCall;
     }
 
 

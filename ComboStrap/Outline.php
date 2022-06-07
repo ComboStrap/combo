@@ -77,14 +77,13 @@ class Outline
                     break;
             }
             if ($newSection) {
-                $level = $actualCall->getAttribute(syntax_plugin_combo_heading::LEVEL);
                 $actualSection->setEndPosition($actualLastPosition);
-                $childSection = OutlineSection::createChildOutlineSection($level, $actualSection);
+                $childSection = OutlineSection::createChildOutlineSection($actualSection);
                 $childSection->addCall($actualCall);
                 $childSection->setStartPosition($actualLastPosition);
+                $childSection->setHeadingCall($actualCall);
                 $actualSection = $childSection;
                 $headingParsingState = DOKU_LEXER_ENTER;
-                $headingEnterCall = $actualCall;
                 continue;
             }
 
@@ -118,19 +117,25 @@ class Outline
 
                     case "p":
 
-                        if ($actualCall->getTagName() == syntax_plugin_combo_headingatx::TAG) {
+                        if ($actualSection->getHeadingCall()->getTagName() == syntax_plugin_combo_headingatx::TAG) {
                             // A new p is the end of an atx call
-                            $headingParsingState = DOKU_LEXER_EXIT;
-                            $endAtxCall = Call::createComboCall(
-                                syntax_plugin_combo_headingatx::TAG,
-                                DOKU_LEXER_EXIT,
-                                $headingEnterCall->getAttributes()
-                            );
-                            $actualSection->addCall($endAtxCall);
-                            // We don't take the p tag inside atx heading
-                            // therefore we continue
-                            continue 2;
-
+                            switch ($actualCall->getComponentName()){
+                                case "p_open":
+                                    // We don't take the p tag inside atx heading
+                                    // therefore we continue
+                                    continue 3;
+                                case "p_close":
+                                    $headingParsingState = DOKU_LEXER_EXIT;
+                                    $endAtxCall = Call::createComboCall(
+                                        syntax_plugin_combo_headingatx::TAG,
+                                        DOKU_LEXER_EXIT,
+                                        $actualSection->getHeadingCall()->getAttributes()
+                                    );
+                                    $actualSection->addCall($endAtxCall);
+                                    // We don't take the p tag inside atx heading
+                                    // therefore we continue
+                                    continue 3;
+                            }
                         }
                         break;
 

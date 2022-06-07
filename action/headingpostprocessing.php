@@ -9,6 +9,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\LayoutMainAreaBuilder;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\Outline;
 use ComboStrap\Page;
 use ComboStrap\EditButton;
 use ComboStrap\PluginUtility;
@@ -211,21 +212,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     function _post_process_heading(&$event, $param)
     {
 
-        /**
-         * @var Doku_Handler $handler
-         */
-        $handler = $event->data;
-        $callStack = CallStack::createFromHandler($handler);
-        $callStack->moveToStart();
 
-
-        /**
-         * Close the section
-         * for whatever reason, the section status is true
-         * even if the sections are closed
-         * We take the hypothesis that the sections are closed
-         */
-        $handler->setStatus('section', false);
 
         /**
          * Reset static
@@ -237,210 +224,29 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         try {
             $pageParsed = Page::createPageFromGlobalDokuwikiId();
         } catch (ExceptionNotFound $e) {
-            LogUtility::msg("The running id is not set. We can't post process the page with heading and table of content");
+            LogUtility::msg("The running global ID is not set. We can't post process the page with heading and table of content");
             return;
         }
 
-        if ($pageParsed->isPrimarySlot()) {
-            $this->tocData = null;
-            $this->tocUniqueId = [];
-        }
-
-
-        /**
-         * Processing variable about the context
-         */
-        $actualHeadingParsingState = DOKU_LEXER_EXIT; // enter if we have entered a heading, exit otherwise
-        $actualSectionState = null; // enter if we have created a section
-        $headingEnterCall = null; // the enter call
-
-        $headingText = ""; // text only content in the heading
-        $previousHeadingLevel = 0; // A pointer to the actual heading level
-        $headingComboCounter = 0; // The number of combo heading found (The first one that is not the first one should close)
-        $headingTotalCounter = 0; // The number of combo heading found (The first one that is not the first one should close)
-
-        $actualLastPosition = 0;
-        while ($actualCall = $callStack->next()) {
-
-            $tagName = $actualCall->getTagName();
-
-
-            /**
-             * Track the position in the file
-             */
-            $currentLastPosition = $actualCall->getLastMatchedCharacterPosition();
-            if ($currentLastPosition > $actualLastPosition) {
-                // the position in the stack is not always good
-                $actualLastPosition = $currentLastPosition;
-            }
-
-            /**
-             * Enter
-             */
-            switch ($tagName) {
-                case syntax_plugin_combo_headingatx::TAG:
-                    $actualCall->setState(DOKU_LEXER_ENTER);
-                    $actualHeadingParsingState = DOKU_LEXER_ENTER;
-                    $headingEnterCall = $callStack->getActualCall();
-                    $headingComboCounter++;
-                    $headingTotalCounter++;
-                    $this->closeEditSectionIfNeeded($actualCall, $handler, $callStack, $actualSectionState, $headingComboCounter, $headingTotalCounter, $actualLastPosition);
-                    $this->closeOutlineSectionIfNeeded($callStack, $actualCall, $previousHeadingLevel, $actualLastPosition);
-                    $this->openOutlineSection($callStack, $actualCall, $actualLastPosition);
-                    continue 2;
-                case syntax_plugin_combo_heading::TAG:
-                case syntax_plugin_combo_headingwiki::TAG:
-                    if ($actualCall->getState() == DOKU_LEXER_ENTER) {
-                        $actualHeadingParsingState = DOKU_LEXER_ENTER;
-                        $headingEnterCall = $callStack->getActualCall();
-                        $headingComboCounter++;
-                        $headingTotalCounter++;
-                        self::closeEditSectionIfNeeded($actualCall, $handler, $callStack, $actualSectionState, $headingComboCounter, $headingTotalCounter, $actualLastPosition);
-                        self::closeOutlineSectionIfNeeded($callStack, $actualCall, $previousHeadingLevel, $actualLastPosition);
-                        self::openOutlineSection($callStack, $actualCall, $actualLastPosition);
-                        $previousHeadingLevel = $headingEnterCall->getAttribute("level");
-                        continue 2;
-                    }
-                    break;
-                case "header":
-                    $headingTotalCounter++;
-                    break;
-            }
-
-
-            /**
-             * Close and Inside the heading description
-             */
-            if ($actualHeadingParsingState === DOKU_LEXER_ENTER) {
-
-                switch ($actualCall->getTagName()) {
-
-                    case syntax_plugin_combo_heading::TAG:
-                    case syntax_plugin_combo_headingwiki::TAG:
-                        if ($actualCall->getState() == DOKU_LEXER_EXIT) {
-                            $this->insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(
-                                $headingEnterCall,
-                                $handler,
-                                $callStack,
-                                $actualSectionState,
-                                $headingText,
-                                $actualHeadingParsingState
-                            );
-                        } else {
-                            // unmatched
-                            self::addToTextHeading($headingText, $actualCall);
-                        }
-                        continue 2;
-
-                    case "internalmedia":
-                        // no link for media in heading
-                        $actualCall->getInstructionCall()[1][6] = MediaLink::LINKING_NOLINK_VALUE;
-                        continue 2;
-
-                    case "header":
-                        if (PluginUtility::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE, syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE) == 1) {
-                            LogUtility::msg("The combo heading wiki is enabled, we should not see `header` calls in the call stack");
-                        }
-                        break;
-
-                    case syntax_plugin_combo_media::TAG:
-                        // no link for media in heading
-                        $actualCall->addAttribute(MediaLink::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
-                        continue 2;
-
-                    default:
-                        self::addToTextHeading($headingText, $actualCall);
-                        continue 2;
-
-                    case "p":
-                        if ($headingEnterCall->getTagName() == syntax_plugin_combo_headingatx::TAG) {
-
-                            /**
-                             * Delete the p_enter / close
-                             */
-                            $callStack->deleteActualCallAndPrevious();
-
-                            /**
-                             * If this was a close tag
-                             */
-                            if ($actualCall->getComponentName() == "p_close") {
-
-                                $callStack->next();
-
-                                /**
-                                 * Create the exit call
-                                 * and open the section
-                                 * Code extracted and adapted from the end of {@link Doku_Handler::header()}
-                                 */
-                                $callStack->insertBefore(
-                                    Call::createComboCall(
-                                        syntax_plugin_combo_headingatx::TAG,
-                                        DOKU_LEXER_EXIT,
-                                        $headingEnterCall->getAttributes()
-                                    )
-                                );
-                                $callStack->previous();
-
-                                /**
-                                 * Close and section
-                                 */
-                                $this->insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(
-                                    $headingEnterCall,
-                                    $handler,
-                                    $callStack,
-                                    $actualSectionState,
-                                    $headingText,
-                                    $actualHeadingParsingState
-                                );
-
-
-                            }
-
-                        }
-                        continue 2;
-
-                }
-
-
-            }
-            /**
-             * when a heading of dokuwiki is mixed with
-             * an atx heading, there is already a section close
-             * at the end or in the middle
-             */
-            if ($actualCall->getComponentName() == self::EDIT_SECTION_CLOSE) {
-                $actualSectionState = DOKU_LEXER_EXIT;
-            }
-
+        if (!$pageParsed->isPrimarySlot()) {
+            return;
         }
 
         /**
-         * If the section was open by us or is still open, we close it
-         *
-         * We don't use the standard `section` key (ie  $handler->getStatus('section')
-         * because it's open when we receive the handler
-         * even if the `section_close` is present in the call stack
-         *
-         * We make sure that we close only what we have open
+         * @var Doku_Handler $handler
          */
-        if ($actualSectionState == DOKU_LEXER_ENTER) {
-            $this->closeSection($callStack, $handler, $actualLastPosition);
-        }
-
-        /**
-         * Closing outline section
-         */
-        while ($this->outlineSectionBalance > 0) {
-            $this->closeOutlineSection($callStack, $actualLastPosition);
-        }
+        $handler = $event->data;
+        $callStack = CallStack::createFromHandler($handler);
+        $outline = Outline::createFromCallStack($callStack);
+        $handler->calls = $outline->getInstructionCalls();
 
         /**
          * Main Slots and TOC to the primary slots
          */
-        if (LayoutMainAreaBuilder::shouldMainAreaBeBuild($callStack, $pageParsed)) {
-            LayoutMainAreaBuilder::headingDisplayNone($callStack, $pageParsed);
-            //LayoutMainAreaBuilder::buildMainArea($callStack, $this->tocData, $pageParsed);
-        }
+//        if (LayoutMainAreaBuilder::shouldMainAreaBeBuild($callStack, $pageParsed)) {
+//            LayoutMainAreaBuilder::headingDisplayNone($callStack, $pageParsed);
+//            //LayoutMainAreaBuilder::buildMainArea($callStack, $this->tocData, $pageParsed);
+//        }
 
     }
 

@@ -19,29 +19,32 @@ class TreeNode
     private $content;
 
     /**
-     * @param string $id
+     * @param string|null $localIdentifier - local id
      * @param TreeNode|null $parent
      */
-    public function __construct(string $id, ?TreeNode $parent)
+    public function __construct(?TreeNode $parent, string $localIdentifier = null)
     {
-        $this->id = $id;
+        if ($localIdentifier === null) {
+            $localIdentifier = IdManager::getOrCreate()->generateNewIdForComponent("TreeNode");
+        }
+        $this->id = $localIdentifier;
         $this->parent = $parent;
         if ($parent != null) {
-            $this->globalId = $parent->getGlobalId() . ":" . $id;
+            $this->globalId = $parent->getGlobalId() . ":" . $localIdentifier;
         } else {
             $this->globalId = "";
         }
     }
 
 
-    public static function createTreeRoot(string $id = "root"): TreeNode
+    public static function createTreeRoot(): TreeNode
     {
-        return TreeNode::create($id, null);
+        return TreeNode::create();
     }
 
-    private static function create(string $string, $parent): TreeNode
+    private static function create($parent = null, string $localIdentifier= null): TreeNode
     {
-        return new TreeNode($string, $parent);
+        return new TreeNode($parent, $localIdentifier);
     }
 
     public static function createFromIds(array $ids): TreeNode
@@ -67,7 +70,7 @@ class TreeNode
     {
         $treeNode = $this->children[$levelIdentifier];
         if ($treeNode === null) {
-            $treeNode = TreeNode::create($levelIdentifier, $this);
+            $treeNode = TreeNode::create($this,$levelIdentifier);
             $this->children[$levelIdentifier] = $treeNode;
         }
         return $treeNode;

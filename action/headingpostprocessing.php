@@ -13,6 +13,7 @@ use ComboStrap\Outline;
 use ComboStrap\Page;
 use ComboStrap\EditButton;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
@@ -238,7 +239,9 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $handler = $event->data;
         $callStack = CallStack::createFromHandler($handler);
         $outline = Outline::createFromCallStack($callStack);
-        $handler->calls = $outline->getInstructionCalls();
+        if(Site::getTemplate()!==Site::STRAP_TEMPLATE_NAME) {
+            $handler->calls = $outline->getDefaultTemplateInstructionCalls();
+        }
 
         /**
          * Main Slots and TOC to the primary slots

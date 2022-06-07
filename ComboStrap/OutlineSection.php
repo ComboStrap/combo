@@ -3,22 +3,46 @@
 namespace ComboStrap;
 
 
+use syntax_plugin_combo_heading;
+
 class OutlineSection extends TreeNode
 {
+    const CANONICAL = "outline";
+    const HEADER_DOKUWIKI_CALL = "header";
 
 
     /**
      *
-     * @var Call[] $calls
+     * @var Call[] $headingCalls
      */
-    private array $calls = [];
-
-    private array $headingTagNames = [\syntax_plugin_combo_heading::TAG, "header", \syntax_plugin_combo_headingwiki::TAG, \syntax_plugin_combo_headingatx::TAG];
+    private array $headingCalls = [];
+    /**
+     *
+     * @var Call[] $contentCalls
+     */
+    private array $contentCalls = [];
 
 
     private int $startFileIndex;
     private int $endFileIndex;
-    private Call $headingEnterCall;
+
+    private ?Call $headingEnterCall;
+
+
+    /**
+     * @param OutlineSection|null $parentSection
+     * @param Call|null $headingEnterCall
+     */
+    public function __construct(?OutlineSection $parentSection, Call $headingEnterCall = null)
+    {
+        $this->headingEnterCall = $headingEnterCall;
+        if ($headingEnterCall !== null) {
+            $this->startFileIndex = $headingEnterCall->getFirstMatchedCharacterPosition();
+        } else {
+            $this->startFileIndex = 0;
+        }
+        parent::__construct($parentSection);
+    }
 
 
     public static function createOutlineRoot(): OutlineSection
@@ -26,9 +50,9 @@ class OutlineSection extends TreeNode
         return new OutlineSection(null);
     }
 
-    public static function createChildOutlineSection(OutlineSection $parentSection): OutlineSection
+    public static function createChildOutlineSection(OutlineSection $parentSection, Call $headingCall): OutlineSection
     {
-        $outlineSection = new OutlineSection($parentSection);
+        $outlineSection = new OutlineSection($parentSection, $headingCall);
         $parentSection->appendChild($outlineSection);
         return $outlineSection;
     }
@@ -42,19 +66,26 @@ class OutlineSection extends TreeNode
     }
 
 
-    public function addCall(Call $actualCall): OutlineSection
+    public function addContentCall(Call $actualCall): OutlineSection
     {
-        $this->calls[] = $actualCall;
+
+        $this->contentCalls[] = $actualCall;
+        return $this;
+
+
+    }
+
+    public function addHeadingCall(Call $actualCall): OutlineSection
+    {
+
+        $this->headingCalls[] = $actualCall;
         return $this;
     }
 
     public function getLabel(): string
     {
         $label = "";
-        foreach ($this->calls as $call) {
-            if ($call->getState() === DOKU_LEXER_EXIT && in_array($call->getTagName(), $this->headingTagNames)) {
-                break;
-            }
+        foreach ($this->headingCalls as $call) {
             \action_plugin_combo_headingpostprocessing::addToTextHeading($label, $call);
         }
         return $label;
@@ -64,6 +95,7 @@ class OutlineSection extends TreeNode
     {
         $this->startFileIndex = $startPosition;
     }
+
     public function setEndPosition(int $endFileIndex)
     {
         $this->endFileIndex = $endFileIndex;
@@ -72,20 +104,62 @@ class OutlineSection extends TreeNode
     /**
      * @return Call[]
      */
-    public function getCalls(): array
+    public function getHeadingCalls(): array
     {
-        return $this->calls;
+        return $this->headingCalls;
     }
 
-    public function setHeadingCall(Call $actualCall): OutlineSection
-    {
-        $this->headingEnterCall = $actualCall;
-        return $this;
-    }
 
     public function getHeadingCall(): Call
     {
         return $this->headingEnterCall;
+    }
+
+
+    public function getCalls(): array
+    {
+        return array_merge($this->headingCalls, $this->contentCalls);
+    }
+
+    public function getContentCalls(): array
+    {
+        return $this->contentCalls;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLevel(): int
+    {
+        if ($this->headingEnterCall === null) {
+            return 0;
+        }
+        switch ($this->headingEnterCall->getTagName()) {
+            case self::HEADER_DOKUWIKI_CALL:
+                $level = $this->headingEnterCall->getInstructionCall()[1][1];
+                break;
+            default:
+                $level = $this->headingEnterCall->getAttribute(syntax_plugin_combo_heading::LEVEL);
+                break;
+        }
+
+        try {
+            return DataType::toInteger($level);
+        } catch (ExceptionBadArgument $e) {
+            // should not happen
+            LogUtility::internalError("The level ($level) could not be cast to an integer", self::CANONICAL);
+            return 0;
+        }
+    }
+
+    public function getStartPosition(): int
+    {
+        return $this->startFileIndex;
+    }
+
+    public function getEndPosition(): int
+    {
+        return $this->endFileIndex;
     }
 
 

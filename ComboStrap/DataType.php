@@ -61,14 +61,23 @@ class DataType
     ];
 
     /**
+     * @throws ExceptionBadArgument
+     */
+    public static function toIntegerOrDefaultIfNull($targetValue, $default): int
+    {
+        if ($targetValue === null) {
+            return $default;
+        }
+        return self::toInteger($targetValue);
+    }
+
+    /**
      *
      * @throws ExceptionBadArgument
      */
-    public static function toInteger($targetValue, $ifNull = null): ?int
+    public static function toInteger($targetValue): int
     {
-        if ($targetValue === null) {
-            return $ifNull;
-        }
+
 
         if (is_int($targetValue)) {
             return $targetValue;

@@ -35,7 +35,6 @@ class Outline
         $this->rootSection = OutlineSection::createOutlineRoot();
         $actualSection = $this->rootSection;
         $headingParsingState = DOKU_LEXER_EXIT; // enter if we have entered an heading, exit if not
-        $headingEnterCall = null; // the enter call to be able to get attribute back
         $actualLastPosition = 0;
         $callStack->moveToStart();
         while ($actualCall = $callStack->next()) {
@@ -78,13 +77,18 @@ class Outline
             }
             if ($newSection) {
                 $actualSection->setEndPosition($actualLastPosition);
-                $childSection = OutlineSection::createChildOutlineSection($actualSection);
-                $childSection->addCall($actualCall);
-                $childSection->setStartPosition($actualLastPosition);
-                $childSection->setHeadingCall($actualCall);
+                $childSection = OutlineSection::createChildOutlineSection($actualSection, $actualCall);
+                $childSection->addHeadingCall($actualCall);
                 $actualSection = $childSection;
                 $headingParsingState = DOKU_LEXER_ENTER;
                 continue;
+            }
+
+            switch ($actualCall->getComponentName()){
+                case \action_plugin_combo_headingpostprocessing::EDIT_SECTION_OPEN:
+                case \action_plugin_combo_headingpostprocessing::EDIT_SECTION_CLOSE:
+                    // we don't store them
+                    continue 2;
             }
 
             /**
@@ -119,19 +123,19 @@ class Outline
 
                         if ($actualSection->getHeadingCall()->getTagName() == syntax_plugin_combo_headingatx::TAG) {
                             // A new p is the end of an atx call
-                            switch ($actualCall->getComponentName()){
+                            switch ($actualCall->getComponentName()) {
                                 case "p_open":
                                     // We don't take the p tag inside atx heading
                                     // therefore we continue
                                     continue 3;
                                 case "p_close":
-                                    $headingParsingState = DOKU_LEXER_EXIT;
                                     $endAtxCall = Call::createComboCall(
                                         syntax_plugin_combo_headingatx::TAG,
                                         DOKU_LEXER_EXIT,
                                         $actualSection->getHeadingCall()->getAttributes()
                                     );
-                                    $actualSection->addCall($endAtxCall);
+                                    $actualSection->addHeadingCall($endAtxCall);
+                                    $headingParsingState = DOKU_LEXER_EXIT;
                                     // We don't take the p tag inside atx heading
                                     // therefore we continue
                                     continue 3;
@@ -141,9 +145,13 @@ class Outline
 
                 }
             }
-            $actualSection->addCall($actualCall);
-
+            if ($headingParsingState === DOKU_LEXER_EXIT) {
+                $actualSection->addContentCall($actualCall);
+            } else {
+                $actualSection->addHeadingCall($actualCall);
+            }
         }
+        $actualSection->setEndPosition($actualLastPosition);
     }
 
     public function getRootSection(): OutlineSection
@@ -159,7 +167,43 @@ class Outline
             $instructionCalls = array_map(function (Call $element) {
                 return $element->getInstructionCall();
             }, $outlineSection->getCalls());
-            $totalInstructionCalls = array_merge($totalInstructionCalls,$instructionCalls);
+            $totalInstructionCalls = array_merge($totalInstructionCalls, $instructionCalls);
+        };
+        TreeVisit::visit($this->rootSection, $collectCalls);
+        return $totalInstructionCalls;
+    }
+
+    public function getDefaultTemplateInstructionCalls(): array
+    {
+        $totalInstructionCalls = [];
+        $collectCalls = function (OutlineSection $outlineSection) use (&$totalInstructionCalls) {
+
+            $wikiSectionOpen = Call::createNativeCall(
+                \action_plugin_combo_headingpostprocessing::EDIT_SECTION_OPEN,
+                array($outlineSection->getLevel()),
+                $outlineSection->getStartPosition()
+            );
+            $wikiSectionClose = Call::createNativeCall(
+                \action_plugin_combo_headingpostprocessing::EDIT_SECTION_CLOSE,
+                array(),
+                $outlineSection->getEndPosition()
+            );
+            if ($outlineSection->hasParent()) {
+                $sectionCalls = array_merge(
+                    $outlineSection->getHeadingCalls(),
+                    [$wikiSectionOpen],
+                    $outlineSection->getContentCalls(),
+                    [$wikiSectionClose],
+                );
+            } else {
+                // dokuwiki seems to have no section for the content before the first heading
+                $sectionCalls = $outlineSection->getContentCalls();
+            }
+
+            $instructionCalls = array_map(function (Call $element) {
+                return $element->getInstructionCall();
+            }, $sectionCalls);
+            $totalInstructionCalls = array_merge($totalInstructionCalls, $instructionCalls);
         };
         TreeVisit::visit($this->rootSection, $collectCalls);
         return $totalInstructionCalls;

@@ -358,8 +358,11 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         }
         $snippetManager->attachCssInternalStyleSheetForSlot(syntax_plugin_combo_heading::TAG);
 
+        /**
+         * TODO: delete
+         */
         $headingWikiEnabled = syntax_plugin_combo_headingwiki::isEnabled();
-        if (!$headingWikiEnabled && $context === self::TYPE_OUTLINE) {
+        if (false === true && !$headingWikiEnabled && $context === self::TYPE_OUTLINE) {
 
             /**
              * Dokuwiki Section Editing
@@ -381,7 +384,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 }
             } else {
                 $tocText = "Heading Text Not found";
-                LogUtility::msg("The heading text attribute was not found for the toc");
+                LogUtility::internalError("The heading text attribute was not found for the toc", self::CANONICAL);
             }
 
 

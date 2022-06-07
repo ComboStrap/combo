@@ -9,10 +9,10 @@ class TreeNode
 {
 
     private $id;
-    private $children = [];
+    private array $children = [];
 
-    private $parent;
-    private $globalId;
+    private ?TreeNode $parent;
+    private string $globalId;
     private $content;
 
     /**
@@ -145,6 +145,11 @@ class TreeNode
     public function hasChildren(): bool
     {
         return sizeof($this->children) > 0;
+    }
+
+    public function hasParent(): bool
+    {
+        return $this->parent !== null;
     }
 
 }

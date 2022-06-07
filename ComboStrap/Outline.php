@@ -28,26 +28,21 @@ class Outline
     private function process(CallStack $callStack)
     {
 
-        $callStack->moveToStart();
-
-        $this->tree = TreeNode::createTreeRoot();
-        $this->tree->setContent(OutlineNode::create());
 
         /**
          * Processing variable about the context
          */
-        $actualHeadingParsingState = null; // null if root, enter if we have entered a heading
-        $actualSectionState = null; // enter if we have created a section
-        $headingEnterCall = null; // the enter call
+        $this->tree = TreeNode::createTreeRoot();
+        $this->tree->setContent(OutlineNode::create());
+        $outlineParsingState = null; // null if root, enter if we have entered a section
+        $headingParsingState = DOKU_LEXER_EXIT; // enter if we have entered an heading, exit if not
+        $headingEnterCall = null; // the enter call to be able to get attribute back
 
         $headingText = ""; // text only content in the heading
-        $previousHeadingLevel = 0; // A pointer to the actual heading level
-        $headingComboCounter = 0; // The number of combo heading found (The first one that is not the first one should close)
-        $headingTotalCounter = 0; // The number of combo heading found (The first one that is not the first one should close)
 
         $actualLastPosition = 0;
-
         $actualTreeNode = $this->tree;
+        $callStack->moveToStart();
         while ($actualCall = $callStack->next()) {
 
             $tagName = $actualCall->getTagName();
@@ -65,35 +60,34 @@ class Outline
             /**
              * Enter new section ?
              */
+            $newSection = false;
             switch ($tagName) {
                 case syntax_plugin_combo_headingatx::TAG:
                     $actualCall->setState(DOKU_LEXER_ENTER);
-                    $actualHeadingParsingState = DOKU_LEXER_ENTER;
-                    $headingEnterCall = $callStack->getActualCall();
-                    $headingComboCounter++;
-                    $headingTotalCounter++;
-
-                    continue 2;
+                    $newSection = true;
+                    break;
                 case syntax_plugin_combo_heading::TAG:
                 case syntax_plugin_combo_headingwiki::TAG:
                     if ($actualCall->getState() == DOKU_LEXER_ENTER) {
-                        $actualHeadingParsingState = DOKU_LEXER_ENTER;
-                        $headingEnterCall = $callStack->getActualCall();
-                        $headingComboCounter++;
-                        $headingTotalCounter++;
-                        $previousHeadingLevel = $headingEnterCall->getAttribute("level");
-                        continue 2;
+                        $newSection = true;
                     }
                     break;
                 case "header":
-                    $headingTotalCounter++;
+                    $newSection = true;
                     break;
+            }
+            if ($newSection) {
+                $headingEnterCall = $callStack->getActualCall();
+                $level = $actualCall->getAttribute("level");
+                $actualTreeNode = $actualTreeNode->appendNode($level);
+                $actualTreeNode->setContent(OutlineNode::create());
+                continue;
             }
 
             /**
-             * If we are not in a heading, this is a root instructions
+             * Still on the root ?
              */
-            if ($actualHeadingParsingState === null) {
+            if (!$actualTreeNode->hasParent()) {
                 /**
                  * @var OutlineNode $outlineNode
                  */
@@ -104,23 +98,17 @@ class Outline
             /**
              * Close and Inside the heading description
              */
-            if ($actualHeadingParsingState === DOKU_LEXER_ENTER) {
+            if ($headingParsingState === DOKU_LEXER_ENTER) {
 
                 switch ($actualCall->getTagName()) {
-
-                    case syntax_plugin_combo_heading::TAG:
-                    case syntax_plugin_combo_headingwiki::TAG:
-                        if ($actualCall->getState() == DOKU_LEXER_EXIT) {
-                            // close
-                        } else {
-                            // unmatched
-                            self::addToTextHeading($headingText, $actualCall);
-                        }
-                        continue 2;
 
                     case "internalmedia":
                         // no link for media in heading
                         $actualCall->getInstructionCall()[1][6] = MediaLink::LINKING_NOLINK_VALUE;
+                        continue 2;
+                    case syntax_plugin_combo_media::TAG:
+                        // no link for media in heading
+                        $actualCall->addAttribute(MediaLink::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
                         continue 2;
 
                     case "header":
@@ -129,61 +117,9 @@ class Outline
                         }
                         break;
 
-                    case syntax_plugin_combo_media::TAG:
-                        // no link for media in heading
-                        $actualCall->addAttribute(MediaLink::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
-                        continue 2;
-
-                    default:
-                        self::addToTextHeading($headingText, $actualCall);
-                        continue 2;
-
-                    case "p":
-                        if ($headingEnterCall->getTagName() == syntax_plugin_combo_headingatx::TAG) {
-
-                            /**
-                             * Delete the p_enter / close
-                             */
-                            $callStack->deleteActualCallAndPrevious();
-
-                            /**
-                             * If this was a close tag
-                             */
-                            if ($actualCall->getComponentName() == "p_close") {
-
-                                $callStack->next();
-
-                                /**
-                                 * Create the exit call
-                                 * and open the section
-                                 * Code extracted and adapted from the end of {@link Doku_Handler::header()}
-                                 */
-                                $callStack->insertBefore(
-                                    Call::createComboCall(
-                                        syntax_plugin_combo_headingatx::TAG,
-                                        DOKU_LEXER_EXIT,
-                                        $headingEnterCall->getAttributes()
-                                    )
-                                );
-                                $callStack->previous();
-
-
-                            }
-
-                        }
-                        continue 2;
-
                 }
 
 
-            }
-            /**
-             * when a heading of dokuwiki is mixed with
-             * an atx heading, there is already a section close
-             * at the end or in the middle
-             */
-            if ($actualCall->getComponentName() == \action_plugin_combo_headingpostprocessing::EDIT_SECTION_CLOSE) {
-                $actualSectionState = DOKU_LEXER_EXIT;
             }
 
         }

@@ -163,7 +163,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
              * Not component heading
              */
             $context = $data[PluginUtility::CONTEXT];
-            if ($context == self::TYPE_OUTLINE) {
+            if ($context === self::TYPE_OUTLINE) {
                 $callStackArray = $data[PluginUtility::ATTRIBUTES];
                 $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
                 $text = $tagAttributes->getValue(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE);
@@ -290,7 +290,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      * @param Doku_Renderer_xhtml $renderer
      * @param integer $pos
      */
-    public static function renderOpeningTag($context, $tagAttributes, &$renderer, $pos)
+    public static function renderOpeningTag(string $context, TagAttributes $tagAttributes, Doku_Renderer_xhtml &$renderer, int $pos)
     {
 
         /**
@@ -313,7 +313,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
             $displayClass = "display-$level";
 
-            if (Bootstrap::getBootStrapMajorVersion() == "4") {
+            if (Bootstrap::getBootStrapMajorVersion() === Bootstrap::BootStrapFourMajorVersion) {
                 /**
                  * Make Bootstrap display responsive
                  */
@@ -357,53 +357,6 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
             $snippetManager->attachCssInternalStyleSheetForSlot(self::TYPE_OUTLINE);
         }
         $snippetManager->attachCssInternalStyleSheetForSlot(syntax_plugin_combo_heading::TAG);
-
-        /**
-         * TODO: delete
-         */
-        $headingWikiEnabled = syntax_plugin_combo_headingwiki::isEnabled();
-        if (false === true && !$headingWikiEnabled && $context === self::TYPE_OUTLINE) {
-
-            /**
-             * Dokuwiki Section Editing
-             *
-             * Calling the {@link Doku_Renderer_xhtml::header()}
-             * with the captured text to be Dokuwiki Template compatible
-             *
-             * It will create:
-             *   * the toc
-             *   * and the section editing
-             */
-            if ($tagAttributes->hasComponentAttribute(self::HEADING_TEXT_ATTRIBUTE)) {
-                $tocText = $tagAttributes->getValueAndRemove(self::HEADING_TEXT_ATTRIBUTE);
-                if (empty($tocText)) {
-                    LogUtility::msg("The heading text should be not null on the enter tag");
-                }
-                if (trim(strtolower($tocText)) === "articles related") {
-                    $tagAttributes->addClassName("d-print-none");
-                }
-            } else {
-                $tocText = "Heading Text Not found";
-                LogUtility::internalError("The heading text attribute was not found for the toc", self::CANONICAL);
-            }
-
-
-            // note on the position value
-            // this is the exact position because we does not capture any EOL
-            // and therefore the section should start at the first captured character
-
-            $renderer->header($tocText, $level, $pos);
-            $attributes = syntax_plugin_combo_heading::reduceToFirstOpeningTagAndReturnAttributes($renderer->doc);
-            foreach ($attributes as $key => $value) {
-                if ($key === "id" && $tagAttributes->hasAttribute($key)) {
-                    // The id was set in the markup, don't overwrite
-                    continue;
-                }
-                $tagAttributes->addComponentAttributeValue($key, $value);
-            }
-
-        }
-
 
         /**
          * Printing

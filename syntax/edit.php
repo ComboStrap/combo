@@ -79,7 +79,7 @@ class syntax_plugin_combo_edit extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
         /**
-         * Call is generated in {@link action_plugin_combo_headingpostprocessing}
+         * Call is generated via {@link EditButton::toComboCall()}
          */
     }
 

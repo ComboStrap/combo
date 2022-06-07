@@ -830,10 +830,24 @@ class Site
     public static function getLogoImage(): Image
     {
         $logosImages = Site::getLogoImages();
-        if(empty($logosImages)){
-           throw new ExceptionNotFound("No logo image was installed", "logo");
+        if (empty($logosImages)) {
+            throw new ExceptionNotFound("No logo image was installed", "logo");
         }
         return $logosImages[0];
+    }
+
+    public static function isSectionEditingEnabled(): bool
+    {
+
+        global $conf;
+        return $conf['maxseclevel'] > 0;
+
+    }
+
+    public static function enableSectionEditing()
+    {
+        global $conf;
+        $conf['maxseclevel'] = 999;
     }
 
 

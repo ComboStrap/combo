@@ -72,7 +72,7 @@ class Outline
                         && $actualCall->getContext() === syntax_plugin_combo_heading::TYPE_OUTLINE) {
                         $newSection = true;
                     }
-                $this->enterHeading($actualCall);
+                    $this->enterHeading($actualCall);
                     break;
                 case "header":
                     // Should happen only on outline section
@@ -190,6 +190,7 @@ class Outline
                 $outlineSection->getEndPosition()
             );
 
+
             if ($outlineSection->hasParent()) {
                 $sectionCalls = array_merge(
                     $outlineSection->getHeadingCalls(),
@@ -197,6 +198,15 @@ class Outline
                     $outlineSection->getContentCalls(),
                     [$wikiSectionClose],
                 );
+
+                if (Site::isSectionEditingEnabled()) {
+                    $editButton = EditButton::create("Edit the section {$outlineSection->getLabel()}")
+                        ->setStartPosition($outlineSection->getStartPosition())
+                        ->setEndPosition($outlineSection->getEndPosition())
+                        ->toComboCall();
+                    $sectionCalls[] = $editButton;
+                }
+
             } else {
                 // dokuwiki seems to have no section for the content before the first heading
                 $sectionCalls = $outlineSection->getContentCalls();

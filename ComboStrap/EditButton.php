@@ -27,12 +27,6 @@ class EditButton
     const CLASS_EDIT_BUTTON = "edit-button-combo";
     const SNIPPET_ID = "edit-button";
 
-    /**
-     * Uses internally to delete its usage by default
-     * on test
-     */
-    public const EDIT_BUTTON_ENABLED_INTERNAL_CONF = "edit-button-enabled";
-
 
     /**
      * The target drive the type of editor
@@ -119,16 +113,6 @@ class EditButton
      */
     public function toTag(): string
     {
-
-        /**
-         * This is an internal configuration used
-         * to disable this functionality in test by default
-         * This is not a public configuration
-         */
-        $pageEditButton = PluginUtility::getConfValue(EditButton::EDIT_BUTTON_ENABLED_INTERNAL_CONF, 1);
-        if ($pageEditButton !== 1) {
-            throw new ExceptionNotEnabled("Edit button functionality is not enabled");
-        }
 
         /**
          * The following data are mandatory from:

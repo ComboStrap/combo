@@ -388,8 +388,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * Edit button
          */
         $startCall = array_pop($this->editButtonStartCalls);
-        $enabled = PluginUtility::getConfValue(EditButton::EDIT_BUTTON_ENABLED_INTERNAL_CONF, 1);
-        if ($startCall !== null && $enabled === 1) {
+        $enabled = Site::isSectionEditingEnabled();
+        if ($startCall !== null && $enabled) {
             $text = $startCall->getAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE);
             $end = null;
             if (!$callStack->isAtEnd()) {

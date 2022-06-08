@@ -250,5 +250,30 @@ class Outline
         $this->actualHeadingParsingState = DOKU_LEXER_EXIT;
     }
 
+    /**
+     * @return array - Dokuwiki TOC array format
+     */
+    public function getTocDokuwikiFormat(): array
+    {
+        $tableOfContent = [];
+        $collectTableOfContent = function (OutlineSection $outlineSection) use (&$tableOfContent) {
+
+            if (!$outlineSection->hasParent()) {
+                // Root Section, no heading
+                return;
+            }
+            $tableOfContent[] = [
+                'link' => '#' . $outlineSection->getHeadingId(),
+                'title' => $outlineSection->getLabel(),
+                'type' => 'ul',
+                'level' => $outlineSection->getLevel()
+            ];
+
+        };
+        TreeVisit::visit($this->rootSection, $collectTableOfContent);
+        return $tableOfContent;
+
+    }
+
 
 }

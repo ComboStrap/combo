@@ -214,7 +214,6 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     {
 
 
-
         /**
          * Reset static
          * When running test, the class are not shutdown
@@ -239,9 +238,18 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $handler = $event->data;
         $callStack = CallStack::createFromHandler($handler);
         $outline = Outline::createFromCallStack($callStack);
-        if(Site::getTemplate()!==Site::STRAP_TEMPLATE_NAME) {
+        if (Site::getTemplate() !== Site::STRAP_TEMPLATE_NAME) {
             $handler->calls = $outline->toDefaultTemplateInstructionCalls();
         }
+
+        /**
+         * TOC
+         */
+        global $TOC;
+        $TOC = $outline->getTocDokuwikiFormat();
+
+
+
 
         /**
          * Main Slots and TOC to the primary slots

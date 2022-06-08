@@ -72,6 +72,10 @@ class EditButton
      * Not really needed, just to be conform with Dokuwiki
      */
     private string $headingId;
+    /**
+     * @var int $sectionid - sequence id of the section used only by dokuwiki
+     */
+    private int $sectionId;
 
 
     /**
@@ -95,11 +99,13 @@ class EditButton
         $endPosition = $attributes[\syntax_plugin_combo_edit::END_POSITION];
         $wikiId = $attributes[TagAttributes::WIKI_ID];
         $headingId = $attributes[\syntax_plugin_combo_edit::HEADING_ID];
+        $sectionId = $attributes[\syntax_plugin_combo_edit::SECTION_ID];
         $editButton = EditButton::create($label)
             ->setStartPosition($startPosition)
             ->setEndPosition($endPosition)
             ->setWikiId($wikiId)
-            ->setHeadingId($headingId);
+            ->setHeadingId($headingId)
+            ->setSectionId($sectionId);
         $format = $attributes[\syntax_plugin_combo_edit::FORMAT];
         if ($format !== null) {
             $editButton->setFormat($format);
@@ -164,7 +170,7 @@ class EditButton
         } else {
             $data[self::FORM_ID] = $this->getHeadingId();
             $data["codeblockOffset"] = 0; // what is that ?
-            $data["secid"] = IdManager::getOrCreate()->generateAndGetNewSequenceValueForScope(self::CANONICAL);
+            $data["secid"] = $this->getSectionId();
         }
         $data[self::RANGE] = $this->getRange();
 
@@ -349,6 +355,7 @@ EOF;
                 \syntax_plugin_combo_edit::LABEL => $this->label,
                 \syntax_plugin_combo_edit::FORMAT => $format,
                 \syntax_plugin_combo_edit::HEADING_ID => $this->getHeadingId(),
+                \syntax_plugin_combo_edit::SECTION_ID => $this->getSectionId(),
                 TagAttributes::WIKI_ID => $this->getWikiId()
             ]
         );
@@ -396,6 +403,17 @@ EOF;
     private function getHeadingId(): string
     {
         return $this->headingId;
+    }
+
+    private function getSectionId(): int
+    {
+        return $this->sectionId;
+    }
+
+    public function setSectionId(int $sectionSequenceId): EditButton
+    {
+        $this->sectionId = $sectionSequenceId;
+        return $this;
     }
 
 }

@@ -32,6 +32,7 @@ class syntax_plugin_combo_edit extends DokuWiki_Syntax_Plugin
     const LABEL = "label";
     const FORMAT = "format";
     const HEADING_ID = "heading-id";
+    const SECTION_ID = "section-id"; // to be dokuwiki conform
 
 
     /**

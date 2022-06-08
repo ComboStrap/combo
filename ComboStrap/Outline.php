@@ -184,7 +184,8 @@ class Outline
     public function toDefaultTemplateInstructionCalls(): array
     {
         $totalInstructionCalls = [];
-        $collectCalls = function (OutlineSection $outlineSection) use (&$totalInstructionCalls) {
+        $sectionSequenceId = 0;
+        $collectCalls = function (OutlineSection $outlineSection) use (&$totalInstructionCalls, &$sectionSequenceId) {
 
             $wikiSectionOpen = Call::createNativeCall(
                 \action_plugin_combo_headingpostprocessing::EDIT_SECTION_OPEN,
@@ -199,6 +200,13 @@ class Outline
 
 
             if ($outlineSection->hasParent()) {
+
+                /**
+                 * Dokuwiki class to be conform
+                 */
+                $sectionSequenceId++;
+                $outlineSection->getHeadingCall()->addClassName("sectionedit$sectionSequenceId");
+
                 $sectionCalls = array_merge(
                     $outlineSection->getHeadingCalls(),
                     [$wikiSectionOpen],
@@ -211,6 +219,7 @@ class Outline
                         ->setStartPosition($outlineSection->getStartPosition())
                         ->setEndPosition($outlineSection->getEndPosition())
                         ->setHeadingId($outlineSection->getHeadingId())
+                        ->setSectionId($sectionSequenceId)
                         ->toComboCallDokuWikiForm();
                     $sectionCalls[] = $editButton;
                 }

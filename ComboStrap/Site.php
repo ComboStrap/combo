@@ -850,5 +850,11 @@ class Site
         $conf['maxseclevel'] = 999;
     }
 
+    public static function setDefaultTemplate()
+    {
+        global $conf;
+        $conf['template'] = "dokuwiki";
+    }
+
 
 }

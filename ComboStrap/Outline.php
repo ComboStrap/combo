@@ -63,8 +63,8 @@ class Outline
                     if ($actualCall->getState() == DOKU_LEXER_ENTER
                         && $actualCall->getContext() === syntax_plugin_combo_heading::TYPE_OUTLINE) {
                         $newSection = true;
+                        $this->enterHeading($actualCall);
                     }
-                    $this->enterHeading($actualCall);
                     break;
                 case "header":
                     // Should happen only on outline section
@@ -110,7 +110,9 @@ class Outline
                     case syntax_plugin_combo_heading::TAG:
                     case syntax_plugin_combo_headingwiki::TAG:
                         if ($actualCall->getState() == DOKU_LEXER_EXIT) {
+                            $this->addCallToSection($actualCall);
                             $this->exitHeading();
+                            continue 2;
                         }
                         break;
 

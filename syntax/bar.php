@@ -189,7 +189,7 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
                     $editButtonCall = EditButton::create("Edit $tag $id")
                         ->setStartPosition($startPosition)
                         ->setEndPosition($endPosition)
-                        ->toComboCall();
+                        ->toComboCallComboFormat();
                     $callStack->moveToEnd();
                     $callStack->insertBefore($editButtonCall);
                 }

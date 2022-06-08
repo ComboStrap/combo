@@ -9,6 +9,7 @@ use ComboStrap\EditButton;
 use ComboStrap\EditButtonManager;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionNotEnabled;
+use ComboStrap\IdManager;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -292,7 +293,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                     }
                 }
 
-                $id = IdManager::getOrCreate()->generateNewIdForComponent(self::TAG);
+                $id = IdManager::getOrCreate()->generateNewHtmlIdForComponent(self::TAG);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes,
@@ -343,7 +344,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                     $editButtonCall = EditButton::create("Edit panel $id")
                         ->setStartPosition($startPosition)
                         ->setEndPosition($endPosition)
-                        ->toComboCall();
+                        ->toComboCallComboFormat();
                     $callStack->moveToEnd();
                     $callStack->insertBefore($editButtonCall);
                 }
@@ -387,7 +388,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                      */
                     if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                         $position = $data[PluginUtility::POSITION];
-                        $name = IdManager::getOrCreate()->generateNewIdForComponent(self::TAG);
+                        $name = IdManager::getOrCreate()->generateNewHtmlIdForComponent(self::TAG);
                         EditButtonManager::getOrCreate()->createAndAddEditButtonToStack($name, $position);
                     }
 

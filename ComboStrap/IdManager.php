@@ -44,8 +44,9 @@ class IdManager
     {
     }
 
-    public function generateNewIdForComponent(string $canonical, Path $slotPath = null): string
+    public function generateNewHtmlIdForComponent(string $canonical, Path $slotPath = null): string
     {
+
         if ($slotPath === null) {
             try {
                 $slotPath = Page::createPageFromGlobalDokuwikiId()->getPath();
@@ -65,15 +66,23 @@ class IdManager
         } else {
             $idScope = "$canonical";
         }
-        $lastId = $this->lastIdByCanonical[$idScope];
+        $lastId = self::generateAndGetNewSequenceValueForScope($idScope);
+
+        return Html::toHtmlId("$idScope-$lastId");
+    }
+
+    public function generateAndGetNewSequenceValueForScope(string $scope)
+    {
+
+        $lastId = $this->lastIdByCanonical[$scope];
         if ($lastId === null) {
             $lastId = 1;
         } else {
             $lastId = $lastId + 1;
         }
-        $this->lastIdByCanonical[$idScope] = $lastId;
+        $this->lastIdByCanonical[$scope] = $lastId;
+        return $lastId;
 
-        return Html::toHtmlId("$idScope-$lastId");
     }
 
 }

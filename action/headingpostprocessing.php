@@ -240,7 +240,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $callStack = CallStack::createFromHandler($handler);
         $outline = Outline::createFromCallStack($callStack);
         if(Site::getTemplate()!==Site::STRAP_TEMPLATE_NAME) {
-            $handler->calls = $outline->getDefaultTemplateInstructionCalls();
+            $handler->calls = $outline->toDefaultTemplateInstructionCalls();
         }
 
         /**
@@ -399,7 +399,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             $editButton = EditButton::create("Edit the section $text")
                 ->setStartPosition($startCall->getFirstMatchedCharacterPosition())
                 ->setEndPosition($end);
-            $callStack->insertBefore($editButton->toComboCall());
+            $callStack->insertBefore($editButton->toComboCallComboFormat());
         }
 
 

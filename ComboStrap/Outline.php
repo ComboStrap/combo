@@ -160,7 +160,7 @@ class Outline
 
     }
 
-    public function getRootSection(): OutlineSection
+    public function getRootOutlineSection(): OutlineSection
     {
         return $this->rootSection;
 
@@ -179,7 +179,7 @@ class Outline
         return $totalInstructionCalls;
     }
 
-    public function getDefaultTemplateInstructionCalls(): array
+    public function toDefaultTemplateInstructionCalls(): array
     {
         $totalInstructionCalls = [];
         $collectCalls = function (OutlineSection $outlineSection) use (&$totalInstructionCalls) {
@@ -205,10 +205,11 @@ class Outline
                 );
 
                 if (Site::isSectionEditingEnabled()) {
-                    $editButton = EditButton::create("Edit the section {$outlineSection->getLabel()}")
+                    $editButton = EditButton::create($outlineSection->getLabel())
                         ->setStartPosition($outlineSection->getStartPosition())
                         ->setEndPosition($outlineSection->getEndPosition())
-                        ->toComboCall();
+                        ->setHeadingId($outlineSection->getHeadingId())
+                        ->toComboCallDokuWikiForm();
                     $sectionCalls[] = $editButton;
                 }
 

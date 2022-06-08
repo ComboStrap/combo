@@ -25,7 +25,7 @@ class TreeNode
     public function __construct(?TreeNode $parent, string $localIdentifier = null)
     {
         if ($localIdentifier === null) {
-            $localIdentifier = IdManager::getOrCreate()->generateNewIdForComponent("TreeNode");
+            $localIdentifier = IdManager::getOrCreate()->generateNewHtmlIdForComponent("TreeNode");
         }
         $this->id = $localIdentifier;
         $this->parent = $parent;

@@ -376,7 +376,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                      */
                     $id = $pageExplorerTagAttributes->getValue(TagAttributes::ID_KEY);
                     if ($id === null) {
-                        $id = IdManager::getOrCreate()->generateNewIdForComponent(self::CANONICAL);
+                        $id = IdManager::getOrCreate()->generateNewHtmlIdForComponent(self::CANONICAL);
                         $pageExplorerTagAttributes->setComponentAttributeValue(TagAttributes::ID_KEY, $id);
                     }
 

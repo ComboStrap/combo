@@ -24,7 +24,7 @@ class OutlineSection extends TreeNode
 
 
     private int $startFileIndex;
-    private ?int $endFileIndex=null;
+    private ?int $endFileIndex = null;
 
     private ?Call $headingEnterCall;
     /**
@@ -114,12 +114,9 @@ class OutlineSection extends TreeNode
     {
 
         if ($this->headingEnterCall !== null && $this->headingEnterCall->isPluginCall()) {
-            $id = $this->headingEnterCall->getAttribute("id");
-            if ($id === null) {
-                $label = $this->getLabel();
-                $id = sectionID($label, $this->tocUniqueId);
-                $this->headingEnterCall->addAttribute("id", $id);
-            }
+
+            $this->headingEnterCall->addAttribute("id", $this->getHeadingId());
+
         }
         return $this->headingCalls;
     }
@@ -180,6 +177,17 @@ class OutlineSection extends TreeNode
     public function hasContentCall(): bool
     {
         return sizeof($this->contentCalls) > 0;
+    }
+
+    public function getHeadingId()
+    {
+        $id = $this->headingEnterCall->getAttribute("id");
+        if ($id !== null) {
+            return $id;
+        }
+        $label = $this->getLabel();
+        return sectionID($label, $this->tocUniqueId);
+
     }
 
 

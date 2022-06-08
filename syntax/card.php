@@ -185,7 +185,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     }
                 }
 
-                $id = IdManager::getOrCreate()->generateNewIdForComponent(self::TAG);
+                $id = IdManager::getOrCreate()->generateNewHtmlIdForComponent(self::TAG);
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -317,7 +317,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     $editButtonCall = EditButton::create("Edit Card $id")
                         ->setStartPosition($position)
                         ->setEndPosition($endPosition)
-                        ->toComboCall();
+                        ->toComboCallComboFormat();
                     $callStack->moveToEnd();
                     $callStack->insertBefore($editButtonCall);
 

@@ -15,11 +15,11 @@ class EditButton
 
 
     const SEC_EDIT_PATTERN = "/" . self::ENTER_HTML_COMMENT . "\s*" . self::EDIT_BUTTON_PREFIX . "({.*?})\s*" . self::CLOSE_HTML_COMMENT . "/";
-    const EDIT_BUTTON_PREFIX = "COMBO-EDIT";
+    const EDIT_BUTTON_PREFIX = "EDIT";
     const WIKI_ID = "wiki-id";
 
-    const FORM_ID = "form-id";
-    const EDIT_MESSAGE = "message";
+    const FORM_ID = "hid"; // id to be dokuwiki conform
+    const EDIT_MESSAGE = "name"; // name to be dokuwiki conform
 
     const CANONICAL = "edit-button";
     const ENTER_HTML_COMMENT = "<!--";
@@ -38,6 +38,8 @@ class EditButton
     const TARGET_TABLE_VALUE = "table"; // not yet used
     public const EDIT_SECTION_TARGET = 'section';
     const RANGE = "range";
+    const DOKUWIKI_FORMAT = "dokuwiki";
+    const COMBO_FORMAT = "combo";
 
 
     private $label;
@@ -51,15 +53,25 @@ class EditButton
      * @var string
      * This is the default
      */
-    private $target = self::TARGET_SECTION_VALUE;
+    private string $target = self::TARGET_SECTION_VALUE;
     /**
      * @var int
      */
-    private $startPosition;
+    private int $startPosition;
     /**
-     * @var int
+     * @var int|null
      */
-    private $endPosition;
+    private ?int $endPosition;
+    /**
+     * @var string $format - to conform or not to dokuwiki format
+     */
+    private string $format = self::COMBO_FORMAT;
+
+    /**
+     * the id of the heading, ie the id of the section
+     * Not really needed, just to be conform with Dokuwiki
+     */
+    private string $headingId;
 
 
     /**
@@ -82,10 +94,18 @@ class EditButton
         $startPosition = $attributes[\syntax_plugin_combo_edit::START_POSITION];
         $endPosition = $attributes[\syntax_plugin_combo_edit::END_POSITION];
         $wikiId = $attributes[TagAttributes::WIKI_ID];
-        return EditButton::create($label)
+        $headingId = $attributes[\syntax_plugin_combo_edit::HEADING_ID];
+        $editButton = EditButton::create($label)
             ->setStartPosition($startPosition)
             ->setEndPosition($endPosition)
-            ->setWikiId($wikiId);
+            ->setWikiId($wikiId)
+            ->setHeadingId($headingId);
+        $format = $attributes[\syntax_plugin_combo_edit::FORMAT];
+        if ($format !== null) {
+            $editButton->setFormat($format);
+        }
+        return $editButton;
+
 
     }
 
@@ -107,9 +127,7 @@ class EditButton
     }
 
     /**
-     *
-     * @throws ExceptionBadArgument
-     * @throws ExceptionNotEnabled
+     * See {@link \Doku_Renderer_xhtml::finishSectionEdit()}
      */
     public function toTag(): string
     {
@@ -119,18 +137,38 @@ class EditButton
          * {@link html_secedit_get_button}
          */
         $wikiId = $this->getWikiId();
-        $slotPath = DokuPath::createPagePathFromId($wikiId);
-        $formId = IdManager::getOrCreate()->generateNewIdForComponent(self::CANONICAL, $slotPath);
-        $data = [
-            self::WIKI_ID => $wikiId,
-            self::EDIT_MESSAGE => $this->label,
-            self::FORM_ID => $formId
-        ];
-        if ($this->hasRange()) {
-            $data[self::TARGET_ATTRIBUTE_NAME] = $this->target;
-            $data[self::RANGE] = $this->getRange();
+
+
+        /**
+         * We follow the order of Dokuwiki for compatibility purpose
+         */
+        $data[self::TARGET_ATTRIBUTE_NAME] = $this->target;
+
+        if ($this->format === self::COMBO_FORMAT) {
+            /**
+             * In the combo edit format, we had the dokuwiki id
+             * because the edit button may also be on the secondary slot
+             */
+            $data[self::WIKI_ID] = $wikiId;
         }
-        return self::EDIT_BUTTON_PREFIX . json_encode($data);
+        $data[self::EDIT_MESSAGE] = $this->label;
+        if ($this->format === self::COMBO_FORMAT) {
+            /**
+             * In the combo edit format, we had the dokuwiki id as form id
+             * to make it unique on the whole page
+             * because the edit button may also be on the secondary slot
+             */
+            $slotPath = DokuPath::createPagePathFromId($wikiId);
+            $formId = IdManager::getOrCreate()->generateNewHtmlIdForComponent(self::CANONICAL, $slotPath);
+            $data[self::FORM_ID] = $formId;
+        } else {
+            $data[self::FORM_ID] = $this->getHeadingId();
+            $data["codeblockOffset"] = 0; // what is that ?
+            $data["secid"] = IdManager::getOrCreate()->generateAndGetNewSequenceValueForScope(self::CANONICAL);
+        }
+        $data[self::RANGE] = $this->getRange();
+
+        return self::EDIT_BUTTON_PREFIX . Html::encode(json_encode($data));
     }
 
     /**
@@ -269,7 +307,7 @@ EOF;
         return $this;
     }
 
-    public function setStartPosition(?int $startPosition): EditButton
+    public function setStartPosition(int $startPosition): EditButton
     {
         $this->startPosition = $startPosition;
         return $this;
@@ -286,10 +324,7 @@ EOF;
      */
     private function getRange(): string
     {
-        $range = "";
-        if ($this->startPosition !== null) {
-            $range = $this->startPosition;
-        }
+        $range = $this->startPosition;
         $range = "$range-";
         if ($this->endPosition !== null) {
             $range = "$range{$this->endPosition}";
@@ -298,7 +333,12 @@ EOF;
 
     }
 
-    public function toComboCall(): Call
+    public function toComboCallComboFormat(): Call
+    {
+        return $this->toComboCall(self::COMBO_FORMAT);
+    }
+
+    public function toComboCall($format): Call
     {
         return Call::createComboCall(
             \syntax_plugin_combo_edit::TAG,
@@ -307,10 +347,13 @@ EOF;
                 \syntax_plugin_combo_edit::START_POSITION => $this->startPosition,
                 \syntax_plugin_combo_edit::END_POSITION => $this->endPosition,
                 \syntax_plugin_combo_edit::LABEL => $this->label,
+                \syntax_plugin_combo_edit::FORMAT => $format,
+                \syntax_plugin_combo_edit::HEADING_ID => $this->getHeadingId(),
                 TagAttributes::WIKI_ID => $this->getWikiId()
             ]
         );
     }
+
 
     /**
      *
@@ -326,9 +369,33 @@ EOF;
 
     }
 
-    private function hasRange(): bool
+
+    public function toComboCallDokuWikiForm(): Call
     {
-        return $this->startPosition !== null || $this->endPosition !== null;
+        return $this->toComboCall(self::DOKUWIKI_FORMAT);
+    }
+
+    /** @noinspection PhpReturnValueOfMethodIsNeverUsedInspection */
+    private function setFormat($format): EditButton
+    {
+
+        if (!in_array($format, [self::DOKUWIKI_FORMAT, self::COMBO_FORMAT])) {
+            LogUtility::internalError("The tag format ($format) is not valid", self::CANONICAL);
+            return $this;
+        }
+        $this->format = $format;
+        return $this;
+    }
+
+    public function setHeadingId($id): EditButton
+    {
+        $this->headingId = $id;
+        return $this;
+    }
+
+    private function getHeadingId(): string
+    {
+        return $this->headingId;
     }
 
 }

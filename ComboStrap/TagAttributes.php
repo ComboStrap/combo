@@ -769,7 +769,7 @@ class TagAttributes
             if ($componentName === null) {
                 $componentName = "unknown-component";
             }
-            $id = IdManager::getOrCreate()->generateNewIdForComponent($componentName);
+            $id = IdManager::getOrCreate()->generateNewHtmlIdForComponent($componentName);
             $this->addComponentAttributeValue(TagAttributes::GENERATED_ID_KEY, $id);
 
         }

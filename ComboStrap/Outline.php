@@ -227,8 +227,8 @@ class Outline
                     $editButton = EditButton::create($outlineSection->getLabel())
                         ->setStartPosition($outlineSection->getStartPosition())
                         ->setEndPosition($outlineSection->getEndPosition())
-                        ->setHeadingId($outlineSection->getHeadingId())
-                        ->setSectionId($sectionSequenceId)
+                        ->setOutlineHeadingId($outlineSection->getHeadingId())
+                        ->setOutlineSectionId($sectionSequenceId)
                         ->toComboCallDokuWikiForm();
                     $sectionCalls[] = $editButton;
                 }

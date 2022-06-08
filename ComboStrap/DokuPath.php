@@ -470,14 +470,19 @@ class DokuPath extends PathAbs
         $actualNames = explode(self::PATH_SEPARATOR, $this->getDokuwikiId());
 
         /**
-         * First element can be empty
+         * First element can be an empty string
          * Case of only one string without path separator
          * the first element returned is an empty string
          * Last element can be empty (namespace split, ie :ns:)
          */
         $names = [];
         foreach ($actualNames as $name) {
-            if (!empty($name)) {
+            /**
+             * Don't use the {@link empty()} function
+             * In the cache, we may have the directory '0'
+             * and it's empty but is valid name
+             */
+            if ($name !== "") {
                 $names[] = $name;
             }
         }

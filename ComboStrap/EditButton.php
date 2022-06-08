@@ -70,12 +70,14 @@ class EditButton
     /**
      * the id of the heading, ie the id of the section
      * Not really needed, just to be conform with Dokuwiki
+     * When the edit button is not for an outline may be null
      */
-    private string $headingId;
+    private ?string $outlineHeadingId = null;
     /**
-     * @var int $sectionid - sequence id of the section used only by dokuwiki
+     * @var ?int $sectionid - sequence id of the section used only by dokuwiki
+     * When the edit button is not for an outline may be null
      */
-    private int $sectionId;
+    private ?int $outlineSectionId = null;
 
 
     /**
@@ -104,11 +106,11 @@ class EditButton
             ->setWikiId($wikiId);
         $headingId = $attributes[\syntax_plugin_combo_edit::HEADING_ID];
         if ($headingId !== null) {
-            $editButton->setHeadingId($headingId);
+            $editButton->setOutlineHeadingId($headingId);
         }
         $sectionId = $attributes[\syntax_plugin_combo_edit::SECTION_ID];
         if($sectionId!==null) {
-            $editButton->setSectionId($sectionId);
+            $editButton->setOutlineSectionId($sectionId);
         }
         $format = $attributes[\syntax_plugin_combo_edit::FORMAT];
         if ($format !== null) {
@@ -398,25 +400,28 @@ EOF;
         return $this;
     }
 
-    public function setHeadingId($id): EditButton
+    public function setOutlineHeadingId($id): EditButton
     {
-        $this->headingId = $id;
+        $this->outlineHeadingId = $id;
         return $this;
     }
 
-    private function getHeadingId(): string
+    /**
+     * @return string|null
+     */
+    private function getHeadingId(): ?string
     {
-        return $this->headingId;
+        return $this->outlineHeadingId;
     }
 
-    private function getSectionId(): int
+    private function getSectionId(): ?int
     {
-        return $this->sectionId;
+        return $this->outlineSectionId;
     }
 
-    public function setSectionId(int $sectionSequenceId): EditButton
+    public function setOutlineSectionId(int $sectionSequenceId): EditButton
     {
-        $this->sectionId = $sectionSequenceId;
+        $this->outlineSectionId = $sectionSequenceId;
         return $this;
     }
 

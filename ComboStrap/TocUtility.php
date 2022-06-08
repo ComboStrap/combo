@@ -196,5 +196,11 @@ EOF;
         $conf['tocminheads'] = $int;
     }
 
+    public static function shouldTocBePrinted(array $toc): bool
+    {
+        global $conf;
+        return $conf['tocminheads'] && count($toc) >= $conf['tocminheads'];
+    }
+
 
 }

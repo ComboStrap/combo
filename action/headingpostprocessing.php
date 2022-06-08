@@ -14,6 +14,7 @@ use ComboStrap\Page;
 use ComboStrap\EditButton;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\TocUtility;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
@@ -245,10 +246,11 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         /**
          * TOC
          */
-        global $TOC;
-        $TOC = $outline->getTocDokuwikiFormat();
-
-
+        $toc = $outline->getTocDokuwikiFormat();
+        if(TocUtility::shouldTocBePrinted($toc)){
+            global $TOC;
+            $TOC = $toc;
+        }
 
 
         /**

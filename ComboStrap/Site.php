@@ -838,10 +838,7 @@ class Site
 
     public static function isSectionEditingEnabled(): bool
     {
-
-        global $conf;
-        return $conf['maxseclevel'] > 0;
-
+        return TocUtility::getTocMax() > 0;
     }
 
     public static function enableSectionEditing()

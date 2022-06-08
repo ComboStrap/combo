@@ -201,11 +201,6 @@ class Outline
 
             if ($outlineSection->hasParent()) {
 
-                /**
-                 * Dokuwiki class to be conform
-                 */
-                $sectionSequenceId++;
-                $outlineSection->getHeadingCall()->addClassName("sectionedit$sectionSequenceId");
 
                 $sectionCalls = array_merge(
                     $outlineSection->getHeadingCalls(),
@@ -215,6 +210,20 @@ class Outline
                 );
 
                 if (Site::isSectionEditingEnabled()) {
+
+                    /**
+                     * Adding sectionedit class to be conform
+                     * with the Dokuwiki {@link \Doku_Renderer_xhtml::header()} function
+                     */
+                    $sectionSequenceId++;
+                    $headingCall = $outlineSection->getHeadingCall();
+                    if ($headingCall->isPluginCall()) {
+                        $level = DataType::toIntegerOrDefaultIfNull($headingCall->getAttribute(syntax_plugin_combo_heading::LEVEL), 0);
+                        if ($level <= TocUtility::getTocMax()) {
+                            $headingCall->addClassName("sectionedit$sectionSequenceId");
+                        }
+                    }
+
                     $editButton = EditButton::create($outlineSection->getLabel())
                         ->setStartPosition($outlineSection->getStartPosition())
                         ->setEndPosition($outlineSection->getEndPosition())

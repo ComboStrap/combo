@@ -202,5 +202,19 @@ EOF;
         return $conf['tocminheads'] && count($toc) >= $conf['tocminheads'];
     }
 
+    /**
+     *
+     */
+    public static function getTocMax(): int
+    {
+        global $conf;
+        try {
+            return DataType::toInteger($conf['maxseclevel']);
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::internalError("Unable to the the maxseclevel as integer. Error: {$e->getMessage()}", self::CANONICAL);
+            return 0;
+        }
+    }
+
 
 }

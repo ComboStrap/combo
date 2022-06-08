@@ -544,12 +544,17 @@ class Page extends ResourceComboAbs
     /**
      * @return string the title, or h1 if empty or the id if empty
      * Shortcut to {@link PageTitle::getValueOrDefault()}
-     * @throws ExceptionNotFound
+     *
      */
     public
     function getTitleOrDefault(): string
     {
-        return $this->title->getValueOrDefault();
+        try {
+            return $this->title->getValueOrDefault();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("Internal Error: The page ($this) does not have any default title");
+            return $this->getPath()->getLastNameWithoutExtension();
+        }
 
     }
 

@@ -2,9 +2,12 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\Index;
 use ComboStrap\LogUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\Message;
+use ComboStrap\Page;
 use dokuwiki\Extension\ActionPlugin;
 
 
@@ -142,7 +145,8 @@ class action_plugin_combo_routermessage extends ActionPlugin
             // Add a list of page with the same name to the message
             // if the redirections is not planned
             if ($redirectSource != action_plugin_combo_router::TARGET_ORIGIN_PAGE_RULES) {
-                $this->addToMessagePagesWithSameName($message, $pageIdOrigin);
+                $pageOrigin = Page::createPageFromId($pageIdOrigin);
+                $this->addToMessagePagesWithSameName($message, $pageOrigin);
             }
 
             if ($event->data === 'show' || $event->data === 'edit' || $event->data === 'search') {
@@ -165,17 +169,25 @@ class action_plugin_combo_routermessage extends ActionPlugin
     /**
      * Add the page with the same page name but in an other location
      * @param Message $message
-     * @param $pageIdOrigin
+     * @param Page $pageOrigin
      */
-    function addToMessagePagesWithSameName(Message $message, $pageIdOrigin)
+    function addToMessagePagesWithSameName(Message $message, Page $pageOrigin)
     {
 
         if ($this->getConf(self::CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE) == 1) {
 
             global $ID;
             // The page name
-            $pageName = noNS($pageIdOrigin);
-            $pagesWithSameName = Index::getOrCreate()->getPagesWithSameLastName($pageIdOrigin);
+            $pageName = $pageOrigin->getNameOrDefault();
+            $pagesWithSameName = Index::getOrCreate()->getPagesWithSameLastName($pageOrigin);
+
+            if (count($pagesWithSameName) === 1) {
+                $page = $pagesWithSameName[0];
+                if ($page->getDokuwikiId() === $ID) {
+                    // the page itself
+                    return;
+                }
+            }
 
             if (count($pagesWithSameName) > 0) {
 
@@ -189,32 +201,36 @@ class action_plugin_combo_routermessage extends ActionPlugin
                 $message->addHtmlContent('<ul>');
 
                 $i = 0;
-                foreach ($pagesWithSameName as $pageId => $title) {
-                    if ($pageId === $ID) {
+                $listPagesHtml = "";
+                foreach ($pagesWithSameName as $page) {
+
+                    if ($page->getDokuwikiId() === $ID) {
                         continue;
                     }
                     $i++;
                     if ($i > 10) {
-                        $message->addHtmlContent('<li>' .
+                        $listPagesHtml .= '<li>' .
                             tpl_link(
-                                wl($pageIdOrigin) . "?do=search&q=" . rawurldecode($pageName),
+                                "?do=search&q=" . rawurldecode($pageName),
                                 "More ...",
                                 'class="" rel="nofollow" title="More..."',
                                 $return = true
-                            ) . '</li>');
+                            ) . '</li>';
                         break;
                     }
-                    if ($title == null) {
-                        $title = $pageId;
+
+                    try {
+                        $markupRef = MarkupRef::createFromPageIdOrPath($page->getDokuwikiId());
+                        $tagAttributes = $markupRef
+                            ->toAttributes()
+                            ->addOutputAttributeValue("rel", "nofollow");
+                        $listPagesHtml .= "<li>{$tagAttributes->toHtmlEnterTag("a")}{$markupRef->getLabel()}</a></li>";
+                    } catch (ExceptionBadSyntax $e) {
+                        LogUtility::internalError("Internal Error: Unable to get a markup ref for the page ($page). Error: {$e->getMessage()}");
                     }
-                    $message->addHtmlContent('<li>' .
-                        tpl_link(
-                            wl($pageId),
-                            $title,
-                            'class="" rel="nofollow" title="' . $title . '"',
-                            $return = true
-                        ) . '</li>');
+
                 }
+                $message->addHtmlContent($listPagesHtml);
                 $message->addHtmlContent('</ul>');
             }
         }

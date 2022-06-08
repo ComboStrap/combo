@@ -229,8 +229,29 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
     function table_open($maxcols = null, $numrows = null, $pos = null, $classes = NULL)
     {
         // initialize the row counter used for classes
+        /** @noinspection DuplicatedCode */
         $this->_counter['row_counter'] = 0;
-        TableUtility::tableOpen($this, $pos);
+
+        /**
+         * Table editing
+         */
+        $class = 'table';
+        if ($classes !== null) {
+            if (is_array($classes)) $classes = join(' ', $classes);
+            $class .= ' ' . $classes;
+        }
+
+        if ($pos !== null) {
+            $hid = $this->_headerToLink($class, true);
+            $data = array();
+            $data['target'] = 'table';
+            $data['name'] = '';
+            $data['hid'] = $hid;
+            $class .= ' ' . $this->startSectionEdit($pos, $data);
+        }
+
+        TableUtility::tableOpen($this, $class);
+
     }
 
 

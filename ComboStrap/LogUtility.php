@@ -360,7 +360,7 @@ class LogUtility
      * @param string $canonical
      * @return void
      */
-    public static function internalError(string $message, string $canonical)
+    public static function internalError(string $message, string $canonical = "support")
     {
         self::error($message, $canonical);
     }

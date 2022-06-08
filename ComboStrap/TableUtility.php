@@ -25,18 +25,9 @@ class TableUtility
 
     const TABLE_SNIPPET_ID = "table";
 
-    static function tableOpen($renderer, $pos)
+    static function tableOpen($renderer, $class)
     {
 
-        $class = 'table';
-        if ($pos !== null) {
-            $sectionEditStartData = ['target' => 'table'];
-            if (!defined('SEC_EDIT_PATTERN')) {
-                // backwards-compatibility for Frusterick Manners (2017-02-19)
-                $sectionEditStartData = 'table';
-            }
-            $class .= ' ' . $renderer->startSectionEdit($pos, $sectionEditStartData);
-        }
         // table-responsive and
         $bootResponsiveClass = 'table-responsive';
 
@@ -46,7 +37,9 @@ class TableUtility
 
         $bootTableClass = 'table table-non-fluid table-hover table-striped';
 
-        $renderer->doc .= '<div class="' . $class . ' ' . $bootResponsiveClass . '"><table class="inline ' . $bootTableClass . '">' . DOKU_LF;
+        $renderer->doc .=<<<EOF
+<div class="$class $bootResponsiveClass"><table class="inline $bootTableClass">
+EOF;
 
     }
 

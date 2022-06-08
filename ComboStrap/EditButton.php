@@ -98,14 +98,18 @@ class EditButton
         $startPosition = $attributes[\syntax_plugin_combo_edit::START_POSITION];
         $endPosition = $attributes[\syntax_plugin_combo_edit::END_POSITION];
         $wikiId = $attributes[TagAttributes::WIKI_ID];
-        $headingId = $attributes[\syntax_plugin_combo_edit::HEADING_ID];
-        $sectionId = $attributes[\syntax_plugin_combo_edit::SECTION_ID];
         $editButton = EditButton::create($label)
             ->setStartPosition($startPosition)
             ->setEndPosition($endPosition)
-            ->setWikiId($wikiId)
-            ->setHeadingId($headingId)
-            ->setSectionId($sectionId);
+            ->setWikiId($wikiId);
+        $headingId = $attributes[\syntax_plugin_combo_edit::HEADING_ID];
+        if ($headingId !== null) {
+            $editButton->setHeadingId($headingId);
+        }
+        $sectionId = $attributes[\syntax_plugin_combo_edit::SECTION_ID];
+        if($sectionId!==null) {
+            $editButton->setSectionId($sectionId);
+        }
         $format = $attributes[\syntax_plugin_combo_edit::FORMAT];
         if ($format !== null) {
             $editButton->setFormat($format);

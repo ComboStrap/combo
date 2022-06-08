@@ -76,7 +76,7 @@ class Outline
             if ($newSection) {
                 if ($this->actualSection->hasParent()) {
                     // -1 because the actual position is the start of the next section
-                    $this->actualSection->setEndPosition($actualLastPosition - 1);
+                    $this->actualSection->setEndPosition($actualCall->getFirstMatchedCharacterPosition() - 1);
                 }
                 $childSection = OutlineSection::createChildOutlineSection($this->actualSection, $actualCall);
                 $childSection->addHeadingCall($actualCall);

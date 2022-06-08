@@ -241,14 +241,19 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
             $class .= ' ' . $classes;
         }
 
-        if ($pos !== null) {
-            $hid = $this->_headerToLink($class, true);
-            $data = array();
-            $data['target'] = 'table';
-            $data['name'] = '';
-            $data['hid'] = $hid;
-            $class .= ' ' . $this->startSectionEdit($pos, $data);
-        }
+        /**
+         * Does not seems to work
+         * there is no relation to this code
+         * https://www.dokuwiki.org/tips:table_editing
+         */
+//        if ($pos !== null) {
+//            $hid = $this->_headerToLink($class, true);
+//            $data = array();
+//            $data['target'] = 'table';
+//            $data['name'] = '';
+//            $data['hid'] = $hid;
+//            $class .= ' ' . $this->startSectionEdit($pos, $data);
+//        }
 
         TableUtility::tableOpen($this, $class);
 

@@ -7,6 +7,7 @@ use syntax_plugin_combo_heading;
 use syntax_plugin_combo_headingatx;
 use syntax_plugin_combo_headingwiki;
 use syntax_plugin_combo_media;
+use syntax_plugin_combo_section;
 
 class Outline
 {
@@ -291,6 +292,62 @@ class Outline
         TreeVisit::visit($this->rootSection, $collectTableOfContent);
         return $tableOfContent;
 
+    }
+
+    public function toStrapTemplateInstructionCalls(): array
+    {
+        $totalInstructionCalls = [];
+        $sectionSequenceId = 0;
+        $collectCalls = function (OutlineSection $outlineSection) use (&$totalInstructionCalls, &$sectionSequenceId) {
+
+            $sectionOpen = Call::createComboCall(
+                syntax_plugin_combo_section::TAG,
+                DOKU_LEXER_ENTER,
+                array(syntax_plugin_combo_heading::LEVEL => $outlineSection->getLevel())
+            );
+            $sectionClose = Call::createComboCall(
+                syntax_plugin_combo_section::TAG,
+                DOKU_LEXER_EXIT
+            );
+
+            if ($outlineSection->hasParent()) {
+
+
+                $sectionCalls = array_merge(
+                    [$sectionOpen],
+                    $outlineSection->getHeadingCalls(),
+                    $outlineSection->getContentCalls()
+                );
+
+                if (Site::isSectionEditingEnabled()) {
+
+                    $editButton = EditButton::create("Edit the section `{$outlineSection->getLabel()}`")
+                        ->setStartPosition($outlineSection->getStartPosition())
+                        ->setEndPosition($outlineSection->getEndPosition())
+                        ->setOutlineHeadingId($outlineSection->getHeadingId())
+                        ->setOutlineSectionId($sectionSequenceId)
+                        ->toComboCallComboFormat();
+                    $sectionCalls[] = $editButton;
+                }
+
+                $sectionCalls[] = $sectionClose;
+
+            } else {
+                // dokuwiki seems to have no section for the content before the first heading
+                $sectionCalls = $outlineSection->getContentCalls();
+            }
+
+            /**
+             * Transform and collect the calls in Instructions calls
+             */
+            $instructionCalls = array_map(function (Call $element) {
+                return $element->getInstructionCall();
+            }, $sectionCalls);
+            $totalInstructionCalls = array_merge($totalInstructionCalls, $instructionCalls);
+        };
+
+        TreeVisit::visit($this->rootSection, $collectCalls);
+        return $totalInstructionCalls;
     }
 
 

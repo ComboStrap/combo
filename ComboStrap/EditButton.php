@@ -35,7 +35,13 @@ class EditButton
      */
     const TARGET_ATTRIBUTE_NAME = "target";
     const TARGET_SECTION_VALUE = "section";
-    const TARGET_TABLE_VALUE = "table"; // not yet used
+    /**
+     * The table does not have an edit form at all
+     * It's created by {@link \Doku_Renderer_xhtml::table_close()}
+     * but without any name and the {@link html_secedit_get_button()}
+     * will then not print them
+     */
+    const TARGET_TABLE_VALUE = "table";
     public const EDIT_SECTION_TARGET = 'section';
     const RANGE = "range";
     const DOKUWIKI_FORMAT = "dokuwiki";
@@ -109,7 +115,7 @@ class EditButton
             $editButton->setOutlineHeadingId($headingId);
         }
         $sectionId = $attributes[\syntax_plugin_combo_edit::SECTION_ID];
-        if($sectionId!==null) {
+        if ($sectionId !== null) {
             $editButton->setOutlineSectionId($sectionId);
         }
         $format = $attributes[\syntax_plugin_combo_edit::FORMAT];
@@ -180,6 +186,7 @@ class EditButton
         }
         $data[self::RANGE] = $this->getRange();
 
+
         return self::EDIT_BUTTON_PREFIX . Html::encode(json_encode($data));
     }
 
@@ -225,7 +232,7 @@ class EditButton
          * Delete the edit comment
          *   * if not writable
          *   * or an old revision
-         * Original: {@link html_secedit()}
+         * Original: {@link html_secedit()} {@link html_secedit_get_button()}
          */
         global $INFO;
         if (!isset($INFO)) {
@@ -258,21 +265,44 @@ class EditButton
         $editFormCallBack = function ($matches) {
             $json = Html::decode($matches[1]);
             $data = json_decode($json, true);
+
+            $target = $data[self::TARGET_ATTRIBUTE_NAME];
+            if ($target === self::TARGET_TABLE_VALUE) {
+                /**
+                 * Dokuwiki does not print them either
+                 * because the name is empty
+                 * {@link html_secedit_get_button()}
+                 */
+                return "";
+            }
             if ($data === NULL) {
+                LogUtility::internalError("No data found in the edit comment", self::CANONICAL);
                 return "";
             }
             $wikiId = $data[self::WIKI_ID];
-            if ($wikiId === null) {
-                LogUtility::error("A wiki id should be present to create an edit button", self::CANONICAL);
-                return "";
-            }
             unset($data[self::WIKI_ID]);
+            if ($wikiId === null) {
+                try {
+                    $page = Page::createPageFromGlobalDokuwikiId();
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError("A page id is mandatory for a edit button (no wiki id, no global ID were found). No edit buttons was created then.", self::CANONICAL);
+                    return "";
+                }
+            } else {
+                $page = Page::createPageFromId($wikiId);
+            }
+
             $formId = $data[self::FORM_ID];
             unset($data[self::FORM_ID]);
             $message = $data[self::EDIT_MESSAGE];
             unset($data[self::EDIT_MESSAGE]);
             $data["summary"] = $message;
-            $page = Page::createPageFromId($wikiId);
+            try {
+                // same as $INFO['lastmod'];
+                $data['rev'] = FileSystems::getModifiedTime($page->getPath())->getTimestamp();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("The file does not exist, we cannot set the last modified time on the edit buttons.", self::CANONICAL);
+            }
             $hiddenInputs = "";
             foreach ($data as $key => $val) {
                 $inputAttributes = TagAttributes::createEmpty()

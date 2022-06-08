@@ -690,7 +690,7 @@ class TagAttributes
     public function addOutputAttributeValue($key, $value): TagAttributes
     {
         if (blank($value)) {
-            LogUtility::msg("The value of the output attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
+            LogUtility::error("The value of the output attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty");
         }
         $this->outputAttributes[$key] = $value;
         return $this;

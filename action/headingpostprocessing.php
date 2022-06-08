@@ -241,6 +241,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $outline = Outline::createFromCallStack($callStack);
         if (Site::getTemplate() !== Site::STRAP_TEMPLATE_NAME) {
             $handler->calls = $outline->toDefaultTemplateInstructionCalls();
+        } else {
+            $handler->calls = $outline->toStrapTemplateInstructionCalls();
         }
 
         /**

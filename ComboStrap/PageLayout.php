@@ -14,7 +14,7 @@ class PageLayout extends MetadataText
     public const INDEX_LAYOUT_VALUE = "index";
     public const HAMBURGER_LAYOUT_VALUE = "hamburger";
 
-    public static function createFromPage(Page $page)
+    public static function createFromPage(Page $page): PageLayout
     {
         return (new PageLayout())
             ->setResource($page);
@@ -62,6 +62,9 @@ class PageLayout extends MetadataText
         return true;
     }
 
+    /**
+     * @return string
+     */
     public function getDefaultValue(): string
     {
         /**
@@ -101,6 +104,25 @@ class PageLayout extends MetadataText
     public function getCanonical(): string
     {
         return self::PROPERTY_NAME;
+    }
+
+    /**
+     * @return string
+     */
+    public function getValueOrDefault(): string
+    {
+
+        try {
+            $value = $this->getValue();
+            if ($value === "") {
+                return $this->getDefaultValue();
+            }
+            return $value;
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+
+
     }
 
 

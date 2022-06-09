@@ -4,6 +4,7 @@
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\DataType;
+use ComboStrap\DynamicRender;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\LayoutMainAreaBuilder;
@@ -214,7 +215,6 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     function _post_process_heading(&$event, $param)
     {
 
-
         /**
          * Reset static
          * When running test, the class are not shutdown
@@ -239,6 +239,15 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $handler = $event->data;
         $callStack = CallStack::createFromHandler($handler);
         $outline = Outline::createFromCallStack($callStack);
+
+        global $ACT;
+        if($ACT === DynamicRender::DYNAMIC_RENDERING){
+            // no outline or edit button for dynamic rendering
+            // but closing of atx heading
+            $handler->calls = $outline->toDynamicInstructionCalls();
+            return;
+        }
+
         if (Site::getTemplate() !== Site::STRAP_TEMPLATE_NAME) {
             $handler->calls = $outline->toDefaultTemplateInstructionCalls();
         } else {

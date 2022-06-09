@@ -1,4 +1,8 @@
 
+div.editbutton_table {
+    /* default used also in edittable*/
+    display: none;
+}
 
 form.edit-button-cs button {
     border: 0;

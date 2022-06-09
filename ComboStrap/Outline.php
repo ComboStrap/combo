@@ -23,7 +23,7 @@ class Outline
     public function __construct(CallStack $callStack)
     {
 
-        $this->process($callStack);
+        $this->buildOutline($callStack);
     }
 
     public static function createFromCallStack(CallStack $callStack): Outline
@@ -31,7 +31,7 @@ class Outline
         return new Outline($callStack);
     }
 
-    private function process(CallStack $callStack)
+    private function buildOutline(CallStack $callStack)
     {
 
 
@@ -343,7 +343,7 @@ class Outline
                 DOKU_LEXER_ENTER,
                 array(\syntax_plugin_combo_box::TAG_ATTRIBUTE => "header",
                     TagAttributes::CLASS_KEY => "outline-header",
-                    )
+                )
             );
             $closeHeader = Call::createComboCall(
                 \syntax_plugin_combo_box::TAG,
@@ -405,6 +405,10 @@ class Outline
      */
     private function addSectionEditButtonComboFormatIfNeeded(OutlineSection $outlineSection, int $sectionSequenceId, array &$totalInstructionCalls): void
     {
+        if (!$outlineSection->hasParent()) {
+            // no button for the root (ie the page)
+            return;
+        }
         if (Site::isSectionEditingEnabled()) {
 
             $editButton = EditButton::create("Edit the section `{$outlineSection->getLabel()}`")
@@ -419,6 +423,33 @@ class Outline
                 ->toComboCallComboFormat();
 
         }
+
+    }
+
+    /**
+     * Dynamic Rendering does not have any section/edit button
+     *
+     * The outline processing ({@link Outline::buildOutline()} just close the atx heading
+     *
+     * @return array
+     */
+    public function toDynamicInstructionCalls(): array
+    {
+        $totalInstructionCalls = [];
+        $collectCalls = function (OutlineSection $outlineSection) use (&$totalInstructionCalls) {
+
+            $sectionCalls = array_merge(
+                $outlineSection->getHeadingCalls(),
+                $outlineSection->getContentCalls()
+            );
+
+            $instructionCalls = array_map(function (Call $element) {
+                return $element->getInstructionCall();
+            }, $sectionCalls);
+            $totalInstructionCalls = array_merge($totalInstructionCalls, $instructionCalls);
+        };
+        TreeVisit::visit($this->rootSection, $collectCalls);
+        return $totalInstructionCalls;
 
     }
 

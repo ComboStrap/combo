@@ -27,8 +27,8 @@ section.outline-level-3, section.outline-level-4, section.outline-level-5, secti
 .outline-section, .outline-header {
     position: relative;
 }
-
-form.edit-button-cs {
+/** Only for section not button for table */
+.editbutton_section {
     right: 0;
     bottom: 0;
     position: absolute;

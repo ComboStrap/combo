@@ -237,6 +237,7 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                 case self::PAGE_CORE_AREA:
                     $tagAttributes->addClassName(tpl_classes());
                     $tagAttributes->addClassName("layout-$layoutName-combo");
+                    $tagAttributes->addClassName("dokuwiki"); // used by Third party plugin
                     $showArea = true;
                     break;
                 case self::MAIN_FOOTER_AREA:

@@ -183,9 +183,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                 // Default
                 $defaultAttributes = array();
-                $defaultAttributes['frameborder'] = 1;
                 $defaultAttributes['width'] = '100%';
-                $defaultAttributes['name'] = "WebCode iFrame";
                 $defaultAttributes[self::RENDERING_MODE_ATTRIBUTE] = 'story';
                 // 'height' is set by the javascript if not set
                 // 'width' and 'scrolling' gets their natural value
@@ -348,7 +346,10 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_EXIT :
                     $codes = $data[self::CODES_ATTRIBUTE];
                     $callStackArray = $data[PluginUtility::ATTRIBUTES];
-                    $iFrameAttributes = TagAttributes::createFromCallStackArray($callStackArray, self::TAG);
+                    /**
+                     * Tag is of an iframe (Web code) or a div (wiki markup)
+                     */
+                    $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray, self::TAG);
 
                     // Create the real output of webcode
                     if (sizeof($codes) == 0) {
@@ -358,11 +359,13 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                     // Credits bar
                     $bar = '<div class="webcode-bar">';
 
+                    // Css
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
 
                     // Dokuwiki Code ?
                     if (array_key_exists(self::MARKI_LANG, $codes)) {
 
-                        $markiCode = $codes[self::MARKI_LANG];
+                        $markupCode = $codes[self::MARKI_LANG];
                         /**
                          * By default, markup code
                          * is rendered inside the page
@@ -370,18 +373,24 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                          * due to lazy loading, such as relative link, ...
                          *
                          */
-                        if (!$iFrameAttributes->hasComponentAttribute("iframe")) {
-                            $renderer->doc .= PluginUtility::render($markiCode);
+                        if (!$tagAttributes->hasComponentAttribute("iframe")) {
+                            /**
+                             * the div is to be able to apply some CSS
+                             * such as don't show editbutton on webcode
+                             */
+                            $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
+                            $renderer->doc .= PluginUtility::render($markupCode);
+                            $renderer->doc .= "</div>";
                             return true;
                         }
 
                         $queryParams = array(
                             'call' => action_plugin_combo_webcode::CALL_ID,
-                            action_plugin_combo_webcode::MARKI_PARAM => $markiCode
+                            action_plugin_combo_webcode::MARKI_PARAM => $markupCode
                         );
                         $queryString = http_build_query($queryParams, '', DokuwikiUrl::AMPERSAND_CHARACTER);
                         $url = Site::getAjaxUrl() . "?$queryString";
-                        $iFrameAttributes->addOutputAttributeValue("src", $url);
+                        $tagAttributes->addOutputAttributeValue("src", $url);
 
                     } else {
 
@@ -399,8 +408,8 @@ EOF;
 
                         // External Resources such as css stylesheet or js
                         $externalResources = [];
-                        if ($iFrameAttributes->hasComponentAttribute(self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY)) {
-                            $resources = $iFrameAttributes->getValueAndRemove(self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY);
+                        if ($tagAttributes->hasComponentAttribute(self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY)) {
+                            $resources = $tagAttributes->getValueAndRemove(self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY);
                             $externalResources = explode(",", $resources);
                         }
 
@@ -419,10 +428,10 @@ EOF;
                             $fileExtension = $pathInfo['extension'];
                             switch ($fileExtension) {
                                 case 'css':
-                                    $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="' . $externalResource . '"/>';
+                                    $iframeSrcValue .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"$externalResource\"/>";
                                     break;
                                 case 'js':
-                                    $iframeSrcValue .= '<script type="text/javascript" src="' . $externalResource . '"></script>';
+                                    $iframeSrcValue .= "<script type=\"text/javascript\" src=\"$externalResource\"></script>";
                                     break;
                             }
                         }
@@ -484,11 +493,11 @@ EOF;
                             $iframeSrcValue .= '<script type="text/babel">' . $codes['babel'] . '</script>';
                         }
                         $iframeSrcValue .= '</body></html>';
-                        $iFrameAttributes->addOutputAttributeValue("srcdoc", $iframeSrcValue);
+                        $tagAttributes->addOutputAttributeValue("srcdoc", $iframeSrcValue);
 
                         // Code bar with button
                         $bar .= '<div class="webcode-bar-item">' . PluginUtility::getDocumentationHyperLink(self::TAG, "Rendered by WebCode", false) . '</div>';
-                        $bar .= '<div class="webcode-bar-item">' . $this->addJsFiddleButton($codes, $externalResources, $useConsole, $iFrameAttributes->getValue("name")) . '</div>';
+                        $bar .= '<div class="webcode-bar-item">' . $this->addJsFiddleButton($codes, $externalResources, $useConsole, $tagAttributes->getValue("name")) . '</div>';
 
 
                     }
@@ -496,7 +505,7 @@ EOF;
                     /**
                      * If there is no height
                      */
-                    if (!$iFrameAttributes->hasComponentAttribute(Dimension::HEIGHT_KEY)) {
+                    if (!$tagAttributes->hasComponentAttribute(Dimension::HEIGHT_KEY)) {
 
                         /**
                          * Adjust the height attribute
@@ -515,14 +524,12 @@ EOF;
                          * This block of code is to avoid scrolling,
                          * then scrolling = no if not set
                          */
-                        if (!$iFrameAttributes->hasComponentAttribute("scrolling")) {
-                            $iFrameAttributes->addOutputAttributeValue("scrolling", "no");
+                        if (!$tagAttributes->hasComponentAttribute("scrolling")) {
+                            $tagAttributes->addOutputAttributeValue("scrolling", "no");
                         }
 
                     }
 
-
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
 
                     /**
                      * The iframe does not have any width
@@ -530,9 +537,9 @@ EOF;
                      * constraint with the `width` attributes that will
                      * set a a max-width
                      */
-                    $iFrameAttributes->addStyleDeclarationIfNotSet("width", "100%");
+                    $tagAttributes->addStyleDeclarationIfNotSet("width", "100%");
 
-                    $iFrameHtml = $iFrameAttributes->toHtmlEnterTag("iframe") . '</iframe>';
+                    $iFrameHtml = $tagAttributes->toHtmlEnterTag("iframe") . '</iframe>';
                     $bar .= '</div>'; // close the bar
                     $renderer->doc .= "<div class=\"webcode-wrapper\">" . $iFrameHtml . $bar . '</div>';
 

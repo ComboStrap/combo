@@ -37,8 +37,7 @@ class EditButton
     /**
      * The table does not have an edit form at all
      * It's created by {@link \Doku_Renderer_xhtml::table_close()}
-     * but without any name and the {@link html_secedit_get_button()}
-     * will then not print them
+     * They are not printed by default via CSS. Edittable show them by default via Javascript
      */
     const TARGET_TABLE_VALUE = "table";
     public const EDIT_SECTION_TARGET = 'section';
@@ -267,14 +266,13 @@ class EditButton
             $data = json_decode($json, true);
 
             $target = $data[self::TARGET_ATTRIBUTE_NAME];
-            if ($target === self::TARGET_TABLE_VALUE) {
-                /**
-                 * Dokuwiki does not print them either
-                 * because the name is empty
-                 * {@link html_secedit_get_button()}
-                 */
-                return "";
+
+            $message = $data[self::EDIT_MESSAGE];
+            unset($data[self::EDIT_MESSAGE]);
+            if ($message === null || trim($message) === "") {
+                $message = "Edit {$target}";
             }
+
             if ($data === NULL) {
                 LogUtility::internalError("No data found in the edit comment", self::CANONICAL);
                 return "";
@@ -291,11 +289,8 @@ class EditButton
             } else {
                 $page = Page::createPageFromId($wikiId);
             }
-
             $formId = $data[self::FORM_ID];
             unset($data[self::FORM_ID]);
-            $message = $data[self::EDIT_MESSAGE];
-            unset($data[self::EDIT_MESSAGE]);
             $data["summary"] = $message;
             try {
                 // same as $INFO['lastmod'];
@@ -312,14 +307,21 @@ class EditButton
                 $hiddenInputs .= $inputAttributes->toHtmlEmptyTag("input");
             }
             $url = $page->getUrl(PageUrlType::CONF_VALUE_PAGE_PATH);
-            $classPageEdit =  StyleUtility::getStylingClassForTag(self::TAG);
+            $classPageEdit = StyleUtility::getStylingClassForTag(self::TAG);
+
+            /**
+             * Important Note: the first div and its class is mandatory for the edittable plugin
+             * See {@link editbutton.js file}
+             */
             return <<<EOF
-<form id="$formId" class="$classPageEdit" method="post" action="{$url}">
-$hiddenInputs
-<input name="do" type="hidden" value="edit"/>
-<button type="submit" title="$message">
-</button>
-</form>
+<div class="editbutton editbutton_{$target}">
+    <form id="$formId" class="btn_secedit $classPageEdit" method="post" action="{$url}">
+    $hiddenInputs
+    <input name="do" type="hidden" value="edit"/>
+    <button type="submit" title="$message">
+    </button>
+    </form>
+</div>
 EOF;
         };
 

@@ -310,12 +310,13 @@ class EditButton
             $classPageEdit = StyleUtility::getStylingClassForTag(self::TAG);
 
             /**
-             * Important Note: the first div and its class is mandatory for the edittable plugin
+             * Important Note: the first div and the public class is mandatory for the edittable plugin
              * See {@link editbutton.js file}
              */
+            $editTableClass = "editbutton_{$target}";
             return <<<EOF
-<div class="editbutton editbutton_{$target}">
-    <form id="$formId" class="btn_secedit $classPageEdit" method="post" action="{$url}">
+<div class="$classPageEdit $editTableClass">
+    <form id="$formId" method="post" action="{$url}">
     $hiddenInputs
     <input name="do" type="hidden" value="edit"/>
     <button type="submit" title="$message">

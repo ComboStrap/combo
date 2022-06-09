@@ -61,16 +61,13 @@ abstract class Metadata
     }
 
     /**
-     * @param $class
+     * @param object|string $class
      * @param Metadata|null $parent
      * @return Metadata
-     * @throws ExceptionBadArgument
+     * @throws ExceptionBadArgument - if the class is not a metadata class
      */
     public static function toMetadataObject($class, Metadata $parent = null): Metadata
     {
-        if ($class === null) {
-            throw new ExceptionBadArgument("The string class is empty");
-        }
         if (!is_subclass_of($class, Metadata::class)) {
             throw new ExceptionBadArgument("The class ($class) is not a metadata class");
         }

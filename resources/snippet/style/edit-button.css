@@ -1,10 +1,10 @@
 
-div.editbutton_table {
+.editbutton_table {
     /* default used also in edittable*/
     display: none;
 }
 
-form.edit-button-cs button {
+.edit-button-cs button {
     border: 0;
     display: inline-block;
     width: 16px;
@@ -15,7 +15,7 @@ form.edit-button-cs button {
     background-position-x: center;
 }
 
-form.edit-button-cs svg {
+.edit-button-cs svg {
     color: rgba(0, 0, 0, 0.35)
 }
 
@@ -29,4 +29,13 @@ Better solution would be to change the styling (background) with css
 /* style for section highlighting */
 .edit-button-highlight-cs {
     background: #f8f9fa;
+}
+
+/** Only for section not button for table */
+/** Because section edit can also be outside outline, it's here*/
+.editbutton_section {
+    right: 0;
+    bottom: 0;
+    position: absolute;
+    z-index: 1040;
 }

@@ -47,8 +47,10 @@ class LazyLoad
      * Used to select all lazy loaded
      * resources and load them before print
      */
-    const LAZY_CLASS = "lazy-combo";
-
+    public static function getLazyClass(): string
+    {
+        return StyleUtility::getStylingClassForTag(self::CANONICAL);
+    }
 
     public static function addSnippet()
     {
@@ -201,8 +203,8 @@ class LazyLoad
 
     public static function disable()
     {
-        PluginUtility::setConf(SvgImageLink::CONF_LAZY_LOAD_ENABLE,0);
-        PluginUtility::setConf(RasterImageLink::CONF_LAZY_LOADING_ENABLE,0);
+        PluginUtility::setConf(SvgImageLink::CONF_LAZY_LOAD_ENABLE, 0);
+        PluginUtility::setConf(RasterImageLink::CONF_LAZY_LOADING_ENABLE, 0);
     }
 
 }

@@ -1,6 +1,6 @@
 window.addEventListener('load', function () {
 
-    document.querySelectorAll('form.edit-button-cs').forEach(editButtonFormElement => {
+    document.querySelectorAll('.edit-button-cs').forEach(editButtonFormElement => {
 
         /**
          * @type {HTMLElement}

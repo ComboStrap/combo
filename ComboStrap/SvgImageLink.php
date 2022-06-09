@@ -128,17 +128,17 @@ class SvgImageLink extends ImageLink
         $svgFunctionalClass = "";
         if ($svgInjection && $lazyLoad) {
             $snippetManager->attachInternalJavascriptForSlot("lozad-svg-injection");
-            $svgFunctionalClass = "lazy-svg-injection-combo";
+            $svgFunctionalClass = StyleUtility::getStylingClassForTag("lazy-svg-injection");
         } else if ($lazyLoad && !$svgInjection) {
             $snippetManager->attachInternalJavascriptForSlot("lozad-svg");
-            $svgFunctionalClass = "lazy-svg-combo";
+            $svgFunctionalClass = StyleUtility::getStylingClassForTag("lazy-svg-cs");
         } else if ($svgInjection && !$lazyLoad) {
             $snippetManager->attachInternalJavascriptForSlot("svg-injector");
-            $svgFunctionalClass = "svg-injection-combo";
+            $svgFunctionalClass = StyleUtility::getStylingClassForTag("svg-injection");
         }
         if ($lazyLoad) {
             // A class to all component lazy loaded to download them before print
-            $svgFunctionalClass .= " " . LazyLoad::LAZY_CLASS;
+            $svgFunctionalClass .= " " . LazyLoad::getLazyClass();
         }
         $responseAttributes->addClassName($svgFunctionalClass);
 

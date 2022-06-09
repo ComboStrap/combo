@@ -39,7 +39,6 @@ class RasterImageLink extends ImageLink
 
     const CONF_RESPONSIVE_IMAGE_MARGIN = "responsiveImageMargin";
     const CONF_RETINA_SUPPORT_ENABLED = "retinaRasterImageEnable";
-    const LAZY_CLASS = "lazy-raster-combo";
 
     /**
      * When the container query are a thing, we may change the breakpoint
@@ -280,8 +279,8 @@ class RasterImageLink extends ImageLink
                              */
                             LazyLoad::addLozadSnippet();
                             PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot("lozad-raster");
-                            $attributes->addClassName(self::LAZY_CLASS);
-                            $attributes->addClassName(LazyLoad::LAZY_CLASS);
+                            $attributes->addClassName(self::getLazyClass());
+                            $attributes->addClassName(LazyLoad::getLazyClass());
 
                             /**
                              * A small image has no srcset
@@ -430,6 +429,14 @@ class RasterImageLink extends ImageLink
          */
         $retinaEnabled = PluginUtility::getConfValue(self::CONF_RETINA_SUPPORT_ENABLED, 0);
         return !$retinaEnabled;
+    }
+
+    /**
+     * Used to select the raster image lazy loaded
+     * @return string
+     */
+    public static function getLazyClass(){
+        return StyleUtility::getStylingClassForTag("lazy-raster");
     }
 
 

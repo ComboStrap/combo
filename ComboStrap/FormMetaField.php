@@ -105,7 +105,6 @@ class FormMetaField
      * We send an error in this case
      * @param Metadata $metadata
      * @return FormMetaField
-     * @throws ExceptionCompile
      */
     public static function createFromMetadata(Metadata $metadata): FormMetaField
     {
@@ -131,8 +130,16 @@ class FormMetaField
             static::setLeafDataToFieldFromMetadata($field, $metadata);
 
             // Value
-            $value = $metadata->toStoreValue();
-            $defaultValue = $metadata->toStoreDefaultValue();
+            try {
+                $value = $metadata->toStoreValue();
+            } catch (ExceptionNotFound $e) {
+                $value = "";
+            }
+            try {
+                $defaultValue = $metadata->toStoreDefaultValue();
+            } catch (ExceptionNotFound $e) {
+                $defaultValue = "";
+            }
             $field->addValue($value, $defaultValue);
 
         } else {
@@ -142,22 +149,32 @@ class FormMetaField
                 $childFields = [];
                 foreach ($metadata->getChildrenClass() as $childMetadataClass) {
 
-                    $childMetadata = Metadata::toMetadataObject($childMetadataClass, $metadata);
+                    try {
+                        $childMetadata = Metadata::toMetadataObject($childMetadataClass, $metadata);
+                    } catch (ExceptionBadArgument $e) {
+                        // should happen only internally
+                        LogUtility::internalError("The metadata class/object ($childMetadataClass) is not a metadata class");
+                        continue;
+                    }
                     $childField = FormMetaField::create($childMetadata);
                     static::setCommonDataToFieldFromMetadata($childField, $childMetadata);
                     static::setLeafDataToFieldFromMetadata($childField, $childMetadata);
                     $field->addColumn($childField);
                     $childFields[$childMetadata::getPersistentName()] = $childField;
                 }
-                $rows = $metadata->getValue();
+                try {
+                    $rows = $metadata->getValue();
+                } catch (ExceptionNotFound $e) {
+                    $rows = null;
+                }
                 if ($rows !== null) {
-
                     $defaultRow = null;
-                    $defaultRows = $metadata->getDefaultValue();
-                    if ($defaultRows !== null) {
+                    try {
+                        $defaultRows = $metadata->getDefaultValue();
                         $defaultRow = $defaultRows[0];
+                    } catch (ExceptionNotFound $e) {
+                        // no default row
                     }
-
                     foreach ($rows as $row) {
                         foreach ($childFields as $childName => $childField) {
                             $colValue = $row[$childName];
@@ -170,7 +187,17 @@ class FormMetaField
                                     continue;
                                 }
                             }
-                            $childField->addValue($colValue->toStoreValue(), $colValue->toStoreDefaultValue());
+                            try {
+                                $storeValue = $colValue->toStoreValue();
+                            } catch (ExceptionNotFound $e) {
+                                $storeValue = "";
+                            }
+                            try {
+                                $defaultStoreValue = $colValue->toStoreDefaultValue();
+                            } catch (ExceptionNotFound $e) {
+                                $defaultStoreValue = "";
+                            }
+                            $childField->addValue($storeValue, $defaultStoreValue);
                         }
 
                     }
@@ -186,20 +213,23 @@ class FormMetaField
                             $childField->addValue(null, $defaultColValue);
                         }
                     }
-
                 } else {
 
-                    // Show the default rows
-                    $rows = $metadata->getDefaultValue();
-                    if ($rows !== null) {
-                        foreach ($rows as $row) {
-                            foreach ($row as $colName => $colValue) {
-                                if ($colValue === null) {
-                                    continue;
-                                }
-                                $childField = $childFields[$colName];
-                                $childField->addValue(null, $colValue->toStoreValue());
+
+                    // No rows, show the default rows
+                    try {
+                        $rows = $metadata->getDefaultValue();
+                    } catch (ExceptionNotFound $e) {
+                        // no default row ok
+                        $rows = [];
+                    }
+                    foreach ($rows as $row) {
+                        foreach ($row as $colName => $colValue) {
+                            if ($colValue === null) {
+                                continue;
                             }
+                            $childField = $childFields[$colName];
+                            $childField->addValue(null, $colValue->toStoreValue());
                         }
                     }
 
@@ -253,7 +283,7 @@ class FormMetaField
             /**
              * Only valid for leaf field
              */
-            if ($this->getValue() !== null) {
+            if ($this->getValue() !== null && $this->getValue() !== "") {
                 $associative[self::VALUE_ATTRIBUTE] = $this->getValue();
             }
 
@@ -326,12 +356,12 @@ class FormMetaField
     }
 
     /**
-     * @param $value
-     * @param null $defaultValuePlaceholderOrReturned - the value set as placeholder or return value for a checked checkbox
+     * @param string|null $value
+     * @param string|null $defaultValuePlaceholderOrReturned - the value set as placeholder or return value for a checked checkbox
      * @return $this
      */
     public
-    function addValue($value, $defaultValuePlaceholderOrReturned = null): FormMetaField
+    function addValue(?string $value, ?string $defaultValuePlaceholderOrReturned = null): FormMetaField
     {
         $this->values[] = $value;
         $this->defaults[] = $defaultValuePlaceholderOrReturned;

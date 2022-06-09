@@ -617,15 +617,15 @@ abstract class MediaLink
                 );
                 $mediaLink->addOutputAttributeValue("href", $src);
                 $snippetId = "lightbox";
-                $mediaLink->addClassName("{$snippetId}-combo");
+                $mediaLink->addClassName(StyleUtility::getStylingClassForTag($snippetId));
                 $linkingClass = $this->getLinkingClass();
                 if ($linkingClass !== null) {
                     $mediaLink->addClassName($linkingClass);
                 }
                 $snippetManager = PluginUtility::getSnippetManager();
                 $snippetManager->attachJavascriptComboLibrary();
-                $snippetManager->attachInternalJavascriptForSlot("lightbox");
-                $snippetManager->attachCssInternalStyleSheetForSlot("lightbox");
+                $snippetManager->attachInternalJavascriptForSlot($snippetId);
+                $snippetManager->attachCssInternalStyleSheetForSlot($snippetId);
                 return $mediaLink->toHtmlEnterTag("a") . $this->renderMediaTag() . "</a>";
 
             case self::LINKING_DETAILS_VALUE:

@@ -59,7 +59,14 @@ abstract class MetadataDateTime extends Metadata
     public function toStoreDefaultValue(): string
     {
 
-        return $this->toPersistentDateTimeUtility($this->getDefaultValue());
+        $defaultValue = $this->getDefaultValue();
+        try {
+            return $this->toPersistentDateTimeUtility($defaultValue);
+        } catch (ExceptionBadArgument $e) {
+            $message = "The date time ($this) has a default value ($defaultValue) that is not valid. Error: {$e->getMessage()}";
+            LogUtility::internalError($message);
+            throw new ExceptionNotFound($message);
+        }
 
     }
 
@@ -108,13 +115,16 @@ abstract class MetadataDateTime extends Metadata
     }
 
 
-    private function toPersistentDateTimeUtility($value): ?string
+    /**
+     * @throws ExceptionBadArgument
+     */
+    private function toPersistentDateTimeUtility($value): string
     {
         if ($value === null) {
-            return null;
+            throw new ExceptionBadArgument("The passed value is null");
         }
         if (!($value instanceof DateTime)) {
-            throw new ExceptionRuntime("This is not a date time");
+            throw new ExceptionBadArgument("This is not a date time");
         }
         return Iso8601Date::createFromDateTime($value)->toString();
     }

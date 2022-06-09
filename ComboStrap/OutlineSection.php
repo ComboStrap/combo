@@ -179,8 +179,11 @@ class OutlineSection extends TreeNode
         return sizeof($this->contentCalls) > 0;
     }
 
+    /**
+     */
     public function getHeadingId()
     {
+
         $id = $this->headingEnterCall->getAttribute("id");
         if ($id !== null) {
             return $id;
@@ -189,6 +192,19 @@ class OutlineSection extends TreeNode
         return sectionID($label, $this->tocUniqueId);
 
     }
+
+    /**
+     * A HTML section should have a heading
+     * but in a markup document, we may have data before the first
+     * heading making a section without heading
+     * @return bool
+     */
+    public function hasHeading(): bool
+    {
+        return $this->headingEnterCall !== null;
+    }
+
+
 
 
 }

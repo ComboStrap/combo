@@ -1,4 +1,4 @@
-button.height-toggle-combo {
+button.height-toggle-cs {
     border: none;
     position: absolute;
     left: 0;
@@ -12,12 +12,12 @@ button.height-toggle-combo {
     z-index: 20;
 }
 
-button[class="height-toggle-combo"][aria-expanded="true"]{
+button[class="height-toggle-cs"][aria-expanded="true"]{
     padding-top: 0;
     background: none;
 }
 
-button.height-toggle-combo::before {
+button.height-toggle-cs::before {
     display: inline-block;
     font-weight: 700;
     line-height: 1;
@@ -30,7 +30,7 @@ button.height-toggle-combo::before {
     vertical-align: text-top;
 }
 
-button[class="height-toggle-combo"][aria-expanded="true"]::before {
+button[class="height-toggle-cs"][aria-expanded="true"]::before {
     transform: rotate(-180deg) translate(0, -0.6rem);;
     vertical-align: text-bottom;
 }

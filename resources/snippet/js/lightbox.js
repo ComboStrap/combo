@@ -1,7 +1,7 @@
 window.addEventListener("DOMContentLoaded", function () {
 
 
-    document.querySelectorAll(".lightbox-combo").forEach((lightBoxAnchor) => {
+    document.querySelectorAll(".lightbox-cs").forEach((lightBoxAnchor) => {
 
         let drag = false;
 
@@ -54,8 +54,9 @@ window.addEventListener("DOMContentLoaded", function () {
                 // because the intrinsic svg can be really small, we put a min with
                 svgStyle += ';width: 100%;min-width: 75vw'
             }
+            let dataDismissAttribute = `data${namespace}-dismiss`;
             let html = `
-<button type="button" class="lightbox-close-combo" data${namespace}-dismiss="modal" aria-label="Close">
+<button type="button" class="lightbox-close-cs" ${dataDismissAttribute}="modal" aria-label="Close">
     <span aria-hidden="true">&times;</span>
 </button>
 <img src="${src}" alt="${alt}" style="${svgStyle}"/>

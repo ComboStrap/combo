@@ -42,7 +42,7 @@ class TreeNode
         return TreeNode::create();
     }
 
-    private static function create($parent = null, string $localIdentifier= null): TreeNode
+    private static function create($parent = null, string $localIdentifier = null): TreeNode
     {
         return new TreeNode($parent, $localIdentifier);
     }
@@ -70,7 +70,7 @@ class TreeNode
     {
         $treeNode = $this->children[$levelIdentifier];
         if ($treeNode === null) {
-            $treeNode = TreeNode::create($this,$levelIdentifier);
+            $treeNode = TreeNode::create($this, $levelIdentifier);
             $this->children[$levelIdentifier] = $treeNode;
         }
         return $treeNode;
@@ -184,6 +184,11 @@ class TreeNode
     private function getIdentifier(): string
     {
         return $this->id;
+    }
+
+    public function getParent(): ?TreeNode
+    {
+        return $this->parent;
     }
 
 }

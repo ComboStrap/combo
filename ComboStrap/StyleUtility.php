@@ -17,14 +17,16 @@ require_once(__DIR__ . '/StringUtility.php');
 class StyleUtility
 {
 
+    const COMBOSTRAP_FIX = "cs";
+
     public static function getRule(array $styles, $selector)
     {
-        $rule = $selector." {".DOKU_LF;
-        foreach ($styles as $key => $value){
-            $rule .= "    $key:$value;".DOKU_LF;
+        $rule = $selector . " {" . DOKU_LF;
+        foreach ($styles as $key => $value) {
+            $rule .= "    $key:$value;" . DOKU_LF;
         }
-        StringUtility::rtrim($rule,";");
-        return $rule.DOKU_LF."}".DOKU_LF;
+        StringUtility::rtrim($rule, ";");
+        return $rule . DOKU_LF . "}" . DOKU_LF;
 
     }
 
@@ -36,7 +38,7 @@ class StyleUtility
     {
         $inline = "";
         foreach ($array as $property => $value) {
-            if ($inline!="") {
+            if ($inline != "") {
                 $inline .= ";$property:$value";
             } else {
                 $inline = "$property:$value";
@@ -55,17 +57,17 @@ class StyleUtility
     public static function addStylingClass(TagAttributes &$tagAttributes)
     {
         $logicalTag = $tagAttributes->getLogicalTag();
-        if ($logicalTag!==null && $tagAttributes->getDefaultStyleClassShouldBeAdded() === true) {
+        if ($logicalTag !== null && $tagAttributes->getDefaultStyleClassShouldBeAdded() === true) {
 
             $tagAttributes->addClassName(self::getStylingClassForTag($logicalTag));
             if (!empty($tagAttributes->getType())) {
-                $tagAttributes->addClassName($logicalTag . "-" . $tagAttributes->getType() . "-combo");
+                $tagAttributes->addClassName($logicalTag . "-" . $tagAttributes->getType() . "-" . self::COMBOSTRAP_FIX);
             }
         }
     }
 
     public static function getStylingClassForTag($logicalTag): string
     {
-        return $logicalTag . "-combo";
+        return $logicalTag . "-" . self::COMBOSTRAP_FIX;
     }
 }

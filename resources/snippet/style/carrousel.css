@@ -1,9 +1,9 @@
-.carrousel-combo {
+.carrousel-cs {
     padding: 0;
 }
 
 @media (min-width:  576px) {
-    .carrousel-combo {
+    .carrousel-cs {
         padding: 1rem;
     }
 }

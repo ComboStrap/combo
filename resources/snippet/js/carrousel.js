@@ -3,7 +3,7 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    let selector = '.carrousel-combo';
+    let selector = '.carrousel-cs';
     const carrousels = [...document.querySelectorAll(selector)];
 
     let carrouselGlideType = "glide";

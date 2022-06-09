@@ -3,7 +3,7 @@
 // https://developer.mozilla.org/en-US/docs/Web/API/Document/scroll_event
 // https://cssanimation.rocks/scroll-animations/
 jQuery(window).scroll(function () {
-    jQuery('[data-combo-animate]').each(function () {
+    jQuery('[data-cs-animate]').each(function () {
 
         // Position of the element
         const elPosition = jQuery(this).offset().top;

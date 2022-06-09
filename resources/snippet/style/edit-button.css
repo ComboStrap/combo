@@ -1,9 +1,6 @@
-form.edit-button-combo {
-    z-index: 1040;
-    position: relative;
-}
 
-form.edit-button-combo button {
+
+form.edit-button-cs button {
     border: 0;
     display: inline-block;
     width: 16px;
@@ -14,7 +11,7 @@ form.edit-button-combo button {
     background-position-x: center;
 }
 
-form.edit-button-combo svg {
+form.edit-button-cs svg {
     color: rgba(0, 0, 0, 0.35)
 }
 
@@ -26,6 +23,6 @@ Better solution would be to change the styling (background) with css
 */
 
 /* style for section highlighting */
-.edit-button-highlight-combo {
+.edit-button-highlight-cs {
     background: #f8f9fa;
 }

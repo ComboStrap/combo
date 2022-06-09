@@ -13,6 +13,7 @@ class Outline
 {
 
 
+    const CANONICAL = "outline";
     private OutlineSection $rootSection;
 
     private OutlineSection $actualSection; // the actual section that is created
@@ -79,7 +80,35 @@ class Outline
                     // -1 because the actual position is the start of the next section
                     $this->actualSection->setEndPosition($actualCall->getFirstMatchedCharacterPosition() - 1);
                 }
-                $childSection = OutlineSection::createChildOutlineSection($this->actualSection, $actualCall);
+                $actualSectionLevel = $this->actualSection->getLevel();
+                try {
+                    $newSectionLevel = DataType::toInteger($actualCall->getAttribute(syntax_plugin_combo_heading::LEVEL));
+                } catch (ExceptionBadArgument $e) {
+                    LogUtility::internalError("The level was not present on the heading call", self::CANONICAL);
+                    $newSectionLevel = $actualSectionLevel;
+                }
+                if ($newSectionLevel > $actualSectionLevel) {
+
+                    /**
+                     * A child of the actual section
+                     */
+                    $childSection = OutlineSection::createChildOutlineSection($this->actualSection, $actualCall);
+
+                } else {
+
+                    /**
+                     * A child of the parent section, A sibling of the actual session
+                     * @var OutlineSection $parentSection
+                     */
+                    $parentSection = $this->actualSection->getParent();
+                    $childSection = OutlineSection::createChildOutlineSection($parentSection, $actualCall);
+                    if ($newSectionLevel < $actualSectionLevel) {
+                        LogUtility::error("The section ($childSection) has a level ($newSectionLevel) lower than its parent ($actualSectionLevel).");
+                    }
+
+                }
+
+
                 $childSection->addHeadingCall($actualCall);
                 $this->actualSection = $childSection;
                 continue;
@@ -294,60 +323,103 @@ class Outline
 
     }
 
-    public function toStrapTemplateInstructionCalls(): array
+    private function toStrapTemplateInstructionCallsRecurse(OutlineSection $outlineSection, array &$totalComboCalls, int &$sectionSequenceId): void
     {
-        $totalInstructionCalls = [];
-        $sectionSequenceId = 0;
-        $collectCalls = function (OutlineSection $outlineSection) use (&$totalInstructionCalls, &$sectionSequenceId) {
 
-            $sectionOpen = Call::createComboCall(
-                syntax_plugin_combo_section::TAG,
+        $totalComboCalls[] = Call::createComboCall(
+            syntax_plugin_combo_section::TAG,
+            DOKU_LEXER_ENTER,
+            array(syntax_plugin_combo_heading::LEVEL => $outlineSection->getLevel())
+        );
+        $contentCalls = $outlineSection->getContentCalls();
+        if ($outlineSection->hasChildren()) {
+            /**
+             * If it has children and content, wrap the heading and the content
+             * in a header tag
+             * The header tag helps also to get the edit button to stay in place
+             */
+            $openHeader = Call::createComboCall(
+                \syntax_plugin_combo_box::TAG,
                 DOKU_LEXER_ENTER,
-                array(syntax_plugin_combo_heading::LEVEL => $outlineSection->getLevel())
+                array(\syntax_plugin_combo_box::TAG_ATTRIBUTE => "header",
+                    TagAttributes::CLASS_KEY => "outline-header",
+                    )
             );
-            $sectionClose = Call::createComboCall(
-                syntax_plugin_combo_section::TAG,
-                DOKU_LEXER_EXIT
+            $closeHeader = Call::createComboCall(
+                \syntax_plugin_combo_box::TAG,
+                DOKU_LEXER_EXIT,
+                array(\syntax_plugin_combo_box::TAG_ATTRIBUTE => "header")
             );
+            $totalComboCalls = array_merge(
+                $totalComboCalls,
+                [$openHeader],
+                $outlineSection->getHeadingCalls(),
+                $contentCalls,
+            );
+            $this->addSectionEditButtonComboFormatIfNeeded($outlineSection, $sectionSequenceId, $totalComboCalls);
+            $totalComboCalls[] = $closeHeader;
 
-            if ($outlineSection->hasParent()) {
-
-
-                $sectionCalls = array_merge(
-                    [$sectionOpen],
-                    $outlineSection->getHeadingCalls(),
-                    $outlineSection->getContentCalls()
-                );
-
-                if (Site::isSectionEditingEnabled()) {
-
-                    $editButton = EditButton::create("Edit the section `{$outlineSection->getLabel()}`")
-                        ->setStartPosition($outlineSection->getStartPosition())
-                        ->setEndPosition($outlineSection->getEndPosition())
-                        ->setOutlineHeadingId($outlineSection->getHeadingId())
-                        ->setOutlineSectionId($sectionSequenceId)
-                        ->toComboCallComboFormat();
-                    $sectionCalls[] = $editButton;
-                }
-
-                $sectionCalls[] = $sectionClose;
-
-            } else {
-                // dokuwiki seems to have no section for the content before the first heading
-                $sectionCalls = $outlineSection->getContentCalls();
+            foreach ($outlineSection->getChildren() as $child) {
+                /**
+                 * @var OutlineSection $child
+                 */
+                $this->toStrapTemplateInstructionCallsRecurse($child, $totalComboCalls, $sectionSequenceId);
             }
 
-            /**
-             * Transform and collect the calls in Instructions calls
-             */
-            $instructionCalls = array_map(function (Call $element) {
-                return $element->getInstructionCall();
-            }, $sectionCalls);
-            $totalInstructionCalls = array_merge($totalInstructionCalls, $instructionCalls);
-        };
+        } else {
+            $totalComboCalls = array_merge(
+                $totalComboCalls,
+                $outlineSection->getHeadingCalls(),
+                $contentCalls,
+            );
+            $this->addSectionEditButtonComboFormatIfNeeded($outlineSection, $sectionSequenceId, $totalComboCalls);
+        }
+        $totalComboCalls[] = Call::createComboCall(
+            syntax_plugin_combo_section::TAG,
+            DOKU_LEXER_EXIT
+        );
 
-        TreeVisit::visit($this->rootSection, $collectCalls);
-        return $totalInstructionCalls;
+
+    }
+
+    public function toStrapTemplateInstructionCalls(): array
+    {
+        $totalCalls = [];
+        $sectionSequenceId = 0;
+
+        /**
+         * Transform and collect the calls in Instructions calls
+         */
+        $this->toStrapTemplateInstructionCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId);
+
+        return array_map(function (Call $element) {
+            return $element->getInstructionCall();
+        }, $totalCalls);
+    }
+
+    /**
+     * Add the edit button if needed
+     * @param $outlineSection
+     * @param $sectionSequenceId
+     * @param array $totalInstructionCalls
+     */
+    private function addSectionEditButtonComboFormatIfNeeded(OutlineSection $outlineSection, int $sectionSequenceId, array &$totalInstructionCalls): void
+    {
+        if (Site::isSectionEditingEnabled()) {
+
+            $editButton = EditButton::create("Edit the section `{$outlineSection->getLabel()}`")
+                ->setStartPosition($outlineSection->getStartPosition())
+                ->setEndPosition($outlineSection->getEndPosition());
+            if ($outlineSection->hasHeading()) {
+                $editButton->setOutlineHeadingId($outlineSection->getHeadingId());
+            }
+
+            $totalInstructionCalls[] = $editButton
+                ->setOutlineSectionId($sectionSequenceId)
+                ->toComboCallComboFormat();
+
+        }
+
     }
 
 

@@ -1,8 +1,8 @@
-window.addEventListener("load", function (event) {
+window.addEventListener("load", function () {
     // lazy loads elements with the below selector
-    const observer = lozad('.lazy-raster-combo', {
+    const observer = lozad('.lazy-raster-cs', {
         load: function (el) {
-            el.classList.add('lazy-fade-combo')
+            el.classList.add('lazy-fade-cs')
             if (el.hasAttribute("data-srcset")) {
                 if (el.hasAttribute("data-sizes")) {
                     el.sizes = el.dataset.sizes;
@@ -15,7 +15,7 @@ window.addEventListener("load", function (event) {
         },
         loaded: function (el) {
             // Custom implementation on a loaded element
-            el.classList.add('loaded-combo');
+            el.classList.add('loaded-cs');
             // Masonry (Not really needed because the placeholder has the good aspect ratio)
             // but who knows
             if(window.Masonry) {

@@ -1,12 +1,12 @@
-.page-explorer-list-combo svg, .page-explorer-list-combo img {
+.page-explorer-list-cs svg, .page-explorer-list-cs img {
     vertical-align: bottom;
     color: rgba(0, 0, 0, 0.65);
 }
-.page-explorer-list-combo a {
+.page-explorer-list-cs a {
     text-decoration: none;
     color: rgba(0, 0, 0, 0.65);
 }
-.page-explorer-list-home-combo {
+.page-explorer-list-home-cs {
     border-bottom: 1px solid #e5e5e5;
     /*noinspection CssUnresolvedCustomProperty*/
     background-color: var(--bs-light)

@@ -24,7 +24,6 @@ class EditButton
     const CANONICAL = "edit-button";
     const ENTER_HTML_COMMENT = "<!--";
     const CLOSE_HTML_COMMENT = "-->";
-    const CLASS_EDIT_BUTTON = "edit-button-combo";
     const SNIPPET_ID = "edit-button";
 
 
@@ -46,6 +45,7 @@ class EditButton
     const RANGE = "range";
     const DOKUWIKI_FORMAT = "dokuwiki";
     const COMBO_FORMAT = "combo";
+    const TAG = "edit-button";
 
 
     private $label;
@@ -312,7 +312,7 @@ class EditButton
                 $hiddenInputs .= $inputAttributes->toHtmlEmptyTag("input");
             }
             $url = $page->getUrl(PageUrlType::CONF_VALUE_PAGE_PATH);
-            $classPageEdit = self::CLASS_EDIT_BUTTON;
+            $classPageEdit =  StyleUtility::getStylingClassForTag(self::TAG);
             return <<<EOF
 <form id="$formId" class="$classPageEdit" method="post" action="{$url}">
 $hiddenInputs

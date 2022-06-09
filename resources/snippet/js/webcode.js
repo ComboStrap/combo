@@ -38,7 +38,7 @@ window.addEventListener('load', function () {
                 WEBCODE.adjustHeightToFitContent(iframe);
             });
     })
-    document.querySelectorAll("iframe.webcode-combo").forEach(iframe => {
+    document.querySelectorAll("iframe.webcode-cs").forEach(iframe => {
         // if height is not set manually
         const height = iframe.getAttribute('height');
         if (height === null) {

@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     anchors.options = {
         placement: 'right',
         icon: '#',
-        class: 'anchor-combo',
+        class: 'anchor-cs',
         visible: "hover"
     };
     anchors

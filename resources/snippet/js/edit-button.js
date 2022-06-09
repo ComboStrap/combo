@@ -1,12 +1,12 @@
 window.addEventListener('load', function () {
 
-    document.querySelectorAll('form.edit-button-combo').forEach(editButtonFormElement => {
+    document.querySelectorAll('form.edit-button-cs').forEach(editButtonFormElement => {
 
         /**
          * @type {HTMLElement}
          */
         let parent = null;
-        let classNameFunction = "edit-button-highlight-combo";
+        let classNameFunction = "edit-button-highlight-cs";
         editButtonFormElement.addEventListener('mouseover', function (event) {
             if (parent === null) {
                 parent = event.target.parentNode;

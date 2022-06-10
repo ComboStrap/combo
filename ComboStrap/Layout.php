@@ -54,5 +54,10 @@ class Layout
         return $layoutArea;
     }
 
+    public function getHtmlPage(): string
+    {
+        return "";
+    }
+
 
 }

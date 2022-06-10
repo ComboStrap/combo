@@ -338,7 +338,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                      * Section
                      * +1 to go at the line
                      */
-                    $startPosition = $openingTag->getAttribute(PluginUtility::POSITION);
+                    $startPosition = $openingTag->getPluginData(PluginUtility::POSITION);
                     $id = $openingTag->getAttribute(TagAttributes::ID_KEY);
                     $endPosition = $pos + strlen($match) + 1;
                     $editButtonCall = EditButton::create("Edit panel $id")

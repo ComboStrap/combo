@@ -55,7 +55,9 @@ class AnalyticsDocument extends OutputDocument
     const METADATA = 'metadata';
 
     /**
-     * @throws ExceptionCompile
+     *
+     * @throws ExceptionBadSyntax - if the json is not valid
+     * @throws ExceptionNotFound - if the file was not found
      */
     public function getOrProcessJson(): Json
     {

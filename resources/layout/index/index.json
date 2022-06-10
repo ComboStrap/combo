@@ -1,21 +1,5 @@
 {
     "page-core": {
-        "container": true,
-        "class": "d-flex justify-content-md-center"
-    },
-    "page-toc": {
-        "show": false
-    },
-    "page-side": {
-        "class": "col-md-3 order-last order-md-first"
-    },
-    "page-main": {
-        "class": "col-md-9 order-first"
-    },
-    "main-footer": {
-        "show": false
-    },
-    "main-header": {
-        "show": false
+        "container": true
     }
 }

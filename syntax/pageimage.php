@@ -128,7 +128,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
         if ($default === null) {
             $defaultOrderOfPrecedence = self::DEFAULT_ORDER;
         } else {
-            $defaultOrderOfPrecedence = implode("|", $default);
+            $defaultOrderOfPrecedence = explode("|", $default);
         }
         foreach ($defaultOrderOfPrecedence as $defaultImageOrder) {
             if ($defaultImageOrder === $type) {

@@ -644,21 +644,26 @@ class Site
     }
 
     /**
-     * @throws ExceptionCompile
      */
     public static function getPageFooterSlotName()
     {
-        Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-        return TplUtility::getFooterSlotPageName();
+        return tpl_getConf("footerSlotPageName", "slot_footer");
     }
 
     /**
-     * @throws ExceptionCompile
+     *
      */
     public static function getPageHeaderSlotName()
     {
-        Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-        return TplUtility::getHeaderSlotPageName();
+        return tpl_getConf("headerSlotPageName", "slot_header");
+    }
+
+    /**
+     *
+     */
+    public static function getPageSideSlotName()
+    {
+        return tpl_getConf("sidekickSlotPageName", "slot_main_side");
     }
 
     /**

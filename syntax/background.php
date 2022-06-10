@@ -13,7 +13,7 @@ use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Position;
 
-if (!defined('DOKU_INC')) die();
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Implementation of a background

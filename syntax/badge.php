@@ -8,11 +8,9 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
-use ComboStrap\Skin;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
-if (!defined('DOKU_INC')) die();
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Class syntax_plugin_combo_badge

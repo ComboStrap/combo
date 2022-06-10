@@ -16,6 +16,7 @@ use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlDocument;
 
 
 /**
@@ -163,6 +164,20 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
             // not a problem
         }
 
+        $layoutHtmlFileName = "$layoutName.html";
+        $layoutHtmlPath = $layoutDirectory->resolve($layoutHtmlFileName);
+        try {
+            $html = FileSystems::getContent($layoutHtmlPath);
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("The layout file ($layoutHtmlFileName) does not exist at $layoutHtmlPath", self::CANONICAL);
+            return;
+        }
+        try {
+            $htmlDocument = XmlDocument::createHtmlDocFromMarkup("<div>$html</div>");
+        } catch (ExceptionCompile $e) {
+            LogUtility::internalError("The html template file ($layoutHtmlFileName) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
+            return;
+        }
 
         /**
          * Area
@@ -214,7 +229,6 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
             // Relative positioning is important for the positioning of the pagetools (page-core), secedit button
             $tagAttributes->addClassName("position-relative");
 
-            $closesPath = null;
             switch ($areaName) {
                 case self::PAGE_FOOTER_AREA:
                 case self::PAGE_HEADER_AREA:
@@ -224,15 +238,16 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                     $tagAttributes->addClassName("position-relative");
 
                     try {
-                        $closesPath = FileSystems::closest($requestedPage->getPath(), $layoutArea->getSlotName() . DokuPath::PAGE_FILE_TXT_EXTENSION);
+                        $closestPath = FileSystems::closest($requestedPage->getPath(), $layoutArea->getSlotName() . DokuPath::PAGE_FILE_TXT_EXTENSION);
                     } catch (ExceptionNotFound $e) {
-                        $closesPath = self::getDefaultAreaContentPath($areaName);
-                        if (!FileSystems::exists($closesPath)) {
-                            $closesPath = null;
-                            LogUtility::errorIfDevOrTest("The default $areaName page could does not exist.");
+                        $closestPath = self::getDefaultAreaContentPath($areaName);
+                        if (!FileSystems::exists($closestPath)) {
+                            $closestPath = null;
+                            LogUtility::errorIfDevOrTest("The default $areaName page does not exist.");
                         }
                     }
-                    $showArea = $closesPath !== null;
+                    $layoutArea->setPath($closestPath);
+                    $showArea = $closestPath !== null;
                     break;
                 case self::PAGE_CORE_AREA:
                     $tagAttributes->addClassName(tpl_classes());
@@ -246,17 +261,17 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
                     $tagAttributes->addComponentAttributeValue("role", "complementary");
                     $tagAttributes->addClassName("d-print-none");
                     try {
-                        $closesPath = FileSystems::closest($requestedPage->getPath(), $layoutArea->getSlotName() . DokuPath::PAGE_FILE_TXT_EXTENSION);
+                        $closestPath = FileSystems::closest($requestedPage->getPath(), $layoutArea->getSlotName() . DokuPath::PAGE_FILE_TXT_EXTENSION);
                     } catch (ExceptionNotFound $e) {
                         // ok
                     }
-                    $showArea = $closesPath !== null && ($ACT === 'show');
+                    $showArea = $closestPath !== null && ($ACT === 'show');
                     break;
             }
 
             $layoutArea->setShow($showArea);
-            if ($showArea && $closesPath !== null) {
-                $layoutArea->setHtml($this->render($closesPath));
+            if ($showArea && $closestPath !== null) {
+                $layoutArea->setHtml($this->render($closestPath));
             }
             $layoutArea->setAttributes($tagAttributes->toHtmlArray());
 
@@ -273,7 +288,6 @@ class action_plugin_combo_layout extends DokuWiki_Action_Plugin
         } catch (Exception $e) {
             return "Rendering the slot ($path), returns an error. {$e->getMessage()}";
         }
-
 
 
     }

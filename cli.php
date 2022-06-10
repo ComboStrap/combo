@@ -9,12 +9,13 @@
  * @author   ComboStrap <support@combostrap.com>
  *
  */
-if (!defined('DOKU_INC')) die();
 
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\BacklinkCount;
 use ComboStrap\Event;
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
@@ -25,9 +26,9 @@ use ComboStrap\Sqlite;
 use splitbrain\phpcli\Options;
 
 /**
- * All dependency are loaded in plugin utility
+ * All dependency are loaded
  */
-require_once(__DIR__ . '/ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/vendor/autoload.php');
 
 /**
  * The memory of the server 128 is not enough
@@ -343,7 +344,15 @@ EOF;
              * Analytics
              */
             $analytics = $page->getAnalyticsDocument();
-            $data = $analytics->getOrProcessContent()->toArray();
+            try {
+                $data = $analytics->getOrProcessJson()->toArray();
+            } catch (ExceptionBadSyntax $e) {
+                LogUtility::error("The analytics json of the page ($page) is not conform");
+                continue;
+            } catch (ExceptionNotFound $e) {
+                LogUtility::error("The analytics document ({$analytics->getCachePath()}) for the page ($page) was not found");
+                continue;
+            }
 
             if (!empty($fileHandle)) {
                 $statistics = $data[AnalyticsDocument::STATISTICS];

@@ -6,8 +6,6 @@ namespace ComboStrap;
 
 use dokuwiki\Extension\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
-use PHPUnit\Exception;
-
 
 
 /**

@@ -1341,13 +1341,17 @@ class Page extends ResourceComboAbs
      * @param MetadataBoolean $lowQualityAttributeName
      * @param bool $value
      * @return Page
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument - if the value cannot be persisted
      */
     private
     function setQualityIndicatorAndDeleteCacheIfNeeded(MetadataBoolean $lowQualityAttributeName, bool $value): Page
     {
-        $actualValue = $lowQualityAttributeName->getValue();
-        if ($actualValue === null || $value !== $actualValue) {
+        try {
+            $actualValue = $lowQualityAttributeName->getValue();
+        } catch (ExceptionNotFound $e) {
+            $actualValue = null;
+        }
+        if ($value !== $actualValue) {
             $lowQualityAttributeName
                 ->setValue($value)
                 ->persist();

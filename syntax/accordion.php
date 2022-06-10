@@ -5,18 +5,9 @@
  */
 
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
-if (!defined('DOKU_INC')) {
-    die();
-}
-
-if (!defined('DOKU_PLUGIN')) {
-    define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
-}
-
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism

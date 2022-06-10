@@ -4,7 +4,7 @@
 use ComboStrap\AdsUtility;
 use ComboStrap\PluginUtility;
 
-require_once(__DIR__ . '/../ComboStrap/AdsUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Class syntax_plugin_combo_ad

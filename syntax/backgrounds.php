@@ -1,14 +1,10 @@
 <?php
 
 
-// must be run within Dokuwiki
-use ComboStrap\Background;
-use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
-if (!defined('DOKU_INC')) die();
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  *

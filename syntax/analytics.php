@@ -4,6 +4,7 @@
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\PluginUtility;
 
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Class syntax_plugin_combo_analytics

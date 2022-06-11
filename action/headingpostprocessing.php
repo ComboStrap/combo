@@ -34,7 +34,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         syntax_plugin_combo_headingwiki::TAG
     ];
 
-    const CANONICAL = action_plugin_combo_layout::CANONICAL;
+    const CANONICAL = Outline::CANONICAL;
 
     /**
      * The toc attribute that will store
@@ -241,11 +241,17 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $outline = Outline::createFromCallStack($callStack);
 
         global $ACT;
-        if($ACT === DynamicRender::DYNAMIC_RENDERING){
-            // no outline or edit button for dynamic rendering
-            // but closing of atx heading
-            $handler->calls = $outline->toDynamicInstructionCalls();
-            return;
+        switch ($ACT) {
+            case DynamicRender::DYNAMIC_RENDERING:
+                // no outline or edit button for dynamic rendering
+                // but closing of atx heading
+                $handler->calls = $outline->toDynamicInstructionCalls();
+                return;
+            case "show":
+                break;
+            default:
+                // No outline if not show (ie admin, edit, ...)
+                return;
         }
 
         if (Site::getTemplate() !== Site::STRAP_TEMPLATE_NAME) {
@@ -258,7 +264,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * TOC
          */
         $toc = $outline->getTocDokuwikiFormat();
-        if(TocUtility::shouldTocBePrinted($toc)){
+        if (TocUtility::shouldTocBePrinted($toc)) {
             global $TOC;
             $TOC = $toc;
         }

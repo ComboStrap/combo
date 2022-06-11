@@ -254,7 +254,7 @@ class XmlDocument
     }
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax
      */
     public static function createHtmlDocFromMarkup($markup): XmlDocument
     {

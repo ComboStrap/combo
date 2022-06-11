@@ -19,10 +19,7 @@ class LayoutArea
      */
     private $html = null;
     private $slotName = "";
-    /**
-     * @var string
-     */
-    private $tag;
+
 
     public function __construct(string $areaId)
     {
@@ -36,39 +33,18 @@ class LayoutArea
      * because there is no true/false
      * and the rendering is done at the dokuwiki way
      */
-    private $show = null;
+    private ?bool $show = null;
     /**
      * @var array|null - the attributes of the element (null means that the default value will be used, ie when combo is not used)
      */
-    private $attributes = null;
+    private ?array $attributes = null;
 
     public function setShow(bool $show)
     {
         $this->show = $show;
     }
 
-    public function toEnterHtmlTag(string $tag = null): string
-    {
 
-        if ($tag === null) {
-            $tag = $this->getTagOrDefault();
-        }
-        $htmlAttributesAsArray = [];
-        $attributes = $this->attributes;
-        if ($attributes === null) {
-            $attributes = [];
-        }
-        foreach ($attributes as $attribute => $value) {
-            $attribute = htmlspecialchars($attribute, ENT_XHTML | ENT_QUOTES);
-            $value = htmlspecialchars($value, ENT_XHTML | ENT_QUOTES);
-            $htmlAttributesAsArray[] = "$attribute=\"$value\"";
-        };
-        $htmlAttributesAsString = "";
-        if (sizeof($htmlAttributesAsArray) > 0) {
-            $htmlAttributesAsString = " " . implode(" ", $htmlAttributesAsArray);
-        }
-        return "<$tag id=\"$this->areaId\"$htmlAttributesAsString>";
-    }
 
     public function setAttributes(array $attributes): LayoutArea
     {
@@ -108,28 +84,6 @@ class LayoutArea
         return $this->attributes;
     }
 
-    public function setTag(string $string): LayoutArea
-    {
-        $this->tag = $string;
-        return $this;
-    }
 
-    public function getTagOrDefault($default = "div")
-    {
-        if ($this->tag !== null) {
-            return $this->tag;
-        }
-        return $default;
-
-    }
-
-    public function toExitTag(string $tag = null): string
-    {
-        if ($tag === null) {
-            $tag = $this->getTagOrDefault();
-        }
-        return "</$tag>";
-
-    }
 
 }

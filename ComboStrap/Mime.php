@@ -64,7 +64,7 @@ class Mime
     public static function createFromExtension($extension): Mime
     {
         switch ($extension) {
-            case ImageSvg::EXTENSION:
+            case ImageFetchSvg::EXTENSION:
                 /**
                  * Svg is authorized when viewing but is not part
                  * of the {@link File::getKnownMime()}

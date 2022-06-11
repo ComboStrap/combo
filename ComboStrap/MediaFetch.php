@@ -14,8 +14,9 @@ namespace ComboStrap;
  * This is why there is a cache attribute - this is the cache of the generated file
  * if any
  */
-abstract class Media extends ResourceComboAbs
+abstract class MediaFetch extends ResourceComboAbs
 {
+
     const RESOURCE_TYPE = "media";
 
     /**
@@ -26,7 +27,7 @@ abstract class Media extends ResourceComboAbs
     /**
      * @var Path
      */
-    private $path;
+    private Path $path;
 
     /**
      * Media constructor.

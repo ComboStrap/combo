@@ -4,13 +4,16 @@
 namespace ComboStrap;
 
 /**
+ * A Image Raster process class that can output:
+ *   * an URL for an HTTP request
+ *   * or a file for an HTTP response or further local processing
+ *
+ *
  * TODO: What messed up is messed up
  *   This class should only wrap up the gd library
- *   to get information about the image
- *   But has also {@link RasterImageLink function} such as {@link ImageRaster::getUrlAtBreakpoint()}
- *   and {@link ImageRaster::getTargetHeight()}
+ *   to manipulate the image
  */
-class ImageRaster extends Image
+class ImageRasterFetch extends ImageFetch
 {
 
     const CANONICAL = "raster";
@@ -31,6 +34,10 @@ class ImageRaster extends Image
     private $wasAnalyzed = false;
 
 
+    public static function createImageRasterFetchFromId(string $imageId): ImageRasterFetch
+    {
+        return new ImageRasterFetch(DokuPath::createMediaPathFromId($imageId));
+    }
 
 
     /**
@@ -104,6 +111,8 @@ class ImageRaster extends Image
      * @param int|null $breakpointWidth - the breakpoint width - use for responsive image
      * @return string|null
      * @throws ExceptionCompile
+     *
+     * TODO: not the good place for it
      */
     public function getUrlAtBreakpoint(int $breakpointWidth = null)
     {
@@ -161,6 +170,7 @@ class ImageRaster extends Image
             LogUtility::msg("The Url of a image not in the media library is not yet supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return "";
         }
+
         return $this->getPath()->getUrl($att);
 
 
@@ -178,7 +188,7 @@ class ImageRaster extends Image
     }
 
     /**
-     * We overwrite the {@link Image::getTargetWidth()}
+     * We overwrite the {@link ImageFetch::getTargetWidth()}
      * because we don't scale up for raster image
      * to not lose quality.
      *

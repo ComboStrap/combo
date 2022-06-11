@@ -8,7 +8,7 @@ namespace ComboStrap;
  * @package ComboStrap
  * A javascript library in the resource directory
  */
-class JavascriptLibrary extends Media
+class JavascriptLibrary extends MediaFetch
 {
 
     const EXTENSION = "js";

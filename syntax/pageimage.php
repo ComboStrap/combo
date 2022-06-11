@@ -12,7 +12,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\FirstImage;
 use ComboStrap\Icon;
-use ComboStrap\Image;
+use ComboStrap\ImageFetch;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Mime;
@@ -335,7 +335,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionNotFound
      */
-    private function getMetaImage(Page $page, TagAttributes $tagAttributes): Image
+    private function getMetaImage(Page $page, TagAttributes $tagAttributes): ImageFetch
     {
         /**
          * Take the image and the page images

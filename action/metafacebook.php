@@ -5,7 +5,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\Image;
+use ComboStrap\ImageFetch;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
 use ComboStrap\Page;
@@ -136,14 +136,14 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
 
         /**
-         * @var Image[]
+         * @var ImageFetch[]
          */
         $facebookImages = $page->getImagesForTheFollowingUsages([PageImageUsage::FACEBOOK, PageImageUsage::SOCIAL, PageImageUsage::ALL]);
         if (empty($facebookImages)) {
             $defaultFacebookImage = PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
             if (!empty($defaultFacebookImage)) {
                 DokuPath::addRootSeparatorIfNotPresent($defaultFacebookImage);
-                $image = Image::createImageFromId($defaultFacebookImage);
+                $image = ImageFetch::createImageFetchFromId($defaultFacebookImage);
                 if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {
@@ -159,16 +159,11 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
              * One of image/jpeg, image/gif or image/png
              * As stated here: https://developers.facebook.com/docs/sharing/webmasters#images
              **/
-            $facebookMime = [Mime::JPEG, Mime::GIF, Mime::PNG];
+            $facebookMimes = [Mime::JPEG, Mime::GIF, Mime::PNG];
             foreach ($facebookImages as $facebookImage) {
 
-                if (!in_array($facebookImage->getPath()->getMime()->toString(), $facebookMime)) {
-                    continue;
-                }
-
-                /** @var Image $facebookImage */
-                if (!($facebookImage->isRaster())) {
-                    LogUtility::msg("Internal: The image ($facebookImage) is not a raster image and this should not be the case for facebook", LogUtility::LVL_MSG_ERROR);
+                $mime = $facebookImage->getPath()->getMime();
+                if (!in_array($mime->toString(), $facebookMimes)) {
                     continue;
                 }
 
@@ -217,10 +212,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                      * We may don't known the dimensions
                      */
                     if (!$toSmall) {
-                        $mime = $facebookImage->getPath()->getMime()->toString();
-                        if (!empty($mime)) {
-                            $facebookMeta["og:image:type"] = $mime;
-                        }
+                        $facebookMeta["og:image:type"] = $mime->toString();
                         $facebookMeta["og:image"] = $facebookImage->getAbsoluteUrl();
                         // One image only
                         break;

@@ -33,7 +33,7 @@ class Index
         return self::$index;
     }
 
-    public function getPagesForMedia(Media $media): array
+    public function getPagesForMedia(MediaFetch $media): array
     {
         $dokuwikiId = $media->getPath()->getDokuwikiId();
         return $this->indexer->lookupKey('relation_media', $dokuwikiId);

@@ -21,7 +21,7 @@ use dokuwiki\Cache\Cache;
  * https://lofi.limo/blog/images/write-html-right.png
  * https://opengraph.githubassets.com/6b85042cdc8e98725bd85a0e7b159c99104644fbf97402fded205ee4d2036ab9/ComboStrap/combo
  */
-class Vignette extends ImageRaster
+class Vignette extends ImageRasterFetch
 {
 
     const CANONICAL = "page-vignette";

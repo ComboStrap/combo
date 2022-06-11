@@ -13,7 +13,6 @@
 namespace ComboStrap;
 
 
-require_once(__DIR__ . '/PluginUtility.php');
 
 
 /**
@@ -24,7 +23,7 @@ require_once(__DIR__ . '/PluginUtility.php');
 class SvgImageLink extends ImageLink
 {
 
-    const CANONICAL = ImageSvg::CANONICAL;
+    const CANONICAL = ImageFetchSvg::CANONICAL;
 
     /**
      * The maximum size to be embedded
@@ -45,12 +44,12 @@ class SvgImageLink extends ImageLink
 
     /**
      * SvgImageLink constructor.
-     * @param ImageSvg $imageSvg
+     * @param ImageFetchSvg $imageSvgFetch
      */
-    public function __construct($imageSvg)
+    public function __construct($imageSvgFetch)
     {
-        parent::__construct($imageSvg);
-        $imageSvg->getAttributes()->setLogicalTag(self::CANONICAL);
+        parent::__construct($imageSvgFetch);
+        $imageSvgFetch->getAttributes()->setLogicalTag(self::CANONICAL);
 
     }
 
@@ -92,9 +91,9 @@ class SvgImageLink extends ImageLink
         /**
          * Remove the cache attribute
          * (no cache for the img tag)
-         * @var ImageSvg $image
+         * @var ImageFetchSvg $image
          */
-        $image = $this->getDefaultImage();
+        $image = $this->getDefaultImageFetch();
         $responseAttributes = TagAttributes::createFromTagAttributes($image->getAttributes());
         $responseAttributes->removeComponentAttributeIfPresent(CacheMedia::CACHE_KEY);
 
@@ -199,9 +198,9 @@ class SvgImageLink extends ImageLink
     {
 
         /**
-         * @var ImageSvg $image
+         * @var ImageFetchSvg $image
          */
-        $image = $this->getDefaultImage();
+        $image = $this->getDefaultImageFetch();
         if (!$image->exists()) {
             throw new ExceptionNotFound("The image ($image) does not exist");
         }
@@ -209,7 +208,7 @@ class SvgImageLink extends ImageLink
         /**
          * This attributes should not be in the render
          */
-        $attributes = $this->getDefaultImage()->getAttributes();
+        $attributes = $this->getDefaultImageFetch()->getAttributes();
         $attributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
         $attributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
         /**

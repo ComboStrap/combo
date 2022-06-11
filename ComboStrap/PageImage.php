@@ -12,7 +12,7 @@ class PageImage
     // next release ?
 
     /**
-     * @var Image
+     * @var ImageFetch
      */
     private $image;
     private $usages;
@@ -24,23 +24,23 @@ class PageImage
     /**
      * PageImage constructor.
      */
-    public function __construct(Image $image, Page $page)
+    public function __construct(ImageFetch $image, Page $page)
     {
         $this->image = $image;
         $this->page = $page;
     }
 
     /**
-     * @param Image|string $image
+     * @param ImageFetch|string $image
      * @param Page $page
      * @return PageImage
      * @throws ExceptionCompile
      */
     public static function create($image, ResourceCombo $page): PageImage
     {
-        if (!($image instanceof Image)) {
+        if (!($image instanceof ImageFetch)) {
             $dokuPath = DokuPath::createMediaPathFromId($image);
-            $image = Image::createImageFromPath($dokuPath);
+            $image = ImageFetch::createImageFetchFromPath($dokuPath);
         }
         return new PageImage($image, $page);
     }
@@ -65,7 +65,7 @@ class PageImage
         return $this;
     }
 
-    public function getImage(): Image
+    public function getImage(): ImageFetch
     {
         return $this->image;
     }

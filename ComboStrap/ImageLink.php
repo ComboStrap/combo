@@ -15,18 +15,18 @@ abstract class ImageLink extends MediaLink
 
 
     /**
-     * @return Image
+     * @return ImageFetch
      */
-    function getDefaultImage(): ?Image
+    function getDefaultImageFetch(): ?ImageFetch
     {
-        if (!($this->getMedia() instanceof Image)) {
+        if (!($this->getMediaFetch() instanceof ImageFetch)) {
             LogUtility::msg("The media ($this) is not an image", LogUtility::LVL_MSG_ERROR);
         }
         /**
          *
          */
-        $media = $this->getMedia();
-        if($media instanceof Image){
+        $media = $this->getMediaFetch();
+        if($media instanceof ImageFetch){
             return $media;
         } else {
             return null;
@@ -39,10 +39,10 @@ abstract class ImageLink extends MediaLink
     public function getMarkupSyntax(): string
     {
         $descriptionPart = "";
-        if (!empty($this->getDefaultImage()->getAltNotEmpty())) {
-            $descriptionPart = "|" . $this->getDefaultImage()->getAltNotEmpty();
+        if (!empty($this->getDefaultImageFetch()->getAltNotEmpty())) {
+            $descriptionPart = "|" . $this->getDefaultImageFetch()->getAltNotEmpty();
         }
-        return '{{' . $this->getMedia()->getPath()->getAbsolutePath() . $descriptionPart . '}}';
+        return '{{' . $this->getMediaFetch()->getPath()->getAbsolutePath() . $descriptionPart . '}}';
     }
 
 }

@@ -31,7 +31,7 @@ require_once(__DIR__ . '/PluginUtility.php');
 class RasterImageLink extends ImageLink
 {
 
-    const CANONICAL = ImageRaster::CANONICAL;
+    const CANONICAL = ImageRasterFetch::CANONICAL;
     const CONF_LAZY_LOADING_ENABLE = "rasterImageLazyLoadingEnable";
     const CONF_LAZY_LOADING_ENABLE_DEFAULT = 1;
 
@@ -57,13 +57,11 @@ class RasterImageLink extends ImageLink
 
     /**
      * RasterImageLink constructor.
-     * @param ImageRaster $imageRaster
+     * @param ImageRasterFetch $imageRasterFetch
      */
-    public function __construct($imageRaster)
+    public function __construct($imageRasterFetch)
     {
-        parent::__construct($imageRaster);
-
-
+        parent::__construct($imageRasterFetch);
     }
 
 
@@ -77,9 +75,9 @@ class RasterImageLink extends ImageLink
     public function renderMediaTag(): string
     {
         /**
-         * @var ImageRaster $image
+         * @var ImageRasterFetch $image
          */
-        $image = $this->getDefaultImage();
+        $image = $this->getDefaultImageFetch();
         if ($image->exists()) {
 
             $attributes = $image->getAttributes();

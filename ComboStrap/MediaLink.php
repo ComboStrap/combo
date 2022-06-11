@@ -12,16 +12,14 @@
 
 namespace ComboStrap;
 
-use dokuwiki\Action\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
 use dokuwiki\Parsing\ParserMode\Internallink;
 use syntax_plugin_combo_media;
 
-require_once(__DIR__ . '/PluginUtility.php');
 
 /**
  * Class InternalMedia
- * Represent a media link
+ * Represent a markup link
  *
  *
  * @package ComboStrap
@@ -58,7 +56,7 @@ abstract class MediaLink
 
     /**
      * This attributes does not apply
-     * to a URL
+     * to a fetch (URL)
      * They are only for the tag (img, svg, ...)
      * or internal
      */
@@ -72,15 +70,6 @@ abstract class MediaLink
         MediaLink::DOKUWIKI_SRC
     ];
 
-    /**
-     * This attribute applies
-     * to a image url (img, svg, ...)
-     */
-    const URL_ATTRIBUTES = [
-        Dimension::WIDTH_KEY,
-        Dimension::HEIGHT_KEY,
-        CacheMedia::CACHE_KEY,
-    ];
 
     /**
      * Default image linking value
@@ -131,24 +120,24 @@ abstract class MediaLink
 
     /**
      * The path of the media
-     * @var Media[]
+     * @var MediaFetch[]
      */
-    private $media;
+    private $mediaFetch;
     private $linking;
     private $linkingClass;
 
 
     /**
      * Image constructor.
-     * @param Image $media
+     * @param ImageFetch $media
      *
      * Protected and not private
      * to allow cascading init
      * If private, the parent attributes are null
      */
-    protected function __construct(Media $media)
+    protected function __construct(MediaFetch $media)
     {
-        $this->media = $media;
+        $this->mediaFetch = $media;
     }
 
 
@@ -243,7 +232,7 @@ abstract class MediaLink
      * @param $match - the match of the renderer (just a shortcut)
      * @return MediaLink
      */
-    public static function createFromRenderMatch($match)
+    public static function createFromRenderMatch($match): ?MediaLink
     {
 
         /**
@@ -422,7 +411,6 @@ abstract class MediaLink
             $tagAttributes = TagAttributes::createEmpty();
         }
 
-
         /**
          * Processing
          */
@@ -430,16 +418,16 @@ abstract class MediaLink
             $mime = FileSystems::getMime($path);
             switch ($mime->toString()) {
                 case Mime::SVG:
-                    $media = new ImageSvg($path, $tagAttributes);
+                    $media = new ImageFetchSvg($path, $tagAttributes);
                     $mediaLink = new SvgImageLink($media);
                     break;
                 default:
                     if (!$mime->isImage()) {
                         LogUtility::msg("The type ($mime) of media ($path) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
-                        $media = new ThirdMedia($path, $tagAttributes);
+                        $media = new ThirdMediaFetch($path, $tagAttributes);
                         $mediaLink = new ThirdMediaLink($media);
                     } else {
-                        $media = new ImageRaster($path, $tagAttributes);
+                        $media = new ImageRasterFetch($path, $tagAttributes);
                         $mediaLink = new RasterImageLink($media);
                     }
                     break;
@@ -447,7 +435,7 @@ abstract class MediaLink
         } catch (ExceptionNotFound $e) {
             // no mime
             LogUtility::msg("The mime type of the media ($path) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
-            $media = new ImageRaster($path, $tagAttributes);
+            $media = new ImageRasterFetch($path, $tagAttributes);
             $mediaLink = new RasterImageLink($media);
         }
 
@@ -497,13 +485,13 @@ abstract class MediaLink
          * src is a path (not an id)
          */
         $array = array(
-            PagePath::PROPERTY_NAME => $this->getMedia()->getPath()->toPathString(),
+            PagePath::PROPERTY_NAME => $this->getMediaFetch()->getPath()->toPathString(),
             self::LINKING_KEY => $this->getLinking()
         );
 
 
         // Add the extra attribute
-        return array_merge($this->getMedia()->getAttributes()->toCallStackArray(), $array);
+        return array_merge($this->getMediaFetch()->getAttributes()->toCallStackArray(), $array);
 
 
     }
@@ -519,7 +507,7 @@ abstract class MediaLink
     public
     function __toString()
     {
-        $media = $this->getMedia();
+        $media = $this->getMediaFetch();
         $dokuPath = $media->getPath();
         if ($dokuPath !== null) {
             return $dokuPath->getDokuwikiId();
@@ -557,6 +545,7 @@ abstract class MediaLink
 
     /**
      * @return string - the HTML of the image inside a link if asked
+     * @throws ExceptionNotFound
      */
     public
     function renderMediaTagWithLink(): string
@@ -578,7 +567,7 @@ abstract class MediaLink
         /**
          * Do we add a link to the image ?
          */
-        $media = $this->getMedia();
+        $media = $this->getMediaFetch();
         $dokuPath = $media->getPath();
         if (!($dokuPath instanceof DokuPath)) {
             LogUtility::msg("Media Link are only supported on media from the internal library ($media)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -653,18 +642,16 @@ abstract class MediaLink
     /**
      * @return string - the HTML of the image
      */
-    public
-
-    abstract function renderMediaTag(): string;
+    public abstract function renderMediaTag(): string;
 
 
     /**
      * The file
-     * @return Media
+     * @return MediaFetch
      */
-    public function getMedia(): Media
+    public function getMediaFetch(): MediaFetch
     {
-        return $this->media;
+        return $this->mediaFetch;
     }
 
     protected function getLazyLoadMethod(): string

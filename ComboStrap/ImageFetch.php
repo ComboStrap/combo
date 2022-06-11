@@ -4,18 +4,18 @@
 namespace ComboStrap;
 
 
-use syntax_plugin_combo_card;
-
-require_once(__DIR__ . "/PluginUtility.php");
 
 /**
  * Class Image
  * @package ComboStrap
- * An image and its attribute
+ *
+ * Image request / response
+ *
+ * and its attribute
  * (ie a file and its transformation attribute if any such as
  * width, height, ...)
  */
-abstract class Image extends Media
+abstract class ImageFetch extends MediaFetch
 {
 
 
@@ -24,7 +24,7 @@ abstract class Image extends Media
 
     /**
      * Image constructor.
-     * @param Path $path
+     * @param Path $path - the path of an image
      * @param TagAttributes|null $attributes - the attributes
      */
     public function __construct(Path $path, $attributes = null)
@@ -40,10 +40,10 @@ abstract class Image extends Media
     /**
      * @param Path $path
      * @param null $attributes
-     * @return ImageRaster|ImageSvg
+     * @return ImageRasterFetch|ImageFetchSvg
      * @throws ExceptionBadArgument if the path is not the path of an image
      */
-    public static function createImageFromPath(Path $path, $attributes = null)
+    public static function createImageFetchFromPath(Path $path, $attributes = null)
     {
 
         try {
@@ -57,11 +57,11 @@ abstract class Image extends Media
         }
         if ($mime->toString() === Mime::SVG) {
 
-            $image = new ImageSvg($path, $attributes);
+            $image = new ImageFetchSvg($path, $attributes);
 
         } else {
 
-            $image = new ImageRaster($path, $attributes);
+            $image = new ImageRasterFetch($path, $attributes);
 
         }
         return $image;
@@ -73,14 +73,14 @@ abstract class Image extends Media
      *
      * @throws ExceptionBadArgument
      */
-    public static function createImageFromId(string $imageId, $rev = '', $attributes = null)
+    public static function createImageFetchFromId(string $imageId, $rev = '', $attributes = null)
     {
         $dokuPath = DokuPath::createMediaPathFromId($imageId, $rev);
-        return self::createImageFromPath($dokuPath, $attributes);
+        return self::createImageFetchFromPath($dokuPath, $attributes);
     }
 
     /**
-     * Return a height value that is conform to the {@link Image::getIntrinsicAspectRatio()} of the image.
+     * Return a height value that is conform to the {@link ImageFetch::getIntrinsicAspectRatio()} of the image.
      *
      * @param int|null $breakpointWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
      * if not specified, the requested width and if not specified the intrinsic width
@@ -91,7 +91,7 @@ abstract class Image extends Media
      *   * If the requested height given is not null, return the given height rounded
      *   * If the requested height is null, if the requested width is:
      *         * null: return the intrinsic / natural height
-     *         * not null: return the height as being the width scaled down by the {@link Image::getIntrinsicAspectRatio()}
+     *         * not null: return the height as being the width scaled down by the {@link ImageFetch::getIntrinsicAspectRatio()}
      */
     public function getBreakpointHeight(?int $breakpointWidth): int
     {
@@ -111,7 +111,7 @@ abstract class Image extends Media
     }
 
     /**
-     * Return a width value that is conform to the {@link Image::getIntrinsicAspectRatio()} of the image.
+     * Return a width value that is conform to the {@link ImageFetch::getIntrinsicAspectRatio()} of the image.
      *
      * @param int|null $requestedWidth - the requested width (may be null)
      * @param int|null $requestedHeight - the request height (may be null)
@@ -121,7 +121,7 @@ abstract class Image extends Media
      *   * If the requested width given is not null, return the given width
      *   * If the requested width is null, if the requested height is:
      *         * null: return the intrinsic / natural width
-     *         * not null: return the width as being the height scaled down by the {@link Image::getIntrinsicAspectRatio()}
+     *         * not null: return the width as being the height scaled down by the {@link ImageFetch::getIntrinsicAspectRatio()}
      */
     public function getWidthValueScaledDown(?int $requestedWidth, ?int $requestedHeight): int
     {
@@ -267,17 +267,7 @@ abstract class Image extends Media
 
     }
 
-    /**
-     * @return bool if this is raster image, false if this is a vector image
-     */
-    public function isRaster(): bool
-    {
-        if ($this->getPath()->getMime()->toString() === Mime::SVG) {
-            return false;
-        } else {
-            return true;
-        }
-    }
+
 
     /**
      * Giving width and height, check that the aspect ratio is the same
@@ -327,6 +317,7 @@ abstract class Image extends Media
     /**
      * The Url
      * @return mixed
+     * TODO: return an {@link URL} object that can output an relative or absolute URL
      */
     public abstract function getAbsoluteUrl();
 
@@ -357,8 +348,8 @@ abstract class Image extends Media
      * specified in the query parameters
      *
      * For instance,
-     *   * with `200`, the target image has a {@link Image::getTargetWidth() logical width} of 200 and a {@link Image::getTargetHeight() logical height} that is scaled down by the {@link Image::getIntrinsicAspectRatio() instrinsic ratio}
-     *   * with ''0x20'', the target image has a {@link Image::getTargetHeight() logical height} of 20 and a {@link Image::getTargetWidth() logical width} that is scaled down by the {@link Image::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with `200`, the target image has a {@link ImageFetch::getTargetWidth() logical width} of 200 and a {@link ImageFetch::getTargetHeight() logical height} that is scaled down by the {@link ImageFetch::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with ''0x20'', the target image has a {@link ImageFetch::getTargetHeight() logical height} of 20 and a {@link ImageFetch::getTargetWidth() logical width} that is scaled down by the {@link ImageFetch::getIntrinsicAspectRatio() instrinsic ratio}
      *
      * The doc is {@link https://www.dokuwiki.org/images#resizing}
      *
@@ -397,7 +388,7 @@ abstract class Image extends Media
          */
         $ratio = $this->getRequestedAspectRatio();
         if (!empty($ratio)) {
-            [$croppedWidth, $croppedHeight] = Image::getCroppingDimensionsWithRatio(
+            [$croppedWidth, $croppedHeight] = ImageFetch::getCroppingDimensionsWithRatio(
                 $ratio,
                 $this->getIntrinsicWidth(),
                 $this->getIntrinsicHeight()
@@ -413,8 +404,8 @@ abstract class Image extends Media
      * The logical width is the width of the target image calculated from the requested dimension
      *
      * For instance,
-     *   * with `200`, the target image has a {@link Image::getTargetWidth() logical width} of 200 and a {@link Image::getTargetHeight() logical height} that is scaled down by the {@link Image::getIntrinsicAspectRatio() instrinsic ratio}
-     *   * with ''0x20'', the target image has a {@link Image::getTargetHeight() logical height} of 20 and a {@link Image::getTargetWidth() logical width} that is scaled down by the {@link Image::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with `200`, the target image has a {@link ImageFetch::getTargetWidth() logical width} of 200 and a {@link ImageFetch::getTargetHeight() logical height} that is scaled down by the {@link ImageFetch::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with ''0x20'', the target image has a {@link ImageFetch::getTargetHeight() logical height} of 20 and a {@link ImageFetch::getTargetWidth() logical width} that is scaled down by the {@link ImageFetch::getIntrinsicAspectRatio() instrinsic ratio}
      *
      * The doc is {@link https://www.dokuwiki.org/images#resizing}
      * @throws ExceptionBadArgument when the width height value are not valid value
@@ -455,7 +446,7 @@ abstract class Image extends Media
          */
         $ratio = $this->getRequestedAspectRatio();
         if (!empty($ratio)) {
-            [$logicalWidthWithRatio, $logicalHeightWithRatio] = Image::getCroppingDimensionsWithRatio(
+            [$logicalWidthWithRatio, $logicalHeightWithRatio] = ImageFetch::getCroppingDimensionsWithRatio(
                 $ratio,
                 $this->getIntrinsicWidth(),
                 $this->getIntrinsicHeight()
@@ -533,13 +524,13 @@ abstract class Image extends Media
          * Trying to crop on the width
          */
         $logicalWidth = $intrinsicWidth;
-        $logicalHeight = Image::round($logicalWidth / $targetRatio);
+        $logicalHeight = ImageFetch::round($logicalWidth / $targetRatio);
         if ($logicalHeight > $intrinsicHeight) {
             /**
              * Cropping by height
              */
             $logicalHeight = $intrinsicHeight;
-            $logicalWidth = Image::round($targetRatio * $logicalHeight);
+            $logicalWidth = ImageFetch::round($targetRatio * $logicalHeight);
         }
         return [$logicalWidth, $logicalHeight];
 

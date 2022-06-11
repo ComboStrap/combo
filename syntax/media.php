@@ -5,7 +5,9 @@ use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
 use ComboStrap\DokuFs;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
+use ComboStrap\FileSystems;
 use ComboStrap\FirstImage;
 use ComboStrap\InternetPath;
 use ComboStrap\LogUtility;
@@ -93,11 +95,11 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     {
         $media = MediaLink::createFromCallStackArray($attributes);
         $renderer->stats[AnalyticsDocument::MEDIA_COUNT]++;
-        $scheme = $media->getMedia()->getPath()->getScheme();
+        $scheme = $media->getMediaFetch()->getPath()->getScheme();
         switch ($scheme) {
             case DokuFs::SCHEME:
                 $renderer->stats[AnalyticsDocument::INTERNAL_MEDIA_COUNT]++;
-                if (!$media->getMedia()->exists()) {
+                if (!$media->getMediaFetch()->exists()) {
                     $renderer->stats[AnalyticsDocument::INTERNAL_BROKEN_MEDIA_COUNT]++;
                 }
                 break;
@@ -235,12 +237,17 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 /** @var Doku_Renderer_xhtml $renderer */
                 $attributes = $data[PluginUtility::ATTRIBUTES];
                 $mediaLink = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
-                $media = $mediaLink->getMedia();
-                if ($media->getPath()->getScheme() == DokuFs::SCHEME) {
-                    if ($media->getPath()->getMime()->isImage() || $media->getPath()->getExtension() === "svg") {
+                $media = $mediaLink->getMediaFetch();
+                if ($media->getPath()->getScheme() === DokuFs::SCHEME) {
+                    try {
+                        $isImage = FileSystems::getMime($media->getPath())->isImage();
+                    } catch (ExceptionNotFound $e) {
+                        $isImage = false;
+                    }
+                    if ($isImage) {
                         try {
                             $renderer->doc .= $mediaLink->renderMediaTagWithLink();
-                        } catch (RuntimeException $e) {
+                        } catch (ExceptionNotFound $e) {
                             if (PluginUtility::isDevOrTest()) {
                                 throw new ExceptionRuntime("Media Rendering Error. {$e->getMessage()}", MediaLink::CANONICAL, 0, $e);
                             } else {

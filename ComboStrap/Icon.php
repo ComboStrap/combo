@@ -28,7 +28,7 @@ require_once(__DIR__ . '/PluginUtility.php');
  * Injection via javascript to avoid problem with the php svgsimple library
  * https://www.npmjs.com/package/svg-injector
  */
-class Icon extends ImageSvg
+class Icon extends ImageFetchSvg
 {
     const CONF_ICONS_MEDIA_NAMESPACE = "icons_namespace";
     const CONF_ICONS_MEDIA_NAMESPACE_DEFAULT = ":" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME . ":icons";

@@ -23,6 +23,7 @@ class CacheMedia
      */
     const CACHE_KEY = 'cache';
     const CACHE_DEFAULT_VALUE = "cache";
+
     /**
      * buster got the same value
      * that the `rev` attribute (ie mtime)
@@ -41,7 +42,7 @@ class CacheMedia
     /**
      * @var Cache
      */
-    private $fileCache;
+    private Cache $fileCache;
     private $maxAge;
 
 
@@ -124,7 +125,7 @@ class CacheMedia
      * Cache file depends on code version and configuration
      * @return bool
      */
-    public function isCacheUsable()
+    public function isCacheUsable(): bool
     {
         if ($this->maxAge == 0) {
             return false;

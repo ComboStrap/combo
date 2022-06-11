@@ -96,7 +96,7 @@ class FirstImage extends MetadataWikiPath
             throw new ExceptionNotFound("No first image for the page ({$this->getResource()}");
         }
         try {
-            return Image::createImageFromId($path);
+            return ImageFetch::createImageFetchFromId($path);
         } catch (ExceptionBadArgument $e) {
             $message = "Internal Error: The image ($path) of the page ({$this->getResource()} is not seen as an image. Error: {$e->getMessage()}";
             // Log to see it in the log and to trigger an error in dev/test

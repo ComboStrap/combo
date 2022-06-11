@@ -6,11 +6,13 @@ namespace ComboStrap;
 /**
  * Class ImageSvg
  * @package ComboStrap
- * A svg image
  *
- * TODO: implements {@link CachedDocument} ? to not cache the optimization in {@link ImageSvg::getSvgFile()}
+ * Svg image fetch processing that can output:
+ *   * an URL for an HTTP request
+ *   * an SvgFile for an HTTP response or any further processing
+ *
  */
-class ImageSvg extends Image
+class ImageFetchSvg extends ImageFetch
 {
 
     const EXTENSION = "svg";
@@ -114,7 +116,7 @@ class ImageSvg extends Image
                     case Dimension::WIDTH_KEY:
                         $newName = "w";
                         try {
-                            $value = Dimension::toPixelValue($value);
+                            $value = ConditionalLength::createFromString($value)->toPixelNumber();
                         } catch (ExceptionCompile $e) {
                             LogUtility::msg("Error while converting the width value ($value) into pixel. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                             continue 2;
@@ -123,7 +125,7 @@ class ImageSvg extends Image
                     case Dimension::HEIGHT_KEY:
                         $newName = "h";
                         try {
-                            $value = Dimension::toPixelValue($value);
+                            $value = ConditionalLength::createFromString($value)->toPixelNumber();
                         } catch (ExceptionCompile $e) {
                             LogUtility::msg("Error while converting the height value ($value) into pixel. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                             continue 2;

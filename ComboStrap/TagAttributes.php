@@ -84,9 +84,9 @@ class TagAttributes
      * and check if the {@link SyntaxPlugin::getPType()} is normal
      */
     const INLINE_LOGICAL_ELEMENTS = [
-        ImageSvg::CANONICAL,
-        ImageRaster::CANONICAL,
-        Image::CANONICAL,
+        ImageFetchSvg::CANONICAL,
+        ImageRasterFetch::CANONICAL,
+        ImageFetch::CANONICAL,
         \syntax_plugin_combo_link::TAG, // link button for instance
         \syntax_plugin_combo_button::TAG
     ];

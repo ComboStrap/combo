@@ -12,10 +12,14 @@ use dokuwiki\Cache\Cache;
  *   * 'id:of:page' is the page wiki id
  *   * 'png' is the format (may be jpeg or webp)
  *
- * Example:
+ * Example when running on Combo
  * http://combo.nico.lan/lib/exe/fetch.php?media=howto:getting_started:getting_started.png&drive=page-vignette
  * http://combo.nico.lan/lib/exe/fetch.php?media=howto:howto.webp&drive=page-vignette
  *
+ *
+ * Example/Inspiration in the real world:
+ * https://lofi.limo/blog/images/write-html-right.png
+ * https://opengraph.githubassets.com/6b85042cdc8e98725bd85a0e7b159c99104644fbf97402fded205ee4d2036ab9/ComboStrap/combo
  */
 class Vignette extends ImageRaster
 {
@@ -92,8 +96,13 @@ class Vignette extends ImageRaster
             return LocalPath::createFromPath($cache->cache);
         }
 
-        $width = 1200;
-        $height = 600;
+        try {
+            $width = $this->getIntrinsicWidth();
+            $height = $this->getIntrinsicHeight();
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionRuntime("Internal error. Width and height of a vignette could not be known");
+        }
+
         /**
          * Don't use {@link imagecreate()} otherwise
          * we get color problem while importing the logo
@@ -188,11 +197,17 @@ class Vignette extends ImageRaster
             $mutedGdColor = imagecolorallocate($vignetteImageHandler, $mutedRgb->getRed(), $mutedRgb->getGreen(), $mutedRgb->getBlue());
             $locale = Locale::createForPage($this->page)->getValueOrDefault();
             try {
-                $lineToPrint = Iso8601Date::createFromDateTime($this->page->getModifiedTimeOrDefault())->formatLocale(null, $locale);
+                $modifiedTimeOrDefault = $this->page->getModifiedTimeOrDefault();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::errorIfDevOrTest("Error while getting the modified date. Error: {$e->getMessage()}", self::CANONICAL);
+                $modifiedTimeOrDefault = new \DateTime();
+            }
+            try {
+                $lineToPrint = Iso8601Date::createFromDateTime($modifiedTimeOrDefault)->formatLocale(null, $locale);
             } catch (ExceptionBadSyntax $e) {
                 // should not happen
                 LogUtility::errorIfDevOrTest("Error while formatting the modified date. Error: {$e->getMessage()}", self::CANONICAL);
-                $lineToPrint = $this->page->getModifiedTimeOrDefault()->format('Y-m-d H:i:s');
+                $lineToPrint = $modifiedTimeOrDefault->format('Y-m-d H:i:s');
             }
             imagettftext($vignetteImageHandler, $dateFontSize, 0, $x, $yDate, $mutedGdColor, $normalFont, $lineToPrint);
 
@@ -261,6 +276,17 @@ class Vignette extends ImageRaster
         $this->useCache = $false;
         return $this;
     }
+
+    public function getIntrinsicWidth(): int
+    {
+        return 1200;
+    }
+
+    public function getIntrinsicHeight(): int
+    {
+        return 600;
+    }
+
 
     /**
      * @throws ExceptionNotFound - unknown mime or unknown extension

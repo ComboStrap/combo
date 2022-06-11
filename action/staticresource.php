@@ -93,7 +93,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
                     $vignette = Vignette::createForPage($page, $mime)
                         ->setUseCache(false);
                     $path = $vignette->getPhysicalPath();
-                } catch (ExceptionBadState|ExceptionNotFound $e) {
+                } catch (ExceptionBadArgument|ExceptionNotFound $e) {
                     $event->data['status'] = HttpResponse::STATUS_INTERNAL_ERROR;
                     $event->data['statusmessage'] = "Error while creating the vignette. Error: {$e->getMessage()}";
                     return;

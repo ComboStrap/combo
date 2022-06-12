@@ -53,15 +53,33 @@ class RasterImageLink extends ImageLink
             "md" => 768,
             "lg" => 992
         );
+    /**
+     * @var void
+     */
+    private $fetchRaster;
 
 
     /**
      * RasterImageLink constructor.
-     * @param ImageRasterFetch $imageRasterFetch
+     * @param Path $path
+     * @param TagAttributes|null $tagAttributes
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
      */
-    public function __construct($imageRasterFetch)
+    public function __construct(Path $path, TagAttributes $tagAttributes = null)
     {
-        parent::__construct($imageRasterFetch);
+
+        if ($tagAttributes === null) {
+            $tagAttributes = TagAttributes::createEmpty(self::CANONICAL);
+        }
+        $tagAttributes->setLogicalTag(self::CANONICAL);
+
+        $this->fetchRaster = ImageRasterFetch::createImageRasterFetchFromPath($path);
+        $this->fetchRaster->buildSharedImagePropertyFromTagAttributes($tagAttributes);
+
+
+        parent::__construct($path, $tagAttributes);
     }
 
 
@@ -231,7 +249,8 @@ class RasterImageLink extends ImageLink
                         }
                         $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
 
-                        $xsmUrl = $image->getUrlAtBreakpoint($breakpointWidthMinusMargin);
+                        $xsmUrl = ImageRasterFetch::createImageRasterFetchFromPath($image->getPath())
+                            ->setRequestedWidth($breakpointWidthMinusMargin);
                         $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
                         $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
 
@@ -433,7 +452,8 @@ class RasterImageLink extends ImageLink
      * Used to select the raster image lazy loaded
      * @return string
      */
-    public static function getLazyClass(){
+    public static function getLazyClass()
+    {
         return StyleUtility::getStylingClassForTag("lazy-raster");
     }
 

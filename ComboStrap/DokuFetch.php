@@ -20,7 +20,7 @@ class DokuFetch implements Fetch
 
     /**
      * @return Url - an URL to download the media
-     * @throws ExceptionNotFound - if the file is not found
+     * @throws ExceptionNotFound
      */
     function getFetchUrl(): Url
     {
@@ -59,5 +59,13 @@ class DokuFetch implements Fetch
         }
         return false;
 
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getMime(): Mime
+    {
+        return FileSystems::getMime($this->path);
     }
 }

@@ -14,35 +14,49 @@ namespace ComboStrap;
  * (ie a file and its transformation attribute if any such as
  * width, height, ...)
  */
-abstract class ImageFetch extends MediaFetch
+abstract class ImageFetch extends FetchAbs
 {
 
+    /**
+     * Doc: https://www.dokuwiki.org/images#caching
+     * Cache
+     * values:
+     *   * cache
+     *   * nocache
+     *   * recache
+     */
+    const CACHE_KEY = 'cache';
+    const CACHE_DEFAULT_VALUE = "cache";
 
     const CANONICAL = "image";
 
+    /**
+     * @var int|null
+     */
+    private ?int $requestedWidth;
+    private ?int $requestedHeight;
+    private ?string $externalCacheRequested;
+    private ?string $requestedRatio;
+
 
     /**
-     * Image constructor.
-     * @param Path $path - the path of an image
-     * @param TagAttributes|null $attributes - the attributes
+     * Image Fetch constructor.
+     *
      */
-    public function __construct(Path $path, $attributes = null)
+    public function __construct()
     {
-        if ($attributes === null) {
-            $this->attributes = TagAttributes::createEmpty(self::CANONICAL);
-        }
-
-        parent::__construct($path, $attributes);
+        // Image can be generated, ie vignette, snapshot
     }
 
 
     /**
      * @param Path $path
-     * @param null $attributes
      * @return ImageRasterFetch|ImageFetchSvg
-     * @throws ExceptionBadArgument if the path is not the path of an image
+     * @throws ExceptionBadArgument - if the path is not an image
+     * @throws ExceptionBadSyntax - if the image is badly encoded
+     * @throws ExceptionNotExists - if the image does not exists
      */
-    public static function createImageFetchFromPath(Path $path, $attributes = null)
+    public static function createImageFetchFromPath(Path $path)
     {
 
         try {
@@ -54,28 +68,78 @@ abstract class ImageFetch extends MediaFetch
         if (!$mime->isImage()) {
             throw new ExceptionBadArgument("The file ($path) has not been detected as being an image, media returned", self::CANONICAL);
         }
+
         if ($mime->toString() === Mime::SVG) {
 
-            $image = new ImageFetchSvg($path, $attributes);
+            $image = new ImageFetchSvg($path);
 
         } else {
 
-            $image = new ImageRasterFetch($path, $attributes);
+            $image = new ImageRasterFetch($path);
 
         }
+
+
         return $image;
 
 
     }
 
     /**
-     *
-     * @throws ExceptionBadArgument
+     * @param string $imageId
+     * @param string|null $rev
+     * @return ImageFetchSvg|ImageRasterFetch
+     * @throws ExceptionBadArgument - if the path is not an image
+     * @throws ExceptionBadSyntax - if the image is badly encoded
+     * @throws ExceptionNotExists - if the image does not exists
      */
-    public static function createImageFetchFromId(string $imageId, $rev = '', $attributes = null)
+    public static function createImageFetchFromId(string $imageId, string $rev = null)
     {
         $dokuPath = DokuPath::createMediaPathFromId($imageId, $rev);
-        return self::createImageFetchFromPath($dokuPath, $attributes);
+        return self::createImageFetchFromPath($dokuPath);
+    }
+
+    /**
+     * Utility function to build the common image fetch processing property
+     * @param TagAttributes $tagAttributes
+     * @return void
+     * @throws ExceptionBadArgument
+     */
+    public function buildSharedImagePropertyFromTagAttributes(TagAttributes $tagAttributes)
+    {
+        $requestedWidth = $tagAttributes->getValueAndRemoveIfPresent(Dimension::WIDTH_KEY);
+        if ($requestedWidth !== null) {
+            try {
+                $requestedWidthInt = DataType::toInteger($requestedWidth);
+            } catch (ExceptionBadArgument $e) {
+                throw new ExceptionBadArgument("The width value ($requestedWidth) is not a valid integer", self::CANONICAL, 0, $e);
+            }
+            $this->setRequestedWidth($requestedWidthInt);
+        }
+        $requestedHeight = $tagAttributes->getValueAndRemoveIfPresent(Dimension::HEIGHT_KEY);
+        if ($requestedHeight !== null) {
+            try {
+                $requestedHeightInt = DataType::toInteger($requestedHeight);
+            } catch (ExceptionBadArgument $e) {
+                throw new ExceptionBadArgument("The height value ($requestedHeight) is not a valid integer", self::CANONICAL, 0, $e);
+            }
+            $this->setRequestedHeight($requestedHeightInt);
+        }
+
+        $requestedRatio = $tagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
+        if ($requestedRatio !== null) {
+            try {
+                $this->requestedRatio = Dimension::convertTextualRatioToNumber($requestedRatio);
+            } catch (ExceptionBadSyntax $e) {
+                throw new ExceptionBadArgument("The requested ratio ($requestedRatio) is not a valid value ({$e->getMessage()})", self::CANONICAL, 0, $e);
+            }
+        }
+
+        $requestedExternalCache = $tagAttributes->getValueAndRemoveIfPresent(self::CACHE_KEY);
+        if ($requestedExternalCache !== null) {
+            $this->setRequestedExternalCache($requestedExternalCache);
+        }
+
     }
 
     /**
@@ -92,7 +156,8 @@ abstract class ImageFetch extends MediaFetch
      *         * null: return the intrinsic / natural height
      *         * not null: return the height as being the width scaled down by the {@link ImageFetch::getIntrinsicAspectRatio()}
      */
-    public function getBreakpointHeight(?int $breakpointWidth): int
+    public
+    function getBreakpointHeight(?int $breakpointWidth): int
     {
 
         try {
@@ -122,7 +187,8 @@ abstract class ImageFetch extends MediaFetch
      *         * null: return the intrinsic / natural width
      *         * not null: return the width as being the height scaled down by the {@link ImageFetch::getIntrinsicAspectRatio()}
      */
-    public function getWidthValueScaledDown(?int $requestedWidth, ?int $requestedHeight): int
+    public
+    function getWidthValueScaledDown(?int $requestedWidth, ?int $requestedHeight): int
     {
 
         if (!empty($requestedWidth) && !empty($requestedHeight)) {
@@ -168,11 +234,10 @@ abstract class ImageFetch extends MediaFetch
      * for a svg, the defined viewBox
      *
      * @return int in pixel
-     * @throws ExceptionBadArgument - when the viewBox value for instance is not good
-     * @throws ExceptionNotExists - when the file does not exists
-     * @throws ExceptionBadSyntax - when the file is not a valid image format
      */
-    public abstract function getIntrinsicWidth(): int;
+    public
+
+    abstract function getIntrinsicWidth(): int;
 
     /**
      * For a raster image, the internal height
@@ -180,10 +245,6 @@ abstract class ImageFetch extends MediaFetch
      *
      * This is needed to calculate the {@link MediaLink::getTargetRatio() target ratio}
      * and pass them to the img tag to avoid layout shift
-     *
-     * @throws ExceptionBadArgument - when the viewBox value for instance is not good
-     * @throws ExceptionNotExists - when the file does not exists
-     * @throws ExceptionBadSyntax - when the file is not a valid image format
      *
      * @return int in pixel
      */
@@ -198,7 +259,6 @@ abstract class ImageFetch extends MediaFetch
      * It's needed for an img tag to set the img `width` and `height` that pass the
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
-     * @throws ExceptionBadArgument
      */
     public function getIntrinsicAspectRatio()
     {
@@ -238,19 +298,13 @@ abstract class ImageFetch extends MediaFetch
      * It's needed for an img tag to set the img `width` and `height` that pass the
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
-     * @throws ExceptionBadArgument
      * @throws ExceptionNotFound
      */
     public function getRequestedAspectRatio()
     {
 
-        $requestedRatio = $this->attributes->getValue(Dimension::RATIO_ATTRIBUTE);
-        if ($requestedRatio !== null) {
-            try {
-                return Dimension::convertTextualRatioToNumber($requestedRatio);
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("The requested ratio ($requestedRatio) is not a valid value ({$e->getMessage()})", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            }
+        if ($this->requestedRatio !== null) {
+            return $this->requestedRatio;
         }
 
         /**
@@ -308,27 +362,6 @@ abstract class ImageFetch extends MediaFetch
         }
     }
 
-
-    /**
-     * This is mandatory for HTML
-     * The alternate text (the title in Dokuwiki media term)
-     * @return null
-     *
-     * TODO: try to extract it from the metadata file ?
-     *
-     * An img element must have an alt attribute, except under certain conditions.
-     * For details, consult guidance on providing text alternatives for images.
-     * https://www.w3.org/WAI/tutorials/images/
-     */
-    public function getAltNotEmpty()
-    {
-        $title = $this->getTitle();
-        if (!empty($title)) {
-            return $title;
-        }
-        $generatedAlt = str_replace("-", " ", $this->getPath()->getLastNameWithoutExtension());
-        return str_replace($generatedAlt, "_", " ");
-    }
 
 
     /**
@@ -399,14 +432,14 @@ abstract class ImageFetch extends MediaFetch
      *   * with ''0x20'', the target image has a {@link ImageFetch::getTargetHeight() logical height} of 20 and a {@link ImageFetch::getTargetWidth() logical width} that is scaled down by the {@link ImageFetch::getIntrinsicAspectRatio() instrinsic ratio}
      *
      * The doc is {@link https://www.dokuwiki.org/images#resizing}
-     * @throws ExceptionBadArgument when the width height value are not valid value
+     * @return int
      */
     public function getTargetWidth(): int
     {
 
         try {
             return $this->getRequestedWidth();
-        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+        } catch (ExceptionNotFound $e) {
             // no requested width
         }
 
@@ -425,7 +458,7 @@ abstract class ImageFetch extends MediaFetch
                 LogUtility::msg("The intrinsic width of the image ($this) was used because retrieving the ratio returns this error: {$e->getMessage()} ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 return $this->getIntrinsicWidth();
             }
-        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+        } catch (ExceptionNotFound $e) {
             // no requested height
         }
 
@@ -441,8 +474,8 @@ abstract class ImageFetch extends MediaFetch
                 $this->getIntrinsicHeight()
             );
             return $logicalWidthWithRatio;
-        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
-            // no ratio
+        } catch (ExceptionNotFound $e) {
+            // no ratio requested
         }
 
         return $this->getIntrinsicWidth();
@@ -451,46 +484,32 @@ abstract class ImageFetch extends MediaFetch
 
     /**
      * @return int|null
-     * @throws ExceptionBadArgument
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotFound - if no requested width was asked
      */
     public function getRequestedWidth(): int
     {
-        $value = $this->attributes->getValue(Dimension::WIDTH_KEY);
-        if ($value === null) {
+        if ($this->requestedWidth === null) {
             throw new ExceptionNotFound("No width was requested");
         }
-        try {
-            $valueInt = DataType::toInteger($value);
-        } catch (ExceptionBadArgument $e) {
-            throw new ExceptionBadArgument("The width value ($value) is not a valid integer", self::CANONICAL, $e);
-        }
-        if ($valueInt === 0) {
+        if ($this->requestedWidth === 0) {
             throw new ExceptionNotFound("Width 0 was requested");
         }
-        return $valueInt;
+        return $this->requestedWidth;
     }
 
     /**
      * @return int
-     * @throws ExceptionBadArgument
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotFound - if no requested height was asked
      */
     public function getRequestedHeight(): int
     {
-        $value = $this->attributes->getValue(Dimension::HEIGHT_KEY);
-        if ($value === null) {
-            throw new ExceptionNotFound("No height requested");
+        if ($this->requestedHeight === null) {
+            throw new ExceptionNotFound("Height not requested");
         }
-        try {
-            $valueInt = DataType::toInteger($value);
-        } catch (ExceptionBadArgument $e) {
-            throw new ExceptionBadArgument("The height value ($value) is not a valid integer", self::CANONICAL, $e);
-        }
-        if ($valueInt === 0) {
+        if ($this->requestedHeight === 0) {
             throw new ExceptionNotFound("Height 0 requested");
         }
-        return $valueInt;
+        return $this->requestedHeight;
     }
 
     /**
@@ -534,6 +553,112 @@ abstract class ImageFetch extends MediaFetch
             $logicalWidth = ImageFetch::round($targetRatio * $logicalHeight);
         }
         return [$logicalWidth, $logicalHeight];
+
+    }
+
+    /**
+     * @return string $cache - one of {@link FetchCache::CACHE_KEY}
+     * @throws ExceptionNotFound
+     */
+    public function getRequestedCache(): string
+    {
+        if ($this->externalCacheRequested === null) {
+            throw new ExceptionNotFound("No cache was requested");
+        }
+        return $this->externalCacheRequested;
+    }
+
+    public function setRequestedWidth(int $requestedWidth): ImageFetch
+    {
+        $this->requestedWidth = $requestedWidth;
+        return $this;
+    }
+
+    public function setRequestedHeight(int $requestedHeight): ImageFetch
+    {
+        $this->requestedHeight = $requestedHeight;
+        return $this;
+    }
+
+    public function setRequestedAspectRatio(string $requestedRatio)
+    {
+        $this->requestedRatio = $requestedRatio;
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public function setRequestedExternalCache(string $requestedExternalCache)
+    {
+        /**
+         * Cache transformation
+         * From Image cache value (https://www.dokuwiki.org/images#caching)
+         * to {@link FetchCache::setMaxAgeInSec()}
+         */
+        switch ($requestedExternalCache) {
+            case "nocache":
+            case "recache":
+            case "cache":
+                $this->externalCacheRequested = $requestedExternalCache;
+                break;
+            default:
+                throw new ExceptionBadArgument("The cache value ($requestedExternalCache) is unknown");
+        }
+    }
+
+    /**
+     * Cache transformation
+     * From Image cache value (https://www.dokuwiki.org/images#caching)
+     * to {@link FetchCache::setMaxAgeInSec()}
+     */
+    public function getExternalCacheMaxAgeInSec(): int
+    {
+        switch ($this->externalCacheRequested) {
+            case "nocache":
+                $cacheParameter = 0;
+                break;
+            case "recache":
+                try {
+                    $cacheParameter = Site::getCacheTime();
+                } catch (ExceptionNotFound|ExceptionBadArgument $e) {
+                    LogUtility::error("Image Fetch cache was set to `cache`. Why ? We got an error when reading the cache time configuration. Error: {$e->getMessage()}");
+                    $cacheParameter = -1;
+                }
+                break;
+            case "cache":
+            default:
+                $cacheParameter = -1;
+                break;
+        }
+        return $cacheParameter;
+    }
+
+    protected function addCommonQueryParameterToUrl(Url $fetchUrl)
+    {
+        try {
+            $fetchUrl->addQueryParameter("w", $this->getRequestedWidth());
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        try {
+            $fetchUrl->addQueryParameter("h", $this->getRequestedHeight());
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+
+        try {
+            $fetchUrl->addQueryParameter("ratio", $this->getRequestedAspectRatio());
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        try {
+            $value = $this->getRequestedCache();
+            if ($value !== ImageFetch::CACHE_DEFAULT_VALUE) {
+                $fetchUrl->addQueryParameter(self::CACHE_KEY, $value);
+            }
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
 
     }
 

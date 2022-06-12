@@ -5,7 +5,7 @@ use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\CacheLog;
 use ComboStrap\CacheManager;
-use ComboStrap\CacheMedia;
+use ComboStrap\FetchCache;
 use ComboStrap\CacheMenuItem;
 use ComboStrap\CacheReportHtmlDataBlockArray;
 use ComboStrap\Cron;

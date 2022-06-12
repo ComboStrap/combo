@@ -9,67 +9,77 @@ namespace ComboStrap;
  *   * or a file for an HTTP response or further local processing
  *
  *
- * TODO: What messed up is messed up
- *   This class should only wrap up the gd library
- *   to manipulate the image
  */
 class ImageRasterFetch extends ImageFetch
 {
 
     const CANONICAL = "raster";
     private DokuPath $path;
+    private Mime $mime;
 
 
     /**
-     * @throws ExceptionBadArgument
+     * @param $path
+     * @throws ExceptionBadArgument - if the path is not an image
+     * @throws ExceptionBadSyntax - if the image is badly encoded
+     * @throws ExceptionNotExists - if the image does not exists
+     * @throws ExceptionNotFound - if the mime was not found
      */
-    public function __construct($path, $attributes = null)
+    public function __construct($path)
     {
         if ($path instanceof DokuPath) {
             $this->path = $path;
         } else {
-            $this->path = DokuPath::createFromPath($this->getPath());
+            $this->path = DokuPath::createFromPath($path);
         }
-        parent::__construct($path, $attributes);
-        $this->getAttributes()->setLogicalTag(self::CANONICAL);
+        $this->analyzeImageIfNeeded();
+        $this->mime = FileSystems::getMime($path);
+        parent::__construct();
     }
 
-    private $imageWidth = null;
-    /**
-     * @var int
-     */
-    private $imageWeight = null;
-
-    private $wasAnalyzed = false;
+    private int $imageWidth;
+    private int $imageWeight;
 
 
     /**
+     * @param string $imageId
+     * @param null $rev
+     * @return ImageRasterFetch
      * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
      */
-    public static function createImageRasterFetchFromId(string $imageId): ImageRasterFetch
+    public static function createImageRasterFetchFromId(string $imageId, $rev = null): ImageRasterFetch
     {
-        return new ImageRasterFetch(DokuPath::createMediaPathFromId($imageId));
+        return new ImageRasterFetch(DokuPath::createMediaPathFromId($imageId, $rev));
+    }
+
+    /**
+     * @param Path $path
+     * @return ImageRasterFetch
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     */
+    public static function createImageRasterFetchFromPath(Path $path): ImageRasterFetch
+    {
+        return new ImageRasterFetch($path);
     }
 
 
     /**
      * @return int - the width of the image from the file
-     * @throws ExceptionBadSyntax - if the image is not a raster image and the dimension could not be determined
-     * @throws ExceptionNotExists - if the image does not exists
      */
     public function getIntrinsicWidth(): int
     {
-        $this->analyzeImageIfNeeded();
         return $this->imageWidth;
     }
 
     /**
      * @return int - the height of the image from the file
-     * @throws ExceptionBadSyntax - if the image is not a valid raster image
      */
     public function getIntrinsicHeight(): int
     {
-        $this->analyzeImageIfNeeded();
         return $this->imageWeight;
     }
 
@@ -82,45 +92,43 @@ class ImageRasterFetch extends ImageFetch
     function analyzeImageIfNeeded()
     {
 
-        if (!$this->wasAnalyzed) {
-
-            if (!FileSystems::exists($this->path)) {
-                throw new ExceptionNotExists("The path ({$this->path}) does not exists");
-            }
-
-            /**
-             * Based on {@link media_image_preview_size()}
-             * $dimensions = media_image_preview_size($this->id, '', false);
-             */
-            $path = $this->path->toLocalPath();
-            $imageSize = getimagesize($path->toAbsolutePath()->toPathString());
-            if ($imageSize === false) {
-                throw new ExceptionBadSyntax("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", self::CANONICAL);
-            }
-            $this->imageWidth = (int)$imageSize[0];
-            if (empty($this->imageWidth)) {
-                throw new ExceptionBadSyntax("We couldn't retrieve the width of the image ($this)", self::CANONICAL);
-            }
-            $this->imageWeight = (int)$imageSize[1];
-            if (empty($this->imageWeight)) {
-                throw new ExceptionBadSyntax("We couldn't retrieve the height of the image ($this)", self::CANONICAL);
-            }
-
-
+        if (!FileSystems::exists($this->path)) {
+            throw new ExceptionNotExists("The path ({$this->path}) does not exists");
         }
-        $this->wasAnalyzed = true;
+
+        /**
+         * Based on {@link media_image_preview_size()}
+         * $dimensions = media_image_preview_size($this->id, '', false);
+         */
+        $path = $this->path->toLocalPath();
+        $imageSize = getimagesize($path->toAbsolutePath()->toPathString());
+        if ($imageSize === false) {
+            throw new ExceptionBadSyntax("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", self::CANONICAL);
+        }
+        $this->imageWidth = (int)$imageSize[0];
+        if (empty($this->imageWidth)) {
+            throw new ExceptionBadSyntax("We couldn't retrieve the width of the image ($this)", self::CANONICAL);
+        }
+        $this->imageWeight = (int)$imageSize[1];
+        if (empty($this->imageWeight)) {
+            throw new ExceptionBadSyntax("We couldn't retrieve the height of the image ($this)", self::CANONICAL);
+        }
+
     }
 
 
     /**
      *
-     * @throws ExceptionNotFound - if the original path was not found
-     * @throws ExceptionBadSyntax - if the image is not a valid raster image (we can then get the dimension)
      */
     public function getFetchUrl(): Url
     {
 
-        $fetchUrl = DokuFetch::createFromPath($this->path)->getFetchUrl();
+        try {
+            $fetchUrl = DokuFetch::createFromPath($this->path)->getFetchUrl();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntime("The image exists. This is already checked at construction");
+        }
+
         /**
          * If the request is not the original image
          * and not cropped, add the width and height
@@ -139,8 +147,8 @@ class ImageRasterFetch extends ImageFetch
             $fetchUrl->addQueryParameter("h", $this->getTargetHeight());
         }
 
-        if (!empty($this->getCache())) {
-            $fetchUrl->addQueryParameter(CacheMedia::CACHE_KEY, $this->getCache());
+        if (!empty($this->getRequestedCache())) {
+            $fetchUrl->addQueryParameter(ImageFetch::CACHE_KEY, $this->getRequestedCache());
         }
         return $fetchUrl;
 
@@ -225,4 +233,28 @@ class ImageRasterFetch extends ImageFetch
         // dokuwiki do it for now
         return false;
     }
+
+    function getBuster(): string
+    {
+        try {
+            return FileSystems::getCacheBuster($this->path);
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("The fact that the file exists, is already checked at construction time, it should not happen", self::CANONICAL);
+            return strval((new \DateTime())->getTimestamp());
+        }
+    }
+
+    public function getMime(): Mime
+    {
+        return $this->mime;
+    }
+
+    /**
+     * @return Path - the path of the original file
+     */
+    public function getPath():Path
+    {
+        return $this->path;
+    }
+
 }

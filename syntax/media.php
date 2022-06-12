@@ -95,11 +95,11 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     {
         $media = MediaLink::createFromCallStackArray($attributes);
         $renderer->stats[AnalyticsDocument::MEDIA_COUNT]++;
-        $scheme = $media->getMediaFetch()->getPath()->getScheme();
+        $scheme = $media->getPath()->getScheme();
         switch ($scheme) {
             case DokuFs::SCHEME:
                 $renderer->stats[AnalyticsDocument::INTERNAL_MEDIA_COUNT]++;
-                if (!$media->getMediaFetch()->exists()) {
+                if (!FileSystems::exists($media->getPath())) {
                     $renderer->stats[AnalyticsDocument::INTERNAL_BROKEN_MEDIA_COUNT]++;
                 }
                 break;
@@ -237,7 +237,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 /** @var Doku_Renderer_xhtml $renderer */
                 $attributes = $data[PluginUtility::ATTRIBUTES];
                 $mediaLink = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
-                $media = $mediaLink->getMediaFetch();
+                $media = $mediaLink->getPath();
                 if ($media->getPath()->getScheme() === DokuFs::SCHEME) {
                     try {
                         $isImage = FileSystems::getMime($media->getPath())->isImage();

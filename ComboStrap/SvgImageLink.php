@@ -13,8 +13,6 @@
 namespace ComboStrap;
 
 
-
-
 /**
  * Image
  * This is the class that handles the
@@ -41,15 +39,33 @@ class SvgImageLink extends ImageLink
      */
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
 
+    /**
+     * @var ImageFetchSvg|ImageRasterFetch
+     */
+    private $svgFetch;
+
 
     /**
      * SvgImageLink constructor.
-     * @param ImageFetchSvg $imageSvgFetch
+     * @param Path $path
+     * @param TagAttributes|null $tagAttributes
+     * @throws ExceptionBadArgument
      */
-    public function __construct($imageSvgFetch)
+    public function __construct(Path $path, TagAttributes $tagAttributes = null)
     {
-        parent::__construct($imageSvgFetch);
-        $imageSvgFetch->getAttributes()->setLogicalTag(self::CANONICAL);
+
+        if ($tagAttributes === null) {
+            $tagAttributes = TagAttributes::createEmpty(self::CANONICAL);
+        }
+        $tagAttributes->setLogicalTag(self::CANONICAL);
+
+        /**
+         * Build the first fetch
+         */
+        $this->svgFetch = new ImageFetchSvg($path);
+        $this->svgFetch->buildSharedImagePropertyFromTagAttributes($tagAttributes);
+
+        parent::__construct($path, $tagAttributes);
 
     }
 
@@ -95,7 +111,7 @@ class SvgImageLink extends ImageLink
          */
         $image = $this->getDefaultImageFetch();
         $responseAttributes = TagAttributes::createFromTagAttributes($image->getAttributes());
-        $responseAttributes->removeComponentAttributeIfPresent(CacheMedia::CACHE_KEY);
+        $responseAttributes->removeComponentAttributeIfPresent(ImageFetch::CACHE_KEY);
 
         /**
          * Remove linking (not yet implemented)

@@ -3,7 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Background;
-use ComboStrap\CacheMedia;
+use ComboStrap\FetchCache;
 use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
@@ -183,7 +183,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                                 PagePath::PROPERTY_NAME => $imageAttribute[0],
                                 Dimension::WIDTH_KEY => $imageAttribute[3],
                                 Dimension::HEIGHT_KEY => $imageAttribute[4],
-                                CacheMedia::CACHE_KEY => $imageAttribute[5]
+                                ImageFetch::CACHE_KEY => $imageAttribute[5]
                             ];
                         }
                         $backgroundAttributes[Background::BACKGROUND_IMAGE] = $backgroundImageAttribute;

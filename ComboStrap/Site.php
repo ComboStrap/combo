@@ -92,7 +92,10 @@ class Site
         return $url;
     }
 
-    public static function getLogoAsSvgImage(): ?ImageFetchSvg
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function getLogoAsSvgImage(): ImageFetchSvg
     {
         foreach (self::SVG_LOGO_IDS as $svgLogo) {
 
@@ -102,11 +105,11 @@ class Site
                 LogUtility::msg("The svg ($svgLogo) returns an error. {$e->getMessage()}");
                 continue;
             }
-            if ($image->exists()) {
+            if (FileSystems::exists($image->getPath())) {
                 return $image;
             }
         }
-        return null;
+        throw new ExceptionNotFound("No Svg Log Image found");
     }
 
     /**
@@ -117,12 +120,12 @@ class Site
         foreach (self::PNG_LOGO_IDS as $pngLogo) {
 
             try {
-                $image = ImageRasterFetch::createImageFetchFromId($pngLogo);
+                $image = ImageRasterFetch::createImageRasterFetchFromId($pngLogo);
             } catch (ExceptionCompile $e) {
                 LogUtility::msg("The png Logo ($pngLogo) returns an error. {$e->getMessage()}");
                 continue;
             }
-            if ($image->exists()) {
+            if (FileSystems::exists($image->getPath())) {
                 return $image;
             }
         }
@@ -386,19 +389,22 @@ class Site
     }
 
     /**
-     * @return int|null
+     * @return int
+     * @throws ExceptionNotFound
+     * @throws ExceptionBadArgument
      */
-    public static function getCacheTime(): ?int
+    public static function getCacheTime(): int
     {
         global $conf;
         $cacheTime = $conf['cachetime'];
         if ($cacheTime === null) {
-            return null;
+            throw new ExceptionNotFound("The global cachetime configuration was not set");
         }
-        if (is_numeric($cacheTime)) {
-            return intval($cacheTime);
+        try {
+            return DataType::toInteger($cacheTime);
+        } catch (ExceptionBadArgument $e) {
+            throw new ExceptionBadArgument("The global cachetime configuration has a value that is not an integer ($cacheTime). Error: {$e->getMessage()}");
         }
-        return null;
     }
 
     /**
@@ -856,6 +862,18 @@ class Site
     {
         global $conf;
         $conf['template'] = "dokuwiki";
+    }
+
+    /**
+     * @return LocalPath[]
+     */
+    public static function getConfigurationFiles(): array
+    {
+        $files = [];
+        foreach(getConfigFiles('main') as $fileConfig){
+            $files[] = LocalPath::createFromPath($fileConfig);
+        }
+        return $files;
     }
 
 

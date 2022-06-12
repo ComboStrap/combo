@@ -165,7 +165,7 @@ class Url
 
     public function addQueryCacheBuster(string $busterValue): Url
     {
-        $this->addQueryParameter(CacheMedia::CACHE_BUSTER_KEY, $busterValue);
+        $this->addQueryParameter(Fetch::CACHE_BUSTER_KEY, $busterValue);
         return $this;
     }
 

@@ -120,24 +120,26 @@ abstract class MediaLink
 
     /**
      * The path of the media
-     * @var MediaFetch[]
+     * @var FetchAbstract[]
      */
-    private $mediaFetch;
+    private $path;
     private $linking;
     private $linkingClass;
+    private TagAttributes $attributes;
 
 
     /**
      * Image constructor.
-     * @param ImageFetch $media
+     * @param Path $path
      *
      * Protected and not private
      * to allow cascading init
      * If private, the parent attributes are null
      */
-    protected function __construct(MediaFetch $media)
+    protected function __construct(Path $path, $tagAttributes)
     {
-        $this->mediaFetch = $media;
+        $this->path = $path;
+        $this->attributes = $tagAttributes;
     }
 
 
@@ -163,7 +165,7 @@ abstract class MediaLink
         $tagAttributes->addComponentAttributeValue(Align::ALIGN_ATTRIBUTE, $align);
         $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
         $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $height);
-        $tagAttributes->addComponentAttributeValue(CacheMedia::CACHE_KEY, $cache);
+        $tagAttributes->addComponentAttributeValue(ImageFetch::CACHE_KEY, $cache);
         $tagAttributes->addComponentAttributeValue(self::LINKING_KEY, $linking);
 
         return self::createMediaLinkFromId($src, $tagAttributes);
@@ -320,7 +322,7 @@ abstract class MediaLink
             self::DOKUWIKI_SRC => $src,
             Dimension::WIDTH_KEY => $parsedAttributes[Dimension::WIDTH_KEY],
             Dimension::HEIGHT_KEY => $parsedAttributes[Dimension::HEIGHT_KEY],
-            CacheMedia::CACHE_KEY => $parsedAttributes[CacheMedia::CACHE_KEY],
+            ImageFetch::CACHE_KEY => $parsedAttributes[ImageFetch::CACHE_KEY],
             TagAttributes::TITLE_KEY => $description,
             Align::ALIGN_ATTRIBUTE => $align,
             MediaLink::LINKING_KEY => $parsedAttributes[MediaLink::LINKING_KEY],
@@ -403,6 +405,7 @@ abstract class MediaLink
      * @param Path $path
      * @param TagAttributes|null $tagAttributes
      * @return RasterImageLink|SvgImageLink|ThirdMediaLink|MediaLink
+     * @throws ExceptionBadArgument
      */
     public static function createMediaLinkFromPath(Path $path, TagAttributes $tagAttributes = null)
     {
@@ -418,25 +421,21 @@ abstract class MediaLink
             $mime = FileSystems::getMime($path);
             switch ($mime->toString()) {
                 case Mime::SVG:
-                    $media = new ImageFetchSvg($path, $tagAttributes);
-                    $mediaLink = new SvgImageLink($media);
+                    $mediaLink = new SvgImageLink($path, $tagAttributes);
                     break;
                 default:
                     if (!$mime->isImage()) {
                         LogUtility::msg("The type ($mime) of media ($path) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
-                        $media = new ThirdMediaFetch($path, $tagAttributes);
-                        $mediaLink = new ThirdMediaLink($media);
+                        $mediaLink = new ThirdMediaLink($path);
                     } else {
-                        $media = new ImageRasterFetch($path, $tagAttributes);
-                        $mediaLink = new RasterImageLink($media);
+                        $mediaLink = new RasterImageLink($path, $tagAttributes);
                     }
                     break;
             }
         } catch (ExceptionNotFound $e) {
             // no mime
             LogUtility::msg("The mime type of the media ($path) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
-            $media = new ImageRasterFetch($path, $tagAttributes);
-            $mediaLink = new RasterImageLink($media);
+            $mediaLink = new RasterImageLink($path);
         }
 
         /**
@@ -485,13 +484,13 @@ abstract class MediaLink
          * src is a path (not an id)
          */
         $array = array(
-            PagePath::PROPERTY_NAME => $this->getMediaFetch()->getPath()->toPathString(),
+            PagePath::PROPERTY_NAME => $this->getPath()->toPathString(),
             self::LINKING_KEY => $this->getLinking()
         );
 
 
         // Add the extra attribute
-        return array_merge($this->getMediaFetch()->getAttributes()->toCallStackArray(), $array);
+        return array_merge($this->getAttributes()->toCallStackArray(), $array);
 
 
     }
@@ -507,13 +506,9 @@ abstract class MediaLink
     public
     function __toString()
     {
-        $media = $this->getMediaFetch();
-        $dokuPath = $media->getPath();
-        if ($dokuPath !== null) {
-            return $dokuPath->getDokuwikiId();
-        } else {
-            return $media->__toString();
-        }
+
+        return $this->path->toUriString();
+
     }
 
 
@@ -567,7 +562,7 @@ abstract class MediaLink
         /**
          * Do we add a link to the image ?
          */
-        $media = $this->getMediaFetch();
+        $media = $this->getPath();
         $dokuPath = $media->getPath();
         if (!($dokuPath instanceof DokuPath)) {
             LogUtility::msg("Media Link are only supported on media from the internal library ($media)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -580,7 +575,7 @@ abstract class MediaLink
                     $dokuPath->getDokuwikiId(),
                     array(
                         'id' => $dokuPath->getDokuwikiId(),
-                        'cache' => $media->getCache(),
+                        'cache' => $media->getRequestedCache(),
                         'rev' => $dokuPath->getRevision()
                     )
                 );
@@ -599,7 +594,7 @@ abstract class MediaLink
                     $dokuPath->getDokuwikiId(),
                     array(
                         'id' => $dokuPath->getDokuwikiId(),
-                        'cache' => $media->getCache(),
+                        'cache' => $media->getRequestedCache(),
                         'rev' => $dokuPath->getRevision()
                     ),
                     true
@@ -623,7 +618,7 @@ abstract class MediaLink
                     $dokuPath->getDokuwikiId(),
                     array(
                         'id' => $dokuPath->getDokuwikiId(),
-                        'cache' => $media->getCache(),
+                        'cache' => $media->getRequestedCache(),
                         'rev' => $dokuPath->getRevision()
                     ),
                     false
@@ -647,16 +642,21 @@ abstract class MediaLink
 
     /**
      * The file
-     * @return MediaFetch
+     * @return Path
      */
-    public function getMediaFetch(): MediaFetch
+    public function getPath(): Path
     {
-        return $this->mediaFetch;
+        return $this->path;
     }
 
     protected function getLazyLoadMethod(): string
     {
         return $this->lazyLoadMethod;
+    }
+
+    public function getTitle()
+    {
+        return $this->attributes->getValue(TagAttributes::TITLE_KEY);
     }
 
 

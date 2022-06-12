@@ -203,7 +203,7 @@ class DokuPath extends PathAbs
         return new DokuPath($absolutePath, DokuPath::PAGE_DRIVE);
     }
 
-    public static function createMediaPathFromAbsolutePath($absolutePath, $rev = ''): DokuPath
+    public static function createMediaPathFromAbsolutePath($absolutePath, $rev = null): DokuPath
     {
         return new DokuPath($absolutePath, DokuPath::MEDIA_DRIVE, $rev);
     }
@@ -296,7 +296,7 @@ class DokuPath extends PathAbs
 
     }
 
-    public static function createMediaPathFromId($id, $rev = ''): DokuPath
+    public static function createMediaPathFromId($id, $rev = null): DokuPath
     {
         DokuPath::addRootSeparatorIfNotPresent($id);
         return self::createMediaPathFromAbsolutePath($id, $rev);

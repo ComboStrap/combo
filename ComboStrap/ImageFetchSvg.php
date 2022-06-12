@@ -21,17 +21,17 @@ class ImageFetchSvg extends ImageFetch
      * @var DokuPath
      */
     private DokuPath $path;
-    private CacheMedia $fetchCache;
+    private FetchCache $fetchCache;
 
 
     /**
      * @throws ExceptionBadArgument - if the path is not local
      */
-    public function __construct($path, $tagAttributes = null)
+    public function __construct($path)
     {
         $this->path = DokuPath::createFromPath($path);
-        $this->fetchCache = new CacheMedia($path, $tagAttributes);
-        parent::__construct($this->path, $tagAttributes);
+
+        parent::__construct();
 
     }
 
@@ -75,7 +75,7 @@ class ImageFetchSvg extends ImageFetch
              * The svg document throw an error if the file does not exist or is not valid
              */
 
-            $this->svgDocument = SvgDocument::createSvgDocumentFromPath($this->getPath());
+            $this->svgDocument = SvgDocument::createSvgDocumentFromPath($this->path);
 
         }
         return $this->svgDocument;
@@ -85,69 +85,14 @@ class ImageFetchSvg extends ImageFetch
      *
      * @return Url - the fetch url
      *
+     * @throws ExceptionNotFound
      */
     public function getFetchUrl(): Url
     {
 
-        $fetchUrl = Url::createFetchUrl()
-            ->addQueryMediaParameter($this->path->getDokuwikiId())
-            ->addQueryParameter(DokuPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
-
-
-        $attributes = $this->getAttributes();
-        $componentAttributes = $attributes->getComponentAttributes();
-        foreach ($componentAttributes as $name => $value) {
-
-            if (!in_array(strtolower($name), MediaLink::NON_URL_ATTRIBUTES)) {
-                $newName = $name;
-
-                /**
-                 * Width and Height
-                 * permits to create SVG of the asked size
-                 *
-                 * This is a little bit redundant with the
-                 * {@link Dimension::processWidthAndHeight()}
-                 * `max-width and width` styling property
-                 * but you may use them outside of HTML.
-                 */
-                switch ($name) {
-                    case Dimension::WIDTH_KEY:
-                        $newName = "w";
-                        try {
-                            $value = ConditionalLength::createFromString($value)->toPixelNumber();
-                        } catch (ExceptionCompile $e) {
-                            LogUtility::msg("Error while converting the width value ($value) into pixel. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                            continue 2;
-                        }
-                        break;
-                    case Dimension::HEIGHT_KEY:
-                        $newName = "h";
-                        try {
-                            $value = ConditionalLength::createFromString($value)->toPixelNumber();
-                        } catch (ExceptionCompile $e) {
-                            LogUtility::msg("Error while converting the height value ($value) into pixel. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                            continue 2;
-                        }
-                        break;
-                }
-
-                if ($newName == CacheMedia::CACHE_KEY && $value == CacheMedia::CACHE_DEFAULT_VALUE) {
-                    // This is the default
-                    // No need to add it
-                    continue;
-                }
-
-                if (!empty($value)) {
-                    $fetchUrl->addQueryParameter($newName, trim($value));
-                }
-            }
-
-        }
-
-        $fetchUrl->addQueryCacheBuster($this->getBuster());
-
+        $fetchUrl = DokuFetch::createFromPath($this->path)->getFetchUrl();
+        $this->addCommonQueryParameterToUrl($fetchUrl);
         return $fetchUrl;
-
 
     }
 
@@ -161,19 +106,31 @@ class ImageFetchSvg extends ImageFetch
     public function getFetchPath(): LocalPath
     {
 
+        /**
+         * Generated svg file cache init
+         */
+        $fetchCache = FetchCache::createFrom($this);
+        $files[] = $this->path->toAbsolutePath()->toPathString();
+        $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve("SvgDocument.php");
+        $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve("XmlDocument.php");
+        $files = array_merge(Site::getConfigurationFiles(),$files); // svg generation depends on configuration
+        foreach($files as $file){
+            $fetchCache->addFileDependency($file);
+        }
+
         global $ACT;
         if (PluginUtility::isDev() && $ACT === "preview") {
             // in dev mode, don't cache
             $isCacheUsable = false;
         } else {
-            $isCacheUsable = $this->fetchCache->isCacheUsable();
+            $isCacheUsable = $fetchCache->isCacheUsable();
         }
         if (!$isCacheUsable) {
             $svgDocument = $this->getSvgDocument();
             $content = $svgDocument->getXmlText($this->getAttributes());
-            $this->fetchCache->storeCache($content);
+            $fetchCache->storeCache($content);
         }
-        return $this->fetchCache->getFile();
+        return $fetchCache->getFile();
 
     }
 
@@ -216,4 +173,19 @@ class ImageFetchSvg extends ImageFetch
         }
         return false;
     }
+
+    public function getMime(): Mime
+    {
+        return Mime::create(Mime::SVG);
+    }
+
+    /**
+     * @return DokuPath - the path of the original svg
+     */
+    public function getPath(): Path {
+        return $this->path;
+    }
+
+
+
 }

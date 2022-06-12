@@ -19,13 +19,14 @@ abstract class ImageLink extends MediaLink
      */
     function getDefaultImageFetch(): ?ImageFetch
     {
-        if (!($this->getMediaFetch() instanceof ImageFetch)) {
+
+        if (!($this->getPath() instanceof ImageFetch)) {
             LogUtility::msg("The media ($this) is not an image", LogUtility::LVL_MSG_ERROR);
         }
         /**
          *
          */
-        $media = $this->getMediaFetch();
+        $media = $this->getPath();
         if($media instanceof ImageFetch){
             return $media;
         } else {
@@ -39,10 +40,31 @@ abstract class ImageLink extends MediaLink
     public function getMarkupSyntax(): string
     {
         $descriptionPart = "";
-        if (!empty($this->getDefaultImageFetch()->getAltNotEmpty())) {
-            $descriptionPart = "|" . $this->getDefaultImageFetch()->getAltNotEmpty();
+        if (!empty($this->getAltNotEmpty())) {
+            $descriptionPart = "|" . $this->getAltNotEmpty();
         }
-        return '{{' . $this->getMediaFetch()->getPath()->getAbsolutePath() . $descriptionPart . '}}';
+        return '{{' . $this->getPath()->getAbsolutePath() . $descriptionPart . '}}';
+    }
+
+    /**
+     * This is mandatory for HTML
+     * The alternate text (the title in Dokuwiki media term)
+     * @return null
+     *
+     * TODO: Try to extract it from the metadata file ?
+     *
+     * An img element must have an alt attribute, except under certain conditions.
+     * For details, consult guidance on providing text alternatives for images.
+     * https://www.w3.org/WAI/tutorials/images/
+     */
+    public function getAltNotEmpty()
+    {
+        $title = $this->getTitle();
+        if (!empty($title)) {
+            return $title;
+        }
+        $generatedAlt = str_replace("-", " ", $this->getPath()->getLastNameWithoutExtension());
+        return str_replace($generatedAlt, "_", " ");
     }
 
 }

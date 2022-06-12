@@ -1,11 +1,12 @@
 <?php
 
-use ComboStrap\CacheMedia;
+use ComboStrap\FetchCache;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadState;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\Fetch;
 use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\HttpResponse;
@@ -41,7 +42,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     const CANONICAL = "cache";
 
     /**
-     * Enable an infinite cache on static resources (image, script, ...) with a {@link CacheMedia::CACHE_BUSTER_KEY}
+     * Enable an infinite cache on static resources (image, script, ...) with a {@link Fetch::CACHE_BUSTER_KEY}
      */
     public const CONF_STATIC_CACHE_ENABLED = "staticCacheEnabled";
 
@@ -141,7 +142,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         /**
          * If there is no buster key, the infinite cache is off
          */
-        $busterKey = $_GET[CacheMedia::CACHE_BUSTER_KEY];
+        $busterKey = $_GET[Fetch::CACHE_BUSTER_KEY];
         if ($busterKey === null) {
             return;
         }
@@ -338,7 +339,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
              * tok is just added when w and h are on the url
              * Buster is the timestamp
              */
-            if (in_array($key, ["media", "tok", CacheMedia::CACHE_BUSTER_KEY])) {
+            if (in_array($key, ["media", "tok", Fetch::CACHE_BUSTER_KEY])) {
                 continue;
             }
             /**

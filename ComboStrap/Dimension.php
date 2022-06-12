@@ -210,7 +210,7 @@ EOF;
      * Convert 16:9, ... to a float
      * @param string $stringRatio
      * @return float
-     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax
      */
     public static function convertTextualRatioToNumber(string $stringRatio): float
     {
@@ -218,15 +218,15 @@ EOF;
         try {
             $width = DataType::toInteger($width);
         } catch (ExceptionCompile $e) {
-            throw new ExceptionCompile("The width value ($width) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
+            throw new ExceptionBadSyntax("The width value ($width) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
         }
         try {
             $height = DataType::toInteger($height);
         } catch (ExceptionCompile $e) {
-            throw new ExceptionCompile("The width value ($height) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
+            throw new ExceptionBadSyntax("The width value ($height) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
         }
-        if ($height == 0) {
-            throw new ExceptionCompile("The height value of the ratio `$stringRatio` should not be zero", syntax_plugin_combo_pageimage::CANONICAL);
+        if ($height === 0) {
+            throw new ExceptionBadSyntax("The height value of the ratio `$stringRatio` should not be zero", syntax_plugin_combo_pageimage::CANONICAL);
         }
         return floatval($width / $height);
 

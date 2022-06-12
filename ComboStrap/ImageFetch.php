@@ -4,7 +4,6 @@
 namespace ComboStrap;
 
 
-
 /**
  * Class Image
  * @package ComboStrap
@@ -170,6 +169,8 @@ abstract class ImageFetch extends MediaFetch
      *
      * @return int in pixel
      * @throws ExceptionBadArgument - when the viewBox value for instance is not good
+     * @throws ExceptionNotExists - when the file does not exists
+     * @throws ExceptionBadSyntax - when the file is not a valid image format
      */
     public abstract function getIntrinsicWidth(): int;
 
@@ -179,6 +180,10 @@ abstract class ImageFetch extends MediaFetch
      *
      * This is needed to calculate the {@link MediaLink::getTargetRatio() target ratio}
      * and pass them to the img tag to avoid layout shift
+     *
+     * @throws ExceptionBadArgument - when the viewBox value for instance is not good
+     * @throws ExceptionNotExists - when the file does not exists
+     * @throws ExceptionBadSyntax - when the file is not a valid image format
      *
      * @return int in pixel
      */
@@ -209,23 +214,18 @@ abstract class ImageFetch extends MediaFetch
      * The Aspect ratio of the target image (may be the original or the an image scaled down)
      *
      * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
-     * @return float|int|false
+     * @return float
      * false if the image is not supported
      *
      * It's needed for an img tag to set the img `width` and `height` that pass the
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
-     * @throws ExceptionCompile
+     *
      */
     public function getTargetAspectRatio()
     {
 
-        $targetHeight = $this->getTargetHeight();
-        if ($targetHeight === 0) {
-            throw new ExceptionCompile("The target height is equal to zero, we can calculate the target aspect ratio");
-        }
-        $targetWidth = $this->getTargetWidth();
-        return $targetWidth / $targetHeight;
+        return $this->getTargetWidth() / $this->getTargetHeight();
 
     }
 
@@ -239,6 +239,7 @@ abstract class ImageFetch extends MediaFetch
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
      * @throws ExceptionBadArgument
+     * @throws ExceptionNotFound
      */
     public function getRequestedAspectRatio()
     {
@@ -252,21 +253,14 @@ abstract class ImageFetch extends MediaFetch
             }
         }
 
-        if (
-            $this->getRequestedWidth() !== null
-            && $this->getRequestedWidth() !== 0 // default value for not set in dokuwiki
-            && $this->getRequestedHeight() !== null) {
-            if ($this->getRequestedHeight() === 0) {
-                LogUtility::msg("The requested height is 0, we can't calculate the requested ratio", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            }
-            return $this->getRequestedWidth() / $this->getRequestedHeight();
-        }
-
-        return null;
+        /**
+         * Note: requested weight and width throw a `not found` if width / height == 0
+         * No division by zero then
+         */
+        return $this->getRequestedWidth() / $this->getRequestedHeight();
 
 
     }
-
 
 
     /**
@@ -314,12 +308,6 @@ abstract class ImageFetch extends MediaFetch
         }
     }
 
-    /**
-     * The Url
-     * @return mixed
-     * TODO: return an {@link URL} object that can output an relative or absolute URL
-     */
-    public abstract function getAbsoluteUrl();
 
     /**
      * This is mandatory for HTML
@@ -355,21 +343,20 @@ abstract class ImageFetch extends MediaFetch
      *
      *
      * @return int
-     * @throws ExceptionCompile
      */
     public function getTargetHeight(): int
     {
-        $requestedHeight = $this->getRequestedHeight();
-        if (!empty($requestedHeight)) {
-            return $requestedHeight;
+        try {
+            return $this->getRequestedHeight();
+        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+            // no height
         }
 
         /**
          * Scaled down by width
          */
-        $width = $this->getRequestedWidth();
-        if (!empty($width)) {
-
+        try {
+            $width = $this->getRequestedWidth();
             try {
                 $ratio = $this->getRequestedAspectRatio();
                 if ($ratio === null) {
@@ -380,20 +367,24 @@ abstract class ImageFetch extends MediaFetch
                 LogUtility::msg("The intrinsic height of the image ($this) was used because retrieving the ratio returns this error: {$e->getMessage()} ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 return $this->getIntrinsicHeight();
             }
-
+        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+            // no width
         }
+
 
         /**
          * Scaled down by ratio
          */
-        $ratio = $this->getRequestedAspectRatio();
-        if (!empty($ratio)) {
+        try {
+            $ratio = $this->getRequestedAspectRatio();
             [$croppedWidth, $croppedHeight] = ImageFetch::getCroppingDimensionsWithRatio(
                 $ratio,
                 $this->getIntrinsicWidth(),
                 $this->getIntrinsicHeight()
             );
             return $croppedHeight;
+        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+            // no requested aspect ratio
         }
 
         return $this->getIntrinsicHeight();
@@ -413,21 +404,17 @@ abstract class ImageFetch extends MediaFetch
     public function getTargetWidth(): int
     {
 
-        $requestedWidth = $this->getRequestedWidth();
-
-        /**
-         * May be 0 (ie empty)
-         */
-        if (!empty($requestedWidth)) {
-            return $requestedWidth;
+        try {
+            return $this->getRequestedWidth();
+        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+            // no requested width
         }
 
         /**
          * Scaled down by Height
          */
-        $height = $this->getRequestedHeight();
-        if (!empty($height)) {
-
+        try {
+            $height = $this->getRequestedHeight();
             try {
                 $ratio = $this->getRequestedAspectRatio();
                 if ($ratio === null) {
@@ -438,20 +425,24 @@ abstract class ImageFetch extends MediaFetch
                 LogUtility::msg("The intrinsic width of the image ($this) was used because retrieving the ratio returns this error: {$e->getMessage()} ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 return $this->getIntrinsicWidth();
             }
-
+        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+            // no requested height
         }
+
 
         /**
          * Scaled down by Ratio
          */
-        $ratio = $this->getRequestedAspectRatio();
-        if (!empty($ratio)) {
+        try {
+            $ratio = $this->getRequestedAspectRatio();
             [$logicalWidthWithRatio, $logicalHeightWithRatio] = ImageFetch::getCroppingDimensionsWithRatio(
                 $ratio,
                 $this->getIntrinsicWidth(),
                 $this->getIntrinsicHeight()
             );
             return $logicalWidthWithRatio;
+        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+            // no ratio
         }
 
         return $this->getIntrinsicWidth();
@@ -461,35 +452,45 @@ abstract class ImageFetch extends MediaFetch
     /**
      * @return int|null
      * @throws ExceptionBadArgument
+     * @throws ExceptionNotFound
      */
-    public function getRequestedWidth(): ?int
+    public function getRequestedWidth(): int
     {
         $value = $this->attributes->getValue(Dimension::WIDTH_KEY);
         if ($value === null) {
-            return null;
+            throw new ExceptionNotFound("No width was requested");
         }
         try {
-            return DataType::toInteger($value);
+            $valueInt = DataType::toInteger($value);
         } catch (ExceptionBadArgument $e) {
             throw new ExceptionBadArgument("The width value ($value) is not a valid integer", self::CANONICAL, $e);
         }
+        if ($valueInt === 0) {
+            throw new ExceptionNotFound("Width 0 was requested");
+        }
+        return $valueInt;
     }
 
     /**
-     * @return int|null
+     * @return int
      * @throws ExceptionBadArgument
+     * @throws ExceptionNotFound
      */
-    public function getRequestedHeight(): ?int
+    public function getRequestedHeight(): int
     {
         $value = $this->attributes->getValue(Dimension::HEIGHT_KEY);
         if ($value === null) {
-            return null;
+            throw new ExceptionNotFound("No height requested");
         }
         try {
-            return DataType::toInteger($value);
+            $valueInt = DataType::toInteger($value);
         } catch (ExceptionBadArgument $e) {
             throw new ExceptionBadArgument("The height value ($value) is not a valid integer", self::CANONICAL, $e);
         }
+        if ($valueInt === 0) {
+            throw new ExceptionNotFound("Height 0 requested");
+        }
+        return $valueInt;
     }
 
     /**

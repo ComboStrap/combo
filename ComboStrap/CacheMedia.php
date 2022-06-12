@@ -49,8 +49,12 @@ class CacheMedia
     /**
      * Cache constructor.
      */
-    public function __construct(Path $path, TagAttributes $tagAttributes)
+    public function __construct(Path $path, TagAttributes $tagAttributes = null)
     {
+
+        if($tagAttributes == null){
+            $tagAttributes = TagAttributes::createEmpty();
+        }
 
         $this->path = $path;
 
@@ -140,7 +144,7 @@ class CacheMedia
             $files[] = $this->path->toAbsolutePath()->toPathString();
             $files[] = Site::getComboHome()->resolve("plugin.info.txt");
             $dependencies = array('files' => $files);
-            if ($this->maxAge != null) {
+            if ($this->maxAge !== null) {
                 $dependencies['age'] = $this->maxAge;
             }
             return $this->fileCache->useCache($dependencies);

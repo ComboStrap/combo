@@ -170,7 +170,7 @@ class Background
                         LogUtility::msg("The image ($media) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         return;
                     }
-                    $url = $image->getFetchUrl(DokuwikiUrl::AMPERSAND_CHARACTER);
+                    $url = $image->getFetchUrl()->toAbsoluteUrlString();
                     $backgroundImageStyleValue = "url(" . $url . ")";
 
                 } else {

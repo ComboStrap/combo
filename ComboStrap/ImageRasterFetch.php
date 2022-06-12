@@ -17,10 +17,19 @@ class ImageRasterFetch extends ImageFetch
 {
 
     const CANONICAL = "raster";
+    private DokuPath $path;
 
 
+    /**
+     * @throws ExceptionBadArgument
+     */
     public function __construct($path, $attributes = null)
     {
+        if ($path instanceof DokuPath) {
+            $this->path = $path;
+        } else {
+            $this->path = DokuPath::createFromPath($this->getPath());
+        }
         parent::__construct($path, $attributes);
         $this->getAttributes()->setLogicalTag(self::CANONICAL);
     }
@@ -34,6 +43,9 @@ class ImageRasterFetch extends ImageFetch
     private $wasAnalyzed = false;
 
 
+    /**
+     * @throws ExceptionBadArgument
+     */
     public static function createImageRasterFetchFromId(string $imageId): ImageRasterFetch
     {
         return new ImageRasterFetch(DokuPath::createMediaPathFromId($imageId));
@@ -42,7 +54,8 @@ class ImageRasterFetch extends ImageFetch
 
     /**
      * @return int - the width of the image from the file
-     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax - if the image is not a raster image and the dimension could not be determined
+     * @throws ExceptionNotExists - if the image does not exists
      */
     public function getIntrinsicWidth(): int
     {
@@ -52,7 +65,7 @@ class ImageRasterFetch extends ImageFetch
 
     /**
      * @return int - the height of the image from the file
-     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax - if the image is not a valid raster image
      */
     public function getIntrinsicHeight(): int
     {
@@ -61,7 +74,9 @@ class ImageRasterFetch extends ImageFetch
     }
 
     /**
-     * @throws ExceptionCompile
+     *
+     * @throws ExceptionBadSyntax - if the path is not valid image format
+     * @throws ExceptionNotExists - if the image does not exists
      */
     private
     function analyzeImageIfNeeded()
@@ -69,123 +84,68 @@ class ImageRasterFetch extends ImageFetch
 
         if (!$this->wasAnalyzed) {
 
-            if ($this->exists()) {
-
-                /**
-                 * Based on {@link media_image_preview_size()}
-                 * $dimensions = media_image_preview_size($this->id, '', false);
-                 */
-                $path = $this->getPath();
-                if ($path instanceof DokuPath) {
-                    $path = $path->toLocalPath();
-                }
-                $imageSize = getimagesize($path->toAbsolutePath()->toPathString());
-                if ($imageSize === false) {
-                    throw new ExceptionCompile("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", self::CANONICAL);
-                }
-                $this->imageWidth = (int)$imageSize[0];
-                if (empty($this->imageWidth)) {
-                    throw new ExceptionCompile("We couldn't retrieve the width of the image ($this)", self::CANONICAL);
-                }
-                $this->imageWeight = (int)$imageSize[1];
-                if (empty($this->imageWeight)) {
-                    throw new ExceptionCompile("We couldn't retrieve the height of the image ($this)", self::CANONICAL);
-                }
-
+            if (!FileSystems::exists($this->path)) {
+                throw new ExceptionNotExists("The path ({$this->path}) does not exists");
             }
+
+            /**
+             * Based on {@link media_image_preview_size()}
+             * $dimensions = media_image_preview_size($this->id, '', false);
+             */
+            $path = $this->path->toLocalPath();
+            $imageSize = getimagesize($path->toAbsolutePath()->toPathString());
+            if ($imageSize === false) {
+                throw new ExceptionBadSyntax("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", self::CANONICAL);
+            }
+            $this->imageWidth = (int)$imageSize[0];
+            if (empty($this->imageWidth)) {
+                throw new ExceptionBadSyntax("We couldn't retrieve the width of the image ($this)", self::CANONICAL);
+            }
+            $this->imageWeight = (int)$imageSize[1];
+            if (empty($this->imageWeight)) {
+                throw new ExceptionBadSyntax("We couldn't retrieve the height of the image ($this)", self::CANONICAL);
+            }
+
+
         }
         $this->wasAnalyzed = true;
     }
 
 
     /**
-     * @throws ExceptionCompile
-     */
-    public function getUrl()
-    {
-        return $this->getUrlAtBreakpoint();
-    }
-
-
-    /**
-     * @param int|null $breakpointWidth - the breakpoint width - use for responsive image
-     * @return string|null
-     * @throws ExceptionCompile
      *
-     * TODO: not the good place for it
+     * @throws ExceptionNotFound - if the original path was not found
+     * @throws ExceptionBadSyntax - if the image is not a valid raster image (we can then get the dimension)
      */
-    public function getUrlAtBreakpoint(int $breakpointWidth = null)
+    public function getFetchUrl(): Url
     {
 
-        /**
-         * Default
-         */
-        if ($breakpointWidth == null) {
-            $breakpointWidth = $this->getTargetWidth();
-        }
-
-        if (!$this->exists()) {
-            LogUtility::msg("The image ($this) does not exist, you can't ask the URL", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return false;
-        }
-
-        /**
-         * Link attribute
-         */
-        $att = array();
-
-        /**
-         * The image ratio is fixed
-         * Width is driving the computation
-         */
-        // Height for the given width
-        $breakpointHeight = $this->getBreakpointHeight($breakpointWidth);
-
+        $fetchUrl = DokuFetch::createFromPath($this->path)->getFetchUrl();
         /**
          * If the request is not the original image
          * and not cropped, add the width and height
          */
-        if ($breakpointWidth != null &&
-            (
-                $breakpointWidth < $this->getIntrinsicWidth()
-                ||
-                $breakpointHeight < $this->getIntrinsicHeight()
-            )) {
-
-            $att['w'] = $breakpointWidth;
-
-            if (!empty($breakpointHeight)) {
-                $att['h'] = $breakpointHeight;
-                $this->checkLogicalRatioAgainstTargetRatio($breakpointWidth, $breakpointHeight);
+        try {
+            $targetWidth = $this->getTargetWidth();
+            if ($targetWidth !== $this->getIntrinsicWidth()) {
+                $fetchUrl->addQueryParameter("w", $this->getTargetHeight());
             }
+        } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
+            // no target width
+        }
 
+        $targetHeight = $this->getTargetHeight();
+        if ($targetHeight !== $this->getIntrinsicHeight()) {
+            $fetchUrl->addQueryParameter("h", $this->getTargetHeight());
         }
 
         if (!empty($this->getCache())) {
-            $att[CacheMedia::CACHE_KEY] = $this->getCache();
+            $fetchUrl->addQueryParameter(CacheMedia::CACHE_KEY, $this->getCache());
         }
-
-
-        if ($this->getPath() === null) {
-            LogUtility::msg("The Url of a image not in the media library is not yet supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return "";
-        }
-
-        return $this->getPath()->getFetchUrl($att);
-
+        return $fetchUrl;
 
     }
 
-    /**
-     * @throws ExceptionCompile
-     */
-    public
-    function getAbsoluteUrl()
-    {
-
-        return $this->getUrl();
-
-    }
 
     /**
      * We overwrite the {@link ImageFetch::getTargetWidth()}
@@ -193,58 +153,76 @@ class ImageRasterFetch extends ImageFetch
      * to not lose quality.
      *
      * @return int
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument - if the requested width is not valid
+     * @throws ExceptionBadSyntax - if the image is not a raster image and the intrinsic width is then unknown
+     * @throws ExceptionNotExists - if the image does not exists
      */
     public
     function getTargetWidth(): int
     {
 
-        $requestedWidth = $this->getRequestedWidth();
+        try {
+            $requestedWidth = $this->getRequestedWidth();
+        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+            return parent::getTargetWidth();
+        }
 
-        /**
-         * May be 0 (ie empty)
-         */
-        if (!empty($requestedWidth)) {
-            // it should not be bigger than the media Height
-            $mediaWidth = $this->getIntrinsicWidth();
-            if (!empty($mediaWidth)) {
-                if ($requestedWidth > $mediaWidth) {
-                    global $ID;
-                    if ($ID != "wiki:syntax") {
-                        // There is a bug in the wiki syntax page
-                        // {{wiki:dokuwiki-128.png?200x50}}
-                        // https://forum.dokuwiki.org/d/19313-bugtypo-how-to-make-a-request-to-change-the-syntax-page-on-dokuwikii
-                        LogUtility::msg("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    }
-                    $requestedWidth = $mediaWidth;
-                }
+
+        // it should not be bigger than the media Height
+        $mediaWidth = $this->getIntrinsicWidth();
+        if ($requestedWidth > $mediaWidth) {
+            global $ID;
+            if ($ID !== "wiki:syntax") {
+                // There is a bug in the wiki syntax page
+                // {{wiki:dokuwiki-128.png?200x50}}
+                // https://forum.dokuwiki.org/d/19313-bugtypo-how-to-make-a-request-to-change-the-syntax-page-on-dokuwikii
+                LogUtility::msg("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             }
-            return $requestedWidth;
+            return $mediaWidth;
         }
 
         return parent::getTargetWidth();
+
     }
+
 
     /**
-     * @throws ExceptionCompile
+     *
      */
-    public function getTargetHeight(): int
+    public
+    function getTargetHeight(): int
     {
 
-        $requestedHeight = $this->getRequestedHeight();
-        if (!empty($requestedHeight)) {
-            // it should not be bigger than the media Height
-            $mediaHeight = $this->getIntrinsicHeight();
-            if (!empty($mediaHeight)) {
-                if ($requestedHeight > $mediaHeight) {
-                    LogUtility::info("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", self::CANONICAL);
-                    return $mediaHeight;
-                }
-            }
-        }
+        try {
+            $requestedHeight = $this->getRequestedHeight();
 
+            // it should not be bigger than the media Height
+            try {
+                $mediaHeight = $this->getIntrinsicHeight();
+            } catch (ExceptionBadSyntax $e) {
+                return parent::getTargetHeight();
+            }
+            if ($requestedHeight > $mediaHeight) {
+                LogUtility::info("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", self::CANONICAL);
+                return $mediaHeight;
+            }
+        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+            // no request height
+        }
         return parent::getTargetHeight();
+
+
     }
 
 
+    function getFetchPath(): Path
+    {
+        throw new ExceptionRuntime("Fetch Raster image is not yet implemented");
+    }
+
+    function acceptsFetchUrl(Url $url): bool
+    {
+        // dokuwiki do it for now
+        return false;
+    }
 }

@@ -12,6 +12,7 @@ namespace ComboStrap;
  */
 class Url
 {
+    const MEDIA_QUERY_PARAMETER = "media";
 
     /**
      * @var array $query
@@ -204,8 +205,13 @@ class Url
      */
     public function addQueryMediaParameter(string $id): Url
     {
-        $this->addQueryParameter("media", $id);
+        $this->addQueryParameter(self::MEDIA_QUERY_PARAMETER, $id);
         return $this;
+    }
+
+    public function __toString()
+    {
+        return $this->toAbsoluteUrlString();
     }
 
 

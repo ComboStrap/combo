@@ -52,11 +52,16 @@ abstract class MediaFetch extends ResourceComboAbs implements Fetch
      * It should be unique for each version of the resource
      *
      * @return string
-     * @throws ExceptionNotFound
      */
     public function getBuster(): string
     {
-        return FileSystems::getCacheBuster($this->getPath());
+        try {
+            $time = FileSystems::getModifiedTime($this->getPath());
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("The cache file should exists. Actual time used instead as buster");
+            $time = new \DateTime();
+        }
+        return strval($time->getTimestamp());
 
     }
 
@@ -95,16 +100,6 @@ abstract class MediaFetch extends ResourceComboAbs implements Fetch
     {
         return ResourceName::createForResource($this)
             ->getValueOrDefault();
-    }
-
-    /**
-     * The URL will change if the file change
-     * @param $queryParameters
-     * @throws ExceptionNotFound
-     */
-    protected function addCacheBusterToQueryParameters(&$queryParameters)
-    {
-        $queryParameters[CacheMedia::CACHE_BUSTER_KEY] = $this->getBuster();
     }
 
 

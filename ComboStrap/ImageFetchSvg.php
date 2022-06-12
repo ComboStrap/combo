@@ -29,8 +29,8 @@ class ImageFetchSvg extends ImageFetch
      */
     public function __construct($path, $tagAttributes = null)
     {
-        $this->path = DokuPath::createFromPath($this->getPath());
-        $this->fetchCache = new CacheMedia($this->getPath(), $this->getAttributes());
+        $this->path = DokuPath::createFromPath($path);
+        $this->fetchCache = new CacheMedia($path, $tagAttributes);
         parent::__construct($this->path, $tagAttributes);
 
     }
@@ -201,4 +201,19 @@ class ImageFetchSvg extends ImageFetch
     }
 
 
+    function acceptsFetchUrl(Url $url): bool
+    {
+
+        $media = $url->getQueryPropertyValue(Url::MEDIA_QUERY_PARAMETER);
+        $dokuPath = DokuPath::createMediaPathFromId($media);
+        try {
+            $mime = FileSystems::getMime($dokuPath);
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
+        if ($mime->toString() === Mime::SVG) {
+            return true;
+        }
+        return false;
+    }
 }

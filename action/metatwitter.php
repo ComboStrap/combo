@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ImageFetch;
 use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
@@ -165,7 +166,12 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         if (!empty($twitterImages)) {
             foreach ($twitterImages as $twitterImage) {
                 if ($twitterImage->exists()) {
-                    $twitterMeta[self::META_IMAGE] = $twitterImage->getAbsoluteUrl();
+                    try {
+                        $twitterMeta[self::META_IMAGE] = $twitterImage->getFetchUrl()->toAbsoluteUrlString();
+                    } catch (ExceptionBadSyntax|\ComboStrap\ExceptionNotFound|\ComboStrap\ExceptionCompile $e) {
+                        // Oeps
+                        LogUtility::internalError("Twitter Image could not be added. Error: {$e->getMessage()}", self::CANONICAL);
+                    }
                     $title = $twitterImage->getAltNotEmpty();
                     if (!empty($title)) {
                         $twitterMeta[self::META_IMAGE_ALT] = $title;

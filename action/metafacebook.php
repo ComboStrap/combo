@@ -3,6 +3,7 @@
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ImageFetch;
@@ -213,7 +214,12 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                      */
                     if (!$toSmall) {
                         $facebookMeta["og:image:type"] = $mime->toString();
-                        $facebookMeta["og:image"] = $facebookImage->getAbsoluteUrl();
+                        try {
+                            $facebookMeta["og:image"] = $facebookImage->getFetchUrl()->toAbsoluteUrlString();
+                        } catch (ExceptionBadSyntax|ExceptionNotFound|ExceptionCompile $e) {
+                            // Oeps
+                            LogUtility::internalError("Og Image could not be added. Error: {$e->getMessage()}", self::CANONICAL);
+                        }
                         // One image only
                         break;
                     }

@@ -162,7 +162,7 @@ class RasterImageLink extends ImageLink
                 LogUtility::msg("No rendering for the image ($image). The intrinsic width reports a problem: {$e->getMessage()}");
                 return "";
             }
-            $srcValue = $image->getUrl();
+            $srcValue = $image->getFetchUrl();
 
             /**
              * Responsive image src set building

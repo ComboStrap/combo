@@ -43,7 +43,7 @@ class FileSystems
     /**
      * @throws ExceptionNotFound - if the file does not exist
      */
-    public static function getModifiedTime(Path $path): ?\DateTime
+    public static function getModifiedTime(Path $path): \DateTime
     {
         $scheme = $path->getScheme();
         switch ($scheme) {

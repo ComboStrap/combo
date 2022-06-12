@@ -80,7 +80,7 @@ class Url
     public static function createFetchUrl(): Url
     {
         global $conf;
-        if($conf['userewrite'] == 1) {
+        if ($conf['userewrite'] == 1) {
             $path = '_media';
         } else {
             $path = 'lib/exe/fetch.php';
@@ -93,7 +93,7 @@ class Url
     public static function createDetailUrl(): Url
     {
         global $conf;
-        if($conf['userewrite'] == 1) {
+        if ($conf['userewrite'] == 1) {
             $path = '_detail';
         } else {
             $path = 'lib/exe/detail.php';
@@ -170,7 +170,7 @@ class Url
 
     public function hasProperty(string $key): bool
     {
-        if(isset($this->query[$key])){
+        if (isset($this->query[$key])) {
             return true;
         }
         return false;
@@ -195,6 +195,17 @@ class Url
     public function getFragment(): string
     {
         return $this->fragment;
+    }
+
+    /**
+     * Utility function to add the media query parameter
+     * @param string $id
+     * @return $this
+     */
+    public function addQueryMediaParameter(string $id): Url
+    {
+        $this->addQueryParameter("media", $id);
+        return $this;
     }
 
 

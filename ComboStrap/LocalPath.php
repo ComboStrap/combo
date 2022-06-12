@@ -154,43 +154,11 @@ class LocalPath extends PathAbs
 
 
     /**
-     * @throws ExceptionBadState - if the path is not inside a drive
+     * @throws ExceptionBadArgument - if the path is not inside a drive
      */
     public function toDokuPath(): DokuPath
     {
-        $driveRoots = DokuPath::getDriveRoots();
-        foreach ($driveRoots as $driveRoot => $drivePath) {
-
-            try {
-                $relativePath = $this->relativize($drivePath);
-            } catch (ExceptionBadArgument $e) {
-                /**
-                 * May be a symlink link
-                 */
-                if (!is_link($drivePath->toPathString())) {
-                    continue;
-                }
-                try {
-                    $realPath = readlink($drivePath->toPathString());
-                    $drivePath = LocalPath::createFromPath($realPath);
-                    $relativePath = $this->relativize($drivePath);
-                } catch (ExceptionBadArgument $e) {
-                    // not a relative path
-                    continue;
-                }
-            }
-            $wikiPath = $relativePath->toPathString();
-            if ($wikiPath === self::RELATIVE_CURRENT) {
-                $wikiPath = "";
-            }
-            if (FileSystems::isDirectory($this)) {
-                DokuPath::addNamespaceEndSeparatorIfNotPresent($wikiPath);
-            }
-            return DokuPath::createDokuPath($wikiPath, $driveRoot);
-        }
-        throw new ExceptionBadState("The local path ($this) is not inside a wiki path drive");
-
-
+        return DokuPath::createFromPath($this);
     }
 
     public function resolve(string $name): LocalPath

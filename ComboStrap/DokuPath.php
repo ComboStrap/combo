@@ -382,6 +382,51 @@ class DokuPath extends PathAbs
     }
 
     /**
+     * @throws ExceptionBadArgument - if the path is not a local path or is not in a known drive
+     */
+    public static function createFromPath(Path $path):DokuPath
+    {
+        if($path instanceof DokuPath){
+            return $path;
+        }
+        if(!($path instanceof LocalPath)){
+            throw new ExceptionBadArgument("The path ($path) is not a local path and cannot be converted to a doku path");
+        }
+        $driveRoots = DokuPath::getDriveRoots();
+        foreach ($driveRoots as $driveRoot => $drivePath) {
+
+            try {
+                $relativePath = $path->relativize($drivePath);
+            } catch (ExceptionBadArgument $e) {
+                /**
+                 * May be a symlink link
+                 */
+                if (!is_link($drivePath->toPathString())) {
+                    continue;
+                }
+                try {
+                    $realPath = readlink($drivePath->toPathString());
+                    $drivePath = LocalPath::createFromPath($realPath);
+                    $relativePath = $path->relativize($drivePath);
+                } catch (ExceptionBadArgument $e) {
+                    // not a relative path
+                    continue;
+                }
+            }
+            $wikiPath = $relativePath->toPathString();
+            if ($wikiPath === LocalPath::RELATIVE_CURRENT) {
+                $wikiPath = "";
+            }
+            if (FileSystems::isDirectory($path)) {
+                DokuPath::addNamespaceEndSeparatorIfNotPresent($wikiPath);
+            }
+            return DokuPath::createDokuPath($wikiPath, $driveRoot);
+        }
+        throw new ExceptionBadArgument("The local path ($path) is not inside a wiki path drive");
+
+    }
+
+    /**
      * @return LocalPath[]
      */
     public static function getDriveRoots(): array

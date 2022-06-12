@@ -151,7 +151,7 @@ class SvgImageLink extends ImageLink
         /**
          * Src call
          */
-        $srcValue = $image->getUrl();
+        $srcValue = $image->getFetchUrl();
         if ($lazyLoad) {
 
             /**
@@ -237,7 +237,7 @@ class SvgImageLink extends ImageLink
             /**
              * Svg tag
              */
-            $imgHTML = FileSystems::getContent($image->getSvgFile());
+            $imgHTML = FileSystems::getContent($image->getFetchPath());
 
 
         }

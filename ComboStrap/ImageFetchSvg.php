@@ -17,12 +17,21 @@ class ImageFetchSvg extends ImageFetch
 
     const EXTENSION = "svg";
     const CANONICAL = "svg";
+    /**
+     * @var DokuPath
+     */
+    private DokuPath $path;
+    private CacheMedia $fetchCache;
 
 
+    /**
+     * @throws ExceptionBadArgument - if the path is not local
+     */
     public function __construct($path, $tagAttributes = null)
     {
-
-        parent::__construct($path, $tagAttributes);
+        $this->path = DokuPath::createFromPath($this->getPath());
+        $this->fetchCache = new CacheMedia($this->getPath(), $this->getAttributes());
+        parent::__construct($this->path, $tagAttributes);
 
     }
 
@@ -51,7 +60,8 @@ class ImageFetchSvg extends ImageFetch
 
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax - content is not svg
+     * @throws ExceptionNotFound - path does not exist
      */
     protected function getSvgDocument(): SvgDocument
     {
@@ -64,38 +74,26 @@ class ImageFetchSvg extends ImageFetch
             /**
              * The svg document throw an error if the file does not exist or is not valid
              */
+
             $this->svgDocument = SvgDocument::createSvgDocumentFromPath($this->getPath());
+
         }
         return $this->svgDocument;
     }
 
     /**
      *
-     * @return string|null
+     * @return Url - the fetch url
      *
-     * At contrary to {@link RasterImageLink::getUrl()} this function does not need any width parameter
      */
-    public function getUrl(): ?string
+    public function getFetchUrl(): Url
     {
 
-
-        if (!$this->exists()) {
-            LogUtility::msg("The svg media does not exist ({$this})", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return "";
-        }
-
-        /**
-         * We remove align and linking because,
-         * they should apply only to the img tag
-         */
+        $fetchUrl = Url::createFetchUrl()
+            ->addQueryMediaParameter($this->path->getDokuwikiId())
+            ->addQueryParameter(DokuPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
 
 
-        /**
-         *
-         * Create the array $att that will cary the query
-         * parameter for the URL
-         */
-        $att = array();
         $attributes = $this->getAttributes();
         $componentAttributes = $attributes->getComponentAttributes();
         foreach ($componentAttributes as $name => $value) {
@@ -140,36 +138,16 @@ class ImageFetchSvg extends ImageFetch
                 }
 
                 if (!empty($value)) {
-                    $att[$newName] = trim($value);
+                    $fetchUrl->addQueryParameter($newName, trim($value));
                 }
             }
 
         }
 
-        if ($this->getPath() === null) {
-            LogUtility::msg("The Url of a image not in the media library is not yet supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return "";
-        }
+        $fetchUrl->addQueryCacheBuster($this->getBuster());
 
-        /**
-         * Old model where all parameters are parsed
-         * and src is not given entirely to the renderer
-         * path may be still present
-         */
-        if (isset($att[PagePath::PROPERTY_NAME])) {
-            unset($att[PagePath::PROPERTY_NAME]);
-        }
+        return $fetchUrl;
 
-        return $this->getPath()->getFetchUrl($att);
-
-
-
-    }
-
-    public function getAbsoluteUrl(): ?string
-    {
-
-        return $this->getUrl();
 
     }
 
@@ -177,41 +155,48 @@ class ImageFetchSvg extends ImageFetch
      * Return the svg file transformed by the attributes
      * from cache if possible. Used when making a fetch with the URL
      * @return LocalPath
-     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax - the file is not a svg file
+     * @throws ExceptionNotFound - the file was not found
      */
-    public function getSvgFile(): LocalPath
+    public function getFetchPath(): LocalPath
     {
 
-        $cache = new CacheMedia($this->getPath(), $this->getAttributes());
         global $ACT;
         if (PluginUtility::isDev() && $ACT === "preview") {
             // in dev mode, don't cache
             $isCacheUsable = false;
         } else {
-            $isCacheUsable = $cache->isCacheUsable();
+            $isCacheUsable = $this->fetchCache->isCacheUsable();
         }
         if (!$isCacheUsable) {
             $svgDocument = $this->getSvgDocument();
             $content = $svgDocument->getXmlText($this->getAttributes());
-            $cache->storeCache($content);
+            $this->fetchCache->storeCache($content);
         }
-        return $cache->getFile();
+        return $this->fetchCache->getFile();
 
     }
 
     /**
      * The buster is not based on file but the cache file
      * because the cache is configuration dependent
+     *
      * It the user changes the configuration, the svg file is generated
      * again and the browser cache should be deleted (ie the buster regenerated)
+     *
      * {@link ResourceCombo::getBuster()}
      * @return string
-     * @throws ExceptionCompile
+     *
      */
     public
     function getBuster(): string
     {
-        $time = FileSystems::getModifiedTime($this->getSvgFile());
+        try {
+            $time = FileSystems::getModifiedTime($this->fetchCache->getFile());
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("The cache file should exists. Actual time used instead as buster");
+            $time = new \DateTime();
+        }
         return strval($time->getTimestamp());
     }
 

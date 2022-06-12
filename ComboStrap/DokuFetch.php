@@ -29,7 +29,7 @@ class DokuFetch implements Fetch
          */
         return Url::createFetchUrl()
             ->addQueryCacheBuster($this->getBuster())
-            ->addQueryParameter("media", $this->path->getDokuwikiId())
+            ->addQueryMediaParameter( $this->path->getDokuwikiId())
             ->addQueryParameter(DokuPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
 
     }

@@ -160,7 +160,7 @@ class ImageFetchSvg extends ImageFetch
             unset($att[PagePath::PROPERTY_NAME]);
         }
 
-        return $this->getPath()->getUrl($att);
+        return $this->getPath()->getFetchUrl($att);
 
 
 

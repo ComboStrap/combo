@@ -438,7 +438,7 @@ EOF;
 
                         // WebConsole style sheet
                         try {
-                            $cssUrl = DokuPath::createComboResource("webcode:webcode-iframe.css")->getUrl();
+                            $cssUrl = DokuPath::createComboResource("webcode:webcode-iframe.css")->getFetchUrl();
                             $iframeSrcValue .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"$cssUrl\"/>";
                         } catch (ExceptionNotFound $e) {
                             LogUtility::error("The web console stylesheet was not found", self::CANONICAL);
@@ -458,7 +458,7 @@ EOF;
                         $useConsole = $data[self::USE_CONSOLE_ATTRIBUTE];
                         if ($useConsole) {
                             try {
-                                $url = DokuPath::createComboResource("webcode:webcode-console.js")->getUrl();
+                                $url = DokuPath::createComboResource("webcode:webcode-console.js")->getFetchUrl();
                                 $iframeSrcValue .= <<<EOF
 <script type="text/javascript" src="$url"></script>
 EOF;

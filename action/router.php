@@ -6,6 +6,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\AliasType;
 use ComboStrap\DatabasePageRow;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
@@ -785,8 +786,13 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         $this->logRedirection($ID, $targetIdOrUrl, $targetOrigin, $method);
 
 
-        // An external url ?
-        $isValid = Url::isValid($targetIdOrUrl);
+        // An http external url ?
+        try {
+            $isValid = Url::createFromString($targetIdOrUrl)->isHttpUrl();
+        } catch (ExceptionBadSyntax $e) {
+            $isValid = false;
+        }
+
         // If there is a bug in the isValid function for an internal url
         // We get a loop.
         // The Url becomes the id, the id is unknown and we do a redirect again
@@ -1032,11 +1038,14 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         }
 
         // If this is an external redirect (other domain)
-        if (Url::isValid($calculatedTarget)) {
-
+        try {
+            $isHttpUrl = Url::createFromString($calculatedTarget)->isHttpUrl();
+        } catch (ExceptionBadSyntax $e) {
+            $isHttpUrl = false;
+        }
+        if ($isHttpUrl) {
             $this->executeHttpRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
             return true;
-
         }
 
         // If the page exist

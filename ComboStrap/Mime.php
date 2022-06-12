@@ -70,7 +70,7 @@ class Mime
                  * of the {@link File::getKnownMime()}
                  */
                 return new Mime(Mime::SVG);
-            case JavascriptLibrary::EXTENSION:
+            case "js":
                 return new Mime(Mime::JAVASCRIPT);
             case renderer_plugin_combo_analytics::RENDERER_NAME_MODE:
             case Json::EXTENSION:

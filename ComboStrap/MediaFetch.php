@@ -14,7 +14,7 @@ namespace ComboStrap;
  * This is why there is a cache attribute - this is the cache of the generated file
  * if any
  */
-abstract class MediaFetch extends ResourceComboAbs
+abstract class MediaFetch extends ResourceComboAbs implements Fetch
 {
 
     const RESOURCE_TYPE = "media";
@@ -44,6 +44,21 @@ abstract class MediaFetch extends ResourceComboAbs
 
     }
 
+
+    /**
+     * A buster value used in URL
+     * to avoid cache (cache bursting)
+     *
+     * It should be unique for each version of the resource
+     *
+     * @return string
+     * @throws ExceptionNotFound
+     */
+    public function getBuster(): string
+    {
+        return FileSystems::getCacheBuster($this->getPath());
+
+    }
 
     /**
      * @return string $cache - one of {@link CacheMedia::CACHE_KEY} or null if not set
@@ -91,11 +106,6 @@ abstract class MediaFetch extends ResourceComboAbs
     {
         $queryParameters[CacheMedia::CACHE_BUSTER_KEY] = $this->getBuster();
     }
-
-    /**
-     * @return mixed
-     */
-    public abstract function getUrl();
 
 
     public function getReadStoreOrDefault(): MetadataStore

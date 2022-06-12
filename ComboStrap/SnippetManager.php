@@ -391,11 +391,16 @@ class SnippetManager
      * @param string $snippetId - the snippet id
      * @param string $relativeId - the relative id from the resources directory
      */
-    public
-    function attachJavascriptScriptForRequest(string $snippetId, string $relativeId)
+    public function attachJavascriptScriptForRequest(string $snippetId, string $relativeId): Snippet
     {
-        $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromDokuwikiId($relativeId);
-        $url = $javascriptMedia->getUrl();
+
+        $dokuPath = DokuPath::createComboResource($relativeId);
+        try {
+            $url = DokuFetch::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError($e->getMessage());
+            $url = "";
+        }
         return $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, $url);
 
     }
@@ -406,11 +411,15 @@ class SnippetManager
      * @param string|null $integrity
      * @return Snippet
      */
-    public
-    function attachJavascriptComboResourceForSlot(string $snippetId, string $relativeId, string $integrity = null): Snippet
+    public function attachJavascriptComboResourceForSlot(string $snippetId, string $relativeId, string $integrity = null): Snippet
     {
-        $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromDokuwikiId($relativeId);
-        $url = $javascriptMedia->getUrl();
+        $dokuPath = DokuPath::createComboResource($relativeId);
+        try {
+            $url = DokuFetch::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError($e->getMessage());
+            $url = "";
+        }
         return $this->attachJavascriptLibraryForSlot(
             $snippetId,
             $url,

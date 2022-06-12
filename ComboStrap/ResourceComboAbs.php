@@ -18,16 +18,7 @@ abstract class ResourceComboAbs implements ResourceCombo
         return FileSystems::exists($this->getPath());
     }
 
-    /**
-     * A buster cache
-     * @return string
-     * @throws ExceptionNotFound
-     */
-    public function getBuster(): string
-    {
-        return FileSystems::getCacheBuster($this->getPath());
 
-    }
 
     /**
      * An utility function that {@link MetadataStore::persist() persists} the value

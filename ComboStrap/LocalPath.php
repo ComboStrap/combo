@@ -332,20 +332,35 @@ class LocalPath extends PathAbs
      * @throws ExceptionNotFound - if the file is not found
      * @throws ExceptionBadState - if the path is not inside a drive
      */
-    public function getUrl(array $queryParameters = []): string
+    public function getFetchUrl(): Url
     {
-        return $this->toDokuPath()->getUrl($queryParameters);
+        return $this->toDokuPath()->getFetchUrl();
     }
 
-    public function toUriString(): string
-    {
-        return self::SCHEME . ':///' . str_replace(self::WINDOWS_SEPARATOR, self::LINUX_SEPARATOR, $this->path);
-
-    }
 
 
     public function getHost(): string
     {
         return "localhost";
+    }
+
+    function acceptsFetchUrl(Url $url): bool
+    {
+        return false;
+    }
+
+    function getUrl(): Url
+    {
+
+        $uri = self::SCHEME . ':///' . str_replace(self::WINDOWS_SEPARATOR, self::LINUX_SEPARATOR, $this->path);
+        try {
+            return Url::createFromString($uri);
+        } catch (ExceptionBadSyntax $e) {
+            $message = "Local Uri Path has a bad syntax ($uri)";
+            // should not happen
+            LogUtility::internalError($message);
+            throw new ExceptionRuntime($message);
+        }
+
     }
 }

@@ -59,12 +59,6 @@ interface Path
     function resolve(string $name);
 
     /**
-     * @param array $queryParameters
-     * @return mixed
-     */
-    function getUrl(array $queryParameters = []);
-
-    /**
      * @return string domain
      */
     function getHost(): string;

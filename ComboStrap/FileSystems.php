@@ -188,6 +188,7 @@ class FileSystems
     /**
      * Return a cache buster
      * @throws ExceptionNotFound
+     * @deprecated for {@link MediaFetch::getBuster()}
      */
     public static function getCacheBuster(Path $path): string
     {

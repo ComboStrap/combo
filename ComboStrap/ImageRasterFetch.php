@@ -171,7 +171,7 @@ class ImageRasterFetch extends ImageFetch
             return "";
         }
 
-        return $this->getPath()->getUrl($att);
+        return $this->getPath()->getFetchUrl($att);
 
 
     }

@@ -719,7 +719,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "<ul>" . DOKU_LF;
 
                             try {
-                                $wikiPath = $namespacePath->getPath();
+                                $wikiPath = $namespacePath->getFetchPath();
                                 $tree = TreeNode::createFromWikiPath($wikiPath);
                                 self::treeProcessTree($renderer->doc, $tree, $data);
                             } catch (ExceptionBadSyntax $e) {

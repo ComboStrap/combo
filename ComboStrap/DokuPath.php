@@ -2,7 +2,6 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/PluginUtility.php');
 
 /**
  * Class DokuPath
@@ -546,7 +545,7 @@ class DokuPath extends PathAbs
             return $this->id;
         } else {
             // the url (it's stored as id in the metadata)
-            return $this->getPath();
+            return $this->getFetchPath();
         }
 
     }
@@ -558,6 +557,7 @@ class DokuPath extends PathAbs
         return $this->path;
 
     }
+
 
     public
     function getScheme(): string
@@ -675,7 +675,7 @@ class DokuPath extends PathAbs
      */
     public function toLabel(): string
     {
-        $words = preg_split("/\s/", preg_replace("/[-_:]/", " ", $this->getPath()));
+        $words = preg_split("/\s/", preg_replace("/[-_:]/", " ", $this->getFetchPath()));
         $wordsUc = [];
         foreach ($words as $word) {
             $wordsUc[] = ucfirst($word);
@@ -773,15 +773,6 @@ class DokuPath extends PathAbs
         return $this->path;
     }
 
-    function toUriString(): string
-    {
-        $driveSep = self::DRIVE_SEPARATOR;
-        $string = "{$this->scheme}://$this->drive$driveSep$this->id";
-        if ($this->rev !== null) {
-            return "$string?rev={$this->rev}";
-        }
-        return $string;
-    }
 
     function toAbsolutePath(): Path
     {
@@ -887,23 +878,22 @@ class DokuPath extends PathAbs
         return new DokuPath($path, $this->getDrive());
     }
 
-    /**
-     * @return string - an URL to download the media
-     * @throws ExceptionNotFound -  if the file does not exist
-     */
-    public
-    function getUrl(array $queryParameters = []): string
-    {
-        $drive = $this->getDrive();
-        if ($drive !== self::MEDIA_DRIVE) {
-            $queryParameters[DokuPath::DRIVE_ATTRIBUTE] = $this->getDrive();
-        }
-        $queryParameters[CacheMedia::CACHE_BUSTER_KEY] = FileSystems::getCacheBuster($this);
-        return ml($this->getDokuwikiId(), $queryParameters, true, DokuwikiUrl::AMPERSAND_CHARACTER, true);
-    }
+
 
     public function getHost(): string
     {
         return "localhost";
+    }
+
+
+    function toUriString(): string
+    {
+        $driveSep = self::DRIVE_SEPARATOR;
+        $uri = "{$this->scheme}://$this->drive$driveSep$this->id";
+        if ($this->rev !== null) {
+            $uri = "$uri?rev={$this->rev}";
+        }
+        return $uri;
+
     }
 }

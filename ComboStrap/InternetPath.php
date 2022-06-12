@@ -104,7 +104,7 @@ class InternetPath extends PathAbs
         return self::create($this->url . self::PATH_SEP . $name);
     }
 
-    function getUrl(array $queryParameters = [])
+    function getFetchUrl(array $queryParameters = [])
     {
         return $this->url;
     }

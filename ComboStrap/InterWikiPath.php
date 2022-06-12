@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 
+
 class InterWikiPath extends PathAbs
 {
 
@@ -69,16 +70,10 @@ class InterWikiPath extends PathAbs
         return self::create($this->path . "/" . $name);
     }
 
-    function getUrl(array $queryParameters = []): string
-    {
-        LogUtility::errorIfDevOrTest("Not implemented");
-        return "";
-    }
-
-
     function getHost(): string
     {
         LogUtility::errorIfDevOrTest("Not implemented");
         return "unknown";
     }
+
 }

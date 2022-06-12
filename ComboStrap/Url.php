@@ -6,34 +6,57 @@ namespace ComboStrap;
 /**
  * Class Url
  * @package ComboStrap
- * There is no URL in php
+ * There is no URL class in php
  * Only function
  * https://www.php.net/manual/en/ref.url.php
  */
 class Url
 {
+
     /**
-     * @var array|false|int|string|null
+     * @var array $query
      */
-    private $urlComponents;
+    private array $query = [];
+    private string $path = "";
+    private $scheme = "";
     /**
-     * @var void
+     * @var string
      */
-    private $query;
+    private string $host = "";
+    private string $fragment = "";
 
 
     /**
      * UrlUtility constructor.
-     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax
      */
-    public function __construct($url)
+    public function __construct($url = null)
     {
-        $this->urlComponents = parse_url($url);
-        if ($this->urlComponents === false) {
-            throw new ExceptionCompile("The url ($url) is not valid");
+        if ($url !== null) {
+            /**
+             *
+             * @var false
+             *
+             * Note: Url validation is hard with regexp
+             * for instance:
+             *  - http://example.lan/utility/a-combostrap-component-to-render-web-code-in-a-web-page-javascript-html-...-u8fe6ahw
+             *  - does not pass return preg_match('|^http(s)?://[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$|i', $url);
+             * of preg_match('/^https?:\/\//',$url) ? from redirect plugin
+             *
+             * We try to create the object, the object use the {@link parse_url()}
+             * method to validate or send an exception if it can be parsed
+             */
+            $urlComponents = parse_url($url);
+            if ($urlComponents === false) {
+                throw new ExceptionBadSyntax("The url ($url) is not valid");
+            }
+            parse_str($urlComponents['query'], $queryKeys);
+            $this->query = $queryKeys;
+            $this->scheme = $urlComponents["scheme"];
+            $this->host = $urlComponents["host"];
+            $this->path = $urlComponents["path"];
+            $this->fragment = $urlComponents["fragment"];
         }
-        parse_str($this->urlComponents['query'], $queryKeys);
-        $this->query = $queryKeys;
     }
 
 
@@ -54,15 +77,45 @@ class Url
         return $urlPath;
     }
 
-    function getQuery()
+    public static function createFetchUrl(): Url
+    {
+        global $conf;
+        if($conf['userewrite'] == 1) {
+            $path = '_media';
+        } else {
+            $path = 'lib/exe/fetch.php';
+        }
+        return Url::createEmpty()
+            ->setPath($path);
+
+    }
+
+    public static function createDetailUrl(): Url
+    {
+        global $conf;
+        if($conf['userewrite'] == 1) {
+            $path = '_detail';
+        } else {
+            $path = 'lib/exe/detail.php';
+        }
+        return Url::createEmpty()
+            ->setPath($path);
+    }
+
+    private static function createEmpty(): Url
+    {
+        return new Url();
+    }
+
+    function getQuery(): array
     {
 
         return $this->query;
     }
 
-    function getQueryPropertyValue($prop)
+    function getQueryPropertyValue($key)
     {
-        return $this->query[$prop];
+        return $this->query[$key];
     }
 
     /**
@@ -72,57 +125,76 @@ class Url
      */
     public function getPropertyValue($propertyName): string
     {
-        $parsedQuery = $this->urlComponents["query"];
-        $parsedQueryArray = [];
-        parse_str($parsedQuery, $parsedQueryArray);
-        return $parsedQueryArray[$propertyName];
+        return $this->query[$propertyName];
     }
 
-    /**
-     * Validate URL
-     * @return   boolean     Returns TRUE/FALSE
-     */
-    public static function isValid($url): bool
-    {
-        /**
-         *
-         * @var false
-         *
-         * Note: Url validation is hard with regexp
-         * for instance:
-         *  - http://example.lan/utility/a-combostrap-component-to-render-web-code-in-a-web-page-javascript-html-...-u8fe6ahw
-         *  - does not pass return preg_match('|^http(s)?://[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$|i', $url);
-         * of preg_match('/^https?:\/\//',$url) ? from redirect plugin
-         *
-         * We try to create the object, the object use the {@link parse_url()}
-         * method to validate or send an exception if it can be parsed
-         */
-        $urlObject = null;
-        try {
-            $urlObject = Url::create($url);
-        } catch (ExceptionCompile $e) {
-            return false;
-        }
-
-        $scheme = $urlObject->getScheme();
-        if (!in_array($scheme, ["http", "https"])) {
-            return false;
-        }
-        return true;
-
-    }
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax
      */
-    public static function create(string $url): Url
+    public static function createFromString(string $url): Url
     {
         return new Url($url);
     }
 
-    private function getScheme()
+    public function getScheme()
     {
-        return $this->urlComponents["scheme"];
+        return $this->scheme;
+    }
+
+    public function setPath(string $path): Url
+    {
+        $this->path = $path;
+        return $this;
+    }
+
+    /**
+     * @return bool - true if http, https scheme
+     */
+    public function isHttpUrl(): bool
+    {
+        return in_array($this->getScheme(), ["http", "https"]);
+    }
+
+    public function addQueryParameter(string $key, string $value): Url
+    {
+        $this->query[$key] = $value;
+        return $this;
+    }
+
+    public function addQueryCacheBuster(string $busterValue): Url
+    {
+        $this->addQueryParameter(CacheMedia::CACHE_BUSTER_KEY, $busterValue);
+        return $this;
+    }
+
+    public function hasProperty(string $key): bool
+    {
+        if(isset($this->query[$key])){
+            return true;
+        }
+        return false;
+    }
+
+    public function toAbsoluteUrlString(): string
+    {
+
+        return "{$this->getScheme()}://{$this->getHost()}";
+    }
+
+    public function getHost()
+    {
+        return $this->host;
+    }
+
+    public function getPath(): string
+    {
+        return $this->path;
+    }
+
+    public function getFragment(): string
+    {
+        return $this->fragment;
     }
 
 

@@ -30,17 +30,6 @@ interface ResourceCombo
      */
     public function getUid(): Metadata;
 
-    /**
-     * A buster value used in URL
-     * to avoid cache (cache bursting)
-     *
-     * It should be unique for each version of the resource
-     *
-     * @deprecated Possible duplicate with {@link FileSystems::getCacheBuster()}
-     *
-     * @return string
-     */
-    function getBuster(): string;
 
     /**
      * @return string - the resource type/name

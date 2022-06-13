@@ -182,6 +182,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                  * Note: The type of image for a svg (icon/illustration) is dedicated
                  * by its structure or is expressly set on type
                  */
+
                 $media = MediaLink::createFromRenderMatch($match);
                 $attributes = $media->toCallStackArray();
 

@@ -43,49 +43,61 @@ class DokuwikiUrl
      */
     const AMPERSAND_CHARACTER = "&";
     const ANCHOR_ATTRIBUTES = "anchor";
-    /**
-     * @var array
-     */
-    private $queryParameters;
-    /**
-     * @var false|string
-     */
-    private $pathOrId;
-    /**
-     * @var false|string
-     */
-    private $fragment;
-    /**
-     * @var false|string
-     */
-    private $queryString;
+
+    private Url $url;
 
     /**
      * Url constructor.
      */
-    public function __construct($url)
+    public function __construct($urlString)
     {
-        $url=trim($url);
 
-        $this->queryParameters = [];
+        $this->url = Url::createEmpty();
+
+        $urlString = trim($urlString);
+
+        /**
+         * Easy case when the URL is just a conform URL
+         */
+        if (media_isexternal($urlString)) {
+            try {
+                $this->url = Url::createFromString($urlString);
+                return;
+            } catch (ExceptionBadSyntax $e) {
+                LogUtility::internalError("The url string is not valid URL ($urlString)");
+            }
+        }
+
 
         /**
          * Path
          */
-        $questionMarkPosition = strpos($url, "?");
-        $this->pathOrId = $url;
+        $questionMarkPosition = strpos($urlString, "?");
+        $httpHostOrPath = $urlString;
         $queryStringAndAnchorOriginal = null;
         if ($questionMarkPosition !== false) {
-            $this->pathOrId = substr($url, 0, $questionMarkPosition);
-            $queryStringAndAnchorOriginal = substr($url, $questionMarkPosition + 1);
+            $httpHostOrPath = substr($urlString, 0, $questionMarkPosition);
+            $queryStringAndAnchorOriginal = substr($urlString, $questionMarkPosition + 1);
         } else {
             // We may have only an anchor
-            $hashTagPosition = strpos($url, "#");
+            $hashTagPosition = strpos($urlString, "#");
             if ($hashTagPosition !== false) {
-                $this->pathOrId = substr($url, 0, $hashTagPosition);
-                $this->fragment = substr($url, $hashTagPosition + 1);
+                $httpHostOrPath = substr($urlString, 0, $hashTagPosition);
+                $this->url->setFragment(substr($urlString, $hashTagPosition + 1));
             }
         }
+
+        /**
+         * Scheme
+         */
+        if (link_isinterwiki($httpHostOrPath)) {
+            $this->url->setScheme(InterWikiPath::scheme);
+            $this->url->setPath($httpHostOrPath);
+        } else {
+            $this->url->setScheme(DokuFs::SCHEME);
+            $this->url->setPath($httpHostOrPath);
+        }
+
 
         /**
          * Parsing Query string if any
@@ -96,6 +108,8 @@ class DokuwikiUrl
              * The value $queryStringAndAnchorOriginal
              * is kept to create the original queryString
              * at the end if we found an anchor
+             *
+             * We parse token by token because we allow a hashtag for a hex color
              */
             $queryStringAndAnchorProcessing = $queryStringAndAnchorOriginal;
             while (strlen($queryStringAndAnchorProcessing) > 0) {
@@ -119,12 +133,12 @@ class DokuwikiUrl
                  */
                 $sizing = [];
                 if (preg_match('/^([0-9]+)(?:x([0-9]+))?/', $token, $sizing)) {
-                    $this->queryParameters[Dimension::WIDTH_KEY] = $sizing[1];
+                    $this->url->addQueryParameter(Dimension::WIDTH_KEY, $sizing[1]);
                     if (isset($sizing[2])) {
-                        $this->queryParameters[Dimension::HEIGHT_KEY] = $sizing[2];
+                        $this->url->addQueryParameter(Dimension::HEIGHT_KEY, $sizing[2]);
                     }
                     $token = substr($token, strlen($sizing[0]));
-                    if ($token == "") {
+                    if ($token === "") {
                         // no anchor behind we continue
                         continue;
                     }
@@ -136,7 +150,7 @@ class DokuwikiUrl
                 $found = preg_match('/^(nolink|direct|linkonly|details)/i', $token, $matches);
                 if ($found) {
                     $linkingValue = $matches[1];
-                    $this->queryParameters[MediaLink::LINKING_KEY] = $linkingValue;
+                    $this->url->addQueryParameter(MediaLink::LINKING_KEY, $linkingValue);
                     $token = substr($token, strlen($linkingValue));
                     if ($token == "") {
                         // no anchor behind we continue
@@ -147,11 +161,11 @@ class DokuwikiUrl
                 /**
                  * Cache
                  */
-                $found = preg_match('/^(nocache)/i', $token, $matches);
+                $noCacheValue = FetchAbs::NOCACHE_VALUE;
+                $found = preg_match('/^(' . $noCacheValue . ')/i', $token, $matches);
                 if ($found) {
-                    $cacheValue = "nocache";
-                    $this->queryParameters[FetchAbs::CACHE_KEY] = $cacheValue;
-                    $token = substr($token, strlen($cacheValue));
+                    $this->url->addQueryParameter(FetchAbs::CACHE_KEY, $noCacheValue);
+                    $token = substr($token, strlen($noCacheValue));
                     if ($token == "") {
                         // no anchor behind we continue
                         continue;
@@ -162,7 +176,7 @@ class DokuwikiUrl
                  * Anchor value after a single token case
                  */
                 if (strpos($token, '#') === 0) {
-                    $this->fragment = substr($token, 1);
+                    $this->url->setFragment(substr($token, 1));
                     continue;
                 }
 
@@ -181,23 +195,24 @@ class DokuwikiUrl
                  */
                 $anchorPosition = strpos($key, '#');
                 if ($anchorPosition !== false) {
-                    $this->fragment = substr($key, $anchorPosition + 1);
+                    $this->url->setFragment(substr($key, $anchorPosition + 1));
                     $key = substr($key, 0, $anchorPosition);
                 }
 
                 /**
                  * Test Anchor on the value
                  */
-                if($value!=null) {
+                if ($value != null) {
                     if (($countHashTag = substr_count($value, "#")) >= 3) {
-                        LogUtility::msg("The value ($value) of the key ($key) for the link ($this->pathOrId) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
+                        LogUtility::msg("The value ($value) of the key ($key) for the link ($httpHostOrPath) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
                         continue;
                     }
                 } else {
                     /**
                      * Boolean attribute
+                     * (null does not make it)
                      */
-                    $value = "true";
+                    $value = null;
                 }
 
                 $anchorPosition = false;
@@ -225,47 +240,25 @@ class DokuwikiUrl
                     $anchorPosition = strpos($value, "#");
                 }
                 if ($anchorPosition !== false) {
-                    $this->fragment = substr($value, $anchorPosition + 1);
+                    $this->url->setFragment(substr($value, $anchorPosition + 1));
                     $value = substr($value, 0, $anchorPosition);
                 }
 
                 switch ($lowerCaseKey) {
                     case "w": // used in a link w=xxx
-                        $this->queryParameters[Dimension::WIDTH_KEY] = $value;
+                        $this->url->addQueryParameter(Dimension::WIDTH_KEY, $value);
                         break;
                     case "h": // used in a link h=xxxx
-                        $this->queryParameters[Dimension::HEIGHT_KEY] = $value;
+                        $this->url->addQueryParameter(Dimension::HEIGHT_KEY, $value);
                         break;
                     default:
-                        /**
-                         * Multiple parameter can be set to form an array
-                         *
-                         * Example: s=word1&s=word2
-                         *
-                         */
-                        if (isset($this->queryParameters[$key])){
-                            $actualValue = $this->queryParameters[$key];
-                            if(is_array($actualValue)){
-                                $actualValue[]=$value;
-                                $this->queryParameters[$key] = $actualValue;
-                            } else {
-                                $this->queryParameters[$key] = [$actualValue, $value];
-                            }
-                        } else {
-                            $this->queryParameters[$key] = $value;
-                        }
+                        $this->url->addQueryParameter($key, $value);
+                        break;
                 }
 
             }
 
-            /**
-             * If a fragment was found,
-             * calculate the query string
-             */
-            $this->queryString = $queryStringAndAnchorOriginal;
-            if ($this->fragment != null) {
-                $this->queryString = substr($queryStringAndAnchorOriginal, 0, -strlen($this->fragment) - 1);
-            }
+
         }
 
     }
@@ -276,67 +269,10 @@ class DokuwikiUrl
         return new DokuwikiUrl($dokuwikiUrl);
     }
 
-    /**
-     * All URL token in an array
-     * @return array
-     */
-    public function toArray(): array
+
+    public function toUrl(): Url
     {
-        $attributes = [];
-        $attributes[self::ANCHOR_ATTRIBUTES] = $this->fragment;
-        $attributes[PagePath::PROPERTY_NAME] = $this->pathOrId;
-        return PluginUtility::mergeAttributes($attributes, $this->queryParameters);
-    }
-
-    public function getQueryString()
-    {
-        return $this->queryString;
-    }
-
-    public function hasQueryParameter($propertyKey): bool
-    {
-        return isset($this->queryParameters[$propertyKey]);
-    }
-
-    public function getQueryParameters(): array
-    {
-        return $this->queryParameters;
-    }
-
-    public function getFragment()
-    {
-        return $this->fragment;
-    }
-
-    /**
-     * In Dokuwiki, a path may also be in the form of an id (ie without root separator)
-     * @return false|string
-     */
-    public function getPath()
-    {
-        return $this->pathOrId;
-    }
-
-    public function getQueryParameter($key)
-    {
-        if(isset($this->queryParameters[$key])){
-            return $this->queryParameters[$key];
-        } else {
-            return null;
-        }
-
-    }
-
-    public function getScheme(): string
-    {
-        if(link_isinterwiki($this->pathOrId)){
-            return InterWikiPath::scheme;
-        }
-        if(media_isexternal($this->pathOrId)){
-            return InternetPath::scheme;
-        }
-        return DokuFs::SCHEME;
-
+        return $this->url;
     }
 
 

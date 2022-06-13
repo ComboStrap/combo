@@ -14,7 +14,8 @@ class Url
 {
 
     /**
-     * @var array $query
+     * An array of array because one name may have several value
+     * @var array[array] $query
      */
     private array $query = [];
     private ?string $path = null;
@@ -166,7 +167,7 @@ class Url
 
     public function setPath(string $path): Url
     {
-        if (strpos($path,"/./") === 0) {
+        if (strpos($path, "/./") === 0) {
             $path = substr($path, 3);
         }
         if ($path[0] === "/") {
@@ -188,9 +189,25 @@ class Url
         }
     }
 
-    public function addQueryParameter(string $key, string $value): Url
+    /**
+     * Multiple parameter can be set to form an array
+     *
+     * Example: s=word1&s=word2
+     *
+     * https://stackoverflow.com/questions/24059773/correct-way-to-pass-multiple-values-for-same-parameter-name-in-get-request
+     */
+    public function addQueryParameter(string $key, ?string $value): Url
     {
-        $this->query[$key] = $value;
+        if (isset($this->query[$key])) {
+            $actualValue = $this->query[$key];
+            if (is_array($actualValue)) {
+                $this->query[$key][] = $value;
+            } else {
+                $this->query[$key] = [$actualValue, $value];
+            }
+        } else {
+            $this->query[$key] = $value;
+        }
         return $this;
     }
 
@@ -266,18 +283,11 @@ class Url
         } catch (ExceptionNotFound $e) {
             // ok
         }
-        if (count($this->query) > 0) {
-            /**
-             * To be able to diff them
-             */
-            ksort($this->query);
-            /**
-             * HTML encoding (ie {@link DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML}
-             * happens only when outputing to HTML
-             * The url may also be used elsewhere where &amp; is unknown or not wanted such as css ...
-             */
-            $queryStringEncoded = http_build_query($this->query, "", DokuwikiUrl::AMPERSAND_CHARACTER);
-            $base = "$base?$queryStringEncoded";
+
+        try {
+            $base = "$base?{$this->getQueryString()}";
+        } catch (ExceptionNotFound $e) {
+            // ok
         }
         return $base;
     }
@@ -421,6 +431,37 @@ class Url
     {
         $this->fragment = $fragment;
         return $this;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getQueryString(): string
+    {
+        if (sizeof($this->query) === 0) {
+            throw new ExceptionNotFound("No Query string");
+        }
+        /**
+         * To be able to diff them
+         */
+
+        ksort($this->query);
+        $queryForHttpQuery = [];
+        foreach ($this->query as $key => $value) {
+            if ($value === null) {
+                $queryForHttpQuery[$key] = '';
+            } else {
+                $queryForHttpQuery[$key] = $value;
+            }
+        }
+
+        /**
+         * HTML encoding (ie {@link DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML}
+         * happens only when outputing to HTML
+         * The url may also be used elsewhere where &amp; is unknown or not wanted such as css ...
+         */
+        return http_build_query($queryForHttpQuery, "", DokuwikiUrl::AMPERSAND_CHARACTER);
+
     }
 
 

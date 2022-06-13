@@ -17,6 +17,7 @@ namespace ComboStrap;
 abstract class FetchAbs implements Fetch
 {
 
+    public const NOCACHE_VALUE = "nocache";
     private ?string $requestedCache = null;
 
     /**

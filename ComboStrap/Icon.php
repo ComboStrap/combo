@@ -501,7 +501,7 @@ class Icon extends ImageFetchSvg
     public function download()
     {
 
-        $mediaDokuPath = $this->getPath();
+        $mediaDokuPath = $this->getOriginalPath();
         if (!($mediaDokuPath instanceof DokuPath)) {
             throw new ExceptionCompile("The icon path ($mediaDokuPath) is not a wiki path. This is not yet supported");
         }
@@ -624,7 +624,7 @@ class Icon extends ImageFetchSvg
     public function render(): string
     {
 
-        if (!FileSystems::exists($this->getPath())) {
+        if (!FileSystems::exists($this->getOriginalPath())) {
             try {
                 $this->download();
             } catch (ExceptionCompile $e) {
@@ -633,7 +633,7 @@ class Icon extends ImageFetchSvg
         }
 
         $svgImageLink = SvgImageLink::createMediaLinkFromPath(
-            $this->getPath(),
+            $this->getOriginalPath(),
             $this->getAttributes()
         );
         return $svgImageLink->renderMediaTag();

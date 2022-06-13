@@ -202,7 +202,7 @@ class Vignette extends ImageFetch
              * Logo
              */
             try {
-                $imagePath = Site::getLogoAsRasterImage()->getPath();
+                $imagePath = Site::getLogoAsRasterImage()->getOriginalPath();
                 if ($imagePath instanceof DokuPath) {
                     $imagePath = $imagePath->toLocalPath();
                 }

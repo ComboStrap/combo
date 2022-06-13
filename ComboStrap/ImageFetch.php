@@ -19,7 +19,8 @@ abstract class ImageFetch extends FetchAbs
 
     const CANONICAL = "image";
 
-    // The common request image parameters
+    const TOK = "tok";
+
     private ?int $requestedWidth = null;
     private ?int $requestedHeight = null;
 
@@ -42,7 +43,7 @@ abstract class ImageFetch extends FetchAbs
      * @param Path $path
      * @return ImageRasterFetch|ImageFetchSvg
      * @throws ExceptionBadArgument - if the path is not an image
-     * @throws ExceptionBadSyntax - if the image is badly encoded
+     * @throws ExceptionBadSyntax - if the image is not encoded
      * @throws ExceptionNotExists - if the image does not exists
      */
     public static function createImageFetchFromPath(Path $path)
@@ -60,11 +61,11 @@ abstract class ImageFetch extends FetchAbs
 
         if ($mime->toString() === Mime::SVG) {
 
-            $image = new ImageFetchSvg($path);
+            $image = ImageFetchSvg::createEmpty()->setOriginalPath($path);
 
         } else {
 
-            $image = new ImageRasterFetch($path);
+            $image = ImageRasterFetch::createImageRasterFetchFromPath($path);
 
         }
 
@@ -72,6 +73,15 @@ abstract class ImageFetch extends FetchAbs
         return $image;
 
 
+    }
+
+    /**
+     * @return DokuPath - just to get the id that is mandatory when adding the toc for dokuwiki compliance
+     * See {@link ImageFetch::addCommonImageQueryParameterToUrl()}
+     * @throws ExceptionNotFound - if not used
+     */
+    function getOriginalPath(): DokuPath{
+        throw new ExceptionNotFound("Not found by default");
     }
 
     /**
@@ -547,7 +557,6 @@ abstract class ImageFetch extends FetchAbs
     }
 
 
-
     public function setRequestedWidth(int $requestedWidth): ImageFetch
     {
         $this->requestedWidth = $requestedWidth;
@@ -566,28 +575,44 @@ abstract class ImageFetch extends FetchAbs
     }
 
 
-
-
-
     protected function addCommonImageQueryParameterToUrl(Url $fetchUrl)
     {
         try {
-            $fetchUrl->addQueryParameter(Dimension::WIDTH_KEY_SHORT, $this->getRequestedWidth());
+            $requestedWidth = $this->getRequestedWidth();
+            $fetchUrl->addQueryParameter(Dimension::WIDTH_KEY_SHORT, $requestedWidth);
         } catch (ExceptionNotFound $e) {
             // ok
+            $requestedWidth = null;
         }
         try {
-            $fetchUrl->addQueryParameter(Dimension::HEIGHT_KEY_SHORT, $this->getRequestedHeight());
+            $requestedHeight = $this->getRequestedHeight();
+            $fetchUrl->addQueryParameter(Dimension::HEIGHT_KEY_SHORT, $requestedHeight);
+        } catch (ExceptionNotFound $e) {
+            // ok
+            $requestedHeight = null;
+        }
+
+        try {
+            if (!($requestedWidth !== null && $requestedHeight !== null)) {
+                /**
+                 * If the height and width are set, the requested ratio is not null
+                 * because it's derived, we put the ratio only if width and height are not defined
+                 */
+                $fetchUrl->addQueryParameter(Dimension::RATIO_ATTRIBUTE, $this->getRequestedAspectRatio());
+            }
         } catch (ExceptionNotFound $e) {
             // ok
         }
 
-        try {
-            $fetchUrl->addQueryParameter("ratio", $this->getRequestedAspectRatio());
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
+        if ($requestedWidth !== null || $requestedHeight !== null) {
 
+            try {
+                $id = $this->getOriginalPath()->getDokuwikiId();
+            } catch (ExceptionNotFound $e) {
+                $id = "";
+            }
+            $fetchUrl->addQueryParameter(self::TOK, media_get_token($id, $requestedWidth, $requestedHeight));
+        }
 
     }
 

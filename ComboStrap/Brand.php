@@ -224,7 +224,7 @@ class Brand
             case self::CURRENT_BRAND:
                 $image = Site::getLogoAsSvgImage();
                 if ($image !== null) {
-                    $path = $image->getPath();
+                    $path = $image->getOriginalPath();
                     if ($path instanceof DokuPath) {
                         /**
                          * End with svg, not seen as an external icon

@@ -77,7 +77,7 @@ class LdJson extends MetadataJson
         $schemaImages = array();
         foreach ($imagesSet as $image) {
 
-            $mime = $image->getPath()->getMime()->toString();
+            $mime = $image->getOriginalPath()->getMime()->toString();
             if (in_array($mime, $supportedMime)) {
                 if ($image->exists()) {
                     $imageObjectSchema = array(

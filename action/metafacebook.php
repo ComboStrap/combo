@@ -163,7 +163,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
             $facebookMimes = [Mime::JPEG, Mime::GIF, Mime::PNG];
             foreach ($facebookImages as $facebookImage) {
 
-                $mime = $facebookImage->getPath()->getMime();
+                $mime = $facebookImage->getOriginalPath()->getMime();
                 if (!in_array($mime->toString(), $facebookMimes)) {
                     continue;
                 }
@@ -198,9 +198,9 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                     if ($toSmall) {
                         $message = "The facebook image ($facebookImage) is too small (" . $intrinsicWidth . " x " . $intrinsicHeight . "). The minimum size constraint is 200px by 200px";
                         if (
-                            $facebookImage->getPath()->toAbsolutePath()->toPathString()
+                            $facebookImage->getOriginalPath()->toAbsolutePath()->toPathString()
                             !==
-                            $page->getFirstImage()->getPath()->toAbsolutePath()->toPathString()
+                            $page->getFirstImage()->getOriginalPath()->toAbsolutePath()->toPathString()
                         ) {
                             LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         } else {

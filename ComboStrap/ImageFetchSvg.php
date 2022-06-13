@@ -19,10 +19,8 @@ class ImageFetchSvg extends ImageFetch
     const CANONICAL = "svg";
 
     const PRESERVE_ASPECT_RATIO_KEY = "preserveAspectRatio";
-    /**
-     * @var DokuPath
-     */
-    private DokuPath $path;
+
+    private ?DokuPath $originalPath = null;
 
     /**
      * @var SvgDocument
@@ -71,7 +69,7 @@ class ImageFetchSvg extends ImageFetch
              * The svg document throw an error if the file does not exist or is not valid
              */
 
-            $this->svgDocument = SvgDocument::createSvgDocumentFromPath($this->path);
+            $this->svgDocument = SvgDocument::createSvgDocumentFromPath($this->originalPath);
 
         }
         return $this->svgDocument;
@@ -85,7 +83,7 @@ class ImageFetchSvg extends ImageFetch
     public function getFetchUrl(Url $url = null): Url
     {
         $url = parent::getFetchUrl($url);
-        $url = DokuFetch::createFromPath($this->path)->getFetchUrl($url);
+        $url = DokuFetch::createFromPath($this->originalPath)->getFetchUrl($url);
         try {
             $url->addQueryParameter(ColorRgb::COLOR, $this->getRequestedColor()->toCssValue());
         } catch (ExceptionNotFound $e) {
@@ -123,7 +121,7 @@ class ImageFetchSvg extends ImageFetch
          * Generated svg file cache init
          */
         $fetchCache = FetchCache::createFrom($this);
-        $files[] = $this->path->toAbsolutePath()->toPathString();
+        $files[] = $this->originalPath->toAbsolutePath()->toPathString();
         $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve("SvgDocument.php");
         $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve("XmlDocument.php");
         $files = array_merge(Site::getConfigurationFiles(), $files); // svg generation depends on configuration
@@ -187,11 +185,15 @@ class ImageFetchSvg extends ImageFetch
     }
 
     /**
-     * @return DokuPath - the path of the original svg
+     * @return DokuPath - the path of the original svg if any
+     * @throws ExceptionNotFound - not used
      */
-    public function getPath(): Path
+    public function getOriginalPath(): DokuPath
     {
-        return $this->path;
+        if($this->originalPath===null){
+            throw new ExceptionNotFound("No original path");
+        }
+        return $this->originalPath;
     }
 
     /**
@@ -201,8 +203,8 @@ class ImageFetchSvg extends ImageFetch
     public function buildFromUrl(Url $url): ImageFetchSvg
     {
         parent::buildFromUrl($url);
-        $this->path = DokuFetch::createEmpty()->buildFromUrl($url)->getFetchPath();
-        $this->buster = FileSystems::getCacheBuster($this->getPath());
+        $this->originalPath = DokuFetch::createEmpty()->buildFromUrl($url)->getFetchPath();
+        $this->buster = FileSystems::getCacheBuster($this->getOriginalPath());
         $this->buildSharedImagePropertyFromTagAttributes($url);
         $color = $url->getQueryPropertyValue(ColorRgb::COLOR);
         if ($color !== null) {
@@ -242,6 +244,17 @@ class ImageFetchSvg extends ImageFetch
         $this->preserveAspectRatio = $preserveAspectRatio;
         return $this;
     }
+
+    /**
+     * @throws ExceptionBadArgument - if the path can not be converted to a doku path
+     */
+    public function setOriginalPath(Path $path): ImageFetchSvg
+    {
+        $this->originalPath = DokuPath::createFromPath($path);
+        return $this;
+    }
+
+
 
 
 }

@@ -232,7 +232,7 @@ class SvgImageLink extends ImageLink
          */
         $attributes->removeComponentAttributeIfPresent(PageTitle::PROPERTY_NAME);
 
-        $imageSize = FileSystems::getSize($image->getPath());
+        $imageSize = FileSystems::getSize($image->getOriginalPath());
         /**
          * Svg Style conflict:
          * when two svg are created and have a style node, they inject class

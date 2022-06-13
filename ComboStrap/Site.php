@@ -105,7 +105,7 @@ class Site
                 LogUtility::msg("The svg ($svgLogo) returns an error. {$e->getMessage()}");
                 continue;
             }
-            if (FileSystems::exists($image->getPath())) {
+            if (FileSystems::exists($image->getOriginalPath())) {
                 return $image;
             }
         }
@@ -125,7 +125,7 @@ class Site
                 LogUtility::msg("The png Logo ($pngLogo) returns an error. {$e->getMessage()}");
                 continue;
             }
-            if (FileSystems::exists($image->getPath())) {
+            if (FileSystems::exists($image->getOriginalPath())) {
                 return $image;
             }
         }
@@ -790,7 +790,7 @@ class Site
          */
         $logoImages = Site::getLogoImages();
         foreach ($logoImages as $logoImage) {
-            $path = $logoImage->getPath();
+            $path = $logoImage->getOriginalPath();
             $mediaLink = MediaLink::createMediaLinkFromPath($path, $tagAttributes)
                 ->setLazyLoad(false);
             try {
@@ -873,6 +873,40 @@ class Site
             $files[] = LocalPath::createFromPath($fileConfig);
         }
         return $files;
+    }
+
+    /**
+     * @return string the base directory for all url
+     * @throws ExceptionNotFound
+     */
+    public static function getUrlPathBaseDir(): string
+    {
+        /**
+         * Based on {@link getBaseURL()}
+         */
+        global $conf;
+        if (!empty($conf['basedir'])) {
+            return $conf['basedir'];
+        }
+        if (substr($_SERVER['SCRIPT_NAME'], -4) == '.php') {
+            return dirname($_SERVER['SCRIPT_NAME']);
+        }
+        if (substr($_SERVER['PHP_SELF'], -4) == '.php') {
+            return dirname($_SERVER['PHP_SELF']);
+        }
+        if ($_SERVER['DOCUMENT_ROOT'] && $_SERVER['SCRIPT_FILENAME']) {
+            $dir = preg_replace('/^' . preg_quote($_SERVER['DOCUMENT_ROOT'], '/') . '/', '',
+                $_SERVER['SCRIPT_FILENAME']);
+            return dirname('/' . $dir);
+        }
+        throw new ExceptionNotFound("No Base dir");
+
+    }
+
+    public static function hasUrlRewrite(): bool
+    {
+        global $conf;
+        return $conf['userewrite'] == 1;
     }
 
 

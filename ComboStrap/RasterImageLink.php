@@ -249,7 +249,7 @@ class RasterImageLink extends ImageLink
                         }
                         $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
 
-                        $xsmUrl = ImageRasterFetch::createImageRasterFetchFromPath($image->getPath())
+                        $xsmUrl = ImageRasterFetch::createImageRasterFetchFromPath($image->getOriginalPath())
                             ->setRequestedWidth($breakpointWidthMinusMargin);
                         $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
                         $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);

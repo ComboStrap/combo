@@ -144,7 +144,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         try {
 
             foreach ($images as $image) {
-                $path = $image->getImage()->getPath();
+                $path = $image->getImage()->getOriginalPath();
                 if (!($path instanceof DokuPath)) {
                     continue;
                 }

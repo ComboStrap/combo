@@ -19,11 +19,8 @@ class Url
     private array $query = [];
     private ?string $path = null;
     private ?string $scheme = null;
-    /**
-     * @var string
-     */
-    private string $host = "";
-    private string $fragment = "";
+    private ?string $host = null;
+    private ?string $fragment = null;
 
 
     /**
@@ -54,7 +51,10 @@ class Url
             $this->query = $queryKeys;
             $this->scheme = $urlComponents["scheme"];
             $this->host = $urlComponents["host"];
-            $this->path = $urlComponents["path"];
+            $pathUrlComponent = $urlComponents["path"];
+            if ($pathUrlComponent !== null) {
+                $this->setPath($pathUrlComponent);
+            }
             $this->fragment = $urlComponents["fragment"];
         }
     }
@@ -78,21 +78,29 @@ class Url
 
     public static function createFetchUrl(): Url
     {
-        global $conf;
-        if ($conf['userewrite'] == 1) {
+
+        if (Site::hasUrlRewrite()) {
             $path = '_media';
         } else {
             $path = 'lib/exe/fetch.php';
         }
+        try {
+            $urlPathBaseDir = Site::getUrlPathBaseDir();
+            $path = "$urlPathBaseDir/$path";
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+
         return Url::createEmpty()
             ->setPath($path);
+
 
     }
 
     public static function createDetailUrl(): Url
     {
-        global $conf;
-        if ($conf['userewrite'] == 1) {
+
+        if (Site::hasUrlRewrite()) {
             $path = '_detail';
         } else {
             $path = 'lib/exe/detail.php';
@@ -158,6 +166,12 @@ class Url
 
     public function setPath(string $path): Url
     {
+        if (strpos($path,"/./") === 0) {
+            $path = substr($path, 3);
+        }
+        if ($path[0] === "/") {
+            $path = substr($path, 1);
+        }
         $this->path = $path;
         return $this;
     }
@@ -167,7 +181,11 @@ class Url
      */
     public function isHttpUrl(): bool
     {
-        return in_array($this->getScheme(), ["http", "https"]);
+        try {
+            return in_array($this->getScheme(), ["http", "https"]);
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
     }
 
     public function addQueryParameter(string $key, string $value): Url
@@ -190,19 +208,69 @@ class Url
         return false;
     }
 
+    /**
+     * @return Url - add the scheme and the host based on the request if not present
+     */
+    public function toAbsoluteUrl(): Url
+    {
+        try {
+            $this->getScheme();
+        } catch (ExceptionNotFound $e) {
+            /**
+             * See {@link getBaseURL()}
+             */
+            $https = $_SERVER['HTTPS'];
+            if (empty($https)) {
+                $this->setScheme("http");
+            } else {
+                $this->setScheme("https");
+            }
+        }
+        try {
+            $this->getHost();
+        } catch (ExceptionNotFound $e) {
+
+            /**
+             * Based on {@link getBaseURL()}
+             * to be dokuwiki compliant
+             */
+            $remoteHost = $_SERVER['HTTP_HOST'];
+            if ($remoteHost !== null) {
+                $this->setHost($remoteHost);
+                return $this;
+            }
+            $remoteHost = $_SERVER['SERVER_NAME'];
+            if ($remoteHost !== null) {
+                $this->setHost($remoteHost);
+                return $this;
+            }
+            $remoteHost = php_uname('n');
+            $this->setHost($remoteHost);
+
+        }
+        return $this;
+    }
+
     public function toAbsoluteUrlString(): string
     {
+        $this->toAbsoluteUrl();
         try {
             $base = "{$this->getScheme()}://{$this->getHost()}";
         } catch (ExceptionNotFound $e) {
-            $base = DOKU_URL;
+            // should not
+            LogUtility::internalError("Absolute Url was called, scheme and host should be set");
+            $base = "";
         }
         try {
-            $base = "$base{$this->getPath()}";
+            $base = "$base/{$this->getPath()}";
         } catch (ExceptionNotFound $e) {
             // ok
         }
         if (count($this->query) > 0) {
+            /**
+             * To be able to diff them
+             */
+            ksort($this->query);
             /**
              * HTML encoding (ie {@link DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML}
              * happens only when outputing to HTML
@@ -214,8 +282,14 @@ class Url
         return $base;
     }
 
-    public function getHost()
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getHost(): string
     {
+        if ($this->host === null) {
+            throw new ExceptionNotFound("No host");
+        }
         return $this->host;
     }
 
@@ -230,8 +304,14 @@ class Url
         return $this->path;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public function getFragment(): string
     {
+        if ($this->fragment === null) {
+            throw new ExceptionNotFound("The fragment was not set");
+        }
         return $this->fragment;
     }
 
@@ -248,6 +328,93 @@ class Url
             return $value;
         }
         return $defaultIfNull;
+    }
+
+    /**
+     * @throws ExceptionNotEquals
+     */
+    public function equals(Url $url)
+    {
+        /**
+         * Scheme
+         */
+        try {
+            $actualScheme = $this->getScheme();
+        } catch (ExceptionNotFound $e) {
+            $actualScheme = "";
+        }
+        try {
+            $externalScheme = $url->getScheme();
+        } catch (ExceptionNotFound $e) {
+            $externalScheme = "";
+        }
+        if ($actualScheme !== $externalScheme) {
+            throw new ExceptionNotEquals("The scheme are not equals ($actualScheme vs $externalScheme)");
+        }
+        /**
+         * Host
+         */
+        try {
+            $actualHost = $this->getHost();
+        } catch (ExceptionNotFound $e) {
+            $actualHost = "";
+        }
+        try {
+            $externalHost = $url->getHost();
+        } catch (ExceptionNotFound $e) {
+            $externalHost = "";
+        }
+        if ($actualHost !== $externalHost) {
+            throw new ExceptionNotEquals("The host are not equals ($actualHost vs $externalHost)");
+        }
+        /**
+         * Query
+         */
+        $actualQuery = $this->getQuery();
+        $externalQuery = $url->getQuery();
+        foreach ($actualQuery as $key => $value) {
+            $externalValue = $externalQuery[$key];
+            if ($externalValue === null) {
+                throw new ExceptionNotEquals("The external url does not have the $key property");
+            }
+            if ($externalValue !== $value) {
+                throw new ExceptionNotEquals("The $key property does not have the same value ($value vs $externalValue)");
+            }
+            unset($externalQuery[$key]);
+        }
+        foreach ($externalQuery as $key => $value) {
+            throw new ExceptionNotEquals("The external URL has an extra property ($key=$value)");
+        }
+
+        /**
+         * Fragment
+         */
+        try {
+            $actualFragment = $this->getFragment();
+        } catch (ExceptionNotFound $e) {
+            $actualFragment = "";
+        }
+        try {
+            $externalFragment = $url->getFragment();
+        } catch (ExceptionNotFound $e) {
+            $externalFragment = "";
+        }
+        if ($actualFragment !== $externalFragment) {
+            throw new ExceptionNotEquals("The fragment are not equals ($actualHost vs $externalHost)");
+        }
+
+    }
+
+    public function setScheme(string $scheme): Url
+    {
+        $this->scheme = $scheme;
+        return $this;
+    }
+
+    public function setHost($host): Url
+    {
+        $this->host = $host;
+        return $this;
     }
 
 

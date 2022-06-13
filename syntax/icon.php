@@ -290,7 +290,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                     if ($name === null) {
                         throw new ExceptionCompile("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
                     }
-                    $mediaPath = Icon::create($name, $tagAttribute)->getPath();
+                    $mediaPath = Icon::create($name, $tagAttribute)->getOriginalPath();
                 } catch (ExceptionCompile $e) {
                     // error is already fired in the renderer
                     return false;

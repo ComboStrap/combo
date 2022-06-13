@@ -294,7 +294,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
          * Zoom applies only to icon not to illustration
          *
          */
-        $isIcon = Icon::isInIconDirectory($selectedPageImage->getPath());
+        $isIcon = Icon::isInIconDirectory($selectedPageImage->getOriginalPath());
         if (!$isIcon) {
             $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
         } else {
@@ -320,7 +320,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
         }
 
         $mediaLink = MediaLink::createMediaLinkFromPath(
-            $selectedPageImage->getPath(),
+            $selectedPageImage->getOriginalPath(),
             $tagAttributes
         );
         try {

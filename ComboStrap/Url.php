@@ -198,6 +198,19 @@ class Url
      */
     public function addQueryParameter(string $key, ?string $value): Url
     {
+        /**
+         * Php Array syntax
+         */
+        if (substr($key, -2) === "[]") {
+            $key = substr($key, 0, -2);
+            $actualValue = $this->query[$key];
+            if ($actualValue === null || is_array($actualValue)) {
+                $this->query[$key][] = $value;
+            } else {
+                $this->query[$key] = [$actualValue, $value];
+            }
+            return $this;
+        }
         if (isset($this->query[$key])) {
             $actualValue = $this->query[$key];
             if (is_array($actualValue)) {
@@ -286,6 +299,12 @@ class Url
 
         try {
             $base = "$base?{$this->getQueryString()}";
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+
+        try {
+            $base = "$base#{$this->getFragment()}";
         } catch (ExceptionNotFound $e) {
             // ok
         }
@@ -444,23 +463,41 @@ class Url
         /**
          * To be able to diff them
          */
-
         ksort($this->query);
-        $queryForHttpQuery = [];
-        foreach ($this->query as $key => $value) {
-            if ($value === null) {
-                $queryForHttpQuery[$key] = '';
-            } else {
-                $queryForHttpQuery[$key] = $value;
-            }
-        }
 
         /**
-         * HTML encoding (ie {@link DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML}
-         * happens only when outputing to HTML
-         * The url may also be used elsewhere where &amp; is unknown or not wanted such as css ...
+         * We don't use {@link http_build_query} because:
+         *   * it does not the follow the array format (ie s[]=searchword1+seachword2)
+         *   * it output 'key=' instead of `key` when the value is null
          */
-        return http_build_query($queryForHttpQuery, "", DokuwikiUrl::AMPERSAND_CHARACTER);
+        $queryString = null;
+        foreach ($this->query as $key => $value) {
+            if ($queryString !== null) {
+                /**
+                 * HTML encoding (ie {@link DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML}
+                 * happens only when outputing to HTML
+                 * The url may also be used elsewhere where &amp; is unknown or not wanted such as css ...
+                 */
+                $queryString .= DokuwikiUrl::AMPERSAND_CHARACTER;
+            }
+            if ($value === null) {
+                $queryString .= urlencode($key);
+            } else {
+                if (is_array($value)) {
+                    for ($i = 0; $i < sizeof($value); $i++) {
+                        $val = $value[$i];
+                        if ($i > 0) {
+                            $queryString .= DokuwikiUrl::AMPERSAND_CHARACTER;
+                        }
+                        $queryString .= urlencode($key) . "[]=" . urlencode($val);
+                    }
+                } else {
+                    $queryString .= urlencode($key) . "=" . urlencode($value);
+                }
+            }
+        }
+        return $queryString;
+
 
     }
 

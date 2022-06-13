@@ -150,7 +150,7 @@ class DokuwikiUrl
                 $found = preg_match('/^(nocache)/i', $token, $matches);
                 if ($found) {
                     $cacheValue = "nocache";
-                    $this->queryParameters[ImageFetch::CACHE_KEY] = $cacheValue;
+                    $this->queryParameters[FetchAbs::CACHE_KEY] = $cacheValue;
                     $token = substr($token, strlen($cacheValue));
                     if ($token == "") {
                         // no anchor behind we continue

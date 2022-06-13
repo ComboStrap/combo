@@ -81,10 +81,9 @@ class ImageFetchSvg extends ImageFetch
      *
      * @throws ExceptionNotFound
      */
-    public function getFetchUrl(): Url
+    public function getFetchUrl(Url $url = null): Url
     {
-
-        $fetchUrl = DokuFetch::createFromPath($this->path)->getFetchUrl();
+        $fetchUrl = DokuFetch::createFromPath($this->path)->getFetchUrl($url);
         $this->addCommonImageQueryParameterToUrl($fetchUrl);
         return $fetchUrl;
 

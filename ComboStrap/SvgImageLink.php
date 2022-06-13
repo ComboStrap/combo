@@ -111,7 +111,7 @@ class SvgImageLink extends ImageLink
          */
         $image = $this->getFetch();
         $responseAttributes = TagAttributes::createFromTagAttributes($image->getAttributes());
-        $responseAttributes->removeComponentAttributeIfPresent(ImageFetch::CACHE_KEY);
+        $responseAttributes->removeComponentAttributeIfPresent(FetchAbs::CACHE_KEY);
 
         /**
          * Remove linking (not yet implemented)

@@ -17,23 +17,12 @@ namespace ComboStrap;
 abstract class ImageFetch extends FetchAbs
 {
 
-    /**
-     * Doc: https://www.dokuwiki.org/images#caching
-     * Cache
-     * values:
-     *   * cache
-     *   * nocache
-     *   * recache
-     */
-    const CACHE_KEY = 'cache';
-    const CACHE_DEFAULT_VALUE = "cache";
-
     const CANONICAL = "image";
 
     // The common request image parameters
     private ?int $requestedWidth = null;
     private ?int $requestedHeight = null;
-    private ?string $externalCacheRequested = null;
+
     private ?string $requestedRatio = null;
 
 
@@ -101,6 +90,7 @@ abstract class ImageFetch extends FetchAbs
 
     /**
      * Utility function to build the common image fetch processing property
+     * (e width, height, ratio)
      * @param Url $tagAttributes
      * @return void
      * @throws ExceptionBadArgument
@@ -139,11 +129,6 @@ abstract class ImageFetch extends FetchAbs
             } catch (ExceptionBadSyntax $e) {
                 throw new ExceptionBadArgument("The requested ratio ($requestedRatio) is not a valid value ({$e->getMessage()})", self::CANONICAL, 0, $e);
             }
-        }
-
-        $requestedExternalCache = $tagAttributes->getQueryPropertyValue(self::CACHE_KEY);
-        if ($requestedExternalCache !== null) {
-            $this->setRequestedExternalCache($requestedExternalCache);
         }
 
     }
@@ -561,17 +546,7 @@ abstract class ImageFetch extends FetchAbs
 
     }
 
-    /**
-     * @return string $cache - one of {@link FetchCache::CACHE_KEY}
-     * @throws ExceptionNotFound
-     */
-    public function getRequestedCache(): string
-    {
-        if ($this->externalCacheRequested === null) {
-            throw new ExceptionNotFound("No cache was requested");
-        }
-        return $this->externalCacheRequested;
-    }
+
 
     public function setRequestedWidth(int $requestedWidth): ImageFetch
     {
@@ -590,53 +565,9 @@ abstract class ImageFetch extends FetchAbs
         $this->requestedRatio = $requestedRatio;
     }
 
-    /**
-     * @throws ExceptionBadArgument
-     */
-    public function setRequestedExternalCache(string $requestedExternalCache)
-    {
-        /**
-         * Cache transformation
-         * From Image cache value (https://www.dokuwiki.org/images#caching)
-         * to {@link FetchCache::setMaxAgeInSec()}
-         */
-        switch ($requestedExternalCache) {
-            case "nocache":
-            case "recache":
-            case "cache":
-                $this->externalCacheRequested = $requestedExternalCache;
-                break;
-            default:
-                throw new ExceptionBadArgument("The cache value ($requestedExternalCache) is unknown");
-        }
-    }
 
-    /**
-     * Cache transformation
-     * From Image cache value (https://www.dokuwiki.org/images#caching)
-     * to {@link FetchCache::setMaxAgeInSec()}
-     */
-    public function getExternalCacheMaxAgeInSec(): int
-    {
-        switch ($this->externalCacheRequested) {
-            case "nocache":
-                $cacheParameter = 0;
-                break;
-            case "recache":
-                try {
-                    $cacheParameter = Site::getCacheTime();
-                } catch (ExceptionNotFound|ExceptionBadArgument $e) {
-                    LogUtility::error("Image Fetch cache was set to `cache`. Why ? We got an error when reading the cache time configuration. Error: {$e->getMessage()}");
-                    $cacheParameter = -1;
-                }
-                break;
-            case "cache":
-            default:
-                $cacheParameter = -1;
-                break;
-        }
-        return $cacheParameter;
-    }
+
+
 
     protected function addCommonImageQueryParameterToUrl(Url $fetchUrl)
     {
@@ -656,14 +587,7 @@ abstract class ImageFetch extends FetchAbs
         } catch (ExceptionNotFound $e) {
             // ok
         }
-        try {
-            $value = $this->getRequestedCache();
-            if ($value !== ImageFetch::CACHE_DEFAULT_VALUE) {
-                $fetchUrl->addQueryParameter(self::CACHE_KEY, $value);
-            }
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
+
 
     }
 

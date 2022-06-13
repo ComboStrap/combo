@@ -25,7 +25,7 @@ class Vignette extends ImageFetch
 {
 
     const CANONICAL = "page-vignette";
-    public const DRIVE = "page-vignette";
+
     const PAGE_QUERY_PROPERTY = "page";
     const VIGNETTE_QUERY_PROPERTY = "vignette";
 
@@ -46,27 +46,16 @@ class Vignette extends ImageFetch
 
 
     /**
-     *
-     * @throws ExceptionNotFound - when the page does not exists
-     */
-    public function __construct(Page $page, Mime $mime = null)
-    {
-        $this->page = $page;
-        $this->mime = $mime;
-        if ($mime === null) {
-            $this->mime = Mime::create(Mime::WEBP);
-        }
-        $this->buster = FileSystems::getCacheBuster($this->page->getPath());
-        parent::__construct();
-
-    }
-
-    /**
      * @throws ExceptionNotFound - if the page does not exists
      */
     public static function createForPage(Page $page, Mime $mime = null): Vignette
     {
         return new Vignette($page, $mime);
+    }
+
+    public static function createFromUrl(Url $url)
+    {
+        return (new Vignette())->buildFromUrl($url);
     }
 
 
@@ -336,5 +325,25 @@ class Vignette extends ImageFetch
     public function getMime(): Mime
     {
         return $this->mime;
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionNotFound
+     */
+    public function buildFromUrl(Url $url): Fetch
+    {
+        $vignette = $url->getQueryPropertyValue(self::VIGNETTE_QUERY_PROPERTY);
+        if ($vignette === null) {
+            throw new ExceptionBadArgument("The vignette query property was not present");
+        }
+        $lastPoint = strrpos($vignette, ".");
+        $extension = substr($vignette, $lastPoint + 1);
+        $wikiId = substr($vignette, 0, $lastPoint);
+        $this->page = Page::createPageFromId($wikiId);
+        $this->mime = Mime::createFromExtension($extension);
+        $this->addCommonImageQueryParameterToUrl($url);
+        return $this;
+
     }
 }

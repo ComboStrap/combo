@@ -17,6 +17,7 @@ use ComboStrap\Mime;
 use ComboStrap\Page;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
+use ComboStrap\Url;
 use ComboStrap\Vignette;
 use dokuwiki\Utf8\PhpString;
 
@@ -75,24 +76,12 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if (!isset($_GET[DokuPath::DRIVE_ATTRIBUTE])) {
             return;
         }
-        $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
-        if (!in_array($drive, DokuPath::DRIVES) && $drive !== Vignette::DRIVE) {
-            // The other resources have ACL
-            // and this endpoint is normally only for
-            $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
-            return;
-        }
-        $mediaId = $event->data['media'];
-        switch ($drive) {
-            case Vignette::DRIVE:
-                $lastPoint = strrpos($mediaId, ".");
-                $extension = substr($mediaId, $lastPoint + 1);
-                $wikiId = substr($mediaId, 0, $lastPoint);
-                $page = Page::createPageFromId($wikiId);
+        $vignette = $_GET[Vignette::VIGNETTE_QUERY_PROPERTY];
+        if($vignette!==null){
+                $url = Url::createFromGetGlobalVariable();
+                $vignette = Vignette::createFromUrl($url);
                 try {
-                    $mime = Mime::createFromExtension($extension);
-                    $vignette = Vignette::createForPage($page, $mime)
-                        ->setUseCache(false);
+
                     $path = $vignette->getPhysicalPath();
                 } catch (ExceptionBadArgument|ExceptionNotFound $e) {
                     $event->data['status'] = HttpResponse::STATUS_INTERNAL_ERROR;
@@ -113,23 +102,28 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
                     $event->data['statusmessage'] = $message;
                     return;
                 }
-                break;
 
-            default:
-                $mediaPath = DokuPath::createDokuPath($mediaId, $drive);
-                $event->data['file'] = $mediaPath->toLocalPath()->toAbsolutePath()->toPathString();
-                if (FileSystems::exists($mediaPath)) {
-                    $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
-                    $event->data['statusmessage'] = '';
-                    $event->data['mime'] = $mediaPath->getMime();
-                }
-                if ($drive === DokuPath::CACHE_DRIVE) {
-                    $event->data['download'] = false;
-                    if (!Identity::isManager()) {
-                        $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
-                    }
-                }
-                break;
+        }
+        $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
+        if (!in_array($drive, DokuPath::DRIVES) ) {
+            // The other resources have ACL
+            // and this endpoint is normally only for
+            $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
+            return;
+        }
+        $mediaId = $event->data['media'];
+        $mediaPath = DokuPath::createDokuPath($mediaId, $drive);
+        $event->data['file'] = $mediaPath->toLocalPath()->toAbsolutePath()->toPathString();
+        if (FileSystems::exists($mediaPath)) {
+            $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
+            $event->data['statusmessage'] = '';
+            $event->data['mime'] = $mediaPath->getMime();
+        }
+        if ($drive === DokuPath::CACHE_DRIVE) {
+            $event->data['download'] = false;
+            if (!Identity::isManager()) {
+                $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
+            }
         }
 
 

@@ -165,7 +165,7 @@ abstract class MediaLink
         $tagAttributes->addComponentAttributeValue(Align::ALIGN_ATTRIBUTE, $align);
         $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
         $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $height);
-        $tagAttributes->addComponentAttributeValue(ImageFetch::CACHE_KEY, $cache);
+        $tagAttributes->addComponentAttributeValue(FetchAbs::CACHE_KEY, $cache);
         $tagAttributes->addComponentAttributeValue(self::LINKING_KEY, $linking);
 
         return self::createMediaLinkFromId($src, $tagAttributes);
@@ -322,7 +322,7 @@ abstract class MediaLink
             self::DOKUWIKI_SRC => $src,
             Dimension::WIDTH_KEY => $parsedAttributes[Dimension::WIDTH_KEY],
             Dimension::HEIGHT_KEY => $parsedAttributes[Dimension::HEIGHT_KEY],
-            ImageFetch::CACHE_KEY => $parsedAttributes[ImageFetch::CACHE_KEY],
+            FetchAbs::CACHE_KEY => $parsedAttributes[FetchAbs::CACHE_KEY],
             TagAttributes::TITLE_KEY => $description,
             Align::ALIGN_ATTRIBUTE => $align,
             MediaLink::LINKING_KEY => $parsedAttributes[MediaLink::LINKING_KEY],

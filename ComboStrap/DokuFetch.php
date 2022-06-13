@@ -2,7 +2,7 @@
 
 namespace ComboStrap;
 
-class DokuFetch implements Fetch
+class DokuFetch extends FetchAbs
 {
 
     public const MEDIA_QUERY_PARAMETER = "media";
@@ -28,13 +28,13 @@ class DokuFetch implements Fetch
      * @return Url - an URL to download the media
      * @throws ExceptionNotFound
      */
-    function getFetchUrl(): Url
+    function getFetchUrl(Url $url = null): Url
     {
         /**
          * For dokuwiki implementation, see {@link ml()}
          */
-        return Url::createFetchUrl()
-            ->addQueryCacheBuster($this->getBuster())
+        $url = parent::getFetchUrl($url);
+        return $url
             ->addQueryMediaParameter( $this->path->getDokuwikiId())
             ->addQueryParameter(DokuPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
 

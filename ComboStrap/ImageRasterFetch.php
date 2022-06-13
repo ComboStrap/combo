@@ -100,37 +100,17 @@ class ImageRasterFetch extends ImageFetch
 
     /**
      *
+     * @throws ExceptionBadArgument
      */
-    public function getFetchUrl(): Url
+    public function getFetchUrl(Url $url = null): Url
     {
 
         try {
-            $fetchUrl = DokuFetch::createFromPath($this->path)->getFetchUrl();
+            $fetchUrl = DokuFetch::createFromPath($this->path)->getFetchUrl($url);
         } catch (ExceptionNotFound $e) {
-            throw new ExceptionRuntime("The image exists. This is already checked at construction");
+            throw new ExceptionRuntime("Internal error. The image should exist. This is already checked at build time.");
         }
-
-        /**
-         * If the request is not the original image
-         * and not cropped, add the width and height
-         */
-        try {
-            $targetWidth = $this->getTargetWidth();
-            if ($targetWidth !== $this->getIntrinsicWidth()) {
-                $fetchUrl->addQueryParameter("w", $this->getTargetHeight());
-            }
-        } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
-            // no target width
-        }
-
-        $targetHeight = $this->getTargetHeight();
-        if ($targetHeight !== $this->getIntrinsicHeight()) {
-            $fetchUrl->addQueryParameter("h", $this->getTargetHeight());
-        }
-
-        if (!empty($this->getRequestedCache())) {
-            $fetchUrl->addQueryParameter(ImageFetch::CACHE_KEY, $this->getRequestedCache());
-        }
+        $this->buildSharedImagePropertyFromTagAttributes($fetchUrl);
         return $fetchUrl;
 
     }

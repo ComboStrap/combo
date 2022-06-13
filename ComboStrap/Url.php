@@ -107,6 +107,15 @@ class Url
         return new Url();
     }
 
+    public static function createFromGetGlobalVariable(): Url
+    {
+        $url = Url::createEmpty();
+        foreach ($_GET as $key => $value) {
+            $url->addQueryParameter($key,$value);
+        }
+        return $url;
+    }
+
     function getQuery(): array
     {
 
@@ -216,7 +225,7 @@ class Url
     public function getQueryPropertyValueOrDefault(string $key, string $defaultIfNull)
     {
         $value = $this->getQueryPropertyValue($key);
-        if($value!==null){
+        if ($value !== null) {
             return $value;
         }
         return $defaultIfNull;

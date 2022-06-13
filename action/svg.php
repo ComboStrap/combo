@@ -6,6 +6,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\Fetch;
+use ComboStrap\FetchAbs;
 use ComboStrap\Identity;
 use ComboStrap\FetchCache;
 use ComboStrap\DokuPath;
@@ -70,7 +71,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         if ($height != 0) {
             $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $height);
         }
-        $tagAttributes->addComponentAttributeValue(ImageFetch::CACHE_KEY, $event->data['cache']);
+        $tagAttributes->addComponentAttributeValue(FetchAbs::CACHE_KEY, $event->data['cache']);
 
         $mime = "image/svg+xml";
         $event->data["mime"] = $mime;

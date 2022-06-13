@@ -22,9 +22,10 @@ interface Fetch
 
     /**
      * Return the URL where the resource can be fetched
+     * @param Url|null $url - the url to be able to pass along in the hierarchy
      * @return Url
      */
-    function getFetchUrl(): Url;
+    function getFetchUrl(Url $url = null): Url;
 
     /**
      * Return the path of the resource

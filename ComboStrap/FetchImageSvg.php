@@ -12,7 +12,7 @@ namespace ComboStrap;
  *   * an SvgFile for an HTTP response or any further processing
  *
  */
-class ImageFetchSvg extends ImageFetch
+class FetchImageSvg extends FetchImage
 {
 
     const EXTENSION = "svg";
@@ -30,9 +30,9 @@ class ImageFetchSvg extends ImageFetch
     private string $buster;
     private ?string $preserveAspectRatio;
 
-    public static function createEmpty(): ImageFetchSvg
+    public static function createEmpty(): FetchImageSvg
     {
-        return new ImageFetchSvg();
+        return new FetchImageSvg();
     }
 
     /**
@@ -83,7 +83,7 @@ class ImageFetchSvg extends ImageFetch
     public function getFetchUrl(Url $url = null): Url
     {
         $url = parent::getFetchUrl($url);
-        $url = DokuFetch::createFromPath($this->originalPath)->getFetchUrl($url);
+        $url = FetchDoku::createFromPath($this->originalPath)->getFetchUrl($url);
         try {
             $url->addQueryParameter(ColorRgb::COLOR, $this->getRequestedColor()->toCssValue());
         } catch (ExceptionNotFound $e) {
@@ -166,7 +166,7 @@ class ImageFetchSvg extends ImageFetch
     function acceptsFetchUrl(Url $url): bool
     {
 
-        $media = $url->getQueryPropertyValue(DokuFetch::MEDIA_QUERY_PARAMETER);
+        $media = $url->getQueryPropertyValue(FetchDoku::MEDIA_QUERY_PARAMETER);
         $dokuPath = DokuPath::createMediaPathFromId($media);
         try {
             $mime = FileSystems::getMime($dokuPath);
@@ -200,10 +200,10 @@ class ImageFetchSvg extends ImageFetch
      * @throws ExceptionBadArgument - for any bad argument
      * @throws ExceptionNotFound - if the svg file was not found
      */
-    public function buildFromUrl(Url $url): ImageFetchSvg
+    public function buildFromUrl(Url $url): FetchImageSvg
     {
         parent::buildFromUrl($url);
-        $this->originalPath = DokuFetch::createEmpty()->buildFromUrl($url)->getFetchPath();
+        $this->originalPath = FetchDoku::createEmpty()->buildFromUrl($url)->getFetchPath();
         $this->buster = FileSystems::getCacheBuster($this->getOriginalPath());
         $this->buildSharedImagePropertyFromTagAttributes($url);
         $color = $url->getQueryPropertyValue(ColorRgb::COLOR);
@@ -218,7 +218,7 @@ class ImageFetchSvg extends ImageFetch
         return $this;
     }
 
-    public function setRequestedColor(ColorRgb $color): ImageFetchSvg
+    public function setRequestedColor(ColorRgb $color): FetchImageSvg
     {
         $this->color = $color;
         return $this;
@@ -239,7 +239,7 @@ class ImageFetchSvg extends ImageFetch
      * @param string $preserveAspectRatio - the aspect ratio of the svg
      * @return $this
      */
-    public function setRequestedPreserveAspectRatio(string $preserveAspectRatio): ImageFetchSvg
+    public function setRequestedPreserveAspectRatio(string $preserveAspectRatio): FetchImageSvg
     {
         $this->preserveAspectRatio = $preserveAspectRatio;
         return $this;
@@ -248,7 +248,7 @@ class ImageFetchSvg extends ImageFetch
     /**
      * @throws ExceptionBadArgument - if the path can not be converted to a doku path
      */
-    public function setOriginalPath(Path $path): ImageFetchSvg
+    public function setOriginalPath(Path $path): FetchImageSvg
     {
         $this->originalPath = DokuPath::createFromPath($path);
         return $this;

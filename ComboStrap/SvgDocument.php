@@ -183,9 +183,9 @@ class SvgDocument
      * @return string
      *
      * TODO: What strange is that this is a XML document that is also an image
-     *   This class should be merged with {@link ImageFetchSvg}
-     *   Because we use only {@link ImageFetch} function that are here not available because we loose the fact that this is an image
-     *   For instance {@link ImageFetch::getCroppingDimensionsWithRatio()}
+     *   This class should be merged with {@link FetchImageSvg}
+     *   Because we use only {@link FetchImage} function that are here not available because we loose the fact that this is an image
+     *   For instance {@link FetchImage::getCroppingDimensionsWithRatio()}
      * @throws ExceptionBadSyntax
      */
     public function getXmlText(TagAttributes $tagAttributes = null): string
@@ -599,7 +599,7 @@ class SvgDocument
                 LogUtility::msg("The target ratio attribute ($ratio) returns the following error ({$e->getMessage()}). The svg processing was stopped");
                 return $this->xmlDocument->getXmlText();
             }
-            [$processedWidth, $processedHeight] = ImageFetch::getCroppingDimensionsWithRatio($targetRatio, $mediaWidth, $mediaHeight);
+            [$processedWidth, $processedHeight] = FetchImage::getCroppingDimensionsWithRatio($targetRatio, $mediaWidth, $mediaHeight);
 
             $this->xmlDocument->setRootAttribute(self::VIEW_BOX, "0 0 $processedWidth $processedHeight");
 

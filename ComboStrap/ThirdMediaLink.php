@@ -13,6 +13,9 @@ namespace ComboStrap;
 class ThirdMediaLink extends MediaLink
 {
 
+
+
+
     public function renderMediaTag(): string
     {
         $msg = "The media with the mime (" . $this->getPath()->getPath()->getMime() . ") is not yet implemented";

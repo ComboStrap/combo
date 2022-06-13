@@ -118,10 +118,7 @@ abstract class MediaLink
     private $lazyLoad = null;
 
 
-    /**
-     * The path of the media
-     * @var FetchAbstract[]
-     */
+
     private $path;
     private $linking;
     private $linkingClass;
@@ -135,10 +132,11 @@ abstract class MediaLink
      * Protected and not private
      * to allow cascading init
      * If private, the parent attributes are null
+     * @throws ExceptionBadArgument - if the path cannot be fetched
      */
     protected function __construct(Path $path, $tagAttributes)
     {
-        $this->path = $path;
+        $this->path = DokuPath::createFromPath($path);
         $this->attributes = $tagAttributes;
     }
 
@@ -234,7 +232,7 @@ abstract class MediaLink
      * @param $match - the match of the renderer (just a shortcut)
      * @return MediaLink
      */
-    public static function createFromRenderMatch($match): ?MediaLink
+    public static function createFromRenderMatch($match): MediaLink
     {
 
         /**
@@ -426,7 +424,7 @@ abstract class MediaLink
                 default:
                     if (!$mime->isImage()) {
                         LogUtility::msg("The type ($mime) of media ($path) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
-                        $mediaLink = new ThirdMediaLink($path);
+                        $mediaLink = new ThirdMediaLink($path, $tagAttributes);
                     } else {
                         $mediaLink = new RasterImageLink($path, $tagAttributes);
                     }
@@ -657,6 +655,21 @@ abstract class MediaLink
     public function getTitle()
     {
         return $this->attributes->getValue(TagAttributes::TITLE_KEY);
+    }
+
+    public function getFetch(): Fetch
+    {
+        try {
+            $mime = FileSystems::getMime($this->path);
+        } catch (ExceptionNotFound $e) {
+            return FetchDoku::createFromPath($this->path);
+        }
+        if($mime->toString()===Mime::PDF){
+            return (new FetchPdf())
+                ->setDokuPath($this->path);
+        }
+        return FetchDoku::createFromPath($this->path);
+
     }
 
 

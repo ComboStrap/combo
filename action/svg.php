@@ -10,8 +10,8 @@ use ComboStrap\FetchAbs;
 use ComboStrap\Identity;
 use ComboStrap\FetchCache;
 use ComboStrap\DokuPath;
-use ComboStrap\ImageFetch;
-use ComboStrap\ImageFetchSvg;
+use ComboStrap\FetchImage;
+use ComboStrap\FetchImageSvg;
 use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -62,7 +62,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         if ($event->data['status'] >= 400) return; // ACLs and precondition checks
 
 
-        $tagAttributes = TagAttributes::createEmpty(ImageFetchSvg::CANONICAL);
+        $tagAttributes = TagAttributes::createEmpty(FetchImageSvg::CANONICAL);
         $width = $event->data['width'];
         if ($width != 0) {
             $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
@@ -118,7 +118,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         $dokuPath = DokuPath::createMediaPathFromId($id,$rev);
 
         try {
-            $svgImage = new ImageFetchSvg($dokuPath,  $tagAttributes);
+            $svgImage = new FetchImageSvg($dokuPath,  $tagAttributes);
             $event->data['file'] =  $svgImage->getFetchPath()->toAbsolutePath()->toPathString();
         } catch (ExceptionCompile $e) {
 

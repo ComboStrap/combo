@@ -6,7 +6,7 @@ use ComboStrap\DokuPath;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\ImageFetch;
+use ComboStrap\FetchImage;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
 use ComboStrap\Page;
@@ -137,14 +137,14 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
 
         /**
-         * @var ImageFetch[]
+         * @var FetchImage[]
          */
         $facebookImages = $page->getImagesForTheFollowingUsages([PageImageUsage::FACEBOOK, PageImageUsage::SOCIAL, PageImageUsage::ALL]);
         if (empty($facebookImages)) {
             $defaultFacebookImage = PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
             if (!empty($defaultFacebookImage)) {
                 DokuPath::addRootSeparatorIfNotPresent($defaultFacebookImage);
-                $image = ImageFetch::createImageFetchFromId($defaultFacebookImage);
+                $image = FetchImage::createImageFetchFromId($defaultFacebookImage);
                 if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {

@@ -10,7 +10,7 @@ namespace ComboStrap;
  *
  *
  */
-class ImageRasterFetch extends ImageFetch
+class FetchImageRaster extends FetchImage
 {
 
     const CANONICAL = "raster";
@@ -25,26 +25,26 @@ class ImageRasterFetch extends ImageFetch
     /**
      * @param string $imageId
      * @param null $rev
-     * @return ImageRasterFetch
+     * @return FetchImageRaster
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
      */
-    public static function createImageRasterFetchFromId(string $imageId, $rev = null): ImageRasterFetch
+    public static function createImageRasterFetchFromId(string $imageId, $rev = null): FetchImageRaster
     {
-        return new ImageRasterFetch(DokuPath::createMediaPathFromId($imageId, $rev));
+        return new FetchImageRaster(DokuPath::createMediaPathFromId($imageId, $rev));
     }
 
     /**
      * @param Path $path
-     * @return ImageRasterFetch
+     * @return FetchImageRaster
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
      */
-    public static function createImageRasterFetchFromPath(Path $path): ImageRasterFetch
+    public static function createImageRasterFetchFromPath(Path $path): FetchImageRaster
     {
-        return new ImageRasterFetch($path);
+        return new FetchImageRaster($path);
     }
 
 
@@ -106,7 +106,7 @@ class ImageRasterFetch extends ImageFetch
     {
 
         try {
-            $fetchUrl = DokuFetch::createFromPath($this->originalPath)->getFetchUrl($url);
+            $fetchUrl = FetchDoku::createFromPath($this->originalPath)->getFetchUrl($url);
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntime("Internal error. The image should exist. This is already checked at build time.");
         }
@@ -117,7 +117,7 @@ class ImageRasterFetch extends ImageFetch
 
 
     /**
-     * We overwrite the {@link ImageFetch::getTargetWidth()}
+     * We overwrite the {@link FetchImage::getTargetWidth()}
      * because we don't scale up for raster image
      * to not lose quality.
      *
@@ -224,16 +224,16 @@ class ImageRasterFetch extends ImageFetch
 
     /**
      * @param Url $url
-     * @return ImageRasterFetch
+     * @return FetchImageRaster
      * @throws ExceptionBadArgument - if the path is not an image
      * @throws ExceptionBadSyntax - if the image is badly encoded
      * @throws ExceptionNotExists - if the image does not exists
      * @throws ExceptionNotFound - if the mime was not found
      */
 
-    public function buildFromUrl(Url $url): ImageRasterFetch
+    public function buildFromUrl(Url $url): FetchImageRaster
     {
-        $this->originalPath = DokuFetch::createEmpty()->buildFromUrl($url)->getFetchPath();
+        $this->originalPath = FetchDoku::createEmpty()->buildFromUrl($url)->getFetchPath();
         $this->analyzeImageIfNeeded();
         $this->mime = FileSystems::getMime($this->originalPath);
         $this->addCommonImageQueryParameterToUrl($url);

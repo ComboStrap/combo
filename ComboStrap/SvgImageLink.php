@@ -21,7 +21,7 @@ namespace ComboStrap;
 class SvgImageLink extends ImageLink
 {
 
-    const CANONICAL = ImageFetchSvg::CANONICAL;
+    const CANONICAL = FetchImageSvg::CANONICAL;
 
     /**
      * The maximum size to be embedded
@@ -40,9 +40,9 @@ class SvgImageLink extends ImageLink
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
 
     /**
-     * @var ImageFetchSvg
+     * @var FetchImageSvg
      */
-    private ImageFetchSvg $svgFetch;
+    private FetchImageSvg $svgFetch;
 
 
     /**
@@ -62,7 +62,7 @@ class SvgImageLink extends ImageLink
         /**
          * Build the first fetch
          */
-        $this->svgFetch = ImageFetchSvg::createEmpty()->buildFromUrl($tagAttributes->toUrl());
+        $this->svgFetch = FetchImageSvg::createEmpty()->buildFromUrl($tagAttributes->toUrl());
 
 
         parent::__construct($path, $tagAttributes);
@@ -107,7 +107,7 @@ class SvgImageLink extends ImageLink
         /**
          * Remove the cache attribute
          * (no cache for the img tag)
-         * @var ImageFetchSvg $image
+         * @var FetchImageSvg $image
          */
         $image = $this->getFetch();
         $responseAttributes = TagAttributes::createFromTagAttributes($image->getAttributes());
@@ -214,7 +214,7 @@ class SvgImageLink extends ImageLink
     {
 
         /**
-         * @var ImageFetchSvg $image
+         * @var FetchImageSvg $image
          */
         $image = $this->getFetch();
         if (!$image->exists()) {

@@ -31,7 +31,7 @@ require_once(__DIR__ . '/PluginUtility.php');
 class RasterImageLink extends ImageLink
 {
 
-    const CANONICAL = ImageRasterFetch::CANONICAL;
+    const CANONICAL = FetchImageRaster::CANONICAL;
     const CONF_LAZY_LOADING_ENABLE = "rasterImageLazyLoadingEnable";
     const CONF_LAZY_LOADING_ENABLE_DEFAULT = 1;
 
@@ -75,7 +75,7 @@ class RasterImageLink extends ImageLink
         }
         $tagAttributes->setLogicalTag(self::CANONICAL);
 
-        $this->fetchRaster = ImageRasterFetch::createImageRasterFetchFromPath($path);
+        $this->fetchRaster = FetchImageRaster::createImageRasterFetchFromPath($path);
         $this->fetchRaster->buildSharedImagePropertyFromTagAttributes($tagAttributes);
 
 
@@ -93,7 +93,7 @@ class RasterImageLink extends ImageLink
     public function renderMediaTag(): string
     {
         /**
-         * @var ImageRasterFetch $image
+         * @var FetchImageRaster $image
          */
         $image = $this->getFetch();
         if ($image->exists()) {
@@ -249,7 +249,7 @@ class RasterImageLink extends ImageLink
                         }
                         $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
 
-                        $xsmUrl = ImageRasterFetch::createImageRasterFetchFromPath($image->getOriginalPath())
+                        $xsmUrl = FetchImageRaster::createImageRasterFetchFromPath($image->getOriginalPath())
                             ->setRequestedWidth($breakpointWidthMinusMargin);
                         $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
                         $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);

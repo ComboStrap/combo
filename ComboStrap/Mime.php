@@ -32,6 +32,7 @@ class Mime
     const WEBP = "image/webp";
     const CSS = "text/css";
     const MARKDOWN = "text/markdown";
+    const PDF = "application/pdf";
     /**
      * @var array|null
      */
@@ -64,7 +65,7 @@ class Mime
     public static function createFromExtension($extension): Mime
     {
         switch ($extension) {
-            case ImageFetchSvg::EXTENSION:
+            case FetchImageSvg::EXTENSION:
                 /**
                  * Svg is authorized when viewing but is not part
                  * of the {@link File::getKnownMime()}
@@ -92,6 +93,8 @@ class Mime
                 return new Mime(Mime::BMP);
             case "gif":
                 return new Mime(Mime::GIF);
+            case "pdf":
+                return new Mime(Mime::PDF);
             default:
                 $mtypes = getMimeTypes();
                 $mimeString = $mtypes[$extension];

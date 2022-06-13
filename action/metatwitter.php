@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\ExceptionBadSyntax;
-use ComboStrap\ImageFetch;
+use ComboStrap\FetchImage;
 use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -152,7 +152,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         if (empty($twitterImages)) {
             $defaultImageIdConf = PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE);
             if (!empty($defaultImageIdConf)) {
-                $twitterImage = ImageFetch::createImageFetchFromId($defaultImageIdConf);
+                $twitterImage = FetchImage::createImageFetchFromId($defaultImageIdConf);
                 if ($twitterImage->exists()) {
                     $twitterImages[] = $twitterImage;
                 } else {

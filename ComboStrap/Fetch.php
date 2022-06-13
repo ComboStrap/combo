@@ -5,7 +5,7 @@ namespace ComboStrap;
 /**
  * A class that would return/process a path
  *
- * Example: {@link ImageFetch}
+ * Example: {@link FetchImage}
  */
 interface Fetch
 {

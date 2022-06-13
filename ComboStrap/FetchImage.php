@@ -14,7 +14,7 @@ namespace ComboStrap;
  * (ie a file and its transformation attribute if any such as
  * width, height, ...)
  */
-abstract class ImageFetch extends FetchAbs
+abstract class FetchImage extends FetchAbs
 {
 
     const CANONICAL = "image";
@@ -41,7 +41,7 @@ abstract class ImageFetch extends FetchAbs
 
     /**
      * @param Path $path
-     * @return ImageRasterFetch|ImageFetchSvg
+     * @return FetchImageRaster|FetchImageSvg
      * @throws ExceptionBadArgument - if the path is not an image
      * @throws ExceptionBadSyntax - if the image is not encoded
      * @throws ExceptionNotExists - if the image does not exists
@@ -61,11 +61,11 @@ abstract class ImageFetch extends FetchAbs
 
         if ($mime->toString() === Mime::SVG) {
 
-            $image = ImageFetchSvg::createEmpty()->setOriginalPath($path);
+            $image = FetchImageSvg::createEmpty()->setOriginalPath($path);
 
         } else {
 
-            $image = ImageRasterFetch::createImageRasterFetchFromPath($path);
+            $image = FetchImageRaster::createImageRasterFetchFromPath($path);
 
         }
 
@@ -77,7 +77,7 @@ abstract class ImageFetch extends FetchAbs
 
     /**
      * @return DokuPath - just to get the id that is mandatory when adding the toc for dokuwiki compliance
-     * See {@link ImageFetch::addCommonImageQueryParameterToUrl()}
+     * See {@link FetchImage::addCommonImageQueryParameterToUrl()}
      * @throws ExceptionNotFound - if not used
      */
     function getOriginalPath(): DokuPath{
@@ -87,7 +87,7 @@ abstract class ImageFetch extends FetchAbs
     /**
      * @param string $imageId
      * @param string|null $rev
-     * @return ImageFetchSvg|ImageRasterFetch
+     * @return FetchImageSvg|FetchImageRaster
      * @throws ExceptionBadArgument - if the path is not an image
      * @throws ExceptionBadSyntax - if the image is badly encoded
      * @throws ExceptionNotExists - if the image does not exists
@@ -144,7 +144,7 @@ abstract class ImageFetch extends FetchAbs
     }
 
     /**
-     * Return a height value that is conform to the {@link ImageFetch::getIntrinsicAspectRatio()} of the image.
+     * Return a height value that is conform to the {@link FetchImage::getIntrinsicAspectRatio()} of the image.
      *
      * @param int|null $breakpointWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
      * if not specified, the requested width and if not specified the intrinsic width
@@ -155,7 +155,7 @@ abstract class ImageFetch extends FetchAbs
      *   * If the requested height given is not null, return the given height rounded
      *   * If the requested height is null, if the requested width is:
      *         * null: return the intrinsic / natural height
-     *         * not null: return the height as being the width scaled down by the {@link ImageFetch::getIntrinsicAspectRatio()}
+     *         * not null: return the height as being the width scaled down by the {@link FetchImage::getIntrinsicAspectRatio()}
      */
     public
     function getBreakpointHeight(?int $breakpointWidth): int
@@ -176,7 +176,7 @@ abstract class ImageFetch extends FetchAbs
     }
 
     /**
-     * Return a width value that is conform to the {@link ImageFetch::getIntrinsicAspectRatio()} of the image.
+     * Return a width value that is conform to the {@link FetchImage::getIntrinsicAspectRatio()} of the image.
      *
      * @param int|null $requestedWidth - the requested width (may be null)
      * @param int|null $requestedHeight - the request height (may be null)
@@ -186,7 +186,7 @@ abstract class ImageFetch extends FetchAbs
      *   * If the requested width given is not null, return the given width
      *   * If the requested width is null, if the requested height is:
      *         * null: return the intrinsic / natural width
-     *         * not null: return the width as being the height scaled down by the {@link ImageFetch::getIntrinsicAspectRatio()}
+     *         * not null: return the width as being the height scaled down by the {@link FetchImage::getIntrinsicAspectRatio()}
      */
     public
     function getWidthValueScaledDown(?int $requestedWidth, ?int $requestedHeight): int
@@ -369,8 +369,8 @@ abstract class ImageFetch extends FetchAbs
      * specified in the query parameters
      *
      * For instance,
-     *   * with `200`, the target image has a {@link ImageFetch::getTargetWidth() logical width} of 200 and a {@link ImageFetch::getTargetHeight() logical height} that is scaled down by the {@link ImageFetch::getIntrinsicAspectRatio() instrinsic ratio}
-     *   * with ''0x20'', the target image has a {@link ImageFetch::getTargetHeight() logical height} of 20 and a {@link ImageFetch::getTargetWidth() logical width} that is scaled down by the {@link ImageFetch::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with `200`, the target image has a {@link FetchImage::getTargetWidth() logical width} of 200 and a {@link FetchImage::getTargetHeight() logical height} that is scaled down by the {@link FetchImage::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with ''0x20'', the target image has a {@link FetchImage::getTargetHeight() logical height} of 20 and a {@link FetchImage::getTargetWidth() logical width} that is scaled down by the {@link FetchImage::getIntrinsicAspectRatio() instrinsic ratio}
      *
      * The doc is {@link https://www.dokuwiki.org/images#resizing}
      *
@@ -410,7 +410,7 @@ abstract class ImageFetch extends FetchAbs
          */
         try {
             $ratio = $this->getRequestedAspectRatio();
-            [$croppedWidth, $croppedHeight] = ImageFetch::getCroppingDimensionsWithRatio(
+            [$croppedWidth, $croppedHeight] = FetchImage::getCroppingDimensionsWithRatio(
                 $ratio,
                 $this->getIntrinsicWidth(),
                 $this->getIntrinsicHeight()
@@ -428,8 +428,8 @@ abstract class ImageFetch extends FetchAbs
      * The logical width is the width of the target image calculated from the requested dimension
      *
      * For instance,
-     *   * with `200`, the target image has a {@link ImageFetch::getTargetWidth() logical width} of 200 and a {@link ImageFetch::getTargetHeight() logical height} that is scaled down by the {@link ImageFetch::getIntrinsicAspectRatio() instrinsic ratio}
-     *   * with ''0x20'', the target image has a {@link ImageFetch::getTargetHeight() logical height} of 20 and a {@link ImageFetch::getTargetWidth() logical width} that is scaled down by the {@link ImageFetch::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with `200`, the target image has a {@link FetchImage::getTargetWidth() logical width} of 200 and a {@link FetchImage::getTargetHeight() logical height} that is scaled down by the {@link FetchImage::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with ''0x20'', the target image has a {@link FetchImage::getTargetHeight() logical height} of 20 and a {@link FetchImage::getTargetWidth() logical width} that is scaled down by the {@link FetchImage::getIntrinsicAspectRatio() instrinsic ratio}
      *
      * The doc is {@link https://www.dokuwiki.org/images#resizing}
      * @return int
@@ -468,7 +468,7 @@ abstract class ImageFetch extends FetchAbs
          */
         try {
             $ratio = $this->getRequestedAspectRatio();
-            [$logicalWidthWithRatio, $logicalHeightWithRatio] = ImageFetch::getCroppingDimensionsWithRatio(
+            [$logicalWidthWithRatio, $logicalHeightWithRatio] = FetchImage::getCroppingDimensionsWithRatio(
                 $ratio,
                 $this->getIntrinsicWidth(),
                 $this->getIntrinsicHeight()
@@ -544,26 +544,26 @@ abstract class ImageFetch extends FetchAbs
          * Trying to crop on the width
          */
         $logicalWidth = $intrinsicWidth;
-        $logicalHeight = ImageFetch::round($logicalWidth / $targetRatio);
+        $logicalHeight = FetchImage::round($logicalWidth / $targetRatio);
         if ($logicalHeight > $intrinsicHeight) {
             /**
              * Cropping by height
              */
             $logicalHeight = $intrinsicHeight;
-            $logicalWidth = ImageFetch::round($targetRatio * $logicalHeight);
+            $logicalWidth = FetchImage::round($targetRatio * $logicalHeight);
         }
         return [$logicalWidth, $logicalHeight];
 
     }
 
 
-    public function setRequestedWidth(int $requestedWidth): ImageFetch
+    public function setRequestedWidth(int $requestedWidth): FetchImage
     {
         $this->requestedWidth = $requestedWidth;
         return $this;
     }
 
-    public function setRequestedHeight(int $requestedHeight): ImageFetch
+    public function setRequestedHeight(int $requestedHeight): FetchImage
     {
         $this->requestedHeight = $requestedHeight;
         return $this;

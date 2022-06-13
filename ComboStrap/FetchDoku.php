@@ -2,7 +2,7 @@
 
 namespace ComboStrap;
 
-class DokuFetch extends FetchAbs
+class FetchDoku extends FetchAbs
 {
 
     public const MEDIA_QUERY_PARAMETER = "media";
@@ -10,18 +10,18 @@ class DokuFetch extends FetchAbs
     private DokuPath $path;
 
 
-    public static function createFromPath(DokuPath $dokuPath): DokuFetch
+    public static function createFromPath(DokuPath $dokuPath): FetchDoku
     {
         return self::createEmpty()->setDokuPath($dokuPath);
     }
 
     /**
      * Empty because a fetch is mostly build through an URL
-     * @return DokuFetch
+     * @return FetchDoku
      */
-    public static function createEmpty(): DokuFetch
+    public static function createEmpty(): FetchDoku
     {
-        return new DokuFetch();
+        return new FetchDoku();
     }
 
 
@@ -32,11 +32,11 @@ class DokuFetch extends FetchAbs
     {
         /**
          * For dokuwiki implementation, see {@link ml()}
-         * We still use the {@link DokuFetch::MEDIA_QUERY_PARAMETER}
+         * We still use the {@link FetchDoku::MEDIA_QUERY_PARAMETER}
          * to be Dokuwiki Compatible even if we can serve from other drive know
          */
         $url = parent::getFetchUrl($url)
-            ->addQueryParameter(DokuFetch::MEDIA_QUERY_PARAMETER, $this->path->getDokuwikiId());
+            ->addQueryParameter(FetchDoku::MEDIA_QUERY_PARAMETER, $this->path->getDokuwikiId());
         if ($this->path->getDrive() !== DokuPath::MEDIA_DRIVE) {
             $url->addQueryParameter(DokuPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
         }
@@ -79,7 +79,7 @@ class DokuFetch extends FetchAbs
         return FileSystems::getMime($this->path);
     }
 
-    public function setDokuPath(DokuPath $dokuPath): DokuFetch
+    public function setDokuPath(DokuPath $dokuPath): FetchDoku
     {
         $this->path = $dokuPath;
         return $this;
@@ -88,7 +88,7 @@ class DokuFetch extends FetchAbs
     /**
      * @throws ExceptionBadArgument
      */
-    public function buildFromUrl(Url $url): DokuFetch
+    public function buildFromUrl(Url $url): FetchDoku
     {
         parent::buildFromUrl($url);
         $id = $url->getQueryPropertyValue(self::MEDIA_QUERY_PARAMETER);

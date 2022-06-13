@@ -417,5 +417,11 @@ class Url
         return $this;
     }
 
+    public function setFragment(string $fragment): Url
+    {
+        $this->fragment = $fragment;
+        return $this;
+    }
+
 
 }

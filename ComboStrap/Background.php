@@ -163,7 +163,7 @@ class Background
                         return;
                     }
                     /**
-                     * @var ImageFetch $image
+                     * @var FetchImage $image
                      */
                     $image = $media->getFetch();
                     if (!FileSystems::exists($image->getOriginalPath())) {

@@ -52,7 +52,7 @@ class Site
 
 
     /**
-     * @return ImageFetch[]
+     * @return FetchImage[]
      */
     public static function getLogoImages(): array
     {
@@ -62,7 +62,7 @@ class Site
             $dokuPath = DokuPath::createMediaPathFromId($logoPath);
             if (FileSystems::exists($dokuPath)) {
                 try {
-                    $logos[] = ImageFetch::createImageFetchFromPath($dokuPath);
+                    $logos[] = FetchImage::createImageFetchFromPath($dokuPath);
                 } catch (Exception $e) {
                     // The image is not valid
                     LogUtility::msg("The logo ($logoPath) is not a valid image. {$e->getMessage()}");
@@ -95,12 +95,12 @@ class Site
     /**
      * @throws ExceptionNotFound
      */
-    public static function getLogoAsSvgImage(): ImageFetchSvg
+    public static function getLogoAsSvgImage(): FetchImageSvg
     {
         foreach (self::SVG_LOGO_IDS as $svgLogo) {
 
             try {
-                $image = ImageFetchSvg::createImageFetchFromId($svgLogo);
+                $image = FetchImageSvg::createImageFetchFromId($svgLogo);
             } catch (ExceptionCompile $e) {
                 LogUtility::msg("The svg ($svgLogo) returns an error. {$e->getMessage()}");
                 continue;
@@ -115,12 +115,12 @@ class Site
     /**
      * @throws ExceptionNotFound
      */
-    public static function getLogoAsRasterImage(): ImageRasterFetch
+    public static function getLogoAsRasterImage(): FetchImageRaster
     {
         foreach (self::PNG_LOGO_IDS as $pngLogo) {
 
             try {
-                $image = ImageRasterFetch::createImageRasterFetchFromId($pngLogo);
+                $image = FetchImageRaster::createImageRasterFetchFromId($pngLogo);
             } catch (ExceptionCompile $e) {
                 LogUtility::msg("The png Logo ($pngLogo) returns an error. {$e->getMessage()}");
                 continue;
@@ -837,7 +837,7 @@ class Site
     /**
      * @throws ExceptionNotFound
      */
-    public static function getLogoImage(): ImageFetch
+    public static function getLogoImage(): FetchImage
     {
         $logosImages = Site::getLogoImages();
         if (empty($logosImages)) {

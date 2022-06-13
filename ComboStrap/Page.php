@@ -707,11 +707,11 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * @return ImageFetch
+     * @return FetchImage
      * @throws ExceptionNotFound
      */
     public
-    function getImage(): ImageFetch
+    function getImage(): FetchImage
     {
 
         $images = $this->getPageImages();
@@ -1828,7 +1828,7 @@ class Page extends ResourceComboAbs
 
     /**
      * @param array $usages
-     * @return ImageFetch[]
+     * @return FetchImage[]
      */
     public
     function getImagesForTheFollowingUsages(array $usages): array

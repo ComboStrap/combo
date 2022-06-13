@@ -21,11 +21,13 @@ use dokuwiki\Cache\Cache;
  * https://lofi.limo/blog/images/write-html-right.png
  * https://opengraph.githubassets.com/6b85042cdc8e98725bd85a0e7b159c99104644fbf97402fded205ee4d2036ab9/ComboStrap/combo
  */
-class Vignette extends ImageRasterFetch
+class Vignette extends ImageFetch
 {
 
     const CANONICAL = "page-vignette";
     public const DRIVE = "page-vignette";
+    const PAGE_QUERY_PROPERTY = "page";
+    const VIGNETTE_QUERY_PROPERTY = "vignette";
 
 
     /**
@@ -39,12 +41,13 @@ class Vignette extends ImageRasterFetch
     /**
      * @var bool
      */
-    private $useCache;
+    private bool $useCache;
+    private string $buster;
 
 
     /**
      *
-     * @throws ExceptionBadArgument
+     * @throws ExceptionNotFound - when the page does not exists
      */
     public function __construct(Page $page, Mime $mime = null)
     {
@@ -53,12 +56,13 @@ class Vignette extends ImageRasterFetch
         if ($mime === null) {
             $this->mime = Mime::create(Mime::WEBP);
         }
-        $path = $this->getPhysicalPath();
-        parent::__construct($path);
+        $this->buster = FileSystems::getCacheBuster($this->page->getPath());
+        parent::__construct();
+
     }
 
     /**
-     * @throws ExceptionBadArgument - if the mime is not supported
+     * @throws ExceptionNotFound - if the page does not exists
      */
     public static function createForPage(Page $page, Mime $mime = null): Vignette
     {
@@ -67,41 +71,35 @@ class Vignette extends ImageRasterFetch
 
 
     /**
-     * @throws ExceptionBadArgument - if the vignette extension is not supported
+     *
+     * @throws ExceptionBadArgument
      */
-    public function getPhysicalPath(): LocalPath
+    public function getFetchPath(): LocalPath
     {
 
         $extension = $this->mime->getExtension();
-        $cache = new Cache($this->page->getPath()->toPathString(), ".vignette.{$extension}");
+        $cache = new FetchCache($this);
 
         /**
          * Building the cache dependencies
          */
-        $fileDependencies = [
-            $this->page->getPath()->toLocalPath()->toPathString(),
-            PluginUtility::getPluginInfoFile()->toPathString()
-        ];
         try {
-            $fileDependencies[] = ClassUtility::getClassPath($this)->toPathString();
+            $cache->addFileDependency($this->page->getPath())
+                ->addFileDependency(ClassUtility::getClassPath($this));
         } catch (\ReflectionException $e) {
             // It should not happen but yeah
-            LogUtility::error("The path of the actual class cannot be determined", self::CANONICAL);
+            LogUtility::internalError("The path of the actual class cannot be determined", self::CANONICAL);
         }
 
         /**
          * Can we use the cache ?
          */
-        if ($cache->useCache(['files' => $fileDependencies]) && $this->useCache === true) {
-            return LocalPath::createFromPath($cache->cache);
+        if ($cache->isCacheUsable()) {
+            return LocalPath::createFromPath($cache->getFile());
         }
 
-        try {
-            $width = $this->getIntrinsicWidth();
-            $height = $this->getIntrinsicHeight();
-        } catch (ExceptionCompile $e) {
-            throw new ExceptionRuntime("Internal error. Width and height of a vignette could not be known");
-        }
+        $width = $this->getIntrinsicWidth();
+        $height = $this->getIntrinsicHeight();
 
         /**
          * Don't use {@link imagecreate()} otherwise
@@ -313,4 +311,30 @@ class Vignette extends ImageRasterFetch
     }
 
 
+    function getFetchUrl(): Url
+    {
+        $url = Url::createFetchUrl()
+            ->addQueryParameter(self::VIGNETTE_QUERY_PROPERTY, $this->page->getPath()->getDokuwikiId() . "." . $this->mime->getExtension());
+        $this->addCommonImageQueryParameterToUrl($url);
+        return $url;
+    }
+
+
+    function getBuster(): string
+    {
+        return $this->buster;
+    }
+
+    function acceptsFetchUrl(Url $url): bool
+    {
+        if ($url->hasProperty(self::VIGNETTE_QUERY_PROPERTY)) {
+            return true;
+        }
+        return false;
+    }
+
+    public function getMime(): Mime
+    {
+        return $this->mime;
+    }
 }

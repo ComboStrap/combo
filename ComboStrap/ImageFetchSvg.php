@@ -25,21 +25,15 @@ class ImageFetchSvg extends ImageFetch
 
 
     /**
-     * @throws ExceptionBadArgument - if the path is not local
-     */
-    public function __construct($path)
-    {
-        $this->path = DokuPath::createFromPath($path);
-
-        parent::__construct();
-
-    }
-
-
-    /**
      * @var SvgDocument
      */
     private $svgDocument;
+    private ColorRgb $color;
+
+    public static function createEmpty(): ImageFetchSvg
+    {
+        return new ImageFetchSvg();
+    }
 
     /**
      *
@@ -91,7 +85,7 @@ class ImageFetchSvg extends ImageFetch
     {
 
         $fetchUrl = DokuFetch::createFromPath($this->path)->getFetchUrl();
-        $this->addCommonQueryParameterToUrl($fetchUrl);
+        $this->addCommonImageQueryParameterToUrl($fetchUrl);
         return $fetchUrl;
 
     }
@@ -113,8 +107,8 @@ class ImageFetchSvg extends ImageFetch
         $files[] = $this->path->toAbsolutePath()->toPathString();
         $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve("SvgDocument.php");
         $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve("XmlDocument.php");
-        $files = array_merge(Site::getConfigurationFiles(),$files); // svg generation depends on configuration
-        foreach($files as $file){
+        $files = array_merge(Site::getConfigurationFiles(), $files); // svg generation depends on configuration
+        foreach ($files as $file) {
             $fetchCache->addFileDependency($file);
         }
 
@@ -161,7 +155,7 @@ class ImageFetchSvg extends ImageFetch
     function acceptsFetchUrl(Url $url): bool
     {
 
-        $media = $url->getQueryPropertyValue(Url::MEDIA_QUERY_PARAMETER);
+        $media = $url->getQueryPropertyValue(DokuFetch::MEDIA_QUERY_PARAMETER);
         $dokuPath = DokuPath::createMediaPathFromId($media);
         try {
             $mime = FileSystems::getMime($dokuPath);
@@ -182,10 +176,31 @@ class ImageFetchSvg extends ImageFetch
     /**
      * @return DokuPath - the path of the original svg
      */
-    public function getPath(): Path {
+    public function getPath(): Path
+    {
         return $this->path;
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public function buildFromUrl(Url $url): ImageFetchSvg
+    {
+        $this->path = DokuFetch::createEmpty()->buildFromUrl($url)->getFetchPath();
+        $this->buildSharedImagePropertyFromTagAttributes($url);
+        $color = $url->getQueryPropertyValue(ColorRgb::COLOR);
+        if($color!==null){
+            // we can't have an hex in an url, we will see if this is encoded ;?
+            $this->setColor(ColorRgb::createFromString($color));
+        }
+        return $this;
+    }
+
+    public function setColor(ColorRgb $color): ImageFetchSvg
+    {
+        $this->color = $color;
+        return $this;
+    }
 
 
 }

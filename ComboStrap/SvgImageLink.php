@@ -40,9 +40,9 @@ class SvgImageLink extends ImageLink
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
 
     /**
-     * @var ImageFetchSvg|ImageRasterFetch
+     * @var ImageFetchSvg
      */
-    private $svgFetch;
+    private ImageFetchSvg $svgFetch;
 
 
     /**
@@ -62,8 +62,8 @@ class SvgImageLink extends ImageLink
         /**
          * Build the first fetch
          */
-        $this->svgFetch = new ImageFetchSvg($path);
-        $this->svgFetch->buildSharedImagePropertyFromTagAttributes($tagAttributes);
+        $this->svgFetch = ImageFetchSvg::createEmpty()->buildFromUrl($tagAttributes->toUrl());
+
 
         parent::__construct($path, $tagAttributes);
 
@@ -109,7 +109,7 @@ class SvgImageLink extends ImageLink
          * (no cache for the img tag)
          * @var ImageFetchSvg $image
          */
-        $image = $this->getDefaultImageFetch();
+        $image = $this->getFetch();
         $responseAttributes = TagAttributes::createFromTagAttributes($image->getAttributes());
         $responseAttributes->removeComponentAttributeIfPresent(ImageFetch::CACHE_KEY);
 
@@ -216,7 +216,7 @@ class SvgImageLink extends ImageLink
         /**
          * @var ImageFetchSvg $image
          */
-        $image = $this->getDefaultImageFetch();
+        $image = $this->getFetch();
         if (!$image->exists()) {
             throw new ExceptionNotFound("The image ($image) does not exist");
         }
@@ -224,7 +224,7 @@ class SvgImageLink extends ImageLink
         /**
          * This attributes should not be in the render
          */
-        $attributes = $this->getDefaultImageFetch()->getAttributes();
+        $attributes = $this->getFetch()->getAttributes();
         $attributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
         $attributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
         /**
@@ -279,4 +279,8 @@ class SvgImageLink extends ImageLink
     }
 
 
+    function getFetch(): Fetch
+    {
+        return $this->svgFetch;
+    }
 }

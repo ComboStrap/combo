@@ -4,7 +4,7 @@
 namespace ComboStrap;
 
 
-class ThirdMediaFetch extends MediaFetch
+class ThirdMediaFetch extends FetchAbstract
 {
 
     public function getUrl(): string

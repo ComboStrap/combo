@@ -9,7 +9,7 @@ class Locale extends MetadataText
 
     const PROPERTY_NAME = "locale";
 
-    public static function createForPage(Page $page)
+    public static function createForPage(Page $page): Locale
     {
         return (new Locale())
             ->setResource($page);
@@ -30,23 +30,21 @@ class Locale extends MetadataText
         return "Locale";
     }
 
+    /**
+     * @return string
+     */
     public function getValue(): string
     {
 
-        $resourceCombo = $this->getResource();
-        if (!($resourceCombo instanceof Page)) {
-            throw new ExceptionNotFound("The locale is only implemented for page resources");
+        $page = $this->getResource();
+        if (!($page instanceof Page)) {
+            LogUtility::internalError("The locale is only implemented for page resources");
+            return $this->getDefaultValue();
         }
-        $lang = $resourceCombo->getLangOrDefault();
-        if (!empty($lang)) {
+        $lang = $page->getLangOrDefault();
+        $country = $page->getRegionOrDefault();
+        return $lang . "_" . strtoupper($country);
 
-            $country = $resourceCombo->getRegionOrDefault();
-            if (empty($country)) {
-                $country = $lang;
-            }
-            return $lang . "_" . strtoupper($country);
-        }
-        throw new ExceptionNotFound("No locale was found for the resource ($resourceCombo)");
 
     }
 
@@ -66,7 +64,10 @@ class Locale extends MetadataText
         return false;
     }
 
-    public function getDefaultValue(): ?string
+    /**
+     * @return string
+     */
+    public function getDefaultValue(): string
     {
         /**
          * The value of {@link locale_get_default()} is with an underscore
@@ -78,6 +79,14 @@ class Locale extends MetadataText
     public function getCanonical(): string
     {
         return "locale";
+    }
+
+    /**
+     * @return string
+     */
+    public function getValueOrDefault(): string
+    {
+        return $this->getValue();
     }
 
 

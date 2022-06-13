@@ -15,24 +15,10 @@ abstract class ImageLink extends MediaLink
 
 
     /**
-     * @return ImageFetch
+     * @return Fetch
      */
-    function getDefaultImageFetch(): ?ImageFetch
-    {
+    abstract function getFetch(): Fetch;
 
-        if (!($this->getPath() instanceof ImageFetch)) {
-            LogUtility::msg("The media ($this) is not an image", LogUtility::LVL_MSG_ERROR);
-        }
-        /**
-         *
-         */
-        $media = $this->getPath();
-        if($media instanceof ImageFetch){
-            return $media;
-        } else {
-            return null;
-        }
-    }
 
     /**
      * @return string the wiki syntax

@@ -12,7 +12,6 @@ namespace ComboStrap;
  */
 class Url
 {
-    const MEDIA_QUERY_PARAMETER = "media";
 
     /**
      * @var array $query
@@ -103,7 +102,7 @@ class Url
             ->setPath($path);
     }
 
-    private static function createEmpty(): Url
+    public static function createEmpty(): Url
     {
         return new Url();
     }
@@ -205,13 +204,22 @@ class Url
      */
     public function addQueryMediaParameter(string $id): Url
     {
-        $this->addQueryParameter(self::MEDIA_QUERY_PARAMETER, $id);
+        $this->addQueryParameter(DokuFetch::MEDIA_QUERY_PARAMETER, $id);
         return $this;
     }
 
     public function __toString()
     {
         return $this->toAbsoluteUrlString();
+    }
+
+    public function getQueryPropertyValueOrDefault(string $key, string $defaultIfNull)
+    {
+        $value = $this->getQueryPropertyValue($key);
+        if($value!==null){
+            return $value;
+        }
+        return $defaultIfNull;
     }
 
 

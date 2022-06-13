@@ -1355,6 +1355,14 @@ class TagAttributes
         return $value;
     }
 
+    public function toUrl(): Url
+    {
+        $url = Url::createEmpty();
+        foreach ($this->componentAttributesCaseInsensitive as $key => $value) {
+            $url->addQueryParameter($key, $value);
+        }
+        return $url;
+    }
 
 
 }

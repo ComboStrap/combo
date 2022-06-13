@@ -165,7 +165,7 @@ class Background
                     /**
                      * @var ImageFetch $image
                      */
-                    $image = $media->getDefaultImageFetch();
+                    $image = $media->getFetch();
                     if (!FileSystems::exists($image->getPath())) {
                         LogUtility::msg("The image ($media) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         return;

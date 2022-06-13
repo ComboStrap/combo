@@ -60,6 +60,7 @@ class DokuPath extends PathAbs
     const CACHE_DRIVE = "cache";
     const DRIVES = [self::COMBO_DRIVE, self::CACHE_DRIVE, self::MEDIA_DRIVE];
     const PAGE_FILE_TXT_EXTENSION = ".txt";
+    const REV_ATTRIBUTE = "rev";
 
     /**
      * @var string[]
@@ -487,6 +488,11 @@ class DokuPath extends PathAbs
         if (substr($namespaceAttribute, -1) !== DokuPath::PATH_SEPARATOR) {
             $namespaceAttribute = $namespaceAttribute . DokuPath::PATH_SEPARATOR;
         }
+    }
+
+    public static function create(string $path, string $drive, string $rev): DokuPath
+    {
+        return new DokuPath($path, $drive, $rev);
     }
 
 

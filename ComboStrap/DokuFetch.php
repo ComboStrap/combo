@@ -5,16 +5,22 @@ namespace ComboStrap;
 class DokuFetch implements Fetch
 {
 
+    public const MEDIA_QUERY_PARAMETER = "media";
     private DokuPath $path;
 
-    public function __construct(DokuPath $dokuPath)
-    {
-        $this->path = $dokuPath;
-    }
 
     public static function createFromPath(DokuPath $dokuPath): DokuFetch
     {
-        return new DokuFetch($dokuPath);
+        return self::createEmpty()->setDokuPath($dokuPath);
+    }
+
+    /**
+     * Empty because a fetch is mostly build through an URL
+     * @return DokuFetch
+     */
+    public static function createEmpty(): DokuFetch
+    {
+        return new DokuFetch();
     }
 
 
@@ -34,9 +40,9 @@ class DokuFetch implements Fetch
 
     }
 
-    function getFetchPath(): LocalPath
+    function getFetchPath(): DokuPath
     {
-        return $this->path->toLocalPath();
+        return $this->path;
     }
 
 
@@ -68,4 +74,29 @@ class DokuFetch implements Fetch
     {
         return FileSystems::getMime($this->path);
     }
+
+    public function setDokuPath(DokuPath $dokuPath): DokuFetch
+    {
+        $this->path = $dokuPath;
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public function buildFromUrl(Url $url): DokuFetch
+    {
+
+        $id = $url->getQueryPropertyValue(self::MEDIA_QUERY_PARAMETER);
+        if($id===null){
+            throw new ExceptionBadArgument("The (".self::MEDIA_QUERY_PARAMETER.") query property is mandatory and was not present in the URL ($url)");
+        }
+        $drive = $url->getQueryPropertyValueOrDefault(DokuPath::DRIVE_ATTRIBUTE, DokuPath::MEDIA_DRIVE);
+        $rev = $url->getQueryPropertyValue(DokuPath::REV_ATTRIBUTE);
+        $this->path = DokuPath::create(":$id", $drive, $rev);
+        return $this;
+
+    }
+
+
 }

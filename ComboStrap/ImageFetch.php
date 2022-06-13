@@ -30,13 +30,11 @@ abstract class ImageFetch extends FetchAbs
 
     const CANONICAL = "image";
 
-    /**
-     * @var int|null
-     */
-    private ?int $requestedWidth;
-    private ?int $requestedHeight;
-    private ?string $externalCacheRequested;
-    private ?string $requestedRatio;
+    // The common request image parameters
+    private ?int $requestedWidth = null;
+    private ?int $requestedHeight = null;
+    private ?string $externalCacheRequested = null;
+    private ?string $requestedRatio = null;
 
 
     /**
@@ -45,7 +43,9 @@ abstract class ImageFetch extends FetchAbs
      */
     public function __construct()
     {
-        // Image can be generated, ie vignette, snapshot
+        /**
+         * Image can be generated, ie {@link Vignette}, {@link Snapshot}
+         */
     }
 
 
@@ -101,13 +101,16 @@ abstract class ImageFetch extends FetchAbs
 
     /**
      * Utility function to build the common image fetch processing property
-     * @param TagAttributes $tagAttributes
+     * @param Url $tagAttributes
      * @return void
      * @throws ExceptionBadArgument
      */
-    public function buildSharedImagePropertyFromTagAttributes(TagAttributes $tagAttributes)
+    public function buildSharedImagePropertyFromTagAttributes(Url $tagAttributes)
     {
-        $requestedWidth = $tagAttributes->getValueAndRemoveIfPresent(Dimension::WIDTH_KEY);
+        $requestedWidth = $tagAttributes->getQueryPropertyValue(Dimension::WIDTH_KEY);
+        if ($requestedWidth === null) {
+            $requestedWidth = $tagAttributes->getQueryPropertyValue(Dimension::WIDTH_KEY_SHORT);
+        }
         if ($requestedWidth !== null) {
             try {
                 $requestedWidthInt = DataType::toInteger($requestedWidth);
@@ -116,7 +119,10 @@ abstract class ImageFetch extends FetchAbs
             }
             $this->setRequestedWidth($requestedWidthInt);
         }
-        $requestedHeight = $tagAttributes->getValueAndRemoveIfPresent(Dimension::HEIGHT_KEY);
+        $requestedHeight = $tagAttributes->getQueryPropertyValue(Dimension::HEIGHT_KEY);
+        if ($requestedHeight === null) {
+            $requestedHeight = $tagAttributes->getQueryPropertyValue(Dimension::HEIGHT_KEY_SHORT);
+        }
         if ($requestedHeight !== null) {
             try {
                 $requestedHeightInt = DataType::toInteger($requestedHeight);
@@ -126,7 +132,7 @@ abstract class ImageFetch extends FetchAbs
             $this->setRequestedHeight($requestedHeightInt);
         }
 
-        $requestedRatio = $tagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
+        $requestedRatio = $tagAttributes->getQueryPropertyValue(Dimension::RATIO_ATTRIBUTE);
         if ($requestedRatio !== null) {
             try {
                 $this->requestedRatio = Dimension::convertTextualRatioToNumber($requestedRatio);
@@ -135,7 +141,7 @@ abstract class ImageFetch extends FetchAbs
             }
         }
 
-        $requestedExternalCache = $tagAttributes->getValueAndRemoveIfPresent(self::CACHE_KEY);
+        $requestedExternalCache = $tagAttributes->getQueryPropertyValue(self::CACHE_KEY);
         if ($requestedExternalCache !== null) {
             $this->setRequestedExternalCache($requestedExternalCache);
         }
@@ -361,7 +367,6 @@ abstract class ImageFetch extends FetchAbs
             }
         }
     }
-
 
 
     /**
@@ -633,15 +638,15 @@ abstract class ImageFetch extends FetchAbs
         return $cacheParameter;
     }
 
-    protected function addCommonQueryParameterToUrl(Url $fetchUrl)
+    protected function addCommonImageQueryParameterToUrl(Url $fetchUrl)
     {
         try {
-            $fetchUrl->addQueryParameter("w", $this->getRequestedWidth());
+            $fetchUrl->addQueryParameter(Dimension::WIDTH_KEY_SHORT, $this->getRequestedWidth());
         } catch (ExceptionNotFound $e) {
             // ok
         }
         try {
-            $fetchUrl->addQueryParameter("h", $this->getRequestedHeight());
+            $fetchUrl->addQueryParameter(Dimension::HEIGHT_KEY_SHORT, $this->getRequestedHeight());
         } catch (ExceptionNotFound $e) {
             // ok
         }

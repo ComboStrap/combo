@@ -18,25 +18,6 @@ class ImageRasterFetch extends ImageFetch
     private Mime $mime;
 
 
-    /**
-     * @param $path
-     * @throws ExceptionBadArgument - if the path is not an image
-     * @throws ExceptionBadSyntax - if the image is badly encoded
-     * @throws ExceptionNotExists - if the image does not exists
-     * @throws ExceptionNotFound - if the mime was not found
-     */
-    public function __construct($path)
-    {
-        if ($path instanceof DokuPath) {
-            $this->path = $path;
-        } else {
-            $this->path = DokuPath::createFromPath($path);
-        }
-        $this->analyzeImageIfNeeded();
-        $this->mime = FileSystems::getMime($path);
-        parent::__construct();
-    }
-
     private int $imageWidth;
     private int $imageWeight;
 
@@ -252,9 +233,27 @@ class ImageRasterFetch extends ImageFetch
     /**
      * @return Path - the path of the original file
      */
-    public function getPath():Path
+    public function getPath(): Path
     {
         return $this->path;
     }
 
+    /**
+     * @param Url $url
+     * @return ImageRasterFetch
+     * @throws ExceptionBadArgument - if the path is not an image
+     * @throws ExceptionBadSyntax - if the image is badly encoded
+     * @throws ExceptionNotExists - if the image does not exists
+     * @throws ExceptionNotFound - if the mime was not found
+     */
+
+    public function buildFromUrl(Url $url): ImageRasterFetch
+    {
+        $this->path = DokuFetch::createEmpty()->buildFromUrl($url)->getFetchPath();
+        $this->analyzeImageIfNeeded();
+        $this->mime = FileSystems::getMime($this->path);
+        $this->addCommonImageQueryParameterToUrl($url);
+        return $this;
+
+    }
 }

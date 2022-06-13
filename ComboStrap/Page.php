@@ -852,7 +852,6 @@ class Page extends ResourceComboAbs
     public
     function getLangOrDefault()
     {
-
         return $this->lang->getValueFromStoreOrDefault();
     }
 

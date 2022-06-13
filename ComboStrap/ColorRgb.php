@@ -336,9 +336,9 @@ class ColorRgb
     }
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument
      */
-    public static function createFromHex(string $color)
+    public static function createFromHex(string $color): ColorRgb
     {
 
         return (new ColorRgb())
@@ -464,12 +464,12 @@ class ColorRgb
      *
      * @param mixed $hex
      *
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument
      */
     function hex2rgb($hex = '#000000'): array
     {
         if ($hex[0] !== "#") {
-            throw new ExceptionCompile("The color value ($hex) does not start with a #, this is not valid CSS hexadecimal color value");
+            throw new ExceptionBadArgument("The color value ($hex) does not start with a #, this is not valid CSS hexadecimal color value");
         }
         $digits = str_replace("#", "", $hex);
         $hexLen = strlen($digits);
@@ -486,11 +486,11 @@ class ColorRgb
                 $transparency = true;
                 break;
             default:
-                throw new ExceptionCompile("The digit color value ($hex) is not 3 or 6 in length, this is not a valid CSS hexadecimal color value");
+                throw new ExceptionBadArgument("The digit color value ($hex) is not 3 or 6 in length, this is not a valid CSS hexadecimal color value");
         }
         $result = preg_match("/[0-9a-f]{3,8}/i", $digits);
         if ($result !== 1) {
-            throw new ExceptionCompile("The digit color value ($hex) is not a hexadecimal value, this is not a valid CSS hexadecimal color value");
+            throw new ExceptionBadArgument("The digit color value ($hex) is not a hexadecimal value, this is not a valid CSS hexadecimal color value");
         }
         $channelHexs = str_split($digits, $lengthColorHex);
         $rgbDec = [];
@@ -534,7 +534,7 @@ class ColorRgb
     }
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument
      */
     public
     static function createFromString(string $color): ColorRgb
@@ -547,7 +547,7 @@ class ColorRgb
     }
 
     /**
-     * @throws ExceptionCompile
+     *
      */
     public
     static function createFromName(string $color): ColorRgb
@@ -776,14 +776,14 @@ class ColorRgb
     }
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionBadArgument
      */
     private
     function setHex(string $color): ColorRgb
     {
         // Hexadecimal
         if ($color[0] !== "#") {
-            throw new ExceptionCompile("The value is not an hexadecimal color value ($color)");
+            throw new ExceptionBadArgument("The value is not an hexadecimal color value ($color)");
         }
         [$this->red, $this->green, $this->blue, $this->transparency] = $this->hex2rgb($color);
         $this->nameType = self::VALUE_TYPE_RGB_HEX;
@@ -824,7 +824,6 @@ class ColorRgb
 
     /**
      * Via a name
-     * @throws ExceptionCompile
      */
     private
     function setName(string $name): ColorRgb

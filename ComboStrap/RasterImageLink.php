@@ -95,7 +95,7 @@ class RasterImageLink extends ImageLink
         /**
          * @var ImageRasterFetch $image
          */
-        $image = $this->getDefaultImageFetch();
+        $image = $this->getFetch();
         if ($image->exists()) {
 
             $attributes = $image->getAttributes();

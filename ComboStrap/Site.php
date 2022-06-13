@@ -175,18 +175,16 @@ class Site
      *
      * Locale always canonicalizes to upper case.
      */
-    public static function getLocale(string $sep = "-"): ?string
+    public static function getLocale(string $sep = "-"): string
     {
 
         $locale = null;
 
         $lang = self::getLang();
-        if ($lang != null) {
-            $country = self::getLanguageRegion();
-            if ($country != null) {
-                $locale = strtolower($lang) . $sep . strtoupper($country);
-            }
-        }
+
+        $country = self::getLanguageRegion();
+
+        $locale = strtolower($lang) . $sep . strtoupper($country);
 
         return $locale;
     }
@@ -196,7 +194,7 @@ class Site
      * ISO 3166 alpha-2 country code
      *
      */
-    public static function getLanguageRegion()
+    public static function getLanguageRegion(): string
     {
         $region = PluginUtility::getConfValue(Region::CONF_SITE_LANGUAGE_REGION);
         if (!empty($region)) {
@@ -210,22 +208,23 @@ class Site
                     return $localeParts[1];
                 }
             }
-
-            return null;
         }
+        return "us";
 
     }
 
     /**
-     * @return mixed|null
+     * @return string
      * Wrapper around  https://www.dokuwiki.org/config:lang
      */
-    public static function getLang()
+    public static function getLang(): string
     {
-
         global $conf;
         $lang = $conf['lang'];
-        return ($lang ?: null);
+        if ($lang === null) {
+            return "en";
+        }
+        return $lang;
     }
 
     public static function getBaseUrl(): string
@@ -870,7 +869,7 @@ class Site
     public static function getConfigurationFiles(): array
     {
         $files = [];
-        foreach(getConfigFiles('main') as $fileConfig){
+        foreach (getConfigFiles('main') as $fileConfig) {
             $files[] = LocalPath::createFromPath($fileConfig);
         }
         return $files;

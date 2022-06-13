@@ -53,5 +53,10 @@ interface Fetch
      */
     public function getMime(): Mime;
 
+    /**
+     * @param Url $url
+     * @return Fetch
+     */
+    public function buildFromUrl(Url $url): Fetch;
 
 }

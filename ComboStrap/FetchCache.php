@@ -104,6 +104,7 @@ class FetchCache
     public function addFileDependency($path)
     {
         $this->fileDependencies[] = $path->toAbsolutePath()->toPathString();
+        return $this;
     }
 
 

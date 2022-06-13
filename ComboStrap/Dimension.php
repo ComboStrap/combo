@@ -52,6 +52,8 @@ class Dimension
     const ZOOM_ATTRIBUTE = "zoom";
 
     const CANONICAL = "dimension";
+    public const WIDTH_KEY_SHORT = "w";
+    public const HEIGHT_KEY_SHORT = "h";
 
 
     /**

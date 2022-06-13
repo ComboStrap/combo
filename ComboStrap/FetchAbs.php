@@ -17,7 +17,7 @@ namespace ComboStrap;
 abstract class FetchAbs implements Fetch
 {
 
-    private ?string $externalCacheRequested = null;
+    private ?string $requestedCache = null;
 
     /**
      * Doc: https://www.dokuwiki.org/images#caching
@@ -64,7 +64,9 @@ abstract class FetchAbs implements Fetch
     public function buildFromUrl(Url $url): Fetch
     {
         $cache = $url->getQueryPropertyValue(self::CACHE_KEY);
-        $this->setRequestedCache($cache);
+        if($cache!==null) {
+            $this->setRequestedCache($cache);
+        }
         return $this;
     }
 
@@ -74,30 +76,30 @@ abstract class FetchAbs implements Fetch
      */
     public function getRequestedCache(): string
     {
-        if ($this->externalCacheRequested === null) {
+        if ($this->requestedCache === null) {
             throw new ExceptionNotFound("No cache was requested");
         }
-        return $this->externalCacheRequested;
+        return $this->requestedCache;
     }
 
     /**
      * @throws ExceptionBadArgument
      */
-    public function setRequestedCache(string $requestedExternalCache)
+    public function setRequestedCache(string $requestedCache)
     {
         /**
          * Cache transformation
          * From Image cache value (https://www.dokuwiki.org/images#caching)
          * to {@link FetchCache::setMaxAgeInSec()}
          */
-        switch ($requestedExternalCache) {
+        switch ($requestedCache) {
             case "nocache":
             case "recache":
             case "cache":
-                $this->externalCacheRequested = $requestedExternalCache;
+                $this->requestedCache = $requestedCache;
                 break;
             default:
-                throw new ExceptionBadArgument("The cache value ($requestedExternalCache) is unknown");
+                throw new ExceptionBadArgument("The cache value ($requestedCache) is unknown");
         }
     }
 
@@ -108,7 +110,7 @@ abstract class FetchAbs implements Fetch
      */
     public function getExternalCacheMaxAgeInSec(): int
     {
-        switch ($this->externalCacheRequested) {
+        switch ($this->requestedCache) {
             case "nocache":
             case "no":
                 $cacheParameter = 0;

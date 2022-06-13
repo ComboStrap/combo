@@ -90,7 +90,7 @@ class DokuFetch extends FetchAbs
      */
     public function buildFromUrl(Url $url): DokuFetch
     {
-
+        parent::buildFromUrl($url);
         $id = $url->getQueryPropertyValue(self::MEDIA_QUERY_PARAMETER);
         if ($id === null) {
             $id = $url->getQueryPropertyValue(self::SRC_QUERY_PARAMETER);

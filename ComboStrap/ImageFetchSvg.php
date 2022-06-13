@@ -17,19 +17,20 @@ class ImageFetchSvg extends ImageFetch
 
     const EXTENSION = "svg";
     const CANONICAL = "svg";
+
+    const PRESERVE_ASPECT_RATIO_KEY = "preserveAspectRatio";
     /**
      * @var DokuPath
      */
     private DokuPath $path;
-    private FetchCache $fetchCache;
-
 
     /**
      * @var SvgDocument
      */
     private $svgDocument;
-    private ?ColorRgb $color;
+    private ?ColorRgb $color = null;
     private string $buster;
+    private ?string $preserveAspectRatio;
 
     public static function createEmpty(): ImageFetchSvg
     {
@@ -83,15 +84,29 @@ class ImageFetchSvg extends ImageFetch
      */
     public function getFetchUrl(Url $url = null): Url
     {
+        $url = parent::getFetchUrl($url);
         $url = DokuFetch::createFromPath($this->path)->getFetchUrl($url);
         try {
             $url->addQueryParameter(ColorRgb::COLOR, $this->getRequestedColor()->toCssValue());
         } catch (ExceptionNotFound $e) {
             // no color ok
         }
+        try {
+            $url->addQueryParameter(self::PRESERVE_ASPECT_RATIO_KEY, $this->getRequestedPreserveAspectRatio());
+        } catch (ExceptionNotFound $e) {
+            // no preserve ratio ok
+        }
         $this->addCommonImageQueryParameterToUrl($url);
         return $url;
 
+    }
+
+    public function getRequestedPreserveAspectRatio()
+    {
+        if ($this->preserveAspectRatio === null) {
+            throw new ExceptionNotFound("No preserve Aspect Ratio was requested");
+        }
+        return $this->preserveAspectRatio;
     }
 
     /**
@@ -185,13 +200,18 @@ class ImageFetchSvg extends ImageFetch
      */
     public function buildFromUrl(Url $url): ImageFetchSvg
     {
+        parent::buildFromUrl($url);
         $this->path = DokuFetch::createEmpty()->buildFromUrl($url)->getFetchPath();
         $this->buster = FileSystems::getCacheBuster($this->getPath());
         $this->buildSharedImagePropertyFromTagAttributes($url);
         $color = $url->getQueryPropertyValue(ColorRgb::COLOR);
-        if($color!==null){
+        if ($color !== null) {
             // we can't have an hex in an url, we will see if this is encoded ;?
             $this->setRequestedColor(ColorRgb::createFromString($color));
+        }
+        $preserveAspectRatio = $url->getQueryPropertyValue(self::PRESERVE_ASPECT_RATIO_KEY);
+        if ($preserveAspectRatio !== null) {
+            $this->setRequestedPreserveAspectRatio($preserveAspectRatio);
         }
         return $this;
     }
@@ -207,12 +227,21 @@ class ImageFetchSvg extends ImageFetch
      */
     public function getRequestedColor(): ColorRgb
     {
-        if($this->color ===null){
+        if ($this->color === null) {
             throw new ExceptionNotFound("No requested color");
         }
         return $this->color;
     }
 
+    /**
+     * @param string $preserveAspectRatio - the aspect ratio of the svg
+     * @return $this
+     */
+    public function setRequestedPreserveAspectRatio(string $preserveAspectRatio): ImageFetchSvg
+    {
+        $this->preserveAspectRatio = $preserveAspectRatio;
+        return $this;
+    }
 
 
 }

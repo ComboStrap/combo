@@ -60,4 +60,9 @@ interface Fetch
      */
     public function buildFromUrl(Url $url): Fetch;
 
+    /**
+     * @throws ExceptionNotFound
+     * @return string
+     */
+    public function getRequestedCache(): string;
 }

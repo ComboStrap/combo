@@ -17,8 +17,8 @@ class Url
      * @var array $query
      */
     private array $query = [];
-    private string $path = "";
-    private $scheme = "";
+    private ?string $path = null;
+    private ?string $scheme = null;
     /**
      * @var string
      */
@@ -73,8 +73,7 @@ class Url
         $encodedParts = array_map(function ($e) {
             return urlencode($e);
         }, $parts);
-        $urlPath = implode("/", $encodedParts);
-        return $urlPath;
+        return implode("/", $encodedParts);
     }
 
     public static function createFetchUrl(): Url
@@ -111,7 +110,7 @@ class Url
     {
         $url = Url::createEmpty();
         foreach ($_GET as $key => $value) {
-            $url->addQueryParameter($key,$value);
+            $url->addQueryParameter($key, $value);
         }
         return $url;
     }
@@ -146,8 +145,14 @@ class Url
         return new Url($url);
     }
 
-    public function getScheme()
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getScheme(): string
     {
+        if ($this->scheme === null) {
+            throw new ExceptionNotFound("The scheme was not found");
+        }
         return $this->scheme;
     }
 
@@ -187,8 +192,26 @@ class Url
 
     public function toAbsoluteUrlString(): string
     {
-
-        return "{$this->getScheme()}://{$this->getHost()}";
+        try {
+            $base = "{$this->getScheme()}://{$this->getHost()}";
+        } catch (ExceptionNotFound $e) {
+            $base = DOKU_URL;
+        }
+        try {
+            $base = "$base{$this->getPath()}";
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        if (count($this->query) > 0) {
+            /**
+             * HTML encoding (ie {@link DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML}
+             * happens only when outputing to HTML
+             * The url may also be used elsewhere where &amp; is unknown or not wanted such as css ...
+             */
+            $queryStringEncoded = http_build_query($this->query, "", DokuwikiUrl::AMPERSAND_CHARACTER);
+            $base = "$base?$queryStringEncoded";
+        }
+        return $base;
     }
 
     public function getHost()
@@ -196,8 +219,14 @@ class Url
         return $this->host;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public function getPath(): string
     {
+        if ($this->path === null) {
+            throw new ExceptionNotFound("The path was not found");
+        }
         return $this->path;
     }
 
@@ -206,16 +235,6 @@ class Url
         return $this->fragment;
     }
 
-    /**
-     * Utility function to add the media query parameter
-     * @param string $id
-     * @return $this
-     */
-    public function addQueryMediaParameter(string $id): Url
-    {
-        $this->addQueryParameter(DokuFetch::MEDIA_QUERY_PARAMETER, $id);
-        return $this;
-    }
 
     public function __toString()
     {

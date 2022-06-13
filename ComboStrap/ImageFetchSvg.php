@@ -28,7 +28,8 @@ class ImageFetchSvg extends ImageFetch
      * @var SvgDocument
      */
     private $svgDocument;
-    private ColorRgb $color;
+    private ?ColorRgb $color;
+    private string $buster;
 
     public static function createEmpty(): ImageFetchSvg
     {
@@ -79,13 +80,17 @@ class ImageFetchSvg extends ImageFetch
      *
      * @return Url - the fetch url
      *
-     * @throws ExceptionNotFound
      */
     public function getFetchUrl(Url $url = null): Url
     {
-        $fetchUrl = DokuFetch::createFromPath($this->path)->getFetchUrl($url);
-        $this->addCommonImageQueryParameterToUrl($fetchUrl);
-        return $fetchUrl;
+        $url = DokuFetch::createFromPath($this->path)->getFetchUrl($url);
+        try {
+            $url->addQueryParameter(ColorRgb::COLOR, $this->getRequestedColor()->toCssValue());
+        } catch (ExceptionNotFound $e) {
+            // no color ok
+        }
+        $this->addCommonImageQueryParameterToUrl($url);
+        return $url;
 
     }
 
@@ -141,13 +146,7 @@ class ImageFetchSvg extends ImageFetch
     public
     function getBuster(): string
     {
-        try {
-            $time = FileSystems::getModifiedTime($this->fetchCache->getFile());
-        } catch (ExceptionNotFound $e) {
-            LogUtility::internalError("The cache file should exists. Actual time used instead as buster");
-            $time = new \DateTime();
-        }
-        return strval($time->getTimestamp());
+        return $this->buster;
     }
 
 
@@ -181,25 +180,39 @@ class ImageFetchSvg extends ImageFetch
     }
 
     /**
-     * @throws ExceptionBadArgument
+     * @throws ExceptionBadArgument - for any bad argument
+     * @throws ExceptionNotFound - if the svg file was not found
      */
     public function buildFromUrl(Url $url): ImageFetchSvg
     {
         $this->path = DokuFetch::createEmpty()->buildFromUrl($url)->getFetchPath();
+        $this->buster = FileSystems::getCacheBuster($this->getPath());
         $this->buildSharedImagePropertyFromTagAttributes($url);
         $color = $url->getQueryPropertyValue(ColorRgb::COLOR);
         if($color!==null){
             // we can't have an hex in an url, we will see if this is encoded ;?
-            $this->setColor(ColorRgb::createFromString($color));
+            $this->setRequestedColor(ColorRgb::createFromString($color));
         }
         return $this;
     }
 
-    public function setColor(ColorRgb $color): ImageFetchSvg
+    public function setRequestedColor(ColorRgb $color): ImageFetchSvg
     {
         $this->color = $color;
         return $this;
     }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getRequestedColor(): ColorRgb
+    {
+        if($this->color ===null){
+            throw new ExceptionNotFound("No requested color");
+        }
+        return $this->color;
+    }
+
 
 
 }

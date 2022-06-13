@@ -6,6 +6,7 @@ class DokuFetch extends FetchAbs
 {
 
     public const MEDIA_QUERY_PARAMETER = "media";
+    const SRC_QUERY_PARAMETER = "src";
     private DokuPath $path;
 
 
@@ -26,17 +27,20 @@ class DokuFetch extends FetchAbs
 
     /**
      * @return Url - an URL to download the media
-     * @throws ExceptionNotFound
      */
     function getFetchUrl(Url $url = null): Url
     {
         /**
          * For dokuwiki implementation, see {@link ml()}
+         * We still use the {@link DokuFetch::MEDIA_QUERY_PARAMETER}
+         * to be Dokuwiki Compatible even if we can serve from other drive know
          */
-        $url = parent::getFetchUrl($url);
-        return $url
-            ->addQueryMediaParameter( $this->path->getDokuwikiId())
-            ->addQueryParameter(DokuPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
+        $url = parent::getFetchUrl($url)
+            ->addQueryParameter(DokuFetch::MEDIA_QUERY_PARAMETER, $this->path->getDokuwikiId());
+        if ($this->path->getDrive() !== DokuPath::MEDIA_DRIVE) {
+            $url->addQueryParameter(DokuPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
+        }
+        return $url;
 
     }
 
@@ -88,12 +92,15 @@ class DokuFetch extends FetchAbs
     {
 
         $id = $url->getQueryPropertyValue(self::MEDIA_QUERY_PARAMETER);
-        if($id===null){
-            throw new ExceptionBadArgument("The (".self::MEDIA_QUERY_PARAMETER.") query property is mandatory and was not present in the URL ($url)");
+        if ($id === null) {
+            $id = $url->getQueryPropertyValue(self::SRC_QUERY_PARAMETER);
+            if ($id === null) {
+                throw new ExceptionBadArgument("The (" . self::MEDIA_QUERY_PARAMETER . " or " . self::SRC_QUERY_PARAMETER . ") query property is mandatory and was not present in the URL ($url)");
+            }
         }
         $drive = $url->getQueryPropertyValueOrDefault(DokuPath::DRIVE_ATTRIBUTE, DokuPath::MEDIA_DRIVE);
         $rev = $url->getQueryPropertyValue(DokuPath::REV_ATTRIBUTE);
-        $this->path = DokuPath::create(":$id", $drive, $rev);
+        $this->path = DokuPath::create($id, $drive, $rev);
         return $this;
 
     }

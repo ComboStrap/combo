@@ -385,12 +385,12 @@ class DokuPath extends PathAbs
     /**
      * @throws ExceptionBadArgument - if the path is not a local path or is not in a known drive
      */
-    public static function createFromPath(Path $path):DokuPath
+    public static function createFromPath(Path $path): DokuPath
     {
-        if($path instanceof DokuPath){
+        if ($path instanceof DokuPath) {
             return $path;
         }
-        if(!($path instanceof LocalPath)){
+        if (!($path instanceof LocalPath)) {
             throw new ExceptionBadArgument("The path ($path) is not a local path and cannot be converted to a doku path");
         }
         $driveRoots = DokuPath::getDriveRoots();
@@ -490,7 +490,13 @@ class DokuPath extends PathAbs
         }
     }
 
-    public static function create(string $path, string $drive, string $rev): DokuPath
+    /**
+     * @param string $path - path or id
+     * @param string $drive
+     * @param string|null $rev
+     * @return DokuPath
+     */
+    public static function create(string $path, string $drive, string $rev = null): DokuPath
     {
         return new DokuPath($path, $drive, $rev);
     }
@@ -928,7 +934,6 @@ class DokuPath extends PathAbs
         $path = $absolutePath . $name;
         return new DokuPath($path, $this->getDrive());
     }
-
 
 
     public function getHost(): string

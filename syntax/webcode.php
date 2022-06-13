@@ -20,7 +20,7 @@ use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\Display;
 use ComboStrap\DokuPath;
-use ComboStrap\DokuwikiUrl;
+use ComboStrap\MarkupUrl;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -388,7 +388,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             'call' => action_plugin_combo_webcode::CALL_ID,
                             action_plugin_combo_webcode::MARKI_PARAM => $markupCode
                         );
-                        $queryString = http_build_query($queryParams, '', DokuwikiUrl::AMPERSAND_CHARACTER);
+                        $queryString = http_build_query($queryParams, '', MarkupUrl::AMPERSAND_CHARACTER);
                         $url = Site::getAjaxUrl() . "?$queryString";
                         $tagAttributes->addOutputAttributeValue("src", $url);
 

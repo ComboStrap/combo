@@ -11,7 +11,7 @@ namespace ComboStrap;
  *
  * TODO: Merge with {@link MarkupRef}
  */
-class DokuwikiUrl
+class MarkupUrl
 {
 
     /**
@@ -42,17 +42,66 @@ class DokuwikiUrl
      * (Css attribute value are then HTML encoded as value of the attribute)
      */
     const AMPERSAND_CHARACTER = "&";
-    const ANCHOR_ATTRIBUTES = "anchor";
 
-    private Url $url;
+    /**
+     * The dokuwiki type and mode name
+     * (ie call)
+     *  * ie {@link MarkupUrl::EXTERNAL_MEDIA_CALL_NAME}
+     *  or {@link MarkupUrl::INTERNAL_MEDIA_CALL_NAME}
+     *
+     * The dokuwiki type (internalmedia/externalmedia)
+     *
+     */
+    public const MEDIA_DOKUWIKI_TYPE = 'dokuwiki_media_type';
+    public const EXTERNAL_MEDIA_CALL_NAME = "externalmedia";
+    public const INTERNAL_MEDIA_CALL_NAME = "internalmedia";
+
+    /**
+     * Link value:
+     *   * 'nolink'
+     *   * 'direct': directly to the image
+     *   * 'linkonly': show only a url
+     *   * 'details': go to the details media viewer
+     *
+     * @var
+     */
+    public const LINKING_KEY = 'linking';
+    public const LINKING_DETAILS_VALUE = 'details';
+    public const LINKING_DIRECT_VALUE = 'direct';
+    /**
+     * Only used by Dokuwiki
+     * Contains the path and eventually an anchor
+     * never query parameters
+     */
+    public const DOKUWIKI_SRC = "src";
+    public const LINKING_LINKONLY_VALUE = "linkonly";
+    public const LINKING_NOLINK_VALUE = 'nolink';
+    /**
+     * Default image linking value
+     */
+    public const CONF_DEFAULT_LINKING = "defaultImageLinking";
+
+    const DOKUWIKI_URL_ATTRIBUTE = "dokuwiki_url";
+
+
+    private Url $fetchUrl;
+
+    private string $markupType;
 
     /**
      * Url constructor.
+     *
+     * The parsing function {@link Doku_Handler_Parse_Media} has some flow / problem
+     *    * It keeps the anchor only if there is no query string
+     *    * It takes the first digit as the width (ie media.pdf?page=31 would have a width of 31)
+     *    * `src` is not only the media path but may have a anchor
+     * We parse it then
+     *
      */
-    public function __construct($urlString)
+    public function __construct(string $urlString)
     {
 
-        $this->url = Url::createEmpty();
+        $this->fetchUrl = Url::createEmpty();
 
         $urlString = trim($urlString);
 
@@ -61,7 +110,8 @@ class DokuwikiUrl
          */
         if (media_isexternal($urlString)) {
             try {
-                $this->url = Url::createFromString($urlString);
+                $this->fetchUrl = Url::createFromString($urlString);
+                $this->markupType = self::EXTERNAL_MEDIA_CALL_NAME;
                 return;
             } catch (ExceptionBadSyntax $e) {
                 LogUtility::internalError("The url string is not valid URL ($urlString)");
@@ -83,7 +133,7 @@ class DokuwikiUrl
             $hashTagPosition = strpos($urlString, "#");
             if ($hashTagPosition !== false) {
                 $httpHostOrPath = substr($urlString, 0, $hashTagPosition);
-                $this->url->setFragment(substr($urlString, $hashTagPosition + 1));
+                $this->fetchUrl->setFragment(substr($urlString, $hashTagPosition + 1));
             }
         }
 
@@ -91,11 +141,14 @@ class DokuwikiUrl
          * Scheme
          */
         if (link_isinterwiki($httpHostOrPath)) {
-            $this->url->setScheme(InterWikiPath::scheme);
-            $this->url->setPath($httpHostOrPath);
+            $this->markupType = InterWikiPath::scheme;
+            $this->fetchUrl->setPath($httpHostOrPath);
         } else {
-            $this->url->setScheme(DokuFs::SCHEME);
-            $this->url->setPath($httpHostOrPath);
+            /**
+             * We transform it as if it was a fetch URL
+             */
+            $this->markupType = DokuFs::SCHEME;
+            $this->fetchUrl->addQueryParameter(DokuPath::MEDIA_DRIVE, $httpHostOrPath);
         }
 
 
@@ -133,9 +186,9 @@ class DokuwikiUrl
                  */
                 $sizing = [];
                 if (preg_match('/^([0-9]+)(?:x([0-9]+))?/', $token, $sizing)) {
-                    $this->url->addQueryParameter(Dimension::WIDTH_KEY, $sizing[1]);
+                    $this->fetchUrl->addQueryParameter(Dimension::WIDTH_KEY, $sizing[1]);
                     if (isset($sizing[2])) {
-                        $this->url->addQueryParameter(Dimension::HEIGHT_KEY, $sizing[2]);
+                        $this->fetchUrl->addQueryParameter(Dimension::HEIGHT_KEY, $sizing[2]);
                     }
                     $token = substr($token, strlen($sizing[0]));
                     if ($token === "") {
@@ -150,7 +203,7 @@ class DokuwikiUrl
                 $found = preg_match('/^(nolink|direct|linkonly|details)/i', $token, $matches);
                 if ($found) {
                     $linkingValue = $matches[1];
-                    $this->url->addQueryParameter(MediaLink::LINKING_KEY, $linkingValue);
+                    $this->fetchUrl->addQueryParameter(self::LINKING_KEY, $linkingValue);
                     $token = substr($token, strlen($linkingValue));
                     if ($token == "") {
                         // no anchor behind we continue
@@ -164,7 +217,7 @@ class DokuwikiUrl
                 $noCacheValue = FetchAbs::NOCACHE_VALUE;
                 $found = preg_match('/^(' . $noCacheValue . ')/i', $token, $matches);
                 if ($found) {
-                    $this->url->addQueryParameter(FetchAbs::CACHE_KEY, $noCacheValue);
+                    $this->fetchUrl->addQueryParameter(FetchAbs::CACHE_KEY, $noCacheValue);
                     $token = substr($token, strlen($noCacheValue));
                     if ($token == "") {
                         // no anchor behind we continue
@@ -176,7 +229,7 @@ class DokuwikiUrl
                  * Anchor value after a single token case
                  */
                 if (strpos($token, '#') === 0) {
-                    $this->url->setFragment(substr($token, 1));
+                    $this->fetchUrl->setFragment(substr($token, 1));
                     continue;
                 }
 
@@ -195,7 +248,7 @@ class DokuwikiUrl
                  */
                 $anchorPosition = strpos($key, '#');
                 if ($anchorPosition !== false) {
-                    $this->url->setFragment(substr($key, $anchorPosition + 1));
+                    $this->fetchUrl->setFragment(substr($key, $anchorPosition + 1));
                     $key = substr($key, 0, $anchorPosition);
                 }
 
@@ -240,19 +293,19 @@ class DokuwikiUrl
                     $anchorPosition = strpos($value, "#");
                 }
                 if ($anchorPosition !== false) {
-                    $this->url->setFragment(substr($value, $anchorPosition + 1));
+                    $this->fetchUrl->setFragment(substr($value, $anchorPosition + 1));
                     $value = substr($value, 0, $anchorPosition);
                 }
 
                 switch ($lowerCaseKey) {
                     case "w": // used in a link w=xxx
-                        $this->url->addQueryParameter(Dimension::WIDTH_KEY, $value);
+                        $this->fetchUrl->addQueryParameter(Dimension::WIDTH_KEY, $value);
                         break;
                     case "h": // used in a link h=xxxx
-                        $this->url->addQueryParameter(Dimension::HEIGHT_KEY, $value);
+                        $this->fetchUrl->addQueryParameter(Dimension::HEIGHT_KEY, $value);
                         break;
                     default:
-                        $this->url->addQueryParameter($key, $value);
+                        $this->fetchUrl->addQueryParameter($key, $value);
                         break;
                 }
 
@@ -263,16 +316,61 @@ class DokuwikiUrl
 
     }
 
-
-    public static function createFromUrl($dokuwikiUrl): DokuwikiUrl
+    /**
+     * Compliance: src in dokuwiki is the path and the anchor if any
+     */
+    public function getSrc(): string
     {
-        return new DokuwikiUrl($dokuwikiUrl);
+        try {
+            $src = $this->fetchUrl->getPath();
+        } catch (ExceptionNotFound $e) {
+            $src = "";
+        }
+        try {
+            $src = "$src#{$this->fetchUrl->getFragment()}";
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        return $src;
+    }
+
+    /**
+     * Media Type
+     */
+    public function getMediaType(): string
+    {
+        try {
+            $scheme = $this->fetchUrl->getScheme();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("The scheme should be known");
+            $scheme = "unknown";
+        }
+        if ($scheme === DokuFs::SCHEME) {
+            return self::INTERNAL_MEDIA_CALL_NAME;
+        } else {
+            return self::EXTERNAL_MEDIA_CALL_NAME;
+        }
+    }
+
+    public function getMarkupType(): string
+    {
+        return $this->markupType;
     }
 
 
-    public function toUrl(): Url
+    public static function createFromUrl($dokuwikiUrl): MarkupUrl
     {
-        return $this->url;
+        return new MarkupUrl($dokuwikiUrl);
+    }
+
+
+    /**
+     * @return Url - an url that has query property as a fetch url
+     * It permits to select the fetch class
+     */
+    public function toFetchUrl(): Url
+    {
+        return $this->fetchUrl;
     }
 
 

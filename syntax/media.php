@@ -1,14 +1,19 @@
 <?php
 
 
+use ComboStrap\Align;
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
+use ComboStrap\Dimension;
 use ComboStrap\DokuFs;
 use ComboStrap\DokuPath;
+use ComboStrap\MarkupUrl;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
+use ComboStrap\FetchAbs;
 use ComboStrap\FileSystems;
 use ComboStrap\FirstImage;
+use ComboStrap\FloatAttribute;
 use ComboStrap\InternetPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
@@ -16,6 +21,7 @@ use ComboStrap\Metadata;
 use ComboStrap\PageImages;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\SvgDocument;
 use ComboStrap\TagAttributes;
 use ComboStrap\ThirdPartyPlugins;
@@ -71,16 +77,59 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      */
     const LINK_CLASS_ATTRIBUTE = "link-class";
 
-    public static function registerFirstImage(Doku_Renderer_metadata $renderer, $src)
+
+    /**
+     * @param $match - the match of the renderer (just a shortcut)
+     */
+    public static function parseMediaMatch($match): array
+    {
+
+
+        /**
+         *   * Delete the opening and closing character
+         *   * create the url and description
+         */
+        $match = preg_replace(array('/^{{/', '/}}$/u'), '', $match);
+        $parts = explode('|', $match, 2);
+        $label = null;
+        $markupUrl = $parts[0];
+        if (isset($parts[1])) {
+            $label = $parts[1];
+        }
+
+
+        /**
+         * Media Alignment
+         */
+
+        $rightAlign = (bool)preg_match('/^ /', $markupUrl);
+        $leftAlign = (bool)preg_match('/ $/', $markupUrl);
+        $align = null;
+        // Logic = what's that ;)...
+        if ($leftAlign & $rightAlign) {
+            $align = 'center';
+        } else if ($rightAlign) {
+            $align = 'right';
+        } else if ($leftAlign) {
+            $align = 'left';
+        }
+
+
+        return [$markupUrl, $label, $align];
+
+
+    }
+
+    public static function registerFirstImage(Doku_Renderer_metadata $renderer, $id)
     {
         /**
          * {@link Doku_Renderer_metadata::$firstimage} is unfortunately protected
          * and {@link Doku_Renderer_metadata::internalmedia()} does not allow svg as first image
          */
         if (!isset($renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION])) {
-            $path = DokuPath::createMediaPathFromId($src);
+            $path = DokuPath::createMediaPathFromId($id);
             if ($path->getMime()->isImage()) {
-                $renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION] = $src;
+                $renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION] = $id;
             }
         }
 
@@ -179,18 +228,25 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL :
 
                 /**
-                 * Note: The type of image for a svg (icon/illustration) is dedicated
-                 * by its structure or is expressly set on type
+                 * @var string $markupUrl
+                 * @var string $label
                  */
+                [$markupUrl, $label, $align] = self::parseMediaMatch($match);
 
-                $media = MediaLink::createFromRenderMatch($match);
-                $attributes = $media->toCallStackArray();
 
-                $callStack = CallStack::createFromHandler($handler);
+                /**
+                 * We store linking as attribute (to make it possible to change the linking by other plugin)
+                 * (ie no linking in heading , ...)
+                 */
+                $attributes[MarkupUrl::LINKING_KEY] = null;
+                $attributes[MarkupUrl::DOKUWIKI_URL_ATTRIBUTE] = $markupUrl;
+                $attributes[Align::ALIGN_ATTRIBUTE] = $align;
+                $attributes[TagAttributes::TITLE_KEY] = $label;
 
                 /**
                  * Parent
                  */
+                $callStack = CallStack::createFromHandler($handler);
                 $parent = $callStack->moveToParent();
                 $parentTag = "";
                 if (!empty($parent)) {
@@ -202,7 +258,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                          *   - The image is in a link, we don't want another link to the image
                          *   - In a brand, there is also already a link to the home page, no link to the media
                          */
-                        $attributes[MediaLink::LINKING_KEY] = MediaLink::LINKING_NOLINK_VALUE;
+                        $attributes[MarkupUrl::LINKING_KEY] = MarkupUrl::LINKING_NOLINK_VALUE;
                     }
                 }
 
@@ -236,8 +292,59 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
             case 'xhtml':
 
                 /** @var Doku_Renderer_xhtml $renderer */
-                $attributes = $data[PluginUtility::ATTRIBUTES];
-                $mediaLink = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
+                $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+
+                /**
+                 * The Dokuwiki Url
+                 */
+                $dokuWikiUrlString = $tagAttributes->getValueAndRemove(MarkupUrl::DOKUWIKI_URL_ATTRIBUTE);
+                if ($dokuWikiUrlString === null) {
+                    $renderer->doc .= "Internal Error: The media url was not found";
+                    return false;
+                }
+                $dokuwikiUrl = MarkupUrl::createFromUrl($dokuWikiUrlString);
+
+                /**
+                 * Linking
+                 */
+                $linking = $tagAttributes->getValue(MarkupUrl::LINKING_KEY);
+                if ($linking === null) {
+                    try {
+                        $linking = $dokuwikiUrl->toFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(MarkupUrl::LINKING_KEY);
+                        $tagAttributes->addComponentAttributeValue(MarkupUrl::LINKING_KEY, $linking);
+                    } catch (ExceptionNotFound $e) {
+                        // ok
+                    }
+                }
+
+                /**
+                 * Align on the url has precedence
+                 * if present
+                 */
+                try {
+                    $align = $dokuwikiUrl->toFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(Align::ALIGN_ATTRIBUTE);
+                    $tagAttributes->addComponentAttributeValue(Align::ALIGN_ATTRIBUTE, $align);
+                } catch (ExceptionNotFound $e) {
+                    // ok
+                }
+                if ($dokuwikiUrl->getMediaType() === MarkupUrl::INTERNAL_MEDIA_CALL_NAME) {
+                    /**
+                     * If this is an internal media,
+                     * we are using our implementation
+                     * and we have a change on attribute specification
+                     *
+                     * The align attribute on an image parse
+                     * is a float right
+                     * ComboStrap does a difference between a block right and a float right
+                     */
+                    if ($tagAttributes->getComponentAttributeValue(Align::ALIGN_ATTRIBUTE) === "right") {
+                        $tagAttributes->removeComponentAttribute(Align::ALIGN_ATTRIBUTE);
+                        $tagAttributes->addComponentAttributeValue(FloatAttribute::FLOAT_KEY, "right");
+                    }
+
+                }
+
+                $mediaLink = MediaLink::createMediaLinkFromPath($dokuwikiUrl->toFetchUrl(), $tagAttributes, $renderer->date_at);
                 $media = $mediaLink->getPath();
                 if ($media->getPath()->getScheme() === DokuFs::SCHEME) {
                     try {
@@ -266,43 +373,50 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                  * This is not an local internal media image (a video or an url image)
                  * Dokuwiki takes over
                  */
-                $type = $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE];
-                $src = $attributes['src'];
-                $title = $attributes['title'];
-                $align = $attributes['align'];
-                $width = $attributes['width'];
-                $height = $attributes['height'];
-                $cache = $attributes['cache'];
-                if ($cache == null) {
+                $mediaType = $dokuwikiUrl->getMediaType();
+                $src = $dokuwikiUrl->getSrc();
+                $title = $tagAttributes->getComponentAttributeValue(TagAttributes::TITLE_KEY);
+                $align = $tagAttributes->getComponentAttributeValue(Align::ALIGN_ATTRIBUTE);
+                try {
+                    $width = $dokuwikiUrl->toFetchUrl()->getQueryPropertyValue(Dimension::WIDTH_KEY);
+                } catch (ExceptionNotFound $e) {
+                    $width = null;
+                }
+                try {
+                    $height = $dokuwikiUrl->toFetchUrl()->getQueryPropertyValue(Dimension::HEIGHT_KEY);
+                } catch (ExceptionNotFound $e) {
+                    $height = null;
+                }
+                try {
+                    $cache = $height = $dokuwikiUrl->toFetchUrl()->getQueryPropertyValue(FetchAbs::CACHE_KEY);
+                } catch (ExceptionNotFound $e) {
                     // Dokuwiki needs a value
                     // If their is no value it will output it without any value
                     // in the query string.
                     $cache = "cache";
                 }
-                $linking = $attributes['linking'];
-                switch ($type) {
-                    case MediaLink::INTERNAL_MEDIA_CALL_NAME:
+                switch ($mediaType) {
+                    case MarkupUrl::INTERNAL_MEDIA_CALL_NAME:
                         $renderer->doc .= $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
                         break;
-                    case MediaLink::EXTERNAL_MEDIA_CALL_NAME:
+                    case MarkupUrl::EXTERNAL_MEDIA_CALL_NAME:
                         $renderer->doc .= $renderer->externalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
                         break;
                     default:
-                        LogUtility::msg("The dokuwiki media type ($type) is unknown");
+                        LogUtility::msg("The dokuwiki media type ($mediaType) is unknown");
                         break;
                 }
-
                 return true;
 
-            case
-            "metadata":
+
+            case "metadata":
 
                 /**
                  * Keep track of the metadata
                  * @var Doku_Renderer_metadata $renderer
                  */
-                $attributes = $data[PluginUtility::ATTRIBUTES];
-                self::registerImageMeta($attributes, $renderer);
+                $tagAttributes = $data[PluginUtility::ATTRIBUTES];
+                self::registerImageMeta($tagAttributes, $renderer);
                 return true;
 
             case renderer_plugin_combo_analytics::RENDERER_FORMAT:
@@ -311,8 +425,8 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                  * Special pattern call
                  * @var renderer_plugin_combo_analytics $renderer
                  */
-                $attributes = $data[PluginUtility::ATTRIBUTES];
-                self::updateStatistics($attributes, $renderer);
+                $tagAttributes = $data[PluginUtility::ATTRIBUTES];
+                self::updateStatistics($tagAttributes, $renderer);
                 return true;
 
         }
@@ -329,28 +443,28 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      */
     static public function registerImageMeta($attributes, $renderer)
     {
-        $type = $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE];
-        $src = $attributes['src'];
-        if ($src == null) {
-            $src = $attributes[PagePath::PROPERTY_NAME];
+        $src = $attributes[MarkupUrl::DOKUWIKI_SRC];
+        if ($src === null) {
+            $src = $attributes[MarkupUrl::DOKUWIKI_URL_ATTRIBUTE];
         }
+        $dokuwikiUrl = MarkupUrl::createFromUrl($src);
         $title = $attributes['title'];
-        $align = $attributes['align'];
-        $width = $attributes['width'];
-        $height = $attributes['height'];
-        $cache = $attributes['cache']; // Cache: https://www.dokuwiki.org/images#caching
-        $linking = $attributes['linking'];
 
-        switch ($type) {
-            case MediaLink::INTERNAL_MEDIA_CALL_NAME:
-                self::registerFirstImage($renderer, $src);
-                $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking);
+        $mediaType = $dokuwikiUrl->getMediaType();
+        switch ($mediaType) {
+            case MarkupUrl::INTERNAL_MEDIA_CALL_NAME:
+                try {
+                    self::registerFirstImage($renderer, $dokuwikiUrl->toFetchUrl()->getPath());
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError("The path should be present on an internal image");
+                }
+                $renderer->internalmedia($src, $title);
                 break;
-            case MediaLink::EXTERNAL_MEDIA_CALL_NAME:
-                $renderer->externalmedia($src, $title, $align, $width, $height, $cache, $linking);
+            case MarkupUrl::EXTERNAL_MEDIA_CALL_NAME:
+                $renderer->externalmedia($src, $title);
                 break;
             default:
-                LogUtility::msg("The dokuwiki media type ($type)  for metadata registration is unknown");
+                LogUtility::msg("The dokuwiki media type ($mediaType) for metadata registration is unknown");
                 break;
         }
 

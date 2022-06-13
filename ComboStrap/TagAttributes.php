@@ -54,7 +54,7 @@ class TagAttributes
     const RESERVED_ATTRIBUTES = [
         self::SCRIPT_KEY, // no script attribute for security reason
         TagAttributes::TYPE_KEY, // type is the component class
-        MediaLink::LINKING_KEY, // internal to image
+        MarkupUrl::LINKING_KEY, // internal to image
         FetchAbs::CACHE_KEY, // internal also
         \syntax_plugin_combo_webcode::RENDERING_MODE_ATTRIBUTE,
         Vertical::VERTICAL_ATTRIBUTE,

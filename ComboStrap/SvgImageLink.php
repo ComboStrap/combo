@@ -116,7 +116,7 @@ class SvgImageLink extends ImageLink
         /**
          * Remove linking (not yet implemented)
          */
-        $responseAttributes->removeComponentAttributeIfPresent(MediaLink::LINKING_KEY);
+        $responseAttributes->removeComponentAttributeIfPresent(MarkupUrl::LINKING_KEY);
 
 
         /**
@@ -226,7 +226,7 @@ class SvgImageLink extends ImageLink
          */
         $attributes = $this->getFetch()->getAttributes();
         $attributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
-        $attributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
+        $attributes->removeComponentAttributeIfPresent(MarkupUrl::DOKUWIKI_SRC);
         /**
          * TODO: Title should be a node just below SVG
          */

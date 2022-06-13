@@ -24,6 +24,7 @@ use ComboStrap\Aliases;
 use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
+use ComboStrap\MarkupUrl;
 use ComboStrap\EditButton;
 use ComboStrap\EditButtonManager;
 use ComboStrap\EndDate;
@@ -328,11 +329,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     foreach ($pageImagesObject as $imageValue) {
                         $imagePath = $imageValue->getImage()->getOriginalPath()->toAbsolutePath()->toPathString();
                         $attributes = [PagePath::PROPERTY_NAME => $imagePath];
-                        if (media_isexternal($imagePath)) {
-                            $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::EXTERNAL_MEDIA_CALL_NAME;
-                        } else {
-                            $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::INTERNAL_MEDIA_CALL_NAME;
-                        }
                         syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
                     }
 
@@ -364,7 +360,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         if (is_array($value) && isset($value[PageImagePath::getPersistentName()])) {
             $path = $value[PageImagePath::getPersistentName()];
         }
-        $media = MediaLink::createFromRenderMatch($path);
+        $media = syntax_plugin_combo_media::parseMediaMatch($path);
         $attributes = $media->toCallStackArray();
         syntax_plugin_combo_media::updateStatistics($attributes, $renderer);
 

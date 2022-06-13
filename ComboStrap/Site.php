@@ -909,5 +909,10 @@ class Site
         return $conf['userewrite'] == 1;
     }
 
+    public static function getDefaultMediaLinking(): string
+    {
+        return PluginUtility::getConfValue(MarkupUrl::CONF_DEFAULT_LINKING, MarkupUrl::LINKING_DIRECT_VALUE);
+    }
+
 
 }

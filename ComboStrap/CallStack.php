@@ -841,7 +841,7 @@ class CallStack
         while ($this->next()) {
             $actualCall = $this->getActualCall();
             if ($actualCall->getTagName() == syntax_plugin_combo_media::TAG) {
-                $actualCall->addAttribute(MediaLink::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
+                $actualCall->addAttribute(MarkupUrl::LINKING_KEY, MarkupUrl::LINKING_NOLINK_VALUE);
             }
         }
     }

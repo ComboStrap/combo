@@ -38,19 +38,6 @@ abstract class MediaLink
 {
 
 
-    /**
-     * The dokuwiki type and mode name
-     * (ie call)
-     *  * ie {@link MediaLink::EXTERNAL_MEDIA_CALL_NAME}
-     *  or {@link MediaLink::INTERNAL_MEDIA_CALL_NAME}
-     *
-     * The dokuwiki type (internalmedia/externalmedia)
-     * is saved in a `type` key that clash with the
-     * combostrap type. To avoid the clash, we renamed it
-     */
-    const MEDIA_DOKUWIKI_TYPE = 'dokuwiki_type';
-    const INTERNAL_MEDIA_CALL_NAME = "internalmedia";
-    const EXTERNAL_MEDIA_CALL_NAME = "externalmedia";
 
     const CANONICAL = "image";
 
@@ -62,46 +49,18 @@ abstract class MediaLink
      */
     const NON_URL_ATTRIBUTES = [
         Align::ALIGN_ATTRIBUTE,
-        MediaLink::LINKING_KEY,
+        MarkupUrl::LINKING_KEY,
         TagAttributes::TITLE_KEY,
         Hover::ON_HOVER_ATTRIBUTE,
         Animation::ON_VIEW_ATTRIBUTE,
-        MediaLink::MEDIA_DOKUWIKI_TYPE,
-        MediaLink::DOKUWIKI_SRC
+        MarkupUrl::DOKUWIKI_SRC
     ];
 
-
-    /**
-     * Default image linking value
-     */
-    const CONF_DEFAULT_LINKING = "defaultImageLinking";
-    const LINKING_LINKONLY_VALUE = "linkonly";
-    const LINKING_DETAILS_VALUE = 'details';
-    const LINKING_NOLINK_VALUE = 'nolink';
 
     /**
      * @deprecated 2021-06-12
      */
     const LINK_PATTERN = "{{\s*([^|\s]*)\s*\|?.*}}";
-
-    const LINKING_DIRECT_VALUE = 'direct';
-
-    /**
-     * Only used by Dokuwiki
-     * Contains the path and eventually an anchor
-     * never query parameters
-     */
-    const DOKUWIKI_SRC = "src";
-    /**
-     * Link value:
-     *   * 'nolink'
-     *   * 'direct': directly to the image
-     *   * 'linkonly': show only a url
-     *   * 'details': go to the details media viewer
-     *
-     * @var
-     */
-    const LINKING_KEY = 'linking';
 
     /**
      * The method to lazy load resources (Ie media)
@@ -110,13 +69,13 @@ abstract class MediaLink
     const LAZY_LOAD_METHOD_HTML_VALUE = "html-attribute";
     const LAZY_LOAD_METHOD_LOZAD_VALUE = "lozad";
 
+
     /**
      * @var string
      */
     private $lazyLoadMethod;
 
     private $lazyLoad = null;
-
 
 
     private $path;
@@ -164,197 +123,12 @@ abstract class MediaLink
         $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
         $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $height);
         $tagAttributes->addComponentAttributeValue(FetchAbs::CACHE_KEY, $cache);
-        $tagAttributes->addComponentAttributeValue(self::LINKING_KEY, $linking);
+        $tagAttributes->addComponentAttributeValue(MarkupUrl::LINKING_KEY, $linking);
 
         return self::createMediaLinkFromId($src, $tagAttributes);
 
     }
 
-    /**
-     * A function to explicitly create an internal media from
-     * a call stack array (ie key string and value) that we get in the {@link SyntaxPlugin::render()}
-     * from the {@link MediaLink::toCallStackArray()}
-     *
-     * @param $attributes - the attributes created by the function {@link MediaLink::getParseAttributes()}
-     * @param $rev - the mtime
-     * @return null|MediaLink
-     */
-    public static function createFromCallStackArray($attributes, $rev = null): ?MediaLink
-    {
-
-        if (!is_array($attributes)) {
-            // Debug for the key_exist below because of the following message:
-            // `PHP Warning:  key_exists() expects parameter 2 to be array, array given`
-            LogUtility::msg("The `attributes` parameter is not an array. Value ($attributes)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-        }
-
-        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-
-        $src = $attributes[self::DOKUWIKI_SRC];
-        if ($src === null) {
-            /**
-             * Dokuwiki parse already the src and create the path and the attributes
-             * The new model will not, we check if we are in the old mode
-             */
-            $src = $attributes[PagePath::PROPERTY_NAME];
-            if ($src === null) {
-                LogUtility::msg("src is mandatory for an image link and was not passed");
-                return null;
-            }
-        }
-        $dokuUrl = DokuwikiUrl::createFromUrl($src);
-        $scheme = $dokuUrl->getScheme();
-        switch ($scheme) {
-            case DokuFs::SCHEME:
-                $id = $dokuUrl->getPath();
-                // the id is always absolute, except in a link
-                // It may be relative, transform it as absolute
-                global $ID;
-                resolve_mediaid(getNS($ID), $id, $exists);
-                $path = DokuPath::createMediaPathFromId($id, $rev);
-                return self::createMediaLinkFromPath($path, $tagAttributes);
-            case InterWikiPath::scheme:
-                $path = InterWikiPath::create($dokuUrl->getPath());
-                return self::createMediaLinkFromPath($path, $tagAttributes);
-            case InternetPath::scheme:
-                $path = InternetPath::create($dokuUrl->getPath());
-                return self::createMediaLinkFromPath($path, $tagAttributes);
-            default:
-                LogUtility::msg("The media with the scheme ($scheme) are not yet supported. Media Source: $src");
-                return null;
-
-        }
-
-
-    }
-
-    /**
-     * @param $match - the match of the renderer (just a shortcut)
-     * @return MediaLink
-     */
-    public static function createFromRenderMatch($match): MediaLink
-    {
-
-        /**
-         * The parsing function {@link Doku_Handler_Parse_Media} has some flow / problem
-         *    * It keeps the anchor only if there is no query string
-         *    * It takes the first digit as the width (ie media.pdf?page=31 would have a width of 31)
-         *    * `src` is not only the media path but may have a anchor
-         * We parse it then
-         */
-
-
-        /**
-         *   * Delete the opening and closing character
-         *   * create the url and description
-         */
-        $match = preg_replace(array('/^{{/', '/}}$/u'), '', $match);
-        $parts = explode('|', $match, 2);
-        $description = null;
-        $url = $parts[0];
-        if (isset($parts[1])) {
-            $description = $parts[1];
-        }
-
-
-        /**
-         * The combo attributes array
-         */
-        $dokuwikiUrl = DokuwikiUrl::createFromUrl($url);
-        $parsedAttributes = $dokuwikiUrl->toArray();
-        $path = $dokuwikiUrl->getPath();
-        $linkingKey = $dokuwikiUrl->getQueryParameter(MediaLink::LINKING_KEY);
-        if ($linkingKey === null) {
-            $linkingKey = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::LINKING_DIRECT_VALUE);
-        }
-        $parsedAttributes[MediaLink::LINKING_KEY] = $linkingKey;
-
-        /**
-         * Media Alignment
-         */
-        $align = $parsedAttributes[Align::ALIGN_ATTRIBUTE];
-        if ($align == null) {
-            $rightAlign = (bool)preg_match('/^ /', $url);
-            $leftAlign = (bool)preg_match('/ $/', $url);
-            // Logic = what's that ;)...
-            if ($leftAlign & $rightAlign) {
-                $align = 'center';
-            } else if ($rightAlign) {
-                $align = 'right';
-            } else if ($leftAlign) {
-                $align = 'left';
-            }
-        }
-
-        /**
-         * Media Type
-         */
-        $scheme = $dokuwikiUrl->getScheme();
-        if ($scheme === DokuFs::SCHEME) {
-            $mediaType = MediaLink::INTERNAL_MEDIA_CALL_NAME;
-        } else {
-            $mediaType = MediaLink::EXTERNAL_MEDIA_CALL_NAME;
-        }
-
-
-        /**
-         * src in dokuwiki is the path and the anchor if any
-         */
-        $src = $path;
-        if (isset($parsedAttributes[DokuwikiUrl::ANCHOR_ATTRIBUTES]) != null) {
-            $src = $src . "#" . $parsedAttributes[DokuwikiUrl::ANCHOR_ATTRIBUTES];
-        }
-
-        /**
-         * To avoid clash with the combostrap component type
-         * ie this is also a ComboStrap attribute where we set the type of a SVG (icon, illustration, background)
-         * we store the media type (ie external/internal) in another key
-         *
-         * There is no need to repeat the attributes as the arrays are merged
-         * into on but this is also an informal code to show which attributes
-         * are only Dokuwiki Native
-         *
-         */
-        $dokuwikiAttributes = array(
-            self::MEDIA_DOKUWIKI_TYPE => $mediaType,
-            self::DOKUWIKI_SRC => $src,
-            Dimension::WIDTH_KEY => $parsedAttributes[Dimension::WIDTH_KEY],
-            Dimension::HEIGHT_KEY => $parsedAttributes[Dimension::HEIGHT_KEY],
-            FetchAbs::CACHE_KEY => $parsedAttributes[FetchAbs::CACHE_KEY],
-            TagAttributes::TITLE_KEY => $description,
-            Align::ALIGN_ATTRIBUTE => $align,
-            MediaLink::LINKING_KEY => $parsedAttributes[MediaLink::LINKING_KEY],
-        );
-
-        /**
-         * Merge standard dokuwiki attributes and
-         * parsed attributes
-         */
-        $mergedAttributes = PluginUtility::mergeAttributes($dokuwikiAttributes, $parsedAttributes);
-
-        /**
-         * If this is an internal media,
-         * we are using our implementation
-         * and we have a change on attribute specification
-         */
-        if ($mediaType == MediaLink::INTERNAL_MEDIA_CALL_NAME) {
-
-            /**
-             * The align attribute on an image parse
-             * is a float right
-             * ComboStrap does a difference between a block right and a float right
-             */
-            if ($mergedAttributes[Align::ALIGN_ATTRIBUTE] === "right") {
-                unset($mergedAttributes[Align::ALIGN_ATTRIBUTE]);
-                $mergedAttributes[FloatAttribute::FLOAT_KEY] = "right";
-            }
-
-
-        }
-
-        return self::createFromCallStackArray($mergedAttributes);
-
-    }
 
 
     public
@@ -400,12 +174,12 @@ abstract class MediaLink
     }
 
     /**
-     * @param Path $path
+     * @param Url $url
      * @param TagAttributes|null $tagAttributes
      * @return RasterImageLink|SvgImageLink|ThirdMediaLink|MediaLink
      * @throws ExceptionBadArgument
      */
-    public static function createMediaLinkFromPath(Path $path, TagAttributes $tagAttributes = null)
+    public static function createMediaLinkFromPath(Url $url, TagAttributes $tagAttributes = null)
     {
 
         if ($tagAttributes === null) {
@@ -440,8 +214,12 @@ abstract class MediaLink
          * Get and delete the attribute for the link
          * (The rest is for the image)
          */
-        $lazyLoadMethod = $tagAttributes->getValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD, self::LAZY_LOAD_METHOD_LOZAD_VALUE);
-        $linking = $tagAttributes->getValueAndRemoveIfPresent(self::LINKING_KEY);
+        try {
+            $lazyLoadMethod = $url->getQueryPropertyValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD);
+        } catch (ExceptionNotFound $e) {
+            $lazyLoadMethod = self::LAZY_LOAD_METHOD_LOZAD_VALUE;
+        }
+        $linking = $tagAttributes->getValueAndRemoveIfPresent(MarkupUrl::LINKING_KEY);
         $linkingClass = $tagAttributes->getValueAndRemoveIfPresent(syntax_plugin_combo_media::LINK_CLASS_ATTRIBUTE);
         return $mediaLink
             ->setLazyLoadMethod($lazyLoadMethod)
@@ -483,7 +261,7 @@ abstract class MediaLink
          */
         $array = array(
             PagePath::PROPERTY_NAME => $this->getPath()->toPathString(),
-            self::LINKING_KEY => $this->getLinking()
+            MarkupUrl::LINKING_KEY => $this->getLinking()
         );
 
 
@@ -568,7 +346,7 @@ abstract class MediaLink
         }
         $linking = $this->getLinking();
         switch ($linking) {
-            case self::LINKING_LINKONLY_VALUE: // show only a url
+            case MarkupUrl::LINKING_LINKONLY_VALUE: // show only a url
                 $src = ml(
                     $dokuPath->getDokuwikiId(),
                     array(
@@ -583,10 +361,10 @@ abstract class MediaLink
                     $title = $media->getType();
                 }
                 return $mediaLink->toHtmlEnterTag("a") . $title . "</a>";
-            case self::LINKING_NOLINK_VALUE:
+            case MarkupUrl::LINKING_NOLINK_VALUE:
                 return $this->renderMediaTag();
             default:
-            case self::LINKING_DIRECT_VALUE:
+            case MarkupUrl::LINKING_DIRECT_VALUE:
                 //directly to the image
                 $src = ml(
                     $dokuPath->getDokuwikiId(),
@@ -610,7 +388,7 @@ abstract class MediaLink
                 $snippetManager->attachCssInternalStyleSheetForSlot($snippetId);
                 return $mediaLink->toHtmlEnterTag("a") . $this->renderMediaTag() . "</a>";
 
-            case self::LINKING_DETAILS_VALUE:
+            case MarkupUrl::LINKING_DETAILS_VALUE:
                 //go to the details media viewer
                 $src = ml(
                     $dokuPath->getDokuwikiId(),
@@ -664,7 +442,7 @@ abstract class MediaLink
         } catch (ExceptionNotFound $e) {
             return FetchDoku::createFromPath($this->path);
         }
-        if($mime->toString()===Mime::PDF){
+        if ($mime->toString() === Mime::PDF) {
             return (new FetchPdf())
                 ->setDokuPath($this->path);
         }

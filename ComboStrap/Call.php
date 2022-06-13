@@ -77,8 +77,8 @@ class Call
         "linebreak",
         "externallink",
         "internallink",
-        MediaLink::INTERNAL_MEDIA_CALL_NAME,
-        MediaLink::EXTERNAL_MEDIA_CALL_NAME,
+        MarkupUrl::INTERNAL_MEDIA_CALL_NAME,
+        MarkupUrl::EXTERNAL_MEDIA_CALL_NAME,
         /**
          * The inline of combo
          */

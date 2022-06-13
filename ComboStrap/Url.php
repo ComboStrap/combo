@@ -12,6 +12,7 @@ namespace ComboStrap;
  */
 class Url
 {
+    const URL_ATTRIBUTE = "url";
 
     /**
      * An array of array because one name may have several value
@@ -130,9 +131,16 @@ class Url
         return $this->query;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     function getQueryPropertyValue($key)
     {
-        return $this->query[$key];
+        $value = $this->query[$key];
+        if ($value === null) {
+            throw new ExceptionNotFound("The key ($key) was not found");
+        }
+        return $value;
     }
 
     /**
@@ -474,11 +482,11 @@ class Url
         foreach ($this->query as $key => $value) {
             if ($queryString !== null) {
                 /**
-                 * HTML encoding (ie {@link DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML}
+                 * HTML encoding (ie {@link MarkupUrl::AMPERSAND_URL_ENCODED_FOR_HTML}
                  * happens only when outputing to HTML
                  * The url may also be used elsewhere where &amp; is unknown or not wanted such as css ...
                  */
-                $queryString .= DokuwikiUrl::AMPERSAND_CHARACTER;
+                $queryString .= MarkupUrl::AMPERSAND_CHARACTER;
             }
             if ($value === null) {
                 $queryString .= urlencode($key);
@@ -487,7 +495,7 @@ class Url
                     for ($i = 0; $i < sizeof($value); $i++) {
                         $val = $value[$i];
                         if ($i > 0) {
-                            $queryString .= DokuwikiUrl::AMPERSAND_CHARACTER;
+                            $queryString .= MarkupUrl::AMPERSAND_CHARACTER;
                         }
                         $queryString .= urlencode($key) . "[]=" . urlencode($val);
                     }
@@ -499,6 +507,16 @@ class Url
         return $queryString;
 
 
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getQueryPropertyValueAndRemoveIfPresent(string $key)
+    {
+        $value = $this->getQueryPropertyValue($key);
+        unset($this->query[$key]);
+        return $value;
     }
 
 

@@ -4,6 +4,7 @@
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
+use ComboStrap\MarkupUrl;
 use ComboStrap\EditButton;
 use ComboStrap\IdManager;
 use ComboStrap\MediaLink;
@@ -234,7 +235,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                         case $imageTag:
                             $actualCall->addClassName("card-img-top");
                             $actualCall->setType(SvgDocument::ILLUSTRATION_TYPE);
-                            $actualCall->addAttribute(MediaLink::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
+                            $actualCall->addAttribute(MarkupUrl::LINKING_KEY, MarkupUrl::LINKING_NOLINK_VALUE);
                             if (!$actualCall->hasAttribute(Dimension::RATIO_ATTRIBUTE)) {
                                 $actualCall->addAttribute(Dimension::RATIO_ATTRIBUTE, "16:9");
                             }

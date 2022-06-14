@@ -14,17 +14,24 @@ class ThirdMediaLink extends MediaLink
 {
 
 
-
-
     public function renderMediaTag(): string
     {
-        $msg = "The media with the mime (" . $this->getPath()->getPath()->getMime() . ") is not yet implemented";
-        LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR);
-        return $msg;
+
+        $mediaMarkup = $this->mediaMarkup;
+        $url = $mediaMarkup->toFetchUrl();
+        try {
+            $label = $mediaMarkup->getLabel();
+        } catch (ExceptionNotFound $e) {
+            $label = $url->toString();
+        }
+
+        return "<a href=\"{$url->toAbsoluteUrlString()}\" title=\"{$label}\">{$label}</a>";
+
     }
 
-    public function getUrl(): string{
-        return "";
+    public function renderMediaTagWithLink(): string
+    {
+        return $this->renderMediaTag();
     }
 
 

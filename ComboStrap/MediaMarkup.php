@@ -55,9 +55,11 @@ class MediaMarkup
     /**
      * The method on how to lazy load resources (Ie media)
      */
-    public const LAZY_LOAD_METHOD = "lazy-method";
+    public const LAZY_LOAD_METHOD = "lazy";
     public const LAZY_LOAD_METHOD_HTML_VALUE = "html-attribute";
     public const LAZY_LOAD_METHOD_LOZAD_VALUE = "lozad";
+    public const LAZY_LOAD_METHOD_NONE_VALUE = "none";
+    const LAZY_LOAD_METHOD_DEFAULT = self::LAZY_LOAD_METHOD_LOZAD_VALUE;
 
     /**
      * This attributes does not apply
@@ -78,16 +80,17 @@ class MediaMarkup
     public const LINK_CLASS_ATTRIBUTE = "link-class";
 
 
+
     private Url $fetchUrl;
 
-    private string $externalOrInternalMedia;
-    private ?string $align;
-    private ?string $label;
+    private string $externalOrTypeMedia;
+    private ?string $align = null;
+    private ?string $label = null;
     private string $ref;
-    private ?string $linking;
-    private ?string $lazyLoad;
+    private ?string $linking = null;
+    private ?string $lazyLoadMethod = null;
     private TagAttributes $tagAttributes;
-    private ?string $linkingClass;
+    private ?string $linkingClass = null;
 
     /**
      * Parse a media wiki ref that you can found in the first part of a media markup
@@ -113,7 +116,7 @@ class MediaMarkup
         if (media_isexternal($ref)) {
             try {
                 $this->fetchUrl = Url::createFromString($ref);
-                $this->externalOrInternalMedia = self::EXTERNAL_MEDIA_CALL_NAME;
+                $this->externalOrTypeMedia = self::EXTERNAL_MEDIA_CALL_NAME;
                 return $this;
             } catch (ExceptionBadSyntax $e) {
                 LogUtility::internalError("The url string is not valid URL ($ref)");
@@ -143,13 +146,13 @@ class MediaMarkup
          * Scheme
          */
         if (link_isinterwiki($httpHostOrPath)) {
-            $this->externalOrInternalMedia = InterWikiPath::scheme;
+            $this->externalOrTypeMedia = InterWikiPath::scheme;
             $this->fetchUrl->setPath($httpHostOrPath);
         } else {
             /**
              * We transform it as if it was a fetch URL
              */
-            $this->externalOrInternalMedia = DokuFs::SCHEME;
+            $this->externalOrTypeMedia = DokuFs::SCHEME;
             $this->fetchUrl->addQueryParameter(DokuPath::MEDIA_DRIVE, $httpHostOrPath);
         }
 
@@ -330,7 +333,7 @@ class MediaMarkup
             // ok
         }
         try {
-            $this->lazyLoad = $this->fetchUrl->getQueryPropertyValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD);
+            $this->lazyLoadMethod = $this->fetchUrl->getQueryPropertyValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD);
         } catch (ExceptionNotFound $e) {
             // ok
         }
@@ -406,7 +409,14 @@ class MediaMarkup
      */
     public function getInternalExternalType(): string
     {
-        return $this->externalOrInternalMedia;
+        switch($this->externalOrTypeMedia){
+            case DokuFs::SCHEME:
+                return self::INTERNAL_MEDIA_CALL_NAME;
+            case self::EXTERNAL_MEDIA_CALL_NAME:
+            case InterWikiPath::scheme:
+            default:
+                return self::EXTERNAL_MEDIA_CALL_NAME;
+        }
     }
 
 
@@ -425,23 +435,6 @@ class MediaMarkup
         return $this->fetchUrl;
     }
 
-    /**
-     * @throws ExceptionNotFound
-     */
-    public function getMime(): Mime
-    {
-        switch ($this->getInternalExternalType()) {
-            case self::INTERNAL_MEDIA_CALL_NAME:
-                $id = $this->fetchUrl->getQueryPropertyValue(FetchDoku::MEDIA_QUERY_PARAMETER);
-                $path = DokuPath::createMediaPathFromId($id);
-                break;
-            default:
-                $path = $this->fetchUrl;
-                break;
-        }
-        return FileSystems::getMime($path);
-
-    }
 
     /**
      * @param string $match - the match of the renderer
@@ -630,7 +623,7 @@ class MediaMarkup
     /**
      * @throws ExceptionNotFound
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         if ($this->label === null) {
             throw new ExceptionNotFound("No label specified");
@@ -639,29 +632,80 @@ class MediaMarkup
     }
 
     public
-    function setLazyLoad($false): MediaMarkup
+    function setLazyLoadMethod($false): MediaMarkup
     {
-        $this->lazyLoad = $false;
+        $this->lazyLoadMethod = $false;
         return $this;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
-    function getLazyLoad()
+    function getLazyLoadMethod(): string
     {
 
-        if ($this->lazyLoad !== null) {
-            return $this->lazyLoad;
+        if ($this->lazyLoadMethod !== null) {
+            return $this->lazyLoadMethod;
         }
-
-        return self::LAZY_LOAD_METHOD_LOZAD_VALUE;
-
+        throw new ExceptionNotFound("Lazy method is not specified");
 
     }
+
+    public
+    function getLazyLoadMethodOrDefault(): string
+    {
+        try {
+            return $this->getLazyLoadMethod();
+        } catch (ExceptionNotFound $e) {
+            return self::LAZY_LOAD_METHOD_LOZAD_VALUE;
+        }
+
+    }
+
 
     public
     static function isInternalMediaSyntax($text)
     {
         return preg_match(' / ' . syntax_plugin_combo_media::MEDIA_PATTERN . ' / msSi', $text);
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function isLazy(): bool
+    {
+
+        return $this->getLazyLoadMethod() !== self::LAZY_LOAD_METHOD_NONE_VALUE;
+
+    }
+
+    public function getAttributes(): TagAttributes
+    {
+        return $this->tagAttributes;
+    }
+
+    public function getPath(): Path
+    {
+        switch ($this->getInternalExternalType()) {
+            case self::INTERNAL_MEDIA_CALL_NAME:
+                $id = $this->fetchUrl->getQueryPropertyValue(FetchDoku::MEDIA_QUERY_PARAMETER);
+                $path = DokuPath::createMediaPathFromId($id);
+                break;
+            default:
+                $path = $this->fetchUrl;
+                break;
+        }
+        return $path;
+    }
+
+    public function setLazyLoad(bool $true)
+    {
+        if($true){
+            $this->lazyLoadMethod = self::LAZY_LOAD_METHOD_DEFAULT;
+        } else {
+            $this->lazyLoadMethod = self::LAZY_LOAD_METHOD_NONE_VALUE;
+        }
     }
 
     /**
@@ -681,6 +725,17 @@ class MediaMarkup
         return $this;
     }
 
+    /**
+     * @return string the wiki syntax
+     */
+    public function getMarkupSyntax(): string
+    {
+        $descriptionPart = "";
+        if (!empty($this->getAltNotEmpty())) {
+            $descriptionPart = "|" . $this->getAltNotEmpty();
+        }
+        return '{{' . $this->ref . $descriptionPart . '}}';
+    }
 
 
 

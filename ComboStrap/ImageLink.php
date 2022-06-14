@@ -14,28 +14,11 @@ abstract class ImageLink extends MediaLink
 {
 
 
-    /**
-     * @return Fetch
-     */
-    abstract function getFetch(): Fetch;
-
-
-    /**
-     * @return string the wiki syntax
-     */
-    public function getMarkupSyntax(): string
-    {
-        $descriptionPart = "";
-        if (!empty($this->getAltNotEmpty())) {
-            $descriptionPart = "|" . $this->getAltNotEmpty();
-        }
-        return '{{' . $this->getPath()->getAbsolutePath() . $descriptionPart . '}}';
-    }
 
     /**
      * This is mandatory for HTML
      * The alternate text (the title in Dokuwiki media term)
-     * @return null
+     *
      *
      * TODO: Try to extract it from the metadata file ?
      *
@@ -43,14 +26,28 @@ abstract class ImageLink extends MediaLink
      * For details, consult guidance on providing text alternatives for images.
      * https://www.w3.org/WAI/tutorials/images/
      */
-    public function getAltNotEmpty()
+    public function getAltNotEmpty(): string
     {
-        $title = $this->getTitle();
-        if (!empty($title)) {
-            return $title;
+        try {
+            return $this->mediaMarkup->getLabel();
+        } catch (ExceptionNotFound $e) {
+            $path = $this->mediaMarkup->getPath();
+            try {
+                $name = $path->getLastNameWithoutExtension();
+            } catch (ExceptionNotFound $e) {
+                try {
+                    $name = $path->getHost();
+                } catch (ExceptionNotFound $e) {
+                    $name = "Unknown";
+                }
+            }
+            $generatedAlt = str_replace("-", " ", $name);
+            return str_replace($generatedAlt, "_", " ");
         }
-        $generatedAlt = str_replace("-", " ", $this->getPath()->getLastNameWithoutExtension());
-        return str_replace($generatedAlt, "_", " ");
+
     }
+
+
+
 
 }

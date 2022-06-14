@@ -86,20 +86,26 @@ class FetchDoku extends FetchAbs
     }
 
     /**
-     * @throws ExceptionBadArgument
+     * @throws ExceptionBadArgument - if the media was not found
      */
     public function buildFromUrl(Url $url): FetchDoku
     {
         parent::buildFromUrl($url);
-        $id = $url->getQueryPropertyValue(self::MEDIA_QUERY_PARAMETER);
-        if ($id === null) {
-            $id = $url->getQueryPropertyValue(self::SRC_QUERY_PARAMETER);
-            if ($id === null) {
+        try {
+            $id = $url->getQueryPropertyValue(self::MEDIA_QUERY_PARAMETER);
+        } catch (ExceptionNotFound $e) {
+            try {
+                $id = $url->getQueryPropertyValue(self::SRC_QUERY_PARAMETER);
+            } catch (ExceptionNotFound $e) {
                 throw new ExceptionBadArgument("The (" . self::MEDIA_QUERY_PARAMETER . " or " . self::SRC_QUERY_PARAMETER . ") query property is mandatory and was not present in the URL ($url)");
             }
         }
         $drive = $url->getQueryPropertyValueOrDefault(DokuPath::DRIVE_ATTRIBUTE, DokuPath::MEDIA_DRIVE);
-        $rev = $url->getQueryPropertyValue(DokuPath::REV_ATTRIBUTE);
+        try {
+            $rev = $url->getQueryPropertyValue(DokuPath::REV_ATTRIBUTE);
+        } catch (ExceptionNotFound $e) {
+            $rev = null;
+        }
         $this->path = DokuPath::create($id, $drive, $rev);
         return $this;
 

@@ -320,31 +320,7 @@ class Url extends PathAbs
     public function toAbsoluteUrlString(): string
     {
         $this->toAbsoluteUrl();
-        try {
-            $base = "{$this->getScheme()}://{$this->getHost()}";
-        } catch (ExceptionNotFound $e) {
-            // should not
-            LogUtility::internalError("Absolute Url was called, scheme and host should be set");
-            $base = "";
-        }
-        try {
-            $base = "$base/{$this->getPath()}";
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-        try {
-            $base = "$base?{$this->getQueryString()}";
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-        try {
-            $base = "$base#{$this->getFragment()}";
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-        return $base;
+        return $this->toString();
     }
 
     /**
@@ -388,11 +364,11 @@ class Url extends PathAbs
 
     public function getQueryPropertyValueOrDefault(string $key, string $defaultIfNull)
     {
-        $value = $this->getQueryPropertyValue($key);
-        if ($value !== null) {
-            return $value;
+        try {
+            return $this->getQueryPropertyValue($key);
+        } catch (ExceptionNotFound $e) {
+            return $defaultIfNull;
         }
-        return $defaultIfNull;
     }
 
     /**
@@ -614,6 +590,42 @@ class Url extends PathAbs
             $this->setPath($name);
             return $this;
         }
+
+    }
+
+    public function toString(): string
+    {
+        try {
+            $base = "{$this->getScheme()}";
+        } catch (ExceptionNotFound $e) {
+            $base = "";
+        }
+
+        try {
+            $base = "$base://{$this->getHost()}";
+        } catch (ExceptionNotFound $e) {
+            // ok
+            $base = "$base://";
+        }
+
+        try {
+            $base = "$base/{$this->getPath()}";
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+
+        try {
+            $base = "$base?{$this->getQueryString()}";
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+
+        try {
+            $base = "$base#{$this->getFragment()}";
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        return $base;
 
     }
 }

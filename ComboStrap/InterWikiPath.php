@@ -4,7 +4,9 @@
 namespace ComboStrap;
 
 
-
+/**
+ * TODO: it should be a {@link LocalPath}, a {@link DokuPath} or an {@link Url}
+ */
 class InterWikiPath extends PathAbs
 {
 

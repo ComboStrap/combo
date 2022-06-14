@@ -80,7 +80,8 @@ abstract class FetchImage extends FetchAbs
      * See {@link FetchImage::addCommonImageQueryParameterToUrl()}
      * @throws ExceptionNotFound - if not used
      */
-    function getOriginalPath(): DokuPath{
+    function getOriginalPath(): DokuPath
+    {
         throw new ExceptionNotFound("Not found by default");
     }
 
@@ -107,9 +108,14 @@ abstract class FetchImage extends FetchAbs
      */
     public function buildSharedImagePropertyFromTagAttributes(Url $tagAttributes)
     {
-        $requestedWidth = $tagAttributes->getQueryPropertyValue(Dimension::WIDTH_KEY);
-        if ($requestedWidth === null) {
-            $requestedWidth = $tagAttributes->getQueryPropertyValue(Dimension::WIDTH_KEY_SHORT);
+        try {
+            $requestedWidth = $tagAttributes->getQueryPropertyValue(Dimension::WIDTH_KEY);
+        } catch (ExceptionNotFound $e) {
+            try {
+                $requestedWidth = $tagAttributes->getQueryPropertyValue(Dimension::WIDTH_KEY_SHORT);
+            } catch (ExceptionNotFound $e) {
+                $requestedWidth = null;
+            }
         }
         if ($requestedWidth !== null) {
             try {
@@ -119,9 +125,14 @@ abstract class FetchImage extends FetchAbs
             }
             $this->setRequestedWidth($requestedWidthInt);
         }
-        $requestedHeight = $tagAttributes->getQueryPropertyValue(Dimension::HEIGHT_KEY);
-        if ($requestedHeight === null) {
-            $requestedHeight = $tagAttributes->getQueryPropertyValue(Dimension::HEIGHT_KEY_SHORT);
+        try {
+            $requestedHeight = $tagAttributes->getQueryPropertyValue(Dimension::HEIGHT_KEY);
+        } catch (ExceptionNotFound $e) {
+            try {
+                $requestedHeight = $tagAttributes->getQueryPropertyValue(Dimension::HEIGHT_KEY_SHORT);
+            } catch (ExceptionNotFound $e) {
+                $requestedHeight = null;
+            }
         }
         if ($requestedHeight !== null) {
             try {
@@ -132,14 +143,17 @@ abstract class FetchImage extends FetchAbs
             $this->setRequestedHeight($requestedHeightInt);
         }
 
-        $requestedRatio = $tagAttributes->getQueryPropertyValue(Dimension::RATIO_ATTRIBUTE);
-        if ($requestedRatio !== null) {
+        try {
+            $requestedRatio = $tagAttributes->getQueryPropertyValue(Dimension::RATIO_ATTRIBUTE);
             try {
                 $this->requestedRatio = Dimension::convertTextualRatioToNumber($requestedRatio);
             } catch (ExceptionBadSyntax $e) {
                 throw new ExceptionBadArgument("The requested ratio ($requestedRatio) is not a valid value ({$e->getMessage()})", self::CANONICAL, 0, $e);
             }
+        } catch (ExceptionNotFound $e) {
+            // ok
         }
+
 
     }
 
@@ -381,7 +395,7 @@ abstract class FetchImage extends FetchAbs
     {
         try {
             return $this->getRequestedHeight();
-        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+        } catch (ExceptionNotFound $e) {
             // no height
         }
 
@@ -392,15 +406,11 @@ abstract class FetchImage extends FetchAbs
             $width = $this->getRequestedWidth();
             try {
                 $ratio = $this->getRequestedAspectRatio();
-                if ($ratio === null) {
-                    $ratio = $this->getIntrinsicAspectRatio();
-                }
-                return self::round($width / $ratio);
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("The intrinsic height of the image ($this) was used because retrieving the ratio returns this error: {$e->getMessage()} ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                return $this->getIntrinsicHeight();
+            } catch (ExceptionNotFound $e) {
+                $ratio = $this->getIntrinsicAspectRatio();
             }
-        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+            return self::round($width / $ratio);
+        } catch (ExceptionNotFound $e) {
             // no width
         }
 
@@ -614,6 +624,15 @@ abstract class FetchImage extends FetchAbs
             $fetchUrl->addQueryParameter(self::TOK, media_get_token($id, $requestedWidth, $requestedHeight));
         }
 
+    }
+
+    public function __toString()
+    {
+        try {
+            return $this->getOriginalPath()->toUriString();
+        } catch (ExceptionNotFound $e) {
+            return get_class($this);
+        }
     }
 
 

@@ -370,7 +370,7 @@ class MarkupRef
                      * Red color
                      * if not `do=edit`
                      */
-                    if(!$this->dokuwikiUrl->hasQueryParameter("do")) {
+                    if (!$this->dokuwikiUrl->hasQueryParameter("do")) {
                         $outputAttributes->addClassName(self::getHtmlClassNotExist());
                         $outputAttributes->addOutputAttributeValue("rel", 'nofollow');
                     }
@@ -997,6 +997,8 @@ EOF;
 
         return $url;
     }
+
+
 
 
 }

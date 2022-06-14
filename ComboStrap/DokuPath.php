@@ -84,14 +84,6 @@ class DokuPath extends PathAbs
 
 
     /**
-     * @var string the path scheme one constant that starts with SCHEME
-     * ie
-     * {@link DokuFs::SCHEME}
-     */
-    private $scheme;
-
-
-    /**
      * The separator from the {@link DokuPath::getDrive()}
      * Same as {@link InterWikiPath}
      */
@@ -163,29 +155,18 @@ class DokuPath extends PathAbs
             $this->path = self::PATH_SEPARATOR;
         }
 
+
         /**
-         * Scheme determination
+         * We use interwiki to define the combo resources
+         * (Internal use only)
          */
-        $this->scheme = $this->schemeDetermination($this->path);
-
-        switch ($this->scheme) {
-            case InterWikiPath::scheme:
-                /**
-                 * We use interwiki to define the combo resources
-                 * (Internal use only)
-                 */
-                $comboInterWikiScheme = "combo>";
-                if (strpos($path, $comboInterWikiScheme) === 0) {
-                    $this->scheme = DokuFs::SCHEME;
-                    $this->id = substr($this->path, strlen($comboInterWikiScheme));
-                    $this->drive = self::COMBO_DRIVE;
-                };
-                break;
-            case DokuFs::SCHEME:
-            default:
-                DokuPath::addRootSeparatorIfNotPresent($this->path);
-                $this->id = DokuPath::toDokuwikiId($this->path);
-
+        $comboInterWikiScheme = "combo>";
+        if (strpos($this->path, $comboInterWikiScheme) === 0) {
+            $this->id = substr($this->path, strlen($comboInterWikiScheme));
+            $this->drive = self::COMBO_DRIVE;
+        } else {
+            DokuPath::addRootSeparatorIfNotPresent($this->path);
+            $this->id = DokuPath::toDokuwikiId($this->path);
         }
 
 
@@ -620,7 +601,7 @@ class DokuPath extends PathAbs
     function getScheme(): string
     {
 
-        return $this->scheme;
+        return DokuFs::SCHEME;
 
     }
 
@@ -751,10 +732,6 @@ class DokuPath extends PathAbs
          * File path
          */
         $filePathString = $this->path;
-        if ($this->scheme !== DokuFs::SCHEME) {
-            return LocalPath::createFromPath($filePathString);
-        }
-
         $isNamespacePath = self::isNamespacePath($this->path);
         if ($isNamespacePath) {
             /**
@@ -910,7 +887,7 @@ class DokuPath extends PathAbs
     function toUriString(): string
     {
         $driveSep = self::DRIVE_SEPARATOR;
-        $uri = "{$this->scheme}://$this->drive$driveSep$this->id";
+        $uri = "{$this->getScheme()}://$this->drive$driveSep$this->id";
         if ($this->rev !== null) {
             $uri = "$uri?rev={$this->rev}";
         }

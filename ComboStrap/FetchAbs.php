@@ -64,9 +64,11 @@ abstract class FetchAbs implements Fetch
      */
     public function buildFromUrl(Url $url): Fetch
     {
-        $cache = $url->getQueryPropertyValue(self::CACHE_KEY);
-        if($cache!==null) {
+        try {
+            $cache = $url->getQueryPropertyValue(self::CACHE_KEY);
             $this->setRequestedCache($cache);
+        } catch (ExceptionNotFound $e) {
+            // ok
         }
         return $this;
     }

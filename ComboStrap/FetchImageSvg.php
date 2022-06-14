@@ -28,7 +28,7 @@ class FetchImageSvg extends FetchImage
     private $svgDocument;
     private ?ColorRgb $color = null;
     private string $buster;
-    private ?string $preserveAspectRatio;
+    private ?string $preserveAspectRatio = null;
 
     public static function createEmpty(): FetchImageSvg
     {
@@ -99,7 +99,10 @@ class FetchImageSvg extends FetchImage
 
     }
 
-    public function getRequestedPreserveAspectRatio()
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getRequestedPreserveAspectRatio(): string
     {
         if ($this->preserveAspectRatio === null) {
             throw new ExceptionNotFound("No preserve Aspect Ratio was requested");
@@ -206,15 +209,21 @@ class FetchImageSvg extends FetchImage
         $this->originalPath = FetchDoku::createEmpty()->buildFromUrl($url)->getFetchPath();
         $this->buster = FileSystems::getCacheBuster($this->getOriginalPath());
         $this->buildSharedImagePropertyFromTagAttributes($url);
-        $color = $url->getQueryPropertyValue(ColorRgb::COLOR);
-        if ($color !== null) {
+        try {
+            $color = $url->getQueryPropertyValue(ColorRgb::COLOR);
             // we can't have an hex in an url, we will see if this is encoded ;?
             $this->setRequestedColor(ColorRgb::createFromString($color));
+        } catch (ExceptionNotFound $e) {
+            // ok
         }
-        $preserveAspectRatio = $url->getQueryPropertyValue(self::PRESERVE_ASPECT_RATIO_KEY);
-        if ($preserveAspectRatio !== null) {
+
+        try {
+            $preserveAspectRatio = $url->getQueryPropertyValue(self::PRESERVE_ASPECT_RATIO_KEY);
             $this->setRequestedPreserveAspectRatio($preserveAspectRatio);
+        } catch (ExceptionNotFound $e) {
+            // ok
         }
+
         return $this;
     }
 

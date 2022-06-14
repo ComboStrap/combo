@@ -45,8 +45,13 @@ abstract class MediaLink
      * @deprecated 2021-06-12
      */
     const LINK_PATTERN = "{{\s*([^|\s]*)\s*\|?.*}}";
+    protected MediaMarkup $mediaMarkup;
 
 
+    public function __construct(MediaMarkup $mediaMarkup)
+    {
+        $this->mediaMarkup = $mediaMarkup;
+    }
 
 
     /**
@@ -63,7 +68,7 @@ abstract class MediaLink
          * Processing
          */
         try {
-            $mime = $mediaMarkup->getMime();
+            $mime = FileSystems::getMime($mediaMarkup->getPath());
         } catch (ExceptionNotFound $e) {
             // no mime
             LogUtility::error($e->getMessage());
@@ -195,16 +200,17 @@ abstract class MediaLink
 
     public function getFetch(): Fetch
     {
+        $path = $this->mediaMarkup->getPath();
         try {
-            $mime = FileSystems::getMime($this->path);
+            $mime = FileSystems::getMime($path);
         } catch (ExceptionNotFound $e) {
-            return FetchDoku::createFromPath($this->path);
+            return FetchDoku::createFromPath($path);
         }
         if ($mime->toString() === Mime::PDF) {
             return (new FetchPdf())
-                ->setDokuPath($this->path);
+                ->setDokuPath($path);
         }
-        return FetchDoku::createFromPath($this->path);
+        return FetchDoku::createFromPath($path);
 
     }
 

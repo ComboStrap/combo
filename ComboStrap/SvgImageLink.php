@@ -39,46 +39,22 @@ class SvgImageLink extends ImageLink
      */
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
 
-    /**
-     * @var FetchImageSvg
-     */
-    private FetchImageSvg $svgFetch;
+
+    private ?FetchImageSvg $svgFetch = null;
 
 
     /**
-     * SvgImageLink constructor.
-     * @param Path $path
-     * @param TagAttributes|null $tagAttributes
      * @throws ExceptionBadArgument
-     */
-    public function __construct(Path $path, TagAttributes $tagAttributes = null)
-    {
-
-        if ($tagAttributes === null) {
-            $tagAttributes = TagAttributes::createEmpty(self::CANONICAL);
-        }
-        $tagAttributes->setLogicalTag(self::CANONICAL);
-
-        /**
-         * Build the first fetch
-         */
-        $this->svgFetch = FetchImageSvg::createEmpty()->buildFromUrl($tagAttributes->toUrl());
-
-
-        parent::__construct($path, $tagAttributes);
-
-    }
-
-
-    /**
+     * @throws ExceptionNotFound
      */
     private function createImgHTMLTag(): string
     {
 
 
-        $lazyLoad = $this->getLazyLoad();
+        $lazyLoad = $this->isLazyLoaded();
 
         $svgInjection = PluginUtility::getConfValue(self::CONF_SVG_INJECTION_ENABLE, 1);
+
         /**
          * Snippet
          */
@@ -109,15 +85,7 @@ class SvgImageLink extends ImageLink
          * (no cache for the img tag)
          * @var FetchImageSvg $image
          */
-        $image = $this->getFetch();
-        $responseAttributes = TagAttributes::createFromTagAttributes($image->getAttributes());
-        $responseAttributes->removeComponentAttributeIfPresent(FetchAbs::CACHE_KEY);
-
-        /**
-         * Remove linking (not yet implemented)
-         */
-        $responseAttributes->removeComponentAttributeIfPresent(MediaMarkup::LINKING_KEY);
-
+        $responseAttributes = $this->mediaMarkup->getAttributes();
 
         /**
          * Adaptive Image
@@ -130,7 +98,7 @@ class SvgImageLink extends ImageLink
         /**
          * Alt is mandatory
          */
-        $responseAttributes->addOutputAttributeValue("alt", $image->getAltNotEmpty());
+        $responseAttributes->addOutputAttributeValue("alt", $this->getAltNotEmpty());
 
 
         /**
@@ -161,13 +129,14 @@ class SvgImageLink extends ImageLink
          * Dimension are mandatory
          * to avoid layout shift (CLS)
          */
-        $responseAttributes->addOutputAttributeValue(Dimension::WIDTH_KEY, $image->getTargetWidth());
-        $responseAttributes->addOutputAttributeValue(Dimension::HEIGHT_KEY, $image->getTargetHeight());
+        $svgFetch = $this->getFetch();
+        $responseAttributes->addOutputAttributeValue(Dimension::WIDTH_KEY, $svgFetch->getTargetWidth());
+        $responseAttributes->addOutputAttributeValue(Dimension::HEIGHT_KEY, $svgFetch->getTargetHeight());
 
         /**
          * Src call
          */
-        $srcValue = $image->getFetchUrl();
+        $srcValue = $svgFetch->getFetchUrl();
         if ($lazyLoad) {
 
             /**
@@ -175,8 +144,8 @@ class SvgImageLink extends ImageLink
              */
             $responseAttributes->addOutputAttributeValue("data-src", $srcValue);
             $responseAttributes->addOutputAttributeValue("src", LazyLoad::getPlaceholder(
-                $image->getTargetWidth(),
-                $image->getTargetHeight()
+                $svgFetch->getTargetWidth(),
+                $svgFetch->getTargetHeight()
             ));
 
         } else {
@@ -184,16 +153,6 @@ class SvgImageLink extends ImageLink
             $responseAttributes->addOutputAttributeValue("src", $srcValue);
 
         }
-
-        /**
-         * Old model where dokuwiki parses the src in handle
-         */
-        $responseAttributes->removeAttributeIfPresent(PagePath::PROPERTY_NAME);
-
-        /**
-         * Ratio is an attribute of the request, not or rendering
-         */
-        $responseAttributes->removeAttributeIfPresent(Dimension::RATIO_ATTRIBUTE);
 
         /**
          * Return the image
@@ -209,37 +168,34 @@ class SvgImageLink extends ImageLink
      * A media can be a video also
      * @return string
      * @throws ExceptionNotFound
+     * @throws ExceptionBadArgument
      */
     public function renderMediaTag(): string
     {
 
-        /**
-         * @var FetchImageSvg $image
-         */
-        $image = $this->getFetch();
-        if (!$image->exists()) {
-            throw new ExceptionNotFound("The image ($image) does not exist");
+
+        $imagePath = $this->mediaMarkup->getPath();
+        if (!FileSystems::exists($imagePath)) {
+            throw new ExceptionNotFound("The image ($imagePath) does not exist");
         }
 
         /**
-         * This attributes should not be in the render
+         * TODO: Title/Label should be a node just below SVG
          */
-        $attributes = $this->getFetch()->getAttributes();
-        $attributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
-        $attributes->removeComponentAttributeIfPresent(MediaMarkup::DOKUWIKI_SRC);
-        /**
-         * TODO: Title should be a node just below SVG
-         */
-        $attributes->removeComponentAttributeIfPresent(PageTitle::PROPERTY_NAME);
+        $imageSize = FileSystems::getSize($imagePath);
 
-        $imageSize = FileSystems::getSize($image->getOriginalPath());
         /**
          * Svg Style conflict:
          * when two svg are created and have a style node, they inject class
          * that may conflict with others (ie cls-1 class, ...)
          * The svg is then inserted via an img tag to scope it.
          */
-        $preserveStyle = $attributes->getValue(SvgDocument::PRESERVE_ATTRIBUTE, false);
+        try {
+            $preserveStyle = DataType::toBoolean($this->mediaMarkup->toFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(SvgDocument::PRESERVE_ATTRIBUTE));
+        } catch (ExceptionNotFound $e) {
+            $preserveStyle = false;
+        }
+
         $asImgTag = $imageSize > $this->getMaxInlineSize() || $preserveStyle;
         if ($asImgTag) {
 
@@ -253,8 +209,13 @@ class SvgImageLink extends ImageLink
             /**
              * Svg tag
              */
-            $imgHTML = FileSystems::getContent($image->getFetchPath());
-
+            try {
+                $fetchPath = $this->getFetch()->getFetchPath();
+                $imgHTML = FileSystems::getContent($fetchPath);
+            } catch (ExceptionBadSyntax|ExceptionBadArgument|ExceptionNotFound $e) {
+                LogUtility::error("Unable to include the svg in the document. Error: {$e->getMessage()}");
+                $imgHTML = $this->createImgHTMLTag();
+            }
 
         }
 
@@ -268,19 +229,30 @@ class SvgImageLink extends ImageLink
     }
 
 
-    public function getLazyLoad()
+    public function isLazyLoaded()
     {
-        $lazyLoad = parent::getLazyLoad();
-        if ($lazyLoad !== null) {
-            return $lazyLoad;
-        } else {
+        try {
+            return $this->mediaMarkup->isLazy();
+        } catch (ExceptionNotFound $e) {
             return PluginUtility::getConfValue(SvgImageLink::CONF_LAZY_LOAD_ENABLE);
         }
     }
 
 
-    function getFetch(): Fetch
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionNotFound
+     */
+    function getFetch(): FetchImageSvg
     {
+
+        if ($this->svgFetch === null) {
+            $this->svgFetch = FetchImageSvg::createEmpty()
+                ->buildFromUrl($this->mediaMarkup->toFetchUrl());
+        }
         return $this->svgFetch;
+
+
     }
+
 }

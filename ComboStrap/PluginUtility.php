@@ -530,7 +530,7 @@ class PluginUtility
             $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
             $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");
             try {
-                $xhtmlIcon = SvgImageLink::createMediaLinkFromPath($logoPath, $tagAttributes)
+                $xhtmlIcon = SvgImageLink::createFromMediaMarkup($logoPath, $tagAttributes)
                     ->renderMediaTag();
             } catch (ExceptionCompile $e) {
                 /**

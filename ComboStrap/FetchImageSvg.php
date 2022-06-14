@@ -124,7 +124,7 @@ class FetchImageSvg extends FetchImage
          * Generated svg file cache init
          */
         $fetchCache = FetchCache::createFrom($this);
-        $files[] = $this->originalPath->toAbsolutePath()->toPathString();
+        $files[] = $this->originalPath;
         $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve("SvgDocument.php");
         $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve("XmlDocument.php");
         $files = array_merge(Site::getConfigurationFiles(), $files); // svg generation depends on configuration

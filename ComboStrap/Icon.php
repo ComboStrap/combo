@@ -632,7 +632,7 @@ class Icon extends FetchImageSvg
             }
         }
 
-        $svgImageLink = SvgImageLink::createMediaLinkFromPath(
+        $svgImageLink = SvgImageLink::createFromMediaMarkup(
             $this->getOriginalPath(),
             $this->getAttributes()
         );

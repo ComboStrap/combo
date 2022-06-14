@@ -246,13 +246,13 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                     && $isImage
                 ) {
                     try {
-                        $renderer->doc .= MediaLink::createMediaLinkFromPath($mediaMarkup);
-                    } catch (ExceptionNotFound $e) {
+                        $renderer->doc .= MediaLink::createFromMediaMarkup($mediaMarkup)->renderMediaTagWithLink();
+                    } catch (ExceptionNotFound|ExceptionBadArgument|\ComboStrap\ExceptionBadSyntax|\ComboStrap\ExceptionNotExists $e) {
                         if (PluginUtility::isDevOrTest()) {
                             throw new ExceptionRuntime("Media Rendering Error. {$e->getMessage()}", MediaLink::CANONICAL, 0, $e);
                         } else {
                             $errorClass = self::SVG_RENDERING_ERROR_CLASS;
-                            $message = "Media ({$media->getPath()}). Error while rendering: {$e->getMessage()}";
+                            $message = "Media ({$mediaMarkup}). Error while rendering: {$e->getMessage()}";
                             $renderer->doc .= "<span class=\"text-danger $errorClass\">" . hsc(trim($message)) . "</span>";
                             LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, MediaLink::CANONICAL);
                         }

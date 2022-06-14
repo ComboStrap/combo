@@ -790,8 +790,9 @@ class Site
          */
         $logoImages = Site::getLogoImages();
         foreach ($logoImages as $logoImage) {
+            $mediaMarkup = MediaMarkup::createFromUrl($logoImage->getFetchUrl());
             $path = $logoImage->getOriginalPath();
-            $mediaLink = MediaLink::createMediaLinkFromPath($path, $tagAttributes)
+            $mediaLink = MediaLink::createFromMediaMarkup($path, $tagAttributes)
                 ->setLazyLoad(false);
             try {
                 return $mediaLink->renderMediaTag();

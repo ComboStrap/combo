@@ -916,6 +916,8 @@ EOF;
         return $this->ref;
     }
 
+
+
     private
     function getEmailObfuscationConfiguration()
     {

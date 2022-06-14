@@ -80,13 +80,12 @@ class MediaMarkup
     public const LINK_CLASS_ATTRIBUTE = "link-class";
 
 
-
     private Url $fetchUrl;
 
     private string $externalOrTypeMedia;
     private ?string $align = null;
     private ?string $label = null;
-    private string $ref;
+    private ?string $ref;
     private ?string $linking = null;
     private ?string $lazyLoadMethod = null;
     private TagAttributes $tagAttributes;
@@ -386,6 +385,11 @@ class MediaMarkup
 
     }
 
+    public static function createFromUrl(Url $getFetchUrl)
+    {
+        return (new MediaMarkup())->setUrl($getFetchUrl);
+    }
+
     /**
      * Compliance: src in dokuwiki is the path and the anchor if any
      */
@@ -409,7 +413,7 @@ class MediaMarkup
      */
     public function getInternalExternalType(): string
     {
-        switch($this->externalOrTypeMedia){
+        switch ($this->externalOrTypeMedia) {
             case DokuFs::SCHEME:
                 return self::INTERNAL_MEDIA_CALL_NAME;
             case self::EXTERNAL_MEDIA_CALL_NAME:
@@ -689,7 +693,12 @@ class MediaMarkup
     {
         switch ($this->getInternalExternalType()) {
             case self::INTERNAL_MEDIA_CALL_NAME:
-                $id = $this->fetchUrl->getQueryPropertyValue(FetchDoku::MEDIA_QUERY_PARAMETER);
+                try {
+                    $id = $this->fetchUrl->getQueryPropertyValue(FetchDoku::MEDIA_QUERY_PARAMETER);
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError("During the ref parsing, the media property should have been set");
+                    $id = "support";
+                }
                 $path = DokuPath::createMediaPathFromId($id);
                 break;
             default:
@@ -699,9 +708,14 @@ class MediaMarkup
         return $path;
     }
 
+    public function __toString()
+    {
+        return $this->toMarkupSyntax();
+    }
+
     public function setLazyLoad(bool $true)
     {
-        if($true){
+        if ($true) {
             $this->lazyLoadMethod = self::LAZY_LOAD_METHOD_DEFAULT;
         } else {
             $this->lazyLoadMethod = self::LAZY_LOAD_METHOD_NONE_VALUE;
@@ -728,15 +742,38 @@ class MediaMarkup
     /**
      * @return string the wiki syntax
      */
-    public function getMarkupSyntax(): string
+    public function toMarkupSyntax(): string
     {
         $descriptionPart = "";
-        if (!empty($this->getAltNotEmpty())) {
-            $descriptionPart = "|" . $this->getAltNotEmpty();
+        try {
+            $descriptionPart = "|" . $this->getLabel();
+        } catch (ExceptionNotFound $e) {
+            // ok
         }
-        return '{{' . $this->ref . $descriptionPart . '}}';
+        try {
+            $ref = $this->getRef();
+        } catch (ExceptionNotFound $e) {
+            $ref = $this->toFetchUrl()->toString();
+        }
+        return '{{' . $ref . $descriptionPart . '}}';
     }
 
+    private function setUrl(Url $getFetchUrl): MediaMarkup
+    {
+        $this->fetchUrl = $getFetchUrl;
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getRef(): string
+    {
+        if ($this->ref === null) {
+            throw new ExceptionNotFound("No ref was specified");
+        }
+        return $this->ref;
+    }
 
 
 }

@@ -101,7 +101,7 @@ class FetchCache
         return LocalPath::createFromPath($this->fileCache->cache);
     }
 
-    public function addFileDependency($path)
+    public function addFileDependency(Path $path): FetchCache
     {
         $this->fileDependencies[] = $path->toAbsolutePath()->toPathString();
         return $this;

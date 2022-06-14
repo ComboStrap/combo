@@ -61,7 +61,7 @@ abstract class MediaLink
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
      */
-    public static function createMediaLinkFromPath(MediaMarkup $mediaMarkup)
+    public static function createFromMediaMarkup(MediaMarkup $mediaMarkup)
     {
 
         /**

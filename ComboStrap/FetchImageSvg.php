@@ -125,8 +125,16 @@ class FetchImageSvg extends FetchImage
          */
         $fetchCache = FetchCache::createFrom($this);
         $files[] = $this->originalPath;
-        $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve("SvgDocument.php");
-        $files[] = Site::getComboHome()->resolve("ComboStrap")->resolve("XmlDocument.php");
+        try {
+            $files[] = ClassUtility::getClassPath(SvgDocument::class);
+        } catch (\ReflectionException $e) {
+            LogUtility::internalError("Unable to add the SvgDocument class as dependency. Error: {$e->getMessage()}");
+        }
+        try {
+            $files[] = ClassUtility::getClassPath(XmlDocument::class);
+        } catch (\ReflectionException $e) {
+            LogUtility::internalError("Unable to add the XmlDocument class as dependency. Error: {$e->getMessage()}");
+        }
         $files = array_merge(Site::getConfigurationFiles(), $files); // svg generation depends on configuration
         foreach ($files as $file) {
             $fetchCache->addFileDependency($file);

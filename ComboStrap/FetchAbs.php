@@ -46,7 +46,7 @@ abstract class FetchAbs implements Fetch
         try {
             $value = $this->getRequestedCache();
             if ($value !== self::CACHE_DEFAULT_VALUE) {
-                $url->addQueryParameter(self::CACHE_KEY, $value);
+                $url->addQueryParameterIfNotActualSameValue(self::CACHE_KEY, $value);
             }
         } catch (ExceptionNotFound $e) {
             // ok
@@ -54,7 +54,7 @@ abstract class FetchAbs implements Fetch
         /**
          * The buster
          */
-        $url->addQueryCacheBuster($this->getBuster());
+        $url->addQueryParameterIfNotActualSameValue(Fetch::CACHE_BUSTER_KEY, $this->getBuster());
         return $url;
     }
 

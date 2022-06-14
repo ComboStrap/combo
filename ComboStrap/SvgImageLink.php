@@ -38,6 +38,7 @@ class SvgImageLink extends ImageLink
      * Svg Injection
      */
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
+    const TAG = "svg";
 
 
     private ?FetchImageSvg $svgFetch = null;
@@ -85,7 +86,8 @@ class SvgImageLink extends ImageLink
          * (no cache for the img tag)
          * @var FetchImageSvg $image
          */
-        $responseAttributes = $this->mediaMarkup->getAttributes();
+        $responseAttributes = $this->mediaMarkup->getAttributes()
+            ->setLogicalTag(self::TAG);
 
         /**
          * Adaptive Image
@@ -125,13 +127,29 @@ class SvgImageLink extends ImageLink
         }
         $responseAttributes->addClassName($svgFunctionalClass);
 
-        /**
-         * Dimension are mandatory
-         * to avoid layout shift (CLS)
-         */
+
         $svgFetch = $this->getFetch();
+        /**
+         * Dimension are mandatory on the image
+         * to avoid layout shift (CLS)
+         * We add them as output attribute
+         */
         $responseAttributes->addOutputAttributeValue(Dimension::WIDTH_KEY, $svgFetch->getTargetWidth());
         $responseAttributes->addOutputAttributeValue(Dimension::HEIGHT_KEY, $svgFetch->getTargetHeight());
+
+        /**
+         * For styling, we add the width and height as component attribute
+         */
+        try {
+            $responseAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $svgFetch->getRequestedWidth());
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        try {
+            $responseAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $svgFetch->getRequestedHeight());
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
 
         /**
          * Src call

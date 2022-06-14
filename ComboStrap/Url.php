@@ -260,11 +260,6 @@ class Url extends PathAbs
         return $this;
     }
 
-    public function addQueryCacheBuster(string $busterValue): Url
-    {
-        $this->addQueryParameter(Fetch::CACHE_BUSTER_KEY, $busterValue);
-        return $this;
-    }
 
     public function hasProperty(string $key): bool
     {
@@ -626,6 +621,29 @@ class Url extends PathAbs
             // ok
         }
         return $base;
+
+    }
+
+    /**
+     * Query parameter can have several values
+     * This function makes sure that there is only one value for one key
+     * if the value are different, the value will be added
+     * @param string $key
+     * @param string $value
+     * @return Url
+     */
+    public function addQueryParameterIfNotActualSameValue(string $key, string $value): Url
+    {
+        try {
+            $actualValue = $this->getQueryPropertyValue($key);
+            if ($actualValue !== $value) {
+                $this->addQueryParameter($key, $value);
+            }
+        } catch (ExceptionNotFound $e) {
+            $this->addQueryParameter($key, $value);
+        }
+
+        return $this;
 
     }
 }

@@ -163,9 +163,9 @@ class TagAttributes
 
 
     /**
-     * @var array attribute that were set on a component
+     * @var ArrayCaseInsensitive attribute that were set on a component
      */
-    private $componentAttributesCaseInsensitive;
+    private ArrayCaseInsensitive $componentAttributesCaseInsensitive;
 
     /**
      * @var array the style declaration array
@@ -719,13 +719,6 @@ class TagAttributes
         }
     }
 
-    /**
-     * @return array - the storage format returned from the {@link SyntaxPlugin::handle()}  method
-     */
-    public function toInternalArray()
-    {
-        return $this->componentAttributesCaseInsensitive;
-    }
 
     /**
      * Get the value and remove it from the attributes

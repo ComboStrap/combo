@@ -46,7 +46,7 @@ class Url extends PathAbs
      * An array of array because one name may have several value
      * @var array[array] $query
      */
-    private array $query = [];
+    private ArrayCaseInsensitive $query;
     private ?string $path = null;
     private ?string $scheme = null;
     private ?string $host = null;
@@ -59,6 +59,8 @@ class Url extends PathAbs
      */
     public function __construct($url = null)
     {
+
+        $this->query = new ArrayCaseInsensitive();
         if ($url !== null) {
             /**
              *
@@ -78,7 +80,7 @@ class Url extends PathAbs
                 throw new ExceptionBadSyntax("The url ($url) is not valid");
             }
             parse_str($urlComponents['query'], $queryKeys);
-            $this->query = $queryKeys;
+            $this->query = new ArrayCaseInsensitive($queryKeys);
             $this->scheme = $urlComponents["scheme"];
             $this->host = $urlComponents["host"];
             $pathUrlComponent = $urlComponents["path"];
@@ -155,8 +157,7 @@ class Url extends PathAbs
 
     function getQuery(): array
     {
-
-        return $this->query;
+        return $this->query->getOriginalArray();
     }
 
     /**
@@ -470,7 +471,8 @@ class Url extends PathAbs
         /**
          * To be able to diff them
          */
-        ksort($this->query);
+        $originalArray = $this->query->getOriginalArray();
+        ksort($originalArray);
 
         /**
          * We don't use {@link http_build_query} because:
@@ -478,7 +480,7 @@ class Url extends PathAbs
          *   * it output 'key=' instead of `key` when the value is null
          */
         $queryString = null;
-        foreach ($this->query as $key => $value) {
+        foreach ($originalArray as $key => $value) {
             if ($queryString !== null) {
                 /**
                  * HTML encoding (ie {@link self::AMPERSAND_URL_ENCODED_FOR_HTML}

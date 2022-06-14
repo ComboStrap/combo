@@ -14,7 +14,6 @@ abstract class ImageLink extends MediaLink
 {
 
 
-
     /**
      * This is mandatory for HTML
      * The alternate text (the title in Dokuwiki media term)
@@ -42,12 +41,10 @@ abstract class ImageLink extends MediaLink
                 }
             }
             $generatedAlt = str_replace("-", " ", $name);
-            return str_replace($generatedAlt, "_", " ");
+            return str_replace("_", " ", $generatedAlt);
         }
 
     }
-
-
 
 
 }

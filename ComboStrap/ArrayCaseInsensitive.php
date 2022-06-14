@@ -6,7 +6,7 @@ namespace ComboStrap;
 
 use ArrayAccess;
 use ArrayObject;
-use Traversable;
+use Countable;
 
 /**
  * Class ArrayCaseInsensitive
@@ -14,27 +14,27 @@ use Traversable;
  *
  * Wrapper around an array to make it case access insensitive
  */
-class ArrayCaseInsensitive implements ArrayAccess, \Iterator
+class ArrayCaseInsensitive implements ArrayAccess, \Iterator, Countable
 {
 
     /**
      * A mapping between lower key and original key (ie offset)
      * @var array
      */
-    private $_keyMapping = array();
+    private array $_keyMapping = array();
     /**
      * @var array
      */
-    private $sourceArray;
+    private array $sourceArray;
     /**
      * @var false|mixed
      */
     private $valid;
-    private $iteratorIndex = 0;
+    private int $iteratorIndex = 0;
     /**
      * @var \ArrayIterator
      */
-    private $iterator;
+    private \ArrayIterator $iterator;
 
 
     public function __construct(array &$source = array())
@@ -89,7 +89,7 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator
         return $this->sourceArray[$sourceOffset] ?? null;
     }
 
-    function getOriginalArray()
+    function getOriginalArray(): array
     {
         return $this->sourceArray;
     }
@@ -119,5 +119,10 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator
     {
         $obj = new ArrayObject( $this->sourceArray );
         $this->iterator = $obj->getIterator();
+    }
+
+    public function count(): int
+    {
+        return sizeof($this->sourceArray);
     }
 }

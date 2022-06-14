@@ -114,7 +114,6 @@ class XmlUtility
 
 
     /**
-     * @noinspection PhpComposerExtensionStubsInspection
      * @param DOMNode $leftNode
      * @param DOMNode $rightNode
      * Tip: To get the text of a node:
@@ -172,23 +171,45 @@ class XmlUtility
                         $leftAttValue = $leftAtt->nodeValue;
                         $rightAttValue = $rightAtt->nodeValue;
                         if ($leftAttValue !== $rightAttValue) {
-                            if ($leftAtt->name === "class") {
-                                $leftClasses = preg_split("/\s/", $leftAttValue);
-                                $rightClasses = preg_split("/\s/", $rightAttValue);
-                                foreach ($leftClasses as $leftClass) {
-                                    if (!in_array($leftClass, $rightClasses)) {
-                                        $error .= "The left class attribute (" . $leftAtt->getNodePath() . ") has the value (" . $leftClass . ") that is not present in the right node)\n";
-                                    } else {
-                                        // Delete the value
-                                        $key = array_search($leftClass, $rightClasses);
-                                        unset($rightClasses[$key]);
+                            switch ($leftAtt->name) {
+                                case "class":
+                                    $leftClasses = preg_split("/\s/", $leftAttValue);
+                                    $rightClasses = preg_split("/\s/", $rightAttValue);
+                                    foreach ($leftClasses as $leftClass) {
+                                        if (!in_array($leftClass, $rightClasses)) {
+                                            $error .= "The left class attribute (" . $leftAtt->getNodePath() . ") has the value (" . $leftClass . ") that is not present in the right node)\n";
+                                        } else {
+                                            // Delete the value
+                                            $key = array_search($leftClass, $rightClasses);
+                                            unset($rightClasses[$key]);
+                                        }
                                     }
-                                }
-                                foreach ($rightClasses as $rightClass) {
-                                    $error .= "The right class attribute (" . $leftAtt->getNodePath() . ") has the value (" . $rightClass . ") that is not present in the left node)\n";
-                                }
-                            } else {
-                                $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ")\n";
+                                    foreach ($rightClasses as $rightClass) {
+                                        $error .= "The right class attribute (" . $leftAtt->getNodePath() . ") has the value (" . $rightClass . ") that is not present in the left node)\n";
+                                    }
+                                    break;
+                                case "src":
+                                case "data-src":
+                                case "href":
+                                    try {
+                                        $leftUrl = Url::createFromString($leftAttValue);
+                                        try {
+                                            $rightUrl = Url::createFromString($rightAttValue);
+                                            try {
+                                                $leftUrl->equals($rightUrl);
+                                            } catch (ExceptionNotEquals $e) {
+                                                $error .= "The attribute (" . $rightAtt->getNodePath() . ") have different values. Error:{$e->getMessage()}\n";
+                                            }
+                                        } catch (ExceptionBadSyntax $e) {
+                                            $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ") and the right value is not an URL. Error:{$e->getMessage()}\n";
+                                        }
+                                    } catch (ExceptionBadSyntax $e) {
+                                        $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ") and the left value is not an URL. Error:{$e->getMessage()}\n";
+                                    }
+                                    break;
+                                default:
+                                    $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ")\n";
+                                    break;
                             }
                         }
                     }
@@ -196,7 +217,7 @@ class XmlUtility
 
                 ksort($rightAttributes);
                 foreach ($rightAttributes as $rightAttName => $rightAtt) {
-                    if(!in_array($rightAttName,$excludedAttributes)) {
+                    if (!in_array($rightAttName, $excludedAttributes)) {
                         $error .= "The attribute (" . $rightAttName . ") of the node (" . $rightAtt->getNodePath() . ") does not exist on the left side\n";
                     }
                 }
@@ -283,10 +304,10 @@ class XmlUtility
      * @param string $right
      * @return string
      * DOMDocument supports formatted XML while SimpleXMLElement does not.
-     * @noinspection PhpComposerExtensionStubsInspection
      * @throws ExceptionCompile
      */
-    public static function diffMarkup(string $left, string $right): string
+    public
+    static function diffMarkup(string $left, string $right): string
     {
         if (empty($right)) {
             throw new \RuntimeException("The right text should not be empty");

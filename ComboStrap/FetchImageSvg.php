@@ -119,6 +119,16 @@ class FetchImageSvg extends FetchImage
     }
 
     /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
+     * @throws ExceptionNotFound
+     */
+    public static function createSvgFromPath(DokuPath $path): FetchImageSvg
+    {
+        return self::createEmptySvg()->setOriginalPath($path);
+    }
+
+    /**
      * @throws ExceptionNotFound
      */
     public function getRequestedOptimization(): bool
@@ -427,7 +437,7 @@ class FetchImageSvg extends FetchImage
      * @throws ExceptionCompile
      * @throws ExceptionNotFound
      */
-    public function getXmlText(): string
+    public function processAndGetMarkup(): string
     {
 
 
@@ -1015,7 +1025,7 @@ class FetchImageSvg extends FetchImage
             $isCacheUsable = $fetchCache->isCacheUsable();
         }
         if (!$isCacheUsable) {
-            $content = self::getXmlText();
+            $content = self::processAndGetMarkup();
             $fetchCache->storeCache($content);
         }
         return $fetchCache->getFile();

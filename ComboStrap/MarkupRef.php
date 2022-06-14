@@ -30,7 +30,7 @@ require_once(__DIR__ . '/PluginUtility.php');
  * and return an XHTML compliant array
  * with href, style, ... attributes
  *
- * TODO: Merge with {@link MarkupUrl}
+ * TODO: Merge with {@link MediaMarkup}
  */
 class MarkupRef
 {
@@ -126,7 +126,7 @@ class MarkupRef
 
 
     /**
-     * @var MarkupUrl
+     * @var MediaMarkup
      */
     private $dokuwikiUrl;
     /**
@@ -241,7 +241,7 @@ class MarkupRef
         /**
          * Url (called ref by dokuwiki)
          */
-        $this->dokuwikiUrl = MarkupUrl::createFromUrl($refProcessing);
+        $this->dokuwikiUrl = MediaMarkup::createFromRef($refProcessing);
 
 
     }
@@ -692,7 +692,7 @@ EOF;
                      */
                     $searchTerms = $this->dokuwikiUrl->getQueryParameter(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY);
                     if ($searchTerms !== null) {
-                        $url .= MarkupUrl::AMPERSAND_CHARACTER;
+                        $url .= Url::AMPERSAND_CHARACTER;
                         PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("search-hit");
                         if (is_array($searchTerms)) {
                             /**
@@ -703,7 +703,7 @@ EOF;
                             foreach ($searchTerms as $searchTerm) {
                                 $searchTermsQuery[] = "s[]=$searchTerm";
                             }
-                            $url .= implode(MarkupUrl::AMPERSAND_CHARACTER, $searchTermsQuery);
+                            $url .= implode(Url::AMPERSAND_CHARACTER, $searchTermsQuery);
                         } else {
                             $url .= "s=$searchTerms";
                         }
@@ -848,7 +848,7 @@ EOF;
     }
 
     public
-    function getDokuwikiUrl(): MarkupUrl
+    function getDokuwikiUrl(): MediaMarkup
     {
         return $this->dokuwikiUrl;
     }

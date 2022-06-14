@@ -3,7 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Background;
-use ComboStrap\MarkupUrl;
+use ComboStrap\MediaMarkup;
 use ComboStrap\FetchAbs;
 use ComboStrap\FetchCache;
 use ComboStrap\CallStack;
@@ -164,7 +164,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                 /**
                  * if the media syntax of Combo is not used, try to retrieve the media of dokuwiki
                  */
-                $imageTag = [syntax_plugin_combo_media::TAG, MarkupUrl::INTERNAL_MEDIA_CALL_NAME];
+                $imageTag = [syntax_plugin_combo_media::TAG, MediaMarkup::INTERNAL_MEDIA_CALL_NAME];
 
                 /**
                  * Collect the image if any
@@ -181,8 +181,8 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                              * As seen in {@link Doku_Handler::media()}
                              */
                             $backgroundImageAttribute = [
-                                MarkupUrl::MEDIA_DOKUWIKI_TYPE => MarkupUrl::INTERNAL_MEDIA_CALL_NAME,
-                                MarkupUrl::DOKUWIKI_SRC => $imageAttribute[0],
+                                MediaMarkup::MEDIA_DOKUWIKI_TYPE => MediaMarkup::INTERNAL_MEDIA_CALL_NAME,
+                                MediaMarkup::DOKUWIKI_SRC => $imageAttribute[0],
                                 Dimension::WIDTH_KEY => $imageAttribute[3],
                                 Dimension::HEIGHT_KEY => $imageAttribute[4],
                                 FetchAbs::CACHE_KEY => $imageAttribute[5]

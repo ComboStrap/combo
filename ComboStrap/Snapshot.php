@@ -16,7 +16,7 @@ class Snapshot
      * @throws ExceptionNotFound
      * @throws \Facebook\WebDriver\Exception\UnsupportedOperationException
      */
-    static public function snapshot(Path $path): LocalPath
+    static public function snapshot(Url $url): LocalPath
     {
 
         $capabilities = DesiredCapabilities::chrome();
@@ -49,7 +49,7 @@ class Snapshot
         try {
 
             // navigate to the page
-            $webDriver->get($path->toUriString());
+            $webDriver->get($url->toUriString());
 
             // wait until the target page is loaded
             // https://github.com/php-webdriver/php-webdriver/wiki/HowTo-Wait
@@ -102,9 +102,9 @@ class Snapshot
                 ->window()
                 ->setSize($fullPageDimension);
 
-            $lastNameWithoutExtension = $path->getLastNameWithoutExtension();
+            $lastNameWithoutExtension = $url->getLastNameWithoutExtension();
             if (empty($lastNameWithoutExtension)) {
-                $lastNameWithoutExtension = $path->getHost();
+                $lastNameWithoutExtension = $url->getHost();
             }
             $screenShotPath = LocalPath::createHomeDirectory()->resolve("Desktop")->resolve($lastNameWithoutExtension . ".png");
             $webDriver->takeScreenshot($screenShotPath);

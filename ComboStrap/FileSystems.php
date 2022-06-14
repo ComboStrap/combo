@@ -238,7 +238,7 @@ class FileSystems
         } catch (ExceptionNotFound $e) {
             $mime = mimetype($path->getLastName(), true)[1];
             if ($mime === null || $mime === false) {
-                throw new ExceptionNotFound("No mime found for path ($path)");
+                throw new ExceptionNotFound("No mime found for path ($path). The mime type of the media is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>");
             }
             return new Mime($mime);
         }

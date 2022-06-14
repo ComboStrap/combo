@@ -884,41 +884,6 @@ class DokuPath extends PathAbs
         return $this->drive;
     }
 
-    private
-    function schemeDetermination($absolutePath): string
-    {
-
-        if (media_isexternal($absolutePath)) {
-            /**
-             * This code should not be here
-             * Because it should be another path (ie http path)
-             * but for historical reason due to compatibility with
-             * dokuwiki, it's here.
-             */
-            return InternetPath::scheme;
-
-        }
-        if (link_isinterwiki($absolutePath)) {
-
-            return InterWikiPath::scheme;
-
-        }
-
-        DokuPath::addRootSeparatorIfNotPresent($absolutePath);
-        $this->path = $absolutePath;
-
-        if (substr($absolutePath, 1, 1) === DokuPath::PATH_SEPARATOR) {
-            /**
-             * path given is `::path`
-             */
-            if (PluginUtility::isDevOrTest()) {
-                LogUtility::warning("The path given ($absolutePath) has too much separator");
-            }
-        }
-        return DokuFs::SCHEME;
-
-
-    }
 
     public
     function getDrive(): string

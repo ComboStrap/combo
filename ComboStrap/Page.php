@@ -926,7 +926,7 @@ class Page extends ResourceComboAbs
      * @return string|null
      */
     public
-    function getCanonicalUrl(array $urlParameters = [], bool $absoluteUrlMandatory = false, string $separator = MarkupUrl::AMPERSAND_CHARACTER): ?string
+    function getCanonicalUrl(array $urlParameters = [], bool $absoluteUrlMandatory = false, string $separator = Url::AMPERSAND_CHARACTER): ?string
     {
 
         /**

@@ -143,7 +143,7 @@ class SlotManagerMenuItem extends AbstractItem
                     if (strpos($url, "?") !== false) {
                         // without url rewrite
                         // /./doku.php?id=slot_main_header
-                        $url .= MarkupUrl::AMPERSAND_URL_ENCODED_FOR_HTML;
+                        $url .= Url::AMPERSAND_URL_ENCODED_FOR_HTML;
                     } else {
                         // with url rewrite, the id parameter is not seen
                         $url .= "?";

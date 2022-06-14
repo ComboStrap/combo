@@ -10,9 +10,37 @@ namespace ComboStrap;
  * Only function
  * https://www.php.net/manual/en/ref.url.php
  */
-class Url
+class Url extends PathAbs
 {
     const URL_ATTRIBUTE = "url";
+    public const PATH_SEP = "/";
+    /**
+     * In HTML (not in css)
+     *
+     * Because ampersands are used to denote HTML entities,
+     * if you want to use them as literal characters, you must escape them as entities,
+     * e.g.  &amp;.
+     *
+     * In HTML, Browser will do the translation for you if you give an URL
+     * not encoded but testing library may not and refuse them
+     *
+     * This URL encoding is mandatory for the {@link ml} function
+     * when there is a width and use them not otherwise
+     *
+     * Thus, if you want to link to:
+     * http://images.google.com/images?num=30&q=larry+bird
+     * you need to encode (ie pass this parameter to the {@link ml} function:
+     * http://images.google.com/images?num=30&amp;q=larry+bird
+     *
+     * https://daringfireball.net/projects/markdown/syntax#autoescape
+     *
+     */
+    public const AMPERSAND_URL_ENCODED_FOR_HTML = '&amp;';
+    /**
+     * Used in dokuwiki syntax & in CSS attribute
+     * (Css attribute value are then HTML encoded as value of the attribute)
+     */
+    public const AMPERSAND_CHARACTER = "&";
 
     /**
      * An array of array because one name may have several value
@@ -482,11 +510,11 @@ class Url
         foreach ($this->query as $key => $value) {
             if ($queryString !== null) {
                 /**
-                 * HTML encoding (ie {@link MarkupUrl::AMPERSAND_URL_ENCODED_FOR_HTML}
+                 * HTML encoding (ie {@link self::AMPERSAND_URL_ENCODED_FOR_HTML}
                  * happens only when outputing to HTML
                  * The url may also be used elsewhere where &amp; is unknown or not wanted such as css ...
                  */
-                $queryString .= MarkupUrl::AMPERSAND_CHARACTER;
+                $queryString .= self::AMPERSAND_CHARACTER;
             }
             if ($value === null) {
                 $queryString .= urlencode($key);
@@ -495,7 +523,7 @@ class Url
                     for ($i = 0; $i < sizeof($value); $i++) {
                         $val = $value[$i];
                         if ($i > 0) {
-                            $queryString .= MarkupUrl::AMPERSAND_CHARACTER;
+                            $queryString .= self::AMPERSAND_CHARACTER;
                         }
                         $queryString .= urlencode($key) . "[]=" . urlencode($val);
                     }
@@ -520,4 +548,72 @@ class Url
     }
 
 
+    /**
+     * @throws ExceptionNotFound
+     */
+    function getLastName()
+    {
+        $names = $this->getNames();
+        if (count($names) >= 1) {
+            return $names[0];
+        }
+        throw new ExceptionNotFound("No last name");
+    }
+
+    function getNames()
+    {
+
+        try {
+            $names = explode(self::PATH_SEP, $this->getPath());
+            return array_slice($names, 1);
+        } catch (ExceptionNotFound $e) {
+            return [];
+        }
+
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    function getParent(): Url
+    {
+        $names = $this->getNames();
+        $count = count($names);
+        if ($count === 0) {
+            throw new ExceptionNotFound("No Parent");
+        }
+        $parentPath = implode(self::PATH_SEP, array_splice($names, 0, $count - 1));
+        return $this->setPath($parentPath);
+    }
+
+    function toPathString(): string
+    {
+        try {
+            return $this->getPath();
+        } catch (ExceptionNotFound $e) {
+            return "";
+        }
+    }
+
+    function toAbsolutePath(): Url
+    {
+        return $this->toAbsoluteUrl();
+    }
+
+    function resolve(string $name): Url
+    {
+        try {
+            $path = $this->getPath();
+            if ($this->path[strlen($path) - 1] === URL::PATH_SEP) {
+                $this->path .= $name;
+            } else {
+                $this->path .= URL::PATH_SEP . $name;
+            }
+            return $this;
+        } catch (ExceptionNotFound $e) {
+            $this->setPath($name);
+            return $this;
+        }
+
+    }
 }

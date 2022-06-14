@@ -24,7 +24,7 @@ use ComboStrap\Aliases;
 use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
-use ComboStrap\MarkupUrl;
+use ComboStrap\MediaMarkup;
 use ComboStrap\EditButton;
 use ComboStrap\EditButtonManager;
 use ComboStrap\EndDate;

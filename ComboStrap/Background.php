@@ -248,7 +248,7 @@ class Background
         $backgroundProperties = [];
         foreach ($mediaCallStackArray as $key => $property) {
             switch ($key) {
-                case MarkupUrl::LINKING_KEY:
+                case MediaMarkup::LINKING_KEY:
                 case TagAttributes::TITLE_KEY:
                 case Align::ALIGN_ATTRIBUTE:
                 case FloatAttribute::FLOAT_KEY: // Float is when the image is at the right

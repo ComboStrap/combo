@@ -7,6 +7,7 @@ use ComboStrap\ConditionalLength;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\MediaMarkup;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -58,8 +59,8 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
         while ($actualCall = $callStack->next()) {
             if ($actualCall->getState() === DOKU_LEXER_SPECIAL && in_array($actualCall->getTagName(), Call::IMAGE_TAGS)) {
                 $actualCall->addAttribute(
-                    MediaLink::LAZY_LOAD_METHOD,
-                    MediaLink::LAZY_LOAD_METHOD_HTML_VALUE
+                    MediaMarkup::LAZY_LOAD_METHOD,
+                    MediaMarkup::LAZY_LOAD_METHOD_HTML_VALUE
                 );
             }
         }

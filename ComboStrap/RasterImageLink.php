@@ -104,7 +104,7 @@ class RasterImageLink extends ImageLink
              * No dokuwiki type attribute
              */
             $attributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
-            $attributes->removeComponentAttributeIfPresent(MarkupUrl::DOKUWIKI_SRC);
+            $attributes->removeComponentAttributeIfPresent(MediaMarkup::DOKUWIKI_SRC);
 
             /**
              * Responsive image
@@ -281,7 +281,7 @@ class RasterImageLink extends ImageLink
                      */
                     $lazyLoadMethod = $this->getLazyLoadMethod();
                     switch ($lazyLoadMethod) {
-                        case MediaLink::LAZY_LOAD_METHOD_HTML_VALUE:
+                        case MediaMarkup::LAZY_LOAD_METHOD_HTML_VALUE:
                             $attributes->addOutputAttributeValue("src", $srcValue);
                             if (!empty($srcSet)) {
                                 // it the image is small, no srcset for instance
@@ -290,7 +290,7 @@ class RasterImageLink extends ImageLink
                             $attributes->addOutputAttributeValue("loading", "lazy");
                             break;
                         default:
-                        case MediaLink::LAZY_LOAD_METHOD_LOZAD_VALUE:
+                        case MediaMarkup::LAZY_LOAD_METHOD_LOZAD_VALUE:
                             /**
                              * Snippet Lazy loading
                              */

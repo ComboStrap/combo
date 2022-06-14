@@ -5,7 +5,7 @@ require_once(__DIR__ . '/../../ComboStrap/PluginUtility.php');
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
-use ComboStrap\MarkupUrl;
+use ComboStrap\MediaMarkup;
 use ComboStrap\FirstImage;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
@@ -197,7 +197,7 @@ $lang[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = PluginUtility::getDocumen
  * Image
  */
 $lang[syntax_plugin_combo_media::CONF_IMAGE_ENABLE] = PluginUtility::getDocumentationHyperLink(MediaLink::CANONICAL, "Image - If unchecked, the image component will be disabled");
-$lang[MarkupUrl::CONF_DEFAULT_LINKING] = PluginUtility::getDocumentationHyperLink(MediaLink::CANONICAL, "Image - The default link option from an internal image.");
+$lang[MediaMarkup::CONF_DEFAULT_LINKING] = PluginUtility::getDocumentationHyperLink(MediaLink::CANONICAL, "Image - The default link option from an internal image.");
 
 /**
  * Float

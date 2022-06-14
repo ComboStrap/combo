@@ -148,11 +148,11 @@ class Outline
 
                     case "internalmedia":
                         // no link for media in heading
-                        $actualCall->getInstructionCall()[1][6] = MarkupUrl::LINKING_NOLINK_VALUE;
+                        $actualCall->getInstructionCall()[1][6] = MediaMarkup::LINKING_NOLINK_VALUE;
                         break;
                     case syntax_plugin_combo_media::TAG:
                         // no link for media in heading
-                        $actualCall->addAttribute(MarkupUrl::LINKING_KEY, MarkupUrl::LINKING_NOLINK_VALUE);
+                        $actualCall->addAttribute(MediaMarkup::LINKING_KEY, MediaMarkup::LINKING_NOLINK_VALUE);
                         break;
 
                     case "header":

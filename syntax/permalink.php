@@ -10,7 +10,7 @@ use ComboStrap\CallStack;
 use ComboStrap\Canonical;
 use ComboStrap\Display;
 use ComboStrap\DokuPath;
-use ComboStrap\MarkupUrl;
+use ComboStrap\MediaMarkup;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\MarkupRef;
 use ComboStrap\LogUtility;

@@ -911,7 +911,7 @@ class Site
 
     public static function getDefaultMediaLinking(): string
     {
-        return PluginUtility::getConfValue(MarkupUrl::CONF_DEFAULT_LINKING, MarkupUrl::LINKING_DIRECT_VALUE);
+        return PluginUtility::getConfValue(MediaMarkup::CONF_DEFAULT_LINKING, MediaMarkup::LINKING_DIRECT_VALUE);
     }
 
 

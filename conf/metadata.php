@@ -8,7 +8,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
-use ComboStrap\MarkupUrl;
+use ComboStrap\MediaMarkup;
 use ComboStrap\FirstImage;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
@@ -261,11 +261,11 @@ $meta[syntax_plugin_combo_media::CONF_IMAGE_ENABLE] = array('onoff');
 /**
  * Internal media default linking
  */
-$meta[MarkupUrl::CONF_DEFAULT_LINKING] = array('multichoice', '_choices' => array(
-    MarkupUrl::LINKING_DIRECT_VALUE,
-    MarkupUrl::LINKING_DETAILS_VALUE,
-    MarkupUrl::LINKING_LINKONLY_VALUE,
-    MarkupUrl::LINKING_NOLINK_VALUE,
+$meta[MediaMarkup::CONF_DEFAULT_LINKING] = array('multichoice', '_choices' => array(
+    MediaMarkup::LINKING_DIRECT_VALUE,
+    MediaMarkup::LINKING_DETAILS_VALUE,
+    MediaMarkup::LINKING_LINKONLY_VALUE,
+    MediaMarkup::LINKING_NOLINK_VALUE,
 ));
 
 /**

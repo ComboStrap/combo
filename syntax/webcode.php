@@ -20,12 +20,13 @@ use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\Display;
 use ComboStrap\DokuPath;
-use ComboStrap\MarkupUrl;
+use ComboStrap\MediaMarkup;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
+use ComboStrap\Url;
 
 if (!defined('DOKU_INC')) die();
 
@@ -388,7 +389,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             'call' => action_plugin_combo_webcode::CALL_ID,
                             action_plugin_combo_webcode::MARKI_PARAM => $markupCode
                         );
-                        $queryString = http_build_query($queryParams, '', MarkupUrl::AMPERSAND_CHARACTER);
+                        $queryString = http_build_query($queryParams, '', Url::AMPERSAND_CHARACTER);
                         $url = Site::getAjaxUrl() . "?$queryString";
                         $tagAttributes->addOutputAttributeValue("src", $url);
 

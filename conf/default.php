@@ -21,7 +21,7 @@
 
 
 use ComboStrap\Canonical;
-use ComboStrap\MarkupUrl;
+use ComboStrap\MediaMarkup;
 use ComboStrap\Icon;
 use ComboStrap\Metadata;
 use ComboStrap\PageType;

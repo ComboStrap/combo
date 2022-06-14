@@ -43,6 +43,16 @@ class SvgImageLink extends ImageLink
 
     private ?FetchImageSvg $svgFetch = null;
 
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
+     * @throws ExceptionNotExists
+     */
+    public static function createFromFetchImage(FetchImageSvg $fetchImage)
+    {
+        return SvgImageLink::createFromMediaMarkup(MediaMarkup::createFromUrl($fetchImage->getFetchUrl()));
+    }
+
 
     /**
      * @throws ExceptionBadArgument
@@ -209,7 +219,7 @@ class SvgImageLink extends ImageLink
          * The svg is then inserted via an img tag to scope it.
          */
         try {
-            $preserveStyle = DataType::toBoolean($this->mediaMarkup->toFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(SvgDocument::PRESERVE_ATTRIBUTE));
+            $preserveStyle = DataType::toBoolean($this->mediaMarkup->toFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(FetchImageSvg::REQUESTED_PRESERVE_ATTRIBUTE));
         } catch (ExceptionNotFound $e) {
             $preserveStyle = false;
         }
@@ -265,7 +275,7 @@ class SvgImageLink extends ImageLink
     {
 
         if ($this->svgFetch === null) {
-            $this->svgFetch = FetchImageSvg::createEmpty()
+            $this->svgFetch = FetchImageSvg::createEmptySvg()
                 ->buildFromUrl($this->mediaMarkup->toFetchUrl());
         }
         return $this->svgFetch;

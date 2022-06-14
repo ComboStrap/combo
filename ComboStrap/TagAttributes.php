@@ -63,7 +63,7 @@ class TagAttributes
         self::HTML_AFTER,
         Dimension::RATIO_ATTRIBUTE,
         self::STRICT,
-        SvgDocument::PRESERVE_ATTRIBUTE,
+        FetchImageSvg::REQUESTED_PRESERVE_ATTRIBUTE,
         \syntax_plugin_combo_link::CLICKABLE_ATTRIBUTE,
         MarkupRef::PREVIEW_ATTRIBUTE,
         \syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE,

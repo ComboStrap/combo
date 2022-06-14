@@ -323,5 +323,21 @@ class XmlUtility
 
     }
 
+    public static function deleteAllElementsByName(string $elementName, XmlDocument $xmlDocument)
+    {
+        $xpathQuery = "//*[local-name()='$elementName']";
+        try {
+            $svgElement = $xmlDocument->xpath($xpathQuery);
+        } catch (ExceptionBadSyntax $e) {
+            // should not happen on prod
+            throw new ExceptionRuntime("xpath query error ($xpathQuery");
+        }
+        for ($i = 0; $i < $svgElement->length; $i++) {
+
+            $nodeElement = XmlElement::create($svgElement[$i], $xmlDocument);
+            $nodeElement->remove();
+        }
+    }
+
 
 }

@@ -9,18 +9,16 @@ use ComboStrap\DokuPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\FileSystems;
+use ComboStrap\FetchImage;
+use ComboStrap\FetchImageSvg;
 use ComboStrap\FirstImage;
 use ComboStrap\Icon;
-use ComboStrap\FetchImage;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
-use ComboStrap\Mime;
 use ComboStrap\Page;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
-use ComboStrap\SvgDocument;
 use ComboStrap\TagAttributes;
 use ComboStrap\Vignette;
 
@@ -288,7 +286,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
          * This is an illustration image
          * Used by svg to color by default with the primary color for instance
          */
-        $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ILLUSTRATION_TYPE);
+        $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, FetchImageSvg::ILLUSTRATION_TYPE);
 
         /**
          * Zoom applies only to icon not to illustration
@@ -310,7 +308,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                          * Icon rendering
                          */
                         $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
-                        $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
+                        $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, FetchImageSvg::ICON_TYPE);
 
                     }
                 } catch (ExceptionCompile $e) {

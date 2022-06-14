@@ -526,11 +526,12 @@ class PluginUtility
         if ($withIcon) {
 
             $logoPath = DokuPath::createComboResource("images:logo.svg");
-            $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
-            $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
-            $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");
             try {
-                $xhtmlIcon = SvgImageLink::createFromMediaMarkup($logoPath, $tagAttributes)
+                $fetchImage = FetchImageSvg::createEmptySvg()
+                    ->setOriginalPath($logoPath)
+                    ->setRequestedType(FetchImageSvg::ICON_TYPE)
+                    ->setRequestedWidth(20);
+                $xhtmlIcon = SvgImageLink::createFromFetchImage($fetchImage)
                     ->renderMediaTag();
             } catch (ExceptionCompile $e) {
                 /**
@@ -539,7 +540,7 @@ class PluginUtility
                  *   * the log functionality to show link to the documentation creating a loop
                  *   * inside the configuration description crashing the page
                  */
-                if(PluginUtility::isDevOrTest()){
+                if (PluginUtility::isDevOrTest()) {
                     // shows errors in the html only on dev/test
                     $xhtmlIcon = "Error: {$e->getMessage()}";
                 }

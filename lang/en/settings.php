@@ -5,16 +5,15 @@ require_once(__DIR__ . '/../../ComboStrap/PluginUtility.php');
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
-use ComboStrap\MediaMarkup;
-use ComboStrap\FirstImage;
+use ComboStrap\FetchImageSvg;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
 use ComboStrap\Identity;
 use ComboStrap\LazyLoad;
-use ComboStrap\MarkupRef;
 use ComboStrap\LowQualityPage;
+use ComboStrap\MarkupRef;
 use ComboStrap\MediaLink;
-use ComboStrap\PageImages;
+use ComboStrap\MediaMarkup;
 use ComboStrap\PagePublicationDate;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlType;
@@ -22,10 +21,9 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\RasterImageLink;
 use ComboStrap\Region;
-use ComboStrap\Shadow;
-use ComboStrap\SvgDocument;
-use ComboStrap\SvgImageLink;
 use ComboStrap\RouterBestEndPage;
+use ComboStrap\Shadow;
+use ComboStrap\SvgImageLink;
 
 
 /**
@@ -173,12 +171,12 @@ $lang[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getDocumentationHype
 $lang[SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg - The maximum size in Kb of the SVG to be included as markup in the web page");
 $lang[SvgImageLink::CONF_SVG_INJECTION_ENABLE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Injection - Replace the image as svg in the HTML when downloaded to be add styling capabilities");
 $lang[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Security - The name of the group of users that can upload SVG");
-$lang[SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - Reduce the size of the SVG by deleting non important meta");
-$lang[SvgDocument::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The namespace prefix to keep");
-$lang[SvgDocument::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The attribute deleted during optimization");
-$lang[SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The element deleted if empty");
-$lang[SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The element always deleted");
-$lang[SvgDocument::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg - Default value for the preserveAspectRatio attribute");
+$lang[FetchImageSvg::CONF_SVG_OPTIMIZATION_ENABLE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - Reduce the size of the SVG by deleting non important meta");
+$lang[FetchImageSvg::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The namespace prefix to keep");
+$lang[FetchImageSvg::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The attribute deleted during optimization");
+$lang[FetchImageSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The element deleted if empty");
+$lang[FetchImageSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The element always deleted");
+$lang[FetchImageSvg::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg - Default value for the preserveAspectRatio attribute");
 
 
 /**

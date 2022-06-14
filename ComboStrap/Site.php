@@ -781,7 +781,7 @@ class Site
         $tagAttributes = TagAttributes::createEmpty("identity");
         $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "72");
         $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, "72");
-        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
+        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, FetchImageSvg::ICON_TYPE);
         $tagAttributes->addClassName("logo");
 
 
@@ -790,15 +790,15 @@ class Site
          */
         $logoImages = Site::getLogoImages();
         foreach ($logoImages as $logoImage) {
-            $mediaMarkup = MediaMarkup::createFromUrl($logoImage->getFetchUrl());
-            $path = $logoImage->getOriginalPath();
-            $mediaLink = MediaLink::createFromMediaMarkup($path, $tagAttributes)
+            $mediaMarkup = MediaMarkup::createFromUrl($logoImage->getFetchUrl())
                 ->setLazyLoad(false);
             try {
+                $mediaLink = MediaLink::createFromMediaMarkup($mediaMarkup);
                 return $mediaLink->renderMediaTag();
-            } catch (ExceptionCompile $e) {
+            } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound|ExceptionCompile $e) {
                 LogUtility::msg("Error while rendering the logo $logoImage");
             }
+
         }
 
         return null;

@@ -61,7 +61,7 @@ abstract class FetchImage extends FetchAbs
 
         if ($mime->toString() === Mime::SVG) {
 
-            $image = FetchImageSvg::createEmpty()->setOriginalPath($path);
+            $image = FetchImageSvg::createEmptySvg()->setOriginalPath($path);
 
         } else {
 

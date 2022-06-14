@@ -16,14 +16,19 @@ class XmlElement
     private $document;
 
     /**
-     * @param DOMElement $domNode
+     * @param DOMElement $domElement
      * @param XmlDocument $document
      */
-    public function __construct(DOMElement $domNode, XmlDocument $document)
+    public function __construct(DOMElement $domElement, XmlDocument $document)
     {
-        $this->element = $domNode;
+        $this->element = $domElement;
         $this->document = $document;
 
+    }
+
+    public static function create($domElement, XmlDocument $xmlDocument): XmlElement
+    {
+        return new XmlElement($domElement, $xmlDocument);
     }
 
     public function getAttribute(string $qualifiedName): string

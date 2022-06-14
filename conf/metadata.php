@@ -8,6 +8,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
+use ComboStrap\FetchImageSvg;
 use ComboStrap\MediaMarkup;
 use ComboStrap\FirstImage;
 use ComboStrap\FloatAttribute;
@@ -26,7 +27,6 @@ use ComboStrap\Prism;
 use ComboStrap\RasterImageLink;
 use ComboStrap\Region;
 use ComboStrap\Shadow;
-use ComboStrap\SvgDocument;
 use ComboStrap\SvgImageLink;
 use ComboStrap\RouterBestEndPage;
 
@@ -219,7 +219,7 @@ $meta[SvgImageLink::CONF_SVG_INJECTION_ENABLE] = array('onoff');
 /**
  * Svg Optimization
  */
-$meta[SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE] = array('onoff');
+$meta[FetchImageSvg::CONF_SVG_OPTIMIZATION_ENABLE] = array('onoff');
 
 /**
  * Svg Optimization Inline
@@ -233,13 +233,13 @@ $meta[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = array('string');
 
 /**
  * Svg The attribute that are deleted with the optimization
- * {@link SvgDocument::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE}
+ * {@link FetchImageSvg::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE}
  */
-$meta[SvgDocument::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = array('string');
-$meta[SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = array('string');
-$meta[SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = array('string');
-$meta[SvgDocument::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP] = array('string');
-$meta[SvgDocument::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = array('string');
+$meta[FetchImageSvg::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = array('string');
+$meta[FetchImageSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = array('string');
+$meta[FetchImageSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = array('string');
+$meta[FetchImageSvg::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP] = array('string');
+$meta[FetchImageSvg::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = array('string');
 
 /**
  * Raster Lazy load image

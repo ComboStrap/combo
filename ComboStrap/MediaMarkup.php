@@ -713,13 +713,14 @@ class MediaMarkup
         return $this->toMarkupSyntax();
     }
 
-    public function setLazyLoad(bool $true)
+    public function setLazyLoad(bool $true): MediaMarkup
     {
         if ($true) {
             $this->lazyLoadMethod = self::LAZY_LOAD_METHOD_DEFAULT;
         } else {
             $this->lazyLoadMethod = self::LAZY_LOAD_METHOD_NONE_VALUE;
         }
+        return $this;
     }
 
     /**

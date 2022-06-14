@@ -233,7 +233,7 @@ class Icon extends FetchImageSvg
         if ($tagAttributes === null) {
             $tagAttributes = TagAttributes::createEmpty();
         }
-        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
+        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, FetchImageSvg::ICON_TYPE);
 
         /**
          * If the name have an extension, it's a file from the media directory

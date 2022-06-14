@@ -9,12 +9,12 @@ use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\FetchImageSvg;
 use ComboStrap\FileSystems;
 use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
-use ComboStrap\SvgDocument;
 use ComboStrap\TagAttributes;
 
 
@@ -186,7 +186,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                         syntax_plugin_combo_link::TAG
                     ])
                 ) {
-                    $requestedWidth = $tagAttributes->getValue(Dimension::WIDTH_KEY, SvgDocument::DEFAULT_ICON_WIDTH);
+                    $requestedWidth = $tagAttributes->getValue(Dimension::WIDTH_KEY, FetchImageSvg::DEFAULT_ICON_WIDTH);
                     $requestedWidthInPx = Dimension::toPixelValue($requestedWidth);
                     if ($requestedWidthInPx > 36) {
                         // Illustrative icon

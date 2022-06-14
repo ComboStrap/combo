@@ -63,7 +63,7 @@ class TagAttributes
         self::HTML_AFTER,
         Dimension::RATIO_ATTRIBUTE,
         self::STRICT,
-        FetchImageSvg::REQUESTED_PRESERVE_ATTRIBUTE,
+        FetchSvg::REQUESTED_PRESERVE_ATTRIBUTE,
         \syntax_plugin_combo_link::CLICKABLE_ATTRIBUTE,
         MarkupRef::PREVIEW_ATTRIBUTE,
         \syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE,
@@ -84,7 +84,7 @@ class TagAttributes
      * and check if the {@link SyntaxPlugin::getPType()} is normal
      */
     const INLINE_LOGICAL_ELEMENTS = [
-        FetchImageSvg::CANONICAL,
+        FetchSvg::CANONICAL,
         FetchImageRaster::CANONICAL,
         FetchImage::CANONICAL,
         \syntax_plugin_combo_link::TAG, // link button for instance

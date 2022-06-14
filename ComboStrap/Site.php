@@ -95,12 +95,12 @@ class Site
     /**
      * @throws ExceptionNotFound
      */
-    public static function getLogoAsSvgImage(): FetchImageSvg
+    public static function getLogoAsSvgImage(): FetchSvg
     {
         foreach (self::SVG_LOGO_IDS as $svgLogo) {
 
             try {
-                $image = FetchImageSvg::createImageFetchFromId($svgLogo);
+                $image = FetchSvg::createImageFetchFromId($svgLogo);
             } catch (ExceptionCompile $e) {
                 LogUtility::msg("The svg ($svgLogo) returns an error. {$e->getMessage()}");
                 continue;
@@ -781,7 +781,7 @@ class Site
         $tagAttributes = TagAttributes::createEmpty("identity");
         $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "72");
         $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, "72");
-        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, FetchImageSvg::ICON_TYPE);
+        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, FetchSvg::ICON_TYPE);
         $tagAttributes->addClassName("logo");
 
 

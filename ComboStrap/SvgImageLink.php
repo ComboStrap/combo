@@ -21,7 +21,7 @@ namespace ComboStrap;
 class SvgImageLink extends ImageLink
 {
 
-    const CANONICAL = FetchImageSvg::CANONICAL;
+    const CANONICAL = FetchSvg::CANONICAL;
 
     /**
      * The maximum size to be embedded
@@ -41,14 +41,14 @@ class SvgImageLink extends ImageLink
     const TAG = "svg";
 
 
-    private ?FetchImageSvg $svgFetch = null;
+    private ?FetchSvg $svgFetch = null;
 
     /**
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
      * @throws ExceptionNotExists
      */
-    public static function createFromFetchImage(FetchImageSvg $fetchImage)
+    public static function createFromFetchImage(FetchSvg $fetchImage)
     {
         return SvgImageLink::createFromMediaMarkup(MediaMarkup::createFromUrl($fetchImage->getFetchUrl()));
     }
@@ -94,7 +94,7 @@ class SvgImageLink extends ImageLink
         /**
          * Remove the cache attribute
          * (no cache for the img tag)
-         * @var FetchImageSvg $image
+         * @var FetchSvg $image
          */
         $responseAttributes = $this->mediaMarkup->getAttributes()
             ->setLogicalTag(self::TAG);
@@ -219,7 +219,7 @@ class SvgImageLink extends ImageLink
          * The svg is then inserted via an img tag to scope it.
          */
         try {
-            $preserveStyle = DataType::toBoolean($this->mediaMarkup->toFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(FetchImageSvg::REQUESTED_PRESERVE_ATTRIBUTE));
+            $preserveStyle = DataType::toBoolean($this->mediaMarkup->toFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(FetchSvg::REQUESTED_PRESERVE_ATTRIBUTE));
         } catch (ExceptionNotFound $e) {
             $preserveStyle = false;
         }
@@ -271,11 +271,11 @@ class SvgImageLink extends ImageLink
      * @throws ExceptionBadArgument
      * @throws ExceptionNotFound
      */
-    function getFetch(): FetchImageSvg
+    function getFetch(): FetchSvg
     {
 
         if ($this->svgFetch === null) {
-            $this->svgFetch = FetchImageSvg::createEmptySvg()
+            $this->svgFetch = FetchSvg::createEmptySvg()
                 ->buildFromUrl($this->mediaMarkup->toFetchUrl());
         }
         return $this->svgFetch;

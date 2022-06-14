@@ -4,7 +4,7 @@
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
-use ComboStrap\FetchImageSvg;
+use ComboStrap\FetchSvg;
 use ComboStrap\MediaMarkup;
 use ComboStrap\EditButton;
 use ComboStrap\IdManager;
@@ -233,7 +233,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     switch ($tagName) {
                         case $imageTag:
                             $actualCall->addClassName("card-img-top");
-                            $actualCall->setType(FetchImageSvg::ILLUSTRATION_TYPE);
+                            $actualCall->setType(FetchSvg::ILLUSTRATION_TYPE);
                             $actualCall->addAttribute(MediaMarkup::LINKING_KEY, MediaMarkup::LINKING_NOLINK_VALUE);
                             if (!$actualCall->hasAttribute(Dimension::RATIO_ATTRIBUTE)) {
                                 $actualCall->addAttribute(Dimension::RATIO_ATTRIBUTE, "16:9");

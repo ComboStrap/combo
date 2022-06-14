@@ -111,6 +111,7 @@ class SvgDocument
     const VIEW_BOX = "viewBox";
     const PRESERVE_ATTRIBUTE = "preserve";
     const STROKE_ATTRIBUTE = "stroke";
+    const REQUESTED_NAME_ATTRIBUTE = "name";
 
     /**
      * @var string - a name identifier that is added in the SVG
@@ -179,7 +180,7 @@ class SvgDocument
     }
 
     /**
-     * @param TagAttributes|null $tagAttributes
+     * @param TagAttributes|null $fetchUrl
      * @return string
      *
      * TODO: What strange is that this is a XML document that is also an image
@@ -188,14 +189,13 @@ class SvgDocument
      *   For instance {@link FetchImage::getCroppingDimensionsWithRatio()}
      * @throws ExceptionBadSyntax
      */
-    public function getXmlText(TagAttributes $tagAttributes = null): string
+    public function getXmlText(Url $fetchUrl = null): string
     {
 
-        if ($tagAttributes === null) {
-            $localTagAttributes = TagAttributes::createEmpty();
-        } else {
-            $localTagAttributes = TagAttributes::createFromTagAttributes($tagAttributes);
+        if ($fetchUrl === null) {
+            $fetchUrl = Url::createEmpty();
         }
+        $localTagAttributes = TagAttributes::createEmpty();
 
         /**
          * ViewBox should exist
@@ -220,9 +220,11 @@ class SvgDocument
         }
 
         // Set the name (icon) attribute for test selection
-        if ($localTagAttributes->hasComponentAttribute("name")) {
-            $name = $localTagAttributes->getValueAndRemove("name");
+        try {
+            $name = $fetchUrl->getQueryPropertyValue(self::REQUESTED_NAME_ATTRIBUTE);
             $this->xmlDocument->setRootAttribute('data-name', $name);
+        } catch (ExceptionNotFound $e) {
+            // ok no name
         }
 
         // Handy variable

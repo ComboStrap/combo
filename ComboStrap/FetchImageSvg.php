@@ -18,7 +18,7 @@ class FetchImageSvg extends FetchImage
     const EXTENSION = "svg";
     const CANONICAL = "svg";
 
-    const PRESERVE_ASPECT_RATIO_KEY = "preserveAspectRatio";
+    const REQUESTED_PRESERVE_ASPECT_RATIO_KEY = "preserveAspectRatio";
 
     private ?DokuPath $originalPath = null;
 
@@ -90,7 +90,7 @@ class FetchImageSvg extends FetchImage
             // no color ok
         }
         try {
-            $url->addQueryParameter(self::PRESERVE_ASPECT_RATIO_KEY, $this->getRequestedPreserveAspectRatio());
+            $url->addQueryParameter(self::REQUESTED_PRESERVE_ASPECT_RATIO_KEY, $this->getRequestedPreserveAspectRatio());
         } catch (ExceptionNotFound $e) {
             // no preserve ratio ok
         }
@@ -226,7 +226,7 @@ class FetchImageSvg extends FetchImage
         }
 
         try {
-            $preserveAspectRatio = $url->getQueryPropertyValue(self::PRESERVE_ASPECT_RATIO_KEY);
+            $preserveAspectRatio = $url->getQueryPropertyValue(self::REQUESTED_PRESERVE_ASPECT_RATIO_KEY);
             $this->setRequestedPreserveAspectRatio($preserveAspectRatio);
         } catch (ExceptionNotFound $e) {
             // ok

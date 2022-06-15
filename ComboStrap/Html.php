@@ -138,7 +138,7 @@ class Html
             } catch (ExceptionBadSyntax $e) {
                 throw new ExceptionBadSyntax("Bad Syntax on Src Set ($i). Error: {$e->getMessage()}. Expected: $expectedSrc vs Actual: $actualSrc. ");
             } catch (ExceptionNotEquals $e) {
-                throw new ExceptionNotEquals("Not Equals on Src Set ($i). Error: {$e->getMessage()}. Expected: $expectedSrc vs Actual: $actualSrc. ");
+                throw ExceptionNotEquals::create("Not Equals on Src Set ($i). Error: {$e->getMessage()}.", $expectedSrc, $actualSrc);
             }
         }
     }

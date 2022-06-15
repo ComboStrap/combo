@@ -175,6 +175,14 @@ class XmlUtility
                                 case "class":
                                     $error .= Html::getDiffBetweenClass($leftAttValue, $rightAttValue, "left ,{$leftAtt->getNodePath()}", "right, {$leftAtt->getNodePath()}");
                                     break;
+                                case "srcset":
+                                case "data-srcset":
+                                    try {
+                                        Html::getDiffBetweenSrcSet($leftAttValue, $rightAttValue);
+                                    } catch (ExceptionBadSyntax|ExceptionNotEquals $e) {
+                                        $error .= $e->getMessage();
+                                    }
+                                    break;
                                 case "src":
                                 case "data-src":
                                 case "href":

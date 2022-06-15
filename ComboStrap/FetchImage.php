@@ -93,6 +93,7 @@ abstract class FetchImage extends FetchAbs
      * @throws ExceptionBadArgument - if the path is not an image
      * @throws ExceptionBadSyntax - if the image is badly encoded
      * @throws ExceptionNotExists - if the image does not exists
+     * @throws ExceptionNotFound
      */
     public static function createImageFetchFromId(string $imageId, string $rev = null)
     {

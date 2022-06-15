@@ -4,10 +4,18 @@
 namespace ComboStrap;
 
 /**
- * A Image Raster process class that can output:
- *   * an URL for an HTTP request
- *   * or a file for an HTTP response or further local processing
  *
+ * A Image Raster processing class that:
+ *   * takes as input:
+ *      * a {@link FetchImageRaster::buildFromUrl() fetch URL}:
+ *          * from an HTTP request
+ *          * or {@link MediaMarkup::getFetchUrl() markup})
+ *      * or data via setter
+ *   * outputs:
+ *      * a {@link FetchImageRaster::getFetchPath() raster image file} for:
+ *         * an HTTP response
+ *         * or further local processing
+ *      * or a {@link FetchImageRaster::getFetchUrl() fetch url} to use in a {@link RasterImageLink img html tag}
  *
  */
 class FetchImageRaster extends FetchImage

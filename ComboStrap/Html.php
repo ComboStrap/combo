@@ -111,4 +111,55 @@ class Html
         }
         return $error;
     }
+
+    /**
+     * @throws ExceptionBadSyntax - bad url
+     * @throws ExceptionNotEquals - not equals
+     */
+    public static function getDiffBetweenSrcSet(string $expected, string $actual)
+    {
+        $expectedSrcSets = explode(",", $expected);
+        $actualSrcSets = explode(",", $actual);
+        $countExpected = count($expectedSrcSets);
+        $countActual = count($actualSrcSets);
+        if ($countExpected !== $countActual) {
+            throw new ExceptionNotEquals( "The expected srcSet count ($countExpected) is not the same than the actual ($countActual).");
+        }
+        for ($i = 0; $i < $countExpected; $i++) {
+            $expectedSrcSet = trim($expectedSrcSets[$i]);
+            [$expectedSrc, $expectedWidth] = explode(" ", $expectedSrcSet, 2);
+            $actualSrcSet = trim($actualSrcSets[$i]);
+            [$actualSrc, $actualWidth] = explode(" ", $actualSrcSet, 2);
+            if ($expectedWidth !== $actualWidth) {
+                throw new ExceptionNotEquals("The expected width ($expectedWidth) of the srcSet ($i) is not the same than the actual ($actualWidth).");
+            }
+            try {
+                Html::getDiffBetweenUrlStrings($expectedSrc, $actualSrc);
+            } catch (ExceptionBadSyntax $e) {
+                throw new ExceptionBadSyntax("Bad Syntax on Src Set ($i). Error: {$e->getMessage()}. Expected: $expectedSrc vs Actual: $actualSrc. ");
+            } catch (ExceptionNotEquals $e) {
+                throw new ExceptionNotEquals("Not Equals on Src Set ($i). Error: {$e->getMessage()}. Expected: $expectedSrc vs Actual: $actualSrc. ");
+            }
+        }
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotEquals
+     */
+    public static function getDiffBetweenUrlStrings(string $expected, string $actual)
+    {
+        try {
+            $url = Url::createFromString($expected);
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionBadSyntax("The expected URL string ($expected) is not valid. Error: {$e->getMessage()}");
+        }
+        try {
+            $urlActual = Url::createFromString($actual);
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionBadSyntax("The $actual URL string ($actual) is not valid. Error: {$e->getMessage()}");
+        }
+        $url->equals($urlActual);
+
+    }
 }

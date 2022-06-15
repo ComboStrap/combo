@@ -302,7 +302,7 @@ class Vignette extends FetchImage
 
     function getFetchUrl(): Url
     {
-        $url = Url::createFetchUrl()
+        $url = UrlEndpoint::createFetchUrl()
             ->addQueryParameter(self::VIGNETTE_QUERY_PROPERTY, $this->page->getPath()->getDokuwikiId() . "." . $this->mime->getExtension());
         $this->addCommonImageQueryParameterToUrl($url);
         return $url;

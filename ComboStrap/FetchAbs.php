@@ -38,7 +38,7 @@ abstract class FetchAbs implements Fetch
     function getFetchUrl(Url $url = null): Url
     {
         if ($url === null) {
-            $url = Url::createFetchUrl();
+            $url = UrlEndpoint::createFetchUrl();
         }
         /**
          * The cache

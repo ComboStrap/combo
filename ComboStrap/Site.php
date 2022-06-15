@@ -915,5 +915,23 @@ class Site
         return PluginUtility::getConfValue(MediaMarkup::CONF_DEFAULT_LINKING, MediaMarkup::LINKING_DIRECT_VALUE);
     }
 
+    public static function shouldEndpointUrlBeAbsolute(): bool
+    {
+        global $conf;
+        return $conf['canonical'] === 1;
+    }
+
+    public static function setEndpointToAbsoluteUrl()
+    {
+        global $conf;
+        $conf['canonical'] = 1;
+    }
+
+    public static function setEndpointToDefaultUrl()
+    {
+        global $conf;
+        $conf['canonical'] = 0;
+    }
+
 
 }

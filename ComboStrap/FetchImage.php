@@ -622,7 +622,8 @@ abstract class FetchImage extends FetchAbs
             } catch (ExceptionNotFound $e) {
                 $id = "";
             }
-            $fetchUrl->addQueryParameter(self::TOK, media_get_token($id, $requestedWidth, $requestedHeight));
+            $token = media_get_token($id, $requestedWidth, $requestedHeight);
+            $fetchUrl->addQueryParameter(self::TOK, $token);
         }
 
     }

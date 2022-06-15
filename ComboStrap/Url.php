@@ -109,39 +109,6 @@ class Url extends PathAbs
         return implode("/", $encodedParts);
     }
 
-    public static function createFetchUrl(): Url
-    {
-
-        if (Site::hasUrlRewrite()) {
-            $path = '_media';
-        } else {
-            $path = 'lib/exe/fetch.php';
-        }
-        try {
-            $urlPathBaseDir = Site::getUrlPathBaseDir();
-            $path = "$urlPathBaseDir/$path";
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-        return Url::createEmpty()
-            ->setPath($path);
-
-
-    }
-
-    public static function createDetailUrl(): Url
-    {
-
-        if (Site::hasUrlRewrite()) {
-            $path = '_detail';
-        } else {
-            $path = 'lib/exe/detail.php';
-        }
-        return Url::createEmpty()
-            ->setPath($path);
-    }
-
     public static function createEmpty(): Url
     {
         return new Url();
@@ -603,7 +570,9 @@ class Url extends PathAbs
             $base = "$base://{$this->getHost()}";
         } catch (ExceptionNotFound $e) {
             // ok
-            $base = "$base://";
+            if ($base !== "") {
+                $base = "$base://";
+            }
         }
 
         try {

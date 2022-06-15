@@ -124,7 +124,7 @@ abstract class ImageLink extends MediaLink
 
             case MediaMarkup::LINKING_DETAILS_VALUE:
                 //go to the details media viewer
-                $url = Url::createDetailUrl()
+                $url = UrlEndpoint::createDetailUrl()
                     ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $dokuPath->getDokuwikiId())
                     ->addQueryParameter(DokuPath::REV_ATTRIBUTE, $dokuPath->getRevision());
                 $tagAttributes->addOutputAttributeValue("href", $url->toString());

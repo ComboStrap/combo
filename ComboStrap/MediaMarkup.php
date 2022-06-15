@@ -7,6 +7,14 @@ use syntax_plugin_combo_media;
 
 /**
  * Represents a media markup
+ *
+ * Wrapper around {@link Doku_Handler_Parse_Media}
+ *
+ *
+ *
+ * Not that for dokuwiki the `type` key of the attributes is the `call`
+ * and therefore determine the function in an render
+ * (ie {@link \Doku_Renderer::internalmedialink()} or {@link \Doku_Renderer::externalmedialink()}
  */
 class MediaMarkup
 {
@@ -364,7 +372,10 @@ class MediaMarkup
 
         $ref = $callStackArray[self::REF_ATTRIBUTE];
         if ($ref === null) {
-            throw new ExceptionBadArgument("The media referece was not found in the callstack array", self::CANONICAL);
+            $ref = $callStackArray[MediaMarkup::DOKUWIKI_SRC];
+            if ($ref === null) {
+                throw new ExceptionBadArgument("The media referece was not found in the callstack array", self::CANONICAL);
+            }
         }
         $mediaMarkup->setRef($ref);
 
@@ -392,15 +403,17 @@ class MediaMarkup
     }
 
     /**
-     * Compliance: src in dokuwiki is the path and the anchor if any
+     * Compliance: src in dokuwiki is the id and the anchor if any
+     * Dokuwiki does not understand other property and the reference metadata
+     * may not work if we send back the `ref`
      */
     public function getSrc(): string
     {
-        try {
-            $src = $this->fetchUrl->getPath();
-        } catch (ExceptionNotFound $e) {
-            $src = "";
+        $path = $this->getPath();
+        if (!($path instanceof DokuPath)) {
+            return $this->ref;
         }
+        $src = $path->getDokuWikiId();
         try {
             $src = "$src#{$this->fetchUrl->getFragment()}";
         } catch (ExceptionNotFound $e) {
@@ -727,7 +740,7 @@ class MediaMarkup
      * Get and delete the attribute for the link
      * (The rest is for the image)
      */
-    private
+    public
     function getLinkingClass()
     {
         return $this->linkingClass;

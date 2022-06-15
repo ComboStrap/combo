@@ -8,6 +8,7 @@ use ComboStrap\Dimension;
 use ComboStrap\DokuFs;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\FetchAbs;
@@ -76,7 +77,10 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
          * {@link Doku_Renderer_metadata::$firstimage} is unfortunately protected
          * and {@link Doku_Renderer_metadata::internalmedia()} does not allow svg as first image
          */
-        if(!($path instanceof DokuPath)){
+        if (!($path instanceof DokuPath)) {
+            return;
+        }
+        if (!FileSystems::exists($path)) {
             return;
         }
         if (!isset($renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION])) {
@@ -239,18 +243,17 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 }
 
                 try {
-                    $isImage = $mediaMarkup->getMime()->isImage();
+                    $isImage = FileSystems::getMime($mediaMarkup->getPath())->isImage();
                 } catch (ExceptionNotFound $e) {
                     $isImage = false;
-
                 }
                 if (
                     $mediaMarkup->getInternalExternalType() === MediaMarkup::INTERNAL_MEDIA_CALL_NAME
                     && $isImage
                 ) {
                     try {
-                        $renderer->doc .= MediaLink::createFromMediaMarkup($mediaMarkup)->renderMediaTagWithLink();
-                    } catch (ExceptionNotFound|ExceptionBadArgument|\ComboStrap\ExceptionBadSyntax|\ComboStrap\ExceptionNotExists $e) {
+                        $renderer->doc .= MediaLink::createFromMediaMarkup($mediaMarkup)->renderMediaTag();
+                    } catch (ExceptionCompile $e) {
                         if (PluginUtility::isDevOrTest()) {
                             throw new ExceptionRuntime("Media Rendering Error. {$e->getMessage()}", MediaLink::CANONICAL, 0, $e);
                         } else {
@@ -353,28 +356,28 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      */
     static public function registerImageMeta($attributes, $renderer)
     {
-        $src = $attributes[MediaMarkup::DOKUWIKI_SRC];
-        if ($src === null) {
-            $src = $attributes[MediaMarkup::REF_ATTRIBUTE];
+        try {
+            $mediaMarkup = MediaMarkup::createFromCallStackArray($attributes);
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::internalError("We can't register the media metadata. Error: {$e->getMessage()}");
+            return;
         }
-        $dokuwikiUrl = MediaMarkup::createFromRef($src);
-        $title = $attributes['title'];
-
-        $mediaType = $dokuwikiUrl->getInternalExternalType();
-        switch ($mediaType) {
+        try {
+            $label = $mediaMarkup->getLabel();
+        } catch (ExceptionNotFound $e) {
+            $label = "";
+        }
+        $internalExternalType = $mediaMarkup->getInternalExternalType();
+        switch ($internalExternalType) {
             case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
-                try {
-                    self::registerFirstImage($renderer, $dokuwikiUrl->getPath());
-                } catch (ExceptionNotFound $e) {
-                    LogUtility::internalError("The path should be present on an internal image. Error: {$e->getMessage()}");
-                }
-                $renderer->internalmedia($src, $title);
+                self::registerFirstImage($renderer, $mediaMarkup->getPath());
+                $renderer->internalmedia($mediaMarkup->getSrc(), $label);
                 break;
             case MediaMarkup::EXTERNAL_MEDIA_CALL_NAME:
-                $renderer->externalmedia($src, $title);
+                $renderer->externalmedia($mediaMarkup->getSrc(), $label);
                 break;
             default:
-                LogUtility::msg("The dokuwiki media type ($mediaType) for metadata registration is unknown");
+                LogUtility::msg("The dokuwiki media type ($internalExternalType) for metadata registration is unknown");
                 break;
         }
 

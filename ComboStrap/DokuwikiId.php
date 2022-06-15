@@ -37,8 +37,8 @@ class DokuwikiId extends MetadataText
         if($path instanceof LocalPath){
             try {
                 return $path->toDokuPath()->getDokuwikiId();
-            } catch (ExceptionBadState $e) {
-                throw new ExceptionNotFound("The path ($path) could not be transformed as drive path. Error: {$e->getMessage()}");
+            } catch (ExceptionBadArgument $e) {
+                throw new ExceptionNotFound($e->getMessage());
             }
         }
         throw new ExceptionNotFound("Unknown path, the dokuwiki id cannot be determined");

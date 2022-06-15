@@ -247,7 +247,7 @@ class SvgImageLink extends ImageLink
 
         }
 
-        return $imgHTML;
+        return $this->wrapMediaMarkupWithLink($imgHTML);
 
     }
 

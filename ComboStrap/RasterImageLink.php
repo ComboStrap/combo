@@ -393,7 +393,7 @@ class RasterImageLink extends ImageLink
 
         }
 
-        return $imgHTML;
+        return $this->wrapMediaMarkupWithLink($imgHTML);
     }
 
 

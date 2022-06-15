@@ -50,10 +50,6 @@ class ThirdMediaLink extends MediaLink
 
     }
 
-    public function renderMediaTagWithLink(): string
-    {
-        return $this->renderMediaTag();
-    }
 
     /**
      */

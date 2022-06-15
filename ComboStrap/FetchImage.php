@@ -104,17 +104,17 @@ abstract class FetchImage extends FetchAbs
     /**
      * Utility function to build the common image fetch processing property
      * (e width, height, ratio)
-     * @param Url $tagAttributes
+     * @param Url $url
      * @return void
      * @throws ExceptionBadArgument
      */
-    public function buildSharedImagePropertyFromTagAttributes(Url $tagAttributes)
+    public function buildSharedImagePropertyFromFetchUrl(Url $url)
     {
         try {
-            $requestedWidth = $tagAttributes->getQueryPropertyValue(Dimension::WIDTH_KEY);
+            $requestedWidth = $url->getQueryPropertyValue(Dimension::WIDTH_KEY);
         } catch (ExceptionNotFound $e) {
             try {
-                $requestedWidth = $tagAttributes->getQueryPropertyValue(Dimension::WIDTH_KEY_SHORT);
+                $requestedWidth = $url->getQueryPropertyValue(Dimension::WIDTH_KEY_SHORT);
             } catch (ExceptionNotFound $e) {
                 $requestedWidth = null;
             }
@@ -128,10 +128,10 @@ abstract class FetchImage extends FetchAbs
             $this->setRequestedWidth($requestedWidthInt);
         }
         try {
-            $requestedHeight = $tagAttributes->getQueryPropertyValue(Dimension::HEIGHT_KEY);
+            $requestedHeight = $url->getQueryPropertyValue(Dimension::HEIGHT_KEY);
         } catch (ExceptionNotFound $e) {
             try {
-                $requestedHeight = $tagAttributes->getQueryPropertyValue(Dimension::HEIGHT_KEY_SHORT);
+                $requestedHeight = $url->getQueryPropertyValue(Dimension::HEIGHT_KEY_SHORT);
             } catch (ExceptionNotFound $e) {
                 $requestedHeight = null;
             }
@@ -146,7 +146,7 @@ abstract class FetchImage extends FetchAbs
         }
 
         try {
-            $requestedRatio = $tagAttributes->getQueryPropertyValue(Dimension::RATIO_ATTRIBUTE);
+            $requestedRatio = $url->getQueryPropertyValue(Dimension::RATIO_ATTRIBUTE);
             try {
                 $this->requestedRatio = Dimension::convertTextualRatioToNumber($requestedRatio);
             } catch (ExceptionBadSyntax $e) {
@@ -462,14 +462,10 @@ abstract class FetchImage extends FetchAbs
             $height = $this->getRequestedHeight();
             try {
                 $ratio = $this->getRequestedAspectRatio();
-                if ($ratio === null) {
-                    $ratio = $this->getIntrinsicAspectRatio();
-                }
-                return self::round($ratio * $height);
-            } catch (ExceptionBadArgument $e) {
-                LogUtility::msg("The intrinsic width of the image ($this) was used because retrieving the ratio returns this error: {$e->getMessage()} ", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                return $this->getIntrinsicWidth();
+            } catch (ExceptionNotFound $e) {
+                $ratio = $this->getIntrinsicAspectRatio();
             }
+            return self::round($ratio * $height);
         } catch (ExceptionNotFound $e) {
             // no requested height
         }

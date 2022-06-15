@@ -604,7 +604,7 @@ class FetchSvg extends FetchImage
         $originalPath = FetchDoku::createEmpty()->buildFromUrl($url)->getFetchPath();
         $this->setOriginalPath($originalPath);
         $this->buster = FileSystems::getCacheBuster($this->getOriginalPath());
-        $this->buildSharedImagePropertyFromTagAttributes($url);
+        $this->buildSharedImagePropertyFromFetchUrl($url);
         try {
             $color = $url->getQueryPropertyValue(ColorRgb::COLOR);
             // we can't have an hex in an url, we will see if this is encoded ;?

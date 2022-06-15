@@ -395,6 +395,7 @@ abstract class FetchImage extends FetchAbs
      */
     public function getTargetHeight(): int
     {
+
         try {
             return $this->getRequestedHeight();
         } catch (ExceptionNotFound $e) {
@@ -422,13 +423,13 @@ abstract class FetchImage extends FetchAbs
          */
         try {
             $ratio = $this->getRequestedAspectRatio();
-            [$croppedWidth, $croppedHeight] = FetchImage::getCroppingDimensionsWithRatio(
+            [$croppedWidth, $croppedHeight] = $this->getCroppingDimensionsWithRatio(
                 $ratio,
                 $this->getIntrinsicWidth(),
                 $this->getIntrinsicHeight()
             );
             return $croppedHeight;
-        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+        } catch (ExceptionNotFound $e) {
             // no requested aspect ratio
         }
 
@@ -476,7 +477,7 @@ abstract class FetchImage extends FetchAbs
          */
         try {
             $ratio = $this->getRequestedAspectRatio();
-            [$logicalWidthWithRatio, $logicalHeightWithRatio] = FetchImage::getCroppingDimensionsWithRatio(
+            [$logicalWidthWithRatio, $logicalHeightWithRatio] = $this->getCroppingDimensionsWithRatio(
                 $ratio,
                 $this->getIntrinsicWidth(),
                 $this->getIntrinsicHeight()
@@ -536,6 +537,7 @@ abstract class FetchImage extends FetchAbs
 
 
     /**
+     *
      * Return the width and height of the image
      * after applying a ratio (16x9, 4x3, ..)
      *
@@ -543,9 +545,8 @@ abstract class FetchImage extends FetchAbs
      *   * the viewBox for svg
      *   * the physical dimension for raster image
      *
-     * TODO: This function is static because the {@link SvgDocument} is not an image but an xml
      */
-    public static function getCroppingDimensionsWithRatio(float $targetRatio, int $intrinsicWidth, int $intrinsicHeight): array
+    public function getCroppingDimensionsWithRatio(float $targetRatio, int $intrinsicWidth, int $intrinsicHeight): array
     {
 
         /**

@@ -1279,7 +1279,7 @@ class FetchSvg extends FetchImage
                 LogUtility::msg("The target ratio attribute ($ratio) returns the following error ({$e->getMessage()}). The svg processing was stopped");
                 return $this->getXmlDocument()->getXmlText();
             }
-            [$processedWidth, $processedHeight] = FetchImage::getCroppingDimensionsWithRatio($targetRatio, $mediaWidth, $mediaHeight);
+            [$processedWidth, $processedHeight] = $this->getCroppingDimensionsWithRatio($targetRatio, $mediaWidth, $mediaHeight);
 
             $this->getXmlDocument()->setRootAttribute(FetchSvg::VIEW_BOX, "0 0 $processedWidth $processedHeight");
 

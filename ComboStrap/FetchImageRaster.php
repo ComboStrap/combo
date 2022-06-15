@@ -14,7 +14,7 @@ class FetchImageRaster extends FetchImage
 {
 
     const CANONICAL = "raster";
-    private ?Path $originalPath = null;
+    private ?DokuPath $originalPath = null;
     private Mime $mime;
 
 
@@ -39,11 +39,10 @@ class FetchImageRaster extends FetchImage
      * @param Path $path
      * @return FetchImageRaster
      * @throws ExceptionBadArgument
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionNotExists
      */
     public static function createImageRasterFetchFromPath(Path $path): FetchImageRaster
     {
+        $path = DokuPath::createFromPath($path);
         return self::createEmptyRaster()
             ->setOriginalPath($path);
     }
@@ -259,11 +258,13 @@ class FetchImageRaster extends FetchImage
 
     }
 
-    private function setOriginalPath(Path $path): FetchImageRaster
+    private function setOriginalPath(DokuPath $path): FetchImageRaster
     {
         $this->originalPath = $path;
         return $this;
     }
+
+
 
 
 }

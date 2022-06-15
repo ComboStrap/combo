@@ -578,9 +578,10 @@ abstract class FetchImage extends FetchAbs
         return $this;
     }
 
-    public function setRequestedAspectRatio(string $requestedRatio)
+    public function setRequestedAspectRatio(string $requestedRatio): FetchImage
     {
         $this->requestedRatio = $requestedRatio;
+        return $this;
     }
 
 
@@ -635,5 +636,34 @@ abstract class FetchImage extends FetchAbs
         }
     }
 
+    public function hasWidthRequested(): bool
+    {
+        try {
+            $this->getRequestedWidth();
+            return true;
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
+    }
+
+    public function hasHeightRequested(): bool
+    {
+        try {
+            $this->getRequestedHeight();
+            return true;
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
+    }
+    public function hasAspectRatioRequested(): bool
+    {
+        try {
+            $this->getRequestedAspectRatio();
+            return true;
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
+
+    }
 
 }

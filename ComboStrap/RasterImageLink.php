@@ -220,16 +220,25 @@ class RasterImageLink extends ImageLink
             $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
 
             try {
-                $xsmUrl = FetchImageRaster::createRasterFromFetchUrl($fetchRaster->getFetchUrl())
-                    ->setRequestedWidth($breakpointWidthMinusMargin)
-                    ->getFetchUrl()
+
+                $breakpointRaster = FetchImageRaster::createRasterFromFetchUrl($fetchRaster->getFetchUrl());
+                if ($fetchRaster->hasWidthRequested() || $fetchRaster->hasAspectRatioRequested()) {
+                    $breakpointRaster->setRequestedWidth($breakpointWidthMinusMargin);
+                }
+                if ($fetchRaster->hasHeightRequested() || $fetchRaster->hasAspectRatioRequested()) {
+                    $breakPointHeight = FetchImageRaster::round($breakpointWidthMinusMargin / $fetchRaster->getTargetAspectRatio());
+                    $breakpointRaster->setRequestedHeight($breakPointHeight);
+                }
+
+                $breakpointUrl = $breakpointRaster->getFetchUrl()
                     ->toString();
+
             } catch (ExceptionCompile $e) {
                 // should not happen as the fetch url was already validated at build time but yeah
                 LogUtility::internalError("We are unable to create the breakpoint image url ($fetchRaster) for the size ($breakpointWidth). Error:{$e->getMessage()}");
                 continue;
             }
-            $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
+            $srcSet .= "$breakpointUrl {$breakpointWidthMinusMargin}w";
             $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
 
 

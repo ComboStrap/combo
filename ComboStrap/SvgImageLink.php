@@ -138,7 +138,7 @@ class SvgImageLink extends ImageLink
         $responseAttributes->addClassName($svgFunctionalClass);
 
 
-        $svgFetch = $this->getFetch();
+        $svgFetch = $this->getFetchSvg();
         /**
          * Dimension are mandatory on the image
          * to avoid layout shift (CLS)
@@ -219,7 +219,7 @@ class SvgImageLink extends ImageLink
          * The svg is then inserted via an img tag to scope it.
          */
         try {
-            $preserveStyle = DataType::toBoolean($this->mediaMarkup->toFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(FetchSvg::REQUESTED_PRESERVE_ATTRIBUTE));
+            $preserveStyle = DataType::toBoolean($this->mediaMarkup->getFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(FetchSvg::REQUESTED_PRESERVE_ATTRIBUTE));
         } catch (ExceptionNotFound $e) {
             $preserveStyle = false;
         }
@@ -238,7 +238,7 @@ class SvgImageLink extends ImageLink
              * Svg tag
              */
             try {
-                $fetchPath = $this->getFetch()->getFetchPath();
+                $fetchPath = $this->getFetchSvg()->getFetchPath();
                 $imgHTML = FileSystems::getContent($fetchPath);
             } catch (ExceptionBadSyntax|ExceptionBadArgument|ExceptionNotFound $e) {
                 LogUtility::error("Unable to include the svg in the document. Error: {$e->getMessage()}");
@@ -266,21 +266,16 @@ class SvgImageLink extends ImageLink
         }
     }
 
-
     /**
+     * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
      * @throws ExceptionNotFound
      */
-    function getFetch(): FetchSvg
+    private function getFetchSvg(): FetchSvg
     {
-
-        if ($this->svgFetch === null) {
-            $this->svgFetch = FetchSvg::createEmptySvg()
-                ->buildFromUrl($this->mediaMarkup->toFetchUrl());
-        }
-        return $this->svgFetch;
-
-
+        return FetchSvg::createEmptySvg()
+            ->buildFromUrl($this->mediaMarkup->getFetchUrl());
     }
+
 
 }

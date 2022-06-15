@@ -78,6 +78,7 @@ class MediaMarkup
      * An attribute to set the class of the link if any
      */
     public const LINK_CLASS_ATTRIBUTE = "link-class";
+    public const INTERWIKI = 'interwiki';
 
 
     private Url $fetchUrl;
@@ -145,7 +146,7 @@ class MediaMarkup
          * Scheme
          */
         if (link_isinterwiki($httpHostOrPath)) {
-            $this->externalOrTypeMedia = InterWikiPath::scheme;
+            $this->externalOrTypeMedia = self::INTERWIKI;
             $this->fetchUrl->setPath($httpHostOrPath);
         } else {
             /**
@@ -417,7 +418,6 @@ class MediaMarkup
             case DokuFs::SCHEME:
                 return self::INTERNAL_MEDIA_CALL_NAME;
             case self::EXTERNAL_MEDIA_CALL_NAME:
-            case InterWikiPath::scheme:
             default:
                 return self::EXTERNAL_MEDIA_CALL_NAME;
         }
@@ -434,7 +434,7 @@ class MediaMarkup
      * @return Url - an url that has query property as a fetch url
      * It permits to select the fetch class
      */
-    public function toFetchUrl(): Url
+    public function getFetchUrl(): Url
     {
         return $this->fetchUrl;
     }
@@ -754,7 +754,7 @@ class MediaMarkup
         try {
             $ref = $this->getRef();
         } catch (ExceptionNotFound $e) {
-            $ref = $this->toFetchUrl()->toString();
+            $ref = $this->getFetchUrl()->toString();
         }
         return '{{' . $ref . $descriptionPart . '}}';
     }

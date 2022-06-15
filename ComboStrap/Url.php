@@ -12,7 +12,8 @@ namespace ComboStrap;
  */
 class Url extends PathAbs
 {
-    const URL_ATTRIBUTE = "url";
+
+
     public const PATH_SEP = "/";
     /**
      * In HTML (not in css)
@@ -647,5 +648,10 @@ class Url extends PathAbs
 
         return $this;
 
+    }
+
+    function getUrl(): Url
+    {
+        return $this;
     }
 }

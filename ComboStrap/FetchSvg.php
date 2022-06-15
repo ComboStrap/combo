@@ -103,6 +103,7 @@ class FetchSvg extends FetchImage
      * Namespace (used to query with xpath only the svg node)
      */
     public const SVG_NAMESPACE_PREFIX = "svg";
+    const TAG = "svg";
 
     private ?DokuPath $originalPath = null;
 
@@ -399,7 +400,7 @@ class FetchSvg extends FetchImage
 
     /**
      * @return int
-     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax
      */
     public
     function getIntrinsicWidth(): int
@@ -411,7 +412,7 @@ class FetchSvg extends FetchImage
             try {
                 return DataType::toInteger($viewBoxWidth);
             } catch (ExceptionCompile $e) {
-                throw new ExceptionCompile("The media with ($viewBoxWidth) of the svg image ($this) is not a valid integer value");
+                throw new ExceptionBadSyntax("The media with ($viewBoxWidth) of the svg image ($this) is not a valid integer value");
             }
         }
 
@@ -421,12 +422,12 @@ class FetchSvg extends FetchImage
          */
         $width = $this->getXmlDom()->documentElement->getAttribute("width");
         if ($width === "") {
-            throw new ExceptionCompile("The svg ($this) does not have a viewBox or width attribute, the intrinsic width cannot be determined");
+            throw new ExceptionBadSyntax("The svg ($this) does not have a viewBox or width attribute, the intrinsic width cannot be determined");
         }
         try {
             return DataType::toInteger($width);
         } catch (ExceptionCompile $e) {
-            throw new ExceptionCompile("The media width ($width) of the svg image ($this) is not a valid integer value");
+            throw new ExceptionBadSyntax("The media width ($width) of the svg image ($this) is not a valid integer value");
         }
 
     }
@@ -435,7 +436,6 @@ class FetchSvg extends FetchImage
      * @return string
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
-     * @throws ExceptionCompile
      * @throws ExceptionNotFound
      */
     public function processAndGetMarkup(): string
@@ -498,7 +498,6 @@ class FetchSvg extends FetchImage
      * @return LocalPath
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax - the file is not a svg file
-     * @throws ExceptionCompile
      * @throws ExceptionNotFound - the file was not found
      */
     public function getFetchPath(): LocalPath
@@ -597,11 +596,13 @@ class FetchSvg extends FetchImage
     /**
      * @throws ExceptionBadArgument - for any bad argument
      * @throws ExceptionNotFound - if the svg file was not found
+     * @throws ExceptionBadSyntax - if the svg is not valid
      */
     public function buildFromUrl(Url $url): FetchSvg
     {
         parent::buildFromUrl($url);
-        $this->originalPath = FetchDoku::createEmpty()->buildFromUrl($url)->getFetchPath();
+        $originalPath = FetchDoku::createEmpty()->buildFromUrl($url)->getFetchPath();
+        $this->setOriginalPath($originalPath);
         $this->buster = FileSystems::getCacheBuster($this->getOriginalPath());
         $this->buildSharedImagePropertyFromTagAttributes($url);
         try {
@@ -809,7 +810,7 @@ class FetchSvg extends FetchImage
     /**
      * @throws ExceptionNotFound
      */
-    public function getRequestedType(): ?string
+    public function getRequestedType(): string
     {
         if ($this->requestedType === null) {
             throw new ExceptionNotFound("The requested type was not specified");
@@ -833,7 +834,6 @@ class FetchSvg extends FetchImage
     }
 
     /**
-     * @throws ExceptionCompile
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
      * @throws ExceptionBadState
@@ -848,7 +848,7 @@ class FetchSvg extends FetchImage
 
         $this->processed = true;
 
-        $localTagAttributes = TagAttributes::createEmpty();
+        $localTagAttributes = TagAttributes::createEmpty(self::TAG);
 
         /**
          * ViewBox should exist
@@ -918,7 +918,7 @@ class FetchSvg extends FetchImage
         try {
             $mediaHeight = $this->getIntrinsicHeight();
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("The media height of ($height) returns the following error ({$e->getMessage()}). The processing was stopped");
+            LogUtility::msg("The media height of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
             return $this->getXmlDocument()->getXmlText();
         }
         if (
@@ -965,6 +965,7 @@ class FetchSvg extends FetchImage
                     break;
             }
         }
+        $localTagAttributes->addClassName(StyleUtility::getStylingClassForTag(self::TAG . "-" . $svgUsageType));
         switch ($svgUsageType) {
             case FetchSvg::ICON_TYPE:
             case FetchSvg::TILE_TYPE:

@@ -9,9 +9,12 @@ class Locale extends MetadataText
 
     const PROPERTY_NAME = "locale";
 
-    public static function createForPage(Page $page): Locale
+    private string $separator = "_";
+
+    public static function createForPage(Page $page, string $separator = "_"): Locale
     {
         return (new Locale())
+            ->setSeparator($separator)
             ->setResource($page);
     }
 
@@ -43,7 +46,8 @@ class Locale extends MetadataText
         }
         $lang = $page->getLangOrDefault();
         $country = $page->getRegionOrDefault();
-        return $lang . "_" . strtoupper($country);
+
+        return $lang . $this->separator . strtoupper($country);
 
 
     }
@@ -73,7 +77,7 @@ class Locale extends MetadataText
          * The value of {@link locale_get_default()} is with an underscore
          * We follow this lead
          */
-        return Site::getLocale("_");
+        return Site::getLocale($this->separator);
     }
 
     public function getCanonical(): string
@@ -87,6 +91,12 @@ class Locale extends MetadataText
     public function getValueOrDefault(): string
     {
         return $this->getValue();
+    }
+
+    public function setSeparator(string $separator): Locale
+    {
+        $this->separator = $separator;
+        return $this;
     }
 
 

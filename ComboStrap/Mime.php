@@ -157,7 +157,11 @@ class Mime
 
     public function getExtension()
     {
-        return explode("/", $this->mime)[1];
+
+        $secondPart = explode("/", $this->mime)[1];
+        // case such as "image/svg+xml";
+        return explode("+",$secondPart)[0];
+
     }
 
 

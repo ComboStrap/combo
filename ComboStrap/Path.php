@@ -13,6 +13,7 @@ namespace ComboStrap;
  *
  * The {@link Path::toPathString()} function is just the path part (no other URI query parameters)
  *
+ *
  */
 interface Path
 {
@@ -59,8 +60,10 @@ interface Path
     function resolve(string $name);
 
     /**
-     * @return string domain
+     * @return Url - the local URL
+     * For external path (ie {@link Url}, there is no {@link Fetch} implementation
+     * To create a {@link ThirdMediaLink}, we use therefore this url
      */
-    function getHost(): string;
+    function getUrl(): Url;
 
 }

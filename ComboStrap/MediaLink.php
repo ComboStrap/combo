@@ -86,9 +86,6 @@ abstract class MediaLink
     }
 
 
-
-
-
     /**
      * @return string - the HTML of the image inside a link if asked
      * @throws ExceptionNotFound
@@ -101,41 +98,45 @@ abstract class MediaLink
          * Link to the media
          *
          */
-        $mediaLink = TagAttributes::createEmpty();
+        $tagAttributes = $this->mediaMarkup->getAttributes();
         // https://www.dokuwiki.org/config:target
         global $conf;
         $target = $conf['target']['media'];
-        $mediaLink->addOutputAttributeValueIfNotEmpty("target", $target);
+        $tagAttributes->addOutputAttributeValueIfNotEmpty("target", $target);
         if (!empty($target)) {
-            $mediaLink->addOutputAttributeValue("rel", 'noopener');
+            $tagAttributes->addOutputAttributeValue("rel", 'noopener');
         }
 
         /**
          * Do we add a link to the image ?
          */
-        $media = $this->getPath();
-        $dokuPath = $media->getPath();
+        $dokuPath = $this->mediaMarkup->getPath();
         if (!($dokuPath instanceof DokuPath)) {
-            LogUtility::msg("Media Link are only supported on media from the internal library ($media)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            return "";
+            // not an internal image
+            return $this->renderMediaTag();
         }
-        $linking = $this->getLinking();
+        try {
+            $isImage = FileSystems::getMime($dokuPath)->isImage();
+            if (!$isImage) {
+                return $this->renderMediaTag();
+            }
+        } catch (ExceptionNotFound $e) {
+            LogUtility::warning("A media link could not be added. Error:{$e->getMessage()}");
+            return $this->renderMediaTag();
+        }
+
+
+        $linking = $this->mediaMarkup->getLinking();
         switch ($linking) {
             case MediaMarkup::LINKING_LINKONLY_VALUE: // show only a url
-                $src = ml(
-                    $dokuPath->getDokuwikiId(),
-                    array(
-                        'id' => $dokuPath->getDokuwikiId(),
-                        'cache' => $media->getRequestedCache(),
-                        'rev' => $dokuPath->getRevision()
-                    )
-                );
-                $mediaLink->addOutputAttributeValue("href", $src);
-                $title = $media->getTitle();
-                if (empty($title)) {
-                    $title = $media->getType();
+                $src = FetchDoku::createFromPath($dokuPath)->getFetchUrl()->toString();
+                $tagAttributes->addOutputAttributeValue("href", $src);
+                try {
+                    $title = $this->mediaMarkup->getLabel();
+                } catch (ExceptionNotFound $e) {
+                    $title = $dokuPath->getLastName();
                 }
-                return $mediaLink->toHtmlEnterTag("a") . $title . "</a>";
+                return $tagAttributes->toHtmlEnterTag("a") . $title . "</a>";
             case MediaMarkup::LINKING_NOLINK_VALUE:
                 return $this->renderMediaTag();
             default:
@@ -150,18 +151,18 @@ abstract class MediaLink
                     ),
                     true
                 );
-                $mediaLink->addOutputAttributeValue("href", $src);
+                $tagAttributes->addOutputAttributeValue("href", $src);
                 $snippetId = "lightbox";
-                $mediaLink->addClassName(StyleUtility::getStylingClassForTag($snippetId));
+                $tagAttributes->addClassName(StyleUtility::getStylingClassForTag($snippetId));
                 $linkingClass = $this->getLinkingClass();
                 if ($linkingClass !== null) {
-                    $mediaLink->addClassName($linkingClass);
+                    $tagAttributes->addClassName($linkingClass);
                 }
                 $snippetManager = PluginUtility::getSnippetManager();
                 $snippetManager->attachJavascriptComboLibrary();
                 $snippetManager->attachInternalJavascriptForSlot($snippetId);
                 $snippetManager->attachCssInternalStyleSheetForSlot($snippetId);
-                return $mediaLink->toHtmlEnterTag("a") . $this->renderMediaTag() . "</a>";
+                return $tagAttributes->toHtmlEnterTag("a") . $this->renderMediaTag() . "</a>";
 
             case MediaMarkup::LINKING_DETAILS_VALUE:
                 //go to the details media viewer
@@ -174,8 +175,8 @@ abstract class MediaLink
                     ),
                     false
                 );
-                $mediaLink->addOutputAttributeValue("href", $src);
-                return $mediaLink->toHtmlEnterTag("a") .
+                $tagAttributes->addOutputAttributeValue("href", $src);
+                return $tagAttributes->toHtmlEnterTag("a") .
                     $this->renderMediaTag() .
                     "</a>";
 
@@ -191,24 +192,10 @@ abstract class MediaLink
     public abstract function renderMediaTag(): string;
 
 
-
-
-
-    public function getFetch(): Fetch
-    {
-        $path = $this->mediaMarkup->getPath();
-        try {
-            $mime = FileSystems::getMime($path);
-        } catch (ExceptionNotFound $e) {
-            return FetchDoku::createFromPath($path);
-        }
-        if ($mime->toString() === Mime::PDF) {
-            return (new FetchPdf())
-                ->setDokuPath($path);
-        }
-        return FetchDoku::createFromPath($path);
-
+    public function getFetchUrl(): Url{
+        return $this->mediaMarkup->getFetchUrl();
     }
+
 
 
 }

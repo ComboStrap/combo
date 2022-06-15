@@ -963,6 +963,7 @@ class Page extends ResourceComboAbs
     /**
      *
      * @return string|null - the locale facebook way
+     * @throws ExceptionNotFound
      * @deprecated for {@link Locale}
      */
     public

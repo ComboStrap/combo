@@ -296,26 +296,6 @@ class LocalPath extends PathAbs
         return $this->sep;
     }
 
-    /**
-     * @throws ExceptionNotFound - if the file is not found
-     * @throws ExceptionBadState - if the path is not inside a drive
-     */
-    public function getFetchUrl(): Url
-    {
-        return $this->toDokuPath()->getFetchUrl();
-    }
-
-
-
-    public function getHost(): string
-    {
-        return "localhost";
-    }
-
-    function acceptsFetchUrl(Url $url): bool
-    {
-        return false;
-    }
 
     function getUrl(): Url
     {

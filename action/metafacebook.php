@@ -3,10 +3,13 @@
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetchImage;
+use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
 use ComboStrap\Page;
@@ -143,13 +146,16 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         if (empty($facebookImages)) {
             $defaultFacebookImage = PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
             if (!empty($defaultFacebookImage)) {
-                DokuPath::addRootSeparatorIfNotPresent($defaultFacebookImage);
-                $image = FetchImage::createImageFetchFromId($defaultFacebookImage);
-                if ($image->exists()) {
-                    $facebookImages[] = $image;
+                $dokuPath = DokuPath::createMediaPathFromId($defaultFacebookImage);
+                if(FileSystems::exists($dokuPath)){
+                    try {
+                        $facebookImages[] = FetchImage::createImageFetchFromPath($dokuPath);
+                    } catch (ExceptionCompile $e) {
+                        LogUtility::error("We were unable to add the default facebook image ($defaultFacebookImage) because of the following error: {$e->getMessage()}", self::CANONICAL);
+                    }
                 } else {
                     if ($defaultFacebookImage != ":logo-facebook.png") {
-                        LogUtility::msg("The default facebook image ($defaultFacebookImage) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        LogUtility::error("The default facebook image ($defaultFacebookImage) does not exist", self::CANONICAL);
                     }
                 }
             }
@@ -163,66 +169,81 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
             $facebookMimes = [Mime::JPEG, Mime::GIF, Mime::PNG];
             foreach ($facebookImages as $facebookImage) {
 
-                $mime = $facebookImage->getOriginalPath()->getMime();
+                try {
+                    $path = $facebookImage->getOriginalPath();
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError($e->getMessage());
+                    continue;
+                }
+                if (!FileSystems::exists($path)) {
+                    LogUtility::error("The image ($path) does not exist and was not added", self::CANONICAL);
+                    continue;
+                }
+                try {
+                    $mime = FileSystems::getMime($path);
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError($e->getMessage());
+                    continue;
+                }
                 if (!in_array($mime->toString(), $facebookMimes)) {
                     continue;
                 }
 
-                if (!$facebookImage->exists()) {
-                    LogUtility::msg("The image ($facebookImage) does not exist and was not added", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                $toSmall = false;
+
+                // There is a minimum size constraint of 200px by 200px
+                // The try is in case we can't get the width and height
+                try {
+                    $intrinsicWidth = $facebookImage->getIntrinsicWidth();
+                    $intrinsicHeight = $facebookImage->getIntrinsicHeight();
+                } catch (ExceptionCompile $e) {
+                    LogUtility::error("No image was added for facebook. Error while retrieving the dimension of the image: {$e->getMessage()}", self::CANONICAL);
+                    break;
+                }
+
+                if ($intrinsicWidth < 200) {
+                    $toSmall = true;
                 } else {
-
-                    $toSmall = false;
-
-                    // There is a minimum size constraint of 200px by 200px
-                    // The try is in case we can't get the width and height
-                    try {
-                        $intrinsicWidth = $facebookImage->getIntrinsicWidth();
-                        $intrinsicHeight = $facebookImage->getIntrinsicHeight();
-                    } catch (ExceptionCompile $e) {
-                        LogUtility::msg("No image was added for facebook. Error while retrieving the dimension of the image: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        break;
-                    }
-
-                    if ($intrinsicWidth < 200) {
+                    $facebookMeta["og:image:width"] = $intrinsicWidth;
+                    if ($intrinsicHeight < 200) {
                         $toSmall = true;
                     } else {
-                        $facebookMeta["og:image:width"] = $intrinsicWidth;
-                        if ($intrinsicHeight < 200) {
-                            $toSmall = true;
-                        } else {
-                            $facebookMeta["og:image:height"] = $intrinsicHeight;
-                        }
+                        $facebookMeta["og:image:height"] = $intrinsicHeight;
                     }
+                }
 
-                    if ($toSmall) {
-                        $message = "The facebook image ($facebookImage) is too small (" . $intrinsicWidth . " x " . $intrinsicHeight . "). The minimum size constraint is 200px by 200px";
+                if ($toSmall) {
+                    $message = "The facebook image ($facebookImage) is too small (" . $intrinsicWidth . " x " . $intrinsicHeight . "). The minimum size constraint is 200px by 200px";
+                    try {
+                        $firstImagePath = $page->getFirstImage()->getOriginalPath();
                         if (
-                            $facebookImage->getOriginalPath()->toAbsolutePath()->toPathString()
+                            $path->toAbsolutePath()->toPathString()
                             !==
-                            $page->getFirstImage()->getOriginalPath()->toAbsolutePath()->toPathString()
+                            $firstImagePath->toAbsolutePath()->toPathString()
                         ) {
-                            LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            LogUtility::error($message, self::CANONICAL);
                         } else {
                             LogUtility::log2BrowserConsole($message);
                         }
+                    } catch (ExceptionNotFound $e) {
+                        LogUtility::error($message, self::CANONICAL);
                     }
+                }
 
 
-                    /**
-                     * We may don't known the dimensions
-                     */
-                    if (!$toSmall) {
-                        $facebookMeta["og:image:type"] = $mime->toString();
-                        try {
-                            $facebookMeta["og:image"] = $facebookImage->getFetchUrl()->toAbsoluteUrlString();
-                        } catch (ExceptionBadSyntax|ExceptionNotFound|ExceptionCompile $e) {
-                            // Oeps
-                            LogUtility::internalError("Og Image could not be added. Error: {$e->getMessage()}", self::CANONICAL);
-                        }
-                        // One image only
-                        break;
+                /**
+                 * We may don't known the dimensions
+                 */
+                if (!$toSmall) {
+                    $facebookMeta["og:image:type"] = $mime->toString();
+                    try {
+                        $facebookMeta["og:image"] = $facebookImage->getFetchUrl()->toAbsoluteUrlString();
+                    } catch (ExceptionCompile $e) {
+                        // Oeps
+                        LogUtility::internalError("Og Image could not be added. Error: {$e->getMessage()}", self::CANONICAL);
                     }
+                    // One image only
+                    break;
                 }
 
             }
@@ -231,8 +252,8 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
         $facebookMeta["fb:app_id"] = self::FACEBOOK_APP_ID;
 
-        $facebookDefaultLocale = "en_US";
-        $locale = $page->getLocale($facebookDefaultLocale);
+        // FYI default if not set by facebook: "en_US"
+        $locale = ComboStrap\Locale::createForPage($page, "_")->getValueOrDefault();
         $facebookMeta["og:locale"] = $locale;
 
 

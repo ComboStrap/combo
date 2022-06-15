@@ -18,6 +18,7 @@ namespace ComboStrap;
  */
 class DokuPath extends PathAbs
 {
+
     const MEDIA_DRIVE = "media";
     const PAGE_DRIVE = "page";
     const UNKNOWN_DRIVE = "unknown";
@@ -85,7 +86,6 @@ class DokuPath extends PathAbs
 
     /**
      * The separator from the {@link DokuPath::getDrive()}
-     * Same as {@link InterWikiPath}
      */
     const DRIVE_SEPARATOR = ">";
     /**
@@ -618,13 +618,10 @@ class DokuPath extends PathAbs
      * @throws ExceptionNotFound
      */
     public
-    function getRevision(): ?string
+    function getRevision(): string
     {
         if ($this->rev === null) {
-            $localPath = $this->toLocalPath();
-            if (FileSystems::exists($localPath)) {
-                return FileSystems::getModifiedTime($localPath)->getTimestamp();
-            }
+            throw new ExceptionNotFound("The rev was not set");
         }
         return $this->rev;
     }
@@ -855,12 +852,6 @@ class DokuPath extends PathAbs
 
     }
 
-    public
-    function getLibrary(): string
-    {
-        return $this->drive;
-    }
-
 
     public
     function getDrive(): string
@@ -878,11 +869,6 @@ class DokuPath extends PathAbs
     }
 
 
-    public function getHost(): string
-    {
-        return "localhost";
-    }
-
 
     function toUriString(): string
     {
@@ -893,5 +879,10 @@ class DokuPath extends PathAbs
         }
         return $uri;
 
+    }
+
+    function getUrl(): Url
+    {
+        return $this->toLocalPath()->getUrl();
     }
 }

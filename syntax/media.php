@@ -18,6 +18,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\MediaMarkup;
 use ComboStrap\MediaLink;
 use ComboStrap\Metadata;
+use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\ThirdPartyPlugins;
@@ -69,16 +70,18 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     const SVG_RENDERING_ERROR_CLASS = "combo-svg-rendering-error";
 
 
-    public static function registerFirstImage(Doku_Renderer_metadata $renderer, $id)
+    public static function registerFirstImage(Doku_Renderer_metadata $renderer, Path $path)
     {
         /**
          * {@link Doku_Renderer_metadata::$firstimage} is unfortunately protected
          * and {@link Doku_Renderer_metadata::internalmedia()} does not allow svg as first image
          */
+        if(!($path instanceof DokuPath)){
+            return;
+        }
         if (!isset($renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION])) {
-            $path = DokuPath::createMediaPathFromId($id);
             if ($path->getMime()->isImage()) {
-                $renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION] = $id;
+                $renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION] = $path->getDokuwikiId();
             }
         }
 
@@ -97,7 +100,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         switch ($markupUrl->getInternalExternalType()) {
             case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
                 $renderer->stats[AnalyticsDocument::INTERNAL_MEDIA_COUNT]++;
-                if (!FileSystems::exists($markupUrlString->getPath())) {
+                if (!FileSystems::exists($markupUrl->getPath())) {
                     $renderer->stats[AnalyticsDocument::INTERNAL_BROKEN_MEDIA_COUNT]++;
                 }
                 break;
@@ -284,17 +287,17 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                     $align = null;
                 }
                 try {
-                    $width = $mediaMarkup->toFetchUrl()->getQueryPropertyValue(Dimension::WIDTH_KEY);
+                    $width = $mediaMarkup->getFetchUrl()->getQueryPropertyValue(Dimension::WIDTH_KEY);
                 } catch (ExceptionNotFound $e) {
                     $width = null;
                 }
                 try {
-                    $height = $mediaMarkup->toFetchUrl()->getQueryPropertyValue(Dimension::HEIGHT_KEY);
+                    $height = $mediaMarkup->getFetchUrl()->getQueryPropertyValue(Dimension::HEIGHT_KEY);
                 } catch (ExceptionNotFound $e) {
                     $height = null;
                 }
                 try {
-                    $cache = $height = $mediaMarkup->toFetchUrl()->getQueryPropertyValue(FetchAbs::CACHE_KEY);
+                    $cache = $height = $mediaMarkup->getFetchUrl()->getQueryPropertyValue(FetchAbs::CACHE_KEY);
                 } catch (ExceptionNotFound $e) {
                     // Dokuwiki needs a value
                     // If their is no value it will output it without any value
@@ -361,9 +364,9 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         switch ($mediaType) {
             case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
                 try {
-                    self::registerFirstImage($renderer, $dokuwikiUrl->toFetchUrl()->getPath());
+                    self::registerFirstImage($renderer, $dokuwikiUrl->getPath());
                 } catch (ExceptionNotFound $e) {
-                    LogUtility::internalError("The path should be present on an internal image");
+                    LogUtility::internalError("The path should be present on an internal image. Error: {$e->getMessage()}");
                 }
                 $renderer->internalmedia($src, $title);
                 break;

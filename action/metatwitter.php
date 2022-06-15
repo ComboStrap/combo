@@ -1,7 +1,11 @@
 <?php
 
+use ComboStrap\DokuPath;
+use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\FetchImage;
+use ComboStrap\FileSystems;
 use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -152,9 +156,13 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         if (empty($twitterImages)) {
             $defaultImageIdConf = PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE);
             if (!empty($defaultImageIdConf)) {
-                $twitterImage = FetchImage::createImageFetchFromId($defaultImageIdConf);
-                if ($twitterImage->exists()) {
-                    $twitterImages[] = $twitterImage;
+                $dokuPath = DokuPath::createMediaPathFromId($defaultImageIdConf);
+                if (FileSystems::exists($dokuPath)) {
+                    try {
+                        $twitterImages[] = FetchImage::createImageFetchFromPath($dokuPath);
+                    } catch (ExceptionCompile $e) {
+                        LogUtility::error("We were unable to add the default twitter image ($defaultImageIdConf) because of the following error: {$e->getMessage()}", self::CANONICAL);
+                    }
                 } else {
                     if ($defaultImageIdConf != ":apple-touch-icon.png") {
                         LogUtility::msg("The default twitter image ($defaultImageIdConf) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -168,7 +176,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
                 if ($twitterImage->exists()) {
                     try {
                         $twitterMeta[self::META_IMAGE] = $twitterImage->getFetchUrl()->toAbsoluteUrlString();
-                    } catch (ExceptionBadSyntax|\ComboStrap\ExceptionNotFound|\ComboStrap\ExceptionCompile $e) {
+                    } catch (ExceptionBadSyntax|\ComboStrap\ExceptionNotFound|ExceptionCompile $e) {
                         // Oeps
                         LogUtility::internalError("Twitter Image could not be added. Error: {$e->getMessage()}", self::CANONICAL);
                     }

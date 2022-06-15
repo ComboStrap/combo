@@ -45,6 +45,7 @@ abstract class PathAbs implements Path
 
     /**
      * @throws ExceptionCompile
+     * @deprecated for {@link DokuPath::createFromPath()}
      */
     function toDokuPath(): DokuPath
     {

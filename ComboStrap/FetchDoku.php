@@ -40,6 +40,13 @@ class FetchDoku extends FetchAbs
         if ($this->path->getDrive() !== DokuPath::MEDIA_DRIVE) {
             $url->addQueryParameter(DokuPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
         }
+        try {
+            $rev = $this->path->getRevision();
+            $url->addQueryParameter(DokuPath::REV_ATTRIBUTE, $rev);
+        } catch (ExceptionNotFound $e) {
+            // ok no rev
+        }
+
         return $url;
 
     }
@@ -56,8 +63,7 @@ class FetchDoku extends FetchAbs
      */
     function getBuster(): string
     {
-        $time = FileSystems::getModifiedTime($this->path);
-        return strval($time->getTimestamp());
+        return FileSystems::getCacheBuster($this->path);
     }
 
 

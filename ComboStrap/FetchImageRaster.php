@@ -47,6 +47,11 @@ class FetchImageRaster extends FetchImage
         return new FetchImageRaster($path);
     }
 
+    public static function createEmptyRaster(): FetchImageRaster
+    {
+        return new FetchImageRaster();
+    }
+
 
     /**
      * @return int - the width of the image from the file
@@ -122,9 +127,6 @@ class FetchImageRaster extends FetchImage
      * to not lose quality.
      *
      * @return int
-     * @throws ExceptionBadArgument - if the requested width is not valid
-     * @throws ExceptionBadSyntax - if the image is not a raster image and the intrinsic width is then unknown
-     * @throws ExceptionNotExists - if the image does not exists
      */
     public
     function getTargetWidth(): int
@@ -132,7 +134,7 @@ class FetchImageRaster extends FetchImage
 
         try {
             $requestedWidth = $this->getRequestedWidth();
-        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+        } catch (ExceptionNotFound $e) {
             return parent::getTargetWidth();
         }
 
@@ -175,7 +177,7 @@ class FetchImageRaster extends FetchImage
                 LogUtility::info("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", self::CANONICAL);
                 return $mediaHeight;
             }
-        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+        } catch (ExceptionNotFound $e) {
             // no request height
         }
         return parent::getTargetHeight();

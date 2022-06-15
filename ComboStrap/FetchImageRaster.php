@@ -29,10 +29,11 @@ class FetchImageRaster extends FetchImage
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
      */
     public static function createImageRasterFetchFromId(string $imageId, $rev = null): FetchImageRaster
     {
-        return new FetchImageRaster(DokuPath::createMediaPathFromId($imageId, $rev));
+        return self::createImageFetchFromPath(DokuPath::createMediaPathFromId($imageId, $rev));
     }
 
     /**

@@ -78,6 +78,7 @@ class RasterImageLink extends ImageLink
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
      * A media can be a video also (Use
      * @return string
+     * @throws ExceptionNotFound
      */
     public function renderMediaTag(): string
     {
@@ -145,7 +146,6 @@ class RasterImageLink extends ImageLink
         $attributes->addStyleDeclarationIfNotSet("height", "auto");
 
 
-
         /**
          * Responsive image src set building
          * We have chosen
@@ -203,27 +203,35 @@ class RasterImageLink extends ImageLink
          *
          * The max-width value is set
          */
-        $intrinsicWidth = $fetchRaster->getIntrinsicWidth();
         $srcValue = $fetchRaster->getFetchUrl();
         /**
          * Add smaller sizes
          */
         foreach (self::BREAKPOINTS as $breakpointWidth) {
 
-            if ($targetWidth > $breakpointWidth) {
-
-                if (!empty($srcSet)) {
-                    $srcSet .= ", ";
-                    $sizes .= ", ";
-                }
-                $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
-
-                $xsmUrl = FetchImageRaster::createImageRasterFetchFromPath($fetchRaster->getOriginalPath())
-                    ->setRequestedWidth($breakpointWidthMinusMargin);
-                $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
-                $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
-
+            if ($breakpointWidth > $targetWidth) {
+                continue;
             }
+
+            if (!empty($srcSet)) {
+                $srcSet .= ", ";
+                $sizes .= ", ";
+            }
+            $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
+
+            try {
+                $xsmUrl = FetchImageRaster::createRasterFromFetchUrl($fetchRaster->getFetchUrl())
+                    ->setRequestedWidth($breakpointWidthMinusMargin)
+                    ->getFetchUrl()
+                    ->toString();
+            } catch (ExceptionCompile $e) {
+                // should not happen as the fetch url was already validated at build time but yeah
+                LogUtility::internalError("We are unable to create the breakpoint image url ($fetchRaster) for the size ($breakpointWidth). Error:{$e->getMessage()}");
+                continue;
+            }
+            $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
+            $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
+
 
         }
 
@@ -234,7 +242,7 @@ class RasterImageLink extends ImageLink
         if (!empty($srcSet)) {
             $srcSet .= ", ";
             $sizes .= ", ";
-            $srcUrl = $fetchRaster->getUrlAtBreakpoint($targetWidth);
+            $srcUrl = $fetchRaster->getFetchUrl()->toString();
             $srcSet .= "$srcUrl {$targetWidth}w";
             $sizes .= "{$targetWidth}px";
         }
@@ -248,7 +256,7 @@ class RasterImageLink extends ImageLink
             /**
              * Html Lazy loading
              */
-            $lazyLoadMethod = $this->getLazyLoadMethod();
+            $lazyLoadMethod = $this->mediaMarkup->getLazyLoadMethodOrDefault();
             switch ($lazyLoadMethod) {
                 case MediaMarkup::LAZY_LOAD_METHOD_HTML_VALUE:
                     $attributes->addOutputAttributeValue("src", $srcValue);
@@ -324,19 +332,6 @@ class RasterImageLink extends ImageLink
         $attributes->addOutputAttributeValueIfNotEmpty("alt", $this->getAltNotEmpty());
 
         /**
-         * TODO: Side effect of the fact that we use the same attributes
-         * Title attribute of a media is the alt of an image
-         * And title should not be in an image tag
-         */
-        $attributes->removeAttributeIfPresent(TagAttributes::TITLE_KEY);
-
-        /**
-         * Old model where the src is parsed and the path
-         * is in the attributes
-         */
-        $attributes->removeAttributeIfPresent(PagePath::PROPERTY_NAME);
-
-        /**
          * Create the img element
          */
         $htmlAttributes = $attributes->toHTMLAttributeString();
@@ -347,13 +342,11 @@ class RasterImageLink extends ImageLink
     }
 
 
-    public
-    function getLazyLoad()
+    public function getLazyLoad(): bool
     {
-        $lazyLoad = parent::getLazyLoad();
-        if ($lazyLoad !== null) {
-            return $lazyLoad;
-        } else {
+        try {
+            return $this->mediaMarkup->isLazy();
+        } catch (ExceptionNotFound $e) {
             return PluginUtility::getConfValue(RasterImageLink::CONF_LAZY_LOADING_ENABLE, RasterImageLink::CONF_LAZY_LOADING_ENABLE_DEFAULT);
         }
     }

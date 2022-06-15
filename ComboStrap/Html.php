@@ -83,12 +83,32 @@ class Html
          * and cannot be added in a attribute because of the quote
          * This is used for {@link Tooltip}
          */
-        return htmlspecialchars($text, ENT_XHTML | ENT_QUOTES |  ENT_DISALLOWED);
+        return htmlspecialchars($text, ENT_XHTML | ENT_QUOTES | ENT_DISALLOWED);
 
     }
 
     public static function decode($int): string
     {
         return htmlspecialchars_decode($int, ENT_XHTML | ENT_QUOTES);
+    }
+
+    public static function getDiffBetweenClass(string $expected, string $actual, string $expectedId = "expected", string $actualId = "actual"): string
+    {
+        $leftClasses = preg_split("/\s/", $expected);
+        $rightClasses = preg_split("/\s/", $actual);
+        $error = "";
+        foreach ($leftClasses as $leftClass) {
+            if (!in_array($leftClass, $rightClasses)) {
+                $error .= "The class ($expectedId) has the value (" . $leftClass . ") that is not present in the class ($actualId))\n";
+            } else {
+                // Delete the value
+                $key = array_search($leftClass, $rightClasses);
+                unset($rightClasses[$key]);
+            }
+        }
+        foreach ($rightClasses as $rightClass) {
+            $error .= "The actual ($actualId) has the value (" . $rightClass . ") that is not present in the class ($expectedId))\n";
+        }
+        return $error;
     }
 }

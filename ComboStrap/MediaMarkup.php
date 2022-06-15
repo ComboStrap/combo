@@ -699,6 +699,11 @@ class MediaMarkup
 
     public function getAttributes(): TagAttributes
     {
+        try {
+            $this->tagAttributes->addComponentAttributeValue(Align::ALIGN_ATTRIBUTE, $this->getAlign());
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
         return $this->tagAttributes;
     }
 

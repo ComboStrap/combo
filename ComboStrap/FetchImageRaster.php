@@ -52,6 +52,29 @@ class FetchImageRaster extends FetchImage
         return new FetchImageRaster();
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
+     */
+    public static function createRasterFromFetchUrl(Url $fetchUrl): FetchImageRaster
+    {
+        return self::createEmptyRaster()
+            ->buildFromUrl($fetchUrl);
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
+     */
+    public static function createRasterFromMediaMarkup(MediaMarkup $mediaMarkup): FetchImageRaster
+    {
+        return self::createRasterFromFetchUrl($mediaMarkup->getFetchUrl());
+    }
+
 
     /**
      * @return int - the width of the image from the file
@@ -103,19 +126,11 @@ class FetchImageRaster extends FetchImage
     }
 
 
-    /**
-     *
-     * @throws ExceptionBadArgument
-     */
     public function getFetchUrl(Url $url = null): Url
     {
 
-        try {
-            $fetchUrl = FetchDoku::createFromPath($this->originalPath)->getFetchUrl($url);
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionRuntime("Internal error. The image should exist. This is already checked at build time.");
-        }
-        $this->buildSharedImagePropertyFromTagAttributes($fetchUrl);
+        $fetchUrl = FetchDoku::createFromPath($this->originalPath)->getFetchUrl($url);
+        $this->addCommonImageQueryParameterToUrl($fetchUrl);
         return $fetchUrl;
 
     }

@@ -173,20 +173,7 @@ class XmlUtility
                         if ($leftAttValue !== $rightAttValue) {
                             switch ($leftAtt->name) {
                                 case "class":
-                                    $leftClasses = preg_split("/\s/", $leftAttValue);
-                                    $rightClasses = preg_split("/\s/", $rightAttValue);
-                                    foreach ($leftClasses as $leftClass) {
-                                        if (!in_array($leftClass, $rightClasses)) {
-                                            $error .= "The left class attribute (" . $leftAtt->getNodePath() . ") has the value (" . $leftClass . ") that is not present in the right node)\n";
-                                        } else {
-                                            // Delete the value
-                                            $key = array_search($leftClass, $rightClasses);
-                                            unset($rightClasses[$key]);
-                                        }
-                                    }
-                                    foreach ($rightClasses as $rightClass) {
-                                        $error .= "The right class attribute (" . $leftAtt->getNodePath() . ") has the value (" . $rightClass . ") that is not present in the left node)\n";
-                                    }
+                                    $error .= Html::getDiffBetweenClass($leftAttValue, $rightAttValue, "left ,{$leftAtt->getNodePath()}", "right, {$leftAtt->getNodePath()}");
                                     break;
                                 case "src":
                                 case "data-src":

@@ -159,92 +159,6 @@ abstract class FetchImage extends FetchAbs
 
     }
 
-    /**
-     * Return a height value that is conform to the {@link FetchImage::getIntrinsicAspectRatio()} of the image.
-     *
-     * @param int|null $breakpointWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
-     * if not specified, the requested width and if not specified the intrinsic width
-     * @param int|null $requestedHeight
-     * @return int the height value attribute in a img
-     *
-     * Algorithm:
-     *   * If the requested height given is not null, return the given height rounded
-     *   * If the requested height is null, if the requested width is:
-     *         * null: return the intrinsic / natural height
-     *         * not null: return the height as being the width scaled down by the {@link FetchImage::getIntrinsicAspectRatio()}
-     */
-    public
-    function getBreakpointHeight(?int $breakpointWidth): int
-    {
-
-        try {
-            $targetAspectRatio = $this->getTargetAspectRatio();
-        } catch (ExceptionCompile $e) {
-            LogUtility::msg("The target ratio for the image was set to 1 because we got this error: {$e->getMessage()}");
-            $targetAspectRatio = 1;
-        }
-        if ($targetAspectRatio === 0) {
-            LogUtility::msg("The target ratio for the image was set to 1 because its value was 0");
-            $targetAspectRatio = 1;
-        }
-        return $this->round($breakpointWidth / $targetAspectRatio);
-
-    }
-
-    /**
-     * Return a width value that is conform to the {@link FetchImage::getIntrinsicAspectRatio()} of the image.
-     *
-     * @param int|null $requestedWidth - the requested width (may be null)
-     * @param int|null $requestedHeight - the request height (may be null)
-     * @return int - the width value attribute in a img (in CSS pixel that the image should takes)
-     *
-     * Algorithm:
-     *   * If the requested width given is not null, return the given width
-     *   * If the requested width is null, if the requested height is:
-     *         * null: return the intrinsic / natural width
-     *         * not null: return the width as being the height scaled down by the {@link FetchImage::getIntrinsicAspectRatio()}
-     */
-    public
-    function getWidthValueScaledDown(?int $requestedWidth, ?int $requestedHeight): int
-    {
-
-        if (!empty($requestedWidth) && !empty($requestedHeight)) {
-            LogUtility::msg("The requested width ($requestedWidth) and the requested height ($requestedHeight) are not null. You can't scale an image in width and height. The width or the height should be null.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-        }
-
-        $computedWidth = $requestedWidth;
-        if (empty($requestedWidth)) {
-
-            if (empty($requestedHeight)) {
-
-                $computedWidth = $this->getIntrinsicWidth();
-
-            } else {
-
-                if ($this->getIntrinsicAspectRatio() !== false) {
-                    $computedWidth = $this->getIntrinsicAspectRatio() * $requestedHeight;
-                } else {
-                    LogUtility::msg("The aspect ratio of the image ($this) could not be calculated", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                }
-
-            }
-        }
-        /**
-         * Rounding to integer
-         * The fetch.php file takes int as value for width and height
-         * making a rounding if we pass a double (such as 37.5)
-         * This is important because the security token is based on width and height
-         * and therefore the fetch will failed
-         *
-         * And this is also ask by the specification
-         * a non-null positive integer
-         * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
-         *
-         * And not {@link intval} because it will make from 3.6, 3 and not 4
-         */
-        return intval(round($computedWidth));
-    }
-
 
     /**
      * For a raster image, the internal width
@@ -529,6 +443,11 @@ abstract class FetchImage extends FetchAbs
      * and therefore the fetch will failed
      *
      * And not directly {@link intval} because it will make from 3.6, 3 and not 4
+     *
+     * And this is also ask by the specification
+     * a non-null positive integer
+     * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
+     *
      */
     public static function round(float $param): int
     {

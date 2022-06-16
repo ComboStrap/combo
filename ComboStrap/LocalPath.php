@@ -34,7 +34,7 @@ class LocalPath extends PathAbs
      */
     private $sep = DIRECTORY_SEPARATOR;
 
-    private ?string $host;
+    private ?string $host = null;
 
     /**
      * LocalPath constructor.

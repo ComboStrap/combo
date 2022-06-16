@@ -132,39 +132,39 @@ class MarkupRef
          * We parse it
          */
         $this->refScheme = MarkupRef::WIKI_URI;
-        $this->url = Url::createEmpty();
+
         $questionMarkPosition = strpos($ref, "?");
-        $httpHostOrPath = $ref;
+        $wikiId = $ref;
+        $fragment = null;
         $queryStringAndAnchorOriginal = null;
         if ($questionMarkPosition !== false) {
-            $httpHostOrPath = substr($ref, 0, $questionMarkPosition);
+            $wikiId = substr($ref, 0, $questionMarkPosition);
             $queryStringAndAnchorOriginal = substr($ref, $questionMarkPosition + 1);
         } else {
             // We may have only an anchor
             $hashTagPosition = strpos($ref, "#");
             if ($hashTagPosition !== false) {
-                $httpHostOrPath = substr($ref, 0, $hashTagPosition);
-                $this->url->setFragment(substr($ref, $hashTagPosition + 1));
+                $wikiId = substr($ref, 0, $hashTagPosition);
+                $fragment = substr($ref, $hashTagPosition + 1);
             }
         }
+        $wikiId = cleanID($wikiId);
 
-        /**
-         * Scheme
-         */
-
-        /**
-         * We transform it as if it was a fetch URL
-         */
-        $this->refScheme = DokuFs::SCHEME;
         switch ($type) {
             case self::MEDIA_TYPE:
-                $this->path = DokuPath::createMediaPathFromId($httpHostOrPath);
+                $this->path = DokuPath::createMediaPathFromId($wikiId);
+                $this->url = FetchDoku::createFromPath($this->path)->getFetchUrl();
                 break;
             case self::LINK_TYPE:
-                $this->path = DokuPath::createPagePathFromId($httpHostOrPath);
+                $this->path = DokuPath::createPagePathFromId($wikiId);
+                $this->url = UrlEndpoint::createDokuUrl($wikiId);
                 break;
             default:
                 throw new ExceptionBadArgument("The ref type ($type) is unknown");
+        }
+
+        if($fragment!==null){
+            $this->url->setFragment($fragment);
         }
 
 
@@ -273,7 +273,7 @@ class MarkupRef
                  */
                 if ($value != null) {
                     if (($countHashTag = substr_count($value, "#")) >= 3) {
-                        LogUtility::msg("The value ($value) of the key ($key) for the link ($httpHostOrPath) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
+                        LogUtility::msg("The value ($value) of the key ($key) for the link ($wikiId) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
                         continue;
                     }
                 } else {

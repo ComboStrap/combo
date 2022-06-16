@@ -50,4 +50,16 @@ class UrlEndpoint
             ->setPath("support");
 
     }
+
+    public static function createDokuUrl(string $id): Url
+    {
+        $cleanedId = cleanID($id);
+        $endpoint = self::createEndPointUrl('doku.php', '');
+        if (Site::hasUrlRewrite()) {
+            $endpoint->setPath(str_replace(DokuPath::PATH_SEPARATOR, "/", $cleanedId));
+        } else {
+            $endpoint->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $cleanedId);
+        }
+        return $endpoint;
+    }
 }

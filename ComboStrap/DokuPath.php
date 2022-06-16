@@ -579,12 +579,7 @@ class DokuPath extends PathAbs
     function getDokuwikiId(): string
     {
 
-        if ($this->getScheme() == DokuFs::SCHEME) {
-            return $this->id;
-        } else {
-            // the url (it's stored as id in the metadata)
-            return $this->getFetchPath();
-        }
+        return $this->id;
 
     }
 
@@ -869,7 +864,6 @@ class DokuPath extends PathAbs
     }
 
 
-
     function toUriString(): string
     {
         $driveSep = self::DRIVE_SEPARATOR;
@@ -890,4 +884,6 @@ class DokuPath extends PathAbs
     {
         return "localhost";
     }
+
+
 }

@@ -34,7 +34,6 @@ class InterWiki
         [$this->name, $this->urlWithoutFragment] = explode(">", $interWikiRef, 2);
 
 
-        //split into hash and url part
         $hash = strrchr($this->urlWithoutFragment, '#');
         if ($hash) {
             $this->urlWithoutFragment = substr($this->urlWithoutFragment, 0, -strlen($hash));
@@ -72,9 +71,24 @@ class InterWiki
     public function toUrl(): Url
     {
 
+
         $originalInterWikiUrlTemplate = $this->getTemplateUrlStringOrDefault();
         $interWikiUrlTemplate = $originalInterWikiUrlTemplate;
 
+        /**
+         * Dokuwiki Id template
+         */
+        if ($interWikiUrlTemplate[0] === ':') {
+            $interWikiUrlTemplate = str_replace(
+                '{NAME}',
+                $this->urlWithoutFragment,
+                $interWikiUrlTemplate
+            );
+            if ($this->fragment !== null) {
+                $interWikiUrlTemplate = "$interWikiUrlTemplate#$this->fragment";
+            }
+            return MarkupRef::createLinkFromRef($interWikiUrlTemplate)->getUrl();
+        }
 
         // Replace placeholder if any
         if (preg_match('#{URL}#', $interWikiUrlTemplate)) {
@@ -89,7 +103,7 @@ class InterWiki
         }
 
         // Name placeholder means replace with URL encoding
-        if (preg_match('#{NAME}#', $interWikiUrlTemplate) && $interWikiUrlTemplate[0] !== ':') {
+        if (preg_match('#{NAME}#', $interWikiUrlTemplate)) {
 
             $interWikiUrlTemplate = str_replace(
                 '{NAME}',

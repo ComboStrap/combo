@@ -73,6 +73,12 @@ class Site
     }
 
 
+    function getEmailObfuscationConfiguration()
+    {
+        global $conf;
+        return $conf['mailguard'];
+    }
+
     /**
      * @return string|null
      */

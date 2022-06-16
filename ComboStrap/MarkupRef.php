@@ -185,7 +185,7 @@ class MarkupRef
 
         if ($fragment !== null) {
             $check = false;
-            $fragment = '#' . sectionID($fragment, $check);
+            $fragment = sectionID($fragment, $check);
             $this->url->setFragment($fragment);
         }
 

@@ -426,7 +426,7 @@ class Url extends PathAbs
             $externalFragment = "";
         }
         if ($actualFragment !== $externalFragment) {
-            throw new ExceptionNotEquals("The fragment are not equals ($actualHost vs $externalHost)");
+            throw new ExceptionNotEquals("The fragment are not equals ($actualFragment vs $externalFragment)");
         }
 
     }

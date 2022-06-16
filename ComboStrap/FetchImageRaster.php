@@ -198,7 +198,7 @@ class FetchImageRaster extends FetchImage
                 return parent::getTargetHeight();
             }
             if ($requestedHeight > $mediaHeight) {
-                LogUtility::info("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", self::CANONICAL);
+                LogUtility::warning("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", self::CANONICAL);
                 return $mediaHeight;
             }
         } catch (ExceptionNotFound $e) {

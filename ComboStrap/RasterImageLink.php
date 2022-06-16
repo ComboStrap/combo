@@ -222,10 +222,15 @@ class RasterImageLink extends ImageLink
             try {
 
                 $breakpointRaster = FetchImageRaster::createRasterFromFetchUrl($fetchRaster->getFetchUrl());
-                if ($fetchRaster->hasWidthRequested() || $fetchRaster->hasAspectRatioRequested()) {
+                if (
+                    !$fetchRaster->hasHeightRequested() // breakpoint url needs only the h attribute in this case
+                    || $fetchRaster->hasAspectRatioRequested() // width and height are mandatory
+                ) {
                     $breakpointRaster->setRequestedWidth($breakpointWidthMinusMargin);
                 }
-                if ($fetchRaster->hasHeightRequested() || $fetchRaster->hasAspectRatioRequested()) {
+                if ($fetchRaster->hasHeightRequested() // if this is a height request
+                    || $fetchRaster->hasAspectRatioRequested() // width and height are mandatory
+                ) {
                     $breakPointHeight = FetchImageRaster::round($breakpointWidthMinusMargin / $fetchRaster->getTargetAspectRatio());
                     $breakpointRaster->setRequestedHeight($breakPointHeight);
                 }

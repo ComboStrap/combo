@@ -43,7 +43,7 @@ class ThirdMediaLink extends MediaLink
         }
 
         if (!FileSystems::exists($path)) {
-            $tagAttributes->addClassName(MarkupRef::getHtmlClassNotExist());
+            $tagAttributes->addClassName(LinkMarkup::getHtmlClassNotExist());
         }
 
         return $tagAttributes->toHtmlEnterTag("a") . $label . "</a>";

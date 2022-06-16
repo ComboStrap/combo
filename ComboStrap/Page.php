@@ -994,7 +994,7 @@ class Page extends ResourceComboAbs
     {
         $id = $this->getPath()->getDokuwikiId();
         try {
-            return MarkupRef::createFromPageIdOrPath($id)
+            return LinkMarkup::createFromPageIdOrPath($id)
                     ->toAttributes($logicalTag)
                     ->toHtmlEnterTag("a")
                 . $this->getNameOrDefault()

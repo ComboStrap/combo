@@ -8,7 +8,7 @@ use ComboStrap\DatabasePageRow;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\File;
 use ComboStrap\FileSystems;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\MetadataDokuWikiStore;
@@ -213,8 +213,8 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
          */
         if ($state == DOKU_LEXER_ENTER) {
             $ref = syntax_plugin_combo_link::parse($match)[syntax_plugin_combo_link::ATTRIBUTE_HREF];
-            $link = new MarkupRef($ref);
-            if ($link->getUriType() == MarkupRef::WIKI_URI) {
+            $link = new LinkMarkup($ref);
+            if ($link->getUriType() == LinkMarkup::WIKI_URI) {
 
                 $handler->internallink($match, $state, $pos);
                 $suffix = "]]";

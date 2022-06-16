@@ -65,7 +65,7 @@ class TagAttributes
         self::STRICT,
         FetchSvg::REQUESTED_PRESERVE_ATTRIBUTE,
         \syntax_plugin_combo_link::CLICKABLE_ATTRIBUTE,
-        MarkupRef::PREVIEW_ATTRIBUTE,
+        LinkMarkup::PREVIEW_ATTRIBUTE,
         \syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE,
         Skin::SKIN_ATTRIBUTE,
         ColorRgb::PRIMARY_VALUE,

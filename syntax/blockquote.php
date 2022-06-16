@@ -9,7 +9,7 @@ use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;

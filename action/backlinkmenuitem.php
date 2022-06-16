@@ -4,7 +4,7 @@ use ComboStrap\BacklinkMenuItem;
 use ComboStrap\Event;
 use ComboStrap\FileSystems;
 use ComboStrap\Identity;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Mime;
 use ComboStrap\Page;

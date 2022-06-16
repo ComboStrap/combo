@@ -2,7 +2,7 @@
 
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\Mime;
 use ComboStrap\Page;
 use ComboStrap\Search;
@@ -85,7 +85,7 @@ class action_plugin_combo_search extends DokuWiki_Action_Plugin
                 LogUtility::log2file("The page ($page) returned from the search query does not exist and was deleted from the database");
                 continue;
             }
-            $linkUtility = MarkupRef::createFromPageIdOrPath($page->getDokuwikiId());
+            $linkUtility = LinkMarkup::createFromPageIdOrPath($page->getDokuwikiId());
             try {
                 $html = $linkUtility->toAttributes()->toHtmlEnterTag("a") . $page->getTitleOrDefault() . "</a>";
             } catch (ExceptionCompile $e) {

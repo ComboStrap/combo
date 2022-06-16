@@ -132,7 +132,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         }
 
         try {
-            $attributes = MarkupRef::createFromPageIdOrPath($id)->toAttributes(self::CANONICAL);
+            $attributes = LinkMarkup::createFromPageIdOrPath($id)->toAttributes(self::CANONICAL);
         } catch (ExceptionCompile $e) {
             return LogUtility::wrapInRedForHtml("Error on breadcrumb markup ref. Message: {$e->getMessage()}");
         }

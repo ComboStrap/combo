@@ -6,7 +6,7 @@
 
 use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\PluginUtility;
 use ComboStrap\Shadow;
 use ComboStrap\Site;
@@ -270,7 +270,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                 /**
                  * CSS if dokuwiki class name for link
                  */
-                if ($this->getConf(MarkupRef::CONF_USE_DOKUWIKI_CLASS_NAME, false)) {
+                if ($this->getConf(LinkMarkup::CONF_USE_DOKUWIKI_CLASS_NAME, false)) {
                     PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
                 }
 

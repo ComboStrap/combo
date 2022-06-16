@@ -6,7 +6,7 @@
 
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -82,7 +82,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
                 $backlinkId = $backlink[self::RELATED_PAGE_ID_PROP];
                 $html .= '<li>';
                 if ($backlinkId != self::MORE_PAGE_ID) {
-                    $linkUtility = MarkupRef::createFromPageIdOrPath($backlinkId);
+                    $linkUtility = LinkMarkup::createFromPageIdOrPath($backlinkId);
                     try {
                         $html .= $linkUtility->toAttributes(self::TAG)->toHtmlEnterTag("a");
                         $html .= $linkUtility->getLabel();

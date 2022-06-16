@@ -86,7 +86,6 @@ class MediaMarkup
      * An attribute to set the class of the link if any
      */
     public const LINK_CLASS_ATTRIBUTE = "link-class";
-    public const INTERWIKI = 'interwiki';
 
 
     private Url $fetchUrl;
@@ -94,7 +93,7 @@ class MediaMarkup
     private string $externalOrTypeMedia;
     private ?string $align = null;
     private ?string $label = null;
-    private ?string $ref;
+    private ?MarkupRef $ref;
     private ?string $linking = null;
     private ?string $lazyLoadMethod = null;
     private TagAttributes $tagAttributes;
@@ -113,217 +112,14 @@ class MediaMarkup
     public function setRef(string $ref): MediaMarkup
     {
 
-        $this->ref = $ref;
-        $this->fetchUrl = Url::createEmpty();
+        $this->ref = MarkupRef::createMediaFromRef($ref);
 
-        $ref = trim($ref);
+        $this->fetchUrl = $this->ref->getUrl();
 
-        /**
-         * Easy case when the URL is just a conform URL
-         */
-        if (media_isexternal($ref)) {
-            try {
-                $this->fetchUrl = Url::createFromString($ref);
-                $this->externalOrTypeMedia = self::EXTERNAL_MEDIA_CALL_NAME;
-                return $this;
-            } catch (ExceptionBadSyntax $e) {
-                LogUtility::internalError("The url string is not valid URL ($ref)");
-            }
-        }
-
-
-        /**
-         * Path
-         */
-        $questionMarkPosition = strpos($ref, "?");
-        $httpHostOrPath = $ref;
-        $queryStringAndAnchorOriginal = null;
-        if ($questionMarkPosition !== false) {
-            $httpHostOrPath = substr($ref, 0, $questionMarkPosition);
-            $queryStringAndAnchorOriginal = substr($ref, $questionMarkPosition + 1);
-        } else {
-            // We may have only an anchor
-            $hashTagPosition = strpos($ref, "#");
-            if ($hashTagPosition !== false) {
-                $httpHostOrPath = substr($ref, 0, $hashTagPosition);
-                $this->fetchUrl->setFragment(substr($ref, $hashTagPosition + 1));
-            }
-        }
-
-        /**
-         * Scheme
-         */
-        if (link_isinterwiki($httpHostOrPath)) {
-            $this->externalOrTypeMedia = self::INTERWIKI;
-            $this->fetchUrl->setPath($httpHostOrPath);
-        } else {
-            /**
-             * We transform it as if it was a fetch URL
-             */
-            $this->externalOrTypeMedia = DokuFs::SCHEME;
-            $this->fetchUrl->addQueryParameter(DokuPath::MEDIA_DRIVE, $httpHostOrPath);
-        }
-
-
-        /**
-         * Parsing Query string if any
-         */
-        if ($queryStringAndAnchorOriginal !== null) {
-
-            /**
-             * The value $queryStringAndAnchorOriginal
-             * is kept to create the original queryString
-             * at the end if we found an anchor
-             *
-             * We parse token by token because we allow a hashtag for a hex color
-             */
-            $queryStringAndAnchorProcessing = $queryStringAndAnchorOriginal;
-            while (strlen($queryStringAndAnchorProcessing) > 0) {
-
-                /**
-                 * Capture the token
-                 * and reduce the text
-                 */
-                $questionMarkPos = strpos($queryStringAndAnchorProcessing, "&");
-                if ($questionMarkPos !== false) {
-                    $token = substr($queryStringAndAnchorProcessing, 0, $questionMarkPos);
-                    $queryStringAndAnchorProcessing = substr($queryStringAndAnchorProcessing, $questionMarkPos + 1);
-                } else {
-                    $token = $queryStringAndAnchorProcessing;
-                    $queryStringAndAnchorProcessing = "";
-                }
-
-
-                /**
-                 * Sizing (wxh)
-                 */
-                $sizing = [];
-                if (preg_match('/^([0-9]+)(?:x([0-9]+))?/', $token, $sizing)) {
-                    $this->fetchUrl->addQueryParameter(Dimension::WIDTH_KEY, $sizing[1]);
-                    if (isset($sizing[2])) {
-                        $this->fetchUrl->addQueryParameter(Dimension::HEIGHT_KEY, $sizing[2]);
-                    }
-                    $token = substr($token, strlen($sizing[0]));
-                    if ($token === "") {
-                        // no anchor behind we continue
-                        continue;
-                    }
-                }
-
-                /**
-                 * Linking
-                 */
-                $found = preg_match('/^(nolink|direct|linkonly|details)/i', $token, $matches);
-                if ($found) {
-                    $linkingValue = $matches[1];
-                    $this->fetchUrl->addQueryParameter(self::LINKING_KEY, $linkingValue);
-                    $token = substr($token, strlen($linkingValue));
-                    if ($token == "") {
-                        // no anchor behind we continue
-                        continue;
-                    }
-                }
-
-                /**
-                 * Cache
-                 */
-                $noCacheValue = FetchAbs::NOCACHE_VALUE;
-                $found = preg_match('/^(' . $noCacheValue . ')/i', $token, $matches);
-                if ($found) {
-                    $this->fetchUrl->addQueryParameter(FetchAbs::CACHE_KEY, $noCacheValue);
-                    $token = substr($token, strlen($noCacheValue));
-                    if ($token == "") {
-                        // no anchor behind we continue
-                        continue;
-                    }
-                }
-
-                /**
-                 * Anchor value after a single token case
-                 */
-                if (strpos($token, '#') === 0) {
-                    $this->fetchUrl->setFragment(substr($token, 1));
-                    continue;
-                }
-
-                /**
-                 * Key, value
-                 * explode to the first `=`
-                 * in the anchor value, we can have one
-                 *
-                 * Ex with media.pdf#page=31
-                 */
-                list($key, $value) = explode("=", $token, 2);
-
-                /**
-                 * Case of an anchor after a boolean attribute (ie without =)
-                 * at the end
-                 */
-                $anchorPosition = strpos($key, '#');
-                if ($anchorPosition !== false) {
-                    $this->fetchUrl->setFragment(substr($key, $anchorPosition + 1));
-                    $key = substr($key, 0, $anchorPosition);
-                }
-
-                /**
-                 * Test Anchor on the value
-                 */
-                if ($value != null) {
-                    if (($countHashTag = substr_count($value, "#")) >= 3) {
-                        LogUtility::msg("The value ($value) of the key ($key) for the link ($httpHostOrPath) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
-                        continue;
-                    }
-                } else {
-                    /**
-                     * Boolean attribute
-                     * (null does not make it)
-                     */
-                    $value = null;
-                }
-
-                $anchorPosition = false;
-                $lowerCaseKey = strtolower($key);
-                if ($lowerCaseKey === TextColor::CSS_ATTRIBUTE) {
-                    /**
-                     * Special case when color has one color value as hexadecimal #
-                     * and the hashtag
-                     */
-                    if (strpos($value, '#') == 0) {
-                        if (substr_count($value, "#") >= 2) {
-
-                            /**
-                             * The last one
-                             */
-                            $anchorPosition = strrpos($value, '#');
-                        }
-                        // no anchor then
-                    } else {
-                        // a color that is not hexadecimal can have an anchor
-                        $anchorPosition = strpos($value, "#");
-                    }
-                } else {
-                    // general case
-                    $anchorPosition = strpos($value, "#");
-                }
-                if ($anchorPosition !== false) {
-                    $this->fetchUrl->setFragment(substr($value, $anchorPosition + 1));
-                    $value = substr($value, 0, $anchorPosition);
-                }
-
-                switch ($lowerCaseKey) {
-                    case "w": // used in a link w=xxx
-                        $this->fetchUrl->addQueryParameter(Dimension::WIDTH_KEY, $value);
-                        break;
-                    case "h": // used in a link h=xxxx
-                        $this->fetchUrl->addQueryParameter(Dimension::HEIGHT_KEY, $value);
-                        break;
-                    default:
-                        $this->fetchUrl->addQueryParameter($key, $value);
-                        break;
-                }
-
-            }
-
+        try {
+            $this->fetchUrl->addQueryParameter(DokuPath::MEDIA_DRIVE, $this->ref->getPath()->getDokuwikiId());
+        } catch (ExceptionNotFound $e) {
+            // no path
         }
 
         /**
@@ -411,7 +207,7 @@ class MediaMarkup
     {
         $path = $this->getPath();
         if (!($path instanceof DokuPath)) {
-            return $this->ref;
+            return $this->ref->getRef();
         }
         $src = $path->getDokuWikiId();
         try {
@@ -791,7 +587,7 @@ class MediaMarkup
         if ($this->ref === null) {
             throw new ExceptionNotFound("No ref was specified");
         }
-        return $this->ref;
+        return $this->ref->getRef();
     }
 
 

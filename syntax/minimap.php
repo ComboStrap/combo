@@ -8,7 +8,7 @@
 
 use ComboStrap\ExceptionCompile;
 use ComboStrap\SnippetManager;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
@@ -186,7 +186,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                             $pageId = $pageArray['id'];
 
                         }
-                        $markupRef = new MarkupRef($pageId);
+                        $markupRef = new LinkMarkup($pageId);
 
 
 
@@ -291,7 +291,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                             $panelHeaderContent = 'No Home Page found';
                         }
                     } else {
-                        $startLink = new MarkupRef($startId);
+                        $startLink = new LinkMarkup($startId);
                         try {
                             $panelHeaderContent = $startLink->toAttributes()->toHtmlEnterTag("a");
                             $panelHeaderContent .= $startLink->getLabel();
@@ -333,7 +333,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
      * Return all pages and/of sub-namespaces (subdirectory) of a namespace (ie directory)
      * Adapted from feed.php
      *
-     * @param $namespace The container of the pages
+     * @param string $namespace The container of the pages
      * @param string $sort 'natural' to use natural order sorting (default); 'date' to sort by filemtime
      * @param $listdirs - Add the directory to the list of files
      * @return array An array of the pages for the namespace
@@ -367,7 +367,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
     /**
      * Return the id of the start page of a namespace
      *
-     * @param $id an id of a namespace (directory)
+     * @param string $id an id of a namespace (directory)
      * @return string the id of the home page
      */
     function getNamespaceStartId($id)

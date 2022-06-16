@@ -4,7 +4,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\Json;
 use ComboStrap\LogUtility;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\PluginUtility;
 use ComboStrap\Search;
 use ComboStrap\Sqlite;
@@ -119,7 +119,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
             }
             $class = "";
             if (!FileSystems::exists($page->getPath())) {
-                $errorClass = MarkupRef::getHtmlClassNotExist();
+                $errorClass = LinkMarkup::getHtmlClassNotExist();
                 $class = "class=\"$errorClass\"";
             }
             /**

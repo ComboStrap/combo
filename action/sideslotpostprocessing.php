@@ -8,7 +8,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Mime;
 use ComboStrap\Page;

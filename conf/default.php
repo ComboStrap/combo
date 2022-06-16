@@ -174,8 +174,8 @@ $conf['disableDynamicQualityMonitoring'] = 0;
 
 /**
  * Link
- * Class in link {@link \ComboStrap\MarkupRef::CONF_USE_DOKUWIKI_CLASS_NAME}
- * Preview on link {@link \ComboStrap\MarkupRef::CONF_PREVIEW_LINK}
+ * Class in link {@link \ComboStrap\LinkMarkup::CONF_USE_DOKUWIKI_CLASS_NAME}
+ * Preview on link {@link \ComboStrap\LinkMarkup::CONF_PREVIEW_LINK}
  * Enable {@link syntax_plugin_combo_link::CONF_DISABLE_LINK}
  */
 $conf['useDokuwikiLinkClassName'] = 0;

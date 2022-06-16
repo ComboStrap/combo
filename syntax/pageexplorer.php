@@ -13,7 +13,7 @@ use ComboStrap\Html;
 use ComboStrap\Icon;
 use ComboStrap\IdManager;
 use ComboStrap\LogUtility;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\Page;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
@@ -504,7 +504,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                         }
                                     } else {
                                         try {
-                                            $renderer->doc .= MarkupRef::createFromPageIdOrPath($currentHomePage->getDokuwikiId())
+                                            $renderer->doc .= LinkMarkup::createFromPageIdOrPath($currentHomePage->getDokuwikiId())
                                                 ->toAttributes()
                                                 ->toHtmlEnterTag("a");
                                             $renderer->doc .= "{$currentHomePage->getNameOrDefault()}</a>";
@@ -548,7 +548,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                         }
                                     } else {
                                         try {
-                                            $renderer->doc .= MarkupRef::createFromPageIdOrPath($parentPage->getDokuwikiId())
+                                            $renderer->doc .= LinkMarkup::createFromPageIdOrPath($parentPage->getDokuwikiId())
                                                 ->toAttributes()
                                                 ->toHtmlEnterTag("a");
                                             $renderer->doc .= Icon::createFromComboResource(self::LEVEL_UP_ICON)
@@ -616,7 +616,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                             }
                                         } else {
                                             try {
-                                                $renderer->doc .= MarkupRef::createFromPageIdOrPath($subNamespacePage->getDokuwikiId())
+                                                $renderer->doc .= LinkMarkup::createFromPageIdOrPath($subNamespacePage->getDokuwikiId())
                                                     ->toAttributes()
                                                     ->toHtmlEnterTag("a");
                                                 $renderer->doc .= Icon::createFromComboResource(self::FOLDER_ICON)
@@ -664,7 +664,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                             }
                                         } else {
                                             try {
-                                                $renderer->doc .= MarkupRef::createFromPageIdOrPath($childPagePath->getDokuwikiId())
+                                                $renderer->doc .= LinkMarkup::createFromPageIdOrPath($childPagePath->getDokuwikiId())
                                                     ->toAttributes()
                                                     ->toHtmlEnterTag("a");
                                                 $renderer->doc .= "{$childPage->getNameOrDefault()}</a>";
@@ -719,7 +719,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "<ul>" . DOKU_LF;
 
                             try {
-                                $wikiPath = $namespacePath->getFetchPath();
+                                $wikiPath = $namespacePath->getPath();
                                 $tree = TreeNode::createFromWikiPath($wikiPath);
                                 self::treeProcessTree($renderer->doc, $tree, $data);
                             } catch (ExceptionBadSyntax $e) {
@@ -940,7 +940,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             }
         } else {
             try {
-                $listItemContent = MarkupRef::createFromPageIdOrPath($page->getDokuwikiId())
+                $listItemContent = LinkMarkup::createFromPageIdOrPath($page->getDokuwikiId())
                     ->toAttributes()
                     ->toHtmlEnterTag("a");
                 $listItemContent .= "{$page->getNameOrDefault()}</a>";

@@ -10,7 +10,7 @@ use ComboStrap\CallStack;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\LogUtility;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\ThirdPartyPlugins;
@@ -53,7 +53,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      */
     public const ATTRIBUTE_HREF = 'href';
     /**
-     * Indicate if the href is a {@link MarkupRef}
+     * Indicate if the href is a {@link LinkMarkup}
      * (ie the syntax from the markup document)
      * or is a html href added by {@link syntax_plugin_combo_share}
      * for instance
@@ -357,7 +357,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     // There is no name
                     $href = $openingTag->getAttribute(self::ATTRIBUTE_HREF);
                     if ($href !== null) {
-                        $markup = MarkupRef::createFromRef($href);
+                        $markup = LinkMarkup::createFromRef($href);
                         $linkLabel = $markup->getLabel();
                     }
                 }
@@ -415,7 +415,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         if ($hrefSource !== null) {
                             try {
                                 $href = syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($href);
-                                $markupRef = MarkupRef::createFromRef($href);
+                                $markupRef = LinkMarkup::createFromRef($href);
                                 $url = $markupRef->getUrl();
                                 $markupRefAttributes = $markupRef->toAttributes();
                             } catch (ExceptionCompile $e) {
@@ -527,12 +527,12 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             return false;
                         }
                         $href = $tagAttributes->getValue(self::ATTRIBUTE_HREF);
-                        $type = MarkupRef::createFromRef($href)
+                        $type = LinkMarkup::createFromRef($href)
                             ->getUriType();
                         $name = $tagAttributes->getValue(self::ATTRIBUTE_LABEL);
 
                         switch ($type) {
-                            case MarkupRef::WIKI_URI:
+                            case LinkMarkup::WIKI_URI:
                                 /**
                                  * The relative link should be passed (ie the original)
                                  * Dokuwiki has a default description
@@ -542,23 +542,23 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $renderer->internallink($href, $descriptionToDelete);
                                 $renderer->doc = substr($renderer->doc, 0, -strlen($descriptionToDelete));
                                 break;
-                            case MarkupRef::WEB_URI:
+                            case LinkMarkup::WEB_URI:
                                 $renderer->externallink($href, $name);
                                 break;
-                            case MarkupRef::LOCAL_URI:
+                            case LinkMarkup::LOCAL_URI:
                                 $renderer->locallink($href, $name);
                                 break;
-                            case MarkupRef::EMAIL_URI:
+                            case LinkMarkup::EMAIL_URI:
                                 $renderer->emaillink($href, $name);
                                 break;
-                            case MarkupRef::INTERWIKI_URI:
+                            case LinkMarkup::INTERWIKI_URI:
                                 $interWikiSplit = preg_split("/>/", $href);
                                 $renderer->interwikilink($href, $name, $interWikiSplit[0], $interWikiSplit[1]);
                                 break;
-                            case MarkupRef::WINDOWS_SHARE_URI:
+                            case LinkMarkup::WINDOWS_SHARE_URI:
                                 $renderer->windowssharelink($href, $name);
                                 break;
-                            case MarkupRef::VARIABLE_URI:
+                            case LinkMarkup::VARIABLE_URI:
                                 // No backlinks for link template
                                 break;
                             default:
@@ -589,7 +589,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         return false;
                     }
                     $ref = $tagAttributes->getValue(self::ATTRIBUTE_HREF);
-                    $href = MarkupRef::createFromRef($ref);
+                    $href = LinkMarkup::createFromRef($ref);
                     $refType = $href->getUriType();
 
 
@@ -601,7 +601,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     $stats = &$renderer->stats;
                     switch ($refType) {
 
-                        case MarkupRef::WIKI_URI:
+                        case LinkMarkup::WIKI_URI:
 
                             /**
                              * Internal link count
@@ -637,7 +637,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $stats[AnalyticsDocument::INTERNAL_LINK_DISTANCE][] = $length;
                             break;
 
-                        case MarkupRef::WEB_URI:
+                        case LinkMarkup::WEB_URI:
 
                             if (!array_key_exists(AnalyticsDocument::EXTERNAL_LINK_COUNT, $stats)) {
                                 $stats[AnalyticsDocument::EXTERNAL_LINK_COUNT] = 0;
@@ -645,7 +645,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $stats[AnalyticsDocument::EXTERNAL_LINK_COUNT]++;
                             break;
 
-                        case MarkupRef::LOCAL_URI:
+                        case LinkMarkup::LOCAL_URI:
 
                             if (!array_key_exists(AnalyticsDocument::LOCAL_LINK_COUNT, $stats)) {
                                 $stats[AnalyticsDocument::LOCAL_LINK_COUNT] = 0;
@@ -653,7 +653,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $stats[AnalyticsDocument::LOCAL_LINK_COUNT]++;
                             break;
 
-                        case MarkupRef::INTERWIKI_URI:
+                        case LinkMarkup::INTERWIKI_URI:
 
                             if (!array_key_exists(AnalyticsDocument::INTERWIKI_LINK_COUNT, $stats)) {
                                 $stats[AnalyticsDocument::INTERWIKI_LINK_COUNT] = 0;
@@ -661,7 +661,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $stats[AnalyticsDocument::INTERWIKI_LINK_COUNT]++;
                             break;
 
-                        case MarkupRef::EMAIL_URI:
+                        case LinkMarkup::EMAIL_URI:
 
                             if (!array_key_exists(AnalyticsDocument::EMAIL_COUNT, $stats)) {
                                 $stats[AnalyticsDocument::EMAIL_COUNT] = 0;
@@ -669,7 +669,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $stats[AnalyticsDocument::EMAIL_COUNT]++;
                             break;
 
-                        case MarkupRef::WINDOWS_SHARE_URI:
+                        case LinkMarkup::WINDOWS_SHARE_URI:
 
                             if (!array_key_exists(AnalyticsDocument::WINDOWS_SHARE_COUNT, $stats)) {
                                 $stats[AnalyticsDocument::WINDOWS_SHARE_COUNT] = 0;
@@ -677,7 +677,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $stats[AnalyticsDocument::WINDOWS_SHARE_COUNT]++;
                             break;
 
-                        case MarkupRef::VARIABLE_URI:
+                        case LinkMarkup::VARIABLE_URI:
 
                             if (!array_key_exists(AnalyticsDocument::TEMPLATE_LINK_COUNT, $stats)) {
                                 $stats[AnalyticsDocument::TEMPLATE_LINK_COUNT] = 0;

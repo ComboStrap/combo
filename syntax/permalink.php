@@ -2,20 +2,16 @@
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
-use ComboStrap\ArrayUtility;
-use ComboStrap\CacheManager;
 use ComboStrap\CacheDependencies;
+use ComboStrap\CacheManager;
+use ComboStrap\CacheRuntimeDependencies2;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
 use ComboStrap\Display;
 use ComboStrap\DokuPath;
-use ComboStrap\MediaMarkup;
-use ComboStrap\ExceptionCompile;
-use ComboStrap\MarkupRef;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
-use ComboStrap\CacheRuntimeDependencies2;
 use ComboStrap\PageUrlPath;
 use ComboStrap\PageUrlType;
 use ComboStrap\PluginUtility;
@@ -151,7 +147,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                             $url .= "#$fragment";
                         }
                         $attributes->addComponentAttributeValue(syntax_plugin_combo_link::ATTRIBUTE_HREF, $url);
-                        $attributes->addOutputAttributeValue("rel","nofollow");
+                        $attributes->addOutputAttributeValue("rel", "nofollow");
                         syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $attributes);
                         if ($state === DOKU_LEXER_SPECIAL) {
                             $this->addLinkContentInCallStack($callStack, $url);
@@ -175,7 +171,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                             $canonicalUrl .= "#$fragment";
                         }
                         $attributes->addComponentAttributeValue(syntax_plugin_combo_link::ATTRIBUTE_HREF, $canonicalUrl);
-                        $attributes->addOutputAttributeValue("rel","nofollow");
+                        $attributes->addOutputAttributeValue("rel", "nofollow");
                         syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $attributes);
                         if ($state === DOKU_LEXER_SPECIAL) {
                             $this->addLinkContentInCallStack($callStack, $canonicalUrl);

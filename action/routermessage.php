@@ -5,7 +5,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\Index;
 use ComboStrap\LogUtility;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\Message;
 use ComboStrap\Page;
 use dokuwiki\Extension\ActionPlugin;
@@ -220,7 +220,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
                     }
 
                     try {
-                        $markupRef = MarkupRef::createFromPageIdOrPath($page->getDokuwikiId());
+                        $markupRef = LinkMarkup::createFromPageIdOrPath($page->getDokuwikiId());
                         $tagAttributes = $markupRef
                             ->toAttributes()
                             ->addOutputAttributeValue("rel", "nofollow");
@@ -280,7 +280,6 @@ class action_plugin_combo_routermessage extends ActionPlugin
         // Close the session
         $phpVersion = phpversion();
         if ($phpVersion > "7.2.0") {
-            /** @noinspection PhpVoidFunctionResultUsedInspection */
             $result = session_write_close();
             if (!$result) {
                 // Session is really not a well known mechanism

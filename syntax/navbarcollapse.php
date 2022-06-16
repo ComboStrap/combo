@@ -12,7 +12,7 @@
 
 use ComboStrap\Bootstrap;
 use ComboStrap\XhtmlUtility;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\NavBarUtility;
 use ComboStrap\PluginUtility;
 

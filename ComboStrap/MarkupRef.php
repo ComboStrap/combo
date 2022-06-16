@@ -30,7 +30,7 @@ require_once(__DIR__ . '/PluginUtility.php');
  * and return an XHTML compliant array
  * with href, style, ... attributes
  *
- * TODO: Merge with {@link MediaMarkup}
+ *
  */
 class MarkupRef
 {
@@ -665,12 +665,12 @@ EOF;
                  * We will not overwrite the parameters if this is an dokuwiki
                  * action link (with the `do` property)
                  */
-                if ($this->dokuwikiUrl->hasQueryParameter("do")) {
+                if ($this->dokuwikiUrl->getFetchUrl()->hasProperty("do")) {
 
                     $absoluteUrl = Site::shouldUrlBeAbsolute();
                     $url = wl(
                         $page->getDokuwikiId(),
-                        $this->dokuwikiUrl->getQueryParameters(),
+                        $this->dokuwikiUrl->getFetchUrl()->getQuery(),
                         $absoluteUrl
                     );
 
@@ -690,8 +690,8 @@ EOF;
                      * We can't use the previous {@link wl function}
                      * because it encode too much
                      */
-                    $searchTerms = $this->dokuwikiUrl->getQueryParameter(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY);
-                    if ($searchTerms !== null) {
+                    try {
+                        $searchTerms = $this->dokuwikiUrl->getFetchUrl()->getQueryPropertyValue(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY);
                         $url .= Url::AMPERSAND_CHARACTER;
                         PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("search-hit");
                         if (is_array($searchTerms)) {
@@ -707,23 +707,32 @@ EOF;
                         } else {
                             $url .= "s=$searchTerms";
                         }
+                    } catch (ExceptionNotFound $e) {
+                        // ok
                     }
 
 
                 }
-                if ($this->dokuwikiUrl->getFragment() != null) {
+                try {
+                    $fragment = $this->dokuwikiUrl->getFetchUrl()->getFragment();
                     /**
                      * pageutils (transform a fragment in section id)
                      */
                     $check = false;
-                    $url .= '#' . sectionID($this->dokuwikiUrl->getFragment(), $check);
+                    $url .= '#' . sectionID($fragment, $check);
+                } catch (ExceptionNotFound $e) {
+                    // ok no fragment
                 }
+
                 break;
             case self::INTERWIKI_URI:
                 $wiki = $this->wiki;
                 $extendedPath = $this->dokuwikiUrl->getPath();
-                if ($this->dokuwikiUrl->getFragment() !== null) {
-                    $extendedPath .= "#{$this->dokuwikiUrl->getFragment()}";
+                try {
+                    $fragment = $this->dokuwikiUrl->getFetchUrl()->getFragment();
+                    $extendedPath .= "#$fragment";
+                } catch (ExceptionNotFound $e) {
+                    // ok no fragment
                 }
                 $url = $this->interWikiRefToUrl($wiki, $extendedPath);
                 break;
@@ -917,7 +926,6 @@ EOF;
     }
 
 
-
     private
     function getEmailObfuscationConfiguration()
     {
@@ -999,8 +1007,6 @@ EOF;
 
         return $url;
     }
-
-
 
 
 }

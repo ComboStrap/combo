@@ -11,6 +11,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
+use ComboStrap\MarkupRef;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\ThirdPartyPlugins;
@@ -532,7 +533,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         $name = $tagAttributes->getValue(self::ATTRIBUTE_LABEL);
 
                         switch ($type) {
-                            case LinkMarkup::WIKI_URI:
+                            case MarkupRef::WIKI_URI:
                                 /**
                                  * The relative link should be passed (ie the original)
                                  * Dokuwiki has a default description
@@ -542,23 +543,23 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $renderer->internallink($href, $descriptionToDelete);
                                 $renderer->doc = substr($renderer->doc, 0, -strlen($descriptionToDelete));
                                 break;
-                            case LinkMarkup::WEB_URI:
+                            case MarkupRef::WEB_URI:
                                 $renderer->externallink($href, $name);
                                 break;
-                            case LinkMarkup::LOCAL_URI:
+                            case MarkupRef::LOCAL_URI:
                                 $renderer->locallink($href, $name);
                                 break;
-                            case LinkMarkup::EMAIL_URI:
+                            case MarkupRef::EMAIL_URI:
                                 $renderer->emaillink($href, $name);
                                 break;
-                            case LinkMarkup::INTERWIKI_URI:
+                            case MarkupRef::INTERWIKI_URI:
                                 $interWikiSplit = preg_split("/>/", $href);
                                 $renderer->interwikilink($href, $name, $interWikiSplit[0], $interWikiSplit[1]);
                                 break;
-                            case LinkMarkup::WINDOWS_SHARE_URI:
+                            case MarkupRef::WINDOWS_SHARE_URI:
                                 $renderer->windowssharelink($href, $name);
                                 break;
-                            case LinkMarkup::VARIABLE_URI:
+                            case MarkupRef::VARIABLE_URI:
                                 // No backlinks for link template
                                 break;
                             default:
@@ -601,7 +602,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     $stats = &$renderer->stats;
                     switch ($refType) {
 
-                        case LinkMarkup::WIKI_URI:
+                        case MarkupRef::WIKI_URI:
 
                             /**
                              * Internal link count
@@ -637,7 +638,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $stats[AnalyticsDocument::INTERNAL_LINK_DISTANCE][] = $length;
                             break;
 
-                        case LinkMarkup::WEB_URI:
+                        case MarkupRef::WEB_URI:
 
                             if (!array_key_exists(AnalyticsDocument::EXTERNAL_LINK_COUNT, $stats)) {
                                 $stats[AnalyticsDocument::EXTERNAL_LINK_COUNT] = 0;
@@ -645,7 +646,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $stats[AnalyticsDocument::EXTERNAL_LINK_COUNT]++;
                             break;
 
-                        case LinkMarkup::LOCAL_URI:
+                        case MarkupRef::LOCAL_URI:
 
                             if (!array_key_exists(AnalyticsDocument::LOCAL_LINK_COUNT, $stats)) {
                                 $stats[AnalyticsDocument::LOCAL_LINK_COUNT] = 0;
@@ -653,7 +654,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $stats[AnalyticsDocument::LOCAL_LINK_COUNT]++;
                             break;
 
-                        case LinkMarkup::INTERWIKI_URI:
+                        case MarkupRef::INTERWIKI_URI:
 
                             if (!array_key_exists(AnalyticsDocument::INTERWIKI_LINK_COUNT, $stats)) {
                                 $stats[AnalyticsDocument::INTERWIKI_LINK_COUNT] = 0;
@@ -661,7 +662,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $stats[AnalyticsDocument::INTERWIKI_LINK_COUNT]++;
                             break;
 
-                        case LinkMarkup::EMAIL_URI:
+                        case MarkupRef::EMAIL_URI:
 
                             if (!array_key_exists(AnalyticsDocument::EMAIL_COUNT, $stats)) {
                                 $stats[AnalyticsDocument::EMAIL_COUNT] = 0;
@@ -669,7 +670,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $stats[AnalyticsDocument::EMAIL_COUNT]++;
                             break;
 
-                        case LinkMarkup::WINDOWS_SHARE_URI:
+                        case MarkupRef::WINDOWS_SHARE_URI:
 
                             if (!array_key_exists(AnalyticsDocument::WINDOWS_SHARE_COUNT, $stats)) {
                                 $stats[AnalyticsDocument::WINDOWS_SHARE_COUNT] = 0;
@@ -677,7 +678,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $stats[AnalyticsDocument::WINDOWS_SHARE_COUNT]++;
                             break;
 
-                        case LinkMarkup::VARIABLE_URI:
+                        case MarkupRef::VARIABLE_URI:
 
                             if (!array_key_exists(AnalyticsDocument::TEMPLATE_LINK_COUNT, $stats)) {
                                 $stats[AnalyticsDocument::TEMPLATE_LINK_COUNT] = 0;

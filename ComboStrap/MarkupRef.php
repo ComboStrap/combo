@@ -2,8 +2,20 @@
 
 namespace ComboStrap;
 
+use syntax_plugin_combo_variable;
+
 class MarkupRef
 {
+    public const WINDOWS_SHARE_URI = 'windowsShare';
+    public const LOCAL_URI = 'local';
+    public const EMAIL_URI = 'email';
+    public const WEB_URI = 'external';
+    /**
+     * Type of link
+     */
+    public const INTERWIKI_URI = 'interwiki';
+    public const WIKI_URI = 'internal';
+    public const VARIABLE_URI = 'internal_template';
 
     /**
      * The type of markup ref (ie media or link)
@@ -14,7 +26,7 @@ class MarkupRef
 
     private string $refScheme;
     public const EXTERNAL_MEDIA_CALL_NAME = "external";
-    public const INTERWIKI = 'interwiki';
+
 
     private string $ref;
     private Url $url;
@@ -36,22 +48,91 @@ class MarkupRef
         $ref = trim($ref);
 
         /**
-         * Easy case when the URL is just a conform URL
+         * Email validation pattern
+         * E-Mail (pattern below is defined in inc/mail.php)
+         *
+         * Example:
+         * [[support@combostrap.com?subject=hallo world]]
+         * [[support@combostrap.com]]
          */
-        if (media_isexternal($ref)) {
+        $emailRfc2822 = "0-9a-zA-Z!#$%&'*+/=?^_`{|}~-";
+        $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
+        if (preg_match('<' . $emailPattern . '>', $ref)) {
+            $this->refScheme = self::EMAIL_URI;
+            $this->url = Url::createFromString("mailto:$ref");
+            return;
+        }
+
+        /**
+         * Case when the URL is just a full conform URL
+         *
+         * Example: `https://` or `ftp://`
+         *
+         * Other scheme are not yet recognized
+         * because it can also be a wiki id
+         * For instance, `mailto:` is also a valid page
+         *
+         * same as {@link media_isexternal()}  check only http / ftp scheme
+         */
+        if (preg_match('#^([a-z0-9\-.+]+?)://#i', $ref)) {
             try {
                 $this->url = Url::createFromString($ref);
-                $this->refScheme = self::EXTERNAL_MEDIA_CALL_NAME;
+                $this->refScheme = self::WEB_URI;
                 return;
             } catch (ExceptionBadSyntax $e) {
                 throw new ExceptionBadSyntax("The url string is not valid URL ($ref)");
             }
         }
 
+        /**
+         * Windows share link
+         */
+        if (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $ref)) {
+            $this->refScheme = self::WINDOWS_SHARE_URI;
+            $this->url = LocalPath::createFromPath($ref)->getUrl();
+            return;
+        }
 
         /**
-         * Path
+         * Only Fragment (also known as local link)
          */
+        if (preg_match('!^#.+!', $ref)) {
+            $this->refScheme = self::LOCAL_URI;
+            $this->url = Url::createEmpty()->setFragment($ref);
+            return;
+        }
+
+        /**
+         * Interwiki ?
+         */
+        if (preg_match('/^[a-zA-Z0-9\.]+>/u', $ref)) {
+
+            $this->refScheme = MarkupRef::INTERWIKI_URI;
+
+            $interWikiPosition = strpos($ref, ">");
+
+            $this->wiki = strtolower(substr($ref, 0, $interWikiPosition));
+            $refProcessing = substr($refProcessing, $interWikiPosition + 1);
+            $this->ref = $ref;
+            return;
+
+        }
+
+
+        /**
+         * It can be a link with a ref template
+         */
+        if (syntax_plugin_combo_variable::isVariable($ref)) {
+            $this->refScheme = MarkupRef::VARIABLE_URI;
+            return;
+        }
+
+        /**
+         * Doku Path
+         * We parse it
+         */
+        $this->refScheme = MarkupRef::WIKI_URI;
+        $this->url = Url::createEmpty();
         $questionMarkPosition = strpos($ref, "?");
         $httpHostOrPath = $ref;
         $queryStringAndAnchorOriginal = null;
@@ -70,26 +151,20 @@ class MarkupRef
         /**
          * Scheme
          */
-        if (link_isinterwiki($httpHostOrPath)) {
-            $this->refScheme = self::INTERWIKI;
-            $this->url->setPath($httpHostOrPath);
-        } else {
-            /**
-             * We transform it as if it was a fetch URL
-             */
-            $this->refScheme = DokuFs::SCHEME;
-            switch($type){
-                case self::MEDIA_TYPE:
-                    $this->path = DokuPath::createMediaPathFromId($httpHostOrPath);
-                    break;
-                case self::LINK_TYPE:
-                    $this->path = DokuPath::createPagePathFromId($httpHostOrPath);
-                    break;
-                default:
-                    throw new ExceptionBadArgument("The ref type ($type) is unknown");
-            }
 
-
+        /**
+         * We transform it as if it was a fetch URL
+         */
+        $this->refScheme = DokuFs::SCHEME;
+        switch ($type) {
+            case self::MEDIA_TYPE:
+                $this->path = DokuPath::createMediaPathFromId($httpHostOrPath);
+                break;
+            case self::LINK_TYPE:
+                $this->path = DokuPath::createPagePathFromId($httpHostOrPath);
+                break;
+            default:
+                throw new ExceptionBadArgument("The ref type ($type) is unknown");
         }
 
 
@@ -256,17 +331,20 @@ class MarkupRef
 
     }
 
-    public static function createMediaFromRef($refProcessing): MarkupRef
+    public
+    static function createMediaFromRef($refProcessing): MarkupRef
     {
         return new MarkupRef($refProcessing, self::MEDIA_TYPE);
     }
 
-    public static function createLinkFromRef($refProcessing): MarkupRef
+    public
+    static function createLinkFromRef($refProcessing): MarkupRef
     {
         return new MarkupRef($refProcessing, self::LINK_TYPE);
     }
 
-    public function getUrl(): Url
+    public
+    function getUrl(): Url
     {
         return $this->url;
     }
@@ -274,15 +352,17 @@ class MarkupRef
     /**
      * @throws ExceptionNotFound
      */
-    public function getPath(): DokuPath
+    public
+    function getPath(): DokuPath
     {
-        if($this->path===null){
+        if ($this->path === null) {
             throw new ExceptionNotFound("No path was found");
         }
         return $this->path;
     }
 
-    public function getRef(): string
+    public
+    function getRef(): string
     {
         return $this->ref;
     }

@@ -13,7 +13,7 @@ namespace ComboStrap;
  *
  * The {@link Path::toPathString()} function is just the path part (no other URI query parameters)
  *
- *
+ * A lot of overlap with {@link Url}
  */
 interface Path
 {
@@ -65,5 +65,11 @@ interface Path
      * To create a {@link ThirdMediaLink}, we use therefore this url
      */
     function getUrl(): Url;
+
+    /**
+     * Needed for the file protocol URI {@link LocalPath}
+     * @return string
+     */
+    function getHost(): string;
 
 }

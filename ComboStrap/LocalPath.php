@@ -7,6 +7,10 @@ namespace ComboStrap;
  * Class LocalPath
  * @package ComboStrap
  * A local file system path
+ *
+ * File protocol Uri:
+ *
+ * file://[HOST]/[PATH]
  */
 class LocalPath extends PathAbs
 {
@@ -30,15 +34,25 @@ class LocalPath extends PathAbs
      */
     private $sep = DIRECTORY_SEPARATOR;
 
+    private ?string $host;
+
     /**
      * LocalPath constructor.
-     * @param $path - relative or absolute
-     * @param null $sep - the directory separator - it permits to test to test linux path on windows, and vice-versa
+     * @param string $path - relative or absolute
+     * @param string|null $sep - the directory separator - it permits to test to test linux path on windows, and vice-versa
      */
-    public function __construct($path, $sep = null)
+    public function __construct(string $path, string $sep = null)
     {
         if ($sep != null) {
             $this->sep = $sep;
+        }
+        $networkShare = "//";
+        if (substr($path, 0, 2) === $networkShare) {
+            // window share
+            $pathWithoutNetworkShare = substr($path, 2);
+            [$this->host, $relativePath] = explode("/", $pathWithoutNetworkShare, 2);
+            $this->path = "/$relativePath";
+            return;
         }
         $this->path = self::normalizeToOsSeparator($path);
     }
@@ -300,7 +314,15 @@ class LocalPath extends PathAbs
     function getUrl(): Url
     {
 
-        $uri = self::SCHEME . ':///' . str_replace(self::WINDOWS_SEPARATOR, self::LINUX_SEPARATOR, $this->path);
+        $uri = self::SCHEME . ':/';
+        try {
+            // Windows share host
+            $uri = "$uri/{$this->getHost()}";
+        } catch (ExceptionNotFound $e) {
+            // ok
+            $uri = "$uri/";
+        }
+        $uri = $uri . str_replace(self::WINDOWS_SEPARATOR, self::LINUX_SEPARATOR, $this->path);
         try {
             return Url::createFromString($uri);
         } catch (ExceptionBadSyntax $e) {
@@ -310,5 +332,16 @@ class LocalPath extends PathAbs
             throw new ExceptionRuntime($message);
         }
 
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    function getHost(): string
+    {
+        if ($this->host === null) {
+            throw new ExceptionNotFound("No host. Localhost should be the default");
+        }
+        return $this->host;
     }
 }

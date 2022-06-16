@@ -885,4 +885,9 @@ class DokuPath extends PathAbs
     {
         return $this->toLocalPath()->getUrl();
     }
+
+    function getHost(): string
+    {
+        return "localhost";
+    }
 }

@@ -52,17 +52,24 @@ class Url extends PathAbs
     private ?string $scheme = null;
     private ?string $host = null;
     private ?string $fragment = null;
+    /**
+     * @var string - original url string
+     */
+    private $url;
+    private ?int $port = null;
 
 
     /**
      * UrlUtility constructor.
      * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
      */
     public function __construct($url = null)
     {
 
+        $this->url = $url;
         $this->query = new ArrayCaseInsensitive();
-        if ($url !== null) {
+        if ($this->url !== null) {
             /**
              *
              * @var false
@@ -84,6 +91,14 @@ class Url extends PathAbs
             $this->query = new ArrayCaseInsensitive($queryKeys);
             $this->scheme = $urlComponents["scheme"];
             $this->host = $urlComponents["host"];
+            $port = $urlComponents["port"];
+            try {
+                if ($port !== null) {
+                    $this->port = DataType::toInteger($port);
+                }
+            } catch (ExceptionBadArgument $e) {
+                throw new ExceptionBadArgument("The port ($port) in ($url) is not an integer. Error: {$e->getMessage()}");
+            }
             $pathUrlComponent = $urlComponents["path"];
             if ($pathUrlComponent !== null) {
                 $this->setPath($pathUrlComponent);
@@ -170,13 +185,19 @@ class Url extends PathAbs
         return $this->scheme;
     }
 
+    /**
+     * @param string $path
+     * @return $this
+     * in a https scheme: Not the path has a leading `/` that makes the path absolute
+     * in a email scheme: the path is the email (without /) then
+     */
     public function setPath(string $path): Url
     {
+        /**
+         * Normalization hack
+         */
         if (strpos($path, "/./") === 0) {
-            $path = substr($path, 3);
-        }
-        if ($path[0] === "/") {
-            $path = substr($path, 1);
+            $path = substr($path, 2);
         }
         $this->path = $path;
         return $this;
@@ -563,22 +584,30 @@ class Url extends PathAbs
     public function toString($ampersand = Url::AMPERSAND_CHARACTER): string
     {
         try {
-            $base = "{$this->getScheme()}";
+            $scheme = $this->getScheme();
+            $base = "{$scheme}:";
+            if (in_array($scheme, ["http", "https", "ftp"])) {
+                // mailto, skype, whatsapp does not have the //
+                $base = "$base//";
+            }
         } catch (ExceptionNotFound $e) {
             $base = "";
         }
 
         try {
-            $base = "$base://{$this->getHost()}";
+            $base = "$base{$this->getHost()}";
         } catch (ExceptionNotFound $e) {
             // ok
-            if ($base !== "") {
-                $base = "$base://";
-            }
         }
 
         try {
-            $base = "$base/{$this->getPath()}";
+            $base = "$base:{$this->getPort()}";
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+
+        try {
+            $base = "$base{$this->getPath()}";
         } catch (ExceptionNotFound $e) {
             // ok
         }
@@ -629,5 +658,16 @@ class Url extends PathAbs
     public function toHtmlString()
     {
         return $this->toString(Url::AMPERSAND_URL_ENCODED_FOR_HTML);
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getPort(): int
+    {
+        if ($this->port === null) {
+            throw new ExceptionNotFound("No port specified");
+        }
+        return $this->port;
     }
 }

@@ -37,19 +37,6 @@ class LinkMarkup
 
 
     /**
-     * Type of link
-     */
-    const INTERWIKI_URI = 'interwiki';
-    const WINDOWS_SHARE_URI = 'windowsShare';
-    const WEB_URI = 'external';
-
-    const EMAIL_URI = 'email';
-    const LOCAL_URI = 'local';
-    const WIKI_URI = 'internal';
-    const VARIABLE_URI = 'internal_template';
-
-
-    /**
      * Class added to the type of link
      * Class have styling rule conflict, they are by default not set
      * but this configuration permits to turn it back
@@ -67,6 +54,7 @@ class LinkMarkup
 
     /**
      * The known parameters for an email url
+     * The other are styling attribute :)
      */
     const EMAIL_VALID_PARAMETERS = ["subject"];
 
@@ -146,101 +134,9 @@ class LinkMarkup
 
 
         /**
-         * Windows share link
-         */
-        if ($this->uriType == null) {
-            if (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $ref)) {
-                $this->uriType = self::WINDOWS_SHARE_URI;
-                $this->ref = $ref;
-                return;
-            }
-        }
-
-        /**
-         * URI like links section with query and fragment
-         */
-
-        /**
-         * Local
-         */
-        if ($this->uriType == null) {
-            if (preg_match('!^#.+!', $ref)) {
-                $this->uriType = self::LOCAL_URI;
-                $this->ref = $ref;
-            }
-        }
-
-        /**
-         * Email validation pattern
-         * E-Mail (pattern below is defined in inc/mail.php)
-         *
-         * Example:
-         * [[support@combostrap.com?subject=hallo]]
-         * [[support@combostrap.com]]
-         */
-        if ($this->uriType == null) {
-            $emailRfc2822 = "0-9a-zA-Z!#$%&'*+/=?^_`{|}~-";
-            $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
-            if (preg_match('<' . $emailPattern . '>', $ref)) {
-                $this->uriType = self::EMAIL_URI;
-                $this->ref = $ref;
-                // we don't return. The query part is parsed afterwards
-            }
-        }
-
-
-        /**
-         * External (ie only https)
-         */
-        if ($this->uriType == null) {
-            /**
-             * Example: `https://`
-             *
-             * Other scheme are not yet recognized
-             * because it can also be a wiki id
-             * For instance, `mailto:` is also a valid page
-             */
-            if (preg_match('#^([a-z0-9\-.+]+?)://#i', $ref)) {
-                $this->uriType = self::WEB_URI;
-                $this->schemeUri = strtolower(substr($ref, 0, strpos($ref, ":")));
-                $this->ref = $ref;
-            }
-        }
-
-        /**
-         * Interwiki ?
-         */
-        $refProcessing = $ref;
-        if ($this->uriType == null) {
-            $interwikiPosition = strpos($refProcessing, ">");
-            if ($interwikiPosition !== false) {
-                $this->wiki = strtolower(substr($refProcessing, 0, $interwikiPosition));
-                $refProcessing = substr($refProcessing, $interwikiPosition + 1);
-                $this->ref = $ref;
-                $this->uriType = self::INTERWIKI_URI;
-            }
-        }
-
-        /**
-         * Internal then
-         */
-        if ($this->uriType == null) {
-            /**
-             * It can be a link with a ref template
-             */
-            if (syntax_plugin_combo_variable::isVariable($ref)) {
-                $this->uriType = self::VARIABLE_URI;
-            } else {
-                $this->uriType = self::WIKI_URI;
-            }
-            $this->ref = $ref;
-        }
-
-
-        /**
          * Url (called ref by dokuwiki)
          */
-        $this->markupRef = MarkupRef::createLinkFromRef($refProcessing);
+        $this->markupRef = MarkupRef::createLinkFromRef($ref);
 
 
     }
@@ -289,7 +185,7 @@ class LinkMarkup
          */
 
         switch ($type) {
-            case self::WIKI_URI:
+            case MarkupRef::WIKI_URI:
                 if (!$this->markupRef->getUrl()->hasProperty("do")) {
                     foreach ($this->getMarkupRef()->getUrl()->getQuery() as $key => $value) {
                         if ($key !== self::SEARCH_HIGHLIGHT_QUERY_PROPERTY) {
@@ -299,7 +195,7 @@ class LinkMarkup
                 }
                 break;
             case
-            self::EMAIL_URI:
+            MarkupRef::EMAIL_URI:
                 foreach ($this->getMarkupRef()->getUrl()->getQuery() as $key => $value) {
                     if (!in_array($key, self::EMAIL_VALID_PARAMETERS)) {
                         $outputAttributes->addComponentAttributeValue($key, $value);
@@ -324,11 +220,11 @@ class LinkMarkup
          * Processing by type
          */
         switch ($this->getUriType()) {
-            case self::INTERWIKI_URI:
+            case MarkupRef::INTERWIKI_URI:
 
                 // normal link for the `this` wiki
                 if ($this->getWiki() !== "this") {
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::INTERWIKI_URI);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(MarkupRef::INTERWIKI_URI);
                 }
                 /**
                  * Target
@@ -347,7 +243,7 @@ class LinkMarkup
                 }
 
                 break;
-            case self::WIKI_URI:
+            case MarkupRef::WIKI_URI:
                 /**
                  * Derived from {@link Doku_Renderer_xhtml::internallink()}
                  */
@@ -490,7 +386,7 @@ EOF;
 
                 break;
 
-            case self::WINDOWS_SHARE_URI:
+            case MarkupRef::WINDOWS_SHARE_URI:
                 // https://www.dokuwiki.org/config:target
                 $windowsTarget = $conf['target']['windows'];
                 if (!empty($windowsTarget)) {
@@ -498,12 +394,12 @@ EOF;
                 }
                 $outputAttributes->addClassName("windows");
                 break;
-            case self::LOCAL_URI:
+            case MarkupRef::LOCAL_URI:
                 break;
-            case self::EMAIL_URI:
+            case MarkupRef::EMAIL_URI:
                 $outputAttributes->addClassName(self::getHtmlClassEmailLink());
                 break;
-            case self::WEB_URI:
+            case MarkupRef::WEB_URI:
                 if ($conf['relnofollow']) {
                     $outputAttributes->addOutputAttributeValue("rel", 'nofollow ugc');
                 }
@@ -540,7 +436,7 @@ EOF;
          * to mitigate XSS
          *
          */
-        if ($this->getUriType() == self::EMAIL_URI) {
+        if ($this->getUriType() == MarkupRef::EMAIL_URI) {
             $emailAddress = $this->obfuscateEmail($this->markupRef->getPath());
             $outputAttributes->addOutputAttributeValue("title", $emailAddress);
         }
@@ -573,7 +469,7 @@ EOF;
     function getInternalPage(): Page
     {
         if ($this->linkedPage == null) {
-            if ($this->getUriType() == self::WIKI_URI) {
+            if ($this->getUriType() == MarkupRef::WIKI_URI) {
                 // if there is no path, this is the actual page
                 $path = $this->markupRef->getPath();
                 $this->linkedPage = Page::createPageFromPathObject($path);
@@ -600,14 +496,14 @@ EOF;
     {
 
         switch ($this->getUriType()) {
-            case self::WIKI_URI:
+            case MarkupRef::WIKI_URI:
                 if ($navigation) {
                     return $this->getInternalPage()->getNameOrDefault();
                 } else {
                     return $this->getInternalPage()->getTitleOrDefault();
                 }
 
-            case self::EMAIL_URI:
+            case MarkupRef::EMAIL_URI:
 
                 global $conf;
                 $email = $this->markupRef->getPath();
@@ -619,9 +515,9 @@ EOF;
                         $obfuscate = array('@' => ' [at] ', '.' => ' [dot] ', '-' => ' [dash] ');
                         return strtr($email, $obfuscate);
                 }
-            case self::INTERWIKI_URI:
+            case MarkupRef::INTERWIKI_URI:
                 return $this->markupRef->getPath();
-            case self::LOCAL_URI:
+            case MarkupRef::LOCAL_URI:
                 return $this->markupRef->getFragment();
             default:
                 return $this->getRef();
@@ -650,7 +546,7 @@ EOF;
     {
 
         switch ($this->getUriType()) {
-            case self::WIKI_URI:
+            case MarkupRef::WIKI_URI:
                 $page = $this->getInternalPage();
 
                 /**
@@ -723,7 +619,7 @@ EOF;
                 }
 
                 break;
-            case self::INTERWIKI_URI:
+            case MarkupRef::INTERWIKI_URI:
                 $wiki = $this->wiki;
                 $extendedPath = $this->markupRef->getPath();
                 try {
@@ -732,13 +628,13 @@ EOF;
                 } catch (ExceptionNotFound $e) {
                     // ok no fragment
                 }
-                $url = $this->interWikiRefToUrl($wiki, $extendedPath);
+                $url = InterWiki::createFrom($wiki, $extendedPath);
                 break;
-            case self::WINDOWS_SHARE_URI:
+            case MarkupRef::WINDOWS_SHARE_URI:
                 $url = str_replace('\\', '/', $this->getRef());
                 $url = 'file:///' . $url;
                 break;
-            case self::EMAIL_URI:
+            case MarkupRef::EMAIL_URI:
                 /**
                  * An email link is `<email>`
                  * {@link Emaillink::connectTo()}
@@ -762,11 +658,11 @@ EOF;
                 }
                 $url = 'mailto:' . $uri;
                 break;
-            case self::LOCAL_URI:
+            case MarkupRef::LOCAL_URI:
                 $check = false;
                 $url = '#' . sectionID($this->ref, $check);
                 break;
-            case self::WEB_URI:
+            case MarkupRef::WEB_URI:
                 /**
                  * Default is external
                  * For instance, {@link \syntax_plugin_combo_share} link
@@ -787,7 +683,7 @@ EOF;
                     $url = $this->ref;
                 }
                 break;
-            case self::VARIABLE_URI:
+            case MarkupRef::VARIABLE_URI:
                 throw new ExceptionBadSyntax("A template variable uri ($this->ref) can not give back an url, it should be first be replaced");
             default:
                 throw new ExceptionBadSyntax("The structure of the reference ($this->ref) is unknown");
@@ -931,80 +827,7 @@ EOF;
         return $conf['mailguard'];
     }
 
-    /**
-     * @param string $shortcut
-     * @param string $reference
-     * @return mixed|string
-     * Adapted  from {@link Doku_Renderer_xhtml::_resolveInterWiki()}
-     * @noinspection DuplicatedCode
-     */
-    private function interWikiRefToUrl(string &$shortcut, string $reference)
-    {
 
-        if ($this->interwiki === null) {
-            $this->interwiki = getInterwiki();
-        }
-
-        // Get interwiki URL
-        if (isset($this->interwiki[$shortcut])) {
-            $url = $this->interwiki[$shortcut];
-        } elseif (isset($this->interwiki['default'])) {
-            $shortcut = 'default';
-            $url = $this->interwiki[$shortcut];
-        } else {
-            // not parsable interwiki outputs '' to make sure string manipulation works
-            $shortcut = '';
-            $url = '';
-        }
-
-        //split into hash and url part
-        $hash = strrchr($reference, '#');
-        if ($hash) {
-            $reference = substr($reference, 0, -strlen($hash));
-            $hash = substr($hash, 1);
-        }
-
-        //replace placeholder
-        if (preg_match('#{(URL|NAME|SCHEME|HOST|PORT|PATH|QUERY)}#', $url)) {
-            //use placeholders
-            $url = str_replace('{URL}', rawurlencode($reference), $url);
-            //wiki names will be cleaned next, otherwise urlencode unsafe chars
-            $url = str_replace('{NAME}', ($url[0] === ':') ? $reference :
-                preg_replace_callback('/[[\\\\\]^`{|}#%]/', function ($match) {
-                    return rawurlencode($match[0]);
-                }, $reference), $url);
-            $parsed = parse_url($reference);
-            if (empty($parsed['scheme'])) $parsed['scheme'] = '';
-            if (empty($parsed['host'])) $parsed['host'] = '';
-            if (empty($parsed['port'])) $parsed['port'] = 80;
-            if (empty($parsed['path'])) $parsed['path'] = '';
-            if (empty($parsed['query'])) $parsed['query'] = '';
-            $url = strtr($url, [
-                '{SCHEME}' => $parsed['scheme'],
-                '{HOST}' => $parsed['host'],
-                '{PORT}' => $parsed['port'],
-                '{PATH}' => $parsed['path'],
-                '{QUERY}' => $parsed['query'],
-            ]);
-        } else if ($url != '') {
-            // make sure when no url is defined, we keep it null
-            // default
-            $url = $url . rawurlencode($reference);
-        }
-        //handle as wiki links
-        if ($url[0] === ':') {
-            $urlParam = null;
-            $id = $url;
-            if (strpos($url, '?') !== false) {
-                list($id, $urlParam) = explode('?', $url, 2);
-            }
-            $url = wl(cleanID($id), $urlParam);
-            $exists = page_exists($id);
-        }
-        if ($hash) $url .= '#' . rawurlencode($hash);
-
-        return $url;
-    }
 
 
 }

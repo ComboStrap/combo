@@ -6,6 +6,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\LinkMarkup;
 use ComboStrap\LogUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
@@ -99,7 +100,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
                     continue;
                 }
                 $link = LinkMarkup::createFromRef($ref);
-                if ($link->getUriType() === LinkMarkup::WIKI_URI) {
+                if ($link->getUriType() === MarkupRef::WIKI_URI) {
                     $ref = Reference::createFromResource($page)
                         ->buildFromStoreValue($link->getInternalPage()->getPath()->toPathString());
                     $references->addRow([$ref]);

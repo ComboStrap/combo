@@ -431,7 +431,7 @@ class Url extends PathAbs
     /**
      * @throws ExceptionNotFound
      */
-    public function getQueryString(): string
+    public function getQueryString($ampersand = Url::AMPERSAND_CHARACTER): string
     {
         if (sizeof($this->query) === 0) {
             throw new ExceptionNotFound("No Query string");
@@ -454,8 +454,10 @@ class Url extends PathAbs
                  * HTML encoding (ie {@link self::AMPERSAND_URL_ENCODED_FOR_HTML}
                  * happens only when outputing to HTML
                  * The url may also be used elsewhere where &amp; is unknown or not wanted such as css ...
+                 *
+                 * In test, we may ask the url HTML encoded
                  */
-                $queryString .= self::AMPERSAND_CHARACTER;
+                $queryString .= $ampersand;
             }
             if ($value === null) {
                 $queryString .= urlencode($key);
@@ -558,7 +560,7 @@ class Url extends PathAbs
 
     }
 
-    public function toString(): string
+    public function toString($ampersand = Url::AMPERSAND_CHARACTER): string
     {
         try {
             $base = "{$this->getScheme()}";
@@ -582,7 +584,7 @@ class Url extends PathAbs
         }
 
         try {
-            $base = "$base?{$this->getQueryString()}";
+            $base = "$base?{$this->getQueryString($ampersand)}";
         } catch (ExceptionNotFound $e) {
             // ok
         }
@@ -622,5 +624,10 @@ class Url extends PathAbs
     function getUrl(): Url
     {
         return $this;
+    }
+
+    public function toHtmlString()
+    {
+        return $this->toString(Url::AMPERSAND_URL_ENCODED_FOR_HTML);
     }
 }

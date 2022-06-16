@@ -310,6 +310,10 @@ class PageId extends MetadataText
         return parent::setValue($value);
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     *
+     */
     public function sendToWriteStore(): Metadata
     {
         /**
@@ -318,9 +322,13 @@ class PageId extends MetadataText
          * We prevent the overwriting of a page id
          */
         $actualStoreValue = $this->getReadStore()->get($this);
-        $value = $this->getValue();
+        try {
+            $value = $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionBadArgument("No value to store");
+        }
         if ($actualStoreValue !== null && $actualStoreValue !== $value) {
-            throw new ExceptionRuntime("The page id can not be modified once generated. The value in the store is $actualStoreValue while the new value is $value");
+            throw new ExceptionBadArgument("The page id can not be modified once generated. The value in the store is $actualStoreValue while the new value is $value");
         }
         parent::sendToWriteStore();
         return $this;
@@ -334,15 +342,13 @@ class PageId extends MetadataText
     }
 
     /**
-     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
      */
     public function getValue(): string
     {
-        try {
-            return parent::getValue();
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionNotExists("The resource does not exist");
-        }
+
+        return parent::getValue();
+
     }
 
 

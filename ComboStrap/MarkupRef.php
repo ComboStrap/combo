@@ -129,6 +129,7 @@ class MarkupRef
      * @var MediaMarkup
      */
     private $dokuwikiUrl;
+
     /**
      * @var array|string|null
      */
@@ -576,9 +577,8 @@ EOF;
         if ($this->linkedPage == null) {
             if ($this->getUriType() == self::WIKI_URI) {
                 // if there is no path, this is the actual page
-                $pathOrId = $this->dokuwikiUrl->getPath();
-
-                $this->linkedPage = Page::createPageFromNonQualifiedPath($pathOrId);
+                $path = $this->dokuwikiUrl->getPath();
+                $this->linkedPage = Page::createPageFromPathObject($path);
 
             } else {
                 throw new \RuntimeException("You can't ask the internal page id from a link that is not an internal one");

@@ -8,11 +8,13 @@ use ComboStrap\ArrayUtility;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionRuntime;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\ThirdPartyPlugins;
+use ComboStrap\UrlEndpoint;
 
 if (!defined('DOKU_INC')) die();
 
@@ -417,8 +419,12 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $url = $markupRef->getUrl();
                                 $markupRefAttributes = $markupRef->toAttributes();
                             } catch (ExceptionCompile $e) {
+                                if (PluginUtility::isDevOrTest()) {
+                                    throw new ExceptionRuntime("Error on link markup ref", self::TAG, 0, $e);
+                                }
                                 $message = "Error while parsing the markup href ($href). Error: {$e->getMessage()}";
-                                $renderer->doc .= "<a>." . LogUtility::wrapInRedForHtml($message);
+                                $url = UrlEndpoint::createSupportUrl()->toString();
+                                $renderer->doc .= "<a href=\"$url\">." . LogUtility::wrapInRedForHtml($message);
                                 return false;
                             }
                             $tagAttributes->mergeWithCallStackArray($markupRefAttributes->toCallStackArray());
@@ -534,7 +540,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                  */
                                 $descriptionToDelete = "b";
                                 $renderer->internallink($href, $descriptionToDelete);
-                                $renderer->doc = substr($renderer->doc,0,-strlen($descriptionToDelete));
+                                $renderer->doc = substr($renderer->doc, 0, -strlen($descriptionToDelete));
                                 break;
                             case MarkupRef::WEB_URI:
                                 $renderer->externallink($href, $name);

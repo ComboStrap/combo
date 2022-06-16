@@ -40,4 +40,14 @@ class UrlEndpoint
         return $url;
 
     }
+
+    public static function createSupportUrl(): Url
+    {
+
+        return Url::createEmpty()
+            ->setScheme("https")
+            ->setHost("combostrap.com")
+            ->setPath("support");
+
+    }
 }

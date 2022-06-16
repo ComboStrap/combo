@@ -9,9 +9,11 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionRuntime;
+use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
 use ComboStrap\MarkupRef;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\ThirdPartyPlugins;
@@ -417,7 +419,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             try {
                                 $href = syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($href);
                                 $markupRef = LinkMarkup::createFromRef($href);
-                                $url = $markupRef->getUrl();
+                                $url = $markupRef->getMarkupRef()->getUrl();
                                 $markupRefAttributes = $markupRef->toAttributes();
                             } catch (ExceptionCompile $e) {
                                 if (PluginUtility::isDevOrTest()) {
@@ -529,7 +531,8 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         }
                         $href = $tagAttributes->getValue(self::ATTRIBUTE_HREF);
                         $type = LinkMarkup::createFromRef($href)
-                            ->getUriType();
+                            ->getMarkupRef()
+                            ->getType();
                         $name = $tagAttributes->getValue(self::ATTRIBUTE_LABEL);
 
                         switch ($type) {
@@ -591,7 +594,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     }
                     $ref = $tagAttributes->getValue(self::ATTRIBUTE_HREF);
                     $href = LinkMarkup::createFromRef($ref);
-                    $refType = $href->getUriType();
+                    $refType = $href->getMarkupRef()->getType();
 
 
                     /**
@@ -617,17 +620,18 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                              * Broken link ?
                              */
 
-                            $linkedPage = $href->getInternalPage();
-                            if (!$linkedPage->exists()) {
+                            $path = $href->getMarkupRef()->getPath();
+                            $linkedPage = Page::createPageFromPathObject($path);
+                            if (!FileSystems::exists($path)) {
                                 $stats[AnalyticsDocument::INTERNAL_LINK_BROKEN_COUNT]++;
-                                $stats[AnalyticsDocument::INFO][] = "The internal linked page `{$href->getInternalPage()}` does not exist";
+                                $stats[AnalyticsDocument::INFO][] = "The internal linked page `{$linkedPage}` does not exist";
                             }
 
                             /**
                              * Calculate link distance
                              */
                             global $ID;
-                            $id = $href->getInternalPage()->getDokuwikiId();
+                            $id = $linkedPage->getDokuwikiId();
                             $a = explode(':', getNS($ID));
                             $b = explode(':', getNS($id));
                             while (isset($a[0]) && $a[0] == $b[0]) {

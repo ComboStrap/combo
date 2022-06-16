@@ -17,6 +17,7 @@ use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
 use dokuwiki\Utf8\Conversion;
+use syntax_plugin_combo_link;
 use syntax_plugin_combo_tooltip;
 use syntax_plugin_combo_variable;
 
@@ -62,7 +63,7 @@ class LinkMarkup
      * If set, it will show a page preview
      */
     const PREVIEW_ATTRIBUTE = "preview";
-    const PREVIEW_TOOLTIP = "preview";
+
 
     /**
      * Highlight Key
@@ -73,70 +74,32 @@ class LinkMarkup
     const SEARCH_HIGHLIGHT_QUERY_PROPERTY = "s";
 
 
-    /**
-     * @var mixed
-     */
-    private $uriType;
-    /**
-     * @var mixed
-     */
-    private $ref;
-
-    /**
-     * @var Page the internal linked page if the link is an internal one
-     */
-    private $linkedPage;
-
-    /**
-     * @var string The value of the title attribute of an anchor
-     */
-    private $title;
-
-
-    /**
-     * The name of the wiki for an inter wiki link
-     * @var string
-     */
-    private $wiki;
-
-
-    /**
-     *
-     * @var false|string
-     */
-    private $schemeUri;
-
-    /**
-     * The uri scheme that can be used inside a page
-     * @var array
-     */
-    private $authorizedSchemes;
-
-
-
     private MarkupRef $markupRef;
 
     /**
      * @var array|string|null
      */
     private $type;
-    /**
-     * @var array
-     */
-    private $interwiki;
+
+    private TagAttributes $attributes;
 
     /**
      * Link constructor.
      * @param $ref
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
      */
     public function __construct($ref)
     {
-
 
         /**
          * Url (called ref by dokuwiki)
          */
         $this->markupRef = MarkupRef::createLinkFromRef($ref);
+
+        $this->attributes = TagAttributes::createEmpty(syntax_plugin_combo_link::TAG);
+        $this->collectStylingAttributeInUrl();
 
 
     }
@@ -154,76 +117,47 @@ class LinkMarkup
 
 
     /**
-     * @param $uriType
-     * @return $this
-     */
-    public function setUriType($uriType): LinkMarkup
-    {
-        $this->uriType = $uriType;
-        return $this;
-    }
-
-
-    /**
      *
-     *
-     *
-     *
+     * @throws ExceptionNotFound
      * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
      */
-    public function toAttributes($logicalTag = \syntax_plugin_combo_link::TAG): TagAttributes
+    public function toAttributes(): TagAttributes
     {
 
-        $outputAttributes = TagAttributes::createEmpty($logicalTag);
+        $outputAttributes = $this->attributes;
 
-        $type = $this->getUriType();
 
+        $url = $this->getMarkupRef()->getUrl();
+        $outputAttributes->addOutputAttributeValue("href", $url->toString());
 
         /**
-         * Add the attribute from the URL
-         * if this is not a `do`
+         * The search term
+         * Code adapted found at {@link Doku_Renderer_xhtml::internallink()}
+         * We can't use the previous {@link wl function}
+         * because it encode too much
          */
-
-        switch ($type) {
-            case MarkupRef::WIKI_URI:
-                if (!$this->markupRef->getUrl()->hasProperty("do")) {
-                    foreach ($this->getMarkupRef()->getUrl()->getQuery() as $key => $value) {
-                        if ($key !== self::SEARCH_HIGHLIGHT_QUERY_PROPERTY) {
-                            $outputAttributes->addComponentAttributeValue($key, $value);
-                        }
-                    }
-                }
-                break;
-            case
-            MarkupRef::EMAIL_URI:
-                foreach ($this->getMarkupRef()->getUrl()->getQuery() as $key => $value) {
-                    if (!in_array($key, self::EMAIL_VALID_PARAMETERS)) {
-                        $outputAttributes->addComponentAttributeValue($key, $value);
-                    }
-                }
-                break;
+        if ($url->hasProperty(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY)) {
+            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("search-hit");
         }
 
 
         global $conf;
 
-        /**
-         * Get the url
-         */
-        $url = $this->getUrl();
-        if (!empty($url)) {
-            $outputAttributes->addOutputAttributeValue("href", $url);
-        }
-
 
         /**
          * Processing by type
          */
-        switch ($this->getUriType()) {
+        switch ($this->getMarkupRef()->getType()) {
             case MarkupRef::INTERWIKI_URI:
-
+                try {
+                    $interWiki = $this->getMarkupRef()->getInterWiki();
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError("The interwiki should be available. We were unable to create the link attributes.");
+                    return $outputAttributes;
+                }
                 // normal link for the `this` wiki
-                if ($this->getWiki() !== "this") {
+                if ($interWiki->getWiki() !== "this") {
                     PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(MarkupRef::INTERWIKI_URI);
                 }
                 /**
@@ -235,13 +169,8 @@ class LinkMarkup
                     $outputAttributes->addOutputAttributeValue('rel', 'noopener');
                 }
                 $outputAttributes->addClassName(self::getHtmlClassInterWikiLink());
-                $wikiClass = "iw_" . preg_replace('/[^_\-a-z0-9]+/i', '_', $this->getWiki());
+                $wikiClass = "iw_" . preg_replace('/[^_\-a-z0-9]+/i', '_', $interWiki->getWiki());
                 $outputAttributes->addClassName($wikiClass);
-                if (!$this->wikiExists()) {
-                    $outputAttributes->addClassName(self::getHtmlClassNotExist());
-                    $outputAttributes->addOutputAttributeValue("rel", 'nofollow');
-                }
-
                 break;
             case MarkupRef::WIKI_URI:
                 /**
@@ -255,11 +184,16 @@ class LinkMarkup
                 /**
                  * Internal Page
                  */
-                $linkedPage = $this->getInternalPage();
-                $outputAttributes->addOutputAttributeValue("data-wiki-id", $linkedPage->getDokuwikiId());
+                try {
+                    $dokuPath = $this->getMarkupRef()->getPath();
+                } catch (ExceptionNotFound $e) {
+                    throw new ExceptionNotFound("We were unable to process the internal link dokuwiki id on the link. The path was not found. Error: {$e->getMessage()}");
+                }
+                $page = Page::createPageFromPathObject($dokuPath);
+                $outputAttributes->addOutputAttributeValue("data-wiki-id", $dokuPath->getDokuwikiId());
 
 
-                if (!$linkedPage->exists()) {
+                if (!FileSystems::exists($dokuPath)) {
 
                     /**
                      * Red color
@@ -292,8 +226,8 @@ class LinkMarkup
                     if ($preview) {
                         Tooltip::addToolTipSnippetIfNeeded();
                         $tooltipHtml = <<<EOF
-<h3>{$linkedPage->getNameOrDefault()}</h3>
-<p>{$linkedPage->getDescriptionOrElseDokuWiki()}</p>
+<h3>{$page->getNameOrDefault()}</h3>
+<p>{$page->getDescriptionOrElseDokuWiki()}</p>
 EOF;
                         $dataAttributeNamespace = Bootstrap::getDataNamespace();
                         $outputAttributes->addOutputAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
@@ -308,7 +242,7 @@ EOF;
                      * the code comes then after)
                      */
                     $pageProtectionAcronym = strtolower(PageProtection::ACRONYM);
-                    if ($linkedPage->isLowQualityPage()) {
+                    if ($page->isLowQualityPage()) {
 
                         /**
                          * Add a class to style it differently
@@ -316,7 +250,7 @@ EOF;
                          */
                         $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
                         $lowerCaseLowQualityAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
-                        $outputAttributes->addClassName(LowQualityPage::CLASS_NAME . "-combo");
+                        $outputAttributes->addClassName(StyleUtility::getStylingClassForTag(LowQualityPage::CLASS_NAME));
                         $snippetLowQualityPageId = $lowerCaseLowQualityAcronym;
                         PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($snippetLowQualityPageId);
                         /**
@@ -345,7 +279,7 @@ EOF;
                      * the late publication and the is therefore after
                      * (In case this a low quality page late published)
                      */
-                    if ($linkedPage->isLatePublication()) {
+                    if ($page->isLatePublication()) {
                         /**
                          * Add a class to style it differently if needed
                          */
@@ -369,10 +303,10 @@ EOF;
                          * If this is not a link into the same page
                          */
                         if (!empty($this->getMarkupRef()->getPath())) {
-                            $description = $linkedPage->getDescriptionOrElseDokuWiki();
+                            $description = $page->getDescriptionOrElseDokuWiki();
                             if (empty($description)) {
                                 // Rare case
-                                $description = $linkedPage->getH1OrDefault();
+                                $description = $page->getH1OrDefault();
                             }
                             if (!empty($acronym)) {
                                 $description = $description . " ($acronym)";
@@ -398,6 +332,28 @@ EOF;
                 break;
             case MarkupRef::EMAIL_URI:
                 $outputAttributes->addClassName(self::getHtmlClassEmailLink());
+                /**
+                 * An email link is `<email>`
+                 * {@link Emaillink::connectTo()}
+                 * or
+                 * {@link PluginTrait::email()
+                 */
+                // common.php#obfsucate implements the $conf['mailguard']
+                $uri = $url->getPath();
+                $uri = $this->obfuscateEmail($uri);
+                $uri = urlencode($uri);
+                $queryParameters = $url->getQuery();
+                if (sizeof($queryParameters) > 0) {
+                    $uri .= "?";
+                    foreach ($queryParameters as $key => $value) {
+                        $value = urlencode($value);
+                        $key = urlencode($key);
+                        if (in_array($key, self::EMAIL_VALID_PARAMETERS)) {
+                            $uri .= "$key=$value";
+                        }
+                    }
+                }
+                $outputAttributes->addOutputAttributeValue("href", 'mailto:' . $uri);
                 break;
             case MarkupRef::WEB_URI:
                 if ($conf['relnofollow']) {
@@ -409,14 +365,12 @@ EOF;
                     $outputAttributes->addOutputAttributeValue('target', $externTarget);
                     $outputAttributes->addOutputAttributeValue("rel", 'noopener');
                 }
-                if ($this->type === null) {
-                    /**
-                     * Default class for default external link
-                     * To not interfere with other external link style
-                     * For instance, {@link \syntax_plugin_combo_share}
-                     */
-                    $outputAttributes->addClassName(self::getHtmlClassExternalLink());
-                }
+                /**
+                 * Default class for default external link
+                 * To not interfere with other external link style
+                 * For instance, {@link \syntax_plugin_combo_share}
+                 */
+                $outputAttributes->addClassName(self::getHtmlClassExternalLink());
                 break;
             default:
                 /**
@@ -436,10 +390,11 @@ EOF;
          * to mitigate XSS
          *
          */
-        if ($this->getUriType() == MarkupRef::EMAIL_URI) {
+        if ($this->getMarkupRef()->getType() == MarkupRef::EMAIL_URI) {
             $emailAddress = $this->obfuscateEmail($this->markupRef->getPath());
             $outputAttributes->addOutputAttributeValue("title", $emailAddress);
         }
+
 
         /**
          * Return
@@ -451,62 +406,25 @@ EOF;
 
 
     /**
-     * Return the type of link from an ID
-     *
-     * @return string a `TYPE_xxx` constant
-     */
-    public
-    function getUriType(): string
-    {
-        return $this->uriType;
-    }
-
-
-    /**
-     * @return Page - the internal page or an error if the link is not an internal one
-     */
-    public
-    function getInternalPage(): Page
-    {
-        if ($this->linkedPage == null) {
-            if ($this->getUriType() == MarkupRef::WIKI_URI) {
-                // if there is no path, this is the actual page
-                $path = $this->markupRef->getPath();
-                $this->linkedPage = Page::createPageFromPathObject($path);
-
-            } else {
-                throw new \RuntimeException("You can't ask the internal page id from a link that is not an internal one");
-            }
-        }
-        return $this->linkedPage;
-    }
-
-    public
-    function getRef()
-    {
-        return $this->ref;
-    }
-
-    /**
      * The label inside the anchor tag if there is none
      * @param false $navigation
-     * @return string|null
+     * @return string
+     * @throws ExceptionNotFound
      */
-    public function getLabel(bool $navigation = false): ?string
+    public function getLabel(bool $navigation = false): string
     {
 
-        switch ($this->getUriType()) {
+        switch ($this->getMarkupRef()->getType()) {
             case MarkupRef::WIKI_URI:
+                $page = $this->getPage();
                 if ($navigation) {
-                    return $this->getInternalPage()->getNameOrDefault();
+                    return ResourceName::createForResource($page)->getValueOrDefault();
                 } else {
-                    return $this->getInternalPage()->getTitleOrDefault();
+                    return PageTitle::createForPage($page)->getValueOrDefault();
                 }
-
             case MarkupRef::EMAIL_URI:
-
                 global $conf;
-                $email = $this->markupRef->getPath();
+                $email = $this->markupRef->getUrl()->getPath();
                 switch ($conf['mailguard']) {
                     case 'none' :
                         return $email;
@@ -516,202 +434,23 @@ EOF;
                         return strtr($email, $obfuscate);
                 }
             case MarkupRef::INTERWIKI_URI:
-                return $this->markupRef->getPath();
+                try {
+                    $path = $this->markupRef->getInterWiki()->toUrl()->getPath();
+                    if ($path[0] === "/") {
+                        return substr($path, 1);
+                    } else {
+                        return $path;
+                    }
+                } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+                    return "interwiki";
+                }
             case MarkupRef::LOCAL_URI:
-                return $this->markupRef->getFragment();
+                return $this->markupRef->getUrl()->getFragment();
             default:
-                return $this->getRef();
+                return $this->markupRef->getRef();
         }
     }
 
-    /**
-     * @param $title - the value of the title attribute of the anchor
-     */
-    public
-    function setTitle($title)
-    {
-        $this->title = $title;
-    }
-
-
-    /**
-     * @throws ExceptionBadSyntax
-     * @var string $targetEnvironmentAmpersand
-     * By default, all data are encoded
-     * at {@link TagAttributes::encodeToHtmlValue()}
-     * therefore the default is non-encoded
-     *
-     */
-    public function getUrl()
-    {
-
-        switch ($this->getUriType()) {
-            case MarkupRef::WIKI_URI:
-                $page = $this->getInternalPage();
-
-                /**
-                 * Styling attribute
-                 * may be passed via parameters
-                 * for internal link
-                 * We don't want the styling attribute
-                 * in the URL
-                 *
-                 * We will not overwrite the parameters if this is an dokuwiki
-                 * action link (with the `do` property)
-                 */
-                if ($this->markupRef->getUrl()->hasProperty("do")) {
-
-                    $absoluteUrl = Site::shouldUrlBeAbsolute();
-                    $url = wl(
-                        $page->getDokuwikiId(),
-                        $this->markupRef->getUrl()->getQuery(),
-                        $absoluteUrl
-                    );
-
-                } else {
-
-                    /**
-                     * No parameters by default known
-                     */
-                    $url = $page->getCanonicalUrl(
-                        [],
-                        false
-                    );
-
-                    /**
-                     * The search term
-                     * Code adapted found at {@link Doku_Renderer_xhtml::internallink()}
-                     * We can't use the previous {@link wl function}
-                     * because it encode too much
-                     */
-                    try {
-                        $searchTerms = $this->markupRef->getUrl()->getQueryPropertyValue(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY);
-                        $url .= Url::AMPERSAND_CHARACTER;
-                        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("search-hit");
-                        if (is_array($searchTerms)) {
-                            /**
-                             * To verify, do we really need the []
-                             * to get an array in php ?
-                             */
-                            $searchTermsQuery = [];
-                            foreach ($searchTerms as $searchTerm) {
-                                $searchTermsQuery[] = "s[]=$searchTerm";
-                            }
-                            $url .= implode(Url::AMPERSAND_CHARACTER, $searchTermsQuery);
-                        } else {
-                            $url .= "s=$searchTerms";
-                        }
-                    } catch (ExceptionNotFound $e) {
-                        // ok
-                    }
-
-
-                }
-                try {
-                    $fragment = $this->markupRef->getUrl()->getFragment();
-                    /**
-                     * pageutils (transform a fragment in section id)
-                     */
-                    $check = false;
-                    $url .= '#' . sectionID($fragment, $check);
-                } catch (ExceptionNotFound $e) {
-                    // ok no fragment
-                }
-
-                break;
-            case MarkupRef::INTERWIKI_URI:
-                $wiki = $this->wiki;
-                $extendedPath = $this->markupRef->getPath();
-                try {
-                    $fragment = $this->markupRef->getUrl()->getFragment();
-                    $extendedPath .= "#$fragment";
-                } catch (ExceptionNotFound $e) {
-                    // ok no fragment
-                }
-                $url = InterWiki::createFrom($wiki, $extendedPath);
-                break;
-            case MarkupRef::WINDOWS_SHARE_URI:
-                $url = str_replace('\\', '/', $this->getRef());
-                $url = 'file:///' . $url;
-                break;
-            case MarkupRef::EMAIL_URI:
-                /**
-                 * An email link is `<email>`
-                 * {@link Emaillink::connectTo()}
-                 * or
-                 * {@link PluginTrait::email()
-                 */
-                // common.php#obfsucate implements the $conf['mailguard']
-                $uri = $this->getMarkupRef()->getPath();
-                $uri = $this->obfuscateEmail($uri);
-                $uri = urlencode($uri);
-                $queryParameters = $this->getMarkupRef()->getQueryParameters();
-                if (sizeof($queryParameters) > 0) {
-                    $uri .= "?";
-                    foreach ($queryParameters as $key => $value) {
-                        $value = urlencode($value);
-                        $key = urlencode($key);
-                        if (in_array($key, self::EMAIL_VALID_PARAMETERS)) {
-                            $uri .= "$key=$value";
-                        }
-                    }
-                }
-                $url = 'mailto:' . $uri;
-                break;
-            case MarkupRef::LOCAL_URI:
-                $check = false;
-                $url = '#' . sectionID($this->ref, $check);
-                break;
-            case MarkupRef::WEB_URI:
-                /**
-                 * Default is external
-                 * For instance, {@link \syntax_plugin_combo_share} link
-                 */
-                /**
-                 * Authorized scheme only
-                 * to not inject code
-                 */
-                if (is_null($this->authorizedSchemes)) {
-                    // https://www.dokuwiki.org/urlschemes
-                    $this->authorizedSchemes = getSchemes();
-                    $this->authorizedSchemes[] = "whatsapp";
-                    $this->authorizedSchemes[] = "mailto";
-                }
-                if (!in_array($this->schemeUri, $this->authorizedSchemes)) {
-                    throw new ExceptionBadSyntax("The scheme ($this->schemeUri) is not authorized as uri");
-                } else {
-                    $url = $this->ref;
-                }
-                break;
-            case MarkupRef::VARIABLE_URI:
-                throw new ExceptionBadSyntax("A template variable uri ($this->ref) can not give back an url, it should be first be replaced");
-            default:
-                throw new ExceptionBadSyntax("The structure of the reference ($this->ref) is unknown");
-        }
-
-
-        return $url;
-    }
-
-    public function getWiki(): ?string
-    {
-        return $this->wiki;
-    }
-
-
-    public
-    function getScheme()
-    {
-        return $this->schemeUri;
-    }
-
-
-    private
-    function wikiExists(): bool
-    {
-        $wikis = getInterwiki();
-        return key_exists($this->wiki, $wikis);
-    }
 
     private
     function obfuscateEmail($email, $inAttribute = true): string
@@ -747,7 +486,7 @@ EOF;
     public
     function isRelative(): bool
     {
-        return strpos($this->ref, DokuPath::PATH_SEPARATOR) !== 0;
+        return strpos($this->getMarkupRef()->getRef(), DokuPath::PATH_SEPARATOR) !== 0;
     }
 
     public
@@ -816,18 +555,63 @@ EOF;
     public
     function __toString()
     {
-        return $this->ref;
+        return $this->getMarkupRef()->getRef();
     }
 
 
-    private
-    function getEmailObfuscationConfiguration()
+
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getPage(): Page
     {
-        global $conf;
-        return $conf['mailguard'];
+        return Page::createPageFromPathObject($this->getMarkupRef()->getPath());
     }
 
+    /**
+     * Styling attribute
+     * may be passed via parameters
+     * for internal link
+     * We don't want the styling attribute
+     * in the URL
+     */
+    private function collectStylingAttributeInUrl()
+    {
 
+
+        /**
+         * We will not overwrite the parameters if this is an dokuwiki
+         * action link (with the `do` property)
+         */
+        if ($this->markupRef->getUrl()->hasProperty("do")) {
+            return;
+        }
+
+        /**
+         * Add the attribute from the URL
+         * if this is not a `do`
+         */
+        switch ($this->markupRef->getType()) {
+            case MarkupRef::WIKI_URI:
+                foreach ($this->getMarkupRef()->getUrl()->getQuery() as $key => $value) {
+                    if ($key !== self::SEARCH_HIGHLIGHT_QUERY_PROPERTY) {
+                        $this->attributes->addComponentAttributeValue($key, $value);
+                    }
+                }
+
+                break;
+            case
+            MarkupRef::EMAIL_URI:
+                foreach ($this->getMarkupRef()->getUrl()->getQuery() as $key => $value) {
+                    if (!in_array($key, self::EMAIL_VALID_PARAMETERS)) {
+                        $this->attributes->addComponentAttributeValue($key, $value);
+                    }
+                }
+                break;
+        }
+
+    }
 
 
 }

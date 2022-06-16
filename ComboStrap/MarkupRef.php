@@ -16,6 +16,7 @@ class MarkupRef
     public const INTERWIKI_URI = 'interwiki';
     public const WIKI_URI = 'internal';
     public const VARIABLE_URI = 'internal_template';
+    private static ?array $authorizedSchemes = null;
 
     /**
      * The type of markup ref (ie media or link)
@@ -29,14 +30,16 @@ class MarkupRef
 
 
     private string $ref;
-    private Url $url;
+    private ?Url $url = null;
 
-    private ?DokuPath $path;
+    private ?DokuPath $path = null;
+    private ?InterWiki $interWiki = null;
 
 
     /**
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
+     * @throws ExceptionNotFound
      */
     public function __construct($ref, $type)
     {
@@ -78,6 +81,14 @@ class MarkupRef
             try {
                 $this->url = Url::createFromString($ref);
                 $this->refScheme = self::WEB_URI;
+
+                /**
+                 * Authorized scheme only (to not inject code ?)
+                 */
+                $authorizedSchemes = self::loadAndGetAuthorizedSchemes();
+                if (!in_array($this->url->getScheme(), $authorizedSchemes)) {
+                    throw new ExceptionBadSyntax("The scheme ({$this->url->getScheme()}) of the URL ({$this->url}) is not authorized");
+                }
                 return;
             } catch (ExceptionBadSyntax $e) {
                 throw new ExceptionBadSyntax("The url string is not valid URL ($ref)");
@@ -98,6 +109,8 @@ class MarkupRef
          */
         if (preg_match('!^#.+!', $ref)) {
             $this->refScheme = self::LOCAL_URI;
+            $check = false;
+            $ref = sectionID($ref, $check);
             $this->url = Url::createEmpty()->setFragment($ref);
             return;
         }
@@ -105,15 +118,22 @@ class MarkupRef
         /**
          * Interwiki ?
          */
-        if (preg_match('/^[a-zA-Z0-9\.]+>/u', $ref)) {
+        if (preg_match('/^[a-zA-Z0-9.]+>/u', $ref)) {
 
             $this->refScheme = MarkupRef::INTERWIKI_URI;
-
-            $interWikiPosition = strpos($ref, ">");
-
-            $this->wiki = strtolower(substr($ref, 0, $interWikiPosition));
-            $refProcessing = substr($refProcessing, $interWikiPosition + 1);
-            $this->ref = $ref;
+            switch ($type) {
+                case self::MEDIA_TYPE:
+                    $this->interWiki = InterWiki::createMediaInterWikiFromString($ref);
+                    break;
+                case self::LINK_TYPE:
+                    $this->interWiki = InterWiki::createLinkInterWikiFromString($ref);
+                    break;
+                default:
+                    LogUtility::internalError("The type ($type) is unknown, returning a interwiki link ref");
+                    $this->interWiki = InterWiki::createLinkInterWikiFromString($ref);
+                    break;
+            }
+            $this->url = $this->interWiki->toUrl();
             return;
 
         }
@@ -163,7 +183,9 @@ class MarkupRef
                 throw new ExceptionBadArgument("The ref type ($type) is unknown");
         }
 
-        if($fragment!==null){
+        if ($fragment !== null) {
+            $check = false;
+            $fragment = '#' . sectionID($fragment, $check);
             $this->url->setFragment($fragment);
         }
 
@@ -331,21 +353,54 @@ class MarkupRef
 
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
+     */
     public
     static function createMediaFromRef($refProcessing): MarkupRef
     {
         return new MarkupRef($refProcessing, self::MEDIA_TYPE);
     }
 
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
+     * @throws ExceptionNotFound
+     */
     public
     static function createLinkFromRef($refProcessing): MarkupRef
     {
         return new MarkupRef($refProcessing, self::LINK_TYPE);
     }
 
+    // https://www.dokuwiki.org/urlschemes
+    private static function loadAndGetAuthorizedSchemes(): array
+    {
+        $requestedPage = PluginUtility::getRequestedWikiId();
+        if (
+            self::$authorizedSchemes === null
+            || self::$authorizedSchemes[$requestedPage] === null
+        ) {
+            self::$authorizedSchemes = null;
+            // scoped by request id to be able to work on test because it's a global variable
+            self::$authorizedSchemes[$requestedPage] = getSchemes();
+            self::$authorizedSchemes[] = "whatsapp";
+            self::$authorizedSchemes[] = "mailto";
+        }
+        return self::$authorizedSchemes;
+    }
+
+    /**
+     * @throws ExceptionBadArgument - if the ref is a variable ref
+     */
     public
     function getUrl(): Url
     {
+        if ($this->type === MarkupRef::VARIABLE_URI) {
+            throw new ExceptionBadArgument("A template variable uri ({$this->ref}) can not give back an url, it should be first replaced");
+        }
         return $this->url;
     }
 
@@ -365,5 +420,18 @@ class MarkupRef
     function getRef(): string
     {
         return $this->ref;
+    }
+
+    public function getType(): string
+    {
+        return $this->refScheme;
+    }
+
+    public function getInterWiki()
+    {
+        if ($this->interWiki === null) {
+            throw new ExceptionNotFound("NO interWiki was found");
+        }
+        return $this->interWiki;
     }
 }

@@ -9,7 +9,7 @@ class InterWiki
     const DEFAULT_INTERWIKI_NAME = 'default';
 
     /**
-     * The pattern that select the characters to encode
+     * The pattern that select the characters to encode in URL
      */
     const CHARACTERS_TO_ENCODE = '/[[\\\\\]^`{|}#%]/';
 
@@ -17,20 +17,22 @@ class InterWiki
 
     private string $name;
     private string $ref;
-    /**
-     * @var ?string
-     */
-    private $urlWithoutFragment = null;
-    /**
-     * @var ?string
-     */
-    private $fragment = null;
-    private Url $url;
 
-    public function __construct($interWikiRef)
+    private ?string $urlWithoutFragment = null;
+
+    private ?string $fragment = null;
+
+    private string $markupType;
+
+    /**
+     * @param string $interWikiRef - The interwiki
+     * @param string $markupType - The {@link MarkupRef::getType()} ie media or link
+     */
+    public function __construct(string $interWikiRef, string $markupType)
     {
 
         $this->ref = $interWikiRef;
+        $this->markupType = $markupType;
         [$this->name, $this->urlWithoutFragment] = explode(">", $interWikiRef, 2);
 
 
@@ -49,7 +51,7 @@ class InterWiki
         self::$INTERWIKI_URL_TEMPLATES[$scopeId][$name] = $value;
     }
 
-    private static function initInterWikis()
+    private static function initInterWikis(): string
     {
         $requestedPage = PluginUtility::getRequestedWikiId();
         if (
@@ -63,6 +65,11 @@ class InterWiki
         return $requestedPage;
     }
 
+    public static function createMediaInterWikiFromString(string $ref): InterWiki
+    {
+        return new InterWiki($ref, MarkupRef::MEDIA_TYPE);
+    }
+
     /**
      * @throws ExceptionNotFound
      * @throws ExceptionBadSyntax
@@ -70,7 +77,6 @@ class InterWiki
      */
     public function toUrl(): Url
     {
-
 
         $originalInterWikiUrlTemplate = $this->getTemplateUrlStringOrDefault();
         $interWikiUrlTemplate = $originalInterWikiUrlTemplate;
@@ -87,7 +93,14 @@ class InterWiki
             if ($this->fragment !== null) {
                 $interWikiUrlTemplate = "$interWikiUrlTemplate#$this->fragment";
             }
-            return MarkupRef::createLinkFromRef($interWikiUrlTemplate)->getUrl();
+            switch ($this->markupType) {
+                case MarkupRef::MEDIA_TYPE:
+                    return MarkupRef::createMediaFromRef($interWikiUrlTemplate)->getUrl();
+                case MarkupRef::LINK_TYPE:
+                default:
+                    return MarkupRef::createLinkFromRef($interWikiUrlTemplate)->getUrl();
+            }
+
         }
 
         // Replace placeholder if any
@@ -154,9 +167,9 @@ class InterWiki
      * @param string $interWikiRef
      * @return InterWiki
      */
-    public static function createFrom(string $interWikiRef): InterWiki
+    public static function createLinkInterWikiFromString(string $interWikiRef): InterWiki
     {
-        return new InterWiki($interWikiRef);
+        return new InterWiki($interWikiRef, MarkupRef::LINK_TYPE);
     }
 
     /**
@@ -196,6 +209,19 @@ class InterWiki
         }
         throw new ExceptionNotFound("No default inter-wiki");
 
+    }
+
+    public function getWiki()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRef(): string
+    {
+        return $this->ref;
     }
 
 

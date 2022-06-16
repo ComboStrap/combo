@@ -652,10 +652,10 @@ class PluginUtility
      * but the one of the page
      * Return the main/requested page id
      * (Not the sidebar)
-     * @return string|null - null in test
+     * @return string
      */
     public
-    static function getRequestedWikiId(): ?string
+    static function getRequestedWikiId(): string
     {
         /**
          * {@link getID()} reads the id from the input variable
@@ -700,7 +700,10 @@ class PluginUtility
             return $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
         }
 
-        return null;
+        if(!PluginUtility::isDevOrTest()){
+            LogUtility::internalError("Internal Error: The request id could not be determined");
+        }
+        return "default_test_id";
 
     }
 

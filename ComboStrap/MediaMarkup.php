@@ -75,11 +75,11 @@ class MediaMarkup
      * They are only for the tag (img, svg, ...)
      * or internal
      */
-    public const NON_URL_ATTRIBUTES = [
+    public const STYLE_ATTRIBUTES = [
         TagAttributes::TITLE_KEY,
         Hover::ON_HOVER_ATTRIBUTE,
         Animation::ON_VIEW_ATTRIBUTE,
-        MediaMarkup::DOKUWIKI_SRC
+        Shadow::SHADOW_ATT
     ];
 
     /**
@@ -351,7 +351,7 @@ class MediaMarkup
             // ok
         }
 
-        foreach (self::NON_URL_ATTRIBUTES as $nonUrlAttribute) {
+        foreach (self::STYLE_ATTRIBUTES as $nonUrlAttribute) {
             try {
                 $value = $this->fetchUrl->getQueryPropertyValueAndRemoveIfPresent($nonUrlAttribute);
                 $this->tagAttributes->addComponentAttributeValue($nonUrlAttribute, $value);

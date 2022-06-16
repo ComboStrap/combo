@@ -25,7 +25,7 @@ class Shadow
     /**
      * Historically, this is the shadow of material design for the button
      */
-    const MEDIUM_ELEVATION_CLASS = "shadow-md-combo";
+    const MEDIUM_ELEVATION_CLASS = "shadow-md";
     const SNIPPET_ID = "shadow";
 
     const CONF_SMALL_LEVEL_VALUE = "small";
@@ -36,7 +36,7 @@ class Shadow
     /**
      * @param TagAttributes $attributes
      */
-    public static function process(&$attributes)
+    public static function process(TagAttributes &$attributes)
     {
         $elevationValue = "";
 
@@ -75,11 +75,14 @@ class Shadow
         if ($value === true) {
             $value = "true";
         }
+        /**
+         * The class are bootstrap class even without the bs suffix/prefix
+         * https://getbootstrap.com/docs/5.0/utilities/shadows/
+         */
         switch ($value) {
             case self::CONF_SMALL_LEVEL_VALUE:
             case "sm":
                 return "shadow-sm";
-                break;
             case self::CONF_MEDIUM_LEVEL_VALUE:
             case "md";
                 PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::SNIPPET_ID);
@@ -87,21 +90,17 @@ class Shadow
             case self::CONF_LARGE_LEVEL_VALUE:
             case "lg":
                 return "shadow";
-                break;
             case self::CONF_EXTRA_LARGE_LEVEL_VALUE:
             case "xl":
             case "high":
                 return "shadow-lg";
                 // Old deprecated: $styleProperties["box-shadow"] = "0 0 0 .2em rgba(3,102,214,0),0 13px 27px -5px rgba(50,50,93,.25),0 8px 16px -8px rgba(0,0,0,.3),0 -6px 16px -6px rgba(0,0,0,.025)";
-                break;
             case "true":
             case "1":
                 return self::getDefaultClass();
-                break;
             default:
                 LogUtility::msg("The shadow / elevation value ($value) is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 return null;
-                break;
         }
     }
 

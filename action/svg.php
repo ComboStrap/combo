@@ -102,7 +102,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
                     break;
                 default:
                     if (!empty($value)) {
-                        if (!in_array(strtolower($name), MediaMarkup::NON_URL_ATTRIBUTES)) {
+                        if (!in_array(strtolower($name), MediaMarkup::STYLE_ATTRIBUTES)) {
                             $tagAttributes->addComponentAttributeValue($name, $value);
                         } else {
                             LogUtility::msg("The attribute ($name) is not a valid fetch image URL attribute and was not added", LogUtility::LVL_MSG_WARNING, SvgImageLink::CANONICAL);

@@ -4,12 +4,32 @@ namespace ComboStrap;
 
 use syntax_plugin_combo_variable;
 
+/**
+ *
+ * Basically, a class that parse a link/media markup reference and returns an URL.
+ *
+ * Detailed, the class parses the reference:
+ *   * from a {@link MarkupRef::createMediaFromRef() media markup}
+ *   * or {@link MarkupRef::createLinkFromRef() link markup}
+ * and returns an {@link MarkupRef::getUrl() URL},
+ *
+ * You may determine the {@link MarkupRef::getType() type of reference}
+ *
+ * For a {@link MarkupRef::WIKI_URI}, the URL returned is:
+ *   * a {@link UrlEndpoint::createFetchUrl() fetch url} for a media
+ *   * a {@link UrlEndpoint::createDokuUrl() doku url} for a link (ie page)
+ *
+ * If this is a {@link MarkupRef::INTERWIKI_URI}, you may also get the {@link MarkupRef::getInterWiki() interwiki instance}
+ * If this is a {@link MarkupRef::WIKI_URI}, you may also get the {@link MarkupRef::getPath() path}
+ *
+ */
 class MarkupRef
 {
     public const WINDOWS_SHARE_URI = 'windowsShare';
     public const LOCAL_URI = 'local';
     public const EMAIL_URI = 'email';
     public const WEB_URI = 'external';
+
     /**
      * Type of link
      */
@@ -483,7 +503,7 @@ class MarkupRef
         return $this->interWiki;
     }
 
-    public function addPageIdToUrl(string $id): MarkupRef
+    private function addPageIdToUrl(string $id): MarkupRef
     {
         switch (Site::getUrlRewrite()) {
             case UrlEndpoint::NO_REWRITE:
@@ -534,11 +554,10 @@ class MarkupRef
         return $this;
     }
 
-    public function addRevToUrl($rev = null): MarkupRef
+    private function addRevToUrl($rev = null): void
     {
         if ($rev !== null) {
             $this->url->addQueryParameter(DokuPath::REV_ATTRIBUTE, $rev);
         }
-        return $this;
     }
 }

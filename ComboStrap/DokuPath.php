@@ -285,10 +285,10 @@ class DokuPath extends PathAbs
     }
 
 
-    public static function createPagePathFromId($id): DokuPath
+    public static function createPagePathFromId($id, $rev = null): DokuPath
     {
         DokuPath::addRootSeparatorIfNotPresent($id);
-        return new DokuPath($id, self::PAGE_DRIVE);
+        return new DokuPath($id, self::PAGE_DRIVE, $rev);
     }
 
     /**
@@ -480,6 +480,28 @@ class DokuPath extends PathAbs
     public static function create(string $path, string $drive, string $rev = null): DokuPath
     {
         return new DokuPath($path, $drive, $rev);
+    }
+
+    /**
+     * In case of manual entry, the function will clean the id
+     * @param string $wikiId
+     * @return string|void
+     */
+    public static function cleanID(string $wikiId)
+    {
+        if ($wikiId === "") {
+            LogUtility::internalError("The passed wiki id is the empty string. We couldn't clean it.");
+            return $wikiId;
+        }
+        $isNamespacePath = false;
+        if ($wikiId[strlen($wikiId) - 1] === DokuPath::PATH_SEPARATOR) {
+            $isNamespacePath = true;
+        }
+        $cleanId = cleanID($wikiId);
+        if($isNamespacePath){
+            return "$cleanId:";
+        }
+        return $cleanId;
     }
 
 
@@ -705,7 +727,7 @@ class DokuPath extends PathAbs
      */
     public function toLabel(): string
     {
-        $words = preg_split("/\s/", preg_replace("/[-_:]/", " ", $this->getFetchPath()));
+        $words = preg_split("/\s/", preg_replace("/[-_:]/", " ", $this->toPathString()));
         $wordsUc = [];
         foreach ($words as $word) {
             $wordsUc[] = ucfirst($word);

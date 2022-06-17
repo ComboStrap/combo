@@ -102,7 +102,8 @@ class DokuFs implements FileSystem
      */
     public function isDirectory(Path $path): bool
     {
-        return FileSystems::isDirectory($path->toLocalPath());
+        return DokuPath::isNamespacePath($path->toPathString());
+        // and not FileSystems::isDirectory($path->toLocalPath());
     }
 
     /**

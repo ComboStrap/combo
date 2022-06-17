@@ -178,6 +178,11 @@ class Page extends ResourceComboAbs
 
         $this->path = $path;
 
+        if (FileSystems::isDirectory($this->path)) {
+            $this->setCorrectPathForDirectoryToIndexPage();
+
+        }
+
         if ($this->isSecondarySlot()) {
 
             /**
@@ -255,27 +260,13 @@ class Page extends ResourceComboAbs
     /**
      *
      * @throws ExceptionBadSyntax - if this is not a
+     * @deprecated just path a namespace path to the page creation
      */
     public static function getIndexPageFromNamespace(string $namespacePath): Page
     {
-        global $conf;
-
         DokuPath::checkNamespacePath($namespacePath);
 
-        $startPageName = $conf['start'];
-        if (page_exists($namespacePath . $startPageName)) {
-            // start page inside namespace
-            return self::createPageFromId($namespacePath . $startPageName);
-        } elseif (page_exists($namespacePath . noNS(cleanID($namespacePath)))) {
-            // page named like the NS inside the NS
-            return self::createPageFromId($namespacePath . noNS(cleanID($namespacePath)));
-        } elseif (page_exists($namespacePath)) {
-            // page like namespace exists
-            return self::createPageFromId(substr($namespacePath, 0, -1));
-        } else {
-            // Does not exist but can be used by hierarchical function
-            return self::createPageFromId($namespacePath . $startPageName);
-        }
+        return Page::createPageFromId($namespacePath);
     }
 
 
@@ -2113,6 +2104,35 @@ class Page extends ResourceComboAbs
             return null;
         }
         return Page::createPageFromId($nearest);
+    }
+
+    private function setCorrectPathForDirectoryToIndexPage(): void
+    {
+        /**
+         * We correct the path
+         * We don't return a page because it does not work in a constructor
+         */
+        $startPageName = Site::getIndexPageName();
+        $indexPage = $this->path->resolve($startPageName);
+        if (FileSystems::exists($indexPage)) {
+            // start page inside namespace
+            $this->path = $indexPage;
+            return;
+        }
+
+        // page named like the NS inside the NS
+        $parent = $this->getPath()->getParent();
+        if ($parent !== null) {
+            $parentName = $parent->getLastNameWithoutExtension();
+            $nsInsideNsIndex = $this->path->resolve($parentName);
+            if (FileSystems::exists($nsInsideNsIndex)) {
+                $this->path = $nsInsideNsIndex;
+                return;
+            }
+        }
+        // We don't support the child page
+        // Does not exist but can be used by hierarchical function
+        $this->path = $indexPage;
     }
 
 

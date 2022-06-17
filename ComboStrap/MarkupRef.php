@@ -168,15 +168,17 @@ class MarkupRef
                 $fragment = substr($ref, $hashTagPosition + 1);
             }
         }
-        $wikiId = cleanID($wikiId);
 
+        /**
+         * The URL
+         * The path is created at the end because it may have a revision
+         */
+        $wikiId = DokuPath::cleanID($wikiId);
         switch ($type) {
             case self::MEDIA_TYPE:
-                $this->path = DokuPath::createMediaPathFromId($wikiId);
-                $this->url = FetchDoku::createFromPath($this->path)->getFetchUrl();
+                $this->url = UrlEndpoint::createFetchUrl($wikiId);
                 break;
             case self::LINK_TYPE:
-                $this->path = DokuPath::createPagePathFromId($wikiId);
                 $this->url = UrlEndpoint::createDokuUrl($wikiId);
                 break;
             default:
@@ -349,6 +351,30 @@ class MarkupRef
 
             }
 
+        }
+
+        /**
+         * The path
+         */
+        try {
+            $rev = $this->url->getQueryPropertyValue(DokuPath::REV_ATTRIBUTE);
+        } catch (ExceptionNotFound $e) {
+            $rev = null;
+        }
+        switch ($type) {
+            case self::MEDIA_TYPE:
+                $this->path = DokuPath::createMediaPathFromId($wikiId, $rev);
+                break;
+            case self::LINK_TYPE:
+                /**
+                 * The path may be a namespace, in the page system
+                 * the path should then be the index
+                 */
+                $path = DokuPath::createPagePathFromId($wikiId, $rev);
+                $this->path = Page::createPageFromPathObject($path)->getPath();
+                break;
+            default:
+                throw new ExceptionBadArgument("The ref type ($type) is unknown");
         }
 
     }

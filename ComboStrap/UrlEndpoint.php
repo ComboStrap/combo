@@ -5,10 +5,15 @@ namespace ComboStrap;
 class UrlEndpoint
 {
 
-    public static function createFetchUrl(): Url
+    public static function createFetchUrl(string $wikiId = null): Url
     {
 
-        return self::createEndPointUrl('lib/exe/fetch.php', '_media');
+        $url = self::createEndPointUrl('lib/exe/fetch.php', '_media');
+        if ($wikiId !== null) {
+            $url->addQueryParameter(FetchDoku::MEDIA_QUERY_PARAMETER, $wikiId);
+        }
+        return $url;
+
 
     }
 

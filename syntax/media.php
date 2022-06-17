@@ -1,27 +1,24 @@
 <?php
 
 
-use ComboStrap\Align;
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
-use ComboStrap\DokuFs;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\FetchAbs;
 use ComboStrap\FileSystems;
 use ComboStrap\FirstImage;
-use ComboStrap\FloatAttribute;
 use ComboStrap\LogUtility;
-use ComboStrap\MediaMarkup;
 use ComboStrap\MediaLink;
+use ComboStrap\MediaMarkup;
 use ComboStrap\Metadata;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
-use ComboStrap\TagAttributes;
 use ComboStrap\ThirdPartyPlugins;
 
 
@@ -104,7 +101,13 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         switch ($markupUrl->getInternalExternalType()) {
             case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
                 $renderer->stats[AnalyticsDocument::INTERNAL_MEDIA_COUNT]++;
-                if (!FileSystems::exists($markupUrl->getPath())) {
+                try {
+                    $path = $markupUrl->getPath();
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError("The path of an internal media should be known. We were unable to update the statistics.", self::TAG);
+                    return;
+                }
+                if (!FileSystems::exists($path)) {
                     $renderer->stats[AnalyticsDocument::INTERNAL_BROKEN_MEDIA_COUNT]++;
                 }
                 break;
@@ -177,41 +180,41 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
-        switch ($state) {
+        // As this is a container, this cannot happens but yeah, now, you know
+        if ($state == DOKU_LEXER_SPECIAL) {
 
-
-            // As this is a container, this cannot happens but yeah, now, you know
-            case DOKU_LEXER_SPECIAL :
-
-
+            try {
                 $mediaMarkup = MediaMarkup::createFromMatch($match);
+            } catch (ExceptionBadSyntax $e) {
+                LogUtility::error("The media ($match) could not be parsed. Error: {$e->getMessage()}");
+                return [];
+            }
 
-                /**
-                 * Parent
-                 */
-                $callStack = CallStack::createFromHandler($handler);
-                $parent = $callStack->moveToParent();
-                $parentTag = "";
-                if (!empty($parent)) {
-                    $parentTag = $parent->getTagName();
-                    if (in_array($parentTag,
-                        [syntax_plugin_combo_link::TAG, syntax_plugin_combo_brand::TAG])) {
-                        /**
-                         * TODO: should be on the exit tag of the link / brand
-                         *   - The image is in a link, we don't want another link to the image
-                         *   - In a brand, there is also already a link to the home page, no link to the media
-                         */
-                        $mediaMarkup->setLinking(MediaMarkup::LINKING_NOLINK_VALUE);
-                    }
+            /**
+             * Parent
+             */
+            $callStack = CallStack::createFromHandler($handler);
+            $parent = $callStack->moveToParent();
+            $parentTag = "";
+            if (!empty($parent)) {
+                $parentTag = $parent->getTagName();
+                if (in_array($parentTag,
+                    [syntax_plugin_combo_link::TAG, syntax_plugin_combo_brand::TAG])) {
+                    /**
+                     * TODO: should be on the exit tag of the {@link syntax_plugin_combo_link::handle() link}
+                     *   / {@link syntax_plugin_combo_brand::handle()} brand
+                     *   - The image is in a link, we don't want another link to the image
+                     *   - In a brand, there is also already a link to the home page, no link to the media
+                     */
+                    $mediaMarkup->setLinking(MediaMarkup::LINKING_NOLINK_VALUE);
                 }
+            }
 
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $mediaMarkup->toCallStackArray(),
-                    PluginUtility::CONTEXT => $parentTag
-                );
-
-
+            return array(
+                PluginUtility::STATE => $state,
+                PluginUtility::ATTRIBUTES => $mediaMarkup->toCallStackArray(),
+                PluginUtility::CONTEXT => $parentTag
+            );
         }
         return array();
 
@@ -354,7 +357,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      * @param array $attributes
      * @param Doku_Renderer_metadata $renderer
      */
-    static public function registerImageMeta($attributes, $renderer)
+    static public function registerImageMeta(array $attributes, Doku_Renderer_metadata $renderer)
     {
         try {
             $mediaMarkup = MediaMarkup::createFromCallStackArray($attributes);
@@ -370,7 +373,13 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         $internalExternalType = $mediaMarkup->getInternalExternalType();
         switch ($internalExternalType) {
             case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
-                self::registerFirstImage($renderer, $mediaMarkup->getPath());
+                try {
+                    $path = $mediaMarkup->getMarkupRef()->getPath();
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError("We cannot get the path of the image. Error: {$e->getMessage()}. The image was not registered in the metadata", self::TAG);
+                    return;
+                }
+                self::registerFirstImage($renderer, $path);
                 $renderer->internalmedia($mediaMarkup->getSrc(), $label);
                 break;
             case MediaMarkup::EXTERNAL_MEDIA_CALL_NAME:

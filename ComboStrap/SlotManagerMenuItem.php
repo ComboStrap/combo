@@ -126,39 +126,41 @@ class SlotManagerMenuItem extends AbstractItem
             }
             $html .= "<p class='mb-0 mt-1'><strong>$label</strong></p>";
             $html .= "<table>";
-            $parentPath = $actualPath->getParent();
-            while ($parentPath !== null) {
-                $secondaryPath = $parentPath->resolve($secondarySlot);
-                try {
-                    $secondaryPage = Page::createPageFromQualifiedPath($secondaryPath->toPathString());
-                    $class = "link-combo";
-                    if (FileSystems::exists($secondaryPath)) {
-                        $action = self::EDIT_ACTION;
-                        $style = '';
-                    } else {
-                        $action = self::CREATE_ACTION;
-                        $style = ' style="color:rgba(0,0,0,0.65)"';
-                    }
-                    $url = $secondaryPage->getUrl(PageUrlType::CONF_VALUE_PAGE_PATH);
-                    if (strpos($url, "?") !== false) {
-                        // without url rewrite
-                        // /./doku.php?id=slot_main_header
-                        $url .= Url::AMPERSAND_URL_ENCODED_FOR_HTML;
-                    } else {
-                        // with url rewrite, the id parameter is not seen
-                        $url .= "?";
-                    }
-                    $url .= "do=edit";
-                    $html .= "<tr><td class='pe-2'>$action</td><td><a href=\"$url\" class=\"$class\"$style>{$secondaryPath->toPathString()}</a></td></tr>";
 
-                    if ($action === self::EDIT_ACTION) {
-                        break;
-                    }
-                } catch (ExceptionBadSyntax $e) {
-                    // should not happen
+            $parentPath = $actualPath;
+            while (true) {
+                try {
+                    $parentPath = $parentPath->getParent();
+                } catch (ExceptionNotFound $e) {
+                    break;
                 }
-                // loop
-                $parentPath = $parentPath->getParent();
+                $secondaryPath = $parentPath->resolve($secondarySlot);
+
+                $secondaryPage = Page::createPageFromQualifiedPath($secondaryPath->toPathString());
+                $class = "link-combo";
+                if (FileSystems::exists($secondaryPath)) {
+                    $action = self::EDIT_ACTION;
+                    $style = '';
+                } else {
+                    $action = self::CREATE_ACTION;
+                    $style = ' style="color:rgba(0,0,0,0.65)"';
+                }
+                $url = $secondaryPage->getUrl(PageUrlType::CONF_VALUE_PAGE_PATH);
+                if (strpos($url, "?") !== false) {
+                    // without url rewrite
+                    // /./doku.php?id=slot_main_header
+                    $url .= Url::AMPERSAND_URL_ENCODED_FOR_HTML;
+                } else {
+                    // with url rewrite, the id parameter is not seen
+                    $url .= "?";
+                }
+                $url .= "do=edit";
+                $html .= "<tr><td class='pe-2'>$action</td><td><a href=\"$url\" class=\"$class\"$style>{$secondaryPath->toPathString()}</a></td></tr>";
+
+                if ($action === self::EDIT_ACTION) {
+                    break;
+                }
+
             }
             $html .= "</table>";
 

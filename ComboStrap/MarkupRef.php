@@ -528,7 +528,7 @@ class MarkupRef
 
     public function addMediaIdToUrl(string $id): MarkupRef
     {
-        $this->url->addQueryParameter(FetchDoku::MEDIA_QUERY_PARAMETER, $id);
+        $this->url->addQueryParameterIfNotActualSameValue(FetchDoku::MEDIA_QUERY_PARAMETER, $id);
         return $this;
     }
 

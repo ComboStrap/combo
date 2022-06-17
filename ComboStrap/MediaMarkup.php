@@ -90,7 +90,7 @@ class MediaMarkup
 
     private Url $fetchUrl;
 
-    private string $externalOrTypeMedia;
+
     private ?string $align = null;
     private ?string $label = null;
     private ?MarkupRef $ref;
@@ -108,6 +108,7 @@ class MediaMarkup
      *    * `src` is not only the media path but may have a anchor
      * We parse it then
      *
+     * @throws ExceptionBadArgument
      */
     public function setRef(string $ref): MediaMarkup
     {
@@ -117,7 +118,7 @@ class MediaMarkup
         $this->fetchUrl = $this->ref->getUrl();
 
         try {
-            $this->fetchUrl->addQueryParameter(DokuPath::MEDIA_DRIVE, $this->ref->getPath()->getDokuwikiId());
+            $this->fetchUrl->addQueryParameterIfNotActualSameValue(FetchDoku::MEDIA_QUERY_PARAMETER, $this->ref->getPath()->getDokuwikiId());
         } catch (ExceptionNotFound $e) {
             // no path
         }
@@ -202,14 +203,11 @@ class MediaMarkup
      * Compliance: src in dokuwiki is the id and the anchor if any
      * Dokuwiki does not understand other property and the reference metadata
      * may not work if we send back the `ref`
+     * @throws ExceptionNotFound
      */
     public function getSrc(): string
     {
-        $path = $this->getPath();
-        if (!($path instanceof DokuPath)) {
-            return $this->ref->getRef();
-        }
-        $src = $path->getDokuWikiId();
+        $src = $this->getPath()->getDokuWikiId();
         try {
             $src = "$src#{$this->fetchUrl->getFragment()}";
         } catch (ExceptionNotFound $e) {
@@ -219,17 +217,19 @@ class MediaMarkup
     }
 
     /**
-     * Media Type
+     * Media Type Needed by Dokuwiki
      */
     public function getInternalExternalType(): string
     {
-        switch ($this->externalOrTypeMedia) {
-            case DokuFs::SCHEME:
-                return self::INTERNAL_MEDIA_CALL_NAME;
-            case self::EXTERNAL_MEDIA_CALL_NAME:
-            default:
-                return self::EXTERNAL_MEDIA_CALL_NAME;
+        try {
+            // if there is a path, this is internal
+            // if interwiki this, wiki id, ...
+            $this->ref->getPath();
+            return self::INTERNAL_MEDIA_CALL_NAME;
+        } catch (ExceptionNotFound $e) {
+            return self::EXTERNAL_MEDIA_CALL_NAME;
         }
+
     }
 
 
@@ -359,7 +359,7 @@ class MediaMarkup
          * (ie no linking in heading , ...)
          */
         $attributes[MediaMarkup::LINKING_KEY] = null;
-        $attributes[MediaMarkup::REF_ATTRIBUTE] = $this->ref;
+        $attributes[MediaMarkup::REF_ATTRIBUTE] = $this->ref->getRef();
         $attributes[Align::ALIGN_ATTRIBUTE] = $this->align;
         $attributes[TagAttributes::TITLE_KEY] = $this->label;
         return $attributes;
@@ -503,24 +503,6 @@ class MediaMarkup
         return $this->tagAttributes;
     }
 
-    public function getPath(): Path
-    {
-        switch ($this->getInternalExternalType()) {
-            case self::INTERNAL_MEDIA_CALL_NAME:
-                try {
-                    $id = $this->fetchUrl->getQueryPropertyValue(FetchDoku::MEDIA_QUERY_PARAMETER);
-                } catch (ExceptionNotFound $e) {
-                    LogUtility::internalError("During the ref parsing, the media property should have been set");
-                    $id = "support";
-                }
-                $path = DokuPath::createMediaPathFromId($id);
-                break;
-            default:
-                $path = $this->fetchUrl;
-                break;
-        }
-        return $path;
-    }
 
     public function __toString()
     {
@@ -545,6 +527,17 @@ class MediaMarkup
     function getLinkingClass()
     {
         return $this->linkingClass;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getMarkupRef(): MarkupRef
+    {
+        if ($this->ref === null) {
+            throw new ExceptionNotFound("No markup, this media markup was not created from a markup");
+        }
+        return $this->ref;
     }
 
     private
@@ -573,9 +566,9 @@ class MediaMarkup
         return '{{' . $ref . $descriptionPart . '}}';
     }
 
-    private function setUrl(Url $getFetchUrl): MediaMarkup
+    private function setUrl(Url $fetchUrl): MediaMarkup
     {
-        $this->fetchUrl = $getFetchUrl;
+        $this->fetchUrl = $fetchUrl;
         return $this;
     }
 
@@ -588,6 +581,27 @@ class MediaMarkup
             throw new ExceptionNotFound("No ref was specified");
         }
         return $this->ref->getRef();
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getPath(): DokuPath
+    {
+        try {
+            return $this->getMarkupRef()->getPath();
+        } catch (ExceptionNotFound $e) {
+
+            try {
+                return FetchDoku::createEmpty()
+                    ->buildFromUrl($this->getFetchUrl())
+                    ->getOriginalPath();
+            } catch (ExceptionBadArgument $e) {
+                throw new ExceptionNotFound("No path in the markup or in the url were found");
+            }
+
+
+        }
     }
 
 

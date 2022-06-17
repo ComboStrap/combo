@@ -36,7 +36,7 @@ class FetchDoku extends FetchAbs
          * to be Dokuwiki Compatible even if we can serve from other drive know
          */
         $url = parent::getFetchUrl($url)
-            ->addQueryParameter(FetchDoku::MEDIA_QUERY_PARAMETER, $this->path->getDokuwikiId());
+            ->addQueryParameterIfNotActualSameValue(FetchDoku::MEDIA_QUERY_PARAMETER, $this->path->getDokuwikiId());
         if ($this->path->getDrive() !== DokuPath::MEDIA_DRIVE) {
             $url->addQueryParameter(DokuPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
         }
@@ -115,6 +115,11 @@ class FetchDoku extends FetchAbs
         $this->path = DokuPath::create($id, $drive, $rev);
         return $this;
 
+    }
+
+    public function getOriginalPath(): DokuPath
+    {
+        return $this->path;
     }
 
 

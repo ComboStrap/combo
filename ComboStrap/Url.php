@@ -586,7 +586,7 @@ class Url extends PathAbs
         try {
             $scheme = $this->getScheme();
             $base = "{$scheme}:";
-            if (in_array($scheme, ["http", "https", "ftp"])) {
+            if (in_array($scheme, ["http", "https", "ftp", LocalPath::SCHEME])) {
                 // mailto, skype, whatsapp does not have the //
                 $base = "$base//";
             }

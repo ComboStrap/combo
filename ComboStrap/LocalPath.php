@@ -46,10 +46,12 @@ class LocalPath extends PathAbs
         if ($sep != null) {
             $this->sep = $sep;
         }
-        $networkShare = "//";
+        // The network share windows/wiki styles with with two \\ and not //
+        $networkShare = "\\\\";
         if (substr($path, 0, 2) === $networkShare) {
             // window share
             $pathWithoutNetworkShare = substr($path, 2);
+            $pathWithoutNetworkShare = str_replace("\\","/", $pathWithoutNetworkShare);
             [$this->host, $relativePath] = explode("/", $pathWithoutNetworkShare, 2);
             $this->path = "/$relativePath";
             return;
@@ -324,9 +326,8 @@ class LocalPath extends PathAbs
             $uri = "$uri/{$this->getHost()}";
         } catch (ExceptionNotFound $e) {
             // ok
-            $uri = "$uri/";
         }
-        $uri = $uri . str_replace(self::WINDOWS_SEPARATOR, self::LINUX_SEPARATOR, $this->path);
+        $uri = $uri . $this->path;
         try {
             return Url::createFromString($uri);
         } catch (ExceptionBadSyntax $e) {

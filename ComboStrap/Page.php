@@ -198,7 +198,7 @@ class Page extends ResourceComboAbs
              */
             $useAcl = false;
             $id = page_findnearest($this->path->getLastNameWithoutExtension(), $useAcl);
-            $path = DokuPath::PATH_SEPARATOR . $id;
+            $path = DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $id;
             if ($id !== false && $id !== $this->path->toPathString()) {
                 $this->path = DokuPath::createPagePathFromPath($path);
             }
@@ -864,7 +864,7 @@ class Page extends ResourceComboAbs
                  * page named like the NS inside the NS
                  * ie ns:ns
                  */
-                $startPage = Page::createPageFromId($namespace->getDokuwikiId() . DokuPath::PATH_SEPARATOR . $startPageName);
+                $startPage = Page::createPageFromId($namespace->getDokuwikiId() . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $startPageName);
                 if (!$startPage->exists()) {
                     return true;
                 }
@@ -1498,7 +1498,7 @@ class Page extends ResourceComboAbs
         /**
          * Create the parent namespace id
          */
-        $parentNamespaceId = implode(DokuPath::PATH_SEPARATOR, $parentNames) . DokuPath::PATH_SEPARATOR;
+        $parentNamespaceId = implode(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $parentNames) . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT;
         try {
             return self::getIndexPageFromNamespace($parentNamespaceId);
         } catch (ExceptionBadSyntax $e) {
@@ -2015,7 +2015,7 @@ class Page extends ResourceComboAbs
     public
     function getAbsolutePath(): string
     {
-        return DokuPath::PATH_SEPARATOR . $this->getDokuwikiId();
+        return DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $this->getDokuwikiId();
     }
 
     function getType(): string
@@ -2121,15 +2121,18 @@ class Page extends ResourceComboAbs
         }
 
         // page named like the NS inside the NS
-        $parent = $this->getPath()->getParent();
-        if ($parent !== null) {
-            $parentName = $parent->getLastNameWithoutExtension();
+        try {
+            $parentName = $this->path->getLastNameWithoutExtension();
             $nsInsideNsIndex = $this->path->resolve($parentName);
             if (FileSystems::exists($nsInsideNsIndex)) {
                 $this->path = $nsInsideNsIndex;
                 return;
             }
+        } catch (ExceptionNotFound $e) {
+            // no last name
         }
+
+
         // We don't support the child page
         // Does not exist but can be used by hierarchical function
         $this->path = $indexPage;

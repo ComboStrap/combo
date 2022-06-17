@@ -275,10 +275,10 @@ class Icon extends FetchSvg
              * From an icon library
              */
             $iconNameSpace = PluginUtility::getConfValue(self::CONF_ICONS_MEDIA_NAMESPACE, self::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
-            if (substr($iconNameSpace, 0, 1) != DokuPath::PATH_SEPARATOR) {
-                $iconNameSpace = DokuPath::PATH_SEPARATOR . $iconNameSpace;
+            if (substr($iconNameSpace, 0, 1) != DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+                $iconNameSpace = DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $iconNameSpace;
             }
-            if (substr($iconNameSpace, -1) != DokuPath::PATH_SEPARATOR) {
+            if (substr($iconNameSpace, -1) != DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
                 $iconNameSpace = $iconNameSpace . ":";
             }
 

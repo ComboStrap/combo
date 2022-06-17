@@ -117,20 +117,24 @@ class LocalPath extends PathAbs
         return LocalFs::SCHEME;
     }
 
-    function getLastName()
+    function getLastName(): string
     {
         $names = $this->getNames();
         $sizeof = sizeof($names);
         if ($sizeof === 0) {
-            return null;
+            throw new ExceptionNotFound("No last name for the path ($this)");
         }
         return $names[$sizeof - 1];
 
     }
 
-    public function getExtension()
+    public function getExtension(): string
     {
-        return pathinfo($this->path, PATHINFO_EXTENSION);
+        $extension = pathinfo($this->path, PATHINFO_EXTENSION);
+        if ($extension === "") {
+            throw new ExceptionNotFound("No extension found for the path ($this)");
+        }
+        return $extension;
     }
 
     function getNames()
@@ -207,7 +211,7 @@ class LocalPath extends PathAbs
         }
         $sepCharacter = 1; // delete the sep characters
         $relativePath = substr($actualPath->toPathString(), strlen($localPath->toPathString()) + $sepCharacter);
-        $relativePath = str_replace($this->getDirectorySeparator(), DokuPath::PATH_SEPARATOR, $relativePath);
+        $relativePath = str_replace($this->getDirectorySeparator(), DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $relativePath);
         return LocalPath::createFromPath($relativePath);
 
     }

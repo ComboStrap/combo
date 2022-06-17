@@ -65,7 +65,7 @@ class action_plugin_combo_canonical extends DokuWiki_Action_Plugin
             //
             // For the modification instructions
             // https://developers.google.com/analytics/devguides/collection/analyticsjs/pages#pageview_fields
-            $pageViewCanonical = str_replace(DokuPath::PATH_SEPARATOR, "/", $canonical);
+            $pageViewCanonical = str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $canonical);
             if ($pageViewCanonical[0] != "/") {
                 $pageViewCanonical = "/$pageViewCanonical";
             }

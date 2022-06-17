@@ -31,7 +31,7 @@ class Slug extends MetadataWikiPath
         if (empty($string)) return null;
         $excludedCharacters = array_merge(DokuPath::getReservedWords(), StringUtility::SEPARATORS_CHARACTERS);
         $excludedCharacters[] = DokuPath::SLUG_SEPARATOR;
-        $parts = explode(DokuPath::PATH_SEPARATOR, $string);
+        $parts = explode(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $string);
         $parts = array_map(function ($e) use ($excludedCharacters) {
             $wordsPart = StringUtility::getWords(
                 $e,
@@ -41,7 +41,7 @@ class Slug extends MetadataWikiPath
             return strtolower(implode(DokuPath::SLUG_SEPARATOR, $wordsPart));
         }, $parts);
 
-        $slug = implode(DokuPath::PATH_SEPARATOR, $parts);
+        $slug = implode(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $parts);
         // Space to separator
         //$slugWithoutSpace = str_replace(" ", DokuPath::SLUG_SEPARATOR, $slugWithoutSpaceAroundParts);
         // No double separator

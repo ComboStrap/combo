@@ -6,7 +6,7 @@ namespace ComboStrap;
 /**
  * Class MetadataWikiPath
  * @package ComboStrap
- * A wiki path value where the separator is a {@link DokuPath::PATH_SEPARATOR}
+ * A wiki path value where the separator is a {@link DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT}
  */
 abstract class MetadataWikiPath extends MetadataText
 {

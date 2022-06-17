@@ -487,7 +487,7 @@ EOF;
     public
     function isRelative(): bool
     {
-        return strpos($this->getMarkupRef()->getRef(), DokuPath::PATH_SEPARATOR) !== 0;
+        return strpos($this->getMarkupRef()->getRef(), DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) !== 0;
     }
 
     public
@@ -600,7 +600,6 @@ EOF;
                         $this->attributes->addComponentAttributeValue($key, $value);
                     }
                 }
-
                 break;
             case
             MarkupRef::EMAIL_URI:

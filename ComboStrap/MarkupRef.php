@@ -170,16 +170,25 @@ class MarkupRef
         }
 
         /**
+         * Example:
+         * [[?do=edit]] to edit the current page
+         *
+         */
+        if ($wikiId === "") {
+            $wikiId = DokuPath::getRequestedPagePath()->getDokuwikiId();
+        } else {
+            $wikiId = DokuPath::cleanID($wikiId);
+        }
+        /**
          * The URL
          * The path is created at the end because it may have a revision
          */
-        $wikiId = DokuPath::cleanID($wikiId);
         switch ($type) {
             case self::MEDIA_TYPE:
-                $this->url = UrlEndpoint::createFetchUrl($wikiId);
+                $this->url = UrlEndpoint::createFetchUrl();
                 break;
             case self::LINK_TYPE:
-                $this->url = UrlEndpoint::createDokuUrl($wikiId);
+                $this->url = UrlEndpoint::createDokuUrl();
                 break;
             default:
                 throw new ExceptionBadArgument("The ref type ($type) is unknown");
@@ -361,9 +370,14 @@ class MarkupRef
         } catch (ExceptionNotFound $e) {
             $rev = null;
         }
+        /**
+         * The wiki id may be relative
+         */
         switch ($type) {
             case self::MEDIA_TYPE:
                 $this->path = DokuPath::createMediaPathFromId($wikiId, $rev);
+                $this->addMediaIdToUrl($wikiId)
+                    ->addRevToUrl($rev);
                 break;
             case self::LINK_TYPE:
                 /**
@@ -372,6 +386,8 @@ class MarkupRef
                  */
                 $path = DokuPath::createPagePathFromId($wikiId, $rev);
                 $this->path = Page::createPageFromPathObject($path)->getPath();
+                $this->addPageIdToUrl($this->path->getDokuwikiId())
+                    ->addRevToUrl($rev);
                 break;
             default:
                 throw new ExceptionBadArgument("The ref type ($type) is unknown");
@@ -459,5 +475,30 @@ class MarkupRef
             throw new ExceptionNotFound("NO interWiki was found");
         }
         return $this->interWiki;
+    }
+
+    public function addPageIdToUrl(string $id)
+    {
+        if (Site::hasUrlRewrite()) {
+            $this->url->setPath(str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id));
+        } else {
+            $this->url->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $id);
+        }
+        return $this;
+
+    }
+
+    public function addMediaIdToUrl(string $id): MarkupRef
+    {
+        $this->url->addQueryParameter(FetchDoku::MEDIA_QUERY_PARAMETER, $id);
+        return $this;
+    }
+
+    public function addRevToUrl($rev = null): MarkupRef
+    {
+        if ($rev !== null) {
+            $this->url->addQueryParameter(DokuPath::REV_ATTRIBUTE, $rev);
+        }
+        return $this;
     }
 }

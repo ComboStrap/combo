@@ -115,7 +115,7 @@ class Url extends PathAbs
      * @param $string -  a string
      * @param string $separator - the path separator in the string
      */
-    public static function encodeToUrlPath($string, string $separator = DokuPath::PATH_SEPARATOR): string
+    public static function encodeToUrlPath($string, string $separator = DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT): string
     {
         $parts = explode($separator, $string);
         $encodedParts = array_map(function ($e) {
@@ -515,7 +515,7 @@ class Url extends PathAbs
     /**
      * @throws ExceptionNotFound
      */
-    function getLastName()
+    function getLastName(): string
     {
         $names = $this->getNames();
         if (count($names) >= 1) {

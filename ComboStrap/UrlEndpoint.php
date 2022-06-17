@@ -5,14 +5,10 @@ namespace ComboStrap;
 class UrlEndpoint
 {
 
-    public static function createFetchUrl(string $wikiId = null): Url
+    public static function createFetchUrl(): Url
     {
 
-        $url = self::createEndPointUrl('lib/exe/fetch.php', '_media');
-        if ($wikiId !== null) {
-            $url->addQueryParameter(FetchDoku::MEDIA_QUERY_PARAMETER, $wikiId);
-        }
-        return $url;
+        return self::createEndPointUrl('lib/exe/fetch.php', '_media');
 
 
     }
@@ -56,15 +52,13 @@ class UrlEndpoint
 
     }
 
-    public static function createDokuUrl(string $id): Url
+    public static function createDokuUrl(): Url
     {
-        $cleanedId = cleanID($id);
-        $endpoint = self::createEndPointUrl('doku.php', '');
-        if (Site::hasUrlRewrite()) {
-            $endpoint->setPath(str_replace(DokuPath::PATH_SEPARATOR, "/", $cleanedId));
-        } else {
-            $endpoint->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $cleanedId);
-        }
-        return $endpoint;
+
+        return self::createEndPointUrl('doku.php', '');
+
+
     }
+
+
 }

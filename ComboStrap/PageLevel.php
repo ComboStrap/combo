@@ -24,7 +24,7 @@ class PageLevel extends MetadataInteger
 
     public function getValue(): int
     {
-        return substr_count($this->getResource()->getPath()->toPathString(), DokuPath::PATH_SEPARATOR) - 1;
+        return substr_count($this->getResource()->getPath()->toPathString(), DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) - 1;
     }
 
 

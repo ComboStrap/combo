@@ -20,20 +20,26 @@ interface Path
 
     function getExtension();
 
-    function getLastNameWithoutExtension();
+
+    /**
+     * @return string
+     * @throws ExceptionNotFound - if the path does not have any last name
+     */
+    function getLastNameWithoutExtension():string;
 
     function getScheme();
 
     /**
-     * The last name of the path with or without the extension
+     * The last name of the path with or without an extension
      *
      * The Path class does not have a notion of "extension"
      * because the file does not have one but we provide the
      * {@link PathAbs::getExtension()} as utility
      *
-     * @return mixed
+     * @return string
+     * @throws ExceptionNotFound - if the path does not have any last name
      */
-    function getLastName();
+    function getLastName():string;
 
     function getNames();
 

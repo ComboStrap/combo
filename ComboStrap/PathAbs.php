@@ -8,9 +8,17 @@ abstract class PathAbs implements Path
 {
 
 
-    public function getExtension()
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getExtension(): string
     {
-        return pathinfo($this->getLastName(), PATHINFO_EXTENSION);
+        $extension = pathinfo($this->getLastName(), PATHINFO_EXTENSION);
+        if ($extension === "") {
+            throw new ExceptionNotFound("No extension found");
+        }
+        return $extension;
+
     }
 
     /**
@@ -26,7 +34,10 @@ abstract class PathAbs implements Path
         }
     }
 
-    public function getLastNameWithoutExtension()
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getLastNameWithoutExtension(): string
     {
         $lastName = $this->getLastName();
         return pathinfo($lastName, PATHINFO_FILENAME);
@@ -57,8 +68,6 @@ abstract class PathAbs implements Path
         }
         throw new ExceptionCompile("This is not a doku path or local path");
     }
-
-
 
 
 }

@@ -112,6 +112,7 @@ class MarkupRef
             $check = false;
             $ref = sectionID($ref, $check);
             $this->url = Url::createEmpty()->setFragment($ref);
+            $this->path = DokuPath::createPagePathFromRequestedPage();
             return;
         }
 

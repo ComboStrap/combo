@@ -703,7 +703,7 @@ class PluginUtility
         if(!PluginUtility::isDevOrTest()){
             LogUtility::internalError("Internal Error: The request id could not be determined");
         }
-        return "default_test_id";
+        return DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
 
     }
 

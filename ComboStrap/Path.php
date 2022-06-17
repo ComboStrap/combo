@@ -25,7 +25,7 @@ interface Path
      * @return string
      * @throws ExceptionNotFound - if the path does not have any last name
      */
-    function getLastNameWithoutExtension():string;
+    function getLastNameWithoutExtension(): string;
 
     function getScheme();
 
@@ -39,11 +39,15 @@ interface Path
      * @return string
      * @throws ExceptionNotFound - if the path does not have any last name
      */
-    function getLastName():string;
+    function getLastName(): string;
 
     function getNames();
 
-    function getParent(): ?Path;
+    /**
+     * @return Path
+     * @throws ExceptionNotFound - for the root
+     */
+    function getParent(): Path;
 
     /**
      * @return string only the string representation of the path

@@ -888,20 +888,20 @@ class DokuPath extends PathAbs
 
     /**
      * The parent path is a directory (namespace)
-     * The parent of page in the root does return null.
+     * The root path throw an errors
      *
-     * @return DokuPath|null
+     * @return DokuPath
+     * @throws ExceptionNotFound when the root
      */
-    function getParent(): ?Path
+    function getParent(): Path
     {
-
         /**
          * Same as {@link getNS()}
          */
         $names = $this->getNames();
         switch (sizeof($names)) {
             case 0:
-                return null;
+                throw new ExceptionNotFound("No parent found");
             case 1:
                 return new DokuPath(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $this->drive, $this->rev);
             default:

@@ -853,11 +853,17 @@ class Page extends ResourceComboAbs
     public
     function isIndexPage(): bool
     {
-        global $conf;
-        $startPageName = $conf['start'];
-        if ($this->getPath()->getLastNameWithoutExtension() == $startPageName) {
-            return true;
-        } else {
+
+        $startPageName = Site::getIndexPageName();
+        try {
+            if ($this->getPath()->getLastNameWithoutExtension() === $startPageName) {
+                return true;
+            }
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+
+        try {
             $namespace = $this->path->getParent();
             if ($namespace->getLastNameWithoutExtension() === $this->getPath()->getLastNameWithoutExtension()) {
                 /**
@@ -869,7 +875,11 @@ class Page extends ResourceComboAbs
                     return true;
                 }
             }
+        } catch (ExceptionNotFound $e) {
+            // no parent, no last name, etc
         }
+
+
         return false;
     }
 

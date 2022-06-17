@@ -91,7 +91,7 @@ class MarkupRef
                 }
                 return;
             } catch (ExceptionBadSyntax $e) {
-                throw new ExceptionBadSyntax("The url string is not valid URL ($ref)");
+                throw new ExceptionBadSyntax("The url string was not validated as an URL ($ref). Error: {$e->getMessage()}");
             }
         }
 
@@ -428,10 +428,10 @@ class MarkupRef
             self::$authorizedSchemes = null;
             // scoped by request id to be able to work on test because it's a global variable
             self::$authorizedSchemes[$requestedPage] = getSchemes();
-            self::$authorizedSchemes[] = "whatsapp";
-            self::$authorizedSchemes[] = "mailto";
+            self::$authorizedSchemes[$requestedPage][] = "whatsapp";
+            self::$authorizedSchemes[$requestedPage][] = "mailto";
         }
-        return self::$authorizedSchemes;
+        return self::$authorizedSchemes[$requestedPage];
     }
 
     /**

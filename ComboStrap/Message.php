@@ -239,7 +239,7 @@ EOF;
     {
         if ($this->canonical !== null) {
             $canonicalPath = DokuPath::createFromUnknownRoot($this->canonical);
-            $label = $canonicalPath->toLabel();
+            $label = ResourceName::createForResource($canonicalPath)->getValueOrDefault();
             return PluginUtility::getDocumentationHyperLink($this->canonical, $label, false);
         } else {
             return null;

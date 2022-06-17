@@ -721,20 +721,6 @@ class DokuPath extends PathAbs
         return self::$reservedWords;
     }
 
-    /**
-     * @return string - a label from a path (used in link when their is no label available)
-     * The path is separated in words and every word gets an uppercase letter
-     */
-    public function toLabel(): string
-    {
-        $words = preg_split("/\s/", preg_replace("/[-_:]/", " ", $this->toPathString()));
-        $wordsUc = [];
-        foreach ($words as $word) {
-            $wordsUc[] = ucfirst($word);
-        }
-        return implode(" ", $wordsUc);
-    }
-
 
     /**
      * @return LocalPath

@@ -410,6 +410,7 @@ EOF;
      * @param false $navigation
      * @return string
      * @throws ExceptionNotFound
+     *
      */
     public function getLabel(bool $navigation = false): string
     {

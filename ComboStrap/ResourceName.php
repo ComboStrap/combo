@@ -52,6 +52,9 @@ class ResourceName extends MetadataText
         return true;
     }
 
+    /**
+     * @return string
+     */
     public function getDefaultValue(): string
     {
 
@@ -83,6 +86,19 @@ class ResourceName extends MetadataText
     public function getCanonical(): string
     {
         return $this->getName();
+    }
+
+    /**
+     * @return string
+     */
+    public function getValueOrDefault(): string
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+
     }
 
 

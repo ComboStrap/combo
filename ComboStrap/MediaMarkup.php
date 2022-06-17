@@ -108,7 +108,11 @@ class MediaMarkup
      *    * `src` is not only the media path but may have a anchor
      * We parse it then
      *
+     * @param string $ref
+     * @return MediaMarkup
      * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
      */
     public function setRef(string $ref): MediaMarkup
     {
@@ -262,6 +266,8 @@ class MediaMarkup
     /**
      * @param string $match - the match of the renderer
      * @throws ExceptionBadSyntax - if no ref was found
+     * @throws ExceptionBadArgument
+     * @throws ExceptionNotFound
      */
     public static function createFromMatch(string $match): MediaMarkup
     {
@@ -279,7 +285,7 @@ class MediaMarkup
         if ($ref === null) {
             throw new ExceptionBadSyntax("No ref was found");
         }
-        $mediaMarkup->setRef($ref);
+        $mediaMarkup->setRef(trim($ref));
         if (isset($parts[1])) {
             $mediaMarkup->setLabel($parts[1]);
         }

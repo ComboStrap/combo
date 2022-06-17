@@ -245,27 +245,14 @@ class Background
      */
     public static function fromMediaToBackgroundImageStackArray(array $mediaCallStackArray): array
     {
-        $backgroundProperties = [];
-        foreach ($mediaCallStackArray as $key => $property) {
-            switch ($key) {
-                case MediaMarkup::LINKING_KEY:
-                case TagAttributes::TITLE_KEY:
-                case Align::ALIGN_ATTRIBUTE:
-                case FloatAttribute::FLOAT_KEY: // Float is when the image is at the right
-                    /**
-                     * Attributes not taken
-                     */
-                    break;
-                case TagAttributes::TYPE_KEY: // needed for the metadata registration
-                default:
-                    /**
-                     * Attributes taken
-                     */
-                    $backgroundProperties[$key] = $property;
-                    break;
-            }
-        }
-        return $backgroundProperties;
+        /**
+         * This attributes should no be taken
+         */
+        $mediaCallStackArray[MediaMarkup::LINKING_KEY] = MediaMarkup::LAZY_LOAD_METHOD_NONE_VALUE;
+        $mediaCallStackArray[Align::ALIGN_ATTRIBUTE] = null;
+        $mediaCallStackArray[TagAttributes::TITLE_KEY] = null; // not sure why
+        return $mediaCallStackArray;
+
     }
 
     /**

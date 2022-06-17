@@ -7,7 +7,10 @@ use ComboStrap\AnalyticsDocument;
 use ComboStrap\ArrayUtility;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
@@ -418,16 +421,28 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         if ($hrefSource !== null) {
                             try {
                                 $href = syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($href);
-                                $markupRef = LinkMarkup::createFromRef($href);
-                                $url = $markupRef->getMarkupRef()->getUrl();
-                                $markupRefAttributes = $markupRef->toAttributes();
+                                $markupLink = LinkMarkup::createFromRef($href);
+                                $markupRefAttributes = $markupLink->toAttributes();
                             } catch (ExceptionCompile $e) {
-                                if (PluginUtility::isDevOrTest()) {
-                                    throw new ExceptionRuntime("Error on link markup ref", self::TAG, 0, $e);
+                                // uncomment to get the original error stack trace in dev
+//                                if (PluginUtility::isDevOrTest()) {
+//                                    throw new ExceptionRuntime("Error on markup ref", self::TAG, 0, $e);
+//                                }
+                                try {
+                                    /**
+                                     * Error. Example: unknown inter-wiki ...
+                                     */
+                                    $markupLink = LinkMarkup::createFromRef("#");
+                                    $markupRefAttributes = $markupLink->toAttributes();
+                                    $markupRefAttributes->addClassName(LinkMarkup::getHtmlClassNotExist());
+                                    $renderer->doc .= $markupRefAttributes->toHtmlEnterTag("a") . $e->getMessage();
+                                } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
+                                    $message = "A local link could not be parsed as reference.It should work everytime as markup ref. Error: {$e->getMessage()}";
+                                    LogUtility::internalError($message);
+                                    $url = UrlEndpoint::createSupportUrl();
+                                    $renderer->doc .= "<a href=\"{$url->toString()}\" >$message";
                                 }
-                                $message = "Error while parsing the markup href ($href). Error: {$e->getMessage()}";
-                                $url = UrlEndpoint::createSupportUrl()->toString();
-                                $renderer->doc .= "<a href=\"$url\">." . LogUtility::wrapInRedForHtml($message);
+
                                 return false;
                             }
                             $tagAttributes->mergeWithCallStackArray($markupRefAttributes->toCallStackArray());

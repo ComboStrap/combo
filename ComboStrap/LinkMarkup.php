@@ -93,12 +93,11 @@ class LinkMarkup
     public function __construct($ref)
     {
 
-        /**
-         * Url (called ref by dokuwiki)
-         */
+        $this->attributes = TagAttributes::createEmpty(syntax_plugin_combo_link::TAG);
+
+
         $this->markupRef = MarkupRef::createLinkFromRef($ref);
 
-        $this->attributes = TagAttributes::createEmpty(syntax_plugin_combo_link::TAG);
         $this->collectStylingAttributeInUrl();
 
 
@@ -110,6 +109,11 @@ class LinkMarkup
         return new LinkMarkup($id);
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
+     */
     public static function createFromRef(string $ref): LinkMarkup
     {
         return new LinkMarkup($ref);
@@ -558,8 +562,6 @@ EOF;
     {
         return $this->getMarkupRef()->getRef();
     }
-
-
 
 
     /**

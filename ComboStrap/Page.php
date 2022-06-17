@@ -864,14 +864,17 @@ class Page extends ResourceComboAbs
         }
 
         try {
+            /**
+             * page named like the NS inside the NS
+             * ie ns:ns
+             */
             $namespace = $this->path->getParent();
             if ($namespace->getLastNameWithoutExtension() === $this->getPath()->getLastNameWithoutExtension()) {
                 /**
-                 * page named like the NS inside the NS
-                 * ie ns:ns
+                 * If the start page does not exists, this is the index page
                  */
                 $startPage = Page::createPageFromId($namespace->getDokuwikiId() . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $startPageName);
-                if (!$startPage->exists()) {
+                if (!FileSystems::exists($startPage->getPath())) {
                     return true;
                 }
             }

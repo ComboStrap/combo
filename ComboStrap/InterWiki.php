@@ -207,7 +207,7 @@ class InterWiki
                 return $interWikis[self::DEFAULT_INTERWIKI_NAME];
             }
         }
-        throw new ExceptionNotFound("No default inter-wiki");
+        throw new ExceptionNotFound("The inter-wiki ({$this->getWiki()}) does not exist and there is no default inter-wiki defined.");
 
     }
 

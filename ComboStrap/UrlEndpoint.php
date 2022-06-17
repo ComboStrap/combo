@@ -52,12 +52,19 @@ class UrlEndpoint
 
     }
 
-    public static function createSupportUrl(): Url
+    public static function createComboStrapUrl(): Url
     {
 
         return Url::createEmpty()
             ->setScheme("https")
-            ->setHost("combostrap.com")
+            ->setHost("combostrap.com");
+
+    }
+
+    public static function createSupportUrl(): Url
+    {
+
+        return self::createComboStrapUrl()
             ->setPath("support");
 
     }
@@ -68,8 +75,6 @@ class UrlEndpoint
         return self::createEndPointUrl('doku.php', '');
 
     }
-
-
 
 
 }

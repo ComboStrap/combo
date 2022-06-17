@@ -196,8 +196,10 @@ class MarkupRef
         }
 
         if ($fragment !== null) {
-            $check = false;
-            $fragment = sectionID($fragment, $check);
+            if ($type === self::LINK_TYPE) {
+                $check = false;
+                $fragment = sectionID($fragment, $check);
+            }
             $this->url->setFragment($fragment);
         }
 

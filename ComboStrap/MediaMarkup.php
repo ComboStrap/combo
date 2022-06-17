@@ -207,13 +207,23 @@ class MediaMarkup
      */
     public function getSrc(): string
     {
-        $src = $this->getPath()->getDokuWikiId();
-        try {
-            $src = "$src#{$this->fetchUrl->getFragment()}";
-        } catch (ExceptionNotFound $e) {
-            // ok
+        $internalExternalType = $this->getInternalExternalType();
+        switch ($internalExternalType) {
+            case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
+                $src = $this->getPath()->getDokuWikiId();
+                try {
+                    $src = "$src#{$this->fetchUrl->getFragment()}";
+                } catch (ExceptionNotFound $e) {
+                    // ok
+                }
+                return $src;
+            case MediaMarkup::EXTERNAL_MEDIA_CALL_NAME:
+                return $this->getMarkupRef()->getRef();
+            default:
+                LogUtility::internalError("The internal/external type value ($internalExternalType) is unknown");
+                return $this->getMarkupRef()->getRef();
         }
-        return $src;
+
     }
 
     /**

@@ -5,6 +5,10 @@ namespace ComboStrap;
 class UrlEndpoint
 {
 
+    const NO_REWRITE = "no_rewrite";
+    const WEB_SERVER_REWRITE = "web_server";
+    const DOKU_REWRITE = "doku_rewrite";
+
     public static function createFetchUrl(): Url
     {
 
@@ -21,10 +25,16 @@ class UrlEndpoint
     public static function createEndPointUrl($relativeNormalPath, $relativeRewritePath): Url
     {
 
-        if (Site::hasUrlRewrite()) {
-            $path = $relativeRewritePath;
-        } else {
-            $path = $relativeNormalPath;
+        $rewrite = Site::getUrlRewrite();
+        switch ($rewrite) {
+            case self::WEB_SERVER_REWRITE:
+                $path = $relativeRewritePath;
+                break;
+            case self::DOKU_REWRITE:
+            case self::NO_REWRITE:
+            default:
+                $path = $relativeNormalPath;
+                break;
         }
         try {
             $urlPathBaseDir = Site::getUrlPathBaseDir();

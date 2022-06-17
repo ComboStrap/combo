@@ -479,10 +479,26 @@ class MarkupRef
 
     public function addPageIdToUrl(string $id)
     {
-        if (Site::hasUrlRewrite()) {
-            $this->url->setPath(str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id));
-        } else {
-            $this->url->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $id);
+        switch (Site::getUrlRewrite()) {
+            case UrlEndpoint::NO_REWRITE:
+            default:
+                $this->url->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $id);
+                break;
+            case UrlEndpoint::WEB_SERVER_REWRITE:
+                $this->url->setPath(str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id));
+                break;
+            case UrlEndpoint::DOKU_REWRITE:
+                try {
+                    $actualPath = $this->url->getPath();
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError("Unable to get the URL path for the doku endpoint. The path should be at minimum `doku.php`");
+                    $actualPath = "doku.php";
+                }
+                // No encoding the : seems to work ?
+                // $id = urlencode($id);
+                $this->url->setPath("$actualPath/$id");
+                break;
+
         }
         return $this;
 

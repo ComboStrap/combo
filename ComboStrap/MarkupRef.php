@@ -477,7 +477,7 @@ class MarkupRef
         return $this->interWiki;
     }
 
-    public function addPageIdToUrl(string $id)
+    public function addPageIdToUrl(string $id): MarkupRef
     {
         switch (Site::getUrlRewrite()) {
             case UrlEndpoint::NO_REWRITE:
@@ -485,18 +485,36 @@ class MarkupRef
                 $this->url->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $id);
                 break;
             case UrlEndpoint::WEB_SERVER_REWRITE:
-                $this->url->setPath(str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id));
+                $separatorCharacter = Site::getUrlEndpointSeparator();
+                $id = str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $separatorCharacter, $id);
+                try {
+                    $base = $this->url->getPath();
+                } catch (ExceptionNotFound $e) {
+                    // may be no base at all
+                    $base = "/";
+                }
+                if ($base[strlen($base) - 1] === "/") {
+                    $path = "$base{$id}";
+                } else {
+                    $path = "$base/$id";
+                }
+                $this->url->setPath($path);
                 break;
             case UrlEndpoint::DOKU_REWRITE:
                 try {
-                    $actualPath = $this->url->getPath();
+                    $base = $this->url->getPath();
                 } catch (ExceptionNotFound $e) {
                     LogUtility::internalError("Unable to get the URL path for the doku endpoint. The path should be at minimum `doku.php`");
-                    $actualPath = "doku.php";
+                    $base = "doku.php";
                 }
-                // No encoding the : seems to work ?
-                // $id = urlencode($id);
-                $this->url->setPath("$actualPath/$id");
+                /**
+                 * No url  encoding of id (ie $id = urlencode($id))
+                 *   * the `:` seems to work {@link idfilter}
+                 *   * doku rewrite is bad rewrite
+                 */
+                $separatorCharacter = Site::getUrlEndpointSeparator();
+                $id = str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $separatorCharacter, $id);
+                $this->url->setPath("$base/$id");
                 break;
 
         }

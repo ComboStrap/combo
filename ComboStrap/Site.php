@@ -81,6 +81,61 @@ class Site
         $conf['userewrite'] = '2';
     }
 
+    /**
+     * Web server rewrite (Apache rewrite (htaccess), Nginx)
+     * @return void
+     */
+    public static function setWebServerUrlRewrite()
+    {
+        global $conf;
+        $conf['userewrite'] = '1';
+    }
+
+    /**
+     * https://www.dokuwiki.org/config:useslash
+     * @return void
+     */
+    public static function useSlashSeparatorInEndpointUrl()
+    {
+        global $conf;
+        $conf['useslash'] = 1; // use slash instead of ;
+    }
+
+
+    public static function getUrlEndpointSeparator(): string
+    {
+        $defaultSeparator = DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT;
+        $slashSeparator = "/";
+        global $conf;
+        $key = 'useslash';
+        $value = $conf[$key];
+        try {
+            $valueInt = DataType::toInteger($value);
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::internalError("The ($key) configuration does not have an integer value ($value). Default separator returned");
+            return $defaultSeparator;
+        }
+        switch ($valueInt) {
+            case 0:
+                return $defaultSeparator;
+            case 1:
+                return $slashSeparator;
+            default:
+                LogUtility::internalError("The ($key) configuration has an integer value ($valueInt) that is not a valid one (0 or 1). Default separator returned");
+                return $defaultSeparator;
+        }
+    }
+
+    /**
+     * https://www.dokuwiki.org/config:useslash
+     * @return void
+     */
+    public static function setUrlRewriteToDefault()
+    {
+        global $conf;
+        $conf['useslash'] = 0;
+    }
+
 
     function getEmailObfuscationConfiguration()
     {

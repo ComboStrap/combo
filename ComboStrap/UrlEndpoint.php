@@ -67,8 +67,9 @@ class UrlEndpoint
 
         return self::createEndPointUrl('doku.php', '');
 
-
     }
+
+
 
 
 }

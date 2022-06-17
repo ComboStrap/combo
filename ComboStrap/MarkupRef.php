@@ -469,10 +469,13 @@ class MarkupRef
         return $this->refScheme;
     }
 
-    public function getInterWiki()
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getInterWiki(): InterWiki
     {
         if ($this->interWiki === null) {
-            throw new ExceptionNotFound("NO interWiki was found");
+            throw new ExceptionNotFound("This ref ($this->ref) is not an interWiki.");
         }
         return $this->interWiki;
     }

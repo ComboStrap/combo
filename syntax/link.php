@@ -415,14 +415,14 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         $href = $tagAttributes->getValue(self::ATTRIBUTE_HREF);
 
                         /**
-                         * HrefMarkup ?
+                         * HrefMarkup already set by another component (Why ?)
                          */
                         $hrefSource = $tagAttributes->getValueAndRemoveIfPresent(self::ATTRIBUTE_HREF_TYPE);
                         if ($hrefSource !== null) {
                             try {
                                 $href = syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($href);
                                 $markupLink = LinkMarkup::createFromRef($href);
-                                $markupRefAttributes = $markupLink->toAttributes();
+                                $markupAttributes = $markupLink->toAttributes();
                             } catch (ExceptionCompile $e) {
                                 // uncomment to get the original error stack trace in dev
 //                                if (PluginUtility::isDevOrTest()) {
@@ -433,9 +433,9 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                      * Error. Example: unknown inter-wiki ...
                                      */
                                     $markupLink = LinkMarkup::createFromRef("#");
-                                    $markupRefAttributes = $markupLink->toAttributes();
-                                    $markupRefAttributes->addClassName(LinkMarkup::getHtmlClassNotExist());
-                                    $renderer->doc .= $markupRefAttributes->toHtmlEnterTag("a") . $e->getMessage();
+                                    $markupAttributes = $markupLink->toAttributes();
+                                    $markupAttributes->addClassName(LinkMarkup::getHtmlClassNotExist());
+                                    $renderer->doc .= $markupAttributes->toHtmlEnterTag("a") . $e->getMessage();
                                 } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
                                     $message = "A local link could not be parsed as reference.It should work everytime as markup ref. Error: {$e->getMessage()}";
                                     LogUtility::internalError($message);
@@ -445,14 +445,9 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
                                 return false;
                             }
-                            $tagAttributes->mergeWithCallStackArray($markupRefAttributes->toCallStackArray());
-                            // No href if the url could not be calculated
-                            // such as a bad interwiki link
-                            if (!empty($url)) {
-                                $tagAttributes->setComponentAttributeValue(self::ATTRIBUTE_HREF, $url);
-                            } else {
-                                $tagAttributes->removeComponentAttributeIfPresent(self::ATTRIBUTE_HREF);
-                            }
+                            // markup attributes is leading because it has already output attribute such as href
+                            $markupAttributes->mergeWithCallStackArray($tagAttributes->toCallStackArray());
+                            $tagAttributes = $markupAttributes;
 
                         }
 

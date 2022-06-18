@@ -97,7 +97,7 @@ abstract class FetchAbs implements Fetch
         try {
             $value = $this->getRequestedCache();
             if ($value !== self::CACHE_DEFAULT_VALUE) {
-                $url->addQueryParameterIfNotActualSameValue(self::CACHE_KEY, $value);
+                $url->setQueryParameter(self::CACHE_KEY, $value);
             }
         } catch (ExceptionNotFound $e) {
             // ok
@@ -105,12 +105,12 @@ abstract class FetchAbs implements Fetch
         /**
          * The buster
          */
-        $url->addQueryParameterIfNotActualSameValue(Fetch::CACHE_BUSTER_KEY, $this->getBuster());
+        $url->setQueryParameter(Fetch::CACHE_BUSTER_KEY, $this->getBuster());
         /**
          * The fetcher name
          */
         $fetcherName = $this->getName();
-        $url->addQueryParameterIfNotPresent(Fetch::FETCHER_KEY, $fetcherName);
+        $url->setQueryParameter(Fetch::FETCHER_KEY, $fetcherName);
         return $url;
     }
 

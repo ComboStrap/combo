@@ -717,5 +717,23 @@ class Url extends PathAbs
         }
     }
 
+    /**
+     * Set/replace a query parameter with the new value
+     * @param string $key
+     * @param string $value
+     * @return Url
+     */
+    public function setQueryParameter(string $key, string $value): Url
+    {
+        $this->removeQueryParameter($key);
+        $this->addQueryParameter($key,$value);
+        return $this;
+    }
+
+    private function removeQueryParameter(string $key)
+    {
+        unset($this->query[$key]);
+    }
+
 
 }

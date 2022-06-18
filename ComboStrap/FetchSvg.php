@@ -475,8 +475,9 @@ class FetchSvg extends FetchImage
      */
     public function getFetchUrl(Url $url = null): Url
     {
-        $url = parent::getFetchUrl($url);
+
         $url = FetchRaw::createFromPath($this->originalPath)->getFetchUrl($url);
+        $url = parent::getFetchUrl($url);
         try {
             $url->addQueryParameter(ColorRgb::COLOR, $this->getRequestedColor()->toCssValue());
         } catch (ExceptionNotFound $e) {

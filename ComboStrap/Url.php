@@ -524,6 +524,26 @@ class Url extends PathAbs
         throw new ExceptionNotFound("No last name");
     }
 
+    /**
+     * @return string
+     * @throws ExceptionNotFound
+     */
+    public function getExtension(): string
+    {
+        if ($this->hasProperty(FetchDoku::MEDIA_QUERY_PARAMETER)) {
+
+            try {
+                $dokuPath = FetchDoku::createEmpty()->buildFromUrl($this)->getOriginalPath();
+                return $dokuPath->getExtension();
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::internalError("Build error from a Media Fetch URL. We were unable to get the mime. Error: {$e->getMessage()}");
+            }
+
+        }
+        return parent::getExtension();
+    }
+
+
     function getNames()
     {
 

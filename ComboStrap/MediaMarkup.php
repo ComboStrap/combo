@@ -165,7 +165,11 @@ class MediaMarkup
     }
 
     /**
+     * @param $callStackArray
+     * @return MediaMarkup
      * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
      */
     public static function createFromCallStackArray($callStackArray): MediaMarkup
     {
@@ -175,7 +179,7 @@ class MediaMarkup
         if ($ref === null) {
             $ref = $callStackArray[MediaMarkup::DOKUWIKI_SRC];
             if ($ref === null) {
-                throw new ExceptionBadArgument("The media referece was not found in the callstack array", self::CANONICAL);
+                throw new ExceptionBadArgument("The media reference was not found in the callstack array", self::CANONICAL);
             }
         }
         $mediaMarkup->setRef($ref);
@@ -600,7 +604,7 @@ class MediaMarkup
     }
 
     /**
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotFound - if this is an external image
      */
     public function getPath(): DokuPath
     {

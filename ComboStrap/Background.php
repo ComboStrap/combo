@@ -157,21 +157,36 @@ class Background
                     }
 
 
-                    $media = MediaLink::createFromCallStackArray($backgroundImageValue);
-                    if ($media instanceof ThirdMediaLink) {
-                        LogUtility::msg("The background image ($media) is not supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    try {
+                        $mediaMarkup = MediaMarkup::createFromCallStackArray($backgroundImageValue)
+                            ->setLinking(MediaMarkup::LAZY_LOAD_METHOD_NONE_VALUE);
+                    } catch (ExceptionCompile $e) {
+                        LogUtility::error("We could not create a background image. Error: {$e->getMessage()}");
                         return;
                     }
-                    /**
-                     * @var FetchImage $image
-                     */
-                    $image = $media->getFetch();
-                    if (!FileSystems::exists($image->getOriginalPath())) {
-                        LogUtility::msg("The image ($media) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    $fetchUrl = $mediaMarkup->getFetchUrl();
+                    try {
+                        $mime = FileSystems::getMime($fetchUrl);
+                    } catch (ExceptionNotFound $e) {
+                        LogUtility::error("The mime of the background image ($fetchUrl) is unknown", self::CANONICAL);
                         return;
                     }
-                    $url = $image->getFetchUrl()->toAbsoluteUrlString();
-                    $backgroundImageStyleValue = "url(" . $url . ")";
+                    if (!$mime->isImage()) {
+                        LogUtility::error("The background image ($fetchUrl) is not an image but a $mime", self::CANONICAL);
+                        return;
+                    }
+                    try {
+                        $path = $mediaMarkup->getPath();
+                        if (!FileSystems::exists($path)) {
+                            LogUtility::error("The image ($path) does not exist", self::CANONICAL);
+                            return;
+                        }
+                    } catch (ExceptionNotFound $e) {
+                        // external url
+                    }
+
+
+                    $backgroundImageStyleValue = "url(" . $fetchUrl->toString() . ")";
 
                 } else {
                     LogUtility::msg("Internal Error: The background image value ($backgroundImageValue) is not a string nor an array", LogUtility::LVL_MSG_ERROR, self::CANONICAL);

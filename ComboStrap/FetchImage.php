@@ -44,7 +44,6 @@ abstract class FetchImage extends FetchAbs
      * @return FetchImageRaster|FetchSvg
      * @throws ExceptionBadArgument - if the path is not an image
      * @throws ExceptionBadSyntax - if the image is badly encoded
-     * @throws ExceptionNotExists - if the image does not exists
      * @throws ExceptionNotFound - if the mime is unknown
      */
     public static function createImageFetchFromPath(Path $path)
@@ -62,7 +61,7 @@ abstract class FetchImage extends FetchAbs
 
         if ($mime->toString() === Mime::SVG) {
 
-            $image = FetchSvg::createSvgEmpty()->setOriginalPath($path);
+            $image = FetchSvg::createSvgFromPath($path);
 
         } else {
 

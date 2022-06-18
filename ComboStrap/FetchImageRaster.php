@@ -268,9 +268,14 @@ class FetchImageRaster extends FetchImage
 
     }
 
+    /**
+     * @throws ExceptionBadSyntax - if the file is badly encoded
+     * @throws ExceptionNotExists - if the file does not exists
+     */
     private function setOriginalPath(DokuPath $path): FetchImageRaster
     {
         $this->originalPath = $path;
+        $this->analyzeImageIfNeeded();
         return $this;
     }
 

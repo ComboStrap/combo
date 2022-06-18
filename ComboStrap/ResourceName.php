@@ -10,10 +10,35 @@ class ResourceName extends MetadataText
 
     public const PROPERTY_NAME = "name";
 
-    public static function createForResource($page): ResourceName
+    public static function createForResource(ResourceCombo $resource): ResourceName
     {
         return (new ResourceName())
-            ->setResource($page);
+            ->setResource($resource);
+    }
+
+    /**
+     * Return a name from a path
+     * @param DokuPath $path
+     * @return string
+     */
+    public static function getFromPath(DokuPath $path): string
+    {
+        try {
+            $name = $path->getLastNameWithoutExtension();
+        } catch (ExceptionNotFound $e) {
+            try {
+                $name = $path->getUrl()->getHost();
+            } catch (ExceptionNotFound $e) {
+                return "Unknown";
+            }
+        }
+        $words = preg_split("/\s/", preg_replace("/[-_]/", " ", $name));
+        $wordsUc = [];
+        foreach ($words as $word) {
+            $wordsUc[] = ucfirst($word);
+        }
+        return implode(" ", $wordsUc);
+
     }
 
     public function getTab(): string
@@ -60,27 +85,20 @@ class ResourceName extends MetadataText
 
         $resourceCombo = $this->getResource();
 
-        $pathName = $resourceCombo->getPath()->getLastNameWithoutExtension();
         /**
          * If this is a home page, the default
          * is the parent path name
          */
-        if ($resourceCombo->getType() == Page::TYPE) {
-            if ($pathName === Site::getIndexPageName()) {
-                $names = $resourceCombo->getPath()->getNames();
-                $namesCount = sizeof($names);
-                if ($namesCount >= 2) {
-                    $pathName = $names[$namesCount - 2];
-                }
+        $path = $resourceCombo->getPath();
+        if ($resourceCombo instanceof Page) {
+            if ($resourceCombo->isIndexPage()) {
+                $path = $resourceCombo->getParentPage()->getPath();
             }
         }
 
-        $words = preg_split("/\s/", preg_replace("/[-_]/", " ", $pathName));
-        $wordsUc = [];
-        foreach ($words as $word) {
-            $wordsUc[] = ucfirst($word);
-        }
-        return implode(" ", $wordsUc);
+        return self::getFromPath($path);
+
+
     }
 
     public function getCanonical(): string

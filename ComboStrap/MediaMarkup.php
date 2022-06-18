@@ -93,11 +93,17 @@ class MediaMarkup
 
     private ?string $align = null;
     private ?string $label = null;
-    private ?MarkupRef $ref;
+    private ?MarkupRef $ref = null;
     private ?string $linking = null;
     private ?string $lazyLoadMethod = null;
     private TagAttributes $tagAttributes;
     private ?string $linkingClass = null;
+
+    public function __construct()
+    {
+        $this->tagAttributes = TagAttributes::createEmpty();
+    }
+
 
     /**
      * Parse a media wiki ref that you can found in the first part of a media markup
@@ -130,7 +136,6 @@ class MediaMarkup
         /**
          * Tag Attributes
          */
-        $this->tagAttributes = TagAttributes::createEmpty();
         try {
             $this->align = $this->fetchUrl->getQueryPropertyValueAndRemoveIfPresent(Align::ALIGN_ATTRIBUTE);
         } catch (ExceptionNotFound $e) {

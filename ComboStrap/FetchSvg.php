@@ -126,7 +126,7 @@ class FetchSvg extends FetchImage
      * @throws ExceptionBadArgument
      * @throws ExceptionNotFound
      */
-    public static function createSvgFromPath(DokuPath $path): FetchSvg
+    public static function createSvgFromPath(Path $path): FetchSvg
     {
         return self::createSvgEmpty()->setOriginalPath($path);
     }
@@ -562,8 +562,18 @@ class FetchSvg extends FetchImage
     public
     function getBuster(): string
     {
-        //return $this->busterOriginalPath;
-        throw new ExceptionRuntime("add the buster of the config file");
+        $buster = $this->busterOriginalPath;
+        try {
+            $configFile = FileSystems::getCacheBuster(DirectoryLayout::getLocalConfPath());
+            $buster = "$buster-$configFile";
+        } catch (ExceptionNotFound $e) {
+            // no local conf file
+            if (PluginUtility::isDevOrTest()) {
+                LogUtility::internalError("A local configuration file should be present in dev");
+            }
+        }
+        return $buster;
+
     }
 
 

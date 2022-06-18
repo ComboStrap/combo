@@ -4,6 +4,7 @@ use ComboStrap\DokuPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetchImage;
 use ComboStrap\FileSystems;
 use ComboStrap\MediaLink;
@@ -12,6 +13,7 @@ use ComboStrap\Page;
 use ComboStrap\PageImage;
 use ComboStrap\PageImageUsage;
 use ComboStrap\PluginUtility;
+use ComboStrap\ResourceName;
 use ComboStrap\StringUtility;
 use ComboStrap\TagAttributes;
 
@@ -172,21 +174,25 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
 
         }
         if (!empty($twitterImages)) {
-            foreach ($twitterImages as $twitterImage) {
-                if ($twitterImage->exists()) {
-                    try {
-                        $twitterMeta[self::META_IMAGE] = $twitterImage->getFetchUrl()->toAbsoluteUrlString();
-                    } catch (ExceptionBadSyntax|\ComboStrap\ExceptionNotFound|ExceptionCompile $e) {
-                        // Oeps
-                        LogUtility::internalError("Twitter Image could not be added. Error: {$e->getMessage()}", self::CANONICAL);
-                    }
-                    $title = $twitterImage->getAltNotEmpty();
-                    if (!empty($title)) {
-                        $twitterMeta[self::META_IMAGE_ALT] = $title;
-                    }
-                    // One image only
-                    break;
+            foreach ($twitterImages as $twitterImageFetcher) {
+                try {
+                  $twitterImagePath =   $twitterImageFetcher->getOriginalPath();
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError("Twitter Image Path should exist in this fetcher. Error: {$e->getMessage()}", self::CANONICAL);
+                    continue;
                 }
+
+                if(!FileSystems::exists($twitterImagePath)){
+                    continue;
+                }
+                $twitterMeta[self::META_IMAGE] = $twitterImageFetcher->getFetchUrl()->toAbsoluteUrlString();
+                $title = ResourceName::getFromPath($twitterImagePath);
+                if (!empty($title)) {
+                    $twitterMeta[self::META_IMAGE_ALT] = $title;
+                }
+                // One image only
+                break;
+
             }
         }
 

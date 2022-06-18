@@ -31,17 +31,7 @@ abstract class ImageLink extends MediaLink
             return $this->mediaMarkup->getLabel();
         } catch (ExceptionNotFound $e) {
             $path = $this->mediaMarkup->getPath();
-            try {
-                $name = $path->getLastNameWithoutExtension();
-            } catch (ExceptionNotFound $e) {
-                try {
-                    $name = $path->getUrl()->getHost();
-                } catch (ExceptionNotFound $e) {
-                    $name = "Unknown";
-                }
-            }
-            $generatedAlt = str_replace("-", " ", $name);
-            return str_replace("_", " ", $generatedAlt);
+            return ResourceName::getFromPath($path);
         }
 
     }

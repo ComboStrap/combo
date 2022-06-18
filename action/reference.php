@@ -2,7 +2,10 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\LinkMarkup;
 use ComboStrap\LogUtility;
@@ -99,12 +102,23 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
                      */
                     continue;
                 }
-                $link = LinkMarkup::createFromRef($ref);
-                if ($link->getUriType() === MarkupRef::WIKI_URI) {
-                    $ref = Reference::createFromResource($page)
-                        ->buildFromStoreValue($link->getInternalPage()->getPath()->toPathString());
-                    $references->addRow([$ref]);
+                try {
+                    $link = MarkupRef::createLinkFromRef($ref);
+                } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
+                    LogUtility::error("Error while parsing the reference link. Error:" . $e->getMessage(), "reference");
+                    continue;
                 }
+
+                try {
+                    $path = $link->getPath();
+                    $ref = Reference::createFromResource($page)
+                        ->buildFromStoreValue($path->toPathString());
+                    $references->addRow([$ref]);
+                } catch (ExceptionNotFound $e) {
+                    // no local path ok
+                }
+
+
             }
         }
 

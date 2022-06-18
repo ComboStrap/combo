@@ -134,7 +134,13 @@ class Url extends PathAbs
     {
         $url = Url::createEmpty();
         foreach ($_GET as $key => $value) {
-            $url->addQueryParameter($key, $value);
+            if(is_array($value)){
+                foreach($value as $val){
+                    $url->addQueryParameter($key, $val);
+                }
+            } else {
+                $url->addQueryParameter($key, $value);
+            }
         }
         return $url;
     }

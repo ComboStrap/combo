@@ -1479,15 +1479,16 @@ class Page extends ResourceComboAbs
      * If the page is at the root, the parent page is the root home
      * Only the root home does not have any parent page and return null.
      *
-     * @return Page|null
+     * @return Page
+     * @throws ExceptionNotFound
      */
     public
-    function getParentPage(): ?Page
+    function getParentPage(): Page
     {
 
         $names = $this->getPath()->getNames();
         if (sizeof($names) == 0) {
-            return null;
+            throw new ExceptionNotFound("No parent page");
         }
         $slice = 1;
         if ($this->isIndexPage()) {
@@ -1501,7 +1502,7 @@ class Page extends ResourceComboAbs
          * Delete the last or the two last parts
          */
         if (sizeof($names) < $slice) {
-            return null;
+            throw new ExceptionNotFound("No parent page");
         }
         /**
          * Get the actual directory for a page
@@ -1515,8 +1516,10 @@ class Page extends ResourceComboAbs
         try {
             return self::getIndexPageFromNamespace($parentNamespaceId);
         } catch (ExceptionBadSyntax $e) {
-            LogUtility::msg("Error on getParentPage, null returned - Error: {$e->getMessage()}");
-            return null;
+            $message = "Error on getParentPage, null returned - Error: {$e->getMessage()}";
+            LogUtility::internalError($message);
+            throw new ExceptionNotFound($message);
+
         }
 
     }

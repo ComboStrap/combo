@@ -92,7 +92,11 @@ class ResourceName extends MetadataText
         $path = $resourceCombo->getPath();
         if ($resourceCombo instanceof Page) {
             if ($resourceCombo->isIndexPage()) {
-                $path = $resourceCombo->getParentPage()->getPath();
+                try {
+                    $path = $resourceCombo->getParentPage()->getPath();
+                } catch (ExceptionNotFound $e) {
+                    // no parent page
+                }
             }
         }
 

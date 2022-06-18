@@ -3,6 +3,8 @@
 namespace ComboStrap;
 
 
+use ReflectionClass;
+
 class ClassUtility
 {
 
@@ -37,12 +39,18 @@ class ClassUtility
         return $class;
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     public static function getObjectImplementingInterface(string $interface): array
     {
         $classes = self::getClassImplementingInterface($interface);
         $objects = [];
         foreach ($classes as $class){
-            $objects[] = new $class();
+            $classReflection     = new ReflectionClass($class);
+            if(!$classReflection->isAbstract()) {
+                $objects[] = new $class();
+            }
         }
         return $objects;
     }

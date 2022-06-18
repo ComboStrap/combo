@@ -605,25 +605,35 @@ class Url extends PathAbs
     {
         try {
             $scheme = $this->getScheme();
-            $base = "{$scheme}:";
-            if (in_array($scheme, ["http", "https", "ftp", LocalPath::SCHEME])) {
-                // mailto, skype, whatsapp does not have the //
-                $base = "$base//";
+        } catch (ExceptionNotFound $e) {
+            $scheme = null;
+        }
+
+        try {
+            $host = $this->getHost();
+        } catch (ExceptionNotFound $e) {
+            $host = null;
+        }
+
+
+        /**
+         * Absolute Url
+         */
+        $base = "";
+        if ($host !== null) {
+            if ($scheme !== null) {
+                $base = "{$scheme}:";
+                if (in_array($scheme, ["http", "https", "ftp", LocalPath::SCHEME])) {
+                    // mailto, skype, whatsapp does not have the //
+                    $base = "$base//";
+                }
             }
-        } catch (ExceptionNotFound $e) {
-            $base = "";
-        }
-
-        try {
-            $base = "$base{$this->getHost()}";
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-        try {
-            $base = "$base:{$this->getPort()}";
-        } catch (ExceptionNotFound $e) {
-            // ok
+            $base = "$base{$host}";
+            try {
+                $base = "$base:{$this->getPort()}";
+            } catch (ExceptionNotFound $e) {
+                // no port
+            }
         }
 
         try {

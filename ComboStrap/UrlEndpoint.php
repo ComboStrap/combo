@@ -38,7 +38,11 @@ class UrlEndpoint
         }
         try {
             $urlPathBaseDir = Site::getUrlPathBaseDir();
-            $path = "$urlPathBaseDir/$path";
+            if ($urlPathBaseDir[strlen($urlPathBaseDir)-1] === "/") {
+                $path = "$urlPathBaseDir$path";
+            } else {
+                $path = "$urlPathBaseDir/$path";
+            }
         } catch (ExceptionNotFound $e) {
             // ok
             $path = "/$path";

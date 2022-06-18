@@ -138,7 +138,8 @@ class FetchImageRaster extends FetchImage
     public function getFetchUrl(Url $url = null): Url
     {
 
-        $fetchUrl = FetchDoku::createFromPath($this->originalPath)->getFetchUrl($url);
+        $url = parent::getFetchUrl($url);
+        $fetchUrl = FetchRaw::createFromPath($this->originalPath)->getFetchUrl($url);
         $this->addCommonImageQueryParameterToUrl($fetchUrl);
         return $fetchUrl;
 
@@ -259,7 +260,7 @@ class FetchImageRaster extends FetchImage
 
     public function buildFromUrl(Url $url): FetchImageRaster
     {
-        $this->originalPath = FetchDoku::createEmpty()->buildFromUrl($url)->getFetchPath();
+        $this->originalPath = FetchRaw::createEmpty()->buildFromUrl($url)->getFetchPath();
         $this->analyzeImageIfNeeded();
         $this->mime = FileSystems::getMime($this->originalPath);
         $this->buildSharedImagePropertyFromFetchUrl($url);
@@ -274,6 +275,8 @@ class FetchImageRaster extends FetchImage
     }
 
 
-
-
+    public function getName(): string
+    {
+        return self::CANONICAL;
+    }
 }

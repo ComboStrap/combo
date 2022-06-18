@@ -212,7 +212,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         if ($format == 'xhtml') {
 
@@ -222,7 +222,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER:
                     /**
-                     * background is print via the {@link Background::processBackgroundAttributes()}
+                     * background is printed via the {@link Background::processBackgroundAttributes()}
                      */
                     break;
                 case DOKU_LEXER_EXIT :

@@ -76,10 +76,10 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if (!isset($_GET[DokuPath::DRIVE_ATTRIBUTE])) {
             return;
         }
-        $vignette = $_GET[Vignette::VIGNETTE_QUERY_PROPERTY];
+        $vignette = $_GET[Vignette::VIGNETTE_NAME];
         if($vignette!==null){
                 $url = Url::createFromGetGlobalVariable();
-                $vignette = Vignette::createFromUrl($url);
+                $vignette = Vignette::createFetcherFromFetchUrl($url);
                 try {
 
                     $path = $vignette->getPhysicalPath();

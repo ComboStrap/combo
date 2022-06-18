@@ -2,26 +2,38 @@
 
 namespace ComboStrap;
 
-class FetchDoku extends FetchAbs
+/**
+ * Return raw files
+ */
+class FetchRaw extends FetchAbs
 {
 
     public const MEDIA_QUERY_PARAMETER = "media";
     const SRC_QUERY_PARAMETER = "src";
+    const RAW = "raw";
     private DokuPath $path;
 
 
-    public static function createFromPath(DokuPath $dokuPath): FetchDoku
+    public static function createFromPath(DokuPath $dokuPath): FetchRaw
     {
         return self::createEmpty()->setDokuPath($dokuPath);
     }
 
     /**
      * Empty because a fetch is mostly build through an URL
-     * @return FetchDoku
+     * @return FetchRaw
      */
-    public static function createEmpty(): FetchDoku
+    public static function createEmpty(): FetchRaw
     {
-        return new FetchDoku();
+        return new FetchRaw();
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public static function createFetcherFromFetchUrl(Url $fetchUrl): FetchRaw
+    {
+        return FetchRaw::createEmpty()->buildFromUrl($fetchUrl);
     }
 
 
@@ -32,11 +44,11 @@ class FetchDoku extends FetchAbs
     {
         /**
          * For dokuwiki implementation, see {@link ml()}
-         * We still use the {@link FetchDoku::MEDIA_QUERY_PARAMETER}
+         * We still use the {@link FetchRaw::MEDIA_QUERY_PARAMETER}
          * to be Dokuwiki Compatible even if we can serve from other drive know
          */
         $url = parent::getFetchUrl($url)
-            ->addQueryParameterIfNotActualSameValue(FetchDoku::MEDIA_QUERY_PARAMETER, $this->path->getDokuwikiId());
+            ->addQueryParameterIfNotActualSameValue(FetchRaw::MEDIA_QUERY_PARAMETER, $this->path->getDokuwikiId());
         if ($this->path->getDrive() !== DokuPath::MEDIA_DRIVE) {
             $url->addQueryParameter(DokuPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
         }
@@ -85,7 +97,7 @@ class FetchDoku extends FetchAbs
         return FileSystems::getMime($this->path);
     }
 
-    public function setDokuPath(DokuPath $dokuPath): FetchDoku
+    public function setDokuPath(DokuPath $dokuPath): FetchRaw
     {
         $this->path = $dokuPath;
         return $this;
@@ -94,7 +106,7 @@ class FetchDoku extends FetchAbs
     /**
      * @throws ExceptionBadArgument - if the media was not found
      */
-    public function buildFromUrl(Url $url): FetchDoku
+    public function buildFromUrl(Url $url): FetchRaw
     {
         parent::buildFromUrl($url);
         try {
@@ -123,4 +135,8 @@ class FetchDoku extends FetchAbs
     }
 
 
+    public function getName(): string
+    {
+        return self::RAW;
+    }
 }

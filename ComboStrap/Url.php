@@ -530,10 +530,10 @@ class Url extends PathAbs
      */
     public function getExtension(): string
     {
-        if ($this->hasProperty(FetchDoku::MEDIA_QUERY_PARAMETER)) {
+        if ($this->hasProperty(FetchRaw::MEDIA_QUERY_PARAMETER)) {
 
             try {
-                $dokuPath = FetchDoku::createEmpty()->buildFromUrl($this)->getOriginalPath();
+                $dokuPath = FetchRaw::createEmpty()->buildFromUrl($this)->getOriginalPath();
                 return $dokuPath->getExtension();
             } catch (ExceptionBadArgument $e) {
                 LogUtility::internalError("Build error from a Media Fetch URL. We were unable to get the mime. Error: {$e->getMessage()}");
@@ -689,5 +689,12 @@ class Url extends PathAbs
             throw new ExceptionNotFound("No port specified");
         }
         return $this->port;
+    }
+
+    public function addQueryParameterIfNotPresent(string $key, string $value)
+    {
+        if (!$this->hasProperty($key)) {
+            $this->addQueryParameterIfNotActualSameValue($key, $value);
+        }
     }
 }

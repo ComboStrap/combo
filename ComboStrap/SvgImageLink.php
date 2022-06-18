@@ -274,7 +274,7 @@ class SvgImageLink extends ImageLink
     private function getFetchSvg(): FetchSvg
     {
         if($this->svgFetch===null) {
-            $this->svgFetch = FetchSvg::createEmptySvg()
+            $this->svgFetch = FetchSvg::createSvgEmpty()
                 ->buildFromUrl($this->mediaMarkup->getFetchUrl());
         }
         return $this->svgFetch;

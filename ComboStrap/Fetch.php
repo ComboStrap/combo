@@ -19,6 +19,8 @@ interface Fetch
      * The value used by Dokuwiki for the buster is tseed.
      */
     public const CACHE_BUSTER_KEY = "tseed";
+    public const FETCHER_KEY = "fetcher";
+
 
     /**
      * Return the URL where the resource can be fetched
@@ -65,4 +67,9 @@ interface Fetch
      * @return string
      */
     public function getRequestedCache(): string;
+
+    /**
+     * @return string - an unique name
+     */
+    public function getName(): string;
 }

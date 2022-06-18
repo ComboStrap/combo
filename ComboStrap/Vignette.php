@@ -27,7 +27,7 @@ class Vignette extends FetchImage
     const CANONICAL = "page-vignette";
 
     const PAGE_QUERY_PROPERTY = "page";
-    const VIGNETTE_QUERY_PROPERTY = "vignette";
+    const VIGNETTE_NAME = "vignette";
 
 
     /**
@@ -52,12 +52,6 @@ class Vignette extends FetchImage
     {
         return new Vignette($page, $mime);
     }
-
-    public static function createFromUrl(Url $url)
-    {
-        return (new Vignette())->buildFromUrl($url);
-    }
-
 
     /**
      *
@@ -303,7 +297,7 @@ class Vignette extends FetchImage
     function getFetchUrl(): Url
     {
         $url = UrlEndpoint::createFetchUrl()
-            ->addQueryParameter(self::VIGNETTE_QUERY_PROPERTY, $this->page->getPath()->getDokuwikiId() . "." . $this->mime->getExtension());
+            ->addQueryParameter(self::VIGNETTE_NAME, $this->page->getPath()->getDokuwikiId() . "." . $this->mime->getExtension());
         $this->addCommonImageQueryParameterToUrl($url);
         return $url;
     }
@@ -316,7 +310,7 @@ class Vignette extends FetchImage
 
     function acceptsFetchUrl(Url $url): bool
     {
-        if ($url->hasProperty(self::VIGNETTE_QUERY_PROPERTY)) {
+        if ($url->hasProperty(self::VIGNETTE_NAME)) {
             return true;
         }
         return false;
@@ -333,7 +327,7 @@ class Vignette extends FetchImage
      */
     public function buildFromUrl(Url $url): Fetch
     {
-        $vignette = $url->getQueryPropertyValue(self::VIGNETTE_QUERY_PROPERTY);
+        $vignette = $url->getQueryPropertyValue(self::VIGNETTE_NAME);
         if ($vignette === null) {
             throw new ExceptionBadArgument("The vignette query property was not present");
         }
@@ -345,5 +339,10 @@ class Vignette extends FetchImage
         $this->addCommonImageQueryParameterToUrl($url);
         return $this;
 
+    }
+
+    public function getName(): string
+    {
+        return self::VIGNETTE_NAME;
     }
 }

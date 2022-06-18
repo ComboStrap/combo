@@ -114,8 +114,9 @@ class FetchSvg extends FetchImage
     private ?bool $preserveStyle = null;
     private ?string $requestedType = null;
     private bool $processed = false;
+    private string $busterOriginalPath;
 
-    public static function createEmptySvg(): FetchSvg
+    public static function createSvgEmpty(): FetchSvg
     {
         return new FetchSvg();
     }
@@ -127,7 +128,17 @@ class FetchSvg extends FetchImage
      */
     public static function createSvgFromPath(DokuPath $path): FetchSvg
     {
-        return self::createEmptySvg()->setOriginalPath($path);
+        return self::createSvgEmpty()->setOriginalPath($path);
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
+     */
+    public static function createSvgFromFetchUrl(Url $fetchUrl): FetchSvg
+    {
+        return self::createSvgEmpty()->buildFromUrl($fetchUrl);
     }
 
     /**
@@ -451,7 +462,7 @@ class FetchSvg extends FetchImage
     /**
      * @throws ExceptionBadState - if no svg was set to be processed
      */
-    private function getMarkup(): string
+    public function getMarkup(): string
     {
         return $this->getXmlDocument()->getXmlText();
     }
@@ -465,7 +476,7 @@ class FetchSvg extends FetchImage
     public function getFetchUrl(Url $url = null): Url
     {
         $url = parent::getFetchUrl($url);
-        $url = FetchDoku::createFromPath($this->originalPath)->getFetchUrl($url);
+        $url = FetchRaw::createFromPath($this->originalPath)->getFetchUrl($url);
         try {
             $url->addQueryParameter(ColorRgb::COLOR, $this->getRequestedColor()->toCssValue());
         } catch (ExceptionNotFound $e) {
@@ -539,8 +550,7 @@ class FetchSvg extends FetchImage
     }
 
     /**
-     * The buster is not based on file but the cache file
-     * because the cache is configuration dependent
+     * The buster is also based on the configuration file
      *
      * It the user changes the configuration, the svg file is generated
      * again and the browser cache should be deleted (ie the buster regenerated)
@@ -552,7 +562,8 @@ class FetchSvg extends FetchImage
     public
     function getBuster(): string
     {
-        return $this->buster;
+        //return $this->busterOriginalPath;
+        throw new ExceptionRuntime("add the buster of the config file");
     }
 
 
@@ -560,7 +571,7 @@ class FetchSvg extends FetchImage
     {
 
         try {
-            $dokuPath = FetchDoku::createEmpty()->buildFromUrl($url)->getFetchPath();
+            $dokuPath = FetchRaw::createEmpty()->buildFromUrl($url)->getFetchPath();
         } catch (ExceptionBadArgument $e) {
             return false;
         }
@@ -601,9 +612,8 @@ class FetchSvg extends FetchImage
     public function buildFromUrl(Url $url): FetchSvg
     {
         parent::buildFromUrl($url);
-        $originalPath = FetchDoku::createEmpty()->buildFromUrl($url)->getFetchPath();
+        $originalPath = FetchRaw::createEmpty()->buildFromUrl($url)->getFetchPath();
         $this->setOriginalPath($originalPath);
-        $this->buster = FileSystems::getCacheBuster($this->getOriginalPath());
         $this->buildSharedImagePropertyFromFetchUrl($url);
         try {
             $color = $url->getQueryPropertyValue(ColorRgb::COLOR);
@@ -680,6 +690,7 @@ class FetchSvg extends FetchImage
     public function setOriginalPath(Path $path): FetchSvg
     {
         $this->originalPath = DokuPath::createFromPath($path);
+        $this->busterOriginalPath = FileSystems::getCacheBuster($this->getOriginalPath());
 
         if ($this->xmlDocument === null) {
 
@@ -1360,4 +1371,8 @@ class FetchSvg extends FetchImage
     }
 
 
+    public function getName(): string
+    {
+        return self::CANONICAL;
+    }
 }

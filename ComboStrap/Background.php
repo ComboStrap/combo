@@ -164,15 +164,21 @@ class Background
                         LogUtility::error("We could not create a background image. Error: {$e->getMessage()}");
                         return;
                     }
-                    $fetchUrl = $mediaMarkup->getFetchUrl();
                     try {
+                        $fetcher = FetchAbs::createFetcherFromFetchUrl($mediaMarkup->getFetchUrl());
+                    } catch (ExceptionNotFound $e) {
+                        LogUtility::internalError("No fetcher can be found for the background image. Error: {$e->getMessage()}", self::CANONICAL);
+                        return;
+                    }
+                    try {
+                        $fetchUrl = $fetcher->getFetchUrl();
                         $mime = FileSystems::getMime($fetchUrl);
                     } catch (ExceptionNotFound $e) {
-                        LogUtility::error("The mime of the background image ($fetchUrl) is unknown", self::CANONICAL);
+                        LogUtility::error("The mime of the background image ($fetcher) is unknown", self::CANONICAL);
                         return;
                     }
                     if (!$mime->isImage()) {
-                        LogUtility::error("The background image ($fetchUrl) is not an image but a $mime", self::CANONICAL);
+                        LogUtility::error("The background image ($fetcher) is not an image but a $mime", self::CANONICAL);
                         return;
                     }
                     try {

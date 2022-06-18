@@ -76,11 +76,11 @@ class ThirdMediaLink extends MediaLink
                         ->getFetchUrl();
                 } catch (ExceptionBadArgument $e) {
                     LogUtility::internalError($e->getMessage());
-                    return FetchDoku::createFromPath($path)
+                    return FetchRaw::createFromPath($path)
                         ->getFetchUrl();
                 }
             default:
-                return FetchDoku::createFromPath($path)
+                return FetchRaw::createFromPath($path)
                     ->getFetchUrl();
         }
 

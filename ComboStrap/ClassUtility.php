@@ -25,4 +25,25 @@ class ClassUtility
         }
         return LocalPath::createFromPath($fileName);
     }
+
+    public static function getClassImplementingInterface(string $interface): array
+    {
+        $class = [];
+        foreach (get_declared_classes() as $className) {
+            if (in_array($interface, class_implements($className))) {
+                $class[]= $className;
+            }
+        }
+        return $class;
+    }
+
+    public static function getObjectImplementingInterface(string $interface): array
+    {
+        $classes = self::getClassImplementingInterface($interface);
+        $objects = [];
+        foreach ($classes as $class){
+            $objects[] = new $class();
+        }
+        return $objects;
+    }
 }

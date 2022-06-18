@@ -31,6 +31,57 @@ abstract class FetchAbs implements Fetch
     public const CACHE_KEY = 'cache';
     public const CACHE_DEFAULT_VALUE = "cache";
 
+
+    /**
+     * @param Url $fetchUrl
+     * @return Fetch
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
+     */
+    public static function createFetcherFromFetchUrl(Url $fetchUrl): Fetch
+    {
+
+        try {
+            $fetcherAtt = $fetchUrl->getQueryPropertyValue(Fetch::FETCHER_KEY);
+            $fetchers = ClassUtility::getObjectImplementingInterface(Fetch::class);
+            foreach ($fetchers as $fetcher) {
+                /**
+                 * @var Fetch $fetcher
+                 */
+                if ($fetcher->getName() === $fetcherAtt) {
+                    return $fetcher;
+                }
+            }
+        } catch (ExceptionNotFound $e) {
+            // no fetcher property
+        }
+
+        try {
+            $fetchDoku = FetchRaw::createFetcherFromFetchUrl($fetchUrl);
+            $dokuPath = $fetchDoku->getOriginalPath();
+        } catch (ExceptionBadArgument $e) {
+            throw new ExceptionNotFound("No fetcher could be matched to the url ($fetchUrl)");
+        }
+        try {
+            $mime = FileSystems::getMime($dokuPath);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionNotFound("No fetcher could be created. The mime us unknown. Error: {$e->getMessage()}");
+        }
+        switch ($mime->toString()) {
+            case Mime::SVG:
+                return FetchSvg::createSvgFromFetchUrl($fetchUrl);
+            default:
+                if ($mime->isImage()) {
+                    return FetchImageRaster::createRasterFromFetchUrl($fetchUrl);
+                } else {
+                    return $fetchDoku;
+                }
+        }
+
+    }
+
     /**
      * @param Url|null $url
      * @return Url
@@ -55,6 +106,11 @@ abstract class FetchAbs implements Fetch
          * The buster
          */
         $url->addQueryParameterIfNotActualSameValue(Fetch::CACHE_BUSTER_KEY, $this->getBuster());
+        /**
+         * The fetcher name
+         */
+        $fetcherName = $this->getName();
+        $url->addQueryParameterIfNotPresent(Fetch::FETCHER_KEY, $fetcherName);
         return $url;
     }
 

@@ -122,7 +122,7 @@ class MediaMarkup
         $this->fetchUrl = $this->ref->getUrl();
 
         try {
-            $this->fetchUrl->addQueryParameterIfNotActualSameValue(FetchDoku::MEDIA_QUERY_PARAMETER, $this->ref->getPath()->getDokuwikiId());
+            $this->fetchUrl->addQueryParameterIfNotActualSameValue(FetchRaw::MEDIA_QUERY_PARAMETER, $this->ref->getPath()->getDokuwikiId());
         } catch (ExceptionNotFound $e) {
             // no path
         }
@@ -613,7 +613,7 @@ class MediaMarkup
         } catch (ExceptionNotFound $e) {
 
             try {
-                return FetchDoku::createEmpty()
+                return FetchRaw::createEmpty()
                     ->buildFromUrl($this->getFetchUrl())
                     ->getOriginalPath();
             } catch (ExceptionBadArgument $e) {

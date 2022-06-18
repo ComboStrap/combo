@@ -2,7 +2,7 @@
 
 namespace ComboStrap;
 
-class FetchPdf extends FetchDoku
+class FetchPdf extends FetchRaw
 {
 
     /**
@@ -19,7 +19,7 @@ class FetchPdf extends FetchDoku
      */
     private ?int $pageNumber = null;
 
-    public function buildFromUrl(Url $url): FetchDoku
+    public function buildFromUrl(Url $url): FetchRaw
     {
         try {
             $fragment = $url->getFragment();

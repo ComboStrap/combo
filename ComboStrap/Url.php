@@ -139,6 +139,8 @@ class Url extends PathAbs
         return $url;
     }
 
+
+
     function getQuery(): array
     {
         return $this->query->getOriginalArray();
@@ -726,7 +728,7 @@ class Url extends PathAbs
     public function setQueryParameter(string $key, string $value): Url
     {
         $this->removeQueryParameter($key);
-        $this->addQueryParameter($key,$value);
+        $this->addQueryParameter($key, $value);
         return $this;
     }
 

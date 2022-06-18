@@ -7,6 +7,7 @@ use ComboStrap\Dimension;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\Fetch;
 use ComboStrap\FetchAbs;
+use ComboStrap\FetchRaw;
 use ComboStrap\Identity;
 use ComboStrap\FetchCache;
 use ComboStrap\DokuPath;
@@ -36,8 +37,6 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
     public function register(Doku_Event_Handler $controller)
     {
 
-        $controller->register_hook('FETCH_MEDIA_STATUS', 'BEFORE', $this, 'svg_optimization');
-
 
         /**
          * Hack the upload is done via the ajax.php file
@@ -50,88 +49,9 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('PARSER_WIKITEXT_PREPROCESS', 'BEFORE', $this, 'svg_mime');
 
-    }
-
-    /**
-     * @param Doku_Event $event
-     * https://www.dokuwiki.org/devel:event:fetch_media_status
-     */
-    public function svg_optimization(Doku_Event &$event)
-    {
-
-        if ($event->data['ext'] != 'svg') return;
-        if ($event->data['status'] >= 400) return; // ACLs and precondition checks
-
-
-        $tagAttributes = TagAttributes::createEmpty(FetchSvg::CANONICAL);
-        $width = $event->data['width'];
-        if ($width != 0) {
-            $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
-        }
-        $height = $event->data['height'];
-        if ($height != 0) {
-            $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $height);
-        }
-        $tagAttributes->addComponentAttributeValue(FetchAbs::CACHE_KEY, $event->data['cache']);
-
-        $mime = "image/svg+xml";
-        $event->data["mime"] = $mime;
-        $tagAttributes->setMime($mime);
-
-        /**
-         * Add the extra attributes
-         */
-        $rev = null;
-        foreach ($_REQUEST as $name => $value) {
-            switch ($name) {
-                case "media":
-                case "w":
-                case "h":
-                case "cache":
-                case Fetch::CACHE_BUSTER_KEY:
-                case "tok": // A checker
-                    // Nothing to do, we take them
-                    break;
-                case "rev":
-                    $rev = $value;
-                    break;
-                case "u":
-                case "p":
-                case "http_credentials":
-                    // Credentials data
-                    break;
-                default:
-                    if (!empty($value)) {
-                        if (!in_array(strtolower($name), MediaMarkup::STYLE_ATTRIBUTES)) {
-                            $tagAttributes->addComponentAttributeValue($name, $value);
-                        } else {
-                            LogUtility::msg("The attribute ($name) is not a valid fetch image URL attribute and was not added", LogUtility::LVL_MSG_WARNING, SvgImageLink::CANONICAL);
-                        }
-                    } else {
-                        LogUtility::msg("Internal Error: the value of the query name ($name) is empty", LogUtility::LVL_MSG_WARNING, SvgImageLink::CANONICAL);
-                    }
-            }
-        }
-
-
-        $id = $event->data["media"];
-
-        $dokuPath = DokuPath::createMediaPathFromId($id,$rev);
-
-        try {
-
-            $svgImage = new FetchSvg($dokuPath,  $tagAttributes);
-            $event->data['file'] =  $svgImage->getFetchPath()->toAbsolutePath()->toPathString();
-
-        } catch (ExceptionCompile $e) {
-
-            $event->data['file'] = DokuPath::createComboResource("images:error-bad-format.svg")->toLocalPath()->toAbsolutePath()->toPathString();
-            $event->data['status'] = 422;
-
-        }
-
 
     }
+
 
     /**
      * @param Doku_Event $event

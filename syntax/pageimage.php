@@ -20,7 +20,7 @@ use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
-use ComboStrap\Vignette;
+use ComboStrap\FetchVignette;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -233,7 +233,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                 case self::VIGNETTE_TYPE:
 
                     try {
-                        $selectedPageImage = Vignette::createForPage($page);
+                        $selectedPageImage = FetchVignette::createForPage($page);
                     } catch (ExceptionBadArgument $e) {
                         LogUtility::error("Error while creating the vignette for the page ($page). Error: {$e->getMessage()}");
                     }

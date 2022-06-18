@@ -21,36 +21,46 @@ use dokuwiki\Cache\Cache;
  * https://lofi.limo/blog/images/write-html-right.png
  * https://opengraph.githubassets.com/6b85042cdc8e98725bd85a0e7b159c99104644fbf97402fded205ee4d2036ab9/ComboStrap/combo
  */
-class Vignette extends FetchImage
+class FetchVignette extends FetchImage
 {
 
-    const CANONICAL = "page-vignette";
+    const CANONICAL = self::VIGNETTE_NAME;
 
-    const PAGE_QUERY_PROPERTY = "page";
     const VIGNETTE_NAME = "vignette";
+    const PNG_EXTENSION = "png";
+    const JPG_EXTENSION = "jpg";
+    const JPEG_EXTENSION = "jpeg";
+    const WEBP_EXTENSION = "webp";
 
 
-    /**
-     * @var Page
-     */
-    private $page;
-    /**
-     * @var Mime
-     */
-    private $mime;
-    /**
-     * @var bool
-     */
-    private bool $useCache;
+    private Page $page;
+
+    private Mime $mime;
+
+
     private string $buster;
+
+    /**
+     * @param Page $page
+     * @param Mime $mime
+     * @throws ExceptionNotFound - page not found
+     * @throws ExceptionBadArgument - bad mime
+     */
+    public function __construct(Page $page, Mime $mime)
+    {
+        $this->setPage($page);
+        $this->setMime($mime);
+        parent::__construct();
+    }
 
 
     /**
      * @throws ExceptionNotFound - if the page does not exists
+     * @throws ExceptionBadArgument - if the mime is not supported
      */
-    public static function createForPage(Page $page, Mime $mime = null): Vignette
+    public static function createForPage(Page $page, Mime $mime = null): FetchVignette
     {
-        return new Vignette($page, $mime);
+        return new FetchVignette($page, $mime);
     }
 
     /**
@@ -90,8 +100,6 @@ class Vignette extends FetchImage
          */
         $vignetteImageHandler = imagecreatetruecolor($width, $height);
         try {
-
-            $gdInfo = gd_info();
 
             /**
              * Background
@@ -197,9 +205,6 @@ class Vignette extends FetchImage
              */
             try {
                 $imagePath = Site::getLogoAsRasterImage()->getOriginalPath();
-                if ($imagePath instanceof DokuPath) {
-                    $imagePath = $imagePath->toLocalPath();
-                }
                 $gdOriginalLogo = $this->getGdImageHandler($imagePath);
                 $targetLogoWidth = 120;
                 $targetLogoHandler = imagescale($gdOriginalLogo, $targetLogoWidth);
@@ -214,34 +219,25 @@ class Vignette extends FetchImage
              * Store
              */
             switch ($extension) {
-                case "png":
-                    if (!$gdInfo["PNG Support"]) {
-                        throw new ExceptionBadArgument("The extension ($extension) is not supported by the GD library", self::CANONICAL);
-                    }
+                case self::PNG_EXTENSION:
                     imagetruecolortopalette($vignetteImageHandler, false, 255);
-                    imagepng($vignetteImageHandler, $cache->cache);
+                    imagepng($vignetteImageHandler, $cache->getFile()->toPathString());
                     break;
-                case "jpg":
-                case "jpeg":
-                    if (!$gdInfo["JPEG Support"]) {
-                        throw new ExceptionBadArgument("The extension ($extension) is not supported by the GD library", self::CANONICAL);
-                    }
-                    imagejpeg($vignetteImageHandler, $cache->cache);
+                case self::JPG_EXTENSION:
+                case self::JPEG_EXTENSION:
+                    imagejpeg($vignetteImageHandler, $cache->getFile()->toPathString());
                     break;
-                case "webp":
-                    if (!$gdInfo["WebP Support"]) {
-                        throw new ExceptionBadArgument("The extension ($extension) is not supported by the GD library", self::CANONICAL);
-                    }
+                case self::WEBP_EXTENSION:
                     /**
                      * To True Color to avoid:
                      * `
                      * Fatal error: Palette image not supported by webp
                      * `
                      */
-                    imagewebp($vignetteImageHandler, $cache->cache);
+                    imagewebp($vignetteImageHandler, $cache->getFile()->toPathString());
                     break;
                 default:
-                    throw new ExceptionBadArgument("The extension ($extension) is unknown or not yet supported", self::CANONICAL);
+                    LogUtility::internalError("The possible mime error should have been caught in the setter");
             }
 
         } finally {
@@ -249,10 +245,10 @@ class Vignette extends FetchImage
         }
 
 
-        return LocalPath::createFromPath($cache->cache);
+        return $cache->getFile();
     }
 
-    public function setUseCache(bool $false): Vignette
+    public function setUseCache(bool $false): FetchVignette
     {
         $this->useCache = $false;
         return $this;
@@ -277,26 +273,23 @@ class Vignette extends FetchImage
         $extension = FileSystems::getMime($imagePath)->getExtension();
 
         switch ($extension) {
-            case "png":
-                $gdLogo = imagecreatefrompng($imagePath->toPathString());
-                break;
-            case "jpg":
-            case "jpeg":
-                $gdLogo = imagecreatefromjpeg($imagePath->toPathString());
-                break;
-            case "webp":
-                $gdLogo = imagecreatefromwebp($imagePath->toPathString());
-                break;
+            case self::PNG_EXTENSION:
+                return imagecreatefrompng($imagePath->toPathString());
+            case self::JPG_EXTENSION:
+            case self::JPEG_EXTENSION:
+                return imagecreatefromjpeg($imagePath->toPathString());
+            case self::WEBP_EXTENSION:
+                return imagecreatefromwebp($imagePath->toPathString());
             default:
-                throw new ExceptionNotFound("Extension ($extension) is not a supported image format to load as Gd image", self::CANONICAL);
+                throw new ExceptionNotFound("Bad mime should have been caught by the setter");
         }
-        return $gdLogo;
+
     }
 
 
-    function getFetchUrl(): Url
+    function getFetchUrl(Url $url = null): Url
     {
-        $url = UrlEndpoint::createFetchUrl()
+        $url = parent::getFetchUrl()
             ->addQueryParameter(self::VIGNETTE_NAME, $this->page->getPath()->getDokuwikiId() . "." . $this->mime->getExtension());
         $this->addCommonImageQueryParameterToUrl($url);
         return $url;
@@ -322,20 +315,28 @@ class Vignette extends FetchImage
     }
 
     /**
-     * @throws ExceptionBadArgument
-     * @throws ExceptionNotFound
+     * @throws ExceptionBadArgument - no vignette property, bad mime
+     * @throws ExceptionNotFound - the page does not exists
      */
-    public function buildFromUrl(Url $url): Fetch
+    public function buildFromUrl(Url $url): FetchVignette
     {
-        $vignette = $url->getQueryPropertyValue(self::VIGNETTE_NAME);
-        if ($vignette === null) {
+        try {
+            $vignette = $url->getQueryPropertyValue(self::VIGNETTE_NAME);
+        } catch (ExceptionNotFound $e) {
             throw new ExceptionBadArgument("The vignette query property was not present");
         }
         $lastPoint = strrpos($vignette, ".");
         $extension = substr($vignette, $lastPoint + 1);
         $wikiId = substr($vignette, 0, $lastPoint);
-        $this->page = Page::createPageFromId($wikiId);
-        $this->mime = Mime::createFromExtension($extension);
+        $this->setPage(Page::createPageFromId($wikiId));
+        if (!FileSystems::exists($this->page->getPath())) {
+            throw new ExceptionNotFound("The page does not exists");
+        }
+        try {
+            $this->setMime(Mime::createFromExtension($extension));
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionBadArgument("The vignette mime is unknown. Error: {$e->getMessage()}");
+        }
         $this->addCommonImageQueryParameterToUrl($url);
         return $this;
 
@@ -344,5 +345,46 @@ class Vignette extends FetchImage
     public function getName(): string
     {
         return self::VIGNETTE_NAME;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function setPage(Page $page): FetchVignette
+    {
+        $this->page = $page;
+        $this->buster = FileSystems::getCacheBuster($this->page->getPath());
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public function setMime(Mime $mime): FetchVignette
+    {
+        $this->mime = $mime;
+        $gdInfo = gd_info();
+        $extension = $mime->getExtension();
+        switch ($extension) {
+            case self::PNG_EXTENSION:
+                if (!$gdInfo["PNG Support"]) {
+                    throw new ExceptionBadArgument("The extension ($extension) is not supported by the GD library", self::CANONICAL);
+                }
+                break;
+            case self::JPG_EXTENSION:
+            case self::JPEG_EXTENSION:
+                if (!$gdInfo["JPEG Support"]) {
+                    throw new ExceptionBadArgument("The extension ($extension) is not supported by the GD library", self::CANONICAL);
+                }
+                break;
+            case self::WEBP_EXTENSION:
+                if (!$gdInfo["WebP Support"]) {
+                    throw new ExceptionBadArgument("The extension ($extension) is not supported by the GD library", self::CANONICAL);
+                }
+                break;
+            default:
+                throw new ExceptionBadArgument("The mime ($mime) is not supported");
+        }
+        return $this;
     }
 }

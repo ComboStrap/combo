@@ -34,7 +34,7 @@ abstract class FetchImage extends FetchAbs
     public function __construct()
     {
         /**
-         * Image can be generated, ie {@link Vignette}, {@link Snapshot}
+         * Image can be generated, ie {@link FetchVignette}, {@link Snapshot}
          */
     }
 

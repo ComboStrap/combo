@@ -1,5 +1,8 @@
 <?php
 
+use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\ExceptionNotExists;
+use ComboStrap\FetchAbs;
 use ComboStrap\FetchCache;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionBadArgument;
@@ -18,7 +21,7 @@ use ComboStrap\Page;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\Url;
-use ComboStrap\Vignette;
+use ComboStrap\FetchVignette;
 use dokuwiki\Utf8\PhpString;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -69,63 +72,65 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
 
     }
 
-
+    /**
+     * @param Doku_Event $event
+     * https://www.dokuwiki.org/devel:event:fetch_media_status
+     */
     function handleMediaStatus(Doku_Event $event, $params)
     {
 
-        if (!isset($_GET[DokuPath::DRIVE_ATTRIBUTE])) {
-            return;
-        }
-        $vignette = $_GET[Vignette::VIGNETTE_NAME];
-        if($vignette!==null){
-                $url = Url::createFromGetGlobalVariable();
-                $vignette = Vignette::createFetcherFromFetchUrl($url);
-                try {
-
-                    $path = $vignette->getPhysicalPath();
-                } catch (ExceptionBadArgument|ExceptionNotFound $e) {
-                    $event->data['status'] = HttpResponse::STATUS_INTERNAL_ERROR;
-                    $event->data['statusmessage'] = "Error while creating the vignette. Error: {$e->getMessage()}";
-                    return;
-                }
-                $event->data['file'] = $path->toPathString();
-                $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
-                $event->data['statusmessage'] = '';
-                $event->data['download'] = false;
-                try {
-                    $event->data['mime'] = FileSystems::getMime($path)->toString();
-                } catch (ExceptionNotFound $e) {
-                    // It should not happen because we should have a problem earlier while creating the vignette
-                    $message = "Error while getting the mime. Error: {$e->getMessage()}";
-                    LogUtility::errorIfDevOrTest("Internal error: $message");
-                    $event->data['status'] = HttpResponse::STATUS_INTERNAL_ERROR;
-                    $event->data['statusmessage'] = $message;
-                    return;
-                }
-
-        }
         $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
-        if (!in_array($drive, DokuPath::DRIVES) ) {
-            // The other resources have ACL
-            // and this endpoint is normally only for
-            $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
+        if (!(
+            isset($drive)
+            || isset($_GET[Fetch::FETCHER_KEY]
+            ))) {
             return;
         }
-        $mediaId = $event->data['media'];
-        $mediaPath = DokuPath::createDokuPath($mediaId, $drive);
-        $event->data['file'] = $mediaPath->toLocalPath()->toAbsolutePath()->toPathString();
-        if (FileSystems::exists($mediaPath)) {
-            $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
-            $event->data['statusmessage'] = '';
-            $event->data['mime'] = $mediaPath->getMime();
-        }
+
+        /**
+         * Security
+         */
         if ($drive === DokuPath::CACHE_DRIVE) {
             $event->data['download'] = false;
             if (!Identity::isManager()) {
                 $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
+                return;
             }
         }
 
+        // ACLs and precondition checks
+        if ($event->data['status'] >= 400) return;
+
+
+        /**
+         * Add the extra attributes
+         */
+        $fetchUrl = Url::createFromGetGlobalVariable();
+
+        try {
+            $fetcher = FetchAbs::createFetcherFromFetchUrl($fetchUrl);
+            $fetchPath = $fetcher->getFetchPath();
+            $event->data['file'] = $fetchPath;
+            $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
+            $mime = $fetcher->getMime();
+            $event->data["mime"] = $mime->toString();
+            if ($mime->isImage() || in_array($mime->getExtension(), ["js", "css"])) {
+                $event->data['download'] = false;
+            } else {
+                $event->data['download'] = true;
+            }
+            $event->data['statusmessage'] = '';
+        } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists|ExceptionNotFound $e) {
+            $event->data['file'] = DokuPath::createComboResource("images:error-bad-format.svg")->toLocalPath()->toAbsolutePath()->toPathString();
+            $event->data['statusmessage'] = $e->getMessage();
+            if ($e instanceof ExceptionNotFound || $e instanceof ExceptionNotExists) {
+                $event->data['status'] = HttpResponse::STATUS_NOT_FOUND;
+            } elseif ($e instanceof ExceptionBadArgument) {
+                $event->data['status'] = 422; // bad request
+            } elseif ($e instanceof ExceptionBadSyntax) {
+                $event->data['status'] = 415; // unsupported media type
+            }
+        }
 
     }
 

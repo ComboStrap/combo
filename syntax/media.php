@@ -240,7 +240,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 /** @var Doku_Renderer_xhtml $renderer */
                 try {
                     $mediaMarkup = MediaMarkup::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                } catch (ExceptionBadArgument $e) {
+                } catch (ExceptionCompile $e) {
                     $renderer->doc .= $e->getMessage();
                     return false;
                 }

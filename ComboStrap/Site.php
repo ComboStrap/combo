@@ -983,19 +983,19 @@ class Site
             $urlRewriteInt = DataType::toInteger($urlRewrite);
         } catch (ExceptionBadArgument $e) {
             LogUtility::internalError("The ($confKey) configuration is not an integer ($urlRewrite)");
-            return UrlEndpoint::NO_REWRITE;
+            return UrlRewrite::NO_REWRITE;
         }
         switch ($urlRewriteInt) {
 
             case 0:
-                return UrlEndpoint::NO_REWRITE;
+                return UrlRewrite::NO_REWRITE;
             case 1:
-                return UrlEndpoint::WEB_SERVER_REWRITE;
+                return UrlRewrite::WEB_SERVER_REWRITE;
             case 2:
-                return UrlEndpoint::DOKU_REWRITE;
+                return UrlRewrite::DOKU_REWRITE;
             default:
                 LogUtility::internalError("The ($confKey) configuration value ($urlRewriteInt) is not a valid value (0, 1 or 2). No rewrite");
-                return UrlEndpoint::NO_REWRITE;
+                return UrlRewrite::NO_REWRITE;
         }
     }
 

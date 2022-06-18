@@ -399,8 +399,8 @@ class MarkupRef
         switch ($type) {
             case self::MEDIA_TYPE:
                 $this->path = DokuPath::createMediaPathFromId($wikiId, $rev);
-                $this->addMediaIdToUrl($wikiId)
-                    ->addRevToUrl($rev);
+                $this->url->addQueryParameter(FetchRaw::MEDIA_QUERY_PARAMETER, $wikiId);
+                $this->addRevToUrl($rev);
                 break;
             case self::LINK_TYPE:
                 /**
@@ -409,8 +409,8 @@ class MarkupRef
                  */
                 $path = DokuPath::createPagePathFromId($wikiId, $rev);
                 $this->path = Page::createPageFromPathObject($path)->getPath();
-                $this->addPageIdToUrl($this->path->getDokuwikiId())
-                    ->addRevToUrl($rev);
+                $this->url->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->path->getDokuwikiId());
+                $this->addRevToUrl($rev);
                 break;
             default:
                 throw new ExceptionBadArgument("The ref type ($type) is unknown");
@@ -501,57 +501,6 @@ class MarkupRef
             throw new ExceptionNotFound("This ref ($this->ref) is not an interWiki.");
         }
         return $this->interWiki;
-    }
-
-    private function addPageIdToUrl(string $id): MarkupRef
-    {
-        switch (Site::getUrlRewrite()) {
-            case UrlEndpoint::NO_REWRITE:
-            default:
-                $this->url->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $id);
-                break;
-            case UrlEndpoint::WEB_SERVER_REWRITE:
-                $separatorCharacter = Site::getUrlEndpointSeparator();
-                $id = str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $separatorCharacter, $id);
-                try {
-                    $base = $this->url->getPath();
-                } catch (ExceptionNotFound $e) {
-                    // may be no base at all
-                    $base = "/";
-                }
-                if ($base[strlen($base) - 1] === "/") {
-                    $path = "$base{$id}";
-                } else {
-                    $path = "$base/$id";
-                }
-                $this->url->setPath($path);
-                break;
-            case UrlEndpoint::DOKU_REWRITE:
-                try {
-                    $base = $this->url->getPath();
-                } catch (ExceptionNotFound $e) {
-                    LogUtility::internalError("Unable to get the URL path for the doku endpoint. The path should be at minimum `doku.php`");
-                    $base = "doku.php";
-                }
-                /**
-                 * No url  encoding of id (ie $id = urlencode($id))
-                 *   * the `:` seems to work {@link idfilter}
-                 *   * doku rewrite is bad rewrite
-                 */
-                $separatorCharacter = Site::getUrlEndpointSeparator();
-                $id = str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $separatorCharacter, $id);
-                $this->url->setPath("$base/$id");
-                break;
-
-        }
-        return $this;
-
-    }
-
-    public function addMediaIdToUrl(string $id): MarkupRef
-    {
-        $this->url->addQueryParameterIfNotActualSameValue(FetchRaw::MEDIA_QUERY_PARAMETER, $id);
-        return $this;
     }
 
     private function addRevToUrl($rev = null): void

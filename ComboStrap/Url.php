@@ -57,6 +57,7 @@ class Url extends PathAbs
      */
     private $url;
     private ?int $port = null;
+    private bool $rewrite = false;
 
 
     /**
@@ -193,6 +194,9 @@ class Url extends PathAbs
      */
     public function setPath(string $path): Url
     {
+        if (substr($path, 0, 2) === "//") {
+            LogUtility::internalError("The url path starts with two slashes");
+        }
         /**
          * Normalization hack
          */
@@ -603,6 +607,11 @@ class Url extends PathAbs
 
     public function toString($ampersand = Url::AMPERSAND_CHARACTER): string
     {
+
+
+        UrlRewrite::rewrite($this);
+
+
         try {
             $scheme = $this->getScheme();
         } catch (ExceptionNotFound $e) {
@@ -707,4 +716,6 @@ class Url extends PathAbs
             $this->addQueryParameterIfNotActualSameValue($key, $value);
         }
     }
+
+
 }

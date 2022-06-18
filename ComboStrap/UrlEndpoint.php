@@ -5,64 +5,26 @@ namespace ComboStrap;
 class UrlEndpoint
 {
 
-    const NO_REWRITE = "no_rewrite";
-    const WEB_SERVER_REWRITE = "web_server";
-    const DOKU_REWRITE = "doku_rewrite";
+    const LIB_EXE_FETCH_PHP = '/lib/exe/fetch.php';
+    const LIB_EXE_DETAIL_PHP = '/lib/exe/detail.php';
+    const DOKU_PHP = '/doku.php';
 
     public static function createFetchUrl(): Url
     {
-
-        return self::createEndPointUrl('lib/exe/fetch.php', '_media');
-
-
+        return Url::createEmpty()->setPath(self::LIB_EXE_FETCH_PHP);
     }
 
     public static function createDetailUrl(): Url
     {
-        return self::createEndPointUrl('lib/exe/detail.php', '_detail');
+        return Url::createEmpty()->setPath(self::LIB_EXE_DETAIL_PHP);
     }
 
-    public static function createEndPointUrl($relativeNormalPath, $relativeRewritePath): Url
-    {
-
-        $rewrite = Site::getUrlRewrite();
-        switch ($rewrite) {
-            case self::WEB_SERVER_REWRITE:
-                $path = $relativeRewritePath;
-                break;
-            case self::DOKU_REWRITE:
-            case self::NO_REWRITE:
-            default:
-                $path = $relativeNormalPath;
-                break;
-        }
-        try {
-            $urlPathBaseDir = Site::getUrlPathBaseDir();
-            if ($urlPathBaseDir[strlen($urlPathBaseDir)-1] === "/") {
-                $path = "$urlPathBaseDir$path";
-            } else {
-                $path = "$urlPathBaseDir/$path";
-            }
-        } catch (ExceptionNotFound $e) {
-            // ok
-            $path = "/$path";
-        }
-        $url = Url::createEmpty()
-            ->setPath($path);
-        if (Site::shouldEndpointUrlBeAbsolute()) {
-            $url->toAbsoluteUrl();
-        }
-        return $url;
-
-    }
 
     public static function createComboStrapUrl(): Url
     {
-
         return Url::createEmpty()
             ->setScheme("https")
             ->setHost("combostrap.com");
-
     }
 
     public static function createSupportUrl(): Url
@@ -76,7 +38,7 @@ class UrlEndpoint
     public static function createDokuUrl(): Url
     {
 
-        return self::createEndPointUrl('doku.php', '');
+        return Url::createEmpty()->setPath(self::DOKU_PHP);
 
     }
 

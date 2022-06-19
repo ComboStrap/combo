@@ -121,7 +121,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                 try {
                     syntax_plugin_combo_brand::mixBrandButtonToTagAttributes($shareAttributes, $brand);
                     if (
-                        !$shareAttributes->hasAttribute(syntax_plugin_combo_link::ATTRIBUTE_HREF)
+                        !$shareAttributes->hasAttribute(syntax_plugin_combo_link::MARKUP_REF_ATTRIBUTE)
                         && !$shareAttributes->hasAttribute(self::HANDLE_ATTRIBUTE)
                     ) {
                         $returnArray[PluginUtility::EXIT_CODE] = 1;

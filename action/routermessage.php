@@ -224,7 +224,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
                         $tagAttributes = $markupRef
                             ->toAttributes()
                             ->addOutputAttributeValue("rel", "nofollow");
-                        $listPagesHtml .= "<li>{$tagAttributes->toHtmlEnterTag("a")}{$markupRef->getLabel()}</a></li>";
+                        $listPagesHtml .= "<li>{$tagAttributes->toHtmlEnterTag("a")}{$markupRef->getDefaultLabel()}</a></li>";
                     } catch (ExceptionBadSyntax $e) {
                         LogUtility::internalError("Internal Error: Unable to get a markup ref for the page ($page). Error: {$e->getMessage()}");
                     }

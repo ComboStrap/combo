@@ -87,7 +87,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
 
 
                 // /i not case sensitive
-                $attributePattern = "\\s*(\w+)\\s*=\\s*[\'\"]{1}([^\`\"]*)[\'\"]{1}\\s*";
+                $attributePattern = "\\s*(\w+)\\s*=\\s*['\"]{1}([^`\"]*)['\"]{1}\\s*";
                 $result = preg_match_all('/' . $attributePattern . '/i', $match, $matches);
                 if ($result != 0) {
                     foreach ($matches[1] as $key => $parameterKey) {
@@ -193,7 +193,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                         /**
                          * Label
                          */
-                        $label = $markupRef->getLabel();
+                        $label = $markupRef->getDefaultLabel();
                         // Suppress the parts in the name with the regexp defines in the 'suppress' params
                         if ($attributes['suppress']) {
                             $substrPattern = '/' . $attributes['suppress'] . '/i';
@@ -294,7 +294,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                         $startLink = new LinkMarkup($startId);
                         try {
                             $panelHeaderContent = $startLink->toAttributes()->toHtmlEnterTag("a");
-                            $panelHeaderContent .= $startLink->getLabel();
+                            $panelHeaderContent .= $startLink->getDefaultLabel();
                             $panelHeaderContent .= "</a>";
                         } catch (ExceptionCompile $e) {
                             $panelHeaderContent = "Error: {$e->getMessage()}";

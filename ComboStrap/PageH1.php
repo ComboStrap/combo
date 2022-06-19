@@ -49,6 +49,9 @@ class PageH1 extends MetadataText
         return true;
     }
 
+    /**
+     * @return string
+     */
     public function getDefaultValue(): string
     {
         $store = $this->getReadStore();
@@ -74,6 +77,19 @@ class PageH1 extends MetadataText
             ->getValueOrDefault();
 
     }
+
+    /**
+     * @return string
+     */
+    public function getValueOrDefault(): string
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+    }
+
 
     public function getCanonical(): string
     {

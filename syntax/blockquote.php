@@ -248,7 +248,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                         $actualCall->getTagName() == syntax_plugin_combo_link::TAG
                         && $actualCall->getState() == DOKU_LEXER_ENTER
                     ) {
-                        $ref = $actualCall->getAttribute(syntax_plugin_combo_link::ATTRIBUTE_HREF);
+                        $ref = $actualCall->getAttribute(syntax_plugin_combo_link::MARKUP_REF_ATTRIBUTE);
                         if (StringUtility::match($ref, "https:\/\/twitter.com\/[^\/]*\/status\/.*")) {
                             $tweetUrlFound = true;
                         }

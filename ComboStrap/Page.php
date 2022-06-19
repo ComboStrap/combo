@@ -557,7 +557,7 @@ class Page extends ResourceComboAbs
     function getH1OrDefault()
     {
 
-        return $this->h1->getValueFromStoreOrDefault();
+        return $this->h1->getValueOrDefault();
 
     }
 
@@ -574,6 +574,7 @@ class Page extends ResourceComboAbs
 
     /**
      * @return string - the description or the dokuwiki generated description
+     * @throws ExceptionNotFound
      */
     public
     function getDescriptionOrElseDokuWiki(): ?string

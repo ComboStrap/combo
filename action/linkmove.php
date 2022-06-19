@@ -5,6 +5,8 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\Alias;
 use ComboStrap\Aliases;
 use ComboStrap\DatabasePageRow;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\File;
 use ComboStrap\FileSystems;
@@ -213,9 +215,14 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
          *
          */
         if ($state == DOKU_LEXER_ENTER) {
-            $ref = syntax_plugin_combo_link::parse($match)[syntax_plugin_combo_link::ATTRIBUTE_HREF];
-            $link = new LinkMarkup($ref);
-            if ($link->getUriType() == MarkupRef::WIKI_URI) {
+            $ref = syntax_plugin_combo_link::parse($match)[syntax_plugin_combo_link::MARKUP_REF_ATTRIBUTE];
+            try {
+                $link = LinkMarkup::createFromRef($ref);
+            } catch (ExceptionCompile $e) {
+                LogUtility::error("Unable to rewrite the markup reference for a link move. The markup ref ($ref) could not be parsed. Error: {$e->getMessage()}");
+                return;
+            }
+            if ($link->getMarkupRef()->getSchemeType() == MarkupRef::WIKI_URI) {
 
                 $handler->internallink($match, $state, $pos);
                 $suffix = "]]";

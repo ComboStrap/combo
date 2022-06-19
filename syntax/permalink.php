@@ -4,7 +4,6 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 use ComboStrap\CacheDependencies;
 use ComboStrap\CacheManager;
-use ComboStrap\CacheRuntimeDependencies2;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
@@ -146,7 +145,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                         if ($fragment != null) {
                             $url .= "#$fragment";
                         }
-                        $attributes->addComponentAttributeValue(syntax_plugin_combo_link::ATTRIBUTE_HREF, $url);
+                        $attributes->addComponentAttributeValue(syntax_plugin_combo_link::MARKUP_REF_ATTRIBUTE, $url);
                         $attributes->addOutputAttributeValue("rel", "nofollow");
                         syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $attributes);
                         if ($state === DOKU_LEXER_SPECIAL) {
@@ -170,7 +169,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                         if ($fragment !== null) {
                             $canonicalUrl .= "#$fragment";
                         }
-                        $attributes->addComponentAttributeValue(syntax_plugin_combo_link::ATTRIBUTE_HREF, $canonicalUrl);
+                        $attributes->addComponentAttributeValue(syntax_plugin_combo_link::MARKUP_REF_ATTRIBUTE, $canonicalUrl);
                         $attributes->addOutputAttributeValue("rel", "nofollow");
                         syntax_plugin_combo_link::addOpenLinkTagInCallStack($callStack, $attributes);
                         if ($state === DOKU_LEXER_SPECIAL) {

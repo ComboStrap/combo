@@ -85,7 +85,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
                     $linkUtility = LinkMarkup::createFromPageIdOrPath($backlinkId);
                     try {
                         $html .= $linkUtility->toAttributes(self::TAG)->toHtmlEnterTag("a");
-                        $html .= $linkUtility->getLabel();
+                        $html .= $linkUtility->getDefaultLabel();
                         $html .= "</a>";
                     } catch (ExceptionCompile $e) {
                         $html = "Error while trying to create the link for the page ($backlinkId). Error: {$e->getMessage()}";

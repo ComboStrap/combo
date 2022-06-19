@@ -119,6 +119,11 @@ class LinkMarkup
         return new LinkMarkup($ref);
     }
 
+    private static function getHtmlClassLocalLink(): string
+    {
+        return "link-local";
+    }
+
 
     /**
      *
@@ -303,20 +308,17 @@ EOF;
                      */
                     if (!$outputAttributes->hasAttribute("title")) {
 
-                        /**
-                         * If this is not a link into the same page
-                         */
-                        if (!empty($this->getMarkupRef()->getPath())) {
+                        try {
                             $description = $page->getDescriptionOrElseDokuWiki();
-                            if (empty($description)) {
-                                // Rare case
-                                $description = $page->getH1OrDefault();
-                            }
-                            if (!empty($acronym)) {
-                                $description = $description . " ($acronym)";
-                            }
-                            $outputAttributes->addOutputAttributeValue("title", $description);
+                        } catch (ExceptionNotFound $e) {
+                            // Rare case
+                            $description = $page->getH1OrDefault();
                         }
+                        if (!empty($acronym)) {
+                            $description = $description . " ($acronym)";
+                        }
+                        $outputAttributes->addOutputAttributeValue("title", $description);
+
 
                     }
 
@@ -333,6 +335,13 @@ EOF;
                 $outputAttributes->addClassName("windows");
                 break;
             case MarkupRef::LOCAL_URI:
+                $outputAttributes->addClassName(self::getHtmlClassLocalLink());
+                if (!$outputAttributes->hasAttribute("title")) {
+                    $description = ucfirst($this->markupRef->getUrl()->getFragment());
+                    if ($description !== "") {
+                        $outputAttributes->addOutputAttributeValue("title", $description);
+                    }
+                }
                 break;
             case MarkupRef::EMAIL_URI:
                 $outputAttributes->addClassName(self::getHtmlClassEmailLink());
@@ -416,7 +425,7 @@ EOF;
      * @throws ExceptionNotFound
      *
      */
-    public function getLabel(bool $navigation = false): string
+    public function getDefaultLabel(bool $navigation = false): string
     {
 
         switch ($this->getMarkupRef()->getSchemeType()) {
@@ -599,14 +608,14 @@ EOF;
             case MarkupRef::WIKI_URI:
                 $showDokuProperty = [self::SEARCH_HIGHLIGHT_QUERY_PROPERTY, DokuWikiId::DOKUWIKI_ID_ATTRIBUTE];
                 foreach ($this->getMarkupRef()->getUrl()->getQuery() as $key => $value) {
-                    if (!in_array($key, $showDokuProperty)){
-                    $this->getMarkupRef()->getUrl()->removeQueryParameter($key);
-                    if (!TagAttributes::isEmptyValue($value)) {
-                        $this->attributes->addComponentAttributeValue($key, $value);
-                    } else {
-                        $this->attributes->addEmptyComponentAttributeValue($key);
+                    if (!in_array($key, $showDokuProperty)) {
+                        $this->getMarkupRef()->getUrl()->removeQueryParameter($key);
+                        if (!TagAttributes::isEmptyValue($value)) {
+                            $this->attributes->addComponentAttributeValue($key, $value);
+                        } else {
+                            $this->attributes->addEmptyComponentAttributeValue($key);
+                        }
                     }
-                }
                 }
                 break;
             case

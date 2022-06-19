@@ -404,8 +404,16 @@ class MarkupRef
                  * The path may be an id if it exists
                  * otherwise it's a relative path
                  */
-                $path = DokuPath::createPagePathFromId($wikiPath, $rev);
-                if (!FileSystems::exists($path)) {
+                $isWikiPath = false;
+                if ($wikiPath !== "") {
+                    $path = DokuPath::createPagePathFromId($wikiPath, $rev);
+                    if (FileSystems::exists($path)) {
+                        $isWikiPath = true;
+                    }
+                }
+                if ($isWikiPath) {
+                    $path = DokuPath::createPagePathFromId($wikiPath, $rev);
+                } else {
                     $path = DokuPath::createPagePathFromPath($wikiPath, $rev);
                 }
                 /**

@@ -356,7 +356,7 @@ class Url extends PathAbs
 
     public function __toString()
     {
-        return $this->toAbsoluteUrlString();
+        return $this->toString();
     }
 
     public function getQueryPropertyValueOrDefault(string $key, string $defaultIfNull)

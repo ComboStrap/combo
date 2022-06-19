@@ -127,11 +127,15 @@ class MarkupRef
         /**
          * Only Fragment (also known as local link)
          */
-        if (preg_match('!^#.+!', $ref)) {
+        if (preg_match('/^#.?/', $ref)) {
             $this->refScheme = self::LOCAL_URI;
             $check = false;
-            $ref = sectionID($ref, $check);
-            $this->url = Url::createEmpty()->setFragment($ref);
+            $fragment = substr($ref, 1);
+            if ($fragment !== "") {
+                // for empty string, the below function returns `section`
+                $fragment = sectionID($fragment, $check);
+            }
+            $this->url = Url::createEmpty()->setFragment($fragment);
             $this->path = DokuPath::createPagePathFromRequestedPage();
             return;
         }

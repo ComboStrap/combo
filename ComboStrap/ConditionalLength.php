@@ -208,6 +208,7 @@ class ConditionalLength
         switch ($this->unitInLength){
             case "vh":
             case "wh":
+            case "rem":
                 return $this->length;
         }
         /**

@@ -738,7 +738,7 @@ class Url extends PathAbs
         return $this;
     }
 
-    private function removeQueryParameter(string $key)
+    public function removeQueryParameter(string $key)
     {
         unset($this->query[$key]);
     }

@@ -13,7 +13,7 @@ use syntax_plugin_combo_variable;
  *   * or {@link MarkupRef::createLinkFromRef() link markup}
  * and returns an {@link MarkupRef::getUrl() URL},
  *
- * You may determine the {@link MarkupRef::getType() type of reference}
+ * You may determine the {@link MarkupRef::getSchemeType() type of reference}
  *
  * For a {@link MarkupRef::WIKI_URI}, the URL returned is:
  *   * a {@link UrlEndpoint::createFetchUrl() fetch url} for a media
@@ -175,31 +175,27 @@ class MarkupRef
         $this->refScheme = MarkupRef::WIKI_URI;
 
         $questionMarkPosition = strpos($ref, "?");
-        $wikiId = $ref;
+        $wikiPath = $ref;
         $fragment = null;
         $queryStringAndAnchorOriginal = null;
         if ($questionMarkPosition !== false) {
-            $wikiId = substr($ref, 0, $questionMarkPosition);
+            $wikiPath = substr($ref, 0, $questionMarkPosition);
             $queryStringAndAnchorOriginal = substr($ref, $questionMarkPosition + 1);
         } else {
             // We may have only an anchor
             $hashTagPosition = strpos($ref, "#");
             if ($hashTagPosition !== false) {
-                $wikiId = substr($ref, 0, $hashTagPosition);
+                $wikiPath = substr($ref, 0, $hashTagPosition);
                 $fragment = substr($ref, $hashTagPosition + 1);
             }
         }
 
         /**
-         * Example:
-         * [[?do=edit]] to edit the current page
          *
+         * Clean it
          */
-        if ($wikiId === "") {
-            $wikiId = DokuPath::getRequestedPagePath()->getDokuwikiId();
-        } else {
-            $wikiId = DokuPath::cleanID($wikiId);
-        }
+        $wikiPath = $this->cleanPath($wikiPath);
+
         /**
          * The URL
          * The path is created at the end because it may have a revision
@@ -329,7 +325,7 @@ class MarkupRef
                  */
                 if ($value != null) {
                     if (($countHashTag = substr_count($value, "#")) >= 3) {
-                        LogUtility::msg("The value ($value) of the key ($key) for the link ($wikiId) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
+                        LogUtility::msg("The value ($value) of the key ($key) for the link ($wikiPath) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
                         continue;
                     }
                 } else {
@@ -394,12 +390,12 @@ class MarkupRef
             $rev = null;
         }
         /**
-         * The wiki id may be relative
+         * The wiki path may be relative
          */
         switch ($type) {
             case self::MEDIA_TYPE:
-                $this->path = DokuPath::createMediaPathFromId($wikiId, $rev);
-                $this->url->addQueryParameter(FetchRaw::MEDIA_QUERY_PARAMETER, $wikiId);
+                $this->path = DokuPath::createMediaPathFromId($wikiPath, $rev);
+                $this->url->addQueryParameter(FetchRaw::MEDIA_QUERY_PARAMETER, $wikiPath);
                 $this->addRevToUrl($rev);
                 break;
             case self::LINK_TYPE:
@@ -407,7 +403,7 @@ class MarkupRef
                  * The path may be a namespace, in the page system
                  * the path should then be the index
                  */
-                $path = DokuPath::createPagePathFromId($wikiId, $rev);
+                $path = DokuPath::createPagePathFromPath($wikiPath, $rev);
                 $this->path = Page::createPageFromPathObject($path)->getPath();
                 $this->url->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->path->getDokuwikiId());
                 $this->addRevToUrl($rev);
@@ -458,14 +454,47 @@ class MarkupRef
     }
 
     /**
-     * @throws ExceptionBadArgument - if the ref is a variable ref
+     * In case of manual entry, the function will clean the path
+     * @param string $wikiPath - a path entered by a user
+     * @return string
      */
+    public function cleanPath(string $wikiPath): string
+    {
+        if ($wikiPath === "") {
+            return $wikiPath;
+        }
+        $isNamespacePath = false;
+        if ($wikiPath[strlen($wikiPath) - 1] === DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+            $isNamespacePath = true;
+        }
+        $pathType = "unknown";
+        if ($wikiPath[0] === DokuPath::CURRENT_PATH_CHARACTER) {
+            $pathType = "current";
+            if (isset($wikiPath[1])) {
+                if ($wikiPath[1] === DokuPath::CURRENT_PATH_CHARACTER) {
+                    $pathType = "parent";
+                }
+            }
+        }
+        $cleanPath = cleanID($wikiPath);
+        if ($isNamespacePath) {
+            $cleanPath = "$cleanPath:";
+        }
+        switch ($pathType) {
+            case "current":
+                $cleanPath = DokuPath::CURRENT_PATH_CHARACTER . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $cleanPath;
+                break;
+            case "parent":
+                $cleanPath = DokuPath::CURRENT_PARENT_PATH_CHARACTER . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $cleanPath;
+                break;
+        }
+        return $cleanPath;
+    }
+
+
     public
     function getUrl(): Url
     {
-        if ($this->type === MarkupRef::VARIABLE_URI) {
-            throw new ExceptionBadArgument("A template variable uri ({$this->ref}) can not give back an url, it should be first replaced");
-        }
         return $this->url;
     }
 
@@ -487,7 +516,7 @@ class MarkupRef
         return $this->ref;
     }
 
-    public function getType(): string
+    public function getSchemeType(): string
     {
         return $this->refScheme;
     }
@@ -508,5 +537,13 @@ class MarkupRef
         if ($rev !== null) {
             $this->url->addQueryParameter(DokuPath::REV_ATTRIBUTE, $rev);
         }
+    }
+
+
+
+
+    public function getType(): string
+    {
+        return $this->type;
     }
 }

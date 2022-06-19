@@ -3,6 +3,8 @@
 namespace ComboStrap;
 
 
+use http\Exception\RuntimeException;
+
 /**
  * Class DokuPath
  * @package ComboStrap
@@ -117,8 +119,8 @@ class DokuPath extends PathAbs
     protected function __construct(string $path, string $drive, string $rev = null)
     {
 
-        if (empty($path)) {
-            LogUtility::msg("A null path was given", LogUtility::LVL_MSG_WARNING);
+        if (trim($path) === "") {
+            $path = DokuPath::getRequestedPagePath()->toPathString();
         }
 
         /**
@@ -129,7 +131,6 @@ class DokuPath extends PathAbs
         if ($drive === self::PAGE_DRIVE && $firstCharacter !== DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $parts = preg_split('/' . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . '/', $path);
             switch ($parts[0]) {
-                default:
                 case DokuPath::CURRENT_PATH_CHARACTER:
                     $rootRelativePath = DokuPath::getCurrentPagePath();
                     $parts = array_splice($parts, 1);
@@ -137,6 +138,13 @@ class DokuPath extends PathAbs
                 case DokuPath::CURRENT_PARENT_PATH_CHARACTER:
                     $rootRelativePath = DokuPath::getCurrentPagePath()->getParent();
                     $parts = array_splice($parts, 1);
+                    break;
+                default:
+                    /**
+                     * just a relative name path
+                     * (ie hallo)
+                     */
+                    $rootRelativePath = DokuPath::getCurrentPagePath();
                     break;
             }
             // is relative directory path ?
@@ -211,12 +219,17 @@ class DokuPath extends PathAbs
 
     /**
      *
-     * @param $absolutePath
+     * @param string $path
+     * @param string|null $rev
      * @return DokuPath
      */
-    public static function createPagePathFromPath($absolutePath): DokuPath
+    public static function createPagePathFromPath(string $path, string $rev = null): DokuPath
     {
-        return new DokuPath($absolutePath, DokuPath::PAGE_DRIVE);
+        try {
+            return new DokuPath($path, DokuPath::PAGE_DRIVE, $rev);
+        } catch (ExceptionNotFound $e) {
+            throw new RuntimeException("Internal Error: The page drive is a known drive");
+        }
     }
 
     public static function createMediaPathFromAbsolutePath($absolutePath, $rev = null): DokuPath
@@ -431,13 +444,11 @@ class DokuPath extends PathAbs
                 }
             }
             $wikiPath = $relativePath->toPathString();
-            if ($wikiPath === LocalPath::RELATIVE_CURRENT) {
-                $wikiPath = "";
-            }
             if (FileSystems::isDirectory($path)) {
                 DokuPath::addNamespaceEndSeparatorIfNotPresent($wikiPath);
             }
-            return DokuPath::createDokuPath($wikiPath, $driveRoot);
+            return DokuPath::createDokuPath(":$wikiPath", $driveRoot);
+
         }
         throw new ExceptionBadArgument("The local path ($path) is not inside a wiki path drive");
 
@@ -515,45 +526,6 @@ class DokuPath extends PathAbs
     public static function create(string $path, string $drive, string $rev = null): DokuPath
     {
         return new DokuPath($path, $drive, $rev);
-    }
-
-    /**
-     * In case of manual entry, the function will clean the id
-     * @param string $wikiId
-     * @return string|void
-     */
-    public static function cleanID(string $wikiId)
-    {
-        if ($wikiId === "") {
-            LogUtility::internalError("The passed wiki id is the empty string. We couldn't clean it.");
-            return $wikiId;
-        }
-        $isNamespacePath = false;
-        if ($wikiId[strlen($wikiId) - 1] === DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
-            $isNamespacePath = true;
-        }
-        $pathType = "unknown";
-        if ($wikiId[0] === DokuPath::CURRENT_PATH_CHARACTER) {
-            $pathType = "current";
-            if (isset($wikiId[1])) {
-                if ($wikiId[1] === DokuPath::CURRENT_PATH_CHARACTER) {
-                    $pathType = "parent";
-                }
-            }
-        }
-        $cleanId = cleanID($wikiId);
-        if ($isNamespacePath) {
-            $cleanId = "$cleanId:";
-        }
-        switch ($pathType) {
-            case "current":
-                $cleanId = DokuPath::CURRENT_PATH_CHARACTER . $cleanId;
-                break;
-            case "parent":
-                $cleanId = DokuPath::CURRENT_PARENT_PATH_CHARACTER . $cleanId;
-                break;
-        }
-        return $cleanId;
     }
 
     /**
@@ -938,10 +910,18 @@ class DokuPath extends PathAbs
     public
     function resolve(string $name): DokuPath
     {
-        $absolutePath = $this->path;
-        // Directory have already separator at the end
-        $path = $absolutePath . $name;
-        return new DokuPath($path, $this->getDrive());
+
+        // Directory path have already separator at the end, don't add it
+        if ($this->path[strlen($this->path) - 1] !== DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+            $path = $this->path . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $name;
+        } else {
+            $path = $this->path . $name;
+        }
+        try {
+            return new DokuPath($path, $this->getDrive());
+        } catch (ExceptionNotFound $e) {
+            throw new RuntimeException("Internal Error: The drive should already exist", 0, $e);
+        }
     }
 
 

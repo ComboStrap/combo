@@ -376,6 +376,11 @@ class TagAttributes
         return implode(" ", $newValues);
     }
 
+    public static function isEmptyValue($attributeValue): bool
+    {
+        return empty($attributeValue) && !is_bool($attributeValue);
+    }
+
     public function addClassName($className): TagAttributes
     {
 
@@ -419,7 +424,7 @@ class TagAttributes
     public function addComponentAttributeValue($attributeName, $attributeValue): TagAttributes
     {
 
-        if (empty($attributeValue) && !is_bool($attributeValue)) {
+        if (TagAttributes::isEmptyValue($attributeValue)) {
             LogUtility::msg("The value of the attribute ($attributeName) is empty. Use the nonEmpty function instead if it's the wanted behavior", LogUtility::LVL_MSG_WARNING, "support");
         }
 

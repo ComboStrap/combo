@@ -152,7 +152,7 @@ class LinkMarkup
         /**
          * Processing by type
          */
-        switch ($this->getMarkupRef()->getType()) {
+        switch ($this->getMarkupRef()->getSchemeType()) {
             case MarkupRef::INTERWIKI_URI:
                 try {
                     $interWiki = $this->getMarkupRef()->getInterWiki();
@@ -394,7 +394,7 @@ EOF;
          * to mitigate XSS
          *
          */
-        if ($this->getMarkupRef()->getType() == MarkupRef::EMAIL_URI) {
+        if ($this->getMarkupRef()->getSchemeType() == MarkupRef::EMAIL_URI) {
             $emailAddress = $this->obfuscateEmail($this->markupRef->getPath());
             $outputAttributes->addOutputAttributeValue("title", $emailAddress);
         }
@@ -419,7 +419,7 @@ EOF;
     public function getLabel(bool $navigation = false): string
     {
 
-        switch ($this->getMarkupRef()->getType()) {
+        switch ($this->getMarkupRef()->getSchemeType()) {
             case MarkupRef::WIKI_URI:
                 $page = $this->getPage();
                 if ($navigation) {
@@ -595,12 +595,18 @@ EOF;
          * Add the attribute from the URL
          * if this is not a `do`
          */
-        switch ($this->markupRef->getType()) {
+        switch ($this->markupRef->getSchemeType()) {
             case MarkupRef::WIKI_URI:
+                $showDokuProperty = [self::SEARCH_HIGHLIGHT_QUERY_PROPERTY, DokuWikiId::DOKUWIKI_ID_ATTRIBUTE];
                 foreach ($this->getMarkupRef()->getUrl()->getQuery() as $key => $value) {
-                    if ($key !== self::SEARCH_HIGHLIGHT_QUERY_PROPERTY) {
+                    if (!in_array($key, $showDokuProperty)){
+                    $this->getMarkupRef()->getUrl()->removeQueryParameter($key);
+                    if (!TagAttributes::isEmptyValue($value)) {
                         $this->attributes->addComponentAttributeValue($key, $value);
+                    } else {
+                        $this->attributes->addEmptyComponentAttributeValue($key);
                     }
+                }
                 }
                 break;
             case

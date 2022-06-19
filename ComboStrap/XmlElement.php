@@ -74,7 +74,7 @@ class XmlElement
      * @return XmlElement[]
      * @throws ExceptionBadSyntax
      */
-    public function querySelectAll(string $selector): array
+    public function querySelectorAll(string $selector): array
     {
         $xpath = $this->document->cssSelectorToXpath($selector);
         $nodes = [];
@@ -120,5 +120,17 @@ class XmlElement
     public function getNodeValue()
     {
         return $this->element->nodeValue;
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    public function querySelector(string $selector): XmlElement
+    {
+        $domNodeList = $this->querySelectorAll($selector);
+        if (sizeof($domNodeList) >= 1) {
+            return $domNodeList[0];
+        }
+        throw new ExceptionNotFound("No element was found with the selector $selector");
     }
 }

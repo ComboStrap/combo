@@ -88,6 +88,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      * The link title attribute (ie popup)
      */
     const TITLE_ATTRIBUTE = "title";
+    const STRETCHED_LINK = "stretched-link";
 
 
     /**
@@ -305,7 +306,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     }
                     if ($parent !== false) {
                         if ($parent->getAttribute(self::CLICKABLE_ATTRIBUTE)) {
-                            $htmlAttributes->addClassName("stretched-link");
+                            $htmlAttributes->addClassName(self::STRETCHED_LINK);
                             $parent->addClassName("position-relative");
                             $parent->removeAttribute(self::CLICKABLE_ATTRIBUTE);
                         }

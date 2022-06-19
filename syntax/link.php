@@ -542,7 +542,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         $href = $tagAttributes->getValue(self::ATTRIBUTE_HREF);
                         $type = LinkMarkup::createFromRef($href)
                             ->getMarkupRef()
-                            ->getType();
+                            ->getSchemeType();
                         $name = $tagAttributes->getValue(self::ATTRIBUTE_LABEL);
 
                         switch ($type) {
@@ -604,7 +604,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     }
                     $ref = $tagAttributes->getValue(self::ATTRIBUTE_HREF);
                     $href = LinkMarkup::createFromRef($ref);
-                    $refType = $href->getMarkupRef()->getType();
+                    $refType = $href->getMarkupRef()->getSchemeType();
 
 
                     /**

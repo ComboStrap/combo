@@ -26,7 +26,7 @@ class InterWiki
 
     /**
      * @param string $interWikiRef - The interwiki
-     * @param string $markupType - The {@link MarkupRef::getType()} ie media or link
+     * @param string $markupType - The {@link MarkupRef::getSchemeType()} ie media or link
      */
     public function __construct(string $interWikiRef, string $markupType)
     {

@@ -366,10 +366,10 @@ class MarkupRef
                 }
 
                 switch ($lowerCaseKey) {
-                    case "w": // used in a link w=xxx
+                    case Dimension::WIDTH_KEY_SHORT: // used in a link w=xxx
                         $this->url->addQueryParameter(Dimension::WIDTH_KEY, $value);
                         break;
-                    case "h": // used in a link h=xxxx
+                    case Dimension::HEIGHT_KEY_SHORT: // used in a link h=xxxx
                         $this->url->addQueryParameter(Dimension::HEIGHT_KEY, $value);
                         break;
                     default:
@@ -399,11 +399,19 @@ class MarkupRef
                 $this->addRevToUrl($rev);
                 break;
             case self::LINK_TYPE:
+
+                /**
+                 * The path may be an id if it exists
+                 * otherwise it's a relative path
+                 */
+                $path = DokuPath::createPagePathFromId($wikiPath, $rev);
+                if (!FileSystems::exists($path)) {
+                    $path = DokuPath::createPagePathFromPath($wikiPath, $rev);
+                }
                 /**
                  * The path may be a namespace, in the page system
-                 * the path should then be the index
+                 * the path should then be the index page
                  */
-                $path = DokuPath::createPagePathFromPath($wikiPath, $rev);
                 $this->path = Page::createPageFromPathObject($path)->getPath();
                 $this->url->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->path->getDokuwikiId());
                 $this->addRevToUrl($rev);
@@ -463,6 +471,7 @@ class MarkupRef
         if ($wikiPath === "") {
             return $wikiPath;
         }
+        $wikiPath = str_replace(DokuPath::NAMESPACE_SEPARATOR_SLASH, DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $wikiPath);
         $isNamespacePath = false;
         if ($wikiPath[strlen($wikiPath) - 1] === DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $isNamespacePath = true;
@@ -538,8 +547,6 @@ class MarkupRef
             $this->url->addQueryParameter(DokuPath::REV_ATTRIBUTE, $rev);
         }
     }
-
-
 
 
     public function getType(): string

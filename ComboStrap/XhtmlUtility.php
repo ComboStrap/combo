@@ -30,10 +30,9 @@ class XhtmlUtility
      * @param string $right
      * @return string
      * DOMDocument supports formatted XML while SimpleXMLElement does not.
-     * @noinspection PhpComposerExtensionStubsInspection
      * @throws ExceptionCompile
      */
-    public static function diffMarkup($left, $right, $xhtml = true, $excludedAttributes = null): string
+    public static function diffMarkup(string $left, string $right, $xhtml = true, $excludedAttributes = null): string
     {
         if (empty($right)) {
             throw new \RuntimeException("The right text should not be empty");

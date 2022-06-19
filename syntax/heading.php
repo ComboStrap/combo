@@ -112,7 +112,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         /**
          * Capture the h1
          */
-        if ($level == 1) {
+        if ($level === 1) {
 
             try {
                 $page = Page::createPageFromGlobalDokuwikiId();

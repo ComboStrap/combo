@@ -190,6 +190,10 @@ class Outline
             $this->addCallToSection($actualCall);
         }
 
+        // Add label the heading text to the metadata
+        $this->saveOutlineToMetadata();
+
+
     }
 
     public function getRootOutlineSection(): OutlineSection
@@ -450,6 +454,26 @@ class Outline
         };
         TreeVisit::visit($this->rootSection, $collectCalls);
         return $totalInstructionCalls;
+
+    }
+
+    /**
+     * Add the label (ie heading text to the cal attribute)
+     *
+     * @return void
+     */
+    private function saveOutlineToMetadata()
+    {
+        try {
+            $firstChild = $this->rootSection->getFirstChild();
+        } catch (ExceptionNotFound $e) {
+            // no child
+            return;
+        }
+        if ($firstChild->getLevel() === 1) {
+            $headingCall = $firstChild->getHeadingCall();
+            $headingCall->setAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $firstChild->getLabel());
+        }
 
     }
 

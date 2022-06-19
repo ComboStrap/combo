@@ -18,10 +18,10 @@ class ResourceName extends MetadataText
 
     /**
      * Return a name from a path
-     * @param DokuPath $path
+     * @param Path $path
      * @return string
      */
-    public static function getFromPath(DokuPath $path): string
+    public static function getFromPath(Path $path): string
     {
         try {
             $name = $path->getLastNameWithoutExtension();

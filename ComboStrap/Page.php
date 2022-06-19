@@ -1300,7 +1300,7 @@ class Page extends ResourceComboAbs
     }
 
     public
-    function getDefaultTitle(): ?string
+    function getDefaultTitle(): string
     {
         return $this->title->getDefaultValue();
     }

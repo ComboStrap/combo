@@ -58,13 +58,17 @@ class PageKeywords extends MetadataMultiple
             return null;
         }
         $keyWords = explode(" ", $resource->getNameOrDefault());
-        $actualPage = $resource;
-        while (($parentPage = $actualPage->getParentPage()) !== null) {
+        $parentPage = $resource;
+        while (true) {
+            try {
+                $parentPage = $parentPage->getParentPage();
+            } catch (ExceptionNotFound $e) {
+                break;
+            }
             if (!$parentPage->isRootHomePage()) {
                 $parentKeyWords = explode(" ", $parentPage->getNameOrDefault());
                 $keyWords = array_merge($keyWords, $parentKeyWords);
             }
-            $actualPage = $parentPage;
         }
         $keyWords = array_map(function ($element) {
             return strtolower($element);
@@ -92,7 +96,6 @@ class PageKeywords extends MetadataMultiple
         }
         return $this;
     }
-
 
 
     public function getCanonical(): string

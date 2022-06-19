@@ -204,7 +204,13 @@ class OutlineSection extends TreeNode
         return $this->headingEnterCall !== null;
     }
 
-
+    /**
+     * @return OutlineSection[]
+     */
+    public function getChildren(): array
+    {
+        return parent::getChildren();
+    }
 
 
 }

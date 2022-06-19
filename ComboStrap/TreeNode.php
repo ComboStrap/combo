@@ -128,8 +128,7 @@ class TreeNode
     /**
      * @return TreeNode[] - empty array for a leaf
      */
-    public
-    function getChildren(): array
+    public function getChildren(): array
     {
         return $this->children;
     }

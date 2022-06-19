@@ -231,8 +231,11 @@ class LinkMarkup
                      * Preview tooltip
                      */
                     $previewConfig = PluginUtility::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
-                    $preview = $outputAttributes->getBooleanValueAndRemoveIfPresent(self::PREVIEW_ATTRIBUTE, $previewConfig);
+                    $preview = $outputAttributes->hasComponentAttribute(self::PREVIEW_ATTRIBUTE);
                     if ($preview) {
+                        $outputAttributes->removeComponentAttribute(self::PREVIEW_ATTRIBUTE);
+                    }
+                    if ($preview || $previewConfig === 1) {
                         Tooltip::addToolTipSnippetIfNeeded();
                         $tooltipHtml = <<<EOF
 <h3>{$page->getNameOrDefault()}</h3>

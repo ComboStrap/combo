@@ -9,13 +9,19 @@ use ComboStrap\CallStack;
 use ComboStrap\Canonical;
 use ComboStrap\Display;
 use ComboStrap\DokuPath;
+use ComboStrap\DokuwikiId;
+use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\ExceptionNotExists;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
+use ComboStrap\OutlineSection;
 use ComboStrap\Page;
 use ComboStrap\PageUrlPath;
 use ComboStrap\PageUrlType;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
+use ComboStrap\UrlEndpoint;
 
 
 /**
@@ -131,8 +137,9 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 $fragment = $attributes->getValueAndRemoveIfPresent(self::FRAGMENT_ATTRIBUTE);
                 switch ($type) {
                     case self::GENERATED_TYPE:
-                        $pageId = $requestedPage->getPageId();
-                        if ($pageId === null) {
+                        try {
+                            $pageId = $requestedPage->getPageId();
+                        } catch (ExceptionNotExists $e) {
                             return self::handleError(
                                 "The page id has not yet been set",
                                 $strict,
@@ -140,10 +147,24 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                                 $callStack
                             );
                         }
+
                         $permanentValue = PageUrlPath::encodePageId($pageId);
-                        $url = Site::getBaseUrl() . "$permanentValue";
-                        if ($fragment != null) {
-                            $url .= "#$fragment";
+                        try {
+                            $url = UrlEndpoint::createBaseUrl()
+                                ->setPath("/$permanentValue")
+                                ->toAbsoluteUrl();
+                        } catch (ExceptionBadSyntax $e) {
+                            return self::handleError(
+                                "The base url is not a valid url. Error: {$e->getMessage()}",
+                                $strict,
+                                $returnArray,
+                                $callStack
+                            );
+                        }
+                        /** @noinspection DuplicatedCode */
+                        if ($fragment !== null) {
+                            $fragment = OutlineSection::textToHtmlSectionId($fragment);
+                            $url->setFragment($fragment);
                         }
                         $attributes->addComponentAttributeValue(syntax_plugin_combo_link::MARKUP_REF_ATTRIBUTE, $url);
                         $attributes->addOutputAttributeValue("rel", "nofollow");
@@ -154,20 +175,24 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                         }
                         return $returnArray;
                     case self::NAMED_TYPE:
-                        $canonical = $requestedPage->getCanonical();
-                        if ($canonical === null) {
-
+                        try {
+                            $requestedPage->getCanonical();
+                        } catch (ExceptionNotFound $e) {
                             $documentationUrlForCanonical = PluginUtility::getDocumentationHyperLink(Canonical::PROPERTY_NAME, "canonical value");
                             $errorMessage = "The page ($requestedPage) does not have a $documentationUrlForCanonical. We can't create a named permalink";
                             return self::handleError($errorMessage, $strict, $returnArray, $callStack);
-
                         }
+
                         $urlPath = PageUrlPath::createForPage($requestedPage)
                             ->getUrlPathFromType(PageUrlType::CONF_VALUE_CANONICAL_PATH);
                         $urlId = DokuPath::toDokuwikiId($urlPath);
-                        $canonicalUrl = wl($urlId, [], true);
+                        $canonicalUrl = UrlEndpoint::createDokuUrl()
+                            ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $urlId)
+                            ->toAbsoluteUrl();
+                        /** @noinspection DuplicatedCode */
                         if ($fragment !== null) {
-                            $canonicalUrl .= "#$fragment";
+                            $fragment = OutlineSection::textToHtmlSectionId($fragment);
+                            $canonicalUrl->setFragment($fragment);
                         }
                         $attributes->addComponentAttributeValue(syntax_plugin_combo_link::MARKUP_REF_ATTRIBUTE, $canonicalUrl);
                         $attributes->addOutputAttributeValue("rel", "nofollow");

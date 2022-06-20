@@ -57,7 +57,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     /**
      * The key of the array for the handle cache
      */
-    public const MARKUP_REF_ATTRIBUTE = 'markup-ref';
+    public const MARKUP_REF_ATTRIBUTE = 'ref';
 
     public const ATTRIBUTE_IMAGE_IN_LABEL = 'image-in-label';
 

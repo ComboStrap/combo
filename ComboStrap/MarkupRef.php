@@ -138,11 +138,10 @@ class MarkupRef
          */
         if (preg_match('/^#.?/', $ref)) {
             $this->refScheme = self::LOCAL_URI;
-            $check = false;
+
             $fragment = substr($ref, 1);
             if ($fragment !== "") {
-                // for empty string, the below function returns `section`
-                $fragment = sectionID($fragment, $check);
+                $fragment = OutlineSection::textToHtmlSectionId($fragment);
             }
             $this->url = Url::createEmpty()->setFragment($fragment);
             $this->path = DokuPath::createPagePathFromRequestedPage();

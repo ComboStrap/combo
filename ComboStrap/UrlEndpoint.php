@@ -43,4 +43,14 @@ class UrlEndpoint
     }
 
 
+    /**
+     *
+     * @throws ExceptionBadSyntax
+     */
+    public static function createBaseUrl(): Url
+    {
+        return Url::createFromString(Site::getBaseUrl());
+    }
+
+
 }

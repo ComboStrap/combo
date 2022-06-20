@@ -61,6 +61,18 @@ class OutlineSection extends TreeNode
         return $outlineSection;
     }
 
+    /**
+     * Return a text to an HTML Id
+     * @param string $fragment
+     * @return string
+     */
+    public static function textToHtmlSectionId(string $fragment): string
+    {
+        $check = false;
+        // for empty string, the below function returns `section`
+        return sectionID($fragment, $check);
+    }
+
     public function getFirstChild(): OutlineSection
     {
 

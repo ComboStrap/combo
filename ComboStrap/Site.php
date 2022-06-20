@@ -297,21 +297,22 @@ class Site
         return $lang;
     }
 
+    /**
+     * In a {@link PluginUtility::isDevOrTest()} dev environment,
+     * don't set the
+     * https://www.dokuwiki.org/config:baseurl
+     * to be able to test the metadata / social integration
+     * via a tunnel
+     *
+     */
     public static function getBaseUrl(): string
     {
 
         /**
-         * In a {@link PluginUtility::isDevOrTest()} dev environment,
-         * don't set the
-         * https://www.dokuwiki.org/config:baseurl
-         * to be able to test the metadata / social integration
-         * via a tunnel
-         *
          * Same as {@link getBaseURL()} ??
-         * Same as {@link wl()} without nothing
          */
-
-        return DOKU_URL;
+        global $conf;
+        return $conf['baseurl'];
 
     }
 

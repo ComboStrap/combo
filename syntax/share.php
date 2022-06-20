@@ -3,15 +3,12 @@
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 use ComboStrap\BrandButton;
-use ComboStrap\CacheManager;
 use ComboStrap\CacheDependencies;
-use ComboStrap\Call;
-use ComboStrap\CallStack;
+use ComboStrap\CacheManager;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
-use ComboStrap\CacheRuntimeDependencies2;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -191,11 +188,9 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     if ($brandButton->hasIcon()) {
                         try {
                             $iconAttributes = $brandButton->getIconAttributes();
-                            $name = $iconAttributes[\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE];
-                            unset($iconAttributes[\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE]);
                             $iconAttributes = TagAttributes::createFromCallStackArray($iconAttributes);
-                            $renderer->doc .= Icon::create($name, $iconAttributes)
-                                ->render();
+                            $renderer->doc .= Icon::createFromTagAttributes($iconAttributes)
+                                ->toHtml();
                         } catch (ExceptionCompile $e) {
                             $renderer->doc .= LogUtility::wrapInRedForHtml("Getting the icon for the social channel ($brandButton) returns an error ({$e->getMessage()}");
                             // don't return because the anchor link is open
@@ -234,14 +229,6 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
     }
 
 
-    private function closeLinkInCallStack(CallStack $callStack)
-    {
-        $callStack->appendCallAtTheEnd(
-            Call::createComboCall(
-                syntax_plugin_combo_link::TAG,
-                DOKU_LEXER_EXIT
-            ));
-    }
 
 
 }

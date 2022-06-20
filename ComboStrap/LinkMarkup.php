@@ -76,10 +76,6 @@ class LinkMarkup
 
     private MarkupRef $markupRef;
 
-    /**
-     * @var array|string|null
-     */
-    private $type;
 
     private TagAttributes $attributes;
 
@@ -119,7 +115,7 @@ class LinkMarkup
         return new LinkMarkup($ref);
     }
 
-    private static function getHtmlClassLocalLink(): string
+    public static function getHtmlClassLocalLink(): string
     {
         return "link-local";
     }
@@ -333,6 +329,7 @@ EOF;
                 if (!$outputAttributes->hasAttribute("title")) {
                     $description = ucfirst($this->markupRef->getUrl()->getFragment());
                     if ($description !== "") {
+                        $description = str_replace("_"," ",$description);
                         $outputAttributes->addOutputAttributeValue("title", $description);
                     }
                 }

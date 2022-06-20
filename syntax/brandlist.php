@@ -8,6 +8,7 @@ use ComboStrap\BrandButton;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\Icon;
+use ComboStrap\IconDownloader;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -182,7 +183,7 @@ EOF;
                             $iconAttributes = TagAttributes::createFromCallStackArray($iconArrayAttributes);
                             $name = $iconAttributes->getValueAndRemoveIfPresent(syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE);
                             if ($name !== null) {
-                                $html .= Icon::create($name, $iconAttributes)->render();
+                                $html .= Icon::createFromName($name, $iconAttributes)->toHtml();
                             } else {
                                 $html .= "Icon name is null for brand $brandName";
                             }

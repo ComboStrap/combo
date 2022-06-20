@@ -659,7 +659,7 @@ EOF;
     private function getResourceIconFile(): DokuPath
     {
         $iconName = $this->getResourceIconName();
-        $iconPath = str_replace(Icon::COMBO . ":", "", $iconName) . ".svg";
+        $iconPath = str_replace(IconDownloader::COMBO . ":", "", $iconName) . ".svg";
         return DokuPath::createComboResource($iconPath);
     }
 
@@ -671,7 +671,7 @@ EOF;
 
     private function getResourceIconName(): string
     {
-        $comboLibrary = Icon::COMBO;
+        $comboLibrary = IconDownloader::COMBO;
         return "$comboLibrary:brand:{$this->getBrand()}:{$this->iconType}";
     }
 

@@ -362,6 +362,6 @@ class LogUtility
      */
     public static function internalError(string $message, string $canonical = "support")
     {
-        self::error($message, $canonical);
+        self::error("Sorry. An internal error has occurred: $message", $canonical);
     }
 }

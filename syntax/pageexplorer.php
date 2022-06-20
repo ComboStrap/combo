@@ -11,6 +11,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\Html;
 use ComboStrap\Icon;
+use ComboStrap\IconDownloader;
 use ComboStrap\IdManager;
 use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;

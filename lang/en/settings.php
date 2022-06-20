@@ -7,7 +7,7 @@ use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
 use ComboStrap\FetchSvg;
 use ComboStrap\FloatAttribute;
-use ComboStrap\Icon;
+use ComboStrap\IconDownloader;
 use ComboStrap\Identity;
 use ComboStrap\LazyLoad;
 use ComboStrap\LowQualityPage;
@@ -63,8 +63,8 @@ $lang[RouterBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = PluginUtility::getDo
 /**
  * Icon
  */
-$lang[Icon::CONF_ICONS_MEDIA_NAMESPACE] = PluginUtility::getDocumentationHyperLink("icon#configuration", "UI Icon Component") . ' - The media namespace where the downloaded icons will be searched and saved';
-$lang[Icon::CONF_DEFAULT_ICON_LIBRARY] = PluginUtility::getDocumentationHyperLink("icon#configuration", "UI Icon Component") . ' - The default icon library from where the icon is downloaded if not specified';
+$lang[IconDownloader::CONF_ICONS_MEDIA_NAMESPACE] = PluginUtility::getDocumentationHyperLink("icon#configuration", "UI Icon Component") . ' - The media namespace where the downloaded icons will be searched and saved';
+$lang[IconDownloader::CONF_DEFAULT_ICON_LIBRARY] = PluginUtility::getDocumentationHyperLink("icon#configuration", "UI Icon Component") . ' - The default icon library from where the icon is downloaded if not specified';
 
 /**
  * Front end Optimization

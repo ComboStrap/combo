@@ -514,7 +514,7 @@ class PluginUtility
      * Create an URL to the documentation website
      * @param $canonical - canonical id or slug
      * @param $label -  the text of the link
-     * @param bool $withIcon - used to break the recursion with the message in the {@link Icon}
+     * @param bool $withIcon - used to break the recursion with the message in the {@link IconDownloader}
      * @return string - an url
      */
     public

@@ -7,6 +7,7 @@ use ComboStrap\CacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\Icon;
+use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;

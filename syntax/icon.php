@@ -13,9 +13,12 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\FetchSvg;
 use ComboStrap\FileSystems;
 use ComboStrap\Icon;
+use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
+use ComboStrap\MediaMarkup;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\SvgImageLink;
 use ComboStrap\TagAttributes;
 use ComboStrap\Tooltip;
 

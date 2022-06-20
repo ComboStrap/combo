@@ -12,6 +12,7 @@ use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\Icon;
+use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -374,14 +375,12 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                     if (!$brandImageFound && $brandButton->hasIcon()) {
                         try {
                             $iconAttributes = $brandButton->getIconAttributes();
-
-                            $name = $iconAttributes[\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE];
                             $iconAttributes = TagAttributes::createFromCallStackArray($iconAttributes);
                             if ($textFound && $context === syntax_plugin_combo_menubar::TAG) {
                                 $iconAttributes->addClassName(self::BOOTSTRAP_NAV_BAR_IMAGE_AND_TEXT_CLASS);
                             }
-                            $renderer->doc .= Icon::create($name, $iconAttributes)
-                                ->render();
+                            $renderer->doc .= Icon::createFromTagAttributes($iconAttributes)
+                                ->toHtml();
                         } catch (ExceptionCompile $e) {
 
                             if ($brandButton->getBrand()->getName() === Brand::CURRENT_BRAND) {

@@ -12,7 +12,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetchImage;
 use ComboStrap\FetchSvg;
 use ComboStrap\FirstImage;
-use ComboStrap\Icon;
+use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
@@ -292,7 +292,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
          * Zoom applies only to icon not to illustration
          *
          */
-        $isIcon = Icon::isInIconDirectory($selectedPageImage->getOriginalPath());
+        $isIcon = IconDownloader::isInIconDirectory($selectedPageImage->getOriginalPath());
         if (!$isIcon) {
             $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
         } else {

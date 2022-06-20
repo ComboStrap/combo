@@ -415,6 +415,12 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         $tagAttributes = TagAttributes::createFromCallStackArray($callStackAttributes, self::TAG);
 
                         $markupRef = $tagAttributes->getValueAndRemove(self::MARKUP_REF_ATTRIBUTE);
+                        if ($markupRef === null) {
+                            $message = "Internal Error: A link reference was not found";
+                            LogUtility::internalError($message);
+                            $renderer->doc .= LogUtility::wrapInRedForHtml($message);
+                            return false;
+                        }
                         try {
                             $markupRef = syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($markupRef);
                             $markupLink = LinkMarkup::createFromRef($markupRef);
@@ -423,9 +429,9 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             // uncomment to get the original error stack trace in dev
                             // and see where the exception comes from
                             // Don't forget to comment back
-                            if (PluginUtility::isDevOrTest()) {
-                                throw new ExceptionRuntime("Error on markup ref", self::TAG, 0, $e);
-                            }
+//                            if (PluginUtility::isDevOrTest()) {
+//                                throw new ExceptionRuntime("Error on markup ref", self::TAG, 0, $e);
+//                            }
                             try {
                                 /**
                                  * Error. Example: unknown inter-wiki ...
@@ -435,7 +441,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $markupAttributes->addClassName(LinkMarkup::getHtmlClassNotExist());
                                 $renderer->doc .= $markupAttributes->toHtmlEnterTag("a") . $e->getMessage();
                             } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
-                                $message = "A local link could not be parsed as reference.It should work everytime as markup ref. Error: {$e->getMessage()}";
+                                $message = "A local link could not be parsed as reference. It should work everytime as markup ref. Error: {$e->getMessage()}";
                                 LogUtility::internalError($message);
                                 $url = UrlEndpoint::createSupportUrl();
                                 $renderer->doc .= "<a href=\"{$url->toString()}\" >$message";
@@ -525,6 +531,10 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
 
                         $markupRef = $tagAttributes->getValue(self::MARKUP_REF_ATTRIBUTE);
+                        if ($markupRef === null) {
+                            LogUtility::internalError("The markup ref was not found for a link.");
+                            return false;
+                        }
                         try {
                             $type = MarkupRef::createLinkFromRef($markupRef)
                                 ->getSchemeType();

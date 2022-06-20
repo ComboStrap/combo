@@ -23,7 +23,7 @@
 use ComboStrap\Canonical;
 use ComboStrap\FetchSvg;
 use ComboStrap\MediaMarkup;
-use ComboStrap\Icon;
+use ComboStrap\IconDownloader;
 use ComboStrap\Metadata;
 use ComboStrap\PageType;
 use ComboStrap\Prism;
@@ -89,15 +89,15 @@ $conf['useCanonicalValueForGoogleAnalyticsPageView'] = 0;
 
 /**
  * Icon Namespace
- * See {@link Icon::CONF_ICONS_MEDIA_NAMESPACE}
- * See {@link Icon::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT}
+ * See {@link IconDownloader::CONF_ICONS_MEDIA_NAMESPACE}
+ * See {@link IconDownloader::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT}
  */
 $conf['icons_namespace'] = ":combostrap:icons";
 
 /**
  * Default library
- * See {@link Icon::CONF_DEFAULT_ICON_LIBRARY}
- * See {@link Icon::CONF_DEFAULT_ICON_LIBRARY_DEFAULT}
+ * See {@link IconDownloader::CONF_DEFAULT_ICON_LIBRARY}
+ * See {@link IconDownloader::CONF_DEFAULT_ICON_LIBRARY_DEFAULT}
  */
 $conf['defaultIconLibrary'] = "mdi";
 

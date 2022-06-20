@@ -114,7 +114,7 @@ class FetchSvg extends FetchImage
     private ?bool $preserveStyle = null;
     private ?string $requestedType = null;
     private bool $processed = false;
-    private string $busterOriginalPath;
+
 
     public static function createSvgEmpty(): FetchSvg
     {
@@ -128,7 +128,8 @@ class FetchSvg extends FetchImage
      */
     public static function createSvgFromPath(Path $path): FetchSvg
     {
-        return self::createSvgEmpty()->setOriginalPath($path);
+        return self::createSvgEmpty()
+            ->setOriginalPath($path);
     }
 
     /**
@@ -472,11 +473,17 @@ class FetchSvg extends FetchImage
      *
      * @return Url - the fetch url
      *
+     * @throws ExceptionBadState - if the svg could not be found
      */
     public function getFetchUrl(Url $url = null): Url
     {
 
-        $url = FetchRaw::createFromPath($this->originalPath)->getFetchUrl($url);
+        try {
+            $dokuPath = $this->getOriginalPath();
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionBadState("No original path could be determined. Error: {$e->getMessage()}");
+        }
+        $url = FetchRaw::createFromPath($dokuPath)->getFetchUrl($url);
         $url = parent::getFetchUrl($url);
         try {
             $url->addQueryParameter(ColorRgb::COLOR, $this->getRequestedColor()->toCssValue());
@@ -566,11 +573,11 @@ class FetchSvg extends FetchImage
      * {@link ResourceCombo::getBuster()}
      * @return string
      *
+     * @throws ExceptionNotFound
      */
-    public
-    function getBuster(): string
+    public function getBuster(): string
     {
-        $buster = $this->busterOriginalPath;
+        $buster = FileSystems::getCacheBuster($this->getOriginalPath());
         try {
             $configFile = FileSystems::getCacheBuster(DirectoryLayout::getLocalConfPath());
             $buster = "$buster-$configFile";
@@ -612,14 +619,22 @@ class FetchSvg extends FetchImage
 
     /**
      * @return DokuPath - the path of the original svg if any
-     * @throws ExceptionNotFound - not used
+     * @throws ExceptionBadState - the original path was not set (Case of svg string) nor any icon
      */
     public function getOriginalPath(): DokuPath
     {
-        if ($this->originalPath === null) {
-            throw new ExceptionNotFound("No original path");
+
+        if ($this->originalPath !== null) {
+            return $this->originalPath;
         }
-        return $this->originalPath;
+
+        try {
+            return $this->getIconPath();
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionBadState("No svg path was defined. The icon process returns the following error: {$e->getMessage()}");
+        }
+
+
     }
 
     /**
@@ -708,23 +723,7 @@ class FetchSvg extends FetchImage
     public function setOriginalPath(Path $path): FetchSvg
     {
         $this->originalPath = DokuPath::createFromPath($path);
-        $this->busterOriginalPath = FileSystems::getCacheBuster($this->getOriginalPath());
-
-        if ($this->xmlDocument === null) {
-
-            try {
-                $this->xmlDocument = XmlDocument::createXmlDocFromPath($path);
-            } catch (ExceptionBadSyntax $e) {
-                throw new ExceptionBadSyntax("The svg file ($path) is not a valid svg. Error: {$e->getMessage()}");
-            } catch (ExceptionNotFound $e) {
-                // ok file not found
-                throw new ExceptionNotFound("The Svg file ($path) was not found", self::CANONICAL);
-            }
-        }
-
-        if ($this->requestedName === null) {
-            $this->requestedName = $this->originalPath->getLastNameWithoutExtension();
-        }
+        $this->busterOriginalPath = FileSystems::getCacheBuster($path);
 
         return $this;
 
@@ -795,11 +794,21 @@ class FetchSvg extends FetchImage
     /**
      *
      * @throws ExceptionBadState - if no xml document has been created
+     * @throws ExceptionBadSyntax - bad svg syntax
+     * @throws ExceptionNotFound - file not found
      */
     private function getXmlDocument(): XmlDocument
     {
         if ($this->xmlDocument === null) {
-            throw new ExceptionBadState("Internal error: No xml document was instantiated. Did you set a path or a svg markup ?");
+            $path = $this->getOriginalPath();
+            try {
+                $this->xmlDocument = XmlDocument::createXmlDocFromPath($path);
+            } catch (ExceptionBadSyntax $e) {
+                throw new ExceptionBadSyntax("The svg file ($path) is not a valid svg. Error: {$e->getMessage()}");
+            } catch (ExceptionNotFound $e) {
+                // ok file not found
+                throw new ExceptionNotFound("The Svg file ($path) was not found", self::CANONICAL);
+            }
         }
         return $this->xmlDocument;
     }
@@ -869,6 +878,7 @@ class FetchSvg extends FetchImage
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
      * @throws ExceptionBadState
+     * @throws ExceptionNotFound|ExceptionCompile
      */
     public function process()
     {
@@ -879,6 +889,10 @@ class FetchSvg extends FetchImage
         }
 
         $this->processed = true;
+
+        if ($this->requestedName === null) {
+            $this->requestedName = $this->getOriginalPath()->getLastNameWithoutExtension();
+        }
 
         $localTagAttributes = TagAttributes::createEmpty(self::TAG);
 
@@ -967,7 +981,7 @@ class FetchSvg extends FetchImage
             // or not squared
             // if the usage is determined or the svg is in the icon directory, it just takes over.
             try {
-                $isInIconDirectory = Icon::isInIconDirectory($this->getOriginalPath());
+                $isInIconDirectory = IconDownloader::isInIconDirectory($this->getOriginalPath());
             } catch (ExceptionNotFound $e) {
                 // not a svg from a path
                 $isInIconDirectory = false;
@@ -1454,5 +1468,44 @@ class FetchSvg extends FetchImage
 
         }
         return $this;
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
+     */
+    private function getIconPath(): DokuPath
+    {
+        /**
+         * It may be a Svg icon that we needs to download
+         */
+        try {
+            $requestedType = $this->getRequestedType();
+            $requestedName = $this->getRequestedName();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionNotFound("No path was defined and no icon name was defined");
+        }
+        if ($requestedType !== self::ICON_TYPE) {
+            throw new ExceptionNotFound("No original path was set and no icon was defined");
+        }
+
+        try {
+            $iconDownloader = IconDownloader::createFromName($requestedName);
+        } catch (ExceptionBadArgument $e) {
+            throw new ExceptionNotFound("The name ($requestedName) is not a valid icon name. Error: ({$e->getMessage()}.", self::CANONICAL);
+        }
+        $originalPath = $iconDownloader->getPath();
+        if (FileSystems::exists($originalPath)) {
+            return $originalPath;
+        }
+        try {
+            $iconDownloader->download();
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionCompile("The icon ($requestedName) could not be downloaded. Error: ({$e->getMessage()}.", self::CANONICAL);
+        }
+        $this->setOriginalPath($originalPath);
+        return $originalPath;
     }
 }

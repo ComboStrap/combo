@@ -62,14 +62,23 @@ class PageTitle extends MetadataText
         if ($resource->isRootHomePage() && !empty(Site::getTagLine())) {
             return Site::getTagLine();
         }
-        try {
-            return $resource->getH1OrDefault();
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-        return $resource->getNameOrDefault();
+        return PageH1::createForPage($this->getResource())
+            ->getValueOrDefault();
 
     }
+
+    /**
+     * @return string
+     */
+    public function getValueOrDefault(): string
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+    }
+
 
     public function getCanonical(): string
     {

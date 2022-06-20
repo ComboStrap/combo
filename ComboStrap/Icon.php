@@ -255,7 +255,7 @@ class Icon extends FetchSvg
 
             }
 
-            parent::__construct($mediaDokuPath, $tagAttributes);
+            parent::__construct();
             return;
 
         }
@@ -308,7 +308,7 @@ class Icon extends FetchSvg
             $this->iconName = substr($this->fullQualifiedName, $sepPosition + 1);
         }
 
-        parent::__construct($mediaDokuPath, $tagAttributes);
+        parent::__construct();
 
     }
 

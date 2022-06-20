@@ -6,6 +6,7 @@
 
 use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
+use ComboStrap\ConditionalLength;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCompile;
@@ -187,7 +188,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                     ])
                 ) {
                     $requestedWidth = $tagAttributes->getValue(Dimension::WIDTH_KEY, FetchSvg::DEFAULT_ICON_WIDTH);
-                    $requestedWidthInPx = Dimension::toPixelValue($requestedWidth);
+                    $requestedWidthInPx = ConditionalLength::createFromString($requestedWidth)->toPixelNumber();
                     if ($requestedWidthInPx > 36) {
                         // Illustrative icon
                         $color = Site::getPrimaryColor();
@@ -295,9 +296,8 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                     // error is already fired in the renderer
                     return false;
                 }
-                if ($mediaPath instanceof DokuPath && FileSystems::exists($mediaPath)) {
-                    $mediaId = $mediaPath->getDokuwikiId();
-                    syntax_plugin_combo_media::registerFirstImage($renderer, $mediaId);
+                if (FileSystems::exists($mediaPath)) {
+                    syntax_plugin_combo_media::registerFirstImage($renderer, $mediaPath);
                 }
                 break;
 

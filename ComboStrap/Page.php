@@ -577,7 +577,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionNotFound
      */
     public
-    function getDescriptionOrElseDokuWiki(): ?string
+    function getDescriptionOrElseDokuWiki(): string
     {
         return $this->description->getValueFromStoreOrDefault();
     }

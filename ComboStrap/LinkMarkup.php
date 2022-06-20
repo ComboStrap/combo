@@ -308,17 +308,11 @@ EOF;
                      */
                     if (!$outputAttributes->hasAttribute("title")) {
 
-                        try {
-                            $description = $page->getDescriptionOrElseDokuWiki();
-                        } catch (ExceptionNotFound $e) {
-                            // Rare case
-                            $description = $page->getH1OrDefault();
-                        }
+                        $description = PageDescription::createForPage($page)->getValueOrDefault();
                         if (!empty($acronym)) {
                             $description = $description . " ($acronym)";
                         }
                         $outputAttributes->addOutputAttributeValue("title", $description);
-
 
                     }
 

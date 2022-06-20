@@ -81,13 +81,18 @@ class PageDescription extends MetadataText
     }
 
     /**
-     * @return string|null - the dokuwiki calculated description
-     *
+     * @return string - the dokuwiki calculated description
+     * or the resource name if none (case when there is no text at all for instance with only a icon)
+     * @throws ExceptionNotFound
      */
-    public function getDefaultValue(): ?string
+    public function getDefaultValue(): string
     {
 
         $this->buildCheck();
+        if ($this->defaultValue === "" || $this->defaultValue === null) {
+            return PageTitle::createForPage($this->getResource())
+                ->getValueOrDefault();
+        }
         return $this->defaultValue;
 
     }
@@ -228,7 +233,7 @@ class PageDescription extends MetadataText
         // Suppress the star, the tab, About
         $description = preg_replace('/(\*|\t|About)/im', "", $description);
         // Suppress all double space and trim
-        return trim(preg_replace('/  /m', " ", $description));
+        return trim(preg_replace('/ /m', " ", $description));
     }
 
 

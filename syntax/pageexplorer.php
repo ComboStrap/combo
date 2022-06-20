@@ -552,7 +552,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                                 ->toAttributes()
                                                 ->toHtmlEnterTag("a");
                                             $renderer->doc .= Icon::createFromComboResource(self::LEVEL_UP_ICON)
-                                                ->render();
+                                                ->toHtml();
                                             $renderer->doc .= " {$parentPage->getNameOrDefault()}</a>";
                                         } catch (ExceptionCompile $e) {
                                             $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default parent. Error: {$e->getMessage()}");
@@ -620,7 +620,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                                     ->toAttributes()
                                                     ->toHtmlEnterTag("a");
                                                 $renderer->doc .= Icon::createFromComboResource(self::FOLDER_ICON)
-                                                    ->render();
+                                                    ->toHtml();
                                                 $renderer->doc .= " {$subNamespacePage->getNameOrDefault()}</a>";
                                             } catch (ExceptionCompile $e) {
                                                 $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default namespace. Error: {$e->getMessage()}");

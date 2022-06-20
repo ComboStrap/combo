@@ -17,6 +17,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
+use ComboStrap\Tooltip;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -250,7 +251,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                         case DOKU_LEXER_ENTER:
 
                             $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                            $tooltip = $tagAttributes->getValueAndRemoveIfPresent(\ComboStrap\Tooltip::TOOLTIP_ATTRIBUTE);
+                            $tooltip = $tagAttributes->getValueAndRemoveIfPresent(Tooltip::TOOLTIP_ATTRIBUTE);
                             if ($tooltip !== null) {
                                 /**
                                  * If there is a tooltip, we need
@@ -258,7 +259,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                                  */
 
 
-                                $tooltipTag = TagAttributes::createFromCallStackArray([\ComboStrap\Tooltip::TOOLTIP_ATTRIBUTE => $tooltip])
+                                $tooltipTag = TagAttributes::createFromCallStackArray([Tooltip::TOOLTIP_ATTRIBUTE => $tooltip])
                                     ->addClassName(syntax_plugin_combo_tooltip::TOOLTIP_CLASS_INLINE_BLOCK);
                                 $renderer->doc .= $tooltipTag->toHtmlEnterTag("span");
                             }
@@ -287,11 +288,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                  */
                 $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                 try {
-                    $name = $tagAttribute->getValueAndRemoveIfPresent("name");
-                    if ($name === null) {
-                        throw new ExceptionCompile("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
-                    }
-                    $mediaPath = Icon::create($name, $tagAttribute)->getOriginalPath();
+                    $mediaPath = Icon::createFromTagAttributes($tagAttribute)->getFetchSvg()->getOriginalPath();
                 } catch (ExceptionCompile $e) {
                     // error is already fired in the renderer
                     return false;
@@ -311,16 +308,15 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
      */
     private function printIcon(TagAttributes $tagAttributes): string
     {
+
         try {
-            $name = $tagAttributes->getValue("name");
-            if ($name === null) {
-                throw new ExceptionCompile("The attributes should have a name. It's mandatory for an icon.", self::CANONICAL);
-            }
-            return Icon::create($name, $tagAttributes)
-                ->render();
+            return Icon::createFromTagAttributes($tagAttributes)
+                ->toHtml();
         } catch (ExceptionCompile $e) {
             return self::exceptionHandling($e, $tagAttributes);
         }
+
+
     }
 
 

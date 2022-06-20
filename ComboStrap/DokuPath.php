@@ -232,9 +232,14 @@ class DokuPath extends PathAbs
         }
     }
 
-    public static function createMediaPathFromAbsolutePath($absolutePath, $rev = null): DokuPath
+
+    public static function createMediaPathFromPath($path, $rev = null): DokuPath
     {
-        return new DokuPath($absolutePath, DokuPath::MEDIA_DRIVE, $rev);
+        try {
+            return new DokuPath($path, DokuPath::MEDIA_DRIVE, $rev);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntime("Internal Error: The drive should be known. Error: {$e->getMessage()}");
+        }
     }
 
     /**
@@ -328,7 +333,7 @@ class DokuPath extends PathAbs
     public static function createMediaPathFromId($id, $rev = null): DokuPath
     {
         DokuPath::addRootSeparatorIfNotPresent($id);
-        return self::createMediaPathFromAbsolutePath($id, $rev);
+        return self::createMediaPathFromPath($id, $rev);
     }
 
 

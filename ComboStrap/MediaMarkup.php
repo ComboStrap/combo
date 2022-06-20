@@ -212,6 +212,7 @@ class MediaMarkup
         return (new MediaMarkup())->setUrl($getFetchUrl);
     }
 
+
     /**
      * Compliance: src in dokuwiki is the id and the anchor if any
      * Dokuwiki does not understand other property and the reference metadata
@@ -563,6 +564,13 @@ class MediaMarkup
             throw new ExceptionNotFound("No markup, this media markup was not created from a markup");
         }
         return $this->ref;
+    }
+
+
+    public function setTagAttributes(TagAttributes $tagAttributes): MediaMarkup
+    {
+        $this->tagAttributes = $tagAttributes;
+        return $this;
     }
 
     private

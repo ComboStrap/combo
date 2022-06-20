@@ -28,7 +28,7 @@ require_once(__DIR__ . '/PluginUtility.php');
  * Injection via javascript to avoid problem with the php svgsimple library
  * https://www.npmjs.com/package/svg-injector
  */
-class Icon extends FetchSvg
+class Icon
 {
     const CONF_ICONS_MEDIA_NAMESPACE = "icons_namespace";
     const CONF_ICONS_MEDIA_NAMESPACE_DEFAULT = ":" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME . ":icons";
@@ -199,7 +199,6 @@ class Icon extends FetchSvg
     const HEALTH_ICONS = "healthicons";
 
 
-    private $fullQualifiedName;
     /**
      * The icon library
      * @var mixed|null
@@ -209,68 +208,44 @@ class Icon extends FetchSvg
      * @var false|string
      */
     private $iconName;
+    private FetchSvg $fetchSvg;
+    private TagAttributes $tagAttributes;
+
 
     /**
-     * Icon constructor.
+     * The function used to render an icon
+     * @param TagAttributes|null $tagAttributes -  the icon attributes
+     * @return Icon
      * @throws ExceptionCompile
-     * @var string $fullQualifiedName - generally a short icon name (but it may be media id)
      */
-    public function __construct($fullQualifiedName, $tagAttributes = null)
+    static public function createFromTagAttributes(TagAttributes $tagAttributes): Icon
     {
 
-        $this->fullQualifiedName = $fullQualifiedName;
+        $icon = new Icon();
 
-        /**
-         * After optimization, the width and height of the svg are gone
-         * but the icon type set them again
-         *
-         * The icon type is used to set:
-         *   * the default dimension
-         *   * color styling
-         *   * disable the responsive properties
-         *
-         */
-        if ($tagAttributes === null) {
-            $tagAttributes = TagAttributes::createEmpty();
+        $name = $tagAttributes->getValueAndRemove(\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE);
+        if ($name === null) {
+            throw new ExceptionNotFound("A name is mandatory as attribute for an icon. It was not found.", self::ICON_CANONICAL_NAME);
         }
-        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, FetchSvg::ICON_TYPE);
 
         /**
          * If the name have an extension, it's a file from the media directory
          * Otherwise, it's an icon from a library
          */
-        $mediaDokuPath = DokuPath::createFromUnknownRoot($fullQualifiedName);
+        $mediaDokuPath = DokuPath::createMediaPathFromId($name);
         $extension = $mediaDokuPath->getExtension();
         if (!empty($extension) && $extension === "svg") {
 
-            // loop through candidates until a match was found:
-            // May be an icon from the templates
             if (!FileSystems::exists($mediaDokuPath)) {
 
                 // Trying to see if it's not in the template images directory
-                $message = "The media file could not be found in the media library. If you want an icon from an icon library, indicate a name without extension.";
-                $message .= "<BR> Media File Library tested: $mediaDokuPath";
-                throw new ExceptionCompile($message, self::ICON_CANONICAL_NAME);
-
+                $message = "The svg icon file ($mediaDokuPath) does not exists. If you want an icon from an icon library, indicate a name without extension.";
+                throw new ExceptionNotExists($message, self::ICON_CANONICAL_NAME);
 
             }
 
-            parent::__construct();
-            return;
-
-        }
-
-
-        /**
-         * Resource icon library
-         * {@link Icon::createFromComboResource()}
-         */
-        if (strpos($fullQualifiedName, self::COMBO) === 0) {
-            $iconName = str_replace(self::COMBO . ":", "", $fullQualifiedName);
-            // the icon name is not to be found in the images directory (there is also brand)
-            // but can be anywhere below the resources directory
-            $mediaDokuPath = DokuPath::createComboResource("$iconName.svg");
         } else {
+
             /**
              * From an icon library
              */
@@ -282,10 +257,26 @@ class Icon extends FetchSvg
                 $iconNameSpace = $iconNameSpace . ":";
             }
 
-            $mediaPathId = $iconNameSpace . $fullQualifiedName . ".svg";
-            $mediaDokuPath = DokuPath::createMediaPathFromAbsolutePath($mediaPathId);
-        }
+            $mediaPathId = $iconNameSpace . $name . ".svg";
+            $mediaDokuPath = DokuPath::createMediaPathFromPath($mediaPathId);
 
+            /**
+             * Name parsing to extract the library name and icon name
+             */
+            // default
+            $confValue = PluginUtility::getConfValue(self::CONF_DEFAULT_ICON_LIBRARY, self::CONF_DEFAULT_ICON_LIBRARY_DEFAULT);
+            $icon->setLibrary($confValue);
+            $icon->setIconName($name);
+            // parse
+            $sepPosition = strpos($name, ":");
+            if ($sepPosition != false) {
+                $libraryName = substr($name, 0, $sepPosition);
+                $icon->setLibrary($libraryName);
+                $iconName = substr($name, $sepPosition + 1);
+                $icon->setIconName($iconName);
+            }
+
+        }
 
         // Bug: null file created when the stream could not get any byte
         // We delete them
@@ -295,35 +286,15 @@ class Icon extends FetchSvg
             }
         }
 
-        /**
-         * Name parsing to extract the library name and icon name
-         */
-        // default
-        $this->library = PluginUtility::getConfValue(self::CONF_DEFAULT_ICON_LIBRARY, self::CONF_DEFAULT_ICON_LIBRARY_DEFAULT);
-        $this->iconName = $this->fullQualifiedName;
-        // parse
-        $sepPosition = strpos($this->fullQualifiedName, ":");
-        if ($sepPosition != false) {
-            $this->library = substr($this->fullQualifiedName, 0, $sepPosition);
-            $this->iconName = substr($this->fullQualifiedName, $sepPosition + 1);
-        }
 
-        parent::__construct();
+        $fetchSvg = FetchSvg::createSvgFromPath($mediaDokuPath)
+            ->buildFromTagAttributes($tagAttributes)
+            ->setRequestedName($name)
+            ->setRequestedType(FetchSvg::ICON_TYPE);
 
-    }
-
-
-    /**
-     * The function used to render an icon
-     * @param string $name - icon name
-     * @param TagAttributes|null $tagAttributes -  the icon attributes
-     * @return Icon
-     * @throws ExceptionCompile
-     */
-    static public function create(string $name, TagAttributes $tagAttributes = null): Icon
-    {
-
-        return new Icon($name, $tagAttributes);
+        return $icon
+            ->setFetchSvg($fetchSvg)
+            ->setTagAttributes($tagAttributes);
 
     }
 
@@ -332,7 +303,14 @@ class Icon extends FetchSvg
      */
     public static function createFromComboResource(string $name, TagAttributes $tagAttributes = null): Icon
     {
-        return self::create(self::COMBO . ":$name", $tagAttributes);
+        $icon = new Icon();
+        $path = DokuPath::createComboResource(":$name.svg");
+        $fetchSvg = FetchSvg::createSvgFromPath($path);
+        $icon->setFetchSvg($fetchSvg);
+        if ($tagAttributes !== null) {
+            $icon->setTagAttributes($tagAttributes);
+        }
+        return $icon;
     }
 
     public static
@@ -362,9 +340,9 @@ class Icon extends FetchSvg
 
     }
 
-    public function getFullQualifiedName(): string
+    public function getIconName(): string
     {
-        return $this->fullQualifiedName;
+        return $this->iconName;
     }
 
     /**
@@ -473,7 +451,7 @@ class Icon extends FetchSvg
                 $iconName = "si-glyph-" . $iconName;
                 break;
             case self::HEALTH_ICONS:
-                [$extractedIconName,$iconType] = self::explodeInTwoPartsByLastPosition($iconName, "-");
+                [$extractedIconName, $iconType] = self::explodeInTwoPartsByLastPosition($iconName, "-");
                 switch ($iconType) {
                     case "outline":
                     case "negative":
@@ -501,10 +479,7 @@ class Icon extends FetchSvg
     public function download()
     {
 
-        $mediaDokuPath = $this->getOriginalPath();
-        if (!($mediaDokuPath instanceof DokuPath)) {
-            throw new ExceptionCompile("The icon path ($mediaDokuPath) is not a wiki path. This is not yet supported");
-        }
+        $mediaDokuPath = $this->fetchSvg->getOriginalPath();
         $library = $this->getLibrary();
 
         /**
@@ -621,10 +596,10 @@ class Icon extends FetchSvg
     /**
      * @throws ExceptionCompile
      */
-    public function render(): string
+    public function toHtml(): string
     {
 
-        if (!FileSystems::exists($this->getOriginalPath())) {
+        if (!FileSystems::exists($this->fetchSvg->getOriginalPath())) {
             try {
                 $this->download();
             } catch (ExceptionCompile $e) {
@@ -632,23 +607,50 @@ class Icon extends FetchSvg
             }
         }
 
-        $svgImageLink = SvgImageLink::createFromMediaMarkup(
-            $this->getOriginalPath(),
-            $this->getAttributes()
-        );
-        return $svgImageLink->renderMediaTag();
+        $mediaMarkup = MediaMarkup::createFromUrl($this->fetchSvg->getFetchUrl())
+            ->setTagAttributes($this->tagAttributes);
+
+        return SvgImageLink::createFromMediaMarkup($mediaMarkup)
+            ->renderMediaTag();
 
 
     }
 
     public function __toString()
     {
-        return $this->getFullQualifiedName();
+        return $this->getIconName();
     }
 
     private function getLibrary()
     {
         return $this->library;
+    }
+
+    private function setFetchSvg(FetchSvg $fetchSvg): Icon
+    {
+        $this->fetchSvg = $fetchSvg;
+        return $this;
+    }
+
+    private function setTagAttributes(TagAttributes $tagAttributes): Icon
+    {
+        $this->tagAttributes = $tagAttributes;
+        return $this;
+    }
+
+    private function setLibrary($libraryName)
+    {
+        $this->library = $libraryName;
+    }
+
+    private function setIconName(string $iconName)
+    {
+        $this->iconName = $iconName;
+    }
+
+    public function getFetchSvg(): FetchSvg
+    {
+        return $this->fetchSvg;
     }
 
 

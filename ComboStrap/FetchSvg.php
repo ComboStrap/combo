@@ -488,7 +488,14 @@ class FetchSvg extends FetchImage
         } catch (ExceptionNotFound $e) {
             // no preserve ratio ok
         }
+        try {
+            $url->addQueryParameter(self::REQUESTED_NAME_ATTRIBUTE, $this->getRequestedName());
+        } catch (ExceptionNotFound $e) {
+            // no name
+        }
+
         $this->addCommonImageQueryParameterToUrl($url);
+
         return $url;
 
     }
@@ -643,7 +650,7 @@ class FetchSvg extends FetchImage
 
         try {
             $name = $url->getQueryPropertyValue(FetchSvg::REQUESTED_NAME_ATTRIBUTE);
-            $this->setName($name);
+            $this->setRequestedName($name);
         } catch (ExceptionNotFound $e) {
             // ok
         }
@@ -715,8 +722,8 @@ class FetchSvg extends FetchImage
             }
         }
 
-        if ($this->name === null) {
-            $this->name = $this->originalPath->getLastNameWithoutExtension();
+        if ($this->requestedName === null) {
+            $this->requestedName = $this->originalPath->getLastNameWithoutExtension();
         }
 
         return $this;
@@ -728,7 +735,7 @@ class FetchSvg extends FetchImage
     /**
      * @var string|null - a name identifier that is added in the SVG
      */
-    private ?string $name = null;
+    private ?string $requestedName = null;
 
     /**
      * @var ?boolean do the svg should be optimized
@@ -742,13 +749,16 @@ class FetchSvg extends FetchImage
 
 
     /**
-     * The name is used to add class in the svg
-     * @param $name
+     * The name is used to add a data attribute in the svg
+     * to be able to select it
+     * @param string $name
+     * @return FetchSvg
      */
-    private
-    function setName($name)
+    public
+    function setRequestedName(string $name): FetchSvg
     {
-        $this->name = $name;
+        $this->requestedName = $name;
+        return $this;
     }
 
 
@@ -758,8 +768,8 @@ class FetchSvg extends FetchImage
         if ($this->originalPath !== null) {
             return $this->originalPath->__toString();
         }
-        if ($this->name !== null) {
-            return $this->name;
+        if ($this->requestedName !== null) {
+            return $this->requestedName;
         }
         return "Anonymous Svg";
     }
@@ -808,10 +818,10 @@ class FetchSvg extends FetchImage
      */
     public function getRequestedName(): string
     {
-        if ($this->name === null) {
+        if ($this->requestedName === null) {
             throw new ExceptionNotFound("Name was not set");
         }
-        return $this->name;
+        return $this->requestedName;
     }
 
     public function setPreserveStyle(bool $bool): FetchSvg
@@ -1385,5 +1395,64 @@ class FetchSvg extends FetchImage
     public function getName(): string
     {
         return self::CANONICAL;
+    }
+
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchSvg
+    {
+
+        foreach ($tagAttributes->getComponentAttributes() as $svgAttribute) {
+            switch ($svgAttribute) {
+                case Dimension::WIDTH_KEY:
+                case Dimension::HEIGHT_KEY:
+                    $value = $tagAttributes->getValueAndRemove($svgAttribute);
+                    try {
+                        $lengthInt = DataType::toInteger($value);
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::error("The $svgAttribute value ($value) of the svg ($this) is not an integer", self::CANONICAL);
+                        continue 2;
+                    }
+                    if ($svgAttribute === Dimension::WIDTH_KEY) {
+                        $this->setRequestedWidth($lengthInt);
+                    } else {
+                        $this->setRequestedHeight($lengthInt);
+                    }
+                    continue 2;
+                case Dimension::RATIO_ATTRIBUTE:
+                    $value = $tagAttributes->getValueAndRemove($svgAttribute);
+                    try {
+                        $lengthFloat = DataType::toFloat($value);
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::error("The $svgAttribute value ($value) of the svg ($this) is not a float", self::CANONICAL);
+                        continue 2;
+                    }
+                    $this->setRequestedAspectRatio($lengthFloat);
+                    continue 2;
+                case ColorRgb::COLOR:
+                    $value = $tagAttributes->getValueAndRemove($svgAttribute);
+                    try {
+                        $color = ColorRgb::createFromString($value);
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::error("The $svgAttribute value ($value) of the svg ($this) is not an valid color", self::CANONICAL);
+                        continue 2;
+                    }
+                    $this->setRequestedColor($color);
+                    continue 2;
+                case TagAttributes::TYPE_KEY:
+                    $value = $tagAttributes->getValueAndRemove($svgAttribute);
+                    $this->setRequestedType($value);
+                    continue 2;
+                case self::REQUESTED_PRESERVE_ATTRIBUTE:
+                    $value = $tagAttributes->getValueAndRemove($svgAttribute);
+                    if ($value === "style") {
+                        $preserve = true;
+                    } else {
+                        $preserve = false;
+                    }
+                    $this->setPreserveStyle($preserve);
+                    continue 2;
+            }
+
+        }
+        return $this;
     }
 }

@@ -14,6 +14,11 @@ use DOMElement;
  *   * an URL for an HTTP request
  *   * an SvgFile for an HTTP response or any further processing
  *
+ * The original svg can be set with:
+ *   * the {@link FetchSvg::setOriginalPath() original path}
+ *   * the {@link FetchSvg::setRequestedName() name} if this is an {@link FetchSvg::setRequestedType() icon type}
+ *   * or by {@link FetchSvg::setMarkup() Svg Markup}
+ *
  */
 class FetchSvg extends FetchImage
 {
@@ -748,8 +753,10 @@ class FetchSvg extends FetchImage
 
 
     /**
-     * The name is used to add a data attribute in the svg
-     * to be able to select it
+     * The name:
+     *  * if this is a icon, this is the icon name of the {@link IconDownloader}. It's used to download the icon if not present.
+     *  * is used to add a data attribute in the svg to be able to select it for test purpose
+     *
      * @param string $name
      * @return FetchSvg
      */

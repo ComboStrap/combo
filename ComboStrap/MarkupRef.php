@@ -82,7 +82,16 @@ class MarkupRef
         $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
         if (preg_match('<' . $emailPattern . '>', $ref)) {
             $this->refScheme = self::EMAIL_URI;
-            $this->url = Url::createFromString("mailto:$ref");
+            $position = strpos($ref, "?");
+
+            if ($position !== false) {
+                $email = substr($ref, 0, $position);
+                $queryStringAndFragment = substr($ref, $position + 1);
+                $this->url = Url::createFromString("mailto:$email");
+                $this->parseAndAddQueryStringAndFragment($queryStringAndFragment);
+            } else {
+                $this->url = Url::createFromString("mailto:$ref");
+            }
             return;
         }
 
@@ -215,173 +224,13 @@ class MarkupRef
                 throw new ExceptionBadArgument("The ref type ($type) is unknown");
         }
 
-        if ($fragment !== null) {
-            if ($type === self::LINK_TYPE) {
-                $check = false;
-                $fragment = sectionID($fragment, $check);
-            }
-            $this->url->setFragment($fragment);
-        }
-
 
         /**
          * Parsing Query string if any
          */
         if ($queryStringAndAnchorOriginal !== null) {
 
-            /**
-             * The value $queryStringAndAnchorOriginal
-             * is kept to create the original queryString
-             * at the end if we found an anchor
-             *
-             * We parse token by token because we allow a hashtag for a hex color
-             */
-            $queryStringAndAnchorProcessing = $queryStringAndAnchorOriginal;
-            while (strlen($queryStringAndAnchorProcessing) > 0) {
-
-                /**
-                 * Capture the token
-                 * and reduce the text
-                 */
-                $questionMarkPos = strpos($queryStringAndAnchorProcessing, "&");
-                if ($questionMarkPos !== false) {
-                    $token = substr($queryStringAndAnchorProcessing, 0, $questionMarkPos);
-                    $queryStringAndAnchorProcessing = substr($queryStringAndAnchorProcessing, $questionMarkPos + 1);
-                } else {
-                    $token = $queryStringAndAnchorProcessing;
-                    $queryStringAndAnchorProcessing = "";
-                }
-
-
-                /**
-                 * Sizing (wxh)
-                 */
-                $sizing = [];
-                if (preg_match('/^([0-9]+)(?:x([0-9]+))?/', $token, $sizing)) {
-                    $this->url->addQueryParameter(Dimension::WIDTH_KEY, $sizing[1]);
-                    if (isset($sizing[2])) {
-                        $this->url->addQueryParameter(Dimension::HEIGHT_KEY, $sizing[2]);
-                    }
-                    $token = substr($token, strlen($sizing[0]));
-                    if ($token === "") {
-                        // no anchor behind we continue
-                        continue;
-                    }
-                }
-
-                /**
-                 * Linking
-                 */
-                $found = preg_match('/^(nolink|direct|linkonly|details)/i', $token, $matches);
-                if ($found) {
-                    $linkingValue = $matches[1];
-                    $this->url->addQueryParameter(MediaMarkup::LINKING_KEY, $linkingValue);
-                    $token = substr($token, strlen($linkingValue));
-                    if ($token == "") {
-                        // no anchor behind we continue
-                        continue;
-                    }
-                }
-
-                /**
-                 * Cache
-                 */
-                $noCacheValue = FetchAbs::NOCACHE_VALUE;
-                $found = preg_match('/^(' . $noCacheValue . ')/i', $token, $matches);
-                if ($found) {
-                    $this->url->addQueryParameter(FetchAbs::CACHE_KEY, $noCacheValue);
-                    $token = substr($token, strlen($noCacheValue));
-                    if ($token == "") {
-                        // no anchor behind we continue
-                        continue;
-                    }
-                }
-
-                /**
-                 * Anchor value after a single token case
-                 */
-                if (strpos($token, '#') === 0) {
-                    $this->url->setFragment(substr($token, 1));
-                    continue;
-                }
-
-                /**
-                 * Key, value
-                 * explode to the first `=`
-                 * in the anchor value, we can have one
-                 *
-                 * Ex with media.pdf#page=31
-                 */
-                list($key, $value) = explode("=", $token, 2);
-
-                /**
-                 * Case of an anchor after a boolean attribute (ie without =)
-                 * at the end
-                 */
-                $anchorPosition = strpos($key, '#');
-                if ($anchorPosition !== false) {
-                    $this->url->setFragment(substr($key, $anchorPosition + 1));
-                    $key = substr($key, 0, $anchorPosition);
-                }
-
-                /**
-                 * Test Anchor on the value
-                 */
-                if ($value != null) {
-                    if (($countHashTag = substr_count($value, "#")) >= 3) {
-                        LogUtility::msg("The value ($value) of the key ($key) for the link ($wikiPath) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
-                        continue;
-                    }
-                } else {
-                    /**
-                     * Boolean attribute
-                     * (null does not make it)
-                     */
-                    $value = null;
-                }
-
-                $anchorPosition = false;
-                $lowerCaseKey = strtolower($key);
-                if ($lowerCaseKey === TextColor::CSS_ATTRIBUTE) {
-                    /**
-                     * Special case when color has one color value as hexadecimal #
-                     * and the hashtag
-                     */
-                    if (strpos($value, '#') == 0) {
-                        if (substr_count($value, "#") >= 2) {
-
-                            /**
-                             * The last one
-                             */
-                            $anchorPosition = strrpos($value, '#');
-                        }
-                        // no anchor then
-                    } else {
-                        // a color that is not hexadecimal can have an anchor
-                        $anchorPosition = strpos($value, "#");
-                    }
-                } else {
-                    // general case
-                    $anchorPosition = strpos($value, "#");
-                }
-                if ($anchorPosition !== false) {
-                    $this->url->setFragment(substr($value, $anchorPosition + 1));
-                    $value = substr($value, 0, $anchorPosition);
-                }
-
-                switch ($lowerCaseKey) {
-                    case Dimension::WIDTH_KEY_SHORT: // used in a link w=xxx
-                        $this->url->addQueryParameter(Dimension::WIDTH_KEY, $value);
-                        break;
-                    case Dimension::HEIGHT_KEY_SHORT: // used in a link h=xxxx
-                        $this->url->addQueryParameter(Dimension::HEIGHT_KEY, $value);
-                        break;
-                    default:
-                        $this->url->addQueryParameter($key, $value);
-                        break;
-                }
-
-            }
+            $this->parseAndAddQueryStringAndFragment($queryStringAndAnchorOriginal);
 
         }
 
@@ -565,4 +414,175 @@ class MarkupRef
     {
         return $this->type;
     }
+
+    /**
+     * A query parameters value may have a # for the definition of a color
+     * This process takes it into account
+     * @param string $queryStringAndFragment
+     * @return void
+     */
+    private function parseAndAddQueryStringAndFragment(string $queryStringAndFragment)
+    {
+        /**
+         * The value $queryStringAndAnchorOriginal
+         * is kept to create the original queryString
+         * at the end if we found an anchor
+         *
+         * We parse token by token because we allow a hashtag for a hex color
+         */
+        $queryStringAndAnchorProcessing = $queryStringAndFragment;
+        while (strlen($queryStringAndAnchorProcessing) > 0) {
+
+            /**
+             * Capture the token
+             * and reduce the text
+             */
+            $questionMarkPos = strpos($queryStringAndAnchorProcessing, "&");
+            if ($questionMarkPos !== false) {
+                $token = substr($queryStringAndAnchorProcessing, 0, $questionMarkPos);
+                $queryStringAndAnchorProcessing = substr($queryStringAndAnchorProcessing, $questionMarkPos + 1);
+            } else {
+                $token = $queryStringAndAnchorProcessing;
+                $queryStringAndAnchorProcessing = "";
+            }
+
+
+            /**
+             * Sizing (wxh)
+             */
+            $sizing = [];
+            if (preg_match('/^([0-9]+)(?:x([0-9]+))?/', $token, $sizing)) {
+                $this->url->addQueryParameter(Dimension::WIDTH_KEY, $sizing[1]);
+                if (isset($sizing[2])) {
+                    $this->url->addQueryParameter(Dimension::HEIGHT_KEY, $sizing[2]);
+                }
+                $token = substr($token, strlen($sizing[0]));
+                if ($token === "") {
+                    // no anchor behind we continue
+                    continue;
+                }
+            }
+
+            /**
+             * Linking
+             */
+            $found = preg_match('/^(nolink|direct|linkonly|details)/i', $token, $matches);
+            if ($found) {
+                $linkingValue = $matches[1];
+                $this->url->addQueryParameter(MediaMarkup::LINKING_KEY, $linkingValue);
+                $token = substr($token, strlen($linkingValue));
+                if ($token == "") {
+                    // no anchor behind we continue
+                    continue;
+                }
+            }
+
+            /**
+             * Cache
+             */
+            $noCacheValue = FetchAbs::NOCACHE_VALUE;
+            $found = preg_match('/^(' . $noCacheValue . ')/i', $token, $matches);
+            if ($found) {
+                $this->url->addQueryParameter(FetchAbs::CACHE_KEY, $noCacheValue);
+                $token = substr($token, strlen($noCacheValue));
+                if ($token == "") {
+                    // no anchor behind we continue
+                    continue;
+                }
+            }
+
+            /**
+             * Anchor value after a single token case
+             */
+            if (strpos($token, '#') === 0) {
+                $this->url->setFragment(substr($token, 1));
+                continue;
+            }
+
+            /**
+             * Key, value
+             * explode to the first `=`
+             * in the anchor value, we can have one
+             *
+             * Ex with media.pdf#page=31
+             */
+            list($key, $value) = explode("=", $token, 2);
+
+            /**
+             * Case of an anchor after a boolean attribute (ie without =)
+             * at the end
+             */
+            $anchorPosition = strpos($key, '#');
+            if ($anchorPosition !== false) {
+                $this->url->setFragment(substr($key, $anchorPosition + 1));
+                $key = substr($key, 0, $anchorPosition);
+            }
+
+            /**
+             * Test Anchor on the value
+             */
+            if ($value != null) {
+                if (($countHashTag = substr_count($value, "#")) >= 3) {
+                    LogUtility::msg("The value ($value) of the key ($key) for the link ($this) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
+                    continue;
+                }
+            } else {
+                /**
+                 * Boolean attribute
+                 * (null does not make it)
+                 */
+                $value = null;
+            }
+
+            $anchorPosition = false;
+            $lowerCaseKey = strtolower($key);
+            if ($lowerCaseKey === TextColor::CSS_ATTRIBUTE) {
+                /**
+                 * Special case when color has one color value as hexadecimal #
+                 * and the hashtag
+                 */
+                if (strpos($value, '#') == 0) {
+                    if (substr_count($value, "#") >= 2) {
+
+                        /**
+                         * The last one
+                         */
+                        $anchorPosition = strrpos($value, '#');
+                    }
+                    // no anchor then
+                } else {
+                    // a color that is not hexadecimal can have an anchor
+                    $anchorPosition = strpos($value, "#");
+                }
+            } else {
+                // general case
+                $anchorPosition = strpos($value, "#");
+            }
+            if ($anchorPosition !== false) {
+                $this->url->setFragment(substr($value, $anchorPosition + 1));
+                $value = substr($value, 0, $anchorPosition);
+            }
+
+            switch ($lowerCaseKey) {
+                case Dimension::WIDTH_KEY_SHORT: // used in a link w=xxx
+                    $this->url->addQueryParameter(Dimension::WIDTH_KEY, $value);
+                    break;
+                case Dimension::HEIGHT_KEY_SHORT: // used in a link h=xxxx
+                    $this->url->addQueryParameter(Dimension::HEIGHT_KEY, $value);
+                    break;
+                default:
+                    $this->url->addQueryParameter($key, $value);
+                    break;
+            }
+
+        }
+
+    }
+
+    public function __toString()
+    {
+        return $this->getRef();
+    }
+
+
 }

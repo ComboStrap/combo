@@ -465,7 +465,7 @@ class TagAttributes
         }
     }
 
-    public function hasComponentAttribute($attributeName)
+    public function hasComponentAttribute($attributeName): bool
     {
         $isset = isset($this->componentAttributesCaseInsensitive[$attributeName]);
         if ($isset === false && $this->knownTypes === null) {
@@ -1359,6 +1359,15 @@ class TagAttributes
             $url->addQueryParameter($key, $value);
         }
         return $url;
+    }
+
+    public function hasComponentAttributeAndRemove(string $key): bool
+    {
+        $hasAttribute = $this->hasComponentAttribute($key);
+        if ($hasAttribute) {
+            $this->removeComponentAttribute($key);
+        }
+        return $hasAttribute;
     }
 
 

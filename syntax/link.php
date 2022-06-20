@@ -421,9 +421,11 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $markupAttributes = $markupLink->toAttributes();
                         } catch (ExceptionCompile $e) {
                             // uncomment to get the original error stack trace in dev
-//                                if (PluginUtility::isDevOrTest()) {
-//                                    throw new ExceptionRuntime("Error on markup ref", self::TAG, 0, $e);
-//                                }
+                            // and see where the exception comes from
+                            // Don't forget to comment back
+                            if (PluginUtility::isDevOrTest()) {
+                                throw new ExceptionRuntime("Error on markup ref", self::TAG, 0, $e);
+                            }
                             try {
                                 /**
                                  * Error. Example: unknown inter-wiki ...

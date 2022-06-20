@@ -23,11 +23,24 @@ class UrlRewrite
     public static function rewrite(Url $url)
     {
 
-        self::pathRewrite($url);
-        self::baseRewrite($url);
-        if (Site::shouldEndpointUrlBeAbsolute()) {
-            $url->toAbsoluteUrl();
+        try {
+            $scheme = $url->getScheme();
+        } catch (ExceptionNotFound $e) {
+            $scheme = "https";
         }
+        switch ($scheme) {
+            case "https":
+            case "http":
+                self::pathRewrite($url);
+                self::baseRewrite($url);
+                if (Site::shouldEndpointUrlBeAbsolute()) {
+                    $url->toAbsoluteUrl();
+                }
+                break;
+            case "email":
+                break;
+        }
+
 
     }
 

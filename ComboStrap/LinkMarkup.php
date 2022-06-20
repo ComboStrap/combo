@@ -231,10 +231,7 @@ class LinkMarkup
                      * Preview tooltip
                      */
                     $previewConfig = PluginUtility::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
-                    $preview = $outputAttributes->hasComponentAttribute(self::PREVIEW_ATTRIBUTE);
-                    if ($preview) {
-                        $outputAttributes->removeComponentAttribute(self::PREVIEW_ATTRIBUTE);
-                    }
+                    $preview = $outputAttributes->hasComponentAttributeAndRemove(self::PREVIEW_ATTRIBUTE);
                     if ($preview || $previewConfig === 1) {
                         Tooltip::addToolTipSnippetIfNeeded();
                         $tooltipHtml = <<<EOF
@@ -407,7 +404,7 @@ EOF;
          *
          */
         if ($this->getMarkupRef()->getSchemeType() == MarkupRef::EMAIL_URI) {
-            $emailAddress = $this->obfuscateEmail($this->markupRef->getPath());
+            $emailAddress = $this->obfuscateEmail($this->markupRef->getUrl()->getPath());
             $outputAttributes->addOutputAttributeValue("title", $emailAddress);
         }
 

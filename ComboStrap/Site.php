@@ -312,7 +312,11 @@ class Site
          * Same as {@link getBaseURL()} ??
          */
         global $conf;
-        return $conf['baseurl'];
+        $baseUrl = $conf['baseurl'];
+        if(!empty($baseUrl)){
+            return $baseUrl;
+        }
+        return DOKU_URL;
 
     }
 

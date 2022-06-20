@@ -16,7 +16,7 @@ use DOMElement;
  *
  * The original svg can be set with:
  *   * the {@link FetchSvg::setOriginalPath() original path}
- *   * the {@link FetchSvg::setRequestedName() name} if this is an {@link FetchSvg::setRequestedType() icon type}
+ *   * the {@link FetchSvg::setRequestedName() name} if this is an {@link FetchSvg::setRequestedType() icon type}, the original path is then determined on {@link FetchSvg::getOriginalPath() get}
  *   * or by {@link FetchSvg::setMarkup() Svg Markup}
  *
  */
@@ -897,9 +897,6 @@ class FetchSvg extends FetchImage
 
         $this->processed = true;
 
-        if ($this->requestedName === null) {
-            $this->requestedName = $this->getOriginalPath()->getLastNameWithoutExtension();
-        }
 
         $localTagAttributes = TagAttributes::createEmpty(self::TAG);
 
@@ -929,7 +926,7 @@ class FetchSvg extends FetchImage
 
         // Set the name (icon) attribute for test selection
         try {
-            $name = $this->getRequestedName();
+            $name = $this->getRequestedNameOrDefault();
             $this->getXmlDocument()->setRootAttribute('data-name', $name);
         } catch (ExceptionNotFound $e) {
             // ok no name
@@ -1368,7 +1365,7 @@ class FetchSvg extends FetchImage
 
         // Add a class on each path for easy styling
         try {
-            $name = $this->getRequestedName();
+            $name = $this->getRequestedNameOrDefault();
             $svgPaths = $this->getXmlDocument()->xpath("//*[local-name()='path']");
             for ($i = 0;
                  $i < $svgPaths->length;
@@ -1514,5 +1511,19 @@ class FetchSvg extends FetchImage
         }
         $this->setOriginalPath($originalPath);
         return $originalPath;
+    }
+
+    /**
+     * This is used to add a name and class to the svg to make selection more easy
+     * @throws ExceptionBadState
+     * @throws ExceptionNotFound
+     */
+    private function getRequestedNameOrDefault(): string
+    {
+        try {
+            return $this->getRequestedName();
+        } catch (ExceptionNotFound $e) {
+            return $this->getOriginalPath()->getLastNameWithoutExtension();
+        }
     }
 }

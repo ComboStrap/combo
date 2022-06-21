@@ -3,18 +3,22 @@
 
 namespace ComboStrap;
 
+
 use syntax_plugin_combo_media;
 
 /**
- * Represents a media markup
+ * This class represents a media markup:
+ *   - with a {@link MediaMarkup::getFetcher() fetcher}
+ *   - and {@link MediaMarkup::getTagAttributes() tag/styling attributes}
  *
- * Wrapper around {@link Doku_Handler_Parse_Media}
+ * You can create it:
+ *   * via a {@link MediaMarkup::createFromRef() Markup Ref} (The string ref in the document)
+ *   * via a {@link MediaMarkup::createFromFetcher() Fetcher}
+ *   * via a {@link MediaMarkup::createFromFetchUrl() Fetch Url}
+ *   * via a {@link MediaMarkup::createFromCallStackArray() callstack array} of {@link syntax_plugin_combo_media::render()}
+ *   * via a {@link MediaMarkup::createFromMatch() string match} of {@link syntax_plugin_combo_media::handle()}
  *
  *
- *
- * Not that for dokuwiki the `type` key of the attributes is the `call`
- * and therefore determine the function in an render
- * (ie {@link \Doku_Renderer::internalmedialink()} or {@link \Doku_Renderer::externalmedialink()}
  */
 class MediaMarkup
 {
@@ -88,83 +92,40 @@ class MediaMarkup
     public const LINK_CLASS_ATTRIBUTE = "link-class";
 
 
-    private Url $fetchUrl;
-
-
     private ?string $align = null;
     private ?string $label = null;
-    private ?MarkupRef $ref = null;
+    private ?MarkupRef $markupRef = null;
     private ?string $linking = null;
     private ?string $lazyLoadMethod = null;
     private TagAttributes $tagAttributes;
     private ?string $linkingClass = null;
+    private Fetch $fetcher;
 
-    public function __construct()
+    private function __construct()
     {
         $this->tagAttributes = TagAttributes::createEmpty();
     }
 
 
     /**
-     * Parse a media wiki ref that you can found in the first part of a media markup
+     * Private method use {@link MediaMarkup::createFromRef()} to create a media markup via a ref
      *
-     * The parsing function {@link Doku_Handler_Parse_Media} has some flow / problem
-     *    * It keeps the anchor only if there is no query string
-     *    * It takes the first digit as the width (ie media.pdf?page=31 would have a width of 31)
-     *    * `src` is not only the media path but may have a anchor
-     * We parse it then
+     * Set and parse a media wiki ref that you can found in the first part of a media markup
      *
-     * @param string $ref
+     * @param string $markupRef
      * @return MediaMarkup
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
+     * @throws ExceptionNotExists
      */
-    public function setRef(string $ref): MediaMarkup
+    private function setMarkupRef(string $markupRef): MediaMarkup
     {
 
-        $this->ref = MarkupRef::createMediaFromRef($ref);
+        $this->markupRef = MarkupRef::createMediaFromRef($markupRef);
 
-        $this->fetchUrl = $this->ref->getUrl();
-
-        try {
-            $this->fetchUrl->addQueryParameterIfNotActualSameValue(FetchRaw::MEDIA_QUERY_PARAMETER, $this->ref->getPath()->getDokuwikiId());
-        } catch (ExceptionNotFound $e) {
-            // no path
-        }
-
-        /**
-         * Tag Attributes
-         */
-        try {
-            $this->align = $this->fetchUrl->getQueryPropertyValueAndRemoveIfPresent(Align::ALIGN_ATTRIBUTE);
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-        try {
-            $this->linking = $this->fetchUrl->getQueryPropertyValueAndRemoveIfPresent(self::LINKING_KEY);
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-        try {
-            $this->lazyLoadMethod = $this->fetchUrl->getQueryPropertyValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD);
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-        try {
-            $this->linkingClass = $this->fetchUrl->getQueryPropertyValueAndRemoveIfPresent(self::LINK_CLASS_ATTRIBUTE);
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-        foreach (self::STYLE_ATTRIBUTES as $nonUrlAttribute) {
-            try {
-                $value = $this->fetchUrl->getQueryPropertyValueAndRemoveIfPresent($nonUrlAttribute);
-                $this->tagAttributes->addComponentAttributeValue($nonUrlAttribute, $value);
-            } catch (ExceptionNotFound $e) {
-                // ok
-            }
-        }
+        $refUrl = $this->markupRef->getUrl();
+        $this->setUrl($refUrl);
 
         return $this;
     }
@@ -187,7 +148,7 @@ class MediaMarkup
                 throw new ExceptionBadArgument("The media reference was not found in the callstack array", self::CANONICAL);
             }
         }
-        $mediaMarkup->setRef($ref);
+        $mediaMarkup->setMarkupRef($ref);
 
         $linking = $callStackArray[self::LINKING_KEY];
         if ($linking !== null) {
@@ -207,9 +168,21 @@ class MediaMarkup
 
     }
 
-    public static function createFromUrl(Url $getFetchUrl)
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
+     */
+    public static function createFromFetchUrl(Url $fetchUrl): MediaMarkup
     {
-        return (new MediaMarkup())->setUrl($getFetchUrl);
+        return (new MediaMarkup())->setUrl($fetchUrl);
+    }
+
+    public static function createFromFetcher(Fetch $fetcher): MediaMarkup
+    {
+        return (new MediaMarkup())
+            ->setFetcher($fetcher);
     }
 
 
@@ -226,7 +199,7 @@ class MediaMarkup
             case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
                 $src = $this->getPath()->getDokuWikiId();
                 try {
-                    $src = "$src#{$this->fetchUrl->getFragment()}";
+                    $src = "$src#{$this->markupRef->getUrl()->getFragment()}";
                 } catch (ExceptionNotFound $e) {
                     // ok
                 }
@@ -248,7 +221,7 @@ class MediaMarkup
         try {
             // if there is a path, this is internal
             // if interwiki this, wiki id, ...
-            $this->ref->getPath();
+            $this->markupRef->getPath();
             return self::INTERNAL_MEDIA_CALL_NAME;
         } catch (ExceptionNotFound $e) {
             return self::EXTERNAL_MEDIA_CALL_NAME;
@@ -257,9 +230,14 @@ class MediaMarkup
     }
 
 
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
+     * @throws ExceptionNotFound
+     */
     public static function createFromRef(string $markupRef): MediaMarkup
     {
-        return (new MediaMarkup())->setRef($markupRef);
+        return (new MediaMarkup())->setMarkupRef($markupRef);
     }
 
 
@@ -269,7 +247,7 @@ class MediaMarkup
      */
     public function getFetchUrl(): Url
     {
-        return $this->fetchUrl;
+        return $this->fetcher->getFetchUrl();
     }
 
 
@@ -277,7 +255,7 @@ class MediaMarkup
      * @param string $match - the match of the renderer
      * @throws ExceptionBadSyntax - if no ref was found
      * @throws ExceptionBadArgument
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotFound|ExceptionNotExists
      */
     public static function createFromMatch(string $match): MediaMarkup
     {
@@ -295,7 +273,7 @@ class MediaMarkup
         if ($ref === null) {
             throw new ExceptionBadSyntax("No ref was found");
         }
-        $mediaMarkup->setRef(trim($ref));
+        $mediaMarkup->setMarkupRef(trim($ref));
         if (isset($parts[1])) {
             $mediaMarkup->setLabel($parts[1]);
         }
@@ -358,7 +336,7 @@ class MediaMarkup
 
         $ref = "$src?{$width}x$height&$cache";
         return (new MediaMarkup())
-            ->setRef($ref)
+            ->setMarkupRef($ref)
             ->setAlign($align)
             ->setLabel($title)
             ->setLinking($linking);
@@ -385,7 +363,7 @@ class MediaMarkup
          * (ie no linking in heading , ...)
          */
         $attributes[MediaMarkup::LINKING_KEY] = null;
-        $attributes[MediaMarkup::REF_ATTRIBUTE] = $this->ref->getRef();
+        $attributes[MediaMarkup::REF_ATTRIBUTE] = $this->markupRef->getRef();
         $attributes[Align::ALIGN_ATTRIBUTE] = $this->align;
         $attributes[TagAttributes::TITLE_KEY] = $this->label;
         return $attributes;
@@ -410,8 +388,7 @@ class MediaMarkup
         if ($linking !== null) {
             return $linking;
         }
-
-        return $this->fetchUrl->getQueryPropertyValueAndRemoveIfPresent(MediaMarkup::LINKING_KEY);
+        throw new ExceptionNotFound("No linking set");
 
 
     }
@@ -421,17 +398,13 @@ class MediaMarkup
      * if present
      * @throws ExceptionNotFound
      */
-    public function getAlign()
+    public function getAlign(): string
     {
 
-        try {
-            return $this->fetchUrl->getQueryPropertyValueAndRemoveIfPresent(Align::ALIGN_ATTRIBUTE);
-        } catch (ExceptionNotFound $e) {
-            if ($this->align !== null) {
-                return $this->align;
-            }
-            throw new ExceptionNotFound("No align was specified");
+        if ($this->align !== null) {
+            return $this->align;
         }
+        throw new ExceptionNotFound("No align was specified");
     }
 
 
@@ -519,7 +492,7 @@ class MediaMarkup
 
     }
 
-    public function getAttributes(): TagAttributes
+    public function getTagAttributes(): TagAttributes
     {
         try {
             $this->tagAttributes->addComponentAttributeValue(Align::ALIGN_ATTRIBUTE, $this->getAlign());
@@ -560,10 +533,10 @@ class MediaMarkup
      */
     public function getMarkupRef(): MarkupRef
     {
-        if ($this->ref === null) {
+        if ($this->markupRef === null) {
             throw new ExceptionNotFound("No markup, this media markup was not created from a markup");
         }
-        return $this->ref;
+        return $this->markupRef;
     }
 
 
@@ -599,9 +572,58 @@ class MediaMarkup
         return '{{' . $ref . $descriptionPart . '}}';
     }
 
+    /**
+     *
+     * Private method use {@link MediaMarkup::createFromFetchUrl()} to create a media markup via a Url
+     *
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
+     */
     private function setUrl(Url $fetchUrl): MediaMarkup
     {
-        $this->fetchUrl = $fetchUrl;
+
+        try {
+            $fetchUrl->addQueryParameterIfNotActualSameValue(FetchRaw::MEDIA_QUERY_PARAMETER, $this->markupRef->getPath()->getDokuwikiId());
+        } catch (ExceptionNotFound $e) {
+            // no path
+        }
+
+        /**
+         * Tag Attributes
+         */
+        try {
+            $this->align = $refUrl->getQueryPropertyValueAndRemoveIfPresent(Align::ALIGN_ATTRIBUTE);
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        try {
+            $this->linking = $refUrl->getQueryPropertyValueAndRemoveIfPresent(self::LINKING_KEY);
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        try {
+            $this->lazyLoadMethod = $refUrl->getQueryPropertyValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD);
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        try {
+            $this->linkingClass = $refUrl->getQueryPropertyValueAndRemoveIfPresent(self::LINK_CLASS_ATTRIBUTE);
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+
+        foreach (self::STYLE_ATTRIBUTES as $nonUrlAttribute) {
+            try {
+                $value = $refUrl->getQueryPropertyValueAndRemoveIfPresent($nonUrlAttribute);
+                $this->tagAttributes->addComponentAttributeValue($nonUrlAttribute, $value);
+            } catch (ExceptionNotFound $e) {
+                // ok
+            }
+        }
+
+        $this->fetcher = FetchAbs::createFetcherFromFetchUrl($refUrl);
         return $this;
     }
 
@@ -610,10 +632,10 @@ class MediaMarkup
      */
     private function getRef(): string
     {
-        if ($this->ref === null) {
+        if ($this->markupRef === null) {
             throw new ExceptionNotFound("No ref was specified");
         }
-        return $this->ref->getRef();
+        return $this->markupRef->getRef();
     }
 
     /**
@@ -636,6 +658,28 @@ class MediaMarkup
 
         }
     }
+
+    /**
+     * Private method use {@link MediaMarkup::createFromFetcher()} to create a media markup via a Fetcher
+     * @param Fetch $fetcher
+     * @return MediaMarkup
+     */
+    private function setFetcher(Fetch $fetcher): MediaMarkup
+    {
+        $this->fetcher = $fetcher;
+        return $this;
+    }
+
+
+    /**
+     * @return Fetch
+     */
+    public function getFetcher(): Fetch
+    {
+        return $this->fetcher;
+    }
+
+
 
 
 }

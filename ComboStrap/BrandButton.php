@@ -437,7 +437,7 @@ EOF;
                 throw new ExceptionNotFound("No {$this->iconType} icon could be found for the known brand ($this)");
             }
         }
-        $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
+        $attributes = [FetchSvg::NAME_ATTRIBUTE => $iconName];
         $textColor = $this->getTextColor();
         if ($textColor !== null) {
             $attributes[ColorRgb::COLOR] = $textColor;

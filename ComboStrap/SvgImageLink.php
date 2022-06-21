@@ -50,7 +50,7 @@ class SvgImageLink extends ImageLink
      */
     public static function createFromFetchImage(FetchSvg $fetchImage)
     {
-        return SvgImageLink::createFromMediaMarkup(MediaMarkup::createFromUrl($fetchImage->getFetchUrl()));
+        return SvgImageLink::createFromMediaMarkup(MediaMarkup::createFromFetchUrl($fetchImage->getFetchUrl()));
     }
 
 
@@ -96,7 +96,7 @@ class SvgImageLink extends ImageLink
          * (no cache for the img tag)
          * @var FetchSvg $image
          */
-        $responseAttributes = $this->mediaMarkup->getAttributes()
+        $responseAttributes = $this->mediaMarkup->getTagAttributes()
             ->setLogicalTag(self::TAG);
 
         /**

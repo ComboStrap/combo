@@ -22,6 +22,14 @@ use syntax_plugin_combo_variable;
  * If this is a {@link MarkupRef::INTERWIKI_URI}, you may also get the {@link MarkupRef::getInterWiki() interwiki instance}
  * If this is a {@link MarkupRef::WIKI_URI}, you may also get the {@link MarkupRef::getPath() path}
  *
+ *
+ * Why ?
+ * The parsing function {@link Doku_Handler_Parse_Media} has some flow / problem
+ *    * It keeps the anchor only if there is no query string
+ *    * It takes the first digit as the width (ie media.pdf?page=31 would have a width of 31)
+ *    * `src` is not only the media path but may have a anchor
+ *    * ...
+ *
  */
 class MarkupRef
 {

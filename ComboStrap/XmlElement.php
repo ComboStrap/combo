@@ -133,4 +133,9 @@ class XmlElement
         }
         throw new ExceptionNotFound("No element was found with the selector $selector");
     }
+
+    public function getLocalName()
+    {
+        return $this->element->localName;
+    }
 }

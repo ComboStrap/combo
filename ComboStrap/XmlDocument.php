@@ -704,5 +704,10 @@ class XmlDocument
 
     }
 
+    public function getDocumentElement(): XmlElement
+    {
+        return XmlElement::create($this->getXmlDom()->documentElement, $this);
+    }
+
 
 }

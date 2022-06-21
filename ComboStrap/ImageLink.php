@@ -48,7 +48,7 @@ abstract class ImageLink extends MediaLink
          * Link to the media
          *
          */
-        $tagAttributes = $this->mediaMarkup->getAttributes();
+        $tagAttributes = $this->mediaMarkup->getTagAttributes();
         // https://www.dokuwiki.org/config:target
         global $conf;
         $target = $conf['target']['media'];

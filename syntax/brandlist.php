@@ -7,6 +7,7 @@ use ComboStrap\Brand;
 use ComboStrap\BrandButton;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionRuntime;
+use ComboStrap\FetchSvg;
 use ComboStrap\Icon;
 use ComboStrap\IconDownloader;
 use ComboStrap\Page;
@@ -181,7 +182,7 @@ EOF;
                         if ($brandButton->hasIcon()) {
                             $iconArrayAttributes = $brandButton->getIconAttributes();
                             $iconAttributes = TagAttributes::createFromCallStackArray($iconArrayAttributes);
-                            $name = $iconAttributes->getValueAndRemoveIfPresent(syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE);
+                            $name = $iconAttributes->getValueAndRemoveIfPresent(FetchSvg::NAME_ATTRIBUTE);
                             if ($name !== null) {
                                 $html .= Icon::createFromName($name, $iconAttributes)->toHtml();
                             } else {

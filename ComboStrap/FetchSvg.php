@@ -109,6 +109,8 @@ class FetchSvg extends FetchImage
      */
     public const SVG_NAMESPACE_PREFIX = "svg";
     const TAG = "svg";
+    public const NAME_ATTRIBUTE = "name";
+    public const DATA_NAME_HTML_ATTRIBUTE = "data-name";
 
     private ?DokuPath $originalPath = null;
 
@@ -1418,7 +1420,7 @@ class FetchSvg extends FetchImage
     public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchSvg
     {
 
-        foreach ($tagAttributes->getComponentAttributes() as $svgAttribute) {
+        foreach (array_keys($tagAttributes->getComponentAttributes()) as $svgAttribute) {
             switch ($svgAttribute) {
                 case Dimension::WIDTH_KEY:
                 case Dimension::HEIGHT_KEY:
@@ -1467,6 +1469,10 @@ class FetchSvg extends FetchImage
                         $preserve = false;
                     }
                     $this->setPreserveStyle($preserve);
+                    continue 2;
+                case self::NAME_ATTRIBUTE:
+                    $value = $tagAttributes->getValueAndRemove($svgAttribute);
+                    $this->setRequestedName($value);
                     continue 2;
             }
 

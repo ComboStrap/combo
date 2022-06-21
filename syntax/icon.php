@@ -44,7 +44,6 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 {
     const TAG = "icon";
     const CANONICAL = self::TAG;
-    const ICON_NAME_ATTRIBUTE = "name";
 
     private static function exceptionHandling(Exception $e, $tagAttribute): string
     {

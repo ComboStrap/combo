@@ -865,7 +865,7 @@ class Site
          */
         $logoImages = Site::getLogoImages();
         foreach ($logoImages as $logoImage) {
-            $mediaMarkup = MediaMarkup::createFromUrl($logoImage->getFetchUrl())
+            $mediaMarkup = MediaMarkup::createFromFetchUrl($logoImage->getFetchUrl())
                 ->setLazyLoad(false);
             try {
                 $mediaLink = MediaLink::createFromMediaMarkup($mediaMarkup);

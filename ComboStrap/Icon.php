@@ -17,13 +17,19 @@ class Icon
      */
     public static function createFromName(string $name, TagAttributes $iconAttributes = null): Icon
     {
-        if($iconAttributes===null){
+        if ($iconAttributes === null) {
             $iconAttributes = TagAttributes::createEmpty(self::ICON_CANONICAL_NAME);
         }
-        $iconAttributes->addComponentAttributeValue(\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE, $name);
+        $iconAttributes->addComponentAttributeValue(FetchSvg::NAME_ATTRIBUTE, $name);
         return self::createFromTagAttributes($iconAttributes);
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
+     */
     public static function createFromTagAttributes(TagAttributes $tagAttributes): Icon
     {
         /**
@@ -36,8 +42,9 @@ class Icon
         /**
          * Icon Svg file or Icon Library
          */
-        $name = $tagAttributes->getValueAndRemove(\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE);
-        if ($name === null) {
+        try {
+            $name = $fetchSvg->getRequestedName();
+        } catch (ExceptionNotFound $e) {
             throw new ExceptionNotFound("A name is mandatory as attribute for an icon. It was not found.", Icon::ICON_CANONICAL_NAME);
         }
 
@@ -58,7 +65,8 @@ class Icon
                 throw new ExceptionNotExists($message, Icon::ICON_CANONICAL_NAME);
 
             }
-            $fetchSvg->setOriginalPath($mediaDokuPath);
+            $fetchSvg->setOriginalPath($mediaDokuPath)
+                ->setRequestedName($mediaDokuPath->getLastNameWithoutExtension());
 
         } catch (ExceptionNotFound $e) {
 
@@ -109,7 +117,7 @@ class Icon
     {
 
 
-        $mediaMarkup = MediaMarkup::createFromUrl($this->fetchSvg->getFetchUrl())
+        $mediaMarkup = MediaMarkup::createFromFetcher($this->fetchSvg)
             ->setTagAttributes($this->tagAttributes);
 
         return SvgImageLink::createFromMediaMarkup($mediaMarkup)

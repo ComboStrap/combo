@@ -48,9 +48,9 @@ class SvgImageLink extends ImageLink
      * @throws ExceptionBadArgument
      * @throws ExceptionNotExists
      */
-    public static function createFromFetchImage(FetchSvg $fetchImage)
+    public static function createFromFetcher(FetchSvg $fetchImage)
     {
-        return SvgImageLink::createFromMediaMarkup(MediaMarkup::createFromFetchUrl($fetchImage->getFetchUrl()));
+        return SvgImageLink::createFromMediaMarkup(MediaMarkup::createFromFetcher($fetchImage));
     }
 
 
@@ -138,7 +138,7 @@ class SvgImageLink extends ImageLink
         $responseAttributes->addClassName($svgFunctionalClass);
 
 
-        $svgFetch = $this->getFetchSvg();
+        $svgFetch = $this->mediaMarkup->getFetcher();
         /**
          * Dimension are mandatory on the image
          * to avoid layout shift (CLS)
@@ -219,7 +219,7 @@ class SvgImageLink extends ImageLink
          * The svg is then inserted via an img tag to scope it.
          */
         try {
-            $preserveStyle = DataType::toBoolean($this->mediaMarkup->getFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(FetchSvg::REQUESTED_PRESERVE_ATTRIBUTE));
+            $preserveStyle = DataType::toBoolean($this->mediaMarkup->getFetcher()->getFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(FetchSvg::REQUESTED_PRESERVE_ATTRIBUTE));
         } catch (ExceptionNotFound $e) {
             $preserveStyle = false;
         }
@@ -238,9 +238,9 @@ class SvgImageLink extends ImageLink
              * Svg tag
              */
             try {
-                $fetchPath = $this->getFetchSvg()->getFetchPath();
+                $fetchPath = $this->mediaMarkup->getFetcher()->getFetchPath();
                 $imgHTML = FileSystems::getContent($fetchPath);
-            } catch (ExceptionBadSyntax|ExceptionBadArgument|ExceptionNotFound $e) {
+            } catch (ExceptionNotFound $e) {
                 LogUtility::error("Unable to include the svg in the document. Error: {$e->getMessage()}");
                 $imgHTML = $this->createImgHTMLTag();
             }
@@ -265,20 +265,5 @@ class SvgImageLink extends ImageLink
             return PluginUtility::getConfValue(SvgImageLink::CONF_LAZY_LOAD_ENABLE);
         }
     }
-
-    /**
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionBadArgument
-     * @throws ExceptionNotFound
-     */
-    private function getFetchSvg(): FetchSvg
-    {
-        if($this->svgFetch===null) {
-            $this->svgFetch = FetchSvg::createSvgEmpty()
-                ->buildFromUrl($this->mediaMarkup->getFetchUrl());
-        }
-        return $this->svgFetch;
-    }
-
 
 }

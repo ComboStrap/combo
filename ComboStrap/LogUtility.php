@@ -336,7 +336,7 @@ class LogUtility
         self::$exceptionLevelOnTest = $level;
     }
 
-    public static function resetTestExceptionLevel()
+    public static function setTestExceptionLevelToDefault()
     {
         self::$exceptionLevelOnTest = self::LVL_MSG_WARNING;
     }

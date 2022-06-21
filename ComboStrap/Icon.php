@@ -35,9 +35,9 @@ class Icon
         /**
          * The svg
          */
-        $fetchSvg = FetchSvg::createSvgEmpty()
+        $fetchSvg = FetchSvg::createFromAttributes($tagAttributes)
             ->setRequestedType(FetchSvg::ICON_TYPE)
-            ->buildFromTagAttributes($tagAttributes);
+            ;
 
         /**
          * Icon Svg file or Icon Library

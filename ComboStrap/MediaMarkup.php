@@ -244,6 +244,7 @@ class MediaMarkup
     /**
      * @return Url - an url that has query property as a fetch url
      * It permits to select the fetch class
+     * @deprecated use {@link MediaMarkup::getFetcher()}->getUrl instead
      */
     public function getFetchUrl(): Url
     {
@@ -594,36 +595,36 @@ class MediaMarkup
          * Tag Attributes
          */
         try {
-            $this->align = $refUrl->getQueryPropertyValueAndRemoveIfPresent(Align::ALIGN_ATTRIBUTE);
+            $this->align = $fetchUrl->getQueryPropertyValueAndRemoveIfPresent(Align::ALIGN_ATTRIBUTE);
         } catch (ExceptionNotFound $e) {
             // ok
         }
         try {
-            $this->linking = $refUrl->getQueryPropertyValueAndRemoveIfPresent(self::LINKING_KEY);
+            $this->linking = $fetchUrl->getQueryPropertyValueAndRemoveIfPresent(self::LINKING_KEY);
         } catch (ExceptionNotFound $e) {
             // ok
         }
         try {
-            $this->lazyLoadMethod = $refUrl->getQueryPropertyValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD);
+            $this->lazyLoadMethod = $fetchUrl->getQueryPropertyValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD);
         } catch (ExceptionNotFound $e) {
             // ok
         }
         try {
-            $this->linkingClass = $refUrl->getQueryPropertyValueAndRemoveIfPresent(self::LINK_CLASS_ATTRIBUTE);
+            $this->linkingClass = $fetchUrl->getQueryPropertyValueAndRemoveIfPresent(self::LINK_CLASS_ATTRIBUTE);
         } catch (ExceptionNotFound $e) {
             // ok
         }
 
         foreach (self::STYLE_ATTRIBUTES as $nonUrlAttribute) {
             try {
-                $value = $refUrl->getQueryPropertyValueAndRemoveIfPresent($nonUrlAttribute);
+                $value = $fetchUrl->getQueryPropertyValueAndRemoveIfPresent($nonUrlAttribute);
                 $this->tagAttributes->addComponentAttributeValue($nonUrlAttribute, $value);
             } catch (ExceptionNotFound $e) {
                 // ok
             }
         }
 
-        $this->fetcher = FetchAbs::createFetcherFromFetchUrl($refUrl);
+        $this->fetcher = FetchAbs::createFetcherFromFetchUrl($fetchUrl);
         return $this;
     }
 

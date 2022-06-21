@@ -158,6 +158,11 @@ class FetchSvg extends FetchImage
         return self::createSvgEmpty()->setMarkup($markup);
     }
 
+    public static function createFromAttributes(TagAttributes $tagAttributes): FetchSvg
+    {
+        return FetchSvg::createSvgEmpty()->buildFromTagAttributes($tagAttributes);
+    }
+
     /**
      * @throws ExceptionNotFound
      */
@@ -924,12 +929,12 @@ class FetchSvg extends FetchImage
                 return $this->getXmlDocument()->getXmlText();
             }
             try {
-                $height = $this->getIntrinsicHeight();
+                $targetHeight = $this->getIntrinsicHeight();
             } catch (ExceptionCompile $e) {
                 LogUtility::error("Svg processing stopped. Bad svg: We can't determine the height of the svg ($this) (The viewBox and the height does not exist) ", FetchSvg::CANONICAL);
                 return $this->getXmlDocument()->getXmlText();
             }
-            $this->getXmlDom()->documentElement->setAttribute(FetchSvg::VIEW_BOX, "0 0 $width $height");
+            $this->getXmlDom()->documentElement->setAttribute(FetchSvg::VIEW_BOX, "0 0 $width $targetHeight");
         }
 
         if ($this->getRequestedOptimizeOrDefault()) {
@@ -956,9 +961,9 @@ class FetchSvg extends FetchImage
 
 
         try {
-            $svgUsageType = $this->getRequestedType();
+            $requestedType = $this->getRequestedType();
         } catch (ExceptionNotFound $e) {
-            $svgUsageType = null;
+            $requestedType = null;
         }
 
         /**
@@ -1002,7 +1007,7 @@ class FetchSvg extends FetchImage
                 // not a svg from a path
                 $isInIconDirectory = false;
             }
-            if ($svgUsageType === FetchSvg::ICON_TYPE || $isInIconDirectory) {
+            if ($requestedType === FetchSvg::ICON_TYPE || $isInIconDirectory) {
                 $svgStructureType = FetchSvg::ICON_TYPE;
             }
 
@@ -1017,22 +1022,27 @@ class FetchSvg extends FetchImage
          *   * in a paragraph (the width and height are the same)
          *   * as an illustration in a page image (the width and height may be not the same)
          */
-        if ($svgUsageType === null) {
+        if ($requestedType === null) {
             switch ($svgStructureType) {
                 case FetchSvg::ICON_TYPE:
-                    $svgUsageType = FetchSvg::ICON_TYPE;
+                    $requestedType = FetchSvg::ICON_TYPE;
                     break;
                 default:
-                    $svgUsageType = FetchSvg::ILLUSTRATION_TYPE;
+                    $requestedType = FetchSvg::ILLUSTRATION_TYPE;
                     break;
             }
         }
-        $localTagAttributes->addClassName(StyleUtility::getStylingClassForTag(self::TAG . "-" . $svgUsageType));
-        switch ($svgUsageType) {
+        // add class with svg type
+        $localTagAttributes->addClassName(StyleUtility::getStylingClassForTag(self::TAG . "-" . $requestedType));
+
+        /**
+         * Dimension and other attributes by requested type
+         */
+        switch ($requestedType) {
             case FetchSvg::ICON_TYPE:
             case FetchSvg::TILE_TYPE:
                 /**
-                 * Dimension
+                 * Dimension: An icon or a tile have the same height and width
                  *
                  * Using a icon in the navbrand component of bootstrap
                  * require the set of width and height otherwise
@@ -1040,23 +1050,29 @@ class FetchSvg extends FetchImage
                  * and the bar component are below the brand text
                  *
                  */
-                $appliedWidth = $requestedWidth;
-                if ($requestedWidth === null) {
-                    if ($svgUsageType == FetchSvg::ICON_TYPE) {
-                        $appliedWidth = FetchSvg::DEFAULT_ICON_WIDTH;
+                if ($this->norWidthNorHeightWasRequested()) {
+                    if ($requestedType == FetchSvg::ICON_TYPE) {
+                        $length = FetchSvg::DEFAULT_ICON_WIDTH;
                     } else {
                         // tile
-                        $appliedWidth = "192";
+                        $length = "192";
                     }
+                    $targetWidth = $length;
+                    $targetHeight = $length;
+                } else {
+                    $targetWidth = $this->getTargetWidth();
+                    $targetHeight = $this->getTargetHeight();
                 }
+                if ($targetWidth !== $targetHeight) {
+                    LogUtility::warning("An icon or tile is defined as having the same dimension but the width ($targetWidth) is different from the height ($targetHeight).");
+                }
+
                 /**
                  * Dimension
-                 * The default unit on attribute is pixel, no need to add it
-                 * as in CSS
+                 * The default unit on attribute is pixel, no need to add it to the number as in CSS
                  */
-                $localTagAttributes->addOutputAttributeValue("width", $appliedWidth);
-                $height = $localTagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY, $appliedWidth);
-                $localTagAttributes->addOutputAttributeValue("height", $height);
+                $localTagAttributes->addOutputAttributeValue("width", $targetWidth);
+                $localTagAttributes->addOutputAttributeValue("height", $targetHeight);
                 break;
             default:
                 /**
@@ -1220,7 +1236,7 @@ class FetchSvg extends FetchImage
                 try {
                     $color = $this->getRequestedColor();
                 } catch (ExceptionNotFound $e) {
-                    if ($svgUsageType === FetchSvg::ILLUSTRATION_TYPE) {
+                    if ($requestedType === FetchSvg::ILLUSTRATION_TYPE) {
                         $primaryColor = Site::getPrimaryColorValue();
                         if ($primaryColor !== null) {
                             $color = $primaryColor;
@@ -1353,7 +1369,7 @@ class FetchSvg extends FetchImage
         $zoomFactor = $localTagAttributes->getValueAsInteger(Dimension::ZOOM_ATTRIBUTE);
         if ($zoomFactor === null
             && $svgStructureType === FetchSvg::ICON_TYPE
-            && $svgUsageType === FetchSvg::ILLUSTRATION_TYPE
+            && $requestedType === FetchSvg::ILLUSTRATION_TYPE
         ) {
             $zoomFactor = -4;
         }
@@ -1427,7 +1443,7 @@ class FetchSvg extends FetchImage
         return self::CANONICAL;
     }
 
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchSvg
+    private function buildFromTagAttributes(TagAttributes $tagAttributes): FetchSvg
     {
 
         foreach (array_keys($tagAttributes->getComponentAttributes()) as $svgAttribute) {
@@ -1540,6 +1556,25 @@ class FetchSvg extends FetchImage
             return $this->getRequestedName();
         } catch (ExceptionNotFound $e) {
             return $this->getOriginalPath()->getLastNameWithoutExtension();
+        }
+    }
+
+    /**
+     * @return bool - true if no width or height was requested
+     */
+    private function norWidthNorHeightWasRequested(): bool
+    {
+        try {
+            $this->getRequestedWidth();
+            return false;
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        try {
+            $this->getRequestedHeight();
+            return false;
+        } catch (ExceptionNotFound $e) {
+            return true;
         }
     }
 }

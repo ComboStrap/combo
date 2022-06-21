@@ -526,11 +526,10 @@ class PluginUtility
 
             $logoPath = DokuPath::createComboResource("images:logo.svg");
             try {
-                $fetchImage = FetchSvg::createSvgEmpty()
-                    ->setOriginalPath($logoPath)
+                $fetchImage = FetchSvg::createSvgFromPath($logoPath)
                     ->setRequestedType(FetchSvg::ICON_TYPE)
                     ->setRequestedWidth(20);
-                $xhtmlIcon = SvgImageLink::createFromFetchImage($fetchImage)
+                $xhtmlIcon = SvgImageLink::createFromFetcher($fetchImage)
                     ->renderMediaTag();
             } catch (ExceptionCompile $e) {
                 /**

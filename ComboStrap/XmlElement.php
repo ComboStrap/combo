@@ -124,6 +124,7 @@ class XmlElement
 
     /**
      * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
      */
     public function querySelector(string $selector): XmlElement
     {

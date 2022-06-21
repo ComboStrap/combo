@@ -22,7 +22,6 @@ class FetchImageRaster extends FetchImage
 {
 
     const CANONICAL = "raster";
-    private ?DokuPath $originalPath = null;
     private Mime $mime;
 
 
@@ -69,19 +68,9 @@ class FetchImageRaster extends FetchImage
      */
     public static function createRasterFromFetchUrl(Url $fetchUrl): FetchImageRaster
     {
-        return self::createEmptyRaster()
-            ->buildFromUrl($fetchUrl);
-    }
-
-    /**
-     * @throws ExceptionBadArgument
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionNotExists
-     * @throws ExceptionNotFound
-     */
-    public static function createRasterFromMediaMarkup(MediaMarkup $mediaMarkup): FetchImageRaster
-    {
-        return self::createRasterFromFetchUrl($mediaMarkup->getFetchUrl());
+        $fetchImageRaster = self::createEmptyRaster();
+        $fetchImageRaster->buildFromUrl($fetchUrl);
+        return $fetchImageRaster;
     }
 
 
@@ -110,15 +99,15 @@ class FetchImageRaster extends FetchImage
     function analyzeImageIfNeeded()
     {
 
-        if (!FileSystems::exists($this->originalPath)) {
-            throw new ExceptionNotExists("The path ({$this->originalPath}) does not exists");
+        if (!FileSystems::exists($this->getOriginalPath())) {
+            throw new ExceptionNotExists("The path ({$this->getOriginalPath()}) does not exists");
         }
 
         /**
          * Based on {@link media_image_preview_size()}
          * $dimensions = media_image_preview_size($this->id, '', false);
          */
-        $path = $this->originalPath->toLocalPath();
+        $path = $this->getOriginalPath()->toLocalPath();
         $imageSize = getimagesize($path->toAbsolutePath()->toPathString());
         if ($imageSize === false) {
             throw new ExceptionBadSyntax("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", self::CANONICAL);
@@ -139,9 +128,8 @@ class FetchImageRaster extends FetchImage
     {
 
         $url = parent::getFetchUrl($url);
-        $fetchUrl = FetchRaw::createFromPath($this->originalPath)->getFetchUrl($url);
-        $this->addCommonImageQueryParameterToUrl($fetchUrl);
-        return $fetchUrl;
+        $this->addCommonImageQueryParameterToUrl($url);
+        return $url;
 
     }
 
@@ -211,7 +199,7 @@ class FetchImageRaster extends FetchImage
     }
 
 
-    function getFetchPath(): Path
+    function getFetchPath(): DokuPath
     {
         throw new ExceptionRuntime("Fetch Raster image is not yet implemented");
     }
@@ -225,7 +213,7 @@ class FetchImageRaster extends FetchImage
     function getBuster(): string
     {
         try {
-            return FileSystems::getCacheBuster($this->originalPath);
+            return FileSystems::getCacheBuster($this->getOriginalPath());
         } catch (ExceptionNotFound $e) {
             LogUtility::internalError("The fact that the file exists, is already checked at construction time, it should not happen", self::CANONICAL);
             return strval((new \DateTime())->getTimestamp());
@@ -237,20 +225,9 @@ class FetchImageRaster extends FetchImage
         return $this->mime;
     }
 
-    /**
-     * @return DokuPath - the path of the original svg if any
-     * @throws ExceptionNotFound - not used
-     */
-    public function getOriginalPath(): DokuPath
-    {
-        if ($this->originalPath === null) {
-            throw new ExceptionNotFound("No original path");
-        }
-        return $this->originalPath;
-    }
 
     /**
-     * @param Url $url
+     * @param TagAttributes $tagAttributes
      * @return FetchImageRaster
      * @throws ExceptionBadArgument - if the path is not an image
      * @throws ExceptionBadSyntax - if the image is badly encoded
@@ -258,12 +235,12 @@ class FetchImageRaster extends FetchImage
      * @throws ExceptionNotFound - if the mime was not found
      */
 
-    public function buildFromUrl(Url $url): FetchImageRaster
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchImageRaster
     {
-        $this->originalPath = FetchRaw::createEmpty()->buildFromUrl($url)->getFetchPath();
+
+        parent::buildFromTagAttributes($tagAttributes);
         $this->analyzeImageIfNeeded();
-        $this->mime = FileSystems::getMime($this->originalPath);
-        parent::buildFromUrl($url);
+        $this->mime = FileSystems::getMime($this->getOriginalPath());
         return $this;
 
     }
@@ -272,9 +249,9 @@ class FetchImageRaster extends FetchImage
      * @throws ExceptionBadSyntax - if the file is badly encoded
      * @throws ExceptionNotExists - if the file does not exists
      */
-    private function setOriginalPath(DokuPath $path): FetchImageRaster
+    public function setOriginalPath(DokuPath $dokuPath): FetchImageRaster
     {
-        $this->originalPath = $path;
+        parent::setOriginalPath($dokuPath);
         $this->analyzeImageIfNeeded();
         return $this;
     }

@@ -14,7 +14,7 @@ namespace ComboStrap;
  * (ie a file and its transformation attribute if any such as
  * width, height, ...)
  */
-abstract class FetchImage extends FetchAbs
+abstract class FetchImage extends FetchRaw
 {
 
     const CANONICAL = "image";
@@ -76,15 +76,6 @@ abstract class FetchImage extends FetchAbs
     }
 
 
-    /**
-     * @return DokuPath - just to get the id that is mandatory when adding the toc for dokuwiki compliance
-     * See {@link FetchImage::addCommonImageQueryParameterToUrl()}
-     * @throws ExceptionNotFound - if not used
-     */
-    function getOriginalPath(): DokuPath
-    {
-        throw new ExceptionNotFound("Not found by default");
-    }
 
     /**
      * @param string $imageId
@@ -92,7 +83,6 @@ abstract class FetchImage extends FetchAbs
      * @return FetchSvg|FetchImageRaster
      * @throws ExceptionBadArgument - if the path is not an image
      * @throws ExceptionBadSyntax - if the image is badly encoded
-     * @throws ExceptionNotExists - if the image does not exists
      * @throws ExceptionNotFound
      */
     public static function createImageFetchFromId(string $imageId, string $rev = null)
@@ -105,6 +95,7 @@ abstract class FetchImage extends FetchAbs
     public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchImage
     {
 
+        parent::buildFromTagAttributes($tagAttributes);
         $requestedWidth = $tagAttributes->getValueAndRemove(Dimension::WIDTH_KEY);
         if ($requestedWidth === null) {
             $requestedWidth = $tagAttributes->getValueAndRemove(Dimension::WIDTH_KEY_SHORT);

@@ -165,34 +165,25 @@ class Background
                         return;
                     }
                     try {
-                        $fetcher = FetchAbs::createFetcherFromFetchUrl($mediaMarkup->getFetchUrl());
-                    } catch (ExceptionNotFound $e) {
-                        LogUtility::internalError("No fetcher can be found for the background image. Error: {$e->getMessage()}", self::CANONICAL);
-                        return;
-                    }
-                    try {
-                        $fetchUrl = $fetcher->getFetchUrl();
-                        $mime = FileSystems::getMime($fetchUrl);
-                    } catch (ExceptionNotFound $e) {
-                        LogUtility::error("The mime of the background image ($fetcher) is unknown", self::CANONICAL);
-                        return;
-                    }
-                    if (!$mime->isImage()) {
-                        LogUtility::error("The background image ($fetcher) is not an image but a $mime", self::CANONICAL);
-                        return;
-                    }
-                    try {
                         $path = $mediaMarkup->getPath();
                         if (!FileSystems::exists($path)) {
                             LogUtility::error("The image ($path) does not exist", self::CANONICAL);
                             return;
                         }
+                        $mime = FileSystems::getMime($path);
                     } catch (ExceptionNotFound $e) {
-                        // external url
+                        try {
+                            $mime = FileSystems::getMime($mediaMarkup->getFetcher()->getFetchUrl());
+                        } catch (ExceptionNotFound $e) {
+                            LogUtility::error("The mime of the background image ($mediaMarkup) is unknown", self::CANONICAL);
+                            return;
+                        }
                     }
-
-
-                    $backgroundImageStyleValue = "url(" . $fetchUrl->toString() . ")";
+                    if (!$mime->isImage()) {
+                        LogUtility::error("The background image ($mediaMarkup) is not an image but a $mime", self::CANONICAL);
+                        return;
+                    }
+                    $backgroundImageStyleValue = "url(" . $mediaMarkup->getFetcher()->getFetchUrl()->toString() . ")";
 
                 } else {
                     LogUtility::msg("Internal Error: The background image value ($backgroundImageValue) is not a string nor an array", LogUtility::LVL_MSG_ERROR, self::CANONICAL);

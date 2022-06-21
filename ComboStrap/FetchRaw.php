@@ -16,7 +16,7 @@ class FetchRaw extends FetchAbs
 
     public static function createFromPath(DokuPath $dokuPath): FetchRaw
     {
-        return self::createEmpty()->setDokuPath($dokuPath);
+        return self::createEmpty()->setOriginalPath($dokuPath);
     }
 
     /**
@@ -33,7 +33,9 @@ class FetchRaw extends FetchAbs
      */
     public static function createFetcherFromFetchUrl(Url $fetchUrl): FetchRaw
     {
-        return FetchRaw::createEmpty()->buildFromUrl($fetchUrl);
+         $fetchRaw = FetchRaw::createEmpty();
+         $fetchRaw->buildFromUrl($fetchUrl);
+         return $fetchRaw;
     }
 
 
@@ -97,7 +99,7 @@ class FetchRaw extends FetchAbs
         return FileSystems::getMime($this->path);
     }
 
-    public function setDokuPath(DokuPath $dokuPath): FetchRaw
+    public function setOriginalPath(DokuPath $dokuPath): FetchRaw
     {
         $this->path = $dokuPath;
         return $this;
@@ -106,36 +108,34 @@ class FetchRaw extends FetchAbs
     /**
      * @throws ExceptionBadArgument - if the media was not found
      */
-    public function buildFromUrl(Url $url): FetchRaw
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchRaw
     {
-        parent::buildFromUrl($url);
-        try {
-            $id = $url->getQueryPropertyValue(self::MEDIA_QUERY_PARAMETER);
-        } catch (ExceptionNotFound $e) {
-            try {
-                $id = $url->getQueryPropertyValue(self::SRC_QUERY_PARAMETER);
-            } catch (ExceptionNotFound $e) {
-                throw new ExceptionBadArgument("The (" . self::MEDIA_QUERY_PARAMETER . " or " . self::SRC_QUERY_PARAMETER . ") query property is mandatory and was not present in the URL ($url)");
-            }
+        parent::buildFromTagAttributes($tagAttributes);
+
+        $id = $tagAttributes->getValueAndRemove(self::MEDIA_QUERY_PARAMETER);
+        if ($id === null) {
+            $id = $tagAttributes->getValueAndRemove(self::SRC_QUERY_PARAMETER);
         }
-        $drive = $url->getQueryPropertyValueOrDefault(DokuPath::DRIVE_ATTRIBUTE, DokuPath::MEDIA_DRIVE);
-        try {
-            $rev = $url->getQueryPropertyValue(DokuPath::REV_ATTRIBUTE);
-        } catch (ExceptionNotFound $e) {
-            $rev = null;
+        if ($id === null) {
+            throw new ExceptionBadArgument("The (" . self::MEDIA_QUERY_PARAMETER . " or " . self::SRC_QUERY_PARAMETER . ") query property is mandatory and was not defined");
         }
+
+        $drive = $tagAttributes->getValueAndRemove(DokuPath::DRIVE_ATTRIBUTE, DokuPath::MEDIA_DRIVE);
+        $rev = $tagAttributes->getValueAndRemove(DokuPath::REV_ATTRIBUTE);
         $this->path = DokuPath::create($id, $drive, $rev);
         return $this;
 
     }
 
-    public function getOriginalPath(): DokuPath
+    public
+    function getOriginalPath(): DokuPath
     {
         return $this->path;
     }
 
 
-    public function getName(): string
+    public
+    function getName(): string
     {
         return self::RAW;
     }

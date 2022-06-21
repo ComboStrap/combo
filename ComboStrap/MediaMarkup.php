@@ -139,7 +139,7 @@ class MediaMarkup
      */
     public static function createFromCallStackArray($callStackArray): MediaMarkup
     {
-        $mediaMarkup = new MediaMarkup();
+
 
         $ref = $callStackArray[self::REF_ATTRIBUTE];
         if ($ref === null) {
@@ -148,7 +148,7 @@ class MediaMarkup
                 throw new ExceptionBadArgument("The media reference was not found in the callstack array", self::CANONICAL);
             }
         }
-        $mediaMarkup->setMarkupRef($ref);
+        $mediaMarkup = self::createFromRef($ref);
 
         $linking = $callStackArray[self::LINKING_KEY];
         if ($linking !== null) {
@@ -584,12 +584,6 @@ class MediaMarkup
      */
     private function setUrl(Url $fetchUrl): MediaMarkup
     {
-
-        try {
-            $fetchUrl->addQueryParameterIfNotActualSameValue(FetchRaw::MEDIA_QUERY_PARAMETER, $this->markupRef->getPath()->getDokuwikiId());
-        } catch (ExceptionNotFound $e) {
-            // no path
-        }
 
         /**
          * Tag Attributes

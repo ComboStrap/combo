@@ -163,6 +163,9 @@ class FetchSvg extends FetchImage
         return self::createSvgEmpty()->setMarkup($markup);
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     */
     public static function createFromAttributes(TagAttributes $tagAttributes): FetchSvg
     {
         return FetchSvg::createSvgEmpty()->buildFromTagAttributes($tagAttributes);
@@ -562,14 +565,18 @@ class FetchSvg extends FetchImage
      * @throws ExceptionBadSyntax - the file is not a svg file
      * @throws ExceptionNotFound - the file was not found
      */
-    public function getFetchPath(): LocalPath
+    public function getFetchPath(): DokuPath
     {
 
         /**
          * Generated svg file cache init
          */
         $fetchCache = FetchCache::createFrom($this);
-        $files[] = $this->getOriginalPath();
+        try {
+            $files[] = $this->getOriginalPath();
+        } catch (ExceptionBadState $e) {
+            LogUtility::internalError("No original path for the svg fetcher");
+        }
         try {
             $files[] = ClassUtility::getClassPath(FetchSvg::class);
         } catch (\ReflectionException $e) {
@@ -1402,6 +1409,7 @@ class FetchSvg extends FetchImage
     public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchSvg
     {
 
+        parent::buildFromTagAttributes($tagAttributes);
         foreach (array_keys($tagAttributes->getComponentAttributes()) as $svgAttribute) {
             switch ($svgAttribute) {
                 case Dimension::WIDTH_KEY:

@@ -33,9 +33,9 @@ class FetchRaw extends FetchAbs
      */
     public static function createFetcherFromFetchUrl(Url $fetchUrl): FetchRaw
     {
-         $fetchRaw = FetchRaw::createEmpty();
-         $fetchRaw->buildFromUrl($fetchUrl);
-         return $fetchRaw;
+        $fetchRaw = FetchRaw::createEmpty();
+        $fetchRaw->buildFromUrl($fetchUrl);
+        return $fetchRaw;
     }
 
 
@@ -65,9 +65,9 @@ class FetchRaw extends FetchAbs
 
     }
 
-    function getFetchPath(): DokuPath
+    function getFetchPath(): LocalPath
     {
-        return $this->path;
+        return $this->path->toLocalPath();
     }
 
 
@@ -110,6 +110,7 @@ class FetchRaw extends FetchAbs
      */
     public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchRaw
     {
+
         parent::buildFromTagAttributes($tagAttributes);
 
         $id = $tagAttributes->getValueAndRemove(self::MEDIA_QUERY_PARAMETER);
@@ -119,7 +120,6 @@ class FetchRaw extends FetchAbs
         if ($id === null) {
             throw new ExceptionBadArgument("The (" . self::MEDIA_QUERY_PARAMETER . " or " . self::SRC_QUERY_PARAMETER . ") query property is mandatory and was not defined");
         }
-
         $drive = $tagAttributes->getValueAndRemove(DokuPath::DRIVE_ATTRIBUTE, DokuPath::MEDIA_DRIVE);
         $rev = $tagAttributes->getValueAndRemove(DokuPath::REV_ATTRIBUTE);
         $this->path = DokuPath::create($id, $drive, $rev);
@@ -127,8 +127,7 @@ class FetchRaw extends FetchAbs
 
     }
 
-    public
-    function getOriginalPath(): DokuPath
+    public function getOriginalPath(): DokuPath
     {
         return $this->path;
     }

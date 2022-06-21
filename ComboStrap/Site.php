@@ -171,6 +171,8 @@ class Site
 
             try {
                 $image = FetchSvg::createImageFetchFromId($svgLogo);
+            } catch (ExceptionNotFound $e) {
+                continue;
             } catch (ExceptionCompile $e) {
                 LogUtility::msg("The svg ($svgLogo) returns an error. {$e->getMessage()}");
                 continue;
@@ -313,7 +315,7 @@ class Site
          */
         global $conf;
         $baseUrl = $conf['baseurl'];
-        if(!empty($baseUrl)){
+        if (!empty($baseUrl)) {
             return $baseUrl;
         }
         return DOKU_URL;

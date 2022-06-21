@@ -199,7 +199,7 @@ class FetchImageRaster extends FetchImage
     }
 
 
-    function getFetchPath(): DokuPath
+    function getFetchPath(): LocalPath
     {
         throw new ExceptionRuntime("Fetch Raster image is not yet implemented");
     }

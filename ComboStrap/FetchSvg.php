@@ -113,7 +113,6 @@ class FetchSvg extends FetchImage
     public const DATA_NAME_HTML_ATTRIBUTE = "data-name";
 
 
-
     private ?ColorRgb $color = null;
     private ?string $preserveAspectRatio = null;
     private ?bool $preserveStyle = null;
@@ -564,7 +563,7 @@ class FetchSvg extends FetchImage
      * @throws ExceptionBadSyntax - the file is not a svg file
      * @throws ExceptionNotFound - the file was not found
      */
-    public function getFetchPath(): DokuPath
+    public function getFetchPath(): LocalPath
     {
 
         /**
@@ -659,26 +658,6 @@ class FetchSvg extends FetchImage
         return Mime::create(Mime::SVG);
     }
 
-    /**
-     * @return DokuPath - the path of the original svg if any
-     * @throws ExceptionBadState - the original path was not set (Case of svg string) nor any icon
-     */
-    public function getOriginalPath(): DokuPath
-    {
-
-        if (parent::getOriginalPath() !== null) {
-            return parent::getOriginalPath();
-        }
-
-        try {
-            return $this->getIconPath();
-        } catch (ExceptionCompile $e) {
-            throw new ExceptionBadState("No svg path was defined. The icon process returns the following error: {$e->getMessage()}");
-        }
-
-
-    }
-
 
     public function setRequestedColor(ColorRgb $color): FetchSvg
     {
@@ -705,21 +684,6 @@ class FetchSvg extends FetchImage
     {
         $this->preserveAspectRatio = $preserveAspectRatio;
         return $this;
-    }
-
-    /**
-     * @throws ExceptionBadArgument - if the path can not be converted to a doku path
-     * @throws ExceptionBadSyntax - the content is not a valid svg
-     * @throws ExceptionNotFound - the path was not found
-     */
-    public function setOriginalPath(Path $path): FetchSvg
-    {
-        $this->originalPath = DokuPath::createFromPath($path);
-        $this->busterOriginalPath = FileSystems::getCacheBuster($path);
-
-        return $this;
-
-
     }
 
 
@@ -1405,6 +1369,11 @@ class FetchSvg extends FetchImage
         return self::CANONICAL;
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionCompile
+     */
     public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchSvg
     {
 
@@ -1473,6 +1442,28 @@ class FetchSvg extends FetchImage
             }
 
         }
+
+        /**
+         * Icon case
+         */
+        try {
+            $iconDownload =
+                !$tagAttributes->hasAttribute(FetchRaw::MEDIA_QUERY_PARAMETER) &&
+                $this->getRequestedType() === self::ICON_TYPE
+                && $this->getRequestedName() !== null;
+            if ($iconDownload) {
+                try {
+                    $dokuPath = $this->downloadAndGetIconPath();
+                } catch (ExceptionCompile $e) {
+                    throw new ExceptionBadArgument("The svg attributes does not have a media or icon name attribute. We can't define the svg path.");
+                }
+                $iconId = $dokuPath->getDokuwikiId();
+                $tagAttributes->addComponentAttributeValue(FetchRaw::MEDIA_QUERY_PARAMETER, $iconId);
+            }
+        } catch (ExceptionNotFound $e) {
+            // no requested type or name
+        }
+
         parent::buildFromTagAttributes($tagAttributes);
         return $this;
     }
@@ -1483,7 +1474,7 @@ class FetchSvg extends FetchImage
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
      */
-    private function getIconPath(): DokuPath
+    private function downloadAndGetIconPath(): DokuPath
     {
         /**
          * It may be a Svg icon that we needs to download

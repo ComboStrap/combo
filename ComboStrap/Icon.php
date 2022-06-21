@@ -34,17 +34,15 @@ class Icon
     {
         /**
          * The svg
+         * Adding the icon type is mandatory if there is no media
          */
-        $fetchSvg = FetchSvg::createFromAttributes($tagAttributes)
-            ->setRequestedType(FetchSvg::ICON_TYPE)
-            ;
+        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY,FetchSvg::ICON_TYPE);
 
         /**
          * Icon Svg file or Icon Library
          */
-        try {
-            $name = $fetchSvg->getRequestedName();
-        } catch (ExceptionNotFound $e) {
+        $name = $tagAttributes->getValue(FetchSvg::NAME_ATTRIBUTE);
+        if($name===null){
             throw new ExceptionNotFound("A name is mandatory as attribute for an icon. It was not found.", Icon::ICON_CANONICAL_NAME);
         }
 
@@ -65,8 +63,10 @@ class Icon
                 throw new ExceptionNotExists($message, Icon::ICON_CANONICAL_NAME);
 
             }
-            $fetchSvg->setOriginalPath($mediaDokuPath)
-                ->setRequestedName($mediaDokuPath->getLastNameWithoutExtension());
+
+            $tagAttributes->addComponentAttributeValue(FetchRaw::MEDIA_QUERY_PARAMETER, $mediaDokuPath->getDokuwikiId());
+            $tagAttributes->setComponentAttributeValue(FetchSvg::NAME_ATTRIBUTE,$mediaDokuPath->getLastNameWithoutExtension());
+
 
         } catch (ExceptionNotFound $e) {
 
@@ -74,9 +74,9 @@ class Icon
              * No file extension
              * From an icon library
              */
-            $fetchSvg->setRequestedName($name);
 
         }
+        $fetchSvg = FetchSvg::createFromAttributes($tagAttributes);
 
         return (new Icon())
             ->setFetchSvg($fetchSvg)

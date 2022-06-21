@@ -634,22 +634,16 @@ class MediaMarkup
     }
 
     /**
-     * @throws ExceptionNotFound - if this is an external image
      */
     public function getPath(): DokuPath
     {
         try {
+
             return $this->getMarkupRef()->getPath();
+
         } catch (ExceptionNotFound $e) {
 
-            try {
-                return FetchRaw::createEmpty()
-                    ->buildFromUrl($this->getFetchUrl())
-                    ->getOriginalPath();
-            } catch (ExceptionBadArgument $e) {
-                throw new ExceptionNotFound("No path in the markup or in the url were found");
-            }
-
+            return $this->fetcher->getOriginalPath();
 
         }
     }
@@ -673,8 +667,6 @@ class MediaMarkup
     {
         return $this->fetcher;
     }
-
-
 
 
 }

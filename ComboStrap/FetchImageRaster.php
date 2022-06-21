@@ -263,7 +263,7 @@ class FetchImageRaster extends FetchImage
         $this->originalPath = FetchRaw::createEmpty()->buildFromUrl($url)->getFetchPath();
         $this->analyzeImageIfNeeded();
         $this->mime = FileSystems::getMime($this->originalPath);
-        $this->buildSharedImagePropertyFromFetchUrl($url);
+        parent::buildFromUrl($url);
         return $this;
 
     }

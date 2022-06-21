@@ -345,36 +345,6 @@ class TagAttributes
         return $newTagAttributes;
     }
 
-    /**
-     * Merge class name
-     * @param string $newNames - the name that we want to add
-     * @param ?string $actualNames - the actual names
-     * @return string - the class name list
-     *
-     * for instance:
-     *   * newNames = foo blue
-     *   * actual Name = foo bar
-     * return
-     *   * foo bar blue
-     */
-    static function mergeClassNames(string $newNames, ?string $actualNames): string
-    {
-        if (!is_string($newNames)) {
-            LogUtility::msg("The value ($newNames) for the `class` attribute is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-        }
-        /**
-         * It may be in the form "value1 value2"
-         */
-        $newValues = StringUtility::explodeAndTrim($newNames, " ");
-        if (!empty($actualNames)) {
-            $actualValues = StringUtility::explodeAndTrim(trim($actualNames), " ");
-        } else {
-            $actualValues = [];
-        }
-        $newValues = PluginUtility::mergeAttributes($newValues, $actualValues);
-        return implode(" ", $newValues);
-    }
-
     public static function isEmptyValue($attributeValue): bool
     {
         return empty($attributeValue) && !is_bool($attributeValue);
@@ -437,7 +407,7 @@ class TagAttributes
          * Type of data: list (class) or atomic (id)
          */
         if (in_array($attributeName, self::MULTIPLE_VALUES_ATTRIBUTES)) {
-            $this->componentAttributesCaseInsensitive[$attLower] = self::mergeClassNames($attributeValue, $actual);
+            $this->componentAttributesCaseInsensitive[$attLower] = Html::mergeClassNames($attributeValue, $actual);
         } else {
             if (!empty($actual)) {
                 LogUtility::msg("The attribute ($attLower) stores an unique value and has already a value ($actual). to set another value ($attributeValue), use the `set` operation instead", LogUtility::LVL_MSG_ERROR, self::CANONICAL);

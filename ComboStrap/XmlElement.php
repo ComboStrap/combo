@@ -138,4 +138,22 @@ class XmlElement
     {
         return $this->element->localName;
     }
+
+    public function addClass(string $class): XmlElement
+    {
+        $classes = Html::mergeClassNames($class, $this->getClass());
+        $this->element->setAttribute("class", $classes);
+        return $this;
+    }
+
+    public function setAttribute(string $name, string $value): XmlElement
+    {
+        $this->element->setAttribute($name, $value);
+        return $this;
+    }
+
+    public function hasAttribute(string $name): bool
+    {
+        return $this->element->hasAttribute($name);
+    }
 }

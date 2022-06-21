@@ -123,7 +123,7 @@ class Html
         $countExpected = count($expectedSrcSets);
         $countActual = count($actualSrcSets);
         if ($countExpected !== $countActual) {
-            throw new ExceptionNotEquals( "The expected srcSet count ($countExpected) is not the same than the actual ($countActual).");
+            throw new ExceptionNotEquals("The expected srcSet count ($countExpected) is not the same than the actual ($countActual).");
         }
         for ($i = 0; $i < $countExpected; $i++) {
             $expectedSrcSet = trim($expectedSrcSets[$i]);
@@ -161,5 +161,33 @@ class Html
         }
         $url->equals($urlActual);
 
+    }
+
+    /**
+     * Merge class name
+     * @param string $newNames - the name that we want to add
+     * @param ?string $actualNames - the actual names
+     * @return string - the class name list
+     *
+     * for instance:
+     *   * newNames = foo blue
+     *   * actual Name = foo bar
+     * return
+     *   * foo bar blue
+     */
+    public static function mergeClassNames(string $newNames, ?string $actualNames): string
+    {
+        /**
+         * It may be in the form "value1 value2"
+         */
+        $newValues = StringUtility::explodeAndTrim($newNames, " ");
+        if (!empty($actualNames)) {
+            $actualValues = StringUtility::explodeAndTrim(trim($actualNames), " ");
+        } else {
+            $actualValues = [];
+        }
+        $newValues = array_merge($actualValues, $newValues);
+        $newValues = array_unique($newValues);
+        return implode(" ", $newValues);
     }
 }

@@ -267,8 +267,13 @@ class XmlDocument
         return $this->xmlDom;
     }
 
-    public
-    function setRootAttribute($name, $value)
+    /**
+     * @param $name
+     * @param $value
+     * @return void
+     * @deprecated use {@link XmlDocument::getDocumentElement()} instead
+     */
+    public function setRootAttribute($name, $value)
     {
         if ($this->isXmlExtensionLoaded()) {
             $this->xmlDom->documentElement->setAttribute($name, $value);

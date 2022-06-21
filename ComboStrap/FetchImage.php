@@ -75,6 +75,7 @@ abstract class FetchImage extends FetchAbs
 
     }
 
+
     /**
      * @return DokuPath - just to get the id that is mandatory when adding the toc for dokuwiki compliance
      * See {@link FetchImage::addCommonImageQueryParameterToUrl()}
@@ -100,23 +101,13 @@ abstract class FetchImage extends FetchAbs
         return self::createImageFetchFromPath($dokuPath);
     }
 
-    /**
-     * Utility function to build the common image fetch processing property
-     * (e width, height, ratio)
-     * @param Url $url
-     * @return void
-     * @throws ExceptionBadArgument
-     */
-    public function buildSharedImagePropertyFromFetchUrl(Url $url)
+
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchImage
     {
-        try {
-            $requestedWidth = $url->getQueryPropertyValue(Dimension::WIDTH_KEY);
-        } catch (ExceptionNotFound $e) {
-            try {
-                $requestedWidth = $url->getQueryPropertyValue(Dimension::WIDTH_KEY_SHORT);
-            } catch (ExceptionNotFound $e) {
-                $requestedWidth = null;
-            }
+
+        $requestedWidth = $tagAttributes->getValueAndRemove(Dimension::WIDTH_KEY);
+        if ($requestedWidth === null) {
+            $requestedWidth = $tagAttributes->getValueAndRemove(Dimension::WIDTH_KEY_SHORT);
         }
         if ($requestedWidth !== null) {
             try {
@@ -126,14 +117,10 @@ abstract class FetchImage extends FetchAbs
             }
             $this->setRequestedWidth($requestedWidthInt);
         }
-        try {
-            $requestedHeight = $url->getQueryPropertyValue(Dimension::HEIGHT_KEY);
-        } catch (ExceptionNotFound $e) {
-            try {
-                $requestedHeight = $url->getQueryPropertyValue(Dimension::HEIGHT_KEY_SHORT);
-            } catch (ExceptionNotFound $e) {
-                $requestedHeight = null;
-            }
+
+        $requestedHeight = $tagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY);
+        if ($requestedHeight === null) {
+            $requestedHeight = $tagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY_SHORT);
         }
         if ($requestedHeight !== null) {
             try {
@@ -144,18 +131,16 @@ abstract class FetchImage extends FetchAbs
             $this->setRequestedHeight($requestedHeightInt);
         }
 
-        try {
-            $requestedRatio = $url->getQueryPropertyValue(Dimension::RATIO_ATTRIBUTE);
+        $requestedRatio = $tagAttributes->getValueAndRemove(Dimension::RATIO_ATTRIBUTE);
+        if ($requestedRatio !== null) {
             try {
                 $this->requestedRatio = Dimension::convertTextualRatioToNumber($requestedRatio);
             } catch (ExceptionBadSyntax $e) {
                 throw new ExceptionBadArgument("The requested ratio ($requestedRatio) is not a valid value ({$e->getMessage()})", self::CANONICAL, 0, $e);
             }
-        } catch (ExceptionNotFound $e) {
-            // ok
         }
 
-
+        return $this;
     }
 
 
@@ -230,7 +215,7 @@ abstract class FetchImage extends FetchAbs
      * to avoid layout shift
      * @throws ExceptionNotFound
      */
-    public function getRequestedAspectRatio()
+    public function getRequestedAspectRatio(): float
     {
 
         if ($this->requestedRatio !== null) {
@@ -336,11 +321,7 @@ abstract class FetchImage extends FetchAbs
          */
         try {
             $ratio = $this->getRequestedAspectRatio();
-            [$croppedWidth, $croppedHeight] = $this->getCroppingDimensionsWithRatio(
-                $ratio,
-                $this->getIntrinsicWidth(),
-                $this->getIntrinsicHeight()
-            );
+            [$croppedWidth, $croppedHeight] = $this->getCroppingDimensionsWithRatio($ratio);
             return $croppedHeight;
         } catch (ExceptionNotFound $e) {
             // no requested aspect ratio
@@ -390,11 +371,7 @@ abstract class FetchImage extends FetchAbs
          */
         try {
             $ratio = $this->getRequestedAspectRatio();
-            [$logicalWidthWithRatio, $logicalHeightWithRatio] = $this->getCroppingDimensionsWithRatio(
-                $ratio,
-                $this->getIntrinsicWidth(),
-                $this->getIntrinsicHeight()
-            );
+            [$logicalWidthWithRatio, $logicalHeightWithRatio] = $this->getCroppingDimensionsWithRatio($ratio);
             return $logicalWidthWithRatio;
         } catch (ExceptionNotFound $e) {
             // no ratio requested
@@ -464,19 +441,19 @@ abstract class FetchImage extends FetchAbs
      *   * the physical dimension for raster image
      *
      */
-    public function getCroppingDimensionsWithRatio(float $targetRatio, int $intrinsicWidth, int $intrinsicHeight): array
+    public function getCroppingDimensionsWithRatio(float $targetRatio): array
     {
 
         /**
          * Trying to crop on the width
          */
-        $logicalWidth = $intrinsicWidth;
+        $logicalWidth = $this->getIntrinsicWidth();
         $logicalHeight = FetchImage::round($logicalWidth / $targetRatio);
-        if ($logicalHeight > $intrinsicHeight) {
+        if ($logicalHeight > $this->getIntrinsicHeight()) {
             /**
              * Cropping by height
              */
-            $logicalHeight = $intrinsicHeight;
+            $logicalHeight = $this->getIntrinsicHeight();
             $logicalWidth = FetchImage::round($targetRatio * $logicalHeight);
         }
         return [$logicalWidth, $logicalHeight];
@@ -573,6 +550,7 @@ abstract class FetchImage extends FetchAbs
             return false;
         }
     }
+
     public function hasAspectRatioRequested(): bool
     {
         try {

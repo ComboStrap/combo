@@ -112,6 +112,7 @@ class FetchSvg extends FetchImage
     public const NAME_ATTRIBUTE = "name";
     public const DATA_NAME_HTML_ATTRIBUTE = "data-name";
 
+
     private ?DokuPath $originalPath = null;
 
 
@@ -121,6 +122,8 @@ class FetchSvg extends FetchImage
     private ?bool $preserveStyle = null;
     private ?string $requestedType = null;
     private bool $processed = false;
+    private ?float $zoomFactor = null;
+    private ?string $requestedClass = null;
 
 
     private static function createSvgEmpty(): FetchSvg
@@ -147,7 +150,9 @@ class FetchSvg extends FetchImage
      */
     public static function createSvgFromFetchUrl(Url $fetchUrl): FetchSvg
     {
-        return self::createSvgEmpty()->buildFromUrl($fetchUrl);
+        $fetchSvg = self::createSvgEmpty();
+        $fetchSvg->buildFromUrl($fetchUrl);
+        return $fetchSvg;
     }
 
     /**
@@ -521,6 +526,16 @@ class FetchSvg extends FetchImage
         } catch (ExceptionNotFound $e) {
             // no name
         }
+        try {
+            $url->addQueryParameter(Dimension::ZOOM_ATTRIBUTE, $this->getRequestedZoom());
+        } catch (ExceptionNotFound $e) {
+            // no name
+        }
+        try {
+            $url->addQueryParameter(TagAttributes::CLASS_KEY, $this->getRequestedClass());
+        } catch (ExceptionNotFound $e) {
+            // no name
+        }
 
         $this->addCommonImageQueryParameterToUrl($url);
 
@@ -554,7 +569,7 @@ class FetchSvg extends FetchImage
          * Generated svg file cache init
          */
         $fetchCache = FetchCache::createFrom($this);
-        $files[] = $this->originalPath;
+        $files[] = $this->getOriginalPath();
         try {
             $files[] = ClassUtility::getClassPath(FetchSvg::class);
         } catch (\ReflectionException $e) {
@@ -658,57 +673,6 @@ class FetchSvg extends FetchImage
 
     }
 
-    /**
-     * You can also use {@link FetchSvg::createSvgFromFetchUrl()}
-     * @throws ExceptionBadArgument - for any bad argument
-     * @throws ExceptionNotFound - if the svg file was not found
-     * @throws ExceptionBadSyntax|ExceptionBadState - if the svg is not valid
-     */
-    public function buildFromUrl(Url $url): FetchSvg
-    {
-        parent::buildFromUrl($url);
-        $originalPath = FetchRaw::createEmpty()->buildFromUrl($url)->getFetchPath();
-        $this->setOriginalPath($originalPath);
-        $this->buildSharedImagePropertyFromFetchUrl($url);
-        try {
-            $color = $url->getQueryPropertyValue(ColorRgb::COLOR);
-            // we can't have an hex in an url, we will see if this is encoded ;?
-            $this->setRequestedColor(ColorRgb::createFromString($color));
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-        try {
-            $preserveAspectRatio = $url->getQueryPropertyValue(self::REQUESTED_PRESERVE_ASPECT_RATIO_KEY);
-            $this->setRequestedPreserveAspectRatio($preserveAspectRatio);
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-        try {
-            $name = $url->getQueryPropertyValue(FetchSvg::REQUESTED_NAME_ATTRIBUTE);
-            $this->setRequestedName($name);
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-        try {
-            $preserve = $this->getFetchUrl()->getQueryPropertyValue(self::REQUESTED_PRESERVE_ATTRIBUTE);
-            if (strpos(strtolower($preserve), "style") !== false) {
-                $this->setPreserveStyle(true);
-            }
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-        try {
-            $this->requestedType = $this->getFetchUrl()->getQueryPropertyValue(TagAttributes::TYPE_KEY);
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-        return $this;
-    }
 
     public function setRequestedColor(ColorRgb $color): FetchSvg
     {
@@ -914,13 +878,13 @@ class FetchSvg extends FetchImage
 
         $this->processed = true;
 
-
-        $localTagAttributes = TagAttributes::createEmpty(self::TAG);
+        // Handy variable
+        $documentElement = $this->getXmlDocument()->getDocumentElement();
 
         /**
          * ViewBox should exist
          */
-        $viewBox = $this->getXmlDom()->documentElement->getAttribute(FetchSvg::VIEW_BOX);
+        $viewBox = $documentElement->getAttribute(FetchSvg::VIEW_BOX);
         if ($viewBox === "") {
             try {
                 $width = $this->getIntrinsicWidth();
@@ -934,7 +898,7 @@ class FetchSvg extends FetchImage
                 LogUtility::error("Svg processing stopped. Bad svg: We can't determine the height of the svg ($this) (The viewBox and the height does not exist) ", FetchSvg::CANONICAL);
                 return $this->getXmlDocument()->getXmlText();
             }
-            $this->getXmlDom()->documentElement->setAttribute(FetchSvg::VIEW_BOX, "0 0 $width $targetHeight");
+            $documentElement->setAttribute(FetchSvg::VIEW_BOX, "0 0 $width $targetHeight");
         }
 
         if ($this->getRequestedOptimizeOrDefault()) {
@@ -944,13 +908,11 @@ class FetchSvg extends FetchImage
         // Set the name (icon) attribute for test selection
         try {
             $name = $this->getRequestedNameOrDefault();
-            $this->getXmlDocument()->setRootAttribute('data-name', $name);
+            $documentElement->setAttribute('data-name', $name);
         } catch (ExceptionNotFound $e) {
             // ok no name
         }
 
-        // Handy variable
-        $documentElement = $this->getXmlDom()->documentElement;
 
         // Width requested
         try {
@@ -1032,8 +994,12 @@ class FetchSvg extends FetchImage
                     break;
             }
         }
-        // add class with svg type
-        $localTagAttributes->addClassName(StyleUtility::getStylingClassForTag(self::TAG . "-" . $requestedType));
+
+        /**
+         * A tag attributes to manage the add of style properties
+         * in the style attribute
+         */
+        $stylingAttributes = TagAttributes::createEmpty(self::TAG);
 
         /**
          * Dimension and other attributes by requested type
@@ -1064,15 +1030,15 @@ class FetchSvg extends FetchImage
                     $targetHeight = $this->getTargetHeight();
                 }
                 if ($targetWidth !== $targetHeight) {
-                    LogUtility::warning("An icon or tile is defined as having the same dimension but the width ($targetWidth) is different from the height ($targetHeight).");
+                    LogUtility::info("An icon or tile is defined as having the same dimension but the width ($targetWidth) is different from the height ($targetHeight). The icon will be cropped.");
                 }
 
                 /**
                  * Dimension
                  * The default unit on attribute is pixel, no need to add it to the number as in CSS
                  */
-                $localTagAttributes->addOutputAttributeValue("width", $targetWidth);
-                $localTagAttributes->addOutputAttributeValue("height", $targetHeight);
+                $documentElement->setAttribute("width", $targetWidth)
+                    ->setAttribute("height", $targetHeight);
                 break;
             default:
                 /**
@@ -1082,7 +1048,7 @@ class FetchSvg extends FetchImage
                  * Responsive SVG
                  */
                 try {
-                    $this->getRequestedPreserveAspectRatio();
+                    $aspectRatio = $this->getRequestedPreserveAspectRatio();
                 } catch (ExceptionNotFound $e) {
                     /**
                      *
@@ -1091,9 +1057,9 @@ class FetchSvg extends FetchImage
                      * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio
                      * Default is xMidYMid meet
                      */
-                    $defaultAspectRatio = PluginUtility::getConfValue(FetchSvg::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
-                    $localTagAttributes->addOutputAttributeValue("preserveAspectRatio", $defaultAspectRatio);
+                    $aspectRatio = PluginUtility::getConfValue(FetchSvg::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
                 }
+                $documentElement->setAttribute("preserveAspectRatio", $aspectRatio);
 
                 /**
                  * Note on dimension width and height
@@ -1106,8 +1072,8 @@ class FetchSvg extends FetchImage
                  * Adapt to the container by default
                  * Height `auto` and not `100%` otherwise you get a layout shift
                  */
-                $localTagAttributes->addStyleDeclarationIfNotSet("width", "100%");
-                $localTagAttributes->addStyleDeclarationIfNotSet("height", "auto");
+                $stylingAttributes->addStyleDeclarationIfNotSet("width", "100%");
+                $stylingAttributes->addStyleDeclarationIfNotSet("height", "auto");
 
 
                 if ($requestedWidth !== null) {
@@ -1118,19 +1084,19 @@ class FetchSvg extends FetchImage
                      * and is not overwritten
                      */
                     try {
-                        $widthInPixel = Dimension::toPixelValue($requestedWidth);
+                        $widthInPixel = ConditionalLength::createFromString($requestedWidth)->toPixelNumber();
                     } catch (ExceptionCompile $e) {
                         LogUtility::msg("The requested width $requestedWidth could not be converted to pixel. It returns the following error ({$e->getMessage()}). Processing was stopped");
                         return $this->getXmlDocument()->getXmlText();
                     }
-                    $localTagAttributes->addStyleDeclarationIfNotSet("max-width", "{$widthInPixel}px");
+                    $stylingAttributes->addStyleDeclarationIfNotSet("max-width", "{$widthInPixel}px");
 
                     /**
                      * To have an internal width
                      * and not shrink on the css property `width: auto !important;`
                      * of a table
                      */
-                    $this->getXmlDocument()->setRootAttribute("width", $widthInPixel);
+                    $documentElement->setAttribute("width", $widthInPixel);
 
                 }
 
@@ -1200,7 +1166,7 @@ class FetchSvg extends FetchImage
                     /**
                      * Note: if fill was not set, the default color would be black
                      */
-                    $localTagAttributes->addOutputAttributeValue("fill", FetchSvg::CURRENT_COLOR);
+                    $documentElement->setAttribute("fill", FetchSvg::CURRENT_COLOR);
 
                 }
 
@@ -1270,7 +1236,7 @@ class FetchSvg extends FetchImage
 
                             if (!$isDoubleColor) {
 
-                                $localTagAttributes->addOutputAttributeValue("fill", $colorValue);
+                                $documentElement->setAttribute("fill", $colorValue);
 
                                 if ($colorValue !== FetchSvg::CURRENT_COLOR) {
                                     /**
@@ -1303,11 +1269,11 @@ class FetchSvg extends FetchImage
                                     $firsFillElement->setAttribute("fill", $colorValue);
                                 }
                             }
-
                             break;
+
                         case FetchSvg::COLOR_TYPE_STROKE_OUTLINE:
-                            $localTagAttributes->addOutputAttributeValue("fill", "none");
-                            $localTagAttributes->addOutputAttributeValue(FetchSvg::STROKE_ATTRIBUTE, $colorValue);
+                            $documentElement->setAttribute("fill", "none");
+                            $documentElement->setAttribute(FetchSvg::STROKE_ATTRIBUTE, $colorValue);
 
                             if ($colorValue !== FetchSvg::CURRENT_COLOR) {
                                 /**
@@ -1338,41 +1304,35 @@ class FetchSvg extends FetchImage
         }
 
         /**
-         * Ratio / Cropping (used for ratio cropping)
+         * Ratio / Width / Height Cropping
+         *
          * Width and height used to set the viewBox of a svg
-         * to crop it
-         * (In a raster image, there is not this distinction)
+         * to crop it (In a raster image, there is not this distinction)
          *
          * With an icon, the viewBox can be small but it can be zoomed out
          * via the {@link Dimension::WIDTH_KEY}
+         *
+         * We get a crop, it means that we need to change the viewBox
+         *
          */
-        $processedWidth = $mediaWidth;
-        $processedHeight = $mediaHeight;
-        if ($localTagAttributes->hasComponentAttribute(Dimension::RATIO_ATTRIBUTE)) {
-            // We get a crop, it means that we need to change the viewBox
-            $ratio = $localTagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
-            try {
-                $targetRatio = Dimension::convertTextualRatioToNumber($ratio);
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("The target ratio attribute ($ratio) returns the following error ({$e->getMessage()}). The svg processing was stopped");
-                return $this->getXmlDocument()->getXmlText();
-            }
-            [$processedWidth, $processedHeight] = $this->getCroppingDimensionsWithRatio($targetRatio, $mediaWidth, $mediaHeight);
+        $ratio = $this->getTargetAspectRatio();
+        [$processedWidth, $processedHeight] = $this->getCroppingDimensionsWithRatio($ratio);
+        $documentElement->setAttribute(FetchSvg::VIEW_BOX, "0 0 $processedWidth $processedHeight");
 
-            $this->getXmlDocument()->setRootAttribute(FetchSvg::VIEW_BOX, "0 0 $processedWidth $processedHeight");
-
-        }
 
         /**
          * Zoom occurs after the crop if any
          */
-        $zoomFactor = $localTagAttributes->getValueAsInteger(Dimension::ZOOM_ATTRIBUTE);
-        if ($zoomFactor === null
-            && $svgStructureType === FetchSvg::ICON_TYPE
-            && $requestedType === FetchSvg::ILLUSTRATION_TYPE
-        ) {
-            $zoomFactor = -4;
+        try {
+            $zoomFactor = $this->getRequestedZoom();
+        } catch (ExceptionNotFound $e) {
+            if ($svgStructureType === FetchSvg::ICON_TYPE && $requestedType === FetchSvg::ILLUSTRATION_TYPE) {
+                $zoomFactor = -4;
+            } else {
+                $zoomFactor = null; // 0r 1 :)
+            }
         }
+
         if ($zoomFactor !== null) {
             // icon case, we zoom out otherwise, this is ugly, the icon takes the whole place
             if ($zoomFactor < 0) {
@@ -1387,54 +1347,50 @@ class FetchSvg extends FetchImage
             $actualHeight = $mediaHeight;
             $x = -($processedWidth - $actualWidth) / 2;
             $y = -($processedHeight - $actualHeight) / 2;
-            $this->getXmlDocument()->setRootAttribute(FetchSvg::VIEW_BOX, "$x $y $processedWidth $processedHeight");
+            $documentElement->setAttribute(FetchSvg::VIEW_BOX, "$x $y $processedWidth $processedHeight");
         }
 
 
+        /**
+         * Set the attributes to the root element
+         * Svg attribute are case sensitive
+         * Styling
+         */
+        $stylingAttributeAsArray = $stylingAttributes->toHtmlArray();
+        foreach ($stylingAttributeAsArray as $name => $value) {
+            $documentElement->setAttribute($name, $value);
+        }
+
+        /**
+         * Class
+         */
+        try {
+            $class = $this->getRequestedClass();
+            $documentElement->addClass($class);
+        } catch (ExceptionNotFound $e) {
+            // no class
+        }
+        // add class with svg type
+        $documentElement
+            ->addClass(StyleUtility::getStylingClassForTag(self::TAG))
+            ->addClass(StyleUtility::getStylingClassForTag(self::TAG . "-" . $requestedType));
         // Add a class on each path for easy styling
         try {
             $name = $this->getRequestedNameOrDefault();
-            $svgPaths = $this->getXmlDocument()->xpath("//*[local-name()='path']");
+            $svgPaths = $documentElement->querySelectorAll('path');
             for ($i = 0;
-                 $i < $svgPaths->length;
+                 $i < count($svgPaths);
                  $i++) {
-
+                $element = $svgPaths[$i];
                 $stylingClass = $name . "-" . $i;
-                $this->getXmlDocument()->addAttributeValue("class", $stylingClass, $svgPaths[$i]);
+                $element->addClass($stylingClass);
             }
         } catch (ExceptionNotFound $e) {
             // no name
         }
 
-
-        /**
-         * Svg attribute are case sensitive
-         * but not the component attribute key
-         * we get the value and set it then as HTML to have the good casing
-         * on this attribute
-         */
-        $caseSensitives = ["preserveAspectRatio"];
-        foreach ($caseSensitives as $caseSensitive) {
-            if ($localTagAttributes->hasComponentAttribute($caseSensitive)) {
-                $aspectRatio = $localTagAttributes->getValueAndRemove($caseSensitive);
-                $localTagAttributes->addOutputAttributeValue($caseSensitive, $aspectRatio);
-            }
-        }
-
-        /**
-         * Set the attributes to the root
-         */
-        $toHtmlArray = $localTagAttributes->toHtmlArray();
-        foreach ($toHtmlArray as $name => $value) {
-            if (in_array($name, TagAttributes::MULTIPLE_VALUES_ATTRIBUTES)) {
-                $actualValue = $this->getXmlDocument()->getRootAttributeValue($name);
-                if ($actualValue !== null) {
-                    $value = TagAttributes::mergeClassNames($value, $actualValue);
-                }
-            }
-            $this->getXmlDocument()->setRootAttribute($name, $value);
-        }
         return $this;
+
     }
 
 
@@ -1443,16 +1399,20 @@ class FetchSvg extends FetchImage
         return self::CANONICAL;
     }
 
-    private function buildFromTagAttributes(TagAttributes $tagAttributes): FetchSvg
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchSvg
     {
 
         foreach (array_keys($tagAttributes->getComponentAttributes()) as $svgAttribute) {
             switch ($svgAttribute) {
                 case Dimension::WIDTH_KEY:
                 case Dimension::HEIGHT_KEY:
+                    /**
+                     * Length may be defined with CSS unit
+                     * https://www.w3.org/TR/SVG2/coords.html#Units
+                     */
                     $value = $tagAttributes->getValueAndRemove($svgAttribute);
                     try {
-                        $lengthInt = DataType::toInteger($value);
+                        $lengthInt = ConditionalLength::createFromString($value)->toPixelNumber();
                     } catch (ExceptionBadArgument $e) {
                         LogUtility::error("The $svgAttribute value ($value) of the svg ($this) is not an integer", self::CANONICAL);
                         continue 2;
@@ -1463,7 +1423,7 @@ class FetchSvg extends FetchImage
                         $this->setRequestedHeight($lengthInt);
                     }
                     continue 2;
-                case Dimension::RATIO_ATTRIBUTE:
+                case Dimension::ZOOM_ATTRIBUTE;
                     $value = $tagAttributes->getValueAndRemove($svgAttribute);
                     try {
                         $lengthFloat = DataType::toFloat($value);
@@ -1471,7 +1431,7 @@ class FetchSvg extends FetchImage
                         LogUtility::error("The $svgAttribute value ($value) of the svg ($this) is not a float", self::CANONICAL);
                         continue 2;
                     }
-                    $this->setRequestedAspectRatio($lengthFloat);
+                    $this->setRequestedZoom($lengthFloat);
                     continue 2;
                 case ColorRgb::COLOR:
                     $value = $tagAttributes->getValueAndRemove($svgAttribute);
@@ -1500,9 +1460,14 @@ class FetchSvg extends FetchImage
                     $value = $tagAttributes->getValueAndRemove($svgAttribute);
                     $this->setRequestedName($value);
                     continue 2;
+                case TagAttributes::CLASS_KEY:
+                    $value = $tagAttributes->getValueAndRemove($svgAttribute);
+                    $this->setRequestedClass($value);
+                    continue 2;
             }
 
         }
+        parent::buildFromTagAttributes($tagAttributes);
         return $this;
     }
 
@@ -1576,5 +1541,41 @@ class FetchSvg extends FetchImage
         } catch (ExceptionNotFound $e) {
             return true;
         }
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getRequestedZoom(): float
+    {
+        $zoom = $this->zoomFactor;
+        if ($zoom === null) {
+            throw new ExceptionNotFound("No zoom requested");
+        }
+        return $zoom;
+    }
+
+    public function setRequestedZoom(float $zoomFactor): FetchSvg
+    {
+        $this->zoomFactor = $zoomFactor;
+        return $this;
+    }
+
+    public function setRequestedClass(string $value): FetchSvg
+    {
+        $this->requestedClass = $value;
+        return $this;
+
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getRequestedClass(): string
+    {
+        if ($this->requestedClass === null) {
+            throw new ExceptionNotFound("No class was set");
+        }
+        return $this->requestedClass;
     }
 }

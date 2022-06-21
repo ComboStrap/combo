@@ -60,6 +60,14 @@ class Aliases extends MetadataTabular
     }
 
     /**
+     * @return Alias[]
+     */
+    public function getAliases(): array
+    {
+        return $this->aliases;
+    }
+
+    /**
      * @param array|null $aliasesPersistentValues
      * return Alias[]
      */
@@ -217,7 +225,7 @@ class Aliases extends MetadataTabular
     }
 
 
-    public function getValue(): ?array
+    public function getValue(): array
     {
         $this->buildCheck();
 

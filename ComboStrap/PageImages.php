@@ -158,8 +158,9 @@ class PageImages extends MetadataTabular
     {
         $this->buildCheck();
 
-        $rows = parent::getValue();
-        if ($rows === null) {
+        try {
+            $rows = parent::getValue();
+        } catch (ExceptionNotFound $e) {
             return [];
         }
         $pageImages = [];
@@ -257,7 +258,7 @@ class PageImages extends MetadataTabular
     private function checkImageExistence()
     {
         foreach ($this->getValueAsPageImages() as $pageImage) {
-            if (!$pageImage->getImage()->exists()) {
+            if (!FileSystems::exists($pageImage->getImage()->getOriginalPath())) {
                 throw new ExceptionCompile("The image ({$pageImage->getImage()}) does not exist", $this->getCanonical());
             }
         }
@@ -283,9 +284,11 @@ class PageImages extends MetadataTabular
 
         $pageImagePath = null;
         // Not really the default value but yeah
-        $firstImage = FirstImage::createForPage($this->getResource())->getValue();
-        if ($firstImage !== null) {
+        try {
+            $firstImage = FirstImage::createForPage($this->getResource())->getValue();
             $pageImagePath = PageImagePath::createFromParent($this)->buildFromStoreValue($firstImage);
+        } catch (ExceptionNotFound $e) {
+            // no first image
         }
         $pageImageUsage = PageImageUsage::createFromParent($this)->buildFromStoreValue([PageImageUsage::DEFAULT]);
         return [

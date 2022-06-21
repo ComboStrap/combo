@@ -57,10 +57,18 @@ interface Fetch
     public function getMime(): Mime;
 
     /**
+     * A convenient way to build a fetcher from a URL
+     * This method calls the function {@link Fetch::buildFromTagAttributes()}
      * @param Url $url
      * @return Fetch
      */
     public function buildFromUrl(Url $url): Fetch;
+
+    /**
+     * @param TagAttributes $tagAttributes - the attributes
+     * @return Fetch
+     */
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): Fetch;
 
     /**
      * @throws ExceptionNotFound

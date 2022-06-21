@@ -120,13 +120,26 @@ abstract class FetchAbs implements Fetch
      */
     public function buildFromUrl(Url $url): Fetch
     {
-        try {
-            $cache = $url->getQueryPropertyValue(self::CACHE_KEY);
-            $this->setRequestedCache($cache);
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
+        $query = $url->getQuery();
+        $tagAttributes = TagAttributes::createFromCallStackArray($query);
+        $this->buildFromTagAttributes($tagAttributes);
+
         return $this;
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): Fetch
+    {
+
+        $cache = $tagAttributes->getValueAndRemove(self::CACHE_KEY);
+        if ($cache !== null) {
+            $this->setRequestedCache($cache);
+        }
+
+        return $this;
+
     }
 
     /**

@@ -34,12 +34,13 @@ abstract class MetadataTabular extends Metadata
     /**
      * @return array - the rows in associate array format
      * where the identifier value is the key
+     * @throws ExceptionNotFound
      */
-    public function getValue(): ?array
+    public function getValue(): array
     {
         $this->buildCheck();
         if ($this->rows === null) {
-            return null;
+            throw new ExceptionNotFound("No tabular data found");
         }
         return $this->rows;
     }

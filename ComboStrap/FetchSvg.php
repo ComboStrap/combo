@@ -123,7 +123,7 @@ class FetchSvg extends FetchImage
     private bool $processed = false;
 
 
-    public static function createSvgEmpty(): FetchSvg
+    private static function createSvgEmpty(): FetchSvg
     {
         return new FetchSvg();
     }
@@ -143,10 +143,19 @@ class FetchSvg extends FetchImage
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
+     * @throws ExceptionBadState
      */
     public static function createSvgFromFetchUrl(Url $fetchUrl): FetchSvg
     {
         return self::createSvgEmpty()->buildFromUrl($fetchUrl);
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    public static function createSvgFromMarkup(string $markup): FetchSvg
+    {
+        return self::createSvgEmpty()->setMarkup($markup);
     }
 
     /**
@@ -645,9 +654,10 @@ class FetchSvg extends FetchImage
     }
 
     /**
+     * You can also use {@link FetchSvg::createSvgFromFetchUrl()}
      * @throws ExceptionBadArgument - for any bad argument
      * @throws ExceptionNotFound - if the svg file was not found
-     * @throws ExceptionBadSyntax - if the svg is not valid
+     * @throws ExceptionBadSyntax|ExceptionBadState - if the svg is not valid
      */
     public function buildFromUrl(Url $url): FetchSvg
     {
@@ -871,7 +881,7 @@ class FetchSvg extends FetchImage
     /**
      * @throws ExceptionBadSyntax
      */
-    public function setMarkup(string $markup): FetchSvg
+    private function setMarkup(string $markup): FetchSvg
     {
         $this->xmlDocument = XmlDocument::createXmlDocFromMarkup($markup);
         return $this;

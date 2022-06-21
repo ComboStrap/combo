@@ -113,11 +113,8 @@ class FetchSvg extends FetchImage
     public const DATA_NAME_HTML_ATTRIBUTE = "data-name";
 
 
-    private ?DokuPath $originalPath = null;
-
 
     private ?ColorRgb $color = null;
-    private string $buster;
     private ?string $preserveAspectRatio = null;
     private ?bool $preserveStyle = null;
     private ?string $requestedType = null;
@@ -144,9 +141,6 @@ class FetchSvg extends FetchImage
 
     /**
      * @throws ExceptionBadArgument
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionNotFound
-     * @throws ExceptionBadState
      */
     public static function createSvgFromFetchUrl(Url $fetchUrl): FetchSvg
     {
@@ -539,6 +533,11 @@ class FetchSvg extends FetchImage
         } catch (ExceptionNotFound $e) {
             // no name
         }
+        try {
+            $url->addQueryParameter(TagAttributes::TYPE_KEY, $this->getRequestedType());
+        } catch (ExceptionNotFound $e) {
+            // no name
+        }
 
         $this->addCommonImageQueryParameterToUrl($url);
 
@@ -667,8 +666,8 @@ class FetchSvg extends FetchImage
     public function getOriginalPath(): DokuPath
     {
 
-        if ($this->originalPath !== null) {
-            return $this->originalPath;
+        if (parent::getOriginalPath() !== null) {
+            return parent::getOriginalPath();
         }
 
         try {
@@ -1409,7 +1408,6 @@ class FetchSvg extends FetchImage
     public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchSvg
     {
 
-        parent::buildFromTagAttributes($tagAttributes);
         foreach (array_keys($tagAttributes->getComponentAttributes()) as $svgAttribute) {
             switch ($svgAttribute) {
                 case Dimension::WIDTH_KEY:
@@ -1452,7 +1450,7 @@ class FetchSvg extends FetchImage
                     $this->setRequestedColor($color);
                     continue 2;
                 case TagAttributes::TYPE_KEY:
-                    $value = $tagAttributes->getValueAndRemove($svgAttribute);
+                    $value = $tagAttributes->getValue($svgAttribute);
                     $this->setRequestedType($value);
                     continue 2;
                 case self::REQUESTED_PRESERVE_ATTRIBUTE:

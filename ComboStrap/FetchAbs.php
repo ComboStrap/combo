@@ -39,6 +39,7 @@ abstract class FetchAbs implements Fetch
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
      * @throws ExceptionNotFound
+     * @throws ExceptionBadState
      */
     public static function createFetcherFromFetchUrl(Url $fetchUrl): Fetch
     {

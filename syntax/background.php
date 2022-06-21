@@ -3,6 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Background;
+use ComboStrap\FetchSvg;
 use ComboStrap\MediaMarkup;
 use ComboStrap\FetchAbs;
 use ComboStrap\FetchCache;
@@ -14,6 +15,7 @@ use ComboStrap\MediaLink;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Position;
+use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
 
@@ -176,6 +178,22 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                         $imageAttribute = $actual->getAttributes();
                         if ($tagName == syntax_plugin_combo_media::TAG) {
                             $backgroundImageAttribute = Background::fromMediaToBackgroundImageStackArray($imageAttribute);
+
+                            /**
+                             * Hack for tile svg
+                             */
+                            $fill = $openingTag->getAttribute(Background::BACKGROUND_FILL);
+                            if ($fill === FetchSvg::TILE_TYPE) {
+                                $ref = $backgroundImageAttribute[MediaMarkup::REF_ATTRIBUTE];
+                                if (!str_contains($ref, TagAttributes::TYPE_KEY) && str_contains($ref, "svg")) {
+                                    if (str_contains($ref, "?")) {
+                                        $ref = "$ref&type=$fill";
+                                    } else {
+                                        $ref = "$ref?type=$fill";
+                                    }
+                                }
+                                $backgroundImageAttribute[MediaMarkup::REF_ATTRIBUTE] = $ref;
+                            }
                         } else {
                             /**
                              * As seen in {@link Doku_Handler::media()}
@@ -287,7 +305,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
          * There is two state (special and exit)
          * Go to the opening call if in exit
          */
-        if($state== DOKU_LEXER_EXIT) {
+        if ($state == DOKU_LEXER_EXIT) {
             $callStack->moveToEnd();
             $callStack->moveToPreviousCorrespondingOpeningCall();
         }

@@ -62,9 +62,6 @@ class FetchImageRaster extends FetchImage
 
     /**
      * @throws ExceptionBadArgument
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionNotExists
-     * @throws ExceptionNotFound
      */
     public static function createRasterFromFetchUrl(Url $fetchUrl): FetchImageRaster
     {
@@ -124,35 +121,28 @@ class FetchImageRaster extends FetchImage
     }
 
 
-    public function getFetchUrl(Url $url = null): Url
-    {
-
-        $url = parent::getFetchUrl($url);
-        $this->addCommonImageQueryParameterToUrl($url);
-        return $url;
-
-    }
-
-
     /**
-     * We overwrite the {@link FetchImage::getTargetWidth()}
+     * We overwrite the {@link FetchImage::getRequestedWidth()}
      * because we don't scale up for raster image
      * to not lose quality.
      *
      * @return int
+     * @throws ExceptionNotFound
      */
     public
-    function getTargetWidth(): int
+    function getRequestedWidth(): int
     {
 
-        try {
-            $requestedWidth = $this->getRequestedWidth();
-        } catch (ExceptionNotFound $e) {
-            return parent::getTargetWidth();
-        }
+        /**
+         * Test, requested width should not be bigger than the media Height
+         * If this is the case, we return the media width
+         */
 
+        $requestedWidth = parent::getRequestedWidth();
 
-        // it should not be bigger than the media Height
+        /**
+         * A width was requested
+         */
         $mediaWidth = $this->getIntrinsicWidth();
         if ($requestedWidth > $mediaWidth) {
             global $ID;
@@ -165,7 +155,7 @@ class FetchImageRaster extends FetchImage
             return $mediaWidth;
         }
 
-        return parent::getTargetWidth();
+        return $requestedWidth;
 
     }
 

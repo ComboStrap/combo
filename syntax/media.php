@@ -14,6 +14,7 @@ use ComboStrap\FetchAbs;
 use ComboStrap\FileSystems;
 use ComboStrap\FirstImage;
 use ComboStrap\LogUtility;
+use ComboStrap\MarkupRef;
 use ComboStrap\MediaLink;
 use ComboStrap\MediaMarkup;
 use ComboStrap\Metadata;
@@ -95,7 +96,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      */
     public static function updateStatistics($attributes, renderer_plugin_combo_analytics $renderer)
     {
-        $markupUrlString = $attributes[MediaMarkup::REF_ATTRIBUTE];
+        $markupUrlString = $attributes[MarkupRef::REF_ATTRIBUTE];
         $renderer->stats[AnalyticsDocument::MEDIA_COUNT]++;
         $markupUrl = MediaMarkup::createFromRef($markupUrlString);
         switch ($markupUrl->getInternalExternalType()) {
@@ -356,14 +357,17 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      *
      * @param array $attributes
      * @param Doku_Renderer_metadata $renderer
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
      */
     static public function registerImageMeta(array $attributes, Doku_Renderer_metadata $renderer)
     {
         try {
             $mediaMarkup = MediaMarkup::createFromCallStackArray($attributes);
-        } catch (ExceptionBadArgument $e) {
+        } catch (ExceptionNotFound|ExceptionBadArgument|ExceptionBadSyntax $e) {
             LogUtility::internalError("We can't register the media metadata. Error: {$e->getMessage()}");
-            return;
+            throw $e;
         }
         try {
             $label = $mediaMarkup->getLabel();

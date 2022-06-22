@@ -61,7 +61,6 @@ class MediaMarkup
      */
     public const CONF_DEFAULT_LINKING = "defaultImageLinking";
 
-    const REF_ATTRIBUTE = "ref";
     const CANONICAL = "media";
 
     /**
@@ -141,7 +140,7 @@ class MediaMarkup
     {
 
 
-        $ref = $callStackArray[self::REF_ATTRIBUTE];
+        $ref = $callStackArray[MarkupRef::REF_ATTRIBUTE];
         if ($ref === null) {
             $ref = $callStackArray[MediaMarkup::DOKUWIKI_SRC];
             if ($ref === null) {
@@ -364,7 +363,7 @@ class MediaMarkup
          * (ie no linking in heading , ...)
          */
         $attributes[MediaMarkup::LINKING_KEY] = null;
-        $attributes[MediaMarkup::REF_ATTRIBUTE] = $this->markupRef->getRef();
+        $attributes[MarkupRef::REF_ATTRIBUTE] = $this->markupRef->getRef();
         $attributes[Align::ALIGN_ATTRIBUTE] = $this->align;
         $attributes[TagAttributes::TITLE_KEY] = $this->label;
         return $attributes;

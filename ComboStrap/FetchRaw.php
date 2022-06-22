@@ -111,8 +111,6 @@ class FetchRaw extends FetchAbs
     public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchRaw
     {
 
-        parent::buildFromTagAttributes($tagAttributes);
-
         $id = $tagAttributes->getValueAndRemove(self::MEDIA_QUERY_PARAMETER);
         if ($id === null) {
             $id = $tagAttributes->getValueAndRemove(self::SRC_QUERY_PARAMETER);
@@ -123,6 +121,8 @@ class FetchRaw extends FetchAbs
         $drive = $tagAttributes->getValueAndRemove(DokuPath::DRIVE_ATTRIBUTE, DokuPath::MEDIA_DRIVE);
         $rev = $tagAttributes->getValueAndRemove(DokuPath::REV_ATTRIBUTE);
         $this->path = DokuPath::create($id, $drive, $rev);
+
+        parent::buildFromTagAttributes($tagAttributes);
         return $this;
 
     }

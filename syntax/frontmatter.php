@@ -24,6 +24,9 @@ use ComboStrap\Aliases;
 use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
+use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\MarkupRef;
 use ComboStrap\MediaMarkup;
 use ComboStrap\EditButton;
 use ComboStrap\EditButtonManager;
@@ -231,7 +234,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 $databasePage = $parsedPage->getDatabasePage();
                 $databasePage->replicateMetaAttributes();
             } catch (Exception $e) {
-                if(PluginUtility::isDevOrTest()){
+                if (PluginUtility::isDevOrTest()) {
                     /** @noinspection PhpUnhandledExceptionInspection */
                     throw $e;
                 }
@@ -327,9 +330,13 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                         ->buildFromStoreValue($value);
                     $pageImagesObject = $pageImages->getValueAsPageImages();
                     foreach ($pageImagesObject as $imageValue) {
-                        $imagePath = $imageValue->getImage()->getOriginalPath()->toAbsolutePath()->toPathString();
-                        $attributes = [PagePath::PROPERTY_NAME => $imagePath];
-                        syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
+                        $dokuwikiId = $imageValue->getImage()->getOriginalPath()->getDokuwikiId();
+                        $attributes = [MarkupRef::REF_ATTRIBUTE => ":$dokuwikiId"];
+                        try {
+                            syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
+                        } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
+                            LogUtility::internalError("The image registration did not work. Error: {$e->getMessage()}");
+                        }
                     }
 
                 }
@@ -360,7 +367,13 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         if (is_array($value) && isset($value[PageImagePath::getPersistentName()])) {
             $path = $value[PageImagePath::getPersistentName()];
         }
-        $media = syntax_plugin_combo_media::parseMediaMatch($path);
+        try {
+            $media = MediaMarkup::createFromRef($path);
+        } catch (ExceptionBadArgument|ExceptionNotFound|ExceptionBadSyntax $e) {
+            LogUtility::internalError("The media image statistics could not be created. The media markup could not be instantiated with the path ($path). Error:{$e->getMessage()}");
+            return;
+        }
+
         $attributes = $media->toCallStackArray();
         syntax_plugin_combo_media::updateStatistics($attributes, $renderer);
 

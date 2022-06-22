@@ -128,11 +128,8 @@ class FetchSvg extends FetchImage
     }
 
     /**
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionBadArgument
-     * @throws ExceptionNotFound
      */
-    public static function createSvgFromPath(Path $path): FetchSvg
+    public static function createSvgFromPath(DokuPath $path): FetchSvg
     {
         return self::createSvgEmpty()
             ->setOriginalPath($path);
@@ -495,17 +492,10 @@ class FetchSvg extends FetchImage
      *
      * @return Url - the fetch url
      *
-     * @throws ExceptionBadState - if the svg could not be found
      */
     public function getFetchUrl(Url $url = null): Url
     {
 
-        try {
-            $dokuPath = $this->getOriginalPath();
-        } catch (ExceptionCompile $e) {
-            throw new ExceptionBadState("No original path could be determined. Error: {$e->getMessage()}");
-        }
-        $url = FetchRaw::createFromPath($dokuPath)->getFetchUrl($url);
         $url = parent::getFetchUrl($url);
         try {
             $url->addQueryParameter(ColorRgb::COLOR, $this->getRequestedColor()->toCssValue());
@@ -537,8 +527,6 @@ class FetchSvg extends FetchImage
         } catch (ExceptionNotFound $e) {
             // no name
         }
-
-        $this->addCommonImageQueryParameterToUrl($url);
 
         return $url;
 
@@ -722,13 +710,8 @@ class FetchSvg extends FetchImage
     public
     function __toString()
     {
-        if ($this->originalPath !== null) {
-            return $this->originalPath->__toString();
-        }
-        if ($this->requestedName !== null) {
-            return $this->requestedName;
-        }
-        return "Anonymous Svg";
+        return $this->getOriginalPath()->__toString();
+
     }
 
 

@@ -44,6 +44,7 @@ class MarkupRef
     public const INTERWIKI_URI = 'interwiki';
     public const WIKI_URI = 'internal';
     public const VARIABLE_URI = 'internal_template';
+    public const REF_ATTRIBUTE = "ref";
     private static ?array $authorizedSchemes = null;
 
     /**

@@ -44,12 +44,10 @@ class TagAttributes
     const STRICT = "strict";
 
     /**
-     * The logical attributes that:
-     *   * are not becoming HTML attributes
-     *   * are never deleted
+     * The logical attributes that are not becoming HTML attributes
      * (ie internal reserved words)
      *
-     * TODO: they should be advertised by the syntax component
+     * TODO: They should be advertised by the syntax component
      */
     const RESERVED_ATTRIBUTES = [
         self::SCRIPT_KEY, // no script attribute for security reason
@@ -575,8 +573,8 @@ class TagAttributes
                 continue;
             }
 
-            // Reserved attribute
-            if (!in_array($key, self::RESERVED_ATTRIBUTES)) {
+            // We only add the common HTML attribute
+            if (in_array($key, [TagAttributes::CLASS_KEY, TagAttributes::STYLE_ATTRIBUTE])) {
                 $tempHtmlArray[$key] = $value;
             }
 
@@ -699,6 +697,8 @@ class TagAttributes
      * @param $attributeName
      * @param $default
      * @return string|array|null
+     *
+     * TODO: we should create a new response object and not deleting data from the request
      */
     public function getValueAndRemove($attributeName, $default = null)
     {
@@ -711,10 +711,9 @@ class TagAttributes
                 /**
                  * Don't remove for instance the `type`
                  * because it may be used elsewhere
+                 * TODO: we should create a new response object and not deleting data from the request
                  */
                 unset($this->componentAttributesCaseInsensitive[$attributeName]);
-            } else {
-                LogUtility::msg("Internal: The attribute $attributeName is a reserved word and cannot be removed. Use the get function instead", LogUtility::LVL_MSG_WARNING, "support");
             }
 
         }

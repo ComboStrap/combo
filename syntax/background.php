@@ -4,6 +4,7 @@
 // must be run within Dokuwiki
 use ComboStrap\Background;
 use ComboStrap\FetchSvg;
+use ComboStrap\MarkupRef;
 use ComboStrap\MediaMarkup;
 use ComboStrap\FetchAbs;
 use ComboStrap\FetchCache;
@@ -184,7 +185,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                              */
                             $fill = $openingTag->getAttribute(Background::BACKGROUND_FILL);
                             if ($fill === FetchSvg::TILE_TYPE) {
-                                $ref = $backgroundImageAttribute[MediaMarkup::REF_ATTRIBUTE];
+                                $ref = $backgroundImageAttribute[MarkupRef::REF_ATTRIBUTE];
                                 if (!str_contains($ref, TagAttributes::TYPE_KEY) && str_contains($ref, "svg")) {
                                     if (str_contains($ref, "?")) {
                                         $ref = "$ref&type=$fill";
@@ -192,7 +193,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                                         $ref = "$ref?type=$fill";
                                     }
                                 }
-                                $backgroundImageAttribute[MediaMarkup::REF_ATTRIBUTE] = $ref;
+                                $backgroundImageAttribute[MarkupRef::REF_ATTRIBUTE] = $ref;
                             }
                         } else {
                             /**

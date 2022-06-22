@@ -25,6 +25,7 @@ abstract class FetchImage extends FetchRaw
     private ?int $requestedHeight = null;
 
     private ?string $requestedRatio = null;
+    private ?float $requestedRatioAsFloat = null;
 
 
     /**
@@ -40,13 +41,11 @@ abstract class FetchImage extends FetchRaw
 
 
     /**
-     * @param Path $path
+     * @param DokuPath $path
      * @return FetchImageRaster|FetchSvg
      * @throws ExceptionBadArgument - if the path is not an image
-     * @throws ExceptionBadSyntax - if the image is badly encoded
-     * @throws ExceptionNotFound - if the mime is unknown
      */
-    public static function createImageFetchFromPath(Path $path)
+    public static function createImageFetchFromPath(DokuPath $path)
     {
 
         try {
@@ -76,7 +75,6 @@ abstract class FetchImage extends FetchRaw
     }
 
 
-
     /**
      * @param string $imageId
      * @param string|null $rev
@@ -91,11 +89,55 @@ abstract class FetchImage extends FetchRaw
         return self::createImageFetchFromPath($dokuPath);
     }
 
+    public function getFetchUrl(Url $url = null): Url
+    {
+
+        /**
+         * Should be called first to build the original path
+         */
+        $url = parent::getFetchUrl($url);
+
+        try {
+            $requestedWidth = $this->getRequestedWidth();
+            $url->addQueryParameterIfNotPresent(Dimension::WIDTH_KEY_SHORT, $requestedWidth);
+        } catch (ExceptionNotFound $e) {
+            // no width ok
+            $requestedWidth = null;
+        }
+
+        try {
+            $requestedHeight = $this->getRequestedHeight();
+            $url->addQueryParameterIfNotPresent(Dimension::HEIGHT_KEY_SHORT, $requestedHeight);
+        } catch (ExceptionNotFound $e) {
+            // no height ok
+            $requestedHeight = null;
+        }
+
+        try {
+            $ratio = $this->getRequestedAspectRatio();
+            $url->addQueryParameterIfNotPresent(Dimension::RATIO_ATTRIBUTE, $ratio);
+        } catch (ExceptionNotFound $e) {
+            // no width ok
+        }
+
+        /**
+         * Dokuwiki Conformance
+         */
+        if ($requestedWidth !== null || $requestedHeight !== null) {
+
+            $id = $this->getOriginalPath()->getDokuwikiId();
+            $token = media_get_token($id, $requestedWidth, $requestedHeight);
+            $url->addQueryParameter(self::TOK, $token);
+        }
+
+        return $url;
+
+    }
+
 
     public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchImage
     {
 
-        parent::buildFromTagAttributes($tagAttributes);
         $requestedWidth = $tagAttributes->getValueAndRemove(Dimension::WIDTH_KEY);
         if ($requestedWidth === null) {
             $requestedWidth = $tagAttributes->getValueAndRemove(Dimension::WIDTH_KEY_SHORT);
@@ -125,11 +167,12 @@ abstract class FetchImage extends FetchRaw
         $requestedRatio = $tagAttributes->getValueAndRemove(Dimension::RATIO_ATTRIBUTE);
         if ($requestedRatio !== null) {
             try {
-                $this->requestedRatio = Dimension::convertTextualRatioToNumber($requestedRatio);
+                $this->setRequestedAspectRatio($requestedRatio);
             } catch (ExceptionBadSyntax $e) {
                 throw new ExceptionBadArgument("The requested ratio ($requestedRatio) is not a valid value ({$e->getMessage()})", self::CANONICAL, 0, $e);
             }
         }
+        parent::buildFromTagAttributes($tagAttributes);
 
         return $this;
     }
@@ -196,21 +239,25 @@ abstract class FetchImage extends FetchRaw
     }
 
     /**
+     * Return the requested aspect ratio requested
+     * with the property
+     * or if the width and height were specified.
+     *
      * The Aspect ratio as explained here
      * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
-     * @return float|int
-     * false if the image is not supported
+     * @return float
+     *
      *
      * It's needed for an img tag to set the img `width` and `height` that pass the
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
      * @throws ExceptionNotFound
      */
-    public function getRequestedAspectRatio(): float
+    public function getCalculatedRequestedAspectRatioAsFloat(): float
     {
 
-        if ($this->requestedRatio !== null) {
-            return $this->requestedRatio;
+        if ($this->requestedRatioAsFloat !== null) {
+            return $this->requestedRatioAsFloat;
         }
 
         /**
@@ -297,7 +344,7 @@ abstract class FetchImage extends FetchRaw
         try {
             $width = $this->getRequestedWidth();
             try {
-                $ratio = $this->getRequestedAspectRatio();
+                $ratio = $this->getCalculatedRequestedAspectRatioAsFloat();
             } catch (ExceptionNotFound $e) {
                 $ratio = $this->getIntrinsicAspectRatio();
             }
@@ -311,7 +358,7 @@ abstract class FetchImage extends FetchRaw
          * Scaled down by ratio
          */
         try {
-            $ratio = $this->getRequestedAspectRatio();
+            $ratio = $this->getCalculatedRequestedAspectRatioAsFloat();
             [$croppedWidth, $croppedHeight] = $this->getCroppingDimensionsWithRatio($ratio);
             return $croppedHeight;
         } catch (ExceptionNotFound $e) {
@@ -347,7 +394,7 @@ abstract class FetchImage extends FetchRaw
         try {
             $height = $this->getRequestedHeight();
             try {
-                $ratio = $this->getRequestedAspectRatio();
+                $ratio = $this->getCalculatedRequestedAspectRatioAsFloat();
             } catch (ExceptionNotFound $e) {
                 $ratio = $this->getIntrinsicAspectRatio();
             }
@@ -361,7 +408,7 @@ abstract class FetchImage extends FetchRaw
          * Scaled down by Ratio
          */
         try {
-            $ratio = $this->getRequestedAspectRatio();
+            $ratio = $this->getCalculatedRequestedAspectRatioAsFloat();
             [$logicalWidthWithRatio, $logicalHeightWithRatio] = $this->getCroppingDimensionsWithRatio($ratio);
             return $logicalWidthWithRatio;
         } catch (ExceptionNotFound $e) {
@@ -464,54 +511,18 @@ abstract class FetchImage extends FetchRaw
         return $this;
     }
 
+    /**
+     * @throws ExceptionBadSyntax
+     */
     public function setRequestedAspectRatio(string $requestedRatio): FetchImage
     {
         $this->requestedRatio = $requestedRatio;
+        $this->requestedRatioAsFloat = Dimension::convertTextualRatioToNumber($requestedRatio);
         return $this;
     }
 
 
-    protected function addCommonImageQueryParameterToUrl(Url $fetchUrl)
-    {
-        try {
-            $requestedWidth = $this->getRequestedWidth();
-            $fetchUrl->addQueryParameter(Dimension::WIDTH_KEY_SHORT, $requestedWidth);
-        } catch (ExceptionNotFound $e) {
-            // ok
-            $requestedWidth = null;
-        }
-        try {
-            $requestedHeight = $this->getRequestedHeight();
-            $fetchUrl->addQueryParameter(Dimension::HEIGHT_KEY_SHORT, $requestedHeight);
-        } catch (ExceptionNotFound $e) {
-            // ok
-            $requestedHeight = null;
-        }
 
-        try {
-            if (!($requestedWidth !== null && $requestedHeight !== null)) {
-                /**
-                 * If the height and width are set, the requested ratio is not null
-                 * because it's derived, we put the ratio only if width and height are not defined
-                 */
-                $fetchUrl->addQueryParameter(Dimension::RATIO_ATTRIBUTE, $this->getRequestedAspectRatio());
-            }
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-        if ($requestedWidth !== null || $requestedHeight !== null) {
-
-            try {
-                $id = $this->getOriginalPath()->getDokuwikiId();
-            } catch (ExceptionNotFound $e) {
-                $id = "";
-            }
-            $token = media_get_token($id, $requestedWidth, $requestedHeight);
-            $fetchUrl->addQueryParameter(self::TOK, $token);
-        }
-
-    }
 
     public function __toString()
     {
@@ -545,12 +556,24 @@ abstract class FetchImage extends FetchRaw
     public function hasAspectRatioRequested(): bool
     {
         try {
-            $this->getRequestedAspectRatio();
+            $this->getCalculatedRequestedAspectRatioAsFloat();
             return true;
         } catch (ExceptionNotFound $e) {
             return false;
         }
 
+    }
+
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getRequestedAspectRatio(): string
+    {
+        if ($this->requestedRatio === null) {
+            throw new ExceptionNotFound("No ratio was specified");
+        }
+        return $this->requestedRatio;
     }
 
 }

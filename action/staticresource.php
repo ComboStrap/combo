@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotExists;
 use ComboStrap\FetchAbs;
 use ComboStrap\FetchCache;
@@ -10,6 +11,7 @@ use ComboStrap\ExceptionBadState;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\Fetch;
+use ComboStrap\FetchImageRaster;
 use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\HttpResponse;
@@ -80,10 +82,12 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     {
 
         $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
-        if (!(
-            isset($drive)
-            || isset($_GET[Fetch::FETCHER_KEY]
-            ))) {
+        $fetcher = $_GET[Fetch::FETCHER_KEY];
+        if ($drive === null && $fetcher === null) {
+            return;
+        }
+        if ($fetcher === FetchImageRaster::CANONICAL) {
+            // not yet implemented
             return;
         }
 
@@ -99,7 +103,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         }
 
         // ACLs and precondition checks
-        if ($event->data['status'] >= 400) return;
+        if ($event->data['status'] >= 400 && $event->data['status'] != HttpResponse::STATUS_NOT_FOUND) return;
 
 
         /**
@@ -108,27 +112,33 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         $fetchUrl = Url::createFromGetGlobalVariable();
 
         try {
+
             $fetcher = FetchAbs::createFetcherFromFetchUrl($fetchUrl);
             $fetchPath = $fetcher->getFetchPath();
             $event->data['file'] = $fetchPath;
             $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
             $mime = $fetcher->getMime();
             $event->data["mime"] = $mime->toString();
-            if ($mime->isImage() || in_array($mime->getExtension(), ["js", "css"])) {
+            /**
+             * TODO: set download as parameter of the fetch url
+             */
+            if ($mime->isImage() || in_array($mime->toString(), [Mime::JAVASCRIPT, Mime::CSS])) {
                 $event->data['download'] = false;
             } else {
                 $event->data['download'] = true;
             }
             $event->data['statusmessage'] = '';
-        } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists|ExceptionNotFound $e) {
+        } catch (ExceptionInternal|ExceptionBadState|ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists|ExceptionNotFound $e) {
             $event->data['file'] = DokuPath::createComboResource("images:error-bad-format.svg")->toLocalPath()->toAbsolutePath()->toPathString();
             $event->data['statusmessage'] = $e->getMessage();
             if ($e instanceof ExceptionNotFound || $e instanceof ExceptionNotExists) {
                 $event->data['status'] = HttpResponse::STATUS_NOT_FOUND;
             } elseif ($e instanceof ExceptionBadArgument) {
-                $event->data['status'] = 422; // bad request
+                $event->data['status'] = HttpResponse::STATUS_BAD_REQUEST; // bad request
             } elseif ($e instanceof ExceptionBadSyntax) {
                 $event->data['status'] = 415; // unsupported media type
+            } elseif ($e instanceof ExceptionBadState || $e instanceof ExceptionInternal) {
+                $event->data['status'] = HttpResponse::STATUS_INTERNAL_ERROR; //
             }
         }
 

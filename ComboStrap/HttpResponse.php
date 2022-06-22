@@ -17,7 +17,7 @@ class HttpResponse
     const STATUS_PERMANENT_REDIRECT = 301;
     public const STATUS_DOES_NOT_EXIST = 404;
     public const STATUS_UNSUPPORTED_MEDIA_TYPE = 415;
-    public const STATUS_BAD_REQUEST = 400;
+    public const STATUS_BAD_REQUEST = 400; // 422 ?
     public const STATUS_INTERNAL_ERROR = 500;
     public const STATUS_NOT_AUTHORIZED = 401;
     const MESSAGE_ATTRIBUTE = "message";

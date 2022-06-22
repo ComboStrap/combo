@@ -39,19 +39,24 @@ abstract class FetchAbs implements Fetch
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
      * @throws ExceptionNotFound
-     * @throws ExceptionBadState
+     * @throws ExceptionInternal
      */
     public static function createFetcherFromFetchUrl(Url $fetchUrl): Fetch
     {
 
         try {
             $fetcherAtt = $fetchUrl->getQueryPropertyValue(Fetch::FETCHER_KEY);
-            $fetchers = ClassUtility::getObjectImplementingInterface(Fetch::class);
+            try {
+                $fetchers = ClassUtility::getObjectImplementingInterface(Fetch::class);
+            } catch (\ReflectionException $e) {
+                throw new ExceptionInternal("We could read fetch classes via reflection Error: {$e->getMessage()}");
+            }
             foreach ($fetchers as $fetcher) {
                 /**
                  * @var Fetch $fetcher
                  */
                 if ($fetcher->getName() === $fetcherAtt) {
+                    $fetcher->buildFromUrl($fetchUrl);
                     return $fetcher;
                 }
             }

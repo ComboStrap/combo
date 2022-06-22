@@ -52,7 +52,7 @@ class Site
 
 
     /**
-     * @return FetcherImage[]
+     * @return FetcherTraitImage[]
      */
     public static function getLogoImages(): array
     {
@@ -62,7 +62,7 @@ class Site
             $dokuPath = DokuPath::createMediaPathFromId($logoPath);
             if (FileSystems::exists($dokuPath)) {
                 try {
-                    $logos[] = FetcherImage::createImageFetchFromPath($dokuPath);
+                    $logos[] = FetcherLocalImage::createImageFetchFromPath($dokuPath);
                 } catch (Exception $e) {
                     // The image is not valid
                     LogUtility::msg("The logo ($logoPath) is not a valid image. {$e->getMessage()}");
@@ -170,7 +170,7 @@ class Site
         foreach (self::SVG_LOGO_IDS as $svgLogo) {
 
             try {
-                $image = FetcherSvg::createImageFetchFromId($svgLogo);
+                $image = FetcherLocalImage::createImageFetchFromId($svgLogo);
             } catch (ExceptionNotFound $e) {
                 continue;
             } catch (ExceptionCompile $e) {
@@ -915,7 +915,7 @@ class Site
     /**
      * @throws ExceptionNotFound
      */
-    public static function getLogoImage(): FetcherImage
+    public static function getLogoImage(): FetcherTraitImage
     {
         $logosImages = Site::getLogoImages();
         if (empty($logosImages)) {

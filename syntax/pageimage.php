@@ -11,6 +11,7 @@ use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetcherImage;
+use ComboStrap\FetcherTraitImage;
 use ComboStrap\FetcherSvg;
 use ComboStrap\FirstImage;
 use ComboStrap\IconDownloader;
@@ -223,7 +224,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                         } catch (ExceptionNotFound $e) {
                             try {
                                 $imageFetcher = FirstImage::createForPage($parent)
-                                    ->getImageFetcher();
+                                    ->getLocalImageFetcher();
                             } catch (ExceptionNotFound $e) {
                                 continue;
                             }
@@ -234,7 +235,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                 case self::FIRST_TYPE:
                     try {
                         $imageFetcher = FirstImage::createForPage($page)
-                            ->getImageFetcher();
+                            ->getLocalImageFetcher();
                     } catch (ExceptionNotFound $e) {
                         continue 2;
                     }

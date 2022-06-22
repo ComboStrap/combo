@@ -31,16 +31,16 @@ class PageImage
     }
 
     /**
-     * @param FetcherImage|string $image
+     * @param FetcherTraitImage|string $image
      * @param Page $page
      * @return PageImage
      * @throws ExceptionCompile
      */
     public static function create($image, ResourceCombo $page): PageImage
     {
-        if (!($image instanceof FetcherImage)) {
+        if (!($image instanceof FetcherTraitImage)) {
             $dokuPath = DokuPath::createMediaPathFromId($image);
-            $image = FetcherImage::createImageFetchFromPath($dokuPath);
+            $image = FetcherLocalImage::createImageFetchFromPath($dokuPath);
         }
         return new PageImage($image, $page);
     }

@@ -633,7 +633,7 @@ class MediaMarkup
             }
         }
 
-        $this->fetcher = FetcherAbs::createFetcherFromFetchUrl($fetchUrl);
+        $this->fetcher = FetcherAbs::createLocalFromFetchUrl($fetchUrl);
         return $this;
     }
 

@@ -62,7 +62,7 @@ class FirstImage extends MetadataWikiPath
          * No image set by {@link \syntax_plugin_combo_media::registerFirstImage()}
          * Trying to see if dokuwiki has one
          */
-        if($firstImageId===null) {
+        if ($firstImageId === null) {
             $relation = $store->getCurrentFromName('relation');
             if (!isset($relation[FirstImage::FIRST_IMAGE_META_RELATION])) {
                 return $this;
@@ -89,7 +89,7 @@ class FirstImage extends MetadataWikiPath
     /**
      * @throws ExceptionNotFound
      */
-    function getImageFetcher():FetcherImage
+    function getLocalImageFetcher(): FetcherLocalImage
     {
         try {
             $path = $this->getValue();
@@ -97,7 +97,7 @@ class FirstImage extends MetadataWikiPath
             throw new ExceptionNotFound("No first image for the page ({$this->getResource()}");
         }
         try {
-            return FetcherImage::createImageFetchFromPath(DokuPath::createMediaPathFromPath($path));
+            return FetcherLocalImage::createImageFetchFromPath(DokuPath::createMediaPathFromPath($path));
         } catch (ExceptionBadArgument $e) {
             $message = "Internal Error: The image ($path) of the page ({$this->getResource()} is not seen as an image. Error: {$e->getMessage()}";
             // Log to see it in the log and to trigger an error in dev/test

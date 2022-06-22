@@ -9,8 +9,10 @@ use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverDimension;
 
-class FetcherSnapshot extends FetcherImage
+class FetcherSnapshot extends FetcherAbs implements FetcherImage
 {
+
+    use FetcherTraitImage;
 
     const WEB_DRIVER_ENDPOINT = 'http://localhost:4444/';
     const CANONICAL = "snapshot";
@@ -26,12 +28,18 @@ class FetcherSnapshot extends FetcherImage
 
     }
 
-
-    public function buildFromUrl(Url $url): FetcherSnapshot
+    function getFetchUrl(Url $url = null): Url
     {
-        $this->url = $url;
-        return $this;
+        $url = parent::getFetchUrl($url);
+        $this->addCommonImagePropertiesToFetchUrl($url);
+        try {
+            $url->addQueryParameter(self::URL, $this->getUrlToSnapshot());
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        return $url;
     }
+
 
     /**
      * @throws ExceptionBadSyntax
@@ -44,6 +52,7 @@ class FetcherSnapshot extends FetcherImage
             throw new ExceptionBadArgument("The `url` property is mandatory");
         }
         $this->url = Url::createFromString($urlString);
+        $this->buildImagePropertiesFromTagAttributes($tagAttributes);
         return $this;
     }
 
@@ -89,8 +98,8 @@ class FetcherSnapshot extends FetcherImage
                 $capabilities,
                 1000
             );
-        } catch (WebDriverCurlException $e){
-            throw new ExceptionInternal("Web driver is not available at ".self::WEB_DRIVER_ENDPOINT.". Error: {$e->getMessage()}");
+        } catch (WebDriverCurlException $e) {
+            throw new ExceptionInternal("Web driver is not available at " . self::WEB_DRIVER_ENDPOINT . ". Error: {$e->getMessage()}");
         }
         try {
 
@@ -154,7 +163,7 @@ class FetcherSnapshot extends FetcherImage
             }
             $screenShotPath = LocalPath::createHomeDirectory()
                 ->resolve("Desktop")
-                ->resolve($lastNameWithoutExtension . ".".$this->getMime()->getExtension());
+                ->resolve($lastNameWithoutExtension . "." . $this->getMime()->getExtension());
             $webDriver->takeScreenshot($screenShotPath);
             return $screenShotPath;
 
@@ -216,7 +225,7 @@ class FetcherSnapshot extends FetcherImage
      */
     private function getUrlToSnapshot(): Url
     {
-        if(!isset($this->url)){
+        if (!isset($this->url)) {
             throw new ExceptionNotFound("No url to snapshot could be determined");
         }
         return $this->url;

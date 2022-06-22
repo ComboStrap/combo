@@ -5,16 +5,16 @@ namespace ComboStrap;
 /**
  * Return raw files
  */
-class FetcherRaw extends FetcherAbs
+class FetcherLocalPath extends FetcherAbs
 {
 
-    use FetcherRawTrait;
+    use FetcherTraitLocalPath;
 
     const SRC_QUERY_PARAMETER = "src";
     const RAW = "raw";
 
 
-    public static function createFromPath(DokuPath $dokuPath): FetcherRaw
+    public static function createFromPath(DokuPath $dokuPath): FetcherLocalPath
     {
         $fetcherRaw = self::createEmpty();
         $fetcherRaw->setOriginalPath($dokuPath);
@@ -23,19 +23,19 @@ class FetcherRaw extends FetcherAbs
 
     /**
      * Empty because a fetch is mostly build through an URL
-     * @return FetcherRaw
+     * @return FetcherLocalPath
      */
-    public static function createEmpty(): FetcherRaw
+    public static function createEmpty(): FetcherLocalPath
     {
-        return new FetcherRaw();
+        return new FetcherLocalPath();
     }
 
     /**
      * @throws ExceptionBadArgument
      */
-    public static function createFetcherFromFetchUrl(Url $fetchUrl): FetcherRaw
+    public static function createLocalFromFetchUrl(Url $fetchUrl): FetcherLocalPath
     {
-        $fetchRaw = FetcherRaw::createEmpty();
+        $fetchRaw = FetcherLocalPath::createEmpty();
         $fetchRaw->buildFromUrl($fetchUrl);
         return $fetchRaw;
     }
@@ -48,7 +48,7 @@ class FetcherRaw extends FetcherAbs
     {
 
         $url = parent::getFetchUrl($url);
-        $this->addOriginalPathParametersToFetchUrl($url);
+        $this->addLocalPathParametersToFetchUrl($url);
 
         return $url;
 
@@ -57,7 +57,7 @@ class FetcherRaw extends FetcherAbs
     /**
      * @throws ExceptionBadArgument - if the media was not found
      */
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherRaw
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherLocalPath
     {
 
         $this->buildOriginalPathFromTagAttributes($tagAttributes);

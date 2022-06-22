@@ -10,7 +10,7 @@ namespace ComboStrap;
  *   * a {@link Fetcher::buildFromTagAttributes() attributes}
  *
  * Example:
- *   * {@link FetcherImage} such as:
+ *   * {@link FetcherTraitImage} such as:
  *     * {@link FetcherSvg} that can process and return svg
  *     * {@link FetcherRaster} that can process and return raster image
  *     * {@link FetcherVignette} that returns a raster image from page metadata

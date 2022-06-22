@@ -256,7 +256,7 @@ class MarkupRef
         switch ($type) {
             case self::MEDIA_TYPE:
                 $this->path = DokuPath::createMediaPathFromId($wikiPath, $rev);
-                $this->url->addQueryParameter(FetcherRawTrait::$MEDIA_QUERY_PARAMETER, $wikiPath);
+                $this->url->addQueryParameter(FetcherTraitLocalPath::$MEDIA_QUERY_PARAMETER, $wikiPath);
                 $this->addRevToUrl($rev);
                 break;
             case self::LINK_TYPE:

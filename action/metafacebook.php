@@ -8,7 +8,8 @@ use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\FetcherImage;
+use ComboStrap\FetcherLocalImage;
+use ComboStrap\FetcherTraitImage;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
@@ -140,16 +141,16 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
 
         /**
-         * @var FetcherImage[]
+         * @var FetcherTraitImage[]
          */
         $facebookImages = $page->getImagesForTheFollowingUsages([PageImageUsage::FACEBOOK, PageImageUsage::SOCIAL, PageImageUsage::ALL]);
         if (empty($facebookImages)) {
             $defaultFacebookImage = PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
             if (!empty($defaultFacebookImage)) {
                 $dokuPath = DokuPath::createMediaPathFromId($defaultFacebookImage);
-                if(FileSystems::exists($dokuPath)){
+                if (FileSystems::exists($dokuPath)) {
                     try {
-                        $facebookImages[] = FetcherImage::createImageFetchFromPath($dokuPath);
+                        $facebookImages[] = FetcherLocalImage::createImageFetchFromPath($dokuPath);
                     } catch (ExceptionCompile $e) {
                         LogUtility::error("We were unable to add the default facebook image ($defaultFacebookImage) because of the following error: {$e->getMessage()}", self::CANONICAL);
                     }
@@ -169,12 +170,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
             $facebookMimes = [Mime::JPEG, Mime::GIF, Mime::PNG];
             foreach ($facebookImages as $facebookImage) {
 
-                try {
-                    $path = $facebookImage->getOriginalPath();
-                } catch (ExceptionNotFound $e) {
-                    LogUtility::internalError($e->getMessage());
-                    continue;
-                }
+                $path = $facebookImage->getOriginalPath();
                 if (!FileSystems::exists($path)) {
                     LogUtility::error("The image ($path) does not exist and was not added", self::CANONICAL);
                     continue;
@@ -216,13 +212,16 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                     $message = "The facebook image ($facebookImage) is too small (" . $intrinsicWidth . " x " . $intrinsicHeight . "). The minimum size constraint is 200px by 200px";
                     try {
                         $firstImagePath = $page->getFirstImage()->getOriginalPath();
+
                         if (
                             $path->toAbsolutePath()->toPathString()
                             !==
                             $firstImagePath->toAbsolutePath()->toPathString()
                         ) {
+                            // specified image
                             LogUtility::error($message, self::CANONICAL);
                         } else {
+                            // first image
                             LogUtility::log2BrowserConsole($message);
                         }
                     } catch (ExceptionNotFound $e) {

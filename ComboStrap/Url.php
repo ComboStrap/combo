@@ -542,10 +542,10 @@ class Url extends PathAbs
      */
     public function getExtension(): string
     {
-        if ($this->hasProperty(FetcherRaw::MEDIA_QUERY_PARAMETER)) {
+        if ($this->hasProperty(FetcherLocalPath::$MEDIA_QUERY_PARAMETER)) {
 
             try {
-                $dokuPath = FetcherRaw::createEmpty()->buildFromUrl($this)->getOriginalPath();
+                $dokuPath = FetcherLocalPath::createLocalFromFetchUrl($this)->getOriginalPath();
                 return $dokuPath->getExtension();
             } catch (ExceptionBadArgument $e) {
                 LogUtility::internalError("Build error from a Media Fetch URL. We were unable to get the mime. Error: {$e->getMessage()}");

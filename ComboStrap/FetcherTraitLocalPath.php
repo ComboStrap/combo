@@ -7,7 +7,7 @@ namespace ComboStrap;
  * if they depends on a {@link DokuPath}
  *
  * This trait can:
- *   * build the {@link FetcherRawTrait::getOriginalPath()} from {@link FetcherRawTrait::buildOriginalPathFromTagAttributes() tag attributes}
+ *   * build the {@link FetcherTraitLocalPath::getOriginalPath()} from {@link FetcherTraitLocalPath::buildOriginalPathFromTagAttributes() tag attributes}
  *   * add the {@link buildURLparams() url params to the fetch Url}
  *
  *
@@ -17,7 +17,7 @@ namespace ComboStrap;
  * Not all image depends on a path, that's why this is a trait to
  * share the code
  */
-trait FetcherRawTrait
+trait FetcherTraitLocalPath
 {
 
     public static string $MEDIA_QUERY_PARAMETER = "media";
@@ -69,10 +69,10 @@ trait FetcherRawTrait
     /**
      * Add media and rev to url
      * For dokuwiki implementation, see {@link ml()}
-     * We still use the {@link FetcherRaw::MEDIA_QUERY_PARAMETER}
+     * We still use the {@link FetcherLocalPath::MEDIA_QUERY_PARAMETER}
      * to be Dokuwiki Compatible even if we can serve from other drive know
      */
-    public function addOriginalPathParametersToFetchUrl(Url $url): Url
+    public function addLocalPathParametersToFetchUrl(Url $url): void
     {
 
         $url->addQueryParameterIfNotActualSameValue(self::$MEDIA_QUERY_PARAMETER, $this->path->getDokuwikiId());
@@ -85,7 +85,6 @@ trait FetcherRawTrait
         } catch (ExceptionNotFound $e) {
             // ok no rev
         }
-        return $url;
 
     }
 

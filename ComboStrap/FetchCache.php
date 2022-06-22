@@ -40,7 +40,7 @@ class FetchCache
         /**
          * Cache Attribute
          */
-        if ($fetch instanceof FetcherImage) {
+        if ($fetch instanceof FetcherTraitImage) {
             $this->setMaxAgeInSec($fetch->getExternalCacheMaxAgeInSec());
         }
 

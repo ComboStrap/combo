@@ -20,10 +20,11 @@ use DOMElement;
  *   * or by {@link FetcherSvg::setMarkup() Svg Markup}
  *
  */
-class FetcherSvg extends FetcherImage
+class FetcherSvg extends FetcherLocalImage implements FetcherImage
 {
 
-    use FetcherRawTrait;
+    use FetcherTraitLocalPath;
+    use FetcherTraitImage;
 
     const EXTENSION = "svg";
     const CANONICAL = "svg";
@@ -157,11 +158,17 @@ class FetcherSvg extends FetcherImage
     }
 
     /**
+     * @param TagAttributes $tagAttributes
+     * @return FetcherSvg
      * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionCompile
      */
     public static function createFromAttributes(TagAttributes $tagAttributes): FetcherSvg
     {
-        return FetcherSvg::createSvgEmpty()->buildFromTagAttributes($tagAttributes);
+        $fetcher = FetcherSvg::createSvgEmpty();
+        $fetcher->buildFromTagAttributes($tagAttributes);
+        return $fetcher;
     }
 
     /**
@@ -500,7 +507,16 @@ class FetcherSvg extends FetcherImage
     {
 
         $url = parent::getFetchUrl($url);
-        $this->addOriginalPathParametersToFetchUrl($url);
+
+        /**
+         * Trait
+         */
+        $this->addLocalPathParametersToFetchUrl($url);
+        $this->addCommonImagePropertiesToFetchUrl($url, $this->getOriginalPath()->getDokuwikiId());
+
+        /**
+         * Specific properties
+         */
         try {
             $url->addQueryParameter(ColorRgb::COLOR, $this->getRequestedColor()->toCssValue());
         } catch (ExceptionNotFound $e) {
@@ -562,11 +578,7 @@ class FetcherSvg extends FetcherImage
          * Generated svg file cache init
          */
         $fetchCache = FetchCache::createFrom($this);
-        try {
-            $files[] = $this->getOriginalPath();
-        } catch (ExceptionBadState $e) {
-            LogUtility::internalError("No original path for the svg fetcher");
-        }
+        $files[] = $this->getOriginalPath();
         try {
             $files[] = ClassUtility::getClassPath(FetcherSvg::class);
         } catch (\ReflectionException $e) {
@@ -629,7 +641,7 @@ class FetcherSvg extends FetcherImage
     {
 
         try {
-            $dokuPath = FetcherRaw::createEmpty()->buildFromUrl($url)->getFetchPath();
+            $dokuPath = FetcherLocalPath::createEmpty()->buildFromUrl($url)->getFetchPath();
         } catch (ExceptionBadArgument $e) {
             return false;
         }
@@ -1361,7 +1373,7 @@ class FetcherSvg extends FetcherImage
      * @throws ExceptionBadSyntax
      * @throws ExceptionCompile
      */
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherSvg
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): Fetcher
     {
 
         foreach (array_keys($tagAttributes->getComponentAttributes()) as $svgAttribute) {
@@ -1435,7 +1447,7 @@ class FetcherSvg extends FetcherImage
          */
         try {
             $iconDownload =
-                !$tagAttributes->hasAttribute(FetcherRawTrait::$MEDIA_QUERY_PARAMETER) &&
+                !$tagAttributes->hasAttribute(FetcherTraitLocalPath::$MEDIA_QUERY_PARAMETER) &&
                 $this->getRequestedType() === self::ICON_TYPE
                 && $this->getRequestedName() !== null;
             if ($iconDownload) {

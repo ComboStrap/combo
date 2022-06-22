@@ -656,10 +656,10 @@ class Page extends ResourceComboAbs
      * @throws ExceptionNotFound
      */
     public
-    function getFirstImage()
+    function getFirstImage(): FetcherLocalImage
     {
         $firstImage = FirstImage::createForPage($this);
-        return $firstImage->getImageFetcher();
+        return $firstImage->getLocalImageFetcher();
     }
 
     /**
@@ -702,8 +702,7 @@ class Page extends ResourceComboAbs
      * @return FetcherImage
      * @throws ExceptionNotFound
      */
-    public
-    function getImage(): FetcherImage
+    public function getImage(): FetcherImage
     {
 
         $images = $this->getPageImages();
@@ -1375,17 +1374,6 @@ class Page extends ResourceComboAbs
         return $this->pageImages->getValueAsPageImages();
     }
 
-
-    /**
-     * @return array|null
-     * @deprecated for {@link LdJson}
-     */
-    public
-    function getLdJson(): ?string
-    {
-        return $this->ldJson->getValue();
-
-    }
 
     /**
      * @param array|string $jsonLd

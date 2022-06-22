@@ -38,7 +38,7 @@ abstract class FetcherAbs implements Fetcher
      * @throws ExceptionNotFound
      * @throws ExceptionInternal
      */
-    public static function createFetcherFromFetchUrl(Url $fetchUrl): Fetcher
+    public static function createLocalFromFetchUrl(Url $fetchUrl): Fetcher
     {
 
         try {
@@ -62,7 +62,7 @@ abstract class FetcherAbs implements Fetcher
         }
 
         try {
-            $fetchDoku = FetcherRaw::createFetcherFromFetchUrl($fetchUrl);
+            $fetchDoku = FetcherLocalPath::createLocalFromFetchUrl($fetchUrl);
             $dokuPath = $fetchDoku->getOriginalPath();
         } catch (ExceptionBadArgument $e) {
             throw new ExceptionNotFound("No fetcher could be matched to the url ($fetchUrl)");

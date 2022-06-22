@@ -18,10 +18,11 @@ namespace ComboStrap;
  *      * or a {@link FetcherRaster::getFetchUrl() fetch url} to use in a {@link RasterImageLink img html tag}
  *
  */
-class FetcherRaster extends FetcherImage
+class FetcherRaster extends FetcherLocalImage implements FetcherImage
 {
 
-    use FetcherRawTrait;
+    use FetcherTraitLocalPath;
+    use FetcherTraitImage;
 
     const CANONICAL = "raster";
 
@@ -42,7 +43,7 @@ class FetcherRaster extends FetcherImage
      */
     public static function createImageRasterFetchFromId(string $imageId, $rev = null): FetcherRaster
     {
-        return self::createImageFetchFromPath(DokuPath::createMediaPathFromId($imageId, $rev));
+        return FetcherLocalImage::createImageFetchFromPath(DokuPath::createMediaPathFromId($imageId, $rev));
     }
 
     /**
@@ -83,8 +84,15 @@ class FetcherRaster extends FetcherImage
 
     public function getFetchUrl(Url $url = null): Url
     {
+
         $url = parent::getFetchUrl($url);
-        $this->addOriginalPathParametersToFetchUrl($url);
+
+        /**
+         * Trait
+         */
+        $this->addLocalPathParametersToFetchUrl($url);
+        $this->addCommonImagePropertiesToFetchUrl($url, $this->getOriginalPath()->getDokuwikiId());
+
         return $url;
     }
 
@@ -132,7 +140,7 @@ class FetcherRaster extends FetcherImage
 
 
     /**
-     * We overwrite the {@link FetcherImage::getRequestedWidth()}
+     * We overwrite the {@link FetcherTraitImage::getRequestedWidth()}
      * because we don't scale up for raster image
      * to not lose quality.
      *
@@ -148,7 +156,7 @@ class FetcherRaster extends FetcherImage
          * If this is the case, we return the media width
          */
 
-        $requestedWidth = parent::getRequestedWidth();
+        $requestedWidth = $this->getRequestedWidth();
 
         /**
          * A width was requested
@@ -181,11 +189,7 @@ class FetcherRaster extends FetcherImage
             $requestedHeight = $this->getRequestedHeight();
 
             // it should not be bigger than the media Height
-            try {
-                $mediaHeight = $this->getIntrinsicHeight();
-            } catch (ExceptionBadSyntax $e) {
-                return parent::getTargetHeight();
-            }
+            $mediaHeight = $this->getIntrinsicHeight();
             if ($requestedHeight > $mediaHeight) {
                 LogUtility::warning("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", self::CANONICAL);
                 return $mediaHeight;
@@ -193,7 +197,7 @@ class FetcherRaster extends FetcherImage
         } catch (ExceptionNotFound $e) {
             // no request height
         }
-        return parent::getTargetHeight();
+        return $this->getTargetHeight();
 
 
     }
@@ -204,21 +208,8 @@ class FetcherRaster extends FetcherImage
         throw new ExceptionRuntime("Fetch Raster image is not yet implemented");
     }
 
-    function acceptsFetchUrl(Url $url): bool
-    {
-        // dokuwiki do it for now
-        return false;
-    }
 
-    function getBuster(): string
-    {
-        try {
-            return FileSystems::getCacheBuster($this->getOriginalPath());
-        } catch (ExceptionNotFound $e) {
-            LogUtility::internalError("The fact that the file exists, is already checked at construction time, it should not happen", self::CANONICAL);
-            return strval((new \DateTime())->getTimestamp());
-        }
-    }
+
 
 
     /**
@@ -229,11 +220,12 @@ class FetcherRaster extends FetcherImage
      * @throws ExceptionNotExists - if the image does not exists
      */
 
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherRaster
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): Fetcher
     {
 
-        $this->buildOriginalPathFromTagAttributes($tagAttributes);
         parent::buildFromTagAttributes($tagAttributes);
+        $this->buildOriginalPathFromTagAttributes($tagAttributes);
+        $this->buildImagePropertiesFromTagAttributes($tagAttributes);
         $this->analyzeImageIfNeeded();
         return $this;
 

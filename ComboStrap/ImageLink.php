@@ -84,7 +84,7 @@ abstract class ImageLink extends MediaLink
         switch ($linking) {
             case MediaMarkup::LINKING_LINKONLY_VALUE:
                 // show only a url, no image
-                $href = FetcherRaw::createFromPath($dokuPath)->getFetchUrl()->toString();
+                $href = FetcherLocalPath::createFromPath($dokuPath)->getFetchUrl()->toString();
                 $tagAttributes->addOutputAttributeValue("href", $href);
                 try {
                     $title = $this->mediaMarkup->getLabel();
@@ -98,7 +98,7 @@ abstract class ImageLink extends MediaLink
             default:
             case MediaMarkup::LINKING_DIRECT_VALUE:
                 //directly to the image
-                $href = FetcherRaw::createFromPath($dokuPath)->getFetchUrl()->toString();
+                $href = FetcherLocalPath::createFromPath($dokuPath)->getFetchUrl()->toString();
                 $tagAttributes->addOutputAttributeValue("href", $href);
                 $snippetId = "lightbox";
                 $tagAttributes->addClassName(StyleUtility::getStylingClassForTag($snippetId));

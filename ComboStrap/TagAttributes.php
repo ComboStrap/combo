@@ -83,10 +83,11 @@ class TagAttributes
     const INLINE_LOGICAL_ELEMENTS = [
         FetcherSvg::CANONICAL,
         FetcherRaster::CANONICAL,
-        FetcherImage::CANONICAL,
+        \syntax_plugin_combo_media::TAG,
         \syntax_plugin_combo_link::TAG, // link button for instance
         \syntax_plugin_combo_button::TAG
     ];
+
     /**
      * Container
      * Heading is a block but not a container

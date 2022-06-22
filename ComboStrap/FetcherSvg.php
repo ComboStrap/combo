@@ -23,6 +23,8 @@ use DOMElement;
 class FetcherSvg extends FetcherImage
 {
 
+    use FetcherRawTrait;
+
     const EXTENSION = "svg";
     const CANONICAL = "svg";
 
@@ -131,8 +133,9 @@ class FetcherSvg extends FetcherImage
      */
     public static function createSvgFromPath(DokuPath $path): FetcherSvg
     {
-        return self::createSvgEmpty()
-            ->setOriginalPath($path);
+        $fetcher = self::createSvgEmpty();
+        $fetcher->setOriginalPath($path);
+        return $fetcher;
     }
 
     /**
@@ -497,6 +500,7 @@ class FetcherSvg extends FetcherImage
     {
 
         $url = parent::getFetchUrl($url);
+        $this->addOriginalPathParametersToFetchUrl($url);
         try {
             $url->addQueryParameter(ColorRgb::COLOR, $this->getRequestedColor()->toCssValue());
         } catch (ExceptionNotFound $e) {
@@ -1431,7 +1435,7 @@ class FetcherSvg extends FetcherImage
          */
         try {
             $iconDownload =
-                !$tagAttributes->hasAttribute(FetcherRaw::MEDIA_QUERY_PARAMETER) &&
+                !$tagAttributes->hasAttribute(FetcherRawTrait::$MEDIA_QUERY_PARAMETER) &&
                 $this->getRequestedType() === self::ICON_TYPE
                 && $this->getRequestedName() !== null;
             if ($iconDownload) {
@@ -1440,13 +1444,17 @@ class FetcherSvg extends FetcherImage
                 } catch (ExceptionCompile $e) {
                     throw new ExceptionBadArgument("The svg attributes does not have a media or icon name attribute. We can't define the svg path.");
                 }
-                $iconId = $dokuPath->getDokuwikiId();
-                $tagAttributes->addComponentAttributeValue(FetcherRaw::MEDIA_QUERY_PARAMETER, $iconId);
+                $this->setOriginalPath($dokuPath);
+
             }
         } catch (ExceptionNotFound $e) {
             // no requested type or name
         }
 
+        /**
+         * Raw Trait
+         */
+        $this->buildOriginalPathFromTagAttributes($tagAttributes);
         parent::buildFromTagAttributes($tagAttributes);
         return $this;
     }

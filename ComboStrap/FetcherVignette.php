@@ -297,13 +297,6 @@ class FetcherVignette extends FetcherImage
         return $this->buster;
     }
 
-    function acceptsFetchUrl(Url $url): bool
-    {
-        if ($url->hasProperty(self::VIGNETTE_NAME)) {
-            return true;
-        }
-        return false;
-    }
 
     public function getMime(): Mime
     {

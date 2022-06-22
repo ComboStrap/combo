@@ -21,8 +21,10 @@ namespace ComboStrap;
 class FetcherRaster extends FetcherImage
 {
 
+    use FetcherRawTrait;
+
     const CANONICAL = "raster";
-    private Mime $mime;
+
 
 
     private int $imageWidth;
@@ -78,6 +80,14 @@ class FetcherRaster extends FetcherImage
     {
         return $this->imageWidth;
     }
+
+    public function getFetchUrl(Url $url = null): Url
+    {
+        $url = parent::getFetchUrl($url);
+        $this->addOriginalPathParametersToFetchUrl($url);
+        return $url;
+    }
+
 
     /**
      * @return int - the height of the image from the file
@@ -210,11 +220,6 @@ class FetcherRaster extends FetcherImage
         }
     }
 
-    public function getMime(): Mime
-    {
-        return $this->mime;
-    }
-
 
     /**
      * @param TagAttributes $tagAttributes
@@ -222,15 +227,14 @@ class FetcherRaster extends FetcherImage
      * @throws ExceptionBadArgument - if the path is not an image
      * @throws ExceptionBadSyntax - if the image is badly encoded
      * @throws ExceptionNotExists - if the image does not exists
-     * @throws ExceptionNotFound - if the mime was not found
      */
 
     public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherRaster
     {
 
+        $this->buildOriginalPathFromTagAttributes($tagAttributes);
         parent::buildFromTagAttributes($tagAttributes);
         $this->analyzeImageIfNeeded();
-        $this->mime = FileSystems::getMime($this->getOriginalPath());
         return $this;
 
     }
@@ -241,7 +245,7 @@ class FetcherRaster extends FetcherImage
      */
     public function setOriginalPath(DokuPath $dokuPath): FetcherRaster
     {
-        parent::setOriginalPath($dokuPath);
+        $this->setOriginalPath($dokuPath);
         $this->analyzeImageIfNeeded();
         return $this;
     }

@@ -13,9 +13,14 @@ namespace ComboStrap;
  * and its attribute
  * (ie a file and its transformation attribute if any such as
  * width, height, ...)
+ *
+ * Image may be generated that's why they don't extends from {@link FetcherRaw}
+ * because they don't depend on a {@link FetcherRaw::getOriginalPath() path}
+ *
  */
-abstract class FetcherImage extends FetcherRaw
+abstract class FetcherImage extends FetcherAbs
 {
+
 
     const CANONICAL = "image";
 
@@ -128,6 +133,7 @@ abstract class FetcherImage extends FetcherRaw
             $id = $this->getOriginalPath()->getDokuwikiId();
             $token = media_get_token($id, $requestedWidth, $requestedHeight);
             $url->addQueryParameter(self::TOK, $token);
+
         }
 
         return $url;
@@ -522,15 +528,9 @@ abstract class FetcherImage extends FetcherRaw
     }
 
 
-
-
     public function __toString()
     {
-        try {
-            return $this->getOriginalPath()->toUriString();
-        } catch (ExceptionNotFound $e) {
-            return get_class($this);
-        }
+        return get_class($this);
     }
 
     public function hasWidthRequested(): bool

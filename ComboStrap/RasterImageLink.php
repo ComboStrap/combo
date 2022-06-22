@@ -31,7 +31,7 @@ require_once(__DIR__ . '/PluginUtility.php');
 class RasterImageLink extends ImageLink
 {
 
-    const CANONICAL = FetchImageRaster::CANONICAL;
+    const CANONICAL = FetcherRaster::CANONICAL;
     const CONF_LAZY_LOADING_ENABLE = "rasterImageLazyLoadingEnable";
     const CONF_LAZY_LOADING_ENABLE_DEFAULT = 1;
 
@@ -67,7 +67,7 @@ class RasterImageLink extends ImageLink
      */
     public function __construct(MediaMarkup $mediaMarkup)
     {
-        $this->fetchRaster = FetchImageRaster::createEmptyRaster()
+        $this->fetchRaster = FetcherRaster::createEmptyRaster()
             ->buildFromUrl($mediaMarkup->getFetchUrl());
         parent::__construct($mediaMarkup);
     }
@@ -221,7 +221,7 @@ class RasterImageLink extends ImageLink
 
             try {
 
-                $breakpointRaster = FetchImageRaster::createRasterFromFetchUrl($fetchRaster->getFetchUrl());
+                $breakpointRaster = FetcherRaster::createRasterFromFetchUrl($fetchRaster->getFetchUrl());
                 /** @noinspection PhpPossiblePolymorphicInvocationInspection */
                 if (
                     !$fetchRaster->hasHeightRequested() // breakpoint url needs only the h attribute in this case
@@ -233,7 +233,7 @@ class RasterImageLink extends ImageLink
                 if ($fetchRaster->hasHeightRequested() // if this is a height request
                     || $fetchRaster->hasAspectRatioRequested() // width and height are mandatory
                 ) {
-                    $breakPointHeight = FetchImageRaster::round($breakpointWidthMinusMargin / $fetchRaster->getTargetAspectRatio());
+                    $breakPointHeight = FetcherRaster::round($breakpointWidthMinusMargin / $fetchRaster->getTargetAspectRatio());
                     $breakpointRaster->setRequestedHeight($breakPointHeight);
                 }
 

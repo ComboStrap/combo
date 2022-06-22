@@ -89,14 +89,15 @@ class FirstImage extends MetadataWikiPath
     /**
      * @throws ExceptionNotFound
      */
-    function getImageObject()
+    function getImageFetcher():FetcherImage
     {
-        $path = $this->getValue();
-        if ($path === null) {
+        try {
+            $path = $this->getValue();
+        } catch (ExceptionNotFound $e) {
             throw new ExceptionNotFound("No first image for the page ({$this->getResource()}");
         }
         try {
-            return FetchImage::createImageFetchFromId($path);
+            return FetcherImage::createImageFetchFromPath(DokuPath::createMediaPathFromPath($path));
         } catch (ExceptionBadArgument $e) {
             $message = "Internal Error: The image ($path) of the page ({$this->getResource()} is not seen as an image. Error: {$e->getMessage()}";
             // Log to see it in the log and to trigger an error in dev/test

@@ -29,7 +29,7 @@ class FetchCache
     /**
      * Cache constructor.
      */
-    public function __construct(Fetch $fetch)
+    public function __construct(Fetcher $fetch)
     {
 
         /**
@@ -40,7 +40,7 @@ class FetchCache
         /**
          * Cache Attribute
          */
-        if ($fetch instanceof FetchImage) {
+        if ($fetch instanceof FetcherImage) {
             $this->setMaxAgeInSec($fetch->getExternalCacheMaxAgeInSec());
         }
 
@@ -49,7 +49,7 @@ class FetchCache
 
     }
 
-    public static function createFrom(Fetch $fetch): FetchCache
+    public static function createFrom(Fetcher $fetch): FetchCache
     {
         return new FetchCache($fetch);
     }

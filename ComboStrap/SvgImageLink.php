@@ -21,7 +21,7 @@ namespace ComboStrap;
 class SvgImageLink extends ImageLink
 {
 
-    const CANONICAL = FetchSvg::CANONICAL;
+    const CANONICAL = FetcherSvg::CANONICAL;
 
     /**
      * The maximum size to be embedded
@@ -41,14 +41,14 @@ class SvgImageLink extends ImageLink
     const TAG = "svg";
 
 
-    private ?FetchSvg $svgFetch = null;
+    private ?FetcherSvg $svgFetch = null;
 
     /**
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
      * @throws ExceptionNotExists
      */
-    public static function createFromFetcher(FetchSvg $fetchImage)
+    public static function createFromFetcher(FetcherSvg $fetchImage)
     {
         return SvgImageLink::createFromMediaMarkup(MediaMarkup::createFromFetcher($fetchImage));
     }
@@ -94,7 +94,7 @@ class SvgImageLink extends ImageLink
         /**
          * Remove the cache attribute
          * (no cache for the img tag)
-         * @var FetchSvg $image
+         * @var FetcherSvg $image
          */
         $responseAttributes = $this->mediaMarkup->getTagAttributes()
             ->setLogicalTag(self::TAG);
@@ -219,7 +219,7 @@ class SvgImageLink extends ImageLink
          * The svg is then inserted via an img tag to scope it.
          */
         try {
-            $preserveStyle = DataType::toBoolean($this->mediaMarkup->getFetcher()->getFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(FetchSvg::REQUESTED_PRESERVE_ATTRIBUTE));
+            $preserveStyle = DataType::toBoolean($this->mediaMarkup->getFetcher()->getFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(FetcherSvg::REQUESTED_PRESERVE_ATTRIBUTE));
         } catch (ExceptionNotFound $e) {
             $preserveStyle = false;
         }

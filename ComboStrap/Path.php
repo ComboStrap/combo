@@ -71,7 +71,7 @@ interface Path
 
     /**
      * @return Url - the local URL
-     * For external path (ie {@link Url}, there is no {@link Fetch} implementation
+     * For external path (ie {@link Url}, there is no {@link Fetcher} implementation
      * To create a {@link ThirdMediaLink}, we use therefore this url
      */
     function getUrl(): Url;

@@ -7,14 +7,11 @@ namespace ComboStrap;
  * Class Media
  * @package ComboStrap
  *
- * * It represents a generated file:
- *   * if the image width is 20 -> the image is generated
- *   * same for svg ...
  *
  * This is why there is a cache attribute - this is the cache of the generated file
  * if any
  */
-abstract class FetchAbs implements Fetch
+abstract class FetcherAbs implements Fetcher
 {
 
     public const NOCACHE_VALUE = "nocache";
@@ -34,28 +31,28 @@ abstract class FetchAbs implements Fetch
 
     /**
      * @param Url $fetchUrl
-     * @return Fetch
+     * @return Fetcher
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
      * @throws ExceptionNotFound
      * @throws ExceptionInternal
      */
-    public static function createFetcherFromFetchUrl(Url $fetchUrl): Fetch
+    public static function createFetcherFromFetchUrl(Url $fetchUrl): Fetcher
     {
 
         try {
-            $fetcherAtt = $fetchUrl->getQueryPropertyValue(Fetch::FETCHER_KEY);
+            $fetcherAtt = $fetchUrl->getQueryPropertyValue(Fetcher::FETCHER_KEY);
             try {
-                $fetchers = ClassUtility::getObjectImplementingInterface(Fetch::class);
+                $fetchers = ClassUtility::getObjectImplementingInterface(Fetcher::class);
             } catch (\ReflectionException $e) {
                 throw new ExceptionInternal("We could read fetch classes via reflection Error: {$e->getMessage()}");
             }
             foreach ($fetchers as $fetcher) {
                 /**
-                 * @var Fetch $fetcher
+                 * @var Fetcher $fetcher
                  */
-                if ($fetcher->getName() === $fetcherAtt) {
+                if ($fetcher->getFetcherName() === $fetcherAtt) {
                     $fetcher->buildFromUrl($fetchUrl);
                     return $fetcher;
                 }
@@ -65,7 +62,7 @@ abstract class FetchAbs implements Fetch
         }
 
         try {
-            $fetchDoku = FetchRaw::createFetcherFromFetchUrl($fetchUrl);
+            $fetchDoku = FetcherRaw::createFetcherFromFetchUrl($fetchUrl);
             $dokuPath = $fetchDoku->getOriginalPath();
         } catch (ExceptionBadArgument $e) {
             throw new ExceptionNotFound("No fetcher could be matched to the url ($fetchUrl)");
@@ -77,10 +74,10 @@ abstract class FetchAbs implements Fetch
         }
         switch ($mime->toString()) {
             case Mime::SVG:
-                return FetchSvg::createSvgFromFetchUrl($fetchUrl);
+                return FetcherSvg::createSvgFromFetchUrl($fetchUrl);
             default:
                 if ($mime->isImage()) {
-                    return FetchImageRaster::createRasterFromFetchUrl($fetchUrl);
+                    return FetcherRaster::createRasterFromFetchUrl($fetchUrl);
                 } else {
                     return $fetchDoku;
                 }
@@ -111,12 +108,12 @@ abstract class FetchAbs implements Fetch
         /**
          * The buster
          */
-        $url->setQueryParameter(Fetch::CACHE_BUSTER_KEY, $this->getBuster());
+        $url->setQueryParameter(Fetcher::CACHE_BUSTER_KEY, $this->getBuster());
         /**
          * The fetcher name
          */
-        $fetcherName = $this->getName();
-        $url->setQueryParameter(Fetch::FETCHER_KEY, $fetcherName);
+        $fetcherName = $this->getFetcherName();
+        $url->setQueryParameter(Fetcher::FETCHER_KEY, $fetcherName);
         return $url;
     }
 
@@ -124,19 +121,18 @@ abstract class FetchAbs implements Fetch
     /**
      * @throws ExceptionBadArgument
      */
-    public function buildFromUrl(Url $url): Fetch
+    public function buildFromUrl(Url $url): Fetcher
     {
         $query = $url->getQuery();
         $tagAttributes = TagAttributes::createFromCallStackArray($query);
         $this->buildFromTagAttributes($tagAttributes);
-
         return $this;
     }
 
     /**
      * @throws ExceptionBadArgument
      */
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): Fetch
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): Fetcher
     {
 
         $cache = $tagAttributes->getValueAndRemove(self::CACHE_KEY);

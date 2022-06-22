@@ -15,12 +15,12 @@ use DOMElement;
  *   * an SvgFile for an HTTP response or any further processing
  *
  * The original svg can be set with:
- *   * the {@link FetchSvg::setOriginalPath() original path}
- *   * the {@link FetchSvg::setRequestedName() name} if this is an {@link FetchSvg::setRequestedType() icon type}, the original path is then determined on {@link FetchSvg::getOriginalPath() get}
- *   * or by {@link FetchSvg::setMarkup() Svg Markup}
+ *   * the {@link FetcherSvg::setOriginalPath() original path}
+ *   * the {@link FetcherSvg::setRequestedName() name} if this is an {@link FetcherSvg::setRequestedType() icon type}, the original path is then determined on {@link FetcherSvg::getOriginalPath() get}
+ *   * or by {@link FetcherSvg::setMarkup() Svg Markup}
  *
  */
-class FetchSvg extends FetchImage
+class FetcherSvg extends FetcherImage
 {
 
     const EXTENSION = "svg";
@@ -83,7 +83,7 @@ class FetchSvg extends FetchImage
      */
     public const CONF_OPTIMIZATION_NAMESPACES_TO_KEEP = "svgOptimizationNamespacesToKeep";
     public const CONF_SVG_OPTIMIZATION_ENABLE = "svgOptimizationEnable";
-    public const COLOR_TYPE_STROKE_OUTLINE = FetchSvg::STROKE_ATTRIBUTE;
+    public const COLOR_TYPE_STROKE_OUTLINE = FetcherSvg::STROKE_ATTRIBUTE;
     public const CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE = "svgOptimizationAttributesToDelete";
     public const CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY = "svgOptimizationElementsToDeleteIfEmpty";
     public const SVG_NAMESPACE_URI = "http://www.w3.org/2000/svg";
@@ -122,14 +122,14 @@ class FetchSvg extends FetchImage
     private ?string $requestedClass = null;
 
 
-    private static function createSvgEmpty(): FetchSvg
+    private static function createSvgEmpty(): FetcherSvg
     {
-        return new FetchSvg();
+        return new FetcherSvg();
     }
 
     /**
      */
-    public static function createSvgFromPath(DokuPath $path): FetchSvg
+    public static function createSvgFromPath(DokuPath $path): FetcherSvg
     {
         return self::createSvgEmpty()
             ->setOriginalPath($path);
@@ -138,7 +138,7 @@ class FetchSvg extends FetchImage
     /**
      * @throws ExceptionBadArgument
      */
-    public static function createSvgFromFetchUrl(Url $fetchUrl): FetchSvg
+    public static function createSvgFromFetchUrl(Url $fetchUrl): FetcherSvg
     {
         $fetchSvg = self::createSvgEmpty();
         $fetchSvg->buildFromUrl($fetchUrl);
@@ -148,7 +148,7 @@ class FetchSvg extends FetchImage
     /**
      * @throws ExceptionBadSyntax
      */
-    public static function createSvgFromMarkup(string $markup): FetchSvg
+    public static function createSvgFromMarkup(string $markup): FetcherSvg
     {
         return self::createSvgEmpty()->setMarkup($markup);
     }
@@ -156,9 +156,9 @@ class FetchSvg extends FetchImage
     /**
      * @throws ExceptionBadArgument
      */
-    public static function createFromAttributes(TagAttributes $tagAttributes): FetchSvg
+    public static function createFromAttributes(TagAttributes $tagAttributes): FetcherSvg
     {
-        return FetchSvg::createSvgEmpty()->buildFromTagAttributes($tagAttributes);
+        return FetcherSvg::createSvgEmpty()->buildFromTagAttributes($tagAttributes);
     }
 
     /**
@@ -179,7 +179,7 @@ class FetchSvg extends FetchImage
         try {
             return $this->getRequestedOptimization();
         } catch (ExceptionNotFound $e) {
-            return PluginUtility::getConfValue(FetchSvg::CONF_SVG_OPTIMIZATION_ENABLE, 1);
+            return PluginUtility::getConfValue(FetcherSvg::CONF_SVG_OPTIMIZATION_ENABLE, 1);
         }
 
     }
@@ -200,9 +200,9 @@ class FetchSvg extends FetchImage
 
     /**
      * @param $boolean
-     * @return FetchSvg
+     * @return FetcherSvg
      */
-    public function setRequestedOptimization($boolean): FetchSvg
+    public function setRequestedOptimization($boolean): FetcherSvg
     {
         $this->requestedOptimization = $boolean;
         return $this;
@@ -226,14 +226,14 @@ class FetchSvg extends FetchImage
              * Delete Editor namespace
              * https://github.com/svg/svgo/blob/master/plugins/removeEditorsNSData.js
              */
-            $confNamespaceToKeeps = PluginUtility::getConfValue(FetchSvg::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP);
+            $confNamespaceToKeeps = PluginUtility::getConfValue(FetcherSvg::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP);
             $namespaceToKeep = StringUtility::explodeAndTrim($confNamespaceToKeeps, ",");
             foreach ($this->getXmlDocument()->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
                 if (
                     !empty($namespacePrefix)
                     && $namespacePrefix != "svg"
                     && !in_array($namespacePrefix, $namespaceToKeep)
-                    && in_array($namespaceUri, FetchSvg::EDITOR_NAMESPACE)
+                    && in_array($namespaceUri, FetcherSvg::EDITOR_NAMESPACE)
                 ) {
                     $this->getXmlDocument()->removeNamespace($namespaceUri);
                 }
@@ -265,7 +265,7 @@ class FetchSvg extends FetchImage
             /**
              * Delete default value (version=1.1 for instance)
              */
-            $defaultValues = FetchSvg::SVG_DEFAULT_ATTRIBUTES_VALUE;
+            $defaultValues = FetcherSvg::SVG_DEFAULT_ATTRIBUTES_VALUE;
             foreach ($documentElement->attributes as $attribute) {
                 /** @var DOMAttr $attribute */
                 $name = $attribute->name;
@@ -279,7 +279,7 @@ class FetchSvg extends FetchImage
             /**
              * Suppress the attributes (by default id, style and class, data-name)
              */
-            $attributeConfToDelete = PluginUtility::getConfValue(FetchSvg::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE, "id, style, class, data-name");
+            $attributeConfToDelete = PluginUtility::getConfValue(FetcherSvg::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE, "id, style, class, data-name");
             $attributesNameToDelete = StringUtility::explodeAndTrim($attributeConfToDelete, ",");
             foreach ($attributesNameToDelete as $value) {
 
@@ -314,7 +314,7 @@ class FetchSvg extends FetchImage
                     $heightPixel = Unit::toPixel($heightAttributeValue);
 
                     // ViewBox
-                    $viewBoxAttribute = $documentElement->getAttribute(FetchSvg::VIEW_BOX);
+                    $viewBoxAttribute = $documentElement->getAttribute(FetcherSvg::VIEW_BOX);
                     if (!empty($viewBoxAttribute)) {
                         $viewBoxAttributeAsArray = StringUtility::explodeAndTrim($viewBoxAttribute, " ");
 
@@ -360,7 +360,7 @@ class FetchSvg extends FetchImage
              * The illustration uses inline fill to color and styled
              * For instance, all un-draw: https://undraw.co/illustrations
              */
-            $elementsToDeleteConf = PluginUtility::getConfValue(FetchSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style, title, desc");
+            $elementsToDeleteConf = PluginUtility::getConfValue(FetcherSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style, title, desc");
             $elementsToDelete = StringUtility::explodeAndTrim($elementsToDeleteConf, ",");
             foreach ($elementsToDelete as $elementToDelete) {
                 if ($elementToDelete === "style" && $this->getRequestedPreserveStyleOrDefault()) {
@@ -372,7 +372,7 @@ class FetchSvg extends FetchImage
             // Delete If Empty
             //   * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/defs
             //   * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/metadata
-            $elementsToDeleteIfEmptyConf = PluginUtility::getConfValue(FetchSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY, "metadata, defs, g");
+            $elementsToDeleteIfEmptyConf = PluginUtility::getConfValue(FetcherSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY, "metadata, defs, g");
             $elementsToDeleteIfEmpty = StringUtility::explodeAndTrim($elementsToDeleteIfEmptyConf);
             foreach ($elementsToDeleteIfEmpty as $elementToDeleteIfEmpty) {
                 $elementNodeList = $this->getXmlDocument()->xpath("//*[local-name()='$elementToDeleteIfEmpty']");
@@ -389,7 +389,7 @@ class FetchSvg extends FetchImage
              * At the end to be able to query with svg as prefix
              */
             if (!in_array("svg", $namespaceToKeep)) {
-                $documentElement->removeAttributeNS(FetchSvg::SVG_NAMESPACE_URI, FetchSvg::SVG_NAMESPACE_PREFIX);
+                $documentElement->removeAttributeNS(FetcherSvg::SVG_NAMESPACE_URI, FetcherSvg::SVG_NAMESPACE_PREFIX);
             }
 
         }
@@ -403,7 +403,7 @@ class FetchSvg extends FetchImage
      */
     public function getIntrinsicHeight(): int
     {
-        $viewBox = $this->getXmlDocument()->getXmlDom()->documentElement->getAttribute(FetchSvg::VIEW_BOX);
+        $viewBox = $this->getXmlDocument()->getXmlDom()->documentElement->getAttribute(FetcherSvg::VIEW_BOX);
         if ($viewBox !== "") {
             $attributes = $this->getViewBoxAttributes($viewBox);
             $viewBoxHeight = $attributes[3];
@@ -436,7 +436,7 @@ class FetchSvg extends FetchImage
     public
     function getIntrinsicWidth(): int
     {
-        $viewBox = $this->getXmlDom()->documentElement->getAttribute(FetchSvg::VIEW_BOX);
+        $viewBox = $this->getXmlDom()->documentElement->getAttribute(FetcherSvg::VIEW_BOX);
         if ($viewBox !== "") {
             $attributes = $this->getViewBoxAttributes($viewBox);
             $viewBoxWidth = $attributes[2];
@@ -564,7 +564,7 @@ class FetchSvg extends FetchImage
             LogUtility::internalError("No original path for the svg fetcher");
         }
         try {
-            $files[] = ClassUtility::getClassPath(FetchSvg::class);
+            $files[] = ClassUtility::getClassPath(FetcherSvg::class);
         } catch (\ReflectionException $e) {
             LogUtility::internalError("Unable to add the FetchImageSvg class as dependency. Error: {$e->getMessage()}");
         }
@@ -625,7 +625,7 @@ class FetchSvg extends FetchImage
     {
 
         try {
-            $dokuPath = FetchRaw::createEmpty()->buildFromUrl($url)->getFetchPath();
+            $dokuPath = FetcherRaw::createEmpty()->buildFromUrl($url)->getFetchPath();
         } catch (ExceptionBadArgument $e) {
             return false;
         }
@@ -647,7 +647,7 @@ class FetchSvg extends FetchImage
     }
 
 
-    public function setRequestedColor(ColorRgb $color): FetchSvg
+    public function setRequestedColor(ColorRgb $color): FetcherSvg
     {
         $this->color = $color;
         return $this;
@@ -668,7 +668,7 @@ class FetchSvg extends FetchImage
      * @param string $preserveAspectRatio - the aspect ratio of the svg
      * @return $this
      */
-    public function setRequestedPreserveAspectRatio(string $preserveAspectRatio): FetchSvg
+    public function setRequestedPreserveAspectRatio(string $preserveAspectRatio): FetcherSvg
     {
         $this->preserveAspectRatio = $preserveAspectRatio;
         return $this;
@@ -697,10 +697,10 @@ class FetchSvg extends FetchImage
      *  * is used to add a data attribute in the svg to be able to select it for test purpose
      *
      * @param string $name
-     * @return FetchSvg
+     * @return FetcherSvg
      */
     public
-    function setRequestedName(string $name): FetchSvg
+    function setRequestedName(string $name): FetcherSvg
     {
         $this->requestedName = $name;
         return $this;
@@ -774,7 +774,7 @@ class FetchSvg extends FetchImage
         return $this->requestedName;
     }
 
-    public function setPreserveStyle(bool $bool): FetchSvg
+    public function setPreserveStyle(bool $bool): FetcherSvg
     {
         $this->preserveStyle = $bool;
         return $this;
@@ -803,13 +803,13 @@ class FetchSvg extends FetchImage
     /**
      * @throws ExceptionBadSyntax
      */
-    private function setMarkup(string $markup): FetchSvg
+    private function setMarkup(string $markup): FetcherSvg
     {
         $this->xmlDocument = XmlDocument::createXmlDocFromMarkup($markup);
         return $this;
     }
 
-    public function setRequestedType(string $requestedType): FetchSvg
+    public function setRequestedType(string $requestedType): FetcherSvg
     {
         $this->requestedType = $requestedType;
         return $this;
@@ -837,21 +837,21 @@ class FetchSvg extends FetchImage
         /**
          * ViewBox should exist
          */
-        $viewBox = $documentElement->getAttribute(FetchSvg::VIEW_BOX);
+        $viewBox = $documentElement->getAttribute(FetcherSvg::VIEW_BOX);
         if ($viewBox === "") {
             try {
                 $width = $this->getIntrinsicWidth();
             } catch (ExceptionCompile $e) {
-                LogUtility::error("Svg processing stopped. Bad svg: We can't determine the width of the svg ($this) (The viewBox and the width does not exist) ", FetchSvg::CANONICAL);
+                LogUtility::error("Svg processing stopped. Bad svg: We can't determine the width of the svg ($this) (The viewBox and the width does not exist) ", FetcherSvg::CANONICAL);
                 return $this->getXmlDocument()->getXmlText();
             }
             try {
                 $targetHeight = $this->getIntrinsicHeight();
             } catch (ExceptionCompile $e) {
-                LogUtility::error("Svg processing stopped. Bad svg: We can't determine the height of the svg ($this) (The viewBox and the height does not exist) ", FetchSvg::CANONICAL);
+                LogUtility::error("Svg processing stopped. Bad svg: We can't determine the height of the svg ($this) (The viewBox and the height does not exist) ", FetcherSvg::CANONICAL);
                 return $this->getXmlDocument()->getXmlText();
             }
-            $documentElement->setAttribute(FetchSvg::VIEW_BOX, "0 0 $width $targetHeight");
+            $documentElement->setAttribute(FetcherSvg::VIEW_BOX, "0 0 $width $targetHeight");
         }
 
         if ($this->getRequestedOptimizeOrDefault()) {
@@ -907,9 +907,9 @@ class FetchSvg extends FetchImage
             $mediaWidth == $mediaHeight
             && $mediaWidth < 400) // 356 for logos telegram are the size of the twitter emoji but tile may be bigger ?
         {
-            $svgStructureType = FetchSvg::ICON_TYPE;
+            $svgStructureType = FetcherSvg::ICON_TYPE;
         } else {
-            $svgStructureType = FetchSvg::ILLUSTRATION_TYPE;
+            $svgStructureType = FetcherSvg::ILLUSTRATION_TYPE;
 
             // some icon may be bigger
             // in size than 400. example 1024 for ant-design:table-outlined
@@ -922,8 +922,8 @@ class FetchSvg extends FetchImage
                 // not a svg from a path
                 $isInIconDirectory = false;
             }
-            if ($requestedType === FetchSvg::ICON_TYPE || $isInIconDirectory) {
-                $svgStructureType = FetchSvg::ICON_TYPE;
+            if ($requestedType === FetcherSvg::ICON_TYPE || $isInIconDirectory) {
+                $svgStructureType = FetcherSvg::ICON_TYPE;
             }
 
         }
@@ -939,11 +939,11 @@ class FetchSvg extends FetchImage
          */
         if ($requestedType === null) {
             switch ($svgStructureType) {
-                case FetchSvg::ICON_TYPE:
-                    $requestedType = FetchSvg::ICON_TYPE;
+                case FetcherSvg::ICON_TYPE:
+                    $requestedType = FetcherSvg::ICON_TYPE;
                     break;
                 default:
-                    $requestedType = FetchSvg::ILLUSTRATION_TYPE;
+                    $requestedType = FetcherSvg::ILLUSTRATION_TYPE;
                     break;
             }
         }
@@ -958,8 +958,8 @@ class FetchSvg extends FetchImage
          * Dimension and other attributes by requested type
          */
         switch ($requestedType) {
-            case FetchSvg::ICON_TYPE:
-            case FetchSvg::TILE_TYPE:
+            case FetcherSvg::ICON_TYPE:
+            case FetcherSvg::TILE_TYPE:
                 /**
                  * Dimension: An icon or a tile have the same height and width
                  *
@@ -970,8 +970,8 @@ class FetchSvg extends FetchImage
                  *
                  */
                 if ($this->norWidthNorHeightWasRequested()) {
-                    if ($requestedType == FetchSvg::ICON_TYPE) {
-                        $length = FetchSvg::DEFAULT_ICON_WIDTH;
+                    if ($requestedType == FetcherSvg::ICON_TYPE) {
+                        $length = FetcherSvg::DEFAULT_ICON_WIDTH;
                     } else {
                         // tile
                         $length = "192";
@@ -1010,7 +1010,7 @@ class FetchSvg extends FetchImage
                      * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio
                      * Default is xMidYMid meet
                      */
-                    $aspectRatio = PluginUtility::getConfValue(FetchSvg::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
+                    $aspectRatio = PluginUtility::getConfValue(FetcherSvg::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
                 }
                 $documentElement->setAttribute("preserveAspectRatio", $aspectRatio);
 
@@ -1058,8 +1058,8 @@ class FetchSvg extends FetchImage
 
 
         switch ($svgStructureType) {
-            case FetchSvg::ICON_TYPE:
-            case FetchSvg::TILE_TYPE:
+            case FetcherSvg::ICON_TYPE:
+            case FetcherSvg::TILE_TYPE:
                 /**
                  * Determine if this is a:
                  *   * fill one color
@@ -1072,15 +1072,15 @@ class FetchSvg extends FetchImage
                  *
                  * If the stroke attribute is not present this is a fill icon
                  */
-                $svgColorType = FetchSvg::COLOR_TYPE_FILL_SOLID;
-                if ($documentElement->hasAttribute(FetchSvg::STROKE_ATTRIBUTE)) {
-                    $svgColorType = FetchSvg::COLOR_TYPE_STROKE_OUTLINE;
+                $svgColorType = FetcherSvg::COLOR_TYPE_FILL_SOLID;
+                if ($documentElement->hasAttribute(FetcherSvg::STROKE_ATTRIBUTE)) {
+                    $svgColorType = FetcherSvg::COLOR_TYPE_STROKE_OUTLINE;
                 }
                 /**
                  * Double color icon ?
                  */
                 $isDoubleColor = false;
-                if ($svgColorType === FetchSvg::COLOR_TYPE_FILL_SOLID) {
+                if ($svgColorType === FetcherSvg::COLOR_TYPE_FILL_SOLID) {
                     $svgFillsElement = $this->getXmlDocument()->xpath("//*[@fill]");
                     $fillColors = [];
                     for ($i = 0; $i < $svgFillsElement->length; $i++) {
@@ -1119,7 +1119,7 @@ class FetchSvg extends FetchImage
                     /**
                      * Note: if fill was not set, the default color would be black
                      */
-                    $documentElement->setAttribute("fill", FetchSvg::CURRENT_COLOR);
+                    $documentElement->setAttribute("fill", FetcherSvg::CURRENT_COLOR);
 
                 }
 
@@ -1155,7 +1155,7 @@ class FetchSvg extends FetchImage
                 try {
                     $color = $this->getRequestedColor();
                 } catch (ExceptionNotFound $e) {
-                    if ($requestedType === FetchSvg::ILLUSTRATION_TYPE) {
+                    if ($requestedType === FetcherSvg::ILLUSTRATION_TYPE) {
                         $primaryColor = Site::getPrimaryColorValue();
                         if ($primaryColor !== null) {
                             $color = $primaryColor;
@@ -1185,13 +1185,13 @@ class FetchSvg extends FetchImage
 
 
                     switch ($svgColorType) {
-                        case FetchSvg::COLOR_TYPE_FILL_SOLID:
+                        case FetcherSvg::COLOR_TYPE_FILL_SOLID:
 
                             if (!$isDoubleColor) {
 
                                 $documentElement->setAttribute("fill", $colorValue);
 
-                                if ($colorValue !== FetchSvg::CURRENT_COLOR) {
+                                if ($colorValue !== FetcherSvg::CURRENT_COLOR) {
                                     /**
                                      * Update the fill property on sub-path
                                      * If the fill is set on sub-path, it will not work
@@ -1207,7 +1207,7 @@ class FetchSvg extends FetchImage
                                         $value = $nodeElement->getAttribute("fill");
                                         if ($value !== "none") {
                                             if ($nodeElement->parentNode->tagName !== "svg") {
-                                                $nodeElement->setAttribute("fill", FetchSvg::CURRENT_COLOR);
+                                                $nodeElement->setAttribute("fill", FetcherSvg::CURRENT_COLOR);
                                             } else {
                                                 $this->getXmlDocument()->removeAttributeValue("fill", $nodeElement);
                                             }
@@ -1224,11 +1224,11 @@ class FetchSvg extends FetchImage
                             }
                             break;
 
-                        case FetchSvg::COLOR_TYPE_STROKE_OUTLINE:
+                        case FetcherSvg::COLOR_TYPE_STROKE_OUTLINE:
                             $documentElement->setAttribute("fill", "none");
-                            $documentElement->setAttribute(FetchSvg::STROKE_ATTRIBUTE, $colorValue);
+                            $documentElement->setAttribute(FetcherSvg::STROKE_ATTRIBUTE, $colorValue);
 
-                            if ($colorValue !== FetchSvg::CURRENT_COLOR) {
+                            if ($colorValue !== FetcherSvg::CURRENT_COLOR) {
                                 /**
                                  * Delete the stroke property on sub-path
                                  */
@@ -1239,9 +1239,9 @@ class FetchSvg extends FetchImage
                                      * @var DOMElement $nodeElement
                                      */
                                     $nodeElement = $svgPaths[$i];
-                                    $value = $nodeElement->getAttribute(FetchSvg::STROKE_ATTRIBUTE);
+                                    $value = $nodeElement->getAttribute(FetcherSvg::STROKE_ATTRIBUTE);
                                     if ($value !== "none") {
-                                        $this->getXmlDocument()->removeAttributeValue(FetchSvg::STROKE_ATTRIBUTE, $nodeElement);
+                                        $this->getXmlDocument()->removeAttributeValue(FetcherSvg::STROKE_ATTRIBUTE, $nodeElement);
                                     } else {
                                         $this->getXmlDocument()->removeNode($nodeElement);
                                     }
@@ -1270,7 +1270,7 @@ class FetchSvg extends FetchImage
          */
         $ratio = $this->getTargetAspectRatio();
         [$processedWidth, $processedHeight] = $this->getCroppingDimensionsWithRatio($ratio);
-        $documentElement->setAttribute(FetchSvg::VIEW_BOX, "0 0 $processedWidth $processedHeight");
+        $documentElement->setAttribute(FetcherSvg::VIEW_BOX, "0 0 $processedWidth $processedHeight");
 
 
         /**
@@ -1279,7 +1279,7 @@ class FetchSvg extends FetchImage
         try {
             $zoomFactor = $this->getRequestedZoom();
         } catch (ExceptionNotFound $e) {
-            if ($svgStructureType === FetchSvg::ICON_TYPE && $requestedType === FetchSvg::ILLUSTRATION_TYPE) {
+            if ($svgStructureType === FetcherSvg::ICON_TYPE && $requestedType === FetcherSvg::ILLUSTRATION_TYPE) {
                 $zoomFactor = -4;
             } else {
                 $zoomFactor = null; // 0r 1 :)
@@ -1300,7 +1300,7 @@ class FetchSvg extends FetchImage
             $actualHeight = $mediaHeight;
             $x = -($processedWidth - $actualWidth) / 2;
             $y = -($processedHeight - $actualHeight) / 2;
-            $documentElement->setAttribute(FetchSvg::VIEW_BOX, "$x $y $processedWidth $processedHeight");
+            $documentElement->setAttribute(FetcherSvg::VIEW_BOX, "$x $y $processedWidth $processedHeight");
         }
 
 
@@ -1347,7 +1347,7 @@ class FetchSvg extends FetchImage
     }
 
 
-    public function getName(): string
+    public function getFetcherName(): string
     {
         return self::CANONICAL;
     }
@@ -1357,7 +1357,7 @@ class FetchSvg extends FetchImage
      * @throws ExceptionBadSyntax
      * @throws ExceptionCompile
      */
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchSvg
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherSvg
     {
 
         foreach (array_keys($tagAttributes->getComponentAttributes()) as $svgAttribute) {
@@ -1431,7 +1431,7 @@ class FetchSvg extends FetchImage
          */
         try {
             $iconDownload =
-                !$tagAttributes->hasAttribute(FetchRaw::MEDIA_QUERY_PARAMETER) &&
+                !$tagAttributes->hasAttribute(FetcherRaw::MEDIA_QUERY_PARAMETER) &&
                 $this->getRequestedType() === self::ICON_TYPE
                 && $this->getRequestedName() !== null;
             if ($iconDownload) {
@@ -1441,7 +1441,7 @@ class FetchSvg extends FetchImage
                     throw new ExceptionBadArgument("The svg attributes does not have a media or icon name attribute. We can't define the svg path.");
                 }
                 $iconId = $dokuPath->getDokuwikiId();
-                $tagAttributes->addComponentAttributeValue(FetchRaw::MEDIA_QUERY_PARAMETER, $iconId);
+                $tagAttributes->addComponentAttributeValue(FetcherRaw::MEDIA_QUERY_PARAMETER, $iconId);
             }
         } catch (ExceptionNotFound $e) {
             // no requested type or name
@@ -1535,13 +1535,13 @@ class FetchSvg extends FetchImage
         return $zoom;
     }
 
-    public function setRequestedZoom(float $zoomFactor): FetchSvg
+    public function setRequestedZoom(float $zoomFactor): FetcherSvg
     {
         $this->zoomFactor = $zoomFactor;
         return $this;
     }
 
-    public function setRequestedClass(string $value): FetchSvg
+    public function setRequestedClass(string $value): FetcherSvg
     {
         $this->requestedClass = $value;
         return $this;

@@ -3,15 +3,15 @@
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotExists;
-use ComboStrap\FetchAbs;
+use ComboStrap\FetcherAbs;
 use ComboStrap\FetchCache;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadState;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\Fetch;
-use ComboStrap\FetchImageRaster;
+use ComboStrap\Fetcher;
+use ComboStrap\FetcherRaster;
 use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\HttpResponse;
@@ -23,7 +23,7 @@ use ComboStrap\Page;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\Url;
-use ComboStrap\FetchVignette;
+use ComboStrap\FetcherVignette;
 use dokuwiki\Utf8\PhpString;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -48,7 +48,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     const CANONICAL = "cache";
 
     /**
-     * Enable an infinite cache on static resources (image, script, ...) with a {@link Fetch::CACHE_BUSTER_KEY}
+     * Enable an infinite cache on static resources (image, script, ...) with a {@link Fetcher::CACHE_BUSTER_KEY}
      */
     public const CONF_STATIC_CACHE_ENABLED = "staticCacheEnabled";
 
@@ -82,11 +82,11 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     {
 
         $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
-        $fetcher = $_GET[Fetch::FETCHER_KEY];
+        $fetcher = $_GET[Fetcher::FETCHER_KEY];
         if ($drive === null && $fetcher === null) {
             return;
         }
-        if ($fetcher === FetchImageRaster::CANONICAL) {
+        if ($fetcher === FetcherRaster::CANONICAL) {
             // not yet implemented
             return;
         }
@@ -113,7 +113,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
 
         try {
 
-            $fetcher = FetchAbs::createFetcherFromFetchUrl($fetchUrl);
+            $fetcher = FetcherAbs::createFetcherFromFetchUrl($fetchUrl);
             $fetchPath = $fetcher->getFetchPath();
             $event->data['file'] = $fetchPath;
             $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
@@ -151,7 +151,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         /**
          * If there is no buster key, the infinite cache is off
          */
-        $busterKey = $_GET[Fetch::CACHE_BUSTER_KEY];
+        $busterKey = $_GET[Fetcher::CACHE_BUSTER_KEY];
         if ($busterKey === null) {
             return;
         }
@@ -348,7 +348,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
              * tok is just added when w and h are on the url
              * Buster is the timestamp
              */
-            if (in_array($key, ["media", "tok", Fetch::CACHE_BUSTER_KEY])) {
+            if (in_array($key, ["media", "tok", Fetcher::CACHE_BUSTER_KEY])) {
                 continue;
             }
             /**

@@ -7,20 +7,22 @@ use ComboStrap\ContextManager;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\FetchImage;
-use ComboStrap\FetchSvg;
+use ComboStrap\FetcherImage;
+use ComboStrap\FetcherSvg;
 use ComboStrap\FirstImage;
 use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\MediaMarkup;
 use ComboStrap\Page;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
-use ComboStrap\FetchVignette;
+use ComboStrap\FetcherVignette;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -198,24 +200,30 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
          * Image Order of precedence
          */
         $order = $data[self::ORDER_OF_PREFERENCE];
-        $selectedPageImage = null;
+        $imageFetcher = null;
         foreach ($order as $pageImageProcessing) {
             switch ($pageImageProcessing) {
                 case self::META_TYPE:
                     try {
-                        $selectedPageImage = $this->getMetaImage($page, $tagAttributes);
+                        $imageFetcher = $this->selectAndGetBestPageImageForRatio($page, $tagAttributes);
                     } catch (ExceptionNotFound $e) {
                         // ok
                     }
                     break;
                 case self::DESCENDANT_TYPE:
                     $parent = $page;
-                    while ($parent = $parent->getParentPage()) {
+                    while (true) {
                         try {
-                            $selectedPageImage = $this->getMetaImage($parent, $tagAttributes);
+                            $parent = $parent->getParentPage();
+                        } catch (ExceptionNotFound $e) {
+                            break;
+                        }
+                        try {
+                            $imageFetcher = $this->selectAndGetBestPageImageForRatio($parent, $tagAttributes);
                         } catch (ExceptionNotFound $e) {
                             try {
-                                $selectedPageImage = FirstImage::createForPage($parent)->getImageObject();
+                                $imageFetcher = FirstImage::createForPage($parent)
+                                    ->getImageFetcher();
                             } catch (ExceptionNotFound $e) {
                                 continue;
                             }
@@ -225,7 +233,8 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     break;
                 case self::FIRST_TYPE:
                     try {
-                        $selectedPageImage = FirstImage::createForPage($page)->getImageObject();
+                        $imageFetcher = FirstImage::createForPage($page)
+                            ->getImageFetcher();
                     } catch (ExceptionNotFound $e) {
                         continue 2;
                     }
@@ -233,15 +242,16 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                 case self::VIGNETTE_TYPE:
 
                     try {
-                        $selectedPageImage = FetchVignette::createForPage($page);
-                    } catch (ExceptionBadArgument $e) {
+                        $imageFetcher = FetcherVignette::createForPage($page);
+                    } catch (ExceptionNotFound|ExceptionBadArgument $e) {
                         LogUtility::error("Error while creating the vignette for the page ($page). Error: {$e->getMessage()}");
                     }
                     break;
 
                 case self::LOGO_TYPE:
-                    $selectedPageImage = Site::getLogoAsSvgImage();
-                    if ($selectedPageImage === null) {
+                    try {
+                        $imageFetcher = Site::getLogoAsSvgImage();
+                    } catch (ExceptionNotFound $e) {
                         LogUtility::msg("No page image could be find for the page ($path)", LogUtility::LVL_MSG_INFO, self::CANONICAL);
                     }
                     break;
@@ -251,48 +261,29 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     LogUtility::error("The image ($pageImageProcessing) is an unknown page image type", self::CANONICAL);
                     continue 2;
             }
-            if ($selectedPageImage !== null) {
+            if ($imageFetcher !== null) {
                 break;
             }
         }
 
-        if ($selectedPageImage === null) {
+        if ($imageFetcher === null) {
             return false;
         }
 
         /**
-         * Image Path was found, no create the request
-         */
-
-        /**
-         * {@link Dimension::RATIO_ATTRIBUTE Ratio} is part of the request
-         * because in svg it is the definition of the viewBox
-         * The rendering function takes care of it
-         * and it's also passed in the fetch url
-         */
-
-
-        /**
-         * Used as an illustration in a card
-         * If the image is too small, we allow that it will stretch
-         * to take the whole space
-         */
-        if ($data[PluginUtility::CONTEXT] === syntax_plugin_combo_card::TAG) {
-            $tagAttributes->addStyleDeclarationIfNotSet("max-width", "100%");
-            $tagAttributes->addStyleDeclarationIfNotSet("max-height", "unset");
-        }
-
-        /**
+         * Extra tag properties processing before building the fetch image with
+         * the tag attributes
+         *
          * This is an illustration image
          * Used by svg to color by default with the primary color for instance
          */
-        $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, FetchSvg::ILLUSTRATION_TYPE);
+        $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, FetcherSvg::ILLUSTRATION_TYPE);
 
         /**
          * Zoom applies only to icon not to illustration
          *
          */
-        $isIcon = IconDownloader::isInIconDirectory($selectedPageImage->getOriginalPath());
+        $isIcon = IconDownloader::isInIconDirectory($imageFetcher->getOriginalPath());
         if (!$isIcon) {
             $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
         } else {
@@ -308,7 +299,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                          * Icon rendering
                          */
                         $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
-                        $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, FetchSvg::ICON_TYPE);
+                        $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, FetcherSvg::ICON_TYPE);
 
                     }
                 } catch (ExceptionCompile $e) {
@@ -317,14 +308,36 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
             }
         }
 
-        $mediaLink = MediaLink::createFromMediaMarkup(
-            $selectedPageImage->getOriginalPath(),
-            $tagAttributes
-        );
+        /**
+         * Final building
+         */
         try {
-            $renderer->doc .= $mediaLink->renderMediaTag();
+            $imageFetcher->buildFromTagAttributes($tagAttributes);
+        } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionCompile $e) {
+            LogUtility::error("The image could not be build. Error: {$e->getMessage()}", self::CANONICAL);
+        }
+
+        /**
+         * Img/Svg Tag
+         */
+        $htmlTag = $tagAttributes;
+        /**
+         * Used as an illustration in a card
+         * If the image is too small, we allow that it will stretch
+         * to take the whole space
+         */
+        if ($data[PluginUtility::CONTEXT] === syntax_plugin_combo_card::TAG) {
+            $htmlTag->addStyleDeclarationIfNotSet("max-width", "100%");
+            $htmlTag->addStyleDeclarationIfNotSet("max-height", "unset");
+        }
+
+
+        try {
+            $renderer->doc .= MediaMarkup::createFromFetcher($imageFetcher)
+                ->setHtmlTagAttributes($htmlTag)
+                ->toHtml();
         } catch (ExceptionCompile $e) {
-            $renderer->doc .= "Error while rendering: {$e->getMessage()}";
+            $renderer->doc .= "Error while rendering the page image: {$e->getMessage()}";
         }
         return true;
 
@@ -333,7 +346,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionNotFound
      */
-    private function getMetaImage(Page $page, TagAttributes $tagAttributes): FetchImage
+    private function selectAndGetBestPageImageForRatio(Page $page, TagAttributes $tagAttributes): FetcherImage
     {
         /**
          * Take the image and the page images

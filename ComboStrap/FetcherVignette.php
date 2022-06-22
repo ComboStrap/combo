@@ -2,8 +2,6 @@
 
 namespace ComboStrap;
 
-use dokuwiki\Cache\Cache;
-
 /**
  *
  * Vignette:
@@ -21,7 +19,7 @@ use dokuwiki\Cache\Cache;
  * https://lofi.limo/blog/images/write-html-right.png
  * https://opengraph.githubassets.com/6b85042cdc8e98725bd85a0e7b159c99104644fbf97402fded205ee4d2036ab9/ComboStrap/combo
  */
-class FetchVignette extends FetchImage
+class FetcherVignette extends FetcherImage
 {
 
     const CANONICAL = self::VIGNETTE_NAME;
@@ -58,9 +56,9 @@ class FetchVignette extends FetchImage
      * @throws ExceptionNotFound - if the page does not exists
      * @throws ExceptionBadArgument - if the mime is not supported
      */
-    public static function createForPage(Page $page, Mime $mime = null): FetchVignette
+    public static function createForPage(Page $page, Mime $mime = null): FetcherVignette
     {
-        return new FetchVignette($page, $mime);
+        return new FetcherVignette($page, $mime);
     }
 
     /**
@@ -248,7 +246,7 @@ class FetchVignette extends FetchImage
         return $cache->getFile();
     }
 
-    public function setUseCache(bool $false): FetchVignette
+    public function setUseCache(bool $false): FetcherVignette
     {
         $this->useCache = $false;
         return $this;
@@ -289,10 +287,8 @@ class FetchVignette extends FetchImage
 
     function getFetchUrl(Url $url = null): Url
     {
-        $url = parent::getFetchUrl()
+        return parent::getFetchUrl($url)
             ->addQueryParameter(self::VIGNETTE_NAME, $this->page->getPath()->getDokuwikiId() . "." . $this->mime->getExtension());
-        $this->addCommonImageQueryParameterToUrl($url);
-        return $url;
     }
 
 
@@ -315,14 +311,14 @@ class FetchVignette extends FetchImage
     }
 
     /**
-     * @throws ExceptionBadArgument - no vignette property, bad mime
-     * @throws ExceptionNotFound - the page does not exists
+     * @throws ExceptionBadArgument
+     * @throws ExceptionNotFound
      */
-    public function buildFromUrl(Url $url): FetchVignette
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherVignette
     {
-        try {
-            $vignette = $url->getQueryPropertyValue(self::VIGNETTE_NAME);
-        } catch (ExceptionNotFound $e) {
+
+        $vignette = $tagAttributes->getValueAndRemove(self::VIGNETTE_NAME);
+        if ($vignette === null) {
             throw new ExceptionBadArgument("The vignette query property was not present");
         }
         $lastPoint = strrpos($vignette, ".");
@@ -337,12 +333,13 @@ class FetchVignette extends FetchImage
         } catch (ExceptionNotFound $e) {
             throw new ExceptionBadArgument("The vignette mime is unknown. Error: {$e->getMessage()}");
         }
-        $this->addCommonImageQueryParameterToUrl($url);
+        parent::buildFromTagAttributes($tagAttributes);
         return $this;
 
     }
 
-    public function getName(): string
+
+    public function getFetcherName(): string
     {
         return self::VIGNETTE_NAME;
     }
@@ -350,7 +347,7 @@ class FetchVignette extends FetchImage
     /**
      * @throws ExceptionNotFound
      */
-    public function setPage(Page $page): FetchVignette
+    public function setPage(Page $page): FetcherVignette
     {
         $this->page = $page;
         $this->buster = FileSystems::getCacheBuster($this->page->getPath());
@@ -360,7 +357,7 @@ class FetchVignette extends FetchImage
     /**
      * @throws ExceptionBadArgument
      */
-    public function setMime(Mime $mime): FetchVignette
+    public function setMime(Mime $mime): FetcherVignette
     {
         $this->mime = $mime;
         $gdInfo = gd_info();

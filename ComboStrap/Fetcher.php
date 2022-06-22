@@ -3,11 +3,25 @@
 namespace ComboStrap;
 
 /**
- * A class that would return/process a path
+ * A class that returns {@link Fetcher::getFetchPath() a path}
  *
- * Example: {@link FetchImage}
+ * where the request may come from:
+ *   * a {@link Fetcher::buildFromUrl() URL}
+ *   * a {@link Fetcher::buildFromTagAttributes() attributes}
+ *
+ * Example:
+ *   * {@link FetcherImage} such as:
+ *     * {@link FetcherSvg} that can process and return svg
+ *     * {@link FetcherRaster} that can process and return raster image
+ *     * {@link FetcherVignette} that returns a raster image from page metadata
+ *     * {@link FetcherSnapshot} that returns a snapshot image from a page
+ *
+ * It represents a fetch file and processing attributes
+ *
+ *   * if the image width is 20 -> the image is generated
+ *   * same for svg ...
  */
-interface Fetch
+interface Fetcher
 {
     /**
      * buster got the same value
@@ -41,16 +55,11 @@ interface Fetch
      */
     function getBuster(): string;
 
-    /**
-     * @param Url $url - the url
-     * @return bool - if the fetch class accepts this url
-     */
-    function acceptsFetchUrl(Url $url): bool;
 
     /**
      * @return Mime - the mime of the
      *
-     * You can also ask it via {@link Fetch::getFetchPath()} but it will
+     * You can also ask it via {@link Fetcher::getFetchPath()} but it will
      * perform the processing. If you want to create a cache file path with the good extension
      * this is the way to go.
      */
@@ -58,17 +67,17 @@ interface Fetch
 
     /**
      * A convenient way to build a fetcher from a URL
-     * This method calls the function {@link Fetch::buildFromTagAttributes()}
+     * This method calls the function {@link Fetcher::buildFromTagAttributes()}
      * @param Url $url
-     * @return Fetch
+     * @return Fetcher
      */
-    public function buildFromUrl(Url $url): Fetch;
+    public function buildFromUrl(Url $url): Fetcher;
 
     /**
      * @param TagAttributes $tagAttributes - the attributes
-     * @return Fetch
+     * @return Fetcher
      */
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): Fetch;
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): Fetcher;
 
     /**
      * @throws ExceptionNotFound
@@ -79,5 +88,5 @@ interface Fetch
     /**
      * @return string - an unique name
      */
-    public function getName(): string;
+    public function getFetcherName(): string;
 }

@@ -52,7 +52,7 @@ class Site
 
 
     /**
-     * @return FetchImage[]
+     * @return FetcherImage[]
      */
     public static function getLogoImages(): array
     {
@@ -62,7 +62,7 @@ class Site
             $dokuPath = DokuPath::createMediaPathFromId($logoPath);
             if (FileSystems::exists($dokuPath)) {
                 try {
-                    $logos[] = FetchImage::createImageFetchFromPath($dokuPath);
+                    $logos[] = FetcherImage::createImageFetchFromPath($dokuPath);
                 } catch (Exception $e) {
                     // The image is not valid
                     LogUtility::msg("The logo ($logoPath) is not a valid image. {$e->getMessage()}");
@@ -165,12 +165,12 @@ class Site
     /**
      * @throws ExceptionNotFound
      */
-    public static function getLogoAsSvgImage(): FetchSvg
+    public static function getLogoAsSvgImage(): FetcherSvg
     {
         foreach (self::SVG_LOGO_IDS as $svgLogo) {
 
             try {
-                $image = FetchSvg::createImageFetchFromId($svgLogo);
+                $image = FetcherSvg::createImageFetchFromId($svgLogo);
             } catch (ExceptionNotFound $e) {
                 continue;
             } catch (ExceptionCompile $e) {
@@ -187,12 +187,12 @@ class Site
     /**
      * @throws ExceptionNotFound
      */
-    public static function getLogoAsRasterImage(): FetchImageRaster
+    public static function getLogoAsRasterImage(): FetcherRaster
     {
         foreach (self::PNG_LOGO_IDS as $pngLogo) {
 
             try {
-                $image = FetchImageRaster::createImageRasterFetchFromId($pngLogo);
+                $image = FetcherRaster::createImageRasterFetchFromId($pngLogo);
             } catch (ExceptionCompile $e) {
                 LogUtility::msg("The png Logo ($pngLogo) returns an error. {$e->getMessage()}");
                 continue;
@@ -858,7 +858,7 @@ class Site
         $tagAttributes = TagAttributes::createEmpty("identity");
         $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "72");
         $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, "72");
-        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, FetchSvg::ICON_TYPE);
+        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, FetcherSvg::ICON_TYPE);
         $tagAttributes->addClassName("logo");
 
 
@@ -915,7 +915,7 @@ class Site
     /**
      * @throws ExceptionNotFound
      */
-    public static function getLogoImage(): FetchImage
+    public static function getLogoImage(): FetcherImage
     {
         $logosImages = Site::getLogoImages();
         if (empty($logosImages)) {

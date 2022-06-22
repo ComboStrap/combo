@@ -3,10 +3,10 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Background;
-use ComboStrap\FetchSvg;
+use ComboStrap\FetcherSvg;
 use ComboStrap\MarkupRef;
 use ComboStrap\MediaMarkup;
-use ComboStrap\FetchAbs;
+use ComboStrap\FetcherAbs;
 use ComboStrap\FetchCache;
 use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
@@ -184,7 +184,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                              * Hack for tile svg
                              */
                             $fill = $openingTag->getAttribute(Background::BACKGROUND_FILL);
-                            if ($fill === FetchSvg::TILE_TYPE) {
+                            if ($fill === FetcherSvg::TILE_TYPE) {
                                 $ref = $backgroundImageAttribute[MarkupRef::REF_ATTRIBUTE];
                                 if (!str_contains($ref, TagAttributes::TYPE_KEY) && str_contains($ref, "svg")) {
                                     if (str_contains($ref, "?")) {
@@ -204,7 +204,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                                 MediaMarkup::DOKUWIKI_SRC => $imageAttribute[0],
                                 Dimension::WIDTH_KEY => $imageAttribute[3],
                                 Dimension::HEIGHT_KEY => $imageAttribute[4],
-                                FetchAbs::CACHE_KEY => $imageAttribute[5]
+                                FetcherAbs::CACHE_KEY => $imageAttribute[5]
                             ];
                         }
                         $backgroundAttributes[Background::BACKGROUND_IMAGE] = $backgroundImageAttribute;

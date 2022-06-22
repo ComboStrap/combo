@@ -14,7 +14,7 @@ namespace ComboStrap;
  * (ie a file and its transformation attribute if any such as
  * width, height, ...)
  */
-abstract class FetchImage extends FetchRaw
+abstract class FetcherImage extends FetcherRaw
 {
 
     const CANONICAL = "image";
@@ -35,14 +35,14 @@ abstract class FetchImage extends FetchRaw
     public function __construct()
     {
         /**
-         * Image can be generated, ie {@link FetchVignette}, {@link Snapshot}
+         * Image can be generated, ie {@link FetcherVignette}, {@link FetcherSnapshot}
          */
     }
 
 
     /**
      * @param DokuPath $path
-     * @return FetchImageRaster|FetchSvg
+     * @return FetcherRaster|FetcherSvg
      * @throws ExceptionBadArgument - if the path is not an image
      */
     public static function createImageFetchFromPath(DokuPath $path)
@@ -60,11 +60,11 @@ abstract class FetchImage extends FetchRaw
 
         if ($mime->toString() === Mime::SVG) {
 
-            $image = FetchSvg::createSvgFromPath($path);
+            $image = FetcherSvg::createSvgFromPath($path);
 
         } else {
 
-            $image = FetchImageRaster::createImageRasterFetchFromPath($path);
+            $image = FetcherRaster::createImageRasterFetchFromPath($path);
 
         }
 
@@ -78,7 +78,7 @@ abstract class FetchImage extends FetchRaw
     /**
      * @param string $imageId
      * @param string|null $rev
-     * @return FetchSvg|FetchImageRaster
+     * @return FetcherSvg|FetcherRaster
      * @throws ExceptionBadArgument - if the path is not an image
      * @throws ExceptionBadSyntax - if the image is badly encoded
      * @throws ExceptionNotFound
@@ -135,7 +135,7 @@ abstract class FetchImage extends FetchRaw
     }
 
 
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchImage
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherImage
     {
 
         $requestedWidth = $tagAttributes->getValueAndRemove(Dimension::WIDTH_KEY);
@@ -321,8 +321,8 @@ abstract class FetchImage extends FetchRaw
      * specified in the query parameters
      *
      * For instance,
-     *   * with `200`, the target image has a {@link FetchImage::getTargetWidth() logical width} of 200 and a {@link FetchImage::getTargetHeight() logical height} that is scaled down by the {@link FetchImage::getIntrinsicAspectRatio() instrinsic ratio}
-     *   * with ''0x20'', the target image has a {@link FetchImage::getTargetHeight() logical height} of 20 and a {@link FetchImage::getTargetWidth() logical width} that is scaled down by the {@link FetchImage::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with `200`, the target image has a {@link FetcherImage::getTargetWidth() logical width} of 200 and a {@link FetcherImage::getTargetHeight() logical height} that is scaled down by the {@link FetcherImage::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with ''0x20'', the target image has a {@link FetcherImage::getTargetHeight() logical height} of 20 and a {@link FetcherImage::getTargetWidth() logical width} that is scaled down by the {@link FetcherImage::getIntrinsicAspectRatio() instrinsic ratio}
      *
      * The doc is {@link https://www.dokuwiki.org/images#resizing}
      *
@@ -373,8 +373,8 @@ abstract class FetchImage extends FetchRaw
      * The logical width is the width of the target image calculated from the requested dimension
      *
      * For instance,
-     *   * with `200`, the target image has a {@link FetchImage::getTargetWidth() logical width} of 200 and a {@link FetchImage::getTargetHeight() logical height} that is scaled down by the {@link FetchImage::getIntrinsicAspectRatio() instrinsic ratio}
-     *   * with ''0x20'', the target image has a {@link FetchImage::getTargetHeight() logical height} of 20 and a {@link FetchImage::getTargetWidth() logical width} that is scaled down by the {@link FetchImage::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with `200`, the target image has a {@link FetcherImage::getTargetWidth() logical width} of 200 and a {@link FetcherImage::getTargetHeight() logical height} that is scaled down by the {@link FetcherImage::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with ''0x20'', the target image has a {@link FetcherImage::getTargetHeight() logical height} of 20 and a {@link FetcherImage::getTargetWidth() logical width} that is scaled down by the {@link FetcherImage::getIntrinsicAspectRatio() instrinsic ratio}
      *
      * The doc is {@link https://www.dokuwiki.org/images#resizing}
      * @return int
@@ -486,26 +486,26 @@ abstract class FetchImage extends FetchRaw
          * Trying to crop on the width
          */
         $logicalWidth = $this->getIntrinsicWidth();
-        $logicalHeight = FetchImage::round($logicalWidth / $targetRatio);
+        $logicalHeight = FetcherImage::round($logicalWidth / $targetRatio);
         if ($logicalHeight > $this->getIntrinsicHeight()) {
             /**
              * Cropping by height
              */
             $logicalHeight = $this->getIntrinsicHeight();
-            $logicalWidth = FetchImage::round($targetRatio * $logicalHeight);
+            $logicalWidth = FetcherImage::round($targetRatio * $logicalHeight);
         }
         return [$logicalWidth, $logicalHeight];
 
     }
 
 
-    public function setRequestedWidth(int $requestedWidth): FetchImage
+    public function setRequestedWidth(int $requestedWidth): FetcherImage
     {
         $this->requestedWidth = $requestedWidth;
         return $this;
     }
 
-    public function setRequestedHeight(int $requestedHeight): FetchImage
+    public function setRequestedHeight(int $requestedHeight): FetcherImage
     {
         $this->requestedHeight = $requestedHeight;
         return $this;
@@ -514,7 +514,7 @@ abstract class FetchImage extends FetchRaw
     /**
      * @throws ExceptionBadSyntax
      */
-    public function setRequestedAspectRatio(string $requestedRatio): FetchImage
+    public function setRequestedAspectRatio(string $requestedRatio): FetcherImage
     {
         $this->requestedRatio = $requestedRatio;
         $this->requestedRatioAsFloat = Dimension::convertTextualRatioToNumber($requestedRatio);

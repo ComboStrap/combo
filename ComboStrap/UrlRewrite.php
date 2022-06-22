@@ -67,7 +67,7 @@ class UrlRewrite
                 switch ($path) {
                     case UrlEndpoint::LIB_EXE_FETCH_PHP:
                         try {
-                            $id = $url->getQueryPropertyValueAndRemoveIfPresent(FetchRaw::MEDIA_QUERY_PARAMETER);
+                            $id = $url->getQueryPropertyValueAndRemoveIfPresent(FetcherRaw::MEDIA_QUERY_PARAMETER);
                         } catch (ExceptionNotFound $e) {
                             LogUtility::internalError("The media query should be present for a fetch. No Url rewrite could be done.");
                             return;
@@ -77,7 +77,7 @@ class UrlRewrite
                         break;
                     case UrlEndpoint::LIB_EXE_DETAIL_PHP:
                         try {
-                            $id = $url->getQueryPropertyValueAndRemoveIfPresent(FetchRaw::MEDIA_QUERY_PARAMETER);
+                            $id = $url->getQueryPropertyValueAndRemoveIfPresent(FetcherRaw::MEDIA_QUERY_PARAMETER);
                         } catch (ExceptionNotFound $e) {
                             LogUtility::internalError("The media query should be present for a fetch. No Url rewrite could be done.");
                             return;

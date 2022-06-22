@@ -5,7 +5,7 @@ namespace ComboStrap;
 /**
  * Return raw files
  */
-class FetchRaw extends FetchAbs
+class FetcherRaw extends FetcherAbs
 {
 
     public const MEDIA_QUERY_PARAMETER = "media";
@@ -14,26 +14,26 @@ class FetchRaw extends FetchAbs
     private DokuPath $path;
 
 
-    public static function createFromPath(DokuPath $dokuPath): FetchRaw
+    public static function createFromPath(DokuPath $dokuPath): FetcherRaw
     {
         return self::createEmpty()->setOriginalPath($dokuPath);
     }
 
     /**
      * Empty because a fetch is mostly build through an URL
-     * @return FetchRaw
+     * @return FetcherRaw
      */
-    public static function createEmpty(): FetchRaw
+    public static function createEmpty(): FetcherRaw
     {
-        return new FetchRaw();
+        return new FetcherRaw();
     }
 
     /**
      * @throws ExceptionBadArgument
      */
-    public static function createFetcherFromFetchUrl(Url $fetchUrl): FetchRaw
+    public static function createFetcherFromFetchUrl(Url $fetchUrl): FetcherRaw
     {
-        $fetchRaw = FetchRaw::createEmpty();
+        $fetchRaw = FetcherRaw::createEmpty();
         $fetchRaw->buildFromUrl($fetchUrl);
         return $fetchRaw;
     }
@@ -46,11 +46,11 @@ class FetchRaw extends FetchAbs
     {
         /**
          * For dokuwiki implementation, see {@link ml()}
-         * We still use the {@link FetchRaw::MEDIA_QUERY_PARAMETER}
+         * We still use the {@link FetcherRaw::MEDIA_QUERY_PARAMETER}
          * to be Dokuwiki Compatible even if we can serve from other drive know
          */
         $url = parent::getFetchUrl($url)
-            ->addQueryParameterIfNotActualSameValue(FetchRaw::MEDIA_QUERY_PARAMETER, $this->path->getDokuwikiId());
+            ->addQueryParameterIfNotActualSameValue(FetcherRaw::MEDIA_QUERY_PARAMETER, $this->path->getDokuwikiId());
         if ($this->path->getDrive() !== DokuPath::MEDIA_DRIVE) {
             $url->addQueryParameter(DokuPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
         }
@@ -72,7 +72,7 @@ class FetchRaw extends FetchAbs
 
 
     /**
-     * Buster for the {@link Fetch} interface
+     * Buster for the {@link Fetcher} interface
      * @throws ExceptionNotFound
      */
     function getBuster(): string
@@ -99,7 +99,7 @@ class FetchRaw extends FetchAbs
         return FileSystems::getMime($this->path);
     }
 
-    public function setOriginalPath(DokuPath $dokuPath): FetchRaw
+    public function setOriginalPath(DokuPath $dokuPath): FetcherRaw
     {
         $this->path = $dokuPath;
         return $this;
@@ -108,19 +108,21 @@ class FetchRaw extends FetchAbs
     /**
      * @throws ExceptionBadArgument - if the media was not found
      */
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchRaw
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherRaw
     {
 
-        $id = $tagAttributes->getValueAndRemove(self::MEDIA_QUERY_PARAMETER);
-        if ($id === null) {
-            $id = $tagAttributes->getValueAndRemove(self::SRC_QUERY_PARAMETER);
+        if(!isset($this->path)) {
+            $id = $tagAttributes->getValueAndRemove(self::MEDIA_QUERY_PARAMETER);
+            if ($id === null) {
+                $id = $tagAttributes->getValueAndRemove(self::SRC_QUERY_PARAMETER);
+            }
+            if ($id === null) {
+                throw new ExceptionBadArgument("The (" . self::MEDIA_QUERY_PARAMETER . " or " . self::SRC_QUERY_PARAMETER . ") query property is mandatory and was not defined");
+            }
+            $drive = $tagAttributes->getValueAndRemove(DokuPath::DRIVE_ATTRIBUTE, DokuPath::MEDIA_DRIVE);
+            $rev = $tagAttributes->getValueAndRemove(DokuPath::REV_ATTRIBUTE);
+            $this->path = DokuPath::create($id, $drive, $rev);
         }
-        if ($id === null) {
-            throw new ExceptionBadArgument("The (" . self::MEDIA_QUERY_PARAMETER . " or " . self::SRC_QUERY_PARAMETER . ") query property is mandatory and was not defined");
-        }
-        $drive = $tagAttributes->getValueAndRemove(DokuPath::DRIVE_ATTRIBUTE, DokuPath::MEDIA_DRIVE);
-        $rev = $tagAttributes->getValueAndRemove(DokuPath::REV_ATTRIBUTE);
-        $this->path = DokuPath::create($id, $drive, $rev);
 
         parent::buildFromTagAttributes($tagAttributes);
         return $this;
@@ -134,7 +136,7 @@ class FetchRaw extends FetchAbs
 
 
     public
-    function getName(): string
+    function getFetcherName(): string
     {
         return self::RAW;
     }

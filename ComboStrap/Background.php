@@ -135,7 +135,7 @@ class Background
                             /**
                              * The type of image is important for the processing of SVG
                              */
-                            $backgroundImageValue[TagAttributes::TYPE_KEY] = FetchSvg::ILLUSTRATION_TYPE;
+                            $backgroundImageValue[TagAttributes::TYPE_KEY] = FetcherSvg::ILLUSTRATION_TYPE;
                             break;
                         case "tile":
                             // background size is then "auto" (ie repeat), the default
@@ -146,7 +146,7 @@ class Background
                              * The type of image is important for the processing of SVG
                              * A tile needs to have a width and a height
                              */
-                            $backgroundImageValue[TagAttributes::TYPE_KEY] = FetchSvg::TILE_TYPE;
+                            $backgroundImageValue[TagAttributes::TYPE_KEY] = FetcherSvg::TILE_TYPE;
                             break;
                         case "css":
                             // custom, set by the user in own css stylesheet, nothing to do

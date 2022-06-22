@@ -221,7 +221,7 @@ class XmlDocument
     }
 
     /**
-     * To not have a collusion with {@link FetchSvg::createFetchImageSvgFromPath()}
+     * To not have a collusion with {@link FetcherSvg::createFetchImageSvgFromPath()}
      * @param Path $path
      * @return XmlDocument
      * @throws ExceptionNotFound - if the file does not exist

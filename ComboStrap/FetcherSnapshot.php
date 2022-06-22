@@ -3,21 +3,63 @@
 namespace ComboStrap;
 
 use Facebook\WebDriver\Chrome\ChromeOptions;
+use Facebook\WebDriver\Exception\WebDriverCurlException;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverDimension;
 
-class Snapshot
+class FetcherSnapshot extends FetcherImage
 {
-    const ENDPOINT = 'http://localhost:4444/';
+
+    const WEB_DRIVER_ENDPOINT = 'http://localhost:4444/';
+    const CANONICAL = "snapshot";
+    const URL = "url";
+
+    private Url $url;
+
+
+    public static function createSnapshotFromUrl(Url $urlToSnapshot): FetcherSnapshot
+    {
+        return (new FetcherSnapshot())
+            ->setUrlToSnapshot($urlToSnapshot);
+
+    }
+
+
+    public function buildFromUrl(Url $url): FetcherSnapshot
+    {
+        $this->url = $url;
+        return $this;
+    }
 
     /**
-     * @throws ExceptionNotFound
-     * @throws \Facebook\WebDriver\Exception\UnsupportedOperationException
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
      */
-    static public function snapshot(Url $url): LocalPath
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherSnapshot
     {
+        $urlString = $tagAttributes->getValue(self::URL);
+        if ($urlString === null) {
+            throw new ExceptionBadArgument("The `url` property is mandatory");
+        }
+        $this->url = Url::createFromString($urlString);
+        return $this;
+    }
+
+
+    /**
+     * @return LocalPath
+     * @throws ExceptionNotFound
+     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
+     * @throws \Facebook\WebDriver\Exception\TimeoutException
+     * @throws \Facebook\WebDriver\Exception\UnsupportedOperationException
+     * @throws ExceptionInternal
+     */
+    function getFetchPath(): LocalPath
+    {
+
+        $url = $this->getUrlToSnapshot();
 
         $capabilities = DesiredCapabilities::chrome();
         $options = new ChromeOptions();
@@ -41,11 +83,15 @@ class Snapshot
 
         $capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
 
-        $webDriver = RemoteWebDriver::create(
-            self::ENDPOINT,
-            $capabilities,
-            1000
-        );
+        try {
+            $webDriver = RemoteWebDriver::create(
+                self::WEB_DRIVER_ENDPOINT,
+                $capabilities,
+                1000
+            );
+        } catch (WebDriverCurlException $e){
+            throw new ExceptionInternal("Web driver is not available at ".self::WEB_DRIVER_ENDPOINT.". Error: {$e->getMessage()}");
+        }
         try {
 
             // navigate to the page
@@ -106,7 +152,9 @@ class Snapshot
             if (empty($lastNameWithoutExtension)) {
                 $lastNameWithoutExtension = $url->getHost();
             }
-            $screenShotPath = LocalPath::createHomeDirectory()->resolve("Desktop")->resolve($lastNameWithoutExtension . ".png");
+            $screenShotPath = LocalPath::createHomeDirectory()
+                ->resolve("Desktop")
+                ->resolve($lastNameWithoutExtension . ".".$this->getMime()->getExtension());
             $webDriver->takeScreenshot($screenShotPath);
             return $screenShotPath;
 
@@ -117,5 +165,60 @@ class Snapshot
             $webDriver->quit();
         }
 
+    }
+
+
+    /**
+     * @throws \ReflectionException
+     * @throws ExceptionNotFound
+     */
+    function getBuster(): string
+    {
+        return FileSystems::getCacheBuster(ClassUtility::getClassPath(FetcherSnapshot::class));
+    }
+
+    public function getMime(): Mime
+    {
+        return Mime::createFromExtension("png");
+    }
+
+    public function getFetcherName(): string
+    {
+        return self::CANONICAL;
+    }
+
+    public function getIntrinsicWidth(): int
+    {
+        try {
+            return $this->getRequestedWidth();
+        } catch (ExceptionNotFound $e) {
+            return 1024;
+        }
+    }
+
+    public function getIntrinsicHeight(): int
+    {
+        try {
+            return $this->getRequestedHeight();
+        } catch (ExceptionNotFound $e) {
+            return 768;
+        }
+    }
+
+    private function setUrlToSnapshot(Url $urlToSnapshot): FetcherSnapshot
+    {
+        $this->url = $urlToSnapshot;
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getUrlToSnapshot(): Url
+    {
+        if(!isset($this->url)){
+            throw new ExceptionNotFound("No url to snapshot could be determined");
+        }
+        return $this->url;
     }
 }

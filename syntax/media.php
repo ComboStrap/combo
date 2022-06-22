@@ -10,7 +10,7 @@ use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
-use ComboStrap\FetchAbs;
+use ComboStrap\FetcherAbs;
 use ComboStrap\FileSystems;
 use ComboStrap\FirstImage;
 use ComboStrap\LogUtility;
@@ -304,12 +304,12 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                     $height = null;
                 }
                 try {
-                    $cache = $height = $mediaMarkup->getFetchUrl()->getQueryPropertyValue(FetchAbs::CACHE_KEY);
+                    $cache = $height = $mediaMarkup->getFetchUrl()->getQueryPropertyValue(FetcherAbs::CACHE_KEY);
                 } catch (ExceptionNotFound $e) {
                     // Dokuwiki needs a value
                     // If their is no value it will output it without any value
                     // in the query string.
-                    $cache = FetchAbs::CACHE_DEFAULT_VALUE;
+                    $cache = FetcherAbs::CACHE_DEFAULT_VALUE;
                 }
                 switch ($mediaType) {
                     case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:

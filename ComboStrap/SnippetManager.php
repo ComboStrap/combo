@@ -396,7 +396,7 @@ class SnippetManager
 
         $dokuPath = DokuPath::createComboResource($relativeId);
         try {
-            $url = FetchRaw::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
+            $url = FetcherRaw::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
         } catch (ExceptionNotFound $e) {
             LogUtility::internalError($e->getMessage());
             $url = "";
@@ -415,7 +415,7 @@ class SnippetManager
     {
         $dokuPath = DokuPath::createComboResource($relativeId);
         try {
-            $url = FetchRaw::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
+            $url = FetcherRaw::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
         } catch (ExceptionNotFound $e) {
             LogUtility::internalError($e->getMessage());
             $url = "";

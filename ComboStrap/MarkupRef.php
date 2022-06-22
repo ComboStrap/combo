@@ -256,7 +256,7 @@ class MarkupRef
         switch ($type) {
             case self::MEDIA_TYPE:
                 $this->path = DokuPath::createMediaPathFromId($wikiPath, $rev);
-                $this->url->addQueryParameter(FetchRaw::MEDIA_QUERY_PARAMETER, $wikiPath);
+                $this->url->addQueryParameter(FetcherRaw::MEDIA_QUERY_PARAMETER, $wikiPath);
                 $this->addRevToUrl($rev);
                 break;
             case self::LINK_TYPE:
@@ -484,10 +484,10 @@ class MarkupRef
             /**
              * Cache
              */
-            $noCacheValue = FetchAbs::NOCACHE_VALUE;
+            $noCacheValue = FetcherAbs::NOCACHE_VALUE;
             $found = preg_match('/^(' . $noCacheValue . ')/i', $token, $matches);
             if ($found) {
-                $this->url->addQueryParameter(FetchAbs::CACHE_KEY, $noCacheValue);
+                $this->url->addQueryParameter(FetcherAbs::CACHE_KEY, $noCacheValue);
                 $token = substr($token, strlen($noCacheValue));
                 if ($token == "") {
                     // no anchor behind we continue

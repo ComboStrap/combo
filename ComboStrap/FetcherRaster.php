@@ -7,18 +7,18 @@ namespace ComboStrap;
  *
  * A Image Raster processing class that:
  *   * takes as input:
- *      * a {@link FetchImageRaster::buildFromUrl() fetch URL}:
+ *      * a {@link FetcherRaster::buildFromUrl() fetch URL}:
  *          * from an HTTP request
  *          * or {@link MediaMarkup::getFetchUrl() markup})
  *      * or data via setter
  *   * outputs:
- *      * a {@link FetchImageRaster::getFetchPath() raster image file} for:
+ *      * a {@link FetcherRaster::getFetchPath() raster image file} for:
  *         * an HTTP response
  *         * or further local processing
- *      * or a {@link FetchImageRaster::getFetchUrl() fetch url} to use in a {@link RasterImageLink img html tag}
+ *      * or a {@link FetcherRaster::getFetchUrl() fetch url} to use in a {@link RasterImageLink img html tag}
  *
  */
-class FetchImageRaster extends FetchImage
+class FetcherRaster extends FetcherImage
 {
 
     const CANONICAL = "raster";
@@ -32,38 +32,38 @@ class FetchImageRaster extends FetchImage
     /**
      * @param string $imageId
      * @param null $rev
-     * @return FetchImageRaster
+     * @return FetcherRaster
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
      * @throws ExceptionNotFound
      */
-    public static function createImageRasterFetchFromId(string $imageId, $rev = null): FetchImageRaster
+    public static function createImageRasterFetchFromId(string $imageId, $rev = null): FetcherRaster
     {
         return self::createImageFetchFromPath(DokuPath::createMediaPathFromId($imageId, $rev));
     }
 
     /**
      * @param Path $path
-     * @return FetchImageRaster
+     * @return FetcherRaster
      * @throws ExceptionBadArgument
      */
-    public static function createImageRasterFetchFromPath(Path $path): FetchImageRaster
+    public static function createImageRasterFetchFromPath(Path $path): FetcherRaster
     {
         $path = DokuPath::createFromPath($path);
         return self::createEmptyRaster()
             ->setOriginalPath($path);
     }
 
-    public static function createEmptyRaster(): FetchImageRaster
+    public static function createEmptyRaster(): FetcherRaster
     {
-        return new FetchImageRaster();
+        return new FetcherRaster();
     }
 
     /**
      * @throws ExceptionBadArgument
      */
-    public static function createRasterFromFetchUrl(Url $fetchUrl): FetchImageRaster
+    public static function createRasterFromFetchUrl(Url $fetchUrl): FetcherRaster
     {
         $fetchImageRaster = self::createEmptyRaster();
         $fetchImageRaster->buildFromUrl($fetchUrl);
@@ -122,7 +122,7 @@ class FetchImageRaster extends FetchImage
 
 
     /**
-     * We overwrite the {@link FetchImage::getRequestedWidth()}
+     * We overwrite the {@link FetcherImage::getRequestedWidth()}
      * because we don't scale up for raster image
      * to not lose quality.
      *
@@ -218,14 +218,14 @@ class FetchImageRaster extends FetchImage
 
     /**
      * @param TagAttributes $tagAttributes
-     * @return FetchImageRaster
+     * @return FetcherRaster
      * @throws ExceptionBadArgument - if the path is not an image
      * @throws ExceptionBadSyntax - if the image is badly encoded
      * @throws ExceptionNotExists - if the image does not exists
      * @throws ExceptionNotFound - if the mime was not found
      */
 
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetchImageRaster
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherRaster
     {
 
         parent::buildFromTagAttributes($tagAttributes);
@@ -239,7 +239,7 @@ class FetchImageRaster extends FetchImage
      * @throws ExceptionBadSyntax - if the file is badly encoded
      * @throws ExceptionNotExists - if the file does not exists
      */
-    public function setOriginalPath(DokuPath $dokuPath): FetchImageRaster
+    public function setOriginalPath(DokuPath $dokuPath): FetcherRaster
     {
         parent::setOriginalPath($dokuPath);
         $this->analyzeImageIfNeeded();
@@ -247,7 +247,7 @@ class FetchImageRaster extends FetchImage
     }
 
 
-    public function getName(): string
+    public function getFetcherName(): string
     {
         return self::CANONICAL;
     }

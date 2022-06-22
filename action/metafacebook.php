@@ -8,7 +8,7 @@ use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\FetchImage;
+use ComboStrap\FetcherImage;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
@@ -140,7 +140,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
 
         /**
-         * @var FetchImage[]
+         * @var FetcherImage[]
          */
         $facebookImages = $page->getImagesForTheFollowingUsages([PageImageUsage::FACEBOOK, PageImageUsage::SOCIAL, PageImageUsage::ALL]);
         if (empty($facebookImages)) {
@@ -149,7 +149,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                 $dokuPath = DokuPath::createMediaPathFromId($defaultFacebookImage);
                 if(FileSystems::exists($dokuPath)){
                     try {
-                        $facebookImages[] = FetchImage::createImageFetchFromPath($dokuPath);
+                        $facebookImages[] = FetcherImage::createImageFetchFromPath($dokuPath);
                     } catch (ExceptionCompile $e) {
                         LogUtility::error("We were unable to add the default facebook image ($defaultFacebookImage) because of the following error: {$e->getMessage()}", self::CANONICAL);
                     }

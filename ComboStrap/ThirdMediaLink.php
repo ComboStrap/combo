@@ -71,16 +71,16 @@ class ThirdMediaLink extends MediaLink
         switch ($mime->toString()) {
             case Mime::PDF:
                 try {
-                    return (new FetchPdf())
+                    return (new FetcherPdf())
                         ->buildFromUrl($this->mediaMarkup->getFetchUrl())
                         ->getFetchUrl();
                 } catch (ExceptionBadArgument $e) {
                     LogUtility::internalError($e->getMessage());
-                    return FetchRaw::createFromPath($path)
+                    return FetcherRaw::createFromPath($path)
                         ->getFetchUrl();
                 }
             default:
-                return FetchRaw::createFromPath($path)
+                return FetcherRaw::createFromPath($path)
                     ->getFetchUrl();
         }
 

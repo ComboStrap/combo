@@ -2,7 +2,7 @@
 
 namespace ComboStrap;
 
-class FetchPdf extends FetchRaw
+class FetcherPdf extends FetcherRaw
 {
 
     /**
@@ -19,7 +19,8 @@ class FetchPdf extends FetchRaw
      */
     private ?int $pageNumber = null;
 
-    public function buildFromUrl(Url $url): FetchRaw
+
+    public function buildFromUrl(Url $url): FetcherPdf
     {
         try {
             $fragment = $url->getFragment();
@@ -34,7 +35,8 @@ class FetchPdf extends FetchRaw
         } catch (ExceptionNotFound $e) {
             // ok no page
         }
-        return parent::buildFromUrl($url);
+        parent::buildFromUrl($url);
+        return $this;
     }
 
     public function getMime(): Mime

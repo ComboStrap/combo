@@ -53,7 +53,7 @@ class TagAttributes
         self::SCRIPT_KEY, // no script attribute for security reason
         TagAttributes::TYPE_KEY, // type is the component class
         MediaMarkup::LINKING_KEY, // internal to image
-        FetchAbs::CACHE_KEY, // internal also
+        FetcherAbs::CACHE_KEY, // internal also
         \syntax_plugin_combo_webcode::RENDERING_MODE_ATTRIBUTE,
         Vertical::VERTICAL_ATTRIBUTE,
         self::OPEN_TAG,
@@ -61,7 +61,7 @@ class TagAttributes
         self::HTML_AFTER,
         Dimension::RATIO_ATTRIBUTE,
         self::STRICT,
-        FetchSvg::REQUESTED_PRESERVE_ATTRIBUTE,
+        FetcherSvg::REQUESTED_PRESERVE_ATTRIBUTE,
         \syntax_plugin_combo_link::CLICKABLE_ATTRIBUTE,
         LinkMarkup::PREVIEW_ATTRIBUTE,
         Skin::SKIN_ATTRIBUTE,
@@ -81,9 +81,9 @@ class TagAttributes
      * and check if the {@link SyntaxPlugin::getPType()} is normal
      */
     const INLINE_LOGICAL_ELEMENTS = [
-        FetchSvg::CANONICAL,
-        FetchImageRaster::CANONICAL,
-        FetchImage::CANONICAL,
+        FetcherSvg::CANONICAL,
+        FetcherRaster::CANONICAL,
+        FetcherImage::CANONICAL,
         \syntax_plugin_combo_link::TAG, // link button for instance
         \syntax_plugin_combo_button::TAG
     ];

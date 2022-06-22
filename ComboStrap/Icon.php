@@ -8,7 +8,7 @@ class Icon
     public const ICON_CANONICAL_NAME = "icon";
 
     private TagAttributes $tagAttributes;
-    private FetchSvg $fetchSvg;
+    private FetcherSvg $fetchSvg;
 
     /**
      * @throws ExceptionBadArgument
@@ -20,7 +20,7 @@ class Icon
         if ($iconAttributes === null) {
             $iconAttributes = TagAttributes::createEmpty(self::ICON_CANONICAL_NAME);
         }
-        $iconAttributes->addComponentAttributeValue(FetchSvg::NAME_ATTRIBUTE, $name);
+        $iconAttributes->addComponentAttributeValue(FetcherSvg::NAME_ATTRIBUTE, $name);
         return self::createFromTagAttributes($iconAttributes);
     }
 
@@ -36,12 +36,12 @@ class Icon
          * The svg
          * Adding the icon type is mandatory if there is no media
          */
-        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY,FetchSvg::ICON_TYPE);
+        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY,FetcherSvg::ICON_TYPE);
 
         /**
          * Icon Svg file or Icon Library
          */
-        $name = $tagAttributes->getValue(FetchSvg::NAME_ATTRIBUTE);
+        $name = $tagAttributes->getValue(FetcherSvg::NAME_ATTRIBUTE);
         if($name===null){
             throw new ExceptionNotFound("A name is mandatory as attribute for an icon. It was not found.", Icon::ICON_CANONICAL_NAME);
         }
@@ -64,8 +64,8 @@ class Icon
 
             }
 
-            $tagAttributes->addComponentAttributeValue(FetchRaw::MEDIA_QUERY_PARAMETER, $mediaDokuPath->getDokuwikiId());
-            $tagAttributes->setComponentAttributeValue(FetchSvg::NAME_ATTRIBUTE,$mediaDokuPath->getLastNameWithoutExtension());
+            $tagAttributes->addComponentAttributeValue(FetcherRaw::MEDIA_QUERY_PARAMETER, $mediaDokuPath->getDokuwikiId());
+            $tagAttributes->setComponentAttributeValue(FetcherSvg::NAME_ATTRIBUTE,$mediaDokuPath->getLastNameWithoutExtension());
 
 
         } catch (ExceptionNotFound $e) {
@@ -76,7 +76,7 @@ class Icon
              */
 
         }
-        $fetchSvg = FetchSvg::createFromAttributes($tagAttributes);
+        $fetchSvg = FetcherSvg::createFromAttributes($tagAttributes);
 
         return (new Icon())
             ->setFetchSvg($fetchSvg)
@@ -90,7 +90,7 @@ class Icon
     {
         $icon = new Icon();
         $path = DokuPath::createComboResource(":$name.svg");
-        $fetchSvg = FetchSvg::createSvgFromPath($path);
+        $fetchSvg = FetcherSvg::createSvgFromPath($path);
         $icon->setFetchSvg($fetchSvg);
         if ($tagAttributes !== null) {
             $icon->setTagAttributes($tagAttributes);
@@ -98,7 +98,7 @@ class Icon
         return $icon;
     }
 
-    public function setFetchSvg(FetchSvg $fetchSvg): Icon
+    public function setFetchSvg(FetcherSvg $fetchSvg): Icon
     {
         $this->fetchSvg = $fetchSvg;
         return $this;
@@ -118,7 +118,7 @@ class Icon
 
 
         $mediaMarkup = MediaMarkup::createFromFetcher($this->fetchSvg)
-            ->setTagAttributes($this->tagAttributes);
+            ->setHtmlTagAttributes($this->tagAttributes);
 
         return SvgImageLink::createFromMediaMarkup($mediaMarkup)
             ->renderMediaTag();
@@ -126,7 +126,7 @@ class Icon
 
     }
 
-    public function getFetchSvg(): FetchSvg
+    public function getFetchSvg(): FetcherSvg
     {
         return $this->fetchSvg;
     }

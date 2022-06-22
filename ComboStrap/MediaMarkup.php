@@ -98,7 +98,7 @@ class MediaMarkup
     private ?string $lazyLoadMethod = null;
     private TagAttributes $tagAttributes;
     private ?string $linkingClass = null;
-    private Fetch $fetcher;
+    private Fetcher $fetcher;
 
     private function __construct()
     {
@@ -178,7 +178,7 @@ class MediaMarkup
         return (new MediaMarkup())->setUrl($fetchUrl);
     }
 
-    public static function createFromFetcher(Fetch $fetcher): MediaMarkup
+    public static function createFromFetcher(Fetcher $fetcher): MediaMarkup
     {
         return (new MediaMarkup())
             ->setFetcher($fetcher);
@@ -540,10 +540,26 @@ class MediaMarkup
     }
 
 
-    public function setTagAttributes(TagAttributes $tagAttributes): MediaMarkup
+    /**
+     * @param TagAttributes $tagAttributes - the tag attributes for HTML
+     * @return $this
+     */
+    public function setHtmlTagAttributes(TagAttributes $tagAttributes): MediaMarkup
     {
         $this->tagAttributes = $tagAttributes;
         return $this;
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
+     */
+    public function toHtml(): string
+    {
+        return MediaLink::createFromMediaMarkup($this)
+            ->renderMediaTag();
     }
 
     private
@@ -617,7 +633,7 @@ class MediaMarkup
             }
         }
 
-        $this->fetcher = FetchAbs::createFetcherFromFetchUrl($fetchUrl);
+        $this->fetcher = FetcherAbs::createFetcherFromFetchUrl($fetchUrl);
         return $this;
     }
 
@@ -649,10 +665,10 @@ class MediaMarkup
 
     /**
      * Private method use {@link MediaMarkup::createFromFetcher()} to create a media markup via a Fetcher
-     * @param Fetch $fetcher
+     * @param Fetcher $fetcher
      * @return MediaMarkup
      */
-    private function setFetcher(Fetch $fetcher): MediaMarkup
+    private function setFetcher(Fetcher $fetcher): MediaMarkup
     {
         $this->fetcher = $fetcher;
         return $this;
@@ -660,9 +676,9 @@ class MediaMarkup
 
 
     /**
-     * @return Fetch
+     * @return Fetcher
      */
-    public function getFetcher(): Fetch
+    public function getFetcher(): Fetcher
     {
         return $this->fetcher;
     }

@@ -5,7 +5,7 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\FetchImage;
+use ComboStrap\FetcherImage;
 use ComboStrap\FileSystems;
 use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
@@ -161,7 +161,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
                 $dokuPath = DokuPath::createMediaPathFromId($defaultImageIdConf);
                 if (FileSystems::exists($dokuPath)) {
                     try {
-                        $twitterImages[] = FetchImage::createImageFetchFromPath($dokuPath);
+                        $twitterImages[] = FetcherImage::createImageFetchFromPath($dokuPath);
                     } catch (ExceptionCompile $e) {
                         LogUtility::error("We were unable to add the default twitter image ($defaultImageIdConf) because of the following error: {$e->getMessage()}", self::CANONICAL);
                     }

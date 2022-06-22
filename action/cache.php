@@ -7,7 +7,7 @@ use ComboStrap\CacheMenuItem;
 use ComboStrap\CacheReportHtmlDataBlockArray;
 use ComboStrap\Cron;
 use ComboStrap\ExceptionCompile;
-use ComboStrap\Fetch;
+use ComboStrap\Fetcher;
 use ComboStrap\File;
 use ComboStrap\Http;
 use ComboStrap\Identity;
@@ -140,7 +140,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         $script = $_SERVER["SCRIPT_NAME"];
         if (in_array($script, self::STATIC_SCRIPT_NAMES)) {
             // To be extra sure, they must have the buster key
-            if (isset($_REQUEST[Fetch::CACHE_BUSTER_KEY])) {
+            if (isset($_REQUEST[Fetcher::CACHE_BUSTER_KEY])) {
                 self::deleteVaryHeader();
             }
         }

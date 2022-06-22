@@ -659,7 +659,7 @@ class Page extends ResourceComboAbs
     function getFirstImage()
     {
         $firstImage = FirstImage::createForPage($this);
-        return $firstImage->getImageObject();
+        return $firstImage->getImageFetcher();
     }
 
     /**
@@ -699,11 +699,11 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * @return FetchImage
+     * @return FetcherImage
      * @throws ExceptionNotFound
      */
     public
-    function getImage(): FetchImage
+    function getImage(): FetcherImage
     {
 
         $images = $this->getPageImages();
@@ -1827,7 +1827,7 @@ class Page extends ResourceComboAbs
 
     /**
      * @param array $usages
-     * @return FetchImage[]
+     * @return FetcherImage[]
      */
     public
     function getImagesForTheFollowingUsages(array $usages): array

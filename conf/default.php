@@ -21,7 +21,7 @@
 
 
 use ComboStrap\Canonical;
-use ComboStrap\FetchSvg;
+use ComboStrap\FetcherSvg;
 use ComboStrap\MediaMarkup;
 use ComboStrap\IconDownloader;
 use ComboStrap\Metadata;

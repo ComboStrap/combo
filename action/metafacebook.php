@@ -212,11 +212,8 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                     $message = "The facebook image ($facebookImage) is too small (" . $intrinsicWidth . " x " . $intrinsicHeight . "). The minimum size constraint is 200px by 200px";
                     try {
                         $firstImagePath = $page->getFirstImage()->getOriginalPath();
-
                         if (
-                            $path->toAbsolutePath()->toPathString()
-                            !==
-                            $firstImagePath->toAbsolutePath()->toPathString()
+                            $path->toAbsolutePath()->toPathString() !== $firstImagePath->toAbsolutePath()->toPathString()
                         ) {
                             // specified image
                             LogUtility::error($message, self::CANONICAL);
@@ -225,6 +222,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                             LogUtility::log2BrowserConsole($message);
                         }
                     } catch (ExceptionNotFound $e) {
+                        // no first image
                         LogUtility::error($message, self::CANONICAL);
                     }
                 }

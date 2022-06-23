@@ -25,7 +25,6 @@ class FetchCache
     private array $fileDependencies = [];
 
 
-
     /**
      * Cache constructor.
      */
@@ -40,9 +39,7 @@ class FetchCache
         /**
          * Cache Attribute
          */
-        if ($fetch instanceof FetcherTraitImage) {
-            $this->setMaxAgeInSec($fetch->getExternalCacheMaxAgeInSec());
-        }
+        $this->setMaxAgeInSec($fetch->getExternalCacheMaxAgeInSec());
 
 
         $this->fileCache = new Cache($cacheKey, ".{$fetch->getMime()->getExtension()}");
@@ -61,7 +58,7 @@ class FetchCache
      */
     public function isCacheUsable(): bool
     {
-        if ($this->maxAge == 0) {
+        if ($this->maxAge === 0) {
             return false;
         } else {
             $files = $this->fileDependencies;

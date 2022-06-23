@@ -68,6 +68,10 @@ class LayoutArea
     }
 
 
+    /**
+     * @throws ExceptionNotFound - if there is no page
+     * @throws ExceptionInternal - if this is an error
+     */
     public function getPage(): Page
     {
         // Main content
@@ -79,14 +83,41 @@ class LayoutArea
         try {
             $closestPath = FileSystems::closest($requestedPage->getPath(), $this->slotName . DokuPath::PAGE_FILE_TXT_EXTENSION);
         } catch (ExceptionNotFound $e) {
+
+            /**
+             * Default page side is for page that are not in the root
+             */
+            switch ($this->areaId) {
+                case Layout::PAGE_SIDE_AREA:
+                    try {
+                        $requestedPage->getPath()->getParent();
+                    } catch (ExceptionNotFound $e) {
+                        // no parent page, no side bar
+                        throw new ExceptionNotFound("No page side for root pages.");
+                    }
+                    break;
+                case Layout::MAIN_HEADER_AREA:
+                    if ($requestedPage->isRootHomePage()) {
+                        throw new ExceptionNotFound("No $this for the home");
+                    }
+                    break;
+                case Layout::MAIN_FOOTER_AREA:
+                    throw new ExceptionNotFound("No default for $this");
+            }
             $closestPath = self::getDefaultAreaContentPath($this->areaId);
             if (!FileSystems::exists($closestPath)) {
-                $closestPath = null;
-                LogUtility::errorIfDevOrTest("The default $this->areaId page does not exist.");
+                throw new ExceptionInternal("The default slot page for the area ($this) does not exist at ($closestPath)");
             }
+
         }
         return Page::createPageFromPathObject($closestPath);
     }
+
+    public function __toString()
+    {
+        return $this->areaId;
+    }
+
 
     public function getHtml(): ?string
     {
@@ -98,15 +129,34 @@ class LayoutArea
         return $this->attributes;
     }
 
+
     public function render()
     {
-        $page = $this->getPage();
         try {
+            try {
+                $page = $this->getPage();
+            } catch (ExceptionNotFound $e) {
+                return "";
+            }
             $html = $page->toXhtml();
             return EditButton::replaceOrDeleteAll($html);
         } catch (\Exception $e) {
-            return "Rendering the slot ($page), returns an error. {$e->getMessage()}";
+            return "Rendering the area ($this), returns an error. {$e->getMessage()}";
         }
 
+    }
+
+    public function isContainer(): bool
+    {
+        return in_array($this->areaId, [Layout::PAGE_CORE_AREA, Layout::PAGE_MAIN_AREA]);
+    }
+
+    /**
+     * Create a valid variable name
+     * @return string
+     */
+    public function getVariableName(): string
+    {
+        return Template::toValidVariableName($this->areaId);
     }
 }

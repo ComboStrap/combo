@@ -21,11 +21,14 @@ namespace ComboStrap;
 class FetcherRaster extends FetcherLocalImage implements FetcherImage
 {
 
-    use FetcherTraitLocalPath;
-    use FetcherTraitImage;
+    use FetcherTraitLocalPath {
+        setOriginalPath as protected setOriginalPathTrait;
+    }
+    use FetcherTraitImage {
+        getRequestedWidth as protected getRequestedWidthTrait;
+    }
 
     const CANONICAL = "raster";
-
 
 
     private int $imageWidth;
@@ -155,8 +158,7 @@ class FetcherRaster extends FetcherLocalImage implements FetcherImage
          * Test, requested width should not be bigger than the media Height
          * If this is the case, we return the media width
          */
-
-        $requestedWidth = $this->getRequestedWidth();
+        $requestedWidth = $this->getRequestedWidthTrait();
 
         /**
          * A width was requested
@@ -209,9 +211,6 @@ class FetcherRaster extends FetcherLocalImage implements FetcherImage
     }
 
 
-
-
-
     /**
      * @param TagAttributes $tagAttributes
      * @return FetcherRaster
@@ -237,7 +236,7 @@ class FetcherRaster extends FetcherLocalImage implements FetcherImage
      */
     public function setOriginalPath(DokuPath $dokuPath): FetcherRaster
     {
-        $this->setOriginalPath($dokuPath);
+        $this->setOriginalPathTrait($dokuPath);
         $this->analyzeImageIfNeeded();
         return $this;
     }

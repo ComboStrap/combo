@@ -222,18 +222,21 @@ class Layout
             /**
              * Rendering
              */
-            if($areaName===self::PAGE_CORE_AREA){
-                // no rendering for this area
+            $layoutArea = $this
+                ->getOrCreateArea($areaName);
+            if ($layoutArea->isContainer()) {
+                // no rendering for container area
                 // this is a parent
                 continue;
             }
-            $htmlOutputByAreaName[$areaName] = $this
-                ->getOrCreateArea($areaName)
+
+            $layoutVariable = $layoutArea->getVariableName();
+            $htmlOutputByAreaName[$layoutVariable] = $layoutArea
                 ->render();
             /**
              * Add the template variable
              */
-            $areaDomElement->appendTextNode("\$\{$areaName\}");
+            $areaDomElement->appendTextNode('$' . $layoutVariable);
 
         }
 

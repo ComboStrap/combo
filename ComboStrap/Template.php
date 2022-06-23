@@ -34,6 +34,11 @@ class Template
         return new Template($string);
     }
 
+    public static function toValidVariableName(string $name)
+    {
+        return str_replace($name, "-", "");
+    }
+
     public function setProperty($key, $value): Template
     {
         $this->_data[$key] = $value;

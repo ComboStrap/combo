@@ -90,7 +90,7 @@ trait FetcherTraitImage
     /**
      * @throws ExceptionBadArgument
      */
-    public function buildImagePropertiesFromTagAttributes(TagAttributes $tagAttributes): FetcherTraitImage
+    public function buildImagePropertiesFromTagAttributes(TagAttributes $tagAttributes): FetcherImage
     {
 
         $requestedWidth = $tagAttributes->getValueAndRemove(Dimension::WIDTH_KEY);

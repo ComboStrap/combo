@@ -134,8 +134,8 @@ class Url extends PathAbs
     {
         $url = Url::createEmpty();
         foreach ($_GET as $key => $value) {
-            if(is_array($value)){
-                foreach($value as $val){
+            if (is_array($value)) {
+                foreach ($value as $val) {
                     $url->addQueryParameter($key, $val);
                 }
             } else {
@@ -144,7 +144,6 @@ class Url extends PathAbs
         }
         return $url;
     }
-
 
 
     function getQuery(): array
@@ -545,9 +544,8 @@ class Url extends PathAbs
         if ($this->hasProperty(FetcherLocalPath::$MEDIA_QUERY_PARAMETER)) {
 
             try {
-                $dokuPath = FetcherLocalPath::createLocalFromFetchUrl($this)->getOriginalPath();
-                return $dokuPath->getExtension();
-            } catch (ExceptionBadArgument $e) {
+                return FetcherLocalPath::createFetcherFromFetchUrl($this)->getMime()->getExtension();
+            } catch (ExceptionCompile $e) {
                 LogUtility::internalError("Build error from a Media Fetch URL. We were unable to get the mime. Error: {$e->getMessage()}");
             }
 

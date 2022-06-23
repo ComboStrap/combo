@@ -608,6 +608,7 @@ class MediaMarkup
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
      * @throws ExceptionNotFound
+     * @throws ExceptionInternal
      */
     private function setUrl(Url $fetchUrl): MediaMarkup
     {
@@ -645,7 +646,7 @@ class MediaMarkup
             }
         }
 
-        $this->fetcher = FetcherAbs::createLocalFromFetchUrl($fetchUrl);
+        $this->fetcher = FetcherAbs::createFetcherFromFetchUrl($fetchUrl);
         return $this;
     }
 

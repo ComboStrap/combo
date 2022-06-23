@@ -113,7 +113,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
 
         try {
 
-            $fetcher = FetcherAbs::createLocalFromFetchUrl($fetchUrl);
+            $fetcher = FetcherAbs::createFetcherFromFetchUrl($fetchUrl);
             $fetchPath = $fetcher->getFetchPath();
             $event->data['file'] = $fetchPath;
             $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;

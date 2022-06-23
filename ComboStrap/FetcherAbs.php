@@ -41,7 +41,7 @@ abstract class FetcherAbs implements Fetcher
      * @throws ExceptionNotFound
      * @throws ExceptionInternal
      */
-    public static function createLocalFromFetchUrl(Url $fetchUrl): Fetcher
+    public static function createFetcherFromFetchUrl(Url $fetchUrl): Fetcher
     {
 
         try {

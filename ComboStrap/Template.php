@@ -2,6 +2,7 @@
 
 
 namespace ComboStrap;
+
 use Psr\Log\LogLevel;
 
 /**
@@ -36,7 +37,7 @@ class Template
 
     public static function toValidVariableName(string $name)
     {
-        return str_replace($name, "-", "");
+        return str_replace("-", "", $name);
     }
 
     public function setProperty($key, $value): Template
@@ -54,10 +55,10 @@ class Template
         $rendered = "";
         foreach ($splits as $part) {
             if (substr($part, 0, 1) === self::VARIABLE_PREFIX) {
-                $variable =  trim(substr($part, 1));
-                if(isset($this->_data[$variable])) {
+                $variable = trim(substr($part, 1));
+                if (isset($this->_data[$variable])) {
                     $value = $this->_data[$variable];
-                } else  {
+                } else {
                     LogUtility::warning("The variable ($variable) was not found in the data and has not been replaced", self::CANONICAL);
                     $value = $variable;
                 }

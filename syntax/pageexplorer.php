@@ -17,6 +17,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
 use ComboStrap\Page;
 use ComboStrap\Path;
+use ComboStrap\PathTreeNode;
 use ComboStrap\PluginUtility;
 use ComboStrap\RenderUtility;
 use ComboStrap\TagAttributes;
@@ -721,7 +722,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                             try {
                                 $wikiPath = $namespacePath->getPath();
-                                $tree = TreeNode::createFromWikiPath($wikiPath);
+                                $tree = PathTreeNode::buildTreeViaFileSystemChildren($wikiPath);
                                 self::treeProcessTree($renderer->doc, $tree, $data);
                             } catch (ExceptionBadSyntax $e) {
                                 $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the tree sub-namespace. Error: {$e->getMessage()}");
@@ -746,12 +747,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     /**
      * Process the
      * @param string $html - the callstack
-     * @param TreeNode $treeNode
+     * @param PathTreeNode $pathTreeNode
      * @param array $data - the data array from the handler
      * @throws ExceptionBadSyntax
      */
     public
-    function treeProcessTree(string &$html, TreeNode $treeNode, array $data)
+    function treeProcessTree(string &$html, PathTreeNode $pathTreeNode, array $data)
     {
 
         /**
@@ -771,8 +772,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         /**
          * Scanning the tree node to
          * categorize the children as home, page or namespace (container)
+         * @var PathTreeNode[] $children
          */
-        $children = $treeNode->getChildren();
+        $children = $pathTreeNode->getChildren();
         foreach ($children as $child) {
 
             /**
@@ -786,7 +788,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 /**
                  * Page
                  */
-                $page = Page::createPageFromPathObject($child->getContent());
+                $page = Page::createPageFromPathObject($child->getPath());
                 if ($page->isIndexPage()) {
                     $homePage = $page;
                 } else {
@@ -813,7 +815,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             /**
              * @var DokuPath $containerPath
              */
-            $containerPath = $containerTreeNode->getContent();
+            $containerPath = $containerTreeNode->getPath();
 
             /**
              * Entering: Creating in instructions form

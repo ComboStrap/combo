@@ -6,11 +6,11 @@ namespace ComboStrap;
 class TreeSystem
 {
 
-    public static function getDescendantCount($treeNode): int
+    public static function getDescendantCount(TreeNode $treeNode): int
     {
         $counterClass = new class {
 
-            private $counter = -1;
+            private int $counter = -1;
 
             public function increment()
             {

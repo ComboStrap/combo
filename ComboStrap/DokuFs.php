@@ -110,7 +110,6 @@ class DokuFs implements FileSystem
      * @param DokuPath $path
      * @param string|null $type
      * @return DokuPath[]
-     * @throws ExceptionBadArgument
      */
     public function getChildren(Path $path, string $type = null): array
     {

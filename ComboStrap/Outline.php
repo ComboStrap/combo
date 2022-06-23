@@ -98,9 +98,8 @@ class Outline
 
                     /**
                      * A child of the parent section, A sibling of the actual session
-                     * @var OutlineSection $parentSection
                      */
-                    $parentSection = $this->actualSection->getParent();
+                    $parentSection = $this->actualSection;
                     $childSection = OutlineSection::createChildOutlineSection($parentSection, $actualCall);
                     if ($newSectionLevel < $actualSectionLevel) {
                         LogUtility::error("The section ($childSection) has a level ($newSectionLevel) lower than its parent ($actualSectionLevel).");

@@ -142,7 +142,6 @@ class FileSystems
 
 
     /**
-     * @throws ExceptionBadArgument
      */
     public static function getChildren(Path $path, string $type = null): array
     {

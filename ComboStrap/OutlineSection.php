@@ -31,13 +31,13 @@ class OutlineSection extends TreeNode
      * @var array an array to make sure that the id are unique
      */
     private array $tocUniqueId = [];
+    private string $localIdentifier;
 
 
     /**
-     * @param OutlineSection|null $parentSection
      * @param Call|null $headingEnterCall
      */
-    public function __construct(?OutlineSection $parentSection, Call $headingEnterCall = null)
+    public function __construct(Call $headingEnterCall = null)
     {
         $this->headingEnterCall = $headingEnterCall;
         if ($headingEnterCall !== null) {
@@ -45,7 +45,7 @@ class OutlineSection extends TreeNode
         } else {
             $this->startFileIndex = 0;
         }
-        parent::__construct($parentSection);
+        $this->localIdentifier = IdManager::getOrCreate()->generateNewHtmlIdForComponent(OutlineSection::class);
     }
 
 
@@ -56,7 +56,7 @@ class OutlineSection extends TreeNode
 
     public static function createChildOutlineSection(OutlineSection $parentSection, Call $headingCall): OutlineSection
     {
-        $outlineSection = new OutlineSection($parentSection, $headingCall);
+        $outlineSection = new OutlineSection($headingCall);
         $parentSection->appendChild($outlineSection);
         return $outlineSection;
     }
@@ -225,4 +225,8 @@ class OutlineSection extends TreeNode
     }
 
 
+    function getGlobalIdentifier(): string
+    {
+        return $this->localIdentifier;
+    }
 }

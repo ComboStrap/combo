@@ -88,7 +88,7 @@ class SlotManagerMenuItem extends AbstractItem
     public function getSvg(): string
     {
         /** @var string icon file */
-        return Site::getComboImagesDirectory()->resolve('entypo-text-document-inverted.svg')->toPathString();
+        return DirectoryLayout::getComboImagesDirectory()->resolve('entypo-text-document-inverted.svg')->toPathString();
     }
 
     public function createHtml(): string

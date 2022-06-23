@@ -51,6 +51,7 @@ abstract class MediaLink
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
      */
     public static function createFromMediaMarkup(MediaMarkup $mediaMarkup)
     {

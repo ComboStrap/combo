@@ -215,7 +215,7 @@ class MarkupRef
          *
          * Clean it
          */
-        $wikiPath = $this->cleanPath($wikiPath);
+        $wikiPath = $this->normalizePath($wikiPath);
 
         /**
          * The URL
@@ -258,6 +258,11 @@ class MarkupRef
                 $this->path = DokuPath::createMediaPathFromId($wikiPath, $rev);
                 $this->url->addQueryParameter(FetcherTraitLocalPath::$MEDIA_QUERY_PARAMETER, $wikiPath);
                 $this->addRevToUrl($rev);
+
+                if ($fragment !== null) {
+                    $this->url->setFragment($fragment);
+                }
+
                 break;
             case self::LINK_TYPE:
 
@@ -280,6 +285,12 @@ class MarkupRef
                 $this->path = Page::createPageFromPathObject($path)->getPath();
                 $this->url->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->path->getDokuwikiId());
                 $this->addRevToUrl($rev);
+
+                if ($fragment !== null) {
+                    $fragment = OutlineSection::textToHtmlSectionId($fragment);
+                    $this->url->setFragment($fragment);
+                }
+
                 break;
             default:
                 throw new ExceptionBadArgument("The ref type ($type) is unknown");
@@ -327,16 +338,18 @@ class MarkupRef
     }
 
     /**
-     * In case of manual entry, the function will clean the path
+     * In case of manual entry, the function will normalize the path
      * @param string $wikiPath - a path entered by a user
      * @return string
      */
-    public function cleanPath(string $wikiPath): string
+    public function normalizePath(string $wikiPath): string
     {
         if ($wikiPath === "") {
             return $wikiPath;
         }
+        // slash to double point
         $wikiPath = str_replace(DokuPath::NAMESPACE_SEPARATOR_SLASH, DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $wikiPath);
+
         $isNamespacePath = false;
         if ($wikiPath[strlen($wikiPath) - 1] === DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $isNamespacePath = true;
@@ -350,6 +363,9 @@ class MarkupRef
                 }
             }
         }
+        /**
+         * Dokuwiki Compliance
+         */
         $cleanPath = cleanID($wikiPath);
         if ($isNamespacePath) {
             $cleanPath = "$cleanPath:";

@@ -467,7 +467,7 @@ class DokuPath extends PathAbs
         return [
             self::MEDIA_DRIVE => Site::getMediaDirectory(),
             self::PAGE_DRIVE => Site::getPageDirectory(),
-            self::COMBO_DRIVE => Site::getComboResourcesDirectory(),
+            self::COMBO_DRIVE => DirectoryLayout::getComboResourcesDirectory(),
             self::CACHE_DRIVE => Site::getCacheDirectory()
         ];
     }

@@ -168,15 +168,7 @@ class Site
     public static function getLogoAsSvgImage(): FetcherSvg
     {
         foreach (self::SVG_LOGO_IDS as $svgLogo) {
-
-            try {
-                $image = FetcherLocalImage::createImageFetchFromId($svgLogo);
-            } catch (ExceptionNotFound $e) {
-                continue;
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("The svg ($svgLogo) returns an error. {$e->getMessage()}");
-                continue;
-            }
+            $image = FetcherSvg::createSvgFromPath(DokuPath::createMediaPathFromId($svgLogo));
             if (FileSystems::exists($image->getOriginalPath())) {
                 return $image;
             }
@@ -826,31 +818,6 @@ class Site
         return LocalPath::createFromPath($cacheDirectory);
     }
 
-
-    public static function getComboHome(): LocalPath
-    {
-        return LocalPath::createFromPath(DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME);
-    }
-
-    public static function getComboImagesDirectory(): LocalPath
-    {
-        return self::getComboResourcesDirectory()->resolve("images");
-    }
-
-    public static function getComboResourcesDirectory(): LocalPath
-    {
-        return Site::getComboHome()->resolve("resources");
-    }
-
-    public static function getComboDictionaryDirectory(): LocalPath
-    {
-        return Site::getComboResourcesDirectory()->resolve("dictionary");
-    }
-
-    public static function getComboResourceSnippetDirectory(): LocalPath
-    {
-        return Site::getComboResourcesDirectory()->resolve("snippet");
-    }
 
     public static function getLogoHtml(): ?string
     {

@@ -145,7 +145,6 @@ class TagAttributes
      * https://html.spec.whatwg.org/multipage/links.html#linkTypes
      */
     const REL = "rel";
-    const STYLE_ATTRIBUTE = "style";
 
     /**
      * The default id if no one is specified
@@ -238,16 +237,11 @@ class TagAttributes
                 unset($this->componentAttributesCaseInsensitive[$key]);
                 continue;
             }
-            if ($key === self::STYLE_ATTRIBUTE) {
+            if ($key === StyleUtility::STYLE_ATTRIBUTE) {
                 unset($this->componentAttributesCaseInsensitive[$key]);
-                $stylingProperties = explode(";", $value);
-                foreach ($stylingProperties as $stylingProperty) {
-                    if (empty($stylingProperty)) {
-                        // case with a trailing comma. ie `width:18rem;`
-                        continue;
-                    }
-                    [$key, $value] = preg_split("/:/", $stylingProperty, 2);
-                    $this->addStyleDeclarationIfNotSet($key, $value);
+                $stylingProperties = StyleUtility::HtmlStyleValueToArray($value);
+                foreach ($stylingProperties as $styleKey => $styleValue) {
+                    $this->addStyleDeclarationIfNotSet($styleKey, $styleValue);
                 }
             }
         }
@@ -575,7 +569,7 @@ class TagAttributes
             }
 
             // We only add the common HTML attribute
-            if (in_array($key, [TagAttributes::CLASS_KEY, TagAttributes::STYLE_ATTRIBUTE])) {
+            if (in_array($key, [TagAttributes::CLASS_KEY, StyleUtility::STYLE_ATTRIBUTE])) {
                 $tempHtmlArray[$key] = $value;
             }
 

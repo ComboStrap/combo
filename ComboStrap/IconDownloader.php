@@ -520,7 +520,7 @@ class IconDownloader
      */
     public static function getEmojiCodePoint(string $emojiName)
     {
-        $path = Site::getComboDictionaryDirectory()->resolve("emojis.json");
+        $path = DirectoryLayout::getComboDictionaryDirectory()->resolve("emojis.json");
         $jsonContent = FileSystems::getContent($path);
         $jsonArray = Json::createFromString($jsonContent)->toArray();
         return $jsonArray[$emojiName];

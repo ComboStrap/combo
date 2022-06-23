@@ -29,6 +29,9 @@ abstract class FetcherAbs implements Fetcher
     public const CACHE_DEFAULT_VALUE = "cache";
 
 
+    private string $requestedFragment;
+
+
     /**
      * @param Url $fetchUrl
      * @return Fetcher
@@ -94,6 +97,13 @@ abstract class FetcherAbs implements Fetcher
         if ($url === null) {
             $url = UrlEndpoint::createFetchUrl();
         }
+
+        try {
+            $url->setFragment($this->getRequestedFragment());
+        } catch (ExceptionNotFound $e) {
+            // no fragment
+        }
+
         /**
          * The cache
          */
@@ -126,6 +136,11 @@ abstract class FetcherAbs implements Fetcher
         $query = $url->getQuery();
         $tagAttributes = TagAttributes::createFromCallStackArray($query);
         $this->buildFromTagAttributes($tagAttributes);
+        try {
+            $this->setRequestedFragment($url->getFragment());
+        } catch (ExceptionNotFound $e) {
+            // no fragment
+        }
         return $this;
     }
 
@@ -157,6 +172,7 @@ abstract class FetcherAbs implements Fetcher
     }
 
     /**
+     *
      * @throws ExceptionBadArgument
      */
     public function setRequestedCache(string $requestedCache)
@@ -204,6 +220,31 @@ abstract class FetcherAbs implements Fetcher
                 break;
         }
         return $cacheParameter;
+    }
+
+    /**
+     *
+     * The fragment may be used by plugin to jump into a media.
+     * This is the case of the PDF plugin
+     * @param string $urlFragment a fragment added to the {@link Fetcher::getFetchUrl() fetch URL}
+     */
+    public function setRequestedFragment(string $urlFragment): Fetcher
+    {
+        $this->requestedFragment = $urlFragment;
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getRequestedFragment(): string
+    {
+
+        if(!isset($this->requestedFragment)){
+            throw new ExceptionNotFound("No fragment was requested");
+        }
+        return $this->requestedFragment;
+
     }
 
 }

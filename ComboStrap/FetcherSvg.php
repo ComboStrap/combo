@@ -624,7 +624,7 @@ class FetcherSvg extends FetcherLocalImage implements FetcherImage
     {
         $buster = FileSystems::getCacheBuster($this->getOriginalPath());
         try {
-            $configFile = FileSystems::getCacheBuster(DirectoryLayout::getLocalConfPath());
+            $configFile = FileSystems::getCacheBuster(DirectoryLayout::getConfLocalFilePath());
             $buster = "$buster-$configFile";
         } catch (ExceptionNotFound $e) {
             // no local conf file

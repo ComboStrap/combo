@@ -16,7 +16,7 @@ use syntax_plugin_combo_media;
  *   * via a {@link MediaMarkup::createFromFetcher() Fetcher}
  *   * via a {@link MediaMarkup::createFromFetchUrl() Fetch Url}
  *   * via a {@link MediaMarkup::createFromCallStackArray() callstack array} of {@link syntax_plugin_combo_media::render()}
- *   * via a {@link MediaMarkup::createFromMatch() string match} of {@link syntax_plugin_combo_media::handle()}
+ *   * via a {@link MediaMarkup::createFromMarkup() string match} of {@link syntax_plugin_combo_media::handle()}
  *
  *
  */
@@ -233,6 +233,7 @@ class MediaMarkup
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
      * @throws ExceptionNotFound
+     * @throws ExceptionNotExists
      */
     public static function createFromRef(string $markupRef): MediaMarkup
     {
@@ -257,7 +258,7 @@ class MediaMarkup
      * @throws ExceptionBadArgument
      * @throws ExceptionNotFound|ExceptionNotExists
      */
-    public static function createFromMatch(string $match): MediaMarkup
+    public static function createFromMarkup(string $match): MediaMarkup
     {
 
         $mediaMarkup = new MediaMarkup();
@@ -560,6 +561,17 @@ class MediaMarkup
     {
         return MediaLink::createFromMediaMarkup($this)
             ->renderMediaTag();
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
+     */
+    public function getMediaLink()
+    {
+        return MediaLink::createFromMediaMarkup($this);
     }
 
     private

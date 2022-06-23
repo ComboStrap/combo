@@ -18,6 +18,7 @@ class StyleUtility
 {
 
     const COMBOSTRAP_FIX = "cs";
+    public const STYLE_ATTRIBUTE = "style";
 
     public static function getRule(array $styles, $selector)
     {
@@ -69,5 +70,21 @@ class StyleUtility
     public static function getStylingClassForTag($logicalTag): string
     {
         return $logicalTag . "-" . self::COMBOSTRAP_FIX;
+    }
+
+    public static function HtmlStyleValueToArray(string $htmlStyleValue): array
+    {
+        $stylingDeclarationsAsString = explode(";", $htmlStyleValue);
+        $stylingDeclarationAsArray = [];
+        foreach ($stylingDeclarationsAsString as $stylingDeclaration) {
+            if (empty($stylingDeclaration)) {
+                // case with a trailing comma. ie `width:18rem;`
+                continue;
+            }
+            [$key, $value] = preg_split("/:/", $stylingDeclaration, 2);
+            $stylingDeclarationAsArray[$key] = $value;
+        }
+        return $stylingDeclarationAsArray;
+
     }
 }

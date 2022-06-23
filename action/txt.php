@@ -3,6 +3,7 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\DirectoryLayout;
 use ComboStrap\Site;
 
 if (!defined('DOKU_INC')) exit;
@@ -50,7 +51,7 @@ class action_plugin_combo_txt extends DokuWiki_Action_Plugin
          * {@link getMimeTypes()}
          */
         global $config_cascade;
-        $svgMimeConf = Site::getComboResourcesDirectory()->resolve("conf")->resolve("txt.mime.conf")->toPathString();
+        $svgMimeConf = DirectoryLayout::getComboResourcesDirectory()->resolve("conf")->resolve("txt.mime.conf")->toPathString();
         $config_cascade['mime']['local'][] = $svgMimeConf;
 
     }

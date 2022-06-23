@@ -185,7 +185,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         if ($state == DOKU_LEXER_SPECIAL) {
 
             try {
-                $mediaMarkup = MediaMarkup::createFromMatch($match);
+                $mediaMarkup = MediaMarkup::createFromMarkup($match);
             } catch (ExceptionBadSyntax $e) {
                 LogUtility::error("The media ($match) could not be parsed. Error: {$e->getMessage()}");
                 return [];

@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\DirectoryLayout;
 use ComboStrap\LogUtility;
 use ComboStrap\PageRules;
 use ComboStrap\PluginUtility;
@@ -23,15 +24,12 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 {
 
 
-    /**
-     * @var array|string[]
-     */
-    private $infoPlugin;
 
     /**
      * @var PageRules
      */
     private $pageRuleManager;
+
 
 
     /**
@@ -45,9 +43,6 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
         // enable direct access to language strings
         // of use of $this->getLang
         $this->setupLocale();
-        $this->currentDate = date("c");
-        $this->infoPlugin = $this->getInfo();
-
 
     }
 
@@ -94,7 +89,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 
     public function getMenuIcon()
     {
-        return Site::getComboImagesDirectory()->resolve('page-next.svg')->toPathString();
+        return DirectoryLayout::getComboImagesDirectory()->resolve('page-next.svg')->toPathString();
     }
 
 
@@ -268,7 +263,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
                     ptln('			<form action="" method="post" style="display: inline-block">');
                     ptln('<input type="hidden" name="sectok" value="' . getSecurityToken() . '" />');
                     ptln('<button style="background: none;border: 0;">');
-                    ptln(inlineSVG(Site::getComboImagesDirectory()->resolve('delete.svg')->toPathString()));
+                    ptln(inlineSVG(DirectoryLayout::getComboImagesDirectory()->resolve('delete.svg')->toPathString()));
                     ptln('</button>');
                     ptln('				<input type="hidden" name="Delete"  value="Yes" />');
                     ptln('				<input type="hidden" name="' . PageRules::ID_NAME . '"  value="' . $id . '" />');
@@ -276,7 +271,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
                     ptln('			<form action="" method="post" style="display: inline-block">');
                     ptln('<input type="hidden" name="sectok" value="' . getSecurityToken() . '" />');
                     ptln('<button style="background: none;border: 0;">');
-                    ptln(inlineSVG(Site::getComboImagesDirectory()->resolve('file-document-edit-outline.svg')->toPathString()));
+                    ptln(inlineSVG(DirectoryLayout::getComboImagesDirectory()->resolve('file-document-edit-outline.svg')->toPathString()));
                     ptln('</button>');
                     ptln('				<input type="hidden" name="upsert"  value="Yes" />');
                     ptln('				<input type="hidden" name="' . PageRules::ID_NAME . '"  value="' . $id . '" />');

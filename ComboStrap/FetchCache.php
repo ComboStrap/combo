@@ -62,7 +62,7 @@ class FetchCache
             return false;
         } else {
             $files = $this->fileDependencies;
-            $files[] = Site::getComboHome()->resolve("plugin.info.txt");
+            $files[] = DirectoryLayout::getPluginInfoPath();
             $dependencies = array('files' => $files);
             $dependencies['age'] = $this->maxAge;
             return $this->fileCache->useCache($dependencies);

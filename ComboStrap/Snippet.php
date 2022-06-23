@@ -323,7 +323,7 @@ class Snippet implements JsonSerializable
                 }
                 return null;
         }
-        return Site::getComboResourceSnippetDirectory()
+        return DirectoryLayout::getComboResourceSnippetDirectory()
             ->resolve($subDirectory)
             ->resolve(strtolower($this->internalIdentifier) . ".$extension");
     }

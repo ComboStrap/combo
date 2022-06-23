@@ -28,22 +28,30 @@ class LayoutArea
 
 
     /**
-     * @var bool show or not the area
-     * null means that combo is not installed
-     * because there is no true/false
-     * and the rendering is done at the dokuwiki way
-     */
-    private ?bool $show = null;
-    /**
      * @var array|null - the attributes of the element (null means that the default value will be used, ie when combo is not used)
      */
     private ?array $attributes = null;
 
-    public function setShow(bool $show)
+    /**
+     * @throws ExceptionBadArgument - when the area name is unknown
+     * @throws ExceptionCompile - when the strap template is not available
+     */
+    public static function getSlotNameForArea($area)
     {
-        $this->show = $show;
+        switch ($area) {
+            case Layout::PAGE_HEADER_AREA:
+                return Site::getPageHeaderSlotName();
+            case Layout::PAGE_FOOTER_AREA:
+                return Site::getPageFooterSlotName();
+            default:
+                throw new ExceptionBadArgument("The area ($area) is unknown");
+        }
     }
 
+    public static function getDefaultAreaContentPath($areaName): DokuPath
+    {
+        return DokuPath::createComboResource(":pages:$areaName.md");
+    }
 
 
     public function setAttributes(array $attributes): LayoutArea
@@ -52,16 +60,6 @@ class LayoutArea
         return $this;
     }
 
-    public function setHtml(string $html): LayoutArea
-    {
-        $this->html = $html;
-        return $this;
-    }
-
-    public function getSlotName(): string
-    {
-        return $this->slotName;
-    }
 
     public function setSlotName($slotName): LayoutArea
     {
@@ -69,9 +67,25 @@ class LayoutArea
         return $this;
     }
 
-    public function show(): ?bool
+
+    public function getPage(): Page
     {
-        return $this->show;
+        // Main content
+        $requestedPage = Page::createPageFromRequestedPage();
+        if ($this->areaId === Layout::MAIN_CONTENT_AREA) {
+            return $requestedPage;
+        }
+        // Slot
+        try {
+            $closestPath = FileSystems::closest($requestedPage->getPath(), $this->slotName . DokuPath::PAGE_FILE_TXT_EXTENSION);
+        } catch (ExceptionNotFound $e) {
+            $closestPath = self::getDefaultAreaContentPath($this->areaId);
+            if (!FileSystems::exists($closestPath)) {
+                $closestPath = null;
+                LogUtility::errorIfDevOrTest("The default $this->areaId page does not exist.");
+            }
+        }
+        return Page::createPageFromPathObject($closestPath);
     }
 
     public function getHtml(): ?string
@@ -84,6 +98,15 @@ class LayoutArea
         return $this->attributes;
     }
 
+    public function render()
+    {
+        $page = $this->getPage();
+        try {
+            $html = $page->toXhtml();
+            return EditButton::replaceOrDeleteAll($html);
+        } catch (\Exception $e) {
+            return "Rendering the slot ($page), returns an error. {$e->getMessage()}";
+        }
 
-
+    }
 }

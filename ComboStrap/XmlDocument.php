@@ -714,5 +714,10 @@ class XmlDocument
         return XmlElement::create($this->getXmlDom()->documentElement, $this);
     }
 
+    public function toHtml()
+    {
+        return $this->xmlDom->saveHTML();
+    }
+
 
 }

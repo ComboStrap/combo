@@ -20,7 +20,7 @@ class Layout
     const MAIN_CONTENT_AREA = "main-content";
     const MAIN_HEADER_AREA = "main-header";
     const MAIN_FOOTER_AREA = "main-footer";
-    const areas = [
+    const AREAS = [
         self::PAGE_CORE_AREA,
         self::PAGE_SIDE_AREA,
         self::PAGE_HEADER_AREA,
@@ -35,7 +35,7 @@ class Layout
     /**
      * @var LayoutArea[]
      */
-    private array $layoutAreas;
+    private array $layoutAreas = [];
 
     public static function create(): Layout
     {
@@ -158,23 +158,26 @@ class Layout
         try {
             $json = Json::createFromString($jsonString);
         } catch (ExceptionBadSyntax $e) {
-            throw new ExceptionBadSyntax("The layout file ($layoutJsonPath) could not be loaded as json. Error: {$e->getMessage()}", self::CANONICAL,1,$e);
+            throw new ExceptionBadSyntax("The layout file ($layoutJsonPath) could not be loaded as json. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
         }
         $jsonArray = $json->toArray();
 
-
-        $areas = self::areas;
-        foreach ($areas as $areaName) {
-
-            $layoutArea = $this->getOrCreateArea($areaName);
+        $htmlOutputByAreaName = [];
+        foreach (self::AREAS as $areaName) {
 
             $attributes = $jsonArray[$areaName];
-            $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+            $jsonConfiguration = TagAttributes::createFromCallStackArray($attributes);
 
-            // show
-            $showArea = $tagAttributes->getBooleanValueAndRemoveIfPresent("show", true);
-            $layoutArea->setShow($showArea);
-            if ($showArea === false) {
+            /**
+             * If the id is not in the html template
+             * we don't show it
+             */
+            try {
+                $areaDomElement = $htmlDocument->querySelector("#$areaName");
+            } catch (ExceptionBadSyntax $e) {
+                LogUtility::internalError("The selector should not have a bad syntax");
+                continue;
+            } catch (ExceptionNotFound $e) {
                 continue;
             }
 
@@ -183,101 +186,62 @@ class Layout
                 // Page Header and Footer have a bar that permits to set the container
                 // Page core does not have any
                 // It's by default contained for all layout
-                $container = $tagAttributes->getValueAndRemoveIfPresent("container", true);
+                $container = $jsonConfiguration->getValueAndRemoveIfPresent("container", true);
                 if ($container) {
                     $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
-                    $tagAttributes->addClassName(syntax_plugin_combo_container::getClassName($container));
+                    $jsonConfiguration->addClassName(syntax_plugin_combo_container::getClassName($container));
                 }
             }
 
+            /**
+             * Special Classes and attributes
+             */
             // relative
-            // Relative positioning is important for the positioning of the pagetools (page-core), secedit button
-            $tagAttributes->addClassName("position-relative");
-
+            // Relative positioning is important for the positioning of the pagetools (page-core),
+            // edit button, ...
+            $areaDomElement->addClass("position-relative");
             switch ($areaName) {
                 case self::PAGE_FOOTER_AREA:
                 case self::PAGE_HEADER_AREA:
                     // no print
-                    $tagAttributes->addClassName("d-print-none");
-                    // position relative to place the edit button
-                    $tagAttributes->addClassName("position-relative");
-
-                    try {
-                        $closestPath = FileSystems::closest($requestedPage->getPath(), $layoutArea->getSlotName() . DokuPath::PAGE_FILE_TXT_EXTENSION);
-                    } catch (ExceptionNotFound $e) {
-                        $closestPath = self::getDefaultAreaContentPath($areaName);
-                        if (!FileSystems::exists($closestPath)) {
-                            $closestPath = null;
-                            LogUtility::errorIfDevOrTest("The default $areaName page does not exist.");
-                        }
-                    }
-                    $layoutArea->setPath($closestPath);
-                    $showArea = $closestPath !== null;
+                    $areaDomElement->addClass("d-print-none");
                     break;
                 case self::PAGE_CORE_AREA:
-                    $tagAttributes->addClassName(tpl_classes());
-                    $tagAttributes->addClassName("layout-$layoutName-combo");
-                    $tagAttributes->addClassName("dokuwiki"); // used by Third party plugin
-                    $showArea = true;
+                    $areaDomElement->addClass(tpl_classes());
+                    $areaDomElement->addClass("layout-$layoutName-combo");
+                    $areaDomElement->addClass("dokuwiki"); // used by Third party plugin
                     break;
                 case self::MAIN_FOOTER_AREA:
                 case self::PAGE_SIDE_AREA:
                 case self::MAIN_SIDE_AREA:
-                    $tagAttributes->addComponentAttributeValue("role", "complementary");
-                    $tagAttributes->addClassName("d-print-none");
-                    try {
-                        $closestPath = FileSystems::closest($requestedPage->getPath(), $layoutArea->getSlotName() . DokuPath::PAGE_FILE_TXT_EXTENSION);
-                    } catch (ExceptionNotFound $e) {
-                        // ok
-                    }
-                    $showArea = $closestPath !== null && ($ACT === 'show');
+                    $areaDomElement->setAttribute("role", "complementary");
+                    $areaDomElement->addClass("d-print-none");
                     break;
             }
 
-            $layoutArea->setShow($showArea);
-            if ($showArea && $closestPath !== null) {
-                $layoutArea->setHtml($this->render($closestPath));
+            /**
+             * Rendering
+             */
+            if($areaName===self::PAGE_CORE_AREA){
+                // no rendering for this area
+                // this is a parent
+                continue;
             }
-            $layoutArea->setAttributes($tagAttributes->toHtmlArray());
+            $htmlOutputByAreaName[$areaName] = $this
+                ->getOrCreateArea($areaName)
+                ->render();
+            /**
+             * Add the template variable
+             */
+            $areaDomElement->appendTextNode("\$\{$areaName\}");
 
         }
-        return "";
-    }
 
-
-    private
-    function render(Path $path)
-    {
-        try {
-            $page = Page::createPageFromPathObject($path);
-            $html = $page->toXhtml();
-            return EditButton::replaceOrDeleteAll($html);
-        } catch (Exception $e) {
-            return "Rendering the slot ($path), returns an error. {$e->getMessage()}";
-        }
+        $htmlDocumentString = $htmlDocument->toHtml();
+        return Template::create($htmlDocumentString)->setProperties($htmlOutputByAreaName)->render();
 
 
     }
 
 
-    /**
-     * @throws ExceptionBadArgument - when the area name is unknown
-     * @throws ExceptionCompile - when the strap template is not available
-     */
-    public static function getSlotNameForArea($area)
-    {
-        switch ($area) {
-            case self::PAGE_HEADER_AREA:
-                return Site::getPageHeaderSlotName();
-            case self::PAGE_FOOTER_AREA:
-                return Site::getPageFooterSlotName();
-            default:
-                throw new ExceptionBadArgument("The area ($area) is unknown");
-        }
-    }
-
-    public static function getDefaultAreaContentPath($areaName): DokuPath
-    {
-        return DokuPath::createComboResource(":pages:$areaName.md");
-    }
 }

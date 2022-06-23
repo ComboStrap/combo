@@ -157,4 +157,26 @@ class XmlElement
     {
         return $this->element->hasAttribute($name);
     }
+
+    public function getDomElement(): DOMElement
+    {
+        return $this->element;
+    }
+
+    /**
+     * Append a text node as a child
+     * @param string $string
+     * @return $this
+     */
+    public function appendTextNode(string $string): XmlElement
+    {
+        $textNode = $this->element->ownerDocument->createTextNode($string);
+        $this->element->appendChild($textNode);
+        return $this;
+    }
+
+    public function toHtml()
+    {
+        return $this->element->ownerDocument->saveHTML($this->element);
+    }
 }

@@ -26,6 +26,7 @@ class FetcherRaster extends FetcherLocalImage implements FetcherImage
     }
     use FetcherTraitImage {
         getRequestedWidth as protected getRequestedWidthTrait;
+        getTargetHeight as protected getTargetHeightTrait;
     }
 
     const CANONICAL = "raster";
@@ -199,7 +200,7 @@ class FetcherRaster extends FetcherLocalImage implements FetcherImage
         } catch (ExceptionNotFound $e) {
             // no request height
         }
-        return $this->getTargetHeight();
+        return $this->getTargetHeightTrait();
 
 
     }

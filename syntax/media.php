@@ -325,15 +325,23 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 return true;
 
 
-            case
-            "metadata":
+            case "metadata":
 
                 /**
                  * Keep track of the metadata
                  * @var Doku_Renderer_metadata $renderer
                  */
                 $tagAttributes = $data[PluginUtility::ATTRIBUTES];
-                self::registerImageMeta($tagAttributes, $renderer);
+                if($tagAttributes===null){
+                    // error on handle
+                    return false;
+                }
+                try {
+                    self::registerImageMeta($tagAttributes, $renderer);
+                } catch (ExceptionCompile $e) {
+                    LogUtility::error("Metadata image registration, return an error. Error: {$e->getMessage()}");
+                    return false;
+                }
                 return true;
 
             case renderer_plugin_combo_analytics::RENDERER_FORMAT:

@@ -287,7 +287,8 @@ class CacheDependencies
     public
     function getDefaultKey(): string
     {
-        return $this->page->getPath()->toLocalPath()->toPathString() . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
+        $keyDokuWikiCompliant = str_replace("\\", "/", $this->page->getPath()->toLocalPath()->toPathString());
+        return $keyDokuWikiCompliant . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
     }
 
     public

@@ -1467,6 +1467,10 @@ class FetcherSvg extends FetcherLocalImage implements FetcherImage
          * Raw Trait
          */
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
+        /**
+         * Image trait
+         */
+        $this->buildImagePropertiesFromTagAttributes($tagAttributes);
         parent::buildFromTagAttributes($tagAttributes);
         return $this;
     }

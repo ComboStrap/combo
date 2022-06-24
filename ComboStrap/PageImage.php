@@ -64,7 +64,7 @@ class PageImage
         return $this;
     }
 
-    public function getImage(): DokuPath
+    public function getImagePath(): DokuPath
     {
         return $this->image;
     }

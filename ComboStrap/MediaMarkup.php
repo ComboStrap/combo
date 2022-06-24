@@ -135,34 +135,21 @@ class MediaMarkup
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
+     * @throws ExceptionNotExists
      */
     public static function createFromCallStackArray($callStackArray): MediaMarkup
     {
 
-
-        $ref = $callStackArray[MarkupRef::REF_ATTRIBUTE];
+        $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
+        $ref = $tagAttributes->getValueAndRemoveIfPresent(MarkupRef::REF_ATTRIBUTE);
         if ($ref === null) {
-            $ref = $callStackArray[MediaMarkup::DOKUWIKI_SRC];
+            $ref = $tagAttributes->getValueAndRemoveIfPresent(MediaMarkup::DOKUWIKI_SRC);
             if ($ref === null) {
                 throw new ExceptionBadArgument("The media reference was not found in the callstack array", self::CANONICAL);
             }
         }
-        $mediaMarkup = self::createFromRef($ref);
-
-        $linking = $callStackArray[self::LINKING_KEY];
-        if ($linking !== null) {
-            $mediaMarkup->setLinking($linking);
-        }
-        $label = $callStackArray[TagAttributes::TITLE_KEY];
-        if ($label !== null) {
-            $mediaMarkup->setLabel($label);
-        }
-        $align = $callStackArray[Align::ALIGN_ATTRIBUTE];
-        if ($align !== null) {
-            $mediaMarkup->setAlign($align);
-        }
-
-        return $mediaMarkup;
+        return self::createFromRef($ref)
+            ->setFromTagAttributes($tagAttributes);
 
 
     }
@@ -172,6 +159,7 @@ class MediaMarkup
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
      * @throws ExceptionNotFound
+     * @throws ExceptionInternal
      */
     public static function createFromFetchUrl(Url $fetchUrl): MediaMarkup
     {
@@ -545,8 +533,9 @@ class MediaMarkup
      * @param TagAttributes $tagAttributes - the tag attributes for HTML
      * @return $this
      */
-    public function setHtmlTagAttributes(TagAttributes $tagAttributes): MediaMarkup
+    public function setHtmlOrSetterTagAttributes(TagAttributes $tagAttributes): MediaMarkup
     {
+        $this->setFromTagAttributes($tagAttributes);
         $this->tagAttributes = $tagAttributes;
         return $this;
     }
@@ -694,6 +683,27 @@ class MediaMarkup
     public function getFetcher(): Fetcher
     {
         return $this->fetcher;
+    }
+
+    private function setFromTagAttributes(TagAttributes $tagAttributes): MediaMarkup
+    {
+        $linking = $tagAttributes->getValueAndRemoveIfPresent(self::LINKING_KEY);
+        if ($linking !== null) {
+            $this->setLinking($linking);
+        }
+        $label = $tagAttributes->getValueAndRemoveIfPresent(TagAttributes::TITLE_KEY);
+        if ($label !== null) {
+            $this->setLabel($label);
+        }
+        $align = $tagAttributes->getValueAndRemoveIfPresent(Align::ALIGN_ATTRIBUTE);
+        if ($align !== null) {
+            $this->setAlign($align);
+        }
+        $lazy = $tagAttributes->getValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD);
+        if ($lazy !== null) {
+            $this->setLazyLoadMethod($lazy);
+        }
+        return $this;
     }
 
 

@@ -263,8 +263,8 @@ class PageImages extends MetadataTabular
     private function checkImageExistence()
     {
         foreach ($this->getValueAsPageImages() as $pageImage) {
-            if (!FileSystems::exists($pageImage->getImage())) {
-                throw new ExceptionCompile("The image ({$pageImage->getImage()}) does not exist", $this->getCanonical());
+            if (!FileSystems::exists($pageImage->getImagePath())) {
+                throw new ExceptionCompile("The image ({$pageImage->getImagePath()}) does not exist", $this->getCanonical());
             }
         }
     }

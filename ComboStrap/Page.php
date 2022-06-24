@@ -699,15 +699,15 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * @return FetcherImage
+     * @return DokuPath
      * @throws ExceptionNotFound
      */
-    public function getImage(): FetcherImage
+    public function getImage(): DokuPath
     {
 
         $images = $this->getPageImages();
         if (sizeof($images) >= 1) {
-            return $images[0]->getImage();
+            return $images[0]->getImagePath();
         }
         throw new ExceptionNotFound("No page image was set for this page ($this)");
 
@@ -1820,7 +1820,7 @@ class Page extends ResourceComboAbs
         foreach ($this->getPageImages() as $pageImage) {
             foreach ($usages as $usage) {
                 if (in_array($usage, $pageImage->getUsages())) {
-                    $images[] = $pageImage->getImage();
+                    $images[] = $pageImage->getImagePath();
                     continue 2;
                 }
             }

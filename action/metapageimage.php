@@ -44,7 +44,7 @@ class action_plugin_combo_metapageimage
             /**
              * {@link Doku_Renderer_metadata::_recordMediaUsage()}
              */
-            $dokuPath = $pageImage->getImage()->getOriginalPath();
+            $dokuPath = $pageImage->getImagePath();
             $event->data[MetadataDokuWikiStore::CURRENT_METADATA]['relation']['media'][$dokuPath->getDokuwikiId()] = FileSystems::exists($dokuPath);
         }
 

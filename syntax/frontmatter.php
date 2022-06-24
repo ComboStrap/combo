@@ -330,7 +330,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                         ->buildFromStoreValue($value);
                     $pageImagesObject = $pageImages->getValueAsPageImages();
                     foreach ($pageImagesObject as $imageValue) {
-                        $dokuwikiId = $imageValue->getImage()->getOriginalPath()->getDokuwikiId();
+                        $dokuwikiId = $imageValue->getImagePath()->getDokuwikiId();
                         $attributes = [MarkupRef::REF_ATTRIBUTE => ":$dokuwikiId"];
                         try {
                             syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);

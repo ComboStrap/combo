@@ -841,7 +841,7 @@ class Site
                 }
                 return MediaMarkup::createFromFetcher($imageFetcher)
                     ->setLazyLoad(false)
-                    ->setHtmlTagAttributes($tagAttributes)
+                    ->setHtmlOrSetterTagAttributes($tagAttributes)
                     ->toHtml();
             } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound|ExceptionCompile $e) {
                 LogUtility::msg("Error while rendering in HTML the logo $imageFetcher");

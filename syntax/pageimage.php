@@ -11,6 +11,7 @@ use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetcherImage;
+use ComboStrap\FetcherLocalImage;
 use ComboStrap\FetcherTraitImage;
 use ComboStrap\FetcherSvg;
 use ComboStrap\FirstImage;
@@ -272,44 +273,6 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
         }
 
         /**
-         * Extra tag properties processing before building the fetch image with
-         * the tag attributes
-         *
-         * This is an illustration image
-         * Used by svg to color by default with the primary color for instance
-         */
-        $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, FetcherSvg::ILLUSTRATION_TYPE);
-
-        /**
-         * Zoom applies only to icon not to illustration
-         *
-         */
-        $isIcon = IconDownloader::isInIconDirectory($imageFetcher->getOriginalPath());
-        if (!$isIcon) {
-            $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
-        } else {
-            /**
-             * When the width is small, no zoom out
-             */
-            $width = $tagAttributes->getValue(Dimension::WIDTH_KEY);
-            if ($width !== null) {
-                try {
-                    $pixelWidth = ConditionalLength::createFromString($width)->toPixelNumber();
-                    if ($pixelWidth < 30) {
-                        /**
-                         * Icon rendering
-                         */
-                        $tagAttributes->removeComponentAttributeIfPresent(Dimension::ZOOM_ATTRIBUTE);
-                        $tagAttributes->setComponentAttributeValue(TagAttributes::TYPE_KEY, FetcherSvg::ICON_TYPE);
-
-                    }
-                } catch (ExceptionCompile $e) {
-                    LogUtility::msg("The width value ($width) could not be translated in pixel value. Error: {$e->getMessage()}");
-                }
-            }
-        }
-
-        /**
          * Final building
          */
         try {
@@ -319,23 +282,67 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
         }
 
         /**
+         * Svg
+         */
+        if ($imageFetcher instanceof FetcherSvg) {
+
+            /**
+             * This is an illustration image
+             * Used by svg to color by default with the primary color for instance
+             */
+            $imageFetcher->setRequestedType(FetcherSvg::ILLUSTRATION_TYPE);
+
+            /**
+             * Zoom applies only to icon not to illustration
+             */
+            $isIcon = IconDownloader::isInIconDirectory($imageFetcher->getOriginalPath());
+            if (!$isIcon) {
+                $imageFetcher->setRequestedZoom(1);
+            } else {
+                /**
+                 * When the width requested is small, no zoom out
+                 */
+                try {
+                    $width = $imageFetcher->getRequestedWidth();
+                    try {
+                        $pixelWidth = ConditionalLength::createFromString($width)->toPixelNumber();
+                        if ($pixelWidth < 30) {
+                            /**
+                             * Icon rendering
+                             */
+                            $imageFetcher->setRequestedZoom(1);
+                            $imageFetcher->setRequestedType(FetcherSvg::ICON_TYPE);
+
+                        }
+                    } catch (ExceptionCompile $e) {
+                        LogUtility::msg("The width value ($width) could not be translated in pixel value. Error: {$e->getMessage()}");
+                    }
+                } catch (ExceptionNotFound $e) {
+                    // no width
+                }
+
+
+            }
+        }
+
+
+        /**
          * Img/Svg Tag
          */
-        $htmlTag = $tagAttributes;
         /**
          * Used as an illustration in a card
          * If the image is too small, we allow that it will stretch
          * to take the whole space
          */
         if ($data[PluginUtility::CONTEXT] === syntax_plugin_combo_card::TAG) {
-            $htmlTag->addStyleDeclarationIfNotSet("max-width", "100%");
-            $htmlTag->addStyleDeclarationIfNotSet("max-height", "unset");
+            $tagAttributes->addStyleDeclarationIfNotSet("max-width", "100%");
+            $tagAttributes->addStyleDeclarationIfNotSet("max-height", "unset");
         }
 
 
         try {
             $renderer->doc .= MediaMarkup::createFromFetcher($imageFetcher)
-                ->setHtmlTagAttributes($htmlTag)
+                ->setHtmlOrSetterTagAttributes($tagAttributes)
                 ->toHtml();
         } catch (ExceptionCompile $e) {
             $renderer->doc .= "Error while rendering the page image: {$e->getMessage()}";
@@ -353,15 +360,19 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
          * Take the image and the page images
          * of the first page with an image
          */
-        $selectedPageImage = $page->getImage();
-        if (!$tagAttributes->hasComponentAttribute(Dimension::RATIO_ATTRIBUTE)) {
-            return $selectedPageImage;
+        try {
+            $selectedPageImage = FetcherLocalImage::createImageFetchFromPath($page->getImage());
+            if (!$tagAttributes->hasComponentAttribute(Dimension::RATIO_ATTRIBUTE)) {
+                return $selectedPageImage;
+            }
+        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
+            LogUtility::internalError("Error while creating the first image object. Error: {$e->getMessage()}");
         }
 
         /**
          * We select the best image for the ratio
          */
-        $stringRatio = $tagAttributes->getValueAndRemove(Dimension::RATIO_ATTRIBUTE);
+        $stringRatio = $tagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
         if (empty($stringRatio)) {
 
             LogUtility::msg("The ratio value is empty and was therefore not taken into account", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -378,16 +389,22 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
             if ($targetRatio !== null) {
                 $pageImages = $page->getPageImages();
                 foreach ($pageImages as $pageImage) {
-                    $image = $pageImage->getImage();
+                    $path = $pageImage->getImagePath();
                     try {
-                        $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
+                        $fetcherImage = FetcherLocalImage::createImageFetchFromPath($path);
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::msg("An image object could not be build from ($path). Is it an image file ?. Error: {$e->getMessage()}");
+                        continue;
+                    }
+                    try {
+                        $ratioDistance = $targetRatio - $fetcherImage->getIntrinsicAspectRatio();
                     } catch (ExceptionCompile $e) {
-                        LogUtility::msg("The page image ($image) of the page ($page) returns an error. Error: {$e->getMessage()}");
+                        LogUtility::msg("The page image ($fetcherImage) of the page ($page) returns an error. Error: {$e->getMessage()}");
                         continue;
                     }
                     if ($ratioDistance < $bestRatioDistance) {
                         $bestRatioDistance = $ratioDistance;
-                        $selectedPageImage = $image;
+                        $selectedPageImage = $fetcherImage;
                     }
                 }
             }

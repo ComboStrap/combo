@@ -260,7 +260,7 @@ class Page extends ResourceComboAbs
     /**
      *
      * @throws ExceptionBadSyntax - if this is not a
-     * @deprecated just path a namespace path to the page creation
+     * @deprecated just pass a namespace path to the page creation and you will get the index page in return
      */
     public static function getIndexPageFromNamespace(string $namespacePath): Page
     {
@@ -1052,13 +1052,8 @@ class Page extends ResourceComboAbs
     function getNameOrDefault(): string
     {
 
-        try {
-            return $this->pageName->getValueFromStoreOrDefault();
-        } catch (ExceptionNotFound $e) {
-            // Internal error: The default name is the path
-            LogUtility::error("Internal Error: The page name or default was not returned.");
-            return $this->getPath()->getLastNameWithoutExtension();
-        }
+        return ResourceName::createForResource($this)->getValueOrDefault();
+
 
     }
 
@@ -1993,6 +1988,7 @@ class Page extends ResourceComboAbs
 
     /**
      * A shortcut for {@link Page::getPath()::getDokuwikiId()}
+     * @deprecated use the dokuwiki id of {@link Page::getPath()}
      */
     public
     function getDokuwikiId(): string

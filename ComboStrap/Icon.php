@@ -36,13 +36,13 @@ class Icon
          * The svg
          * Adding the icon type is mandatory if there is no media
          */
-        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY,FetcherSvg::ICON_TYPE);
+        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, FetcherSvg::ICON_TYPE);
 
         /**
          * Icon Svg file or Icon Library
          */
         $name = $tagAttributes->getValue(FetcherSvg::NAME_ATTRIBUTE);
-        if($name===null){
+        if ($name === null) {
             throw new ExceptionNotFound("A name is mandatory as attribute for an icon. It was not found.", Icon::ICON_CANONICAL_NAME);
         }
 
@@ -65,7 +65,7 @@ class Icon
             }
 
             $tagAttributes->addComponentAttributeValue(FetcherLocalPath::$MEDIA_QUERY_PARAMETER, $mediaDokuPath->getDokuwikiId());
-            $tagAttributes->setComponentAttributeValue(FetcherSvg::NAME_ATTRIBUTE,$mediaDokuPath->getLastNameWithoutExtension());
+            $tagAttributes->setComponentAttributeValue(FetcherSvg::NAME_ATTRIBUTE, $mediaDokuPath->getLastNameWithoutExtension());
 
 
         } catch (ExceptionNotFound $e) {
@@ -117,8 +117,10 @@ class Icon
     {
 
 
-        $mediaMarkup = MediaMarkup::createFromFetcher($this->fetchSvg)
-            ->setHtmlTagAttributes($this->tagAttributes);
+        $mediaMarkup = MediaMarkup::createFromFetcher($this->fetchSvg);
+        if (isset($this->tagAttributes)) {
+            $mediaMarkup->setHtmlTagAttributes($this->tagAttributes);
+        }
 
         return SvgImageLink::createFromMediaMarkup($mediaMarkup)
             ->renderMediaTag();

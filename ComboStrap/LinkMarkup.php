@@ -17,6 +17,7 @@ use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
 use dokuwiki\Utf8\Conversion;
+use http\Exception\RuntimeException;
 use syntax_plugin_combo_link;
 use syntax_plugin_combo_tooltip;
 use syntax_plugin_combo_variable;
@@ -102,7 +103,11 @@ class LinkMarkup
     public static function createFromPageIdOrPath($id): LinkMarkup
     {
         DokuPath::addRootSeparatorIfNotPresent($id);
-        return new LinkMarkup($id);
+        try {
+            return new LinkMarkup($id);
+        } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
+            throw new RuntimeException("Internal error: an id should be a good reference");
+        }
     }
 
     /**

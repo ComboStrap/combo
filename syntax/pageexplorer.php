@@ -75,8 +75,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     const NAMESPACE_ATTRIBUTES = "namespace-attributes";
     const PAGE_INSTRUCTIONS = "page-instructions";
     const PAGE_ATTRIBUTES = "page-attributes";
-    const HOME_INSTRUCTIONS = "home-instructions";
-    const HOME_ATTRIBUTES = "home-attributes";
+    const INDEX_INSTRUCTIONS = "index-instructions";
+    const INDEX_ATTRIBUTES = "index-attributes";
     const PARENT_INSTRUCTIONS = "parent-instructions";
     const PARENT_ATTRIBUTES = "parent-attributes";
     const HOME_TYPE = "home";
@@ -338,8 +338,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $openingTag->setPluginData(self::NAMESPACE_ATTRIBUTES, $namespaceAttributes);
                 $openingTag->setPluginData(self::PAGE_INSTRUCTIONS, $templatePageInstructions);
                 $openingTag->setPluginData(self::PAGE_ATTRIBUTES, $pageAttributes);
-                $openingTag->setPluginData(self::HOME_INSTRUCTIONS, $templateHomeInstructions);
-                $openingTag->setPluginData(self::HOME_ATTRIBUTES, $homeAttributes);
+                $openingTag->setPluginData(self::INDEX_INSTRUCTIONS, $templateHomeInstructions);
+                $openingTag->setPluginData(self::INDEX_ATTRIBUTES, $homeAttributes);
                 $openingTag->setPluginData(self::PARENT_INSTRUCTIONS, $parentInstructions);
                 $openingTag->setPluginData(self::PARENT_ATTRIBUTES, $parentAttributes);
 
@@ -398,7 +398,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     /**
                      * NameSpacePath determination
                      */
-                    $type = $pageExplorerTagAttributes->getType();
+                    $pageExplorerType = $pageExplorerTagAttributes->getType();
                     $namespaceAttribute = $pageExplorerTagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
                     $namespacePath = null;
                     if ($namespaceAttribute !== null) {
@@ -406,7 +406,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         $namespacePath = DokuPath::createPagePathFromPath($namespaceAttribute);
                     }
                     if ($namespacePath === null) {
-                        switch ($type) {
+                        switch ($pageExplorerType) {
                             case self::LIST_TYPE:
                                 $requestedPage = Page::createPageFromRequestedPage();
                                 $namespacePath = $requestedPage->getPath()->getParent();
@@ -431,7 +431,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 break;
                             default:
                                 // Should never happens but yeah
-                                $renderer->doc .= LogUtility::wrapInRedForHtml("The type of the page explorer ($type) is unknown");
+                                $renderer->doc .= LogUtility::wrapInRedForHtml("The type of the page explorer ($pageExplorerType) is unknown");
                                 return 2;
                         }
                     }
@@ -440,13 +440,13 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     /**
                      * Class Prefix
                      */
-                    $componentClassPrefix = self::getClassPrefix($type);
+                    $componentClassPrefix = self::getClassPrefix($pageExplorerType);
 
 
                     /**
                      * Rendering
                      */
-                    switch ($type) {
+                    switch ($pageExplorerType) {
                         default:
                         case self::LIST_TYPE:
 
@@ -474,44 +474,40 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Home
                              */
-                            $homeInstructions = $data[self::HOME_INSTRUCTIONS];
-                            $parentAttributes = $data[self::HOME_ATTRIBUTES];
-                            try {
-                                $currentHomePage = Page::getIndexPageFromNamespace($namespacePath->toPathString());
-                            } catch (ExceptionBadSyntax $e) {
-                                $renderer->doc .= LogUtility::wrapInRedForHtml("Error while getting the home page for the namespace. Error: {$e->getMessage()}");
-                                return false;
-                            }
-                            if (!($homeInstructions === null && $parentAttributes !== null)) {
+                            $indexInstructions = $data[self::INDEX_INSTRUCTIONS];
+                            $indexAttributes = $data[self::INDEX_ATTRIBUTES];
+                            $currentIndexPage = Page::createPageFromPathObject($namespacePath);
+                            if (!($indexInstructions === null && $indexAttributes !== null)) {
 
-                                if ($currentHomePage->exists()) {
+                                if ($currentIndexPage->exists()) {
 
 
-                                    $homeAttributes = TagAttributes::createFromCallStackArray($data[self::HOME_ATTRIBUTES]);
+                                    $indexTagAttributes = TagAttributes::createFromCallStackArray($indexAttributes);
 
 
                                     /**
                                      * Enter home tag
                                      */
-                                    $renderer->doc .= $homeAttributes
+                                    $indexPageType = "index";
+                                    $renderer->doc .= $indexTagAttributes
                                         ->addClassName($classItem)
-                                        ->setLogicalTag(self::CANONICAL . "-{$type}-home")
+                                        ->setLogicalTag(self::CANONICAL . "-{$pageExplorerType}-{$indexPageType}")
                                         ->toHtmlEnterTag("li");
                                     /**
                                      * Content
                                      */
-                                    if ($homeInstructions !== null) {
+                                    if ($indexInstructions !== null) {
                                         try {
-                                            $renderer->doc .= RenderUtility::renderInstructionsToXhtml($homeInstructions, $currentHomePage->getMetadataForRendering());
+                                            $renderer->doc .= RenderUtility::renderInstructionsToXhtml($indexInstructions, $currentIndexPage->getMetadataForRendering());
                                         } catch (ExceptionCompile $e) {
                                             $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the home. Error: {$e->getMessage()}");
                                         }
                                     } else {
                                         try {
-                                            $renderer->doc .= LinkMarkup::createFromPageIdOrPath($currentHomePage->getDokuwikiId())
+                                            $renderer->doc .= LinkMarkup::createFromPageIdOrPath($currentIndexPage->getDokuwikiId())
                                                 ->toAttributes()
                                                 ->toHtmlEnterTag("a");
-                                            $renderer->doc .= "{$currentHomePage->getNameOrDefault()}</a>";
+                                            $renderer->doc .= "{$currentIndexPage->getNameOrDefault()}</a>";
                                         } catch (ExceptionCompile $e) {
                                             $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default home. Error: {$e->getMessage()}");
                                         }
@@ -529,18 +525,19 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                              */
                             $parentInstructions = $data[self::PARENT_INSTRUCTIONS];
                             $parentAttributes = $data[self::PARENT_ATTRIBUTES];
-                            if (!($parentInstructions === null && $parentAttributes !== null)) {
+                            if (!($parentInstructions === null && $indexAttributes !== null)) {
                                 try {
-                                    $parentPage = $currentHomePage->getParentPage();
+                                    $parentPage = $currentIndexPage->getParentPage();
                                     if ($parentPage->exists()) {
 
-                                        $parentAttributes = TagAttributes::createFromCallStackArray($data[self::PARENT_ATTRIBUTES]);
+                                        $parentTagAttributes = TagAttributes::createFromCallStackArray($parentAttributes);
                                         /**
                                          * Enter parent tag
                                          */
-                                        $renderer->doc .= $parentAttributes
+                                        $pageType = "parent";
+                                        $renderer->doc .= $parentTagAttributes
                                             ->addClassName($classItem)
-                                            ->setLogicalTag(self::CANONICAL . "-{$type}-parent")
+                                            ->setLogicalTag(self::CANONICAL . "-{$pageExplorerType}-{$pageType}")
                                             ->toHtmlEnterTag("li");
                                         /**
                                          * Content
@@ -553,7 +550,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                             }
                                         } else {
                                             try {
-                                                $renderer->doc .= LinkMarkup::createFromPageIdOrPath($parentPage->getDokuwikiId())
+                                                $parentWikiId = $parentPage->getPath()->getDokuwikiId();
+                                                $renderer->doc .= LinkMarkup::createFromPageIdOrPath($parentWikiId)
                                                     ->toAttributes()
                                                     ->toHtmlEnterTag("a");
                                                 $renderer->doc .= Icon::createFromComboResource(self::LEVEL_UP_ICON)
@@ -580,11 +578,11 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                             $namespaceEnterTag = TagAttributes::createFromCallStackArray($data[self::NAMESPACE_ATTRIBUTES])
                                 ->addClassName($classItem)
-                                ->setLogicalTag(self::CANONICAL . "-{$type}-namespace")
+                                ->setLogicalTag(self::CANONICAL . "-{$pageExplorerType}-namespace")
                                 ->toHtmlEnterTag("li");
                             $pageEnterTag = TagAttributes::createFromCallStackArray($data[self::PAGE_ATTRIBUTES])
                                 ->addClassName($classItem)
-                                ->setLogicalTag(self::CANONICAL . "-{$type}-page")
+                                ->setLogicalTag(self::CANONICAL . "-{$pageExplorerType}-page")
                                 ->toHtmlEnterTag("li");
 
 
@@ -653,8 +651,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 }
                                 if (!($pageInstructions === null && $pageAttributes !== null)) {
                                     $pageNum++;
-                                    if ($currentHomePage !== null
-                                        && $childPagePath->getDokuwikiId() !== $currentHomePage->getDokuwikiId()
+                                    if ($currentIndexPage !== null
+                                        && $childPagePath->getDokuwikiId() !== $currentIndexPage->getDokuwikiId()
                                         && FileSystems::exists($childPagePath)
                                     ) {
                                         /**
@@ -714,7 +712,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             }
 
 
-                            $snippetId = self::CANONICAL . "-" . $type;
+                            $snippetId = self::CANONICAL . "-" . $pageExplorerType;
                             /**
                              * Open the tree until the current page
                              * and make it active

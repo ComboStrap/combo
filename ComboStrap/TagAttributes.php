@@ -569,8 +569,14 @@ class TagAttributes
             }
 
             // We only add the common HTML attribute
-            if (in_array($key, [TagAttributes::CLASS_KEY, StyleUtility::STYLE_ATTRIBUTE])) {
+            if (in_array($key, [TagAttributes::CLASS_KEY, StyleUtility::STYLE_ATTRIBUTE, TagAttributes::ID_KEY])) {
                 $tempHtmlArray[$key] = $value;
+            } else {
+                if (!in_array($key, [TagAttributes::TYPE_KEY, TagAttributes::GENERATED_ID_KEY])) {
+                    if (PluginUtility::isDevOrTest()) {
+                        LogUtility::warning("The component attribute ($key) is still in the component output. If it must be in the HTML output, you should add it via the output attribute methods during processing.");
+                    }
+                }
             }
 
         }

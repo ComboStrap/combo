@@ -60,14 +60,14 @@ class StyleUtility
         $logicalTag = $tagAttributes->getLogicalTag();
         if ($logicalTag !== null && $tagAttributes->getDefaultStyleClassShouldBeAdded() === true) {
 
-            $tagAttributes->addClassName(self::getStylingClassForTag($logicalTag));
+            $tagAttributes->addClassName(self::addComboStrapSuffix($logicalTag));
             if (!empty($tagAttributes->getType())) {
                 $tagAttributes->addClassName($logicalTag . "-" . $tagAttributes->getType() . "-" . self::COMBOSTRAP_FIX);
             }
         }
     }
 
-    public static function getStylingClassForTag($logicalTag): string
+    public static function addComboStrapSuffix($logicalTag): string
     {
         return $logicalTag . "-" . self::COMBOSTRAP_FIX;
     }

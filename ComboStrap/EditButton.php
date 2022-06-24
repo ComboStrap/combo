@@ -307,7 +307,7 @@ class EditButton
                 $hiddenInputs .= $inputAttributes->toHtmlEmptyTag("input");
             }
             $url = $page->getUrl(PageUrlType::CONF_VALUE_PAGE_PATH);
-            $classPageEdit = StyleUtility::getStylingClassForTag(self::TAG);
+            $classPageEdit = StyleUtility::addComboStrapSuffix(self::TAG);
 
             /**
              * Important Note: the first div and the public class is mandatory for the edittable plugin

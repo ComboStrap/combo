@@ -413,7 +413,7 @@ class RasterImageLink extends ImageLink
      */
     public static function getLazyClass()
     {
-        return StyleUtility::getStylingClassForTag("lazy-raster");
+        return StyleUtility::addComboStrapSuffix("lazy-raster");
     }
 
 

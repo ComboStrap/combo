@@ -101,7 +101,7 @@ abstract class ImageLink extends MediaLink
                 $href = FetcherLocalPath::createFromPath($dokuPath)->getFetchUrl()->toString();
                 $tagAttributes->addOutputAttributeValue("href", $href);
                 $snippetId = "lightbox";
-                $tagAttributes->addClassName(StyleUtility::getStylingClassForTag($snippetId));
+                $tagAttributes->addClassName(StyleUtility::addComboStrapSuffix($snippetId));
                 $linkingClass = $this->mediaMarkup->getLinkingClass();
                 if ($linkingClass !== null) {
                     $tagAttributes->addClassName($linkingClass);

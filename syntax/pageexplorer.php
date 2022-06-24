@@ -8,6 +8,7 @@ use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\Html;
 use ComboStrap\Icon;
@@ -20,6 +21,7 @@ use ComboStrap\Path;
 use ComboStrap\PathTreeNode;
 use ComboStrap\PluginUtility;
 use ComboStrap\RenderUtility;
+use ComboStrap\StyleUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\TreeNode;
 
@@ -528,43 +530,48 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $parentInstructions = $data[self::PARENT_INSTRUCTIONS];
                             $parentAttributes = $data[self::PARENT_ATTRIBUTES];
                             if (!($parentInstructions === null && $parentAttributes !== null)) {
-                                $parentPage = $currentHomePage->getParentPage();
-                                if ($parentPage !== null && $parentPage->exists()) {
+                                try {
+                                    $parentPage = $currentHomePage->getParentPage();
+                                    if ($parentPage->exists()) {
 
-                                    $parentAttributes = TagAttributes::createFromCallStackArray($data[self::PARENT_ATTRIBUTES]);
-                                    /**
-                                     * Enter parent tag
-                                     */
-                                    $renderer->doc .= $parentAttributes
-                                        ->addClassName($classItem)
-                                        ->setLogicalTag(self::CANONICAL . "-{$type}-parent")
-                                        ->toHtmlEnterTag("li");
-                                    /**
-                                     * Content
-                                     */
-                                    if ($parentInstructions !== null) {
-                                        try {
-                                            $renderer->doc .= RenderUtility::renderInstructionsToXhtml($parentInstructions, $parentPage->getMetadataForRendering());
-                                        } catch (ExceptionCompile $e) {
-                                            $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the parent instructions. Error: {$e->getMessage()}");
+                                        $parentAttributes = TagAttributes::createFromCallStackArray($data[self::PARENT_ATTRIBUTES]);
+                                        /**
+                                         * Enter parent tag
+                                         */
+                                        $renderer->doc .= $parentAttributes
+                                            ->addClassName($classItem)
+                                            ->setLogicalTag(self::CANONICAL . "-{$type}-parent")
+                                            ->toHtmlEnterTag("li");
+                                        /**
+                                         * Content
+                                         */
+                                        if ($parentInstructions !== null) {
+                                            try {
+                                                $renderer->doc .= RenderUtility::renderInstructionsToXhtml($parentInstructions, $parentPage->getMetadataForRendering());
+                                            } catch (ExceptionCompile $e) {
+                                                $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the parent instructions. Error: {$e->getMessage()}");
+                                            }
+                                        } else {
+                                            try {
+                                                $renderer->doc .= LinkMarkup::createFromPageIdOrPath($parentPage->getDokuwikiId())
+                                                    ->toAttributes()
+                                                    ->toHtmlEnterTag("a");
+                                                $renderer->doc .= Icon::createFromComboResource(self::LEVEL_UP_ICON)
+                                                    ->toHtml();
+                                                $renderer->doc .= " {$parentPage->getNameOrDefault()}</a>";
+                                            } catch (ExceptionCompile $e) {
+                                                $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default parent. Error: {$e->getMessage()}");
+                                            }
                                         }
-                                    } else {
-                                        try {
-                                            $renderer->doc .= LinkMarkup::createFromPageIdOrPath($parentPage->getDokuwikiId())
-                                                ->toAttributes()
-                                                ->toHtmlEnterTag("a");
-                                            $renderer->doc .= Icon::createFromComboResource(self::LEVEL_UP_ICON)
-                                                ->toHtml();
-                                            $renderer->doc .= " {$parentPage->getNameOrDefault()}</a>";
-                                        } catch (ExceptionCompile $e) {
-                                            $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the default parent. Error: {$e->getMessage()}");
-                                        }
+                                        /**
+                                         * End parent tag
+                                         */
+                                        $renderer->doc .= "</li>";
                                     }
-                                    /**
-                                     * End parent tag
-                                     */
-                                    $renderer->doc .= "</li>";
+                                } catch (ExceptionNotFound $e) {
+                                    // no parent page
                                 }
+
                             }
 
                             /**
@@ -703,7 +710,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             if (!blank($namespaceId)) {
                                 $pageExplorerTagAttributes->addOutputAttributeValue("data-" . TagAttributes::WIKI_ID, $namespaceId);
                             } else {
-                                $pageExplorerTagAttributes->addEmptyComponentAttributeValue("data-" . TagAttributes::WIKI_ID);
+                                $pageExplorerTagAttributes->addEmptyOutputAttributeValue("data-" . TagAttributes::WIKI_ID);
                             }
 
 
@@ -837,7 +844,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
             // button
             $this->namespaceCounter++;
-            $id = Html::toHtmlId("page-explorer-{$containerPath->getDokuwikiId()}-$this->namespaceCounter-combo");
+            $id = StyleUtility::addComboStrapSuffix(Html::toHtmlId("page-explorer-{$containerPath->getDokuwikiId()}-$this->namespaceCounter"));
             $html .= TagAttributes::createEmpty()
                 ->addOutputAttributeValue("data-bs-target", "#$id")
                 ->addOutputAttributeValue("data-" . TagAttributes::WIKI_ID, $containerPath->getDokuwikiId())

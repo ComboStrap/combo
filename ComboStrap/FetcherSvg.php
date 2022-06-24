@@ -1341,8 +1341,8 @@ class FetcherSvg extends FetcherLocalImage implements FetcherImage
         }
         // add class with svg type
         $documentElement
-            ->addClass(StyleUtility::getStylingClassForTag(self::TAG))
-            ->addClass(StyleUtility::getStylingClassForTag(self::TAG . "-" . $requestedType));
+            ->addClass(StyleUtility::addComboStrapSuffix(self::TAG))
+            ->addClass(StyleUtility::addComboStrapSuffix(self::TAG . "-" . $requestedType));
         // Add a class on each path for easy styling
         try {
             $name = $this->getRequestedNameOrDefault();

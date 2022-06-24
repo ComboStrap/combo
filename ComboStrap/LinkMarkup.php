@@ -255,7 +255,7 @@ EOF;
                          */
                         $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
                         $lowerCaseLowQualityAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
-                        $outputAttributes->addClassName(StyleUtility::getStylingClassForTag(LowQualityPage::CLASS_NAME));
+                        $outputAttributes->addClassName(StyleUtility::addComboStrapSuffix(LowQualityPage::CLASS_NAME));
                         $snippetLowQualityPageId = $lowerCaseLowQualityAcronym;
                         PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($snippetLowQualityPageId);
                         /**

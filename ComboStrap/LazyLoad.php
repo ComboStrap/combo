@@ -49,7 +49,7 @@ class LazyLoad
      */
     public static function getLazyClass(): string
     {
-        return StyleUtility::getStylingClassForTag(self::CANONICAL);
+        return StyleUtility::addComboStrapSuffix(self::CANONICAL);
     }
 
     public static function addSnippet()

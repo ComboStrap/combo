@@ -124,7 +124,7 @@ class LocalFs implements FileSystem
          * Same as {@link scandir()}, they output
          * the current and parent relative directory (ie `.` and `..`)
          */
-        $directoryHandle = opendir($path->toAbsolutePath());
+        $directoryHandle = @opendir($path->toAbsolutePath());
         if (!$directoryHandle) return [];
         try {
             $localChildren = [];

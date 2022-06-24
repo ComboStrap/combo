@@ -207,9 +207,7 @@ class Layout
                     $areaDomElement->addClass("d-print-none");
                     break;
                 case self::PAGE_CORE_AREA:
-                    $areaDomElement->addClass(tpl_classes());
                     $areaDomElement->addClass("layout-$layoutName-combo");
-                    $areaDomElement->addClass("dokuwiki"); // used by Third party plugin
                     break;
                 case self::MAIN_FOOTER_AREA:
                 case self::PAGE_SIDE_AREA:

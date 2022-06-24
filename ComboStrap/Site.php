@@ -52,9 +52,9 @@ class Site
 
 
     /**
-     * @return FetcherTraitImage[]
+     * @return DokuPath[]
      */
-    public static function getLogoImages(): array
+    public static function getLogoImagesAsPath(): array
     {
         $logosPaths = PluginUtility::mergeAttributes(self::PNG_LOGO_IDS, self::SVG_LOGO_IDS);
         $logos = [];
@@ -62,7 +62,7 @@ class Site
             $dokuPath = DokuPath::createMediaPathFromId($logoPath);
             if (FileSystems::exists($dokuPath)) {
                 try {
-                    $logos[] = FetcherLocalImage::createImageFetchFromPath($dokuPath);
+                    $logos[] = $dokuPath;
                 } catch (Exception $e) {
                     // The image is not valid
                     LogUtility::msg("The logo ($logoPath) is not a valid image. {$e->getMessage()}");
@@ -173,7 +173,7 @@ class Site
                 return $image;
             }
         }
-        throw new ExceptionNotFound("No Svg Log Image found");
+        throw new ExceptionNotFound("No Svg Logo Image found");
     }
 
     /**
@@ -819,33 +819,36 @@ class Site
     }
 
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public static function getLogoHtml(): ?string
     {
 
-        $tagAttributes = TagAttributes::createEmpty("identity");
-        $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "72");
-        $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, "72");
-        $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, FetcherSvg::ICON_TYPE);
-        $tagAttributes->addClassName("logo");
-
-
-        /**
-         * Logo
-         */
-        $logoImages = Site::getLogoImages();
-        foreach ($logoImages as $logoImage) {
-            $mediaMarkup = MediaMarkup::createFromFetchUrl($logoImage->getFetchUrl())
-                ->setLazyLoad(false);
+        $logoImagesPath = Site::getLogoImagesAsPath();
+        $tagAttributes = TagAttributes::createEmpty("identity")
+            ->addClassName("logo");
+        foreach ($logoImagesPath as $logoImagePath) {
             try {
-                $mediaLink = MediaLink::createFromMediaMarkup($mediaMarkup);
-                return $mediaLink->renderMediaTag();
+                if(!Identity::isReader($logoImagePath->getDokuwikiId())){
+                    continue;
+                }
+                $imageFetcher = FetcherLocalImage::createImageFetchFromPath($logoImagePath)
+                    ->setRequestedHeight(72)
+                    ->setRequestedWidth(72);
+                if ($imageFetcher instanceof FetcherSvg) {
+                    $imageFetcher->setRequestedType(FetcherSvg::ICON_TYPE);
+                }
+                return MediaMarkup::createFromFetcher($imageFetcher)
+                    ->setLazyLoad(false)
+                    ->setHtmlTagAttributes($tagAttributes)
+                    ->toHtml();
             } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound|ExceptionCompile $e) {
-                LogUtility::msg("Error while rendering the logo $logoImage");
+                LogUtility::msg("Error while rendering in HTML the logo $imageFetcher");
             }
 
         }
-
-        return null;
+        throw new ExceptionNotFound("No logo image could be found");
     }
 
     /**
@@ -882,9 +885,9 @@ class Site
     /**
      * @throws ExceptionNotFound
      */
-    public static function getLogoImage(): FetcherTraitImage
+    public static function getLogoImage(): DokuPath
     {
-        $logosImages = Site::getLogoImages();
+        $logosImages = Site::getLogoImagesAsPath();
         if (empty($logosImages)) {
             throw new ExceptionNotFound("No logo image was installed", "logo");
         }

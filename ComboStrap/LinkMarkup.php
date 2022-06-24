@@ -92,7 +92,6 @@ class LinkMarkup
 
         $this->attributes = TagAttributes::createEmpty(syntax_plugin_combo_link::TAG);
 
-
         $this->markupRef = MarkupRef::createLinkFromRef($ref);
 
         $this->collectStylingAttributeInUrl();
@@ -129,8 +128,6 @@ class LinkMarkup
     /**
      *
      * @throws ExceptionNotFound
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionBadArgument
      */
     public function toAttributes(): TagAttributes
     {

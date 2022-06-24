@@ -83,7 +83,7 @@ class Skin
         if (!$attributes->hasComponentAttribute(self::SKIN_ATTRIBUTE)) {
             return;
         }
-        $skinValue = $attributes->getValue(self::SKIN_ATTRIBUTE);
+        $skinValue = $attributes->getValueAndRemove(self::SKIN_ATTRIBUTE);
         if (!$attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)) {
 
             LogUtility::msg("A component type is mandatory when using the skin attribute", LogUtility::LVL_MSG_WARNING, self::CANONICAL);

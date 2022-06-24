@@ -551,6 +551,23 @@ class DokuPath extends PathAbs
         return DokuPath::createPagePathFromId(PluginUtility::getRequestedWikiId());
     }
 
+    /**
+     * Normalize a valid id
+     * (ie from / to :)
+     *
+     * @param string $id
+     * @return array|string|string[]
+     *
+     * This is not the same than {@link MarkupRef::normalizePath()}
+     * because there is no relativity or any reserved character in a id
+     *
+     * as an {@link DokuPath::getDokuwikiId() id} is a validated absolute path without root character
+     */
+    public static function normalizeWikId(string $id)
+    {
+        return str_replace(DokuPath::NAMESPACE_SEPARATOR_SLASH, DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $id);
+    }
+
 
     /**
      * The last part of the path
@@ -643,8 +660,9 @@ class DokuPath extends PathAbs
      * The index stores needs this value
      * And most of the function that are not links related
      * use this format (What fucked up is fucked up)
-     * /**
-     * The absolute path without root separator
+     *
+     * The id is a validated absolute path without any root character.
+     *
      * Heavily used inside Dokuwiki
      */
     public

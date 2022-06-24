@@ -151,6 +151,26 @@ class TagAttributes
      */
     const GENERATED_ID_KEY = "generated_id";
 
+    /**
+     * The attributes that may flow into an HTML output
+     * TODO: href comes from {@link \syntax_plugin_combo_brand}, it should be corrected to use {@link LinkMarkup}
+     */
+    const HTML_ATTRIBUTES = [
+        TagAttributes::CLASS_KEY,
+        StyleUtility::STYLE_ATTRIBUTE,
+        TagAttributes::ID_KEY,
+        TagAttributes::TITLE_KEY,
+        "href"
+    ];
+
+    /**
+     * Attribute that cannot be deleted
+     * TODO: This is because the request object and the response object are the same. We should add the request attribute in the {@link \TagAttributes}
+     */
+    const PROTECTED_ATTRIBUTES = [
+        TagAttributes::TYPE_KEY
+    ];
+
 
     /**
      * A global static counter
@@ -569,10 +589,14 @@ class TagAttributes
             }
 
             // We only add the common HTML attribute
-            if (in_array($key, [TagAttributes::CLASS_KEY, StyleUtility::STYLE_ATTRIBUTE, TagAttributes::ID_KEY])) {
+            if (in_array($key, self::HTML_ATTRIBUTES)) {
                 $tempHtmlArray[$key] = $value;
             } else {
-                if (!in_array($key, [TagAttributes::TYPE_KEY, TagAttributes::GENERATED_ID_KEY])) {
+
+                if (!in_array($key, [
+                    TagAttributes::TYPE_KEY,
+                    TagAttributes::GENERATED_ID_KEY
+                ])) {
                     if (PluginUtility::isDevOrTest()) {
                         LogUtility::warning("The component attribute ($key) is still in the component output. If it must be in the HTML output, you should add it via the output attribute methods during processing.");
                     }
@@ -708,11 +732,10 @@ class TagAttributes
         if ($this->hasComponentAttribute($attributeName)) {
             $value = $this->getValue($attributeName);
 
-            if (!in_array($attributeName, self::RESERVED_ATTRIBUTES)) {
+            if (!in_array($attributeName, self::PROTECTED_ATTRIBUTES)) {
                 /**
                  * Don't remove for instance the `type`
                  * because it may be used elsewhere
-                 * TODO: we should create a new response object and not deleting data from the request
                  */
                 unset($this->componentAttributesCaseInsensitive[$attributeName]);
             }

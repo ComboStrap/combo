@@ -177,7 +177,7 @@ class Identity
      * @param bool $includeLogo
      * @return string
      */
-    public static function getHeaderHTML(Doku_Form $form, $classPrefix, $includeLogo = true)
+    public static function getHeaderHTML(Doku_Form $form, $classPrefix, $includeLogo = true): string
     {
         if (isset($form->_content[0]["_legend"])) {
 
@@ -191,7 +191,11 @@ class Identity
                 &&
                 $includeLogo === true
             ) {
-                $logoHtmlImgTag = Site::getLogoHtml();
+                try {
+                    $logoHtmlImgTag = Site::getLogoHtml();
+                } catch (ExceptionNotFound $e) {
+                    // no logo found or readable
+                }
             }
             /**
              * Don't use `header` in place of
@@ -212,9 +216,9 @@ EOF;
         return "";
     }
 
-    public static function isReader(string $pageId): bool
+    public static function isReader(string $wikiId): bool
     {
-        $perm = self::getPerm($pageId);
+        $perm = self::getPermissions($wikiId);
 
         if ($perm >= AUTH_READ) {
             return true;
@@ -224,15 +228,15 @@ EOF;
 
     }
 
-    private static function getPerm(string $pageId)
+    private static function getPermissions(string $wikiId): int
     {
-        if ($pageId == null) {
-            $pageId = Page::createPageFromRequestedPage()->getDokuwikiId();
+        if ($wikiId == null) {
+            $wikiId = Page::createPageFromRequestedPage()->getDokuwikiId();
         }
         if ($_SERVER['REMOTE_USER']) {
-            $perm = auth_quickaclcheck($pageId);
+            $perm = auth_quickaclcheck($wikiId);
         } else {
-            $perm = auth_aclcheck($pageId, '', null);
+            $perm = auth_aclcheck($wikiId, '', null);
         }
         return $perm;
     }

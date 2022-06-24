@@ -359,6 +359,11 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         $snippetManager->attachCssInternalStyleSheetForSlot(syntax_plugin_combo_heading::TAG);
 
         /**
+         * Not a HTML attribute
+         */
+        $tagAttributes->removeComponentAttributeIfPresent(self::HEADING_TEXT_ATTRIBUTE);
+
+        /**
          * Printing
          */
         $renderer->doc .= $tagAttributes->toHtmlEnterTag("h$level");

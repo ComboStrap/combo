@@ -222,15 +222,12 @@ class Brand
 
         switch ($this->name) {
             case self::CURRENT_BRAND:
-                $image = Site::getLogoAsSvgImage();
-                if ($image !== null) {
-                    $path = $image->getOriginalPath();
-                    if ($path instanceof DokuPath) {
-                        /**
-                         * End with svg, not seen as an external icon
-                         */
-                        return $path->getDokuwikiId();
-                    }
+                try {
+                    return Site::getLogoAsSvgImage()
+                        ->getOriginalPath()
+                        ->getDokuwikiId();
+                } catch (ExceptionNotFound $e) {
+                    // no logo installed
                 }
                 break;
             default:

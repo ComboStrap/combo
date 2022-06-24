@@ -559,9 +559,9 @@ EOF;
         $logicalTag = $this->type;
         $linkAttributes = TagAttributes::createEmpty($logicalTag);
         $linkAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, $logicalTag);
-        $linkAttributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "{$this->getWidgetClass()} {$this->getIdentifierClass()}");
+        $linkAttributes->addClassName("{$this->getWidgetClass()} {$this->getIdentifierClass()}");
         $linkTitle = $this->getLinkTitle();
-        $linkAttributes->addComponentAttributeValue("title", $linkTitle);
+        $linkAttributes->addOutputAttributeValue("title", $linkTitle);
         switch ($this->type) {
             case self::TYPE_BUTTON_SHARE:
 
@@ -570,8 +570,8 @@ EOF;
                 }
 
                 $ariaLabel = "Share on " . ucfirst($this->getBrand());
-                $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
-                $linkAttributes->addComponentAttributeValue("rel", "nofollow");
+                $linkAttributes->addOutputAttributeValue("aria-label", $ariaLabel);
+                $linkAttributes->addOutputAttributeValue("rel", "nofollow");
 
                 switch ($this->getBrand()) {
                     case "whatsapp":
@@ -579,8 +579,8 @@ EOF;
                          * Direct link
                          * For whatsapp, the sharer link is not the good one
                          */
-                        $linkAttributes->addComponentAttributeValue("target", "_blank");
-                        $linkAttributes->addComponentAttributeValue("href", $this->getBrandEndpointForPage($requestedPage));
+                        $linkAttributes->addOutputAttributeValue("target", "_blank");
+                        $linkAttributes->addOutputAttributeValue("href", $this->getBrandEndpointForPage($requestedPage));
                         break;
                     default:
                         /**
@@ -590,7 +590,7 @@ EOF;
                         /**
                          * Opens in a popup
                          */
-                        $linkAttributes->addComponentAttributeValue("rel", "noopener");
+                        $linkAttributes->addOutputAttributeValue("rel", "noopener");
 
                         PluginUtility::getSnippetManager()->attachJavascriptLibraryForSlot(
                             "sharer",
@@ -598,11 +598,11 @@ EOF;
                             "sha256-AqqY/JJCWPQwZFY/mAhlvxjC5/880Q331aOmargQVLU="
                         );
 
-                        $linkAttributes->addComponentAttributeValue("data-sharer", $this->getBrand()); // the id
-                        $linkAttributes->addComponentAttributeValue("data-link", "false");
-                        $linkAttributes->addComponentAttributeValue("data-title", $this->getTextForPage($requestedPage));
+                        $linkAttributes->addOutputAttributeValue("data-sharer", $this->getBrand()); // the id
+                        $linkAttributes->addOutputAttributeValue("data-link", "false");
+                        $linkAttributes->addOutputAttributeValue("data-title", $this->getTextForPage($requestedPage));
                         $urlToShare = $this->getSharedUrlForPage($requestedPage);
-                        $linkAttributes->addComponentAttributeValue("data-url", $urlToShare);
+                        $linkAttributes->addOutputAttributeValue("data-url", $urlToShare);
                         //$linkAttributes->addComponentAttributeValue("href", "#"); // with # we style navigate to the top
                         $linkAttributes->addStyleDeclarationIfNotSet("cursor", "pointer"); // show a pointer (without href, there is none)
                 }
@@ -610,17 +610,17 @@ EOF;
             case self::TYPE_BUTTON_FOLLOW:
 
                 $ariaLabel = "Follow us on " . ucfirst($this->getBrand());
-                $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
-                $linkAttributes->addComponentAttributeValue("target", "_blank");
-                $linkAttributes->addComponentAttributeValue("rel", "nofollow");
+                $linkAttributes->addOutputAttributeValue("aria-label", $ariaLabel);
+                $linkAttributes->addOutputAttributeValue("target", "_blank");
+                $linkAttributes->addOutputAttributeValue("rel", "nofollow");
                 $href = $this->getBrandEndpointForPage();
                 if ($href !== null) {
-                    $linkAttributes->addComponentAttributeValue("href", $href);
+                    $linkAttributes->addOutputAttributeValue("href", $href);
                 }
                 return $linkAttributes;
             case self::TYPE_BUTTON_BRAND:
                 if ($this->brand->getBrandUrl() !== null) {
-                    $linkAttributes->addComponentAttributeValue("href", $this->brand->getBrandUrl());
+                    $linkAttributes->addOutputAttributeValue("href", $this->brand->getBrandUrl());
                 }
                 return $linkAttributes;
             default:

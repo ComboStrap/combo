@@ -1,7 +1,10 @@
 <?php
 
 use ComboStrap\DatabasePageRow;
+use ComboStrap\DokuPath;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
+use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PageUrlPath;
 use ComboStrap\PluginUtility;
@@ -15,6 +18,21 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
 {
 
     const CANONICAL = "lang";
+
+    /**
+     *
+     * hack as:
+     *   * {@link getID()} invoked later reads the id from the input variable
+     *   * {@link PluginUtility::getRequestedWikiId()} read it then also
+     *
+     * @param string $normalizedId
+     * @return void
+     */
+    private static function setNormalizedId(string $normalizedId)
+    {
+        global $INPUT;
+        $INPUT->set("id", $normalizedId);
+    }
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -53,10 +71,19 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
         $clean = false;
         /** @noinspection PhpConditionAlreadyCheckedInspection */
         $id = getID("id", $clean);
+        $id = DokuPath::normalizeWikId($id);
+        self::setNormalizedId($id);
         $page = Page::createPageFromId($id);
         if (!FileSystems::exists($page->getPath())) {
             // Is it a permanent link
-            $encodedPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($page->getPath()->getLastNameWithoutExtension());
+            try {
+                $lastPartName = $page->getPath()->getLastNameWithoutExtension();
+            } catch (ExceptionNotFound $e) {
+                // only the root does not have any name, it should therefore never happen
+                LogUtility::internalError("No last name, we were unable to set the request id right", self::CANONICAL);
+                return;
+            }
+            $encodedPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($lastPartName);
             if ($encodedPageId !== null) {
                 $pageId = PageUrlPath::decodePageId($encodedPageId);
                 if ($pageId !== null) {
@@ -68,11 +95,8 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
                         return;
                     }
 
-                    /**
-                     * hack as {@link getID()} invoked later reads the id from the input variable
-                     */
-                    global $INPUT;
-                    $INPUT->set("id", $page->getPath()->getDokuwikiId());
+                    self::setNormalizedId($page->getPath()->getDokuwikiId());
+
 
                 }
             }

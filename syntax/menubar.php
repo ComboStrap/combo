@@ -219,7 +219,7 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
                      * Without the expand, the flex has a row direction
                      * and not a column
                      */
-                    $breakpoint = $tagAttributes->getValue(self::BREAKPOINT_ATTRIBUTE);
+                    $breakpoint = $tagAttributes->getValueAndRemoveIfPresent(self::BREAKPOINT_ATTRIBUTE);
                     $tagAttributes->addClassName("navbar-expand-$breakpoint");
 
                     // Grab the position
@@ -240,7 +240,7 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
                              *
                              * We set the class and padding-top with the javascript
                              */
-                            $tagAttributes->addComponentAttributeValue("data-type", $fixedTopClass);
+                            $tagAttributes->addOutputAttributeValue("data-type", $fixedTopClass);
                             $fixedTopSnippetId = self::TAG . "-" . $fixedTopClass;
                             // See http://stackoverflow.com/questions/17181355/boostrap-using-fixed-navbar-and-anchor-tags-to-jump-to-sections
                             PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot($fixedTopSnippetId);

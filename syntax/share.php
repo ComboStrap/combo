@@ -163,12 +163,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                      * and Runtime Cache key dependencies
                      */
                     CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
-                    try {
-                        $requestedPage = Page::createPageFromRequestedPage();
-                    } catch (ExceptionCompile $e) {
-                        $renderer->doc .= LogUtility::wrapInRedForHtml("The requested page could not be determined. Error: ({$e->getMessage()}");
-                        return false;
-                    }
+                    $requestedPage = Page::createPageFromRequestedPage();
                     try {
                         $linkAttributes = $brandButton->getLinkAttributes($requestedPage)
                             ->setType($shareAttributes->getType())
@@ -228,8 +223,6 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
         // unsupported $mode
         return false;
     }
-
-
 
 
 }

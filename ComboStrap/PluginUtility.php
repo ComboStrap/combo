@@ -526,8 +526,8 @@ class PluginUtility
 
             $logoPath = DokuPath::createComboResource("images:logo.svg");
             try {
-                $fetchImage = FetcherSvg::createSvgFromPath($logoPath)
-                    ->setRequestedType(FetcherSvg::ICON_TYPE)
+                $fetchImage = FetcherSvg::createSvgFromPath($logoPath);
+                $fetchImage->setRequestedType(FetcherSvg::ICON_TYPE)
                     ->setRequestedWidth(20);
                 $xhtmlIcon = SvgImageLink::createFromFetcher($fetchImage)
                     ->renderMediaTag();
@@ -652,9 +652,9 @@ class PluginUtility
      * (Not the sidebar)
      * @return string
      */
-    public
-    static function getRequestedWikiId(): string
+    public static function getRequestedWikiId(): string
     {
+
         /**
          * {@link getID()} reads the id from the input variable
          *
@@ -698,15 +698,14 @@ class PluginUtility
             return $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
         }
 
-        if(!PluginUtility::isDevOrTest()){
+        if (!PluginUtility::isDevOrTest()) {
             LogUtility::internalError("Internal Error: The request id could not be determined");
         }
         return DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
 
     }
 
-    public
-    static function xmlEncode($text)
+    public static function xmlEncode($text)
     {
         /**
          * {@link htmlentities }
@@ -833,7 +832,6 @@ class PluginUtility
         }
 
     }
-
 
 
     public
@@ -1167,7 +1165,6 @@ class PluginUtility
         }
         return $slot;
     }
-
 
 
 }

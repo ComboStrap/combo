@@ -92,20 +92,18 @@ class ResourceName extends MetadataText
         $path = $resourceCombo->getPath();
         if ($resourceCombo instanceof Page) {
 
-            if ($resourceCombo->isRootHomePage()) {
-                return "Home";
-            }
 
-            if ($resourceCombo->isIndexPage()) {
+            if ($resourceCombo->isIndexPage() && !$resourceCombo->isRootHomePage()) {
+
                 try {
                     $path = $path->getParent();
                 } catch (ExceptionNotFound $e) {
-                    // no parent page
-                    // should not happen otherwise this is the root
-                    return "Home";
+                    // no parent path
+                    // should not happen because even the home page (:start) has
+                    // a parent (ie :)
+                    return Site::getIndexPageName();
                 }
             }
-
         }
 
         return self::getFromPath($path);

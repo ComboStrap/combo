@@ -271,7 +271,11 @@ class MarkupRef
                  * otherwise it's a relative path
                  */
                 $path = DokuPath::createPagePathFromPath($wikiPath, $rev);
-                if (!FileSystems::exists($path)) {
+                if (!FileSystems::exists($path) && $wikiPath !== "") {
+                    // We test for an empty wikiPath string
+                    // because if the wiki path is the empty string,
+                    // this is the current requested page
+                    // An empty id is the root and always exists
                     $idPath = DokuPath::createPagePathFromId($wikiPath, $rev);
                     if (FileSystems::exists($idPath)) {
                         $path = $idPath;
@@ -354,6 +358,10 @@ class MarkupRef
         if ($wikiPath[strlen($wikiPath) - 1] === DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $isNamespacePath = true;
         }
+        $isPath = false;
+        if ($wikiPath[0] === DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+            $isPath = true;
+        }
         $pathType = "unknown";
         if ($wikiPath[0] === DokuPath::CURRENT_PATH_CHARACTER) {
             $pathType = "current";
@@ -377,6 +385,9 @@ class MarkupRef
             case "parent":
                 $cleanPath = DokuPath::CURRENT_PARENT_PATH_CHARACTER . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $cleanPath;
                 break;
+        }
+        if ($isPath) {
+            $cleanPath = ":$cleanPath";
         }
         return $cleanPath;
     }

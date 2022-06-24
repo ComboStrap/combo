@@ -882,5 +882,12 @@ class Call
         return $this->getAttribute(TagAttributes::GENERATED_ID_KEY);
     }
 
+    public function getAttributeAndRemove(string $key)
+    {
+        $value = $this->getAttribute($key);
+        $this->removeAttribute($key);
+        return $value;
+    }
+
 
 }

@@ -9,12 +9,16 @@ class PageImage
 
     const PAGE_IMAGE = "page-image";
 
-    // next release ?
 
     /**
-     * @var FetcherImage
+     * A path and not a {@link FetcherImage}
+     * because:
+     *   * it's basically a path (no processing information are needed)
+     *   * it's easier to manipulate a path
+     *   * in syntax component, we pass attribute to the fetcher that it should delete if used (Way to check the attribute usage)
+     * @var DokuPath
      */
-    private $image;
+    private DokuPath $image;
     private $usages;
     /**
      * @var Page
@@ -24,24 +28,19 @@ class PageImage
     /**
      * PageImage constructor.
      */
-    public function __construct(FetcherImage $image, Page $page)
+    public function __construct(DokuPath $image, Page $page)
     {
         $this->image = $image;
         $this->page = $page;
     }
 
     /**
-     * @param FetcherTraitImage|string $image
+     * @param DokuPath $image
      * @param Page $page
      * @return PageImage
-     * @throws ExceptionCompile
      */
-    public static function create($image, ResourceCombo $page): PageImage
+    public static function create(DokuPath $image, ResourceCombo $page): PageImage
     {
-        if (!($image instanceof FetcherTraitImage)) {
-            $dokuPath = DokuPath::createMediaPathFromId($image);
-            $image = FetcherLocalImage::createImageFetchFromPath($dokuPath);
-        }
         return new PageImage($image, $page);
     }
 
@@ -65,7 +64,7 @@ class PageImage
         return $this;
     }
 
-    public function getImage(): FetcherImage
+    public function getImage(): DokuPath
     {
         return $this->image;
     }

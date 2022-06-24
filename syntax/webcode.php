@@ -348,10 +348,18 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_EXIT :
                     $codes = $data[self::CODES_ATTRIBUTE];
                     $callStackArray = $data[PluginUtility::ATTRIBUTES];
+
+
                     /**
                      * Tag is of an iframe (Web code) or a div (wiki markup)
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray, self::TAG);
+
+                    /**
+                     * Rendering mode is used in handle exit, we delete it
+                     * to not get it in the HTML output
+                     */
+                    $tagAttributes->removeComponentAttribute(self::RENDERING_MODE_ATTRIBUTE);
 
                     // Create the real output of webcode
                     if (sizeof($codes) == 0) {

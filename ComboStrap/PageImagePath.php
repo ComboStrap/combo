@@ -57,8 +57,8 @@ class PageImagePath extends MetadataWikiPath
     public function setFromStoreValue($value): Metadata
     {
         DokuPath::addRootSeparatorIfNotPresent($value);
-        $pageImage = PageImage::create($value, $this->getResource());
-        if (!$pageImage->getImage()->exists()) {
+        $path = DokuPath::createMediaPathFromPath($value);
+        if (!FileSystems::exists($path)) {
             throw new ExceptionCompile("The image ($value) does not exists", $this->getCanonical());
         }
         return parent::setFromStoreValue($value);

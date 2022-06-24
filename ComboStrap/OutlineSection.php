@@ -54,12 +54,7 @@ class OutlineSection extends TreeNode
         return new OutlineSection(null);
     }
 
-    public static function createChildOutlineSection(OutlineSection $parentSection, Call $headingCall): OutlineSection
-    {
-        $outlineSection = new OutlineSection($headingCall);
-        $parentSection->appendChild($outlineSection);
-        return $outlineSection;
-    }
+
 
     /**
      * Return a text to an HTML Id

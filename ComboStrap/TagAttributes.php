@@ -597,9 +597,18 @@ class TagAttributes
                     TagAttributes::TYPE_KEY,
                     TagAttributes::GENERATED_ID_KEY
                 ])) {
-                    if (PluginUtility::isDevOrTest()) {
-                        LogUtility::warning("The component attribute ($key) is still in the component output. If it must be in the HTML output, you should add it via the output attribute methods during processing.");
+
+                    /**
+                     * Note for developer
+                     *    * If it must be in the HTML output, you should add it via the output attribute methods during processing.
+                     *    * Otherwise you need for now to get and delete it
+                     */
+                    $message = "The component attribute ($key) is unknown or does not apply ";
+                    if (isset($this->logicalTag)) {
+                        $message = "$message for the component ({$this->logicalTag}).";
                     }
+                    LogUtility::error($message);
+
                 }
             }
 
@@ -926,8 +935,7 @@ class TagAttributes
 
     }
 
-    public
-    function getLogicalTag()
+    public function getLogicalTag()
     {
         return $this->logicalTag;
     }

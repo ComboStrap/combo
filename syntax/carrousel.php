@@ -231,14 +231,14 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                      */
                     $control = $tagAttributes->getValueAndRemoveIfPresent(self::CONTROL_ATTRIBUTE);
                     if ($control !== null) {
-                        $tagAttributes->addComponentAttributeValue("data-" . self::CONTROL_ATTRIBUTE, $control);
+                        $tagAttributes->addOutputAttributeValue("data-" . self::CONTROL_ATTRIBUTE, $control);
                     }
 
                     /**
                      * Element Min
                      */
                     $elementsMin = $tagAttributes->getValueAndRemoveIfPresent(self::ELEMENTS_MIN_ATTRIBUTE, self::ELEMENTS_MIN_DEFAULT);
-                    $tagAttributes->addComponentAttributeValue("data-" . self::ELEMENTS_MIN_ATTRIBUTE, $elementsMin);
+                    $tagAttributes->addOutputAttributeValue("data-" . self::ELEMENTS_MIN_ATTRIBUTE, $elementsMin);
 
                     /**
                      * Minimal Width
@@ -247,7 +247,7 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                     if ($slideMinimalWidth !== null) {
                         try {
                             $slideMinimalWidth = ConditionalLength::createFromString($slideMinimalWidth)->toPixelNumber();
-                            $tagAttributes->addComponentAttributeValue("data-" . self::ELEMENT_WIDTH_ATTRIBUTE, $slideMinimalWidth);
+                            $tagAttributes->addOutputAttributeValue("data-" . self::ELEMENT_WIDTH_ATTRIBUTE, $slideMinimalWidth);
                         } catch (ExceptionCompile $e) {
                             LogUtility::msg("The minimal width value ($slideMinimalWidth) is not a valid value. Error: {$e->getMessage()}");
                         }

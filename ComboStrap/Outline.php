@@ -51,12 +51,12 @@ class Outline
             /**
              * Enter new section ?
              */
-            $newSection = false;
+            $shouldWeCreateASection = false;
             switch ($tagName) {
                 case syntax_plugin_combo_headingatx::TAG:
                     $actualCall->setState(DOKU_LEXER_ENTER);
                     if ($actualCall->getContext() === syntax_plugin_combo_heading::TYPE_OUTLINE) {
-                        $newSection = true;
+                        $shouldWeCreateASection = true;
                     }
                     $this->enterHeading($actualCall);
                     break;
@@ -64,18 +64,18 @@ class Outline
                 case syntax_plugin_combo_headingwiki::TAG:
                     if ($actualCall->getState() == DOKU_LEXER_ENTER
                         && $actualCall->getContext() === syntax_plugin_combo_heading::TYPE_OUTLINE) {
-                        $newSection = true;
+                        $shouldWeCreateASection = true;
                         $this->enterHeading($actualCall);
                     }
                     break;
                 case "header":
                     // Should happen only on outline section
                     // we take over inside a component
-                    $newSection = true;
+                    $shouldWeCreateASection = true;
                     $this->enterHeading($actualCall);
                     break;
             }
-            if ($newSection) {
+            if ($shouldWeCreateASection) {
                 if ($this->actualSection->hasParent()) {
                     // -1 because the actual position is the start of the next section
                     $this->actualSection->setEndPosition($actualCall->getFirstMatchedCharacterPosition() - 1);
@@ -87,29 +87,44 @@ class Outline
                     LogUtility::internalError("The level was not present on the heading call", self::CANONICAL);
                     $newSectionLevel = $actualSectionLevel;
                 }
-                if ($newSectionLevel > $actualSectionLevel) {
+
+                $newOutlineSection = new OutlineSection($actualCall);
+                $sectionDiff = $newSectionLevel - $actualSectionLevel;
+                if ($sectionDiff > 0) {
 
                     /**
                      * A child of the actual section
                      */
-                    $childSection = OutlineSection::createChildOutlineSection($this->actualSection, $actualCall);
+                    if ($sectionDiff > 1) {
+                        $expectedLevel = $actualSectionLevel + 1;
+                        LogUtility::error("A child of the section ($this->actualSection) should have the level ($expectedLevel) but have the level ($newSectionLevel");
+                        $actualCall->setAttribute(syntax_plugin_combo_heading::LEVEL, $expectedLevel);
+                    }
+                    $this->actualSection->appendChild($newOutlineSection);
 
                 } else {
 
                     /**
                      * A child of the parent section, A sibling of the actual session
                      */
-                    $parentSection = $this->actualSection;
-                    $childSection = OutlineSection::createChildOutlineSection($parentSection, $actualCall);
-                    if ($newSectionLevel < $actualSectionLevel) {
-                        LogUtility::error("The section ($childSection) has a level ($newSectionLevel) lower than its parent ($actualSectionLevel).");
+                    try {
+                        $parent = $this->actualSection->getParent();
+                        for ($i = 0; $i < abs($sectionDiff); $i++) {
+                            $parent = $parent->getParent();
+                        }
+                        $parent->appendChild($newOutlineSection);
+                    } catch (ExceptionNotFound $e) {
+                        // no parent
+                        LogUtility::internalError("Due to the level logic, the actual section should have a parent");
+                        $this->actualSection->appendChild($newOutlineSection);
                     }
+
 
                 }
 
 
-                $childSection->addHeadingCall($actualCall);
-                $this->actualSection = $childSection;
+                $newOutlineSection->addHeadingCall($actualCall);
+                $this->actualSection = $newOutlineSection;
                 continue;
             }
 

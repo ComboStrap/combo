@@ -361,7 +361,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
         /**
          * We select the best image for the ratio
          */
-        $stringRatio = $tagAttributes->getValue(Dimension::RATIO_ATTRIBUTE);
+        $stringRatio = $tagAttributes->getValueAndRemove(Dimension::RATIO_ATTRIBUTE);
         if (empty($stringRatio)) {
 
             LogUtility::msg("The ratio value is empty and was therefore not taken into account", LogUtility::LVL_MSG_ERROR, self::CANONICAL);

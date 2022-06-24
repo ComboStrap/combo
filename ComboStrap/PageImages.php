@@ -83,7 +83,8 @@ class PageImages extends MetadataTabular
                     }
                 }
                 DokuPath::addRootSeparatorIfNotPresent($imagePath);
-                $pageImage = PageImage::create($imagePath, $page);
+                $imagePathObject = DokuPath::createMediaPathFromPath($imagePath);
+                $pageImage = PageImage::create($imagePathObject, $page);
                 if ($usage !== null) {
                     $pageImage->setUsages($usage);
                 }
@@ -96,7 +97,8 @@ class PageImages extends MetadataTabular
              * A single path image
              */
             DokuPath::addRootSeparatorIfNotPresent($persistentValue);
-            $images = [$persistentValue => PageImage::create($persistentValue, $page)];
+            $imagePathObject = DokuPath::createMediaPathFromPath($persistentValue);
+            $images = [$persistentValue => PageImage::create($imagePathObject, $page)];
         }
 
         return $images;
@@ -170,11 +172,14 @@ class PageImages extends MetadataTabular
              */
             $pageImagePath = $row[PageImagePath::getPersistentName()];
             try {
-                $pageImage = PageImage::create($pageImagePath->getValue(), $this->getResource());
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("Error while creating the page image ($pageImagePath) for the page {$this->getResource()}. The image was not used. Error: {$e->getMessage()}");
+                $pageImagePathValue = $pageImagePath->getValue();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("The page path didn't have any values in the rows", self::CANONICAL);
                 continue;
             }
+            $pageImageObject = DokuPath::createMediaPathFromId($pageImagePathValue);
+            $pageImage = PageImage::create($pageImageObject, $this->getResource());
+
             /**
              * @var PageImageUsage $pageImageUsage
              */
@@ -258,7 +263,7 @@ class PageImages extends MetadataTabular
     private function checkImageExistence()
     {
         foreach ($this->getValueAsPageImages() as $pageImage) {
-            if (!FileSystems::exists($pageImage->getImage()->getOriginalPath())) {
+            if (!FileSystems::exists($pageImage->getImage())) {
                 throw new ExceptionCompile("The image ({$pageImage->getImage()}) does not exist", $this->getCanonical());
             }
         }

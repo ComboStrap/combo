@@ -5,9 +5,16 @@ namespace ComboStrap;
 /**
  * A class that returns {@link Fetcher::getFetchPath() a path}
  *
- * where the request may come from:
+ * It represents a fetch file and possible processing attributes
+ *
+ * Example
+ *   * svg file if the requested image width is set, it will generate it
+ *
+ * The request may come from:
  *   * a {@link Fetcher::buildFromUrl() URL}
  *   * a {@link Fetcher::buildFromTagAttributes() attributes}
+ *
+ * The hierarchy is {@link Mime} based.
  *
  * Example:
  *   * {@link FetcherTraitImage} such as:
@@ -15,11 +22,9 @@ namespace ComboStrap;
  *     * {@link FetcherRaster} that can process and return raster image
  *     * {@link FetcherVignette} that returns a raster image from page metadata
  *     * {@link FetcherSnapshot} that returns a snapshot image from a page
+ *   * {@link FetcherLocalPath} that returns all type of local file without processing
  *
- * It represents a fetch file and processing attributes
- *
- *   * if the image width is 20 -> the image is generated
- *   * same for svg ...
+
  */
 interface Fetcher
 {

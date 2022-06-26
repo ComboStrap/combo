@@ -19,10 +19,9 @@ namespace ComboStrap;
  * https://lofi.limo/blog/images/write-html-right.png
  * https://opengraph.githubassets.com/6b85042cdc8e98725bd85a0e7b159c99104644fbf97402fded205ee4d2036ab9/ComboStrap/combo
  */
-class FetcherVignette extends FetcherAbs implements FetcherImage
+class FetcherVignette extends FetcherImage
 {
 
-    use FetcherTraitImage;
 
     const CANONICAL = self::VIGNETTE_NAME;
 
@@ -46,10 +45,14 @@ class FetcherVignette extends FetcherAbs implements FetcherImage
      * @throws ExceptionNotFound - page not found
      * @throws ExceptionBadArgument - bad mime
      */
-    public function __construct(Page $page, Mime $mime)
+    public function __construct(Page $page, Mime $mime = null)
     {
         $this->setPage($page);
-        $this->setMime($mime);
+        if ($mime !== null) {
+            $this->setMime($mime);
+        }
+        parent::__construct();
+
     }
 
 
@@ -290,7 +293,6 @@ class FetcherVignette extends FetcherAbs implements FetcherImage
     {
         $url = parent::getFetchUrl($url)
             ->addQueryParameter(self::VIGNETTE_NAME, $this->page->getPath()->getDokuwikiId() . "." . $this->mime->getExtension());
-        $this->addCommonImagePropertiesToFetchUrl($url);
         return $url;
 
     }
@@ -314,7 +316,6 @@ class FetcherVignette extends FetcherAbs implements FetcherImage
     public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherVignette
     {
 
-        $this->buildImagePropertiesFromTagAttributes($tagAttributes);
         $vignette = $tagAttributes->getValueAndRemove(self::VIGNETTE_NAME);
         if ($vignette === null) {
             throw new ExceptionBadArgument("The vignette query property was not present");

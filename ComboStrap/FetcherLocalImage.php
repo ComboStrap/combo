@@ -9,7 +9,7 @@ namespace ComboStrap;
  * in a list of image if the image was also the first image
  * based on the path.
  */
-abstract class FetcherLocalImage extends FetcherAbs implements FetcherImage
+abstract class FetcherLocalImage extends FetcherImage
 {
 
     /**
@@ -23,11 +23,11 @@ abstract class FetcherLocalImage extends FetcherAbs implements FetcherImage
         try {
             $mime = FileSystems::getMime($path);
         } catch (ExceptionNotFound $e) {
-            throw new ExceptionBadArgument("The file ($path) has an unknown mime, we can't verify if we support it", FetcherImage::CANONICAL_IMAGE);
+            throw new ExceptionBadArgument("The file ($path) has an unknown mime, we can't verify if we support it", FetcherImage::CANONICAL);
         }
 
         if (!$mime->isImage()) {
-            throw new ExceptionBadArgument("The file ($path) has not been detected as being an image, media returned", FetcherImage::CANONICAL_IMAGE);
+            throw new ExceptionBadArgument("The file ($path) has not been detected as being an image, media returned", FetcherImage::CANONICAL);
         }
 
         if ($mime->toString() === Mime::SVG) {
@@ -86,7 +86,7 @@ abstract class FetcherLocalImage extends FetcherAbs implements FetcherImage
         try {
             return FileSystems::getCacheBuster($this->getOriginalPath());
         } catch (ExceptionNotFound $e) {
-            LogUtility::internalError("The fact that the file exists, is already checked at construction time, it should not happen", FetcherImage::CANONICAL_IMAGE);
+            LogUtility::internalError("The fact that the file exists, is already checked at construction time, it should not happen", FetcherImage::CANONICAL);
             return strval((new \DateTime())->getTimestamp());
         }
     }

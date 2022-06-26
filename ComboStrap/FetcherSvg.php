@@ -20,11 +20,12 @@ use DOMElement;
  *   * or by {@link FetcherSvg::setMarkup() Svg Markup}
  *
  */
-class FetcherSvg extends FetcherLocalImage implements FetcherImage
+class FetcherSvg extends FetcherLocalImage
 {
 
-    use FetcherTraitLocalPath;
-    use FetcherTraitImage;
+    use FetcherTraitLocalPath {
+        setOriginalPath as protected  setOriginalPathTraitAlias;
+    }
 
     const EXTENSION = "svg";
     const CANONICAL = "svg";
@@ -123,6 +124,8 @@ class FetcherSvg extends FetcherLocalImage implements FetcherImage
     private bool $processed = false;
     private ?float $zoomFactor = null;
     private ?string $requestedClass = null;
+    private int $intrinsicHeight;
+    private int $intrinsicWidth;
 
 
     private static function createSvgEmpty(): FetcherSvg
@@ -409,67 +412,21 @@ class FetcherSvg extends FetcherLocalImage implements FetcherImage
     /**
      *
      * @return int
-     * @throws ExceptionCompile
      */
     public function getIntrinsicHeight(): int
     {
-        $viewBox = $this->getXmlDocument()->getXmlDom()->documentElement->getAttribute(FetcherSvg::VIEW_BOX);
-        if ($viewBox !== "") {
-            $attributes = $this->getViewBoxAttributes($viewBox);
-            $viewBoxHeight = $attributes[3];
-            try {
-                return DataType::toInteger($viewBoxHeight);
-            } catch (ExceptionCompile $e) {
-                throw new ExceptionCompile("The media height ($viewBoxHeight) of the svg image ($this) is not a valid integer value");
-            }
-        }
-        /**
-         * Case with some icon such as
-         * https://raw.githubusercontent.com/fefanto/fontaudio/master/svgs/fad-random-1dice.svg
-         */
-        $height = $this->getXmlDocument()->getXmlDom()->documentElement->getAttribute("height");
-        if ($height === "") {
-            throw new ExceptionCompile("The svg ($this) does not have a viewBox or height attribute, the intrinsic height cannot be determined");
-        }
-        try {
-            return DataType::toInteger($height);
-        } catch (ExceptionCompile $e) {
-            throw new ExceptionCompile("The media width ($height) of the svg image ($this) is not a valid integer value");
-        }
+
+        return $this->intrinsicHeight;
 
     }
 
     /**
      * @return int
-     * @throws ExceptionBadSyntax
      */
     public
     function getIntrinsicWidth(): int
     {
-        $viewBox = $this->getXmlDom()->documentElement->getAttribute(FetcherSvg::VIEW_BOX);
-        if ($viewBox !== "") {
-            $attributes = $this->getViewBoxAttributes($viewBox);
-            $viewBoxWidth = $attributes[2];
-            try {
-                return DataType::toInteger($viewBoxWidth);
-            } catch (ExceptionCompile $e) {
-                throw new ExceptionBadSyntax("The media with ($viewBoxWidth) of the svg image ($this) is not a valid integer value");
-            }
-        }
-
-        /**
-         * Case with some icon such as
-         * https://raw.githubusercontent.com/fefanto/fontaudio/master/svgs/fad-random-1dice.svg
-         */
-        $width = $this->getXmlDom()->documentElement->getAttribute("width");
-        if ($width === "") {
-            throw new ExceptionBadSyntax("The svg ($this) does not have a viewBox or width attribute, the intrinsic width cannot be determined");
-        }
-        try {
-            return DataType::toInteger($width);
-        } catch (ExceptionCompile $e) {
-            throw new ExceptionBadSyntax("The media width ($width) of the svg image ($this) is not a valid integer value");
-        }
+        return $this->intrinsicWidth;
 
     }
 
@@ -497,6 +454,27 @@ class FetcherSvg extends FetcherLocalImage implements FetcherImage
         return $this->getXmlDocument()->getXmlText();
     }
 
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
+     */
+    public function setOriginalPath(DokuPath $dokuPath): FetcherLocalImage
+    {
+
+        try {
+            $this->xmlDocument = XmlDocument::createXmlDocFromPath($dokuPath);
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionBadSyntax("The svg file ($dokuPath) is not a valid svg. Error: {$e->getMessage()}");
+        } catch (ExceptionNotFound $e) {
+            // ok file not found
+            throw new ExceptionNotFound("The svg file ($dokuPath) was not found", self::CANONICAL);
+        }
+        $this->setIntrinsicDimensions();
+        $this->setOriginalPathTraitAlias($dokuPath);
+        return $this;
+
+    }
+
 
     /**
      *
@@ -512,7 +490,6 @@ class FetcherSvg extends FetcherLocalImage implements FetcherImage
          * Trait
          */
         $this->addLocalPathParametersToFetchUrl($url);
-        $this->addCommonImagePropertiesToFetchUrl($url, $this->getOriginalPath()->getDokuwikiId());
 
         /**
          * Specific properties
@@ -748,24 +725,11 @@ class FetcherSvg extends FetcherLocalImage implements FetcherImage
         return $attributes;
     }
 
-    /**
-     *
-     * @throws ExceptionBadState - if no xml document has been created
-     * @throws ExceptionBadSyntax - bad svg syntax
-     * @throws ExceptionNotFound - file not found
-     */
+
     private function getXmlDocument(): XmlDocument
     {
         if ($this->xmlDocument === null) {
-            $path = $this->getOriginalPath();
-            try {
-                $this->xmlDocument = XmlDocument::createXmlDocFromPath($path);
-            } catch (ExceptionBadSyntax $e) {
-                throw new ExceptionBadSyntax("The svg file ($path) is not a valid svg. Error: {$e->getMessage()}");
-            } catch (ExceptionNotFound $e) {
-                // ok file not found
-                throw new ExceptionNotFound("The Svg file ($path) was not found", self::CANONICAL);
-            }
+            throw new ExceptionRuntime("Internal error: The xml document was not set.");
         }
         return $this->xmlDocument;
     }
@@ -822,8 +786,10 @@ class FetcherSvg extends FetcherLocalImage implements FetcherImage
     private function setMarkup(string $markup): FetcherSvg
     {
         $this->xmlDocument = XmlDocument::createXmlDocFromMarkup($markup);
+        $this->setIntrinsicDimensions();
         return $this;
     }
+
 
     public function setRequestedType(string $requestedType): FetcherSvg
     {
@@ -855,18 +821,8 @@ class FetcherSvg extends FetcherLocalImage implements FetcherImage
          */
         $viewBox = $documentElement->getAttribute(FetcherSvg::VIEW_BOX);
         if ($viewBox === "") {
-            try {
-                $width = $this->getIntrinsicWidth();
-            } catch (ExceptionCompile $e) {
-                LogUtility::error("Svg processing stopped. Bad svg: We can't determine the width of the svg ($this) (The viewBox and the width does not exist) ", FetcherSvg::CANONICAL);
-                return $this->getXmlDocument()->getXmlText();
-            }
-            try {
-                $targetHeight = $this->getIntrinsicHeight();
-            } catch (ExceptionCompile $e) {
-                LogUtility::error("Svg processing stopped. Bad svg: We can't determine the height of the svg ($this) (The viewBox and the height does not exist) ", FetcherSvg::CANONICAL);
-                return $this->getXmlDocument()->getXmlText();
-            }
+            $width = $this->getIntrinsicWidth();
+            $targetHeight = $this->getIntrinsicHeight();
             $documentElement->setAttribute(FetcherSvg::VIEW_BOX, "0 0 $width $targetHeight");
         }
 
@@ -1373,7 +1329,7 @@ class FetcherSvg extends FetcherLocalImage implements FetcherImage
      * @throws ExceptionBadSyntax
      * @throws ExceptionCompile
      */
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): Fetcher
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherImage
     {
 
         foreach (array_keys($tagAttributes->getComponentAttributes()) as $svgAttribute) {
@@ -1467,10 +1423,6 @@ class FetcherSvg extends FetcherLocalImage implements FetcherImage
          * Raw Trait
          */
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
-        /**
-         * Image trait
-         */
-        $this->buildImagePropertiesFromTagAttributes($tagAttributes);
         parent::buildFromTagAttributes($tagAttributes);
         return $this;
     }
@@ -1581,5 +1533,80 @@ class FetcherSvg extends FetcherLocalImage implements FetcherImage
             throw new ExceptionNotFound("No class was set");
         }
         return $this->requestedClass;
+    }
+
+    /**
+     * Analyse and set the mandatory intrinsic dimensions
+     * @throws ExceptionBadSyntax
+     */
+    private function setIntrinsicDimensions()
+    {
+        $this->setIntrinsicHeight()
+            ->setIntrinsicWidth();
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    private function setIntrinsicHeight(): FetcherSvg
+    {
+        $viewBox = $this->getXmlDocument()->getXmlDom()->documentElement->getAttribute(FetcherSvg::VIEW_BOX);
+        if ($viewBox !== "") {
+            $attributes = $this->getViewBoxAttributes($viewBox);
+            $viewBoxHeight = $attributes[3];
+            try {
+                $this->intrinsicHeight = DataType::toInteger($viewBoxHeight);
+                return $this;
+            } catch (ExceptionBadArgument $e) {
+                throw new ExceptionBadSyntax("The media height ($viewBoxHeight) of the svg image ($this) is not a valid integer value");
+            }
+        }
+        /**
+         * Case with some icon such as
+         * https://raw.githubusercontent.com/fefanto/fontaudio/master/svgs/fad-random-1dice.svg
+         */
+        $height = $this->getXmlDocument()->getXmlDom()->documentElement->getAttribute("height");
+        if ($height === "") {
+            throw new ExceptionBadSyntax("The svg ($this) does not have a viewBox or height attribute, the intrinsic height cannot be determined");
+        }
+        try {
+            $this->intrinsicHeight = DataType::toInteger($height);
+        } catch (ExceptionBadArgument $e) {
+            throw new ExceptionBadSyntax("The media width ($height) of the svg image ($this) is not a valid integer value");
+        }
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    private function setIntrinsicWidth(): FetcherSvg
+    {
+        $viewBox = $this->getXmlDom()->documentElement->getAttribute(FetcherSvg::VIEW_BOX);
+        if ($viewBox !== "") {
+            $attributes = $this->getViewBoxAttributes($viewBox);
+            $viewBoxWidth = $attributes[2];
+            try {
+                $this->intrinsicWidth = DataType::toInteger($viewBoxWidth);
+                return $this;
+            } catch (ExceptionCompile $e) {
+                throw new ExceptionBadSyntax("The media with ($viewBoxWidth) of the svg image ($this) is not a valid integer value");
+            }
+        }
+
+        /**
+         * Case with some icon such as
+         * https://raw.githubusercontent.com/fefanto/fontaudio/master/svgs/fad-random-1dice.svg
+         */
+        $width = $this->getXmlDom()->documentElement->getAttribute("width");
+        if ($width === "") {
+            throw new ExceptionBadSyntax("The svg ($this) does not have a viewBox or width attribute, the intrinsic width cannot be determined");
+        }
+        try {
+            $this->intrinsicWidth = DataType::toInteger($width);
+            return $this;
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionBadSyntax("The media width ($width) of the svg image ($this) is not a valid integer value");
+        }
     }
 }

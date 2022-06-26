@@ -94,13 +94,21 @@ class Outline
 
                     /**
                      * A child of the actual section
+                     * We append it first before the message check to
+                     * build the {@link TreeNode::getTreeIdentifier()}
                      */
+                    $this->actualSection->appendChild($newOutlineSection);
+
                     if ($sectionDiff > 1) {
                         $expectedLevel = $actualSectionLevel + 1;
-                        LogUtility::error("A child of the section ($this->actualSection) should have the level ($expectedLevel) but have the level ($newSectionLevel");
+                        if ($actualSectionLevel === 0) {
+                            $message = "The first section heading should have the level 1 (not $newSectionLevel).";
+                        } else {
+                            $message = "The child section heading ($actualSectionLevel) has the level ($newSectionLevel) but is parent ({$this->actualSection->getLabel()}) has the level ($actualSectionLevel). The expected level is ($expectedLevel).";
+                        }
+                        LogUtility::error($message, self::CANONICAL);
                         $actualCall->setAttribute(syntax_plugin_combo_heading::LEVEL, $expectedLevel);
                     }
-                    $this->actualSection->appendChild($newOutlineSection);
 
                 } else {
 

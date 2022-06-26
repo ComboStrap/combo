@@ -69,7 +69,7 @@ class PathTreeNode extends TreeNode
             $actualNode = $nodeByIds[$path->getDokuwikiId()];
             if ($actualNode === null) {
                 $actualNode = PathTreeNode::createPathTreeNodeFromPath($path);
-                $nodeByIds[$actualNode->getGlobalIdentifier()] = $actualNode;
+                $nodeByIds[$path->getDokuwikiId()] = $actualNode;
             }
             while (true) {
                 try {
@@ -103,7 +103,7 @@ class PathTreeNode extends TreeNode
         return $this->path;
     }
 
-    function getGlobalIdentifier(): ?string
+    function getTreeIdentifier(): string
     {
         return $this->path->toPathString();
     }

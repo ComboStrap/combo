@@ -14,6 +14,7 @@ use ComboStrap\FetcherImage;
 use ComboStrap\FetcherLocalImage;
 use ComboStrap\FetcherTraitImage;
 use ComboStrap\FetcherSvg;
+use ComboStrap\FileSystems;
 use ComboStrap\FirstImage;
 use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
@@ -207,7 +208,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
             switch ($pageImageProcessing) {
                 case self::META_TYPE:
                     try {
-                        $imageFetcher = $this->selectAndGetBestPageImageForRatio($page, $tagAttributes);
+                        $imageFetcher = $this->selectAndGetBestMetadataPageImageFetcherForRatio($page, $tagAttributes);
                     } catch (ExceptionNotFound $e) {
                         // ok
                     }
@@ -221,7 +222,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                             break;
                         }
                         try {
-                            $imageFetcher = $this->selectAndGetBestPageImageForRatio($parent, $tagAttributes);
+                            $imageFetcher = $this->selectAndGetBestMetadataPageImageFetcherForRatio($parent, $tagAttributes);
                         } catch (ExceptionNotFound $e) {
                             try {
                                 $imageFetcher = FirstImage::createForPage($parent)
@@ -354,62 +355,54 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionNotFound
      */
-    private function selectAndGetBestPageImageForRatio(Page $page, TagAttributes $tagAttributes): FetcherImage
+    private function selectAndGetBestMetadataPageImageFetcherForRatio(Page $page, TagAttributes $tagAttributes): FetcherImage
     {
+
         /**
          * Take the image and the page images
          * of the first page with an image
          */
-        try {
-            $selectedPageImage = FetcherLocalImage::createImageFetchFromPath($page->getImage());
-            if (!$tagAttributes->hasComponentAttribute(Dimension::RATIO_ATTRIBUTE)) {
-                return $selectedPageImage;
-            }
-        } catch (ExceptionBadArgument|ExceptionNotFound $e) {
-            LogUtility::internalError("Error while creating the first image object. Error: {$e->getMessage()}");
+        $selectedPageImage = FetcherLocalImage::createImageFetchFromPageImageMetadata($page);
+        $stringRatio = $tagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
+        if ($stringRatio === null) {
+
+            return $selectedPageImage;
         }
 
         /**
          * We select the best image for the ratio
+         * Best ratio
          */
-        $stringRatio = $tagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
-        if (empty($stringRatio)) {
+        $bestRatioDistance = 9999;
+        try {
+            $targetRatio = Dimension::convertTextualRatioToNumber($stringRatio);
+        } catch (ExceptionBadSyntax $e) {
+            LogUtility::error("The ratio ($stringRatio) is not a valid ratio. Error: {$e->getMessage()}", self::CANONICAL);
+            return $selectedPageImage;
+        }
 
-            LogUtility::msg("The ratio value is empty and was therefore not taken into account", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-
-        } else {
-
-            $bestRatioDistance = 9999;
-            $targetRatio = null;
+        $pageImages = $page->getPageMetadataImages();
+        foreach ($pageImages as $pageImage) {
+            $path = $pageImage->getImagePath();
             try {
-                $targetRatio = Dimension::convertTextualRatioToNumber($stringRatio);
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("The ratio ($stringRatio) is not a valid ratio. Error: {$e->getMessage()}");
+                $fetcherImage = FetcherLocalImage::createImageFetchFromPath($path);
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::msg("An image object could not be build from ($path). Is it an image file ?. Error: {$e->getMessage()}");
+                continue;
             }
-            if ($targetRatio !== null) {
-                $pageImages = $page->getPageImages();
-                foreach ($pageImages as $pageImage) {
-                    $path = $pageImage->getImagePath();
-                    try {
-                        $fetcherImage = FetcherLocalImage::createImageFetchFromPath($path);
-                    } catch (ExceptionBadArgument $e) {
-                        LogUtility::msg("An image object could not be build from ($path). Is it an image file ?. Error: {$e->getMessage()}");
-                        continue;
-                    }
-                    try {
-                        $ratioDistance = $targetRatio - $fetcherImage->getIntrinsicAspectRatio();
-                    } catch (ExceptionCompile $e) {
-                        LogUtility::msg("The page image ($fetcherImage) of the page ($page) returns an error. Error: {$e->getMessage()}");
-                        continue;
-                    }
-                    if ($ratioDistance < $bestRatioDistance) {
-                        $bestRatioDistance = $ratioDistance;
-                        $selectedPageImage = $fetcherImage;
-                    }
-                }
+            try {
+                $ratioDistance = $targetRatio - $fetcherImage->getIntrinsicAspectRatio();
+            } catch (ExceptionCompile $e) {
+                LogUtility::msg("The page image ($fetcherImage) of the page ($page) returns an error. Error: {$e->getMessage()}");
+                continue;
+            }
+            if ($ratioDistance < $bestRatioDistance) {
+                $bestRatioDistance = $ratioDistance;
+                $selectedPageImage = $fetcherImage;
             }
         }
         return $selectedPageImage;
+
 
     }
 

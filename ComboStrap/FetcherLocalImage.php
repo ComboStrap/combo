@@ -40,7 +40,6 @@ abstract class FetcherLocalImage extends FetcherAbs implements FetcherImage
 
         }
 
-
         return $image;
 
 
@@ -56,6 +55,27 @@ abstract class FetcherLocalImage extends FetcherAbs implements FetcherImage
     {
         $dokuPath = DokuPath::createMediaPathFromId($imageId, $rev);
         return FetcherLocalImage::createImageFetchFromPath($dokuPath);
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function createImageFetchFromPageImageMetadata(Page $page)
+    {
+        $selectedPageImage = null;
+        foreach ($page->getPageMetadataImages() as $pageMetadataImage) {
+            try {
+                $pageMetadataImagePath = $pageMetadataImage->getImagePath();
+                $selectedPageImage = FetcherLocalImage::createImageFetchFromPath($pageMetadataImagePath);
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::internalError("The file ($pageMetadataImagePath) is not a valid image for the page ($page). Error: {$e->getMessage()}");
+                continue;
+            }
+        }
+        if ($selectedPageImage !== null) {
+            return $selectedPageImage;
+        }
+        throw new ExceptionNotFound("No page image metadata image could be found for the page ($page)");
     }
 
     abstract public function getOriginalPath(): DokuPath;

@@ -699,21 +699,6 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * @return DokuPath
-     * @throws ExceptionNotFound
-     */
-    public function getImage(): DokuPath
-    {
-
-        $images = $this->getPageImages();
-        if (sizeof($images) >= 1) {
-            return $images[0]->getImagePath();
-        }
-        throw new ExceptionNotFound("No page image was set for this page ($this)");
-
-    }
-
-    /**
      * Get author name
      *
      * @return string
@@ -1364,7 +1349,7 @@ class Page extends ResourceComboAbs
      * @return PageImage[]
      */
     public
-    function getPageImages(): ?array
+    function getPageMetadataImages(): array
     {
         return $this->pageImages->getValueAsPageImages();
     }
@@ -1817,7 +1802,7 @@ class Page extends ResourceComboAbs
     {
         $usages = array_merge($usages, [PageImageUsage::ALL]);
         $images = [];
-        foreach ($this->getPageImages() as $pageImage) {
+        foreach ($this->getPageMetadataImages() as $pageImage) {
             foreach ($usages as $usage) {
                 if (in_array($usage, $pageImage->getUsages())) {
                     $images[] = $pageImage->getImagePath();

@@ -23,6 +23,7 @@ trait FetcherTraitLocalPath
     public static string $MEDIA_QUERY_PARAMETER = "media";
     private DokuPath $path;
 
+
     public function setOriginalPath(DokuPath $dokuPath): Fetcher
     {
         $this->path = $dokuPath;
@@ -30,7 +31,12 @@ trait FetcherTraitLocalPath
     }
 
     /**
-     * @throws ExceptionBadArgument - if the media was not found
+     * @param TagAttributes $tagAttributes
+     * @return Fetcher
+     * @throws ExceptionBadArgument - if the media property was not found and the path was not set
+     * @throws ExceptionBadSyntax - if the media has a bad syntax (no width, ...)
+     * @throws ExceptionNotExists -  if the media does not exists
+     * @throws ExceptionNotFound - if the media or any mandatory metadata (ie dimension) was not found
      */
     public function buildOriginalPathFromTagAttributes(TagAttributes $tagAttributes): Fetcher
     {
@@ -45,7 +51,7 @@ trait FetcherTraitLocalPath
             }
             $drive = $tagAttributes->getValueAndRemove(DokuPath::DRIVE_ATTRIBUTE, DokuPath::MEDIA_DRIVE);
             $rev = $tagAttributes->getValueAndRemove(DokuPath::REV_ATTRIBUTE);
-            $this->path = DokuPath::create($id, $drive, $rev);
+            $this->setOriginalPath(DokuPath::create($id, $drive, $rev));
         }
 
         return $this;

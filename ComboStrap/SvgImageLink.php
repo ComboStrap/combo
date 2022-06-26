@@ -137,7 +137,9 @@ class SvgImageLink extends ImageLink
         }
         $responseAttributes->addClassName($svgFunctionalClass);
 
-
+        /**
+         * @var FetcherSvg $svgFetch
+         */
         $svgFetch = $this->mediaMarkup->getFetcher();
         /**
          * Dimension are mandatory on the image

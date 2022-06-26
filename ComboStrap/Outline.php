@@ -349,7 +349,7 @@ class Outline
 
     }
 
-    private function toStrapTemplateInstructionCallsRecurse(OutlineSection $outlineSection, array &$totalComboCalls, int &$sectionSequenceId): void
+    private function toHtmlSectionOutlineCallsRecurse(OutlineSection $outlineSection, array &$totalComboCalls, int &$sectionSequenceId): void
     {
 
         $totalComboCalls[] = Call::createComboCall(
@@ -386,10 +386,7 @@ class Outline
             $totalComboCalls[] = $closeHeader;
 
             foreach ($outlineSection->getChildren() as $child) {
-                /**
-                 * @var OutlineSection $child
-                 */
-                $this->toStrapTemplateInstructionCallsRecurse($child, $totalComboCalls, $sectionSequenceId);
+                $this->toHtmlSectionOutlineCallsRecurse($child, $totalComboCalls, $sectionSequenceId);
             }
 
         } else {
@@ -408,7 +405,7 @@ class Outline
 
     }
 
-    public function toStrapTemplateInstructionCalls(): array
+    public function toHtmlSectionOutlineCalls(): array
     {
         $totalCalls = [];
         $sectionSequenceId = 0;
@@ -416,7 +413,7 @@ class Outline
         /**
          * Transform and collect the calls in Instructions calls
          */
-        $this->toStrapTemplateInstructionCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId);
+        $this->toHtmlSectionOutlineCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId);
 
         return array_map(function (Call $element) {
             return $element->getInstructionCall();

@@ -9,10 +9,10 @@ use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverDimension;
 
-class FetcherSnapshot extends FetcherAbs implements FetcherImage
+class FetcherSnapshot extends FetcherImage
 {
 
-    use FetcherTraitImage;
+
 
     const WEB_DRIVER_ENDPOINT = 'http://localhost:4444/';
     const CANONICAL = "snapshot";
@@ -31,7 +31,6 @@ class FetcherSnapshot extends FetcherAbs implements FetcherImage
     function getFetchUrl(Url $url = null): Url
     {
         $url = parent::getFetchUrl($url);
-        $this->addCommonImagePropertiesToFetchUrl($url);
         try {
             $url->addQueryParameter(self::URL, $this->getUrlToSnapshot());
         } catch (ExceptionNotFound $e) {
@@ -52,7 +51,7 @@ class FetcherSnapshot extends FetcherAbs implements FetcherImage
             throw new ExceptionBadArgument("The `url` property is mandatory");
         }
         $this->url = Url::createFromString($urlString);
-        $this->buildImagePropertiesFromTagAttributes($tagAttributes);
+        parent::buildFromTagAttributes($tagAttributes);
         return $this;
     }
 

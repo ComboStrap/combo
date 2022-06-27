@@ -341,7 +341,7 @@ class DatabasePageRow
 
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setQueryParametrized('delete from pages where id = ?', [$this->page->getDokuwikiId()]);
+            ->setQueryParametrized('delete from pages where id = ?', [$this->page->getWikiId()]);
         try {
             $request->execute();
         } catch (ExceptionCompile $e) {
@@ -853,7 +853,7 @@ class DatabasePageRow
                 /**
                  * Page Id Collision detection
                  */
-                if ($this->page != null && $id !== $this->page->getDokuwikiId()) {
+                if ($this->page != null && $id !== $this->page->getWikiId()) {
                     $duplicatePage = PageFragment::createPageFromId($id);
                     if (!$duplicatePage->exists()) {
                         // Move
@@ -919,7 +919,7 @@ class DatabasePageRow
                 return null;
             case 1:
                 $id = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-                if ($this->page !== null && $id !== $this->page->getDokuwikiId()) {
+                if ($this->page !== null && $id !== $this->page->getWikiId()) {
                     $duplicatePage = PageFragment::createPageFromId($id);
                     if (!$duplicatePage->exists()) {
                         $this->addRedirectAliasWhileBuildingRow($duplicatePage);
@@ -1007,7 +1007,7 @@ class DatabasePageRow
                 throw new ExceptionNotFound("No database row found for the page");
             case 1:
                 $value = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-                if ($this->page != null && $value !== $this->page->getDokuwikiId()) {
+                if ($this->page != null && $value !== $this->page->getWikiId()) {
                     $duplicatePage = PageFragment::createPageFromId($value);
                     if (!$duplicatePage->exists()) {
                         $this->addRedirectAliasWhileBuildingRow($duplicatePage);

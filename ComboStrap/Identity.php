@@ -98,7 +98,7 @@ class Identity
     {
         if ($wikiId === null) {
             try {
-                $wikiId = PageFragment::createPageFromGlobalDokuwikiId()
+                $wikiId = PageFragment::createPageFromGlobalWikiId()
                     ->getPath()
                     ->getWikiId();
             } catch (ExceptionNotFound $e) {
@@ -231,7 +231,7 @@ EOF;
     private static function getPermissions(string $wikiId): int
     {
         if ($wikiId == null) {
-            $wikiId = PageFragment::createFromRequestedPage()->getDokuwikiId();
+            $wikiId = PageFragment::createFromRequestedPage()->getWikiId();
         }
         if ($_SERVER['REMOTE_USER']) {
             $perm = auth_quickaclcheck($wikiId);

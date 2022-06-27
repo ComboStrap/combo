@@ -178,7 +178,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         $result = [];
 
         try {
-            $parsedPage = PageFragment::createPageFromGlobalDokuwikiId();
+            $parsedPage = PageFragment::createPageFromGlobalWikiId();
         } catch (ExceptionCompile $e) {
             LogUtility::error("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
             return [];

@@ -425,7 +425,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          */
         Metadata::deleteIfPresent($persistentPageMeta, Metadata::RUNTIME_META);
 
-        p_save_metadata($page->getDokuwikiId(), $metaData);
+        p_save_metadata($page->getWikiId(), $metaData);
         $metadataStore->setData($metaData);
 
         if (sizeof($messages) !== 0) {

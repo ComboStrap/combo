@@ -418,7 +418,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 break;
                             case self::TYPE_TREE:
                                 try {
-                                    $renderedPage = PageFragment::createPageFromGlobalDokuwikiId();
+                                    $renderedPage = PageFragment::createPageFromGlobalWikiId();
                                 } catch (ExceptionCompile $e) {
                                     LogUtility::msg("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
                                     return false;
@@ -504,7 +504,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                         }
                                     } else {
                                         try {
-                                            $renderer->doc .= LinkMarkup::createFromPageIdOrPath($currentIndexPage->getDokuwikiId())
+                                            $renderer->doc .= LinkMarkup::createFromPageIdOrPath($currentIndexPage->getWikiId())
                                                 ->toAttributes()
                                                 ->toHtmlEnterTag("a");
                                             $renderer->doc .= "{$currentIndexPage->getNameOrDefault()}</a>";
@@ -623,7 +623,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                             }
                                         } else {
                                             try {
-                                                $renderer->doc .= LinkMarkup::createFromPageIdOrPath($subNamespacePage->getDokuwikiId())
+                                                $renderer->doc .= LinkMarkup::createFromPageIdOrPath($subNamespacePage->getWikiId())
                                                     ->toAttributes()
                                                     ->toHtmlEnterTag("a");
                                                 $renderer->doc .= Icon::createFromComboResource(self::FOLDER_ICON)
@@ -652,7 +652,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 if (!($pageInstructions === null && $pageAttributes !== null)) {
                                     $pageNum++;
                                     if ($currentIndexPage !== null
-                                        && $childPagePath->getWikiId() !== $currentIndexPage->getDokuwikiId()
+                                        && $childPagePath->getWikiId() !== $currentIndexPage->getWikiId()
                                         && FileSystems::exists($childPagePath)
                                     ) {
                                         /**
@@ -948,7 +948,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             }
         } else {
             try {
-                $listItemContent = LinkMarkup::createFromPageIdOrPath($page->getDokuwikiId())
+                $listItemContent = LinkMarkup::createFromPageIdOrPath($page->getWikiId())
                     ->toAttributes()
                     ->toHtmlEnterTag("a");
                 $listItemContent .= "{$page->getNameOrDefault()}</a>";

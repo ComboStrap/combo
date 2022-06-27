@@ -68,7 +68,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
             CacheLog::deleteCacheIfExistsAndLog(
                 $htmlDocument,
                 self::QUALITY_MUTATION_EVENT_NAME,
-                "The {$backlink->getDokuwikiId()} of {$path} had its HTML cache deleted ($desc)."
+                "The {$backlink->getWikiId()} of {$path} had its HTML cache deleted ($desc)."
             );
         }
     }

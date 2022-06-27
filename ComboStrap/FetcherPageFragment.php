@@ -25,11 +25,12 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
      */
     private $snippetCache;
 
-    private CacheDependencies $cacheDependencies;
     private PageFragment $pageFragment;
     private Mime $mime;
     private bool $cacheAfterRendering = true;
     private string $renderer;
+    private CacheDependencies $cacheDependencies;
+    private PageFragment $requestedContextPage;
 
 
     public static function createPageFragmentFetcherFromId(string $mainId): FetcherPageFragment
@@ -61,9 +62,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     {
 
         $this->pageFragment = $pageFragment;
-        $this->buildCacheObject();
-
-
+        $this->buildCacheObjects();
         return $this;
 
     }
@@ -132,7 +131,8 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
              */
             $depends = $this->getDepends();
             $depends['age'] = $this->getCacheAge();
-            return ($this->cache->useCache($depends) === false);
+            $useCache = $this->cache->useCache($depends);
+            return ($useCache === false);
         } finally {
             $ID = $keepID;
             $ACT = $keepAct;
@@ -146,7 +146,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     function storeSnippets()
     {
 
-        $slotId = $this->getRequestedPageFragment()->getDokuwikiId();
+        $slotId = $this->getRequestedPageFragment()->getPath()->getWikiId();
 
         /**
          * Snippet
@@ -218,7 +218,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         if ($this->snippetCache !== null) {
             return $this->snippetCache;
         }
-        $id = $this->getRequestedPageFragment()->getDokuwikiId();
+        $id = $this->getRequestedPageFragment()->getPath()->getWikiId();
         $slotLocalFilePath = $this->getRequestedPageFragment()
             ->getPath()
             ->toLocalPath()
@@ -243,11 +243,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         return $this->cacheDependencies;
     }
 
-    public
-    function getCacheDependencies(): CacheDependencies
-    {
-        return $this->cacheDependencies;
-    }
+
 
     public
     function getDependenciesCacheStore(): CacheParser
@@ -351,11 +347,11 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     public function setRequestedMime(Mime $mime): FetcherPageFragment
     {
         $this->mime = $mime;
-        $this->buildCacheObject();
+        $this->buildCacheObjects();
         return $this;
     }
 
-    public function setRequestedFormatAsXhtml(): FetcherPageFragment
+    public function setRequestedMimeToXhtml(): FetcherPageFragment
     {
         try {
             return $this->setRequestedMime(Mime::createFromExtension("xhtml"));
@@ -399,14 +395,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
             return "";
         }
 
-        if (
-            !$this->shouldProcess()
-            && FileSystems::exists($this->getFetchPath())
-            && PluginUtility::isDevOrTest()
-        ) {
-            throw new ExceptionRuntime("The fetcher ({$this}) should not compile and exists already, compilation is not needed", LogUtility::LVL_MSG_ERROR);
-        }
-
         /**
          * Global ID is the ID of the HTTP request
          * (ie the page id)
@@ -447,7 +435,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
 
     }
 
-    private function buildCacheObject()
+    private function buildCacheObjects()
     {
 
         $wikiId = $this->pageFragment->getPath()->getWikiId();
@@ -477,11 +465,18 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
                 break;
             default:
                 $this->cache = new CacheRenderer($wikiId, $localFile, $extension);
+
                 /**
                  * Modifying the cache key and the corresponding output file
                  * from runtime dependencies
                  */
-                $this->cacheDependencies = CacheManager::getOrCreateFromRequestedPage()->getCacheDependenciesForSlot($wikiId);
+                try {
+                    $requestedPage = $this->getRequestedContextPage();
+                } catch (ExceptionNotFound $e) {
+                    $requestedPage = PageFragment::createFromRequestedPage();
+                }
+                $this->cacheDependencies = CacheManager::getOrCreateForContextPage($requestedPage)
+                    ->getCacheDependenciesForPageFragment($this->pageFragment);
                 $this->cacheDependencies->rerouteCacheDestination($this->cache);
                 break;
         }
@@ -577,6 +572,38 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     {
         $path = $this->cache->cache;
         return LocalPath::createFromPath($path);
+    }
+
+
+
+
+
+    /**
+     * @return PageFragment - the requested page in which this fetcher should run
+     * @throws ExceptionNotFound
+     */
+    public function getRequestedContextPage(): PageFragment
+    {
+        if(!isset($this->requestedContextPage)){
+            throw new ExceptionNotFound("No requested context page specified");
+        }
+        return $this->requestedContextPage;
+    }
+
+    /**
+     * @param PageFragment $pageFragment - the requested page (ie the main fragment)
+     * @return $this
+     */
+    public function setRequestedContextPage(PageFragment $pageFragment): FetcherPageFragment
+    {
+        $this->requestedContextPage = $pageFragment;
+        $this->buildCacheObjects();
+        return $this;
+    }
+
+    public function getCacheDependencies(): CacheDependencies
+    {
+        return $this->cacheDependencies;
     }
 
 }

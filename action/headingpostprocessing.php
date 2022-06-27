@@ -223,7 +223,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * We reset only on primary slots
          */
         try {
-            $pageParsed = PageFragment::createPageFromGlobalDokuwikiId();
+            $pageParsed = PageFragment::createPageFromGlobalWikiId();
         } catch (ExceptionNotFound $e) {
             LogUtility::msg("The running global ID is not set. We can't post process the page with heading and table of content");
             return;

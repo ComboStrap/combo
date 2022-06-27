@@ -24,7 +24,7 @@ class EditButtonManager
     {
 
         $page = PageFragment::createFromRequestedPage();
-        $cacheKey = $page->getDokuwikiId();
+        $cacheKey = $page->getWikiId();
         $editButtonManager = self::$editButtonManagers[$cacheKey];
         if ($editButtonManager === null) {
             // new run, delete all old cache managers

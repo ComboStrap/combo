@@ -209,9 +209,9 @@ class PageFragment extends ResourceComboAbs
     }
 
     /**
-     * @throws ExceptionNotFound - if the global ID is unknown
+     * The current running rendering markup
      */
-    public static function createPageFromGlobalDokuwikiId(): PageFragment
+    public static function createPageFromGlobalWikiId(): PageFragment
     {
         $dokuPath = DokuPath::createPagePathFromGlobalId();
         return self::createPageFromPathObject($dokuPath);
@@ -439,7 +439,7 @@ class PageFragment extends ResourceComboAbs
 
         if ($this->htmlDocument === null) {
             $this->htmlDocument = FetcherPageFragment::createPageFragmentFetcherFromObject($this)
-                ->setRequestedFormatAsXhtml();
+                ->setRequestedMimeToXhtml();
         }
         return $this->htmlDocument;
 
@@ -470,7 +470,7 @@ class PageFragment extends ResourceComboAbs
          * Same as
          * idx_get_indexer()->lookupKey('relation_references', $ID);
          */
-        $ft_backlinks = ft_backlinks($this->getDokuwikiId());
+        $ft_backlinks = ft_backlinks($this->getWikiId());
         foreach ($ft_backlinks as $backlinkId) {
             $backlinks[$backlinkId] = PageFragment::createPageFromId($backlinkId);
         }
@@ -1195,7 +1195,7 @@ class PageFragment extends ResourceComboAbs
     public
     function canBeUpdatedByCurrentUser(): bool
     {
-        return Identity::isWriter($this->getDokuwikiId());
+        return Identity::isWriter($this->getWikiId());
     }
 
 
@@ -1936,7 +1936,7 @@ class PageFragment extends ResourceComboAbs
     {
 
         Index::getOrCreate()->deletePage($this);
-        saveWikiText($this->getDokuwikiId(), "", "Delete");
+        saveWikiText($this->getWikiId(), "", "Delete");
 
     }
 
@@ -1982,7 +1982,7 @@ class PageFragment extends ResourceComboAbs
      * @deprecated use the dokuwiki id of {@link PageFragment::getPath()}
      */
     public
-    function getDokuwikiId(): string
+    function getWikiId(): string
     {
         return $this->getPath()->getWikiId();
     }
@@ -1997,7 +1997,7 @@ class PageFragment extends ResourceComboAbs
     public
     function getAbsolutePath(): string
     {
-        return DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $this->getDokuwikiId();
+        return DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $this->getWikiId();
     }
 
     function getType(): string
@@ -2040,7 +2040,7 @@ class PageFragment extends ResourceComboAbs
         global $ID;
         $keep = $ID;
         try {
-            $ID = $this->getDokuwikiId();
+            $ID = $this->getWikiId();
             return page_findnearest($pageName);
         } finally {
             $ID = $keep;
@@ -2066,7 +2066,7 @@ class PageFragment extends ResourceComboAbs
 
     public function isHidden(): bool
     {
-        return isHiddenPage($this->getDokuwikiId());
+        return isHiddenPage($this->getWikiId());
     }
 
 

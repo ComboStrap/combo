@@ -183,7 +183,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
 
             if (count($pagesWithSameName) === 1) {
                 $page = $pagesWithSameName[0];
-                if ($page->getDokuwikiId() === $ID) {
+                if ($page->getWikiId() === $ID) {
                     // the page itself
                     return;
                 }
@@ -204,7 +204,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
                 $listPagesHtml = "";
                 foreach ($pagesWithSameName as $page) {
 
-                    if ($page->getDokuwikiId() === $ID) {
+                    if ($page->getWikiId() === $ID) {
                         continue;
                     }
                     $i++;
@@ -220,7 +220,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
                     }
 
                     try {
-                        $markupRef = LinkMarkup::createFromPageIdOrPath($page->getDokuwikiId());
+                        $markupRef = LinkMarkup::createFromPageIdOrPath($page->getWikiId());
                         $tagAttributes = $markupRef
                             ->toAttributes()
                             ->addOutputAttributeValue("rel", "nofollow");

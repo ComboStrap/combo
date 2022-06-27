@@ -398,7 +398,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                         return;
                     }
 
-                    $this->executeTransparentRedirect($page->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+                    $this->executeTransparentRedirect($page->getWikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
                     return;
 
                 }
@@ -425,12 +425,12 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
              */
             if ($canonicalPage->getUrlId() === $identifier) {
                 $res = $this->executeTransparentRedirect(
-                    $canonicalPage->getDokuwikiId(),
+                    $canonicalPage->getWikiId(),
                     self::TARGET_ORIGIN_CANONICAL
                 );
             } else {
                 $res = $this->executePermanentRedirect(
-                    $canonicalPage->getDokuwikiId(), // not the url because, it allows to add url query redirection property
+                    $canonicalPage->getWikiId(), // not the url because, it allows to add url query redirection property
                     self::TARGET_ORIGIN_CANONICAL
                 );
             }
@@ -459,7 +459,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                     }
                     break;
                 case AliasType::SYNONYM:
-                    $res = $this->executeTransparentRedirect($aliasRequestedPage->getDokuwikiId(), self::TARGET_ORIGIN_ALIAS);
+                    $res = $this->executeTransparentRedirect($aliasRequestedPage->getWikiId(), self::TARGET_ORIGIN_ALIAS);
                     if ($res) {
                         return;
                     }
@@ -528,10 +528,10 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                         $res = false;
                         switch ($method) {
                             case self::REDIRECT_PERMANENT_METHOD:
-                                $res = $this->executePermanentRedirect($bestEndPage->getDokuwikiId(), self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
+                                $res = $this->executePermanentRedirect($bestEndPage->getWikiId(), self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
                                 break;
                             case self::REDIRECT_NOTFOUND_METHOD:
-                                $res = $this->performNotFoundRedirect($bestEndPage->getDokuwikiId(), self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
+                                $res = $this->performNotFoundRedirect($bestEndPage->getWikiId(), self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
                                 break;
                             default:
                                 LogUtility::msg("This redirection method ($method) was not expected for the redirection algorithm ($algorithm)");

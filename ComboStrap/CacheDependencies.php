@@ -106,21 +106,23 @@ class CacheDependencies
      */
     private $runtimeStoreDependencies;
 
-    private $page;
+    private PageFragment $pageFragement;
 
     /**
      * @var string the first key captured
      */
     private $firstActualKey;
+    private PageFragment $requestedPage;
 
 
     /**
      * CacheManagerForSlot constructor.
-     * @param string $id
+     *
      */
-    public function __construct(string $id)
+    private function __construct(PageFragment $pageFragment, PageFragment $requestedPage)
     {
-        $this->page = PageFragment::createPageFromId($id);
+        $this->pageFragement = $pageFragment;
+        $this->requestedPage = $requestedPage;
 
         $data = $this->getDependenciesCacheStore()->retrieveCache();
         if (!empty($data)) {
@@ -129,9 +131,9 @@ class CacheDependencies
 
     }
 
-    public static function create(PageFragment $page): CacheDependencies
+    public static function create(PageFragment $pageFragment, PageFragment $requestedFragment): CacheDependencies
     {
-        return new CacheDependencies($page);
+        return new CacheDependencies($pageFragment, $requestedFragment);
     }
 
     /**
@@ -183,7 +185,7 @@ class CacheDependencies
      *   * the ':sidebar' html output may be dependent to the namespace `ns` or `ns2`
      * @throws ExceptionCompile
      */
-    public static function getValueForKey($dependenciesValue): string
+    public function getValueForKey($dependenciesValue): string
     {
 
         /**
@@ -196,7 +198,7 @@ class CacheDependencies
          *
          * Scope is directory/namespace based
          */
-        $requestedPage = PageFragment::createFromRequestedPage();
+        $requestedPage = $this->requestedPage;
         switch ($dependenciesValue) {
             case CacheDependencies::NAMESPACE_OLD_VALUE:
             case CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY:
@@ -242,7 +244,7 @@ class CacheDependencies
 
             foreach ($runtimeDependencies as $dependency) {
                 if (in_array($dependency, self::OUTPUT_DEPENDENCIES)) {
-                    $dependencyKey .= self::getValueForKey($dependency);
+                    $dependencyKey .= $this->getValueForKey($dependency);
                 }
             }
 
@@ -288,7 +290,7 @@ class CacheDependencies
     public
     function getDefaultKey(): string
     {
-        $keyDokuWikiCompliant = str_replace("\\", "/", $this->page->getPath()->toLocalPath()->toPathString());
+        $keyDokuWikiCompliant = str_replace("\\", "/", $this->pageFragement->getPath()->toLocalPath()->toPathString());
         return $keyDokuWikiCompliant . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
     }
 
@@ -302,7 +304,7 @@ class CacheDependencies
             $cache->cache = getCacheName($cache->key, '.' . $cache->mode);
 
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while trying to reroute the cache destination for the slot ({$this->page}). You may have cache problem. Error: {$e->getMessage()}");
+            LogUtility::msg("Error while trying to reroute the cache destination for the slot ({$this->pageFragement}). You may have cache problem. Error: {$e->getMessage()}");
         }
 
     }
@@ -339,8 +341,8 @@ class CacheDependencies
         if ($this->dependenciesCacheStore !== null) {
             return $this->dependenciesCacheStore;
         }
-        $id = $this->page->getDokuwikiId();
-        $slotLocalFilePath = $this->page
+        $id = $this->pageFragement->getPath()->getWikiId();
+        $slotLocalFilePath = $this->pageFragement
             ->getPath()
             ->toLocalPath()
             ->toAbsolutePath()

@@ -85,7 +85,7 @@ class action_plugin_combo_search extends DokuWiki_Action_Plugin
                 LogUtility::log2file("The page ($page) returned from the search query does not exist and was deleted from the database");
                 continue;
             }
-            $linkUtility = LinkMarkup::createFromPageIdOrPath($page->getDokuwikiId());
+            $linkUtility = LinkMarkup::createFromPageIdOrPath($page->getWikiId());
             try {
                 $html = $linkUtility->toAttributes()->toHtmlEnterTag("a") . $page->getTitleOrDefault() . "</a>";
             } catch (ExceptionCompile $e) {

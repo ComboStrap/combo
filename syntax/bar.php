@@ -108,7 +108,7 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
     {
         $tag = "div";
         try {
-            $page = PageFragment::createPageFromGlobalDokuwikiId();
+            $page = PageFragment::createPageFromGlobalWikiId();
             if ($page->isPrimarySlot()) {
                 $tag = self::HTML_SECTION_TAG;
             }

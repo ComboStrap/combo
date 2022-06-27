@@ -132,8 +132,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                         continue;
                     }
 
-                    $slotId = $report->getSlotId();
-                    PageFragment::createPageFromId($slotId)
+                    $report->getPageFragment()
                         ->getHtmlFetcher()
                         ->loadSnippets();
 

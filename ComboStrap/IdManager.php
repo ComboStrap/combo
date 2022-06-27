@@ -25,7 +25,7 @@ class IdManager
     {
 
         $page = PageFragment::createFromRequestedPage();
-        $cacheKey = $page->getDokuwikiId();
+        $cacheKey = $page->getWikiId();
         $idManager = self::$idManagers[$cacheKey];
         if ($idManager === null) {
             // new run, delete all old cache managers
@@ -49,7 +49,7 @@ class IdManager
 
         if ($slotPath === null) {
             try {
-                $slotPath = PageFragment::createPageFromGlobalDokuwikiId()->getPath();
+                $slotPath = PageFragment::createPageFromGlobalWikiId()->getPath();
             } catch (ExceptionNotFound $e) {
                 /**
                  * Not found

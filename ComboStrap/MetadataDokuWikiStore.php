@@ -85,7 +85,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         $requestedId = PluginUtility::getRequestedWikiId();
         if ($requestedId === null) {
             if ($resourceCombo instanceof PageFragment) {
-                $requestedId = $resourceCombo->getDokuwikiId();
+                $requestedId = $resourceCombo->getWikiId();
             } else {
                 $requestedId = "not-a-page";
             }
@@ -106,7 +106,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             LogUtility::msg("The resource is not a page. File System store supports only page resources");
             $data = null;
         } else {
-            $data = p_read_metadata($resourceCombo->getDokuwikiId());
+            $data = p_read_metadata($resourceCombo->getWikiId());
         }
 
         $metadataStore = new MetadataDokuWikiStore($resourceCombo, $data);
@@ -157,7 +157,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         if (!($resource instanceof PageFragment)) {
             throw new ExceptionBadState("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
-        $dokuwikiId = $resource->getDokuwikiId();
+        $dokuwikiId = $resource->getWikiId();
         $this->setFromWikiId($dokuwikiId, $name, $persistentValue, $defaultValue);
     }
 
@@ -179,7 +179,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         if (!($resource instanceof PageFragment)) {
             throw new ExceptionRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
-        return $this->getFromWikiId($resource->getDokuwikiId(), $metadata->getName(), $default);
+        return $this->getFromWikiId($resource->getWikiId(), $metadata->getName(), $default);
 
 
     }
@@ -196,7 +196,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      */
     public function getFromPersistentName(string $name, $default = null)
     {
-        $wikiId = $this->getResource()->getDokuwikiId();
+        $wikiId = $this->getResource()->getWikiId();
         return $this->getFromWikiId($wikiId, $name, $default);
     }
 
@@ -217,7 +217,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      */
     public function setFromPersistentName(string $name, $value): MetadataDokuWikiStore
     {
-        $this->setFromWikiId($this->getResource()->getDokuwikiId(), $name, $value);
+        $this->setFromWikiId($this->getResource()->getWikiId(), $name, $value);
         return $this;
     }
 
@@ -227,7 +227,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
              $this->data === null
             || sizeof($this->data[self::PERSISTENT_METADATA]) === 0 // move
         ) {
-            $this->data = p_read_metadata($this->getResource()->getDokuwikiId());
+            $this->data = p_read_metadata($this->getResource()->getWikiId());
         }
         return parent::getData();
     }
@@ -282,7 +282,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
          * Read/render the metadata from the file
          * with parsing
          */
-        $dokuwikiId = $this->getResource()->getDokuwikiId();
+        $dokuwikiId = $this->getResource()->getWikiId();
         $actualMeta = $this->getData();
         global $ID;
         $keep = $ID;
@@ -448,7 +448,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     public function deleteAndFlush()
     {
         $emptyMeta = [MetadataDokuWikiStore::CURRENT_METADATA => [], MetadataDokuWikiStore::PERSISTENT_METADATA => []];
-        $dokuwikiId = $this->getResource()->getDokuwikiId();
+        $dokuwikiId = $this->getResource()->getWikiId();
         p_save_metadata($dokuwikiId, $emptyMeta);
         $this->data = $emptyMeta;
 

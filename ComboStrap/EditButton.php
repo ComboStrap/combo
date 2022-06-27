@@ -281,7 +281,7 @@ class EditButton
             unset($data[self::WIKI_ID]);
             if ($wikiId === null) {
                 try {
-                    $page = PageFragment::createPageFromGlobalDokuwikiId();
+                    $page = PageFragment::createPageFromGlobalWikiId();
                 } catch (ExceptionNotFound $e) {
                     LogUtility::internalError("A page id is mandatory for a edit button (no wiki id, no global ID were found). No edit buttons was created then.", self::CANONICAL);
                     return "";

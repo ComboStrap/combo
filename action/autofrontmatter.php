@@ -35,7 +35,7 @@ class action_plugin_combo_autofrontmatter extends DokuWiki_Action_Plugin
     public function handle_new_page(Doku_Event $event, $param){
 
         try {
-            $page = PageFragment::createPageFromGlobalDokuwikiId();
+            $page = PageFragment::createPageFromGlobalWikiId();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("Unable to handle a new page because the global id is unknown");
         }

@@ -45,7 +45,7 @@ class HttpRequest
     {
 
         $url = FetcherPageFragment::createPageFragmentFetcherFromId($wikiId)
-            ->setRequestedFormatAsXhtml()
+            ->setRequestedMimeToXhtml()
             ->getFetchUrl();
 
         return HttpRequest::createRequest($url)

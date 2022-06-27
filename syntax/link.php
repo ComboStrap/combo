@@ -637,7 +637,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                              * Calculate link distance
                              */
                             global $ID;
-                            $id = $linkedPage->getDokuwikiId();
+                            $id = $linkedPage->getWikiId();
                             $a = explode(':', getNS($ID));
                             $b = explode(':', getNS($id));
                             while (isset($a[0]) && $a[0] == $b[0]) {

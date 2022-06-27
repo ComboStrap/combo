@@ -392,13 +392,15 @@ class DokuPath extends PathAbs
     }
 
     /**
-     * @throws ExceptionNotFound - if the page was not found
      */
     public static function createPagePathFromGlobalId(): DokuPath
     {
         global $ID;
         if ($ID === null) {
-            throw new ExceptionNotFound("The global wiki ID is null, unable to create a path");
+            if (!PluginUtility::isTest()) {
+                LogUtility::error("The markup fragment could not be identified (global wiki ID is null)");
+            }
+            $ID = DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
         }
         return DokuPath::createPagePathFromId($ID);
     }

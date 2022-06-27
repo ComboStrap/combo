@@ -1155,6 +1155,7 @@ class PluginUtility
     }
 
     /**
+     * @deprecated for {@link DokuPath::createPagePathFromGlobalId()}
      */
     public static function getCurrentSlotId(): string
     {

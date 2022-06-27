@@ -45,7 +45,7 @@ class CacheReportHtmlDataBlockArray
                     }
                 }
                 $mode = $result->getMode();
-                $slotId = $result->getSlotId();
+                $pageFragment = $result->getPageFragment();
 
                 $cacheFile = null;
                 try {
@@ -62,14 +62,14 @@ class CacheReportHtmlDataBlockArray
 
                 if ($mode === FetcherPageFragment::XHTML_MODE) {
                     $dependencies = $cacheManager
-                        ->getCacheDependenciesForSlot($slotId)
+                        ->getCacheDependenciesForPageFragment($pageFragment)
                         ->getDependencies();
                     if ($dependencies !== null) {
                         $data[self::DEPENDENCY_ATT] = $dependencies;
                     }
                 }
 
-                $htmlDataBlock[$slotId][$mode] = $data;
+                $htmlDataBlock[$pageFragment->getPath()->getWikiId()][$mode] = $data;
 
             }
 

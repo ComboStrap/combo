@@ -1,7 +1,6 @@
 <?php
 
 
-use ComboStrap\AnalyticsDocument;
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionNotFound;
@@ -115,7 +114,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         if ($level === 1) {
 
             try {
-                $page = PageFragment::createPageFromGlobalDokuwikiId();
+                $page = PageFragment::createPageFromGlobalWikiId();
             } catch (ExceptionNotFound $e) {
                 LogUtility::error("Unable to save the h1 heading text because the global Id was not found", self::CANONICAL);
                 return;

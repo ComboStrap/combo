@@ -65,7 +65,7 @@ class Index
 
         $matchedPages = [];
         foreach ($pageIdList as $pageId) {
-            if ($pageToMatch->getDokuwikiId() === $pageId) {
+            if ($pageToMatch->getWikiId() === $pageId) {
                 continue;
             }
             $actualPage = PageFragment::createPageFromId($pageId);
@@ -80,7 +80,7 @@ class Index
     public function deletePage(PageFragment $page)
     {
 
-        $this->indexer->deletePage($page->getDokuwikiId());
+        $this->indexer->deletePage($page->getWikiId());
 
     }
 }

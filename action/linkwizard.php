@@ -94,7 +94,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
         $html = "";
         $lowerSearchTerm = strtolower($searchTerm);
         foreach ($pages as $page) {
-            $id = $page->getDokuwikiId();
+            $id = $page->getWikiId();
             $path = $page->getPath()->toPathString();
             /**
              * The name is the label that is put

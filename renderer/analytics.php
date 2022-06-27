@@ -188,7 +188,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     {
         $this->reset();
         try {
-            $this->page = PageFragment::createPageFromGlobalDokuwikiId();
+            $this->page = PageFragment::createPageFromGlobalWikiId();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("The global ID is unknown, we were unable to instantiate the requested page in analytics");
         }
@@ -600,7 +600,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * Metadata
          */
         try {
-            $requestedPage = PageFragment::createPageFromGlobalDokuwikiId();
+            $requestedPage = PageFragment::createPageFromGlobalWikiId();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("The global ID is unknown, we can't find the requested page. Analytics was stopped");
             return;

@@ -55,7 +55,7 @@ class action_plugin_combo_sideslotpostprocessing extends DokuWiki_Action_Plugin
     {
 
         try {
-            $page = PageFragment::createPageFromGlobalDokuwikiId();
+            $page = PageFragment::createPageFromGlobalWikiId();
         } catch (ExceptionNotFound $e) {
             if (PluginUtility::isDevOrTest()) {
                 LogUtility::error("The global ID was not found. Unable to process the side slot");

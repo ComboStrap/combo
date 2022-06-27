@@ -95,7 +95,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
                 } else {
                     $html .=
                         tpl_link(
-                            wl($page->getDokuwikiId()) . '?do=backlink',
+                            wl($page->getWikiId()) . '?do=backlink',
                             "More ...",
                             'class="" rel="nofollow" title="More..."',
                             true
@@ -239,7 +239,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
         // @require_once(DOKU_INC . 'inc/fulltext.php');
         // Backlinks called the indexer, for more info
         // See: https://www.dokuwiki.org/devel:metadata#metadata_index
-        $backlinks = ft_backlinks($page->getDokuwikiId(), $ignore_perms = false);
+        $backlinks = ft_backlinks($page->getWikiId(), $ignore_perms = false);
 
         $related = array();
         foreach ($backlinks as $backlink) {

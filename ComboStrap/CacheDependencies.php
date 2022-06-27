@@ -120,7 +120,7 @@ class CacheDependencies
      */
     public function __construct(string $id)
     {
-        $this->page = Page::createPageFromId($id);
+        $this->page = PageFragment::createPageFromId($id);
 
         $data = $this->getDependenciesCacheStore()->retrieveCache();
         if (!empty($data)) {
@@ -129,7 +129,7 @@ class CacheDependencies
 
     }
 
-    public static function create(Page $page): CacheDependencies
+    public static function create(PageFragment $page): CacheDependencies
     {
         return new CacheDependencies($page);
     }
@@ -150,10 +150,10 @@ class CacheDependencies
             /**
              * Rerender secondary slot if needed
              */
-            $page = Page::createPageFromId($ID);
+            $page = PageFragment::createPageFromId($ID);
             $independentSlots = $page->getPrimaryIndependentSlots();
             foreach ($independentSlots as $secondarySlot) {
-                $htmlDocument = $secondarySlot->getHtmlDocument();
+                $htmlDocument = $secondarySlot->getHtmlFetcher();
                 $cacheDependencies = $htmlDocument->getCacheDependencies();
                 if ($cacheDependencies->hasDependency($dependency)) {
                     $link = PluginUtility::getDocumentationHyperLink("cache:slot","Slot Dependency", false);
@@ -196,7 +196,7 @@ class CacheDependencies
          *
          * Scope is directory/namespace based
          */
-        $requestPage = Page::createPageFromRequestedPage();
+        $requestPage = PageFragment::createPageFromRequestedPage();
         switch ($dependenciesValue) {
             case CacheDependencies::NAMESPACE_OLD_VALUE:
             case CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY:

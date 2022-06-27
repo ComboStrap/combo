@@ -24,7 +24,7 @@ class FsWikiUtility
     /**
      * Determine if the current page is a sidebar (a bar)
      * @return bool
-     * TODO: Duplicate of {@link Page::isSecondarySlot()}
+     * TODO: Duplicate of {@link PageFragment::isSecondarySlot()}
      */
     public static function isSideBar()
     {
@@ -61,7 +61,7 @@ class FsWikiUtility
          */
         $dokuPath = DokuPath::createPagePathFromPath($path);
         // delete the last separator
-        $dokuwikiId = substr( $dokuPath->getDokuwikiId(),0,-1);
+        $dokuwikiId = substr( $dokuPath->getWikiId(),0,-1);
         $relativeFileSystemPath = str_replace(":", "/", $dokuwikiId);
 
 
@@ -94,11 +94,11 @@ class FsWikiUtility
      * ie the index.html
      * @param $namespacePath - in dokuwiki format
      * @return string - the dokuwiki path
-     * @deprecated use {@link Page::getIndexPageFromNamespace()} instead
+     * @deprecated use {@link PageFragment::getIndexPageFromNamespace()} instead
      */
     public static function getHomePagePath($namespacePath): ?string
     {
-        $homePage = Page::getIndexPageFromNamespace($namespacePath);
+        $homePage = PageFragment::getIndexPageFromNamespace($namespacePath);
         if ($homePage->exists()) {
             return $homePage->getAbsolutePath();
         } else {
@@ -130,9 +130,9 @@ class FsWikiUtility
 
     /**
      * @param $namespacePath
-     * @return Page|null the page path of the parent or null if it does not exist
+     * @return PageFragment|null the page path of the parent or null if it does not exist
      */
-    public static function getParentPagePath($namespacePath): ?Page
+    public static function getParentPagePath($namespacePath): ?PageFragment
     {
 
         /**
@@ -153,7 +153,7 @@ class FsWikiUtility
             } else {
                 $parentNamespacePath = substr($namespacePath, 0, $pos);
             }
-            return Page::getIndexPageFromNamespace($parentNamespacePath);
+            return PageFragment::getIndexPageFromNamespace($parentNamespacePath);
 
         } else {
             return null;

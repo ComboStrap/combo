@@ -16,7 +16,7 @@ class Reference extends MetadataWikiPath
 
 
 
-    public static function createFromResource(Page $page)
+    public static function createFromResource(PageFragment $page)
     {
         return (new Reference())
             ->setResource($page);

@@ -6,6 +6,7 @@ namespace ComboStrap;
 use action_plugin_combo_qualitymessage;
 use DateTime;
 use Exception;
+use renderer_plugin_combo_analytics;
 
 
 require_once(__DIR__ . '/PluginUtility.php');
@@ -24,7 +25,7 @@ require_once(__DIR__ . '/PluginUtility.php');
  *
  *
  */
-class Page extends ResourceComboAbs
+class PageFragment extends ResourceComboAbs
 {
 
     private $path;
@@ -135,13 +136,11 @@ class Page extends ResourceComboAbs
      */
     private $ldJson;
     /**
-     * @var HtmlDocument
+     * @var PageFragment
      */
     private $htmlDocument;
-    /**
-     * @var InstructionsDocument
-     */
-    private $instructionsDocument;
+
+    private ?FetcherPageFragment $instructionsDocument;
 
     /**
      * @var PageDescription $description
@@ -212,19 +211,19 @@ class Page extends ResourceComboAbs
     /**
      * @throws ExceptionNotFound - if the global ID is unknown
      */
-    public static function createPageFromGlobalDokuwikiId(): Page
+    public static function createPageFromGlobalDokuwikiId(): PageFragment
     {
         $dokuPath = DokuPath::createPagePathFromGlobalId();
         return self::createPageFromPathObject($dokuPath);
     }
 
-    public static function createPageFromId($id): Page
+    public static function createPageFromId($id): PageFragment
     {
         $path = DokuPath::createPagePathFromId($id);
-        return new Page($path);
+        return new PageFragment($path);
     }
 
-    public static function createPageFromNonQualifiedPath($pathOrId): Page
+    public static function createPageFromNonQualifiedPath($pathOrId): PageFragment
     {
         global $ID;
         $qualifiedId = $pathOrId;
@@ -239,21 +238,21 @@ class Page extends ResourceComboAbs
             global $conf;
             $qualifiedId = $conf['start'];
         }
-        return Page::createPageFromId($qualifiedId);
+        return PageFragment::createPageFromId($qualifiedId);
 
     }
 
     /**
-     * @return Page - the requested page
+     * @return PageFragment - the requested page
      */
-    public static function createPageFromRequestedPage(): Page
+    public static function createPageFromRequestedPage(): PageFragment
     {
-        return Page::createPageFromPathObject(DokuPath::createPagePathFromRequestedPage());
+        return PageFragment::createPageFromPathObject(DokuPath::createPagePathFromRequestedPage());
     }
 
-    public static function createPageFromPathObject(Path $path): Page
+    public static function createPageFromPathObject(Path $path): PageFragment
     {
-        return new Page($path);
+        return new PageFragment($path);
     }
 
 
@@ -262,18 +261,18 @@ class Page extends ResourceComboAbs
      * @throws ExceptionBadSyntax - if this is not a
      * @deprecated just pass a namespace path to the page creation and you will get the index page in return
      */
-    public static function getIndexPageFromNamespace(string $namespacePath): Page
+    public static function getIndexPageFromNamespace(string $namespacePath): PageFragment
     {
         DokuPath::checkNamespacePath($namespacePath);
 
-        return Page::createPageFromId($namespacePath);
+        return PageFragment::createPageFromId($namespacePath);
     }
 
 
-    static function createPageFromQualifiedPath($qualifiedPath): Page
+    static function createPageFromQualifiedPath($qualifiedPath): PageFragment
     {
         $path = DokuPath::createPagePathFromPath($qualifiedPath);
-        return new Page($path);
+        return new PageFragment($path);
     }
 
 
@@ -282,7 +281,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setCanonical($canonical): Page
+    function setCanonical($canonical): PageFragment
     {
         $this->canonical
             ->setValue($canonical)
@@ -344,7 +343,7 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @return Page[]
+     * @return PageFragment[]
      */
     public function getChildren(): array
     {
@@ -393,7 +392,7 @@ class Page extends ResourceComboAbs
      * @return $this
      */
     public
-    function rebuild(): Page
+    function rebuild(): PageFragment
     {
         $this->readStore = null;
         $this->buildPropertiesFromFileSystem();
@@ -405,7 +404,7 @@ class Page extends ResourceComboAbs
 
     /**
      *
-     * @return Page[]|null the internal links or null
+     * @return PageFragment[]|null the internal links or null
      */
     public
     function getLinkReferences(): ?array
@@ -427,7 +426,7 @@ class Page extends ResourceComboAbs
 
         $pages = [];
         foreach (array_keys($metadata['references']) as $referencePageId) {
-            $pages[$referencePageId] = Page::createPageFromId($referencePageId);
+            $pages[$referencePageId] = PageFragment::createPageFromId($referencePageId);
         }
         return $pages;
 
@@ -435,10 +434,12 @@ class Page extends ResourceComboAbs
 
 
     public
-    function getHtmlDocument(): HtmlDocument
+    function getHtmlFetcher(): FetcherPageFragment
     {
+
         if ($this->htmlDocument === null) {
-            $this->htmlDocument = new HtmlDocument($this);
+            $this->htmlDocument = FetcherPageFragment::createPageFragmentFetcherFromObject($this)
+                ->setRequestedFormatAsXhtml();
         }
         return $this->htmlDocument;
 
@@ -450,13 +451,13 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setCanBeOfLowQuality(bool $value): Page
+    function setCanBeOfLowQuality(bool $value): PageFragment
     {
         return $this->setQualityIndicatorAndDeleteCacheIfNeeded($this->canBeOfLowQuality, $value);
     }
 
     /**
-     * @return Page[] the backlinks
+     * @return PageFragment[] the backlinks
      * Duplicate of related
      *
      * Same as {@link DokuPath::getReferencedBy()} ?
@@ -471,7 +472,7 @@ class Page extends ResourceComboAbs
          */
         $ft_backlinks = ft_backlinks($this->getDokuwikiId());
         foreach ($ft_backlinks as $backlinkId) {
-            $backlinks[$backlinkId] = Page::createPageFromId($backlinkId);
+            $backlinks[$backlinkId] = PageFragment::createPageFromId($backlinkId);
         }
         return $backlinks;
     }
@@ -606,15 +607,15 @@ class Page extends ResourceComboAbs
     {
         $Indexer = idx_get_indexer();
         $pages = $Indexer->getPages();
-        $return = array_search($this->getPath()->getDokuwikiId(), $pages, true);
+        $return = array_search($this->getPath()->getWikiId(), $pages, true);
         return $return !== false;
     }
 
 
     public
-    function upsertContent($content, $summary = "Default"): Page
+    function upsertContent($content, $summary = "Default"): PageFragment
     {
-        saveWikiText($this->getPath()->getDokuwikiId(), $content, $summary);
+        saveWikiText($this->getPath()->getWikiId(), $content, $summary);
         return $this;
     }
 
@@ -632,7 +633,7 @@ class Page extends ResourceComboAbs
         $keepACT = $ACT;
         try {
             $ACT = "show";
-            $ID = $this->getPath()->getDokuwikiId();
+            $ID = $this->getPath()->getWikiId();
             idx_addPage($ID);
         } finally {
             $ID = $keep;
@@ -778,7 +779,7 @@ class Page extends ResourceComboAbs
      * and therefore you may get no metadata and no backlinks
      */
     public
-    function renderMetadataAndFlush(): Page
+    function renderMetadataAndFlush(): PageFragment
     {
 
         if (!$this->exists()) {
@@ -858,7 +859,7 @@ class Page extends ResourceComboAbs
                 /**
                  * If the start page does not exists, this is the index page
                  */
-                $startPage = Page::createPageFromId($namespace->getDokuwikiId() . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $startPageName);
+                $startPage = PageFragment::createPageFromId($namespace->getWikiId() . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $startPageName);
                 if (!FileSystems::exists($startPage->getPath())) {
                     return true;
                 }
@@ -968,12 +969,16 @@ class Page extends ResourceComboAbs
 
     /**
      *
+     * @throws ExceptionNotFound
      */
     public
-    function toXhtml(): ?string
+    function toXhtml(): string
     {
 
-        return $this->getHtmlDocument()->getOrProcessContent();
+        return FileSystems::getContent(
+            $this->getHtmlFetcher()
+                ->getFetchPath()
+        );
 
     }
 
@@ -981,7 +986,7 @@ class Page extends ResourceComboAbs
     public
     function getHtmlAnchorLink($logicalTag = null): string
     {
-        $id = $this->getPath()->getDokuwikiId();
+        $id = $this->getPath()->getWikiId();
         try {
             return LinkMarkup::createFromPageIdOrPath($id)
                     ->toAttributes($logicalTag)
@@ -1015,7 +1020,7 @@ class Page extends ResourceComboAbs
      * @deprecated use {@link MetadataDokuWikiStore::deleteAndFlush()}
      */
     public
-    function deleteMetadatasAndFlush(): Page
+    function deleteMetadatasAndFlush(): PageFragment
     {
         MetadataDokuWikiStore::getOrCreateFromResource($this)
             ->deleteAndFlush();
@@ -1048,11 +1053,11 @@ class Page extends ResourceComboAbs
     public
     function unsetMetadata($property)
     {
-        $meta = p_read_metadata($this->getPath()->getDokuwikiId());
+        $meta = p_read_metadata($this->getPath()->getWikiId());
         if (isset($meta['persistent'][$property])) {
             unset($meta['persistent'][$property]);
         }
-        p_save_metadata($this->getPath()->getDokuwikiId(), $meta);
+        p_save_metadata($this->getPath()->getWikiId(), $meta);
 
     }
 
@@ -1173,9 +1178,9 @@ class Page extends ResourceComboAbs
 
 
     public
-    function getAnalyticsDocument(): AnalyticsDocument
+    function getAnalyticsDocument(): FetcherPageFragment
     {
-        return new AnalyticsDocument($this);
+        return AnalyticsDocument::createForPageFragment($this);
     }
 
     public
@@ -1206,11 +1211,11 @@ class Page extends ResourceComboAbs
     /**
      * Used when the page is moved to take the Page Id of the source
      * @param string|null $pageId
-     * @return Page
+     * @return PageFragment
      * @throws ExceptionCompile
      */
     public
-    function setPageId(?string $pageId): Page
+    function setPageId(?string $pageId): PageFragment
     {
 
         $this->pageId
@@ -1302,7 +1307,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setLowQualityIndicatorCalculation($bool): Page
+    function setLowQualityIndicatorCalculation($bool): PageFragment
     {
         return $this->setQualityIndicatorAndDeleteCacheIfNeeded($this->lowQualityIndicatorCalculated, $bool);
     }
@@ -1314,11 +1319,11 @@ class Page extends ResourceComboAbs
      * and that the protection is on, delete the cache
      * @param MetadataBoolean $lowQualityAttributeName
      * @param bool $value
-     * @return Page
+     * @return PageFragment
      * @throws ExceptionBadArgument - if the value cannot be persisted
      */
     private
-    function setQualityIndicatorAndDeleteCacheIfNeeded(MetadataBoolean $lowQualityAttributeName, bool $value): Page
+    function setQualityIndicatorAndDeleteCacheIfNeeded(MetadataBoolean $lowQualityAttributeName, bool $value): PageFragment
     {
         try {
             $actualValue = $lowQualityAttributeName->getValue();
@@ -1362,7 +1367,7 @@ class Page extends ResourceComboAbs
      * @deprecated for {@link LdJson}
      */
     public
-    function setJsonLd($jsonLd): Page
+    function setJsonLd($jsonLd): PageFragment
     {
         $this->ldJson
             ->setValue($jsonLd)
@@ -1374,7 +1379,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setPageType(string $value): Page
+    function setPageType(string $value): PageFragment
     {
         $this->type
             ->setValue($value)
@@ -1438,11 +1443,11 @@ class Page extends ResourceComboAbs
      * If the page is at the root, the parent page is the root home
      * Only the root home does not have any parent page and return null.
      *
-     * @return Page
+     * @return PageFragment
      * @throws ExceptionNotFound
      */
     public
-    function getParentPage(): Page
+    function getParentPage(): PageFragment
     {
 
         $names = $this->getPath()->getNames();
@@ -1487,7 +1492,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setDescription($description): Page
+    function setDescription($description): PageFragment
     {
 
         $this->description
@@ -1501,7 +1506,7 @@ class Page extends ResourceComboAbs
      * @deprecated uses {@link EndDate} instead
      */
     public
-    function setEndDate($value): Page
+    function setEndDate($value): PageFragment
     {
         $this->endDate
             ->setFromStoreValue($value)
@@ -1514,7 +1519,7 @@ class Page extends ResourceComboAbs
      * @deprecated uses {@link StartDate} instead
      */
     public
-    function setStartDate($value): Page
+    function setStartDate($value): PageFragment
     {
         $this->startDate
             ->setFromStoreValue($value)
@@ -1526,7 +1531,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setPublishedDate($value): Page
+    function setPublishedDate($value): PageFragment
     {
         $this->publishedDate
             ->setFromStoreValue($value)
@@ -1540,7 +1545,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setPageName($value): Page
+    function setPageName($value): PageFragment
     {
         $this->pageName
             ->setValue($value)
@@ -1553,7 +1558,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setTitle($value): Page
+    function setTitle($value): PageFragment
     {
         $this->title
             ->setValue($value)
@@ -1565,7 +1570,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setH1($value): Page
+    function setH1($value): PageFragment
     {
         $this->h1
             ->setValue($value)
@@ -1577,7 +1582,7 @@ class Page extends ResourceComboAbs
      * @throws Exception
      */
     public
-    function setRegion($value): Page
+    function setRegion($value): PageFragment
     {
         $this->region
             ->setFromStoreValue($value)
@@ -1589,7 +1594,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setLang($value): Page
+    function setLang($value): PageFragment
     {
 
         $this->lang
@@ -1602,7 +1607,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setLayout($value): Page
+    function setLayout($value): PageFragment
     {
         $this->layout
             ->setValue($value)
@@ -1679,7 +1684,7 @@ class Page extends ResourceComboAbs
     }
 
     public
-    function setDatabasePage(DatabasePageRow $databasePage): Page
+    function setDatabasePage(DatabasePageRow $databasePage): PageFragment
     {
         $this->databasePage = $databasePage;
         return $this;
@@ -1687,7 +1692,7 @@ class Page extends ResourceComboAbs
 
     /**
      *
-     * TODO: Move to {@link HtmlDocument} ?
+     * TODO: Move to {@link PageFragment} ?
      */
     public function getUrlPath(): string
     {
@@ -1712,7 +1717,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setSlug($slug): Page
+    function setSlug($slug): PageFragment
     {
         $this->slug
             ->setFromStoreValue($slug)
@@ -1732,7 +1737,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setQualityMonitoringIndicator($boolean): Page
+    function setQualityMonitoringIndicator($boolean): PageFragment
     {
         $this->qualityMonitoringIndicator
             ->setFromStoreValue($boolean)
@@ -1786,7 +1791,7 @@ class Page extends ResourceComboAbs
      * @return $this
      */
     public
-    function setReadStore($store): Page
+    function setReadStore($store): PageFragment
     {
         $this->readStore = $store;
         return $this;
@@ -1795,7 +1800,7 @@ class Page extends ResourceComboAbs
 
     /**
      * @param array $usages
-     * @return FetcherImage[]
+     * @return PageImage[]
      */
     public
     function getImagesForTheFollowingUsages(array $usages): array
@@ -1832,7 +1837,7 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCompile
      */
     public
-    function setKeywords($value): Page
+    function setKeywords($value): PageFragment
     {
         $this->keywords
             ->setFromStoreValue($value)
@@ -1880,7 +1885,7 @@ class Page extends ResourceComboAbs
      * @deprecated for {@link CacheExpirationDate}
      */
     public
-    function setCacheExpirationDate(DateTime $cacheExpirationDate): Page
+    function setCacheExpirationDate(DateTime $cacheExpirationDate): PageFragment
     {
         $this->cacheExpirationDate->setValue($cacheExpirationDate);
         return $this;
@@ -1888,7 +1893,7 @@ class Page extends ResourceComboAbs
 
     /**
      * @return bool - true if the page has changed
-     * @deprecated use {@link Page::getInstructionsDocument()} instead
+     * @deprecated use {@link PageFragment::getInstructionsDocument()} instead
      */
     public
     function isParseCacheUsable(): bool
@@ -1898,11 +1903,11 @@ class Page extends ResourceComboAbs
 
     /**
      * @return $this
-     * @deprecated use {@link Page::getInstructionsDocument()} instead
+     * @deprecated use {@link PageFragment::getInstructionsDocument()} instead
      * Parse a page and put the instructions in the cache
      */
     public
-    function parse(): Page
+    function parse(): PageFragment
     {
 
         $this->getInstructionsDocument()
@@ -1916,10 +1921,11 @@ class Page extends ResourceComboAbs
      *
      */
     public
-    function getInstructionsDocument(): InstructionsDocument
+    function getInstructionsDocument(): FetcherPageFragment
     {
         if ($this->instructionsDocument === null) {
-            $this->instructionsDocument = new InstructionsDocument($this);
+            $this->instructionsDocument = FetcherPageFragment::createPageFragmentFetcherFromObject($this)
+                ->setRequestedFormatAsInstructions();
         }
         return $this->instructionsDocument;
 
@@ -1972,13 +1978,13 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * A shortcut for {@link Page::getPath()::getDokuwikiId()}
-     * @deprecated use the dokuwiki id of {@link Page::getPath()}
+     * A shortcut for {@link PageFragment::getPath()::getDokuwikiId()}
+     * @deprecated use the dokuwiki id of {@link PageFragment::getPath()}
      */
     public
     function getDokuwikiId(): string
     {
-        return $this->getPath()->getDokuwikiId();
+        return $this->getPath()->getWikiId();
     }
 
     public
@@ -2006,7 +2012,7 @@ class Page extends ResourceComboAbs
     }
 
 
-    public function getSideSlot(): ?Page
+    public function getSideSlot(): ?PageFragment
     {
         /**
          * Only primary slot have a side slot
@@ -2020,7 +2026,7 @@ class Page extends ResourceComboAbs
         if ($nearestMainFooter === false) {
             return null;
         }
-        return Page::createPageFromId($nearestMainFooter);
+        return PageFragment::createPageFromId($nearestMainFooter);
 
 
     }
@@ -2045,7 +2051,7 @@ class Page extends ResourceComboAbs
     /**
      * The slots that are independent from the primary slot
      *
-     * @return Page[]
+     * @return PageFragment[]
      */
     public function getPrimaryIndependentSlots(): array
     {
@@ -2064,22 +2070,22 @@ class Page extends ResourceComboAbs
     }
 
 
-    public function getPrimaryHeaderPage(): ?Page
+    public function getPrimaryHeaderPage(): ?PageFragment
     {
         $nearest = page_findnearest(Site::getPrimaryHeaderSlotName());
         if ($nearest === false) {
             return null;
         }
-        return Page::createPageFromId($nearest);
+        return PageFragment::createPageFromId($nearest);
     }
 
-    private function getPrimaryFooterPage(): ?Page
+    private function getPrimaryFooterPage(): ?PageFragment
     {
         $nearest = page_findnearest(Site::getPrimaryFooterSlotName());
         if ($nearest === false) {
             return null;
         }
-        return Page::createPageFromId($nearest);
+        return PageFragment::createPageFromId($nearest);
     }
 
     private function setCorrectPathForDirectoryToIndexPage(): void

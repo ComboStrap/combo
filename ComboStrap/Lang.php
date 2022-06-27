@@ -96,7 +96,7 @@ class Lang extends MetadataText
 
     }
 
-    public static function createForPage(Page $page)
+    public static function createForPage(PageFragment $page)
     {
         return (new Lang())
             ->setResource($page);

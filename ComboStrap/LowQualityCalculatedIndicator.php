@@ -9,7 +9,7 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
 
     public const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
 
-    public static function createFromPage(Page $page)
+    public static function createFromPage(PageFragment $page)
     {
         return (new LowQualityCalculatedIndicator())
             ->setResource($page);
@@ -39,15 +39,15 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
              * but if the analytics was done, we can get it
              */
             $resource = $this->getResource();
-            if (!($resource instanceof Page)) {
+            if (!($resource instanceof PageFragment)) {
                 throw new ExceptionNotFound("Low Quality is only for page resources");
             }
             $analyticsDocument = $resource->getAnalyticsDocument();
-            if (!FileSystems::exists($analyticsDocument->getCachePath())) {
+            if (!FileSystems::exists($analyticsDocument->getFetchPath())) {
                 throw new ExceptionNotFound("No analytics document could be found");
             }
             try {
-                return $analyticsDocument->getJson()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
+                return Json::createFromPath($analyticsDocument->getFetchPath())->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
             } catch (ExceptionCompile $e) {
                 $message = "Error while reading the json analytics. {$e->getMessage()}";
                 LogUtility::internalError($message, self::CANONICAL);

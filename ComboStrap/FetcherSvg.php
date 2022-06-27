@@ -24,7 +24,7 @@ class FetcherSvg extends FetcherLocalImage
 {
 
     use FetcherTraitLocalPath {
-        setOriginalPath as protected  setOriginalPathTraitAlias;
+        setOriginalPath as protected setOriginalPathTraitAlias;
     }
 
     const EXTENSION = "svg";
@@ -489,7 +489,7 @@ class FetcherSvg extends FetcherLocalImage
         /**
          * Trait
          */
-        $this->addLocalPathParametersToFetchUrl($url);
+        $this->addLocalPathParametersToFetchUrl($url, self::$MEDIA_QUERY_PARAMETER);
 
         /**
          * Specific properties

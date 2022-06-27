@@ -90,7 +90,7 @@ class FetcherRaster extends FetcherLocalImage
         /**
          * Trait
          */
-        $this->addLocalPathParametersToFetchUrl($url);
+        $this->addLocalPathParametersToFetchUrl($url,self::$MEDIA_QUERY_PARAMETER);
 
         return $url;
     }

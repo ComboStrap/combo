@@ -35,17 +35,17 @@ class Index
 
     public function getPagesForMedia(DokuPath $media): array
     {
-        $dokuwikiId = $media->getDokuwikiId();
+        $dokuwikiId = $media->getWikiId();
         return $this->indexer->lookupKey('relation_media', $dokuwikiId);
     }
 
     /**
      * Return a list of page id that have the same last name
      *
-     * @param Page $pageToMatch
-     * @return Page[]
+     * @param PageFragment $pageToMatch
+     * @return PageFragment[]
      */
-    public function getPagesWithSameLastName(Page $pageToMatch): array
+    public function getPagesWithSameLastName(PageFragment $pageToMatch): array
     {
         /**
          * * A shortcut to:
@@ -68,7 +68,7 @@ class Index
             if ($pageToMatch->getDokuwikiId() === $pageId) {
                 continue;
             }
-            $actualPage = Page::createPageFromId($pageId);
+            $actualPage = PageFragment::createPageFromId($pageId);
             if ($actualPage->getPath()->getLastName() === $lastName) {
                 $matchedPages[] = $actualPage;
             }
@@ -77,7 +77,7 @@ class Index
 
     }
 
-    public function deletePage(Page $page)
+    public function deletePage(PageFragment $page)
     {
 
         $this->indexer->deletePage($page->getDokuwikiId());

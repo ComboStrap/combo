@@ -46,7 +46,7 @@ use ComboStrap\Metadata;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MetadataStoreTransfer;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PageH1;
 use ComboStrap\PageId;
 use ComboStrap\PageImagePath;
@@ -178,7 +178,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         $result = [];
 
         try {
-            $parsedPage = Page::createPageFromGlobalDokuwikiId();
+            $parsedPage = PageFragment::createPageFromGlobalDokuwikiId();
         } catch (ExceptionCompile $e) {
             LogUtility::error("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
             return [];
@@ -318,7 +318,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 /**
                  * Register media in index
                  */
-                $page = Page::createPageFromId($ID);
+                $page = PageFragment::createPageFromId($ID);
                 $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
                 if (isset($frontMatterJsonArray[PageImages::getPersistentName()])) {
                     $value = $frontMatterJsonArray[PageImages::getPersistentName()];
@@ -330,7 +330,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                         ->buildFromStoreValue($value);
                     $pageImagesObject = $pageImages->getValueAsPageImages();
                     foreach ($pageImagesObject as $imageValue) {
-                        $dokuwikiId = $imageValue->getImagePath()->getDokuwikiId();
+                        $dokuwikiId = $imageValue->getImagePath()->getWikiId();
                         $attributes = [MarkupRef::REF_ATTRIBUTE => ":$dokuwikiId"];
                         try {
                             syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);

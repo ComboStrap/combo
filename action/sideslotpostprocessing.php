@@ -11,7 +11,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Mime;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Reference;
@@ -55,7 +55,7 @@ class action_plugin_combo_sideslotpostprocessing extends DokuWiki_Action_Plugin
     {
 
         try {
-            $page = Page::createPageFromGlobalDokuwikiId();
+            $page = PageFragment::createPageFromGlobalDokuwikiId();
         } catch (ExceptionNotFound $e) {
             if (PluginUtility::isDevOrTest()) {
                 LogUtility::error("The global ID was not found. Unable to process the side slot");

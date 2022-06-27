@@ -38,6 +38,10 @@ interface Fetcher
      * The value used by Dokuwiki for the buster is tseed.
      */
     public const CACHE_BUSTER_KEY = "tseed";
+
+    /**
+     * The property in the URL that identify the fetcher
+     */
     public const FETCHER_KEY = "fetcher";
 
 
@@ -62,7 +66,7 @@ interface Fetcher
 
 
     /**
-     * @return Mime - the mime of the
+     * @return Mime - the mime of the output
      *
      * You can also ask it via {@link Fetcher::getFetchPath()} but it will
      * perform the processing. If you want to create a cache file path with the good extension
@@ -85,13 +89,15 @@ interface Fetcher
     public function buildFromTagAttributes(TagAttributes $tagAttributes): Fetcher;
 
     /**
+     * Get the cache value requested
      * @throws ExceptionNotFound
      * @return string
      */
     public function getRequestedCache(): string;
 
     /**
-     * @return string - an unique name
+     * @return string - an unique name that is added in the fetcher key of the URL
      */
     public function getFetcherName(): string;
+
 }

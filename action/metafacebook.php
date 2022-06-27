@@ -3,17 +3,13 @@
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\DokuPath;
-use ComboStrap\ExceptionBadArgument;
-use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
-use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetcherLocalImage;
-use ComboStrap\FetcherTraitImage;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PageImageUsage;
 use ComboStrap\PageType;
 use ComboStrap\PluginUtility;
@@ -77,7 +73,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
 
-        $page = Page::createPageFromId($ID);
+        $page = PageFragment::createPageFromId($ID);
         if (!$page->exists()) {
             return;
         }
@@ -140,9 +136,6 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
 
-        /**
-         * @var FetcherTraitImage[]
-         */
         $facebookImages = $page->getImagesForTheFollowingUsages([PageImageUsage::FACEBOOK, PageImageUsage::SOCIAL, PageImageUsage::ALL]);
         if (empty($facebookImages)) {
             $defaultFacebookImage = PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);

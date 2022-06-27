@@ -124,7 +124,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
      */
     public function createLink($id, $name, $class = null): string
     {
-        $page = Page::createPageFromId($id);
+        $page = PageFragment::createPageFromId($id);
         if ($name == "start") {
             $name = "Home Page";
         } else {

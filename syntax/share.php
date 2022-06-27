@@ -9,7 +9,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\Icon;
 use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -163,7 +163,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                      * and Runtime Cache key dependencies
                      */
                     CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
-                    $requestedPage = Page::createPageFromRequestedPage();
+                    $requestedPage = PageFragment::createPageFromRequestedPage();
                     try {
                         $linkAttributes = $brandButton->getLinkAttributes($requestedPage)
                             ->setType($shareAttributes->getType())

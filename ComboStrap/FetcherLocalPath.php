@@ -5,7 +5,7 @@ namespace ComboStrap;
 /**
  * Return raw files
  */
-class FetcherLocalPath extends FetcherAbs
+class FetcherLocalPath extends FetcherAbs implements FetcherSource
 {
 
     use FetcherTraitLocalPath;
@@ -48,14 +48,18 @@ class FetcherLocalPath extends FetcherAbs
     {
 
         $url = parent::getFetchUrl($url);
-        $this->addLocalPathParametersToFetchUrl($url);
-
+        $this->addLocalPathParametersToFetchUrl($url, self::$MEDIA_QUERY_PARAMETER);
         return $url;
 
     }
 
     /**
-     * @throws ExceptionBadArgument - if the media was not found
+     * @param TagAttributes $tagAttributes
+     * @return FetcherLocalPath
+     * @throws ExceptionBadArgument - if the media/id was not found
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
      */
     public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherLocalPath
     {

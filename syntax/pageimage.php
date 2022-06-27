@@ -12,20 +12,17 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetcherImage;
 use ComboStrap\FetcherLocalImage;
-use ComboStrap\FetcherTraitImage;
 use ComboStrap\FetcherSvg;
-use ComboStrap\FileSystems;
+use ComboStrap\FetcherVignette;
 use ComboStrap\FirstImage;
 use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
-use ComboStrap\MediaLink;
 use ComboStrap\MediaMarkup;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
-use ComboStrap\FetcherVignette;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -197,7 +194,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
          * Image selection
          */
         DokuPath::addRootSeparatorIfNotPresent($path);
-        $page = Page::createPageFromQualifiedPath($path);
+        $page = PageFragment::createPageFromQualifiedPath($path);
 
         /**
          * Image Order of precedence
@@ -355,7 +352,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionNotFound
      */
-    private function selectAndGetBestMetadataPageImageFetcherForRatio(Page $page, TagAttributes $tagAttributes): FetcherImage
+    private function selectAndGetBestMetadataPageImageFetcherForRatio(PageFragment $page, TagAttributes $tagAttributes): FetcherImage
     {
 
         /**

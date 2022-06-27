@@ -281,13 +281,13 @@ class EditButton
             unset($data[self::WIKI_ID]);
             if ($wikiId === null) {
                 try {
-                    $page = Page::createPageFromGlobalDokuwikiId();
+                    $page = PageFragment::createPageFromGlobalDokuwikiId();
                 } catch (ExceptionNotFound $e) {
                     LogUtility::internalError("A page id is mandatory for a edit button (no wiki id, no global ID were found). No edit buttons was created then.", self::CANONICAL);
                     return "";
                 }
             } else {
-                $page = Page::createPageFromId($wikiId);
+                $page = PageFragment::createPageFromId($wikiId);
             }
             $formId = $data[self::FORM_ID];
             unset($data[self::FORM_ID]);

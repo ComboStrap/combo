@@ -9,7 +9,7 @@ namespace ComboStrap;
  * in a list of image if the image was also the first image
  * based on the path.
  */
-abstract class FetcherLocalImage extends FetcherImage
+abstract class FetcherLocalImage extends FetcherImage implements FetcherSource
 {
 
     /**
@@ -60,7 +60,7 @@ abstract class FetcherLocalImage extends FetcherImage
     /**
      * @throws ExceptionNotFound
      */
-    public static function createImageFetchFromPageImageMetadata(Page $page)
+    public static function createImageFetchFromPageImageMetadata(PageFragment $page)
     {
         $selectedPageImage = null;
         foreach ($page->getPageMetadataImages() as $pageMetadataImage) {
@@ -78,7 +78,6 @@ abstract class FetcherLocalImage extends FetcherImage
         throw new ExceptionNotFound("No page image metadata image could be found for the page ($page)");
     }
 
-    abstract public function getOriginalPath(): DokuPath;
 
 
     function getBuster(): string

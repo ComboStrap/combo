@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 
 /**
  * Class action_plugin_combo_metacanonical
@@ -37,7 +37,7 @@ class action_plugin_combo_metacanonical
             return;
         }
 
-        $page = Page::createPageFromId($ID);
+        $page = PageFragment::createPageFromId($ID);
 
         /**
          * No canonical for slot page

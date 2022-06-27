@@ -93,7 +93,7 @@ class SlotManagerMenuItem extends AbstractItem
 
     public function createHtml(): string
     {
-        $requestedPage = Page::createPageFromRequestedPage();
+        $requestedPage = PageFragment::createPageFromRequestedPage();
         $html = "<p>Edit and/or create the <a href=\"https://combostrap.com/slot\">slots</a> of the page</p>";
         foreach (Site::getSecondarySlotNames() as $secondarySlot) {
 
@@ -136,7 +136,7 @@ class SlotManagerMenuItem extends AbstractItem
                 }
                 $secondaryPath = $parentPath->resolve($secondarySlot);
 
-                $secondaryPage = Page::createPageFromQualifiedPath($secondaryPath->toPathString());
+                $secondaryPage = PageFragment::createPageFromQualifiedPath($secondaryPath->toPathString());
                 $class = "link-combo";
                 if (FileSystems::exists($secondaryPath)) {
                     $action = self::EDIT_ACTION;

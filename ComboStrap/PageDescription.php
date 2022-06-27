@@ -227,7 +227,7 @@ class PageDescription extends MetadataText
         $description = str_replace("\n", " ", $value);
         // suppress the h1
         $resourceCombo = $this->getResource();
-        if ($resourceCombo instanceof Page) {
+        if ($resourceCombo instanceof PageFragment) {
             $description = str_replace($resourceCombo->getH1OrDefault(), "", $description);
         }
         // Suppress the star, the tab, About

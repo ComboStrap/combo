@@ -15,7 +15,7 @@ use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use dokuwiki\Cache\CacheRenderer;
@@ -122,7 +122,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
         $keep = $ID;
         try {
             $ID = $requestedId;
-            $slot = Page::createPageFromQualifiedPath($slotPath);
+            $slot = PageFragment::createPageFromQualifiedPath($slotPath);
 
             /**
              * Calculate a new expiration date
@@ -160,7 +160,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
                 self::SLOT_CACHE_EXPIRATION_EVENT,
                 $message);
             CacheLog::deleteCacheIfExistsAndLog(
-                $slot->getHtmlDocument(),
+                $slot->getHtmlFetcher(),
                 self::SLOT_CACHE_EXPIRATION_EVENT,
                 $message);
 
@@ -168,7 +168,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
              * Re-render
              */
             CacheLog::renderCacheAndLog(
-                $slot->getHtmlDocument(),
+                $slot->getHtmlFetcher(),
                 self::SLOT_CACHE_EXPIRATION_EVENT,
                 $message);
 

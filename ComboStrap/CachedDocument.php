@@ -8,8 +8,10 @@ namespace ComboStrap;
  * @package ComboStrap
  * A document that is generated and where
  * the output may be stored in the cache
+ *
+ *
  */
-interface CachedDocument
+interface CachedDocument extends Fetcher
 {
 
 
@@ -17,7 +19,7 @@ interface CachedDocument
      * Execute the transformation process
      *   * from one format to another
      *   * optimization
-     * And stores the output in the {@link PageCompilerDocument::getCachePath() cache file}
+     * And stores the output in the {@link PageCompilerDocument::getFetchPath() cache file}
      * if the cache is enabled
      * @return mixed - the object
      */
@@ -26,7 +28,7 @@ interface CachedDocument
     /**
      * @return LocalPath - the path where the generated content is stored
      */
-    public function getCachePath(): LocalPath;
+    public function getFetchPath(): LocalPath;
 
     /**
      * @return bool true if the {@link CachedDocument::process() compilation} should occurs
@@ -55,12 +57,5 @@ interface CachedDocument
      */
     public function storeContent($content);
 
-    /**
-     * @return string - the file extension / format
-     * For instance:
-     *   * "xhtml" for an html document
-     *   * "svg" for an svg document
-     */
-    function getExtension(): string;
 
 }

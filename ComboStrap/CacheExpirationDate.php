@@ -35,11 +35,11 @@ class CacheExpirationDate extends MetadataDateTime
     public function getDefaultValue(): DateTime
     {
         $resourceCombo = $this->getResource();
-        if (!($resourceCombo instanceof Page)) {
+        if (!($resourceCombo instanceof PageFragment)) {
             throw new ExceptionNotFound("Cache expiration is only available for page");
         }
 
-        $path = $resourceCombo->getHtmlDocument()->getCachePath();
+        $path = $resourceCombo->getHtmlFetcher()->getFetchPath();
         if (!FileSystems::exists($path)) {
             throw new ExceptionNotFound("There is no HTML document created to expire");
         }

@@ -63,7 +63,7 @@ class ContextManager
         $context = self::$globalContext[$id];
         if ($context === null) {
             self::$globalContext = null; // delete old snippet manager for other request
-            $defaultContextData = Page::createPageFromRequestedPage()->getMetadataForRendering();
+            $defaultContextData = PageFragment::createPageFromRequestedPage()->getMetadataForRendering();
             $context = new ContextManager($defaultContextData);
             self::$globalContext[$id] = $context;
         }

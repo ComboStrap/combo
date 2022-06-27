@@ -8,7 +8,7 @@ class References extends MetadataTabular
 {
 
 
-    public static function createFromResource(Page $page)
+    public static function createFromResource(PageFragment $page)
     {
         return (new References())
             ->setResource($page);

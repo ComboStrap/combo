@@ -830,7 +830,7 @@ class Site
             ->addClassName("logo");
         foreach ($logoImagesPath as $logoImagePath) {
             try {
-                if(!Identity::isReader($logoImagePath->getDokuwikiId())){
+                if(!Identity::isReader($logoImagePath->getWikiId())){
                     continue;
                 }
                 $imageFetcher = FetcherLocalImage::createImageFetchFromPath($logoImagePath)

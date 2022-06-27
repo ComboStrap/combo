@@ -32,7 +32,7 @@ class FetcherVignette extends FetcherImage
     const WEBP_EXTENSION = "webp";
 
 
-    private Page $page;
+    private PageFragment $page;
 
     private Mime $mime;
 
@@ -40,12 +40,12 @@ class FetcherVignette extends FetcherImage
     private string $buster;
 
     /**
-     * @param Page $page
+     * @param PageFragment $page
      * @param Mime $mime
      * @throws ExceptionNotFound - page not found
      * @throws ExceptionBadArgument - bad mime
      */
-    public function __construct(Page $page, Mime $mime = null)
+    public function __construct(PageFragment $page, Mime $mime = null)
     {
         $this->setPage($page);
         if ($mime !== null) {
@@ -60,7 +60,7 @@ class FetcherVignette extends FetcherImage
      * @throws ExceptionNotFound - if the page does not exists
      * @throws ExceptionBadArgument - if the mime is not supported
      */
-    public static function createForPage(Page $page, Mime $mime = null): FetcherVignette
+    public static function createForPage(PageFragment $page, Mime $mime = null): FetcherVignette
     {
         return new FetcherVignette($page, $mime);
     }
@@ -292,7 +292,7 @@ class FetcherVignette extends FetcherImage
     function getFetchUrl(Url $url = null): Url
     {
         $url = parent::getFetchUrl($url)
-            ->addQueryParameter(self::VIGNETTE_NAME, $this->page->getPath()->getDokuwikiId() . "." . $this->mime->getExtension());
+            ->addQueryParameter(self::VIGNETTE_NAME, $this->page->getPath()->getWikiId() . "." . $this->mime->getExtension());
         return $url;
 
     }
@@ -323,7 +323,7 @@ class FetcherVignette extends FetcherImage
         $lastPoint = strrpos($vignette, ".");
         $extension = substr($vignette, $lastPoint + 1);
         $wikiId = substr($vignette, 0, $lastPoint);
-        $this->setPage(Page::createPageFromId($wikiId));
+        $this->setPage(PageFragment::createPageFromId($wikiId));
         if (!FileSystems::exists($this->page->getPath())) {
             throw new ExceptionNotFound("The page does not exists");
         }
@@ -346,7 +346,7 @@ class FetcherVignette extends FetcherImage
     /**
      * @throws ExceptionNotFound
      */
-    public function setPage(Page $page): FetcherVignette
+    public function setPage(PageFragment $page): FetcherVignette
     {
         $this->page = $page;
         $this->buster = FileSystems::getCacheBuster($this->page->getPath());

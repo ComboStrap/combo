@@ -8,7 +8,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PagePath;
 use ComboStrap\Reference;
 use ComboStrap\References;
@@ -50,7 +50,7 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
 
         $data = $event->data;
         $pagePath = $data[PagePath::getPersistentName()];
-        $reference = Page::createPageFromQualifiedPath($pagePath);
+        $reference = PageFragment::createPageFromQualifiedPath($pagePath);
 
         if ($reference->isSecondarySlot()) {
             return;

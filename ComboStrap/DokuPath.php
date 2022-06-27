@@ -106,7 +106,7 @@ class DokuPath extends PathAbs
      * @param string $drive - the drive (media, page, combo) - same as in windows for the drive prefix (c, d, ...)
      * @param string|null $rev - the revision (mtime)
      *
-     * Thee path should be a qualified/absolute path because in Dokuwiki, a link to a {@link Page}
+     * Thee path should be a qualified/absolute path because in Dokuwiki, a link to a {@link PageFragment}
      * that ends with the {@link DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT} points to a start page
      * and not to a namespace. The qualification occurs in the transformation
      * from ref to page.
@@ -561,7 +561,7 @@ class DokuPath extends PathAbs
      * This is not the same than {@link MarkupRef::normalizePath()}
      * because there is no relativity or any reserved character in a id
      *
-     * as an {@link DokuPath::getDokuwikiId() id} is a validated absolute path without root character
+     * as an {@link DokuPath::getWikiId() id} is a validated absolute path without root character
      */
     public static function normalizeWikId(string $id)
     {
@@ -593,7 +593,7 @@ class DokuPath extends PathAbs
     function getNames(): array
     {
 
-        $actualNames = explode(self::NAMESPACE_SEPARATOR_DOUBLE_POINT, $this->getDokuwikiId());
+        $actualNames = explode(self::NAMESPACE_SEPARATOR_DOUBLE_POINT, $this->getWikiId());
 
         /**
          * First element can be an empty string
@@ -642,7 +642,7 @@ class DokuPath extends PathAbs
          * with id of the form :path:*
          * (for directory ?)
          */
-        return StringUtility::endWiths($this->getDokuwikiId(), ":*");
+        return StringUtility::endWiths($this->getWikiId(), ":*");
     }
 
     public
@@ -666,7 +666,7 @@ class DokuPath extends PathAbs
      * Heavily used inside Dokuwiki
      */
     public
-    function getDokuwikiId(): string
+    function getWikiId(): string
     {
 
         return $this->id;
@@ -720,7 +720,7 @@ class DokuPath extends PathAbs
      * when creating test, otherwise the ref is considered as relative
      *
      *
-     * Otherwise everywhere in Dokuwiki, they use the {@link DokuPath::getDokuwikiId()} absolute value that does not have any root separator
+     * Otherwise everywhere in Dokuwiki, they use the {@link DokuPath::getWikiId()} absolute value that does not have any root separator
      * and is absolute (internal index, function, ...)
      *
      */
@@ -740,7 +740,7 @@ class DokuPath extends PathAbs
     public
     function getReferencedBy(): array
     {
-        $absoluteId = $this->getDokuwikiId();
+        $absoluteId = $this->getWikiId();
         if ($this->drive == self::MEDIA_DRIVE) {
             return idx_get_indexer()->lookupKey('relation_media', $absoluteId);
         } else {
@@ -758,8 +758,8 @@ class DokuPath extends PathAbs
     function toRelativeFileSystemPath(): string
     {
         $relativeSystemPath = ".";
-        if (!empty($this->getDokuwikiId())) {
-            $relativeSystemPath .= "/" . utf8_encodeFN(str_replace(':', '/', $this->getDokuwikiId()));
+        if (!empty($this->getWikiId())) {
+            $relativeSystemPath .= "/" . utf8_encodeFN(str_replace(':', '/', $this->getWikiId()));
         }
         return $relativeSystemPath;
 
@@ -777,7 +777,7 @@ class DokuPath extends PathAbs
      */
     public function getAuthAclValue(): int
     {
-        return auth_quickaclcheck($this->getDokuwikiId());
+        return auth_quickaclcheck($this->getWikiId());
     }
 
 

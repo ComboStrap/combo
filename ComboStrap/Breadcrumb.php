@@ -59,9 +59,9 @@ class Breadcrumb
         if ($path === null) {
             // should never happen but yeah
             LogUtility::error("Internal Error: The page context was not set. Defaulting to the requested page", syntax_plugin_combo_breadcrumb::CANONICAL_HIERARCHICAL);
-            $actual = Page::createPageFromRequestedPage();
+            $actual = PageFragment::createPageFromRequestedPage();
         } else {
-            $actual = Page::createPageFromQualifiedPath($path);
+            $actual = PageFragment::createPageFromQualifiedPath($path);
         }
 
 
@@ -124,12 +124,12 @@ class Breadcrumb
     }
 
     /**
-     * @param Page $page
+     * @param PageFragment $page
      * @param bool $current
      * @param bool $link
      * @return string - the list item for the page
      */
-    public static function getLiHtmlOutput(Page $page, bool $current = false, bool $link = true): string
+    public static function getLiHtmlOutput(PageFragment $page, bool $current = false, bool $link = true): string
     {
         $liClass = "";
         $liArial = "";

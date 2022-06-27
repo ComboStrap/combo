@@ -64,7 +64,7 @@ class Icon
 
             }
 
-            $tagAttributes->addComponentAttributeValue(FetcherLocalPath::$MEDIA_QUERY_PARAMETER, $mediaDokuPath->getDokuwikiId());
+            $tagAttributes->addComponentAttributeValue(FetcherLocalPath::$MEDIA_QUERY_PARAMETER, $mediaDokuPath->getWikiId());
             $tagAttributes->setComponentAttributeValue(FetcherSvg::NAME_ATTRIBUTE, $mediaDokuPath->getLastNameWithoutExtension());
 
 

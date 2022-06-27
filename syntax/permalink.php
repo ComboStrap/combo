@@ -15,7 +15,7 @@ use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\OutlineSection;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PageUrlPath;
 use ComboStrap\PageUrlType;
 use ComboStrap\PluginUtility;
@@ -133,7 +133,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
 
 
-                $requestedPage = Page::createPageFromRequestedPage();
+                $requestedPage = PageFragment::createPageFromRequestedPage();
                 $fragment = $attributes->getValueAndRemoveIfPresent(self::FRAGMENT_ATTRIBUTE);
                 switch ($type) {
                     case self::GENERATED_TYPE:

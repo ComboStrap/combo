@@ -62,7 +62,7 @@ class MetaManagerForm
         $this->targetFormDataStore = MetadataFormDataStore::getOrCreateFromResource($page);
     }
 
-    public static function createForPage(Page $page): MetaManagerForm
+    public static function createForPage(PageFragment $page): MetaManagerForm
     {
         return new MetaManagerForm($page);
     }

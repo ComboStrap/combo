@@ -47,7 +47,10 @@ trait FetcherTraitLocalPath
                 $id = $tagAttributes->getValueAndRemove(self::SRC_QUERY_PARAMETER);
             }
             if ($id === null) {
-                throw new ExceptionBadArgument("The (" . self::$MEDIA_QUERY_PARAMETER . " or " . self::SRC_QUERY_PARAMETER . ") query property is mandatory and was not defined");
+                $id = $tagAttributes->getValueAndRemove(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
+            }
+            if ($id === null) {
+                throw new ExceptionBadArgument("The (" . self::$MEDIA_QUERY_PARAMETER . ", " . self::SRC_QUERY_PARAMETER . " or " . DokuwikiId::DOKUWIKI_ID_ATTRIBUTE . ") query property is mandatory and was not defined");
             }
             $drive = $tagAttributes->getValueAndRemove(DokuPath::DRIVE_ATTRIBUTE, DokuPath::MEDIA_DRIVE);
             $rev = $tagAttributes->getValueAndRemove(DokuPath::REV_ATTRIBUTE);
@@ -78,10 +81,10 @@ trait FetcherTraitLocalPath
      * We still use the {@link FetcherLocalPath::MEDIA_QUERY_PARAMETER}
      * to be Dokuwiki Compatible even if we can serve from other drive know
      */
-    public function addLocalPathParametersToFetchUrl(Url $url): void
+    public function addLocalPathParametersToFetchUrl(Url $url, string $key): void
     {
 
-        $url->addQueryParameterIfNotActualSameValue(self::$MEDIA_QUERY_PARAMETER, $this->path->getDokuwikiId());
+        $url->addQueryParameterIfNotActualSameValue(self::$MEDIA_QUERY_PARAMETER, $this->path->getWikiId());
         if ($this->path->getDrive() !== DokuPath::MEDIA_DRIVE) {
             $url->addQueryParameter(DokuPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
         }

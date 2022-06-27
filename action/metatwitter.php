@@ -1,24 +1,17 @@
 <?php
 
 use ComboStrap\DokuPath;
-use ComboStrap\ExceptionBadArgument;
-use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetcherLocalImage;
-use ComboStrap\FetcherTraitImage;
 use ComboStrap\FileSystems;
-use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
-use ComboStrap\PageImage;
+use ComboStrap\PageFragment;
 use ComboStrap\PageImageUsage;
 use ComboStrap\PluginUtility;
 use ComboStrap\ResourceName;
 use ComboStrap\StringUtility;
-use ComboStrap\TagAttributes;
 
-if (!defined('DOKU_INC')) die();
 
 require_once(__DIR__ . '/../ComboStrap/Site.php');
 
@@ -103,7 +96,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         }
 
 
-        $page = Page::createPageFromId($ID);
+        $page = PageFragment::createPageFromId($ID);
 
         if (!$page->exists()) {
             return;

@@ -5,7 +5,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\DokuPath;
 use ComboStrap\Identity;
 use ComboStrap\LowQualityPage;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PageProtection;
 use ComboStrap\PagePublicationDate;
 
@@ -85,7 +85,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
              */
             return;
         }
-        $page = Page::createPageFromId($id);
+        $page = PageFragment::createPageFromId($id);
 
         if ($page->isLowQualityPage()) {
             if (LowQualityPage::getLowQualityProtectionMode() == PageProtection::CONF_VALUE_HIDDEN) {
@@ -147,7 +147,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
              * It should be only a page
              * https://www.dokuwiki.org/devel:event:auth_acl_check
              */
-            $page = Page::createPageFromId($id);
+            $page = PageFragment::createPageFromId($id);
 
             if ($page->isLowQualityPage()) {
                 if ($this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true)) {
@@ -178,7 +178,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         foreach ($pageItems as $key => $pageItem) {
             $url = $pageItem->url;
             $dokuPath = DokuPath::createFromUrl($url);
-            $page = Page::createPageFromId($dokuPath->getDokuwikiId());
+            $page = PageFragment::createPageFromId($dokuPath->getWikiId());
             if ($page->isLowQualityPage() && LowQualityPage::isProtectionEnabled()) {
 
                 unset($event->data["items"][$key]);
@@ -236,7 +236,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
             // To prevent an Illegal string offset 'id'
             if(isset($data["id"])) {
 
-                $page = Page::createPageFromId($data["id"]);
+                $page = PageFragment::createPageFromId($data["id"]);
 
                 if ($page->isLowQualityPage() && $isLowQualityProtectionEnabled) {
                     $protectionMode = LowQualityPage::getLowQualityProtectionMode();
@@ -275,7 +275,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
          */
         if (is_array($event->result)) {
             foreach (array_keys($event->result) as $idx) {
-                $page = Page::createPageFromId($idx);
+                $page = PageFragment::createPageFromId($idx);
                 if ($page->isLowQualityPage()) {
                     $securityConf = $this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE);
                     if (in_array($securityConf, $protectionModes)) {
@@ -312,7 +312,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
             return;
         }
 
-        $page = Page::createPageFromId($ID);
+        $page = PageFragment::createPageFromId($ID);
 
         /**
          * No management for slot page

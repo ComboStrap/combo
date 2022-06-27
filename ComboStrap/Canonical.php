@@ -18,7 +18,7 @@ class Canonical extends MetadataWikiPath
      */
     public const CONF_CANONICAL_LAST_NAMES_COUNT = 'MinimalNamesCountForAutomaticCanonical';
 
-    public static function createForPage(Page $page): Canonical
+    public static function createForPage(PageFragment $page): Canonical
     {
         return (new Canonical())
             ->setResource($page);
@@ -59,7 +59,7 @@ class Canonical extends MetadataWikiPath
     {
 
         $resourceCombo = $this->getResource();
-        if (!($resourceCombo instanceof Page)) {
+        if (!($resourceCombo instanceof PageFragment)) {
             throw new ExceptionNotFound("No default value for other resources than page");
         }
 

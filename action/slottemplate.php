@@ -7,7 +7,7 @@ use ComboStrap\FileSystems;
 use ComboStrap\Layout;
 use ComboStrap\LayoutArea;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\Site;
 
 /**
@@ -28,7 +28,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
     {
 
 
-        $page = Page::createPageFromRequestedPage();
+        $page = PageFragment::createPageFromRequestedPage();
 
         /**
          * Header

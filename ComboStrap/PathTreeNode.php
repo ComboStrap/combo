@@ -66,10 +66,10 @@ class PathTreeNode extends TreeNode
         $nodeByIds = [];
         foreach ($ids as $id) {
             $path = DokuPath::createPagePathFromId($id);
-            $actualNode = $nodeByIds[$path->getDokuwikiId()];
+            $actualNode = $nodeByIds[$path->getWikiId()];
             if ($actualNode === null) {
                 $actualNode = PathTreeNode::createPathTreeNodeFromPath($path);
-                $nodeByIds[$path->getDokuwikiId()] = $actualNode;
+                $nodeByIds[$path->getWikiId()] = $actualNode;
             }
             while (true) {
                 try {
@@ -77,10 +77,10 @@ class PathTreeNode extends TreeNode
                      * @var DokuPath $parentPath
                      */
                     $parentPath = $actualNode->getPath()->getParent();
-                    $parentPathNode = $nodeByIds[$parentPath->getDokuwikiId()];
+                    $parentPathNode = $nodeByIds[$parentPath->getWikiId()];
                     if ($parentPathNode === null) {
                         $parentPathNode = PathTreeNode::createPathTreeNodeFromPath($parentPath);
-                        $nodeByIds[$parentPath->getDokuwikiId()] = $parentPathNode;
+                        $nodeByIds[$parentPath->getWikiId()] = $parentPathNode;
                     }
                     $parentPathNode->appendChild($actualNode);
 

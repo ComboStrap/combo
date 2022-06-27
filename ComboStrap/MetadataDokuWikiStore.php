@@ -84,7 +84,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
 
         $requestedId = PluginUtility::getRequestedWikiId();
         if ($requestedId === null) {
-            if ($resourceCombo instanceof Page) {
+            if ($resourceCombo instanceof PageFragment) {
                 $requestedId = $resourceCombo->getDokuwikiId();
             } else {
                 $requestedId = "not-a-page";
@@ -102,7 +102,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             return $storesByRequestedId[$path];
         }
 
-        if (!($resourceCombo instanceof Page)) {
+        if (!($resourceCombo instanceof PageFragment)) {
             LogUtility::msg("The resource is not a page. File System store supports only page resources");
             $data = null;
         } else {
@@ -154,7 +154,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         if ($resource === null) {
             throw new ExceptionBadState("A resource is mandatory", self::CANONICAL);
         }
-        if (!($resource instanceof Page)) {
+        if (!($resource instanceof PageFragment)) {
             throw new ExceptionBadState("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
         $dokuwikiId = $resource->getDokuwikiId();
@@ -176,7 +176,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         if ($resource === null) {
             throw new ExceptionRuntime("A resource is mandatory", self::CANONICAL);
         }
-        if (!($resource instanceof Page)) {
+        if (!($resource instanceof PageFragment)) {
             throw new ExceptionRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
         return $this->getFromWikiId($resource->getDokuwikiId(), $metadata->getName(), $default);
@@ -381,11 +381,11 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     function getMetaFilePath(): ?Path
     {
         $resource = $this->getResource();
-        if (!($resource instanceof Page)) {
+        if (!($resource instanceof PageFragment)) {
             LogUtility::msg("The resource type ({$resource->getType()}) meta file is unknown and can't be retrieved.");
             return null;
         }
-        $dokuwikiId = $resource->getPath()->getDokuWikiId();
+        $dokuwikiId = $resource->getPath()->getWikiId();
         return LocalPath::create(metaFN($dokuwikiId, '.meta'));
     }
 

@@ -184,7 +184,7 @@ class MediaMarkup
         $internalExternalType = $this->getInternalExternalType();
         switch ($internalExternalType) {
             case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
-                $src = $this->getPath()->getDokuWikiId();
+                $src = $this->getPath()->getWikiId();
                 try {
                     $src = "$src#{$this->markupRef->getUrl()->getFragment()}";
                 } catch (ExceptionNotFound $e) {

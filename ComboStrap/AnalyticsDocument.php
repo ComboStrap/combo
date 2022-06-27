@@ -15,7 +15,10 @@ namespace ComboStrap;
 
 use renderer_plugin_combo_analytics;
 
-class AnalyticsDocument extends OutputDocument
+/**
+ * A class that holds the constant and
+ */
+class AnalyticsDocument
 {
 
 
@@ -54,60 +57,17 @@ class AnalyticsDocument extends OutputDocument
     const FAILED_MANDATORY_RULES = 'failed_mandatory_rules';
     const METADATA = 'metadata';
 
-    /**
-     *
-     * @throws ExceptionBadSyntax - if the json is not valid
-     * @throws ExceptionNotFound - if the file was not found
-     */
-    public function getOrProcessJson(): Json
+    public static function createForPageFragment(PageFragment $param): FetcherPageFragment
     {
-        $content = parent::getOrProcessContent();
-        return Json::createFromString($content);
-    }
-
-
-    /**
-     * Return the JSON analytics data without any processing
-     *
-     * Data Type Wrapper around {@link AnalyticsDocument::getContent()}
-     * to return a json object
-     *
-     * @return Json
-     * @throws ExceptionCompile
-     */
-    public function getJson(): Json
-    {
-        /**
-         * Don't render if the analytics file exists
-         * If the data is stale, the render function may create a cycle
-         * (for instance, the {@link Page::getLowQualityIndicatorCalculated()}
-         * used this data but the {@link renderer_plugin_combo_analytics}
-         * will set it {@link Page::setLowQualityIndicatorCalculation()}
-         * creating a loop
-         */
-        if (!FileSystems::exists($this->getCachePath())) {
-            return Json::createEmpty();
+        $analyticsFetcher = FetcherPageFragment::createPageFragmentFetcherFromObject($param)
+            ->setRendererName(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
+        try {
+            $fileExtension = Mime::createFromExtension("json");
+            $analyticsFetcher->setRequestedFormat($fileExtension);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntime("Json is a known extension and should not throw");
         }
-        return Json::createFromString(parent::getContent());
-
-
+        return $analyticsFetcher;
     }
-
-
-    function getExtension(): string
-    {
-        /**
-         * Unfortunately, you can add a json extension
-         * because the format is used to locate the
-         * class {@link renderer_plugin_combo_analytics}
-         */
-        return  renderer_plugin_combo_analytics::RENDERER_NAME_MODE;
-    }
-
-    function getRendererName(): string
-    {
-        return renderer_plugin_combo_analytics::RENDERER_NAME_MODE;
-    }
-
 
 }

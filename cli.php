@@ -20,7 +20,7 @@ use ComboStrap\ExceptionRuntime;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataFrontmatterStore;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PageH1;
 use ComboStrap\Sqlite;
 use splitbrain\phpcli\Options;
@@ -334,7 +334,7 @@ EOF;
         $totalNumberOfPages = sizeof($pages);
         while ($pageArray = array_shift($pages)) {
             $id = $pageArray['id'];
-            $page = Page::createPageFromId($id);
+            $page = PageFragment::createPageFromId($id);
 
 
             $pageCounter++;
@@ -345,12 +345,12 @@ EOF;
              */
             $analytics = $page->getAnalyticsDocument();
             try {
-                $data = $analytics->getOrProcessJson()->toArray();
+                $data = \ComboStrap\Json::createFromPath($analytics->getFetchPath())->toArray();
             } catch (ExceptionBadSyntax $e) {
                 LogUtility::error("The analytics json of the page ($page) is not conform");
                 continue;
             } catch (ExceptionNotFound $e) {
-                LogUtility::error("The analytics document ({$analytics->getCachePath()}) for the page ($page) was not found");
+                LogUtility::error("The analytics document ({$analytics->getFetchPath()}) for the page ($page) was not found");
                 continue;
             }
 
@@ -409,7 +409,7 @@ EOF;
             $id = $row['id'];
             if (!page_exists($id)) {
                 echo 'Page does not exist on the file system. Deleted from the database (' . $id . ")\n";
-                Page::createPageFromId($id)->getDatabasePage()->delete();
+                PageFragment::createPageFromId($id)->getDatabasePage()->delete();
             }
         }
         LogUtility::msg("Sync finished ($counter pages checked)");
@@ -430,7 +430,7 @@ EOF;
             $id = $pageArray['id'];
             global $ID;
             $ID = $id;
-            $page = Page::createPageFromId($id);
+            $page = PageFragment::createPageFromId($id);
             $pageCounter++;
             LogUtility::msg("Processing page {$id} ($pageCounter / $totalNumberOfPages) ", LogUtility::LVL_MSG_INFO);
             try {

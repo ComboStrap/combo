@@ -2,7 +2,7 @@
 
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 
 /**
  * Copyright (c) 2021. ComboStrap, Inc. and its affiliates. All Rights Reserved.
@@ -35,7 +35,7 @@ class action_plugin_combo_autofrontmatter extends DokuWiki_Action_Plugin
     public function handle_new_page(Doku_Event $event, $param){
 
         try {
-            $page = Page::createPageFromGlobalDokuwikiId();
+            $page = PageFragment::createPageFromGlobalDokuwikiId();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("Unable to handle a new page because the global id is unknown");
         }

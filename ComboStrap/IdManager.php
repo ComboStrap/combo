@@ -24,7 +24,7 @@ class IdManager
     static function getOrCreate(): IdManager
     {
 
-        $page = Page::createPageFromRequestedPage();
+        $page = PageFragment::createPageFromRequestedPage();
         $cacheKey = $page->getDokuwikiId();
         $idManager = self::$idManagers[$cacheKey];
         if ($idManager === null) {
@@ -49,7 +49,7 @@ class IdManager
 
         if ($slotPath === null) {
             try {
-                $slotPath = Page::createPageFromGlobalDokuwikiId()->getPath();
+                $slotPath = PageFragment::createPageFromGlobalDokuwikiId()->getPath();
             } catch (ExceptionNotFound $e) {
                 /**
                  * Not found

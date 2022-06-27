@@ -4,7 +4,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
 use ComboStrap\Mime;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\Search;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');

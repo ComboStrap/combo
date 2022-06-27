@@ -19,7 +19,7 @@ use ComboStrap\MetadataStoreTransfer;
 use ComboStrap\MetaManagerForm;
 use ComboStrap\MetaManagerMenuItem;
 use ComboStrap\Mime;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PluginUtility;
 use ComboStrap\QualityDynamicMonitoringOverwrite;
 
@@ -103,7 +103,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 ->sendMessage("The page path (id form) is empty");
             return;
         }
-        $page = Page::createPageFromId($id);
+        $page = PageFragment::createPageFromId($id);
         if (!$page->exists()) {
             HttpResponse::create(HttpResponse::STATUS_DOES_NOT_EXIST)
                 ->setEvent($event)
@@ -206,10 +206,10 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
     /**
      * @param $event
-     * @param Page $page
+     * @param PageFragment $page
      * @param array $post
      */
-    private function handleManagerPost($event, Page $page, array $post)
+    private function handleManagerPost($event, PageFragment $page, array $post)
     {
 
         $formStore = MetadataFormDataStore::getOrCreateFromResource($page, $post);
@@ -283,10 +283,10 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
     /**
      * @param Doku_Event $event
-     * @param Page $page
+     * @param PageFragment $page
      */
     private
-    function handleManagerGet(Doku_Event $event, Page $page)
+    function handleManagerGet(Doku_Event $event, PageFragment $page)
     {
         $formMeta = MetaManagerForm::createForPage($page)->toFormMeta();
         $payload = json_encode($formMeta->toAssociativeArray());
@@ -297,9 +297,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
     /**
      * @param Doku_Event $event
-     * @param Page $page
+     * @param PageFragment $page
      */
-    private function handleViewerGet(Doku_Event $event, Page $page)
+    private function handleViewerGet(Doku_Event $event, PageFragment $page)
     {
         if (!Identity::isManager()) {
             HttpResponse::create(HttpResponse::STATUS_NOT_AUTHORIZED)
@@ -339,7 +339,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
     }
 
-    private function handleViewerPost(Doku_Event $event, Page $page, array $post)
+    private function handleViewerPost(Doku_Event $event, PageFragment $page, array $post)
     {
 
         $metadataStore = MetadataDokuWikiStore::getOrCreateFromResource($page);

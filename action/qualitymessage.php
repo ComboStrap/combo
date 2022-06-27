@@ -6,7 +6,7 @@ use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\Message;
 use ComboStrap\Mime;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PluginUtility;
 use ComboStrap\QualityMenuItem;
 use ComboStrap\HttpResponse;
@@ -52,7 +52,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         $this->setupLocale();
     }
 
-    public static function createHtmlQualityNote(Page $page): Message
+    public static function createHtmlQualityNote(PageFragment $page): Message
     {
         if ($page->isSecondarySlot()) {
             return Message::createErrorMessage("A has no quality metrics");
@@ -66,7 +66,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
 
         try {
-            $analyticsArray = $page->getAnalyticsDocument()->getJson()->toArray();
+            $analyticsArray = \ComboStrap\Json::createFromPath($page->getAnalyticsDocument()->getFetchPath())->toArray();
         } catch (ExceptionCompile $e) {
             return Message::createErrorMessage("Error while trying to read the JSON analytics document. {$e->getMessage()}")
                 ->setStatus(HttpResponse::STATUS_INTERNAL_ERROR);
@@ -239,7 +239,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         }
 
 
-        $page = Page::createPageFromId($id);
+        $page = PageFragment::createPageFromId($id);
 
         $message = self::createHtmlQualityNote($page);
 

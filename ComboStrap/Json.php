@@ -43,6 +43,20 @@ class Json
     }
 
     /**
+     * @throws ExceptionBadSyntax
+     */
+    public static function createFromPath(Path $path)
+    {
+
+        try {
+            $content = FileSystems::getContent($path);
+        } catch (ExceptionNotFound $e) {
+            return self::createEmpty();
+        }
+        return self::createFromString($content);
+    }
+
+    /**
      * Used to make diff
      * @return false|string
      */

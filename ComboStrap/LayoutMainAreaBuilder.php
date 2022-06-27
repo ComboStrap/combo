@@ -17,7 +17,7 @@ class LayoutMainAreaBuilder
     const CANONICAL = "layout";
 
 
-    public static function shouldMainAreaBeBuild(CallStack $callStack, Page $page): bool
+    public static function shouldMainAreaBeBuild(CallStack $callStack, PageFragment $page): bool
     {
 
 
@@ -123,7 +123,7 @@ class LayoutMainAreaBuilder
      * @param $tocData - the toc data
      * @return void
      */
-    public static function buildMainArea(CallStack $mainCallStack, $tocData, Page $page)
+    public static function buildMainArea(CallStack $mainCallStack, $tocData, PageFragment $page)
     {
 
 
@@ -137,7 +137,7 @@ class LayoutMainAreaBuilder
             $name = $child->getPath()->getLastName();
 
             try {
-                $childInstructions = $child->getInstructionsDocument()->getOrProcessContent();
+                $childInstructions = $child->getInstructionsDocument()->getFetchPathAsInstructionsArray();
             } catch (ExceptionNotFound $e) {
                 LogUtility::msg("The instructions content of the $name slot was not found, we were unable to add it to the main content", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 continue;
@@ -350,7 +350,7 @@ class LayoutMainAreaBuilder
 
     }
 
-    public static function headingDisplayNone(CallStack $callStack, Page $page)
+    public static function headingDisplayNone(CallStack $callStack, PageFragment $page)
     {
 
         $mainHeaderPage = $page->getPrimaryHeaderPage();
@@ -358,7 +358,7 @@ class LayoutMainAreaBuilder
             return;
         }
         try {
-            $mainHeaderCallStack = CallStack::createFromInstructions($mainHeaderPage->getInstructionsDocument()->getOrProcessContent());
+            $mainHeaderCallStack = CallStack::createFromInstructions($mainHeaderPage->getInstructionsDocument()->getFetchPathAsInstructionsArray());
         } catch (ExceptionNotFound $e) {
             return;
         }

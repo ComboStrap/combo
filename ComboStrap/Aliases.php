@@ -16,7 +16,7 @@ class Aliases extends MetadataTabular
     private $aliases;
 
 
-    public static function createForPage(Page $page): Aliases
+    public static function createForPage(PageFragment $page): Aliases
     {
 
         return (new Aliases())->setResource($page);

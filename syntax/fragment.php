@@ -7,7 +7,7 @@ use ComboStrap\CallStack;
 use ComboStrap\Canonical;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PageCreationDate;
 use ComboStrap\PagePath;
 use ComboStrap\PagePublicationDate;
@@ -215,7 +215,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
                         $renderer->doc .= LogUtility::wrapInRedForHtml("Template instructions should not be null");
                         return false;
                     }
-                    $page = Page::createPageFromRequestedPage();
+                    $page = PageFragment::createPageFromRequestedPage();
                     $metadata = $page->getMetadataForRendering();
                     try {
                         $renderer->doc .= RenderUtility::renderInstructionsToXhtml($templateStack, $metadata);

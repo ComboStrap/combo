@@ -3,7 +3,7 @@
 
 use ComboStrap\FileSystems;
 use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PageImages;
 
 /**
@@ -34,7 +34,7 @@ class action_plugin_combo_metapageimage
     function metadataPageImages($event)
     {
         $dokuwikiId = $event->data["page"];
-        $page = Page::createPageFromId($dokuwikiId);
+        $page = PageFragment::createPageFromId($dokuwikiId);
         $pageImagesMeta = PageImages::createForPage($page);
         $pageImages = $pageImagesMeta->getValueAsPageImages();
         if ($pageImages === null) {
@@ -45,7 +45,7 @@ class action_plugin_combo_metapageimage
              * {@link Doku_Renderer_metadata::_recordMediaUsage()}
              */
             $dokuPath = $pageImage->getImagePath();
-            $event->data[MetadataDokuWikiStore::CURRENT_METADATA]['relation']['media'][$dokuPath->getDokuwikiId()] = FileSystems::exists($dokuPath);
+            $event->data[MetadataDokuWikiStore::CURRENT_METADATA]['relation']['media'][$dokuPath->getWikiId()] = FileSystems::exists($dokuPath);
         }
 
 

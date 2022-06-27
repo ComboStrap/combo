@@ -51,7 +51,7 @@ class CacheManager
     public static function getOrCreate(): CacheManager
     {
 
-        $page = Page::createPageFromRequestedPage();
+        $page = PageFragment::createPageFromRequestedPage();
         $cacheKey = $page->getDokuwikiId();
         $cacheManager = self::$cacheManager[$cacheKey];
         if ($cacheManager === null) {
@@ -159,7 +159,7 @@ class CacheManager
             return false;
         }
 
-        $page = Page::createPageFromId($pageId);
+        $page = PageFragment::createPageFromId($pageId);
         try {
             $cacheExpirationFrequency = CacheExpirationFrequency::createForPage($page)
                 ->getValue();

@@ -14,7 +14,7 @@ class PageLayout extends MetadataText
     public const INDEX_LAYOUT_VALUE = "index";
     public const HAMBURGER_LAYOUT_VALUE = "hamburger";
 
-    public static function createFromPage(Page $page): PageLayout
+    public static function createFromPage(PageFragment $page): PageLayout
     {
         return (new PageLayout())
             ->setResource($page);
@@ -68,7 +68,7 @@ class PageLayout extends MetadataText
     public function getDefaultValue(): string
     {
         /**
-         * @var Page $page
+         * @var PageFragment $page
          */
         $page = $this->getResource();
         if ($page->isRootHomePage()) {

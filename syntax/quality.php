@@ -2,7 +2,7 @@
 
 
 use ComboStrap\Mime;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PluginUtility;
 
 
@@ -130,7 +130,7 @@ class syntax_plugin_combo_quality extends DokuWiki_Syntax_Plugin
                     if (empty($pageId)) {
                         $renderer->doc .= "Quality Component: The page-id property is not defined";
                     } else {
-                        $page = Page::createPageFromId($pageId);
+                        $page = PageFragment::createPageFromId($pageId);
                         $message = action_plugin_combo_qualitymessage::createHtmlQualityNote($page);
                         $note = $message->getContent();
                         if ($note != null) {

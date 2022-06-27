@@ -8,7 +8,7 @@ use ComboStrap\CallStack;
 use ComboStrap\DynamicRender;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PagePath;
 use ComboStrap\PageSql;
 use ComboStrap\PageSqlTreeListener;
@@ -328,9 +328,9 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         $tagAttributes = TagAttributes::createFromCallStackArray($data[self::PAGE_SQL_ATTRIBUTES]);
                         $path = $tagAttributes->getValue(PagePath::PROPERTY_NAME);
                         if ($path !== null) {
-                            $contextualPage = Page::createPageFromQualifiedPath($path);
+                            $contextualPage = PageFragment::createPageFromQualifiedPath($path);
                         } else {
-                            $contextualPage = Page::createPageFromRequestedPage();
+                            $contextualPage = PageFragment::createPageFromRequestedPage();
                         }
                         $pageSql = PageSql::create($pageSql, $contextualPage);
                     } catch (Exception $e) {
@@ -381,7 +381,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                              * We use id until path is full in the database
                              */
                             $id = $sourceRow["ID"];
-                            $contextualPage = Page::createPageFromId($id);
+                            $contextualPage = PageFragment::createPageFromId($id);
                             if ($contextualPage->isHidden()) {
                                 continue;
                             }

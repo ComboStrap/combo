@@ -8,7 +8,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDbStore;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PageTitle;
 use ComboStrap\StringUtility;
 use dokuwiki\ChangeLog\PageChangeLog;
@@ -114,7 +114,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     protected $tableopen = false;
     private $plainTextId = 0;
     /**
-     * @var Page
+     * @var PageFragment
      */
     private $page;
 
@@ -140,7 +140,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     {
         $this->reset();
         try {
-            $this->page = Page::createPageFromGlobalDokuwikiId();
+            $this->page = PageFragment::createPageFromGlobalDokuwikiId();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("The global ID is unknown, we were unable to instantiate the requested page in analytics");
         }
@@ -552,7 +552,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * Metadata
          */
         try {
-            $requestedPage = Page::createPageFromGlobalDokuwikiId();
+            $requestedPage = PageFragment::createPageFromGlobalDokuwikiId();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("The global ID is unknown, we can't find the requested page. Analytics was stopped");
             return;

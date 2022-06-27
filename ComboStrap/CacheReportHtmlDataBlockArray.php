@@ -50,7 +50,7 @@ class CacheReportHtmlDataBlockArray
                 $cacheFile = null;
                 try {
                     $dokuPath = $result->getPath()->toDokuPath();
-                    $cacheFile = $dokuPath->getDokuwikiId();
+                    $cacheFile = $dokuPath->getWikiId();
                 } catch (ExceptionCompile $e) {
                     LogUtility::msg("The path ({$result->getPath()}) could not be transformed as wiki path. Error:{$e->getMessage()}");
                 }
@@ -60,7 +60,7 @@ class CacheReportHtmlDataBlockArray
                     self::CACHE_FILE => $cacheFile
                 ];
 
-                if ($mode === HtmlDocument::mode) {
+                if ($mode === FetcherPageFragment::XHTML_MODE) {
                     $dependencies = $cacheManager
                         ->getCacheDependenciesForSlot($slotId)
                         ->getDependencies();

@@ -11,7 +11,7 @@ use ComboStrap\LayoutMainAreaBuilder;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Outline;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\EditButton;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -223,7 +223,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * We reset only on primary slots
          */
         try {
-            $pageParsed = Page::createPageFromGlobalDokuwikiId();
+            $pageParsed = PageFragment::createPageFromGlobalDokuwikiId();
         } catch (ExceptionNotFound $e) {
             LogUtility::msg("The running global ID is not set. We can't post process the page with heading and table of content");
             return;

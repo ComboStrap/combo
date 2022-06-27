@@ -11,7 +11,7 @@ class Mime
 
     public const JSON = "application/json";
     public const HTML = "text/html";
-    public const XHTML = self::HTML;
+    public const XHTML = "text/xhtml";
     const PLAIN_TEXT = "text/plain";
     /**
      * The value must be `Content-type` and not `Content-Type`
@@ -81,6 +81,7 @@ class Mime
             case "txt":
                 return new Mime(Mime::PLAIN_TEXT);
             case "xhtml":
+                return new Mime(Mime::XHTML);
             case "html":
                 return new Mime(Mime::HTML);
             case "png":
@@ -95,6 +96,8 @@ class Mime
                 return new Mime(Mime::GIF);
             case "pdf":
                 return new Mime(Mime::PDF);
+            case FetcherPageFragment::INSTRUCTION_EXTENSION:
+                return new Mime("text/i");
             default:
                 $mtypes = getMimeTypes();
                 $mimeString = $mtypes[$extension];

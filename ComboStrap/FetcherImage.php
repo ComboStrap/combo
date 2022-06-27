@@ -75,7 +75,7 @@ abstract class FetcherImage extends FetcherAbs
         if ($this instanceof FetcherLocalImage) {
             if ($requestedWidth !== null || $requestedHeight !== null) {
 
-                $id = $this->getOriginalPath()->getDokuwikiId();
+                $id = $this->getOriginalPath()->getWikiId();
                 $token = media_get_token($id, $requestedWidth, $requestedHeight);
                 $url->addQueryParameter(FetcherImage::TOK, $token);
 

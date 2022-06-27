@@ -196,8 +196,8 @@ class LinkMarkup
                 } catch (ExceptionNotFound $e) {
                     throw new ExceptionNotFound("We were unable to process the internal link dokuwiki id on the link. The path was not found. Error: {$e->getMessage()}");
                 }
-                $page = Page::createPageFromPathObject($dokuPath);
-                $outputAttributes->addOutputAttributeValue("data-wiki-id", $dokuPath->getDokuwikiId());
+                $page = PageFragment::createPageFromPathObject($dokuPath);
+                $outputAttributes->addOutputAttributeValue("data-wiki-id", $dokuPath->getWikiId());
 
 
                 if (!FileSystems::exists($dokuPath)) {
@@ -569,9 +569,9 @@ EOF;
     /**
      * @throws ExceptionNotFound
      */
-    private function getPage(): Page
+    private function getPage(): PageFragment
     {
-        return Page::createPageFromPathObject($this->getMarkupRef()->getPath());
+        return PageFragment::createPageFromPathObject($this->getMarkupRef()->getPath());
     }
 
     /**

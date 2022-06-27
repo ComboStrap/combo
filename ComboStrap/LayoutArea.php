@@ -72,10 +72,10 @@ class LayoutArea
      * @throws ExceptionNotFound - if there is no page
      * @throws ExceptionInternal - if this is an error
      */
-    public function getPage(): Page
+    public function getPage(): PageFragment
     {
         // Main content
-        $requestedPage = Page::createPageFromRequestedPage();
+        $requestedPage = PageFragment::createPageFromRequestedPage();
         if ($this->areaId === Layout::MAIN_CONTENT_AREA) {
             return $requestedPage;
         }
@@ -110,7 +110,7 @@ class LayoutArea
             }
 
         }
-        return Page::createPageFromPathObject($closestPath);
+        return PageFragment::createPageFromPathObject($closestPath);
     }
 
     public function __toString()

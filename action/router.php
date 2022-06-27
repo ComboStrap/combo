@@ -12,7 +12,7 @@ use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PageId;
 use ComboStrap\PageRules;
 use ComboStrap\PageUrlPath;
@@ -258,7 +258,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     {
 
         $id = self::getOriginalIdFromRequest();
-        $page = Page::createPageFromId($id);
+        $page = PageFragment::createPageFromId($id);
         if (!$page->exists()) {
             // Well known
             if (self::isWellKnownFile($id)) {
@@ -313,7 +313,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Page is an existing id ?
          */
-        $requestedPage = Page::createPageFromId($ID);
+        $requestedPage = PageFragment::createPageFromId($ID);
         if ($requestedPage->exists()) {
 
             /**
@@ -521,7 +521,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                 case self::GO_TO_BEST_END_PAGE_NAME:
 
                     /**
-                     * @var Page $bestEndPage
+                     * @var PageFragment $bestEndPage
                      */
                     list($bestEndPage, $method) = RouterBestEndPage::process($requestedPage);
                     if ($bestEndPage != null) {
@@ -706,7 +706,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     {
         /**
          * Because we set the ID globally for the ID redirect
-         * we make sure that this is not a {@link Page}
+         * we make sure that this is not a {@link PageFragment}
          * object otherwise we got an error in the {@link \ComboStrap\AnalyticsMenuItem}
          * because the constructor takes it {@link \dokuwiki\Menu\Item\AbstractItem}
          */

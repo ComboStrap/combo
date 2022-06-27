@@ -98,9 +98,9 @@ class Identity
     {
         if ($wikiId === null) {
             try {
-                $wikiId = Page::createPageFromGlobalDokuwikiId()
+                $wikiId = PageFragment::createPageFromGlobalDokuwikiId()
                     ->getPath()
-                    ->getDokuwikiId();
+                    ->getWikiId();
             } catch (ExceptionNotFound $e) {
                 LogUtility::msg("Internal Error: The global ID is not defined, we couldn't detect the page requested. No writer permission given");
                 return false;
@@ -231,7 +231,7 @@ EOF;
     private static function getPermissions(string $wikiId): int
     {
         if ($wikiId == null) {
-            $wikiId = Page::createPageFromRequestedPage()->getDokuwikiId();
+            $wikiId = PageFragment::createPageFromRequestedPage()->getDokuwikiId();
         }
         if ($_SERVER['REMOTE_USER']) {
             $perm = auth_quickaclcheck($wikiId);

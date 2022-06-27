@@ -2,7 +2,7 @@
 
 use ComboStrap\LogUtility;
 use ComboStrap\Metadata;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PageKeywords;
 
 
@@ -36,7 +36,7 @@ class action_plugin_combo_metakeywords extends DokuWiki_Action_Plugin
         }
 
 
-        $page = Page::createPageFromRequestedPage();
+        $page = PageFragment::createPageFromRequestedPage();
 
         $keywords = $page->getKeywordsOrDefault();
         if ($keywords === null) {

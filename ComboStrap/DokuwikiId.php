@@ -32,11 +32,11 @@ class DokuwikiId extends MetadataText
     {
         $path = $this->getResource()->getPath();
         if($path instanceof DokuPath){
-            return $path->getDokuwikiId();
+            return $path->getWikiId();
         }
         if($path instanceof LocalPath){
             try {
-                return $path->toDokuPath()->getDokuwikiId();
+                return $path->toDokuPath()->getWikiId();
             } catch (ExceptionBadArgument $e) {
                 throw new ExceptionNotFound($e->getMessage());
             }

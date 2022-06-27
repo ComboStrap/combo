@@ -169,7 +169,7 @@ class RenderUtility
     /**
      * @throws ExceptionCompile
      */
-    public static function renderInstructionsToXhtmlFromPage($callStackHeaderInstructions, Page $renderingPageId): string
+    public static function renderInstructionsToXhtmlFromPage($callStackHeaderInstructions, PageFragment $renderingPageId): string
     {
         return self::renderInstructionsToXhtml($callStackHeaderInstructions, $renderingPageId->getMetadataForRendering());
     }

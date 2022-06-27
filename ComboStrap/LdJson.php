@@ -42,7 +42,7 @@ class LdJson extends MetadataJson
 
     public const CANONICAL = action_plugin_combo_metagoogle::CANONICAL;
 
-    public static function createForPage(Page $page): LdJson
+    public static function createForPage(PageFragment $page): LdJson
     {
         return (new LdJson())
             ->setResource($page);
@@ -50,9 +50,9 @@ class LdJson extends MetadataJson
 
     /**
      * @param array $ldJson
-     * @param Page $page
+     * @param PageFragment $page
      */
-    public static function addImage(array &$ldJson, Page $page)
+    public static function addImage(array &$ldJson, PageFragment $page)
     {
         /**
          * Image must belong to the page
@@ -75,24 +75,31 @@ class LdJson extends MetadataJson
         ];
         $imagesSet = $page->getImagesForTheFollowingUsages([PageImageUsage::ALL, PageImageUsage::SOCIAL, PageImageUsage::GOOGLE]);
         $schemaImages = array();
-        foreach ($imagesSet as $image) {
+        foreach ($imagesSet as $pageImage) {
 
-            $mime = $image->getOriginalPath()->getMime()->toString();
+            $pageImagePath = $pageImage->getImagePath();
+            $mime = $pageImagePath->getMime()->toString();
             if (in_array($mime, $supportedMime)) {
-                if ($image->exists()) {
+                if (FileSystems::exists($pageImagePath)) {
+                    try {
+                        $fetcherPageImage = FetcherLocalImage::createImageFetchFromPath($pageImagePath);
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::error("The image ($pageImagePath) could not be added as page image. Error: {$e->getMessage()}");
+                        continue;
+                    }
                     $imageObjectSchema = array(
                         "@type" => "ImageObject",
-                        "url" => $image->getAbsoluteUrl()
+                        "url" => $fetcherPageImage->getFetchUrl()->toAbsoluteUrlString()
                     );
-                    if (!empty($image->getIntrinsicWidth())) {
-                        $imageObjectSchema["width"] = $image->getIntrinsicWidth();
+                    if (!empty($fetcherPageImage->getIntrinsicWidth())) {
+                        $imageObjectSchema["width"] = $fetcherPageImage->getIntrinsicWidth();
                     }
-                    if (!empty($image->getIntrinsicHeight())) {
-                        $imageObjectSchema["height"] = $image->getIntrinsicHeight();
+                    if (!empty($fetcherPageImage->getIntrinsicHeight())) {
+                        $imageObjectSchema["height"] = $fetcherPageImage->getIntrinsicHeight();
                     }
                     $schemaImages[] = $imageObjectSchema;
                 } else {
-                    LogUtility::msg("The image ($image) does not exist and was not added to the google ld-json", LogUtility::LVL_MSG_ERROR, action_plugin_combo_metagoogle::CANONICAL);
+                    LogUtility::msg("The image ($pageImagePath) does not exist and was not added to the google ld-json", LogUtility::LVL_MSG_ERROR, action_plugin_combo_metagoogle::CANONICAL);
                 }
             }
         }
@@ -159,7 +166,7 @@ class LdJson extends MetadataJson
 
         if ($value === null) {
             $resourceCombo = $this->getResource();
-            if (($resourceCombo instanceof Page)) {
+            if (($resourceCombo instanceof PageFragment)) {
                 // Deprecated, old organization syntax
                 if ($resourceCombo->getTypeOrDefault() === PageType::ORGANIZATION_TYPE) {
                     $store = $this->getReadStore();
@@ -207,7 +214,7 @@ class LdJson extends MetadataJson
     private function mergeWithDefaultValueAndGet($actualValue = null): ?array
     {
         $page = $this->getResource();
-        if (!($page instanceof Page)) {
+        if (!($page instanceof PageFragment)) {
             return $actualValue;
         }
 

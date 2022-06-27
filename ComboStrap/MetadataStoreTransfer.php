@@ -17,7 +17,7 @@ class MetadataStoreTransfer
     private $targetStore;
 
     /**
-     * @var Page
+     * @var PageFragment
      */
     private $page;
     /**
@@ -34,7 +34,7 @@ class MetadataStoreTransfer
 
     /**
      * MetadataStoreTransfer constructor.
-     * @param Page $resource
+     * @param PageFragment $resource
      */
     public function __construct(ResourceCombo $resource)
     {

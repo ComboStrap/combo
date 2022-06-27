@@ -25,16 +25,16 @@ class CacheLog
         ];
     const CANONICAL = "support";
 
-    public static function deleteCacheIfExistsAndLog(PageCompilerDocument $outputDocument, string $event, string $message)
+    public static function deleteCacheIfExistsAndLog(FetcherSource $outputDocument, string $event, string $message)
     {
-        $instructionsFile = $outputDocument->getCachePath();
+        $instructionsFile = $outputDocument->getFetchPath();
         if (FileSystems::exists($instructionsFile)) {
             FileSystems::delete($instructionsFile);
             try {
                 CacheLog::logCacheEvent(
                     $event,
-                    $outputDocument->getPage()->getPath()->toPathString(),
-                    $outputDocument->getExtension(),
+                    $outputDocument->getOriginalPath()->toPathString(),
+                    $outputDocument->getMime()->getExtension(),
                     CacheManager::CACHE_DELETION,
                     $message
                 );
@@ -45,14 +45,14 @@ class CacheLog
         }
     }
 
-    public static function renderCacheAndLog(PageCompilerDocument $outputDocument, string $event, string $message)
+    public static function renderCacheAndLog(FetcherSource $outputDocument, string $event, string $message)
     {
-        $outputDocument->process();
+        $outputDocument->getFetchPath();
         try {
             CacheLog::logCacheEvent(
                 $event,
-                $outputDocument->getPage()->getPath()->toPathString(),
-                $outputDocument->getExtension(),
+                $outputDocument->getOriginalPath()->toPathString(),
+                $outputDocument->getMime()->getExtension(),
                 CacheManager::CACHE_CREATION,
                 $message
             );

@@ -9,7 +9,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\LowQualityCalculatedIndicator;
 use ComboStrap\LowQualityPageOverwrite;
 use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PagePath;
 use ComboStrap\Site;
 
@@ -52,7 +52,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
 
         $data = $event->data;
         $path = $data[PagePath::getPersistentName()];
-        $page = Page::createPageFromQualifiedPath($path);
+        $page = PageFragment::createPageFromQualifiedPath($path);
 
         if (!$page->getCanBeOfLowQuality()) {
             return;
@@ -63,7 +63,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
          *
          */
         foreach ($page->getBacklinks() as $backlink) {
-            $htmlDocument = $backlink->getHtmlDocument();
+            $htmlDocument = $backlink->getHtmlFetcher();
             $desc = $data[self::DESC];
             CacheLog::deleteCacheIfExistsAndLog(
                 $htmlDocument,

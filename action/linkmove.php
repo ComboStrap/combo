@@ -15,7 +15,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PageId;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -148,7 +148,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
             /**
              * Check page id
              */
-            $targetPage = Page::createPageFromId($targetId);
+            $targetPage = PageFragment::createPageFromId($targetId);
             $targetPageId = PageId::createForPage($targetPage);
             $targetPageIdValue = $targetPageId->getValueFromStore();
             $databasePageIdValue = $databasePage->getPageId();

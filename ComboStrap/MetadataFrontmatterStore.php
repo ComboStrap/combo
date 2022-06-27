@@ -38,7 +38,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
     {
 
         /**
-         * @var Page $resourceCombo
+         * @var PageFragment $resourceCombo
          */
         $resourceCombo = $this->getResource();
 
@@ -229,7 +229,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
      * @throws ExceptionBadSyntax - if the content has a syntax problem
      * @throws ExceptionNotFound - if the page does not exist
      */
-    public static function createFromPage(Page $page): MetadataFrontmatterStore
+    public static function createFromPage(PageFragment $page): MetadataFrontmatterStore
     {
         $content = FileSystems::getContent($page->getPath());
         $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
@@ -441,7 +441,7 @@ EOF;
         }
         $newPageContent = $this->toMarkup();
         $resourceCombo = $this->getResource();
-        if ($resourceCombo instanceof Page) {
+        if ($resourceCombo instanceof PageFragment) {
             $resourceCombo->upsertContent($newPageContent, "Metadata frontmatter store upsert");
         }
         return $this;

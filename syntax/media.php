@@ -83,7 +83,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         }
         if (!isset($renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION])) {
             if ($path->getMime()->isImage()) {
-                $renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION] = $path->getDokuwikiId();
+                $renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION] = $path->getWikiId();
             }
         }
 

@@ -4,7 +4,7 @@ use ComboStrap\CacheDependencies;
 use ComboStrap\Event;
 use ComboStrap\FileSystems;
 use ComboStrap\LocalPath;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PagePath;
 use ComboStrap\Site;
 

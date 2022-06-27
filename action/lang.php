@@ -5,7 +5,7 @@ use ComboStrap\DokuPath;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\PageUrlPath;
 use ComboStrap\PluginUtility;
 
@@ -73,7 +73,7 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
         $id = getID("id", $clean);
         $id = DokuPath::normalizeWikId($id);
         self::setNormalizedId($id);
-        $page = Page::createPageFromId($id);
+        $page = PageFragment::createPageFromId($id);
         if (!FileSystems::exists($page->getPath())) {
             // Is it a permanent link
             try {
@@ -95,7 +95,7 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
                         return;
                     }
 
-                    self::setNormalizedId($page->getPath()->getDokuwikiId());
+                    self::setNormalizedId($page->getPath()->getWikiId());
 
 
                 }

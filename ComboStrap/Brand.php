@@ -225,7 +225,7 @@ class Brand
                 try {
                     return Site::getLogoAsSvgImage()
                         ->getOriginalPath()
-                        ->getDokuwikiId();
+                        ->getWikiId();
                 } catch (ExceptionNotFound $e) {
                     // no logo installed
                 }

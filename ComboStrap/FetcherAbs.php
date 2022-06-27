@@ -29,7 +29,7 @@ abstract class FetcherAbs implements Fetcher
     public const CACHE_DEFAULT_VALUE = "cache";
 
 
-    private string $requestedFragment;
+    private string $requestedUrlFragment;
 
 
     /**
@@ -94,12 +94,13 @@ abstract class FetcherAbs implements Fetcher
      */
     function getFetchUrl(Url $url = null): Url
     {
+
         if ($url === null) {
             $url = UrlEndpoint::createFetchUrl();
         }
 
         try {
-            $url->setFragment($this->getRequestedFragment());
+            $url->setFragment($this->getRequestedUrlFragment());
         } catch (ExceptionNotFound $e) {
             // no fragment
         }
@@ -115,15 +116,21 @@ abstract class FetcherAbs implements Fetcher
         } catch (ExceptionNotFound $e) {
             // ok
         }
+
         /**
          * The buster
          */
-        $url->setQueryParameter(Fetcher::CACHE_BUSTER_KEY, $this->getBuster());
+        $buster = $this->getBuster();
+        if ($buster !== "") {
+            $url->setQueryParameter(Fetcher::CACHE_BUSTER_KEY, $buster);
+        }
+
         /**
          * The fetcher name
          */
         $fetcherName = $this->getFetcherName();
         $url->setQueryParameter(Fetcher::FETCHER_KEY, $fetcherName);
+
         return $url;
     }
 
@@ -137,7 +144,7 @@ abstract class FetcherAbs implements Fetcher
         $tagAttributes = TagAttributes::createFromCallStackArray($query);
         $this->buildFromTagAttributes($tagAttributes);
         try {
-            $this->setRequestedFragment($url->getFragment());
+            $this->setRequestedUrlFragment($url->getFragment());
         } catch (ExceptionNotFound $e) {
             // no fragment
         }
@@ -228,22 +235,22 @@ abstract class FetcherAbs implements Fetcher
      * This is the case of the PDF plugin
      * @param string $urlFragment a fragment added to the {@link Fetcher::getFetchUrl() fetch URL}
      */
-    public function setRequestedFragment(string $urlFragment): Fetcher
+    public function setRequestedUrlFragment(string $urlFragment): Fetcher
     {
-        $this->requestedFragment = $urlFragment;
+        $this->requestedUrlFragment = $urlFragment;
         return $this;
     }
 
     /**
      * @throws ExceptionNotFound
      */
-    public function getRequestedFragment(): string
+    public function getRequestedUrlFragment(): string
     {
 
-        if(!isset($this->requestedFragment)){
-            throw new ExceptionNotFound("No fragment was requested");
+        if (!isset($this->requestedUrlFragment)) {
+            throw new ExceptionNotFound("No url fragment was requested");
         }
-        return $this->requestedFragment;
+        return $this->requestedUrlFragment;
 
     }
 

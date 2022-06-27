@@ -16,7 +16,7 @@ class CacheResults
     /**
      * @var string
      */
-    private $wikiId;
+    private string $wikiId;
 
     /**
      * CacheReporter constructor.
@@ -44,10 +44,10 @@ class CacheResults
             /**
              * Add snippet and output dependencies
              */
-            if ($cacheParser->mode === HtmlDocument::mode) {
+            if ($cacheParser->mode === FetcherPageFragment::XHTML_MODE) {
                 $page = $cacheParser->page;
-                $htmlDocument = Page::createPageFromId($page)
-                    ->getHtmlDocument();
+                $htmlDocument = PageFragment::createPageFromId($page)
+                    ->getHtmlFetcher();
 
                 /**
                  * @var CacheParser[] $cacheStores
@@ -83,6 +83,14 @@ class CacheResults
     public function getResultForMode(string $mode): ?CacheResult
     {
         return $this->cacheResults[$mode];
+    }
+
+    /**
+     * @return string
+     */
+    public function getWikiId(): string
+    {
+        return $this->wikiId;
     }
 
 }

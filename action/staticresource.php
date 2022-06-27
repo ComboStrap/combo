@@ -19,7 +19,7 @@ use ComboStrap\Identity;
 use ComboStrap\LocalPath;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
-use ComboStrap\Page;
+use ComboStrap\PageFragment;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\Url;

@@ -21,14 +21,14 @@ class PageImage
     private DokuPath $image;
     private $usages;
     /**
-     * @var Page
+     * @var PageFragment
      */
     private $page;
 
     /**
      * PageImage constructor.
      */
-    public function __construct(DokuPath $image, Page $page)
+    public function __construct(DokuPath $image, PageFragment $page)
     {
         $this->image = $image;
         $this->page = $page;
@@ -36,7 +36,7 @@ class PageImage
 
     /**
      * @param DokuPath $image
-     * @param Page $page
+     * @param PageFragment $page
      * @return PageImage
      */
     public static function create(DokuPath $image, ResourceCombo $page): PageImage
@@ -83,9 +83,9 @@ class PageImage
     }
 
     /**
-     * @return Page
+     * @return PageFragment
      */
-    public function getPage(): Page
+    public function getPage(): PageFragment
     {
         return $this->page;
     }

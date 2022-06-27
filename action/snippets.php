@@ -1,14 +1,10 @@
 <?php
 
 use ComboStrap\CacheManager;
-use ComboStrap\ExceptionCompile;
-use ComboStrap\HtmlDocument;
-use ComboStrap\LogUtility;
-use ComboStrap\Page;
-use ComboStrap\PluginUtility;
 use ComboStrap\DynamicRender;
-use ComboStrap\RenderUtility;
-use ComboStrap\SnippetManager;
+use ComboStrap\FetcherPageFragment;
+use ComboStrap\PageFragment;
+use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
 
@@ -132,13 +128,13 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
                 foreach ($cacheReporter->getResults() as $report) {
 
-                    if ($report->getMode() !== HtmlDocument::mode) {
+                    if ($report->getMode() !== FetcherPageFragment::XHTML_MODE) {
                         continue;
                     }
 
                     $slotId = $report->getSlotId();
-                    Page::createPageFromId($slotId)
-                        ->getHtmlDocument()
+                    PageFragment::createPageFromId($slotId)
+                        ->getHtmlFetcher()
                         ->loadSnippets();
 
                 }

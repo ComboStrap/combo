@@ -1,7 +1,6 @@
 <?php
 
 
-use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
@@ -97,11 +96,11 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     public static function updateStatistics($attributes, renderer_plugin_combo_analytics $renderer)
     {
         $markupUrlString = $attributes[MarkupRef::REF_ATTRIBUTE];
-        $renderer->stats[AnalyticsDocument::MEDIA_COUNT]++;
+        $renderer->stats[renderer_plugin_combo_analytics::MEDIA_COUNT]++;
         $markupUrl = MediaMarkup::createFromRef($markupUrlString);
         switch ($markupUrl->getInternalExternalType()) {
             case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
-                $renderer->stats[AnalyticsDocument::INTERNAL_MEDIA_COUNT]++;
+                $renderer->stats[renderer_plugin_combo_analytics::INTERNAL_MEDIA_COUNT]++;
                 try {
                     $path = $markupUrl->getPath();
                 } catch (ExceptionNotFound $e) {
@@ -109,11 +108,11 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                     return;
                 }
                 if (!FileSystems::exists($path)) {
-                    $renderer->stats[AnalyticsDocument::INTERNAL_BROKEN_MEDIA_COUNT]++;
+                    $renderer->stats[renderer_plugin_combo_analytics::INTERNAL_BROKEN_MEDIA_COUNT]++;
                 }
                 break;
             case MediaMarkup::EXTERNAL_MEDIA_CALL_NAME:
-                $renderer->stats[AnalyticsDocument::EXTERNAL_MEDIA_COUNT]++;
+                $renderer->stats[renderer_plugin_combo_analytics::EXTERNAL_MEDIA_COUNT]++;
                 break;
         }
     }

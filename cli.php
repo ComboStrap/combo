@@ -10,7 +10,6 @@
  *
  */
 
-use ComboStrap\AnalyticsDocument;
 use ComboStrap\BacklinkCount;
 use ComboStrap\Event;
 use ComboStrap\ExceptionBadSyntax;
@@ -355,24 +354,24 @@ EOF;
             }
 
             if (!empty($fileHandle)) {
-                $statistics = $data[AnalyticsDocument::STATISTICS];
+                $statistics = $data[renderer_plugin_combo_analytics::STATISTICS];
                 $row = array(
                     'id' => $id,
                     'backlinks' => $statistics[BacklinkCount::getPersistentName()],
-                    'broken_links' => $statistics[AnalyticsDocument::INTERNAL_LINK_BROKEN_COUNT],
-                    'changes' => $statistics[AnalyticsDocument::EDITS_COUNT],
-                    'chars' => $statistics[AnalyticsDocument::CHAR_COUNT],
-                    'external_links' => $statistics[AnalyticsDocument::EXTERNAL_LINK_COUNT],
-                    'external_medias' => $statistics[AnalyticsDocument::EXTERNAL_MEDIA_COUNT],
-                    PageH1::PROPERTY_NAME => $statistics[AnalyticsDocument::HEADING_COUNT][PageH1::PROPERTY_NAME],
-                    'h2' => $statistics[AnalyticsDocument::HEADING_COUNT]['h2'],
-                    'h3' => $statistics[AnalyticsDocument::HEADING_COUNT]['h3'],
-                    'h4' => $statistics[AnalyticsDocument::HEADING_COUNT]['h4'],
-                    'h5' => $statistics[AnalyticsDocument::HEADING_COUNT]['h5'],
-                    'internal_links' => $statistics[AnalyticsDocument::INTERNAL_LINK_COUNT],
-                    'internal_medias' => $statistics[AnalyticsDocument::INTERNAL_MEDIA_COUNT],
-                    'words' => $statistics[AnalyticsDocument::WORD_COUNT],
-                    'low' => $data[AnalyticsDocument::QUALITY]['low']
+                    'broken_links' => $statistics[renderer_plugin_combo_analytics::INTERNAL_LINK_BROKEN_COUNT],
+                    'changes' => $statistics[renderer_plugin_combo_analytics::EDITS_COUNT],
+                    'chars' => $statistics[renderer_plugin_combo_analytics::CHAR_COUNT],
+                    'external_links' => $statistics[renderer_plugin_combo_analytics::EXTERNAL_LINK_COUNT],
+                    'external_medias' => $statistics[renderer_plugin_combo_analytics::EXTERNAL_MEDIA_COUNT],
+                    PageH1::PROPERTY_NAME => $statistics[renderer_plugin_combo_analytics::HEADING_COUNT][PageH1::PROPERTY_NAME],
+                    'h2' => $statistics[renderer_plugin_combo_analytics::HEADING_COUNT]['h2'],
+                    'h3' => $statistics[renderer_plugin_combo_analytics::HEADING_COUNT]['h3'],
+                    'h4' => $statistics[renderer_plugin_combo_analytics::HEADING_COUNT]['h4'],
+                    'h5' => $statistics[renderer_plugin_combo_analytics::HEADING_COUNT]['h5'],
+                    'internal_links' => $statistics[renderer_plugin_combo_analytics::INTERNAL_LINK_COUNT],
+                    'internal_medias' => $statistics[renderer_plugin_combo_analytics::INTERNAL_MEDIA_COUNT],
+                    'words' => $statistics[renderer_plugin_combo_analytics::WORD_COUNT],
+                    'low' => $data[renderer_plugin_combo_analytics::QUALITY]['low']
                 );
                 fwrite($fileHandle, implode(",", $row) . PHP_EOL);
             }

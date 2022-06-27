@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use renderer_plugin_combo_analytics;
+
 class LowQualityCalculatedIndicator extends MetadataBoolean
 {
 
@@ -42,12 +44,12 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
             if (!($resource instanceof PageFragment)) {
                 throw new ExceptionNotFound("Low Quality is only for page resources");
             }
-            $analyticsDocument = $resource->getAnalyticsDocument();
-            if (!FileSystems::exists($analyticsDocument->getFetchPath())) {
+            $analyticsCache = $resource->getAnalyticsDocument()->getCachePath();
+            if (!FileSystems::exists($analyticsCache)) {
                 throw new ExceptionNotFound("No analytics document could be found");
             }
             try {
-                return Json::createFromPath($analyticsDocument->getFetchPath())->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
+                return Json::createFromPath($analyticsCache)->toArray()[renderer_plugin_combo_analytics::QUALITY][renderer_plugin_combo_analytics::LOW];
             } catch (ExceptionCompile $e) {
                 $message = "Error while reading the json analytics. {$e->getMessage()}";
                 LogUtility::internalError($message, self::CANONICAL);

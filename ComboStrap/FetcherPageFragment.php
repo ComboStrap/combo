@@ -244,8 +244,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     function getFetchPath(): Path
     {
 
-        $path = $this->cache->cache;
-        $fetchPath = LocalPath::createFromPath($path);
+        $fetchPath = $this->getCachePath();
 
         if (!$this->shouldProcess()) {
             return $fetchPath;
@@ -331,11 +330,10 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     }
 
     /**
-     * @throws ExceptionNotFound
      */
-    public function setRequestedFormat(string $fileExtension): FetcherPageFragment
+    public function setRequestedMime(Mime $mime): FetcherPageFragment
     {
-        $this->mime = Mime::createFromExtension($fileExtension);
+        $this->mime = $mime;
         $this->buildCacheObject();
         return $this;
     }
@@ -343,7 +341,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     public function setRequestedFormatAsXhtml(): FetcherPageFragment
     {
         try {
-            return $this->setRequestedFormat("xhtml");
+            return $this->setRequestedMime(Mime::createFromExtension("xhtml"));
         } catch (ExceptionNotFound $e) {
             throw new RuntimeException("Internal error", 0, $e);
         }
@@ -407,7 +405,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
              * $ret = p_cached_output($file, 'xhtml', $pageid);
              */
             $instructions = FetcherPageFragment::createPageFragmentFetcherFromObject($this->getRequestedPageFragment())
-                ->setRequestedFormat(self::INSTRUCTION_EXTENSION)
+                ->setRequestedMimeToInstructions()
                 ->getFetchPathAsInstructionsArray();
 
             /**
@@ -525,10 +523,10 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         return $this->pageFragment->getPath();
     }
 
-    public function setRequestedFormatAsInstructions(): FetcherPageFragment
+    public function setRequestedMimeToInstructions(): FetcherPageFragment
     {
         try {
-            $this->setRequestedFormat(Mime::createFromExtension(self::INSTRUCTION_EXTENSION));
+            $this->setRequestedMime(Mime::createFromExtension(self::INSTRUCTION_EXTENSION));
         } catch (ExceptionNotFound $e) {
             throw new RuntimeException("Internal error: the mime is internal and should be good");
         }
@@ -551,6 +549,12 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     {
         $this->renderer = $rendererName;
         return $this;
+    }
+
+    public function getCachePath(): LocalPath
+    {
+        $path = $this->cache->cache;
+        return LocalPath::createFromPath($path);
     }
 
 }

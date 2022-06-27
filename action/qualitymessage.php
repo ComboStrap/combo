@@ -1,18 +1,15 @@
 <?php
 
-use ComboStrap\AnalyticsDocument;
+
 use ComboStrap\ExceptionCompile;
+use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
-use ComboStrap\LogUtility;
 use ComboStrap\Message;
 use ComboStrap\Mime;
 use ComboStrap\PageFragment;
 use ComboStrap\PluginUtility;
 use ComboStrap\QualityMenuItem;
-use ComboStrap\HttpResponse;
 
-if (!defined('DOKU_INC')) die();
-if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -26,9 +23,6 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  */
 class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 {
-
-    // a class can not start with a number
-    const QUALITY_BOX_CLASS = "quality-message";
 
     /**
      * The quality rules that will not show
@@ -72,7 +66,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                 ->setStatus(HttpResponse::STATUS_INTERNAL_ERROR);
         }
 
-        $rules = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::RULES];
+        $rules = $analyticsArray[renderer_plugin_combo_analytics::QUALITY][renderer_plugin_combo_analytics::RULES];
 
 
         /**
@@ -87,14 +81,14 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         /**
          * If there is no info, nothing to show
          */
-        if (!array_key_exists(AnalyticsDocument::INFO, $rules)) {
+        if (!array_key_exists(renderer_plugin_combo_analytics::INFO, $rules)) {
             return Message::createInfoMessage("No quality rules information to show");
         }
 
         /**
          * The error info
          */
-        $qualityInfoRules = $rules[AnalyticsDocument::INFO];
+        $qualityInfoRules = $rules[renderer_plugin_combo_analytics::INFO];
 
         /**
          * Excluding the excluded rules
@@ -112,13 +106,13 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
             return Message::createInfoMessage("No quality rules information to show");
         }
 
-        $qualityScore = $analyticsArray[AnalyticsDocument::QUALITY][renderer_plugin_combo_analytics::SCORING][renderer_plugin_combo_analytics::SCORE];
+        $qualityScore = $analyticsArray[renderer_plugin_combo_analytics::QUALITY][renderer_plugin_combo_analytics::SCORING][renderer_plugin_combo_analytics::SCORE];
         $message = "<p>The page has a " . PluginUtility::getDocumentationHyperLink("quality:score", "quality score") . " of {$qualityScore}.</p>";
 
-        $lowQuality = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
+        $lowQuality = $analyticsArray[renderer_plugin_combo_analytics::QUALITY][renderer_plugin_combo_analytics::LOW];
         if ($lowQuality) {
 
-            $mandatoryFailedRules = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::FAILED_MANDATORY_RULES];
+            $mandatoryFailedRules = $analyticsArray[renderer_plugin_combo_analytics::QUALITY][renderer_plugin_combo_analytics::FAILED_MANDATORY_RULES];
             $rulesUrl = PluginUtility::getDocumentationHyperLink("quality:rule", "rules");
             $lqPageUrl = PluginUtility::getDocumentationHyperLink("low_quality_page", "low quality page");
             $message .= "<div class='alert alert-warning'>This is a {$lqPageUrl} because it has failed the following mandatory {$rulesUrl}:";

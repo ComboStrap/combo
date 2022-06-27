@@ -1,7 +1,6 @@
 <?php
 
 
-use ComboStrap\AnalyticsDocument;
 use ComboStrap\PluginUtility;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
@@ -111,7 +110,7 @@ class syntax_plugin_combo_analytics extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             if ($state == DOKU_LEXER_SPECIAL) {
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                $renderer->stats[AnalyticsDocument::SYNTAX_COUNT] = $attributes;
+                $renderer->stats[renderer_plugin_combo_analytics::SYNTAX_COUNT] = $attributes;
                 return true;
             }
 

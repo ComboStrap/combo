@@ -3,7 +3,6 @@
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
-use ComboStrap\AnalyticsDocument;
 use ComboStrap\ArrayUtility;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
@@ -11,10 +10,9 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\ExceptionRuntime;
 use ComboStrap\FileSystems;
-use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
+use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
 use ComboStrap\PageFragment;
 use ComboStrap\PluginUtility;
@@ -615,10 +613,10 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             /**
                              * Internal link count
                              */
-                            if (!array_key_exists(AnalyticsDocument::INTERNAL_LINK_COUNT, $stats)) {
-                                $stats[AnalyticsDocument::INTERNAL_LINK_COUNT] = 0;
+                            if (!array_key_exists(renderer_plugin_combo_analytics::INTERNAL_LINK_COUNT, $stats)) {
+                                $stats[renderer_plugin_combo_analytics::INTERNAL_LINK_COUNT] = 0;
                             }
-                            $stats[AnalyticsDocument::INTERNAL_LINK_COUNT]++;
+                            $stats[renderer_plugin_combo_analytics::INTERNAL_LINK_COUNT]++;
 
 
                             /**
@@ -628,8 +626,8 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $path = $markupRef->getMarkupRef()->getPath();
                                 $linkedPage = PageFragment::createPageFromPathObject($path);
                                 if (!FileSystems::exists($path)) {
-                                    $stats[AnalyticsDocument::INTERNAL_LINK_BROKEN_COUNT]++;
-                                    $stats[AnalyticsDocument::INFO][] = "The internal linked page `{$linkedPage}` does not exist";
+                                    $stats[renderer_plugin_combo_analytics::INTERNAL_LINK_BROKEN_COUNT]++;
+                                    $stats[renderer_plugin_combo_analytics::INFO][] = "The internal linked page `{$linkedPage}` does not exist";
                                 }
                             } catch (ExceptionNotFound $e) {
                                 // no local path
@@ -647,55 +645,55 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 array_shift($b);
                             }
                             $length = count($a) + count($b);
-                            $stats[AnalyticsDocument::INTERNAL_LINK_DISTANCE][] = $length;
+                            $stats[renderer_plugin_combo_analytics::INTERNAL_LINK_DISTANCE][] = $length;
                             break;
 
                         case MarkupRef::WEB_URI:
 
-                            if (!array_key_exists(AnalyticsDocument::EXTERNAL_LINK_COUNT, $stats)) {
-                                $stats[AnalyticsDocument::EXTERNAL_LINK_COUNT] = 0;
+                            if (!array_key_exists(renderer_plugin_combo_analytics::EXTERNAL_LINK_COUNT, $stats)) {
+                                $stats[renderer_plugin_combo_analytics::EXTERNAL_LINK_COUNT] = 0;
                             }
-                            $stats[AnalyticsDocument::EXTERNAL_LINK_COUNT]++;
+                            $stats[renderer_plugin_combo_analytics::EXTERNAL_LINK_COUNT]++;
                             break;
 
                         case MarkupRef::LOCAL_URI:
 
-                            if (!array_key_exists(AnalyticsDocument::LOCAL_LINK_COUNT, $stats)) {
-                                $stats[AnalyticsDocument::LOCAL_LINK_COUNT] = 0;
+                            if (!array_key_exists(renderer_plugin_combo_analytics::LOCAL_LINK_COUNT, $stats)) {
+                                $stats[renderer_plugin_combo_analytics::LOCAL_LINK_COUNT] = 0;
                             }
-                            $stats[AnalyticsDocument::LOCAL_LINK_COUNT]++;
+                            $stats[renderer_plugin_combo_analytics::LOCAL_LINK_COUNT]++;
                             break;
 
                         case MarkupRef::INTERWIKI_URI:
 
-                            if (!array_key_exists(AnalyticsDocument::INTERWIKI_LINK_COUNT, $stats)) {
-                                $stats[AnalyticsDocument::INTERWIKI_LINK_COUNT] = 0;
+                            if (!array_key_exists(renderer_plugin_combo_analytics::INTERWIKI_LINK_COUNT, $stats)) {
+                                $stats[renderer_plugin_combo_analytics::INTERWIKI_LINK_COUNT] = 0;
                             }
-                            $stats[AnalyticsDocument::INTERWIKI_LINK_COUNT]++;
+                            $stats[renderer_plugin_combo_analytics::INTERWIKI_LINK_COUNT]++;
                             break;
 
                         case MarkupRef::EMAIL_URI:
 
-                            if (!array_key_exists(AnalyticsDocument::EMAIL_COUNT, $stats)) {
-                                $stats[AnalyticsDocument::EMAIL_COUNT] = 0;
+                            if (!array_key_exists(renderer_plugin_combo_analytics::EMAIL_COUNT, $stats)) {
+                                $stats[renderer_plugin_combo_analytics::EMAIL_COUNT] = 0;
                             }
-                            $stats[AnalyticsDocument::EMAIL_COUNT]++;
+                            $stats[renderer_plugin_combo_analytics::EMAIL_COUNT]++;
                             break;
 
                         case MarkupRef::WINDOWS_SHARE_URI:
 
-                            if (!array_key_exists(AnalyticsDocument::WINDOWS_SHARE_COUNT, $stats)) {
-                                $stats[AnalyticsDocument::WINDOWS_SHARE_COUNT] = 0;
+                            if (!array_key_exists(renderer_plugin_combo_analytics::WINDOWS_SHARE_COUNT, $stats)) {
+                                $stats[renderer_plugin_combo_analytics::WINDOWS_SHARE_COUNT] = 0;
                             }
-                            $stats[AnalyticsDocument::WINDOWS_SHARE_COUNT]++;
+                            $stats[renderer_plugin_combo_analytics::WINDOWS_SHARE_COUNT]++;
                             break;
 
                         case MarkupRef::VARIABLE_URI:
 
-                            if (!array_key_exists(AnalyticsDocument::TEMPLATE_LINK_COUNT, $stats)) {
-                                $stats[AnalyticsDocument::TEMPLATE_LINK_COUNT] = 0;
+                            if (!array_key_exists(renderer_plugin_combo_analytics::TEMPLATE_LINK_COUNT, $stats)) {
+                                $stats[renderer_plugin_combo_analytics::TEMPLATE_LINK_COUNT] = 0;
                             }
-                            $stats[AnalyticsDocument::TEMPLATE_LINK_COUNT]++;
+                            $stats[renderer_plugin_combo_analytics::TEMPLATE_LINK_COUNT]++;
                             break;
 
                         default:

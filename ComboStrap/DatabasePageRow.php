@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 use DateTime;
+use renderer_plugin_combo_analytics;
 
 /**
  * The class that manage the replication
@@ -1197,8 +1198,8 @@ class DatabasePageRow
          */
         $record[self::ANALYTICS_ATTRIBUTE] = $analyticsJsonAsString;
         $record['IS_LOW_QUALITY'] = ($this->page->isLowQualityPage() === true ? 1 : 0);
-        $record['WORD_COUNT'] = $analyticsJsonAsArray[AnalyticsDocument::STATISTICS][AnalyticsDocument::WORD_COUNT];
-        $record[BacklinkCount::getPersistentName()] = $analyticsJsonAsArray[AnalyticsDocument::STATISTICS][BacklinkCount::getPersistentName()];
+        $record['WORD_COUNT'] = $analyticsJsonAsArray[renderer_plugin_combo_analytics::STATISTICS][renderer_plugin_combo_analytics::WORD_COUNT];
+        $record[BacklinkCount::getPersistentName()] = $analyticsJsonAsArray[renderer_plugin_combo_analytics::STATISTICS][BacklinkCount::getPersistentName()];
         $record[$replicationDateMeta::getPersistentName()] = $replicationDateMeta->toStoreValue();
         $this->upsertAttributes($record);
     }

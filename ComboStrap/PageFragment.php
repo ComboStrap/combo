@@ -1180,7 +1180,7 @@ class PageFragment extends ResourceComboAbs
     public
     function getAnalyticsDocument(): FetcherPageFragment
     {
-        return AnalyticsDocument::createForPageFragment($this);
+        return renderer_plugin_combo_analytics::createAnalyticsFetcherForPageFragment($this);
     }
 
     public
@@ -1925,7 +1925,7 @@ class PageFragment extends ResourceComboAbs
     {
         if ($this->instructionsDocument === null) {
             $this->instructionsDocument = FetcherPageFragment::createPageFragmentFetcherFromObject($this)
-                ->setRequestedFormatAsInstructions();
+                ->setRequestedMimeToInstructions();
         }
         return $this->instructionsDocument;
 

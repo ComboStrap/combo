@@ -38,6 +38,8 @@ class HttpResponse
     private $headers = [];
     private $msg;
 
+    private string $body;
+
 
     /**
      * Error constructor.
@@ -81,7 +83,6 @@ class HttpResponse
                 LogUtility::log2file("No status was set for this soft exit, the default was set instead", LogUtility::LVL_MSG_ERROR, $this->canonical);
             }
         }
-
 
         /**
          * Payload
@@ -170,6 +171,20 @@ class HttpResponse
     public function sendHtmlMessage(string $html)
     {
         $this->send($html, Mime::HTML);
+    }
+
+    public function setBody(string $body): HttpResponse
+    {
+        $this->body = $body;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBody(): string
+    {
+        return $this->body;
     }
 
 }

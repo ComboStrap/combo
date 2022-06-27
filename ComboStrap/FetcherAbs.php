@@ -15,6 +15,7 @@ abstract class FetcherAbs implements Fetcher
 {
 
     public const NOCACHE_VALUE = "nocache";
+    const RECACHE_VALUE = "recache";
     private ?string $requestedCache = null;
 
     /**
@@ -191,7 +192,7 @@ abstract class FetcherAbs implements Fetcher
          */
         switch ($requestedCache) {
             case "nocache":
-            case "recache":
+            case self::RECACHE_VALUE:
             case "cache":
                 $this->requestedCache = $requestedCache;
                 break;
@@ -201,32 +202,38 @@ abstract class FetcherAbs implements Fetcher
     }
 
     /**
-     * Cache transformation
-     * From Image cache value (https://www.dokuwiki.org/images#caching)
+     * Get cache age from cache property
+     *
      * to {@link FetchCache::setMaxAgeInSec()}
      */
-    public function getExternalCacheMaxAgeInSec(): int
+    public function getCacheMaxAgeInSec(string $cacheValue): int
     {
-        switch ($this->requestedCache) {
+        /**
+         * From the Dokuwiki Rule
+         * From Image cache value (https://www.dokuwiki.org/images#caching)
+         * and https://www.dokuwiki.org/devel:event:fetch_media_status
+         *
+         * Not if a value is passed numerically inside dokuwiki, this rule applies
+         *  $maxAge < 0 // cache forever
+         *  $maxAge === 0 // never cache
+         *  $maxAge > 0 // cache for a number of seconds
+         */
+        switch ($cacheValue) {
             case "nocache":
             case "no":
-                $cacheParameter = 0;
-                break;
-            case "recache":
+                // never cache
+                return 0;
+            case self::RECACHE_VALUE:
             case "re":
-                try {
-                    $cacheParameter = Site::getCacheTime();
-                } catch (ExceptionNotFound|ExceptionBadArgument $e) {
-                    LogUtility::error("Image Fetch cache was set to `cache`. Why ? We got an error when reading the cache time configuration. Error: {$e->getMessage()}");
-                    $cacheParameter = -1;
-                }
-                break;
+                return Site::getXhtmlCacheTime();
             case "cache":
             default:
-                $cacheParameter = -1;
-                break;
+                // cache forever
+                return PHP_INT_MAX;
+
         }
-        return $cacheParameter;
+
+
     }
 
     /**

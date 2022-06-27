@@ -44,6 +44,8 @@ class Site
     public const SLOT_MAIN_FOOTER_NAME = "slot_main_footer";
 
     public const SLOT_MAIN_SIDE_NAME = "slot_main_side";
+
+    const CANONICAL = "configuration";
     /**
      * Strap Template meta (version, release date, ...)
      * @var array
@@ -458,20 +460,20 @@ class Site
 
     /**
      * @return int
-     * @throws ExceptionNotFound
-     * @throws ExceptionBadArgument
      */
-    public static function getCacheTime(): int
+    public static function getXhtmlCacheTime(): int
     {
         global $conf;
         $cacheTime = $conf['cachetime'];
         if ($cacheTime === null) {
-            throw new ExceptionNotFound("The global cachetime configuration was not set");
+            LogUtility::internalError("The global `cachetime` configuration was not set.", self::CANONICAL);
+            return FetcherPageFragment::MAX_CACHE_AGE;
         }
         try {
             return DataType::toInteger($cacheTime);
         } catch (ExceptionBadArgument $e) {
-            throw new ExceptionBadArgument("The global cachetime configuration has a value that is not an integer ($cacheTime). Error: {$e->getMessage()}");
+            LogUtility::error("The global `cachetime` configuration has a value ($cacheTime) that is not an integer. Error: {$e->getMessage()}", self::CANONICAL);
+            return FetcherPageFragment::MAX_CACHE_AGE;
         }
     }
 
@@ -830,7 +832,7 @@ class Site
             ->addClassName("logo");
         foreach ($logoImagesPath as $logoImagePath) {
             try {
-                if(!Identity::isReader($logoImagePath->getWikiId())){
+                if (!Identity::isReader($logoImagePath->getWikiId())) {
                     continue;
                 }
                 $imageFetcher = FetcherLocalImage::createImageFetchFromPath($logoImagePath)

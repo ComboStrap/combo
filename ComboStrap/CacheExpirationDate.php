@@ -44,7 +44,7 @@ class CacheExpirationDate extends MetadataDateTime
             throw new ExceptionNotFound("There is no HTML document created to expire");
         }
 
-        $cacheIntervalInSecond = Site::getCacheTime();
+        $cacheIntervalInSecond = Site::getXhtmlCacheTime();
         if ($cacheIntervalInSecond === -1) {
             throw new ExceptionNotFound("Cache has been disabled globally on the site");
         }

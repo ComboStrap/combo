@@ -20,29 +20,24 @@ class FetchCache
      * @var Cache
      */
     private Cache $fileCache;
-    private int $maxAge;
+
 
     private array $fileDependencies = [];
+    private Fetcher $fetcher;
 
 
     /**
      * Cache constructor.
      */
-    public function __construct(Fetcher $fetch)
+    public function __construct(Fetcher $fetcher)
     {
 
+        $this->fetcher = $fetcher;
         /**
          * Cache Key Construction
          */
-        $cacheKey = $fetch->getFetchUrl()->toAbsoluteUrlString();
-
-        /**
-         * Cache Attribute
-         */
-        $this->setMaxAgeInSec($fetch->getExternalCacheMaxAgeInSec());
-
-
-        $this->fileCache = new Cache($cacheKey, ".{$fetch->getMime()->getExtension()}");
+        $cacheKey = $fetcher->getFetchUrl()->toAbsoluteUrlString();
+        $this->fileCache = new Cache($cacheKey, ".{$fetcher->getMime()->getExtension()}");
 
     }
 
@@ -58,35 +53,25 @@ class FetchCache
      */
     public function isCacheUsable(): bool
     {
-        if ($this->maxAge === 0) {
-            return false;
-        } else {
-            $files = $this->fileDependencies;
-            $files[] = DirectoryLayout::getPluginInfoPath();
-            $dependencies = array('files' => $files);
-            $dependencies['age'] = $this->maxAge;
-            return $this->fileCache->useCache($dependencies);
-        }
-    }
 
-    public function setMaxAgeInSec($maxAge)
-    {
+        $files = $this->fileDependencies;
+        $files[] = DirectoryLayout::getPluginInfoPath();
+        $dependencies = array('files' => $files);
 
         /**
-         * Got the Dokuwiki Rule
-         * from
-         * https://www.dokuwiki.org/devel:event:fetch_media_status
+         * Cache Attribute
          */
-        if ($maxAge < 0) {
-            // cache forever
-            $this->maxAge = PHP_INT_MAX;
-        } elseif ($maxAge == 0) {
-            // never cache
-            $this->maxAge = 0;
-        } else {
-            $this->maxAge = $maxAge;
+        try {
+            $requestedCache = $this->fetcher->getRequestedCache();
+            $maxAge = $this->fetcher->getCacheMaxAgeInSec($requestedCache);
+            $dependencies['age'] = $maxAge;
+        } catch (ExceptionNotFound $e) {
+            // no requested cache
         }
+        return $this->fileCache->useCache($dependencies);
+
     }
+
 
     public function storeCache($content)
     {

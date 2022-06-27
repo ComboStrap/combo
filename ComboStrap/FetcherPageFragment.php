@@ -13,6 +13,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
 {
     const XHTML_MODE = "xhtml";
     const INSTRUCTION_EXTENSION = "i";
+    const MAX_CACHE_AGE = 999999;
 
     /**
      * @var CacheRenderer cache file
@@ -29,6 +30,25 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     private Mime $mime;
     private bool $cacheAfterRendering = true;
     private string $renderer;
+
+
+    public static function createPageFragmentFetcherFromId(string $mainId): FetcherPageFragment
+    {
+        $page = PageFragment::createPageFromId($mainId);
+        return FetcherPageFragment::createPageFragmentFetcherFromObject($page);
+    }
+
+    function getFetchUrl(Url $url = null): Url
+    {
+        /**
+         * Overwrite default fetcher endpoint
+         * that is {@link UrlEndpoint::createFetchUrl()}
+         */
+        $url = UrlEndpoint::createDokuUrl();
+        return parent::getFetchUrl($url)
+            ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->pageFragment->getPath()->getWikiId());
+
+    }
 
 
     public static function createPageFragmentFetcherFromObject(PageFragment $pageFragment): FetcherPageFragment
@@ -84,10 +104,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     public function shouldProcess(): bool
     {
 
-        if ($this->getCacheTime() > 0) {
-            return true;
-        }
-
         /**
          * The cache is stored by requested
          * page scope
@@ -115,6 +131,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
              * the event coupled to the cache (ie PARSER_CACHE_USE)
              */
             $depends = $this->getDepends();
+            $depends['age'] = $this->getCacheAge();
             return ($this->cache->useCache($depends) === false);
         } finally {
             $ID = $keepID;
@@ -348,7 +365,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
 
     }
 
-    private function getCacheTime(): int
+    private function getCacheAge(): int
     {
 
         $extension = $this->getMime()->getExtension();
@@ -359,10 +376,15 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
                 }
                 break;
             case self::INSTRUCTION_EXTENSION:
-                return 999999999;
+                return self::MAX_CACHE_AGE;
         }
-
-        return $this->cacheAfterRendering ? 1 : 0;
+        try {
+            $requestedCache = $this->getRequestedCache();
+        } catch (ExceptionNotFound $e) {
+            $requestedCache = FetcherAbs::RECACHE_VALUE;
+        }
+        $cacheAge = $this->getCacheMaxAgeInSec($requestedCache);
+        return $this->cacheAfterRendering ? $cacheAge : 0;
 
     }
 

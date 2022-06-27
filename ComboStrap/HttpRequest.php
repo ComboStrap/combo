@@ -2,15 +2,25 @@
 
 namespace ComboStrap;
 
+use http\Env\Request;
+use http\Exception\RuntimeException;
+
+/**
+ * A request to the application
+ * It's now a wrapper around {@link \TestRequest}
+ */
 class HttpRequest
 {
-    private \TestRequest $request;
-    private \TestResponse $response;
+
+    private bool $withTestRequest = true;
+
+    private Url $url;
+    private HttpResponse $response;
 
 
-    public function __construct()
+    public function __construct(Url $url)
     {
-        $this->request = new \TestRequest();
+        $this->url = $url;
     }
 
 
@@ -30,28 +40,32 @@ class HttpRequest
 
     }
 
-    public static function create(): HttpRequest
+
+    public static function fetchPageFragmentAsXhtml(string $wikiId): HttpResponse
     {
-        return new HttpRequest();
+
+        $url = FetcherPageFragment::createPageFragmentFetcherFromId($wikiId)
+            ->setRequestedFormatAsXhtml()
+            ->getFetchUrl();
+
+        return HttpRequest::createRequest($url)
+            ->withTestRequest()
+            ->fetch();
+
     }
 
-    public function getDokuwikiTestRequest(): \TestRequest
-    {
-        return $this->request;
-    }
 
-    public function executeForWikiId(string $wikiId): HttpRequest
+    private function withTestRequest(): HttpRequest
     {
-        $this->response = $this->request->get(["id"=>$wikiId]);
-        /**
-         * The get method will delete the env
-         * We set it back because this is for now how the
-         * {@link HttpRequest::purgeStaticDataRequestedScoped() static component}
-         * communicate based on the global requested page id
-         */
-        $this->setRequestIdEnv($wikiId);
+        $this->withTestRequest = true;
         return $this;
     }
+
+    private static function createRequest(Url $url): HttpRequest
+    {
+        return new HttpRequest($url);
+    }
+
 
     /**
      * Set the environment for the {@link PluginUtility::getRequestedWikiId()}
@@ -67,5 +81,36 @@ class HttpRequest
             $INFO['id'] = $wikiId;
         }
 
+    }
+
+    public function fetch(): HttpResponse
+    {
+        if (!$this->withTestRequest) {
+            throw new RuntimeException("HTTP fetch not yet implemented");
+        }
+        $query = $this->url->getQuery();
+        $testRequest = new \TestRequest();
+        $response = $testRequest->get($query);
+
+        $statusCode = $response->getStatusCode();
+        if ($statusCode === null) {
+            $statusCode = HttpResponse::STATUS_ALL_GOOD;
+        }
+        $httpResponse = HttpResponse::create($statusCode)
+            ->setBody($response->getContent());
+        try {
+            /**
+             * The get method will delete the env
+             * We set it back because this is for now how the
+             * {@link HttpRequest::purgeStaticDataRequestedScoped() static component}
+             * communicate based on the global requested page id
+             */
+            $wikiId = $this->url->getPropertyValue(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
+            $this->setRequestIdEnv($wikiId);
+        } catch (ExceptionNotFound $e) {
+            // no wiki id
+        }
+
+        return $httpResponse;
     }
 }

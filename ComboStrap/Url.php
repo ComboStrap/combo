@@ -43,6 +43,8 @@ class Url extends PathAbs
      */
     public const AMPERSAND_CHARACTER = "&";
 
+    const CANONICAL = "url";
+
     /**
      * An array of array because one name may have several value
      * @var array[array] $query
@@ -167,15 +169,19 @@ class Url extends PathAbs
      * Extract the value of a property
      * @param $propertyName
      * @return string - the value of the property
+     * @throws ExceptionNotFound
      */
     public function getPropertyValue($propertyName): string
     {
+        if(!isset($this->query[$propertyName])){
+            throw new ExceptionNotFound("The property ($propertyName) was not found", self::CANONICAL);
+        }
         return $this->query[$propertyName];
     }
 
 
     /**
-     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadSyntax|ExceptionBadArgument
      */
     public static function createFromString(string $url): Url
     {

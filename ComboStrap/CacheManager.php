@@ -48,27 +48,33 @@ class CacheManager
     /**
      * @return CacheManager
      */
-    public static function getOrCreate(): CacheManager
+    public static function getOrCreateFromRequestedPage(): CacheManager
     {
 
-        $page = PageFragment::createPageFromRequestedPage();
-        $cacheKey = $page->getDokuwikiId();
-        $cacheManager = self::$cacheManager[$cacheKey];
-        if ($cacheManager === null) {
-            // new run, delete all old cache managers
-            self::$cacheManager = [];
-            // create
-            $cacheManager = new CacheManager();
-            self::$cacheManager[$cacheKey] = $cacheManager;
-        }
-        return $cacheManager;
+        $page = PageFragment::createFromRequestedPage();
+        $cacheKey = $page->getPath()->getWikiId();
+        return self::getOrCreateForId($cacheKey);
+
     }
 
 
     public static function resetAndGet(): CacheManager
     {
         self::reset();
-        return self::getOrCreate();
+        return self::getOrCreateFromRequestedPage();
+    }
+
+    private static function getOrCreateForId(string $requestId): CacheManager
+    {
+        $cacheManager = self::$cacheManager[$requestId];
+        if ($cacheManager === null) {
+            // new run, delete all old cache managers
+            self::$cacheManager = [];
+            // create
+            $cacheManager = new CacheManager();
+            self::$cacheManager[$requestId] = $cacheManager;
+        }
+        return $cacheManager;
     }
 
     /**

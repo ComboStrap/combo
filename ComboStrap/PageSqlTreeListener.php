@@ -95,7 +95,7 @@ final class PageSqlTreeListener implements ParseTreeListener
         $this->parser = $parser;
         $this->pageSqlString = $sql;
         if ($pageContext == null) {
-            $this->requestedPage = PageFragment::createPageFromRequestedPage();
+            $this->requestedPage = PageFragment::createFromRequestedPage();
         } else {
             $this->requestedPage = $pageContext;
         }

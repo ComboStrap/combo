@@ -245,7 +245,7 @@ class PageFragment extends ResourceComboAbs
     /**
      * @return PageFragment - the requested page
      */
-    public static function createPageFromRequestedPage(): PageFragment
+    public static function createFromRequestedPage(): PageFragment
     {
         return PageFragment::createPageFromPathObject(DokuPath::createPagePathFromRequestedPage());
     }

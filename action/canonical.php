@@ -47,7 +47,7 @@ class action_plugin_combo_canonical extends DokuWiki_Action_Plugin
     {
 
         global $JSINFO;
-        $page = PageFragment::createPageFromRequestedPage();
+        $page = PageFragment::createFromRequestedPage();
 
         try {
             $canonical = $page->getCanonical();

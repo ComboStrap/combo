@@ -36,7 +36,7 @@ class action_plugin_combo_metatitle extends DokuWiki_Action_Plugin
 
         // Page Title
         // Root Home page
-        $currentPage = PageFragment::createPageFromRequestedPage();
+        $currentPage = PageFragment::createFromRequestedPage();
 
         $pageTitle = $currentPage->getTitleOrDefault();
 

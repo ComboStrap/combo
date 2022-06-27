@@ -59,7 +59,7 @@ class Breadcrumb
         if ($path === null) {
             // should never happen but yeah
             LogUtility::error("Internal Error: The page context was not set. Defaulting to the requested page", syntax_plugin_combo_breadcrumb::CANONICAL_HIERARCHICAL);
-            $actual = PageFragment::createPageFromRequestedPage();
+            $actual = PageFragment::createFromRequestedPage();
         } else {
             $actual = PageFragment::createPageFromQualifiedPath($path);
         }

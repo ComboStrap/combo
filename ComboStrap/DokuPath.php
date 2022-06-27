@@ -406,13 +406,6 @@ class DokuPath extends PathAbs
     public static function createPagePathFromRequestedPage(): DokuPath
     {
         $pageId = PluginUtility::getRequestedWikiId();
-        if ($pageId === null) {
-            $pageId = DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
-            if (!PluginUtility::isTest()) {
-                // should never happen, we don't throw an exception
-                LogUtility::msg("We were unable to determine the requested page from the variables environment, default non-existing page id used");
-            }
-        }
         return DokuPath::createPagePathFromId($pageId);
     }
 

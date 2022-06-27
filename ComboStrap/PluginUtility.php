@@ -645,11 +645,12 @@ class PluginUtility
     }
 
     /**
-     * Get the page id
-     * If the page is a sidebar, it will not return the id of the sidebar
-     * but the one of the page
-     * Return the main/requested page id
-     * (Not the sidebar)
+     *
+     * Return the requested wiki id (known also as page id)
+     *
+     * If the code is rendering a sidebar, it will not return the id of the sidebar
+     * but the requested wiki id
+     *
      * @return string
      */
     public static function getRequestedWikiId(): string
@@ -699,8 +700,10 @@ class PluginUtility
         }
 
         if (!PluginUtility::isDevOrTest()) {
-            LogUtility::internalError("Internal Error: The request id could not be determined");
+            // should never happen, we don't throw an exception
+            LogUtility::internalError("Internal Error: The requested wiki id could not be determined");
         }
+
         return DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
 
     }
@@ -1100,7 +1103,7 @@ class PluginUtility
 
     public static function getCacheManager(): CacheManager
     {
-        return CacheManager::getOrCreate();
+        return CacheManager::getOrCreateFromRequestedPage();
     }
 
     public static function getModeFromPluginName($name)

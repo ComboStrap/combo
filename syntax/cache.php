@@ -86,7 +86,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                 $status = self::PARSING_STATE_SUCCESSFUL;
 
 
-                $requestPage = PageFragment::createPageFromRequestedPage();
+                $requestPage = PageFragment::createFromRequestedPage();
 
                 try {
                     CacheExpirationFrequency::createForPage($requestPage)
@@ -138,7 +138,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
             case "metadata":
                 if ($data[self::PARSING_STATUS] === self::PARSING_STATE_SUCCESSFUL) {
                     $cronExpression = $data[PluginUtility::PAYLOAD];
-                    $requestPage = PageFragment::createPageFromRequestedPage();
+                    $requestPage = PageFragment::createFromRequestedPage();
                     try {
                         CacheExpirationFrequency::createForPage($requestPage)
                             ->setValue($cronExpression)

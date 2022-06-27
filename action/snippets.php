@@ -122,7 +122,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         /**
          * For each processed slot in the page, retrieve the snippets
          */
-        $cacheReporters = CacheManager::getOrCreate()->getCacheResults();
+        $cacheReporters = CacheManager::getOrCreateFromRequestedPage()->getCacheResults();
         if ($cacheReporters !== null) {
             foreach ($cacheReporters as $cacheReporter) {
 

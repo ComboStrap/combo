@@ -75,7 +75,7 @@ class LayoutArea
     public function getPage(): PageFragment
     {
         // Main content
-        $requestedPage = PageFragment::createPageFromRequestedPage();
+        $requestedPage = PageFragment::createFromRequestedPage();
         if ($this->areaId === Layout::MAIN_CONTENT_AREA) {
             return $requestedPage;
         }

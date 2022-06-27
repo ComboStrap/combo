@@ -114,7 +114,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                 list($attributes) = $data;
                 /** @var Doku_Renderer_xhtml $renderer */
 
-                $page = PageFragment::createPageFromRequestedPage();
+                $page = PageFragment::createFromRequestedPage();
 
                 /**
                  * Disqus configuration

@@ -156,7 +156,7 @@ class CacheDependencies
                 $htmlDocument = $secondarySlot->getHtmlFetcher();
                 $cacheDependencies = $htmlDocument->getCacheDependencies();
                 if ($cacheDependencies->hasDependency($dependency)) {
-                    $link = PluginUtility::getDocumentationHyperLink("cache:slot","Slot Dependency", false);
+                    $link = PluginUtility::getDocumentationHyperLink("cache:slot", "Slot Dependency", false);
                     $message = "$link ($dependency) was met with the primary slot ($path).";
                     CacheLog::deleteCacheIfExistsAndLog(
                         $htmlDocument,
@@ -196,18 +196,19 @@ class CacheDependencies
          *
          * Scope is directory/namespace based
          */
-        $requestPage = PageFragment::createPageFromRequestedPage();
+        $requestedPage = PageFragment::createFromRequestedPage();
         switch ($dependenciesValue) {
             case CacheDependencies::NAMESPACE_OLD_VALUE:
             case CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY:
-                $parentPath = $requestPage->getPath()->getParent();
-                if ($parentPath === null) {
-                    return ":";
-                } else {
+                try {
+                    $parentPath = $requestedPage->getPath()->getParent();
                     return $parentPath->toPathString();
+                } catch (ExceptionNotFound $e) {
+                    // root
+                    return ":";
                 }
             case CacheDependencies::REQUESTED_PAGE_DEPENDENCY:
-                return $requestPage->getPath()->toPathString();
+                return $requestedPage->getPath()->toPathString();
             default:
                 throw new ExceptionCompile("The requested dependency value ($dependenciesValue) has no calculation");
         }

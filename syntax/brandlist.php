@@ -175,7 +175,7 @@ EOF;
                         $html .= "<td>";
                         $page = null;
                         if ($type === BrandButton::TYPE_BUTTON_SHARE) {
-                            $page = PageFragment::createPageFromRequestedPage();
+                            $page = PageFragment::createFromRequestedPage();
                         }
                         $html .= $brandButton->getLinkAttributes($page)->toHtmlEnterTag("a");
 

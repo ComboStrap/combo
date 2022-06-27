@@ -24,7 +24,7 @@ class IdManager
     static function getOrCreate(): IdManager
     {
 
-        $page = PageFragment::createPageFromRequestedPage();
+        $page = PageFragment::createFromRequestedPage();
         $cacheKey = $page->getDokuwikiId();
         $idManager = self::$idManagers[$cacheKey];
         if ($idManager === null) {

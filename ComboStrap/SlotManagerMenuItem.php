@@ -93,7 +93,7 @@ class SlotManagerMenuItem extends AbstractItem
 
     public function createHtml(): string
     {
-        $requestedPage = PageFragment::createPageFromRequestedPage();
+        $requestedPage = PageFragment::createFromRequestedPage();
         $html = "<p>Edit and/or create the <a href=\"https://combostrap.com/slot\">slots</a> of the page</p>";
         foreach (Site::getSecondarySlotNames() as $secondarySlot) {
 

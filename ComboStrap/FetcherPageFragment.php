@@ -27,11 +27,11 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     private CacheDependencies $cacheDependencies;
     private PageFragment $pageFragment;
     private Mime $mime;
-    private int $cacheAfterRendering = 1;
+    private bool $cacheAfterRendering = true;
     private string $renderer;
 
 
-    public static function createPageFragmentFetcherFromObject(PageFragment $pageFragment)
+    public static function createPageFragmentFetcherFromObject(PageFragment $pageFragment): FetcherPageFragment
     {
         return (new FetcherPageFragment())
             ->setRequestedPageFragment($pageFragment);
@@ -362,7 +362,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
                 return 999999999;
         }
 
-        return $this->cacheAfterRendering;
+        return $this->cacheAfterRendering ? 1 : 0;
 
     }
 
@@ -459,7 +459,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
                  * Modifying the cache key and the corresponding output file
                  * from runtime dependencies
                  */
-                $this->cacheDependencies = CacheManager::getOrCreate()->getCacheDependenciesForSlot($wikiId);
+                $this->cacheDependencies = CacheManager::getOrCreateFromRequestedPage()->getCacheDependenciesForSlot($wikiId);
                 $this->cacheDependencies->rerouteCacheDestination($this->cache);
                 break;
         }

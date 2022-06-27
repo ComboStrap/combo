@@ -215,7 +215,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
 
         if ($format == 'xhtml') {
 
-            $page = PageFragment::createPageFromRequestedPage();
+            $page = PageFragment::createFromRequestedPage();
             $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
             $max = $tagAttributes->getValue(self::MAX_LINKS_CONF);
             if ($max === NULL) {

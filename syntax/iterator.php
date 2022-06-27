@@ -330,7 +330,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         if ($path !== null) {
                             $contextualPage = PageFragment::createPageFromQualifiedPath($path);
                         } else {
-                            $contextualPage = PageFragment::createPageFromRequestedPage();
+                            $contextualPage = PageFragment::createFromRequestedPage();
                         }
                         $pageSql = PageSql::create($pageSql, $contextualPage);
                     } catch (Exception $e) {
@@ -339,7 +339,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     }
 
                     $table = $pageSql->getTable();
-                    $cacheManager = CacheManager::getOrCreate();
+                    $cacheManager = CacheManager::getOrCreateFromRequestedPage();
                     switch ($table) {
                         case PageSqlTreeListener::BACKLINKS:
                             $cacheManager->addDependencyForCurrentSlot(CacheDependencies::BACKLINKS_DEPENDENCY);

@@ -130,10 +130,10 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 /**
                  * Cache key dependencies
                  */
-                CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                CacheManager::getOrCreateFromRequestedPage()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
 
 
-                $requestedPage = PageFragment::createPageFromRequestedPage();
+                $requestedPage = PageFragment::createFromRequestedPage();
                 $fragment = $attributes->getValueAndRemoveIfPresent(self::FRAGMENT_ATTRIBUTE);
                 switch ($type) {
                     case self::GENERATED_TYPE:

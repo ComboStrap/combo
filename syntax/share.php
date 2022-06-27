@@ -162,8 +162,8 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                      * Standard link attribute
                      * and Runtime Cache key dependencies
                      */
-                    CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
-                    $requestedPage = PageFragment::createPageFromRequestedPage();
+                    CacheManager::getOrCreateFromRequestedPage()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                    $requestedPage = PageFragment::createFromRequestedPage();
                     try {
                         $linkAttributes = $brandButton->getLinkAttributes($requestedPage)
                             ->setType($shareAttributes->getType())

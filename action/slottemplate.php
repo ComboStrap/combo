@@ -28,7 +28,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
     {
 
 
-        $page = PageFragment::createPageFromRequestedPage();
+        $page = PageFragment::createFromRequestedPage();
 
         /**
          * Header

@@ -231,7 +231,7 @@ EOF;
     private static function getPermissions(string $wikiId): int
     {
         if ($wikiId == null) {
-            $wikiId = PageFragment::createPageFromRequestedPage()->getDokuwikiId();
+            $wikiId = PageFragment::createFromRequestedPage()->getDokuwikiId();
         }
         if ($_SERVER['REMOTE_USER']) {
             $perm = auth_quickaclcheck($wikiId);

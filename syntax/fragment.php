@@ -177,7 +177,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
                 /**
                  * Cache dependent on the requested page
                  */
-                CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                CacheManager::getOrCreateFromRequestedPage()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -215,7 +215,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
                         $renderer->doc .= LogUtility::wrapInRedForHtml("Template instructions should not be null");
                         return false;
                     }
-                    $page = PageFragment::createPageFromRequestedPage();
+                    $page = PageFragment::createFromRequestedPage();
                     $metadata = $page->getMetadataForRendering();
                     try {
                         $renderer->doc .= RenderUtility::renderInstructionsToXhtml($templateStack, $metadata);

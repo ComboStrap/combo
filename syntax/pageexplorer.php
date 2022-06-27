@@ -388,12 +388,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                      * The cache output is composed of primary metadata
                      * (If it changes, the content change)
                      */
-                    CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
+                    CacheManager::getOrCreateFromRequestedPage()->addDependencyForCurrentSlot(CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
                     /**
                      * The content depend on the file system tree
                      * (if a file is added or deleted, the content will change)
                      */
-                    CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::PAGE_SYSTEM_DEPENDENCY);
+                    CacheManager::getOrCreateFromRequestedPage()->addDependencyForCurrentSlot(CacheDependencies::PAGE_SYSTEM_DEPENDENCY);
 
                     /**
                      * NameSpacePath determination
@@ -408,13 +408,13 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     if ($namespacePath === null) {
                         switch ($pageExplorerType) {
                             case self::LIST_TYPE:
-                                $requestedPage = PageFragment::createPageFromRequestedPage();
+                                $requestedPage = PageFragment::createFromRequestedPage();
                                 $namespacePath = $requestedPage->getPath()->getParent();
                                 if ($namespacePath === null) {
                                     // root
                                     $namespacePath = $requestedPage->getPath();
                                 }
-                                CacheManager::getOrCreate()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
+                                CacheManager::getOrCreateFromRequestedPage()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
                                 break;
                             case self::TYPE_TREE:
                                 try {

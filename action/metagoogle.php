@@ -39,7 +39,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             return;
         }
 
-        $page = PageFragment::createPageFromRequestedPage();
+        $page = PageFragment::createFromRequestedPage();
         $ldJson = LdJson::createForPage($page)
             ->getLdJsonMergedWithDefault();
 

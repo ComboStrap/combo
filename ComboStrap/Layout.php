@@ -76,7 +76,7 @@ class Layout
      */
     public function getHtmlPage(): string
     {
-        $requestedPage = PageFragment::createPageFromRequestedPage();
+        $requestedPage = PageFragment::createFromRequestedPage();
 
         global $ACT;
         switch ($ACT) {

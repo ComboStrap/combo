@@ -663,10 +663,12 @@ class Url extends PathAbs
                 /**
                  * Skype. Example: skype:echo123?call
                  * https://docs.microsoft.com/en-us/skype-sdk/skypeuris/skypeuris
+                 * Mailto: Example: mailto:java-net@java.sun.com?subject=yolo
+                 * https://datacadamia.com/marketing/email/mailto
                  */
                 $base = "$scheme:";
                 try {
-                    $base = "$base/{$this->getPath()}";
+                    $base = "$base{$this->getPath()}";
                 } catch (ExceptionNotFound $e) {
                     // no path
                 }

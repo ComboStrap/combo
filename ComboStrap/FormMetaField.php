@@ -57,9 +57,9 @@ class FormMetaField
     /**
      * If canonical is set, an url is also send
      */
-    private $canonical;
-    private $values = [];
-    private $defaults = [];
+    private string $canonical;
+    private array $values = [];
+    private array $defaults = [];
     /**
      * @var string
      */
@@ -333,7 +333,7 @@ class FormMetaField
     public
     function getUrl(): ?string
     {
-        if ($this->canonical == null) {
+        if (!isset($this->canonical)) {
             return null;
         }
         $url = PluginUtility::$URL_APEX;
@@ -356,12 +356,12 @@ class FormMetaField
     }
 
     /**
-     * @param string|null $value
-     * @param string|null $defaultValuePlaceholderOrReturned - the value set as placeholder or return value for a checked checkbox
+     * @param boolean|string|null $value
+     * @param boolean|string|null $defaultValuePlaceholderOrReturned - the value set as placeholder or return value for a checked checkbox
      * @return $this
      */
     public
-    function addValue(?string $value, ?string $defaultValuePlaceholderOrReturned = null): FormMetaField
+    function addValue($value, $defaultValuePlaceholderOrReturned = null): FormMetaField
     {
         $this->values[] = $value;
         $this->defaults[] = $defaultValuePlaceholderOrReturned;

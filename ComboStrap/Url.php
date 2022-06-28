@@ -44,6 +44,11 @@ class Url extends PathAbs
     public const AMPERSAND_CHARACTER = "&";
 
     const CANONICAL = "url";
+    /**
+     * The schemes that are relative (normallu only URL ? ie http, https)
+     * This class is much more an URI
+     */
+    const RELATIVE_URL_SCHEMES = ["http", "https"];
 
     /**
      * An array of array because one name may have several value
@@ -643,14 +648,15 @@ class Url extends PathAbs
 
 
         /**
-         * Absolute Url
+         * Absolute/Relative Uri
          */
         $base = "";
         if ($host !== null) {
             if ($scheme !== null) {
                 $base = "{$scheme}:";
                 if (in_array($scheme, ["http", "https", "ftp", LocalPath::SCHEME])) {
-                    // mailto, skype, whatsapp does not have the //
+                    // mailto, skype, whatsapp does not have the
+                    // because they don't have any host
                     $base = "$base//";
                 }
             }
@@ -659,6 +665,10 @@ class Url extends PathAbs
                 $base = "$base:{$this->getPort()}";
             } catch (ExceptionNotFound $e) {
                 // no port
+            }
+        } else {
+            if (!in_array($scheme, self::RELATIVE_URL_SCHEMES) && $scheme !== null) {
+                $base = "{$scheme}:";
             }
         }
 

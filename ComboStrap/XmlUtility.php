@@ -190,6 +190,7 @@ class XmlUtility
                             case "src":
                             case "data-src":
                             case "href":
+                            case "action": // form
                                 try {
                                     $leftUrl = Url::createFromString($leftAttValue);
                                     try {
@@ -199,13 +200,13 @@ class XmlUtility
                                         } catch (ExceptionNotEquals $e) {
                                             $error .= "The attribute (" . $rightAtt->getNodePath() . ") have different values. Error:{$e->getMessage()}\n";
                                         }
-                                    } catch (ExceptionBadSyntax $e) {
+                                    } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
                                         $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ") and the right value is not an URL. Error:{$e->getMessage()}\n";
                                     }
-                                } catch (ExceptionBadSyntax $e) {
+                                } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
                                     $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ") and the left value is not an URL. Error:{$e->getMessage()}\n";
                                 }
-                                break;
+                            break;
                             default:
                                 $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ")\n";
                                 break;

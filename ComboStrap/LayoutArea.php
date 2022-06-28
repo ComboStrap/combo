@@ -3,6 +3,8 @@
 
 namespace ComboStrap;
 
+use http\Exception\RuntimeException;
+
 /**
  * Represents a layout area
  */
@@ -139,8 +141,17 @@ class LayoutArea
                 return "";
             }
             $html = $page->toXhtml();
-            return EditButton::replaceOrDeleteAll($html);
+            if ($page->getPath()->getDrive() !== DokuPath::PAGE_DRIVE) {
+                // case when this is a default page in the resource directory
+                return EditButton::deleteAll($html);
+            } else {
+                return EditButton::replaceOrDeleteAll($html);
+            }
+
         } catch (\Exception $e) {
+            if (PluginUtility::isDevOrTest()) {
+                throw new ExceptionRuntime("Error while rendering. Error: {$e->getMessage()}", Layout::CANONICAL, 1, $e);
+            }
             return "Rendering the area ($this), returns an error. {$e->getMessage()}";
         }
 

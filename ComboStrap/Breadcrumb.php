@@ -36,6 +36,7 @@ class Breadcrumb
      *
      * @param TagAttributes|null $tagAttributes
      * @return string
+     * @throws ExceptionNotFound
      */
     public static function toBreadCrumbHtml(TagAttributes $tagAttributes = null): string
     {
@@ -44,13 +45,6 @@ class Breadcrumb
             $tagAttributes = TagAttributes::createEmpty(syntax_plugin_combo_breadcrumb::TAG);
         }
 
-
-        try {
-            $requiredDepth = DataType::toInteger($tagAttributes->getValueAndRemoveIfPresent(PageSqlTreeListener::DEPTH));
-        } catch (ExceptionBadArgument $e) {
-            LogUtility::error("We were unable to get the depth attribute. Error: {$e->getMessage()}");
-            $requiredDepth = null;
-        }
 
         /**
          * Get the page
@@ -85,7 +79,13 @@ class Breadcrumb
                 $htmlOutput .= '<ol class="breadcrumb">';
 
                 $lisHtmlOutput = self::getLiHtmlOutput($actual, true);
-                while ($actual = $actual->getParentPage()) {
+                $parent = $actual;
+                while (true) {
+                    try {
+                        $parent = $parent->getParentPage();
+                    } catch (ExceptionNotFound $e) {
+                        break;
+                    }
                     $liHtmlOutput = self::getLiHtmlOutput($actual);
                     $lisHtmlOutput = $liHtmlOutput . $lisHtmlOutput;
                 }
@@ -95,6 +95,13 @@ class Breadcrumb
                 $htmlOutput .= '</nav>';
                 return $htmlOutput;
             case self::TYPOGRAPHY_TYPE:
+
+                try {
+                    $requiredDepth = DataType::toInteger($tagAttributes->getValueAndRemoveIfPresent(PageSqlTreeListener::DEPTH));
+                } catch (ExceptionBadArgument $e) {
+                    LogUtility::error("We were unable to determine the depth attribute. The depth was set to 1. Error: {$e->getMessage()}");
+                    $requiredDepth = 1;
+                }
                 if ($requiredDepth > 1) {
                     SnippetManager::getOrCreate()->attachCssInternalStyleSheetForSlot("breadcrumb-$type");
                 }

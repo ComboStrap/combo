@@ -64,9 +64,9 @@ class EditButton
      */
     private int $startPosition;
     /**
-     * @var int|null
+     * @var int
      */
-    private ?int $endPosition;
+    private int $endPosition;
     /**
      * @var string $format - to conform or not to dokuwiki format
      */
@@ -234,15 +234,13 @@ class EditButton
          * Original: {@link html_secedit()} {@link html_secedit_get_button()}
          */
         global $INFO;
-        if (!isset($INFO)) {
-            $message = "Internal Error: Global Info variable is not available. We can't get the page revision";
-            LogUtility::internalError($message, self::CANONICAL);
-            throw new ExceptionNotAuthorized($message);
+        if (isset($INFO)) {
+            // the page is a revision page
+            if ($INFO['rev']) {
+                throw new ExceptionBadState("Internal Error: No edit button can be added to a revision page");
+            }
         }
-        // the page is a revision page
-        if ($INFO['rev']) {
-            throw new ExceptionBadState("The page is a revision page");
-        }
+
 
         global $ACT;
         if ($ACT !== "show") {
@@ -296,7 +294,7 @@ class EditButton
                 // same as $INFO['lastmod'];
                 $data['rev'] = FileSystems::getModifiedTime($page->getPath())->getTimestamp();
             } catch (ExceptionNotFound $e) {
-                LogUtility::internalError("The file does not exist, we cannot set the last modified time on the edit buttons.", self::CANONICAL);
+                LogUtility::internalError("The file ({$page->getPath()}) does not exist, we cannot set the last modified time on the edit buttons.", self::CANONICAL);
             }
             $hiddenInputs = "";
             foreach ($data as $key => $val) {
@@ -369,9 +367,12 @@ EOF;
      */
     private function getRange(): string
     {
-        $range = $this->startPosition;
+        $range = "";
+        if (isset($this->startPosition)) {
+            $range = $this->startPosition;
+        }
         $range = "$range-";
-        if ($this->endPosition !== null) {
+        if (isset($this->endPosition)) {
             $range = "$range{$this->endPosition}";
         }
         return $range;

@@ -211,6 +211,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     }
                     break;
                 case self::DESCENDANT_TYPE:
+                case "parent": // old
                     $parent = $page;
                     while (true) {
                         try {
@@ -247,7 +248,6 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                         LogUtility::error("Error while creating the vignette for the page ($page). Error: {$e->getMessage()}");
                     }
                     break;
-
                 case self::LOGO_TYPE:
                     try {
                         $imageFetcher = Site::getLogoAsSvgImage();

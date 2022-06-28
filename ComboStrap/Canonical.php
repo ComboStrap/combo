@@ -103,8 +103,12 @@ class Canonical extends MetadataWikiPath
          * If this is a `start` page, delete the name
          * ie javascript:start will become javascript
          * (Not a home page)
+         *
+         * We don't use the {@link PageFragment::isIndexPage()}
+         * because the path `ns:ns` is also an index if the
+         * page `ns:start` does not exists
          */
-        if ($resourceCombo->isIndexPage()) {
+        if ($resourceCombo->getPath()->getLastNameWithoutExtension() === Site::getIndexPageName()) {
             $names = array_slice($names, 0, $namesLength - 1);
         }
         $calculatedCanonical = implode(":", $names);

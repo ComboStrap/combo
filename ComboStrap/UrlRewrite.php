@@ -10,8 +10,13 @@ class UrlRewrite
 
     public const NO_REWRITE = "no_rewrite";
     public const WEB_SERVER_REWRITE = "web_server";
+    /**
+     * Doku Rewrite is value 2
+     * https://www.dokuwiki.org/rewrite#further_details_for_the_technically_savvy
+     */
     public const DOKU_REWRITE = "doku_rewrite";
     const EXPORT_PREFIX = "export_";
+    const CANONICAL = "url_rewrite";
 
     /**
      * Apply all rewrite URL logic (from relative to absolute
@@ -114,10 +119,9 @@ class UrlRewrite
                 if ($path === UrlEndpoint::DOKU_PHP) {
                     try {
                         $id = $url->getQueryPropertyValueAndRemoveIfPresent(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE);
-                        $idPath = str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
-                        $url->setPath("$path/$idPath");
+                        $url->setPath("$path/$id");
                     } catch (ExceptionNotFound $e) {
-                        LogUtility::internalError("The id should be present for a doku script. No Dokuwiki Url rewrite could be done.");
+                        LogUtility::internalError("The id should be present for a doku script. No Dokuwiki Url rewrite could be done.",self::CANONICAL);
                     }
                 }
                 break;

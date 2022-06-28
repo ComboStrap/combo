@@ -73,6 +73,7 @@ class InterWiki
     /**
      * @throws ExceptionNotFound
      * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
      * Adapted  from {@link Doku_Renderer_xhtml::_resolveInterWiki()}
      */
     public function toUrl(): Url

@@ -36,10 +36,15 @@ class CacheExpirationDate extends MetadataDateTime
     {
         $resourceCombo = $this->getResource();
         if (!($resourceCombo instanceof PageFragment)) {
-            throw new ExceptionNotFound("Cache expiration is only available for page");
+            throw new ExceptionNotFound("Cache expiration is only available for page fragment");
         }
 
-        $path = $resourceCombo->getHtmlFetcher()->getFetchPath();
+        /**
+         * We use {@link FetcherPageFragment::getCachePath()}
+         * and not {@link FetcherPageFragment::getFetchPath()}
+         * to not create the HTML
+         */
+        $path = $resourceCombo->getHtmlFetcher()->getCachePath();
         if (!FileSystems::exists($path)) {
             throw new ExceptionNotFound("There is no HTML document created to expire");
         }

@@ -66,6 +66,7 @@ class DokuPath extends PathAbs
     const REV_ATTRIBUTE = "rev";
     const CURRENT_PATH_CHARACTER = ".";
     const CURRENT_PARENT_PATH_CHARACTER = "..";
+    const CANONICAL = "wiki-path";
 
     /**
      * @var string[]
@@ -132,19 +133,43 @@ class DokuPath extends PathAbs
             $parts = preg_split('/' . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . '/', $path);
             switch ($parts[0]) {
                 case DokuPath::CURRENT_PATH_CHARACTER:
-                    $rootRelativePath = DokuPath::getCurrentPagePath();
+                    // delete the relative character
                     $parts = array_splice($parts, 1);
+                    try {
+                        $rootRelativePath = DokuPath::getCurrentPagePath();
+                    } catch (ExceptionNotFound $e) {
+                        // Root case: the relative path is in the root
+                        // the root has no parent
+                        LogUtility::error("The current relative path ({$this->path}) returns an error: {$e->getMessage()}",self::CANONICAL);
+                        $rootRelativePath = DokuPath::createPagePathFromPath(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
+                    }
                     break;
                 case DokuPath::CURRENT_PARENT_PATH_CHARACTER:
-                    $rootRelativePath = DokuPath::getCurrentPagePath()->getParent();
+                    // delete the relative character
                     $parts = array_splice($parts, 1);
+                    try {
+                        $currentPagePath = DokuPath::getCurrentPagePath();
+                        try {
+                            $rootRelativePath = $currentPagePath->getParent();
+                        } catch (ExceptionNotFound $e) {
+                            LogUtility::error("The parent relative path ({$this->path}) returns an error: {$e->getMessage()}",self::CANONICAL);
+                            $rootRelativePath = DokuPath::getCurrentPagePath();
+                        }
+                    } catch (ExceptionNotFound $e) {
+                        LogUtility::error("The parent relative path ({$this->path}) returns an error: {$e->getMessage()}",self::CANONICAL);
+                    }
                     break;
                 default:
                     /**
                      * just a relative name path
                      * (ie hallo)
                      */
-                    $rootRelativePath = DokuPath::getCurrentPagePath();
+                    try {
+                        $rootRelativePath = DokuPath::getCurrentPagePath();
+                    } catch (ExceptionNotFound $e) {
+                        LogUtility::error("The named relative path ({$this->path}) returns an error: {$e->getMessage()}",self::CANONICAL);
+                        $rootRelativePath = DokuPath::createPagePathFromPath(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
+                    }
                     break;
             }
             // is relative directory path ?
@@ -228,7 +253,7 @@ class DokuPath extends PathAbs
         try {
             return new DokuPath($path, DokuPath::PAGE_DRIVE, $rev);
         } catch (ExceptionNotFound $e) {
-            throw new RuntimeException("Internal Error: The page drive is a known drive");
+            throw new ExceptionRuntime("Internal Error: The page drive is a known drive. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
         }
     }
 
@@ -534,9 +559,10 @@ class DokuPath extends PathAbs
     public static function getCurrentPagePath(): DokuPath
     {
         $requestedPath = self::getRequestedPagePath();
-        $parent = $requestedPath->getParent();
-        if ($parent === null) {
-            throw new ExceptionNotFound("The current path ($requestedPath) does not have any parent");
+        try {
+            $parent = $requestedPath->getParent();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionNotFound("The current path ($requestedPath) does not have any parent.");
         }
         return $parent;
     }
@@ -558,7 +584,7 @@ class DokuPath extends PathAbs
      *
      * as an {@link DokuPath::getWikiId() id} is a validated absolute path without root character
      */
-    public static function normalizeWikId(string $id)
+    public static function normalizeWikiId(string $id)
     {
         return str_replace(DokuPath::NAMESPACE_SEPARATOR_SLASH, DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $id);
     }

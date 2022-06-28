@@ -7,6 +7,7 @@ use ComboStrap\DokuPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\FetcherAbs;
@@ -385,7 +386,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      * @param Doku_Renderer_metadata $renderer
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotFound|ExceptionNotExists
      */
     static public function registerImageMeta(array $attributes, Doku_Renderer_metadata $renderer)
     {

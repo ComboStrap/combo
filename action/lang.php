@@ -71,7 +71,7 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
         $clean = false;
         /** @noinspection PhpConditionAlreadyCheckedInspection */
         $id = getID("id", $clean);
-        $id = DokuPath::normalizeWikId($id);
+        $id = DokuPath::normalizeWikiId($id);
         self::setNormalizedId($id);
         $page = PageFragment::createPageFromId($id);
         if (!FileSystems::exists($page->getPath())) {

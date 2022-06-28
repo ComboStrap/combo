@@ -179,4 +179,9 @@ class XmlElement
     {
         return $this->element->ownerDocument->saveHTML($this->element);
     }
+
+    public function toXhtml()
+    {
+        return $this->element->ownerDocument->saveXML($this->element);
+    }
 }

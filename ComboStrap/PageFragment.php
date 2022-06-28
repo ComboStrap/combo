@@ -975,10 +975,12 @@ class PageFragment extends ResourceComboAbs
     function toXhtml(): string
     {
 
-        return FileSystems::getContent(
-            $this->getHtmlFetcher()
-                ->getFetchPath()
-        );
+        $path = $this->getHtmlFetcher()->getFetchPath();
+        try {
+            return FileSystems::getContent($path);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionNotFound("Internal Error: The html file for the markup fragment ($this) was not found at the path ($path)");
+        }
 
     }
 
@@ -1890,8 +1892,6 @@ class PageFragment extends ResourceComboAbs
         $this->cacheExpirationDate->setValue($cacheExpirationDate);
         return $this;
     }
-
-
 
 
     /**

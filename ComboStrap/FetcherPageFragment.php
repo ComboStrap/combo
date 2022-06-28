@@ -254,10 +254,9 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     {
         $this->setRequestGlobalVariableEnvironment();
         try {
-            $fetchPath = $this->getCachePath();
 
             if (!$this->shouldProcess()) {
-                return $fetchPath;
+                return $this->getCachePath();
             }
 
 
@@ -320,7 +319,12 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         } finally {
             $this->resetRequestGlobalVariableEnvironment();
         }
-        return $fetchPath;
+        /**
+         * The cache path may have change due to the cache key rerouting
+         * We should there always use the {@link FetcherPageFragment::getCachePath()}
+         * as fetch path
+         */
+        return $this->getCachePath();
 
     }
 

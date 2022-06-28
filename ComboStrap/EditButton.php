@@ -63,10 +63,8 @@ class EditButton
      * @var int
      */
     private int $startPosition;
-    /**
-     * @var int
-     */
-    private int $endPosition;
+
+    private ?int $endPosition;
     /**
      * @var string $format - to conform or not to dokuwiki format
      */

@@ -273,8 +273,8 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                                 LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, MediaLink::CANONICAL);
                             }
                         }
+                        return true;
                     }
-                    return true;
 
                 }
 

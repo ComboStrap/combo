@@ -5,18 +5,7 @@ namespace ComboStrap;
 class FetcherPdf extends FetcherLocalPath
 {
 
-    /**
-     * We support also query parameter after the anchor
-     * This is something a little bit weird but yeah.
-     * Documentation here:
-     * https://helpx.adobe.com/acrobat/kb/link-html-pdf-page-acrobat.html
-     *
-     * Open a PDF file to a specific page
-     * add #page=[page number] to the end of the link's URL.
-     *
-     * For example, this HTML tag opens page 4 of a PDF file named myfile.pdf:
-     * <A HREF="http://www.example.com/myfile.pdf#page=4">
-     */
+
     private ?int $pageNumber = null;
 
 

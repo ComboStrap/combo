@@ -120,6 +120,12 @@ class DokuPath extends PathAbs
     protected function __construct(string $path, string $drive, string $rev = null)
     {
 
+        /**
+         * Due to the fact that the request environment is set on the setup in test,
+         * the path may be not normalized
+         */
+        $path = self::normalizeWikiPath($path);
+
         if (trim($path) === "") {
             $path = DokuPath::getRequestedPagePath()->toPathString();
         }
@@ -584,7 +590,7 @@ class DokuPath extends PathAbs
      *
      * as an {@link DokuPath::getWikiId() id} is a validated absolute path without root character
      */
-    public static function normalizeWikiId(string $id)
+    public static function normalizeWikiPath(string $id)
     {
         return str_replace(DokuPath::NAMESPACE_SEPARATOR_SLASH, DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $id);
     }

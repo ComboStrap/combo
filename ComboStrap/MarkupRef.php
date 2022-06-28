@@ -390,7 +390,7 @@ class MarkupRef
                 if (!$isNamespacePath) {
                     $cleanPath = DokuPath::CURRENT_PARENT_PATH_CHARACTER . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $cleanPath;
                 } else {
-                    $cleanPath = DokuPath::CURRENT_PATH_CHARACTER . $cleanPath;
+                    $cleanPath = DokuPath::CURRENT_PARENT_PATH_CHARACTER . $cleanPath;
                 }
                 break;
         }

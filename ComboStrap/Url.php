@@ -212,9 +212,7 @@ class Url extends PathAbs
      */
     public function setPath(string $path): Url
     {
-        if (substr($path, 0, 2) === "//") {
-            LogUtility::internalError("The url path starts with two slashes");
-        }
+
         /**
          * Normalization hack
          */
@@ -630,66 +628,115 @@ class Url extends PathAbs
     public function toString($ampersand = Url::AMPERSAND_CHARACTER): string
     {
 
-
-        UrlRewrite::rewrite($this);
-
-
         try {
             $scheme = $this->getScheme();
         } catch (ExceptionNotFound $e) {
             $scheme = null;
         }
 
-        try {
-            $host = $this->getHost();
-        } catch (ExceptionNotFound $e) {
-            $host = null;
-        }
-
-
-        /**
-         * Absolute/Relative Uri
-         */
-        $base = "";
-        if ($host !== null) {
-            if ($scheme !== null) {
-                $base = "{$scheme}:";
-                if (in_array($scheme, ["http", "https", "ftp", LocalPath::SCHEME])) {
-                    // mailto, skype, whatsapp does not have the
-                    // because they don't have any host
-                    $base = "$base//";
+        switch ($scheme) {
+            case LocalPath::SCHEME:
+                /**
+                 * file://host/path
+                 */
+                $base = "$scheme://";
+                try {
+                    $base = "$base{$this->getHost()}";
+                } catch (ExceptionNotFound $e) {
+                    // no host
                 }
-            }
-            $base = "$base{$host}";
-            try {
-                $base = "$base:{$this->getPort()}";
-            } catch (ExceptionNotFound $e) {
-                // no port
-            }
-        } else {
-            if (!in_array($scheme, self::RELATIVE_URL_SCHEMES) && $scheme !== null) {
-                $base = "{$scheme}:";
-            }
+                try {
+                    $path = $this->getPath();
+                    if ($path[0] !== "/") {
+                        $base = "$base/{$path}";
+                    } else {
+                        // linux, network share (file://host/path)
+                        $base = "$base{$path}";
+                    }
+                } catch (ExceptionNotFound $e) {
+                    // no path
+                }
+                return $base;
+            case "mailto":
+            case "whatsapp":
+            case "skype":
+                /**
+                 * Skype. Example: skype:echo123?call
+                 * https://docs.microsoft.com/en-us/skype-sdk/skypeuris/skypeuris
+                 */
+                $base = "$scheme:";
+                try {
+                    $base = "$base/{$this->getPath()}";
+                } catch (ExceptionNotFound $e) {
+                    // no path
+                }
+                try {
+                    $base = "$base?{$this->getQueryString()}";
+                } catch (ExceptionNotFound $e) {
+                    // no query string
+                }
+                try {
+                    $base = "$base#{$this->getFragment()}";
+                } catch (ExceptionNotFound $e) {
+                    // no fragment
+                }
+                return $base;
+            case "http":
+            case "https":
+            case "ftp":
+            default:
+                // http, https
+                UrlRewrite::rewrite($this);
+                try {
+                    $host = $this->getHost();
+                } catch (ExceptionNotFound $e) {
+                    $host = null;
+                }
+                /**
+                 * Absolute/Relative Uri
+                 */
+                $base = "";
+                if ($host !== null) {
+                    if ($scheme !== null) {
+                        $base = "{$scheme}:";
+                        if (in_array($scheme, ["http", "https", "ftp", LocalPath::SCHEME])) {
+                            // mailto, skype, whatsapp does not have the
+                            // because they don't have any host
+                            $base = "$base//";
+                        }
+                    }
+                    $base = "$base{$host}";
+                    try {
+                        $base = "$base:{$this->getPort()}";
+                    } catch (ExceptionNotFound $e) {
+                        // no port
+                    }
+                } else {
+                    if (!in_array($scheme, self::RELATIVE_URL_SCHEMES) && $scheme !== null) {
+                        $base = "{$scheme}:";
+                    }
+                }
+
+                try {
+                    $base = "$base{$this->getPath()}";
+                } catch (ExceptionNotFound $e) {
+                    // ok
+                }
+
+                try {
+                    $base = "$base?{$this->getQueryString($ampersand)}";
+                } catch (ExceptionNotFound $e) {
+                    // ok
+                }
+
+                try {
+                    $base = "$base#{$this->getFragment()}";
+                } catch (ExceptionNotFound $e) {
+                    // ok
+                }
+                return $base;
         }
 
-        try {
-            $base = "$base{$this->getPath()}";
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-        try {
-            $base = "$base?{$this->getQueryString($ampersand)}";
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-        try {
-            $base = "$base#{$this->getFragment()}";
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-        return $base;
 
     }
 

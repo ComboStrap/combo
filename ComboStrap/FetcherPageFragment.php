@@ -632,10 +632,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         global $ACT;
         $this->keepAct = $ACT;
         if ($ACT === null) {
-            /**
-             * ACT is the usage of the parsed instructions
-             * and is needed for {@link LayoutMainAreaBuilder::shouldMainAreaBeBuild()}
-             */
             $ACT = "show";
         }
         /**

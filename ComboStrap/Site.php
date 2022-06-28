@@ -392,7 +392,7 @@ class Site
         return self::getBaseUrl() . "lib/exe/ajax.php";
     }
 
-    public static function getPageDirectory()
+    public static function getPageDirectory(): LocalPath
     {
         global $conf;
         /**

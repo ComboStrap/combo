@@ -28,6 +28,12 @@ class LocalPath extends PathAbs
     const WINDOWS_SEPARATOR = '\\';
     const SCHEME = "file";
 
+
+    public function toUriString(): string
+    {
+        return $this->getUrl()->toString();
+    }
+
     private $path;
     /**
      * @var mixed
@@ -51,7 +57,7 @@ class LocalPath extends PathAbs
         if (substr($path, 0, 2) === $networkShare) {
             // window share
             $pathWithoutNetworkShare = substr($path, 2);
-            $pathWithoutNetworkShare = str_replace("\\","/", $pathWithoutNetworkShare);
+            $pathWithoutNetworkShare = str_replace("\\", "/", $pathWithoutNetworkShare);
             [$this->host, $relativePath] = explode("/", $pathWithoutNetworkShare, 2);
             $this->path = "/$relativePath";
             return;
@@ -209,7 +215,7 @@ class LocalPath extends PathAbs
             throw new ExceptionBadArgument("The path ($localPath) is not a parent path of the actual path ($actualPath)");
         }
         if ($actualPath->toPathString() === $localPath->toPathString()) {
-            return LocalPath::createFromPath(self::RELATIVE_CURRENT);
+            return LocalPath::createFromPath("");
         }
         $sepCharacter = 1; // delete the sep characters
         $relativePath = substr($actualPath->toPathString(), strlen($localPath->toPathString()) + $sepCharacter);
@@ -320,17 +326,25 @@ class LocalPath extends PathAbs
     function getUrl(): Url
     {
 
-        $uri = self::SCHEME . ':/';
+        /**
+         * file://host/path
+         */
+        $uri = self::SCHEME . '://';
         try {
             // Windows share host
-            $uri = "$uri/{$this->getHost()}";
+            $uri = "$uri{$this->getHost()}";
         } catch (ExceptionNotFound $e) {
             // ok
         }
-        $uri = $uri . $this->path;
+        $pathNormalized = str_replace(self::WINDOWS_SEPARATOR, self::LINUX_SEPARATOR, $this->path);
+        if ($pathNormalized[0] !== "/") {
+            $uri = $uri . "/" . $pathNormalized;
+        } else {
+            $uri = $uri . $pathNormalized;
+        }
         try {
             return Url::createFromString($uri);
-        } catch (ExceptionBadSyntax $e) {
+        } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
             $message = "Local Uri Path has a bad syntax ($uri)";
             // should not happen
             LogUtility::internalError($message);

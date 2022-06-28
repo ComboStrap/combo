@@ -1891,31 +1891,8 @@ class PageFragment extends ResourceComboAbs
         return $this;
     }
 
-    /**
-     * @return bool - true if the page has changed
-     * @deprecated use {@link PageFragment::getInstructionsDocument()} instead
-     */
-    public
-    function isParseCacheUsable(): bool
-    {
-        return $this->getInstructionsDocument()->shouldProcess() === false;
-    }
 
-    /**
-     * @return $this
-     * @deprecated use {@link PageFragment::getInstructionsDocument()} instead
-     * Parse a page and put the instructions in the cache
-     */
-    public
-    function parse(): PageFragment
-    {
 
-        $this->getInstructionsDocument()
-            ->process();
-
-        return $this;
-
-    }
 
     /**
      *

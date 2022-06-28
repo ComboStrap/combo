@@ -85,9 +85,11 @@ class HttpRequest
 
     public function fetch(): HttpResponse
     {
+
         if (!$this->withTestRequest) {
-            throw new RuntimeException("HTTP fetch not yet implemented");
+            throw new RuntimeException("Real HTTP fetch not yet implemented, only test fetch");
         }
+
         $query = $this->url->getQuery();
         $testRequest = new \TestRequest();
         $response = $testRequest->get($query);
@@ -98,6 +100,7 @@ class HttpRequest
         }
         $httpResponse = HttpResponse::create($statusCode)
             ->setBody($response->getContent());
+
         try {
             /**
              * The get method will delete the env

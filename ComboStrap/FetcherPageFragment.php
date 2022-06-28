@@ -7,6 +7,7 @@ namespace ComboStrap;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheParser;
 use dokuwiki\Cache\CacheRenderer;
+use Exception;
 use http\Exception\RuntimeException;
 
 class FetcherPageFragment extends FetcherAbs implements FetcherSource
@@ -31,6 +32,11 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     private string $renderer;
     private CacheDependencies $cacheDependencies;
     private PageFragment $requestedContextPage;
+
+    // environment variable
+    private ?string $keepID;
+    private ?string $keepAct;
+    private string $keepRequestedID;
 
 
     public static function createPageFragmentFetcherFromId(string $mainId): FetcherPageFragment
@@ -104,25 +110,15 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     {
 
         /**
-         * The cache is stored by requested
-         * page scope
+         * The cache is stored by requested page scope
          *
-         * We set the id because it's not passed
-         * in all actions and is needed to log the cache
-         * result
+         * We set the environment because
+         * {@link CacheParser::useCache()} may call a parsing of the markup fragment
+         * And the global environment are not always passed
+         * in all actions and is needed to log the {@link  CacheResult cache
+         * result}
          */
-        global $ID;
-        $keepID = $ID;
-        $ID = $this->getRequestedPageFragment()->getPath()->getWikiId();
-        global $ACT;
-        $keepAct = $ACT;
-        if ($ACT === null) {
-            /**
-             * ACT is the usage of the parsed instructions
-             * and is needed for {@link LayoutMainAreaBuilder::shouldMainAreaBeBuild()}
-             */
-            $ACT = "show";
-        }
+        $this->setRequestGlobalVariableEnvironment();
         try {
 
             /**
@@ -134,8 +130,8 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
             $useCache = $this->cache->useCache($depends);
             return ($useCache === false);
         } finally {
-            $ID = $keepID;
-            $ACT = $keepAct;
+            $this->resetRequestGlobalVariableEnvironment();
+
         }
 
 
@@ -256,62 +252,74 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
      */
     function getFetchPath(): Path
     {
+        $this->setRequestGlobalVariableEnvironment();
+        try {
+            $fetchPath = $this->getCachePath();
 
-        $fetchPath = $this->getCachePath();
+            if (!$this->shouldProcess()) {
+                return $fetchPath;
+            }
 
-        if (!$this->shouldProcess()) {
-            return $fetchPath;
-        }
 
-        /**
-         * Snippets if XHTML
-         */
-        if ($this->getMime()->getExtension() === self::XHTML_MODE) {
-            /** We make the Snippet store to Html store an atomic operation
-             *
-             * Why ? Because if the rendering of the page is stopped,
-             * the cache of the HTML page may be stored but not the cache of the snippets
-             * leading to a bad page because the next rendering will see then no snippets.
+            /**
+             * Process
              */
-            try {
-                $this->storeSnippets();
-            } catch (\Exception $e) {
-                // if any write os exception
-                LogUtility::msg("Error while storing the xhtml content: {$e->getMessage()}");
-                $this->removeSnippets();
+            $extension = $this->getMime()->getExtension();
+            switch ($extension) {
+                case self::INSTRUCTION_EXTENSION:
+                    $content = $this->processInstruction();
+                    break;
+                default:
+                    $content = $this->process();
+                    /**
+                     * Reroute the cache output by runtime dependencies
+                     * set during processing
+                     */
+                    $this->cacheDependencies->rerouteCacheDestination($this->cache);
+            }
+
+
+            /**
+             * Storage
+             */
+
+            /**
+             * Snippets and dependencies if XHTML
+             * (after processing as they can be added at runtime)
+             */
+            if ($this->getMime()->getExtension() === self::XHTML_MODE) {
+
+                /**
+                 * We make the Snippet store to Html store an atomic operation
+                 *
+                 * Why ? Because if the rendering of the page is stopped,
+                 * the cache of the HTML page may be stored but not the cache of the snippets
+                 * leading to a bad page because the next rendering will see then no snippets.
+                 */
+                try {
+                    $this->storeSnippets();
+                } catch (Exception $e) {
+                    // if any write os exception
+                    LogUtility::msg("Error while storing the xhtml content: {$e->getMessage()}");
+                    $this->removeSnippets();
+                }
+
+                /**
+                 * Cache output dependencies
+                 */
+                $this->cacheDependencies->storeDependencies();
+
             }
 
             /**
-             * Cache output dependencies
+             * We store always the output in the cache
+             * if the cache is not on, the file is just overwritten
              */
-            $this->cacheDependencies->storeDependencies();
+            $this->cache->storeCache($content);
 
+        } finally {
+            $this->resetRequestGlobalVariableEnvironment();
         }
-
-        /**
-         * Process
-         */
-        $extension = $this->getMime()->getExtension();
-        switch ($extension) {
-            case self::INSTRUCTION_EXTENSION:
-                $content = $this->processInstruction();
-                break;
-            default:
-                $content = $this->process();
-                /**
-                 * Reroute the cache output by runtime dependencies
-                 * set during processing
-                 */
-                $this->cacheDependencies->rerouteCacheDestination($this->cache);
-        }
-
-
-        /**
-         * We store always the output in the cache
-         * if the cache is not on, the file is just overwritten
-         */
-        $this->cache->storeCache($content);
-
         return $fetchPath;
 
     }
@@ -604,6 +612,62 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     public function getCacheDependencies(): CacheDependencies
     {
         return $this->cacheDependencies;
+    }
+
+    private function setRequestGlobalVariableEnvironment()
+    {
+        /**
+         * The running fragment
+         */
+        global $ID;
+        $this->keepID = $ID;
+        $ID = $this->getRequestedPageFragment()->getPath()->getWikiId();
+        /**
+         * The requested action
+         */
+        global $ACT;
+        $this->keepAct = $ACT;
+        if ($ACT === null) {
+            /**
+             * ACT is the usage of the parsed instructions
+             * and is needed for {@link LayoutMainAreaBuilder::shouldMainAreaBeBuild()}
+             */
+            $ACT = "show";
+        }
+        /**
+         * The requested page
+         */
+        $this->keepRequestedID = PluginUtility::getRequestedWikiId();
+        global $INPUT;
+        $INPUT->set(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE,$this->getRequestedContextPageOrDefault()->getPath()->getWikiId());
+
+    }
+
+    private function getRequestedContextPageOrDefault(): PageFragment
+    {
+        try {
+            return $this->getRequestedContextPage();
+        } catch (ExceptionNotFound $e) {
+            return PageFragment::createFromRequestedPage();
+        }
+    }
+
+    private function resetRequestGlobalVariableEnvironment()
+    {
+        global $ID;
+        $ID = $this->keepID;
+        global $ACT;
+        $ACT = $this->keepAct;
+        global $INPUT;
+        $INPUT->set(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE, $this->keepRequestedID);
+    }
+
+    /**
+     * @return PageFragment
+     */
+    public function getPageFragment(): PageFragment
+    {
+        return $this->pageFragment;
     }
 
 }

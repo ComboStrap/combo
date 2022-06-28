@@ -106,7 +106,7 @@ class CacheDependencies
      */
     private $runtimeStoreDependencies;
 
-    private PageFragment $pageFragement;
+    private PageFragment $pageFragment;
 
     /**
      * @var string the first key captured
@@ -121,7 +121,7 @@ class CacheDependencies
      */
     private function __construct(PageFragment $pageFragment, PageFragment $requestedPage)
     {
-        $this->pageFragement = $pageFragment;
+        $this->pageFragment = $pageFragment;
         $this->requestedPage = $requestedPage;
 
         $data = $this->getDependenciesCacheStore()->retrieveCache();
@@ -240,14 +240,10 @@ class CacheDependencies
         $dependencyKey = $this->firstActualKey;
         $runtimeDependencies = $this->getDependencies();
 
-        if ($runtimeDependencies !== null) {
-
-            foreach ($runtimeDependencies as $dependency) {
-                if (in_array($dependency, self::OUTPUT_DEPENDENCIES)) {
-                    $dependencyKey .= $this->getValueForKey($dependency);
-                }
+        foreach ($runtimeDependencies as $dependency) {
+            if (in_array($dependency, self::OUTPUT_DEPENDENCIES)) {
+                $dependencyKey .= $this->getValueForKey($dependency);
             }
-
         }
         return $dependencyKey;
     }
@@ -271,13 +267,13 @@ class CacheDependencies
     }
 
     public
-    function getDependencies(): ?array
+    function getDependencies(): array
     {
-        if ($this->runtimeAddedDependencies != null) {
+        if ($this->runtimeAddedDependencies !== null) {
             return array_keys($this->runtimeAddedDependencies);
         }
         if ($this->runtimeStoreDependencies === null) {
-            return null;
+            return [];
         }
         return array_keys($this->runtimeStoreDependencies);
     }
@@ -290,7 +286,7 @@ class CacheDependencies
     public
     function getDefaultKey(): string
     {
-        $keyDokuWikiCompliant = str_replace("\\", "/", $this->pageFragement->getPath()->toLocalPath()->toPathString());
+        $keyDokuWikiCompliant = str_replace("\\", "/", $this->pageFragment->getPath()->toLocalPath()->toPathString());
         return $keyDokuWikiCompliant . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
     }
 
@@ -304,7 +300,7 @@ class CacheDependencies
             $cache->cache = getCacheName($cache->key, '.' . $cache->mode);
 
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while trying to reroute the cache destination for the slot ({$this->pageFragement}). You may have cache problem. Error: {$e->getMessage()}");
+            LogUtility::msg("Error while trying to reroute the cache destination for the slot ({$this->pageFragment}). You may have cache problem. Error: {$e->getMessage()}");
         }
 
     }
@@ -341,8 +337,8 @@ class CacheDependencies
         if ($this->dependenciesCacheStore !== null) {
             return $this->dependenciesCacheStore;
         }
-        $id = $this->pageFragement->getPath()->getWikiId();
-        $slotLocalFilePath = $this->pageFragement
+        $id = $this->pageFragment->getPath()->getWikiId();
+        $slotLocalFilePath = $this->pageFragment
             ->getPath()
             ->toLocalPath()
             ->toAbsolutePath()

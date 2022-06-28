@@ -186,7 +186,12 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
             try {
                 $mediaMarkup = MediaMarkup::createFromMarkup($match);
             } catch (ExceptionCompile $e) {
-                LogUtility::error("The media ($match) could not be parsed. Error: {$e->getMessage()}");
+                $message = "The media ($match) could not be parsed. Error: {$e->getMessage()}";
+                if (PluginUtility::isDevOrTest()) {
+                    // to get the trace on test run
+                    throw new ExceptionRuntime($message, self::TAG, 1, $e);
+                }
+                LogUtility::error($message);
                 return [];
             }
 
@@ -245,25 +250,27 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                     return false;
                 }
 
-                try {
-                    $isImage = FileSystems::getMime($mediaMarkup->getPath())->isImage();
-                } catch (ExceptionNotFound $e) {
-                    $isImage = false;
-                }
+
                 if (
                     $mediaMarkup->getInternalExternalType() === MediaMarkup::INTERNAL_MEDIA_CALL_NAME
-                    && $isImage
                 ) {
                     try {
-                        $renderer->doc .= MediaLink::createFromMediaMarkup($mediaMarkup)->renderMediaTag();
-                    } catch (ExceptionCompile $e) {
-                        if (PluginUtility::isDevOrTest()) {
-                            throw new ExceptionRuntime("Media Rendering Error. {$e->getMessage()}", MediaLink::CANONICAL, 0, $e);
-                        } else {
-                            $errorClass = self::SVG_RENDERING_ERROR_CLASS;
-                            $message = "Media ({$mediaMarkup}). Error while rendering: {$e->getMessage()}";
-                            $renderer->doc .= "<span class=\"text-danger $errorClass\">" . hsc(trim($message)) . "</span>";
-                            LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, MediaLink::CANONICAL);
+                        $isImage = FileSystems::getMime($mediaMarkup->getPath())->isImage();
+                    } catch (ExceptionNotFound $e) {
+                        $isImage = false;
+                    }
+                    if ($isImage) {
+                        try {
+                            $renderer->doc .= MediaLink::createFromMediaMarkup($mediaMarkup)->renderMediaTag();
+                        } catch (ExceptionCompile $e) {
+                            if (PluginUtility::isDevOrTest()) {
+                                throw new ExceptionRuntime("Media Rendering Error. {$e->getMessage()}", MediaLink::CANONICAL, 0, $e);
+                            } else {
+                                $errorClass = self::SVG_RENDERING_ERROR_CLASS;
+                                $message = "Media ({$mediaMarkup}). Error while rendering: {$e->getMessage()}";
+                                $renderer->doc .= "<span class=\"text-danger $errorClass\">" . hsc(trim($message)) . "</span>";
+                                LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, MediaLink::CANONICAL);
+                            }
                         }
                     }
                     return true;
@@ -293,17 +300,29 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                     $align = null;
                 }
                 try {
-                    $width = $mediaMarkup->getFetchUrl()->getQueryPropertyValue(Dimension::WIDTH_KEY);
+                    /**
+                     * We use the markup ref url
+                     * because we don't support http/https (external) url
+                     * And there is therefore no fetcher available
+                     */
+                    $markupUrl = $mediaMarkup->getMarkupRef()->getUrl();
+                } catch (ExceptionNotFound $e) {
+                    // the
+                    LogUtility::internalError("As the media markup is created from a markup in the syntax component, it should be available");
+                    return false;
+                }
+                try {
+                    $width = $markupUrl->getQueryPropertyValue(Dimension::WIDTH_KEY);
                 } catch (ExceptionNotFound $e) {
                     $width = null;
                 }
                 try {
-                    $height = $mediaMarkup->getFetchUrl()->getQueryPropertyValue(Dimension::HEIGHT_KEY);
+                    $height = $markupUrl->getQueryPropertyValue(Dimension::HEIGHT_KEY);
                 } catch (ExceptionNotFound $e) {
                     $height = null;
                 }
                 try {
-                    $cache = $height = $mediaMarkup->getFetchUrl()->getQueryPropertyValue(FetcherAbs::CACHE_KEY);
+                    $cache = $markupUrl->getQueryPropertyValue(FetcherAbs::CACHE_KEY);
                 } catch (ExceptionNotFound $e) {
                     // Dokuwiki needs a value
                     // If their is no value it will output it without any value
@@ -331,7 +350,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                  * @var Doku_Renderer_metadata $renderer
                  */
                 $tagAttributes = $data[PluginUtility::ATTRIBUTES];
-                if($tagAttributes===null){
+                if ($tagAttributes === null) {
                     // error on handle
                     return false;
                 }

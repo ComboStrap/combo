@@ -635,7 +635,14 @@ class MediaMarkup
             }
         }
 
-        $this->fetcher = FetcherAbs::createFetcherFromFetchUrl($fetchUrl);
+        try {
+            $this->fetcher = FetcherAbs::createFetcherFromFetchUrl($fetchUrl);
+        } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionInternal|ExceptionNotExists|ExceptionNotFound $e) {
+            // we don't support http fetch
+            if (!($this->getMarkupRef()->getSchemeType() === MarkupRef::WEB_URI)) {
+                throw $e;
+            }
+        }
         return $this;
     }
 

@@ -289,8 +289,7 @@ class EditButton
             unset($data[self::FORM_ID]);
             $data["summary"] = $message;
             try {
-                // same as $INFO['lastmod'];
-                $data['rev'] = FileSystems::getModifiedTime($page->getPath())->getTimestamp();
+                $data['rev'] = $page->getPath()->getRevisionOrDefault();
             } catch (ExceptionNotFound $e) {
                 LogUtility::internalError("The file ({$page->getPath()}) does not exist, we cannot set the last modified time on the edit buttons.", self::CANONICAL);
             }

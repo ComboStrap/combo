@@ -738,6 +738,20 @@ class DokuPath extends PathAbs
         return $this->rev;
     }
 
+    /**
+     *
+     * @throws ExceptionNotFound - if the revision is not set and the path does not exist
+     */
+    public function getRevisionOrDefault(){
+        try {
+            return $this->getRevision();
+        } catch (ExceptionNotFound $e) {
+            // same as $INFO['lastmod'];
+            return FileSystems::getModifiedTime($this)->getTimestamp();
+        }
+
+    }
+
 
     /**
      * @return string

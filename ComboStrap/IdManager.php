@@ -60,11 +60,14 @@ class IdManager
             }
         }
 
+        $idScope = $canonical;
         if ($slotPath !== null) {
-            $slotName = $slotPath->getLastNameWithoutExtension();
-            $idScope = "$canonical-$slotName";
-        } else {
-            $idScope = "$canonical";
+            try {
+                $slotName = $slotPath->getLastNameWithoutExtension();
+                $idScope = "$idScope-$slotName";
+            } catch (ExceptionNotFound $e) {
+                // no name (ie root)
+            }
         }
         $lastId = self::generateAndGetNewSequenceValueForScope($idScope);
 

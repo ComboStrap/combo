@@ -3,15 +3,25 @@
 namespace ComboStrap;
 
 use Facebook\WebDriver\Chrome\ChromeOptions;
+use Facebook\WebDriver\Exception\NoSuchElementException;
+use Facebook\WebDriver\Exception\TimeoutException;
+use Facebook\WebDriver\Exception\UnsupportedOperationException;
 use Facebook\WebDriver\Exception\WebDriverCurlException;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverDimension;
 
+/**
+ * Download chrome driver with the same version
+ *
+ * Then run:
+ * ```
+ * chromedriver.exe --port=4444
+ * ```
+ */
 class FetcherSnapshot extends FetcherImage
 {
-
 
 
     const WEB_DRIVER_ENDPOINT = 'http://localhost:4444/';
@@ -59,9 +69,9 @@ class FetcherSnapshot extends FetcherImage
     /**
      * @return LocalPath
      * @throws ExceptionNotFound
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
-     * @throws \Facebook\WebDriver\Exception\TimeoutException
-     * @throws \Facebook\WebDriver\Exception\UnsupportedOperationException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
+     * @throws UnsupportedOperationException
      * @throws ExceptionInternal
      */
     function getFetchPath(): LocalPath
@@ -97,13 +107,14 @@ class FetcherSnapshot extends FetcherImage
                 $capabilities,
                 1000
             );
-        } catch (WebDriverCurlException $e) {
+        } /** @noinspection PhpRedundantCatchClauseInspection */ catch (WebDriverCurlException $e) {
+            // this exception is thrown even if it's not advertised
             throw new ExceptionInternal("Web driver is not available at " . self::WEB_DRIVER_ENDPOINT . ". Error: {$e->getMessage()}");
         }
         try {
 
             // navigate to the page
-            $webDriver->get($url->toUriString());
+            $webDriver->get($url->toAbsoluteUrlString());
 
             // wait until the target page is loaded
             // https://github.com/php-webdriver/php-webdriver/wiki/HowTo-Wait
@@ -156,13 +167,21 @@ class FetcherSnapshot extends FetcherImage
                 ->window()
                 ->setSize($fullPageDimension);
 
-            $lastNameWithoutExtension = $url->getLastNameWithoutExtension();
-            if (empty($lastNameWithoutExtension)) {
-                $lastNameWithoutExtension = $url->getHost();
+
+            if (!PluginUtility::isDevOrTest()) {
+                // Cache
+                $screenShotPath = FetchCache::createFrom($this)->getFile();
+            } else {
+                // Desktop
+                try {
+                    $lastNameWithoutExtension = $url->getLastNameWithoutExtension();
+                } catch (ExceptionNotFound $e) {
+                    $lastNameWithoutExtension = $url->getHost();
+                }
+                $screenShotPath = LocalPath::createHomeDirectory()
+                    ->resolve("Desktop")
+                    ->resolve($lastNameWithoutExtension . "." . $this->getMime()->getExtension());
             }
-            $screenShotPath = LocalPath::createHomeDirectory()
-                ->resolve("Desktop")
-                ->resolve($lastNameWithoutExtension . "." . $this->getMime()->getExtension());
             $webDriver->takeScreenshot($screenShotPath);
             return $screenShotPath;
 

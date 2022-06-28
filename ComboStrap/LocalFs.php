@@ -88,7 +88,7 @@ class LocalFs implements FileSystem
 
     /**
      * @return false|int
-     *@var LocalPath $path
+     * @var LocalPath $path
      */
     public function getSize(Path $path)
     {
@@ -171,19 +171,23 @@ class LocalFs implements FileSystem
      */
     public function closest(Path $path, string $lastFullName): Path
     {
-        if(FileSystems::isDirectory($path)) {
+        if (FileSystems::isDirectory($path)) {
             $closest = $path->resolve($lastFullName);
             if (FileSystems::exists($closest)) {
                 return $closest;
             }
         }
-        $currentPath = $path;
-        while (($parent = $currentPath->getParent()) !== null) {
+        $parent = $path;
+        while (true) {
+            try {
+                $parent = $parent->getParent();
+            } catch (ExceptionNotFound $e) {
+                break;
+            }
             $closest = $parent->resolve($lastFullName);
             if (FileSystems::exists($closest)) {
                 return $closest;
             }
-            $currentPath = $parent;
         }
         throw new ExceptionNotFound("No closest was found for the file name ($lastFullName) from the path ($path)");
     }

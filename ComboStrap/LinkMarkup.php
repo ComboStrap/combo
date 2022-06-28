@@ -78,7 +78,7 @@ class LinkMarkup
     private MarkupRef $markupRef;
 
 
-    private TagAttributes $attributes;
+    private TagAttributes $stylingAttributes;
 
     /**
      * Link constructor.
@@ -90,7 +90,7 @@ class LinkMarkup
     public function __construct($ref)
     {
 
-        $this->attributes = TagAttributes::createEmpty(syntax_plugin_combo_link::TAG);
+        $this->stylingAttributes = TagAttributes::createEmpty(syntax_plugin_combo_link::TAG);
 
         $this->markupRef = MarkupRef::createLinkFromRef($ref);
 
@@ -132,7 +132,7 @@ class LinkMarkup
     public function toAttributes(): TagAttributes
     {
 
-        $outputAttributes = $this->attributes;
+        $outputAttributes = $this->stylingAttributes;
 
 
         $url = $this->getMarkupRef()->getUrl();
@@ -604,9 +604,9 @@ EOF;
                     if (!in_array($key, $showDokuProperty)) {
                         $this->getMarkupRef()->getUrl()->removeQueryParameter($key);
                         if (!TagAttributes::isEmptyValue($value)) {
-                            $this->attributes->addComponentAttributeValue($key, $value);
+                            $this->stylingAttributes->addComponentAttributeValue($key, $value);
                         } else {
-                            $this->attributes->addEmptyComponentAttributeValue($key);
+                            $this->stylingAttributes->addEmptyComponentAttributeValue($key);
                         }
                     }
                 }
@@ -615,12 +615,21 @@ EOF;
             MarkupRef::EMAIL_URI:
                 foreach ($this->getMarkupRef()->getUrl()->getQuery() as $key => $value) {
                     if (!in_array($key, self::EMAIL_VALID_PARAMETERS)) {
-                        $this->attributes->addComponentAttributeValue($key, $value);
+                        $this->stylingAttributes->addComponentAttributeValue($key, $value);
                     }
                 }
                 break;
         }
 
+    }
+
+    /**
+     * @return TagAttributes - the unknown attributes in a url are collected as styling attributes if this not a do query
+     * by {@link LinkMarkup::collectStylingAttributeInUrl()}
+     */
+    public function getStylingAttributes(): TagAttributes
+    {
+        return $this->stylingAttributes;
     }
 
 

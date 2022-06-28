@@ -173,7 +173,7 @@ class Url extends PathAbs
      */
     public function getPropertyValue($propertyName): string
     {
-        if(!isset($this->query[$propertyName])){
+        if (!isset($this->query[$propertyName])) {
             throw new ExceptionNotFound("The property ($propertyName) was not found", self::CANONICAL);
         }
         return $this->query[$propertyName];
@@ -374,9 +374,14 @@ class Url extends PathAbs
     }
 
     /**
+     * Actual vs expected
+     *
+     * We use this vocabulary (actual/expected) and not (internal/external or left/right) because this function
+     * is mostly used in a test framework.
+     *
      * @throws ExceptionNotEquals
      */
-    public function equals(Url $url)
+    public function equals(Url $expectedUrl)
     {
         /**
          * Scheme
@@ -387,12 +392,12 @@ class Url extends PathAbs
             $actualScheme = "";
         }
         try {
-            $externalScheme = $url->getScheme();
+            $expectedScheme = $expectedUrl->getScheme();
         } catch (ExceptionNotFound $e) {
-            $externalScheme = "";
+            $expectedScheme = "";
         }
-        if ($actualScheme !== $externalScheme) {
-            throw new ExceptionNotEquals("The scheme are not equals ($actualScheme vs $externalScheme)");
+        if ($actualScheme !== $expectedScheme) {
+            throw new ExceptionNotEquals("The scheme are not equals ($actualScheme vs $expectedScheme)");
         }
         /**
          * Host
@@ -403,30 +408,30 @@ class Url extends PathAbs
             $actualHost = "";
         }
         try {
-            $externalHost = $url->getHost();
+            $expectedHost = $expectedUrl->getHost();
         } catch (ExceptionNotFound $e) {
-            $externalHost = "";
+            $expectedHost = "";
         }
-        if ($actualHost !== $externalHost) {
-            throw new ExceptionNotEquals("The host are not equals ($actualHost vs $externalHost)");
+        if ($actualHost !== $expectedHost) {
+            throw new ExceptionNotEquals("The host are not equals ($actualHost vs $expectedHost)");
         }
         /**
          * Query
          */
         $actualQuery = $this->getQuery();
-        $externalQuery = $url->getQuery();
+        $expectedQuery = $expectedUrl->getQuery();
         foreach ($actualQuery as $key => $value) {
-            $externalValue = $externalQuery[$key];
-            if ($externalValue === null) {
-                throw new ExceptionNotEquals("The external url does not have the $key property");
+            $expectedValue = $expectedQuery[$key];
+            if ($expectedValue === null) {
+                throw new ExceptionNotEquals("The expected url does not have the $key property");
             }
-            if ($externalValue !== $value) {
-                throw new ExceptionNotEquals("The $key property does not have the same value ($value vs $externalValue)");
+            if ($expectedValue !== $value) {
+                throw new ExceptionNotEquals("The $key property does not have the same value ($value vs $expectedValue)");
             }
-            unset($externalQuery[$key]);
+            unset($expectedQuery[$key]);
         }
-        foreach ($externalQuery as $key => $value) {
-            throw new ExceptionNotEquals("The external URL has an extra property ($key=$value)");
+        foreach ($expectedQuery as $key => $value) {
+            throw new ExceptionNotEquals("The expected URL has an extra property ($key=$value)");
         }
 
         /**
@@ -438,12 +443,12 @@ class Url extends PathAbs
             $actualFragment = "";
         }
         try {
-            $externalFragment = $url->getFragment();
+            $expectedFragment = $expectedUrl->getFragment();
         } catch (ExceptionNotFound $e) {
-            $externalFragment = "";
+            $expectedFragment = "";
         }
-        if ($actualFragment !== $externalFragment) {
-            throw new ExceptionNotEquals("The fragment are not equals ($actualFragment vs $externalFragment)");
+        if ($actualFragment !== $expectedFragment) {
+            throw new ExceptionNotEquals("The fragment are not equals ($actualFragment vs $expectedFragment)");
         }
 
     }

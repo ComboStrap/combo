@@ -158,56 +158,60 @@ class XmlUtility
                     /** @var \DOMAttr $leftAtt */
                     $rightAtt = $rightAttributes[$leftAttName];
                     if ($rightAtt == null) {
-                        $error .= "The attribute (" . $leftAtt->getNodePath() . ") does not exist on the right side\n";
-                    } else {
-                        unset($rightAttributes[$leftAttName]);
-
-                        /**
-                         * Value check
-                         */
-                        if (in_array($leftAttName, $excludedAttributes)) {
-                            continue;
+                        if (!in_array($leftAttName, $excludedAttributes)) {
+                            $error .= "The attribute (" . $leftAtt->getNodePath() . ") does not exist on the right side\n";
                         }
-                        $leftAttValue = $leftAtt->nodeValue;
-                        $rightAttValue = $rightAtt->nodeValue;
-                        if ($leftAttValue !== $rightAttValue) {
-                            switch ($leftAtt->name) {
-                                case "class":
-                                    $error .= Html::getDiffBetweenClass($leftAttValue, $rightAttValue, "left ,{$leftAtt->getNodePath()}", "right, {$leftAtt->getNodePath()}");
-                                    break;
-                                case "srcset":
-                                case "data-srcset":
+                        continue;
+                    }
+
+                    unset($rightAttributes[$leftAttName]);
+
+                    /**
+                     * Value check
+                     */
+                    if (in_array($leftAttName, $excludedAttributes)) {
+                        continue;
+                    }
+                    $leftAttValue = $leftAtt->nodeValue;
+                    $rightAttValue = $rightAtt->nodeValue;
+                    if ($leftAttValue !== $rightAttValue) {
+                        switch ($leftAtt->name) {
+                            case "class":
+                                $error .= Html::getDiffBetweenClass($leftAttValue, $rightAttValue, "left ,{$leftAtt->getNodePath()}", "right, {$leftAtt->getNodePath()}");
+                                break;
+                            case "srcset":
+                            case "data-srcset":
+                                try {
+                                    Html::getDiffBetweenSrcSet($leftAttValue, $rightAttValue);
+                                } catch (ExceptionBadSyntax|ExceptionNotEquals $e) {
+                                    $error .= $e->getMessage();
+                                }
+                                break;
+                            case "src":
+                            case "data-src":
+                            case "href":
+                                try {
+                                    $leftUrl = Url::createFromString($leftAttValue);
                                     try {
-                                        Html::getDiffBetweenSrcSet($leftAttValue, $rightAttValue);
-                                    } catch (ExceptionBadSyntax|ExceptionNotEquals $e) {
-                                        $error .= $e->getMessage();
-                                    }
-                                    break;
-                                case "src":
-                                case "data-src":
-                                case "href":
-                                    try {
-                                        $leftUrl = Url::createFromString($leftAttValue);
+                                        $rightUrl = Url::createFromString($rightAttValue);
                                         try {
-                                            $rightUrl = Url::createFromString($rightAttValue);
-                                            try {
-                                                $leftUrl->equals($rightUrl);
-                                            } catch (ExceptionNotEquals $e) {
-                                                $error .= "The attribute (" . $rightAtt->getNodePath() . ") have different values. Error:{$e->getMessage()}\n";
-                                            }
-                                        } catch (ExceptionBadSyntax $e) {
-                                            $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ") and the right value is not an URL. Error:{$e->getMessage()}\n";
+                                            $leftUrl->equals($rightUrl);
+                                        } catch (ExceptionNotEquals $e) {
+                                            $error .= "The attribute (" . $rightAtt->getNodePath() . ") have different values. Error:{$e->getMessage()}\n";
                                         }
                                     } catch (ExceptionBadSyntax $e) {
-                                        $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ") and the left value is not an URL. Error:{$e->getMessage()}\n";
+                                        $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ") and the right value is not an URL. Error:{$e->getMessage()}\n";
                                     }
-                                    break;
-                                default:
-                                    $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ")\n";
-                                    break;
-                            }
+                                } catch (ExceptionBadSyntax $e) {
+                                    $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ") and the left value is not an URL. Error:{$e->getMessage()}\n";
+                                }
+                                break;
+                            default:
+                                $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ")\n";
+                                break;
                         }
                     }
+
                 }
 
                 ksort($rightAttributes);

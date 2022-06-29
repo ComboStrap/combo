@@ -922,7 +922,11 @@ class PageFragment extends ResourceComboAbs
         /**
          * Conf
          */
-        $urlType = PageUrlType::getOrCreateForPage($this)->getValue();
+        try {
+            $urlType = PageUrlType::createFromPage($this)->getValue();
+        } catch (ExceptionNotFound $e) {
+            $urlType = null;
+        }
         if ($urlType === PageUrlType::CONF_VALUE_PAGE_PATH && $absoluteUrlMandatory == false) {
             $absoluteUrlMandatory = Site::shouldUrlBeAbsolute();
         }
@@ -1421,20 +1425,22 @@ class PageFragment extends ResourceComboAbs
     public
     function getSlugOrDefault(): ?string
     {
-
-        if ($this->getSlug() !== null) {
+        try {
             return $this->getSlug();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultSlug();
         }
-        return $this->getDefaultSlug();
+
+
     }
 
     /**
      *
-     * @return string|null
+     * @return string
      *
      */
     public
-    function getDefaultSlug(): ?string
+    function getDefaultSlug(): string
     {
         return $this->slug->getDefaultValue();
     }
@@ -1692,9 +1698,9 @@ class PageFragment extends ResourceComboAbs
         return $this;
     }
 
+
     /**
      *
-     * TODO: Move to {@link PageFragment} ?
      */
     public function getUrlPath(): string
     {
@@ -1707,9 +1713,10 @@ class PageFragment extends ResourceComboAbs
     /**
      * @return string|null
      *
+     * @throws ExceptionNotFound
      */
     public
-    function getSlug(): ?string
+    function getSlug(): string
     {
         return $this->slug->getValue();
     }

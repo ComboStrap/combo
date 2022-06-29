@@ -81,7 +81,7 @@ class PageUrlPath extends MetadataWikiPath
         /**
          * Type of Url
          */
-        $pageUrlType = PageUrlType::getOrCreateForPage($page);
+        $pageUrlType = PageUrlType::createFromPage($page);
         $urlType = $pageUrlType->getValue();
         $urlTypeDefault = $pageUrlType->getDefaultValue();
         if ($urlType === $urlTypeDefault) {
@@ -89,6 +89,20 @@ class PageUrlPath extends MetadataWikiPath
             throw new ExceptionNotFound("Same value as default");
         }
         return $this->getUrlPathFromType($urlType);
+
+    }
+
+    /**
+     * @return string
+     *
+     */
+    public function getValueOrDefault(): string
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
 
     }
 
@@ -118,10 +132,13 @@ class PageUrlPath extends MetadataWikiPath
         return false;
     }
 
-    public function getDefaultValue()
+    /**
+     * @return string
+     */
+    public function getDefaultValue(): string
     {
 
-        $urlTypeDefault = PageUrlType::getOrCreateForPage($this->getResource())->getDefaultValue();
+        $urlTypeDefault = PageUrlType::createFromPage($this->getResource())->getDefaultValue();
         return $this->getUrlPathFromType($urlTypeDefault);
 
     }
@@ -211,15 +228,20 @@ class PageUrlPath extends MetadataWikiPath
         return null;
     }
 
-    public function getUrlPathFromType(?string $urlType)
+    /**
+     * In case of internal error, the path is returned
+     */
+    public function getUrlPathFromType(string $urlType): string
     {
         $page = $this->getResource();
-        if((!$page instanceof PageFragment)){
-            LogUtility::msg("The url path is only for page resources", LogUtility::LVL_MSG_ERROR, $this->getCanonical());
-            return null;
+        $pagePath = $page->getPath()->toPathString();
+        if ((!$page instanceof PageFragment)) {
+            $message = "The url path is only for page resources";
+            LogUtility::internalError($message, $this->getCanonical());
+            return $pagePath;
         }
 
-        $pagePath = $page->getPath()->toPathString();
+
         switch ($urlType) {
             case PageUrlType::CONF_VALUE_PAGE_PATH:
                 // the default
@@ -234,23 +256,34 @@ class PageUrlPath extends MetadataWikiPath
                 return $this->toPermanentUrlPath($page->getSlugOrDefault());
             case PageUrlType::CONF_VALUE_HIERARCHICAL_SLUG:
                 $urlPath = $page->getSlugOrDefault();
-                while (($parentPage = $page->getParentPage()) != null) {
-                    if(!$parentPage->isRootHomePage()) {
+                $parentPage = $page;
+                while (true) {
+                    try {
+                        $parentPage = $parentPage->getParentPage();
+                    } catch (ExceptionNotFound $e){
+                        break;
+                    }
+                    if (!$parentPage->isRootHomePage()) {
                         $urlPath = Slug::toSlugPath($parentPage->getNameOrDefault()) . $urlPath;
                     }
                 }
                 return $this->toPermanentUrlPath($urlPath);
             case PageUrlType::CONF_VALUE_HOMED_SLUG:
                 $urlPath = $page->getSlugOrDefault();
-                if (($parentPage = $page->getParentPage()) != null) {
-                    if(!$parentPage->isRootHomePage()) {
+                try {
+                    $parentPage = $page->getParentPage();
+                    if (!$parentPage->isRootHomePage()) {
                         $urlPath = Slug::toSlugPath($parentPage->getNameOrDefault()) . $urlPath;
                     }
+                } catch (ExceptionNotFound $e) {
+                    // no parent page
                 }
                 return $this->toPermanentUrlPath($urlPath);
             default:
-                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
-                return null;
+                $message = "The url type ($urlType) is unknown and was unexpected";
+                LogUtility::internalError($message, self::PROPERTY_NAME);
+                return $pagePath;
+
         }
     }
 

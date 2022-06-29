@@ -96,13 +96,13 @@ class Slug extends MetadataWikiPath
         return true;
     }
 
-    public function getDefaultValue(): ?string
+    /**
+     * @return string
+     */
+    public function getDefaultValue(): string
     {
         $title = PageTitle::createForPage($this->getResource())
             ->getValueOrDefault();
-        if ($title === null) {
-            return null;
-        }
         return self::toSlugPath($title);
     }
 }

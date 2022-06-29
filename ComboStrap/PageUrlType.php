@@ -28,18 +28,6 @@ class PageUrlType extends MetadataText
     ];
 
 
-    public static function getOrCreateForPage(ResourceCombo $page): PageUrlType
-    {
-        $path = $page->getPath()->toPathString();
-        $urlType = self::$urlTypeInstanceCache[$path];
-        if ($urlType === null) {
-            $urlType = self::createFromPage($page);
-            self::$urlTypeInstanceCache[$path] = $urlType;
-        }
-        return $urlType;
-
-    }
-
     public static function createFromPage(ResourceCombo $page): PageUrlType
     {
         return (new PageUrlType())
@@ -102,6 +90,9 @@ class PageUrlType extends MetadataText
         return true;
     }
 
+    /**
+     * @return string
+     */
     public function getDefaultValue(): string
     {
         return PageUrlType::CONF_CANONICAL_URL_TYPE_DEFAULT;

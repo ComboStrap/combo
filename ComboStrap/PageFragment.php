@@ -1419,18 +1419,16 @@ class PageFragment extends ResourceComboAbs
     }
 
     /**
-     * @return string|null
-     *
+     * @return string
      */
     public
-    function getSlugOrDefault(): ?string
+    function getSlugOrDefault(): string
     {
         try {
             return $this->getSlug();
         } catch (ExceptionNotFound $e) {
             return $this->getDefaultSlug();
         }
-
 
     }
 

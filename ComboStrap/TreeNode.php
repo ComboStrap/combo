@@ -22,13 +22,26 @@ abstract class TreeNode
     private int $levelChildIdentifier;
 
 
+    /**
+     * @throws ExceptionBadState - if the node has already been added and is not the same than in the tree
+     */
     public function appendChild(TreeNode $treeNode): TreeNode
     {
-
-        $childCount = count($this->children);
-        $treeNode->setLevelChildIdentifier($childCount + 1);
-        $treeNode->setParent($this);
-        $this->children[] = $treeNode;
+        try {
+            $levelChildIdentifier = $treeNode->getLevelChildIdentifier();
+        } catch (ExceptionNotFound $e) {
+            // no level child identifier
+            $childCount = count($this->children);
+            $levelChildIdentifier = $childCount + 1;
+            $treeNode->setLevelChildIdentifier($levelChildIdentifier);
+            $treeNode->setParent($this);
+            $this->children[$levelChildIdentifier] = $treeNode;
+            return $this;
+        }
+        $actualTreeNode = $this->children[$levelChildIdentifier];
+        if ($actualTreeNode !== $treeNode) {
+            throw new ExceptionBadState("The node ($treeNode) was already added but not on this level");
+        }
         return $this;
     }
 
@@ -91,12 +104,12 @@ abstract class TreeNode
     function getTreeIdentifier(): string
     {
 
-        $treeIdentifier = $this->getLevelNodeIdentifier();
+        $treeIdentifier = $this->getLevelChildIdentifier();
         $parent = $this;
         while (true) {
             try {
                 $parent = $parent->getParent();
-                $parentLevelNodeIdentifier = $parent->getLevelNodeIdentifier();
+                $parentLevelNodeIdentifier = $parent->getLevelChildIdentifier();
                 if ($parentLevelNodeIdentifier !== "") {
                     $treeIdentifier = "{$parentLevelNodeIdentifier}.$treeIdentifier";
                 } else {
@@ -128,17 +141,20 @@ abstract class TreeNode
         return $this->parentNode;
     }
 
-    private function setLevelChildIdentifier(int $param)
+    private function setLevelChildIdentifier(int $levelIdentifier)
     {
-        $this->levelChildIdentifier = $param;
+        $this->levelChildIdentifier = $levelIdentifier;
     }
 
-    private function getLevelNodeIdentifier(): string
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getLevelChildIdentifier(): int
     {
-        if (isset($this->levelChildIdentifier)) {
-            return "$this->levelChildIdentifier";
+        if (!isset($this->levelChildIdentifier)) {
+            throw new ExceptionNotFound("No child identifier level found");
         }
-        return "";
+        return $this->levelChildIdentifier;
     }
 
 

@@ -74,7 +74,7 @@ abstract class FetcherAbs implements Fetcher
         try {
             $mime = FileSystems::getMime($dokuPath);
         } catch (ExceptionNotFound $e) {
-            throw new ExceptionNotFound("No fetcher could be created. The mime us unknown. Error: {$e->getMessage()}");
+            throw new ExceptionNotFound("No fetcher could be created. The mime is unknown for the path ($dokuPath). Error: {$e->getMessage()}");
         }
         switch ($mime->toString()) {
             case Mime::SVG:

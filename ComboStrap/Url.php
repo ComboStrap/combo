@@ -50,10 +50,7 @@ class Url extends PathAbs
      */
     const RELATIVE_URL_SCHEMES = ["http", "https"];
 
-    /**
-     * An array of array because one name may have several value
-     * @var array[array] $query
-     */
+
     private ArrayCaseInsensitive $query;
     private ?string $path = null;
     private ?string $scheme = null;
@@ -64,7 +61,6 @@ class Url extends PathAbs
      */
     private $url;
     private ?int $port = null;
-    private bool $rewrite = false;
 
 
     /**
@@ -251,9 +247,10 @@ class Url extends PathAbs
             $key = substr($key, 0, -2);
             $actualValue = $this->query[$key];
             if ($actualValue === null || is_array($actualValue)) {
-                $this->query[$key][] = $value;
+                $this->query[$key] = [$value];
             } else {
-                $this->query[$key] = [$actualValue, $value];
+                $actualValue[] = $value;
+                $this->query[$key] = $actualValue;
             }
             return $this;
         }

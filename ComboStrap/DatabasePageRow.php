@@ -392,10 +392,14 @@ class DatabasePageRow
         }
 
         // Do we have a page attached to this page id
-        $pageId = $page->getPageId();
-        $row = $this->getDatabaseRowFromPageId($pageId);
-        if ($row !== null) {
-            return $row;
+        try {
+            $pageId = $page->getPageId();
+            $row = $this->getDatabaseRowFromPageId($pageId);
+            if ($row !== null) {
+                return $row;
+            }
+        } catch (ExceptionNotFound $e) {
+            // no page id
         }
 
 
@@ -407,7 +411,7 @@ class DatabasePageRow
                 return $row;
             }
         } catch (ExceptionNotFound $e) {
-            // ok
+            // no canonical
         }
 
         // Do we have a page attached to the path

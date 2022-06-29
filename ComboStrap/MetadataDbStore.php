@@ -15,11 +15,6 @@ class MetadataDbStore extends MetadataStoreAbs
 {
     const CANONICAL = "database";
 
-    /**
-     * @var DatabasePageRow[]
-     */
-    private static $dbRows = [];
-
 
     static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
@@ -28,7 +23,12 @@ class MetadataDbStore extends MetadataStoreAbs
 
     public static function resetAll()
     {
-        self::$dbRows = [];
+        /**
+         * no cache anymore because
+         * because during the row get {@link DatabasePageRow::createFromPageObject()}
+         * we may retrieve it by page id but also canonical
+         * ...
+         */
     }
 
     public function set(Metadata $metadata)
@@ -77,11 +77,11 @@ class MetadataDbStore extends MetadataStoreAbs
     {
 
 
-        $uid = $metadata->getUidObject();
-        if ($uid === null) {
+        try {
+            $uid = $metadata->getUidObject();
+        } catch (ExceptionBadArgument $e) {
             throw new ExceptionCompile("The uid class should be defined for the metadata ($metadata)");
         }
-
 
         $sourceRows = $metadata->toStoreValue();
         if ($sourceRows === null) {
@@ -275,17 +275,14 @@ EOF;
 
     private function getDatabaseRow(): DatabasePageRow
     {
-        $mapKey = $this->getResource()->getPath()->toPathString();
-        $row = self::$dbRows[$mapKey];
-        if ($row === null) {
+
+        if(!isset($this->row)){
             $page = $this->getResource();
-            if (!($page instanceof PageFragment)) {
-                throw new ExceptionRuntime("The resource should be a page, {$page->getType()} is not supported");
-            }
-            $row = DatabasePageRow::createFromPageObject($page);
-            self::$dbRows[$mapKey] = $row;
+            $this->row = DatabasePageRow::createFromPageObject($page);
         }
-        return $row;
+        return $this->row;
+
+
     }
 
 

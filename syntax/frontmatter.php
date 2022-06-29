@@ -212,7 +212,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
 
         /**
-         * Sync
+         * Sync to file
          */
         $targetStore = MetadataDokuWikiStore::getOrCreateFromResource($parsedPage);
         $transfer = MetadataStoreTransfer::createForPage($parsedPage)

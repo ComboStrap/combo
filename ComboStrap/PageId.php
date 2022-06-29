@@ -169,8 +169,7 @@ class PageId extends MetadataText
             /**
              * Create the row in the database (to allow permanent url redirection {@link PageUrlType})
              */
-            (new DatabasePageRow())
-                ->setPage($resource)
+            DatabasePageRow::createFromPageObject($resource)
                 ->upsertAttributes([PageId::getPersistentName() => $actualValue]);
         } catch (ExceptionCompile $e) {
             LogUtility::msg("Unable to store the page id generated. Message:" . $e->getMessage());

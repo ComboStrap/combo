@@ -1170,7 +1170,7 @@ class PageFragment extends ResourceComboAbs
     /**
      * A page id
      * @return string
-     * @throws ExceptionNotExists - when the page does not exist
+     * @throws ExceptionNotFound - when the page does not exist
      */
     public
     function getPageId(): string
@@ -1956,7 +1956,7 @@ class PageFragment extends ResourceComboAbs
 
     /**
      * A shortcut for {@link PageFragment::getPath()::getDokuwikiId()}
-     * @deprecated use the dokuwiki id of {@link PageFragment::getPath()}
+     *
      */
     public
     function getWikiId(): string

@@ -33,11 +33,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     private CacheDependencies $cacheDependencies;
     private PageFragment $requestedContextPage;
 
-    // environment variable
-    private ?string $keepID;
-    private ?string $keepAct;
-    private string $keepRequestedID;
-
 
     public static function createPageFragmentFetcherFromId(string $mainId): FetcherPageFragment
     {
@@ -118,7 +113,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
          * in all actions and is needed to log the {@link  CacheResult cache
          * result}
          */
-        $this->setRequestGlobalVariableEnvironment();
+        $wikiRequest = $this->createWikiRequest();
         try {
 
             /**
@@ -130,8 +125,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
             $useCache = $this->cache->useCache($depends);
             return ($useCache === false);
         } finally {
-            $this->resetRequestGlobalVariableEnvironment();
-
+            $wikiRequest->resetEnvironment();
         }
 
 
@@ -252,7 +246,8 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
      */
     function getFetchPath(): Path
     {
-        $this->setRequestGlobalVariableEnvironment();
+
+        $wikiRequest = $this->createWikiRequest();
         try {
 
             if (!$this->shouldProcess()) {
@@ -317,7 +312,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
             $this->cache->storeCache($content);
 
         } finally {
-            $this->resetRequestGlobalVariableEnvironment();
+            $wikiRequest->resetEnvironment();
         }
         /**
          * The cache path may have change due to the cache key rerouting
@@ -618,28 +613,13 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         return $this->cacheDependencies;
     }
 
-    private function setRequestGlobalVariableEnvironment()
+    private function createWikiRequest()
     {
-        /**
-         * The running fragment
-         */
-        global $ID;
-        $this->keepID = $ID;
-        $ID = $this->getRequestedPageFragment()->getPath()->getWikiId();
-        /**
-         * The requested action
-         */
-        global $ACT;
-        $this->keepAct = $ACT;
-        if ($ACT === null) {
-            $ACT = "show";
-        }
-        /**
-         * The requested page
-         */
-        $this->keepRequestedID = PluginUtility::getRequestedWikiId();
-        global $INPUT;
-        $INPUT->set(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE,$this->getRequestedContextPageOrDefault()->getPath()->getWikiId());
+
+        return WikiRequest::create()
+            ->setRunningId($this->getRequestedPageFragment()->getPath()->getWikiId())
+            ->setAct("show")
+            ->setRequestedId($this->getRequestedContextPageOrDefault()->getPath()->getWikiId());
 
     }
 
@@ -652,15 +632,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         }
     }
 
-    private function resetRequestGlobalVariableEnvironment()
-    {
-        global $ID;
-        $ID = $this->keepID;
-        global $ACT;
-        $ACT = $this->keepAct;
-        global $INPUT;
-        $INPUT->set(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE, $this->keepRequestedID);
-    }
 
     /**
      * @return PageFragment

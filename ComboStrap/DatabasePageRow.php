@@ -183,7 +183,7 @@ class DatabasePageRow
         try {
             $row = $databasePage->getDatabaseRowFromPage($page);
             $databasePage->setRow($row);
-        } catch (ExceptionSqliteNotAvailable|ExceptionNotExists|ExceptionNotFound $e) {
+        } catch (ExceptionSqliteNotAvailable|ExceptionNotExists $e) {
             // ok
         }
         return $databasePage;
@@ -377,9 +377,8 @@ class DatabasePageRow
      * Return the database row
      *
      *
-     * @throws ExceptionNotFound - if the row does not exists
      * @throws ExceptionSqliteNotAvailable - if sqlite is not available
-     * @throws ExceptionNotExists - if the page does not exists
+     * @throws ExceptionNotExists - if the row does not exists
      */
     private
     function getDatabaseRowFromPage(PageFragment $page): array
@@ -425,7 +424,12 @@ class DatabasePageRow
          * Do we have a page attached to this ID
          */
         $id = $page->getPath()->getWikiId();
-        return $this->getDatabaseRowFromDokuWikiId($id);
+        try {
+            return $this->getDatabaseRowFromDokuWikiId($id);
+        } catch (ExceptionNotFound $e) {
+            // we send a not exist to not
+            throw new ExceptionNotExists("No row could be found");
+        }
 
 
     }

@@ -15,6 +15,11 @@ class MetadataDbStore extends MetadataStoreAbs
 {
     const CANONICAL = "database";
 
+    /**
+     * @var DatabasePageRow[]
+     */
+    private static array $dbRows = [];
+
 
     static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
@@ -23,12 +28,7 @@ class MetadataDbStore extends MetadataStoreAbs
 
     public static function resetAll()
     {
-        /**
-         * no cache anymore because
-         * because during the row get {@link DatabasePageRow::createFromPageObject()}
-         * we may retrieve it by page id but also canonical
-         * ...
-         */
+        self::$dbRows = [];
     }
 
     public function set(Metadata $metadata)
@@ -275,14 +275,14 @@ EOF;
 
     private function getDatabaseRow(): DatabasePageRow
     {
-
-        if(!isset($this->row)){
+        $mapKey = $this->getResource()->getPath()->toPathString();
+        $row = self::$dbRows[$mapKey];
+        if ($row === null) {
             $page = $this->getResource();
-            $this->row = DatabasePageRow::createFromPageObject($page);
+            $row = DatabasePageRow::createFromPageObject($page);
+            self::$dbRows[$mapKey] = $row;
         }
-        return $this->row;
-
-
+        return $row;
     }
 
 

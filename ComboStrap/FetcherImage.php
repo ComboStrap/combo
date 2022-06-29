@@ -73,18 +73,48 @@ abstract class FetcherImage extends FetcherAbs
          * Dokuwiki Conformance
          */
         if ($this instanceof FetcherLocalImage) {
-            if ($requestedWidth !== null || $requestedHeight !== null) {
 
-                $id = $this->getOriginalPath()->getWikiId();
-                $token = media_get_token($id, $requestedWidth, $requestedHeight);
-                $url->addQueryParameter(FetcherImage::TOK, $token);
+            $url->addQueryParameter(FetcherImage::TOK, $this->getTok());
 
-            }
+
         }
 
         return $url;
     }
 
+    /**
+     * The tok is supposed to counter a DDOS attack when
+     * with or height are requested
+     *
+     *
+     * @throws ExceptionNotFound
+     */
+    public function getTok(): string
+    {
+        /**
+         * Dokuwiki Compliance
+         */
+        if (!($this instanceof FetcherLocalImage)) {
+            throw new ExceptionNotFound("No tok for non local image");
+        }
+        try {
+            $requestedWidth = $this->getRequestedWidth();
+        } catch (ExceptionNotFound $e) {
+            $requestedWidth = null;
+        }
+        try {
+            $requestedHeight = $this->getRequestedHeight();
+        } catch (ExceptionNotFound $e) {
+            $requestedHeight = null;
+        }
+        if ($requestedWidth !== null || $requestedHeight !== null) {
+
+            $id = $this->getOriginalPath()->getWikiId();
+            return media_get_token($id, $requestedWidth, $requestedHeight);
+
+        }
+        throw new ExceptionNotFound("No tok needed");
+    }
 
     /**
      * @throws ExceptionBadArgument

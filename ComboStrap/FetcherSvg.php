@@ -1333,6 +1333,7 @@ class FetcherSvg extends FetcherLocalImage
     {
 
         foreach (array_keys($tagAttributes->getComponentAttributes()) as $svgAttribute) {
+            $svgAttribute = strtolower($svgAttribute);
             switch ($svgAttribute) {
                 case Dimension::WIDTH_KEY:
                 case Dimension::HEIGHT_KEY:
@@ -1393,6 +1394,10 @@ class FetcherSvg extends FetcherLocalImage
                 case TagAttributes::CLASS_KEY:
                     $value = $tagAttributes->getValueAndRemove($svgAttribute);
                     $this->setRequestedClass($value);
+                    continue 2;
+                case strtolower(self::REQUESTED_PRESERVE_ASPECT_RATIO_KEY):
+                    $value = $tagAttributes->getValueAndRemove($svgAttribute);
+                    $this->setRequestedPreserveAspectRatio($value);
                     continue 2;
             }
 

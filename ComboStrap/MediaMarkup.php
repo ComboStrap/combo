@@ -117,6 +117,7 @@ class MediaMarkup
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
      * @throws ExceptionNotExists
+     * @throws ExceptionInternal
      */
     private function setMarkupRef(string $markupRef): MediaMarkup
     {
@@ -271,7 +272,6 @@ class MediaMarkup
         /**
          * Media Alignment
          */
-
         $rightAlign = (bool)preg_match('/^ /', $ref);
         $leftAlign = (bool)preg_match('/ $/', $ref);
         $align = null;
@@ -593,11 +593,7 @@ class MediaMarkup
      *
      * Private method use {@link MediaMarkup::createFromFetchUrl()} to create a media markup via a Url
      *
-     * @throws ExceptionBadArgument
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionNotExists
      * @throws ExceptionNotFound
-     * @throws ExceptionInternal
      */
     private function setUrl(Url $fetchUrl): MediaMarkup
     {

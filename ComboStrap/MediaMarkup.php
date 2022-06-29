@@ -82,7 +82,8 @@ class MediaMarkup
         TagAttributes::TITLE_KEY,
         Hover::ON_HOVER_ATTRIBUTE,
         Animation::ON_VIEW_ATTRIBUTE,
-        Shadow::SHADOW_ATT
+        Shadow::SHADOW_ATT,
+        Opacity::OPACITY_ATTRIBUTE
     ];
 
     /**
@@ -122,6 +123,7 @@ class MediaMarkup
     private function setMarkupRef(string $markupRef): MediaMarkup
     {
 
+        $markupRef = trim($markupRef);
         $this->markupRef = MarkupRef::createMediaFromRef($markupRef);
 
         $refUrl = $this->markupRef->getUrl();
@@ -246,6 +248,7 @@ class MediaMarkup
      * @throws ExceptionBadSyntax - if no ref was found
      * @throws ExceptionBadArgument
      * @throws ExceptionNotFound|ExceptionNotExists
+     * @throws ExceptionInternal
      */
     public static function createFromMarkup(string $match): MediaMarkup
     {
@@ -263,7 +266,7 @@ class MediaMarkup
         if ($ref === null) {
             throw new ExceptionBadSyntax("No ref was found");
         }
-        $mediaMarkup->setMarkupRef(trim($ref));
+        $mediaMarkup->setMarkupRef($ref);
         if (isset($parts[1])) {
             $mediaMarkup->setLabel($parts[1]);
         }

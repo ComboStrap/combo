@@ -125,7 +125,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
             $useCache = $this->cache->useCache($depends);
             return ($useCache === false);
         } finally {
-            $wikiRequest->resetEnvironment();
+            $wikiRequest->resetEnvironmentToPreviousValues();
         }
 
 
@@ -312,7 +312,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
             $this->cache->storeCache($content);
 
         } finally {
-            $wikiRequest->resetEnvironment();
+            $wikiRequest->resetEnvironmentToPreviousValues();
         }
         /**
          * The cache path may have change due to the cache key rerouting
@@ -617,9 +617,9 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     {
 
         return WikiRequest::create()
-            ->setRunningId($this->getRequestedPageFragment()->getPath()->getWikiId())
-            ->setAct("show")
-            ->setRequestedId($this->getRequestedContextPageOrDefault()->getPath()->getWikiId());
+            ->setNewRunningId($this->getRequestedPageFragment()->getPath()->getWikiId())
+            ->setNewAct("show")
+            ->setNewRequestedId($this->getRequestedContextPageOrDefault()->getPath()->getWikiId());
 
     }
 

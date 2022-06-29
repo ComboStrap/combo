@@ -652,59 +652,13 @@ class PluginUtility
      * but the requested wiki id
      *
      * @return string
+     * @deprecated use {@link WikiRequest}
      */
     public static function getRequestedWikiId(): string
     {
 
-        /**
-         * {@link getID()} reads the id from the input variable
-         *
-         * The {@link \action_plugin_combo_lang::load_lang()}
-         * set it back right
-         */
-        global $INPUT;
-        $id = $INPUT->str("id");
-        if (!empty($id)) {
-            return $id;
-        }
-
-        /**
-         * This should be less used
-         * but shows where the requested id is spilled in dokuwiki
-         *
-         * If the component is in a sidebar, we don't want the ID of the sidebar
-         * but the ID of the page.
-         */
-        global $INFO;
-        if ($INFO !== null) {
-            $callingId = $INFO['id'];
-            if (!empty($callingId)) {
-                return $callingId;
-            }
-        }
-
-
-        global $ID;
-        if ($ID !== null) {
-            return $ID;
-        }
-
-        /**
-         * This is the case with event triggered
-         * before DokuWiki such as
-         * https://www.dokuwiki.org/devel:event:init_lang_load
-         */
-        global $_REQUEST;
-        if (isset($_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE])) {
-            return $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-        }
-
-        if (!PluginUtility::isDevOrTest()) {
-            // should never happen, we don't throw an exception
-            LogUtility::internalError("Internal Error: The requested wiki id could not be determined");
-        }
-
-        return DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
+        return WikiRequest::create()
+            ->getActualRequestedId();
 
     }
 

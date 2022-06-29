@@ -72,12 +72,12 @@ abstract class FetcherImage extends FetcherAbs
         /**
          * Dokuwiki Conformance
          */
-        if ($this instanceof FetcherLocalImage) {
-
+        try {
             $url->addQueryParameter(FetcherImage::TOK, $this->getTok());
-
-
+        } catch (ExceptionNotNeeded $e) {
+            // ok not needed
         }
+
 
         return $url;
     }
@@ -87,7 +87,7 @@ abstract class FetcherImage extends FetcherAbs
      * with or height are requested
      *
      *
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotNeeded
      */
     public function getTok(): string
     {
@@ -95,7 +95,7 @@ abstract class FetcherImage extends FetcherAbs
          * Dokuwiki Compliance
          */
         if (!($this instanceof FetcherLocalImage)) {
-            throw new ExceptionNotFound("No tok for non local image");
+            throw new ExceptionNotNeeded("No tok for non local image");
         }
         try {
             $requestedWidth = $this->getRequestedWidth();
@@ -113,7 +113,7 @@ abstract class FetcherImage extends FetcherAbs
             return media_get_token($id, $requestedWidth, $requestedHeight);
 
         }
-        throw new ExceptionNotFound("No tok needed");
+        throw new ExceptionNotNeeded("No tok needed");
     }
 
     /**

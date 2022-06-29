@@ -42,6 +42,8 @@ class PageProtection
     const PAGE_PROTECTION_LINK_WARNING = "warning";
     const PAGE_PROTECTION_LINK_NORMAL = "normal";
     const PAGE_PROTECTION_LINK_LOGIN = "login";
+    public const DATA_PP_SOURCE = "data-pp-source";
+    public const DATA_PP_LINK = "data-pp-link";
 
 
     /**

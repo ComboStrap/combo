@@ -73,6 +73,7 @@ class LinkMarkup
      * See {@link html_hilight}
      */
     const SEARCH_HIGHLIGHT_QUERY_PROPERTY = "s";
+    const DATA_WIKI_ID = "data-wiki-id";
 
 
     private MarkupRef $markupRef;
@@ -197,7 +198,7 @@ class LinkMarkup
                     throw new ExceptionNotFound("We were unable to process the internal link dokuwiki id on the link. The path was not found. Error: {$e->getMessage()}");
                 }
                 $page = PageFragment::createPageFromPathObject($dokuPath);
-                $outputAttributes->addOutputAttributeValue("data-wiki-id", $dokuPath->getWikiId());
+                $outputAttributes->addOutputAttributeValue(self::DATA_WIKI_ID, $dokuPath->getWikiId());
 
 
                 if (!FileSystems::exists($dokuPath)) {
@@ -257,7 +258,7 @@ EOF;
                          */
                         $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
                         $lowerCaseLowQualityAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
-                        $outputAttributes->addClassName(StyleUtility::addComboStrapSuffix(LowQualityPage::CLASS_NAME));
+                        $outputAttributes->addClassName(StyleUtility::addComboStrapSuffix(LowQualityPage::CLASS_SUFFIX));
                         $snippetLowQualityPageId = $lowerCaseLowQualityAcronym;
                         PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($snippetLowQualityPageId);
                         /**
@@ -268,8 +269,8 @@ EOF;
                         if (LowQualityPage::isProtectionEnabled()) {
 
                             $linkType = LowQualityPage::getLowQualityLinkType();
-                            $outputAttributes->addOutputAttributeValue("data-$pageProtectionAcronym-link", $linkType);
-                            $outputAttributes->addOutputAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLowQualityAcronym);
+                            $outputAttributes->addOutputAttributeValue(PageProtection::DATA_PP_LINK, $linkType);
+                            $outputAttributes->addOutputAttributeValue(PageProtection::DATA_PP_SOURCE, $lowerCaseLowQualityAcronym);
 
                             /**
                              * Low Quality Page protection javascript is only for warning or login link

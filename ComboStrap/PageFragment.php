@@ -57,10 +57,8 @@ class PageFragment extends ResourceComboAbs
      */
     private $title;
 
-    /**
-     * @var LowQualityPageOverwrite
-     */
-    private $canBeOfLowQuality;
+
+    private LowQualityPageOverwrite $canBeOfLowQuality;
     /**
      * @var Region
      */
@@ -485,31 +483,33 @@ class PageFragment extends ResourceComboAbs
     function isLowQualityPage(): bool
     {
 
-        try {
-            return $this->getCanBeOfLowQuality();
-        } catch (ExceptionNotFound $e) {
-            if (!Site::isLowQualityProtectionEnable()) {
-                return false;
-            }
-            try {
-                return $this->getLowQualityIndicatorCalculated();
-            } catch (ExceptionNotFound $e) {
-                // We were returning null but null used in a condition is falsy
-                // we return false
-                return false;
-            }
+
+        if (!$this->getCanBeOfLowQuality()) {
+            return false;
         }
 
+        if (!Site::isLowQualityProtectionEnable()) {
+            return false;
+        }
+        try {
+            return $this->getLowQualityIndicatorCalculated();
+        } catch (ExceptionNotFound $e) {
+            // We were returning null but null used in a condition is falsy
+            // we return false
+            return false;
+        }
 
     }
 
 
     /**
-     * @throws ExceptionNotFound
+     *
      */
     public function getCanBeOfLowQuality(): bool
     {
-        return $this->canBeOfLowQuality->getValue();
+
+        return $this->canBeOfLowQuality->getValueOrDefault();
+
     }
 
 

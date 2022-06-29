@@ -26,7 +26,7 @@ abstract class MetadataBoolean extends Metadata
     {
         $this->buildCheck();
         if($this->value===null){
-            throw new ExceptionNotFound("The value is null");
+            throw new ExceptionNotFound("No ($this) found");
         }
         return $this->value;
     }

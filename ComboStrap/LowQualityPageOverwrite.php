@@ -56,6 +56,22 @@ class LowQualityPageOverwrite extends MetadataBoolean
         return true;
     }
 
+    /**
+     * @return bool
+     */
+    public function getValueOrDefault(): bool
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+    }
+
+
+    /**
+     * @return bool
+     */
     public function getDefaultValue(): bool
     {
         /**

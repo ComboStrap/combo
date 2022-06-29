@@ -41,7 +41,7 @@ class HttpRequest
     }
 
 
-    public static function fetchPageFragmentAsXhtml(string $wikiId): HttpResponse
+    public static function fetchXhtmlPageFragmentResponse(string $wikiId): HttpResponse
     {
 
         $url = FetcherPageFragment::createPageFragmentFetcherFromId($wikiId)

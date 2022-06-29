@@ -393,10 +393,7 @@ class DatabasePageRow
         // Do we have a page attached to this page id
         try {
             $pageId = $page->getPageId();
-            $row = $this->getDatabaseRowFromPageId($pageId);
-            if ($row !== null) {
-                return $row;
-            }
+            return $this->getDatabaseRowFromPageId($pageId);
         } catch (ExceptionNotFound $e) {
             // no page id
         }
@@ -405,20 +402,20 @@ class DatabasePageRow
         // Do we have a page attached to the canonical
         try {
             $canonical = $page->getCanonical();
-            $row = $this->getDatabaseRowFromCanonical($canonical);
-            if ($row !== null) {
-                return $row;
-            }
+            return $this->getDatabaseRowFromCanonical($canonical);
         } catch (ExceptionNotFound $e) {
             // no canonical
         }
 
         // Do we have a page attached to the path
-        $path = $page->getPath();
-        $row = $this->getDatabaseRowFromPath($path);
-        if ($row !== null) { // the path may no yet updated in the db
-            return $row;
+
+        try {
+            $path = $page->getPath();
+            return $this->getDatabaseRowFromPath($path);
+        } catch (ExceptionNotFound $e) {
+            // not found
         }
+
 
         /**
          * Do we have a page attached to this ID
@@ -828,12 +825,16 @@ class DatabasePageRow
         return $this->getFromRow(self::ROWID);
     }
 
+    /**
+     * @throws ExceptionSqliteNotAvailable
+     * @throws ExceptionNotFound
+     */
     private
     function getDatabaseRowFromPageId(string $pageId)
     {
 
         if ($this->sqlite === null) {
-            return null;
+            throw new ExceptionSqliteNotAvailable();
         }
 
         $pageIdAttribute = PageId::PROPERTY_NAME;
@@ -855,7 +856,7 @@ class DatabasePageRow
 
         switch (sizeof($rows)) {
             case 0:
-                return null;
+                throw new ExceptionNotFound("No database row by page id");
             case 1:
                 $id = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
                 /**
@@ -882,8 +883,9 @@ class DatabasePageRow
                 return $rows[0];
             default:
                 $existingPages = implode(", ", $rows);
-                LogUtility::msg("The pages ($existingPages) have all the same page id ($pageId)", LogUtility::LVL_MSG_ERROR);
-                return null;
+                $message = "The pages ($existingPages) have all the same page id ($pageId)";
+                LogUtility::internalError($message);
+                throw new ExceptionRuntime($message);
         }
 
     }
@@ -971,8 +973,10 @@ class DatabasePageRow
         }
     }
 
-    private
-    function getDatabaseRowFromPath(string $path): ?array
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getDatabaseRowFromPath(string $path): ?array
     {
         DokuPath::addRootSeparatorIfNotPresent($path);
         return $this->getDatabaseRowFromAttribute(PagePath::PROPERTY_NAME, $path);

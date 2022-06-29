@@ -291,7 +291,8 @@ EOF;
                         /**
                          * Add a class to style it differently if needed
                          */
-                        $outputAttributes->addClassName(PagePublicationDate::LATE_PUBLICATION_CLASS_NAME . "-combo");
+                        $className = StyleUtility::addComboStrapSuffix(PagePublicationDate::LATE_PUBLICATION_CLASS_PREFIX_NAME);
+                        $outputAttributes->addClassName($className);
                         if (PagePublicationDate::isLatePublicationProtectionEnabled()) {
                             $acronym = PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM;
                             $lowerCaseLatePublicationAcronym = strtolower(PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM);
@@ -332,7 +333,7 @@ EOF;
                 if (!$outputAttributes->hasAttribute("title")) {
                     $description = ucfirst($this->markupRef->getUrl()->getFragment());
                     if ($description !== "") {
-                        $description = str_replace("_"," ",$description);
+                        $description = str_replace("_", " ", $description);
                         $outputAttributes->addOutputAttributeValue("title", $description);
                     }
                 }

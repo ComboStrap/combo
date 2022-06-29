@@ -36,7 +36,7 @@ class PagePublicationDate extends MetadataDateTime
     const LATE_PUBLICATION_PROTECTION_ACRONYM = "lpp";
     const CONF_LATE_PUBLICATION_PROTECTION_MODE = "latePublicationProtectionMode";
     const CONF_LATE_PUBLICATION_PROTECTION_ENABLE = "latePublicationProtectionEnable";
-    const LATE_PUBLICATION_CLASS_NAME = "late-publication";
+    const LATE_PUBLICATION_CLASS_PREFIX_NAME = "late-publication";
 
 
     public static function getLatePublicationProtectionMode()

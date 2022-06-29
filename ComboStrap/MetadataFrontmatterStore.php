@@ -63,9 +63,6 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
             $metaModifiedTime = FileSystems::getModifiedTime($metaFilePath);
             $pageModifiedTime = FileSystems::getModifiedTime($resourceCombo->getPath());
             $diff = $pageModifiedTime->diff($metaModifiedTime);
-            if ($diff === false) {
-                throw new ExceptionCompile("Unable to calculate the diff between the page and metadata file");
-            }
             $secondDiff = intval($diff->format('%s'));
             if ($secondDiff > 0) {
                 $resourceCombo->renderMetadataAndFlush();
@@ -91,10 +88,18 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
                 ->setWriteStore($this);
 
             $sourceValue = $this->get($metadata);
-            $targetValue = $metadata->getValue();
-            $defaultValue = $metadata->getDefaultValue();
+            try {
+                $targetValue = $metadata->getValue();
+            } catch (ExceptionNotFound $e) {
+                $targetValue = null;
+            }
+            try {
+                $defaultValue = $metadata->getDefaultValue();
+            } catch (ExceptionNotFound $e) {
+                $defaultValue = null;
+            }
             /**
-             * Strict because otherwise the comparison `false = null` is true
+             * Strict because otherwise the comparison `false == null` is true
              */
             $targetValueShouldBeStore = !in_array($targetValue, [$defaultValue, null], true);
             if ($targetValueShouldBeStore) {
@@ -136,6 +141,9 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
         try {
             $this->syncData();
         } catch (ExceptionCompile $e) {
+            if (PluginUtility::isDevOrTest()) {
+                throw new ExceptionRuntime("Error while synchronizing data in the frontmatter", self::CANONICAL, 1, $e);
+            }
             return Message::createInfoMessage($e->getMessage())
                 ->setStatus(syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_ERROR);
         }

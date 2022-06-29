@@ -187,4 +187,54 @@ class HttpResponse
         return $this->body;
     }
 
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getHeaders(string $headerName): array
+    {
+        $results = array();
+        foreach ($this->headers as $header) {
+            if (substr($header, 0, strlen($headerName) + 1) == $headerName . ':') {
+                $results[] = $header;
+            }
+        }
+
+        if (count($results) === 0) {
+            throw new ExceptionNotFound("No header with the name $headerName");
+        }
+        return $results;
+
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getHeader(string $headerName): string
+    {
+        $headers = $this->getHeaders($headerName);
+        return $headers[0];
+
+    }
+
+    /**
+     * @throws ExceptionNotFound - if the header was not found
+     * @throws ExceptionNotExists - if the header value could not be identified
+     */
+    public function getHeaderValue(string $headerName)
+    {
+        $header = $this->getHeader($headerName);
+        $positionDoublePointSeparator = strpos($header, ':');
+        if ($positionDoublePointSeparator === false) {
+            throw new ExceptionNotExists("No value found");
+        }
+        return substr($header, $positionDoublePointSeparator + 1);
+    }
+
+    public function setHeaders(array $headers): HttpResponse
+    {
+        $this->headers = $headers;
+        return $this;
+    }
+
 }

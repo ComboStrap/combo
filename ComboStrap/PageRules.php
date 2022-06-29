@@ -17,6 +17,8 @@ class PageRules
     const TARGET_NAME = 'TARGET';
     const TIMESTAMP_NAME = 'TIMESTAMP';
 
+    const CANONICAL = "page:rules";
+
 
     /**
      * Delete Redirection
@@ -27,7 +29,7 @@ class PageRules
 
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setQueryParametrized('delete from PAGE_RULES where id = ?', $ruleId);
+            ->setQueryParametrized('delete from PAGE_RULES where id = ?', [$ruleId]);
         try {
             $request->execute();
         } catch (ExceptionCompile $e) {
@@ -104,7 +106,7 @@ class PageRules
      * @param $priority
      * @return int - the rule id
      */
-    function addRule($sourcePageId, $targetPageId, $priority)
+    function addRule($sourcePageId, $targetPageId, $priority): ?int
     {
         $currentDate = date("c");
         return $this->addRuleWithDate($sourcePageId, $targetPageId, $priority, $currentDate);
@@ -161,11 +163,16 @@ class PageRules
         );
 
         $statement = 'update PAGE_RULES set matcher = ?, target = ?, priority = ?, timestamp = ? where id = ?';
-        $res = $this->sqlite->query($statement, $entry);
-        if (!$res) {
-            LogUtility::msg("There was a problem during the update");
+        $request = Sqlite::createOrGetSqlite()
+            ->createRequest()
+            ->setQueryParametrized($statement, $entry);
+        try {
+            $request->execute();
+        } catch (ExceptionCompile $e) {
+            LogUtility::error("There was a problem during the page rules update. Error: {$e->getMessage()}", self::CANONICAL);
+        } finally {
+            $request->close();
         }
-        $this->sqlite->res_close($res);
 
     }
 
@@ -177,6 +184,7 @@ class PageRules
     function deleteAll()
     {
 
+        /** @noinspection SqlWithoutWhere */
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
             ->setQuery("delete from PAGE_RULES");
@@ -226,7 +234,7 @@ class PageRules
 
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setQuery("select * from PAGE_RULES order by PRIORITY asc");
+            ->setQuery("select * from PAGE_RULES order by PRIORITY");
 
         try {
             return $request->execute()

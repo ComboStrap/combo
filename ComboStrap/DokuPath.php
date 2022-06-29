@@ -291,6 +291,7 @@ class DokuPath extends PathAbs
     /**
      * @param $url - a URL path http://whatever/hello/my/lord (The canonical)
      * @return DokuPath - a dokuwiki Id hello:my:lord
+     * @deprecated for {@link FetcherPageFragment::createPageFragmentFetcherFromUrl()}
      */
     public static function createFromUrl($url): DokuPath
     {

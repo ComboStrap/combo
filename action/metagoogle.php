@@ -35,11 +35,12 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
     {
 
 
-        if(!PluginUtility::isRenderingRequestedPageProcess()){
+        if (!PluginUtility::isRenderingRequestedPageProcess()) {
             return;
         }
 
         $page = PageFragment::createFromRequestedPage();
+
         $ldJson = LdJson::createForPage($page)
             ->getLdJsonMergedWithDefault();
 

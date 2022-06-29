@@ -12,6 +12,9 @@ use http\Exception\RuntimeException;
 
 class FetcherPageFragment extends FetcherAbs implements FetcherSource
 {
+
+    use FetcherTraitLocalPath;
+
     const XHTML_MODE = "xhtml";
     const INSTRUCTION_EXTENSION = "i";
     const MAX_CACHE_AGE = 999999;
@@ -40,6 +43,16 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         return FetcherPageFragment::createPageFragmentFetcherFromObject($page);
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public static function createPageFragmentFetcherFromUrl(Url $fetchUrl): FetcherPageFragment
+    {
+        $pageFragment = new FetcherPageFragment();
+        $pageFragment->buildFromUrl($fetchUrl);
+        return $pageFragment;
+    }
+
     function getFetchUrl(Url $url = null): Url
     {
         /**
@@ -56,13 +69,20 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     public static function createPageFragmentFetcherFromObject(PageFragment $pageFragment): FetcherPageFragment
     {
         return (new FetcherPageFragment())
-            ->setRequestedPageFragment($pageFragment);
+            ->setRequestedPage($pageFragment);
     }
 
-    public function setRequestedPageFragment(PageFragment $pageFragment): FetcherPageFragment
+    /**
+     * TODO: better using path as requested in place of a page ?
+     *   It's a duplicate of {@link FetcherPageFragment::setOriginalPath()}
+     * @param PageFragment $pageFragment
+     * @return $this
+     */
+    public function setRequestedPage(PageFragment $pageFragment): FetcherPageFragment
     {
 
         $this->pageFragment = $pageFragment;
+        $this->setOriginalPath($pageFragment->getPath());
         $this->buildCacheObjects();
         return $this;
 
@@ -232,7 +252,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     {
         return $this->cacheDependencies;
     }
-
 
 
     public
@@ -542,10 +561,20 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     }
 
 
-    public function getOriginalPath(): DokuPath
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
+     */
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherPageFragment
     {
-        return $this->pageFragment->getPath();
+        parent::buildFromTagAttributes($tagAttributes);
+        $this->buildOriginalPathFromTagAttributes($tagAttributes);
+        $this->setRequestedPage(PageFragment::createPageFromPathObject($this->getOriginalPath()));
+        return $this;
     }
+
 
     public function setRequestedMimeToInstructions(): FetcherPageFragment
     {
@@ -582,16 +611,13 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     }
 
 
-
-
-
     /**
      * @return PageFragment - the requested page in which this fetcher should run
      * @throws ExceptionNotFound
      */
     public function getRequestedContextPage(): PageFragment
     {
-        if(!isset($this->requestedContextPage)){
+        if (!isset($this->requestedContextPage)) {
             throw new ExceptionNotFound("No requested context page specified");
         }
         return $this->requestedContextPage;

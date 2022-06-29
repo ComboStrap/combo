@@ -44,7 +44,7 @@ trait FetcherTraitLocalPath
         if (!isset($this->path)) {
             $id = $tagAttributes->getValueAndRemove(self::$MEDIA_QUERY_PARAMETER);
             if ($id === null) {
-                $id = $tagAttributes->getValueAndRemove(self::SRC_QUERY_PARAMETER);
+                $id = $tagAttributes->getValueAndRemove(FetcherLocalPath::SRC_QUERY_PARAMETER);
             }
             if ($id === null) {
                 $id = $tagAttributes->getValueAndRemove(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);

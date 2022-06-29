@@ -99,7 +99,8 @@ class HttpRequest
             $statusCode = HttpResponse::STATUS_ALL_GOOD;
         }
         $httpResponse = HttpResponse::create($statusCode)
-            ->setBody($response->getContent());
+            ->setBody($response->getContent())
+            ->setHeaders($response->getHeaders());
 
         try {
             /**

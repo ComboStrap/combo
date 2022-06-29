@@ -6,6 +6,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\AliasType;
 use ComboStrap\DatabasePageRow;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\HttpResponse;
@@ -297,9 +298,10 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         $sqlite = Sqlite::createOrGetSqlite();
         if ($sqlite == null) {
             return;
-        } else {
-            $this->pageRules = new PageRules();
         }
+
+        $this->pageRules = new PageRules();
+
 
         /**
          * Unfortunately, DOKUWIKI_STARTED is not the first event
@@ -789,7 +791,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         // An http external url ?
         try {
             $isValid = Url::createFromString($targetIdOrUrl)->isHttpUrl();
-        } catch (ExceptionBadSyntax $e) {
+        } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
             $isValid = false;
         }
 
@@ -1044,7 +1046,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             $isHttpUrl = false;
         }
         if ($isHttpUrl) {
-            $this->executeHttpRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
+            $this->executeHttpRedirect($calculatedTarget,$ID, self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
             return true;
         }
 
@@ -1054,7 +1056,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             // This is DokuWiki Id and should always be lowercase
             // The page rule may have change that
             $calculatedTarget = strtolower($calculatedTarget);
-            $res = $this->executeTransparentRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES);
+            $res = $this->executeHttpRedirect($calculatedTarget,self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
             if ($res) {
                 return true;
             } else {

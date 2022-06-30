@@ -26,6 +26,7 @@ class SlotManagerMenuItem extends AbstractItem
     const CANONICAL = "edit-page";
     const EDIT_ACTION = "Edit";
     const CREATE_ACTION = "Create";
+    const TAG = "slot";
 
 
     /**
@@ -94,35 +95,31 @@ class SlotManagerMenuItem extends AbstractItem
     public function createHtml(): string
     {
         $requestedPage = PageFragment::createFromRequestedPage();
-        $html = "<p>Edit and/or create the <a href=\"https://combostrap.com/slot\">slots</a> of the page</p>";
+        $url = UrlEndpoint::createComboStrapUrl()->setPath("/". self::TAG);
+        $html = "<p>Edit and/or create the <a href=\"{$url->toHtmlString()}\">slots</a> of the page</p>";
         foreach (Site::getSecondarySlotNames() as $secondarySlot) {
 
             $actualPath = $requestedPage->getPath();
             $label = $secondarySlot;
-            try {
-                switch ($secondarySlot) {
-                    case Site::getSidebarName():
-                        $label = "Page Sidebar";
-                        break;
-                    case Site::getPrimaryHeaderSlotName():
-                        $label = "Main Header";
-                        break;
-                    case Site::getPrimarySideSlotName():
-                        $label = "Main Side";
-                        break;
-                    case Site::getPrimaryFooterSlotName():
-                        $label = "Main Footer";
-                        break;
-                    case Site::getPageFooterSlotName():
-                        $label = "Page Footer";
-                        break;
-                    case Site::getPageHeaderSlotName():
-                        $label = "Page Header";
-                        break;
-                }
-            } catch (ExceptionCompile $e) {
-                // error if strap was not loaded
-                // should have happen before when we get the secondary name (getSecondarySlotNames)
+            switch ($secondarySlot) {
+                case Site::getSidebarName():
+                    $label = "Page Sidebar";
+                    break;
+                case Site::getPrimaryHeaderSlotName():
+                    $label = "Main Header";
+                    break;
+                case Site::getPrimarySideSlotName():
+                    $label = "Main Side";
+                    break;
+                case Site::getPrimaryFooterSlotName():
+                    $label = "Main Footer";
+                    break;
+                case Site::getPageFooterSlotName():
+                    $label = "Page Footer";
+                    break;
+                case Site::getPageHeaderSlotName():
+                    $label = "Page Header";
+                    break;
             }
             $html .= "<p class='mb-0 mt-1'><strong>$label</strong></p>";
             $html .= "<table>";
@@ -137,7 +134,7 @@ class SlotManagerMenuItem extends AbstractItem
                 $secondaryPath = $parentPath->resolve($secondarySlot);
 
                 $secondaryPage = PageFragment::createPageFromQualifiedPath($secondaryPath->toPathString());
-                $class = "link-combo";
+                $class = StyleUtility::addComboStrapSuffix(\syntax_plugin_combo_link::TAG);
                 if (FileSystems::exists($secondaryPath)) {
                     $action = self::EDIT_ACTION;
                     $style = '';
@@ -145,17 +142,11 @@ class SlotManagerMenuItem extends AbstractItem
                     $action = self::CREATE_ACTION;
                     $style = ' style="color:rgba(0,0,0,0.65)"';
                 }
-                $url = $secondaryPage->getUrl(PageUrlType::CONF_VALUE_PAGE_PATH);
-                if (strpos($url, "?") !== false) {
-                    // without url rewrite
-                    // /./doku.php?id=slot_main_header
-                    $url .= Url::AMPERSAND_URL_ENCODED_FOR_HTML;
-                } else {
-                    // with url rewrite, the id parameter is not seen
-                    $url .= "?";
-                }
-                $url .= "do=edit";
-                $html .= "<tr><td class='pe-2'>$action</td><td><a href=\"$url\" class=\"$class\"$style>{$secondaryPath->toPathString()}</a></td></tr>";
+                $url = UrlEndpoint::createDokuUrl()
+                    ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $secondaryPage->getWikiId())
+                    ->addQueryParameter("do", "edit");
+
+                $html .= "<tr><td class='pe-2'>$action</td><td><a href=\"{$url->toHtmlString()}\" class=\"$class\"$style>{$secondaryPath->toPathString()}</a></td></tr>";
 
                 if ($action === self::EDIT_ACTION) {
                     break;

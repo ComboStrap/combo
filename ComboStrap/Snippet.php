@@ -233,7 +233,7 @@ class Snippet implements JsonSerializable
      *
      * @return void
      */
-    public static function clearSnippets()
+    public static function reset()
     {
         self::$globalSnippets = null;
     }

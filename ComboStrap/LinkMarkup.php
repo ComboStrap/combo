@@ -417,7 +417,7 @@ EOF;
      * The label inside the anchor tag if there is none
      * @param false $navigation
      * @return string
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotFound|ExceptionBadArgument
      *
      */
     public function getDefaultLabel(bool $navigation = false): string

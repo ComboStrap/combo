@@ -25,7 +25,7 @@ class Toggle
      *
      */
     public
-    static function processToggle(&$attributes)
+    static function processToggle(TagAttributes $attributes)
     {
 
 
@@ -82,7 +82,7 @@ EOF;
                          * The snippet id is dependent on id
                          * if there is more than one
                          */
-                        $snippetId = "self::CANONICAL-$id";
+                        $snippetId = self::CANONICAL."-$id";
                         PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($snippetId, $styleSheet);
 
                 }
@@ -111,8 +111,8 @@ EOF;
             if (substr($targetId, 0, 1) != "#") {
                 $targetId = "#" . $targetId;
             }
-            $attributes->addComponentAttributeValue("data-{$bootstrapNamespace}toggle", "collapse");
-            $attributes->addComponentAttributeValue("data-{$bootstrapNamespace}target", $targetId);
+            $attributes->addOutputAttributeValue("data-{$bootstrapNamespace}toggle", "collapse");
+            $attributes->addOutputAttributeValue("data-{$bootstrapNamespace}target", $targetId);
 
         }
 

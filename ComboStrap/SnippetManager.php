@@ -38,8 +38,6 @@ class SnippetManager
 {
 
 
-
-
     const CANONICAL = "snippet-manager";
     const SCRIPT_TAG = "script";
     const LINK_TAG = "link";
@@ -48,17 +46,21 @@ class SnippetManager
 
 
     /**
-     * @var SnippetManager array that contains one element (one {@link SnippetManager} scoped to the requested id
+     * @var array SnippetManager array that contains one element (one {@link SnippetManager} scoped to the requested id
      */
-    private static $globalSnippetManager;
+    private static array $globalSnippetManager;
 
     /**
-     * @deprecated
-     * Not needed anymore as we scope the global object to the requested id
-     * We let the function to document the static object
+     *
+     * Still needed anymore even if we scope the global object to the requested id
+     * because the request id may not be set between test
+     * Meaning that when we render dynamic content (ie without request id), we
+     * will get the snippets of the first test and of the second
      */
     public static function reset()
     {
+        self::$globalSnippetManager = [];
+        Snippet::reset();
     }
 
 
@@ -82,18 +84,18 @@ class SnippetManager
      */
     public static function getOrCreate(): SnippetManager
     {
+
         $id = PluginUtility::getRequestedWikiId();
-        if ($id === null) {
-            if (PluginUtility::isTest()) {
-                $id = "test_dynamic_script_execution";
-            } else {
-                LogUtility::msg("The requested Id could not be found, the snippets may not be scoped properly");
-            }
+
+        if (PluginUtility::isTest()) {
+            $id = "test_dynamic_script_execution";
+        } else {
+            LogUtility::msg("The requested Id could not be found, the snippets may not be scoped properly");
         }
 
         $snippetManager = self::$globalSnippetManager[$id];
         if ($snippetManager === null) {
-            self::$globalSnippetManager = null; // delete old snippet manager for other request
+            self::$globalSnippetManager = []; // delete old snippet manager for other request
             $snippetManager = new SnippetManager();
             self::$globalSnippetManager[$id] = $snippetManager;
         }
@@ -555,7 +557,7 @@ class SnippetManager
 
     public function clearSnippets()
     {
-        Snippet::clearSnippets();
+        Snippet::reset();
     }
 
 

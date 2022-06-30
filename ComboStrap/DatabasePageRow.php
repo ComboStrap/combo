@@ -416,7 +416,6 @@ class DatabasePageRow
             // not found
         }
 
-
         /**
          * Do we have a page attached to this ID
          */
@@ -905,8 +904,10 @@ class DatabasePageRow
         return $this;
     }
 
-    private
-    function getDatabaseRowFromCanonical($canonical)
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getDatabaseRowFromCanonical($canonical)
     {
         $query = $this->getParametrizedLookupQuery(Canonical::PROPERTY_NAME);
         $request = $this->sqlite
@@ -918,15 +919,14 @@ class DatabasePageRow
                 ->execute()
                 ->getRows();
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("An exception has occurred with the page search from CANONICAL. " . $e->getMessage());
-            return null;
+            throw new ExceptionRuntime("An exception has occurred with the page search from CANONICAL. " . $e->getMessage());
         } finally {
             $request->close();
         }
 
         switch (sizeof($rows)) {
             case 0:
-                return null;
+                throw new ExceptionNotFound("No canonical row was found");
             case 1:
                 $id = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
                 if ($this->page !== null && $id !== $this->page->getWikiId()) {
@@ -963,13 +963,12 @@ class DatabasePageRow
                         $existingPages[] = $row;
                     }
                 }
-                if (sizeof($existingPages) === 1) {
-                    return $existingPages[0];
-                } else {
+                if (sizeof($existingPages) > 1) {
                     $existingPages = implode(", ", $existingPages);
-                    LogUtility::msg("The existing pages ($existingPages) have all the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
-                    return null;
+                    $message = "The existing pages ($existingPages) have all the same canonical ($canonical), return the first one";
+                    LogUtility::error($message, self::CANONICAL);
                 }
+                return $existingPages[0];
         }
     }
 

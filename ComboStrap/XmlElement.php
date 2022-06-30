@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 use DOMElement;
+use DOMText;
 
 class XmlElement
 {
@@ -59,12 +60,26 @@ class XmlElement
     /**
      * @return XmlElement[]
      */
-    public function getChildren(): array
+    public function getChildrenElement(): array
     {
         $childNodes = [];
         foreach ($this->element->childNodes as $childNode) {
             if ($childNode instanceof DOMElement) {
                 $childNodes[] = new XmlElement($childNode, $this->document);
+            }
+        }
+        return $childNodes;
+    }
+
+    /**
+     * @return array - the node text values in an array
+     */
+    public function getChildrenNodeTextValues(): array
+    {
+        $childNodes = [];
+        foreach ($this->element->childNodes as $childNode) {
+            if ($childNode instanceof DOMText) {
+                $childNodes[] = $childNode->nodeValue;
             }
         }
         return $childNodes;

@@ -896,7 +896,7 @@ class TagAttributes
     function toHtmlEnterTag($htmlTag): string
     {
 
-        $enterTag = "<" . $htmlTag;
+        $enterTag = "<" . trim($htmlTag);
         $attributeString = $this->toHTMLAttributeString();
         if (!empty($attributeString)) {
             $enterTag .= " " . $attributeString;

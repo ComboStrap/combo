@@ -69,6 +69,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
     const ENCLOSED_PILLS_TYPE = "enclosed-pills";
     const TABS_SKIN = "tabs";
     const PILLS_SKIN = "pills";
+    const SELECTED_ATTRIBUTE = "selected";
 
     private static function getComponentType(TagAttributes $tagAttributes)
     {
@@ -87,109 +88,108 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
 
 
     /**
-     * @param $attributes
+     * @param TagAttributes $tagAttributes
      * @return string - return the HTML open tags of the panels (not the navigation)
      */
-    public static function openTabPanelsElement(&$attributes)
+    public static function openTabPanelsElement(TagAttributes $tagAttributes): string
     {
-        PluginUtility::addClass2Attributes("tab-content", $attributes);
+
+        $tagAttributes->addClassName("tab-content");
 
         /**
          * In preview with only one panel
          */
         global $ACT;
-        if ($ACT == "preview" && isset($attributes["selected"])) {
-            unset($attributes["selected"]);
+        if ($ACT === "preview" && $tagAttributes->hasComponentAttribute(self::SELECTED_ATTRIBUTE)) {
+            $tagAttributes->removeComponentAttribute(self::SELECTED_ATTRIBUTE);
         }
 
-        $html = "<div " . PluginUtility::array2HTMLAttributesAsString($attributes) . ">" . DOKU_LF;
-        $type = self::getComponentType($attributes);
-        switch ($type) {
-            case self::ENCLOSED_TABS_TYPE:
-            case self::ENCLOSED_PILLS_TYPE:
-                $html = "<div class=\"card-body\">" . DOKU_LF . $html;
-                break;
-        }
-        return $html;
-
-
-    }
-
-    public static function closeTabPanelsElement(&$attributes)
-    {
-        $html = "</div>" . DOKU_LF;
-        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+        $html = $tagAttributes->toHtmlEnterTag("div");
         $type = self::getComponentType($tagAttributes);
         switch ($type) {
             case self::ENCLOSED_TABS_TYPE:
             case self::ENCLOSED_PILLS_TYPE:
-                $html .= "</div>" . DOKU_LF;
-                $html .= "</div>" . DOKU_LF;
+                $html = "<div class=\"card-body\">" . $html;
+                break;
+        }
+        return $html;
+
+    }
+
+    public static function closeTabPanelsElement(TagAttributes $tagAttributes): string
+    {
+        $html = "</div>";
+        $type = self::getComponentType($tagAttributes);
+        switch ($type) {
+            case self::ENCLOSED_TABS_TYPE:
+            case self::ENCLOSED_PILLS_TYPE:
+                $html .= "</div>";
+                $html .= "</div>";
                 break;
         }
         return $html;
     }
 
-    public static function closeNavigationalTabElement()
+    public static function closeNavigationalTabElement(): string
     {
-        return "</a>" . DOKU_LF . "</li>";
+        return "</a></li>";
     }
 
     /**
      * @param array $attributes
      * @return string
      */
-    public static function openNavigationalTabElement(array $attributes)
+    public static function openNavigationalTabElement(array $attributes): string
     {
+        $liTagAttributes = TagAttributes::createFromCallStackArray($attributes);
 
         /**
          * Check all attributes for the link (not the li)
          * and delete them
          */
-        $active = syntax_plugin_combo_panel::getSelectedValue($attributes);
+        $active = syntax_plugin_combo_panel::getSelectedValue($liTagAttributes);
         $panel = "";
 
 
-        $panelAttrName = "panel";
-        if (isset($attributes[$panelAttrName])) {
-            $panel = $attributes[$panelAttrName];
-            unset($attributes[$panelAttrName]);
-        } else {
-            if (isset($attributes["id"])) {
-                $panel = $attributes["id"];
-                unset($attributes["id"]);
-            } else {
-                LogUtility::msg("A id attribute is missing on a panel tag", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_tabs::TAG);
-            }
+        $panel = $liTagAttributes->getValueAndRemoveIfPresent("panel");
+        if ($panel === null && $liTagAttributes->hasComponentAttribute("id")) {
+            $panel = $liTagAttributes->getValueAndRemoveIfPresent("id");
         }
+        if ($panel === null) {
+            LogUtility::msg("A id attribute is missing on a panel tag", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_tabs::TAG);
+        }
+
 
         /**
          * Creating the li element
          */
-        PluginUtility::addClass2Attributes("nav-item", $attributes);
-        $html = "<li " . PluginUtility::array2HTMLAttributesAsString($attributes) . " role=\"presentation\">" . DOKU_LF;
+        $html = $liTagAttributes->addClassName("nav-item")
+            ->addOutputAttributeValue("role", "presentation")
+            ->toHtmlEnterTag("li");
 
         /**
          * Creating the a element
          */
-        $htmlAttributes = array();
-        PluginUtility::addClass2Attributes("nav-link", $htmlAttributes);
-        if ($active === true) {
-            PluginUtility::addClass2Attributes("active", $htmlAttributes);
-            $htmlAttributes["aria-selected"] = "true";
-        }
-        $htmlAttributes['id'] = $panel . "-tab";
         $namespace = Bootstrap::getDataNamespace();
-        $htmlAttributes["data{$namespace}-toggle"] = "tab";
-        $htmlAttributes['aria-controls'] = $panel;
-        $htmlAttributes["role"] = "tab";
-        $htmlAttributes['href'] = "#$panel";
+        $htmlAttributes = TagAttributes::createEmpty();
+        if ($active === true) {
+            $htmlAttributes->addClassName("active");
+            $htmlAttributes->addOutputAttributeValue("aria-selected", "true");
+        }
+        $html .= $htmlAttributes
+            ->addClassName("nav-link")
+            ->addOutputAttributeValue('id', $panel . "-tab")
+            ->addOutputAttributeValue("data{$namespace}-toggle", "tab")
+            ->addOutputAttributeValue('aria-controls', $panel)
+            ->addOutputAttributeValue("role", "tab")
+            ->addOutputAttributeValue('href', "#$panel")
+            ->toHtmlEnterTag("a");
 
-        $html .= "<a " . PluginUtility::array2HTMLAttributesAsString($htmlAttributes) . ">";
         return $html;
     }
 
-    private static function closeNavigationalHeaderComponent($type)
+    private
+    static function closeNavigationalHeaderComponent($type)
     {
         $html = "</ul>" . DOKU_LF;
         switch ($type) {
@@ -202,13 +202,13 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
     }
 
     /**
-     * @param $attributes
+     * @param $tagAttributes
      * @return string - the opening HTML code of the tab navigational header
      */
-    public static function openNavigationalTabsElement(&$attributes): string
+    public
+    static function openNavigationalTabsElement(TagAttributes $tagAttributes): string
     {
 
-        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
         /**
          * Unset non-html attributes
          */
@@ -294,12 +294,14 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
      * This function has no effect because {@link SyntaxPlugin::accepts()} is used
      * ************************
      */
-    public function getAllowedTypes()
+    public
+    function getAllowedTypes()
     {
         return array('container', 'base', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    public function accepts($mode)
+    public
+    function accepts($mode)
     {
         /**
          * header mode is disable to take over
@@ -355,7 +357,8 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
 
     }
 
-    public function postConnect()
+    public
+    function postConnect()
     {
 
         $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
@@ -539,19 +542,19 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
 
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
+            $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+            $context = $data[PluginUtility::CONTEXT];
 
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $context = $data[PluginUtility::CONTEXT];
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
 
                     switch ($context) {
                         /**
                          * When the tag tabs enclosed the panels
                          */
                         case syntax_plugin_combo_panel::TAG:
-                            $renderer->doc .= self::openTabPanelsElement($attributes);
+                            $renderer->doc .= self::openTabPanelsElement($tagAttributes);
                             break;
                         /**
                          * When the tag tabs are derived (new syntax)
@@ -561,7 +564,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                              * Old syntax, when the tag had to be added specifically
                              */
                         case syntax_plugin_combo_tab::TAG:
-                            $renderer->doc .= self::openNavigationalTabsElement($attributes);
+                            $renderer->doc .= self::openNavigationalTabsElement($tagAttributes);
                             break;
                         default:
                             LogUtility::log2FrontEnd("The context ($context) is unknown in enter", LogUtility::LVL_MSG_ERROR, self::TAG);
@@ -571,14 +574,13 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
 
                     break;
                 case DOKU_LEXER_EXIT :
-                    $context = $data[PluginUtility::CONTEXT];
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
+
                     switch ($context) {
                         /**
                          * New syntax (tabpanel enclosing)
                          */
                         case syntax_plugin_combo_panel::TAG:
-                            $renderer->doc .= self::closeTabPanelsElement($attributes);
+                            $renderer->doc .= self::closeTabPanelsElement($tagAttributes);
                             break;
                         /**
                          * Old syntax

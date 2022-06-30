@@ -5,6 +5,7 @@
  */
 
 use ComboStrap\CallStack;
+use ComboStrap\DataType;
 use ComboStrap\EditButton;
 use ComboStrap\EditButtonManager;
 use ComboStrap\ExceptionBadArgument;
@@ -55,20 +56,19 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
     private $tabCounter = 0;
 
 
-    static function getSelectedValue(&$attributes)
+    static function getSelectedValue(TagAttributes $tagAttributes)
     {
-
-        if (isset($attributes[syntax_plugin_combo_panel::SELECTED])) {
+        $selected = $tagAttributes->getValueAndRemoveIfPresent(syntax_plugin_combo_panel::SELECTED);
+        if ($selected !== null) {
             /**
              * Value may be false/true
              */
-            $value = $attributes[syntax_plugin_combo_panel::SELECTED];
-            unset($attributes[syntax_plugin_combo_panel::SELECTED]);
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            return DataType::toBoolean($selected);
 
         }
-        if (isset($attributes[TagAttributes::TYPE_KEY])) {
-            if (strtolower($attributes[TagAttributes::TYPE_KEY]) === "selected") {
+        if ($tagAttributes->hasComponentAttribute(TagAttributes::TYPE_KEY)) {
+            $type = $tagAttributes->getType();
+            if (strtolower($type) === "selected") {
                 return true;
             }
         }
@@ -372,7 +372,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {
@@ -401,23 +401,21 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                         case self::OLD_TAB_PANEL_TAG: // Old deprecated syntax
                         case syntax_plugin_combo_tabs::TAG: // new syntax
 
-                            $attributes = $data[PluginUtility::ATTRIBUTES];
+                            $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
 
-                            PluginUtility::addClass2Attributes("tab-pane fade", $attributes);
-
-                            $selected = self::getSelectedValue($attributes);
+                            $ariaLabelledValue = $tagAttributes->getValue("id") . "-tab";
+                            $tagAttributes
+                                ->addClassName("tab-pane fade")
+                                ->addOutputAttributeValue("role", "tabpanel")
+                                ->addOutputAttributeValue("aria-labelledby", $ariaLabelledValue);
+                            $selected = self::getSelectedValue($tagAttributes);
                             if ($selected) {
-                                PluginUtility::addClass2Attributes("show active", $attributes);
+                                $tagAttributes->addClassName("show active");
                             }
-                            unset($attributes[self::SELECTED]);
-
-                            $attributes["role"] = "tabpanel";
-                            $attributes["aria-labelledby"] = $attributes["id"] . "-tab";
-
-                            $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '>';
+                            $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
                             break;
                         case self::CONTEXT_PREVIEW_ALONE:
-                            $aloneAttributes = syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE_ATTRIBUTES;
+                            $aloneAttributes = TagAttributes::createFromCallStackArray(syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE_ATTRIBUTES);
                             $renderer->doc .= syntax_plugin_combo_tabs::openTabPanelsElement($aloneAttributes);
                             break;
                         default:
@@ -433,7 +431,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;
                             break;
                         case self::CONTEXT_PREVIEW_ALONE:
-                            $aloneVariable = syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE_ATTRIBUTES;
+                            $aloneVariable = TagAttributes::createFromCallStackArray(syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE_ATTRIBUTES);
                             $renderer->doc .= syntax_plugin_combo_tabs::closeTabPanelsElement($aloneVariable);
                             break;
 

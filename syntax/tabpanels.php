@@ -5,6 +5,7 @@
  */
 
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -161,7 +162,7 @@ class syntax_plugin_combo_tabpanels extends DokuWiki_Syntax_Plugin
 
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
-            $attributes = array();
+            $attributes = TagAttributes::createEmpty();
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :

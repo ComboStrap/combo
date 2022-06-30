@@ -366,7 +366,7 @@ class Snippet implements JsonSerializable
          * the same class name, the inline `style` tag is not applied
          *
          */
-        return "snippet-" . $this->internalIdentifier . "-" . SnippetManager::COMBO_CLASS_SUFFIX;
+        return StyleUtility::addComboStrapSuffix("snippet-" . $this->internalIdentifier);
 
     }
 

@@ -37,7 +37,7 @@ require_once(__DIR__ . '/Snippet.php');
 class SnippetManager
 {
 
-    const COMBO_CLASS_SUFFIX = "combo";
+
 
 
     const CANONICAL = "snippet-manager";

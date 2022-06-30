@@ -1046,7 +1046,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             $isHttpUrl = false;
         }
         if ($isHttpUrl) {
-            $this->executeHttpRedirect($calculatedTarget,$ID, self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
+            $this->executeHttpRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
             return true;
         }
 

@@ -221,20 +221,28 @@ class HttpResponse
      * @throws ExceptionNotFound - if the header was not found
      * @throws ExceptionNotExists - if the header value could not be identified
      */
-    public function getHeaderValue(string $headerName)
+    public function getHeaderValue(string $headerName): string
     {
         $header = $this->getHeader($headerName);
         $positionDoublePointSeparator = strpos($header, ':');
         if ($positionDoublePointSeparator === false) {
             throw new ExceptionNotExists("No value found");
         }
-        return substr($header, $positionDoublePointSeparator + 1);
+        return trim(substr($header, $positionDoublePointSeparator + 1));
     }
 
     public function setHeaders(array $headers): HttpResponse
     {
         $this->headers = $headers;
         return $this;
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    public function getBodyAsHtmlDom(): XmlDocument
+    {
+        return XmlDocument::createHtmlDocFromMarkup($this->getBody());
     }
 
 }

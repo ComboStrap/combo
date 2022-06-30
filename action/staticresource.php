@@ -182,7 +182,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             }
 
             try {
-                $dokuPath = $mediaToSend->toDokuPath();
+                $dokuPath = $mediaToSend->toWikiPath();
             } catch (ExceptionCompile $e) {
                 // not a dokuwiki file ?
                 LogUtility::msg("Error: {$e->getMessage()}");

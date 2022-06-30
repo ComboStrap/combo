@@ -182,7 +182,7 @@ class LocalPath extends PathAbs
     /**
      * @throws ExceptionBadArgument - if the path is not inside a drive
      */
-    public function toDokuPath(): WikiPath
+    public function toWikiPath(): WikiPath
     {
         return WikiPath::createFromPath($this);
     }

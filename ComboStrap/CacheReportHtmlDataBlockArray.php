@@ -49,7 +49,7 @@ class CacheReportHtmlDataBlockArray
 
                 $cacheFile = null;
                 try {
-                    $dokuPath = $result->getPath()->toDokuPath();
+                    $dokuPath = $result->getPath()->toWikiPath();
                     $cacheFile = $dokuPath->getWikiId();
                 } catch (ExceptionCompile $e) {
                     LogUtility::msg("The path ({$result->getPath()}) could not be transformed as wiki path. Error:{$e->getMessage()}");
@@ -80,17 +80,14 @@ class CacheReportHtmlDataBlockArray
 
     /**
      * An utility function to extract the cache data block from test responses
-     * @param \TestResponse $response
+     * @param XmlDocument $xmlDom
      * @return mixed
      * @throws ExceptionCompile
      */
-    public static function extractFromResponse(\TestResponse $response)
+    public static function extractFromHtmlDom(XmlDocument $xmlDom)
     {
-        $metaCacheMain = $response->queryHTML('script[type="' . CacheReportHtmlDataBlockArray::APPLICATION_COMBO_CACHE_JSON . '"]');
-        if ($metaCacheMain->count() != 1) {
-            throw new ExceptionCompile("The data cache was not found");
-        }
-        $cacheJsonTextValue = $metaCacheMain->elements[0]->childNodes->item(0)->textContent;
-        return json_decode(XmlUtility::extractTextWithoutCdata($cacheJsonTextValue), true);
+        $metaCacheMain = $xmlDom->querySelector('script[type="' . CacheReportHtmlDataBlockArray::APPLICATION_COMBO_CACHE_JSON . '"]');
+        $cacheJsonTextValue = $metaCacheMain->getNodeValueWithoutCdata();
+        return json_decode($cacheJsonTextValue, true);
     }
 }

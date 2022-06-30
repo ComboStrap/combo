@@ -199,4 +199,9 @@ class XmlElement
     {
         return $this->element->ownerDocument->saveXML($this->element);
     }
+
+    public function getNodeValueWithoutCdata()
+    {
+        return XmlUtility::extractTextWithoutCdata($this->getNodeValue());
+    }
 }

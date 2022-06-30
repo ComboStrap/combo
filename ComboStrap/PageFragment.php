@@ -1905,7 +1905,7 @@ class PageFragment extends ResourceComboAbs
     public
     function getInstructionsDocument(): FetcherPageFragment
     {
-        if ($this->instructionsDocument === null) {
+        if (!isset($this->instructionsDocument)) {
             $this->instructionsDocument = FetcherPageFragment::createPageFragmentFetcherFromObject($this)
                 ->setRequestedMimeToInstructions();
         }

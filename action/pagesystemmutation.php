@@ -76,7 +76,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
                 action_plugin_combo_pagesystemmutation::PAGE_SYSTEM_MUTATION_EVENT_NAME,
                 [
                     self::TYPE_ATTRIBUTE => self::TYPE_CREATION,
-                    PagePath::getPersistentName() => $file->toDokuPath()->toPathString()
+                    PagePath::getPersistentName() => $file->toWikiPath()->toPathString()
                 ]
             );
             return;
@@ -103,7 +103,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
                     action_plugin_combo_pagesystemmutation::PAGE_SYSTEM_MUTATION_EVENT_NAME,
                     [
                         self::TYPE_ATTRIBUTE => self::TYPE_DELETION,
-                        PagePath::getPersistentName() => $file->toDokuPath()->toPathString()
+                        PagePath::getPersistentName() => $file->toWikiPath()->toPathString()
                     ]
                 );
             }

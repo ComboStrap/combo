@@ -595,11 +595,12 @@ class TagAttributes
 
                 if (!in_array($key, [
                     TagAttributes::TYPE_KEY,
-                    TagAttributes::GENERATED_ID_KEY
+                    TagAttributes::GENERATED_ID_KEY,
+                    TagAttributes::OPEN_TAG
                 ])) {
 
                     /**
-                     * Note for developer
+                     * Note for developers:
                      *    * If it must be in the HTML output, you should add it via the output attribute methods during processing.
                      *    * Otherwise you need for now to get and delete it
                      */
@@ -607,7 +608,7 @@ class TagAttributes
                     if (isset($this->logicalTag)) {
                         $message = "$message for the component ({$this->logicalTag}).";
                     }
-                    LogUtility::error($message);
+                    LogUtility::warning($message);
 
                 }
             }

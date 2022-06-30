@@ -31,7 +31,12 @@ class UrlRewrite
         try {
             $scheme = $url->getScheme();
         } catch (ExceptionNotFound $e) {
-            $scheme = "https";
+            /**
+             * we don't set, we just tell that that this is a http scheme
+             * the conditional {@link Url::toAbsoluteUrlString()}
+             * will set it
+             */
+            $scheme = "http";
         }
         switch ($scheme) {
             case "https":
@@ -41,8 +46,6 @@ class UrlRewrite
                 if (Site::shouldEndpointUrlBeAbsolute()) {
                     $url->toAbsoluteUrl();
                 }
-                break;
-            case "email":
                 break;
         }
 

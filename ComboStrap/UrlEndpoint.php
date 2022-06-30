@@ -46,6 +46,7 @@ class UrlEndpoint
     /**
      *
      * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
      */
     public static function createBaseUrl(): Url
     {

@@ -965,7 +965,6 @@ class Site
             return UrlRewrite::NO_REWRITE;
         }
         switch ($urlRewriteInt) {
-
             case 0:
                 return UrlRewrite::NO_REWRITE;
             case 1:

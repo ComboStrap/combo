@@ -53,22 +53,20 @@ class RasterImageLink extends ImageLink
             "md" => 768,
             "lg" => 992
         );
-    /**
-     * @var void
-     */
-    private $fetchRaster;
+
+    private FetcherRaster $fetchRaster;
 
 
     /**
      * @throws ExceptionBadArgument
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionNotExists
-     * @throws ExceptionNotFound
      */
     public function __construct(MediaMarkup $mediaMarkup)
     {
-        $this->fetchRaster = FetcherRaster::createEmptyRaster()
-            ->buildFromUrl($mediaMarkup->getFetchUrl());
+        $fetcher = $mediaMarkup->getFetcher();
+        if(!($fetcher instanceof FetcherRaster)) {
+           throw new ExceptionBadArgument("The fetcher is not a raster fetcher but is a ".get_class($fetcher));
+        }
+        $this->fetchRaster = $fetcher;
         parent::__construct($mediaMarkup);
     }
 
@@ -84,11 +82,10 @@ class RasterImageLink extends ImageLink
     {
 
         $path = $this->mediaMarkup->getPath();
-        if ($path instanceof DokuPath) {
-            if (!FileSystems::exists($path)) {
-                return "<span class=\"text-danger\">The image ($path) does not exist</span>";
-            }
+        if (!FileSystems::exists($path)) {
+            return "<span class=\"text-danger\">The image ($path) does not exist</span>";
         }
+
 
         $fetchRaster = $this->fetchRaster;
 
@@ -222,14 +219,12 @@ class RasterImageLink extends ImageLink
             try {
 
                 $breakpointRaster = FetcherRaster::createRasterFromFetchUrl($fetchRaster->getFetchUrl());
-                /** @noinspection PhpPossiblePolymorphicInvocationInspection */
                 if (
                     !$fetchRaster->hasHeightRequested() // breakpoint url needs only the h attribute in this case
                     || $fetchRaster->hasAspectRatioRequested() // width and height are mandatory
                 ) {
                     $breakpointRaster->setRequestedWidth($breakpointWidthMinusMargin);
                 }
-                /** @noinspection PhpPossiblePolymorphicInvocationInspection */
                 if ($fetchRaster->hasHeightRequested() // if this is a height request
                     || $fetchRaster->hasAspectRatioRequested() // width and height are mandatory
                 ) {

@@ -297,7 +297,6 @@ class Url extends PathAbs
         try {
             $this->getHost();
         } catch (ExceptionNotFound $e) {
-
             /**
              * Based on {@link getBaseURL()}
              * to be dokuwiki compliant
@@ -684,8 +683,20 @@ class Url extends PathAbs
             case "https":
             case "ftp":
             default:
-                // http, https
+                /**
+                 * Url Rewrite
+                 * Absolute vs Relative, __media, ...
+                 */
                 UrlRewrite::rewrite($this);
+                /**
+                 * Rewrite may have set a default scheme
+                 * We read it again
+                 */
+                try {
+                    $scheme = $this->getScheme();
+                } catch (ExceptionNotFound $e) {
+                    $scheme = null;
+                }
                 try {
                     $host = $this->getHost();
                 } catch (ExceptionNotFound $e) {
@@ -697,12 +708,7 @@ class Url extends PathAbs
                 $base = "";
                 if ($host !== null) {
                     if ($scheme !== null) {
-                        $base = "{$scheme}:";
-                        if (in_array($scheme, ["http", "https", "ftp", LocalPath::SCHEME])) {
-                            // mailto, skype, whatsapp does not have the
-                            // because they don't have any host
-                            $base = "$base//";
-                        }
+                        $base = "{$scheme}://";
                     }
                     $base = "$base{$host}";
                     try {

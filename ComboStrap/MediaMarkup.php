@@ -658,7 +658,7 @@ class MediaMarkup
 
     /**
      */
-    public function getPath(): DokuPath
+    public function getPath(): WikiPath
     {
         try {
 

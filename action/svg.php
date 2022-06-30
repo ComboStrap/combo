@@ -3,27 +3,9 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
-use ComboStrap\Dimension;
 use ComboStrap\DirectoryLayout;
-use ComboStrap\ExceptionCompile;
-use ComboStrap\Fetcher;
-use ComboStrap\FetcherAbs;
-use ComboStrap\FetcherLocalPath;
 use ComboStrap\Identity;
-use ComboStrap\FetchCache;
-use ComboStrap\DokuPath;
-use ComboStrap\FetcherTraitImage;
-use ComboStrap\FetcherSvg;
-use ComboStrap\MediaLink;
-use ComboStrap\LogUtility;
-use ComboStrap\MediaMarkup;
-use ComboStrap\PluginUtility;
-use ComboStrap\Site;
-use ComboStrap\SvgImageLink;
-use ComboStrap\TagAttributes;
 
-if (!defined('DOKU_INC')) exit;
-if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
 
 /**
  * Class action_plugin_combo_svg

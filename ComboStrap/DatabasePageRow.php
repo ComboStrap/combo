@@ -212,7 +212,7 @@ class DatabasePageRow
     public static function createFromCanonical($canonical): DatabasePageRow
     {
 
-        DokuPath::addRootSeparatorIfNotPresent($canonical);
+        WikiPath::addRootSeparatorIfNotPresent($canonical);
         $databasePage = new DatabasePageRow();
         try {
             $row = $databasePage->getDatabaseRowFromAttribute(Canonical::PROPERTY_NAME, $canonical);
@@ -228,7 +228,7 @@ class DatabasePageRow
     public static function createFromAlias($alias): DatabasePageRow
     {
 
-        DokuPath::addRootSeparatorIfNotPresent($alias);
+        WikiPath::addRootSeparatorIfNotPresent($alias);
         $databasePage = new DatabasePageRow();
         $row = $databasePage->getDatabaseRowFromAlias($alias);
         if ($row != null) {
@@ -663,7 +663,7 @@ class DatabasePageRow
         }
 
         $path = $targetId;
-        DokuPath::addRootSeparatorIfNotPresent($path);
+        WikiPath::addRootSeparatorIfNotPresent($path);
         $attributes = [
             DokuwikiId::DOKUWIKI_ID_ATTRIBUTE => $targetId,
             PagePath::PROPERTY_NAME => $path
@@ -977,7 +977,7 @@ class DatabasePageRow
      */
     private function getDatabaseRowFromPath(string $path): ?array
     {
-        DokuPath::addRootSeparatorIfNotPresent($path);
+        WikiPath::addRootSeparatorIfNotPresent($path);
         return $this->getDatabaseRowFromAttribute(PagePath::PROPERTY_NAME, $path);
     }
 

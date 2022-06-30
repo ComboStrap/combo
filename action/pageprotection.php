@@ -2,7 +2,7 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
-use ComboStrap\DokuPath;
+use ComboStrap\WikiPath;
 use ComboStrap\Identity;
 use ComboStrap\LowQualityPage;
 use ComboStrap\PageFragment;
@@ -140,7 +140,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
             return;
         }
 
-        $dokuPath = DokuPath::createFromUnknownRoot($id);
+        $dokuPath = WikiPath::createFromUnknownRoot($id);
         if ($dokuPath->isPage()) {
 
             /**
@@ -177,7 +177,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         $pageItems = $event->data["items"];
         foreach ($pageItems as $key => $pageItem) {
             $url = $pageItem->url;
-            $dokuPath = DokuPath::createFromUrl($url);
+            $dokuPath = WikiPath::createFromUrl($url);
             $page = PageFragment::createPageFromId($dokuPath->getWikiId());
             if ($page->isLowQualityPage() && LowQualityPage::isProtectionEnabled()) {
 

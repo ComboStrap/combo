@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\DokuPath;
+use ComboStrap\WikiPath;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetcherLocalImage;
@@ -152,7 +152,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         if (empty($twitterImages)) {
             $defaultImageIdConf = PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE);
             if (!empty($defaultImageIdConf)) {
-                $dokuPath = DokuPath::createMediaPathFromId($defaultImageIdConf);
+                $dokuPath = WikiPath::createMediaPathFromId($defaultImageIdConf);
                 if (FileSystems::exists($dokuPath)) {
                     try {
                         $twitterImages[] = FetcherLocalImage::createImageFetchFromPath($dokuPath);

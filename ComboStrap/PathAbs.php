@@ -56,11 +56,11 @@ abstract class PathAbs implements Path
 
     /**
      * @throws ExceptionCompile
-     * @deprecated for {@link DokuPath::createFromPath()}
+     * @deprecated for {@link WikiPath::createFromPath()}
      */
-    function toDokuPath(): DokuPath
+    function toDokuPath(): WikiPath
     {
-        if ($this instanceof DokuPath) {
+        if ($this instanceof WikiPath) {
             return $this;
         }
         if ($this instanceof LocalPath) {

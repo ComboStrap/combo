@@ -43,7 +43,7 @@ class FetcherRaster extends FetcherLocalImage
      */
     public static function createImageRasterFetchFromId(string $imageId, $rev = null): FetcherRaster
     {
-        return FetcherLocalImage::createImageFetchFromPath(DokuPath::createMediaPathFromId($imageId, $rev));
+        return FetcherLocalImage::createImageFetchFromPath(WikiPath::createMediaPathFromId($imageId, $rev));
     }
 
     /**
@@ -53,7 +53,7 @@ class FetcherRaster extends FetcherLocalImage
      */
     public static function createImageRasterFetchFromPath(Path $path): FetcherRaster
     {
-        $path = DokuPath::createFromPath($path);
+        $path = WikiPath::createFromPath($path);
         return self::createEmptyRaster()
             ->setOriginalPath($path);
     }
@@ -229,7 +229,7 @@ class FetcherRaster extends FetcherLocalImage
      * @throws ExceptionBadSyntax - if the file is badly encoded
      * @throws ExceptionNotExists - if the file does not exists
      */
-    public function setOriginalPath(DokuPath $dokuPath): FetcherRaster
+    public function setOriginalPath(WikiPath $dokuPath): FetcherRaster
     {
         $this->setOriginalPathTrait($dokuPath);
         $this->analyzeImageIfNeeded();

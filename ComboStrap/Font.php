@@ -44,12 +44,12 @@ class Font
      */
     static public function getLiberationSansFontRegularPath(): LocalPath
     {
-        return DokuPath::createComboResource(":fonts:LiberationSans-Regular.ttf")->toLocalPath();
+        return WikiPath::createComboResource(":fonts:LiberationSans-Regular.ttf")->toLocalPath();
     }
 
     static public function getLiberationSansFontBoldPath(): LocalPath
     {
-        return DokuPath::createComboResource(":fonts:LiberationSans-Bold.ttf")->toLocalPath();
+        return WikiPath::createComboResource(":fonts:LiberationSans-Bold.ttf")->toLocalPath();
     }
 
     static public function printWindowsTrueTypeFont()

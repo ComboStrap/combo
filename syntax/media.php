@@ -3,7 +3,7 @@
 
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
-use ComboStrap\DokuPath;
+use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
@@ -75,7 +75,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
          * {@link Doku_Renderer_metadata::$firstimage} is unfortunately protected
          * and {@link Doku_Renderer_metadata::internalmedia()} does not allow svg as first image
          */
-        if (!($path instanceof DokuPath)) {
+        if (!($path instanceof WikiPath)) {
             return;
         }
         if (!FileSystems::exists($path)) {

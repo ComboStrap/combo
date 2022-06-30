@@ -82,8 +82,8 @@ class PageImages extends MetadataTabular
                         }
                     }
                 }
-                DokuPath::addRootSeparatorIfNotPresent($imagePath);
-                $imagePathObject = DokuPath::createMediaPathFromPath($imagePath);
+                WikiPath::addRootSeparatorIfNotPresent($imagePath);
+                $imagePathObject = WikiPath::createMediaPathFromPath($imagePath);
                 $pageImage = PageImage::create($imagePathObject, $page);
                 if ($usage !== null) {
                     $pageImage->setUsages($usage);
@@ -96,8 +96,8 @@ class PageImages extends MetadataTabular
             /**
              * A single path image
              */
-            DokuPath::addRootSeparatorIfNotPresent($persistentValue);
-            $imagePathObject = DokuPath::createMediaPathFromPath($persistentValue);
+            WikiPath::addRootSeparatorIfNotPresent($persistentValue);
+            $imagePathObject = WikiPath::createMediaPathFromPath($persistentValue);
             $images = [$persistentValue => PageImage::create($imagePathObject, $page)];
         }
 
@@ -177,7 +177,7 @@ class PageImages extends MetadataTabular
                 LogUtility::internalError("The page path didn't have any values in the rows", self::CANONICAL);
                 continue;
             }
-            $pageImageObject = DokuPath::createMediaPathFromId($pageImagePathValue);
+            $pageImageObject = WikiPath::createMediaPathFromId($pageImagePathValue);
             $pageImage = PageImage::create($pageImageObject, $this->getResource());
 
             /**

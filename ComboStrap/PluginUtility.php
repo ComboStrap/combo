@@ -524,7 +524,7 @@ class PluginUtility
         $xhtmlIcon = "";
         if ($withIcon) {
 
-            $logoPath = DokuPath::createComboResource("images:logo.svg");
+            $logoPath = WikiPath::createComboResource("images:logo.svg");
             try {
                 $fetchImage = FetcherSvg::createSvgFromPath($logoPath);
                 $fetchImage->setRequestedType(FetcherSvg::ICON_TYPE)
@@ -1109,7 +1109,7 @@ class PluginUtility
     }
 
     /**
-     * @deprecated for {@link DokuPath::createPagePathFromGlobalId()}
+     * @deprecated for {@link WikiPath::createPagePathFromGlobalId()}
      */
     public static function getCurrentSlotId(): string
     {

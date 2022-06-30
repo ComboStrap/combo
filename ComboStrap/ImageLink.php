@@ -61,7 +61,7 @@ abstract class ImageLink extends MediaLink
          * Do we add a link to the image ?
          */
         $dokuPath = $this->mediaMarkup->getPath();
-        if (!($dokuPath instanceof DokuPath)) {
+        if (!($dokuPath instanceof WikiPath)) {
             // not an internal image
             return $htmlMediaMarkup;
         }
@@ -116,7 +116,7 @@ abstract class ImageLink extends MediaLink
                 //go to the details media viewer
                 $url = UrlEndpoint::createDetailUrl()
                     ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $dokuPath->getWikiId())
-                    ->addQueryParameter(DokuPath::REV_ATTRIBUTE, $dokuPath->getRevision());
+                    ->addQueryParameter(WikiPath::REV_ATTRIBUTE, $dokuPath->getRevision());
                 $tagAttributes->addOutputAttributeValue("href", $url->toString());
                 return $tagAttributes->toHtmlEnterTag("a") . $htmlMediaMarkup . "</a>";
 

@@ -135,7 +135,7 @@ class FetcherSvg extends FetcherLocalImage
 
     /**
      */
-    public static function createSvgFromPath(DokuPath $path): FetcherSvg
+    public static function createSvgFromPath(WikiPath $path): FetcherSvg
     {
         $fetcher = self::createSvgEmpty();
         $fetcher->setOriginalPath($path);
@@ -458,7 +458,7 @@ class FetcherSvg extends FetcherLocalImage
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
      */
-    public function setOriginalPath(DokuPath $dokuPath): FetcherLocalImage
+    public function setOriginalPath(WikiPath $dokuPath): FetcherLocalImage
     {
 
         try {
@@ -1438,7 +1438,7 @@ class FetcherSvg extends FetcherLocalImage
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
      */
-    private function downloadAndGetIconPath(): DokuPath
+    private function downloadAndGetIconPath(): WikiPath
     {
         /**
          * It may be a Svg icon that we needs to download

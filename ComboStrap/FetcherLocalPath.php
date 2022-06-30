@@ -14,7 +14,7 @@ class FetcherLocalPath extends FetcherAbs implements FetcherSource
     const RAW = "raw";
 
 
-    public static function createFromPath(DokuPath $dokuPath): FetcherLocalPath
+    public static function createFromPath(WikiPath $dokuPath): FetcherLocalPath
     {
         $fetcherRaw = self::createEmpty();
         $fetcherRaw->setOriginalPath($dokuPath);

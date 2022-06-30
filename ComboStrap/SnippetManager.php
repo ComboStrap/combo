@@ -396,7 +396,7 @@ class SnippetManager
     public function attachJavascriptScriptForRequest(string $snippetId, string $relativeId): Snippet
     {
 
-        $dokuPath = DokuPath::createComboResource($relativeId);
+        $dokuPath = WikiPath::createComboResource($relativeId);
         try {
             $url = FetcherLocalPath::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
         } catch (ExceptionNotFound $e) {
@@ -415,7 +415,7 @@ class SnippetManager
      */
     public function attachJavascriptComboResourceForSlot(string $snippetId, string $relativeId, string $integrity = null): Snippet
     {
-        $dokuPath = DokuPath::createComboResource($relativeId);
+        $dokuPath = WikiPath::createComboResource($relativeId);
         try {
             $url = FetcherLocalPath::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
         } catch (ExceptionNotFound $e) {

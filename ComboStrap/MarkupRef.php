@@ -61,7 +61,7 @@ class MarkupRef
     private string $ref;
     private ?Url $url = null;
 
-    private ?DokuPath $path = null;
+    private ?WikiPath $path = null;
     private ?InterWiki $interWiki = null;
 
 
@@ -153,7 +153,7 @@ class MarkupRef
                 $fragment = OutlineSection::textToHtmlSectionId($fragment);
             }
             $this->url = Url::createEmpty()->setFragment($fragment);
-            $this->path = DokuPath::createPagePathFromRequestedPage();
+            $this->path = WikiPath::createPagePathFromRequestedPage();
             return;
         }
 
@@ -246,7 +246,7 @@ class MarkupRef
          * The path
          */
         try {
-            $rev = $this->url->getQueryPropertyValue(DokuPath::REV_ATTRIBUTE);
+            $rev = $this->url->getQueryPropertyValue(WikiPath::REV_ATTRIBUTE);
         } catch (ExceptionNotFound $e) {
             $rev = null;
         }
@@ -255,7 +255,7 @@ class MarkupRef
          */
         switch ($type) {
             case self::MEDIA_TYPE:
-                $this->path = DokuPath::createMediaPathFromId($wikiPath, $rev);
+                $this->path = WikiPath::createMediaPathFromId($wikiPath, $rev);
                 $this->url->addQueryParameter(FetcherTraitLocalPath::$MEDIA_QUERY_PARAMETER, $wikiPath);
                 $this->addRevToUrl($rev);
 
@@ -270,13 +270,13 @@ class MarkupRef
                  * The path may be an id if it exists
                  * otherwise it's a relative path
                  */
-                $path = DokuPath::createPagePathFromPath($wikiPath, $rev);
+                $path = WikiPath::createPagePathFromPath($wikiPath, $rev);
                 if (!FileSystems::exists($path) && $wikiPath !== "") {
                     // We test for an empty wikiPath string
                     // because if the wiki path is the empty string,
                     // this is the current requested page
                     // An empty id is the root and always exists
-                    $idPath = DokuPath::createPagePathFromId($wikiPath, $rev);
+                    $idPath = WikiPath::createPagePathFromId($wikiPath, $rev);
                     if (FileSystems::exists($idPath)) {
                         $path = $idPath;
                     }
@@ -352,21 +352,21 @@ class MarkupRef
             return $wikiPath;
         }
         // slash to double point
-        $wikiPath = str_replace(DokuPath::NAMESPACE_SEPARATOR_SLASH, DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $wikiPath);
+        $wikiPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_SLASH, WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $wikiPath);
 
         $isNamespacePath = false;
-        if ($wikiPath[strlen($wikiPath) - 1] === DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+        if ($wikiPath[strlen($wikiPath) - 1] === WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $isNamespacePath = true;
         }
         $isPath = false;
-        if ($wikiPath[0] === DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+        if ($wikiPath[0] === WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $isPath = true;
         }
         $pathType = "unknown";
-        if ($wikiPath[0] === DokuPath::CURRENT_PATH_CHARACTER) {
+        if ($wikiPath[0] === WikiPath::CURRENT_PATH_CHARACTER) {
             $pathType = "current";
             if (isset($wikiPath[1])) {
-                if ($wikiPath[1] === DokuPath::CURRENT_PATH_CHARACTER) {
+                if ($wikiPath[1] === WikiPath::CURRENT_PATH_CHARACTER) {
                     $pathType = "parent";
                 }
             }
@@ -381,16 +381,16 @@ class MarkupRef
         switch ($pathType) {
             case "current":
                 if (!$isNamespacePath) {
-                    $cleanPath = DokuPath::CURRENT_PATH_CHARACTER . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $cleanPath;
+                    $cleanPath = WikiPath::CURRENT_PATH_CHARACTER . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $cleanPath;
                 } else {
-                    $cleanPath = DokuPath::CURRENT_PATH_CHARACTER . $cleanPath;
+                    $cleanPath = WikiPath::CURRENT_PATH_CHARACTER . $cleanPath;
                 }
                 break;
             case "parent":
                 if (!$isNamespacePath) {
-                    $cleanPath = DokuPath::CURRENT_PARENT_PATH_CHARACTER . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $cleanPath;
+                    $cleanPath = WikiPath::CURRENT_PARENT_PATH_CHARACTER . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $cleanPath;
                 } else {
-                    $cleanPath = DokuPath::CURRENT_PARENT_PATH_CHARACTER . $cleanPath;
+                    $cleanPath = WikiPath::CURRENT_PARENT_PATH_CHARACTER . $cleanPath;
                 }
                 break;
         }
@@ -411,7 +411,7 @@ class MarkupRef
      * @throws ExceptionNotFound
      */
     public
-    function getPath(): DokuPath
+    function getPath(): WikiPath
     {
         if ($this->path === null) {
             throw new ExceptionNotFound("No path was found");
@@ -444,7 +444,7 @@ class MarkupRef
     private function addRevToUrl($rev = null): void
     {
         if ($rev !== null) {
-            $this->url->addQueryParameter(DokuPath::REV_ATTRIBUTE, $rev);
+            $this->url->addQueryParameter(WikiPath::REV_ATTRIBUTE, $rev);
         }
     }
 

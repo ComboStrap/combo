@@ -19,7 +19,7 @@ class PathTreeNode extends TreeNode
      */
     public static function buildTreeViaFileSystemChildren(string $wikiPath = ":"): PathTreeNode
     {
-        $rootSpace = DokuPath::createPagePathFromId($wikiPath);
+        $rootSpace = WikiPath::createPagePathFromId($wikiPath);
         $root = PathTreeNode::createPathTreeNodeFromPath($rootSpace);
         self::buildTreeFromWikiFileSystemRecursively($root);
         return $root;
@@ -65,7 +65,7 @@ class PathTreeNode extends TreeNode
          */
         $nodeByIds = [];
         foreach ($ids as $id) {
-            $path = DokuPath::createPagePathFromId($id);
+            $path = WikiPath::createPagePathFromId($id);
             $actualNode = $nodeByIds[$path->getWikiId()];
             if ($actualNode === null) {
                 $actualNode = PathTreeNode::createPathTreeNodeFromPath($path);
@@ -74,7 +74,7 @@ class PathTreeNode extends TreeNode
             while (true) {
                 try {
                     /**
-                     * @var DokuPath $parentPath
+                     * @var WikiPath $parentPath
                      */
                     $parentPath = $actualNode->getPath()->getParent();
                     $parentPathNode = $nodeByIds[$parentPath->getWikiId()];

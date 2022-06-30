@@ -102,7 +102,7 @@ class LinkMarkup
 
     public static function createFromPageIdOrPath($id): LinkMarkup
     {
-        DokuPath::addRootSeparatorIfNotPresent($id);
+        WikiPath::addRootSeparatorIfNotPresent($id);
         try {
             return new LinkMarkup($id);
         } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
@@ -495,7 +495,7 @@ EOF;
     public
     function isRelative(): bool
     {
-        return strpos($this->getMarkupRef()->getRef(), DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) !== 0;
+        return strpos($this->getMarkupRef()->getRef(), WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) !== 0;
     }
 
     public

@@ -58,7 +58,7 @@ class ThirdMediaLink extends MediaLink
 
 
         $path = $this->mediaMarkup->getPath();
-        if(!$path instanceof DokuPath){
+        if(!$path instanceof WikiPath){
             return $this->mediaMarkup->getFetchUrl();
         }
 

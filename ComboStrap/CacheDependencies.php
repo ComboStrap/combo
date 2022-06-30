@@ -148,7 +148,7 @@ class CacheDependencies
         global $ID;
         $keep = $ID;
         try {
-            $ID = DokuPath::toDokuwikiId($path);
+            $ID = WikiPath::toDokuwikiId($path);
             /**
              * Rerender secondary slot if needed
              */

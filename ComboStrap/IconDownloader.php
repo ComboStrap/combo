@@ -193,7 +193,7 @@ class IconDownloader
     const PHOSPHOR_ICONS = "ph";
     const VSCODE = "vscode";
     const SI_GLYPH = "si-glyph";
-    const COMBO = DokuPath::COMBO_DRIVE;
+    const COMBO = WikiPath::COMBO_DRIVE;
     const AKAR_ICONS = "akar-icons";
     const ARCTICONS = "articons";
     const HEALTH_ICONS = "healthicons";
@@ -208,7 +208,7 @@ class IconDownloader
      * @var false|string
      */
     private $iconName;
-    private DokuPath $path;
+    private WikiPath $path;
 
 
     /**
@@ -218,15 +218,15 @@ class IconDownloader
     {
 
         $iconNameSpace = PluginUtility::getConfValue(self::CONF_ICONS_MEDIA_NAMESPACE, self::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
-        if (substr($iconNameSpace, 0, 1) != DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
-            $iconNameSpace = DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $iconNameSpace;
+        if (substr($iconNameSpace, 0, 1) != WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+            $iconNameSpace = WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $iconNameSpace;
         }
-        if (substr($iconNameSpace, -1) != DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+        if (substr($iconNameSpace, -1) != WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $iconNameSpace = $iconNameSpace . ":";
         }
 
         $mediaPathId = $iconNameSpace . $name . ".svg";
-        $mediaDokuPath = DokuPath::createMediaPathFromPath($mediaPathId);
+        $mediaDokuPath = WikiPath::createMediaPathFromPath($mediaPathId);
 
         /**
          * Name parsing to extract the library name and icon name
@@ -572,7 +572,7 @@ class IconDownloader
         $this->iconName = $iconName;
     }
 
-    public function getPath(): DokuPath
+    public function getPath(): WikiPath
     {
         return $this->path;
     }

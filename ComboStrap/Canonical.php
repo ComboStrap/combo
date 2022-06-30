@@ -112,7 +112,7 @@ class Canonical extends MetadataWikiPath
             $names = array_slice($names, 0, $namesLength - 1);
         }
         $calculatedCanonical = implode(":", $names);
-        DokuPath::addRootSeparatorIfNotPresent($calculatedCanonical);
+        WikiPath::addRootSeparatorIfNotPresent($calculatedCanonical);
         return $calculatedCanonical;
 
     }

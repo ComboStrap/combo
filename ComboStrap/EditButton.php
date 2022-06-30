@@ -173,7 +173,7 @@ class EditButton
              * to make it unique on the whole page
              * because the edit button may also be on the secondary slot
              */
-            $slotPath = DokuPath::createPagePathFromId($wikiId);
+            $slotPath = WikiPath::createPagePathFromId($wikiId);
             $formId = IdManager::getOrCreate()->generateNewHtmlIdForComponent(self::CANONICAL, $slotPath);
             $data[self::FORM_ID] = $formId;
         } else {

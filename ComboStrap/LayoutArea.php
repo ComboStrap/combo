@@ -50,9 +50,9 @@ class LayoutArea
         }
     }
 
-    public static function getDefaultAreaContentPath($areaName): DokuPath
+    public static function getDefaultAreaContentPath($areaName): WikiPath
     {
-        return DokuPath::createComboResource(":pages:$areaName.md");
+        return WikiPath::createComboResource(":pages:$areaName.md");
     }
 
 
@@ -83,7 +83,7 @@ class LayoutArea
         }
         // Slot
         try {
-            $closestPath = FileSystems::closest($requestedPage->getPath(), $this->slotName . DokuPath::PAGE_FILE_TXT_EXTENSION);
+            $closestPath = FileSystems::closest($requestedPage->getPath(), $this->slotName . WikiPath::PAGE_FILE_TXT_EXTENSION);
         } catch (ExceptionNotFound $e) {
 
             /**
@@ -141,7 +141,7 @@ class LayoutArea
                 return "";
             }
             $html = $page->toXhtml();
-            if ($page->getPath()->getDrive() !== DokuPath::PAGE_DRIVE) {
+            if ($page->getPath()->getDrive() !== WikiPath::PAGE_DRIVE) {
                 // case when this is a default page in the resource directory
                 return EditButton::deleteAll($html);
             } else {

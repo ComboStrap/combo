@@ -8,6 +8,6 @@ namespace ComboStrap;
 interface FetcherSource extends Fetcher
 {
 
-    public function getOriginalPath(): DokuPath;
+    public function getOriginalPath(): WikiPath;
 
 }

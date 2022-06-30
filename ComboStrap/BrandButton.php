@@ -656,11 +656,11 @@ EOF;
         return $this;
     }
 
-    private function getResourceIconFile(): DokuPath
+    private function getResourceIconFile(): WikiPath
     {
         $iconName = $this->getResourceIconName();
         $iconPath = str_replace(IconDownloader::COMBO . ":", "", $iconName) . ".svg";
-        return DokuPath::createComboResource($iconPath);
+        return WikiPath::createComboResource($iconPath);
     }
 
     public function setSecondaryColor(string $secondaryColor): BrandButton

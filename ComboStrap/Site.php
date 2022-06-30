@@ -27,12 +27,12 @@ class Site
     );
 
     const PNG_LOGO_IDS = array(
-        ':logo.png',
-        ':wiki:logo.png',
-        ':favicon-32×32.png',
-        ':favicon-16×16.png',
-        ':apple-touch-icon.png',
-        ':android-chrome-192x192.png'
+        'logo.png',
+        'wiki:logo.png',
+        'favicon-32×32.png',
+        'favicon-16×16.png',
+        'apple-touch-icon.png',
+        'android-chrome-192x192.png'
     );
     /**
      * Name of the main header slot
@@ -54,14 +54,14 @@ class Site
 
 
     /**
-     * @return DokuPath[]
+     * @return WikiPath[]
      */
     public static function getLogoImagesAsPath(): array
     {
         $logosPaths = PluginUtility::mergeAttributes(self::PNG_LOGO_IDS, self::SVG_LOGO_IDS);
         $logos = [];
         foreach ($logosPaths as $logoPath) {
-            $dokuPath = DokuPath::createMediaPathFromId($logoPath);
+            $dokuPath = WikiPath::createMediaPathFromId($logoPath);
             if (FileSystems::exists($dokuPath)) {
                 try {
                     $logos[] = $dokuPath;
@@ -106,7 +106,7 @@ class Site
 
     public static function getUrlEndpointSeparator(): string
     {
-        $defaultSeparator = DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT;
+        $defaultSeparator = WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT;
         $slashSeparator = "/";
         global $conf;
         $key = 'useslash';
@@ -170,7 +170,7 @@ class Site
     public static function getLogoAsSvgImage(): FetcherSvg
     {
         foreach (self::SVG_LOGO_IDS as $svgLogo) {
-            $image = FetcherSvg::createSvgFromPath(DokuPath::createMediaPathFromId($svgLogo));
+            $image = FetcherSvg::createSvgFromPath(WikiPath::createMediaPathFromId($svgLogo));
             if (FileSystems::exists($image->getOriginalPath())) {
                 return $image;
             }
@@ -887,7 +887,7 @@ class Site
     /**
      * @throws ExceptionNotFound
      */
-    public static function getLogoImage(): DokuPath
+    public static function getLogoImage(): WikiPath
     {
         $logosImages = Site::getLogoImagesAsPath();
         if (empty($logosImages)) {

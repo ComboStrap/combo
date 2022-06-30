@@ -29,24 +29,24 @@ class Slug extends MetadataWikiPath
     public static function toSlugPath($string): ?string
     {
         if (empty($string)) return null;
-        $excludedCharacters = array_merge(DokuPath::getReservedWords(), StringUtility::SEPARATORS_CHARACTERS);
-        $excludedCharacters[] = DokuPath::SLUG_SEPARATOR;
-        $parts = explode(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $string);
+        $excludedCharacters = array_merge(WikiPath::getReservedWords(), StringUtility::SEPARATORS_CHARACTERS);
+        $excludedCharacters[] = WikiPath::SLUG_SEPARATOR;
+        $parts = explode(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $string);
         $parts = array_map(function ($e) use ($excludedCharacters) {
             $wordsPart = StringUtility::getWords(
                 $e,
                 $excludedCharacters
             );
             // Implode and Lower case
-            return strtolower(implode(DokuPath::SLUG_SEPARATOR, $wordsPart));
+            return strtolower(implode(WikiPath::SLUG_SEPARATOR, $wordsPart));
         }, $parts);
 
-        $slug = implode(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $parts);
+        $slug = implode(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $parts);
         // Space to separator
         //$slugWithoutSpace = str_replace(" ", DokuPath::SLUG_SEPARATOR, $slugWithoutSpaceAroundParts);
         // No double separator
         //$slugWithoutDoubleSeparator = preg_replace("/" . DokuPath::SLUG_SEPARATOR . "{2,}/", DokuPath::SLUG_SEPARATOR, $slugWithoutSpace);
-        DokuPath::addRootSeparatorIfNotPresent($slug);
+        WikiPath::addRootSeparatorIfNotPresent($slug);
         return $slug;
     }
 

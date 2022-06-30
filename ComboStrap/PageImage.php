@@ -16,9 +16,9 @@ class PageImage
      *   * it's basically a path (no processing information are needed)
      *   * it's easier to manipulate a path
      *   * in syntax component, we pass attribute to the fetcher that it should delete if used (Way to check the attribute usage)
-     * @var DokuPath
+     * @var WikiPath
      */
-    private DokuPath $image;
+    private WikiPath $image;
     private $usages;
     /**
      * @var PageFragment
@@ -28,18 +28,18 @@ class PageImage
     /**
      * PageImage constructor.
      */
-    public function __construct(DokuPath $image, PageFragment $page)
+    public function __construct(WikiPath $image, PageFragment $page)
     {
         $this->image = $image;
         $this->page = $page;
     }
 
     /**
-     * @param DokuPath $image
+     * @param WikiPath $image
      * @param PageFragment $page
      * @return PageImage
      */
-    public static function create(DokuPath $image, ResourceCombo $page): PageImage
+    public static function create(WikiPath $image, ResourceCombo $page): PageImage
     {
         return new PageImage($image, $page);
     }
@@ -64,7 +64,7 @@ class PageImage
         return $this;
     }
 
-    public function getImagePath(): DokuPath
+    public function getImagePath(): WikiPath
     {
         return $this->image;
     }

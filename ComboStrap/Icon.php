@@ -50,7 +50,7 @@ class Icon
          * If the name have an extension, it's a file from the media directory
          * Otherwise, it's an icon from a library
          */
-        $mediaDokuPath = DokuPath::createMediaPathFromId($name);
+        $mediaDokuPath = WikiPath::createMediaPathFromId($name);
         try {
             $extension = $mediaDokuPath->getExtension();
             if ($extension !== "svg") {
@@ -89,7 +89,7 @@ class Icon
     public static function createFromComboResource(string $name, TagAttributes $tagAttributes = null): Icon
     {
         $icon = new Icon();
-        $path = DokuPath::createComboResource(":$name.svg");
+        $path = WikiPath::createComboResource(":$name.svg");
         $fetchSvg = FetcherSvg::createSvgFromPath($path);
         $icon->setFetchSvg($fetchSvg);
         if ($tagAttributes !== null) {

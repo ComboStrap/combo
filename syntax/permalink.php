@@ -8,7 +8,7 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
 use ComboStrap\Display;
-use ComboStrap\DokuPath;
+use ComboStrap\WikiPath;
 use ComboStrap\DokuwikiId;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionNotExists;
@@ -185,7 +185,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
 
                         $urlPath = PageUrlPath::createForPage($requestedPage)
                             ->getUrlPathFromType(PageUrlType::CONF_VALUE_CANONICAL_PATH);
-                        $urlId = DokuPath::toDokuwikiId($urlPath);
+                        $urlId = WikiPath::toDokuwikiId($urlPath);
                         $canonicalUrl = UrlEndpoint::createDokuUrl()
                             ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $urlId)
                             ->toAbsoluteUrl();

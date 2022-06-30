@@ -108,7 +108,7 @@ class Layout
                 break;
         }
 
-        $layoutDirectory = DokuPath::createDokuPath(":layout:$layoutName:", DokuPath::COMBO_DRIVE);
+        $layoutDirectory = WikiPath::createDokuPath(":layout:$layoutName:", WikiPath::COMBO_DRIVE);
         if (!FileSystems::exists($layoutDirectory)) {
             throw new ExceptionNotFound("The layout directory ($layoutName) does not exist at $layoutDirectory", self::CANONICAL);
         }

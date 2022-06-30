@@ -35,7 +35,7 @@ class DokuFs implements FileSystem
     }
 
     /**
-     * @param DokuPath $path
+     * @param WikiPath $path
      */
     function exists(Path $path): bool
     {
@@ -43,7 +43,7 @@ class DokuFs implements FileSystem
     }
 
     /**
-     * @param DokuPath $path
+     * @param WikiPath $path
      * @throws ExceptionNotFound
      */
     function getContent(Path $path): string
@@ -52,7 +52,7 @@ class DokuFs implements FileSystem
     }
 
     /**
-     * @param DokuPath $path
+     * @param WikiPath $path
      * @throws ExceptionNotFound
      */
     function getModifiedTime(Path $path): DateTime
@@ -61,7 +61,7 @@ class DokuFs implements FileSystem
     }
 
     /**
-     * @param DokuPath $path
+     * @param WikiPath $path
      * @return DateTime
      * @throws ExceptionNotFound
      */
@@ -71,7 +71,7 @@ class DokuFs implements FileSystem
     }
 
     /**
-     * @param DokuPath $path
+     * @param WikiPath $path
      */
     public function delete(Path $path)
     {
@@ -79,7 +79,7 @@ class DokuFs implements FileSystem
     }
 
     /**
-     * @param DokuPath $path
+     * @param WikiPath $path
      */
     public function getSize(Path $path)
     {
@@ -87,7 +87,7 @@ class DokuFs implements FileSystem
     }
 
     /**
-     * @param DokuPath $dirPath
+     * @param WikiPath $dirPath
      * @return mixed
      * @throws ExceptionCompile
      */
@@ -97,19 +97,19 @@ class DokuFs implements FileSystem
     }
 
     /**
-     * @param DokuPath $path
+     * @param WikiPath $path
      * @return bool
      */
     public function isDirectory(Path $path): bool
     {
-        return DokuPath::isNamespacePath($path->toPathString());
+        return WikiPath::isNamespacePath($path->toPathString());
         // and not FileSystems::isDirectory($path->toLocalPath());
     }
 
     /**
-     * @param DokuPath $path
+     * @param WikiPath $path
      * @param string|null $type
-     * @return DokuPath[]
+     * @return WikiPath[]
      */
     public function getChildren(Path $path, string $type = null): array
     {
@@ -129,7 +129,7 @@ class DokuFs implements FileSystem
     }
 
     /**
-     * @param DokuPath $path
+     * @param WikiPath $path
      * @param string $lastFullName
      * @return Path
      * @throws ExceptionNotFound
@@ -140,7 +140,7 @@ class DokuFs implements FileSystem
     }
 
     /**
-     * @param DokuPath $path
+     * @param WikiPath $path
      * @return void
      */
     public function createRegularFile(Path $path)
@@ -149,7 +149,7 @@ class DokuFs implements FileSystem
     }
 
     /**
-     * @param DokuPath $path
+     * @param WikiPath $path
      * @param string $content
      * @return void
      */

@@ -4,7 +4,7 @@ namespace ComboStrap;
 
 /**
  * A trait to share between Fetcher
- * if they depends on a {@link DokuPath}
+ * if they depends on a {@link WikiPath}
  *
  * This trait can:
  *   * build the {@link FetcherTraitLocalPath::getOriginalPath()} from {@link FetcherTraitLocalPath::buildOriginalPathFromTagAttributes() tag attributes}
@@ -21,10 +21,10 @@ trait FetcherTraitLocalPath
 {
 
     public static string $MEDIA_QUERY_PARAMETER = "media";
-    private DokuPath $path;
+    private WikiPath $path;
 
 
-    public function setOriginalPath(DokuPath $dokuPath): Fetcher
+    public function setOriginalPath(WikiPath $dokuPath): Fetcher
     {
         $this->path = $dokuPath;
         return $this;
@@ -52,9 +52,9 @@ trait FetcherTraitLocalPath
             if ($id === null) {
                 throw new ExceptionBadArgument("The (" . self::$MEDIA_QUERY_PARAMETER . ", " . self::SRC_QUERY_PARAMETER . " or " . DokuwikiId::DOKUWIKI_ID_ATTRIBUTE . ") query property is mandatory and was not defined");
             }
-            $drive = $tagAttributes->getValueAndRemove(DokuPath::DRIVE_ATTRIBUTE, DokuPath::MEDIA_DRIVE);
-            $rev = $tagAttributes->getValueAndRemove(DokuPath::REV_ATTRIBUTE);
-            $this->setOriginalPath(DokuPath::create($id, $drive, $rev));
+            $drive = $tagAttributes->getValueAndRemove(WikiPath::DRIVE_ATTRIBUTE, WikiPath::MEDIA_DRIVE);
+            $rev = $tagAttributes->getValueAndRemove(WikiPath::REV_ATTRIBUTE);
+            $this->setOriginalPath(WikiPath::create($id, $drive, $rev));
         }
 
         return $this;
@@ -62,7 +62,7 @@ trait FetcherTraitLocalPath
     }
 
 
-    public function getOriginalPath(): DokuPath
+    public function getOriginalPath(): WikiPath
     {
         return $this->path;
     }
@@ -85,12 +85,12 @@ trait FetcherTraitLocalPath
     {
 
         $url->addQueryParameterIfNotActualSameValue(self::$MEDIA_QUERY_PARAMETER, $this->path->getWikiId());
-        if ($this->path->getDrive() !== DokuPath::MEDIA_DRIVE) {
-            $url->addQueryParameter(DokuPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
+        if ($this->path->getDrive() !== WikiPath::MEDIA_DRIVE) {
+            $url->addQueryParameter(WikiPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
         }
         try {
             $rev = $this->path->getRevision();
-            $url->addQueryParameter(DokuPath::REV_ATTRIBUTE, $rev);
+            $url->addQueryParameter(WikiPath::REV_ATTRIBUTE, $rev);
         } catch (ExceptionNotFound $e) {
             // ok no rev
         }

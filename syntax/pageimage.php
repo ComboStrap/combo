@@ -5,7 +5,7 @@ use ComboStrap\CallStack;
 use ComboStrap\ConditionalLength;
 use ComboStrap\ContextManager;
 use ComboStrap\Dimension;
-use ComboStrap\DokuPath;
+use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
@@ -193,7 +193,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
         /**
          * Image selection
          */
-        DokuPath::addRootSeparatorIfNotPresent($path);
+        WikiPath::addRootSeparatorIfNotPresent($path);
         $page = PageFragment::createPageFromQualifiedPath($path);
 
         /**

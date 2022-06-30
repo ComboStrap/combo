@@ -182,9 +182,9 @@ class LocalPath extends PathAbs
     /**
      * @throws ExceptionBadArgument - if the path is not inside a drive
      */
-    public function toDokuPath(): DokuPath
+    public function toDokuPath(): WikiPath
     {
-        return DokuPath::createFromPath($this);
+        return WikiPath::createFromPath($this);
     }
 
     public function resolve(string $name): LocalPath
@@ -219,7 +219,7 @@ class LocalPath extends PathAbs
         }
         $sepCharacter = 1; // delete the sep characters
         $relativePath = substr($actualPath->toPathString(), strlen($localPath->toPathString()) + $sepCharacter);
-        $relativePath = str_replace($this->getDirectorySeparator(), DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $relativePath);
+        $relativePath = str_replace($this->getDirectorySeparator(), WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $relativePath);
         return LocalPath::createFromPath($relativePath);
 
     }

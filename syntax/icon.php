@@ -8,7 +8,7 @@ use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
 use ComboStrap\ConditionalLength;
 use ComboStrap\Dimension;
-use ComboStrap\DokuPath;
+use ComboStrap\WikiPath;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\FetcherSvg;
 use ComboStrap\FileSystems;

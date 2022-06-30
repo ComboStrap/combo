@@ -5,7 +5,7 @@ use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotExists;
 use ComboStrap\FetcherAbs;
 use ComboStrap\FetchCache;
-use ComboStrap\DokuPath;
+use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadState;
 use ComboStrap\ExceptionCompile;
@@ -81,7 +81,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     function handleMediaStatus(Doku_Event $event, $params)
     {
 
-        $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
+        $drive = $_GET[WikiPath::DRIVE_ATTRIBUTE];
         $fetcher = $_GET[Fetcher::FETCHER_KEY];
         if ($drive === null && $fetcher === null) {
             return;
@@ -94,7 +94,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         /**
          * Security
          */
-        if ($drive === DokuPath::CACHE_DRIVE) {
+        if ($drive === WikiPath::CACHE_DRIVE) {
             $event->data['download'] = false;
             if (!Identity::isManager()) {
                 $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
@@ -129,7 +129,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             }
             $event->data['statusmessage'] = '';
         } catch (ExceptionInternal|ExceptionBadState|ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists|ExceptionNotFound $e) {
-            $event->data['file'] = DokuPath::createComboResource("images:error-bad-format.svg")->toLocalPath()->toAbsolutePath()->toPathString();
+            $event->data['file'] = WikiPath::createComboResource("images:error-bad-format.svg")->toLocalPath()->toAbsolutePath()->toPathString();
             $event->data['statusmessage'] = $e->getMessage();
             if ($e instanceof ExceptionNotFound || $e instanceof ExceptionNotExists) {
                 $event->data['status'] = HttpResponse::STATUS_NOT_FOUND;
@@ -173,7 +173,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Combo Media
          * (Static file from the combo resources are always taken over)
          */
-        $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
+        $drive = $_GET[WikiPath::DRIVE_ATTRIBUTE];
         if ($drive === null) {
 
             $confValue = PluginUtility::getConfValue(self::CONF_STATIC_CACHE_ENABLED, 1);

@@ -5,7 +5,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\AliasType;
 use ComboStrap\DatabasePageRow;
-use ComboStrap\DokuPath;
+use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
@@ -133,7 +133,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     private static function getOriginalIdFromRequest()
     {
         $originalId = $_GET["id"];
-        return str_replace("/", DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $originalId);
+        return str_replace("/", WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $originalId);
     }
 
     /**

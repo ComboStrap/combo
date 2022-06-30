@@ -6,7 +6,7 @@ namespace ComboStrap;
 /**
  * Class MetadataWikiPath
  * @package ComboStrap
- * A wiki path value where the separator is a {@link DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT}
+ * A wiki path value where the separator is a {@link WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT}
  */
 abstract class MetadataWikiPath extends MetadataText
 {
@@ -28,7 +28,7 @@ abstract class MetadataWikiPath extends MetadataText
             return $this;
         }
 
-        $value = DokuPath::toValidAbsolutePath($value);
+        $value = WikiPath::toValidAbsolutePath($value);
         parent::setValue($value);
         return $this;
     }
@@ -38,7 +38,7 @@ abstract class MetadataWikiPath extends MetadataText
     public function buildFromStoreValue($value): Metadata
     {
         if ($value !== null && $value !== "") {
-            $value = DokuPath::toValidAbsolutePath($value);
+            $value = WikiPath::toValidAbsolutePath($value);
         }
         parent::buildFromStoreValue($value);
         return $this;

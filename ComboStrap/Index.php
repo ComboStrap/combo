@@ -33,7 +33,7 @@ class Index
         return self::$index;
     }
 
-    public function getPagesForMedia(DokuPath $media): array
+    public function getPagesForMedia(WikiPath $media): array
     {
         $dokuwikiId = $media->getWikiId();
         return $this->indexer->lookupKey('relation_media', $dokuwikiId);

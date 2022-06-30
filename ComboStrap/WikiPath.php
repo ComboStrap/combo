@@ -13,12 +13,12 @@ use http\Exception\RuntimeException;
  *
  * The drive is just a local path on the local file system
  *
- * Dokuwiki knows only two drives ({@link DokuPath::PAGE_DRIVE} and {@link DokuPath::MEDIA_DRIVE}
- * but we have added a couple more such as the {@link DokuPath::COMBO_DRIVE combo resources}
- * and the {@link DokuPath::CACHE_DRIVE}
+ * Dokuwiki knows only two drives ({@link WikiPath::PAGE_DRIVE} and {@link WikiPath::MEDIA_DRIVE}
+ * but we have added a couple more such as the {@link WikiPath::COMBO_DRIVE combo resources}
+ * and the {@link WikiPath::CACHE_DRIVE}
  *
  */
-class DokuPath extends PathAbs
+class WikiPath extends PathAbs
 {
 
     const MEDIA_DRIVE = "media";
@@ -48,13 +48,13 @@ class DokuPath extends PathAbs
      * This parameters is an URL parameter
      * that permits to set an another one
      * when retrieving the file via HTTP
-     * For now, there is only one value: {@link DokuPath::COMBO_DRIVE}
+     * For now, there is only one value: {@link WikiPath::COMBO_DRIVE}
      */
     public const DRIVE_ATTRIBUTE = "drive";
 
     /**
      * The interwiki scheme that points to the
-     * combo resources directory ie {@link DokuPath::COMBO_DRIVE}
+     * combo resources directory ie {@link WikiPath::COMBO_DRIVE}
      * ie
      *   combo>library:
      *   combo>image:
@@ -90,7 +90,7 @@ class DokuPath extends PathAbs
 
 
     /**
-     * The separator from the {@link DokuPath::getDrive()}
+     * The separator from the {@link WikiPath::getDrive()}
      */
     const DRIVE_SEPARATOR = ">";
     /**
@@ -108,7 +108,7 @@ class DokuPath extends PathAbs
      * @param string|null $rev - the revision (mtime)
      *
      * Thee path should be a qualified/absolute path because in Dokuwiki, a link to a {@link PageFragment}
-     * that ends with the {@link DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT} points to a start page
+     * that ends with the {@link WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT} points to a start page
      * and not to a namespace. The qualification occurs in the transformation
      * from ref to page.
      *   For a page: in {@link MarkupRef::getInternalPage()}
@@ -127,7 +127,7 @@ class DokuPath extends PathAbs
         $path = self::normalizeWikiPath($path);
 
         if (trim($path) === "") {
-            $path = DokuPath::getRequestedPagePath()->toPathString();
+            $path = WikiPath::getRequestedPagePath()->toPathString();
         }
 
         /**
@@ -135,31 +135,31 @@ class DokuPath extends PathAbs
          */
         $this->path = $path;
         $firstCharacter = substr($path, 0, 1);
-        if ($drive === self::PAGE_DRIVE && $firstCharacter !== DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
-            $parts = preg_split('/' . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . '/', $path);
+        if ($drive === self::PAGE_DRIVE && $firstCharacter !== WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+            $parts = preg_split('/' . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . '/', $path);
             switch ($parts[0]) {
-                case DokuPath::CURRENT_PATH_CHARACTER:
+                case WikiPath::CURRENT_PATH_CHARACTER:
                     // delete the relative character
                     $parts = array_splice($parts, 1);
                     try {
-                        $rootRelativePath = DokuPath::getCurrentPagePath();
+                        $rootRelativePath = WikiPath::getCurrentPagePath();
                     } catch (ExceptionNotFound $e) {
                         // Root case: the relative path is in the root
                         // the root has no parent
                         LogUtility::error("The current relative path ({$this->path}) returns an error: {$e->getMessage()}",self::CANONICAL);
-                        $rootRelativePath = DokuPath::createPagePathFromPath(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
+                        $rootRelativePath = WikiPath::createPagePathFromPath(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
                     }
                     break;
-                case DokuPath::CURRENT_PARENT_PATH_CHARACTER:
+                case WikiPath::CURRENT_PARENT_PATH_CHARACTER:
                     // delete the relative character
                     $parts = array_splice($parts, 1);
                     try {
-                        $currentPagePath = DokuPath::getCurrentPagePath();
+                        $currentPagePath = WikiPath::getCurrentPagePath();
                         try {
                             $rootRelativePath = $currentPagePath->getParent();
                         } catch (ExceptionNotFound $e) {
                             LogUtility::error("The parent relative path ({$this->path}) returns an error: {$e->getMessage()}",self::CANONICAL);
-                            $rootRelativePath = DokuPath::getCurrentPagePath();
+                            $rootRelativePath = WikiPath::getCurrentPagePath();
                         }
                     } catch (ExceptionNotFound $e) {
                         LogUtility::error("The parent relative path ({$this->path}) returns an error: {$e->getMessage()}",self::CANONICAL);
@@ -171,10 +171,10 @@ class DokuPath extends PathAbs
                      * (ie hallo)
                      */
                     try {
-                        $rootRelativePath = DokuPath::getCurrentPagePath();
+                        $rootRelativePath = WikiPath::getCurrentPagePath();
                     } catch (ExceptionNotFound $e) {
                         LogUtility::error("The named relative path ({$this->path}) returns an error: {$e->getMessage()}",self::CANONICAL);
-                        $rootRelativePath = DokuPath::createPagePathFromPath(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
+                        $rootRelativePath = WikiPath::createPagePathFromPath(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
                     }
                     break;
             }
@@ -190,8 +190,8 @@ class DokuPath extends PathAbs
                 $rootRelativePath = $rootRelativePath->resolve($part);
             }
             $absolutePathString = $rootRelativePath->toPathString();
-            if ($isRelativeDirectoryPath && !DokuPath::isNamespacePath($absolutePathString)) {
-                $absolutePathString = $absolutePathString . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT;
+            if ($isRelativeDirectoryPath && !WikiPath::isNamespacePath($absolutePathString)) {
+                $absolutePathString = $absolutePathString . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT;
             }
             $this->path = $absolutePathString;
         }
@@ -238,8 +238,8 @@ class DokuPath extends PathAbs
             $this->id = substr($this->path, strlen($comboInterWikiScheme));
             $this->drive = self::COMBO_DRIVE;
         } else {
-            DokuPath::addRootSeparatorIfNotPresent($this->path);
-            $this->id = DokuPath::toDokuwikiId($this->path);
+            WikiPath::addRootSeparatorIfNotPresent($this->path);
+            $this->id = WikiPath::toDokuwikiId($this->path);
         }
 
 
@@ -252,22 +252,22 @@ class DokuPath extends PathAbs
      *
      * @param string $path
      * @param string|null $rev
-     * @return DokuPath
+     * @return WikiPath
      */
-    public static function createPagePathFromPath(string $path, string $rev = null): DokuPath
+    public static function createPagePathFromPath(string $path, string $rev = null): WikiPath
     {
         try {
-            return new DokuPath($path, DokuPath::PAGE_DRIVE, $rev);
+            return new WikiPath($path, WikiPath::PAGE_DRIVE, $rev);
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntime("Internal Error: The page drive is a known drive. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
         }
     }
 
 
-    public static function createMediaPathFromPath($path, $rev = null): DokuPath
+    public static function createMediaPathFromPath($path, $rev = null): WikiPath
     {
         try {
-            return new DokuPath($path, DokuPath::MEDIA_DRIVE, $rev);
+            return new WikiPath($path, WikiPath::MEDIA_DRIVE, $rev);
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntime("Internal Error: The drive should be known. Error: {$e->getMessage()}");
         }
@@ -281,19 +281,19 @@ class DokuPath extends PathAbs
      * The constructor will determine the type based on
      * the id structure.
      * @param $id
-     * @return DokuPath
+     * @return WikiPath
      */
-    public static function createFromUnknownRoot($id): DokuPath
+    public static function createFromUnknownRoot($id): WikiPath
     {
-        return new DokuPath($id, DokuPath::UNKNOWN_DRIVE);
+        return new WikiPath($id, WikiPath::UNKNOWN_DRIVE);
     }
 
     /**
      * @param $url - a URL path http://whatever/hello/my/lord (The canonical)
-     * @return DokuPath - a dokuwiki Id hello:my:lord
+     * @return WikiPath - a dokuwiki Id hello:my:lord
      * @deprecated for {@link FetcherPageFragment::createPageFragmentFetcherFromUrl()}
      */
-    public static function createFromUrl($url): DokuPath
+    public static function createFromUrl($url): WikiPath
     {
         // Replace / by : and suppress the first : because the global $ID does not have it
         $parsedQuery = parse_url($url, PHP_URL_QUERY);
@@ -318,9 +318,9 @@ class DokuPath extends PathAbs
      */
     public static function getLastPart($pathId)
     {
-        $endSeparatorLocation = StringUtility::lastIndexOf($pathId, DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
+        $endSeparatorLocation = StringUtility::lastIndexOf($pathId, WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
         if ($endSeparatorLocation === false) {
-            $endSeparatorLocation = StringUtility::lastIndexOf($pathId, DokuPath::NAMESPACE_SEPARATOR_SLASH);
+            $endSeparatorLocation = StringUtility::lastIndexOf($pathId, WikiPath::NAMESPACE_SEPARATOR_SLASH);
         }
         if ($endSeparatorLocation === false) {
             $lastPathPart = $pathId;
@@ -340,7 +340,7 @@ class DokuPath extends PathAbs
         if (is_null($id)) {
             LogUtility::msg("The id passed should not be null");
         }
-        return DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $id;
+        return WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $id;
     }
 
     public
@@ -349,30 +349,30 @@ class DokuPath extends PathAbs
         /**
          * Delete the first separator
          */
-        if ($path[0] === DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+        if ($path[0] === WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $path = substr($path, 1);
         }
         /**
          * Delete the extra separator from namespace
          */
-        if (substr($path, -1) === DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+        if (substr($path, -1) === WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $path = substr($path, 0, strlen($path) - 1);
         }
         return $path;
 
     }
 
-    public static function createMediaPathFromId($id, $rev = null): DokuPath
+    public static function createMediaPathFromId($id, $rev = null): WikiPath
     {
-        DokuPath::addRootSeparatorIfNotPresent($id);
+        WikiPath::addRootSeparatorIfNotPresent($id);
         return self::createMediaPathFromPath($id, $rev);
     }
 
 
-    public static function createPagePathFromId($id, $rev = null): DokuPath
+    public static function createPagePathFromId($id, $rev = null): WikiPath
     {
-        DokuPath::addRootSeparatorIfNotPresent($id);
-        return new DokuPath($id, self::PAGE_DRIVE, $rev);
+        WikiPath::addRootSeparatorIfNotPresent($id);
+        return new WikiPath($id, self::PAGE_DRIVE, $rev);
     }
 
     /**
@@ -383,8 +383,8 @@ class DokuPath extends PathAbs
     public static function addRootSeparatorIfNotPresent(string &$path)
     {
         $firstCharacter = substr($path, 0, 1);
-        if (!in_array($firstCharacter, [DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, DokuPath::CURRENT_PATH_CHARACTER])) {
-            $path = DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $path;
+        if (!in_array($firstCharacter, [WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, WikiPath::CURRENT_PATH_CHARACTER])) {
+            $path = WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $path;
         }
     }
 
@@ -405,27 +405,27 @@ class DokuPath extends PathAbs
     public static function toValidAbsolutePath($path): string
     {
         $path = cleanID($path);
-        DokuPath::addRootSeparatorIfNotPresent($path);
+        WikiPath::addRootSeparatorIfNotPresent($path);
         return $path;
     }
 
     /**
      */
-    public static function createComboResource($dokuwikiId): DokuPath
+    public static function createComboResource($dokuwikiId): WikiPath
     {
-        return new DokuPath($dokuwikiId, self::COMBO_DRIVE);
+        return new WikiPath($dokuwikiId, self::COMBO_DRIVE);
     }
 
     /**
      */
-    public static function createDokuPath($path, $drive, $rev = ''): DokuPath
+    public static function createDokuPath($path, $drive, $rev = ''): WikiPath
     {
-        return new DokuPath($path, $drive, $rev);
+        return new WikiPath($path, $drive, $rev);
     }
 
     /**
      */
-    public static function createPagePathFromGlobalId(): DokuPath
+    public static function createPagePathFromGlobalId(): WikiPath
     {
         global $ID;
         if ($ID === null) {
@@ -434,27 +434,27 @@ class DokuPath extends PathAbs
             }
             $ID = DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
         }
-        return DokuPath::createPagePathFromId($ID);
+        return WikiPath::createPagePathFromId($ID);
     }
 
-    public static function createPagePathFromRequestedPage(): DokuPath
+    public static function createPagePathFromRequestedPage(): WikiPath
     {
         $pageId = PluginUtility::getRequestedWikiId();
-        return DokuPath::createPagePathFromId($pageId);
+        return WikiPath::createPagePathFromId($pageId);
     }
 
     /**
      * @throws ExceptionBadArgument - if the path is not a local path or is not in a known drive
      */
-    public static function createFromPath(Path $path): DokuPath
+    public static function createFromPath(Path $path): WikiPath
     {
-        if ($path instanceof DokuPath) {
+        if ($path instanceof WikiPath) {
             return $path;
         }
         if (!($path instanceof LocalPath)) {
             throw new ExceptionBadArgument("The path ($path) is not a local path and cannot be converted to a doku path");
         }
-        $driveRoots = DokuPath::getDriveRoots();
+        $driveRoots = WikiPath::getDriveRoots();
         foreach ($driveRoots as $driveRoot => $drivePath) {
 
             try {
@@ -477,9 +477,9 @@ class DokuPath extends PathAbs
             }
             $wikiPath = $relativePath->toPathString();
             if (FileSystems::isDirectory($path)) {
-                DokuPath::addNamespaceEndSeparatorIfNotPresent($wikiPath);
+                WikiPath::addNamespaceEndSeparatorIfNotPresent($wikiPath);
             }
-            return DokuPath::createDokuPath(":$wikiPath", $driveRoot);
+            return WikiPath::createDokuPath(":$wikiPath", $driveRoot);
 
         }
         throw new ExceptionBadArgument("The local path ($path) is not inside a wiki path drive");
@@ -511,14 +511,14 @@ class DokuPath extends PathAbs
      * TODO: May be ? We may also just check if the txt file exists
      *   and if not if the directory exists
      *
-     * Also related {@link DokuPath::addNamespaceEndSeparatorIfNotPresent()}
+     * Also related {@link WikiPath::addNamespaceEndSeparatorIfNotPresent()}
      *
      * @param string $namespacePath
      * @return bool
      */
     public static function isNamespacePath(string $namespacePath): bool
     {
-        if (substr($namespacePath, -1) !== DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+        if (substr($namespacePath, -1) !== WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             return false;
         }
         return true;
@@ -537,15 +537,15 @@ class DokuPath extends PathAbs
 
     /**
      * Add a end separator to the wiki path to pass the fact that this is a directory/namespace
-     * See {@link DokuPath::isNamespacePath()} for more info
+     * See {@link WikiPath::isNamespacePath()} for more info
      *
      * @param string $namespaceAttribute
      * @return void
      */
     public static function addNamespaceEndSeparatorIfNotPresent(string &$namespaceAttribute)
     {
-        if (substr($namespaceAttribute, -1) !== DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
-            $namespaceAttribute = $namespaceAttribute . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT;
+        if (substr($namespaceAttribute, -1) !== WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+            $namespaceAttribute = $namespaceAttribute . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT;
         }
     }
 
@@ -553,17 +553,17 @@ class DokuPath extends PathAbs
      * @param string $path - path or id
      * @param string $drive
      * @param string|null $rev
-     * @return DokuPath
+     * @return WikiPath
      */
-    public static function create(string $path, string $drive, string $rev = null): DokuPath
+    public static function create(string $path, string $drive, string $rev = null): WikiPath
     {
-        return new DokuPath($path, $drive, $rev);
+        return new WikiPath($path, $drive, $rev);
     }
 
     /**
      * @throws ExceptionNotFound
      */
-    public static function getCurrentPagePath(): DokuPath
+    public static function getCurrentPagePath(): WikiPath
     {
         $requestedPath = self::getRequestedPagePath();
         try {
@@ -574,9 +574,9 @@ class DokuPath extends PathAbs
         return $parent;
     }
 
-    public static function getRequestedPagePath(): DokuPath
+    public static function getRequestedPagePath(): WikiPath
     {
-        return DokuPath::createPagePathFromId(PluginUtility::getRequestedWikiId());
+        return WikiPath::createPagePathFromId(PluginUtility::getRequestedWikiId());
     }
 
     /**
@@ -589,11 +589,11 @@ class DokuPath extends PathAbs
      * This is not the same than {@link MarkupRef::normalizePath()}
      * because there is no relativity or any reserved character in a id
      *
-     * as an {@link DokuPath::getWikiId() id} is a validated absolute path without root character
+     * as an {@link WikiPath::getWikiId() id} is a validated absolute path without root character
      */
     public static function normalizeWikiPath(string $id)
     {
-        return str_replace(DokuPath::NAMESPACE_SEPARATOR_SLASH, DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $id);
+        return str_replace(WikiPath::NAMESPACE_SEPARATOR_SLASH, WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $id);
     }
 
 
@@ -762,7 +762,7 @@ class DokuPath extends PathAbs
      * when creating test, otherwise the ref is considered as relative
      *
      *
-     * Otherwise everywhere in Dokuwiki, they use the {@link DokuPath::getWikiId()} absolute value that does not have any root separator
+     * Otherwise everywhere in Dokuwiki, they use the {@link WikiPath::getWikiId()} absolute value that does not have any root separator
      * and is absolute (internal index, function, ...)
      *
      */
@@ -859,7 +859,7 @@ class DokuPath extends PathAbs
                     $localPath = LocalPath::createFromPath($conf['datadir']);
                     break;
                 default:
-                    $localPath = DokuPath::getDriveRoots()[$this->drive];
+                    $localPath = WikiPath::getDriveRoots()[$this->drive];
                     break;
             }
 
@@ -890,7 +890,7 @@ class DokuPath extends PathAbs
                 }
                 break;
             default:
-                $baseDirectory = DokuPath::getDriveRoots()[$this->drive];
+                $baseDirectory = WikiPath::getDriveRoots()[$this->drive];
                 if ($baseDirectory === null) {
                     // We don't throw, the file will just not exist
                     // this is metadata
@@ -910,7 +910,7 @@ class DokuPath extends PathAbs
 
     /**
      * @return string - Returns the string representation of this path (to be able to use it in url)
-     * To get the full string version see {@link DokuPath::toUriString()}
+     * To get the full string version see {@link WikiPath::toUriString()}
      */
     function toPathString(): string
     {
@@ -920,14 +920,14 @@ class DokuPath extends PathAbs
 
     function toAbsolutePath(): Path
     {
-        return new DokuPath($this->path, $this->drive, $this->rev);
+        return new WikiPath($this->path, $this->drive, $this->rev);
     }
 
     /**
      * The parent path is a directory (namespace)
      * The root path throw an errors
      *
-     * @return DokuPath
+     * @return WikiPath
      * @throws ExceptionNotFound when the root
      */
     function getParent(): Path
@@ -940,10 +940,10 @@ class DokuPath extends PathAbs
             case 0:
                 throw new ExceptionNotFound("No parent found");
             case 1:
-                return new DokuPath(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $this->drive, $this->rev);
+                return new WikiPath(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $this->drive, $this->rev);
             default:
                 $names = array_slice($names, 0, sizeof($names) - 1);
-                $path = implode(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $names);
+                $path = implode(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $names);
                 /**
                  * Because DokuPath does not have the notion of extension
                  * if this is a page, we don't known if this is a directory
@@ -951,7 +951,7 @@ class DokuPath extends PathAbs
                  */
                 $sep = self::NAMESPACE_SEPARATOR_DOUBLE_POINT;
                 $path = "$sep$path$sep";
-                return new DokuPath($path, $this->drive, $this->rev);
+                return new WikiPath($path, $this->drive, $this->rev);
         }
 
     }
@@ -973,17 +973,17 @@ class DokuPath extends PathAbs
     }
 
     public
-    function resolve(string $name): DokuPath
+    function resolve(string $name): WikiPath
     {
 
         // Directory path have already separator at the end, don't add it
-        if ($this->path[strlen($this->path) - 1] !== DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
-            $path = $this->path . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $name;
+        if ($this->path[strlen($this->path) - 1] !== WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+            $path = $this->path . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $name;
         } else {
             $path = $this->path . $name;
         }
         try {
-            return new DokuPath($path, $this->getDrive());
+            return new WikiPath($path, $this->getDrive());
         } catch (ExceptionNotFound $e) {
             throw new RuntimeException("Internal Error: The drive should already exist", 0, $e);
         }

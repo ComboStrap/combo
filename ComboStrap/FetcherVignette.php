@@ -41,16 +41,17 @@ class FetcherVignette extends FetcherImage
 
     /**
      * @param PageFragment $page
-     * @param Mime $mime
-     * @throws ExceptionNotFound - page not found
+     * @param Mime|null $mime
      * @throws ExceptionBadArgument - bad mime
+     * @throws ExceptionNotFound - page not found
      */
     public function __construct(PageFragment $page, Mime $mime = null)
     {
         $this->setPage($page);
-        if ($mime !== null) {
-            $this->setMime($mime);
+        if ($mime === null) {
+            $mime = Mime::create(Mime::WEBP);
         }
+        $this->setMime($mime);
         parent::__construct();
 
     }
@@ -206,6 +207,7 @@ class FetcherVignette extends FetcherImage
              * Logo
              */
             try {
+
                 $imagePath = Site::getLogoAsRasterImage()->getOriginalPath();
                 $gdOriginalLogo = $this->getGdImageHandler($imagePath);
                 $targetLogoWidth = 120;
@@ -270,8 +272,10 @@ class FetcherVignette extends FetcherImage
     /**
      * @throws ExceptionNotFound - unknown mime or unknown extension
      */
-    private function getGdImageHandler(Path $imagePath)
+    private function getGdImageHandler(WikiPath $imagePath)
     {
+        // the gd function needs a local path, not a wiki path
+        $imagePath = $imagePath->toLocalPath();
         $extension = FileSystems::getMime($imagePath)->getExtension();
 
         switch ($extension) {

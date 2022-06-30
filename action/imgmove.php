@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\DokuPath;
+use ComboStrap\WikiPath;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\LogUtility;
@@ -185,7 +185,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
     {
         try {
             $newId = $handler->resolveMoves($relativeOrAbsoluteWikiId, "media");
-            $relativeOrAbsoluteWikiId = DokuPath::IdToAbsolutePath($newId);
+            $relativeOrAbsoluteWikiId = WikiPath::IdToAbsolutePath($newId);
         } catch (Exception $e) {
             throw new ExceptionCompile("A move error has occurred while trying to move the image ($relativeOrAbsoluteWikiId). The target resolution function send the following error message: " . $e->getMessage(), self::CANONICAL);
         }

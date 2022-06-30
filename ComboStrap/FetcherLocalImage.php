@@ -13,11 +13,11 @@ abstract class FetcherLocalImage extends FetcherImage implements FetcherSource
 {
 
     /**
-     * @param DokuPath $path
+     * @param WikiPath $path
      * @return FetcherRaster|FetcherSvg
      * @throws ExceptionBadArgument - if the path is not an image
      */
-    public static function createImageFetchFromPath(DokuPath $path): FetcherLocalImage
+    public static function createImageFetchFromPath(WikiPath $path): FetcherLocalImage
     {
 
         try {
@@ -53,7 +53,7 @@ abstract class FetcherLocalImage extends FetcherImage implements FetcherSource
      */
     public static function createImageFetchFromId(string $imageId, string $rev = null): FetcherLocalImage
     {
-        $dokuPath = DokuPath::createMediaPathFromId($imageId, $rev);
+        $dokuPath = WikiPath::createMediaPathFromId($imageId, $rev);
         return FetcherLocalImage::createImageFetchFromPath($dokuPath);
     }
 

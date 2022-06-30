@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\DatabasePageRow;
-use ComboStrap\DokuPath;
+use ComboStrap\WikiPath;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
@@ -71,7 +71,7 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
         $clean = false;
         /** @noinspection PhpConditionAlreadyCheckedInspection */
         $id = getID("id", $clean);
-        $id = DokuPath::normalizeWikiPath($id);
+        $id = WikiPath::normalizeWikiPath($id);
         self::setNormalizedId($id);
         $page = PageFragment::createPageFromId($id);
         if (!FileSystems::exists($page->getPath())) {

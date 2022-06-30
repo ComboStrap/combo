@@ -5,7 +5,7 @@ use ComboStrap\CacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\DokuPath;
+use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
@@ -105,10 +105,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     }
 
     /**
-     * @param DokuPath $namespacePath
+     * @param WikiPath $namespacePath
      * @return string the last part with a uppercase letter and where underscore became a space
      */
-    private static function toNamespaceName(DokuPath $namespacePath): string
+    private static function toNamespaceName(WikiPath $namespacePath): string
     {
         return ucfirst(trim(str_replace("_", " ", $namespacePath->getLastNameWithoutExtension())));
     }
@@ -402,8 +402,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     $namespaceAttribute = $pageExplorerTagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
                     $namespacePath = null;
                     if ($namespaceAttribute !== null) {
-                        DokuPath::addNamespaceEndSeparatorIfNotPresent($namespaceAttribute);
-                        $namespacePath = DokuPath::createPagePathFromPath($namespaceAttribute);
+                        WikiPath::addNamespaceEndSeparatorIfNotPresent($namespaceAttribute);
+                        $namespacePath = WikiPath::createPagePathFromPath($namespaceAttribute);
                     }
                     if ($namespacePath === null) {
                         switch ($pageExplorerType) {
@@ -818,7 +818,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         foreach ($containerTreeNodes as $containerTreeNode) {
 
             /**
-             * @var DokuPath $containerPath
+             * @var WikiPath $containerPath
              */
             $containerPath = $containerTreeNode->getPath();
 

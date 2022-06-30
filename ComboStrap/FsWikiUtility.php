@@ -54,12 +54,12 @@ class FsWikiUtility
         require_once(__DIR__ . '/../../../../inc/search.php');
         global $conf;
 
-        DokuPath::checkNamespacePath($path);
+        WikiPath::checkNamespacePath($path);
 
         /**
          * To the wiki id form
          */
-        $dokuPath = DokuPath::createPagePathFromPath($path);
+        $dokuPath = WikiPath::createPagePathFromPath($path);
         // delete the last separator
         $dokuwikiId = substr( $dokuPath->getWikiId(),0,-1);
         $relativeFileSystemPath = str_replace(":", "/", $dokuwikiId);

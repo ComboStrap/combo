@@ -195,9 +195,9 @@ class PageFragment extends ResourceComboAbs
              */
             $useAcl = false;
             $id = page_findnearest($this->path->getLastNameWithoutExtension(), $useAcl);
-            $path = DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $id;
+            $path = WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $id;
             if ($id !== false && $id !== $this->path->toPathString()) {
-                $this->path = DokuPath::createPagePathFromPath($path);
+                $this->path = WikiPath::createPagePathFromPath($path);
             }
 
         }
@@ -211,13 +211,13 @@ class PageFragment extends ResourceComboAbs
      */
     public static function createPageFromGlobalWikiId(): PageFragment
     {
-        $dokuPath = DokuPath::createPagePathFromGlobalId();
+        $dokuPath = WikiPath::createPagePathFromGlobalId();
         return self::createPageFromPathObject($dokuPath);
     }
 
     public static function createPageFromId($id): PageFragment
     {
-        $path = DokuPath::createPagePathFromId($id);
+        $path = WikiPath::createPagePathFromId($id);
         return new PageFragment($path);
     }
 
@@ -245,7 +245,7 @@ class PageFragment extends ResourceComboAbs
      */
     public static function createFromRequestedPage(): PageFragment
     {
-        return PageFragment::createPageFromPathObject(DokuPath::createPagePathFromRequestedPage());
+        return PageFragment::createPageFromPathObject(WikiPath::createPagePathFromRequestedPage());
     }
 
     public static function createPageFromPathObject(Path $path): PageFragment
@@ -261,7 +261,7 @@ class PageFragment extends ResourceComboAbs
      */
     public static function getIndexPageFromNamespace(string $namespacePath): PageFragment
     {
-        DokuPath::checkNamespacePath($namespacePath);
+        WikiPath::checkNamespacePath($namespacePath);
 
         return PageFragment::createPageFromId($namespacePath);
     }
@@ -269,7 +269,7 @@ class PageFragment extends ResourceComboAbs
 
     static function createPageFromQualifiedPath($qualifiedPath): PageFragment
     {
-        $path = DokuPath::createPagePathFromPath($qualifiedPath);
+        $path = WikiPath::createPagePathFromPath($qualifiedPath);
         return new PageFragment($path);
     }
 
@@ -458,7 +458,7 @@ class PageFragment extends ResourceComboAbs
      * @return PageFragment[] the backlinks
      * Duplicate of related
      *
-     * Same as {@link DokuPath::getReferencedBy()} ?
+     * Same as {@link WikiPath::getReferencedBy()} ?
      */
     public
     function getBacklinks(): array
@@ -859,7 +859,7 @@ class PageFragment extends ResourceComboAbs
                 /**
                  * If the start page does not exists, this is the index page
                  */
-                $startPage = PageFragment::createPageFromId($namespace->getWikiId() . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $startPageName);
+                $startPage = PageFragment::createPageFromId($namespace->getWikiId() . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $startPageName);
                 if (!FileSystems::exists($startPage->getPath())) {
                     return true;
                 }
@@ -948,7 +948,7 @@ class PageFragment extends ResourceComboAbs
         if ($type === null) {
             return $this->getCanonicalUrl();
         }
-        $pageUrlId = DokuPath::toDokuwikiId(PageUrlPath::createForPage($this)
+        $pageUrlId = WikiPath::toDokuwikiId(PageUrlPath::createForPage($this)
             ->getUrlPathFromType($type));
         return wl($pageUrlId);
     }
@@ -1009,7 +1009,7 @@ class PageFragment extends ResourceComboAbs
     /**
      * Without the `:` at the end
      * @return string
-     * @deprecated / shortcut for {@link DokuPath::getParent()}
+     * @deprecated / shortcut for {@link WikiPath::getParent()}
      * Because a page has always a parent, the string is never null.
      */
     public
@@ -1482,7 +1482,7 @@ class PageFragment extends ResourceComboAbs
         /**
          * Create the parent namespace id
          */
-        $parentNamespaceId = implode(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $parentNames) . DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT;
+        $parentNamespaceId = implode(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $parentNames) . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT;
         try {
             return self::getIndexPageFromNamespace($parentNamespaceId);
         } catch (ExceptionBadSyntax $e) {
@@ -1736,7 +1736,7 @@ class PageFragment extends ResourceComboAbs
     public
     function getUrlId()
     {
-        return DokuPath::toDokuwikiId($this->getUrlPath());
+        return WikiPath::toDokuwikiId($this->getUrlPath());
     }
 
 
@@ -1950,7 +1950,7 @@ class PageFragment extends ResourceComboAbs
     }
 
     /**
-     * @return DokuPath
+     * @return WikiPath
      */
     public
     function getPath(): Path
@@ -1979,7 +1979,7 @@ class PageFragment extends ResourceComboAbs
     public
     function getAbsolutePath(): string
     {
-        return DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $this->getWikiId();
+        return WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $this->getWikiId();
     }
 
     function getType(): string

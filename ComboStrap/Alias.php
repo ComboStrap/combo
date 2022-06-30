@@ -34,7 +34,7 @@ class Alias
             LogUtility::msg("Alias: To create an alias, the path value should a string. Value: " . var_export($path, true), LogUtility::LVL_MSG_ERROR);
             return;
         }
-        DokuPath::addRootSeparatorIfNotPresent($path);
+        WikiPath::addRootSeparatorIfNotPresent($path);
         $this->path = $path;
     }
 

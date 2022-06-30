@@ -80,7 +80,7 @@ class UrlRewrite
                             LogUtility::internalError("The media query should be present for a fetch. No Url rewrite could be done.");
                             return;
                         }
-                        $idPath = str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
+                        $idPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
                         $url->setPath("/_media/$idPath");
                         break;
                     case UrlEndpoint::LIB_EXE_DETAIL_PHP:
@@ -90,7 +90,7 @@ class UrlRewrite
                             LogUtility::internalError("The media query should be present for a fetch. No Url rewrite could be done.");
                             return;
                         }
-                        $idPath = str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
+                        $idPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
                         $url->setPath("/_detail/$idPath");
                         break;
                     case UrlEndpoint::DOKU_PHP:
@@ -99,7 +99,7 @@ class UrlRewrite
                             if (strpos($do, self::EXPORT_PREFIX) === 0) {
                                 $exportFormat = substr($do, strlen(self::EXPORT_PREFIX));
                                 $id = $url->getQueryPropertyValueAndRemoveIfPresent(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE);
-                                $idPath = str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
+                                $idPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
                                 $url->setPath("_export/$exportFormat/$idPath");
                                 return;
                             }
@@ -108,7 +108,7 @@ class UrlRewrite
                         }
                         try {
                             $id = $url->getQueryPropertyValueAndRemoveIfPresent(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE);
-                            $idPath = str_replace(DokuPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
+                            $idPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
                             $url->setPath("/$idPath");
                             return;
                         } catch (ExceptionNotFound $e) {

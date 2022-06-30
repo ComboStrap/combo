@@ -238,8 +238,8 @@ EOF;
     public function getDocumentationHyperLink(): ?string
     {
         if ($this->canonical !== null) {
-            $canonicalPath = DokuPath::createFromUnknownRoot($this->canonical);
-            $label = ResourceName::createForResource($canonicalPath)->getValueOrDefault();
+            $canonicalPath = WikiPath::createFromUnknownRoot($this->canonical);
+            $label = ResourceName::getFromPath($canonicalPath);
             return PluginUtility::getDocumentationHyperLink($this->canonical, $label, false);
         } else {
             return null;

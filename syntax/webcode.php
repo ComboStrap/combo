@@ -19,7 +19,7 @@
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\Display;
-use ComboStrap\DokuPath;
+use ComboStrap\WikiPath;
 use ComboStrap\FetcherLocalPath;
 use ComboStrap\MediaMarkup;
 use ComboStrap\ExceptionNotFound;
@@ -448,7 +448,7 @@ EOF;
 
                         // WebConsole style sheet
                         try {
-                            $cssUrl = FetcherLocalPath::createFromPath(DokuPath::createComboResource("webcode:webcode-iframe.css"))->getFetchUrl();
+                            $cssUrl = FetcherLocalPath::createFromPath(WikiPath::createComboResource("webcode:webcode-iframe.css"))->getFetchUrl();
                             $iframeSrcValue .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"$cssUrl\"/>";
                         } catch (ExceptionNotFound $e) {
                             LogUtility::error("The web console stylesheet was not found", self::CANONICAL);
@@ -468,7 +468,7 @@ EOF;
                         $useConsole = $data[self::USE_CONSOLE_ATTRIBUTE];
                         if ($useConsole) {
                             try {
-                                $url = FetcherLocalPath::createFromPath(DokuPath::createComboResource("webcode:webcode-console.js"))->getFetchUrl();
+                                $url = FetcherLocalPath::createFromPath(WikiPath::createComboResource("webcode:webcode-console.js"))->getFetchUrl();
                                 $iframeSrcValue .= <<<EOF
 <script type="text/javascript" src="$url"></script>
 EOF;
@@ -585,8 +585,8 @@ EOF;
 
             // Adding them here
             // The firebug resources for the console.log features
-            $externalResources[] = FetcherLocalPath::createFromPath(DokuPath::createComboResource(':firebug:firebug-lite.css'))->getFetchUrl()->toString();
-            $externalResources[] = FetcherLocalPath::createFromPath(DokuPath::createComboResource(':firebug:firebug-lite-1.2.js'))->getFetchUrl()->toString();
+            $externalResources[] = FetcherLocalPath::createFromPath(WikiPath::createComboResource(':firebug:firebug-lite.css'))->getFetchUrl()->toString();
+            $externalResources[] = FetcherLocalPath::createFromPath(WikiPath::createComboResource(':firebug:firebug-lite-1.2.js'))->getFetchUrl()->toString();
         }
 
         // The below code is to prevent this JsFiddle bug: https://github.com/jsfiddle/jsfiddle-issues/issues/726

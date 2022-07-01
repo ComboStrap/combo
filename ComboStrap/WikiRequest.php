@@ -45,16 +45,23 @@ class WikiRequest
     {
         global $ID;
         $ID = $runningId;
-        if (!isset($this->requestedId)) {
-            $this->setGlobalInputRequestedId($runningId);
-        }
         return $this;
     }
 
+    /**
+     * A running id can be a secondary fragment
+     * The requested id is the main fragment
+     *
+     * Note that this should be set only once (for test purpose)
+     *
+     * @param string $requestedId
+     * @return $this
+     */
     public function setNewRequestedId(string $requestedId): WikiRequest
     {
         $this->requestedId = $requestedId;
-        $this->setGlobalInputRequestedId($requestedId);
+        global $INPUT;
+        $INPUT->set("id", $requestedId);
         return $this;
     }
 
@@ -80,17 +87,6 @@ class WikiRequest
     public function getActualRequestedId(): string
     {
         return $this->actualRequestedID;
-    }
-
-    /**
-     * To be able to set the requested id from the running and requested method
-     * @param string $requestedId
-     * @return void
-     */
-    private function setGlobalInputRequestedId(string $requestedId)
-    {
-        global $INPUT;
-        $INPUT->set("id", $requestedId);
     }
 
 
@@ -146,6 +142,14 @@ class WikiRequest
 
         return DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
 
+    }
+
+    /**
+     * @return string
+     */
+    public function getRequestedId(): string
+    {
+        return $this->requestedId;
     }
 
 }

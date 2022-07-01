@@ -19,6 +19,8 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     const INSTRUCTION_EXTENSION = "i";
     const MAX_CACHE_AGE = 999999;
 
+    const CANONICAL = "page";
+
     /**
      * @var CacheRenderer cache file
      */
@@ -34,7 +36,9 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     private bool $cacheAfterRendering = true;
     private string $renderer;
     private CacheDependencies $cacheDependencies;
-    private PageFragment $requestedContextPage;
+    private PageFragment $requestedPage;
+    private bool $objectHasBeenBuild = false;
+    private WikiRequest $wikiRequest;
 
 
     public static function createPageFragmentFetcherFromId(string $mainId): FetcherPageFragment
@@ -69,7 +73,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     public static function createPageFragmentFetcherFromObject(PageFragment $pageFragment): FetcherPageFragment
     {
         return (new FetcherPageFragment())
-            ->setRequestedPage($pageFragment);
+            ->setRequestedPageFragment($pageFragment);
     }
 
     /**
@@ -78,16 +82,20 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
      * @param PageFragment $pageFragment
      * @return $this
      */
-    public function setRequestedPage(PageFragment $pageFragment): FetcherPageFragment
+    public function setRequestedPageFragment(PageFragment $pageFragment): FetcherPageFragment
     {
 
+        $this->checkNoSetAfterBuild();
         $this->pageFragment = $pageFragment;
         $this->setOriginalPath($pageFragment->getPath());
-        $this->buildCacheObjects();
+
         return $this;
 
     }
 
+    /**
+     * @return Mime
+     */
     public function getMime(): Mime
     {
         if (isset($this->mime)) {
@@ -99,7 +107,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
             return Mime::createFromExtension(self::XHTML_MODE);
         } catch (ExceptionNotFound $e) {
             // should not happen
-            throw new RuntimeException("Internal error: The mime was not found");
+            throw new RuntimeException("Internal error: The XHTML mime was not found.", self::CANONICAL, 1, $e);
         }
     }
 
@@ -133,21 +141,17 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
          * in all actions and is needed to log the {@link  CacheResult cache
          * result}
          */
-        $wikiRequest = $this->createWikiRequest();
-        try {
+        $this->buildObjectAndEnvironmentIfNeeded();
 
-            /**
-             * Use cache should be always called because it trigger
-             * the event coupled to the cache (ie PARSER_CACHE_USE)
-             */
-            $depends = $this->getDepends();
-            $depends['age'] = $this->getCacheAge();
-            $useCache = $this->cache->useCache($depends);
-            return ($useCache === false);
-        } finally {
-            $wikiRequest->resetEnvironmentToPreviousValues();
-        }
 
+        /**
+         * Use cache should be always called because it trigger
+         * the event coupled to the cache (ie PARSER_CACHE_USE)
+         */
+        $depends = $this->getDepends();
+        $depends['age'] = $this->getCacheAge();
+        $useCache = $this->cache->useCache($depends);
+        return ($useCache === false);
 
     }
 
@@ -228,6 +232,9 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         if ($this->snippetCache !== null) {
             return $this->snippetCache;
         }
+
+        $this->buildObjectAndEnvironmentIfNeeded();
+
         $id = $this->getRequestedPageFragment()->getPath()->getWikiId();
         $slotLocalFilePath = $this->getRequestedPageFragment()
             ->getPath()
@@ -266,72 +273,68 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     function getFetchPath(): Path
     {
 
-        $wikiRequest = $this->createWikiRequest();
-        try {
+        $this->buildObjectAndEnvironmentIfNeeded();
 
-            if (!$this->shouldProcess()) {
-                return $this->getCachePath();
-            }
-
-            /**
-             * Process
-             */
-            $extension = $this->getMime()->getExtension();
-            switch ($extension) {
-                case self::INSTRUCTION_EXTENSION:
-                    $content = $this->processInstruction();
-                    break;
-                default:
-                    $content = $this->process();
-                    /**
-                     * Reroute the cache output by runtime dependencies
-                     * set during processing
-                     */
-                    $this->cacheDependencies->rerouteCacheDestination($this->cache);
-            }
-
-
-            /**
-             * Storage
-             */
-
-            /**
-             * Snippets and dependencies if XHTML
-             * (after processing as they can be added at runtime)
-             */
-            if ($this->getMime()->getExtension() === self::XHTML_MODE) {
-
-                /**
-                 * We make the Snippet store to Html store an atomic operation
-                 *
-                 * Why ? Because if the rendering of the page is stopped,
-                 * the cache of the HTML page may be stored but not the cache of the snippets
-                 * leading to a bad page because the next rendering will see then no snippets.
-                 */
-                try {
-                    $this->storeSnippets();
-                } catch (Exception $e) {
-                    // if any write os exception
-                    LogUtility::msg("Error while storing the xhtml content: {$e->getMessage()}");
-                    $this->removeSnippets();
-                }
-
-                /**
-                 * Cache output dependencies
-                 */
-                $this->cacheDependencies->storeDependencies();
-
-            }
-
-            /**
-             * We store always the output in the cache
-             * if the cache is not on, the file is just overwritten
-             */
-            $this->cache->storeCache($content);
-
-        } finally {
-            $wikiRequest->resetEnvironmentToPreviousValues();
+        if (!$this->shouldProcess()) {
+            return $this->getCachePath();
         }
+
+        /**
+         * Process
+         */
+        $extension = $this->getMime()->getExtension();
+        switch ($extension) {
+            case self::INSTRUCTION_EXTENSION:
+                $content = $this->processInstruction();
+                break;
+            default:
+                $content = $this->process();
+                /**
+                 * Reroute the cache output by runtime dependencies
+                 * set during processing
+                 */
+                $this->cacheDependencies->rerouteCacheDestination($this->cache);
+        }
+
+
+        /**
+         * Storage
+         */
+
+        /**
+         * Snippets and dependencies if XHTML
+         * (after processing as they can be added at runtime)
+         */
+        if ($this->getMime()->getExtension() === self::XHTML_MODE) {
+
+            /**
+             * We make the Snippet store to Html store an atomic operation
+             *
+             * Why ? Because if the rendering of the page is stopped,
+             * the cache of the HTML page may be stored but not the cache of the snippets
+             * leading to a bad page because the next rendering will see then no snippets.
+             */
+            try {
+                $this->storeSnippets();
+            } catch (Exception $e) {
+                // if any write os exception
+                LogUtility::msg("Error while storing the xhtml content: {$e->getMessage()}");
+                $this->removeSnippets();
+            }
+
+            /**
+             * Cache output dependencies
+             */
+            $this->cacheDependencies->storeDependencies();
+
+        }
+
+        /**
+         * We store always the output in the cache
+         * if the cache is not on, the file is just overwritten
+         */
+        $this->cache->storeCache($content);
+
         /**
          * The cache path may have change due to the cache key rerouting
          * We should there always use the {@link FetcherPageFragment::getCachePath()}
@@ -371,8 +374,8 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
      */
     public function setRequestedMime(Mime $mime): FetcherPageFragment
     {
+        $this->checkNoSetAfterBuild();
         $this->mime = $mime;
-        $this->buildCacheObjects();
         return $this;
     }
 
@@ -424,44 +427,59 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
          * Global ID is the ID of the HTTP request
          * (ie the page id)
          * We change it for the run
-         * And restore it at the end
          */
-        global $ID;
-        $keep = $ID;
-        global $ACT;
-        $keepACT = $ACT;
-        try {
-
-            $ID = $this->getRequestedPageFragment()->getPath()->getWikiId();
-            $ACT = "show";
-
-            /**
-             * The code below is adapted from {@link p_cached_output()}
-             * $ret = p_cached_output($file, 'xhtml', $pageid);
-             */
-            $instructions = FetcherPageFragment::createPageFragmentFetcherFromObject($this->getRequestedPageFragment())
-                ->setRequestedMimeToInstructions()
-                ->getFetchPathAsInstructionsArray();
-
-            /**
-             * Render
-             */
-            $result = p_render($this->getRendererName(), $instructions, $info);
-            $this->cacheAfterRendering = $info['cache'];
+        $this->buildObjectAndEnvironmentIfNeeded();
 
 
-        } finally {
-            // restore
-            $ID = $keep;
-            $ACT = $keepACT;
-        }
+        /**
+         * The code below is adapted from {@link p_cached_output()}
+         * $ret = p_cached_output($file, 'xhtml', $pageid);
+         */
+        $instructions = FetcherPageFragment::createPageFragmentFetcherFromObject($this->getRequestedPageFragment())
+            ->setRequestedMimeToInstructions()
+            ->getFetchPathAsInstructionsArray();
+
+        /**
+         * Render
+         */
+        $result = p_render($this->getRendererName(), $instructions, $info);
+        $this->cacheAfterRendering = $info['cache'];
 
         return $result;
 
     }
 
-    private function buildCacheObjects()
+    /**
+     * Build object (mostly the cache)
+     * Setter should not be used after this
+     * function has been called
+     */
+    private function buildObjectAndEnvironmentIfNeeded()
     {
+
+
+        if ($this->objectHasBeenBuild === true) {
+            /**
+             * A request is also send by dokuwiki to check the cache validity
+             * at {@link FetcherPageFragment::shouldProcess()}
+             * We build it only once
+             */
+            return;
+        }
+
+        /**
+         * The cache object depends on the running request
+         * We build it then just
+         * A request is also send by dokuwiki to check the cache validity
+         * We build it only once
+         */
+        $this->wikiRequest = WikiRequest::create()
+            ->setNewRunningId($this->getRequestedPageFragment()->getPath()->getWikiId())
+            ->setNewAct("show")
+            ->setNewRequestedId($this->getRequestedContextPageOrDefault()->getPath()->getWikiId());
+
+
+        $this->objectHasBeenBuild = true;
 
         $wikiId = $this->pageFragment->getPath()->getWikiId();
 
@@ -496,7 +514,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
                  * from runtime dependencies
                  */
                 try {
-                    $requestedPage = $this->getRequestedContextPage();
+                    $requestedPage = $this->getRequestedPage();
                 } catch (ExceptionNotFound $e) {
                     $requestedPage = PageFragment::createFromRequestedPage();
                 }
@@ -570,7 +588,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     {
         parent::buildFromTagAttributes($tagAttributes);
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
-        $this->setRequestedPage(PageFragment::createPageFromPathObject($this->getOriginalPath()));
+        $this->setRequestedPageFragment(PageFragment::createPageFromPathObject($this->getOriginalPath()));
         return $this;
     }
 
@@ -599,12 +617,14 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
 
     public function setRendererName(string $rendererName): FetcherPageFragment
     {
+        $this->checkNoSetAfterBuild();
         $this->renderer = $rendererName;
         return $this;
     }
 
     public function getCachePath(): LocalPath
     {
+        $this->buildObjectAndEnvironmentIfNeeded();
         $path = $this->cache->cache;
         return LocalPath::createFromPath($path);
     }
@@ -614,22 +634,22 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
      * @return PageFragment - the requested page in which this fetcher should run
      * @throws ExceptionNotFound
      */
-    public function getRequestedContextPage(): PageFragment
+    public function getRequestedPage(): PageFragment
     {
-        if (!isset($this->requestedContextPage)) {
+        if (!isset($this->requestedPage)) {
             throw new ExceptionNotFound("No requested context page specified");
         }
-        return $this->requestedContextPage;
+        return $this->requestedPage;
     }
 
     /**
      * @param PageFragment $pageFragment - the requested page (ie the main fragment)
      * @return $this
      */
-    public function setRequestedContextPage(PageFragment $pageFragment): FetcherPageFragment
+    public function setRequestedPage(PageFragment $pageFragment): FetcherPageFragment
     {
-        $this->requestedContextPage = $pageFragment;
-        $this->buildCacheObjects();
+        $this->checkNoSetAfterBuild();
+        $this->requestedPage = $pageFragment;
         return $this;
     }
 
@@ -638,20 +658,11 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         return $this->cacheDependencies;
     }
 
-    private function createWikiRequest()
-    {
-
-        return WikiRequest::create()
-            ->setNewRunningId($this->getRequestedPageFragment()->getPath()->getWikiId())
-            ->setNewAct("show")
-            ->setNewRequestedId($this->getRequestedContextPageOrDefault()->getPath()->getWikiId());
-
-    }
 
     private function getRequestedContextPageOrDefault(): PageFragment
     {
         try {
-            return $this->getRequestedContextPage();
+            return $this->getRequestedPage();
         } catch (ExceptionNotFound $e) {
             return PageFragment::createFromRequestedPage();
         }
@@ -664,6 +675,13 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     public function getPageFragment(): PageFragment
     {
         return $this->pageFragment;
+    }
+
+    private function checkNoSetAfterBuild()
+    {
+        if ($this->objectHasBeenBuild) {
+            LogUtility::internalError("You can't set when the object has been build");
+        }
     }
 
 }

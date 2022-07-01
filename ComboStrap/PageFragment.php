@@ -245,7 +245,8 @@ class PageFragment extends ResourceComboAbs
      */
     public static function createFromRequestedPage(): PageFragment
     {
-        return PageFragment::createPageFromPathObject(WikiPath::createPagePathFromRequestedPage());
+        $path = WikiPath::createPagePathFromRequestedPage();
+        return PageFragment::createPageFromPathObject($path);
     }
 
     public static function createPageFromPathObject(Path $path): PageFragment

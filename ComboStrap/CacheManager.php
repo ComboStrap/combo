@@ -76,7 +76,7 @@ class CacheManager
         $cacheManager = self::$cacheManager[$contextId];
         if ($cacheManager === null) {
             // new run, delete all old cache managers
-            self::$cacheManager = [];
+            self::reset();
             // create
             $cacheManager = new CacheManager($requestedContextPage);
             self::$cacheManager[$contextId] = $cacheManager;

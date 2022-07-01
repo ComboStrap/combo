@@ -19,6 +19,7 @@ use ComboStrap\PageFragment;
 use ComboStrap\PageId;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\WikiRequest;
 
 
 /**
@@ -210,38 +211,62 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
     public function rewrite_combo($match, $state, $pos, $plugin, helper_plugin_move_handler $handler)
     {
         /**
-         * The original move method
-         * is {@link helper_plugin_move_handler::internallink()}
+         * The goal is to recreate the document
+         * in the {@link helper_plugin_move_handler::$calls}
+         * variable (this is a string, not an array of calls)
+         *
+         * We got the {@link syntax_plugin_combo_link::handle() render match of the handle function}
+         *
+         * Unfortunately, all environemnt propertes of {@link helper_plugin_move_handler}
+         * such as {@link helper_plugin_move_handler::$id} are private
+         *
+         * The code below calls then the rewrite function {@link helper_plugin_move_handler::internallink()}
+         * and change the content modified in the {@link helper_plugin_move_handler::$calls} variable
          *
          */
-        if ($state == DOKU_LEXER_ENTER) {
-            $ref = syntax_plugin_combo_link::parse($match)[syntax_plugin_combo_link::MARKUP_REF_ATTRIBUTE];
-            try {
-                $link = LinkMarkup::createFromRef($ref);
-            } catch (ExceptionCompile $e) {
-                LogUtility::error("Unable to rewrite the markup reference for a link move. The markup ref ($ref) could not be parsed. Error: {$e->getMessage()}");
-                return;
-            }
-            if ($link->getMarkupRef()->getSchemeType() == MarkupRef::WIKI_URI) {
-
-                $handler->internallink($match, $state, $pos);
-                $suffix = "]]";
-                if (substr($handler->calls, -strlen($suffix)) == $suffix) {
-                    $handler->calls = substr($handler->calls, 0, strlen($handler->calls) - strlen($suffix));
-                }
-
-            } else {
-
-                // Other type of links
-                $handler->calls .= $match;
-
-            }
-        } else {
-
+        if ($state !== DOKU_LEXER_ENTER) {
             // Description and ending
             $handler->calls .= $match;
-
+            return;
         }
+
+        /**
+         * All environment on the {@link helper_plugin_move_handler handler} are private
+         * We can't get it, we just hack around the move of the handler then
+         */
+        $parseAttributes = syntax_plugin_combo_link::parse($match);
+        $ref = $parseAttributes[syntax_plugin_combo_link::MARKUP_REF_ATTRIBUTE];
+        try {
+            $link = LinkMarkup::createFromRef($ref);
+            $isWikiUri = $link->getMarkupRef()->getSchemeType() === MarkupRef::WIKI_URI;
+        } catch (ExceptionCompile $e) {
+            LogUtility::error("Unable to rewrite the markup reference for a link move. The markup ref ($ref) could not be parsed. Error: {$e->getMessage()}");
+            $handler->calls .= $match;
+            return;
+        }
+
+        if (!$isWikiUri) {
+            // Other type of links
+            $handler->calls .= $match;
+            return;
+        }
+
+        /**
+         * This function will modify and add the link to the new output (ie calls)
+         * {@link helper_plugin_move_handler::$calls}
+         */
+        $handler->internallink($match, $state, $pos);
+
+        /**
+         * Internal Link Calls Hack
+         * that delete the ]]
+         */
+        $suffix = "]]";
+        if (substr($handler->calls, -strlen($suffix)) === $suffix) {
+            $handler->calls = substr($handler->calls, 0, strlen($handler->calls) - strlen($suffix));
+        }
+
+
     }
 
 

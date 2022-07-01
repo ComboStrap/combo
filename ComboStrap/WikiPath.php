@@ -142,11 +142,11 @@ class WikiPath extends PathAbs
                     // delete the relative character
                     $parts = array_splice($parts, 1);
                     try {
-                        $rootRelativePath = WikiPath::getCurrentPagePath();
+                        $rootRelativePath = $this->getCurrentPagePath();
                     } catch (ExceptionNotFound $e) {
                         // Root case: the relative path is in the root
                         // the root has no parent
-                        LogUtility::error("The current relative path ({$this->path}) returns an error: {$e->getMessage()}",self::CANONICAL);
+                        LogUtility::error("The current relative path ({$this->path}) returns an error: {$e->getMessage()}", self::CANONICAL);
                         $rootRelativePath = WikiPath::createPagePathFromPath(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
                     }
                     break;
@@ -154,15 +154,15 @@ class WikiPath extends PathAbs
                     // delete the relative character
                     $parts = array_splice($parts, 1);
                     try {
-                        $currentPagePath = WikiPath::getCurrentPagePath();
+                        $currentPagePath = $this->getCurrentPagePath();
                         try {
                             $rootRelativePath = $currentPagePath->getParent();
                         } catch (ExceptionNotFound $e) {
-                            LogUtility::error("The parent relative path ({$this->path}) returns an error: {$e->getMessage()}",self::CANONICAL);
-                            $rootRelativePath = WikiPath::getCurrentPagePath();
+                            LogUtility::error("The parent relative path ({$this->path}) returns an error: {$e->getMessage()}", self::CANONICAL);
+                            $rootRelativePath = $this->getCurrentPagePath();
                         }
                     } catch (ExceptionNotFound $e) {
-                        LogUtility::error("The parent relative path ({$this->path}) returns an error: {$e->getMessage()}",self::CANONICAL);
+                        LogUtility::error("The parent relative path ({$this->path}) returns an error: {$e->getMessage()}", self::CANONICAL);
                     }
                     break;
                 default:
@@ -171,9 +171,9 @@ class WikiPath extends PathAbs
                      * (ie hallo)
                      */
                     try {
-                        $rootRelativePath = WikiPath::getCurrentPagePath();
+                        $rootRelativePath = $this->getCurrentPagePath();
                     } catch (ExceptionNotFound $e) {
-                        LogUtility::error("The named relative path ({$this->path}) returns an error: {$e->getMessage()}",self::CANONICAL);
+                        LogUtility::error("The named relative path ({$this->path}) returns an error: {$e->getMessage()}", self::CANONICAL);
                         $rootRelativePath = WikiPath::createPagePathFromPath(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
                     }
                     break;
@@ -424,8 +424,9 @@ class WikiPath extends PathAbs
     }
 
     /**
+     * The running page fragment given by the global id
      */
-    public static function createPagePathFromGlobalId(): WikiPath
+    public static function createRunningPageFragment(): WikiPath
     {
         global $ID;
         if ($ID === null) {
@@ -565,7 +566,7 @@ class WikiPath extends PathAbs
      */
     public static function getCurrentPagePath(): WikiPath
     {
-        $requestedPath = self::getRequestedPagePath();
+        $requestedPath = WikiPath::createRunningPageFragment();;
         try {
             $parent = $requestedPath->getParent();
         } catch (ExceptionNotFound $e) {
@@ -595,6 +596,8 @@ class WikiPath extends PathAbs
     {
         return str_replace(WikiPath::NAMESPACE_SEPARATOR_SLASH, WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $id);
     }
+
+
 
 
     /**
@@ -743,7 +746,8 @@ class WikiPath extends PathAbs
      *
      * @throws ExceptionNotFound - if the revision is not set and the path does not exist
      */
-    public function getRevisionOrDefault(){
+    public function getRevisionOrDefault()
+    {
         try {
             return $this->getRevision();
         } catch (ExceptionNotFound $e) {

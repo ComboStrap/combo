@@ -211,7 +211,7 @@ class PageFragment extends ResourceComboAbs
      */
     public static function createPageFromGlobalWikiId(): PageFragment
     {
-        $dokuPath = WikiPath::createPagePathFromGlobalId();
+        $dokuPath = WikiPath::createRunningPageFragment();
         return self::createPageFromPathObject($dokuPath);
     }
 

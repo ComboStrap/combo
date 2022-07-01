@@ -1109,7 +1109,7 @@ class PluginUtility
     }
 
     /**
-     * @deprecated for {@link WikiPath::createPagePathFromGlobalId()}
+     * @deprecated for {@link WikiPath::createRunningPageFragment()}
      */
     public static function getCurrentSlotId(): string
     {

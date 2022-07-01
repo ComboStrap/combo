@@ -1415,7 +1415,7 @@ class FetcherSvg extends FetcherLocalImage
                 try {
                     $dokuPath = $this->downloadAndGetIconPath();
                 } catch (ExceptionCompile $e) {
-                    throw new ExceptionBadArgument("The svg attributes does not have a media or icon name attribute. We can't define the svg path.");
+                    throw new ExceptionBadArgument("We can't get the icon path. Error: {$e->getMessage()}. (ie media or icon name attribute is mandatory).", self::CANONICAL, 1, $e);
                 }
                 $this->setOriginalPath($dokuPath);
 
@@ -1456,7 +1456,7 @@ class FetcherSvg extends FetcherLocalImage
         try {
             $iconDownloader = IconDownloader::createFromName($requestedName);
         } catch (ExceptionBadArgument $e) {
-            throw new ExceptionNotFound("The name ($requestedName) is not a valid icon name. Error: ({$e->getMessage()}.", self::CANONICAL);
+            throw new ExceptionNotFound("The name ($requestedName) is not a valid icon name. Error: ({$e->getMessage()}.", self::CANONICAL, 1, $e);
         }
         $originalPath = $iconDownloader->getPath();
         if (FileSystems::exists($originalPath)) {

@@ -92,14 +92,14 @@ class Html
         return htmlspecialchars_decode($int, ENT_XHTML | ENT_QUOTES);
     }
 
-    public static function getDiffBetweenClass(string $expected, string $actual, string $expectedId = "expected", string $actualId = "actual"): string
+    public static function getDiffBetweenValuesSeparatedByBlank(string $expected, string $actual, string $expectedName = "expected class", string $actualName = "actual class"): string
     {
         $leftClasses = preg_split("/\s/", $expected);
         $rightClasses = preg_split("/\s/", $actual);
         $error = "";
         foreach ($leftClasses as $leftClass) {
             if (!in_array($leftClass, $rightClasses)) {
-                $error .= "The class ($expectedId) has the value (" . $leftClass . ") that is not present in the class ($actualId))\n";
+                $error .= "The $expectedName has the value (" . $leftClass . ") that is not present in the $actualName)\n";
             } else {
                 // Delete the value
                 $key = array_search($leftClass, $rightClasses);
@@ -107,7 +107,7 @@ class Html
             }
         }
         foreach ($rightClasses as $rightClass) {
-            $error .= "The actual ($actualId) has the value (" . $rightClass . ") that is not present in the class ($expectedId))\n";
+            $error .= "The $actualName has the value (" . $rightClass . ") that is not present in the $expectedName)\n";
         }
         return $error;
     }

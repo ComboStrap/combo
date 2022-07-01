@@ -6,6 +6,7 @@ use ComboStrap\BrandButton;
 use ComboStrap\CacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionRuntime;
 use ComboStrap\Icon;
 use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
@@ -184,11 +185,15 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                     if ($brandButton->hasIcon()) {
                         try {
                             $iconAttributes = $brandButton->getIconAttributes();
-                            $iconAttributes = TagAttributes::createFromCallStackArray($iconAttributes);
-                            $renderer->doc .= Icon::createFromTagAttributes($iconAttributes)
+                            $tagIconAttributes = TagAttributes::createFromCallStackArray($iconAttributes);
+                            $renderer->doc .= Icon::createFromTagAttributes($tagIconAttributes)
                                 ->toHtml();
                         } catch (ExceptionCompile $e) {
-                            $renderer->doc .= LogUtility::wrapInRedForHtml("Getting the icon for the social channel ($brandButton) returns an error ({$e->getMessage()}");
+                            $message = "Getting the icon for the social channel ($brandButton) returns an error ({$e->getMessage()}";
+                            if (PluginUtility::isDevOrTest()) {
+                                throw new ExceptionRuntime($message, self::CANONICAL, 1, $e);
+                            }
+                            $renderer->doc .= LogUtility::wrapInRedForHtml($message);
                             // don't return because the anchor link is open
                         }
                     }

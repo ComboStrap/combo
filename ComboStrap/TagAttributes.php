@@ -696,11 +696,24 @@ class TagAttributes
      */
     public function addOutputAttributeValue($key, $value): TagAttributes
     {
+
         if (blank($value)) {
             LogUtility::error("The value of the output attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty");
         }
-        $this->outputAttributes[$key] = $value;
+
+        $actualValue = $this->outputAttributes[$key];
+        if($actualValue===null){
+            $this->outputAttributes[$key] = $value;
+            return $this;
+        }
+
+        if (!in_array($key, self::MULTIPLE_VALUES_ATTRIBUTES)) {
+            LogUtility::internalError("The output attribute ($key) was already set with the value ($actualValue), we have added the value ($value)");
+        }
+
+        $this->outputAttributes[$key] = "$value $actualValue";
         return $this;
+
     }
 
 

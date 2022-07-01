@@ -273,7 +273,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
                 return $this->getCachePath();
             }
 
-
             /**
              * Process
              */

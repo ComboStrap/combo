@@ -177,7 +177,7 @@ class XmlUtility
                     if ($leftAttValue !== $rightAttValue) {
                         switch ($leftAtt->name) {
                             case "class":
-                                $error .= Html::getDiffBetweenClass($leftAttValue, $rightAttValue, "left ,{$leftAtt->getNodePath()}", "right, {$leftAtt->getNodePath()}");
+                                $error .= Html::getDiffBetweenValuesSeparatedByBlank($leftAttValue, $rightAttValue, "left ,{$leftAtt->getNodePath()}", "right, {$leftAtt->getNodePath()}");
                                 break;
                             case "srcset":
                             case "data-srcset":

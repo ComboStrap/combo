@@ -106,7 +106,8 @@ class IconDownloader
         self::SI_GLYPH => "https://glyph.smarticons.co/",
         self::AKAR_ICONS => "https://akaricons.com/",
         self::ARCTICONS => "https://arcticons.com/",
-        self::HEALTH_ICONS => "https://healthicons.org/"
+        self::HEALTH_ICONS => "https://healthicons.org/",
+        self::COMBO => ""
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
@@ -157,7 +158,8 @@ class IconDownloader
         "si-glyph" => self::SI_GLYPH,
         "akar-icons" => self::AKAR_ICONS,
         "arcticons" => self::ARCTICONS,
-        "healthicons" => self::HEALTH_ICONS
+        "healthicons" => self::HEALTH_ICONS,
+        "combo" => self::COMBO
     );
 
     const FEATHER = "feather";
@@ -224,9 +226,15 @@ class IconDownloader
         if (substr($iconNameSpace, -1) != WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $iconNameSpace = $iconNameSpace . ":";
         }
-
-        $mediaPathId = $iconNameSpace . $name . ".svg";
-        $mediaDokuPath = WikiPath::createMediaPathFromPath($mediaPathId);
+        $mediaPathId = $iconNameSpace . $name . ".svg";;
+        $this->path = WikiPath::createMediaPathFromPath($mediaPathId);
+        // Bug: null file created when the stream could not get any byte
+        // We delete them
+        if (FileSystems::exists($this->path)) {
+            if (FileSystems::getSize($this->path) === 0) {
+                FileSystems::delete($this->path);
+            }
+        }
 
         /**
          * Name parsing to extract the library name and icon name
@@ -242,17 +250,16 @@ class IconDownloader
             $this->setLibrary($libraryName);
             $iconName = substr($name, $sepPosition + 1);
             $this->setIconName($iconName);
-        }
 
-        // Bug: null file created when the stream could not get any byte
-        // We delete them
-        if (FileSystems::exists($mediaDokuPath)) {
-            if (FileSystems::getSize($mediaDokuPath) === 0) {
-                FileSystems::delete($mediaDokuPath);
+            /**
+             * Special case, internal library
+             */
+            if ($this->getLibrary() === self::COMBO) {
+                $this->path = WikiPath::createComboResource($iconName . ".svg");
             }
         }
 
-        $this->path = $mediaDokuPath;
+
     }
 
 

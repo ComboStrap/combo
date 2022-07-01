@@ -29,6 +29,7 @@ class Icon
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
      * @throws ExceptionNotFound
+     * @throws ExceptionCompile
      */
     public static function createFromTagAttributes(TagAttributes $tagAttributes): Icon
     {
@@ -76,10 +77,10 @@ class Icon
              */
 
         }
-        $fetchSvg = FetcherSvg::createFromAttributes($tagAttributes);
+        $fetcherSvg = FetcherSvg::createFromAttributes($tagAttributes);
 
         return (new Icon())
-            ->setFetchSvg($fetchSvg)
+            ->setFetcherSvg($fetcherSvg)
             ->setTagAttributes($tagAttributes);
     }
 
@@ -91,14 +92,14 @@ class Icon
         $icon = new Icon();
         $path = WikiPath::createComboResource(":$name.svg");
         $fetchSvg = FetcherSvg::createSvgFromPath($path);
-        $icon->setFetchSvg($fetchSvg);
+        $icon->setFetcherSvg($fetchSvg);
         if ($tagAttributes !== null) {
             $icon->setTagAttributes($tagAttributes);
         }
         return $icon;
     }
 
-    public function setFetchSvg(FetcherSvg $fetchSvg): Icon
+    public function setFetcherSvg(FetcherSvg $fetchSvg): Icon
     {
         $this->fetchSvg = $fetchSvg;
         return $this;

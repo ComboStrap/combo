@@ -9,6 +9,7 @@ use syntax_plugin_combo_container;
 class FetcherPage extends FetcherAbs implements FetcherSource
 {
 
+    use FetcherTraitLocalPath;
 
     const CANONICAL = "page";
 
@@ -71,6 +72,13 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         return $layoutArea;
     }
 
+    public static function createPageFetcherFromObject(PageFragment $param): FetcherPage
+    {
+        $fetcherPage = new FetcherPage();
+        $fetcherPage->setOriginalPath($param->getPath());
+        return $fetcherPage;
+    }
+
     /**
      * @throws ExceptionNotFound - if the layout resources were not found
      * @throws ExceptionBadSyntax - if the template xhtml is not valid
@@ -78,15 +86,35 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     public function getFetchPath(): LocalPath
     {
 
+        /**
+         * We first collect the depend file to
+         * check if we can use the cache
+         */
+        $requestedPage = PageFragment::createPageFromPathObject($this->getOriginalPath());
+        $layoutName = PageLayout::createFromPage($requestedPage)->getValueOrDefault();
+
+        $layoutDirectory = WikiPath::createWikiPath(":layout:$layoutName:", WikiPath::COMBO_DRIVE);
+        if (!FileSystems::exists($layoutDirectory)) {
+            throw new ExceptionNotFound("The layout directory ($layoutName) does not exist at $layoutDirectory", self::CANONICAL);
+        }
+        $layoutCssPath = $layoutDirectory->resolve("$layoutName.css");
+        $layoutJsPath = $layoutDirectory->resolve("$layoutName.js");
+        $bodyLayoutHtmlPath = $layoutDirectory->resolve("$layoutName.html");
+        $layoutJsonPath = $layoutDirectory->resolve("$layoutName.json");
+
         $cache = FetcherCache::createFrom($this)
-            ->addFileDependency($this->getOriginalPath());
+            ->addFileDependency($this->getOriginalPath())
+            ->addFileDependency($layoutCssPath)
+            ->addFileDependency($layoutJsPath)
+            ->addFileDependency($bodyLayoutHtmlPath)
+            ->addFileDependency($layoutJsonPath);
+
+        $htmlBodyDocument = $this->loadHtmlTemplate($bodyLayoutHtmlPath);
 
         if ($cache->isCacheUsable()) {
             return $cache->getFile();
         }
 
-
-        $requestedPage = PageFragment::createPageFromPathObject($this->getOriginalPath());
 
         global $ACT;
         switch ($ACT) {
@@ -118,24 +146,19 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                 break;
         }
 
-        $layoutDirectory = WikiPath::createDokuPath(":layout:$layoutName:", WikiPath::COMBO_DRIVE);
-        if (!FileSystems::exists($layoutDirectory)) {
-            throw new ExceptionNotFound("The layout directory ($layoutName) does not exist at $layoutDirectory", self::CANONICAL);
-        }
-
 
         /**
          * Css and Js
          */
         $snippetManager = PluginUtility::getSnippetManager();
-        $layoutCssPath = $layoutDirectory->resolve("$layoutName.css");
+
         try {
             $content = FileSystems::getContent($layoutCssPath);
             $snippetManager->attachCssInternalStylesheetForRequest(self::CANONICAL, $content);
         } catch (ExceptionNotFound $e) {
             // not a problem
         }
-        $layoutJsPath = $layoutDirectory->resolve("$layoutName.js");
+
         try {
             $content = FileSystems::getContent($layoutJsPath);
             $snippetManager->attachJavascriptInternalForRequest(self::CANONICAL, $content);
@@ -143,18 +166,6 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             // not a problem
         }
 
-        $bodyLayoutHtmlFileName = "$layoutName.html";
-        $bodyLayoutHtmlPath = $layoutDirectory->resolve($bodyLayoutHtmlFileName);
-        try {
-            $bodyHtmlStringLayout = FileSystems::getContent($bodyLayoutHtmlPath);
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionNotFound("The layout file ($bodyLayoutHtmlFileName) does not exist at $bodyLayoutHtmlPath", self::CANONICAL);
-        }
-        try {
-            $htmlBodyDocument = XmlDocument::createHtmlDocFromMarkup("<body>$bodyHtmlStringLayout</body>");
-        } catch (ExceptionBadSyntax $e) {
-            throw new ExceptionBadSyntax("The html template file ($bodyLayoutHtmlFileName) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
-        }
 
         /**
          * Body
@@ -170,7 +181,6 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         /**
          * Area
          */
-        $layoutJsonPath = $layoutDirectory->resolve("$layoutName.json");
         try {
             $jsonString = FileSystems::getContent($layoutJsonPath);
         } catch (ExceptionNotFound $e) {
@@ -241,8 +251,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             /**
              * Rendering
              */
-            $layoutArea = $this
-                ->getOrCreateArea($areaName);
+            $layoutArea = $this->getOrCreateArea($areaName);
             if ($layoutArea->isContainer()) {
                 // no rendering for container area
                 // this is a parent
@@ -250,8 +259,8 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             }
 
             $layoutVariable = $layoutArea->getVariableName();
-            $htmlOutputByAreaName[$layoutVariable] = $layoutArea
-                ->render();
+            $htmlOutputByAreaName[$layoutVariable] = $layoutArea->render();
+
             /**
              * Add the template variable
              */
@@ -294,8 +303,33 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         return self::CANONICAL;
     }
 
-    public function getOriginalPath(): WikiPath
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
+     */
+    public function getFetchPathAsHtmlDom(): XmlDocument
     {
-        return PageFragment::createFromRequestedPage()->getPath();
+        $content = FileSystems::getContent($this->getFetchPath());
+        return XmlDocument::createXmlDocFromMarkup($content);
     }
+
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
+     */
+    private function loadHtmlTemplate(WikiPath $layoutHtmlPath): XmlDocument
+    {
+        try {
+            $bodyHtmlStringLayout = FileSystems::getContent($layoutHtmlPath);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionNotFound("The layout file ($layoutHtmlPath) does not exist at $layoutHtmlPath", self::CANONICAL);
+        }
+        try {
+            return XmlDocument::createHtmlDocFromMarkup("<body>$bodyHtmlStringLayout</body>");
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionBadSyntax("The html template file ($layoutHtmlPath) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
+        }
+    }
+
+
 }

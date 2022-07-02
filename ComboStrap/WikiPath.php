@@ -115,7 +115,6 @@ class WikiPath extends PathAbs
      *   For a media: in the {@link MediaLink::createMediaLinkFromId()}
      * Because this class is mostly the file representation, it should be able to
      * represents also a namespace
-     * @throws ExceptionNotFound
      */
     protected function __construct(string $path, string $drive, string $rev = null)
     {
@@ -416,9 +415,8 @@ class WikiPath extends PathAbs
         return new WikiPath($dokuwikiId, self::COMBO_DRIVE);
     }
 
-    /**
-     */
-    public static function createDokuPath($path, $drive, $rev = ''): WikiPath
+
+    public static function createWikiPath($path, $drive, $rev = ''): WikiPath
     {
         return new WikiPath($path, $drive, $rev);
     }
@@ -480,7 +478,7 @@ class WikiPath extends PathAbs
             if (FileSystems::isDirectory($path)) {
                 WikiPath::addNamespaceEndSeparatorIfNotPresent($wikiPath);
             }
-            return WikiPath::createDokuPath(":$wikiPath", $driveRoot);
+            return WikiPath::createWikiPath(":$wikiPath", $driveRoot);
 
         }
         throw new ExceptionBadArgument("The local path ($path) is not inside a wiki path drive");

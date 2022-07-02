@@ -122,7 +122,7 @@ class LocalPath extends PathAbs
 
     function getScheme(): string
     {
-        return LocalFs::SCHEME;
+        return LocalFileSystem::SCHEME;
     }
 
     function getLastName(): string
@@ -184,7 +184,7 @@ class LocalPath extends PathAbs
      */
     public function toWikiPath(): WikiPath
     {
-        return WikiPath::createFromPath($this);
+        return WikiPath::createFromPathObject($this);
     }
 
     public function resolve(string $name): LocalPath

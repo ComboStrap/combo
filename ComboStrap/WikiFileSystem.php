@@ -7,14 +7,14 @@ namespace ComboStrap;
 use DateTime;
 
 /**
- * Class DokuFs
+ *
  * @package ComboStrap
  *
- * The file system of Dokuwiki is based
+ * The wiki file system is based
  * on drive name (such as page and media)
  * that locates a directory on the local file system
  */
-class DokuFs implements FileSystem
+class WikiFileSystem implements FileSystem
 {
 
 
@@ -22,14 +22,14 @@ class DokuFs implements FileSystem
 
 
     /**
-     * @var DokuFs
+     * @var WikiFileSystem
      */
     private static $dokuFS;
 
-    public static function getOrCreate(): DokuFs
+    public static function getOrCreate(): WikiFileSystem
     {
         if (self::$dokuFS === null) {
-            self::$dokuFS = new DokuFs();
+            self::$dokuFS = new WikiFileSystem();
         }
         return self::$dokuFS;
     }
@@ -114,14 +114,14 @@ class DokuFs implements FileSystem
     public function getChildren(Path $path, string $type = null): array
     {
 
-        $children = FileSystems::getChildren($path->toLocalPath(), $type);
+        $children = LocalFileSystem::getOrCreate()->getChildren($path->toLocalPath(), $type);
         $childrenWiki = [];
         foreach ($children as $child) {
             try {
-                $childrenWiki[] = $child->toDokuPath();
+                $childrenWiki[] = WikiPath::createFromPathObject($child);
             } catch (ExceptionCompile $e) {
                 // Should not happen
-                LogUtility::error("Unable to get back the wiki path from the local path. Error: {$e->getMessage()}");
+                LogUtility::internalError("Unable to get back the wiki path from the local path. Error: {$e->getMessage()}");
             }
         }
         return $childrenWiki;

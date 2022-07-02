@@ -16,10 +16,10 @@ class FileSystems
     {
         $scheme = $path->getScheme();
         switch ($scheme) {
-            case LocalFs::SCHEME:
-                return LocalFs::getOrCreate()->exists($path);
-            case DokuFs::SCHEME:
-                return DokuFs::getOrCreate()->exists($path);
+            case LocalFileSystem::SCHEME:
+                return LocalFileSystem::getOrCreate()->exists($path);
+            case WikiFileSystem::SCHEME:
+                return WikiFileSystem::getOrCreate()->exists($path);
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }
@@ -32,10 +32,10 @@ class FileSystems
     {
         $scheme = $path->getScheme();
         switch ($scheme) {
-            case LocalFs::SCHEME:
-                return LocalFs::getOrCreate()->getContent($path);
-            case DokuFs::SCHEME:
-                return DokuFs::getOrCreate()->getContent($path);
+            case LocalFileSystem::SCHEME:
+                return LocalFileSystem::getOrCreate()->getContent($path);
+            case WikiFileSystem::SCHEME:
+                return WikiFileSystem::getOrCreate()->getContent($path);
         }
         throw new ExceptionRuntime("File system ($scheme) unknown");
     }
@@ -47,10 +47,10 @@ class FileSystems
     {
         $scheme = $path->getScheme();
         switch ($scheme) {
-            case LocalFs::SCHEME:
-                return LocalFs::getOrCreate()->getModifiedTime($path);
-            case DokuFs::SCHEME:
-                return DokuFs::getOrCreate()->getModifiedTime($path);
+            case LocalFileSystem::SCHEME:
+                return LocalFileSystem::getOrCreate()->getModifiedTime($path);
+            case WikiFileSystem::SCHEME:
+                return WikiFileSystem::getOrCreate()->getModifiedTime($path);
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }
@@ -64,10 +64,10 @@ class FileSystems
     {
         $scheme = $path->getScheme();
         switch ($scheme) {
-            case LocalFs::SCHEME:
-                return LocalFs::getOrCreate()->getCreationTime($path);
-            case DokuFs::SCHEME:
-                return DokuFs::getOrCreate()->getCreationTime($path);
+            case LocalFileSystem::SCHEME:
+                return LocalFileSystem::getOrCreate()->getCreationTime($path);
+            case WikiFileSystem::SCHEME:
+                return WikiFileSystem::getOrCreate()->getCreationTime($path);
             default:
                 // Internal Error: should not happen
                 throw new ExceptionRuntime("File system ($scheme) unknown");
@@ -85,11 +85,11 @@ class FileSystems
     {
         $scheme = $path->getScheme();
         switch ($scheme) {
-            case LocalFs::SCHEME:
-                LocalFs::getOrCreate()->delete($path);
+            case LocalFileSystem::SCHEME:
+                LocalFileSystem::getOrCreate()->delete($path);
                 return;
-            case DokuFs::SCHEME:
-                DokuFs::getOrCreate()->delete($path);
+            case WikiFileSystem::SCHEME:
+                WikiFileSystem::getOrCreate()->delete($path);
                 return;
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
@@ -101,10 +101,10 @@ class FileSystems
 
         $scheme = $path->getScheme();
         switch ($scheme) {
-            case LocalFs::SCHEME:
-                return LocalFs::getOrCreate()->getSize($path);
-            case DokuFs::SCHEME:
-                return DokuFs::getOrCreate()->getSize($path);
+            case LocalFileSystem::SCHEME:
+                return LocalFileSystem::getOrCreate()->getSize($path);
+            case WikiFileSystem::SCHEME:
+                return WikiFileSystem::getOrCreate()->getSize($path);
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }
@@ -118,10 +118,10 @@ class FileSystems
     {
         $scheme = $dirPath->getScheme();
         switch ($scheme) {
-            case LocalFs::SCHEME:
-                return LocalFs::getOrCreate()->createDirectory($dirPath);
-            case DokuFs::SCHEME:
-                return DokuFs::getOrCreate()->createDirectory($dirPath);
+            case LocalFileSystem::SCHEME:
+                return LocalFileSystem::getOrCreate()->createDirectory($dirPath);
+            case WikiFileSystem::SCHEME:
+                return WikiFileSystem::getOrCreate()->createDirectory($dirPath);
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }
@@ -131,10 +131,10 @@ class FileSystems
     {
         $scheme = $path->getScheme();
         switch ($scheme) {
-            case LocalFs::SCHEME:
-                return LocalFs::getOrCreate()->isDirectory($path);
-            case DokuFs::SCHEME:
-                return DokuFs::getOrCreate()->isDirectory($path);
+            case LocalFileSystem::SCHEME:
+                return LocalFileSystem::getOrCreate()->isDirectory($path);
+            case WikiFileSystem::SCHEME:
+                return WikiFileSystem::getOrCreate()->isDirectory($path);
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }
@@ -147,10 +147,10 @@ class FileSystems
     {
         $scheme = $path->getScheme();
         switch ($scheme) {
-            case LocalFs::SCHEME:
-                return LocalFs::getOrCreate()->getChildren($path, $type);
-            case DokuFs::SCHEME:
-                return DokuFs::getOrCreate()->getChildren($path, $type);
+            case LocalFileSystem::SCHEME:
+                return LocalFileSystem::getOrCreate()->getChildren($path, $type);
+            case WikiFileSystem::SCHEME:
+                return WikiFileSystem::getOrCreate()->getChildren($path, $type);
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }
@@ -202,10 +202,10 @@ class FileSystems
     {
         $scheme = $path->getScheme();
         switch ($scheme) {
-            case LocalFs::SCHEME:
-                return LocalFs::getOrCreate()->closest($path, $name);
-            case DokuFs::SCHEME:
-                return DokuFs::getOrCreate()->closest($path, $name);
+            case LocalFileSystem::SCHEME:
+                return LocalFileSystem::getOrCreate()->closest($path, $name);
+            case WikiFileSystem::SCHEME:
+                return WikiFileSystem::getOrCreate()->closest($path, $name);
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }
@@ -215,11 +215,11 @@ class FileSystems
     {
         $scheme = $path->getScheme();
         switch ($scheme) {
-            case LocalFs::SCHEME:
-                LocalFs::getOrCreate()->createRegularFile($path);
+            case LocalFileSystem::SCHEME:
+                LocalFileSystem::getOrCreate()->createRegularFile($path);
                 break;
-            case DokuFs::SCHEME:
-                DokuFs::getOrCreate()->createRegularFile($path);
+            case WikiFileSystem::SCHEME:
+                WikiFileSystem::getOrCreate()->createRegularFile($path);
                 break;
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
@@ -247,11 +247,11 @@ class FileSystems
     {
         $scheme = $path->getScheme();
         switch ($scheme) {
-            case LocalFs::SCHEME:
-                LocalFs::getOrCreate()->setContent($path, $content);
+            case LocalFileSystem::SCHEME:
+                LocalFileSystem::getOrCreate()->setContent($path, $content);
                 break;
-            case DokuFs::SCHEME:
-                DokuFs::getOrCreate()->setContent($path, $content);
+            case WikiFileSystem::SCHEME:
+                WikiFileSystem::getOrCreate()->setContent($path, $content);
                 break;
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");

@@ -2,7 +2,7 @@
 
 namespace ComboStrap;
 
-class ExceptionPhpError extends ExceptionRuntime
+class ExceptionPhpError extends ExceptionCompile
 {
 
 

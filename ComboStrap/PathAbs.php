@@ -56,7 +56,7 @@ abstract class PathAbs implements Path
 
     /**
      * @throws ExceptionCompile
-     * @deprecated for {@link WikiPath::createFromPath()}
+     * @deprecated for {@link WikiPath::createFromPathObject()}
      */
     function toWikiPath(): WikiPath
     {

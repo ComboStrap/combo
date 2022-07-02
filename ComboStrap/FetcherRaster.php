@@ -53,7 +53,7 @@ class FetcherRaster extends FetcherLocalImage
      */
     public static function createImageRasterFetchFromPath(Path $path): FetcherRaster
     {
-        $path = WikiPath::createFromPath($path);
+        $path = WikiPath::createFromPathObject($path);
         return self::createEmptyRaster()
             ->setOriginalPath($path);
     }

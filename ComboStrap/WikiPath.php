@@ -447,7 +447,7 @@ class WikiPath extends PathAbs
     /**
      * @throws ExceptionBadArgument - if the path is not a local path or is not in a known drive
      */
-    public static function createFromPath(Path $path): WikiPath
+    public static function createFromPathObject(Path $path): WikiPath
     {
         if ($path instanceof WikiPath) {
             return $path;
@@ -717,7 +717,7 @@ class WikiPath extends PathAbs
     function getScheme(): string
     {
 
-        return DokuFs::SCHEME;
+        return WikiFileSystem::SCHEME;
 
     }
 

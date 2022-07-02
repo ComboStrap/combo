@@ -6,21 +6,21 @@ namespace ComboStrap;
 
 use DateTime;
 
-class LocalFs implements FileSystem
+class LocalFileSystem implements FileSystem
 {
 
     // same as the uri: ie local file os system
     public const SCHEME = "file";
 
     /**
-     * @var LocalFs
+     * @var LocalFileSystem
      */
     private static $localFs;
 
-    public static function getOrCreate(): LocalFs
+    public static function getOrCreate(): LocalFileSystem
     {
         if (self::$localFs === null) {
-            self::$localFs = new LocalFs();
+            self::$localFs = new LocalFileSystem();
         }
         return self::$localFs;
     }

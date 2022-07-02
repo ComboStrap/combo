@@ -4,7 +4,7 @@ use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotExists;
 use ComboStrap\FetcherAbs;
-use ComboStrap\FetchCache;
+use ComboStrap\FetcherCache;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadState;

@@ -170,7 +170,7 @@ class FetcherSnapshot extends FetcherImage
 
             if (!PluginUtility::isDevOrTest()) {
                 // Cache
-                $screenShotPath = FetchCache::createFrom($this)->getFile();
+                $screenShotPath = FetcherCache::createFrom($this)->getFile();
             } else {
                 // Desktop
                 try {

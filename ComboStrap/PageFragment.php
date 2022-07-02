@@ -9,8 +9,6 @@ use Exception;
 use renderer_plugin_combo_analytics;
 
 
-require_once(__DIR__ . '/PluginUtility.php');
-
 /**
  *
  * Class Page

@@ -554,7 +554,7 @@ class FetcherSvg extends FetcherLocalImage
         /**
          * Generated svg file cache init
          */
-        $fetchCache = FetchCache::createFrom($this);
+        $fetchCache = FetcherCache::createFrom($this);
         $files[] = $this->getOriginalPath();
         try {
             $files[] = ClassUtility::getClassPath(FetcherSvg::class);

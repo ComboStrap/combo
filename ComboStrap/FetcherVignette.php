@@ -74,7 +74,7 @@ class FetcherVignette extends FetcherImage
     {
 
         $extension = $this->mime->getExtension();
-        $cache = new FetchCache($this);
+        $cache = new FetcherCache($this);
 
         /**
          * Building the cache dependencies

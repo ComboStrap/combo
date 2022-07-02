@@ -204,4 +204,43 @@ class XmlElement
     {
         return XmlUtility::extractTextWithoutCdata($this->getNodeValue());
     }
+
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
+     */
+    public function insertAdjacentHTML(string $position, string $html): XmlElement
+    {
+        $externalElement = XmlDocument::createHtmlDocFromMarkup($html)->getDocumentElement()->getDomElement();
+        // import/copy item from external document to internal document
+        $internalElement = $this->element->ownerDocument->importNode($externalElement, true);
+        switch ($position) {
+            case 'beforeend':
+                $this->element->appendChild($internalElement);
+                return $this;
+            case 'afterbegin':
+                $firstChild = $this->element->firstChild;
+                if ($firstChild === null) {
+                    $this->element->appendChild($internalElement);
+                } else {
+                    // The object on which you actually call the insertBefore()
+                    // on the parent node of the reference node
+                    // otherwise you get a `not found`
+                    // https://www.php.net/manual/en/domnode.insertbefore.php#53506
+                    $firstChild->parentNode->insertBefore($internalElement,$firstChild);
+                }
+                return $this;
+            case 'beforebegin':
+                $this->element->parentNode->insertBefore($internalElement, $this->element);
+                return $this;
+            default:
+                throw new ExceptionBadArgument("The position ($position) is unknown");
+        }
+
+    }
+
+    public function getDocumentElement(): XmlElement
+    {
+        return $this->document->getDocumentElement();
+    }
 }

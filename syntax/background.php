@@ -7,7 +7,7 @@ use ComboStrap\FetcherSvg;
 use ComboStrap\MarkupRef;
 use ComboStrap\MediaMarkup;
 use ComboStrap\FetcherAbs;
-use ComboStrap\FetchCache;
+use ComboStrap\FetcherCache;
 use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;

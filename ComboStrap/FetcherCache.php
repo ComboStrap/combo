@@ -12,7 +12,7 @@ use dokuwiki\Cache\Cache;
  * that takes into account the arguments / properties of the media
  * to create the cache file
  */
-class FetchCache
+class FetcherCache
 {
 
 
@@ -41,9 +41,9 @@ class FetchCache
 
     }
 
-    public static function createFrom(Fetcher $fetch): FetchCache
+    public static function createFrom(Fetcher $fetch): FetcherCache
     {
-        return new FetchCache($fetch);
+        return new FetcherCache($fetch);
     }
 
 
@@ -83,7 +83,7 @@ class FetchCache
         return LocalPath::createFromPath($this->fileCache->cache);
     }
 
-    public function addFileDependency(Path $path): FetchCache
+    public function addFileDependency(Path $path): FetcherCache
     {
         $this->fileDependencies[] = $path->toAbsolutePath()->toPathString();
         return $this;

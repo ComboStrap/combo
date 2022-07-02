@@ -168,7 +168,7 @@ abstract class FetcherAbs implements Fetcher
     }
 
     /**
-     * @return string $cache - one of {@link FetchCache::CACHE_KEY}
+     * @return string $cache - one of {@link FetcherCache::CACHE_KEY}
      * @throws ExceptionNotFound
      */
     public function getRequestedCache(): string
@@ -188,7 +188,7 @@ abstract class FetcherAbs implements Fetcher
         /**
          * Cache transformation
          * From Image cache value (https://www.dokuwiki.org/images#caching)
-         * to {@link FetchCache::setMaxAgeInSec()}
+         * to {@link FetcherCache::setMaxAgeInSec()}
          */
         switch ($requestedCache) {
             case "nocache":
@@ -204,7 +204,7 @@ abstract class FetcherAbs implements Fetcher
     /**
      * Get cache age from cache property
      *
-     * to {@link FetchCache::setMaxAgeInSec()}
+     * to {@link FetcherCache::setMaxAgeInSec()}
      */
     public function getCacheMaxAgeInSec(string $cacheValue): int
     {

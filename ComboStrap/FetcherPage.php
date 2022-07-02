@@ -6,11 +6,12 @@ namespace ComboStrap;
 use Exception;
 use syntax_plugin_combo_container;
 
-class Layout
+class FetcherPage extends FetcherAbs implements FetcherSource
 {
 
 
-    const CANONICAL = "layout";
+    const CANONICAL = "page";
+
     const PAGE_CORE_AREA = "page-core";
     const PAGE_SIDE_AREA = "page-side";
     const PAGE_HEADER_AREA = "page-header";
@@ -37,9 +38,9 @@ class Layout
      */
     private array $layoutAreas = [];
 
-    public static function create(): Layout
+    public static function create(): FetcherPage
     {
-        $layout = new Layout();
+        $layout = new FetcherPage();
         $layout->getOrCreateArea(self::PAGE_HEADER_AREA)
             ->setSlotName(Site::getPageHeaderSlotName());
         $layout->getOrCreateArea(self::PAGE_FOOTER_AREA)
@@ -74,9 +75,18 @@ class Layout
      * @throws ExceptionNotFound - if the layout resources were not found
      * @throws ExceptionBadSyntax - if the template xhtml is not valid
      */
-    public function getHtmlPage(): string
+    public function getFetchPath(): LocalPath
     {
-        $requestedPage = PageFragment::createFromRequestedPage();
+
+        $cache = FetcherCache::createFrom($this)
+            ->addFileDependency($this->getOriginalPath());
+
+        if ($cache->isCacheUsable()) {
+            return $cache->getFile();
+        }
+
+
+        $requestedPage = PageFragment::createPageFromPathObject($this->getOriginalPath());
 
         global $ACT;
         switch ($ACT) {
@@ -133,18 +143,29 @@ class Layout
             // not a problem
         }
 
-        $layoutHtmlFileName = "$layoutName.html";
-        $layoutHtmlPath = $layoutDirectory->resolve($layoutHtmlFileName);
+        $bodyLayoutHtmlFileName = "$layoutName.html";
+        $bodyLayoutHtmlPath = $layoutDirectory->resolve($bodyLayoutHtmlFileName);
         try {
-            $html = FileSystems::getContent($layoutHtmlPath);
+            $bodyHtmlStringLayout = FileSystems::getContent($bodyLayoutHtmlPath);
         } catch (ExceptionNotFound $e) {
-            throw new ExceptionNotFound("The layout file ($layoutHtmlFileName) does not exist at $layoutHtmlPath", self::CANONICAL);
+            throw new ExceptionNotFound("The layout file ($bodyLayoutHtmlFileName) does not exist at $bodyLayoutHtmlPath", self::CANONICAL);
         }
         try {
-            $htmlDocument = XmlDocument::createHtmlDocFromMarkup("<div>$html</div>");
+            $htmlBodyDocument = XmlDocument::createHtmlDocFromMarkup("<body>$bodyHtmlStringLayout</body>");
         } catch (ExceptionBadSyntax $e) {
-            throw new ExceptionBadSyntax("The html template file ($layoutHtmlFileName) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
+            throw new ExceptionBadSyntax("The html template file ($bodyLayoutHtmlFileName) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
         }
+
+        /**
+         * Body
+         * {@link tpl_classes} will add the dokuwiki class.
+         * See https://www.dokuwiki.org/devel:templates#dokuwiki_class
+         * dokuwiki__top ID is needed for the "Back to top" utility
+         * used also by some plugins
+         */
+        $tplClasses = tpl_classes();
+        $bodyPositionRelativeClass = "position-relative"; // for absolutely positioning at the left corner of the viewport (message, tool, ...)
+        $htmlBodyDocument->querySelector("body")->addClass("$tplClasses {$bodyPositionRelativeClass}");
 
         /**
          * Area
@@ -173,7 +194,7 @@ class Layout
              * we don't show it
              */
             try {
-                $areaDomElement = $htmlDocument->querySelector("#$areaName");
+                $areaDomElement = $htmlBodyDocument->querySelector("#$areaName");
             } catch (ExceptionBadSyntax $e) {
                 LogUtility::internalError("The selector should not have a bad syntax");
                 continue;
@@ -238,11 +259,43 @@ class Layout
 
         }
 
-        $htmlDocumentString = $htmlDocument->toHtml();
-        return Template::create($htmlDocumentString)->setProperties($htmlOutputByAreaName)->render();
+        $htmlBodyDocumentString = $htmlBodyDocument->toHtml();
+        $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlOutputByAreaName)->render();
 
+
+        $cache->storeCache($finalHtmlBodyString);
+
+        return $cache->getFile();
 
     }
 
+    function getFetchPathAsHtmlString(): string
+    {
+        throw new ExceptionRuntime("to do");
+        //return TplUtility::printMessage();
 
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    function getBuster(): string
+    {
+        return FileSystems::getCacheBuster($this->getOriginalPath());
+    }
+
+    public function getMime(): Mime
+    {
+        return Mime::create(Mime::HTML);
+    }
+
+    public function getFetcherName(): string
+    {
+        return self::CANONICAL;
+    }
+
+    public function getOriginalPath(): WikiPath
+    {
+        return PageFragment::createFromRequestedPage()->getPath();
+    }
 }

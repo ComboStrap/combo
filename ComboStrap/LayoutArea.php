@@ -41,9 +41,9 @@ class LayoutArea
     public static function getSlotNameForArea($area)
     {
         switch ($area) {
-            case Layout::PAGE_HEADER_AREA:
+            case FetcherPage::PAGE_HEADER_AREA:
                 return Site::getPageHeaderSlotName();
-            case Layout::PAGE_FOOTER_AREA:
+            case FetcherPage::PAGE_FOOTER_AREA:
                 return Site::getPageFooterSlotName();
             default:
                 throw new ExceptionBadArgument("The area ($area) is unknown");
@@ -78,7 +78,7 @@ class LayoutArea
     {
         // Main content
         $requestedPage = PageFragment::createFromRequestedPage();
-        if ($this->areaId === Layout::MAIN_CONTENT_AREA) {
+        if ($this->areaId === FetcherPage::MAIN_CONTENT_AREA) {
             return $requestedPage;
         }
         // Slot
@@ -90,7 +90,7 @@ class LayoutArea
              * Default page side is for page that are not in the root
              */
             switch ($this->areaId) {
-                case Layout::PAGE_SIDE_AREA:
+                case FetcherPage::PAGE_SIDE_AREA:
                     try {
                         $requestedPage->getPath()->getParent();
                     } catch (ExceptionNotFound $e) {
@@ -98,12 +98,12 @@ class LayoutArea
                         throw new ExceptionNotFound("No page side for root pages.");
                     }
                     break;
-                case Layout::MAIN_HEADER_AREA:
+                case FetcherPage::MAIN_HEADER_AREA:
                     if ($requestedPage->isRootHomePage()) {
                         throw new ExceptionNotFound("No $this for the home");
                     }
                     break;
-                case Layout::MAIN_FOOTER_AREA:
+                case FetcherPage::MAIN_FOOTER_AREA:
                     throw new ExceptionNotFound("No default for $this");
             }
             $closestPath = self::getDefaultAreaContentPath($this->areaId);
@@ -145,7 +145,7 @@ class LayoutArea
 
         } catch (\Exception $e) {
             if (PluginUtility::isDevOrTest()) {
-                throw new ExceptionRuntime("Error while rendering. Error: {$e->getMessage()}", Layout::CANONICAL, 1, $e);
+                throw new ExceptionRuntime("Error while rendering. Error: {$e->getMessage()}", FetcherPage::CANONICAL, 1, $e);
             }
             return "Rendering the area ($this), returns an error. {$e->getMessage()}";
         }
@@ -154,7 +154,7 @@ class LayoutArea
 
     public function isContainer(): bool
     {
-        return in_array($this->areaId, [Layout::PAGE_CORE_AREA, Layout::PAGE_MAIN_AREA]);
+        return in_array($this->areaId, [FetcherPage::PAGE_CORE_AREA, FetcherPage::PAGE_MAIN_AREA]);
     }
 
     /**

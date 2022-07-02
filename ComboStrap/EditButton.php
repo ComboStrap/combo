@@ -45,6 +45,7 @@ class EditButton
     const DOKUWIKI_FORMAT = "dokuwiki";
     const COMBO_FORMAT = "combo";
     const TAG = "edit-button";
+    const CLASS_SUFFIX = "edit-button";
 
 
     private $label;
@@ -302,7 +303,7 @@ class EditButton
                 $hiddenInputs .= $inputAttributes->toHtmlEmptyTag("input");
             }
             $url = $page->getUrl(PageUrlType::CONF_VALUE_PAGE_PATH);
-            $classPageEdit = StyleUtility::addComboStrapSuffix(self::TAG);
+            $classPageEdit = StyleUtility::addComboStrapSuffix(self::CLASS_SUFFIX);
 
             /**
              * Important Note: the first div and the public class is mandatory for the edittable plugin

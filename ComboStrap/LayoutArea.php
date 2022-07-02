@@ -140,13 +140,8 @@ class LayoutArea
             } catch (ExceptionNotFound $e) {
                 return "";
             }
-            $html = $page->toXhtml();
-            if ($page->getPath()->getDrive() !== WikiPath::PAGE_DRIVE) {
-                // case when this is a default page in the resource directory
-                return EditButton::deleteAll($html);
-            } else {
-                return EditButton::replaceOrDeleteAll($html);
-            }
+            return $page->toXhtml();
+
 
         } catch (\Exception $e) {
             if (PluginUtility::isDevOrTest()) {

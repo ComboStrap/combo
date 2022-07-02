@@ -169,10 +169,13 @@ class DatabasePageRow
     public static function createFromPageId(string $pageId): DatabasePageRow
     {
         $databasePage = new DatabasePageRow();
-        $row = $databasePage->getDatabaseRowFromPageId($pageId);
-        if ($row != null) {
+        try {
+            $row = $databasePage->getDatabaseRowFromPageId($pageId);
             $databasePage->setRow($row);
+        } catch (ExceptionNotFound|ExceptionSqliteNotAvailable $e) {
+            // not found
         }
+
         return $databasePage;
     }
 

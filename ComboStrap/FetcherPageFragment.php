@@ -19,7 +19,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     const INSTRUCTION_EXTENSION = "i";
     const MAX_CACHE_AGE = 999999;
 
-    const CANONICAL = "page";
+    const CANONICAL = "page-fragment-fetcher";
 
     /**
      * @var CacheRenderer cache file
@@ -268,7 +268,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     }
 
     /**
-     * @throws ExceptionNotFound
+     *
      */
     function getFetchPath(): Path
     {
@@ -682,6 +682,47 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         if ($this->objectHasBeenBuild) {
             LogUtility::internalError("You can't set when the object has been build");
         }
+    }
+
+
+    /**
+     * @return string - with replacement if any
+     * TODO: edit button replacement could be a script tag with a json, permits to do DOM manipulation
+     */
+    public function getFetchPathAsHtmlString(): string
+    {
+        $path = $this->getFetchPath();
+        try {
+            $text = FileSystems::getContent($path);
+        } catch (ExceptionNotFound $e) {
+            throw new RuntimeException("Internal error: The fetch path should exists.", self::CANONICAL, 1, $e);
+        }
+        if (!in_array($this->getMime()->getExtension(), ["html", "xhtml"])) {
+            return $text;
+        }
+        if ($this->getOriginalPath()->getDrive() !== WikiPath::PAGE_DRIVE) {
+            // case when this is a default page in the resource directory
+            return EditButton::deleteAll($text);
+        } else {
+            return EditButton::replaceOrDeleteAll($text);
+        }
+
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    public function getFetchPathAsHtmlDom(): XmlDocument
+    {
+        return XmlDocument::createHtmlDocFromMarkup($this->getFetchPathAsHtmlString());
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    public function getFetchPathAsXHtmlDom(): XmlDocument
+    {
+        return XmlDocument::createXmlDocFromMarkup($this->getFetchPathAsHtmlString());
     }
 
 }

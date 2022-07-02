@@ -136,7 +136,7 @@ class PageFragment extends ResourceComboAbs
     /**
      * @var PageFragment
      */
-    private $htmlDocument;
+    private $fetcherPageFragment;
 
     private ?FetcherPageFragment $instructionsDocument;
 
@@ -396,7 +396,7 @@ class PageFragment extends ResourceComboAbs
         $this->readStore = null;
         $this->buildPropertiesFromFileSystem();
         $this->databasePage = null;
-        $this->htmlDocument = null;
+        $this->fetcherPageFragment = null;
         $this->instructionsDocument = null;
         return $this;
     }
@@ -436,11 +436,11 @@ class PageFragment extends ResourceComboAbs
     function getHtmlFetcher(): FetcherPageFragment
     {
 
-        if ($this->htmlDocument === null) {
-            $this->htmlDocument = FetcherPageFragment::createPageFragmentFetcherFromObject($this)
+        if ($this->fetcherPageFragment === null) {
+            $this->fetcherPageFragment = FetcherPageFragment::createPageFragmentFetcherFromObject($this)
                 ->setRequestedMimeToXhtml();
         }
-        return $this->htmlDocument;
+        return $this->fetcherPageFragment;
 
     }
 
@@ -974,18 +974,12 @@ class PageFragment extends ResourceComboAbs
 
     /**
      *
-     * @throws ExceptionNotFound
+     * @deprecated use a {@link FetcherPageFragment::getFetchPathAsHtmlString()} instead
      */
-    public
-    function toXhtml(): string
+    public function toXhtml(): string
     {
 
-        $path = $this->getHtmlFetcher()->getFetchPath();
-        try {
-            return FileSystems::getContent($path);
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionNotFound("Internal Error: The html file for the markup fragment ($this) was not found at the path ($path)");
-        }
+        return $this->getHtmlFetcher()->getFetchPathAsHtmlString();
 
     }
 

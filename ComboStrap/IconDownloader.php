@@ -107,6 +107,7 @@ class IconDownloader
         self::AKAR_ICONS => "https://akaricons.com/",
         self::ARCTICONS => "https://arcticons.com/",
         self::HEALTH_ICONS => "https://healthicons.org/",
+        self::MATERIAL_DESIGN_ACRONYM => "https://materialdesignicons.com/",
         self::COMBO => ""
     );
 
@@ -455,13 +456,30 @@ class IconDownloader
 
         /**
          * Download the icon
+         * The `@` delete the E_WARNING upon failure
+         *
+         * https://www.php.net/manual/en/function.fopen.php
          */
         $downloadUrl = $this->getDownloadUrl();
-        $filePointer = fopen($downloadUrl, 'r');
-        if ($filePointer === false) {
+        ErrorHandler::phpErrorAsException();
+        try {
+            $filePointer = fopen($downloadUrl, 'r');
+        } catch (ExceptionPhpError $e) {
             // (ie no icon file found at ($downloadUrl)
-            $urlLibrary = self::ICON_LIBRARY_WEBSITE_URLS[$library];
-            throw new ExceptionCompile("The library (<a href=\"$urlLibrary\">$library</a>) does not have a icon (<a href=\"$downloadUrl\">$this->iconName</a>).", Icon::ICON_CANONICAL_NAME);
+            $message = "We couldn't find the <a href=\"$downloadUrl\">icon $this->iconName</a>) from the";
+            try {
+                $urlLibrary = $this->getLibraryUrl();
+                $message = "$message <a href=\"$urlLibrary\">library $library</a>";
+            } catch (ExceptionNotFound $e) {
+                if (PluginUtility::isDevOrTest()) {
+                    throw $e;
+                }
+                $message = "$message library $library";
+            }
+            $message = "$message. Error: {$e->getMessage()}";
+            throw new ExceptionCompile($message, Icon::ICON_CANONICAL_NAME);
+        } finally {
+            ErrorHandler::restore();
         }
 
         $numberOfByte = file_put_contents($mediaDokuPath->toLocalPath()->toAbsolutePath()->toPathString(), $filePointer);
@@ -582,6 +600,19 @@ class IconDownloader
     public function getPath(): WikiPath
     {
         return $this->path;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getLibraryUrl()
+    {
+        $library = $this->getLibrary();
+        $libraryUrl = @self::ICON_LIBRARY_WEBSITE_URLS[$library];
+        if ($libraryUrl === null) {
+            throw new ExceptionNotFound("The url for the library ($library) was not found");
+        }
+        return $libraryUrl;
     }
 
 

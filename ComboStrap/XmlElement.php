@@ -249,8 +249,8 @@ class XmlElement
         return $this->getAttribute("id");
     }
 
-    public function hasChildren(): bool
+    public function hasChildrenElement(): bool
     {
-        return $this->element->childElementCount !== 0;
+        return sizeof($this->getChildrenElement()) !== 0;
     }
 }

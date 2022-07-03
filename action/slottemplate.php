@@ -5,7 +5,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\FetcherPage;
-use ComboStrap\FetcherPageLayoutElement;
+use ComboStrap\PageElement;
 use ComboStrap\LogUtility;
 use ComboStrap\PageFragment;
 use ComboStrap\Site;
@@ -36,7 +36,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
         try {
             $pageHeaderSlotName = Site::getPageHeaderSlotName();
             if ($page->getPath()->toPathString() === ":$pageHeaderSlotName") {
-                $pageHeaderPath = FetcherPageLayoutElement::getDefaultAreaContentPath(FetcherPage::PAGE_HEADER_AREA);
+                $pageHeaderPath = PageElement::getDefaultAreaContentPath(FetcherPage::PAGE_HEADER_AREA);
                 try {
                     $event->data["tpl"] = FileSystems::getContent($pageHeaderPath);
                     $event->data["doreplace"] = false;
@@ -56,7 +56,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
         try {
             $pageFooterSlotName = Site::getPageFooterSlotName();
             if ($page->getPath()->toPathString() === ":$pageFooterSlotName") {
-                $pageFooterPath = FetcherPageLayoutElement::getDefaultAreaContentPath(FetcherPage::PAGE_FOOTER_AREA);
+                $pageFooterPath = PageElement::getDefaultAreaContentPath(FetcherPage::PAGE_FOOTER_AREA);
                 try {
                     $event->data["tpl"] = FileSystems::getContent($pageFooterPath);
                     $event->data["doreplace"] = false;

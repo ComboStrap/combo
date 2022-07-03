@@ -43,8 +43,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     }
 
     /**
-     * @throws ExceptionNotFound - if the layout resources were not found
-     * @throws ExceptionBadSyntax - if the template xhtml is not valid
+     *
      */
     public function getFetchPath(): LocalPath
     {
@@ -150,29 +149,25 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          */
         $tplClasses = tpl_classes();
         $bodyPositionRelativeClass = "position-relative"; // for absolutely positioning at the left corner of the viewport (message, tool, ...)
-        $htmlBodyDomElement->querySelector("body")->addClass("$tplClasses {$bodyPositionRelativeClass}");
+        try {
+            $htmlBodyDomElement->querySelector("body")->addClass("$tplClasses {$bodyPositionRelativeClass}");
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("The template ($bodyLayoutHtmlPath) does not have a body element");
+        }
 
 
         /**
          * Area
          */
-        try {
-            $jsonString = FileSystems::getContent($layoutJsonPath);
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionNotFound("The layout file ($layoutName) does not exist at $layoutJsonPath", self::CANONICAL, 1, $e);
-        }
-        try {
-            $json = Json::createFromString($jsonString);
-        } catch (ExceptionBadSyntax $e) {
-            throw new ExceptionBadSyntax("The layout file ($layoutJsonPath) could not be loaded as json. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
-        }
-        $jsonArray = $json->toArray();
+        $jsonConfigurations = $this->getJsonConfigurations($layoutJsonPath);
 
         $htmlOutputByAreaName = [];
         foreach ($pageAreas as $pageLayoutElement) {
 
+            $areaDomElement = $pageLayoutElement->getDomElement();
+
             $areaName = $pageLayoutElement->getId();
-            $attributes = $jsonArray[$areaName];
+            $attributes = $jsonConfigurations[$areaName];
             $jsonConfiguration = TagAttributes::createFromCallStackArray($attributes);
 
             // Container
@@ -183,7 +178,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                 $container = $jsonConfiguration->getValueAndRemoveIfPresent("container", true);
                 if ($container) {
                     $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
-                    $jsonConfiguration->addClassName(syntax_plugin_combo_container::getClassName($container));
+                    $areaDomElement->addClass(syntax_plugin_combo_container::getClassName($container));
                 }
             }
 
@@ -193,7 +188,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             // relative
             // Relative positioning is important for the positioning of the pagetools (page-core),
             // edit button, ...
-            $areaDomElement = $pageLayoutElement->getDomElement()->addClass("position-relative");
+            $areaDomElement->addClass("position-relative");
             switch ($areaName) {
                 case self::PAGE_FOOTER_AREA:
                 case self::PAGE_HEADER_AREA:
@@ -224,7 +219,9 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             try {
                 $wikiPath = $pageLayoutElement->getFragmentPath();
             } catch (ExceptionNotFound $e) {
-                LogUtility::internalError("The element ($pageLayoutElement) does not have any markup fragment. It should not be thrown as a page element should not have been created");
+                // no fragment (page side for instance)
+                // remove or empty ?
+                $areaDomElement->remove();
                 continue;
             }
             $htmlOutputByAreaName[$layoutVariable] = FetcherPageFragment::createPageFragmentFetcherFromPath($wikiPath)
@@ -235,6 +232,10 @@ class FetcherPage extends FetcherAbs implements FetcherSource
              */
             $areaDomElement->appendTextNode('$' . $layoutVariable);
 
+        }
+
+        if (sizeof($htmlOutputByAreaName) === 0) {
+            LogUtility::internalError("No slot was rendered");
         }
 
         $htmlBodyDocumentString = $htmlBodyDomElement->toHtml();
@@ -304,7 +305,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     /**
      * @param XmlDocument $htmlBodyDomElement
-     * @return FetcherPageLayoutElement[]
+     * @return PageElement[]
      */
     private function buildAndGetAreas(XmlDocument $htmlBodyDomElement): array
     {
@@ -324,7 +325,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                 continue;
             }
 
-            $areas[] = new FetcherPageLayoutElement($domElement, $this);
+            $areas[] = new PageElement($domElement, $this);
 
         }
         return $areas;
@@ -334,6 +335,22 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     public function getRequestedPath(): WikiPath
     {
         return $this->getOriginalPath();
+    }
+
+    private function getJsonConfigurations($layoutJsonPath): array
+    {
+        try {
+            $jsonString = FileSystems::getContent($layoutJsonPath);
+        } catch (ExceptionNotFound $e) {
+            // The layout file ($layoutJsonPath) does not exist at $layoutJsonPath", self::CANONICAL, 1, $e);
+            return [];
+        }
+        try {
+            $json = Json::createFromString($jsonString);
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionRuntimeInternal("The layout file ($layoutJsonPath) could not be loaded as json. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+        }
+        return $json->toArray();
     }
 
 

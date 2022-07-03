@@ -10,11 +10,11 @@ namespace ComboStrap;
  * It wraps a DOM Element with extra properties needed in a page layout.
  *
  * It represents a:
- *   * a {@link FetcherPageLayoutElement::isSlot() slot} with content
- *   * or a {@link FetcherPageLayoutElement::isContainer() container} without content
+ *   * a {@link PageElement::isSlot() slot} with content
+ *   * or a {@link PageElement::isContainer() container} without content
  *
  */
-class FetcherPageLayoutElement
+class PageElement
 {
 
     /**
@@ -69,7 +69,7 @@ class FetcherPageLayoutElement
     }
 
 
-    public function setAttributes(array $attributes): FetcherPageLayoutElement
+    public function setAttributes(array $attributes): PageElement
     {
         $this->attributes = $attributes;
         return $this;
@@ -147,7 +147,7 @@ class FetcherPageLayoutElement
     public
     function isSlot(): bool
     {
-        return !$this->domElement->hasChildren();
+        return !$this->domElement->hasChildrenElement();
     }
 
     /**

@@ -57,6 +57,12 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         return $pageFragment;
     }
 
+    public static function createPageFragmentFetcherFromPath(WikiPath $wikiPath): FetcherPageFragment
+    {
+        $page = PageFragment::createPageFromPathObject($wikiPath);
+        return self::createPageFragmentFetcherFromObject($page);
+    }
+
     function getFetchUrl(Url $url = null): Url
     {
         /**

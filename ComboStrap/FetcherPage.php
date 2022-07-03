@@ -220,7 +220,15 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             }
 
             $layoutVariable = $pageLayoutElement->getVariableName();
-            $htmlOutputByAreaName[$layoutVariable] = $pageLayoutElement->render();
+
+            try {
+                $wikiPath = $pageLayoutElement->getFragmentPath();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("The element ($pageLayoutElement) does not have any markup fragment. It should not be thrown as a page element should not have been created");
+                continue;
+            }
+            $htmlOutputByAreaName[$layoutVariable] = FetcherPageFragment::createPageFragmentFetcherFromPath($wikiPath)
+                ->getFetchPathAsHtmlString();
 
             /**
              * Add the template variable
@@ -232,7 +240,6 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         $htmlBodyDocumentString = $htmlBodyDomElement->toHtml();
         $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlOutputByAreaName)->render();
 
-
         $cache->storeCache($finalHtmlBodyString);
 
         return $cache->getFile();
@@ -241,8 +248,12 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     function getFetchPathAsHtmlString(): string
     {
-        throw new ExceptionRuntime("to do");
-        //return TplUtility::printMessage();
+
+        /**
+         * TODO: add return {@link TplUtility::printMessage()}
+         */
+        return FileSystems::getContent($this->getFetchPath());
+
 
     }
 
@@ -266,11 +277,10 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     /**
      * @throws ExceptionBadSyntax
-     * @throws ExceptionNotFound
      */
     public function getFetchPathAsHtmlDom(): XmlDocument
     {
-        $content = FileSystems::getContent($this->getFetchPath());
+        $content = $this->getFetchPathAsHtmlString();
         return XmlDocument::createXmlDocFromMarkup($content);
     }
 

@@ -75,9 +75,15 @@ class FetcherPageLayoutElement
         return $this;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public function getLastFileNameForSlot()
     {
         $elementId = $this->getId();
+        if (!$this->isSlot()) {
+            throw new ExceptionNotFound("No slot name for container element");
+        }
         switch ($elementId) {
             case FetcherPage::PAGE_HEADER_AREA:
                 return Site::getPageHeaderSlotName();
@@ -99,17 +105,6 @@ class FetcherPageLayoutElement
     }
 
 
-    /**
-     * @throws ExceptionNotFound - if there is no page
-     * @throws ExceptionInternal - if this is an error
-     */
-    public
-    function getPage(): PageFragment
-    {
-
-        return PageFragment::createPageFromPathObject($this->getFragmentPath());
-    }
-
     public
     function __toString()
     {
@@ -129,27 +124,6 @@ class FetcherPageLayoutElement
         return $this->attributes;
     }
 
-
-    public
-    function render()
-    {
-        try {
-            try {
-                $page = $this->getPage();
-            } catch (ExceptionNotFound $e) {
-                return "";
-            }
-            return $page->toXhtml();
-
-
-        } catch (\Exception $e) {
-            if (PluginUtility::isDevOrTest()) {
-                throw new ExceptionRuntime("Error while rendering. Error: {$e->getMessage()}", FetcherPage::CANONICAL, 1, $e);
-            }
-            return "Rendering the area ($this), returns an error. {$e->getMessage()}";
-        }
-
-    }
 
     public
     function isContainer(): bool
@@ -177,10 +151,13 @@ class FetcherPageLayoutElement
     }
 
     /**
-     * @throws ExceptionNotFound - if the area is not a slot
+     * @throws ExceptionNotFound - if the area is not a slot or there is no path found
      */
     public function getFragmentPath()
     {
+        if (!$this->isSlot()) {
+            throw new ExceptionNotFound("No fragment path for container element");
+        }
         // Main content
         $requestedPath = $this->fetcherPage->getRequestedPath();
         if ($this->getId() === FetcherPage::MAIN_CONTENT_AREA) {

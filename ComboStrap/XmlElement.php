@@ -227,7 +227,7 @@ class XmlElement
                     // on the parent node of the reference node
                     // otherwise you get a `not found`
                     // https://www.php.net/manual/en/domnode.insertbefore.php#53506
-                    $firstChild->parentNode->insertBefore($internalElement,$firstChild);
+                    $firstChild->parentNode->insertBefore($internalElement, $firstChild);
                 }
                 return $this;
             case 'beforebegin':
@@ -242,5 +242,15 @@ class XmlElement
     public function getDocumentElement(): XmlElement
     {
         return $this->document->getDocumentElement();
+    }
+
+    public function getId(): string
+    {
+        return $this->getAttribute("id");
+    }
+
+    public function hasChildren(): bool
+    {
+        return $this->element->childElementCount !== 0;
     }
 }

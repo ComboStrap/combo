@@ -34,43 +34,6 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         self::MAIN_FOOTER_AREA,
     ];
 
-    /**
-     * @var LayoutArea[]
-     */
-    private array $layoutAreas = [];
-
-    public static function create(): FetcherPage
-    {
-        $layout = new FetcherPage();
-        $layout->getOrCreateArea(self::PAGE_HEADER_AREA)
-            ->setSlotName(Site::getPageHeaderSlotName());
-        $layout->getOrCreateArea(self::PAGE_FOOTER_AREA)
-            ->setSlotName(Site::getPageFooterSlotName());
-
-        $layout->getOrCreateArea(self::MAIN_CONTENT_AREA);
-        $layout->getOrCreateArea(self::PAGE_SIDE_AREA)
-            ->setSlotName(Site::getSidebarName());
-
-        $layout->getOrCreateArea(self::MAIN_SIDE_AREA)
-            ->setSlotName(Site::getPageSideSlotName());
-        $layout->getOrCreateArea(self::MAIN_HEADER_AREA)
-            ->setSlotName("slot_main_header");
-        $layout->getOrCreateArea(self::MAIN_FOOTER_AREA)
-            ->setSlotName("slot_main_footer");
-
-        return $layout;
-
-    }
-
-    public function getOrCreateArea($areaIdentifier): LayoutArea
-    {
-        $layoutArea = $this->layoutAreas[$areaIdentifier];
-        if ($layoutArea === null) {
-            $layoutArea = new LayoutArea($areaIdentifier);
-            $this->layoutAreas[$areaIdentifier] = $layoutArea;
-        }
-        return $layoutArea;
-    }
 
     public static function createPageFetcherFromObject(PageFragment $param): FetcherPage
     {
@@ -103,14 +66,26 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         $layoutJsonPath = $layoutDirectory->resolve("$layoutName.json");
 
         $cache = FetcherCache::createFrom($this)
-            ->addFileDependency($this->getOriginalPath())
             ->addFileDependency($layoutCssPath)
             ->addFileDependency($layoutJsPath)
             ->addFileDependency($bodyLayoutHtmlPath)
             ->addFileDependency($layoutJsonPath);
 
-        $htmlBodyDocument = $this->loadHtmlTemplate($bodyLayoutHtmlPath);
+        $htmlBodyDomElement = $this->htmlTemplatePathToHtmlDom($bodyLayoutHtmlPath);
 
+        $pageAreas = $this->buildAndGetAreas($htmlBodyDomElement);
+        foreach ($pageAreas as $pageArea) {
+            try {
+                $path = $pageArea->getFragmentPath();
+                $cache->addFileDependency($path);
+            } catch (ExceptionNotFound $e) {
+                // no area path to render found
+            }
+        }
+
+        /**
+         * Do we create the page or return
+         */
         if ($cache->isCacheUsable()) {
             return $cache->getFile();
         }
@@ -151,7 +126,6 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          * Css and Js
          */
         $snippetManager = PluginUtility::getSnippetManager();
-
         try {
             $content = FileSystems::getContent($layoutCssPath);
             $snippetManager->attachCssInternalStylesheetForRequest(self::CANONICAL, $content);
@@ -176,7 +150,8 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          */
         $tplClasses = tpl_classes();
         $bodyPositionRelativeClass = "position-relative"; // for absolutely positioning at the left corner of the viewport (message, tool, ...)
-        $htmlBodyDocument->querySelector("body")->addClass("$tplClasses {$bodyPositionRelativeClass}");
+        $htmlBodyDomElement->querySelector("body")->addClass("$tplClasses {$bodyPositionRelativeClass}");
+
 
         /**
          * Area
@@ -194,23 +169,11 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         $jsonArray = $json->toArray();
 
         $htmlOutputByAreaName = [];
-        foreach (self::AREAS as $areaName) {
+        foreach ($pageAreas as $pageLayoutElement) {
 
+            $areaName = $pageLayoutElement->getId();
             $attributes = $jsonArray[$areaName];
             $jsonConfiguration = TagAttributes::createFromCallStackArray($attributes);
-
-            /**
-             * If the id is not in the html template
-             * we don't show it
-             */
-            try {
-                $areaDomElement = $htmlBodyDocument->querySelector("#$areaName");
-            } catch (ExceptionBadSyntax $e) {
-                LogUtility::internalError("The selector should not have a bad syntax");
-                continue;
-            } catch (ExceptionNotFound $e) {
-                continue;
-            }
 
             // Container
             if ($areaName === self::PAGE_CORE_AREA) {
@@ -230,7 +193,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             // relative
             // Relative positioning is important for the positioning of the pagetools (page-core),
             // edit button, ...
-            $areaDomElement->addClass("position-relative");
+            $areaDomElement = $pageLayoutElement->getDomElement()->addClass("position-relative");
             switch ($areaName) {
                 case self::PAGE_FOOTER_AREA:
                 case self::PAGE_HEADER_AREA:
@@ -251,15 +214,13 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             /**
              * Rendering
              */
-            $layoutArea = $this->getOrCreateArea($areaName);
-            if ($layoutArea->isContainer()) {
-                // no rendering for container area
-                // this is a parent
+            if (!$pageLayoutElement->isSlot()) {
+                // no rendering for container area, this is a parent
                 continue;
             }
 
-            $layoutVariable = $layoutArea->getVariableName();
-            $htmlOutputByAreaName[$layoutVariable] = $layoutArea->render();
+            $layoutVariable = $pageLayoutElement->getVariableName();
+            $htmlOutputByAreaName[$layoutVariable] = $pageLayoutElement->render();
 
             /**
              * Add the template variable
@@ -268,7 +229,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
         }
 
-        $htmlBodyDocumentString = $htmlBodyDocument->toHtml();
+        $htmlBodyDocumentString = $htmlBodyDomElement->toHtml();
         $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlOutputByAreaName)->render();
 
 
@@ -317,7 +278,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
      */
-    private function loadHtmlTemplate(WikiPath $layoutHtmlPath): XmlDocument
+    private function htmlTemplatePathToHtmlDom(WikiPath $layoutHtmlPath): XmlDocument
     {
         try {
             $bodyHtmlStringLayout = FileSystems::getContent($layoutHtmlPath);
@@ -329,6 +290,40 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         } catch (ExceptionBadSyntax $e) {
             throw new ExceptionBadSyntax("The html template file ($layoutHtmlPath) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
         }
+    }
+
+    /**
+     * @param XmlDocument $htmlBodyDomElement
+     * @return FetcherPageLayoutElement[]
+     */
+    private function buildAndGetAreas(XmlDocument $htmlBodyDomElement): array
+    {
+
+        $areas = [];
+        foreach (self::AREAS as $areaName) {
+
+            /**
+             * If the id is not in the html template we don't show it
+             */
+            try {
+                $domElement = $htmlBodyDomElement->querySelector("#$areaName");
+            } catch (ExceptionBadSyntax $e) {
+                LogUtility::internalError("The selector should not have a bad syntax");
+                continue;
+            } catch (ExceptionNotFound $e) {
+                continue;
+            }
+
+            $areas[] = new FetcherPageLayoutElement($domElement, $this);
+
+        }
+        return $areas;
+
+    }
+
+    public function getRequestedPath(): WikiPath
+    {
+        return $this->getOriginalPath();
     }
 
 

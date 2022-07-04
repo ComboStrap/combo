@@ -2059,6 +2059,11 @@ class PageFragment extends ResourceComboAbs
         return FetcherPage::createPageFetcherFromObject($this);
     }
 
+    public function getHtmlResponseviaTemplate(): HttpResponse
+    {
+        return HttpRequest::fetchXhtmlPageFragmentResponse($this->getWikiId());
+    }
+
     private function getPrimaryFooterPage(): ?PageFragment
     {
         $nearest = page_findnearest(Site::getPrimaryFooterSlotName());

@@ -33,6 +33,30 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         self::MAIN_SIDE_AREA,
         self::MAIN_FOOTER_AREA,
     ];
+    private string $requestedLayout;
+
+    /**
+     * @param Url|null $url
+     * @return Url
+     *
+     * Note: The fetch url is the {@link FetcherCache keyCache}
+     */
+    function getFetchUrl(Url $url = null): Url
+    {
+        /**
+         * Overwrite default fetcher endpoint
+         * that is {@link UrlEndpoint::createFetchUrl()}
+         */
+        $url = UrlEndpoint::createDokuUrl();
+        $url = parent::getFetchUrl($url);
+        try {
+            $url->addQueryParameter(PageLayout::PROPERTY_NAME, $this->getRequestedLayout());
+        } catch (ExceptionNotFound $e) {
+            // no requested layout
+        }
+        $this->addLocalPathParametersToFetchUrl($url, DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);;
+        return $url;
+    }
 
 
     public static function createPageFetcherFromObject(PageFragment $param): FetcherPage
@@ -57,7 +81,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
         $layoutDirectory = WikiPath::createWikiPath(":layout:$layoutName:", WikiPath::COMBO_DRIVE);
         if (!FileSystems::exists($layoutDirectory)) {
-            throw new ExceptionNotFound("The layout directory ($layoutName) does not exist at $layoutDirectory", self::CANONICAL);
+            throw new ExceptionRuntimeInternal("The layout directory ($layoutName) does not exist at $layoutDirectory", self::CANONICAL);
         }
         $layoutCssPath = $layoutDirectory->resolve("$layoutName.css");
         $layoutJsPath = $layoutDirectory->resolve("$layoutName.js");
@@ -70,10 +94,16 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             ->addFileDependency($bodyLayoutHtmlPath)
             ->addFileDependency($layoutJsonPath);
 
-        $htmlBodyDomElement = $this->htmlTemplatePathToHtmlDom($bodyLayoutHtmlPath);
+        try {
+            $htmlBodyDomElement = $this->htmlTemplatePathToHtmlDom($bodyLayoutHtmlPath);
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionRuntimeInternal("The Html template layout ($bodyLayoutHtmlPath) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("The Html template layout ($bodyLayoutHtmlPath) does not exists", self::CANONICAL);
+        }
 
-        $pageAreas = $this->buildAndGetAreas($htmlBodyDomElement);
-        foreach ($pageAreas as $pageArea) {
+        $pageElements = $this->buildAndGetPageElements($htmlBodyDomElement);
+        foreach ($pageElements as $pageArea) {
             try {
                 $path = $pageArea->getFragmentPath();
                 $cache->addFileDependency($path);
@@ -83,166 +113,142 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         }
 
         /**
-         * Do we create the page or return
+         * Do we create the page or return the cache
          */
         if ($cache->isCacheUsable()) {
             return $cache->getFile();
         }
 
-
-        global $ACT;
-        switch ($ACT) {
-            case "preview": // edit preview
-            case "edit": // edit
-            case "admin": // admin page
-            case "media": // media manager
-                /**
-                 * Note: the secondary slot will not render because the act is not show
-                 * This is for now not used by strap
-                 */
-                $layoutName = "hamburger";
-                break;
-            case "show":
-                $layoutName = PageLayout::createFromPage($requestedPage)
-                    ->getValueOrDefault();
-                break;
-            default:
-            case "login": // login
-            case "resendpwd": // passwd resend
-            case "register": // register form
-            case "profile": // profile form
-            case "search": // search
-            case "recent": // the revisions for the website
-            case "index": // the website index
-            case "diff": // diff between revisions
-            case "revisions": // Known as old revisions (old version of the page)
-                $layoutName = "median";
-                break;
-        }
-
-
         /**
-         * Css and Js
+         * Request environment variable
          */
-        $snippetManager = PluginUtility::getSnippetManager();
-        try {
-            $content = FileSystems::getContent($layoutCssPath);
-            $snippetManager->attachCssInternalStylesheetForRequest(self::CANONICAL, $content);
-        } catch (ExceptionNotFound $e) {
-            // not a problem
-        }
+        $wikiRequest = WikiRequest::create()
+            ->setNewAct("show")
+            ->setNewRequestedId($this->getRequestedPath()->getWikiId());
 
         try {
-            $content = FileSystems::getContent($layoutJsPath);
-            $snippetManager->attachJavascriptInternalForRequest(self::CANONICAL, $content);
-        } catch (ExceptionNotFound $e) {
-            // not a problem
-        }
 
-
-        /**
-         * Body
-         * {@link tpl_classes} will add the dokuwiki class.
-         * See https://www.dokuwiki.org/devel:templates#dokuwiki_class
-         * dokuwiki__top ID is needed for the "Back to top" utility
-         * used also by some plugins
-         */
-        $tplClasses = tpl_classes();
-        $bodyPositionRelativeClass = "position-relative"; // for absolutely positioning at the left corner of the viewport (message, tool, ...)
-        try {
-            $htmlBodyDomElement->querySelector("body")->addClass("$tplClasses {$bodyPositionRelativeClass}");
-        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-            throw new ExceptionRuntimeInternal("The template ($bodyLayoutHtmlPath) does not have a body element");
-        }
-
-
-        /**
-         * Area
-         */
-        $jsonConfigurations = $this->getJsonConfigurations($layoutJsonPath);
-
-        $htmlOutputByAreaName = [];
-        foreach ($pageAreas as $pageLayoutElement) {
-
-            $areaDomElement = $pageLayoutElement->getDomElement();
-
-            $areaName = $pageLayoutElement->getId();
-            $attributes = $jsonConfigurations[$areaName];
-            $jsonConfiguration = TagAttributes::createFromCallStackArray($attributes);
-
-            // Container
-            if ($areaName === self::PAGE_CORE_AREA) {
-                // Page Header and Footer have a bar that permits to set the container
-                // Page core does not have any
-                // It's by default contained for all layout
-                $container = $jsonConfiguration->getValueAndRemoveIfPresent("container", true);
-                if ($container) {
-                    $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
-                    $areaDomElement->addClass(syntax_plugin_combo_container::getClassName($container));
-                }
-            }
+            $layoutName = $this->requestedLayout ?? PageLayout::createFromPage($requestedPage)->getValueOrDefault();
 
             /**
-             * Special Classes and attributes
+             * Css and Js
              */
-            // relative
-            // Relative positioning is important for the positioning of the pagetools (page-core),
-            // edit button, ...
-            $areaDomElement->addClass("position-relative");
-            switch ($areaName) {
-                case self::PAGE_FOOTER_AREA:
-                case self::PAGE_HEADER_AREA:
-                    // no print
-                    $areaDomElement->addClass("d-print-none");
-                    break;
-                case self::PAGE_CORE_AREA:
-                    $areaDomElement->addClass("layout-$layoutName-combo");
-                    break;
-                case self::MAIN_FOOTER_AREA:
-                case self::PAGE_SIDE_AREA:
-                case self::MAIN_SIDE_AREA:
-                    $areaDomElement->setAttribute("role", "complementary");
-                    $areaDomElement->addClass("d-print-none");
-                    break;
+            $snippetManager = PluginUtility::getSnippetManager();
+            try {
+                $content = FileSystems::getContent($layoutCssPath);
+                $snippetManager->attachCssInternalStylesheetForRequest(self::CANONICAL, $content);
+            } catch (ExceptionNotFound $e) {
+                // not a problem
             }
-
-            /**
-             * Rendering
-             */
-            if (!$pageLayoutElement->isSlot()) {
-                // no rendering for container area, this is a parent
-                continue;
-            }
-
-            $layoutVariable = $pageLayoutElement->getVariableName();
 
             try {
-                $wikiPath = $pageLayoutElement->getFragmentPath();
+                $content = FileSystems::getContent($layoutJsPath);
+                $snippetManager->attachJavascriptInternalForRequest(self::CANONICAL, $content);
             } catch (ExceptionNotFound $e) {
-                // no fragment (page side for instance)
-                // remove or empty ?
-                $areaDomElement->remove();
-                continue;
+                // not a problem
             }
-            $htmlOutputByAreaName[$layoutVariable] = FetcherPageFragment::createPageFragmentFetcherFromPath($wikiPath)
-                ->getFetchPathAsHtmlString();
+
 
             /**
-             * Add the template variable
+             * Body
+             * {@link tpl_classes} will add the dokuwiki class.
+             * See https://www.dokuwiki.org/devel:templates#dokuwiki_class
+             * dokuwiki__top ID is needed for the "Back to top" utility
+             * used also by some plugins
              */
-            $areaDomElement->appendTextNode('$' . $layoutVariable);
+            $tplClasses = tpl_classes();
+            $bodyPositionRelativeClass = "position-relative"; // for absolutely positioning at the left corner of the viewport (message, tool, ...)
+            try {
+                $htmlBodyDomElement->querySelector("body")->addClass("$tplClasses {$bodyPositionRelativeClass}");
+            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+                throw new ExceptionRuntimeInternal("The template ($bodyLayoutHtmlPath) does not have a body element");
+            }
+
+
+            $htmlOutputByAreaName = [];
+            foreach ($pageElements as $pageElement) {
+
+                $domElement = $pageElement->getDomElement();
+
+                $pageElementId = $pageElement->getId();
+
+                // Container
+                if ($pageElementId === self::PAGE_CORE_AREA) {
+                    // Page Header and Footer have a bar that permits to set the container
+                    // Page core does not have any
+                    // It's by default contained for all layout
+                    if ($domElement->hasAttribute("data-layout-container")) {
+                        $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                        $domElement->addClass(syntax_plugin_combo_container::getClassName($container));
+                    }
+                }
+
+                /**
+                 * Special Classes and attributes
+                 */
+                // relative
+                // Relative positioning is important for the positioning of the pagetools (page-core),
+                // edit button, ...
+                $domElement->addClass("position-relative");
+                switch ($pageElementId) {
+                    case self::PAGE_FOOTER_AREA:
+                    case self::PAGE_HEADER_AREA:
+                        // no print
+                        $domElement->addClass("d-print-none");
+                        break;
+                    case self::PAGE_CORE_AREA:
+                        $domElement->addClass("layout-$layoutName-combo");
+                        break;
+                    case self::MAIN_FOOTER_AREA:
+                    case self::PAGE_SIDE_AREA:
+                    case self::MAIN_SIDE_AREA:
+                        $domElement->setAttribute("role", "complementary");
+                        $domElement->addClass("d-print-none");
+                        break;
+                }
+
+                /**
+                 * Rendering
+                 */
+                if (!$pageElement->isSlot()) {
+                    // no rendering for container area, this is a parent
+                    continue;
+                }
+
+                $layoutVariable = $pageElement->getVariableName();
+
+                try {
+                    $wikiPath = $pageElement->getFragmentPath();
+                } catch (ExceptionNotFound $e) {
+                    // no fragment (page side for instance)
+                    // remove or empty ?
+                    $domElement->remove();
+                    continue;
+                }
+                $htmlOutputByAreaName[$layoutVariable] = FetcherPageFragment::createPageFragmentFetcherFromPath($wikiPath)
+                    ->getFetchPathAsHtmlString();
+
+                /**
+                 * Add the template variable
+                 */
+                $domElement->appendTextNode('$' . $layoutVariable);
+
+            }
+
+            if (sizeof($htmlOutputByAreaName) === 0) {
+                LogUtility::internalError("No slot was rendered");
+            }
+
+            $htmlBodyDocumentString = $htmlBodyDomElement->toHtml();
+            $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlOutputByAreaName)->render();
+
+            $cache->storeCache($finalHtmlBodyString);
+
+        } finally {
+
+            $wikiRequest->resetEnvironmentToPreviousValues();
 
         }
-
-        if (sizeof($htmlOutputByAreaName) === 0) {
-            LogUtility::internalError("No slot was rendered");
-        }
-
-        $htmlBodyDocumentString = $htmlBodyDomElement->toHtml();
-        $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlOutputByAreaName)->render();
-
-        $cache->storeCache($finalHtmlBodyString);
-
         return $cache->getFile();
 
     }
@@ -307,7 +313,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
      * @param XmlDocument $htmlBodyDomElement
      * @return PageElement[]
      */
-    private function buildAndGetAreas(XmlDocument $htmlBodyDomElement): array
+    private function buildAndGetPageElements(XmlDocument $htmlBodyDomElement): array
     {
 
         $areas = [];
@@ -337,6 +343,12 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         return $this->getOriginalPath();
     }
 
+    public function setRequestedLayout(string $layoutValue): FetcherPage
+    {
+        $this->requestedLayout = $layoutValue;
+        return $this;
+    }
+
     private function getJsonConfigurations($layoutJsonPath): array
     {
         try {
@@ -351,6 +363,17 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             throw new ExceptionRuntimeInternal("The layout file ($layoutJsonPath) could not be loaded as json. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
         }
         return $json->toArray();
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getRequestedLayout(): string
+    {
+        if (!isset($this->requestedLayout)) {
+            throw new ExceptionNotFound("No requested layout");
+        }
+        return $this->requestedLayout;
     }
 
 

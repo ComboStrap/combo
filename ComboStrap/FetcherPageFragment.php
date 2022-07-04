@@ -63,6 +63,13 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         return self::createPageFragmentFetcherFromObject($page);
     }
 
+    /**
+     *
+     * @param Url|null $url
+     * @return Url
+     *
+     * Note: The fetch url is the {@link FetcherCache keyCache}
+     */
     function getFetchUrl(Url $url = null): Url
     {
         /**
@@ -70,8 +77,9 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
          * that is {@link UrlEndpoint::createFetchUrl()}
          */
         $url = UrlEndpoint::createDokuUrl();
-        return parent::getFetchUrl($url)
-            ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->pageFragment->getPath()->getWikiId());
+        $url = parent::getFetchUrl($url);
+        $this->addLocalPathParametersToFetchUrl($url, DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);;
+        return $url;
 
     }
 
@@ -689,6 +697,8 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
             LogUtility::internalError("You can't set when the object has been build");
         }
     }
+
+
 
 
     /**

@@ -80,11 +80,14 @@ trait FetcherTraitLocalPath
      * For dokuwiki implementation, see {@link ml()}
      * We still use the {@link FetcherLocalPath::MEDIA_QUERY_PARAMETER}
      * to be Dokuwiki Compatible even if we can serve from other drive know
+     * @param Url $url
+     * @param string $wikiIdKey - the key used to set the wiki id (ie {@link FetcherTraitLocalPath::$MEDIA_QUERY_PARAMETER}
+     * or {@link DokuWikiId::DOKUWIKI_ID_ATTRIBUTE}
      */
-    public function addLocalPathParametersToFetchUrl(Url $url, string $key): void
+    public function addLocalPathParametersToFetchUrl(Url $url, string $wikiIdKey): void
     {
 
-        $url->addQueryParameterIfNotActualSameValue(self::$MEDIA_QUERY_PARAMETER, $this->path->getWikiId());
+        $url->addQueryParameterIfNotActualSameValue($wikiIdKey, $this->path->getWikiId());
         if ($this->path->getDrive() !== WikiPath::MEDIA_DRIVE) {
             $url->addQueryParameter(WikiPath::DRIVE_ATTRIBUTE, $this->path->getDrive());
         }

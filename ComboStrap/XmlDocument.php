@@ -52,11 +52,11 @@ class XmlDocument
     /**
      * @var DOMDocument
      */
-    private $xmlDom;
+    private DOMDocument $xmlDom;
     /**
      * @var DOMXPath
      */
-    private $domXpath;
+    private DOMXPath $domXpath;
 
     /**
      * XmlFile constructor.
@@ -441,7 +441,7 @@ class XmlDocument
     public
     function xpath($query, DOMElement $contextNode = null): DOMNodeList
     {
-        if ($this->domXpath === null) {
+        if (!isset($this->domXpath)) {
             $this->domXpath = new DOMXPath($this->getXmlDom());
 
             /**

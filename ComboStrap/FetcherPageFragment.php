@@ -699,8 +699,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     }
 
 
-
-
     /**
      * @return string - with replacement if any
      * TODO: edit button replacement could be a script tag with a json, permits to do DOM manipulation
@@ -739,6 +737,18 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     public function getFetchPathAsXHtmlDom(): XmlDocument
     {
         return XmlDocument::createXmlDocFromMarkup($this->getFetchPathAsHtmlString());
+    }
+
+    /**
+     * The page context in which this fragment was requested
+     * @param WikiPath $wikiPath
+     * @return $this
+     */
+    public function setRequestedPagePath(WikiPath $wikiPath): FetcherPageFragment
+    {
+        $page = PageFragment::createPageFromPathObject($wikiPath);
+        $this->setRequestedPage($page);
+        return $this;
     }
 
 }

@@ -186,12 +186,10 @@ class PageElement
                         throw new ExceptionNotFound("No $this for the home");
                     }
                     break;
-                case FetcherPage::MAIN_FOOTER_AREA:
-                    throw new ExceptionNotFound("No default for $this");
             }
             $closestPath = self::getDefaultAreaContentPath($this->getId());
             if (!FileSystems::exists($closestPath)) {
-                throw new ExceptionRuntimeInternal("The default slot page for the area ($this) does not exist at ($closestPath)");
+                throw new ExceptionNotFound("The default slot page for the area ($this) does not exist at ($closestPath)");
             }
             return $closestPath;
         }

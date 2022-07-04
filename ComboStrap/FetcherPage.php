@@ -33,6 +33,8 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         self::MAIN_SIDE_AREA,
         self::MAIN_FOOTER_AREA,
     ];
+    const DATA_LAYOUT_CONTAINER_ATTRIBUTE = "data-layout-container";
+    const DATA_EMPTY_ACTION_ATTRIBUTE = "data-empty-action";
     private string $requestedLayout;
 
     /**
@@ -95,14 +97,14 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             ->addFileDependency($layoutJsonPath);
 
         try {
-            $htmlBodyDomElement = $this->htmlTemplatePathToHtmlDom($bodyLayoutHtmlPath);
+            $domDocument = $this->htmlTemplatePathToHtmlDom($bodyLayoutHtmlPath);
         } catch (ExceptionBadSyntax $e) {
             throw new ExceptionRuntimeInternal("The Html template layout ($bodyLayoutHtmlPath) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntimeInternal("The Html template layout ($bodyLayoutHtmlPath) does not exists", self::CANONICAL);
         }
 
-        $pageElements = $this->buildAndGetPageElements($htmlBodyDomElement);
+        $pageElements = $this->buildAndGetPageElements($domDocument);
         foreach ($pageElements as $pageArea) {
             try {
                 $path = $pageArea->getFragmentPath();
@@ -157,9 +159,13 @@ class FetcherPage extends FetcherAbs implements FetcherSource
              * used also by some plugins
              */
             $tplClasses = tpl_classes();
-            $bodyPositionRelativeClass = "position-relative"; // for absolutely positioning at the left corner of the viewport (message, tool, ...)
+            $positionRelativeClass = "position-relative"; // for absolutely positioning at the left corner of the viewport (message, tool, ...)
             try {
-                $htmlBodyDomElement->querySelector("body")->addClass("$tplClasses {$bodyPositionRelativeClass}");
+                $layoutClass = StyleUtility::addComboStrapSuffix("layout-$layoutName");
+                $domDocument->querySelector("body")
+                    ->addClass($tplClasses)
+                    ->addClass($positionRelativeClass)
+                    ->addClass($layoutClass);
             } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
                 throw new ExceptionRuntimeInternal("The template ($bodyLayoutHtmlPath) does not have a body element");
             }
@@ -170,42 +176,29 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
                 $domElement = $pageElement->getDomElement();
 
-                $pageElementId = $pageElement->getId();
-
-                // Container
-                if ($pageElementId === self::PAGE_CORE_AREA) {
-                    // Page Header and Footer have a bar that permits to set the container
-                    // Page core does not have any
-                    // It's by default contained for all layout
-                    if ($domElement->hasAttribute("data-layout-container")) {
-                        $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
-                        $domElement->addClass(syntax_plugin_combo_container::getClassName($container));
-                    }
+                /**
+                 * Layout Container
+                 * Page Header and Footer have a bar that permits to set the layout container value
+                 *
+                 * The page core does not have any
+                 * It's by default contained for all layout
+                 * generally applied on the page-core element ie
+                 * <div id="page-core" data-layout-container=>
+                 */
+                if ($domElement->hasAttribute(self::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
+                    $domElement->removeAttribute(self::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
+                    $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                    $domElement->addClass(syntax_plugin_combo_container::getClassName($container));
                 }
+
 
                 /**
                  * Special Classes and attributes
+                 *
+                 *  Relative positioning is important for the positioning of the pagetools (page-core),
+                 *  edit button, ...
                  */
-                // relative
-                // Relative positioning is important for the positioning of the pagetools (page-core),
-                // edit button, ...
-                $domElement->addClass("position-relative");
-                switch ($pageElementId) {
-                    case self::PAGE_FOOTER_AREA:
-                    case self::PAGE_HEADER_AREA:
-                        // no print
-                        $domElement->addClass("d-print-none");
-                        break;
-                    case self::PAGE_CORE_AREA:
-                        $domElement->addClass("layout-$layoutName-combo");
-                        break;
-                    case self::MAIN_FOOTER_AREA:
-                    case self::PAGE_SIDE_AREA:
-                    case self::MAIN_SIDE_AREA:
-                        $domElement->setAttribute("role", "complementary");
-                        $domElement->addClass("d-print-none");
-                        break;
-                }
+                $domElement->addClass($positionRelativeClass);
 
                 /**
                  * Rendering
@@ -214,23 +207,39 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                     // no rendering for container area, this is a parent
                     continue;
                 }
-
-                $layoutVariable = $pageElement->getVariableName();
-
                 try {
                     $wikiPath = $pageElement->getFragmentPath();
                 } catch (ExceptionNotFound $e) {
-                    // no fragment (page side for instance)
-                    // remove or empty ?
-                    $domElement->remove();
+                    /**
+                     * no fragment (page side for instance)
+                     * remove or empty ?
+                     *   * remove is the default to not have any empty node but it may break css rules
+                     *   * empty permits not break any css rules (grid may be broken for instance)
+                     */
+                    $action = $domElement->getAttributeOrDefault(self::DATA_EMPTY_ACTION_ATTRIBUTE, "remove");
+                    switch ($action) {
+                        case "remove":
+                            $domElement->remove();
+                            break;
+                        case "none":
+                            // the empty node will stay in the page
+                            break;
+                        default:
+                            LogUtility::internalError("The value ($action) of the attribute (" . self::DATA_EMPTY_ACTION_ATTRIBUTE . ") is unknown", self::CANONICAL);
+                    }
                     continue;
                 }
-                $htmlOutputByAreaName[$layoutVariable] = FetcherPageFragment::createPageFragmentFetcherFromPath($wikiPath)
-                    ->getFetchPathAsHtmlString();
-
                 /**
-                 * Add the template variable
+                 * We don't load / add the HTML string in the actual DOM document
+                 * to no add by-effect, corrections during loading and writing
+                 *
+                 * We add a template variable, we save the HTML in a array
+                 * And replace them after the loop
                  */
+                $layoutVariable = $pageElement->getVariableName();
+                $htmlOutputByAreaName[$layoutVariable] = FetcherPageFragment::createPageFragmentFetcherFromPath($wikiPath)
+                    ->setRequestedPagePath($this->getRequestedPath())
+                    ->getFetchPathAsHtmlString();
                 $domElement->appendTextNode('$' . $layoutVariable);
 
             }
@@ -239,7 +248,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                 LogUtility::internalError("No slot was rendered");
             }
 
-            $htmlBodyDocumentString = $htmlBodyDomElement->toHtml();
+            $htmlBodyDocumentString = $domDocument->toHtml();
             $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlOutputByAreaName)->render();
 
             $cache->storeCache($finalHtmlBodyString);
@@ -298,12 +307,12 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     private function htmlTemplatePathToHtmlDom(WikiPath $layoutHtmlPath): XmlDocument
     {
         try {
-            $bodyHtmlStringLayout = FileSystems::getContent($layoutHtmlPath);
+            $htmlStringLayout = FileSystems::getContent($layoutHtmlPath);
         } catch (ExceptionNotFound $e) {
             throw new ExceptionNotFound("The layout file ($layoutHtmlPath) does not exist at $layoutHtmlPath", self::CANONICAL);
         }
         try {
-            return XmlDocument::createHtmlDocFromMarkup("<body>$bodyHtmlStringLayout</body>");
+            return XmlDocument::createHtmlDocFromMarkup($htmlStringLayout);
         } catch (ExceptionBadSyntax $e) {
             throw new ExceptionBadSyntax("The html template file ($layoutHtmlPath) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
         }

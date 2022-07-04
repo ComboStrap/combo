@@ -253,4 +253,13 @@ class XmlElement
     {
         return sizeof($this->getChildrenElement()) !== 0;
     }
+
+    public function getAttributeOrDefault(string $string, string $default): string
+    {
+        if (!$this->hasAttribute($string)) {
+            return $default;
+        }
+        return $this->getAttribute($string);
+
+    }
 }

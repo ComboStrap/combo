@@ -43,8 +43,7 @@ class Html
     }
 
     /**
-     * Encode special HTML characters to entity
-     * (ie escaping)
+     * Encode special HTML characters to entity (ie escaping)
      *
      * This is used to transform text that may be interpreted as HTML
      * into a text
@@ -64,6 +63,8 @@ class Html
      *
      * @param $text
      * @return string
+     *
+     * Note that if the `meta[charset]` matches the text encoding   , it should not be encoded
      */
     public static function encode($text): string
     {

@@ -719,5 +719,14 @@ class XmlDocument
         return $this->xmlDom->saveHTML();
     }
 
+    /**
+     * @throws \DOMException - if invalid local name
+     */
+    public function createElement(string $localName): XmlElement
+    {
+        $element = $this->xmlDom->createElement($localName);
+        return XmlElement::create($element, $this);
+    }
+
 
 }

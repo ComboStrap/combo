@@ -262,4 +262,10 @@ class XmlElement
         return $this->getAttribute($string);
 
     }
+
+    public function appendChild(XmlElement $xmlElement): XmlElement
+    {
+        $this->element->appendChild($xmlElement->element);
+        return $this;
+    }
 }

@@ -35,6 +35,8 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     ];
     const DATA_LAYOUT_CONTAINER_ATTRIBUTE = "data-layout-container";
     const DATA_EMPTY_ACTION_ATTRIBUTE = "data-empty-action";
+    const UTF_8_CHARSET_VALUE = "utf-8";
+    const VIEWPORT_VALUE = "width=device-width,initial-scale=1";
     private string $requestedLayout;
 
     /**
@@ -145,6 +147,57 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
             if (FileSystems::exists($layoutJsPath)) {
                 $snippetManager->attachInternalJavascriptFromPathForRequest(self::CANONICAL, $layoutJsPath);
+            }
+
+            /**
+             * Head
+             */
+            try {
+                $head = $domDocument->querySelector("head");
+            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+                throw new ExceptionRuntimeInternal("The template ($bodyLayoutHtmlPath) does not have a head element");
+            }
+            /**
+             * Character set
+             * Note: avoid using {@link Html::encode() character entities} in your HTML,
+             * provided their encoding matches that of the document (generally UTF-8)
+             */
+            $charsetValue = self::UTF_8_CHARSET_VALUE;
+            try {
+                $metaCharset = $head->querySelector("meta[charset]");
+                $charsetActualValue = $metaCharset->getAttribute("charset");
+                if ($charsetActualValue !== $charsetValue) {
+                    LogUtility::warning("The actual charset ($charsetActualValue) should be $charsetValue");
+                }
+            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+                try {
+                    $metaCharset = $domDocument->createElement("meta")
+                        ->setAttribute("charset", $charsetValue);
+                    $head->appendChild($metaCharset);
+                } catch (\DOMException $e) {
+                    throw new ExceptionRuntimeInternal("Bad local name meta, should not occur", self::CANONICAL, 1, $e);
+                }
+            }
+            /**
+             * Responsive meta tag
+             */
+            $expectedResponsiveContent = self::VIEWPORT_VALUE;
+            try {
+                $responsiveMeta = $head->querySelector('meta[name="viewport"]');
+                $responsiveActualValue = $responsiveMeta->getAttribute("content");
+                if ($responsiveActualValue !== $expectedResponsiveContent) {
+                    LogUtility::warning("The actual viewport meta ($responsiveActualValue) should be $expectedResponsiveContent");
+                }
+            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+                try {
+                    $head->appendChild(
+                        $domDocument->createElement("meta")
+                            ->setAttribute("name","viewport")
+                            ->setAttribute("content", $expectedResponsiveContent)
+                    );
+                } catch (\DOMException $e) {
+                    throw new ExceptionRuntimeInternal("Bad responsive name meta, should not occur", self::CANONICAL, 1, $e);
+                }
             }
 
 

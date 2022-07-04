@@ -271,7 +271,7 @@ class XmlDocument
      * @param $name
      * @param $value
      * @return void
-     * @deprecated use {@link XmlDocument::getDocumentElement()} instead
+     * @deprecated use {@link XmlDocument::getElement()} instead
      */
     public function setRootAttribute($name, $value)
     {
@@ -709,7 +709,7 @@ class XmlDocument
 
     }
 
-    public function getDocumentElement(): XmlElement
+    public function getElement(): XmlElement
     {
         return XmlElement::create($this->getXmlDom()->documentElement, $this);
     }

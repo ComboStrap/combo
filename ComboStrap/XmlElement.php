@@ -173,7 +173,7 @@ class XmlElement
         return $this->element->hasAttribute($name);
     }
 
-    public function getDomElement(): DOMElement
+    private function getDomElement(): DOMElement
     {
         return $this->element;
     }
@@ -211,7 +211,7 @@ class XmlElement
      */
     public function insertAdjacentHTML(string $position, string $html): XmlElement
     {
-        $externalElement = XmlDocument::createHtmlDocFromMarkup($html)->getDocumentElement()->getDomElement();
+        $externalElement = XmlDocument::createHtmlDocFromMarkup($html)->getElement()->getDomElement();
         // import/copy item from external document to internal document
         $internalElement = $this->element->ownerDocument->importNode($externalElement, true);
         switch ($position) {
@@ -239,10 +239,6 @@ class XmlElement
 
     }
 
-    public function getDocumentElement(): XmlElement
-    {
-        return $this->document->getDocumentElement();
-    }
 
     public function getId(): string
     {
@@ -267,5 +263,10 @@ class XmlElement
     {
         $this->element->appendChild($xmlElement->element);
         return $this;
+    }
+
+    public function getDocument(): XmlDocument
+    {
+        return $this->document;
     }
 }

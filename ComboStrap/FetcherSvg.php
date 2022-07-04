@@ -814,7 +814,7 @@ class FetcherSvg extends FetcherLocalImage
         $this->processed = true;
 
         // Handy variable
-        $documentElement = $this->getXmlDocument()->getDocumentElement();
+        $documentElement = $this->getXmlDocument()->getElement();
 
         /**
          * ViewBox should exist

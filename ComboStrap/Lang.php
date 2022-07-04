@@ -96,16 +96,30 @@ class Lang extends MetadataText
 
     }
 
-    public static function createForPage(PageFragment $page)
+    public static function createForPage(PageFragment $page): Lang
     {
-        return (new Lang())
-            ->setResource($page);
+        $lang = new Lang();
+        $lang->setResource($page);
+        return $lang;
     }
 
     public function getTab(): ?string
     {
         return MetaManagerForm::TAB_LANGUAGE_VALUE;
     }
+
+    /**
+     * @return string
+     */
+    public function getValueOrDefault(): string
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+    }
+
 
     /**
      * @throws ExceptionCompile
@@ -155,7 +169,10 @@ class Lang extends MetadataText
         return true;
     }
 
-    public function getDefaultValue()
+    /**
+     * @return string
+     */
+    public function getDefaultValue(): string
     {
         return Site::getLang();
     }

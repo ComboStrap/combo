@@ -40,6 +40,19 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
     private string $requestedLayout;
 
+
+    public static function createPageFetcherFromRequestedPage(): FetcherPage
+    {
+        return self::createPageFetcherFromPath(WikiPath::createPagePathFromRequestedPage());
+    }
+
+    private static function createPageFetcherFromPath(WikiPath $path): FetcherPage
+    {
+        $fetcherPage = new FetcherPage();
+        $fetcherPage->setRequestedPath($path);
+        return $fetcherPage;
+    }
+
     /**
      * @param Url|null $url
      * @return Url
@@ -64,11 +77,9 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     }
 
 
-    public static function createPageFetcherFromObject(PageFragment $param): FetcherPage
+    public static function createPageFetcherFromPage(PageFragment $pageFragment): FetcherPage
     {
-        $fetcherPage = new FetcherPage();
-        $fetcherPage->setOriginalPath($param->getPath());
-        return $fetcherPage;
+        return self::createPageFetcherFromPath($pageFragment->getPath());
     }
 
     /**
@@ -90,28 +101,27 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         }
         $layoutCssPath = $layoutDirectory->resolve("$layoutName.css");
         $layoutJsPath = $layoutDirectory->resolve("$layoutName.js");
-        $bodyLayoutHtmlPath = $layoutDirectory->resolve("$layoutName.html");
+        $htmlTemplatePath = $layoutDirectory->resolve("$layoutName.html");
         $layoutJsonPath = $layoutDirectory->resolve("$layoutName.json");
 
         $cache = FetcherCache::createFrom($this)
             ->addFileDependency($layoutCssPath)
             ->addFileDependency($layoutJsPath)
-            ->addFileDependency($bodyLayoutHtmlPath)
+            ->addFileDependency($htmlTemplatePath)
             ->addFileDependency($layoutJsonPath);
 
         try {
-            $domDocument = $this->htmlTemplatePathToHtmlDom($bodyLayoutHtmlPath);
+            $domDocument = $this->htmlTemplatePathToHtmlDom($htmlTemplatePath);
         } catch (ExceptionBadSyntax $e) {
-            throw new ExceptionRuntimeInternal("The Html template layout ($bodyLayoutHtmlPath) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
+            throw new ExceptionRuntimeInternal("The Html template layout ($htmlTemplatePath) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
         } catch (ExceptionNotFound $e) {
-            throw new ExceptionRuntimeInternal("The Html template layout ($bodyLayoutHtmlPath) does not exists", self::CANONICAL);
+            throw new ExceptionRuntimeInternal("The Html template layout ($htmlTemplatePath) does not exists", self::CANONICAL);
         }
 
         $pageElements = $this->buildAndGetPageElements($domDocument);
-        foreach ($pageElements as $pageArea) {
+        foreach ($pageElements as $pageElement) {
             try {
-                $path = $pageArea->getFragmentPath();
-                $cache->addFileDependency($path);
+                $cache->addFileDependency($pageElement->getFragmentPath());
             } catch (ExceptionNotFound $e) {
                 // no area path to render found
             }
@@ -151,16 +161,39 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             }
 
             /**
+             * Html
+             */
+            try {
+                $html = $domDocument->querySelector("html");
+            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+                throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a html element");
+            }
+
+            $langValue = Lang::createForPage($requestedPage)->getValueOrDefault();
+            global $lang;
+            $langDirection = $lang['direction'];
+            /**
+             * @noinspection HttpUrlsUsage because this is just an identifier https://github.com/w3c/svgwg/issues/738 - http and https
+             */
+            $html
+                ->setAttribute("xmlns", "http://www.w3.org/1999/xhtml")
+                ->setAttribute("xml:lang", $langValue)
+                ->setAttribute("lang", $langValue)
+                ->setAttribute("direction", $langDirection);
+            $this->setRemFontSizeToHtml($html);
+
+            /**
              * Head
              */
             try {
                 $head = $domDocument->querySelector("head");
             } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("The template ($bodyLayoutHtmlPath) does not have a head element");
+                throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a head element");
             }
             $this->checkCharSetMeta($head);
             $this->checkViewPortMeta($head);
             $this->addPageIconMeta($head);
+            $this->addTitleMeta($head);
 
 
             /**
@@ -179,7 +212,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                     ->addClass($positionRelativeClass)
                     ->addClass($layoutClass);
             } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("The template ($bodyLayoutHtmlPath) does not have a body element");
+                throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a body element");
             }
 
 
@@ -260,7 +293,11 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                 LogUtility::internalError("No slot was rendered");
             }
 
-            $htmlBodyDocumentString = $domDocument->toHtml();
+            /**
+             * We save as XML because we strive to be XML compliant (ie XHTML)
+             * And we want to load it as XML to check the XHTML namespace (ie xmlns)
+             */
+            $htmlBodyDocumentString = $domDocument->toXml();
             $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlOutputByAreaName)->render();
 
             $cache->storeCache($finalHtmlBodyString);
@@ -581,6 +618,53 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         } catch (ExceptionBadArgument|\DOMException $e) {
             LogUtility::internalError("The file ($iconPath) should be found and the local name should be good. Error: {$e->getMessage()}");
         }
+
+    }
+
+    private function addTitleMeta(XmlElement $head)
+    {
+
+        try {
+            $titleMeta = $head->querySelector("title");
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            try {
+                $titleMeta = $head->getDocument()
+                    ->createElement("title");
+                $head->appendChild($titleMeta);
+            } catch (\DOMException $e) {
+                throw new ExceptionRuntimeInternal("Bad local name title, should not occur", self::CANONICAL, 1, $e);
+            }
+        }
+
+        $nodeValue = PageFragment::createPageFromPathObject($this->getRequestedPath());
+        $title = PageTitle::createForPage($nodeValue)->getValueOrDefault();
+        $titleMeta->setNodeValue($title);
+
+    }
+
+    private function setRequestedPath(WikiPath $requestedPath): FetcherPage
+    {
+        $this->setOriginalPath($requestedPath);
+        return $this;
+    }
+
+
+    private function setRemFontSizeToHtml(XmlElement $html)
+    {
+        /**
+         * Same as {@link TplUtility::CONF_REM_SIZE}
+         */
+        $remSize = tpl_getConf("remSize", null);
+        if ($remSize === null) {
+            return;
+        }
+        try {
+            $remSizeInt = DataType::toInteger($remSize);
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::error("The rem size configuration value ($remSize) is not an integer. Error:{$e->getMessage()}", self::CANONICAL);
+            return;
+        }
+        $html->addStyle("font-size", "{$remSizeInt}px");
 
     }
 

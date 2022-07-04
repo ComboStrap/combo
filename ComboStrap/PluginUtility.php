@@ -324,23 +324,6 @@ class PluginUtility
     }
 
     /**
-     * @param array $styleProperties - an array of CSS properties with key, value
-     * @return string - the value for the style attribute (ie all rules where joined with the comma)
-     */
-    public static function array2InlineStyle(array $styleProperties)
-    {
-        $inlineCss = "";
-        foreach ($styleProperties as $key => $value) {
-            $inlineCss .= "$key:$value;";
-        }
-        // Suppress the last ;
-        if ($inlineCss[strlen($inlineCss) - 1] == ";") {
-            $inlineCss = substr($inlineCss, 0, -1);
-        }
-        return $inlineCss;
-    }
-
-    /**
      * @param $tag
      * @return string
      * Create a pattern used where the tag is not a container.

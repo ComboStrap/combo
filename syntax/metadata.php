@@ -1,12 +1,11 @@
 <?php
 
 
-use ComboStrap\MetadataUtility;
+use ComboStrap\Html;
 use ComboStrap\PluginUtility;
 
-if (!defined('DOKU_INC')) die();
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Class syntax_plugin_combo_metadata
@@ -34,7 +33,7 @@ class syntax_plugin_combo_metadata extends DokuWiki_Syntax_Plugin
 
     /**
      *
-     * @param \dokuwiki\Extension\Plugin $plugin - the calling dokuwiki plugin
+     * @param syntax_plugin_combo_metadata $plugin - the calling dokuwiki plugin
      * @param $inlineAttributes - the inline attribute of a component if any
      * @return string - an HTML box of the array
      */
@@ -76,7 +75,7 @@ class syntax_plugin_combo_metadata extends DokuWiki_Syntax_Plugin
             "font-style" => "italic"
         );
 
-        $content .= '<div style="' . PluginUtility::array2InlineStyle($referenceStyle) . '">' . $plugin->getLang('message_come_from') . PluginUtility::getDocumentationHyperLink("metadata:viewer", "ComboStrap Metadata Viewer") . '</div>';
+        $content .= '<div style="' . Html::array2InlineStyle($referenceStyle) . '">' . $plugin->getLang('message_come_from') . PluginUtility::getDocumentationHyperLink("metadata:viewer", "ComboStrap Metadata Viewer") . '</div>';
         $content .= '</div>';
         return $content;
 

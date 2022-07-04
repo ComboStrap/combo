@@ -84,7 +84,7 @@ class XmlDocument
             // HTML
             if ($type == self::HTML_TYPE) {
 
-                // Options that cause the processus to hang if this is not for a html file
+                // Options that cause the process to hang if this is not for a html file
                 // Empty tag option may also be used only on save
                 //   at https://www.php.net/manual/en/domdocument.save.php
                 //   and https://www.php.net/manual/en/domdocument.savexml.php
@@ -100,7 +100,7 @@ class XmlDocument
              * No warning reporting
              * Load XML issue E_STRICT warning seen in the log
              */
-            if (!defined('DOKU_UNITTEST')) {
+            if (!PluginUtility::isTest()) {
                 $oldLevel = error_reporting(E_ERROR);
             }
 
@@ -199,7 +199,7 @@ class XmlDocument
             /**
              * Error reporting back
              */
-            if (!defined('DOKU_UNITTEST')) {
+            if (!PluginUtility::isTest() && isset($oldLevel)) {
                 error_reporting($oldLevel);
             }
 
@@ -726,6 +726,11 @@ class XmlDocument
     {
         $element = $this->xmlDom->createElement($localName);
         return XmlElement::create($element, $this);
+    }
+
+    public function toXml(): string
+    {
+        return $this->xmlDom->saveXML();
     }
 
 

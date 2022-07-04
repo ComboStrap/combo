@@ -187,7 +187,7 @@ class TagAttributes
     /**
      * @var array the style declaration array
      */
-    private $styleDeclaration = array();
+    private array $styleDeclaration = array();
 
     /**
      * @var bool - set when the transformation from component attribute to html attribute
@@ -376,18 +376,16 @@ class TagAttributes
         return $this->getValue(self::CLASS_KEY);
     }
 
-    public function getStyle(): ?string
+    /**
+     * @return string
+     * @throws ExceptionNotFound
+     */
+    public function getStyle(): string
     {
-        if (sizeof($this->styleDeclaration) != 0) {
-            return PluginUtility::array2InlineStyle($this->styleDeclaration);
-        } else {
-            /**
-             * null is needed to see if the attribute was set or not
-             * because an attribute may have the empty string
-             * Example: the wiki id of the root namespace
-             */
-            return null;
+        if (sizeof($this->styleDeclaration) === 0) {
+            throw new ExceptionNotFound("No style");
         }
+        return Html::array2InlineStyle($this->styleDeclaration);
 
     }
 
@@ -565,7 +563,11 @@ class TagAttributes
          * Add the style has html attribute
          * before processing
          */
-        $this->addOutputAttributeValueIfNotEmpty("style", $this->getStyle());
+        try {
+            $this->addOutputAttributeValueIfNotEmpty("style", $this->getStyle());
+        } catch (ExceptionNotFound $e) {
+            // no style
+        }
 
         /**
          * Create a non-sorted temporary html attributes array
@@ -702,7 +704,7 @@ class TagAttributes
         }
 
         $actualValue = $this->outputAttributes[$key];
-        if($actualValue===null){
+        if ($actualValue === null) {
             $this->outputAttributes[$key] = $value;
             return $this;
         }
@@ -806,9 +808,10 @@ class TagAttributes
         foreach ($this->outputAttributes as $key => $value) {
             $array[$key] = $value;
         }
-        $style = $this->getStyle();
-        if ($style != null) {
-            $array["style"] = $style;
+        try {
+            $array["style"] = $this->getStyle();
+        } catch (ExceptionNotFound $e) {
+            // no style
         }
 
         return $array;

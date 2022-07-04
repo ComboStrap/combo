@@ -2056,7 +2056,7 @@ class PageFragment extends ResourceComboAbs
 
     public function getHtmlFetcherAsPage(): FetcherPage
     {
-        return FetcherPage::createPageFetcherFromObject($this);
+        return FetcherPage::createPageFetcherFromPage($this);
     }
 
     public function getHtmlResponseviaTemplate(): HttpResponse

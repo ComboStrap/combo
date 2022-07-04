@@ -7,18 +7,14 @@ use DOMText;
 
 class XmlElement
 {
-    /**
-     * @var DOMElement
-     */
-    private $element;
-    /**
-     * @var XmlDocument
-     */
-    private $document;
+
+    private DOMElement $element;
+    private XmlDocument $document;
+    private array $styleDeclaration = [];
 
     /**
-     * @param DOMElement $domElement
-     * @param XmlDocument $document
+     * @param DOMElement $domElement - the dom element wrapped
+     * @param XmlDocument $document - the document
      */
     public function __construct(DOMElement $domElement, XmlDocument $document)
     {
@@ -268,5 +264,17 @@ class XmlElement
     public function getDocument(): XmlDocument
     {
         return $this->document;
+    }
+
+    public function setNodeValue(string $nodeValue)
+    {
+        $this->element->nodeValue = $nodeValue;
+    }
+
+    public function addStyle(string $name, string $value): XmlElement
+    {
+        ArrayUtility::addIfNotSet($this->styleDeclaration, $name, $value);
+        $this->setAttribute("style",Html::array2InlineStyle($this->styleDeclaration));
+        return $this;
     }
 }

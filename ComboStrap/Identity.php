@@ -262,7 +262,12 @@ EOF;
     public static function getHtmlStyleTag(string $componentId): string
     {
         $loginCss = Snippet::createInternalCssSnippet($componentId);
-        $content = $loginCss->getInternalInlineAndFileContent();
+        try {
+            $content = $loginCss->getInternalInlineAndFileContent();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("The style content should be not null", self::CANONICAL);
+            $content = "";
+        }
         $content = Identity::addPrimaryColorCssRuleIfSet($content);
         $class = $loginCss->getClass();
         return <<<EOF

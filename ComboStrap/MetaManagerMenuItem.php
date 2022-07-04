@@ -32,7 +32,7 @@ class MetaManagerMenuItem extends AbstractItem
     {
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetManager->attachJavascriptComboLibrary();
-        $snippetManager->attachJavascriptInternalForRequest(self::CANONICAL);
+        $snippetManager->attachJavascriptInternalInlineForRequest(self::CANONICAL);
         parent::__construct();
     }
 

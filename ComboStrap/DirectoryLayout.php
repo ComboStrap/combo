@@ -45,9 +45,6 @@ class DirectoryLayout
         return DirectoryLayout::getComboResourcesDirectory()->resolve("dictionary");
     }
 
-    public static function getComboResourceSnippetDirectory(): LocalPath
-    {
-        return DirectoryLayout::getComboResourcesDirectory()->resolve("snippet");
-    }
+
 
 }

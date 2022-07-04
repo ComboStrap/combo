@@ -61,6 +61,7 @@ interface Fetcher
     /**
      * The buster that should be added to the url.
      * @return string
+     * @throws ExceptionNotFound - if the buster cannot be calculated (file does not exist for instance)
      */
     function getBuster(): string;
 

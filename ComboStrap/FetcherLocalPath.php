@@ -14,10 +14,10 @@ class FetcherLocalPath extends FetcherAbs implements FetcherSource
     const RAW = "raw";
 
 
-    public static function createFromPath(WikiPath $dokuPath): FetcherLocalPath
+    public static function createFromPath(WikiPath $wikiPath): FetcherLocalPath
     {
         $fetcherRaw = self::createEmpty();
-        $fetcherRaw->setOriginalPath($dokuPath);
+        $fetcherRaw->setOriginalPath($wikiPath);
         return $fetcherRaw;
     }
 
@@ -43,6 +43,7 @@ class FetcherLocalPath extends FetcherAbs implements FetcherSource
 
     /**
      * @return Url - an URL to download the media
+     * @throws ExceptionNotFound - if the file does not exists (no buster can be added)
      */
     function getFetchUrl(Url $url = null): Url
     {

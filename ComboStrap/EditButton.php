@@ -251,7 +251,7 @@ class EditButton
          */
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetManager->attachCssInternalStylesheetForRequest(self::SNIPPET_ID);
-        $snippetManager->attachJavascriptInternalForRequest(self::SNIPPET_ID);
+        $snippetManager->attachJavascriptInternalInlineForRequest(self::SNIPPET_ID);
 
         /**
          * The callback function on all edit comment

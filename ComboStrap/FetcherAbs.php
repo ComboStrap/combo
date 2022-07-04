@@ -92,6 +92,7 @@ abstract class FetcherAbs implements Fetcher
     /**
      * @param Url|null $url
      * @return Url
+     * @throws ExceptionNotFound
      */
     function getFetchUrl(Url $url = null): Url
     {

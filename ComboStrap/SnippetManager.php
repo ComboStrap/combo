@@ -178,21 +178,34 @@ class SnippetManager
                                 // not async: it will run as soon as possible
                                 // the dom main not be loaded completely, the script may miss HTML dom element
                             }
-                            $jsDokuwiki = $this->addExtraHtml($jsDokuwiki, $snippet);
+                            $jsDokuwiki = $this->addHtmlAttributes($jsDokuwiki, $snippet);
                             ksort($jsDokuwiki);
                             $returnedDokuWikiFormat[self::SCRIPT_TAG][] = $jsDokuwiki;
                             break;
                         case Snippet::INTERNAL_TYPE:
-                            $content = $snippet->getInternalInlineAndFileContent();
-                            if ($content === null) {
-                                LogUtility::msg("The internal js snippet ($snippet) has no content. Skipped");
-                                continue 3;
+                            $jsDokuwiki = []; //reset
+                            if ($snippet->hasInlineContent()) {
+                                try {
+                                    $jsDokuwiki[self::DATA_DOKUWIKI_ATT] = $snippet->getInternalInlineAndFileContent();
+                                } catch (ExceptionNotFound $e) {
+                                    LogUtility::internalError("The internal js snippet ($snippet) has no content. Skipped", self::CANONICAL);
+                                    continue 3;
+                                }
+                            } else {
+                                $wikiPath = $snippet->getInternalPath();
+                                try {
+                                    $fetchUrl = FetcherLocalPath::createFromPath($wikiPath)->getFetchUrl();
+                                    $jsDokuwiki["src"] = $fetchUrl->toString();
+                                    if (!$snippet->getCritical()) {
+                                        $jsDokuwiki["defer"] = null;
+                                    }
+                                } catch (ExceptionNotFound $e) {
+                                    LogUtility::internalError("The internal snippet path ($wikiPath) was not found. Skipped", self::CANONICAL);
+                                    continue 3;
+                                }
+
                             }
-                            $jsDokuwiki = array(
-                                "class" => $snippet->getClass(),
-                                self::DATA_DOKUWIKI_ATT => $content
-                            );
-                            $jsDokuwiki = $this->addExtraHtml($jsDokuwiki, $snippet);
+                            $jsDokuwiki = $this->addHtmlAttributes($jsDokuwiki, $snippet);
                             $returnedDokuWikiFormat[self::SCRIPT_TAG][] = $jsDokuwiki;
                             break;
                         default:
@@ -203,7 +216,6 @@ class SnippetManager
                     switch ($type) {
                         case Snippet::EXTERNAL_TYPE:
                             $cssDokuwiki = array(
-                                "class" => $snippet->getClass(),
                                 "rel" => "stylesheet",
                                 "href" => $snippet->getUrl(),
                                 "crossorigin" => "anonymous"
@@ -217,25 +229,31 @@ class SnippetManager
                                 $cssDokuwiki["rel"] = "preload";
                                 $cssDokuwiki['as'] = self::STYLE_TAG;
                             }
-                            $cssDokuwiki = $this->addExtraHtml($cssDokuwiki, $snippet);
+                            $cssDokuwiki = $this->addHtmlAttributes($cssDokuwiki, $snippet);
                             ksort($cssDokuwiki);
                             $returnedDokuWikiFormat[self::LINK_TAG][] = $cssDokuwiki;
                             break;
                         case Snippet::INTERNAL_TYPE:
                             /**
                              * CSS inline in script tag
-                             * They are all critical
+                             * If they are critical or inline dynamic content is set, we add them in the page
                              */
-                            $content = $snippet->getInternalInlineAndFileContent();
-                            if ($content === null) {
-                                LogUtility::msg("The internal css snippet ($snippet) has no content. Skipped");
-                                continue 3;
+                            $cssInternalArray = []; // reset
+                            $inline = $snippet->getCritical() === true ||
+                                ($snippet->getCritical() === false && $snippet->hasInlineContent());
+                            if ($inline) {
+                                try {
+                                    $cssInternalArray[self::DATA_DOKUWIKI_ATT] = $snippet->getInternalInlineAndFileContent();
+                                } catch (ExceptionNotFound $e) {
+                                    LogUtility::internalError("The internal css snippet ($snippet) has no content. Skipped", self::CANONICAL);
+                                    continue 3;
+                                }
+                            } else {
+                                $fetchUrl = FetcherLocalPath::createFromPath($snippet->getInternalPath())->getFetchUrl();
+                                $cssInternalArray["rel"] = "stylesheet";
+                                $cssInternalArray["href"] = $fetchUrl->toString();
                             }
-                            $cssInternalArray = array(
-                                "class" => $snippet->getClass(),
-                                self::DATA_DOKUWIKI_ATT => $content
-                            );
-                            $cssInternalArray = $this->addExtraHtml($cssInternalArray, $snippet);
+                            $cssInternalArray = $this->addHtmlAttributes($cssInternalArray, $snippet);
                             $returnedDokuWikiFormat[self::STYLE_TAG][] = $cssInternalArray;
                             break;
                         default:
@@ -332,10 +350,9 @@ class SnippetManager
     {
         $snippet = &$this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE);
         if ($script !== null) {
-            $content = $snippet->getInternalDynamicContent();
-            if ($content !== null) {
-                $content .= $script;
-            } else {
+            try {
+                $content = "{$snippet->getInternalDynamicContent()} $script";
+            } catch (ExceptionNotFound $e) {
                 $content = $script;
             }
             $snippet->setInlineContent($content);
@@ -348,13 +365,19 @@ class SnippetManager
      * @param string|null $script
      * @return Snippet a snippet not in a slot
      */
-    public
-    function &attachJavascriptInternalForRequest($snippetId, string $script = null): Snippet
+    public function &attachJavascriptInternalInlineForRequest($snippetId, string $script = null): Snippet
     {
         $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE);
         if ($script != null) {
             $snippet->setInlineContent($script);
         }
+        return $snippet;
+    }
+
+    public function &attachInternalJavascriptFromPathForRequest($snippetId, WikiPath $path): Snippet
+    {
+        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE)
+            ->setInternalPath($path);
         return $snippet;
     }
 
@@ -470,7 +493,7 @@ class SnippetManager
 
     }
 
-    private function addExtraHtml(array $attributesArray, Snippet $snippet): array
+    private function addHtmlAttributes(array $attributesArray, Snippet $snippet): array
     {
         $htmlAttributes = $snippet->getHtmlAttributes();
         if ($htmlAttributes !== null) {
@@ -478,6 +501,7 @@ class SnippetManager
                 $attributesArray[$name] = $value;
             }
         }
+        $attributesArray["class"] = $snippet->getClass();
         return $attributesArray;
     }
 

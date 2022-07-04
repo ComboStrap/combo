@@ -140,14 +140,11 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                 $content = FileSystems::getContent($layoutCssPath);
                 $snippetManager->attachCssInternalStylesheetForRequest(self::CANONICAL, $content);
             } catch (ExceptionNotFound $e) {
-                // not a problem
+                // no css found, not a problem
             }
 
-            try {
-                $content = FileSystems::getContent($layoutJsPath);
-                $snippetManager->attachJavascriptInternalForRequest(self::CANONICAL, $content);
-            } catch (ExceptionNotFound $e) {
-                // not a problem
+            if (FileSystems::exists($layoutJsPath)) {
+                $snippetManager->attachInternalJavascriptFromPathForRequest(self::CANONICAL, $layoutJsPath);
             }
 
 

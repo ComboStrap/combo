@@ -60,7 +60,7 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
             "https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js",
             "sha256-LGOWMG4g6/zc0chji4hZP1d8RxR2bPvXMzl/7oPZqjs="
         );
-        $snippetManager->attachJavascriptInternalForRequest(self::ANCHOR_LIBRARY_SNIPPET_ID);
+        $snippetManager->attachJavascriptInternalInlineForRequest(self::ANCHOR_LIBRARY_SNIPPET_ID);
 
         /**
          * Default Link Color

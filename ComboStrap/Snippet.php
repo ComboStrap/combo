@@ -95,7 +95,7 @@ class Snippet implements JsonSerializable
     /**
      * @var string the text script / style (may be null if it's an external resources)
      */
-    private $inlineContent;
+    private string $inlineContent;
 
     /**
      * @var string
@@ -136,6 +136,7 @@ class Snippet implements JsonSerializable
      * @var bool run as soon as possible
      */
     private $async;
+    private WikiPath $internalPath;
 
     /**
      * Snippet constructor.
@@ -284,27 +285,34 @@ class Snippet implements JsonSerializable
     }
 
     /**
+     * The content that was set via a string (It should be used
+     * for dynamic content, that's why it's called dynamic)
      * @return string
+     * @throws ExceptionNotFound
      */
-    public function getInternalDynamicContent(): ?string
+    public function getInternalDynamicContent(): string
     {
+        if (!isset($this->inlineContent)) {
+            throw new ExceptionNotFound("No inline content set");
+        }
         return $this->inlineContent;
     }
 
     /**
      * @return string|null
+     * @throws ExceptionNotFound -  if not found
      */
-    public function getInternalFileContent(): ?string
+    public function getInternalFileContent(): string
     {
-        $path = $this->getInternalFile();
-        if (!FileSystems::exists($path)) {
-            return null;
-        }
+        $path = $this->getInternalPath();
         return FileSystems::getContent($path);
     }
 
-    public function getInternalFile(): ?LocalPath
+    public function getInternalPath(): WikiPath
     {
+        if (isset($this->internalPath)) {
+            return $this->internalPath;
+        }
         switch ($this->extension) {
             case self::EXTENSION_CSS:
                 $extension = "css";
@@ -316,14 +324,10 @@ class Snippet implements JsonSerializable
                 break;
             default:
                 $message = "Unknown snippet type ($this->extension)";
-                if (PluginUtility::isDevOrTest()) {
-                    throw new ExceptionRuntime($message);
-                } else {
-                    LogUtility::msg($message);
-                }
-                return null;
+                throw new ExceptionRuntimeInternal($message);
+
         }
-        return DirectoryLayout::getComboResourceSnippetDirectory()
+        return WikiPath::createComboResource("snippet")
             ->resolve($subDirectory)
             ->resolve(strtolower($this->internalIdentifier) . ".$extension");
     }
@@ -370,20 +374,6 @@ class Snippet implements JsonSerializable
 
     }
 
-    /**
-     * @return string the HTML of the tag (works for now only with CSS content)
-     */
-    public function getHtmlStyleTag(): string
-    {
-        $content = $this->getInternalInlineAndFileContent();
-        $class = $this->getClass();
-        return <<<EOF
-<style class="$class">
-$content
-</style>
-EOF;
-
-    }
 
     public function getId()
     {
@@ -501,21 +491,26 @@ EOF;
         return $this->htmlAttributes;
     }
 
-    public function getInternalInlineAndFileContent(): ?string
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getInternalInlineAndFileContent(): string
     {
         $totalContent = null;
-        $internalFileContent = $this->getInternalFileContent();
-        if ($internalFileContent !== null) {
-            $totalContent = $internalFileContent;
+        try {
+            $totalContent = $this->getInternalFileContent();
+        } catch (ExceptionNotFound $e) {
+            // no
         }
 
-        $content = $this->getInternalDynamicContent();
-        if ($content !== null) {
-            if ($totalContent === null) {
-                $totalContent = $content;
-            } else {
-                $totalContent .= $content;
-            }
+        try {
+            $totalContent .= $this->getInternalDynamicContent();
+        } catch (ExceptionNotFound $e) {
+            // no
+        }
+        if ($totalContent === null) {
+            throw new ExceptionNotFound("No content");
         }
         return $totalContent;
 
@@ -541,7 +536,7 @@ EOF;
         if ($this->async !== null) {
             $dataToSerialize[self::JSON_ASYNC_PROPERTY] = $this->async;
         }
-        if ($this->inlineContent !== null) {
+        if (isset($this->inlineContent)) {
             $dataToSerialize[self::JSON_CONTENT_PROPERTY] = $this->inlineContent;
         }
         if ($this->htmlAttributes !== null) {
@@ -553,5 +548,16 @@ EOF;
     public function getInternalId(): string
     {
         return $this->internalIdentifier;
+    }
+
+    public function setInternalPath(WikiPath $path): Snippet
+    {
+        $this->internalPath = $path;
+        return $this;
+    }
+
+    public function hasInlineContent(): bool
+    {
+        return isset($this->inlineContent);
     }
 }

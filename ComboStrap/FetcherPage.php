@@ -37,6 +37,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     const DATA_EMPTY_ACTION_ATTRIBUTE = "data-empty-action";
     const UTF_8_CHARSET_VALUE = "utf-8";
     const VIEWPORT_RESPONSIVE_VALUE = "width=device-width,initial-scale=1";
+    const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
     private string $requestedLayout;
 
     /**
@@ -159,6 +160,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             }
             $this->checkCharSetMeta($head);
             $this->checkViewPortMeta($head);
+            $this->addPageIconMeta($head);
 
 
             /**
@@ -448,6 +450,138 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                 throw new ExceptionRuntimeInternal("Bad local name meta, should not occur", self::CANONICAL, 1, $e);
             }
         }
+    }
+
+    /**
+     * @param XmlElement $head
+     * @return void
+     * Adapted from {@link TplUtility::renderFaviconMetaLinks()}
+     */
+    private function addPageIconMeta(XmlElement $head)
+    {
+        $this->addShortcutFavIconInHead($head);
+        $this->addIconInHead($head);
+        $this->addAppleTouchIconInHead($head);
+    }
+
+    /**
+     * Add a favIcon.ico
+     * @param XmlElement $head
+     * @return void
+     */
+    private function addShortcutFavIconInHead(XmlElement $head)
+    {
+
+        $internalFavIcon = WikiPath::createComboResource('images:favicon.ico');
+        $iconPaths = array(
+            WikiPath::createMediaPathFromId(':favicon.ico'),
+            WikiPath::createMediaPathFromId(':wiki:favicon.ico'),
+            $internalFavIcon
+        );
+        try {
+            /**
+             * @var WikiPath $icoWikiPath - we give wiki paths, we get wiki path
+             */
+            $icoWikiPath = FileSystems::getFirstExistingPath($iconPaths);
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("The internal fav icon ($internalFavIcon) should be at minimal found", self::CANONICAL);
+            return;
+        }
+
+        try {
+            $head->appendChild(
+                $head->getDocument()
+                    ->createElement("link")
+                    ->setAttribute("rel", "shortcut icon")
+                    ->setAttribute("href", FetcherLocalPath::createFromPath($icoWikiPath)->getFetchUrl()->toAbsoluteUrl()->toString())
+            );
+        } catch (ExceptionNotFound|\DOMException $e) {
+            LogUtility::internalError("The file should be found and the local name should be good. Error: {$e->getMessage()}");
+        }
+
+    }
+
+    /**
+     * Add Icon Png (16x16 and 32x32)
+     * @param XmlElement $head
+     * @return void
+     */
+    private function addIconInHead(XmlElement $head)
+    {
+
+
+        $sizeValues = ["32x32", "16x16"];
+        foreach ($sizeValues as $sizeValue) {
+
+            $internalIcon = WikiPath::createComboResource(":images:favicon-$sizeValue.png");
+            $iconPaths = array(
+                WikiPath::createMediaPathFromId(":favicon-$sizeValue.png"),
+                WikiPath::createMediaPathFromId(":wiki:favicon-$sizeValue.png"),
+                $internalIcon
+            );
+            try {
+                /**
+                 * @var WikiPath $iconPath - to say to the linter that this is a wiki path
+                 */
+                $iconPath = FileSystems::getFirstExistingPath($iconPaths);
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("The internal icon ($internalIcon) should be at minimal found", self::CANONICAL);
+                continue;
+            }
+            try {
+                $head->appendChild(
+                    $head->getDocument()
+                        ->createElement("link")
+                        ->setAttribute("rel", "icon")
+                        ->setAttribute("sizes", $sizeValue)
+                        ->setAttribute("type", Mime::PNG)
+                        ->setAttribute("href", FetcherLocalPath::createFromPath($iconPath)->getFetchUrl()->toAbsoluteUrl()->toString())
+                );
+            } catch (ExceptionNotFound|\DOMException $e) {
+                LogUtility::internalError("The file ($iconPath) should be found and the local name should be good. Error: {$e->getMessage()}");
+            }
+        }
+
+    }
+
+    /**
+     * Add Apple touch icon
+     * @param XmlElement $head
+     * @return void
+     */
+    private function addAppleTouchIconInHead(XmlElement $head)
+    {
+
+        $internalIcon = WikiPath::createComboResource(":images:apple-touch-icon.png");
+        $iconPaths = array(
+            WikiPath::createMediaPathFromId(":apple-touch-icon.png"),
+            WikiPath::createMediaPathFromId(":wiki:apple-touch-icon.png"),
+            $internalIcon
+        );
+        try {
+            /**
+             * @var WikiPath $iconPath - to say to the linter that this is a wiki path
+             */
+            $iconPath = FileSystems::getFirstExistingPath($iconPaths);
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("The internal apple icon ($internalIcon) should be at minimal found", self::CANONICAL);
+            return;
+        }
+        try {
+            $fetcherLocalPath = FetcherRaster::createImageRasterFetchFromPath($iconPath);
+            $sizesValue = "{$fetcherLocalPath->getIntrinsicWidth()}x{$fetcherLocalPath->getIntrinsicHeight()}";
+            $head->appendChild(
+                $head->getDocument()
+                    ->createElement("link")
+                    ->setAttribute("rel", self::APPLE_TOUCH_ICON_REL_VALUE)
+                    ->setAttribute("sizes", $sizesValue)
+                    ->setAttribute("type", Mime::PNG)
+                    ->setAttribute("href", $fetcherLocalPath->getFetchUrl()->toAbsoluteUrl()->toString())
+            );
+        } catch (ExceptionBadArgument|\DOMException $e) {
+            LogUtility::internalError("The file ($iconPath) should be found and the local name should be good. Error: {$e->getMessage()}");
+        }
+
     }
 
 

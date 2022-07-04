@@ -258,4 +258,21 @@ class FileSystems
         }
     }
 
+    /**
+     * @param Path[] $paths
+     * @return Path
+     * @throws ExceptionNotFound
+     */
+    public static function getFirstExistingPath(array $paths): Path
+    {
+
+        foreach ($paths as $path) {
+            if (FileSystems::exists($path)) {
+                return $path;
+            }
+        }
+        throw new ExceptionNotFound("Existing file could be found");
+
+    }
+
 }

@@ -570,6 +570,7 @@ EOF;
      * @return string the HTML form code
      *
      * Specification, see http://doc.jsfiddle.net/api/post.html
+     *
      */
     public function addJsFiddleButton($codes, $externalResources, $useConsole = false, $snippetTitle = null): string
     {
@@ -585,8 +586,13 @@ EOF;
 
             // Adding them here
             // The firebug resources for the console.log features
-            $externalResources[] = FetcherLocalPath::createFromPath(WikiPath::createComboResource(':firebug:firebug-lite.css'))->getFetchUrl()->toString();
-            $externalResources[] = FetcherLocalPath::createFromPath(WikiPath::createComboResource(':firebug:firebug-lite-1.2.js'))->getFetchUrl()->toString();
+            try {
+                $externalResources[] = FetcherLocalPath::createFromPath(WikiPath::createComboResource(':firebug:firebug-lite.css'))->getFetchUrl()->toString();
+                $externalResources[] = FetcherLocalPath::createFromPath(WikiPath::createComboResource(':firebug:firebug-lite-1.2.js'))->getFetchUrl()->toString();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("We were unable to add the firebug css and js. Error: {$e->getMessage()}", self::CANONICAL);
+            }
+
         }
 
         // The below code is to prevent this JsFiddle bug: https://github.com/jsfiddle/jsfiddle-issues/issues/726

@@ -100,7 +100,7 @@ class XmlElement
     public function getXmlTextNormalized(): string
     {
 
-        return $this->document->getXmlTextNormalized($this->element);
+        return $this->document->toXmlNormalized($this->element);
 
     }
 
@@ -209,7 +209,7 @@ class XmlElement
     {
         $externalElement = XmlDocument::createHtmlDocFromMarkup($html)->getElement()->getDomElement();
         // import/copy item from external document to internal document
-        $internalElement = $this->element->ownerDocument->importNode($externalElement, true);
+        $internalElement = $this->importIfExternal($externalElement);
         switch ($position) {
             case 'beforeend':
                 $this->element->appendChild($internalElement);
@@ -257,7 +257,8 @@ class XmlElement
 
     public function appendChild(XmlElement $xmlElement): XmlElement
     {
-        $this->element->appendChild($xmlElement->element);
+        $element = $this->importIfExternal($xmlElement->element);
+        $this->element->appendChild($element);
         return $this;
     }
 
@@ -276,5 +277,24 @@ class XmlElement
         ArrayUtility::addIfNotSet($this->styleDeclaration, $name, $value);
         $this->setAttribute("style",Html::array2InlineStyle($this->styleDeclaration));
         return $this;
+    }
+
+    /**
+     *
+     * Utility to change the owner document
+     * otherwise you get an error:
+     * ```
+     * DOMException : Wrong Document Error
+     * ```
+     *
+     * @param DOMElement $domElement
+     * @return DOMElement
+     */
+    private function importIfExternal(DOMElement $domElement): DOMElement
+    {
+        if($domElement->ownerDocument !== $this->getDocument()->getDomDocument()){
+            return  $this->getDocument()->getDomDocument()->importNode($domElement, true);
+        }
+        return $domElement;
     }
 }

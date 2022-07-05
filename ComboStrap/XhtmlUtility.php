@@ -45,8 +45,8 @@ class XhtmlUtility
             $loading = XmlDocument::HTML_TYPE;
         }
 
-        $leftDocument = (new XmlDocument($left, $loading))->getXmlDom();
-        $rightDocument = (new XmlDocument($right, $loading))->getXmlDom();
+        $leftDocument = (new XmlDocument($left, $loading))->getDomDocument();
+        $rightDocument = (new XmlDocument($right, $loading))->getDomDocument();
 
         $error = "";
         XmlUtility::diffNode(
@@ -76,7 +76,7 @@ class XhtmlUtility
             throw new \RuntimeException("The text should not be empty");
         }
         $xmlDoc = new XmlDocument($htmlText, XmlDocument::HTML_TYPE);
-        return $xmlDoc->getXmlTextNormalized();
+        return $xmlDoc->toXmlNormalized();
     }
 
 

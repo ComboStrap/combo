@@ -43,8 +43,7 @@ class XmlDocument
         "Tag svg invalid\n", // svg
         "Unexpected end tag : a\n", // when the document is only a anchor
         "Unexpected end tag : p\n", // when the document is only a p
-        "Unexpected end tag : button\n" // // when the document is only a button
-
+        "Unexpected end tag : button\n", // when the document is only a button
     ];
 
     const CANONICAL = "xml";
@@ -52,7 +51,7 @@ class XmlDocument
     /**
      * @var DOMDocument
      */
-    private DOMDocument $xmlDom;
+    private DOMDocument $domDocument;
     /**
      * @var DOMXPath
      */
@@ -62,7 +61,7 @@ class XmlDocument
      * XmlFile constructor.
      * @param $text
      * @param string $type - HTML or not
-     * @throws ExceptionBadSyntax - if the document is not valid
+     * @throws ExceptionBadSyntax - if the document is not valid or the lib xml is not available
      *
      * Getting the width of an error HTML document if the file was downloaded
      * from a server has no use at all
@@ -70,153 +69,154 @@ class XmlDocument
     public function __construct($text, string $type = self::XML_TYPE)
     {
 
-
-        if ($this->isXmlExtensionLoaded()) {
-
-            // https://www.php.net/manual/en/libxml.constants.php
-            $options = LIBXML_NOCDATA
-                // | LIBXML_NOBLANKS // same as preserveWhiteSpace=true, not set to be able to format the output
-                | LIBXML_NOXMLDECL // Drop the XML declaration when saving a document
-                | LIBXML_NONET // No network during load
-                | LIBXML_NSCLEAN // Remove redundant namespace declarations - for whatever reason, the formatting does not work if this is set
-            ;
-
-            // HTML
-            if ($type == self::HTML_TYPE) {
-
-                // Options that cause the process to hang if this is not for a html file
-                // Empty tag option may also be used only on save
-                //   at https://www.php.net/manual/en/domdocument.save.php
-                //   and https://www.php.net/manual/en/domdocument.savexml.php
-                $options = $options
-                    // | LIBXML_NOEMPTYTAG // Expand empty tags (e.g. <br/> to <br></br>)
-                    | LIBXML_HTML_NODEFDTD // No doctype
-                    | LIBXML_HTML_NOIMPLIED;
-
-
-            }
-
+        if (!$this->isXmlExtensionLoaded()) {
             /**
-             * No warning reporting
-             * Load XML issue E_STRICT warning seen in the log
+             * If the XML module is not present
              */
-            if (!PluginUtility::isTest()) {
-                $oldLevel = error_reporting(E_ERROR);
-            }
+            throw new ExceptionBadSyntax("The php `libxml` module was not found on your installation, the xml/svg file could not be modified / instantiated", self::CANONICAL);
+        }
 
-            $this->xmlDom = new DOMDocument('1.0', 'UTF-8');
+        // https://www.php.net/manual/en/libxml.constants.php
+        $options = LIBXML_NOCDATA
+            // | LIBXML_NOBLANKS // same as preserveWhiteSpace=true, not set to be able to format the output
+            | LIBXML_NOXMLDECL // Drop the XML declaration when saving a document
+            | LIBXML_NONET // No network during load
+            | LIBXML_NSCLEAN // Remove redundant namespace declarations - for whatever reason, the formatting does not work if this is set
+        ;
 
-            $this->mandatoryFormatConfigBeforeLoading();
+        // HTML
+        if ($type == self::HTML_TYPE) {
+
+            // Options that cause the process to hang if this is not for a html file
+            // Empty tag option may also be used only on save
+            //   at https://www.php.net/manual/en/domdocument.save.php
+            //   and https://www.php.net/manual/en/domdocument.savexml.php
+            $options = $options
+                // | LIBXML_NOEMPTYTAG // Expand empty tags (e.g. <br/> to <br></br>)
+                | LIBXML_HTML_NODEFDTD // No doctype
+                | LIBXML_HTML_NOIMPLIED;
 
 
-            $text = $this->processTextBeforeLoading($text);
+        }
 
-            /**
-             * Because the load does handle HTML5tag as error
-             * (ie section for instance)
-             * We take over the errors and handle them after the below load
-             *
-             * https://www.php.net/manual/en/function.libxml-use-internal-errors.php
-             *
-             */
-            libxml_use_internal_errors(true);
+        /**
+         * No warning reporting
+         * Load XML issue E_STRICT warning seen in the log
+         */
+        if (!PluginUtility::isTest()) {
+            $oldLevel = error_reporting(E_ERROR);
+        }
 
-            if ($type == self::XML_TYPE) {
+        $this->domDocument = new DOMDocument('1.0', 'UTF-8');
 
-                $result = $this->xmlDom->loadXML($text, $options);
+        $this->mandatoryFormatConfigBeforeLoading();
 
-            } else {
 
-                /**
-                 * Unlike loading XML, HTML does not have to be well-formed to load.
-                 * While malformed HTML should load successfully, this function may generate E_WARNING errors
-                 * @deprecated as we try to be XHTML compliantXML but yeah this is not always possible
-                 */
+        $text = $this->processTextBeforeLoading($text);
 
-                /**
-                 * Bug: Even if we set that the document is an UTF-8
-                 * loadHTML treat the string as being in ISO-8859-1 if without any heading
-                 * (ie <xml encoding="utf-8"..>
-                 * https://stackoverflow.com/questions/8218230/php-domdocument-loadhtml-not-encoding-utf-8-correctly
-                 * Otherwise French and other language are not well loaded
-                 *
-                 * We use the trick to transform UTF-8 to HTML
-                 */
-                $htmlEntityEncoded = mb_convert_encoding($text, 'HTML-ENTITIES', 'UTF-8');
-                $result = $this->xmlDom->loadHTML($htmlEntityEncoded, $options);
+        /**
+         * Because the load does handle HTML5tag as error
+         * (ie section for instance)
+         * We take over the errors and handle them after the below load
+         *
+         * https://www.php.net/manual/en/function.libxml-use-internal-errors.php
+         *
+         */
+        libxml_use_internal_errors(true);
 
-            }
-            if ($result === false) {
+        if ($type == self::XML_TYPE) {
 
-                /**
-                 * Error
-                 */
-                $errors = libxml_get_errors();
-
-                foreach ($errors as $error) {
-
-                    /* @var LibXMLError
-                     * @noinspection PhpComposerExtensionStubsInspection
-                     *
-                     * Section is an html5 tag (and is invalid for libxml)
-                     */
-                    if (!in_array($error->message, self::KNOWN_HTML_LOADING_ERRORS)) {
-                        /**
-                         * This error is an XML and HTML error
-                         */
-                        if (
-                            strpos($error->message, "htmlParseEntityRef: expecting ';' in Entity") !== false
-                            ||
-                            $error->message == "EntityRef: expecting ';'\n"
-                        ) {
-                            $message = "There is big probability that there is an ampersand alone `&`. ie You forgot to call html/Xml entities in a `src` or `url` attribute.";
-                        } else {
-                            $message = "Error while loading HTML";
-                        }
-                        $message .= "Error: " . $error->message . ", Loaded text: " . $text;
-
-                        /**
-                         * We clean the errors, otherwise
-                         * in a test series, they failed the next test
-                         *
-                         */
-                        libxml_clear_errors();
-
-                        // The xml dom object is null, we got NULL pointer exception everywhere
-                        // just throw, the code will see it
-                        throw new ExceptionBadSyntax($message, self::CANONICAL);
-
-                    }
-
-                }
-            }
-
-            /**
-             * We clean the known errors (otherwise they are added in a queue)
-             */
-            libxml_clear_errors();
-
-            /**
-             * Error reporting back
-             */
-            if (!PluginUtility::isTest() && isset($oldLevel)) {
-                error_reporting($oldLevel);
-            }
-
-            // namespace error : Namespace prefix dc on format is not defined
-            // missing the ns declaration in the file. example:
-            // xmlns:dc="http://purl.org/dc/elements/1.1/"
-
+            $result = $this->domDocument->loadXML($text, $options);
 
         } else {
 
             /**
-             * If the XML module is not present
+             * Unlike loading XML, HTML does not have to be well-formed to load.
+             * While malformed HTML should load successfully, this function may generate E_WARNING errors
+             * @deprecated as we try to be XHTML compliantXML but yeah this is not always possible
              */
-            LogUtility::msg("The php `libxml` module was not found on your installation, the xml/svg file could not be modified / instantiated", LogUtility::LVL_MSG_ERROR, "support");
 
+            /**
+             * Bug: Even if we set that the document is an UTF-8
+             * loadHTML treat the string as being in ISO-8859-1 if without any heading
+             * (ie <xml encoding="utf-8"..>
+             * https://stackoverflow.com/questions/8218230/php-domdocument-loadhtml-not-encoding-utf-8-correctly
+             * Otherwise French and other language are not well loaded
+             *
+             * We use the trick to transform UTF-8 to HTML
+             */
+            $htmlEntityEncoded = mb_convert_encoding($text, 'HTML-ENTITIES', 'UTF-8');
+            $result = $this->domDocument->loadHTML($htmlEntityEncoded, $options);
 
         }
+        if ($result === false) {
+
+            /**
+             * Error
+             */
+            $errors = libxml_get_errors();
+
+            foreach ($errors as $error) {
+
+                /* @var LibXMLError
+                 * @noinspection PhpComposerExtensionStubsInspection
+                 *
+                 * Section is an html5 tag (and is invalid for libxml)
+                 */
+                if (!in_array($error->message, self::KNOWN_HTML_LOADING_ERRORS)) {
+                    /**
+                     * This error is an XML and HTML error
+                     */
+                    if (
+                        strpos($error->message, "htmlParseEntityRef: expecting ';' in Entity") !== false
+                        ||
+                        $error->message == "EntityRef: expecting ';'\n"
+                    ) {
+                        $message = "There is big probability that there is an ampersand alone `&`. ie You forgot to call html/Xml entities in a `src` or `url` attribute.";
+                    } else {
+                        $message = "Error while loading HTML";
+                    }
+                    /**
+                     * inboolean attribute XML loading error
+                     */
+                    if (strpos($error->message, "Specification mandates value for attribute") !== false) {
+                        $message = "Xml does not allow boolean attribute (ie without any value). If you skip this error, you will get a general attribute constructing error as next error. Load as HTML.";
+                    }
+
+                    $message .= "Error: " . $error->message . ", Loaded text: " . $text;
+
+                    /**
+                     * We clean the errors, otherwise
+                     * in a test series, they failed the next test
+                     *
+                     */
+                    libxml_clear_errors();
+
+                    // The xml dom object is null, we got NULL pointer exception everywhere
+                    // just throw, the code will see it
+                    throw new ExceptionBadSyntax($message, self::CANONICAL);
+
+                }
+
+            }
+        }
+
+        /**
+         * We clean the known errors (otherwise they are added in a queue)
+         */
+        libxml_clear_errors();
+
+        /**
+         * Error reporting back
+         */
+        if (!PluginUtility::isTest() && isset($oldLevel)) {
+            error_reporting($oldLevel);
+        }
+
+        // namespace error : Namespace prefix dc on format is not defined
+        // missing the ns declaration in the file. example:
+        // xmlns:dc="http://purl.org/dc/elements/1.1/"
+
 
     }
 
@@ -254,6 +254,16 @@ class XmlDocument
     }
 
     /**
+     * HTML loading is more permissive
+     *
+     * For instance, you would not get an error on boolean attribute
+     * ```
+     * Error while loading HTMLError: Specification mandates value for attribute defer
+     * ```
+     * In Xml, it's mandatory but not in HTML, they are known as:
+     * https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#boolean-attribute
+     *
+     *
      * @throws ExceptionBadSyntax
      */
     public static function createHtmlDocFromMarkup($markup): XmlDocument
@@ -262,9 +272,9 @@ class XmlDocument
     }
 
     public
-    function &getXmlDom(): DOMDocument
+    function &getDomDocument(): DOMDocument
     {
-        return $this->xmlDom;
+        return $this->domDocument;
     }
 
     /**
@@ -276,7 +286,7 @@ class XmlDocument
     public function setRootAttribute($name, $value)
     {
         if ($this->isXmlExtensionLoaded()) {
-            $this->xmlDom->documentElement->setAttribute($name, $value);
+            $this->domDocument->documentElement->setAttribute($name, $value);
         }
     }
 
@@ -286,22 +296,31 @@ class XmlDocument
      */
     public function getRootAttributeValue($name): ?string
     {
-        $value = $this->xmlDom->documentElement->getAttribute($name);
+        $value = $this->domDocument->documentElement->getAttribute($name);
         if ($value === "") {
             return null;
         }
         return $value;
     }
 
-    public function getXmlText(DOMElement $element = null): string
+    public function toXhtml(DOMElement $element = null): string
+    {
+        return $this->toXml($element);
+    }
+
+    public function toXml(DOMElement $element = null): string
     {
 
         if ($element === null) {
-            $element = $this->getXmlDom()->documentElement;
+            $element = $this->getDomDocument()->documentElement;
         }
-        $xmlText = $this->getXmlDom()->saveXML(
+        /**
+         * LIBXML_NOXMLDECL (no xml declaration) does not work because only empty tag is recognized
+         * https://www.php.net/manual/en/domdocument.savexml.php
+         */
+        $xmlText = $this->getDomDocument()->saveXML(
             $element,
-            LIBXML_NOXMLDECL // no xml declaration
+            LIBXML_NOXMLDECL
         );
         // Delete doctype (for svg optimization)
         // php has only doctype manipulation for HTML
@@ -323,8 +342,7 @@ class XmlDocument
      * ```
      * @return bool
      */
-    public
-    function isXmlExtensionLoaded()
+    public function isXmlExtensionLoaded(): bool
     {
         // A suffix used in the bad message
         $suffixBadMessage = "php extension is not installed. To install it, you need to install xml. Example: `sudo apt-get install php-xml`, `yum install php-xml`";
@@ -390,8 +408,8 @@ class XmlDocument
 
 
         //Node namespace can be select only from the document
-        $xpath = new DOMXPath($this->getXmlDom());
-        $DOMNodeList = $xpath->query("namespace::*", $this->getXmlDom()->ownerDocument);
+        $xpath = new DOMXPath($this->getDomDocument());
+        $DOMNodeList = $xpath->query("namespace::*", $this->getDomDocument()->ownerDocument);
         foreach ($DOMNodeList as $node) {
             $namespaceURI = $node->namespaceURI;
             if ($namespaceURI == $namespaceUri) {
@@ -403,15 +421,18 @@ class XmlDocument
 
     }
 
-    public
-    function getDocNamespaces(): array
+    public function getNamespaces(): array
     {
-        $xpath = new DOMXPath($this->getXmlDom());
+        /**
+         * We can't query with the library {@link XmlDocument::xpath()} function because
+         * we register in the xpath the namespace
+         */
+        $xpath = new DOMXPath($this->getDomDocument());
         // `namespace::*` means selects all the namespace attribute of the context node
         // namespace is an axes
         // See https://www.w3.org/TR/1999/REC-xpath-19991116/#axes
         // the namespace axis contains the namespace nodes of the context node; the axis will be empty unless the context node is an element
-        $DOMNodeList = $xpath->query('namespace::*', $this->getXmlDom()->ownerDocument);
+        $DOMNodeList = $xpath->query('namespace::*', $this->getDomDocument()->ownerDocument);
         $nameSpace = array();
         foreach ($DOMNodeList as $node) {
             /** @var DOMElement $node */
@@ -442,14 +463,15 @@ class XmlDocument
     function xpath($query, DOMElement $contextNode = null): DOMNodeList
     {
         if (!isset($this->domXpath)) {
-            $this->domXpath = new DOMXPath($this->getXmlDom());
+
+            $this->domXpath = new DOMXPath($this->getDomDocument());
 
             /**
              * Prefix mapping
              * It is necessary to use xpath to handle documents which have default namespaces.
              * The xpath expression will search for items with no namespace by default.
              */
-            foreach ($this->getDocNamespaces() as $prefix => $namespaceUri) {
+            foreach ($this->getNamespaces() as $prefix => $namespaceUri) {
                 /**
                  * You can't register an empty prefix
                  * Default namespace (without a prefix) can only be accessed by the local-name() and namespace-uri() attributes.
@@ -464,7 +486,7 @@ class XmlDocument
         }
 
         if ($contextNode === null) {
-            $contextNode = $this->xmlDom;
+            $contextNode = $this->domDocument;
         }
         $domList = $this->domXpath->query($query, $contextNode);
         if ($domList === false) {
@@ -482,9 +504,9 @@ class XmlDocument
         // This function does not work
         // $result = $this->getXmlDom()->documentElement->removeAttribute($attribute);
 
-        for ($i = 0; $i < $this->getXmlDom()->documentElement->attributes->length; $i++) {
-            if ($this->getXmlDom()->documentElement->attributes[$i]->name == $attribute) {
-                $result = $this->getXmlDom()->documentElement->removeAttributeNode($this->getXmlDom()->documentElement->attributes[$i]);
+        for ($i = 0; $i < $this->getDomDocument()->documentElement->attributes->length; $i++) {
+            if ($this->getDomDocument()->documentElement->attributes[$i]->name == $attribute) {
+                $result = $this->getDomDocument()->documentElement->removeAttributeNode($this->getDomDocument()->documentElement->attributes[$i]);
                 if ($result === false) {
                     throw new \RuntimeException("Not able to delete the $attribute");
                 }
@@ -497,10 +519,10 @@ class XmlDocument
     public
     function removeRootChildNode($nodeName)
     {
-        for ($i = 0; $i < $this->getXmlDom()->documentElement->childNodes->length; $i++) {
-            $childNode = &$this->getXmlDom()->documentElement->childNodes[$i];
+        for ($i = 0; $i < $this->getDomDocument()->documentElement->childNodes->length; $i++) {
+            $childNode = &$this->getDomDocument()->documentElement->childNodes[$i];
             if ($childNode->nodeName == $nodeName) {
-                $result = $this->getXmlDom()->documentElement->removeChild($childNode);
+                $result = $this->getDomDocument()->documentElement->removeChild($childNode);
                 if ($result == false) {
                     throw new \RuntimeException("Not able to delete the child node $nodeName");
                 }
@@ -547,7 +569,7 @@ class XmlDocument
     public function diff(XmlDocument $rightDocument)
     {
         $error = "";
-        XmlUtility::diffNode($this->getXmlDom(), $rightDocument->getXmlDom(), $error);
+        XmlUtility::diffNode($this->getDomDocument(), $rightDocument->getDomDocument(), $error);
         return $error;
     }
 
@@ -561,11 +583,11 @@ class XmlDocument
      * We do it with the function {@link XmlDocument::mandatoryFormatConfigBeforeLoading()}
      *
      */
-    public function getXmlTextFormatted(DOMElement $element = null)
+    public function toXmlFormatted(DOMElement $element = null): string
     {
 
-        $this->xmlDom->formatOutput = true;
-        return $this->getXmlText($element);
+        $this->domDocument->formatOutput = true;
+        return $this->toXml($element);
 
     }
 
@@ -577,7 +599,7 @@ class XmlDocument
      * See also {@link XmlDocument::processTextBeforeLoading()}
      * that is needed before loading
      */
-    public function getXmlTextNormalized(DOMElement $element = null)
+    public function toXmlNormalized(DOMElement $element = null): string
     {
 
         /**
@@ -597,15 +619,15 @@ class XmlDocument
 //        }
 
         if ($element == null) {
-            $element = $this->xmlDom->documentElement;
+            $element = $this->domDocument->documentElement;
         }
         $element->normalize();
-        return $this->getXmlTextFormatted($element);
+        return $this->toXmlFormatted($element);
     }
 
     /**
      * Not really conventional but
-     * to be able to {@link getXmlTextNormalized}
+     * to be able to {@link toXmlNormalized}
      * the EOL should be deleted
      * We do it before loading and not with a XML documentation
      */
@@ -622,7 +644,7 @@ class XmlDocument
 
     /**
      * This function is called just before loading
-     * in order to be able to {@link XmlDocument::getXmlTextFormatted() format the output }
+     * in order to be able to {@link XmlDocument::toXmlFormatted() format the output }
      * https://www.php.net/manual/en/class.domdocument.php#domdocument.props.formatoutput
      * Mandatory for a a good formatting before loading
      *
@@ -632,7 +654,7 @@ class XmlDocument
         // not that
         // the loading option: LIBXML_NOBLANKS
         // is equivalent to $this->xmlDom->preserveWhiteSpace = true;
-        $this->xmlDom->preserveWhiteSpace = false;
+        $this->domDocument->preserveWhiteSpace = false;
     }
 
     /**
@@ -655,6 +677,8 @@ class XmlDocument
 
 
     /**
+     * Query via a CSS selector
+     * (not that it will not work with other namespace than the default one, ie xmlns will not work)
      * @throws ExceptionBadSyntax - if the selector is not valid
      * @throws ExceptionNotFound - if the selector selects nothing
      */
@@ -711,12 +735,12 @@ class XmlDocument
 
     public function getElement(): XmlElement
     {
-        return XmlElement::create($this->getXmlDom()->documentElement, $this);
+        return XmlElement::create($this->getDomDocument()->documentElement, $this);
     }
 
     public function toHtml()
     {
-        return $this->xmlDom->saveHTML();
+        return $this->domDocument->saveHTML();
     }
 
     /**
@@ -724,13 +748,8 @@ class XmlDocument
      */
     public function createElement(string $localName): XmlElement
     {
-        $element = $this->xmlDom->createElement($localName);
+        $element = $this->domDocument->createElement($localName);
         return XmlElement::create($element, $this);
-    }
-
-    public function toXml(): string
-    {
-        return $this->xmlDom->saveXML();
     }
 
 

@@ -89,7 +89,7 @@ class XmlUtility
             throw new ExceptionBadSyntax("The text should not be empty");
         }
         $xmlDoc = new XmlDocument($text, XmlDocument::XML_TYPE);
-        return $xmlDoc->getXmlTextNormalized();
+        return $xmlDoc->toXmlNormalized();
     }
 
     /**

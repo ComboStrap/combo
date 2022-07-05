@@ -241,7 +241,7 @@ class FetcherSvg extends FetcherLocalImage
              */
             $confNamespaceToKeeps = PluginUtility::getConfValue(FetcherSvg::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP);
             $namespaceToKeep = StringUtility::explodeAndTrim($confNamespaceToKeeps, ",");
-            foreach ($this->getXmlDocument()->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
+            foreach ($this->getXmlDocument()->getNamespaces() as $namespacePrefix => $namespaceUri) {
                 if (
                     !empty($namespacePrefix)
                     && $namespacePrefix != "svg"
@@ -255,8 +255,8 @@ class FetcherSvg extends FetcherLocalImage
             /**
              * Delete empty namespace rules
              */
-            $documentElement = $this->getXmlDocument()->getXmlDom()->documentElement;
-            foreach ($this->getXmlDocument()->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
+            $documentElement = $this->getXmlDocument()->getDomDocument()->documentElement;
+            foreach ($this->getXmlDocument()->getNamespaces() as $namespacePrefix => $namespaceUri) {
                 $nodes = $this->getXmlDocument()->xpath("//*[namespace-uri()='$namespaceUri']");
                 $attributes = $this->getXmlDocument()->xpath("//@*[namespace-uri()='$namespaceUri']");
                 if ($nodes->length == 0 && $attributes->length == 0) {
@@ -451,7 +451,7 @@ class FetcherSvg extends FetcherLocalImage
      */
     public function getMarkup(): string
     {
-        return $this->getXmlDocument()->getXmlText();
+        return $this->getXmlDocument()->toXml();
     }
 
     /**
@@ -740,7 +740,7 @@ class FetcherSvg extends FetcherLocalImage
      */
     public function getXmlDom(): \DOMDocument
     {
-        return $this->getXmlDocument()->getXmlDom();
+        return $this->getXmlDocument()->getDomDocument();
     }
 
     /**
@@ -867,13 +867,13 @@ class FetcherSvg extends FetcherLocalImage
             $mediaWidth = $this->getIntrinsicWidth();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("The media width of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
-            return $this->getXmlDocument()->getXmlText();
+            return $this->getXmlDocument()->toXml();
         }
         try {
             $mediaHeight = $this->getIntrinsicHeight();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("The media height of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
-            return $this->getXmlDocument()->getXmlText();
+            return $this->getXmlDocument()->toXml();
         }
         if (
             $mediaWidth == $mediaHeight
@@ -1012,7 +1012,7 @@ class FetcherSvg extends FetcherLocalImage
                         $widthInPixel = ConditionalLength::createFromString($requestedWidth)->toPixelNumber();
                     } catch (ExceptionCompile $e) {
                         LogUtility::msg("The requested width $requestedWidth could not be converted to pixel. It returns the following error ({$e->getMessage()}). Processing was stopped");
-                        return $this->getXmlDocument()->getXmlText();
+                        return $this->getXmlDocument()->toXml();
                     }
                     $stylingAttributes->addStyleDeclarationIfNotSet("max-width", "{$widthInPixel}px");
 
@@ -1555,7 +1555,7 @@ class FetcherSvg extends FetcherLocalImage
      */
     private function setIntrinsicHeight(): FetcherSvg
     {
-        $viewBox = $this->getXmlDocument()->getXmlDom()->documentElement->getAttribute(FetcherSvg::VIEW_BOX);
+        $viewBox = $this->getXmlDocument()->getDomDocument()->documentElement->getAttribute(FetcherSvg::VIEW_BOX);
         if ($viewBox !== "") {
             $attributes = $this->getViewBoxAttributes($viewBox);
             $viewBoxHeight = $attributes[3];
@@ -1570,7 +1570,7 @@ class FetcherSvg extends FetcherLocalImage
          * Case with some icon such as
          * https://raw.githubusercontent.com/fefanto/fontaudio/master/svgs/fad-random-1dice.svg
          */
-        $height = $this->getXmlDocument()->getXmlDom()->documentElement->getAttribute("height");
+        $height = $this->getXmlDocument()->getDomDocument()->documentElement->getAttribute("height");
         if ($height === "") {
             throw new ExceptionBadSyntax("The svg ($this) does not have a viewBox or height attribute, the intrinsic height cannot be determined");
         }

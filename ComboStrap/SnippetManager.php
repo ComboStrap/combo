@@ -195,7 +195,7 @@ class SnippetManager
                                 $wikiPath = $snippet->getInternalPath();
                                 try {
                                     $fetchUrl = FetcherLocalPath::createFromPath($wikiPath)->getFetchUrl();
-                                    $jsDokuwiki["src"] = $fetchUrl->toString();
+                                    $jsDokuwiki["src"] = $fetchUrl->toHtmlString(); // html string at this point
                                     if (!$snippet->getCritical()) {
                                         $jsDokuwiki["defer"] = null;
                                     }
@@ -249,9 +249,16 @@ class SnippetManager
                                     continue 3;
                                 }
                             } else {
-                                $fetchUrl = FetcherLocalPath::createFromPath($snippet->getInternalPath())->getFetchUrl();
-                                $cssInternalArray["rel"] = "stylesheet";
-                                $cssInternalArray["href"] = $fetchUrl->toString();
+                                try {
+                                    $fetchUrl = FetcherLocalPath::createFromPath($snippet->getInternalPath())->getFetchUrl();
+                                    $cssInternalArray["rel"] = "stylesheet";
+                                    $cssInternalArray["href"] = $fetchUrl->toHtmlString(); // html string at this point
+                                } catch (ExceptionNotFound $e) {
+                                    // the file should have been found at this point
+                                    LogUtility::internalError("The internal css could not be added. Error:{$e->getMessage()}",self::CANONICAL);
+                                    continue 3;
+                                }
+
                             }
                             $cssInternalArray = $this->addHtmlAttributes($cssInternalArray, $snippet);
                             $returnedDokuWikiFormat[self::STYLE_TAG][] = $cssInternalArray;
@@ -528,7 +535,7 @@ class SnippetManager
     }
 
     /**
-     * Output the snippe in HTML format
+     * Output the snippet in HTML format
      * @return string - html string
      */
     public function toHtml(): string
@@ -563,7 +570,11 @@ class SnippetManager
                  */
                 foreach ($tag as $attributeName => $attributeValue) {
                     if ($attributeName !== "_data") {
-                        $attributes .= " $attributeName=\"$attributeValue\"";
+                        if ($attributeValue !== null) {
+                            $attributes .= " $attributeName=\"$attributeValue\"";
+                        } else {
+                            $attributes .= " $attributeName";
+                        }
                     } else {
                         $content = $attributeValue;
                     }

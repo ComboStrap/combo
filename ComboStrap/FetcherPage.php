@@ -113,7 +113,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         try {
             $domDocument = $this->htmlTemplatePathToHtmlDom($htmlTemplatePath);
         } catch (ExceptionBadSyntax $e) {
-            throw new ExceptionRuntimeInternal("The Html template layout ($htmlTemplatePath) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
+            throw new ExceptionRuntimeInternal("The Html template layout ($htmlTemplatePath) is not valid. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntimeInternal("The Html template layout ($htmlTemplatePath) does not exists", self::CANONICAL);
         }
@@ -172,14 +172,14 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             $langValue = Lang::createForPage($requestedPage)->getValueOrDefault();
             global $lang;
             $langDirection = $lang['direction'];
-            /**
-             * @noinspection HttpUrlsUsage because this is just an identifier https://github.com/w3c/svgwg/issues/738 - http and https
-             */
             $html
-                ->setAttribute("xmlns", "http://www.w3.org/1999/xhtml")
-                ->setAttribute("xml:lang", $langValue)
                 ->setAttribute("lang", $langValue)
                 ->setAttribute("direction", $langDirection);
+            /**
+             * Not Xhtml bedcause it does not support boolean attribute without any value
+             *  ->setAttribute("xmlns", "http://www.w3.org/1999/xhtml")
+             *  ->setAttribute("xml:lang", $langValue)
+             */
             $this->setRemFontSizeToHtml($html);
 
             /**
@@ -194,6 +194,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             $this->checkViewPortMeta($head);
             $this->addPageIconMeta($head);
             $this->addTitleMeta($head);
+            $this->addHeaders($head);
 
 
             /**
@@ -297,9 +298,11 @@ class FetcherPage extends FetcherAbs implements FetcherSource
              * We save as XML because we strive to be XML compliant (ie XHTML)
              * And we want to load it as XML to check the XHTML namespace (ie xmlns)
              */
-            $htmlBodyDocumentString = $domDocument->toXml();
+            $htmlBodyDocumentString = $domDocument->toHtml();
             $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlOutputByAreaName)->render();
 
+            // DocType required by bootstrap https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
+            $finalHtmlBodyString = "<!doctype html>\n$finalHtmlBodyString";
             $cache->storeCache($finalHtmlBodyString);
 
         } finally {
@@ -363,7 +366,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         try {
             return XmlDocument::createHtmlDocFromMarkup($htmlStringLayout);
         } catch (ExceptionBadSyntax $e) {
-            throw new ExceptionBadSyntax("The html template file ($layoutHtmlPath) is not valid. Error: {$e->getMessage()}", self::CANONICAL);
+            throw new ExceptionBadSyntax("The html template file ($layoutHtmlPath) is not valid. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
         }
     }
 
@@ -665,6 +668,28 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             return;
         }
         $html->addStyle("font-size", "{$remSizeInt}px");
+
+    }
+
+    private function addHeaders(XmlElement $head)
+    {
+        ob_start();
+        try {
+            tpl_metaheaders();
+            $htmlHeaders = ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+        try {
+            $headerDocument = XmlDocument::createHtmlDocFromMarkup("<div>$htmlHeaders</div>");
+        } catch (ExceptionBadSyntax $e) {
+            LogUtility::error("The created meta html header string could not be read. Error:{$e->getMessage()}", self::CANONICAL);
+            return;
+        }
+        $headers = $headerDocument->getElement()->getChildrenElement();
+        foreach ($headers as $childElement) {
+            $head->appendChild($childElement);
+        }
 
     }
 

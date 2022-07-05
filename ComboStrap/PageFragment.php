@@ -2059,7 +2059,7 @@ class PageFragment extends ResourceComboAbs
         return FetcherPage::createPageFetcherFromPage($this);
     }
 
-    public function getHtmlResponseviaTemplate(): HttpResponse
+    public function getHttpResponse(): HttpResponse
     {
         return HttpRequest::fetchXhtmlPageFragmentResponse($this->getWikiId());
     }

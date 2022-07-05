@@ -70,6 +70,9 @@ class XhtmlUtility
     }
 
 
+    /**
+     * @throws ExceptionBadSyntax
+     */
     public static function normalize($htmlText)
     {
         if (empty($htmlText)) {

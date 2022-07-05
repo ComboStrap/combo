@@ -150,7 +150,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             }
 
         }
-        $snippetManager->clearSnippets();
+        $snippetManager->reset();
 
     }
 
@@ -233,7 +233,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
     {$snippetManager->toHtml()}
 </div>
 EOF;
-            $snippetManager->clearSnippets();
+            $snippetManager->reset();
 
         }
 

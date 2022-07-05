@@ -188,17 +188,9 @@ class Snippet implements JsonSerializable
             $url = $identifier;
         }
         $requestedPageId = PluginUtility::getRequestedWikiId();
-        if ($requestedPageId === null) {
-            if (PluginUtility::isTest()) {
-                $requestedPageId = "test-id";
-            } else {
-                $requestedPageId = "unknown";
-                LogUtility::msg("The requested id is unknown. We couldn't scope the snippets.");
-            }
-        }
         $snippets = &self::$globalSnippets[$requestedPageId];
         if ($snippets === null) {
-            self::$globalSnippets = null;
+            self::reset();
             self::$globalSnippets[$requestedPageId] = [];
             $snippets = &self::$globalSnippets[$requestedPageId];
         }

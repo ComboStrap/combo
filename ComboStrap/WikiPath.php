@@ -428,6 +428,10 @@ class WikiPath extends PathAbs
     {
         global $ID;
         if ($ID === null) {
+            /**
+             * It can happen during dynamic test call
+             * TODO: It can happen in case of ajax call, check this test case
+             */
             if (!PluginUtility::isTest()) {
                 LogUtility::error("The markup fragment could not be identified (global wiki ID is null)");
             }

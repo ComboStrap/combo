@@ -5,6 +5,7 @@
  */
 
 use ComboStrap\Bootstrap;
+use ComboStrap\IdManager;
 use ComboStrap\PluginUtility;
 
 
@@ -24,7 +25,7 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
 
     const TAG = "dropdown";
 
-    private $dropdownCounter = 0;
+
 
     /**
      * Syntax Type.
@@ -178,13 +179,9 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $this->dropdownCounter++;
-                    $dropDownId = "dropDown" . $this->dropdownCounter;
-                    if (isset($data[PluginUtility::ATTRIBUTES])) {
-                        $attributes = $data[PluginUtility::ATTRIBUTES];
-                    } else {
-                        $attributes = $data[1];
-                    }
+
+                    $dropDownId = IdManager::getOrCreate()->generateNewHtmlIdForComponent(self::TAG);
+                    $attributes = $data[PluginUtility::ATTRIBUTES] ?? $data[1];
                     $name = "Name attribute not set";
                     if (array_key_exists("name", $attributes)) {
                         $name = $attributes["name"];

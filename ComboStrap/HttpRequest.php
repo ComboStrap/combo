@@ -91,6 +91,9 @@ class HttpRequest
         }
 
         $query = $this->url->getQuery();
+
+        HttpRequest::purgeStaticDataRequestedScoped();
+
         $testRequest = new \TestRequest();
         $response = $testRequest->get($query);
 

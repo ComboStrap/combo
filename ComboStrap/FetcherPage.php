@@ -91,6 +91,11 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     {
 
         /**
+         * Request environment
+         */
+        $this->setRequestEnvironment();
+
+        /**
          * We first collect the depend file to
          * check if we can use the cache
          */
@@ -123,224 +128,211 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         $htmlOutputByAreaName = [];
         $pageElements = $this->buildAndGetPageElements($domDocument);
 
+
         /**
-         * Request environment variable before the fetch
+         * Run the main slot
+         * Get the HTML fragment
+         * The first one should be the main because it has the frontmatter
          */
-        $wikiRequest = WikiRequest::create()
-            ->setNewAct("show")
-            ->setNewRequestedId($this->getRequestedPath()->getWikiId());
-
+        $mainElement = $pageElements[self::MAIN_CONTENT_AREA];
         try {
-
             /**
-             * Run the main slot
-             * Get the HTML fragment
-             * The first one should be the main because it has the frontmatter
+             * The {@link FetcherPageFragment::getFetchPath() Get fetch path}
+             * will start the rendering if there is no HTML path
+             * or the cache is not fresh
              */
-            $mainElement = $pageElements[self::MAIN_CONTENT_AREA];
+            $path = $mainElement->getPageFragmentFetcher()->getFetchPath();
+            $cache->addFileDependency($path);
+        } catch (ExceptionNotFound $e) {
+            // it should be found
+            throw new ExceptionNotFound("The main page markup document was not found. Error:{$e->getMessage()}", self::CANONICAL);
+        }
+
+        /**
+         * Run the secondary slots
+         */
+        foreach ($pageElements as $elementId => $pageElement) {
+            if ($elementId === self::MAIN_CONTENT_AREA) {
+                // already added just below
+                continue;
+            }
             try {
-                /**
-                 * The {@link FetcherPageFragment::getFetchPath() Get fetch path}
-                 * will start the rendering if there is no HTML path
-                 * or the cache is not fresh
-                 */
-                $path = $mainElement->getPageFragmentFetcher()->getFetchPath();
-                $cache->addFileDependency($path);
+                $cache->addFileDependency($pageElement->getPageFragmentFetcher()->getFetchPath());
             } catch (ExceptionNotFound $e) {
-                // it should be found
-                throw new ExceptionNotFound("The main page markup document was not found. Error:{$e->getMessage()}", self::CANONICAL);
+                // no fetcher or container
             }
+        }
+
+        /**
+         * Do we create the page or return the cache
+         */
+        if ($cache->isCacheUsable()) {
+            return $cache->getFile();
+        }
+
+        /**
+         * Creating the HTML document
+         *
+         */
+        foreach ($pageElements as $pageElement) {
+
+
+            $domElement = $pageElement->getDomElement();
 
             /**
-             * Run the secondary slots
-             */
-            foreach ($pageElements as $elementId => $pageElement) {
-                if ($elementId === self::MAIN_CONTENT_AREA) {
-                    // already added just below
-                    continue;
-                }
-                try {
-                    $cache->addFileDependency($pageElement->getPageFragmentFetcher()->getFetchPath());
-                } catch (ExceptionNotFound $e) {
-                    // no fetcher or container
-                }
-            }
-
-            /**
-             * Do we create the page or return the cache
-             */
-            if ($cache->isCacheUsable()) {
-                return $cache->getFile();
-            }
-
-            /**
-             * Creating the HTML document
+             * Layout Container
+             * Page Header and Footer have a bar that permits to set the layout container value
              *
+             * The page core does not have any
+             * It's by default contained for all layout
+             * generally applied on the page-core element ie
+             * <div id="page-core" data-layout-container=>
              */
-            foreach ($pageElements as $pageElement) {
-
-
-                $domElement = $pageElement->getDomElement();
-
-                /**
-                 * Layout Container
-                 * Page Header and Footer have a bar that permits to set the layout container value
-                 *
-                 * The page core does not have any
-                 * It's by default contained for all layout
-                 * generally applied on the page-core element ie
-                 * <div id="page-core" data-layout-container=>
-                 */
-                if ($domElement->hasAttribute(self::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
-                    $domElement->removeAttribute(self::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
-                    $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
-                    $domElement->addClass(syntax_plugin_combo_container::getClassName($container));
-                }
-
-
-                /**
-                 * Relative positioning is important for the positioning of the pagetools (page-core), edit button, ...
-                 * for absolutely positioning at the left corner of the viewport (message, tool, ...)
-                 */
-                $domElement->addClass(self::POSITION_RELATIVE_CLASS);
-
-                /**
-                 * Rendering
-                 */
-                if (!$pageElement->isSlot()) {
-                    // no rendering for container area, this is a parent
-                    continue;
-                }
-
-
-                try {
-
-                    $fetcher = $pageElement->getPageFragmentFetcher();
-
-                } catch (ExceptionNotFound $e) {
-
-                    /**
-                     * no fragment (page side for instance)
-                     * remove or empty ?
-                     *   * remove allows to not have any empty node but it may break css rules
-                     *   * empty permits not break any css rules (grid may be broken for instance)
-                     */
-                    $action = $domElement->getAttributeOrDefault(self::DATA_EMPTY_ACTION_ATTRIBUTE, "none");
-                    switch ($action) {
-                        case "remove":
-                            $domElement->remove();
-                            break;
-                        case "none":
-                            // the empty node will stay in the page
-                            break;
-                        default:
-                            LogUtility::internalError("The value ($action) of the attribute (" . self::DATA_EMPTY_ACTION_ATTRIBUTE . ") is unknown", self::CANONICAL);
-                    }
-                    continue;
-
-                }
-
-                /**
-                 * We don't load / add the HTML string in the actual DOM document
-                 * to no add by-effect, corrections during loading and writing
-                 *
-                 * We add a template variable, we save the HTML in a array
-                 * And replace them after the loop
-                 */
-                $layoutVariable = $pageElement->getVariableName();
-                $htmlOutputByAreaName[$layoutVariable] = $fetcher->getFetchPathAsHtmlString();
-                $domElement->appendTextNode('$' . $layoutVariable);
-
+            if ($domElement->hasAttribute(self::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
+                $domElement->removeAttribute(self::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
+                $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                $domElement->addClass(syntax_plugin_combo_container::getClassName($container));
             }
 
 
             /**
-             * Html
+             * Relative positioning is important for the positioning of the pagetools (page-core), edit button, ...
+             * for absolutely positioning at the left corner of the viewport (message, tool, ...)
              */
+            $domElement->addClass(self::POSITION_RELATIVE_CLASS);
+
+            /**
+             * Rendering
+             */
+            if (!$pageElement->isSlot()) {
+                // no rendering for container area, this is a parent
+                continue;
+            }
+
+
             try {
-                $html = $domDocument->querySelector("html");
-            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a html element");
+
+                $fetcher = $pageElement->getPageFragmentFetcher();
+
+            } catch (ExceptionNotFound $e) {
+
+                /**
+                 * no fragment (page side for instance)
+                 * remove or empty ?
+                 *   * remove allows to not have any empty node but it may break css rules
+                 *   * empty permits not break any css rules (grid may be broken for instance)
+                 */
+                $action = $domElement->getAttributeOrDefault(self::DATA_EMPTY_ACTION_ATTRIBUTE, "none");
+                switch ($action) {
+                    case "remove":
+                        $domElement->remove();
+                        break;
+                    case "none":
+                        // the empty node will stay in the page
+                        break;
+                    default:
+                        LogUtility::internalError("The value ($action) of the attribute (" . self::DATA_EMPTY_ACTION_ATTRIBUTE . ") is unknown", self::CANONICAL);
+                }
+                continue;
+
             }
 
-            $langValue = Lang::createForPage($requestedPage)->getValueOrDefault();
-            global $lang;
-            $langDirection = $lang['direction'];
-            $html
-                ->setAttribute("lang", $langValue)
-                ->setAttribute("direction", $langDirection);
             /**
-             * Not Xhtml bedcause it does not support boolean attribute without any value
-             *  ->setAttribute("xmlns", "http://www.w3.org/1999/xhtml")
-             *  ->setAttribute("xml:lang", $langValue)
-             */
-            $this->setRemFontSizeToHtml($html);
-
-            /**
-             * Head
-             */
-            try {
-                $head = $domDocument->querySelector("head");
-            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a head element");
-            }
-            $this->checkCharSetMeta($head);
-            $this->checkViewPortMeta($head);
-            $this->addPageIconMeta($head);
-            $this->addTitleMeta($head);
-
-            /**
-             * Snippet (in header)
-             * Css and Js from the layout if any
+             * We don't load / add the HTML string in the actual DOM document
+             * to no add by-effect, corrections during loading and writing
              *
-             * Note that Header may be added during rendering and must be
-             * then called after rendering
+             * We add a template variable, we save the HTML in a array
+             * And replace them after the loop
              */
-            $this->addHeaders($head, $layoutCssPath, $layoutJsPath);
-
-            /**
-             * Body
-             * {@link tpl_classes} will add the dokuwiki class.
-             * See https://www.dokuwiki.org/devel:templates#dokuwiki_class
-             * dokuwiki__top ID is needed for the "Back to top" utility
-             * used also by some plugins
-             */
-            $tplClasses = tpl_classes();
-            try {
-                $layoutClass = StyleUtility::addComboStrapSuffix("layout-$layoutName");
-                $domDocument->querySelector("body")
-                    ->addClass($tplClasses)
-                    ->addClass(self::POSITION_RELATIVE_CLASS)
-                    ->addClass($layoutClass);
-            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a body element");
-            }
-
-
-            if (sizeof($htmlOutputByAreaName) === 0) {
-                LogUtility::internalError("No slot was rendered");
-            }
-
-
-            /**
-             * We save as XML because we strive to be XML compliant (ie XHTML)
-             * And we want to load it as XML to check the XHTML namespace (ie xmlns)
-             */
-            $htmlBodyDocumentString = $domDocument->toHtml();
-            $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlOutputByAreaName)->render();
-
-            /**
-             * DocType is required by bootstrap
-             * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
-             */
-            $finalHtmlBodyString = "<!doctype html>\n$finalHtmlBodyString";
-            $cache->storeCache($finalHtmlBodyString);
-
-        } finally {
-
-            $wikiRequest->resetEnvironmentToPreviousValues();
+            $layoutVariable = $pageElement->getVariableName();
+            $htmlOutputByAreaName[$layoutVariable] = $fetcher->getFetchPathAsHtmlString();
+            $domElement->appendTextNode('$' . $layoutVariable);
 
         }
+
+
+        /**
+         * Html
+         */
+        try {
+            $html = $domDocument->querySelector("html");
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a html element");
+        }
+
+        $langValue = Lang::createForPage($requestedPage)->getValueOrDefault();
+        global $lang;
+        $langDirection = $lang['direction'];
+        $html
+            ->setAttribute("lang", $langValue)
+            ->setAttribute("dir", $langDirection);
+        /**
+         * Not Xhtml bedcause it does not support boolean attribute without any value
+         *  ->setAttribute("xmlns", "http://www.w3.org/1999/xhtml")
+         *  ->setAttribute("xml:lang", $langValue)
+         */
+        $this->setRemFontSizeToHtml($html);
+
+        /**
+         * Head
+         */
+        try {
+            $head = $domDocument->querySelector("head");
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a head element");
+        }
+        $this->checkCharSetMeta($head);
+        $this->checkViewPortMeta($head);
+        $this->addPageIconMeta($head);
+        $this->addTitleMeta($head);
+
+        /**
+         * Snippet (in header)
+         * Css and Js from the layout if any
+         *
+         * Note that Header may be added during rendering and must be
+         * then called after rendering
+         */
+        $this->addHeadElements($head, $layoutCssPath, $layoutJsPath);
+
+        /**
+         * Body
+         * {@link tpl_classes} will add the dokuwiki class.
+         * See https://www.dokuwiki.org/devel:templates#dokuwiki_class
+         * dokuwiki__top ID is needed for the "Back to top" utility
+         * used also by some plugins
+         */
+        $tplClasses = tpl_classes();
+        try {
+            $layoutClass = StyleUtility::addComboStrapSuffix("layout-$layoutName");
+            $domDocument->querySelector("body")
+                ->addClass($tplClasses)
+                ->addClass(self::POSITION_RELATIVE_CLASS)
+                ->addClass($layoutClass);
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a body element");
+        }
+
+
+        if (sizeof($htmlOutputByAreaName) === 0) {
+            LogUtility::internalError("No slot was rendered");
+        }
+
+
+        /**
+         * We save as XML because we strive to be XML compliant (ie XHTML)
+         * And we want to load it as XML to check the XHTML namespace (ie xmlns)
+         */
+        $htmlBodyDocumentString = $domDocument->toHtml();
+        $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlOutputByAreaName)->render();
+
+        /**
+         * DocType is required by bootstrap
+         * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
+         */
+        $finalHtmlBodyString = "<!doctype html>\n$finalHtmlBodyString";
+        $cache->storeCache($finalHtmlBodyString);
+
         return $cache->getFile();
 
     }
@@ -702,8 +694,15 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     }
 
-    private function addHeaders(XmlElement $head, WikiPath $layoutCssPath, WikiPath $layoutJsPath)
+    private function addHeadElements(XmlElement $head, WikiPath $layoutCssPath, WikiPath $layoutJsPath)
     {
+
+
+        /**
+         * Bootstrap meta-headers function registration
+         */
+        TplUtility::registerHeaderHandler();
+
         /**
          * Add the layout js and css first
          */
@@ -723,11 +722,17 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          */
         ob_start();
         try {
+            /**
+             * The request environment variable are needed
+             * by tpl_metaheaders
+             */
+            $this->setRequestEnvironment();
             tpl_metaheaders();
             $htmlHeaders = ob_get_contents();
         } finally {
             ob_end_clean();
         }
+
         try {
             $headerDocument = XmlDocument::createHtmlDocFromMarkup("<div>$htmlHeaders</div>");
         } catch (ExceptionBadSyntax $e) {
@@ -739,6 +744,14 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             $head->appendChild($childElement);
         }
 
+    }
+
+    private function setRequestEnvironment()
+    {
+        WikiRequest::create()
+            ->setNewAct("show")
+            ->setNewRunningId($this->getRequestedPath()->getWikiId())
+            ->setNewRequestedId($this->getRequestedPath()->getWikiId());
     }
 
 

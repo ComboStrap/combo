@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\ExceptionCompile;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\RenderUtility;
 use ComboStrap\Site;
@@ -73,10 +74,12 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
             /**
              * Html
              */
-            $htmlBeforeHeads = '<!DOCTYPE html>' . DOKU_LF;
-            $htmlBeforeHeads .= '<html>' . DOKU_LF;
-            $htmlBeforeHeads .= '<head>' . DOKU_LF;
-            $htmlBeforeHeads .= "  <title>$title</title>" . DOKU_LF;
+            $htmlBeforeHeads =<<<EOF
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>$title</title>
+EOF;
             // we echo because the tpl function just flush
             echo $htmlBeforeHeads;
 
@@ -89,7 +92,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
                     Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
                     TplUtility::registerHeaderHandler();
                 } catch (ExceptionCompile $e) {
-                    \ComboStrap\LogUtility::log2file("Error while registering the header handler on webcode ajax call. Error: {$e->getMessage()}");
+                    LogUtility::log2file("Error while registering the header handler on webcode ajax call. Error: {$e->getMessage()}");
                 }
 
             }

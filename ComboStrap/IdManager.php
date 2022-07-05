@@ -29,7 +29,7 @@ class IdManager
         $idManager = self::$idManagers[$cacheKey];
         if ($idManager === null) {
             // new run, delete all old cache managers
-            self::$idManagers = [];
+            self::reset();
             // create
             $idManager = new IdManager();
             self::$idManagers[$cacheKey] = $idManager;
@@ -38,26 +38,21 @@ class IdManager
     }
 
     /**
-     * @deprecated as the id manager is scoped to the requested page id
+     * We may test two run with the same id
+     * Even if the id manager is scoped to the requested page id, we need to have a reset
      */
     public static function reset()
     {
+        self::$idManagers = [];
     }
 
     public function generateNewHtmlIdForComponent(string $canonical, Path $slotPath = null): string
     {
 
         if ($slotPath === null) {
-            try {
-                $slotPath = PageFragment::createPageFromGlobalWikiId()->getPath();
-            } catch (ExceptionNotFound $e) {
-                /**
-                 * Not found
-                 *
-                 * It can happen in case of ajax call.
-                 *
-                 */
-            }
+
+            $slotPath = PageFragment::createPageFromGlobalWikiId()->getPath();
+
         }
 
         $idScope = $canonical;

@@ -22,7 +22,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     const MAIN_CONTENT_AREA = "main-content";
     const MAIN_HEADER_AREA = "main-header";
     const MAIN_FOOTER_AREA = "main-footer";
-    const AREAS = [
+    const LAYOUT_ELEMENTS = [
         self::PAGE_CORE_AREA,
         self::PAGE_SIDE_AREA,
         self::PAGE_HEADER_AREA,
@@ -38,6 +38,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     const UTF_8_CHARSET_VALUE = "utf-8";
     const VIEWPORT_RESPONSIVE_VALUE = "width=device-width,initial-scale=1";
     const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
+    const POSITION_RELATIVE_CLASS = "position-relative";
     private string $requestedLayout;
 
 
@@ -84,6 +85,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     /**
      *
+     * @throws ExceptionNotFound - if the main markup page was not found
      */
     public function getFetchPath(): LocalPath
     {
@@ -118,24 +120,11 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             throw new ExceptionRuntimeInternal("The Html template layout ($htmlTemplatePath) does not exists", self::CANONICAL);
         }
 
+        $htmlOutputByAreaName = [];
         $pageElements = $this->buildAndGetPageElements($domDocument);
-        foreach ($pageElements as $pageElement) {
-            try {
-                $cache->addFileDependency($pageElement->getFragmentPath());
-            } catch (ExceptionNotFound $e) {
-                // no area path to render found
-            }
-        }
 
         /**
-         * Do we create the page or return the cache
-         */
-        if ($cache->isCacheUsable()) {
-            return $cache->getFile();
-        }
-
-        /**
-         * Request environment variable
+         * Request environment variable before the fetch
          */
         $wikiRequest = WikiRequest::create()
             ->setNewAct("show")
@@ -143,22 +132,127 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
         try {
 
-            $layoutName = $this->requestedLayout ?? PageLayout::createFromPage($requestedPage)->getValueOrDefault();
+            /**
+             * Run the main slot
+             * Get the HTML fragment
+             * The first one should be the main because it has the frontmatter
+             */
+            $mainElement = $pageElements[self::MAIN_CONTENT_AREA];
+            try {
+                /**
+                 * The {@link FetcherPageFragment::getFetchPath() Get fetch path}
+                 * will start the rendering if there is no HTML path
+                 * or the cache is not fresh
+                 */
+                $path = $mainElement->getPageFragmentFetcher()->getFetchPath();
+                $cache->addFileDependency($path);
+            } catch (ExceptionNotFound $e) {
+                // it should be found
+                throw new ExceptionNotFound("The main page markup document was not found. Error:{$e->getMessage()}", self::CANONICAL);
+            }
 
             /**
-             * Css and Js
+             * Run the secondary slots
              */
-            $snippetManager = PluginUtility::getSnippetManager();
-            try {
-                $content = FileSystems::getContent($layoutCssPath);
-                $snippetManager->attachCssInternalStylesheetForRequest(self::CANONICAL, $content);
-            } catch (ExceptionNotFound $e) {
-                // no css found, not a problem
+            foreach ($pageElements as $elementId => $pageElement) {
+                if ($elementId === self::MAIN_CONTENT_AREA) {
+                    // already added just below
+                    continue;
+                }
+                try {
+                    $cache->addFileDependency($pageElement->getPageFragmentFetcher()->getFetchPath());
+                } catch (ExceptionNotFound $e) {
+                    // no fetcher or container
+                }
             }
 
-            if (FileSystems::exists($layoutJsPath)) {
-                $snippetManager->attachInternalJavascriptFromPathForRequest(self::CANONICAL, $layoutJsPath);
+            /**
+             * Do we create the page or return the cache
+             */
+            if ($cache->isCacheUsable()) {
+                return $cache->getFile();
             }
+
+            /**
+             * Creating the HTML document
+             *
+             */
+            foreach ($pageElements as $pageElement) {
+
+
+                $domElement = $pageElement->getDomElement();
+
+                /**
+                 * Layout Container
+                 * Page Header and Footer have a bar that permits to set the layout container value
+                 *
+                 * The page core does not have any
+                 * It's by default contained for all layout
+                 * generally applied on the page-core element ie
+                 * <div id="page-core" data-layout-container=>
+                 */
+                if ($domElement->hasAttribute(self::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
+                    $domElement->removeAttribute(self::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
+                    $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                    $domElement->addClass(syntax_plugin_combo_container::getClassName($container));
+                }
+
+
+                /**
+                 * Relative positioning is important for the positioning of the pagetools (page-core), edit button, ...
+                 * for absolutely positioning at the left corner of the viewport (message, tool, ...)
+                 */
+                $domElement->addClass(self::POSITION_RELATIVE_CLASS);
+
+                /**
+                 * Rendering
+                 */
+                if (!$pageElement->isSlot()) {
+                    // no rendering for container area, this is a parent
+                    continue;
+                }
+
+
+                try {
+
+                    $fetcher = $pageElement->getPageFragmentFetcher();
+
+                } catch (ExceptionNotFound $e) {
+
+                    /**
+                     * no fragment (page side for instance)
+                     * remove or empty ?
+                     *   * remove allows to not have any empty node but it may break css rules
+                     *   * empty permits not break any css rules (grid may be broken for instance)
+                     */
+                    $action = $domElement->getAttributeOrDefault(self::DATA_EMPTY_ACTION_ATTRIBUTE, "none");
+                    switch ($action) {
+                        case "remove":
+                            $domElement->remove();
+                            break;
+                        case "none":
+                            // the empty node will stay in the page
+                            break;
+                        default:
+                            LogUtility::internalError("The value ($action) of the attribute (" . self::DATA_EMPTY_ACTION_ATTRIBUTE . ") is unknown", self::CANONICAL);
+                    }
+                    continue;
+
+                }
+
+                /**
+                 * We don't load / add the HTML string in the actual DOM document
+                 * to no add by-effect, corrections during loading and writing
+                 *
+                 * We add a template variable, we save the HTML in a array
+                 * And replace them after the loop
+                 */
+                $layoutVariable = $pageElement->getVariableName();
+                $htmlOutputByAreaName[$layoutVariable] = $fetcher->getFetchPathAsHtmlString();
+                $domElement->appendTextNode('$' . $layoutVariable);
+
+            }
+
 
             /**
              * Html
@@ -194,8 +288,15 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             $this->checkViewPortMeta($head);
             $this->addPageIconMeta($head);
             $this->addTitleMeta($head);
-            $this->addHeaders($head);
 
+            /**
+             * Snippet (in header)
+             * Css and Js from the layout if any
+             *
+             * Note that Header may be added during rendering and must be
+             * then called after rendering
+             */
+            $this->addHeaders($head, $layoutCssPath, $layoutJsPath);
 
             /**
              * Body
@@ -205,94 +306,21 @@ class FetcherPage extends FetcherAbs implements FetcherSource
              * used also by some plugins
              */
             $tplClasses = tpl_classes();
-            $positionRelativeClass = "position-relative"; // for absolutely positioning at the left corner of the viewport (message, tool, ...)
             try {
                 $layoutClass = StyleUtility::addComboStrapSuffix("layout-$layoutName");
                 $domDocument->querySelector("body")
                     ->addClass($tplClasses)
-                    ->addClass($positionRelativeClass)
+                    ->addClass(self::POSITION_RELATIVE_CLASS)
                     ->addClass($layoutClass);
             } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
                 throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a body element");
             }
 
 
-            $htmlOutputByAreaName = [];
-            foreach ($pageElements as $pageElement) {
-
-                $domElement = $pageElement->getDomElement();
-
-                /**
-                 * Layout Container
-                 * Page Header and Footer have a bar that permits to set the layout container value
-                 *
-                 * The page core does not have any
-                 * It's by default contained for all layout
-                 * generally applied on the page-core element ie
-                 * <div id="page-core" data-layout-container=>
-                 */
-                if ($domElement->hasAttribute(self::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
-                    $domElement->removeAttribute(self::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
-                    $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
-                    $domElement->addClass(syntax_plugin_combo_container::getClassName($container));
-                }
-
-
-                /**
-                 * Special Classes and attributes
-                 *
-                 *  Relative positioning is important for the positioning of the pagetools (page-core),
-                 *  edit button, ...
-                 */
-                $domElement->addClass($positionRelativeClass);
-
-                /**
-                 * Rendering
-                 */
-                if (!$pageElement->isSlot()) {
-                    // no rendering for container area, this is a parent
-                    continue;
-                }
-                try {
-                    $wikiPath = $pageElement->getFragmentPath();
-                } catch (ExceptionNotFound $e) {
-                    /**
-                     * no fragment (page side for instance)
-                     * remove or empty ?
-                     *   * remove is the default to not have any empty node but it may break css rules
-                     *   * empty permits not break any css rules (grid may be broken for instance)
-                     */
-                    $action = $domElement->getAttributeOrDefault(self::DATA_EMPTY_ACTION_ATTRIBUTE, "remove");
-                    switch ($action) {
-                        case "remove":
-                            $domElement->remove();
-                            break;
-                        case "none":
-                            // the empty node will stay in the page
-                            break;
-                        default:
-                            LogUtility::internalError("The value ($action) of the attribute (" . self::DATA_EMPTY_ACTION_ATTRIBUTE . ") is unknown", self::CANONICAL);
-                    }
-                    continue;
-                }
-                /**
-                 * We don't load / add the HTML string in the actual DOM document
-                 * to no add by-effect, corrections during loading and writing
-                 *
-                 * We add a template variable, we save the HTML in a array
-                 * And replace them after the loop
-                 */
-                $layoutVariable = $pageElement->getVariableName();
-                $htmlOutputByAreaName[$layoutVariable] = FetcherPageFragment::createPageFragmentFetcherFromPath($wikiPath)
-                    ->setRequestedPagePath($this->getRequestedPath())
-                    ->getFetchPathAsHtmlString();
-                $domElement->appendTextNode('$' . $layoutVariable);
-
-            }
-
             if (sizeof($htmlOutputByAreaName) === 0) {
                 LogUtility::internalError("No slot was rendered");
             }
+
 
             /**
              * We save as XML because we strive to be XML compliant (ie XHTML)
@@ -301,7 +329,10 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             $htmlBodyDocumentString = $domDocument->toHtml();
             $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlOutputByAreaName)->render();
 
-            // DocType required by bootstrap https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
+            /**
+             * DocType is required by bootstrap
+             * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
+             */
             $finalHtmlBodyString = "<!doctype html>\n$finalHtmlBodyString";
             $cache->storeCache($finalHtmlBodyString);
 
@@ -378,13 +409,13 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     {
 
         $areas = [];
-        foreach (self::AREAS as $areaName) {
+        foreach (self::LAYOUT_ELEMENTS as $elementId) {
 
             /**
              * If the id is not in the html template we don't show it
              */
             try {
-                $domElement = $htmlBodyDomElement->querySelector("#$areaName");
+                $domElement = $htmlBodyDomElement->querySelector("#$elementId");
             } catch (ExceptionBadSyntax $e) {
                 LogUtility::internalError("The selector should not have a bad syntax");
                 continue;
@@ -392,7 +423,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                 continue;
             }
 
-            $areas[] = new PageElement($domElement, $this);
+            $areas[$elementId] = new PageElement($domElement, $this);
 
         }
         return $areas;
@@ -671,8 +702,25 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     }
 
-    private function addHeaders(XmlElement $head)
+    private function addHeaders(XmlElement $head, WikiPath $layoutCssPath, WikiPath $layoutJsPath)
     {
+        /**
+         * Add the layout js and css first
+         */
+        $snippetManager = PluginUtility::getSnippetManager();
+        try {
+            $content = FileSystems::getContent($layoutCssPath);
+            $snippetManager->attachCssInternalStylesheetForRequest(self::CANONICAL, $content);
+        } catch (ExceptionNotFound $e) {
+            // no css found, not a problem
+        }
+        if (FileSystems::exists($layoutJsPath)) {
+            $snippetManager->attachInternalJavascriptFromPathForRequest(self::CANONICAL, $layoutJsPath);
+        }
+
+        /**
+         * Start the meta headers
+         */
         ob_start();
         try {
             tpl_metaheaders();

@@ -10,22 +10,26 @@ namespace ComboStrap;
  * It wraps a DOM Element with extra properties needed in a page layout.
  *
  * It represents a:
- *   * a {@link PageElement::isSlot() slot} with content
+ *   * a {@link PageElement::isSlot() slot} with {@link FetcherPageFragment content}
  *   * or a {@link PageElement::isContainer() container} without content
  *
+ * It's used in the {@link FetcherPage} as utility class
  */
 class PageElement
 {
 
     /**
-     * @var string
-     * The html may be null to set
-     * the default (for instance, with a page header)
+     * @var FetcherPage - the fetcher page of this page element
      */
-    private $html = null;
-
     private FetcherPage $fetcherPage;
+    /**
+     * @var XmlElement - the xml element of this page element
+     */
     private XmlElement $domElement;
+    /**
+     * @var FetcherPageFragment - the fetcher if this is a slot and has a page fragment source
+     */
+    private FetcherPageFragment $fetcherFragment;
 
 
     public function __construct(XmlElement $DOMElement, FetcherPage $fetcherPage)
@@ -33,6 +37,14 @@ class PageElement
 
         $this->fetcherPage = $fetcherPage;
         $this->domElement = $DOMElement;
+        try {
+            $fragmentPath = $this->getFragmentPath();
+            $this->fetcherFragment = FetcherPageFragment::createPageFragmentFetcherFromPath($fragmentPath)
+                ->setRequestedPagePath($this->fetcherPage->getRequestedPath());
+        } catch (ExceptionNotFound $e) {
+            // no fragment
+        }
+
     }
 
 
@@ -113,12 +125,6 @@ class PageElement
 
 
     public
-    function getHtml(): ?string
-    {
-        return $this->html;
-    }
-
-    public
     function getAttributes(): ?array
     {
         return $this->attributes;
@@ -153,7 +159,7 @@ class PageElement
     /**
      * @throws ExceptionNotFound - if the area is not a slot or there is no path found
      */
-    public function getFragmentPath()
+    private function getFragmentPath()
     {
         if (!$this->isSlot()) {
             throw new ExceptionNotFound("No fragment path for container element");
@@ -204,4 +210,17 @@ class PageElement
     {
         return $this->domElement;
     }
+
+    /**
+     * @throws ExceptionNotFound if the page/markup fragment was not found (a container element does not have any also)
+     */
+    public function getPageFragmentFetcher(): FetcherPageFragment
+    {
+        if (!isset($this->fetcherFragment)) {
+            throw new ExceptionNotFound("No fragment found");
+        }
+        return $this->fetcherFragment;
+    }
+
+
 }

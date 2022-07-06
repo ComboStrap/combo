@@ -148,6 +148,16 @@ class Url extends PathAbs
         return $url;
     }
 
+    /**
+     * Utility class to transform windows separator to url path separator
+     * @param string $pathString
+     * @return array|string|string[]
+     */
+    public static function toUrlSeparator(string $pathString)
+    {
+        return str_replace('\\','/',$pathString);
+    }
+
 
     function getQuery(): array
     {

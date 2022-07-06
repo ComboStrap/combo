@@ -153,7 +153,7 @@ class MarkupRef
                 $fragment = OutlineSection::textToHtmlSectionId($fragment);
             }
             $this->url = Url::createEmpty()->setFragment($fragment);
-            $this->path = WikiPath::createPagePathFromRequestedPage();
+            $this->path = WikiPath::createRequestedPagePathFromRequest();
             return;
         }
 

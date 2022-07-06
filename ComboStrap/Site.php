@@ -938,16 +938,18 @@ class Site
         if (!empty($conf['basedir'])) {
             return $conf['basedir'];
         }
-        if (substr($_SERVER['SCRIPT_NAME'], -4) == '.php') {
-            return dirname($_SERVER['SCRIPT_NAME']);
+        $scriptName = LocalPath::createFromPath($_SERVER['SCRIPT_NAME']);
+        if ($scriptName->getExtension() === 'php') {
+            return Url::toUrlSeparator($scriptName->getParent()->toPathString());
         }
-        if (substr($_SERVER['PHP_SELF'], -4) == '.php') {
-            return dirname($_SERVER['PHP_SELF']);
+        $phpSelf = LocalPath::createFromPath($_SERVER['PHP_SELF']);
+        if ($phpSelf->getExtension() === "php") {
+            return Url::toUrlSeparator($scriptName->getParent()->toPathString());
         }
         if ($_SERVER['DOCUMENT_ROOT'] && $_SERVER['SCRIPT_FILENAME']) {
             $dir = preg_replace('/^' . preg_quote($_SERVER['DOCUMENT_ROOT'], '/') . '/', '',
                 $_SERVER['SCRIPT_FILENAME']);
-            return dirname('/' . $dir);
+            return Url::toUrlSeparator(dirname('/' . $dir));
         }
         throw new ExceptionNotFound("No Base dir");
 

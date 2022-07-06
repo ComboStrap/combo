@@ -46,7 +46,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     public static function createPageFetcherFromRequestedPage(): FetcherPage
     {
-        return self::createPageFetcherFromPath(WikiPath::createPagePathFromRequestedPage());
+        return self::createPageFetcherFromPath(WikiPath::createRequestedPagePathFromRequest());
     }
 
     private static function createPageFetcherFromPath(WikiPath $path): FetcherPage
@@ -703,7 +703,13 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         /**
          * Bootstrap meta-headers function registration
          */
-        TplUtility::registerHeaderHandler();
+        try {
+            Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            TplUtility::registerHeaderHandler();
+        } catch (ExceptionCompile $e) {
+            LogUtility::internalError("We were unable to register the head handler (ie adding Bootstrap). Because fetcher page is called by strap, strap should load.", self::CANONICAL);
+        }
+
 
         /**
          * Add the layout js and css first
@@ -774,17 +780,18 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             return;
         }
 
-        $url = UrlEndpoint::createTaskRunnerUrl()
+        $htmlUrl = UrlEndpoint::createTaskRunnerUrl()
             ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getRequestedPath()->getWikiId())
-            ->addQueryParameter(time());
+            ->addQueryParameter(time())
+            ->toHtmlString();
         // no more 1x1 px image because of ad blockers
         $taskRunnerImg
-            ->setAttribute("id",self::TASK_RUNNER_ID)
+            ->setAttribute("id", self::TASK_RUNNER_ID)
             ->addClass("d-none")
             ->setAttribute('width', 2)
             ->setAttribute('height', 1)
             ->setAttribute('alt', 'Task Runner')
-            ->setAttribute('src', $url->toHtmlString());
+            ->setAttribute('src', $htmlUrl);
         $bodyElement->appendChild($taskRunnerImg);
 
     }

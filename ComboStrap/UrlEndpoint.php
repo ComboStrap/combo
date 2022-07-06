@@ -7,7 +7,7 @@ class UrlEndpoint
 
     const LIB_EXE_FETCH_PHP = '/lib/exe/fetch.php';
     const LIB_EXE_DETAIL_PHP = '/lib/exe/detail.php';
-    const LIB_EXE_RUNNER_PHP = 'lib/exe/taskrunner.php';
+    const LIB_EXE_RUNNER_PHP = '/lib/exe/taskrunner.php';
     const DOKU_PHP = '/doku.php';
 
 

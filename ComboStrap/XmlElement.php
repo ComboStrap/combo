@@ -275,7 +275,7 @@ class XmlElement
     public function addStyle(string $name, string $value): XmlElement
     {
         ArrayUtility::addIfNotSet($this->styleDeclaration, $name, $value);
-        $this->setAttribute("style",Html::array2InlineStyle($this->styleDeclaration));
+        $this->setAttribute("style", Html::array2InlineStyle($this->styleDeclaration));
         return $this;
     }
 
@@ -292,9 +292,34 @@ class XmlElement
      */
     private function importIfExternal(DOMElement $domElement): DOMElement
     {
-        if($domElement->ownerDocument !== $this->getDocument()->getDomDocument()){
-            return  $this->getDocument()->getDomDocument()->importNode($domElement, true);
+        if ($domElement->ownerDocument !== $this->getDocument()->getDomDocument()) {
+            return $this->getDocument()->getDomDocument()->importNode($domElement, true);
         }
         return $domElement;
+    }
+
+    /**
+     * @throws ExceptionNotEquals
+     */
+    public function equals(XmlElement $rightDocument, array $attributeFilter = [])
+    {
+        $error = "";
+        XmlUtility::diffNode(
+            $this->element,
+            $rightDocument->element,
+            $error,
+            $attributeFilter
+        );
+        if($error!==null){
+            throw new ExceptionNotEquals($error);
+        }
+    }
+
+    public function removeClass(string $string): XmlElement
+    {
+        $class = $this->getClass();
+        $newClass = str_replace($string,"",$class);
+        $this->setAttribute("class",$newClass);
+        return $this;
     }
 }

@@ -28,9 +28,11 @@ class XhtmlUtility
      * Return a diff
      * @param string $left
      * @param string $right
+     * @param bool $xhtml
+     * @param null $excludedAttributes
      * @return string
      * DOMDocument supports formatted XML while SimpleXMLElement does not.
-     * @throws ExceptionCompile
+     * @throws ExceptionBadSyntax
      */
     public static function diffMarkup(string $left, string $right, $xhtml = true, $excludedAttributes = null): string
     {
@@ -44,7 +46,6 @@ class XhtmlUtility
         if (!$xhtml) {
             $loading = XmlDocument::HTML_TYPE;
         }
-
         $leftDocument = (new XmlDocument($left, $loading))->getDomDocument();
         $rightDocument = (new XmlDocument($right, $loading))->getDomDocument();
 
@@ -81,6 +82,8 @@ class XhtmlUtility
         $xmlDoc = new XmlDocument($htmlText, XmlDocument::HTML_TYPE);
         return $xmlDoc->toXmlNormalized();
     }
+
+
 
 
 }

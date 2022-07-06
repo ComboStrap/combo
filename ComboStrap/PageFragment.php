@@ -205,7 +205,7 @@ class PageFragment extends ResourceComboAbs
      */
     public static function createPageFromGlobalWikiId(): PageFragment
     {
-        $dokuPath = WikiPath::createRunningPageFragment();
+        $dokuPath = WikiPath::createRunningPageFragmentPathFromGlobalId();
         return self::createPageFromPathObject($dokuPath);
     }
 
@@ -239,7 +239,7 @@ class PageFragment extends ResourceComboAbs
      */
     public static function createFromRequestedPage(): PageFragment
     {
-        $path = WikiPath::createPagePathFromRequestedPage();
+        $path = WikiPath::createRequestedPagePathFromRequest();
         return PageFragment::createPageFromPathObject($path);
     }
 
@@ -294,8 +294,9 @@ class PageFragment extends ResourceComboAbs
     public function isSecondarySlot(): bool
     {
         $slotNames = Site::getSecondarySlotNames();
-        $name = $this->getPath()->getLastNameWithoutExtension();
-        if ($name === null) {
+        try {
+            $name = $this->getPath()->getLastNameWithoutExtension();
+        } catch (ExceptionNotFound $e) {
             // root case
             return false;
         }

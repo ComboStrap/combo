@@ -33,7 +33,6 @@ class OutlineSection extends TreeNode
     private array $tocUniqueId = [];
 
 
-
     /**
      * @param Call|null $headingEnterCall
      */
@@ -53,7 +52,6 @@ class OutlineSection extends TreeNode
     {
         return new OutlineSection(null);
     }
-
 
 
     /**
@@ -97,7 +95,15 @@ class OutlineSection extends TreeNode
     {
         $label = "";
         foreach ($this->headingCalls as $call) {
-            \action_plugin_combo_headingpostprocessing::addToTextHeading($label, $call);
+            if ($call->isTextCall()) {
+                // Building the text for the toc
+                // only cdata for now
+                // no image, ...
+                if ($label != "") {
+                    $label .= " ";
+                }
+                $label .= trim($call->getCapturedContent());
+            }
         }
         return $label;
     }
@@ -218,7 +224,6 @@ class OutlineSection extends TreeNode
     {
         return parent::getChildren();
     }
-
 
 
 }

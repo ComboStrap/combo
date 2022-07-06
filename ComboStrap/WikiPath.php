@@ -424,7 +424,7 @@ class WikiPath extends PathAbs
     /**
      * The running page fragment given by the global id
      */
-    public static function createRunningPageFragment(): WikiPath
+    public static function createRunningPageFragmentPathFromGlobalId(): WikiPath
     {
         global $ID;
         if ($ID === null) {
@@ -440,7 +440,7 @@ class WikiPath extends PathAbs
         return WikiPath::createPagePathFromId($ID);
     }
 
-    public static function createPagePathFromRequestedPage(): WikiPath
+    public static function createRequestedPagePathFromRequest(): WikiPath
     {
         $pageId = PluginUtility::getRequestedWikiId();
         return WikiPath::createPagePathFromId($pageId);
@@ -568,7 +568,7 @@ class WikiPath extends PathAbs
      */
     public static function getCurrentPagePath(): WikiPath
     {
-        $requestedPath = WikiPath::createRunningPageFragment();;
+        $requestedPath = WikiPath::createRunningPageFragmentPathFromGlobalId();;
         try {
             $parent = $requestedPath->getParent();
         } catch (ExceptionNotFound $e) {

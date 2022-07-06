@@ -238,7 +238,7 @@ class Url extends PathAbs
      *
      * https://stackoverflow.com/questions/24059773/correct-way-to-pass-multiple-values-for-same-parameter-name-in-get-request
      */
-    public function addQueryParameter(string $key, ?string $value): Url
+    public function addQueryParameter(string $key, ?string $value = null): Url
     {
         /**
          * Php Array syntax

@@ -7,7 +7,9 @@ class UrlEndpoint
 
     const LIB_EXE_FETCH_PHP = '/lib/exe/fetch.php';
     const LIB_EXE_DETAIL_PHP = '/lib/exe/detail.php';
+    const LIB_EXE_RUNNER_PHP = 'lib/exe/taskrunner.php';
     const DOKU_PHP = '/doku.php';
+
 
     public static function createFetchUrl(): Url
     {
@@ -51,6 +53,11 @@ class UrlEndpoint
     public static function createBaseUrl(): Url
     {
         return Url::createFromString(Site::getBaseUrl());
+    }
+
+    public static function createTaskRunnerUrl(): Url
+    {
+        return Url::createEmpty()->setPath(self::LIB_EXE_RUNNER_PHP);
     }
 
 

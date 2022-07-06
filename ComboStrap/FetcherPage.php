@@ -40,6 +40,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     const VIEWPORT_RESPONSIVE_VALUE = "width=device-width,initial-scale=1";
     const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
     const POSITION_RELATIVE_CLASS = "position-relative";
+    const TASK_RUNNER_ID = "task-runner";
     private string $requestedLayout;
 
 
@@ -306,14 +307,14 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         $tplClasses = tpl_classes();
         try {
             $layoutClass = StyleUtility::addComboStrapSuffix("layout-$layoutName");
-            $domDocument->querySelector("body")
+            $bodyElement = $domDocument->querySelector("body")
                 ->addClass($tplClasses)
                 ->addClass(self::POSITION_RELATIVE_CLASS)
                 ->addClass($layoutClass);
         } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
             throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a body element");
         }
-
+        $this->addTaskRunnerImage($bodyElement);
 
         if (sizeof($htmlOutputByAreaName) === 0) {
             LogUtility::internalError("No slot was rendered");
@@ -758,6 +759,34 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             ->setNewAct("show")
             ->setNewRunningId($this->getRequestedPath()->getWikiId())
             ->setNewRequestedId($this->getRequestedPath()->getWikiId());
+    }
+
+    /**
+     * Adapted from {@link tpl_indexerWebBug()}
+     */
+    private function addTaskRunnerImage(XmlElement $bodyElement)
+    {
+
+        try {
+            $taskRunnerImg = $bodyElement->getDocument()->createElement("img");
+        } catch (\DOMException $e) {
+            LogUtility::internalError("img is a valid tag ban. No exception should happen .Error: {$e->getMessage()}.");
+            return;
+        }
+
+        $url = UrlEndpoint::createTaskRunnerUrl()
+            ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getRequestedPath()->getWikiId())
+            ->addQueryParameter(time());
+        // no more 1x1 px image because of ad blockers
+        $taskRunnerImg
+            ->setAttribute("id",self::TASK_RUNNER_ID)
+            ->addClass("d-none")
+            ->setAttribute('width', 2)
+            ->setAttribute('height', 1)
+            ->setAttribute('alt', 'Task Runner')
+            ->setAttribute('src', $url->toHtmlString());
+        $bodyElement->appendChild($taskRunnerImg);
+
     }
 
 

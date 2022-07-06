@@ -2,6 +2,22 @@
 
 namespace ComboStrap;
 
+/**
+ * A object that permits to set the global state request data
+ *
+ *
+ *
+ * We don't restore the global state because this is useless
+ * Dokuwiki does not have the notion of request object, all request data are passed via global state
+ *
+ *
+ *   * Dokuwiki uses {@link Cache::useCache()} needs them also therefore if you split the process in two function: useCache
+ * and processing, you need to set and unset each time
+ *   * Get function may also needs them if the Object cache depends on them
+ *   * ...
+ *
+ * Before executing any request, this function should be call
+ */
 class WikiRequest
 {
 

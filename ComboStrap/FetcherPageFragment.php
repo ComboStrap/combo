@@ -468,9 +468,19 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
      * Setter should not be used after this
      * function has been called
      */
-    private function buildObjectAndEnvironmentIfNeeded()
+    private function buildObjectAndEnvironmentIfNeeded(): void
     {
 
+        /**
+         * The cache object depends on the running request
+         * We build it then just
+         * A request is also send by dokuwiki to check the cache validity
+         * We build it only once
+         */
+        WikiRequest::create()
+            ->setNewRunningId($this->getRequestedPageFragment()->getPath()->getWikiId())
+            ->setNewAct("show")
+            ->setNewRequestedId($this->getRequestedContextPageOrDefault()->getPath()->getWikiId());
 
         if ($this->objectHasBeenBuild === true) {
             /**
@@ -480,17 +490,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
              */
             return;
         }
-
-        /**
-         * The cache object depends on the running request
-         * We build it then just
-         * A request is also send by dokuwiki to check the cache validity
-         * We build it only once
-         */
-        $this->wikiRequest = WikiRequest::create()
-            ->setNewRunningId($this->getRequestedPageFragment()->getPath()->getWikiId())
-            ->setNewAct("show")
-            ->setNewRequestedId($this->getRequestedContextPageOrDefault()->getPath()->getWikiId());
 
 
         $this->objectHasBeenBuild = true;

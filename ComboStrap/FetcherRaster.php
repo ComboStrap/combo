@@ -203,6 +203,14 @@ class FetcherRaster extends FetcherLocalImage
 
     function getFetchPath(): LocalPath
     {
+        /**
+         * In fetch.php
+         * if($HEIGHT && $WIDTH) {
+         *    $data['file'] = $FILE = media_crop_image($data['file'], $EXT, $WIDTH, $HEIGHT);
+         * } else {
+         *    $data['file'] = $FILE = media_resize_image($data['file'], $EXT, $WIDTH, $HEIGHT);
+         * }
+         */
         throw new ExceptionRuntime("Fetch Raster image is not yet implemented");
     }
 

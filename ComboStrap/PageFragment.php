@@ -131,12 +131,8 @@ class PageFragment extends ResourceComboAbs
      * @var LdJson
      */
     private $ldJson;
-    /**
-     * @var PageFragment
-     */
-    private $fetcherPageFragment;
 
-    private ?FetcherPageFragment $instructionsDocument;
+
 
     /**
      * @var PageDescription $description
@@ -394,8 +390,6 @@ class PageFragment extends ResourceComboAbs
         $this->readStore = null;
         $this->buildPropertiesFromFileSystem();
         $this->databasePage = null;
-        $this->fetcherPageFragment = null;
-        $this->instructionsDocument = null;
         return $this;
     }
 
@@ -434,11 +428,7 @@ class PageFragment extends ResourceComboAbs
     function getHtmlFetcher(): FetcherPageFragment
     {
 
-        if ($this->fetcherPageFragment === null) {
-            $this->fetcherPageFragment = FetcherPageFragment::createPageFragmentFetcherFromObject($this)
-                ->setRequestedMimeToXhtml();
-        }
-        return $this->fetcherPageFragment;
+        return FetcherPageFragment::createPageFragmentFetcherFromObject($this)->setRequestedMimeToXhtml();
 
     }
 
@@ -1898,11 +1888,9 @@ class PageFragment extends ResourceComboAbs
     public
     function getInstructionsDocument(): FetcherPageFragment
     {
-        if (!isset($this->instructionsDocument)) {
-            $this->instructionsDocument = FetcherPageFragment::createPageFragmentFetcherFromObject($this)
-                ->setRequestedMimeToInstructions();
-        }
-        return $this->instructionsDocument;
+
+        return FetcherPageFragment::createPageFragmentFetcherFromObject($this)
+            ->setRequestedMimeToInstructions();
 
     }
 

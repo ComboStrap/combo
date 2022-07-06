@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Cache\Cache;
 use Exception;
 use syntax_plugin_combo_container;
 
@@ -746,6 +747,11 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     }
 
+    /**
+     * @return void
+     *
+     *
+     */
     private function setRequestEnvironment()
     {
         WikiRequest::create()

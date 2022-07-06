@@ -38,7 +38,8 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     private CacheDependencies $cacheDependencies;
     private PageFragment $requestedPage;
     private bool $objectHasBeenBuild = false;
-    private WikiRequest $wikiRequest;
+    private WikiRequestEnvironment $wikiRequestEnvironment;
+    private bool $closed = false;
 
 
     public static function createPageFragmentFetcherFromId(string $mainId): FetcherPageFragment
@@ -57,7 +58,10 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         return $pageFragment;
     }
 
-    public static function createPageFragmentFetcherFromPath(WikiPath $wikiPath): FetcherPageFragment
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function createPageFragmentFetcherFromPath(Path $wikiPath): FetcherPageFragment
     {
         $page = PageFragment::createPageFromPathObject($wikiPath);
         return self::createPageFragmentFetcherFromObject($page);
@@ -449,9 +453,13 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
          * The code below is adapted from {@link p_cached_output()}
          * $ret = p_cached_output($file, 'xhtml', $pageid);
          */
-        $instructions = FetcherPageFragment::createPageFragmentFetcherFromObject($this->getRequestedPageFragment())
-            ->setRequestedMimeToInstructions()
-            ->getFetchPathAsInstructionsArray();
+        $instructionsFetcher = FetcherPageFragment::createPageFragmentFetcherFromObject($this->getRequestedPageFragment())
+            ->setRequestedMimeToInstructions();
+        try {
+            $instructions = $instructionsFetcher->getFetchPathAsInstructionsArray();
+        } finally {
+            $instructionsFetcher->close();
+        }
 
         /**
          * Render
@@ -471,28 +479,30 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     private function buildObjectAndEnvironmentIfNeeded(): void
     {
 
+        if ($this->objectHasBeenBuild === true) {
+            if ($this->closed) {
+                /**
+                 * Just a check
+                 */
+                throw new ExceptionRuntimeInternal("The fetcher page fragment has already been closed and cannnot be used anymore");
+            }
+            return;
+        }
+        $this->objectHasBeenBuild = true;
+
         /**
          * The cache object depends on the running request
          * We build it then just
+         *
          * A request is also send by dokuwiki to check the cache validity
          * We build it only once
+         *
+         * You need to close it with the {@link FetcherPageFragment::close()}
          */
-        WikiRequest::create()
+        $this->wikiRequestEnvironment = WikiRequestEnvironment::createAndCaptureState()
             ->setNewRunningId($this->getRequestedPageFragment()->getPath()->getWikiId())
             ->setNewAct("show")
             ->setNewRequestedId($this->getRequestedContextPageOrDefault()->getPath()->getWikiId());
-
-        if ($this->objectHasBeenBuild === true) {
-            /**
-             * A request is also send by dokuwiki to check the cache validity
-             * at {@link FetcherPageFragment::shouldProcess()}
-             * We build it only once
-             */
-            return;
-        }
-
-
-        $this->objectHasBeenBuild = true;
 
         $wikiId = $this->pageFragment->getPath()->getWikiId();
 
@@ -522,16 +532,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
             default:
                 $this->cache = new CacheRenderer($wikiId, $localFile, $extension);
 
-                /**
-                 * Modifying the cache key and the corresponding output file
-                 * from runtime dependencies
-                 */
-                try {
-                    $requestedPage = $this->getRequestedPage();
-                } catch (ExceptionNotFound $e) {
-                    $requestedPage = PageFragment::createFromRequestedPage();
-                }
-                $this->cacheDependencies = CacheManager::getOrCreateForContextPage($requestedPage)
+                $this->cacheDependencies = CacheManager::getOrCreateFromRequestedPage()
                     ->getCacheDependenciesForPageFragment($this->pageFragment);
                 $this->cacheDependencies->rerouteCacheDestination($this->cache);
                 break;
@@ -748,6 +749,23 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         $page = PageFragment::createPageFromPathObject($wikiPath);
         $this->setRequestedPage($page);
         return $this;
+    }
+
+    /**
+     * Restore the environment variable
+     * @return $this
+     */
+    public function close(): FetcherPageFragment
+    {
+
+        $this->wikiRequestEnvironment->restoreState();
+        $this->closed = true;
+        return $this;
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->closed = true;
     }
 
 }

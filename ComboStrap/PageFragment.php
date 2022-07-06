@@ -174,28 +174,6 @@ class PageFragment extends ResourceComboAbs
 
         }
 
-        if ($this->isSecondarySlot()) {
-
-            /**
-             * Used when we want to remove the cache of slots for a requested page
-             * (ie {@link Cache::removeSideSlotCache()})
-             *
-             * The $absolutePath is the logical path and may not exists
-             *
-             * Find the first physical file
-             * Don't use ACL otherwise the ACL protection event 'AUTH_ACL_CHECK' will kick in
-             * and we got then a recursive problem
-             * with the {@link \action_plugin_combo_pageprotection}
-             */
-            $useAcl = false;
-            $id = page_findnearest($this->path->getLastNameWithoutExtension(), $useAcl);
-            $path = WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $id;
-            if ($id !== false && $id !== $this->path->toPathString()) {
-                $this->path = WikiPath::createPagePathFromPath($path);
-            }
-
-        }
-
         $this->buildPropertiesFromFileSystem();
 
     }
@@ -243,10 +221,14 @@ class PageFragment extends ResourceComboAbs
         return PageFragment::createPageFromPathObject($path);
     }
 
+    /**
+     *
+     */
     public static function createPageFromPathObject(Path $path): PageFragment
     {
         return new PageFragment($path);
     }
+
 
 
     /**
@@ -2062,6 +2044,10 @@ class PageFragment extends ResourceComboAbs
         return PageFragment::createPageFromId($nearest);
     }
 
+    /**
+     * Set the page path to an index page for a directory path
+     * @return void
+     */
     private function setCorrectPathForDirectoryToIndexPage(): void
     {
         /**

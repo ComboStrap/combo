@@ -46,18 +46,20 @@ class CacheResults
              */
             if ($cacheParser->mode === FetcherPageFragment::XHTML_MODE) {
                 $page = $cacheParser->page;
-                $htmlDocument = PageFragment::createPageFromId($page)
-                    ->getHtmlFetcher();
-
-                /**
-                 * @var CacheParser[] $cacheStores
-                 */
-                $cacheStores = [$htmlDocument->getSnippetCacheStore(), $htmlDocument->getDependenciesCacheStore()];
-                foreach ($cacheStores as $cacheStore) {
-                    if(file_exists($cacheStore->cache)) {
-                        $this->cacheResults[$cacheStore->mode] = (new CacheResult($cacheStore))
-                            ->setResult($event->result);
+                $pageFragment = PageFragment::createPageFromId($page)->getHtmlFetcher();
+                try {
+                    /**
+                     * @var CacheParser[] $cacheStores
+                     */
+                    $cacheStores = [$pageFragment->getSnippetCacheStore(), $pageFragment->getDependenciesCacheStore()];
+                    foreach ($cacheStores as $cacheStore) {
+                        if (file_exists($cacheStore->cache)) {
+                            $this->cacheResults[$cacheStore->mode] = (new CacheResult($cacheStore))
+                                ->setResult($event->result);
+                        }
                     }
+                } finally {
+                    $pageFragment->close();
                 }
             }
         }

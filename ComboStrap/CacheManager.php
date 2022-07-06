@@ -26,7 +26,7 @@ class CacheManager
     /**
      * @var CacheManager[]
      */
-    private static array $cacheManager;
+    private static array $cacheManager = [];
 
 
     /**

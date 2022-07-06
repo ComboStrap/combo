@@ -18,7 +18,7 @@ namespace ComboStrap;
  *
  * Before executing any request, this function should be call
  */
-class WikiRequest
+class WikiRequestEnvironment
 {
 
 
@@ -52,12 +52,12 @@ class WikiRequest
 
     }
 
-    public static function create(): WikiRequest
+    public static function createAndCaptureState(): WikiRequestEnvironment
     {
-        return new WikiRequest();
+        return new WikiRequestEnvironment();
     }
 
-    public function setNewRunningId(string $runningId): WikiRequest
+    public function setNewRunningId(string $runningId): WikiRequestEnvironment
     {
         global $ID;
         $ID = $runningId;
@@ -73,7 +73,7 @@ class WikiRequest
      * @param string $requestedId
      * @return $this
      */
-    public function setNewRequestedId(string $requestedId): WikiRequest
+    public function setNewRequestedId(string $requestedId): WikiRequestEnvironment
     {
         $this->requestedId = $requestedId;
         global $INPUT;
@@ -81,14 +81,14 @@ class WikiRequest
         return $this;
     }
 
-    public function setNewAct(string $string): WikiRequest
+    public function setNewAct(string $string): WikiRequestEnvironment
     {
         global $ACT;
         $ACT = $string;
         return $this;
     }
 
-    public function resetEnvironmentToPreviousValues()
+    public function restoreState()
     {
 
         global $ACT;
@@ -166,6 +166,16 @@ class WikiRequest
     public function getRequestedId(): string
     {
         return $this->requestedId;
+    }
+
+    public function getActualAct(): ?string
+    {
+        return $this->actualAct;
+    }
+
+    public function getActualGlobalId(): ?string
+    {
+        return $this->actualGlobalId;
     }
 
 }

@@ -48,7 +48,7 @@ class SnippetManager
     /**
      * @var array SnippetManager array that contains one element (one {@link SnippetManager} scoped to the requested id
      */
-    private static array $globalSnippetManager;
+    private static array $globalSnippetManager = [];
 
     /**
      *

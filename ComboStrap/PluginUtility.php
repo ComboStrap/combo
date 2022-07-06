@@ -635,12 +635,12 @@ class PluginUtility
      * but the requested wiki id
      *
      * @return string
-     * @deprecated use {@link WikiRequest}
+     * @deprecated use {@link WikiRequestEnvironment}
      */
     public static function getRequestedWikiId(): string
     {
 
-        return WikiRequest::create()
+        return WikiRequestEnvironment::createAndCaptureState()
             ->getActualRequestedId();
 
     }

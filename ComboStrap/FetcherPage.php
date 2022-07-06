@@ -42,6 +42,20 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     const POSITION_RELATIVE_CLASS = "position-relative";
     const TASK_RUNNER_ID = "task-runner";
     private string $requestedLayout;
+    private WikiRequestEnvironment $wikiRequestEnvironment;
+    private bool $build = false;
+    private bool $closed = false;
+
+    /**
+     * @var PageElement[]
+     */
+    private array $pageElements = [];
+    private WikiPath $pageCssPath;
+    private WikiPath $pageJsPath;
+    private WikiPath $pageHtmlTemplatePath;
+    private XmlDocument $templateDomDocument;
+    private PageFragment $requestedPage;
+    private string $layoutName;
 
 
     public static function createPageFetcherFromRequestedPage(): FetcherPage
@@ -92,58 +106,31 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     public function getFetchPath(): LocalPath
     {
 
-        /**
-         * Request environment
-         */
-        $this->setRequestEnvironment();
 
-        /**
-         * We first collect the depend file to
-         * check if we can use the cache
-         */
-        $requestedPage = PageFragment::createPageFromPathObject($this->getOriginalPath());
-        $layoutName = PageLayout::createFromPage($requestedPage)->getValueOrDefault();
-
-        $layoutDirectory = WikiPath::createWikiPath(":layout:$layoutName:", WikiPath::COMBO_DRIVE);
-        if (!FileSystems::exists($layoutDirectory)) {
-            throw new ExceptionRuntimeInternal("The layout directory ($layoutName) does not exist at $layoutDirectory", self::CANONICAL);
-        }
-        $layoutCssPath = $layoutDirectory->resolve("$layoutName.css");
-        $layoutJsPath = $layoutDirectory->resolve("$layoutName.js");
-        $htmlTemplatePath = $layoutDirectory->resolve("$layoutName.html");
-        $layoutJsonPath = $layoutDirectory->resolve("$layoutName.json");
+        $this->buildObject();
 
         $cache = FetcherCache::createFrom($this)
-            ->addFileDependency($layoutCssPath)
-            ->addFileDependency($layoutJsPath)
-            ->addFileDependency($htmlTemplatePath)
-            ->addFileDependency($layoutJsonPath);
-
-        try {
-            $domDocument = $this->htmlTemplatePathToHtmlDom($htmlTemplatePath);
-        } catch (ExceptionBadSyntax $e) {
-            throw new ExceptionRuntimeInternal("The Html template layout ($htmlTemplatePath) is not valid. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionRuntimeInternal("The Html template layout ($htmlTemplatePath) does not exists", self::CANONICAL);
-        }
+            ->addFileDependency($this->pageCssPath)
+            ->addFileDependency($this->pageJsPath)
+            ->addFileDependency($this->pageHtmlTemplatePath);
 
         $htmlOutputByAreaName = [];
-        $pageElements = $this->buildAndGetPageElements($domDocument);
-
 
         /**
          * Run the main slot
          * Get the HTML fragment
          * The first one should be the main because it has the frontmatter
          */
-        $mainElement = $pageElements[self::MAIN_CONTENT_AREA];
+        $mainElement = $this->pageElements[self::MAIN_CONTENT_AREA];
         try {
+            $fetcherMainPageFragment = $mainElement->getPageFragmentFetcher();
             /**
              * The {@link FetcherPageFragment::getFetchPath() Get fetch path}
              * will start the rendering if there is no HTML path
              * or the cache is not fresh
              */
-            $path = $mainElement->getPageFragmentFetcher()->getFetchPath();
+
+            $path = $fetcherMainPageFragment->getFetchPath();
             $cache->addFileDependency($path);
         } catch (ExceptionNotFound $e) {
             // it should be found
@@ -153,7 +140,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         /**
          * Run the secondary slots
          */
-        foreach ($pageElements as $elementId => $pageElement) {
+        foreach ($this->getPageElements() as $elementId => $pageElement) {
             if ($elementId === self::MAIN_CONTENT_AREA) {
                 // already added just below
                 continue;
@@ -176,7 +163,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          * Creating the HTML document
          *
          */
-        foreach ($pageElements as $pageElement) {
+        foreach ($this->getPageElements() as $pageElement) {
 
 
             $domElement = $pageElement->getDomElement();
@@ -257,12 +244,12 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          * Html
          */
         try {
-            $html = $domDocument->querySelector("html");
+            $html = $this->getTemplateDomDocument()->querySelector("html");
         } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-            throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a html element");
+            throw new ExceptionRuntimeInternal("The template ($this->pageHtmlTemplatePath) does not have a html element");
         }
 
-        $langValue = Lang::createForPage($requestedPage)->getValueOrDefault();
+        $langValue = Lang::createForPage($this->getRequestedPage())->getValueOrDefault();
         global $lang;
         $langDirection = $lang['direction'];
         $html
@@ -279,9 +266,9 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          * Head
          */
         try {
-            $head = $domDocument->querySelector("head");
+            $head = $this->getTemplateDomDocument()->querySelector("head");
         } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-            throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a head element");
+            throw new ExceptionRuntimeInternal("The template ($this->pageHtmlTemplatePath) does not have a head element");
         }
         $this->checkCharSetMeta($head);
         $this->checkViewPortMeta($head);
@@ -295,7 +282,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          * Note that Header may be added during rendering and must be
          * then called after rendering
          */
-        $this->addHeadElements($head, $layoutCssPath, $layoutJsPath);
+        $this->addHeadElements($head);
 
         /**
          * Body
@@ -306,13 +293,13 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          */
         $tplClasses = tpl_classes();
         try {
-            $layoutClass = StyleUtility::addComboStrapSuffix("layout-$layoutName");
-            $bodyElement = $domDocument->querySelector("body")
+            $layoutClass = StyleUtility::addComboStrapSuffix("layout-{$this->getLayout()}");
+            $bodyElement = $this->getTemplateDomDocument()->querySelector("body")
                 ->addClass($tplClasses)
                 ->addClass(self::POSITION_RELATIVE_CLASS)
                 ->addClass($layoutClass);
         } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-            throw new ExceptionRuntimeInternal("The template ($htmlTemplatePath) does not have a body element");
+            throw new ExceptionRuntimeInternal("The template ($this->pageHtmlTemplatePath) does not have a body element");
         }
         $this->addTaskRunnerImage($bodyElement);
 
@@ -325,7 +312,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          * We save as XML because we strive to be XML compliant (ie XHTML)
          * And we want to load it as XML to check the XHTML namespace (ie xmlns)
          */
-        $htmlBodyDocumentString = $domDocument->toHtml();
+        $htmlBodyDocumentString = $this->getTemplateDomDocument()->toHtml();
         $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlOutputByAreaName)->render();
 
         /**
@@ -396,20 +383,49 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     }
 
     /**
-     * @param XmlDocument $htmlBodyDomElement
-     * @return PageElement[]
+     *
      */
-    private function buildAndGetPageElements(XmlDocument $htmlBodyDomElement): array
+    private function buildObject(): void
     {
 
-        $areas = [];
+        if ($this->build) {
+            if ($this->closed) {
+                throw new ExceptionRuntimeInternal("This fetcher page object has already been close and cannot be reused", self::CANONICAL);
+            }
+            return;
+        }
+        $this->build = true;
+
+        $this->requestedPage = PageFragment::createPageFromPathObject($this->getRequestedPath());
+        $this->layoutName  = PageLayout::createFromPage($this->requestedPage)->getValueOrDefault();
+
+        $layoutDirectory = WikiPath::createWikiPath(":layout:$this->layoutName:", WikiPath::COMBO_DRIVE);
+        if (!FileSystems::exists($layoutDirectory)) {
+            throw new ExceptionRuntimeInternal("The layout directory ($this->layoutName) does not exist at $layoutDirectory", self::CANONICAL);
+        }
+        $this->pageCssPath = $layoutDirectory->resolve("$this->layoutName.css");
+        $this->pageJsPath = $layoutDirectory->resolve("$this->layoutName.js");
+        $this->pageHtmlTemplatePath = $layoutDirectory->resolve("$this->layoutName.html");
+        try {
+            $this->templateDomDocument = $this->htmlTemplatePathToHtmlDom($this->pageHtmlTemplatePath);
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionRuntimeInternal("The Html template layout ($this->pageHtmlTemplatePath) is not valid. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("The Html template layout ($this->pageHtmlTemplatePath) does not exists", self::CANONICAL);
+        }
+
+        $this->wikiRequestEnvironment = WikiRequestEnvironment::createAndCaptureState()
+            ->setNewAct("show")
+            ->setNewRunningId($this->getRequestedPath()->getWikiId())
+            ->setNewRequestedId($this->getRequestedPath()->getWikiId());
+
         foreach (self::LAYOUT_ELEMENTS as $elementId) {
 
             /**
              * If the id is not in the html template we don't show it
              */
             try {
-                $domElement = $htmlBodyDomElement->querySelector("#$elementId");
+                $domElement = $this->templateDomDocument->querySelector("#$elementId");
             } catch (ExceptionBadSyntax $e) {
                 LogUtility::internalError("The selector should not have a bad syntax");
                 continue;
@@ -417,10 +433,10 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                 continue;
             }
 
-            $areas[$elementId] = new PageElement($domElement, $this);
+            $this->pageElements[$elementId] = new PageElement($domElement, $this);
 
         }
-        return $areas;
+
 
     }
 
@@ -696,7 +712,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     }
 
-    private function addHeadElements(XmlElement $head, WikiPath $layoutCssPath, WikiPath $layoutJsPath)
+    private function addHeadElements(XmlElement $head)
     {
 
 
@@ -716,13 +732,13 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          */
         $snippetManager = PluginUtility::getSnippetManager();
         try {
-            $content = FileSystems::getContent($layoutCssPath);
+            $content = FileSystems::getContent($this->pageCssPath);
             $snippetManager->attachCssInternalStylesheetForRequest(self::CANONICAL, $content);
         } catch (ExceptionNotFound $e) {
             // no css found, not a problem
         }
-        if (FileSystems::exists($layoutJsPath)) {
-            $snippetManager->attachInternalJavascriptFromPathForRequest(self::CANONICAL, $layoutJsPath);
+        if (FileSystems::exists($this->pageJsPath)) {
+            $snippetManager->attachInternalJavascriptFromPathForRequest(self::CANONICAL, $this->pageJsPath);
         }
 
         /**
@@ -730,11 +746,6 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          */
         ob_start();
         try {
-            /**
-             * The request environment variable are needed
-             * by tpl_metaheaders
-             */
-            $this->setRequestEnvironment();
             tpl_metaheaders();
             $htmlHeaders = ob_get_contents();
         } finally {
@@ -754,18 +765,6 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     }
 
-    /**
-     * @return void
-     *
-     *
-     */
-    private function setRequestEnvironment()
-    {
-        WikiRequest::create()
-            ->setNewAct("show")
-            ->setNewRunningId($this->getRequestedPath()->getWikiId())
-            ->setNewRequestedId($this->getRequestedPath()->getWikiId());
-    }
 
     /**
      * Adapted from {@link tpl_indexerWebBug()}
@@ -796,5 +795,40 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     }
 
+    /**
+     *
+     */
+    public function close(): FetcherPage
+    {
+        $this->wikiRequestEnvironment->restoreState();
+        return $this;
+    }
+
+    /**
+     * @return PageElement[]
+     */
+    private function getPageElements(): array
+    {
+        $this->buildObject();
+        return $this->pageElements;
+    }
+
+    private function getTemplateDomDocument(): XmlDocument
+    {
+        $this->buildObject();
+        return $this->templateDomDocument;
+    }
+
+    private function getRequestedPage()
+    {
+        $this->buildObject();
+        return $this->requestedPage;
+    }
+
+    private function getLayout()
+    {
+        $this->buildObject();
+        return $this->layoutName;
+    }
 
 }

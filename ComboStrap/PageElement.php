@@ -37,13 +37,6 @@ class PageElement
 
         $this->fetcherPage = $fetcherPage;
         $this->domElement = $DOMElement;
-        try {
-            $fragmentPath = $this->getFragmentPath();
-            $this->fetcherFragment = FetcherPageFragment::createPageFragmentFetcherFromPath($fragmentPath)
-                ->setRequestedPagePath($this->fetcherPage->getRequestedPath());
-        } catch (ExceptionNotFound $e) {
-            // no fragment
-        }
 
     }
 
@@ -216,9 +209,17 @@ class PageElement
      */
     public function getPageFragmentFetcher(): FetcherPageFragment
     {
-        if (!isset($this->fetcherFragment)) {
-            throw new ExceptionNotFound("No fragment found");
+        if (isset($this->fetcherFragment)) {
+            if (!$this->fetcherFragment->isClosed()) {
+                return $this->fetcherFragment;
+            }
         }
+        /**
+         * Rebuild the fragment if any
+         */
+        $fragmentPath = $this->getFragmentPath();
+        $this->fetcherFragment = FetcherPageFragment::createPageFragmentFetcherFromPath($fragmentPath)
+            ->setRequestedPagePath($this->fetcherPage->getRequestedPath());
         return $this->fetcherFragment;
     }
 

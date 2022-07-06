@@ -18,20 +18,20 @@ class WikiFileSystem implements FileSystem
 {
 
 
-    public const SCHEME = 'doku';
+    public const SCHEME = 'wiki';
 
 
     /**
      * @var WikiFileSystem
      */
-    private static $dokuFS;
+    private static WikiFileSystem $wikiFileSystem;
 
     public static function getOrCreate(): WikiFileSystem
     {
-        if (self::$dokuFS === null) {
-            self::$dokuFS = new WikiFileSystem();
+        if (!isset(self::$wikiFileSystem)) {
+            self::$wikiFileSystem = new WikiFileSystem();
         }
-        return self::$dokuFS;
+        return self::$wikiFileSystem;
     }
 
     /**

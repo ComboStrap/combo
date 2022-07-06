@@ -455,7 +455,7 @@ class WikiPath extends PathAbs
             return $path;
         }
         if (!($path instanceof LocalPath)) {
-            throw new ExceptionBadArgument("The path ($path) is not a local path and cannot be converted to a doku path");
+            throw new ExceptionBadArgument("The path ($path) is not a local path and cannot be converted to a wiki path");
         }
         $driveRoots = WikiPath::getDriveRoots();
         foreach ($driveRoots as $driveRoot => $drivePath) {
@@ -687,7 +687,7 @@ class WikiPath extends PathAbs
     /**
      *
      *
-     * @return string - the id of dokuwiki is the absolute path
+     * @return string - the wiki id is the absolute path
      * without the root separator (ie normalized)
      *
      * The index stores needs this value
@@ -724,7 +724,7 @@ class WikiPath extends PathAbs
     }
 
     /**
-     * The dokuwiki revision value
+     * The wiki revision value
      * as seen in the {@link basicinfo()} function
      * is the {@link File::getModifiedTime()} of the file
      *
@@ -781,7 +781,7 @@ class WikiPath extends PathAbs
     }
 
     /**
-     * @return array the pages where the dokuwiki file (page or media) is used
+     * @return array the pages where the wiki file (page or media) is used
      *   * backlinks for page
      *   * page with media for media
      */

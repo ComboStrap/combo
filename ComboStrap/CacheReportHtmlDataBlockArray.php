@@ -25,7 +25,7 @@ class CacheReportHtmlDataBlockArray
      */
     public static function getFromRuntime(): array
     {
-        $cacheManager = CacheManager::getOrCreateFromRequestedPage();
+        $cacheManager = CacheManager::getOrCreateFromRequestedPath();
         $cacheReporters = $cacheManager->getCacheResults();
         if ($cacheReporters === null) {
             return [];
@@ -46,6 +46,12 @@ class CacheReportHtmlDataBlockArray
                 }
                 $mode = $result->getMode();
                 $pageFragment = $result->getPageFragment();
+                try {
+                    $pageFragmentPath = WikiPath::createFromPathObject($pageFragment->getPath());
+                } catch (ExceptionBadArgument $e) {
+                    // should not
+                    throw new ExceptionRuntimeInternal("The path should be local wiki based");
+                }
 
                 $cacheFile = null;
                 try {
@@ -62,14 +68,12 @@ class CacheReportHtmlDataBlockArray
 
                 if ($mode === FetcherPageFragment::XHTML_MODE) {
                     $dependencies = $cacheManager
-                        ->getCacheDependenciesForPageFragment($pageFragment)
+                        ->getCacheDependenciesForPath($pageFragmentPath)
                         ->getDependencies();
-                    if ($dependencies !== null) {
-                        $data[self::DEPENDENCY_ATT] = $dependencies;
-                    }
+                    $data[self::DEPENDENCY_ATT] = $dependencies;
                 }
 
-                $htmlDataBlock[$pageFragment->getPath()->getWikiId()][$mode] = $data;
+                $htmlDataBlock[$pageFragmentPath->getWikiId()][$mode] = $data;
 
             }
 

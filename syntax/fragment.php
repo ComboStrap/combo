@@ -177,7 +177,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
                 /**
                  * Cache dependent on the requested page
                  */
-                CacheManager::getOrCreateFromRequestedPage()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
 
                 return array(
                     PluginUtility::STATE => $state,

@@ -44,22 +44,22 @@ class CacheManager
      */
     private $slotsExpiration;
 
-    private PageFragment $requestedPage;
+    private WikiPath $requestedPath;
 
-    public function __construct(PageFragment $requestedPage)
+    public function __construct(WikiPath $requestedPath)
     {
-        $this->requestedPage = $requestedPage;
+        $this->requestedPath = $requestedPath;
     }
 
 
     /**
      * @return CacheManager
      */
-    public static function getOrCreateFromRequestedPage(): CacheManager
+    public static function getOrCreateFromRequestedPath(): CacheManager
     {
 
-        $page = PageFragment::createFromRequestedPage();
-        return self::getOrCreateForContextPage($page);
+        $path = WikiPath::createRequestedPagePathFromRequest();
+        return self::getOrCreateForContextPage($path);
 
     }
 
@@ -67,18 +67,18 @@ class CacheManager
     public static function resetAndGet(): CacheManager
     {
         self::reset();
-        return self::getOrCreateFromRequestedPage();
+        return self::getOrCreateFromRequestedPath();
     }
 
-    public static function getOrCreateForContextPage(PageFragment $requestedContextPage): CacheManager
+    public static function getOrCreateForContextPage(WikiPath $requestedContextPath): CacheManager
     {
-        $contextId = $requestedContextPage->getPath()->getWikiId();
+        $contextId = $requestedContextPath->getWikiId();
         $cacheManager = self::$cacheManager[$contextId];
         if ($cacheManager === null) {
             // new run, delete all old cache managers
             self::reset();
             // create
-            $cacheManager = new CacheManager($requestedContextPage);
+            $cacheManager = new CacheManager($requestedContextPath);
             self::$cacheManager[$contextId] = $cacheManager;
         }
         return $cacheManager;
@@ -86,17 +86,17 @@ class CacheManager
 
 
     /**
-     * @param PageFragment $pageFragment
+     * @param Path $path
      * @return CacheDependencies
      */
-    public function getCacheDependenciesForPageFragment(PageFragment $pageFragment): CacheDependencies
+    public function getCacheDependenciesForPath(Path $path): CacheDependencies
     {
 
-        $wikiId = $pageFragment->getPath()->getWikiId();
-        $cacheRuntimeDependencies = $this->slotCacheDependencies[$wikiId];
+        $pathId = $path->toPathString();
+        $cacheRuntimeDependencies = $this->slotCacheDependencies[$pathId];
         if ($cacheRuntimeDependencies === null) {
-            $cacheRuntimeDependencies = CacheDependencies::create($pageFragment, $this->requestedPage);
-            $this->slotCacheDependencies[$wikiId] = $cacheRuntimeDependencies;
+            $cacheRuntimeDependencies = CacheDependencies::create($path, $this->requestedPath);
+            $this->slotCacheDependencies[$pathId] = $cacheRuntimeDependencies;
         }
         return $cacheRuntimeDependencies;
 
@@ -136,8 +136,8 @@ class CacheManager
     public function addDependencyForCurrentSlot(string $dependencyName): CacheManager
     {
 
-        $currentFragment = PageFragment::createPageFromGlobalWikiId();
-        $cacheDependencies = $this->getCacheDependenciesForPageFragment($currentFragment);
+        $currentFragment = WikiPath::createRunningPageFragmentPathFromGlobalId();
+        $cacheDependencies = $this->getCacheDependenciesForPath($currentFragment);
         $cacheDependencies->addDependency($dependencyName);
         return $this;
 

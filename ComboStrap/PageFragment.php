@@ -6,6 +6,7 @@ namespace ComboStrap;
 use action_plugin_combo_qualitymessage;
 use DateTime;
 use Exception;
+use http\Exception\RuntimeException;
 use renderer_plugin_combo_analytics;
 
 
@@ -133,7 +134,6 @@ class PageFragment extends ResourceComboAbs
     private $ldJson;
 
 
-
     /**
      * @var PageDescription $description
      */
@@ -230,7 +230,6 @@ class PageFragment extends ResourceComboAbs
     }
 
 
-
     /**
      *
      * @throws ExceptionBadSyntax - if this is not a
@@ -318,32 +317,6 @@ class PageFragment extends ResourceComboAbs
         return in_array($name, $slotNames, true);
     }
 
-    /**
-     * @return PageFragment[]
-     */
-    public function getChildren(): array
-    {
-
-        /**
-         * A secondary slot
-         */
-        if ($this->isSecondarySlot()) {
-            return [];
-        }
-
-        /**
-         * This is the main slot
-         */
-        $children = [];
-        $primaryHeader = $this->getPrimaryHeaderPage();
-        if ($primaryHeader !== null) {
-            $children[] = $primaryHeader;
-        }
-        return $children;
-
-
-    }
-
 
     /**
      * Return a canonical if set
@@ -407,11 +380,19 @@ class PageFragment extends ResourceComboAbs
     }
 
 
+    /**
+     *
+     */
     public
     function getHtmlFetcher(): FetcherPageFragment
     {
 
-        return FetcherPageFragment::createPageFragmentFetcherFromObject($this)->setRequestedMimeToXhtml();
+        try {
+            return FetcherPageFragment::createPageFragmentFetcherFromPath($this->getPath())
+                ->setRequestedMimeToXhtml();
+        } catch (ExceptionBadArgument $e) {
+            throw new ExceptionRuntimeInternal("The path should be local. Error: {$e->getMessage()}");
+        }
 
     }
 
@@ -1872,7 +1853,7 @@ class PageFragment extends ResourceComboAbs
     function getInstructionsDocument(): FetcherPageFragment
     {
 
-        return FetcherPageFragment::createPageFragmentFetcherFromObject($this)
+        return FetcherPageFragment::createPageFragmentFetcherFromPath($this->getPath())
             ->setRequestedMimeToInstructions();
 
     }
@@ -1914,7 +1895,7 @@ class PageFragment extends ResourceComboAbs
     }
 
     /**
-     * @return WikiPath
+     * @return Path
      */
     public
     function getPath(): Path

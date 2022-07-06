@@ -130,7 +130,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 /**
                  * Cache key dependencies
                  */
-                CacheManager::getOrCreateFromRequestedPage()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
 
 
                 $requestedPage = PageFragment::createFromRequestedPage();

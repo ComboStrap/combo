@@ -31,21 +31,21 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
      */
     private $snippetCache;
 
-    private PageFragment $pageFragment;
+
     private Mime $mime;
     private bool $cacheAfterRendering = true;
     private string $renderer;
     private CacheDependencies $cacheDependencies;
-    private PageFragment $requestedPage;
     private bool $objectHasBeenBuild = false;
     private WikiRequestEnvironment $wikiRequestEnvironment;
     private bool $closed = false;
+    private WikiPath $requestedPagePath;
 
 
     public static function createPageFragmentFetcherFromId(string $mainId): FetcherPageFragment
     {
-        $page = PageFragment::createPageFromId($mainId);
-        return FetcherPageFragment::createPageFragmentFetcherFromObject($page);
+        $page = WikiPath::createPagePathFromId($mainId);
+        return FetcherPageFragment::createPageFragmentFetcherFromPath($page);
     }
 
     /**
@@ -59,12 +59,12 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     }
 
     /**
-     * @throws ExceptionNotFound
+     *
      */
-    public static function createPageFragmentFetcherFromPath(Path $wikiPath): FetcherPageFragment
+    public static function createPageFragmentFetcherFromPath(Path $path): FetcherPageFragment
     {
-        $page = PageFragment::createPageFromPathObject($wikiPath);
-        return self::createPageFragmentFetcherFromObject($page);
+        return (new FetcherPageFragment())
+            ->setRequestedPath($path);
     }
 
     /**
@@ -88,25 +88,22 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     }
 
 
-    public static function createPageFragmentFetcherFromObject(PageFragment $pageFragment): FetcherPageFragment
-    {
-        return (new FetcherPageFragment())
-            ->setRequestedPageFragment($pageFragment);
-    }
-
     /**
      * TODO: better using path as requested in place of a page ?
      *   It's a duplicate of {@link FetcherPageFragment::setOriginalPath()}
-     * @param PageFragment $pageFragment
+     * @param Path $path
      * @return $this
      */
-    public function setRequestedPageFragment(PageFragment $pageFragment): FetcherPageFragment
+    public function setRequestedPath(Path $path): FetcherPageFragment
     {
 
         $this->checkNoSetAfterBuild();
-        $this->pageFragment = $pageFragment;
-        $this->setOriginalPath($pageFragment->getPath());
-
+        try {
+            $dokuPath = WikiPath::createFromPathObject($path);
+        } catch (ExceptionBadArgument $e) {
+            throw new ExceptionRuntimeInternal("It should be", self::CANONICAL, 1, $e);
+        }
+        $this->setOriginalPath($dokuPath);
         return $this;
 
     }
@@ -166,7 +163,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
          * Use cache should be always called because it trigger
          * the event coupled to the cache (ie PARSER_CACHE_USE)
          */
-        $depends = $this->getDepends();
         $depends['age'] = $this->getCacheAge();
         $useCache = $this->cache->useCache($depends);
         return ($useCache === false);
@@ -178,7 +174,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     function storeSnippets()
     {
 
-        $slotId = $this->getRequestedPageFragment()->getPath()->getWikiId();
+        $slotId = $this->getOriginalPath()->getWikiId();
 
         /**
          * Snippet
@@ -253,13 +249,13 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
 
         $this->buildObjectAndEnvironmentIfNeeded();
 
-        $id = $this->getRequestedPageFragment()->getPath()->getWikiId();
-        $slotLocalFilePath = $this->getRequestedPageFragment()
-            ->getPath()
+        $id = $this->getRequestedPath()->getWikiId();
+        $slotLocalFilePath = $this->getRequestedPath()
             ->toLocalPath()
             ->toAbsolutePath()
             ->toPathString();
         $this->snippetCache = new CacheParser($id, $slotLocalFilePath, "snippet.json");
+
         /**
          * Snippet.json is data dependent
          *
@@ -374,19 +370,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         return "page-fragment";
     }
 
-    private function getRequestedPageFragment(): PageFragment
-    {
-        return $this->pageFragment;
-    }
-
-    private function getDepends(): array
-    {
-        $depends = [];
-        foreach ($this->getRequestedPageFragment()->getChildren() as $child) {
-            $depends['files'][] = $child->getPath()->toLocalPath()->toPathString();
-        }
-        return $depends;
-    }
 
     /**
      */
@@ -437,7 +420,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     function process(): string
     {
 
-        if (!$this->getRequestedPageFragment()->exists()) {
+        if (!FileSystems::exists($this->getRequestedPath())) {
             return "";
         }
 
@@ -453,7 +436,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
          * The code below is adapted from {@link p_cached_output()}
          * $ret = p_cached_output($file, 'xhtml', $pageid);
          */
-        $instructionsFetcher = FetcherPageFragment::createPageFragmentFetcherFromObject($this->getRequestedPageFragment())
+        $instructionsFetcher = FetcherPageFragment::createPageFragmentFetcherFromPath($this->getRequestedPath())
             ->setRequestedMimeToInstructions();
         try {
             $instructions = $instructionsFetcher->getFetchPathAsInstructionsArray();
@@ -500,11 +483,11 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
          * You need to close it with the {@link FetcherPageFragment::close()}
          */
         $this->wikiRequestEnvironment = WikiRequestEnvironment::createAndCaptureState()
-            ->setNewRunningId($this->getRequestedPageFragment()->getPath()->getWikiId())
+            ->setNewRunningId($this->getOriginalPath()->getWikiId())
             ->setNewAct("show")
-            ->setNewRequestedId($this->getRequestedContextPageOrDefault()->getPath()->getWikiId());
+            ->setNewRequestedId($this->getRequestedPagePathOrDefault()->getWikiId());
 
-        $wikiId = $this->pageFragment->getPath()->getWikiId();
+        $wikiId = $this->getOriginalPath()->getWikiId();
 
         /**
          * The local path is part of the key cache and should be the same
@@ -532,8 +515,8 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
             default:
                 $this->cache = new CacheRenderer($wikiId, $localFile, $extension);
 
-                $this->cacheDependencies = CacheManager::getOrCreateFromRequestedPage()
-                    ->getCacheDependenciesForPageFragment($this->pageFragment);
+                $this->cacheDependencies = CacheManager::getOrCreateFromRequestedPath()
+                    ->getCacheDependenciesForPath($this->getRequestedPath());
                 $this->cacheDependencies->rerouteCacheDestination($this->cache);
                 break;
         }
@@ -543,18 +526,11 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
 
     public function __toString()
     {
-        return $this->getRequestedPageFragment() . $this->getMime()->toString();
+        return $this->getRequestedPath() . $this->getMime()->toString();
     }
 
     private function processInstruction(): array
     {
-        /**
-         * The id is not passed while on handler
-         * Therefore the global id should be set
-         */
-        global $ID;
-        $oldId = $ID;
-        $ID = $this->getRequestedPageFragment()->getPath()->getWikiId();
 
         /**
          * Get the instructions
@@ -573,20 +549,15 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
          * the parsing. See {@link \action_plugin_combo_headingpostprocessing}
          *
          */
-        $path = $this->getRequestedPageFragment()->getPath();
+        $path = $this->getRequestedPath();
         try {
             $text = FileSystems::getContent($path);
             $instructions = p_get_instructions($text);
         } catch (ExceptionNotFound $e) {
             LogUtility::msg("The file ($path) does not exists, call stack instructions was set to empty");
             $instructions = [];
-        } finally {
-            // close restore ID
-            $ID = $oldId;
         }
 
-        // the parsing may have set new metadata values
-        $this->getRequestedPageFragment()->rebuild();
         return $instructions;
 
     }
@@ -602,7 +573,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     {
         parent::buildFromTagAttributes($tagAttributes);
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
-        $this->setRequestedPageFragment(PageFragment::createPageFromPathObject($this->getOriginalPath()));
+        $this->setRequestedPath($this->getOriginalPath());
         return $this;
     }
 
@@ -644,52 +615,21 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     }
 
 
-    /**
-     * @return PageFragment - the requested page in which this fetcher should run
-     * @throws ExceptionNotFound
-     */
-    public function getRequestedPage(): PageFragment
-    {
-        if (!isset($this->requestedPage)) {
-            throw new ExceptionNotFound("No requested context page specified");
-        }
-        return $this->requestedPage;
-    }
-
-    /**
-     * @param PageFragment $pageFragment - the requested page (ie the main fragment)
-     * @return $this
-     */
-    public function setRequestedPage(PageFragment $pageFragment): FetcherPageFragment
-    {
-        $this->checkNoSetAfterBuild();
-        $this->requestedPage = $pageFragment;
-        return $this;
-    }
-
     public function getCacheDependencies(): CacheDependencies
     {
         return $this->cacheDependencies;
     }
 
 
-    private function getRequestedContextPageOrDefault(): PageFragment
+    private function getRequestedPagePathOrDefault(): WikiPath
     {
         try {
-            return $this->getRequestedPage();
+            return $this->getRequestedPagePath();
         } catch (ExceptionNotFound $e) {
-            return PageFragment::createFromRequestedPage();
+            return WikiPath::createRequestedPagePathFromRequest();
         }
     }
 
-
-    /**
-     * @return PageFragment
-     */
-    public function getPageFragment(): PageFragment
-    {
-        return $this->pageFragment;
-    }
 
     private function checkNoSetAfterBuild()
     {
@@ -741,13 +681,13 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
 
     /**
      * The page context in which this fragment was requested
-     * @param WikiPath $wikiPath
+     * @param Path $path
      * @return $this
+     * @throws ExceptionBadArgument - if the path cannot be transformed as wiki path
      */
-    public function setRequestedPagePath(WikiPath $wikiPath): FetcherPageFragment
+    public function setRequestedPagePath(Path $path): FetcherPageFragment
     {
-        $page = PageFragment::createPageFromPathObject($wikiPath);
-        $this->setRequestedPage($page);
+        $this->requestedPagePath = WikiPath::createFromPathObject($path);
         return $this;
     }
 
@@ -766,6 +706,22 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     public function isClosed(): bool
     {
         return $this->closed = true;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getRequestedPagePath(): WikiPath
+    {
+        if (!isset($this->requestedPagePath)) {
+            throw new ExceptionNotFound("No requested page path");
+        }
+        return $this->requestedPagePath;
+    }
+
+    private function getRequestedPath(): WikiPath
+    {
+        return $this->getOriginalPath();
     }
 
 }

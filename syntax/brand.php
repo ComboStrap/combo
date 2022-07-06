@@ -66,7 +66,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
             $urlTemplate = Template::create($url);
             $variableDetected = $urlTemplate->getVariablesDetected();
             if (sizeof($variableDetected) === 1 && $variableDetected[0] === "path") {
-                CacheManager::getOrCreateFromRequestedPage()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
                 $page = PageFragment::createFromRequestedPage();
                 $relativePath = str_replace(":", "/", $page->getWikiId());
                 $url = $urlTemplate

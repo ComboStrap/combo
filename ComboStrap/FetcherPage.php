@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 use dokuwiki\Cache\Cache;
 use Exception;
+use http\Exception\RuntimeException;
 use syntax_plugin_combo_container;
 
 class FetcherPage extends FetcherAbs implements FetcherSource
@@ -63,7 +64,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         return self::createPageFetcherFromPath(WikiPath::createRequestedPagePathFromRequest());
     }
 
-    private static function createPageFetcherFromPath(WikiPath $path): FetcherPage
+    private static function createPageFetcherFromPath(Path $path): FetcherPage
     {
         $fetcherPage = new FetcherPage();
         $fetcherPage->setRequestedPath($path);
@@ -123,14 +124,19 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          */
         $mainElement = $this->pageElements[self::MAIN_CONTENT_AREA];
         try {
-            $fetcherMainPageFragment = $mainElement->getPageFragmentFetcher();
+
             /**
              * The {@link FetcherPageFragment::getFetchPath() Get fetch path}
              * will start the rendering if there is no HTML path
              * or the cache is not fresh
              */
+            $fetcherMainPageFragment = $mainElement->getPageFragmentFetcher();
+            try {
+                $path = $fetcherMainPageFragment->getFetchPath();
+            } finally {
+                $fetcherMainPageFragment->close();
+            }
 
-            $path = $fetcherMainPageFragment->getFetchPath();
             $cache->addFileDependency($path);
         } catch (ExceptionNotFound $e) {
             // it should be found
@@ -146,7 +152,12 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                 continue;
             }
             try {
-                $cache->addFileDependency($pageElement->getPageFragmentFetcher()->getFetchPath());
+                $fetcherPageFragment = $pageElement->getPageFragmentFetcher();
+                try {
+                    $cache->addFileDependency($fetcherPageFragment->getFetchPath());
+                } finally {
+                    $fetcherPageFragment->close();
+                }
             } catch (ExceptionNotFound $e) {
                 // no fetcher or container
             }
@@ -202,11 +213,27 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             try {
 
                 $fetcher = $pageElement->getPageFragmentFetcher();
+                try {
+                    $fetcherHtmlString = $fetcher->getFetchPathAsHtmlString();
+                } finally {
+                    $fetcher->close();
+                }
+
+                /**
+                 * We don't load / add the HTML string in the actual DOM document
+                 * to no add by-effect, corrections during loading and writing
+                 *
+                 * We add a template variable, we save the HTML in a array
+                 * And replace them after the loop
+                 */
+                $layoutVariable = $pageElement->getVariableName();
+                $htmlOutputByAreaName[$layoutVariable] = $fetcherHtmlString;
+                $domElement->appendTextNode('$' . $layoutVariable);
 
             } catch (ExceptionNotFound $e) {
 
                 /**
-                 * no fragment (page side for instance)
+                 * no fetcher fragment (page side for instance)
                  * remove or empty ?
                  *   * remove allows to not have any empty node but it may break css rules
                  *   * empty permits not break any css rules (grid may be broken for instance)
@@ -225,17 +252,6 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                 continue;
 
             }
-
-            /**
-             * We don't load / add the HTML string in the actual DOM document
-             * to no add by-effect, corrections during loading and writing
-             *
-             * We add a template variable, we save the HTML in a array
-             * And replace them after the loop
-             */
-            $layoutVariable = $pageElement->getVariableName();
-            $htmlOutputByAreaName[$layoutVariable] = $fetcher->getFetchPathAsHtmlString();
-            $domElement->appendTextNode('$' . $layoutVariable);
 
         }
 
@@ -397,7 +413,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         $this->build = true;
 
         $this->requestedPage = PageFragment::createPageFromPathObject($this->getRequestedPath());
-        $this->layoutName  = PageLayout::createFromPage($this->requestedPage)->getValueOrDefault();
+        $this->layoutName = PageLayout::createFromPage($this->requestedPage)->getValueOrDefault();
 
         $layoutDirectory = WikiPath::createWikiPath(":layout:$this->layoutName:", WikiPath::COMBO_DRIVE);
         if (!FileSystems::exists($layoutDirectory)) {
@@ -686,8 +702,13 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     }
 
-    private function setRequestedPath(WikiPath $requestedPath): FetcherPage
+    private function setRequestedPath(Path $requestedPath): FetcherPage
     {
+        try {
+            $requestedPath = WikiPath::createFromPathObject($requestedPath);
+        } catch (ExceptionBadArgument $e) {
+            throw new ExceptionRuntimeInternal("Not a local wiki path", self::CANONICAL, 1, $e);
+        }
         $this->setOriginalPath($requestedPath);
         return $this;
     }

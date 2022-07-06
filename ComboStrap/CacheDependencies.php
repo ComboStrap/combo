@@ -83,6 +83,8 @@ class CacheDependencies
      */
     const PAGE_SYSTEM_DEPENDENCY = "page_system";
 
+    const CANONICAL = "cache:dependency";
+
 
     /**
      * @var CacheParser
@@ -106,23 +108,23 @@ class CacheDependencies
      */
     private $runtimeStoreDependencies;
 
-    private PageFragment $pageFragment;
+    private Path $pathFragment;
 
     /**
      * @var string the first key captured
      */
     private $firstActualKey;
-    private PageFragment $requestedPage;
+    private Path $requestedPath;
 
 
     /**
      * CacheManagerForSlot constructor.
      *
      */
-    private function __construct(PageFragment $pageFragment, PageFragment $requestedPage)
+    private function __construct(Path $pathFragment, Path $requestedPath)
     {
-        $this->pageFragment = $pageFragment;
-        $this->requestedPage = $requestedPage;
+        $this->pathFragment = $pathFragment;
+        $this->requestedPath = $requestedPath;
 
         $data = $this->getDependenciesCacheStore()->retrieveCache();
         if (!empty($data)) {
@@ -131,9 +133,9 @@ class CacheDependencies
 
     }
 
-    public static function create(PageFragment $pageFragment, PageFragment $requestedFragment): CacheDependencies
+    public static function create(Path $pathFragment, Path $requestedPath): CacheDependencies
     {
-        return new CacheDependencies($pageFragment, $requestedFragment);
+        return new CacheDependencies($pathFragment, $requestedPath);
     }
 
     /**
@@ -198,7 +200,7 @@ class CacheDependencies
          *
          * Scope is directory/namespace based
          */
-        $requestedPage = $this->requestedPage;
+        $requestedPage = PageFragment::createPageFromPathObject($this->requestedPath);
         switch ($dependenciesValue) {
             case CacheDependencies::NAMESPACE_OLD_VALUE:
             case CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY:
@@ -286,7 +288,7 @@ class CacheDependencies
     public
     function getDefaultKey(): string
     {
-        $keyDokuWikiCompliant = str_replace("\\", "/", $this->pageFragment->getPath()->toLocalPath()->toPathString());
+        $keyDokuWikiCompliant = str_replace("\\", "/", $this->pathFragment->getPath()->toLocalPath()->toPathString());
         return $keyDokuWikiCompliant . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
     }
 
@@ -300,7 +302,7 @@ class CacheDependencies
             $cache->cache = getCacheName($cache->key, '.' . $cache->mode);
 
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while trying to reroute the cache destination for the slot ({$this->pageFragment}). You may have cache problem. Error: {$e->getMessage()}");
+            LogUtility::msg("Error while trying to reroute the cache destination for the slot ({$this->pathFragment}). You may have cache problem. Error: {$e->getMessage()}");
         }
 
     }
@@ -337,13 +339,19 @@ class CacheDependencies
         if ($this->dependenciesCacheStore !== null) {
             return $this->dependenciesCacheStore;
         }
-        $id = $this->pageFragment->getPath()->getWikiId();
-        $slotLocalFilePath = $this->pageFragment
-            ->getPath()
-            ->toLocalPath()
+        /**
+         * We take the path and not the id
+         * because the markup may be not in a wiki path
+         */
+        try {
+            $localPath = LocalPath::createFromPathObject($this->pathFragment);
+        } catch (ExceptionBadArgument $e) {
+            throw new ExceptionRuntimeInternal("The page fragment path should be local. Error:{$e->getMessage()}",self::CANONICAL);
+        }
+        $slotLocalFilePath = $localPath
             ->toAbsolutePath()
             ->toPathString();
-        $this->dependenciesCacheStore = new CacheParser($id, $slotLocalFilePath, "deps.json");
+        $this->dependenciesCacheStore = new CacheParser($localPath->toPathString(), $slotLocalFilePath, "deps.json");
         return $this->dependenciesCacheStore;
     }
 

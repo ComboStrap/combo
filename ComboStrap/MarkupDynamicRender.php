@@ -15,7 +15,7 @@ use PHPUnit\Exception;
  * row of each table is lost.
  *
  */
-class DynamicRender
+class MarkupDynamicRender
 {
 
     /**
@@ -65,14 +65,14 @@ class DynamicRender
     /**
      * @throws ExceptionNotFound
      */
-    public static function create($format): DynamicRender
+    public static function create($format): MarkupDynamicRender
     {
-        return new DynamicRender($format);
+        return new MarkupDynamicRender($format);
     }
 
-    public static function createXhtml(): DynamicRender
+    public static function createXhtml(): MarkupDynamicRender
     {
-        return new DynamicRender("xhtml");
+        return new MarkupDynamicRender("xhtml");
     }
 
     public function setDateAt($date_at)

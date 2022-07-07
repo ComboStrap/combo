@@ -2,7 +2,7 @@
 
 
 use ComboStrap\CallStack;
-use ComboStrap\DynamicRender;
+use ComboStrap\MarkupDynamicRender;
 use ComboStrap\Outline;
 use ComboStrap\Site;
 use ComboStrap\TocUtility;
@@ -79,7 +79,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 
         global $ACT;
         switch ($ACT) {
-            case DynamicRender::DYNAMIC_RENDERING:
+            case MarkupDynamicRender::DYNAMIC_RENDERING:
                 // no outline or edit button for dynamic rendering
                 // but closing of atx heading
                 $handler->calls = $outline->toDynamicInstructionCalls();

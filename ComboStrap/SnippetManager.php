@@ -85,17 +85,10 @@ class SnippetManager
     public static function getOrCreate(): SnippetManager
     {
 
-        $id = PluginUtility::getRequestedWikiId();
-
-        if (PluginUtility::isTest()) {
-            $id = "test_dynamic_script_execution";
-        } else {
-            LogUtility::msg("The requested Id could not be found, the snippets may not be scoped properly");
-        }
-
+        $id = WikiRequestEnvironment::createAndCaptureState()->getActualRequestedId();
         $snippetManager = self::$globalSnippetManager[$id];
         if ($snippetManager === null) {
-            self::$globalSnippetManager = []; // delete old snippet manager for other request
+            self::reset(); // delete old snippet manager for other request
             $snippetManager = new SnippetManager();
             self::$globalSnippetManager[$id] = $snippetManager;
         }

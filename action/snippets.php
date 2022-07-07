@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\CacheManager;
-use ComboStrap\DynamicRender;
+use ComboStrap\MarkupDynamicRender;
 use ComboStrap\FetcherPageFragment;
 use ComboStrap\PageFragment;
 use ComboStrap\PluginUtility;
@@ -183,7 +183,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * We don't add any component at this moment
          */
         global $ACT;
-        if ($ACT === DynamicRender::DYNAMIC_RENDERING) {
+        if ($ACT === MarkupDynamicRender::DYNAMIC_RENDERING) {
             return;
         }
 

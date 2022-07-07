@@ -16,7 +16,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     use FetcherTraitLocalPath;
 
     const XHTML_MODE = "xhtml";
-    const INSTRUCTION_EXTENSION = "i";
     const MAX_CACHE_AGE = 999999;
 
     const CANONICAL = "page-fragment-fetcher";
@@ -40,6 +39,8 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     private WikiRequestEnvironment $wikiRequestEnvironment;
     private bool $closed = false;
     private WikiPath $requestedPagePath;
+
+    private bool $removeRootBlockElement = false;
 
 
     public static function createPageFragmentFetcherFromId(string $mainId): FetcherPageFragment
@@ -67,12 +68,14 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
             ->setRequestedPath($path);
     }
 
+
     /**
      *
      * @param Url|null $url
      * @return Url
      *
      * Note: The fetch url is the {@link FetcherCache keyCache}
+     * @throws ExceptionNotFound
      */
     function getFetchUrl(Url $url = null): Url
     {
@@ -126,23 +129,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         }
     }
 
-    /**
-     * @return string
-     * @deprecated for {@link PageFragment::getMime()}
-     */
-    function getExtension(): string
-    {
-        return self::XHTML_MODE;
-    }
-
-
-    function getRendererName(): string
-    {
-        if (isset($this->renderer)) {
-            return $this->renderer;
-        }
-        return "xhtml";
-    }
 
     public function shouldProcess(): bool
     {
@@ -296,30 +282,56 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         /**
          * Process
          */
-        $extension = $this->getMime()->getExtension();
-        switch ($extension) {
-            case self::INSTRUCTION_EXTENSION:
-                $content = $this->processInstruction();
-                break;
-            default:
-                $content = $this->process();
-                /**
-                 * Reroute the cache output by runtime dependencies
-                 * set during processing
-                 */
-                $this->cacheDependencies->rerouteCacheDestination($this->cache);
+        $path = $this->getRequestedPath();
+        try {
+            $markup = FileSystems::getContent($path);
+        } catch (ExceptionNotFound $e) {
+            $markup = "";
+            LogUtility::error("The path ($path) does not exist, we have set the markup to the empty string during rendering", self::CANONICAL);
         }
 
+        $extension = $this->getMime()->getExtension();
+        switch ($extension) {
+            case MarkupRenderer::INSTRUCTION_EXTENSION:
+                $markupRenderer = MarkupRenderer::createFromMarkup($markup)
+                    ->setRequestedMimeToInstruction()
+                    ->setDeleteRootBlockElement($this->removeRootBlockElement);
+                try {
+                    $content = $markupRenderer->process();
+                } finally {
+                    $markupRenderer->close();
+                }
+                break;
+            default:
+                $instructionsFetcher = FetcherPageFragment::createPageFragmentFetcherFromPath($this->getRequestedPath())
+                    ->setRequestedMimeToInstructions();
+                try {
+                    $instructions = $instructionsFetcher->getFetchPathAsInstructionsArray();
+                } finally {
+                    $instructionsFetcher->close();
+                }
+                $markupRenderer = MarkupRenderer::createFromInstructions($instructions)
+                    ->setRequestedMime($this->getMime());
+                try {
+                    $content = $markupRenderer->process();
+                } finally {
+                    $markupRenderer->close();
+                }
+                $this->cacheAfterRendering = $markupRenderer->getCacheAfterRendering();
+        }
 
-        /**
-         * Storage
-         */
 
         /**
          * Snippets and dependencies if XHTML
          * (after processing as they can be added at runtime)
          */
         if ($this->getMime()->getExtension() === self::XHTML_MODE) {
+
+            /**
+             * Reroute the cache output by runtime dependencies
+             * set during processing
+             */
+            $this->cacheDependencies->rerouteCacheDestination($this->cache);
 
             /**
              * We make the Snippet store to Html store an atomic operation
@@ -400,7 +412,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
                     return 0;
                 }
                 break;
-            case self::INSTRUCTION_EXTENSION:
+            case MarkupRenderer::INSTRUCTION_EXTENSION:
                 return self::MAX_CACHE_AGE;
         }
         try {
@@ -413,46 +425,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
 
     }
 
-    /**
-     * @return string
-     * @throws ExceptionNotFound
-     */
-    function process(): string
-    {
-
-        if (!FileSystems::exists($this->getRequestedPath())) {
-            return "";
-        }
-
-        /**
-         * Global ID is the ID of the HTTP request
-         * (ie the page id)
-         * We change it for the run
-         */
-        $this->buildObjectAndEnvironmentIfNeeded();
-
-
-        /**
-         * The code below is adapted from {@link p_cached_output()}
-         * $ret = p_cached_output($file, 'xhtml', $pageid);
-         */
-        $instructionsFetcher = FetcherPageFragment::createPageFragmentFetcherFromPath($this->getRequestedPath())
-            ->setRequestedMimeToInstructions();
-        try {
-            $instructions = $instructionsFetcher->getFetchPathAsInstructionsArray();
-        } finally {
-            $instructionsFetcher->close();
-        }
-
-        /**
-         * Render
-         */
-        $result = p_render($this->getRendererName(), $instructions, $info);
-        $this->cacheAfterRendering = $info['cache'];
-
-        return $result;
-
-    }
 
     /**
      * Build object (mostly the cache)
@@ -509,7 +481,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
          */
         $extension = $this->getMime()->getExtension();
         switch ($extension) {
-            case self::INSTRUCTION_EXTENSION:
+            case MarkupRenderer::INSTRUCTION_EXTENSION:
                 $this->cache = new CacheInstructions($wikiId, $localFile);
                 break;
             default:
@@ -527,39 +499,6 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     public function __toString()
     {
         return $this->getRequestedPath() . $this->getMime()->toString();
-    }
-
-    private function processInstruction(): array
-    {
-
-        /**
-         * Get the instructions
-         * Adapted from {@link p_cached_instructions()}
-         *
-         * Note that this code may not run at first rendering
-         *
-         * Why ?
-         * Because dokuwiki asks first page information
-         * via the {@link pageinfo()} method.
-         * This function then render the metadata (ie {@link p_render_metadata()} and therefore will trigger
-         * the rendering with this function
-         * ```p_cached_instructions(wikiFN($id),false,$id)```
-         *
-         * The best way to manipulate the instructions is not before but after
-         * the parsing. See {@link \action_plugin_combo_headingpostprocessing}
-         *
-         */
-        $path = $this->getRequestedPath();
-        try {
-            $text = FileSystems::getContent($path);
-            $instructions = p_get_instructions($text);
-        } catch (ExceptionNotFound $e) {
-            LogUtility::msg("The file ($path) does not exists, call stack instructions was set to empty");
-            $instructions = [];
-        }
-
-        return $instructions;
-
     }
 
 
@@ -581,7 +520,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     public function setRequestedMimeToInstructions(): FetcherPageFragment
     {
         try {
-            $this->setRequestedMime(Mime::createFromExtension(self::INSTRUCTION_EXTENSION));
+            $this->setRequestedMime(Mime::createFromExtension(MarkupRenderer::INSTRUCTION_EXTENSION));
         } catch (ExceptionNotFound $e) {
             throw new RuntimeException("Internal error: the mime is internal and should be good");
         }
@@ -592,20 +531,18 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     /**
      * Utility function that returns the fetch path as instructions array
      * (ie un-serialized)
-     * @throws ExceptionNotFound
+     *
      */
     public function getFetchPathAsInstructionsArray()
     {
-        $contents = FileSystems::getContent($this->getFetchPath());
+        try {
+            $contents = FileSystems::getContent($this->getFetchPath());
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("The fetch path was not found but should be present", self::CANONICAL, 1, $e);
+        }
         return !empty($contents) ? unserialize($contents) : array();
     }
 
-    public function setRendererName(string $rendererName): FetcherPageFragment
-    {
-        $this->checkNoSetAfterBuild();
-        $this->renderer = $rendererName;
-        return $this;
-    }
 
     public function getCachePath(): LocalPath
     {
@@ -722,6 +659,18 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     private function getRequestedPath(): WikiPath
     {
         return $this->getOriginalPath();
+    }
+
+    /**
+     * The renderer will add a p block element
+     * if the first one is not one
+     * @param bool $b
+     * @return $this
+     */
+    public function setRemoveRootBlockElement(bool $b): FetcherPageFragment
+    {
+        $this->removeRootBlockElement = $b;
+        return $this;
     }
 
 }

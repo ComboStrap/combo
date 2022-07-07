@@ -435,7 +435,7 @@ class WikiPath extends PathAbs
             if (!PluginUtility::isTest()) {
                 LogUtility::error("The markup fragment could not be identified (global wiki ID is null)");
             }
-            $ID = DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
+            $ID = MarkupDynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
         }
         return WikiPath::createPagePathFromId($ID);
     }

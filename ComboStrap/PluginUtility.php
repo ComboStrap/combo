@@ -1102,7 +1102,7 @@ class PluginUtility
             if (!PluginUtility::isTest()) {
                 LogUtility::msg("The slot could not be identified (global ID is null)");
             }
-            return DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
+            return MarkupDynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
         }
         return $slot;
     }

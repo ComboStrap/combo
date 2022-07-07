@@ -96,7 +96,7 @@ class Mime
                 return new Mime(Mime::GIF);
             case "pdf":
                 return new Mime(Mime::PDF);
-            case FetcherPageFragment::INSTRUCTION_EXTENSION:
+            case MarkupRenderer::INSTRUCTION_EXTENSION:
                 return new Mime("text/i");
             default:
                 $mtypes = getMimeTypes();

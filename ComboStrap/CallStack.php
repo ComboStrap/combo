@@ -181,7 +181,7 @@ class CallStack
         global $ACT;
         $keepAct = $ACT;
         if ($ID === null && PluginUtility::isTest()) {
-            $ID = DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
+            $ID = MarkupDynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
         }
         try {
             $ACT = "show";

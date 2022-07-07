@@ -196,7 +196,7 @@ class EditButton
     public function toHtmlComment(): string
     {
         global $ACT;
-        if ($ACT === DynamicRender::DYNAMIC_RENDERING) {
+        if ($ACT === MarkupDynamicRender::DYNAMIC_RENDERING) {
             // ie weblog, they are generated via dynamic markup
             // meaning that there is no button to edit the file
             if (!PluginUtility::isTest()) {

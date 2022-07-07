@@ -23,7 +23,11 @@ class WikiRequestEnvironment
 
 
     private ?string $actualGlobalId;
-    private ?string $actualAct;
+    /**
+     * It may be an array when preview/save/cancel
+     * @var array|string|null
+     */
+    private $actualAct;
     private ?string $actualRequestedID;
 
     /**
@@ -156,7 +160,7 @@ class WikiRequestEnvironment
             LogUtility::internalError("Internal Error: The requested wiki id could not be determined");
         }
 
-        return DynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
+        return MarkupDynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
 
     }
 
@@ -168,7 +172,7 @@ class WikiRequestEnvironment
         return $this->requestedId;
     }
 
-    public function getActualAct(): ?string
+    public function getActualAct()
     {
         return $this->actualAct;
     }

@@ -5,7 +5,7 @@ use ComboStrap\CacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\DynamicRender;
+use ComboStrap\MarkupDynamicRender;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\PageFragment;
@@ -462,7 +462,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     /**
                      * Rendering
                      */
-                    $render = DynamicRender::createXhtml();
+                    $render = MarkupDynamicRender::createXhtml();
 
                     /**
                      * Header

@@ -132,9 +132,12 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                         continue;
                     }
 
-                    $report->getPageFragment()
-                        ->getHtmlFetcher()
-                        ->loadSnippets();
+                    $pageFragment = $report->getPageFragment()->getHtmlFetcher();
+                    try {
+                        $pageFragment->loadSnippets();
+                    } finally {
+                        $pageFragment->close();
+                    }
 
                 }
 

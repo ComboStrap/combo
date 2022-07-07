@@ -3,9 +3,6 @@
 namespace ComboStrap;
 
 
-use dokuwiki\Cache\Cache;
-use Exception;
-use http\Exception\RuntimeException;
 use syntax_plugin_combo_container;
 
 class FetcherPage extends FetcherAbs implements FetcherSource

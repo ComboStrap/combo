@@ -2013,7 +2013,7 @@ class PageFragment extends ResourceComboAbs
 
     public function getHttpResponse(): HttpResponse
     {
-        return HttpRequest::fetchXhtmlPageFragmentResponse($this->getWikiId());
+        return HttpRequest::fetchXhtmlPageResponse($this->getWikiId());
     }
 
     private function getPrimaryFooterPage(): ?PageFragment

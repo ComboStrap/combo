@@ -12,25 +12,26 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     const CANONICAL = "page";
 
-    const PAGE_CORE_AREA = "page-core";
-    const PAGE_SIDE_AREA = "page-side";
-    const PAGE_HEADER_AREA = "page-header";
-    const PAGE_FOOTER_AREA = "page-footer";
-    const PAGE_MAIN_AREA = "page-main";
-    const MAIN_SIDE_AREA = "main-side";
-    const MAIN_CONTENT_AREA = "main-content";
-    const MAIN_HEADER_AREA = "main-header";
-    const MAIN_FOOTER_AREA = "main-footer";
+    const PAGE_CORE_ELEMENT = "page-core";
+    const PAGE_SIDE_ELEMENT = "page-side";
+    const PAGE_HEADER_ELEMENT = "page-header";
+    const PAGE_FOOTER_ELEMENT = "page-footer";
+    const PAGE_MAIN_ELEMENT = "page-main";
+    const MAIN_SIDE_ELEMENT = "main-side";
+    const MAIN_CONTENT_ELEMENT = "main-content";
+    const MAIN_HEADER_ELEMENT = "main-header";
+    const MAIN_TOC_ELEMENT = "main-toc";
+    const MAIN_FOOTER_ELEMENT = "main-footer";
     const LAYOUT_ELEMENTS = [
-        self::PAGE_CORE_AREA,
-        self::PAGE_SIDE_AREA,
-        self::PAGE_HEADER_AREA,
-        self::PAGE_MAIN_AREA,
-        self::PAGE_FOOTER_AREA,
-        self::MAIN_HEADER_AREA,
-        self::MAIN_CONTENT_AREA,
-        self::MAIN_SIDE_AREA,
-        self::MAIN_FOOTER_AREA,
+        self::PAGE_CORE_ELEMENT,
+        self::PAGE_SIDE_ELEMENT,
+        self::PAGE_HEADER_ELEMENT,
+        self::PAGE_MAIN_ELEMENT,
+        self::PAGE_FOOTER_ELEMENT,
+        self::MAIN_HEADER_ELEMENT,
+        self::MAIN_CONTENT_ELEMENT,
+        self::MAIN_SIDE_ELEMENT,
+        self::MAIN_FOOTER_ELEMENT,
     ];
     const DATA_LAYOUT_CONTAINER_ATTRIBUTE = "data-layout-container";
     const DATA_EMPTY_ACTION_ATTRIBUTE = "data-empty-action";
@@ -39,6 +40,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
     const POSITION_RELATIVE_CLASS = "position-relative";
     const TASK_RUNNER_ID = "task-runner";
+
     private string $requestedLayout;
     private WikiRequestEnvironment $wikiRequestEnvironment;
     private bool $build = false;
@@ -68,11 +70,18 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         return $fetcherPage;
     }
 
+    public static function createPageFetcherFromId(string $wikiId): FetcherPage
+    {
+        $wikiPath = WikiPath::createPagePathFromId($wikiId);
+        return self::createPageFetcherFromPath($wikiPath);
+    }
+
     /**
      * @param Url|null $url
      * @return Url
      *
      * Note: The fetch url is the {@link FetcherCache keyCache}
+     * @throws ExceptionNotFound
      */
     function getFetchUrl(Url $url = null): Url
     {
@@ -119,7 +128,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          * Get the HTML fragment
          * The first one should be the main because it has the frontmatter
          */
-        $mainElement = $this->pageElements[self::MAIN_CONTENT_AREA];
+        $mainElement = $this->pageElements[self::MAIN_CONTENT_ELEMENT];
         try {
 
             /**
@@ -144,7 +153,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          * Run the secondary slots
          */
         foreach ($this->getPageElements() as $elementId => $pageElement) {
-            if ($elementId === self::MAIN_CONTENT_AREA) {
+            if ($elementId === self::MAIN_CONTENT_ELEMENT) {
                 // already added just below
                 continue;
             }
@@ -225,7 +234,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                  */
                 $layoutVariable = $pageElement->getVariableName();
                 $htmlOutputByAreaName[$layoutVariable] = $fetcherHtmlString;
-                $domElement->appendTextNode('$' . $layoutVariable);
+                $domElement->appendTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
 
             } catch (ExceptionNotFound $e) {
 
@@ -320,6 +329,20 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             LogUtility::internalError("No slot was rendered");
         }
 
+        /**
+         * Toc
+         */
+        try {
+            $tocId = self::MAIN_TOC_ELEMENT;
+            $tocElement = $this->getTemplateDomDocument()->querySelector('#' . $tocId);
+            global $TOC;
+            $tocHtml = TocUtility::renderToc($TOC);
+            $tocVariable = Template::toValidVariableName($tocId);
+            $htmlOutputByAreaName[$tocVariable] = $tocHtml;
+            $tocElement->appendTextNode(Template::VARIABLE_PREFIX . $tocVariable);
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            // no toc
+        }
 
         /**
          * We save as XML because we strive to be XML compliant (ie XHTML)
@@ -374,7 +397,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     public function getFetchPathAsHtmlDom(): XmlDocument
     {
         $content = $this->getFetchPathAsHtmlString();
-        return XmlDocument::createXmlDocFromMarkup($content);
+        return XmlDocument::createHtmlDocFromMarkup($content);
     }
 
     /**
@@ -462,22 +485,6 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     {
         $this->requestedLayout = $layoutValue;
         return $this;
-    }
-
-    private function getJsonConfigurations($layoutJsonPath): array
-    {
-        try {
-            $jsonString = FileSystems::getContent($layoutJsonPath);
-        } catch (ExceptionNotFound $e) {
-            // The layout file ($layoutJsonPath) does not exist at $layoutJsonPath", self::CANONICAL, 1, $e);
-            return [];
-        }
-        try {
-            $json = Json::createFromString($jsonString);
-        } catch (ExceptionBadSyntax $e) {
-            throw new ExceptionRuntimeInternal("The layout file ($layoutJsonPath) could not be loaded as json. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
-        }
-        return $json->toArray();
     }
 
     /**

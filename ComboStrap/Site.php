@@ -138,6 +138,66 @@ class Site
         $conf['useslash'] = 0;
     }
 
+    public static function getTocMinHeadings(): int
+    {
+        global $conf;
+        $confKey = 'tocminheads';
+        $tocMinHeads = $conf[$confKey];
+        if ($tocMinHeads === null) {
+            return 0;
+        }
+        try {
+            return DataType::toInteger($tocMinHeads);
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::error("The configuration ($confKey) is not an integer. Error:{$e->getMessage()}", self::CANONICAL);
+            return 0;
+        }
+    }
+
+    /**
+     *
+     */
+    public static function getTocMax(): int
+    {
+        global $conf;
+        try {
+            return DataType::toInteger($conf['maxseclevel']);
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::internalError("Unable to the the maxseclevel as integer. Error: {$e->getMessage()}", TocUtility::CANONICAL);
+            return 0;
+        }
+    }
+
+    /**
+     * @param int $int
+     */
+    public static function setTocMinHeading(int $int)
+    {
+        global $conf;
+        $conf['tocminheads'] = $int;
+    }
+
+    public static function getTopTocLevel(): int
+    {
+        global $conf;
+        $confKey = 'toptoclevel';
+        $value = $conf[$confKey];
+        try {
+            return DataType::toInteger($value);
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::error("The configuration ($confKey) has a value ($value) that is not an integer", self::CANONICAL);
+            return 1;
+        }
+    }
+
+    public static function setTocTopLevel(int $int)
+    {
+        global $conf;
+        $confKey = 'toptoclevel';
+        $conf[$confKey] = $int;
+
+    }
+
 
     function getEmailObfuscationConfiguration()
     {
@@ -898,7 +958,7 @@ class Site
 
     public static function isSectionEditingEnabled(): bool
     {
-        return TocUtility::getTocMax() > 0;
+        return self::getTocMax() > 0;
     }
 
     public static function enableSectionEditing()

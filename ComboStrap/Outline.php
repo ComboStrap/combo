@@ -275,7 +275,7 @@ class Outline
                     $headingCall = $outlineSection->getHeadingCall();
                     if ($headingCall->isPluginCall()) {
                         $level = DataType::toIntegerOrDefaultIfNull($headingCall->getAttribute(syntax_plugin_combo_heading::LEVEL), 0);
-                        if ($level <= TocUtility::getTocMax()) {
+                        if ($level <= Site::getTocMax()) {
                             $headingCall->addClassName("sectionedit$sectionSequenceId");
                         }
                     }

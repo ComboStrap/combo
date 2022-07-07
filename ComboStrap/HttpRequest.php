@@ -12,6 +12,7 @@ use http\Exception\RuntimeException;
 class HttpRequest
 {
 
+    const CANONICAL = "httpRequest";
     private bool $withTestRequest = true;
 
     private Url $url;
@@ -37,16 +38,22 @@ class HttpRequest
         CacheManager::reset();
         SnippetManager::reset();
         IdManager::reset();
+        // global variable
+        global $TOC;
+        unset($TOC);
 
     }
 
 
-    public static function fetchXhtmlPageFragmentResponse(string $wikiId): HttpResponse
+    public static function fetchXhtmlPageResponse(string $wikiId): HttpResponse
     {
 
-        $url = FetcherPageFragment::createPageFragmentFetcherFromId($wikiId)
-            ->setRequestedMimeToXhtml()
-            ->getFetchUrl();
+        try {
+            $url = FetcherPage::createPageFetcherFromId($wikiId)
+                ->getFetchUrl();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("Cannot create the fetch url", self::CANONICAL, 1, $e);
+        }
 
         return HttpRequest::createRequest($url)
             ->withTestRequest()

@@ -2,6 +2,7 @@
 
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionNotEnabled;
+use ComboStrap\FetcherPage;
 use ComboStrap\PluginUtility;
 use ComboStrap\TocUtility;
 
@@ -91,7 +92,7 @@ EOF;
                 // global $conf;
                 // $topTocLevel = $conf['toptoclevel'];
 
-                $tocSelector = "#" . TocUtility::TOC_AREA_ID." ul";
+                $tocSelector = "#" . FetcherPage::MAIN_TOC_ELEMENT ." ul";
                 return <<<EOF
 $tocSelector li { counter-increment: toc2; }
 $tocSelector li li { counter-increment: toc3; }

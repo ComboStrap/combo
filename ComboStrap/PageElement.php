@@ -53,9 +53,9 @@ class PageElement
     public static function getSlotNameForArea($area)
     {
         switch ($area) {
-            case FetcherPage::PAGE_HEADER_AREA:
+            case FetcherPage::PAGE_HEADER_ELEMENT:
                 return Site::getPageHeaderSlotName();
-            case FetcherPage::PAGE_FOOTER_AREA:
+            case FetcherPage::PAGE_FOOTER_ELEMENT:
                 return Site::getPageFooterSlotName();
             default:
                 throw new ExceptionBadArgument("The area ($area) is unknown");
@@ -90,19 +90,19 @@ class PageElement
             throw new ExceptionNotFound("No slot name for container element");
         }
         switch ($elementId) {
-            case FetcherPage::PAGE_HEADER_AREA:
+            case FetcherPage::PAGE_HEADER_ELEMENT:
                 return Site::getPageHeaderSlotName();
-            case FetcherPage::PAGE_FOOTER_AREA:
+            case FetcherPage::PAGE_FOOTER_ELEMENT:
                 return Site::getPageFooterSlotName();
-            case FetcherPage::MAIN_CONTENT_AREA:
+            case FetcherPage::MAIN_CONTENT_ELEMENT:
                 throw new ExceptionRuntimeInternal("Main content area is not a slot and does not have any last slot name");
-            case FetcherPage::PAGE_SIDE_AREA:
+            case FetcherPage::PAGE_SIDE_ELEMENT:
                 return Site::getSidebarName();
-            case FetcherPage::MAIN_SIDE_AREA:
+            case FetcherPage::MAIN_SIDE_ELEMENT:
                 return Site::getPageSideSlotName();
-            case FetcherPage::MAIN_HEADER_AREA:
+            case FetcherPage::MAIN_HEADER_ELEMENT:
                 return "slot_main_header";
-            case FetcherPage::MAIN_FOOTER_AREA:
+            case FetcherPage::MAIN_FOOTER_ELEMENT:
                 return "slot_main_footer";
             default:
                 throw new ExceptionRuntimeInternal("Internal: The element ($elementId) was unexpected.");
@@ -159,7 +159,7 @@ class PageElement
         }
         // Main content
         $requestedPath = $this->fetcherPage->getRequestedPath();
-        if ($this->getId() === FetcherPage::MAIN_CONTENT_AREA) {
+        if ($this->getId() === FetcherPage::MAIN_CONTENT_ELEMENT) {
             return $requestedPath;
         }
         // Slot
@@ -172,7 +172,7 @@ class PageElement
              */
             $requestedPage = PageFragment::createPageFromPathObject($this->fetcherPage->getRequestedPath());
             switch ($this->getId()) {
-                case FetcherPage::PAGE_SIDE_AREA:
+                case FetcherPage::PAGE_SIDE_ELEMENT:
                     try {
                         $requestedPage->getPath()->getParent();
                     } catch (ExceptionNotFound $e) {
@@ -180,7 +180,7 @@ class PageElement
                         throw new ExceptionNotFound("No page side for pages in the root directory.");
                     }
                     break;
-                case FetcherPage::MAIN_HEADER_AREA:
+                case FetcherPage::MAIN_HEADER_ELEMENT:
                     if ($requestedPage->isRootHomePage()) {
                         throw new ExceptionNotFound("No $this for the home");
                     }

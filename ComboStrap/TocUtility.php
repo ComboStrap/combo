@@ -21,21 +21,13 @@ class TocUtility
 {
 
 
-    /**
-     * The id of the container area
-     */
-    public const TOC_AREA_ID = "main-toc";
     const CANONICAL = syntax_plugin_combo_toc::TAG;
 
 
-    public static function renderToc($toc): string
+    public static function renderToc(array $toc): string
     {
 
-        global $conf;
-        $tocMinHeads = $conf['tocminheads'];
-        if ($tocMinHeads === null) {
-            $tocMinHeads = 0;
-        }
+        $tocMinHeads = Site::getTocMinHeadings();
         if (count($toc) < $tocMinHeads) {
             return "";
         }
@@ -59,12 +51,12 @@ class TocUtility
         global $lang;
 
         $previousLevel = 0;
-        $rootLevel = 1;
+        $topTocLevel = Site::getTopTocLevel();
         $ulMarkup = "";
         foreach ($toc as $tocItem) {
 
             $actualLevel = $tocItem["level"];
-            if ($actualLevel <= $rootLevel) {
+            if ($actualLevel < $topTocLevel) {
                 continue;
             }
 
@@ -72,7 +64,7 @@ class TocUtility
              * Closing
              */
 
-            if ($previousLevel !== $rootLevel) {
+            if ($previousLevel !== $topTocLevel) {
                 /**
                  * Same level
                  */
@@ -101,9 +93,9 @@ class TocUtility
             $previousLevel = $actualLevel;
         }
         // closing
-        $ulMarkup .= str_repeat("</li></ul>", $previousLevel - $rootLevel);
+        $ulMarkup .= str_repeat("</li></ul>", $previousLevel - $topTocLevel);
         $tocHeaderLang = $lang['toc'];
-        $tocAreaId = self::TOC_AREA_ID;
+        $tocAreaId = FetcherPage::MAIN_TOC_ELEMENT;
         return <<<EOF
 <nav id="$tocAreaId">
 <p id="toc-header">$tocHeaderLang</p>
@@ -134,7 +126,7 @@ EOF;
         /**
          * Search page, no toc
          */
-        if ($ACT == 'search') {
+        if ($ACT === 'search') {
 
             return false;
 
@@ -186,34 +178,10 @@ EOF;
 
     }
 
-    /**
-     * @param int $int
-     */
-    public
-    static function setTocMinHeading(int $int)
-    {
-        global $conf;
-        $conf['tocminheads'] = $int;
-    }
-
     public static function shouldTocBePrinted(array $toc): bool
     {
         global $conf;
         return $conf['tocminheads'] && count($toc) >= $conf['tocminheads'];
-    }
-
-    /**
-     *
-     */
-    public static function getTocMax(): int
-    {
-        global $conf;
-        try {
-            return DataType::toInteger($conf['maxseclevel']);
-        } catch (ExceptionBadArgument $e) {
-            LogUtility::internalError("Unable to the the maxseclevel as integer. Error: {$e->getMessage()}", self::CANONICAL);
-            return 0;
-        }
     }
 
 

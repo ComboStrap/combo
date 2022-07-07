@@ -163,7 +163,7 @@ class Site
         try {
             return DataType::toInteger($conf['maxseclevel']);
         } catch (ExceptionBadArgument $e) {
-            LogUtility::internalError("Unable to the the maxseclevel as integer. Error: {$e->getMessage()}", TocUtility::CANONICAL);
+            LogUtility::internalError("Unable to the the maxseclevel as integer. Error: {$e->getMessage()}", Toc::CANONICAL);
             return 0;
         }
     }

@@ -1774,14 +1774,19 @@ class PageFragment extends ResourceComboAbs
     }
 
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
-    function getKeywords(): ?array
+    function getKeywords(): array
     {
         return $this->keywords->getValue();
     }
 
-    public
-    function getKeywordsOrDefault(): array
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getKeywordsOrDefault(): array
     {
         return $this->keywords->getValueOrDefaults();
     }

@@ -17,15 +17,32 @@ use Doku_Renderer;
 use DokuWiki_Admin_Plugin;
 use syntax_plugin_combo_toc;
 
-class TocUtility
+class Toc extends Metadata
 {
 
 
-    const CANONICAL = syntax_plugin_combo_toc::TAG;
+    const CANONICAL = syntax_plugin_combo_toc::CANONICAL;
+    private ?array $tocData = null;
 
 
-    public static function renderToc(array $toc): string
+    public static function createForRequestedPage(): Toc
     {
+        return self::createForPage(PageFragment::createFromRequestedPage());
+    }
+
+
+    public function toXhtml(): string
+    {
+
+        $this->buildCheck();
+
+        if ($this->tocData === null) {
+            return "";
+        }
+
+        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::CANONICAL);
+
+        $toc = $this->tocData;
 
         $tocMinHeads = Site::getTocMinHeadings();
         if (count($toc) < $tocMinHeads) {
@@ -47,7 +64,6 @@ class TocUtility
         /**
          * Creating the html
          */
-        \dokuwiki\Extension\Event::createAndTrigger('TPL_TOC_RENDER', $toc, null, false);
         global $lang;
 
         $previousLevel = 0;
@@ -93,14 +109,11 @@ class TocUtility
             $previousLevel = $actualLevel;
         }
         // closing
-        $ulMarkup .= str_repeat("</li></ul>", $previousLevel - $topTocLevel);
+        $ulMarkup .= str_repeat("</li></ul>", $previousLevel - $topTocLevel + 1);
         $tocHeaderLang = $lang['toc'];
-        $tocAreaId = FetcherPage::MAIN_TOC_ELEMENT;
         return <<<EOF
-<nav id="$tocAreaId">
 <p id="toc-header">$tocHeaderLang</p>
 $ulMarkup
-</nav>
 EOF;
 
 
@@ -116,22 +129,17 @@ EOF;
      * when
      * ~~NOTOC~~
      */
-    public
-    static function showToc(Doku_Renderer $renderer): bool
+    public static function showToc(Doku_Renderer $renderer): bool
     {
 
         global $ACT;
-
 
         /**
          * Search page, no toc
          */
         if ($ACT === 'search') {
-
             return false;
-
         }
-
 
         /**
          * If this is another template such as Dokuwiki, we get two TOC.
@@ -143,7 +151,7 @@ EOF;
         /**
          * On the admin page
          */
-        if ($ACT == 'admin') {
+        if ($ACT === 'admin') {
 
             global $INPUT;
             $plugin = null;
@@ -178,11 +186,86 @@ EOF;
 
     }
 
-    public static function shouldTocBePrinted(array $toc): bool
+    public function shouldTocBePrinted(): bool
     {
         global $conf;
-        return $conf['tocminheads'] && count($toc) >= $conf['tocminheads'];
+        return $conf['tocminheads'] && count($this->tocData) >= $conf['tocminheads'];
+    }
+
+    public static function createForPage($page): Toc
+    {
+        return (new Toc())
+            ->setResource($page);
     }
 
 
+    public function setValue($value): Toc
+    {
+        $this->tocData = $value;
+        global $TOC;
+        $TOC = $value;
+        return $this;
+    }
+
+    public function valueIsNotNull(): bool
+    {
+        return $this->tocData !== null;
+    }
+
+    public function getDataType(): string
+    {
+        return DataType::ARRAY_VALUE;
+    }
+
+    public function getDescription(): string
+    {
+        return "Table of Contents";
+    }
+
+    public function getLabel(): string
+    {
+        return "The table of content for the page";
+    }
+
+    public static function getName(): string
+    {
+        return "toc";
+    }
+
+    public function getPersistenceType(): string
+    {
+        return Metadata::DERIVED_METADATA;
+    }
+
+    public function getMutable(): bool
+    {
+        return true;
+    }
+
+    public function buildFromStoreValue($value): Metadata
+    {
+        $this->tocData = $value;
+        return $this;
+        // We can't modify the toc of dokuwiki
+        // This data shows how to get the table of content from dokuwiki
+        // $description = $metaDataStore->getCurrentFromName("description");
+        // if($description!==null) {
+        //    $this->tocData = $description["tableofcontents"];
+        // }
+
+    }
+
+    public function getValue()
+    {
+        $this->buildCheck();
+        if ($this->tocData === null) {
+            throw new ExceptionNotFound("No toc");
+        }
+        return $this->tocData;
+    }
+
+    public function getDefaultValue(): array
+    {
+        return [];
+    }
 }

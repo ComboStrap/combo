@@ -4,7 +4,7 @@ use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\FetcherPage;
 use ComboStrap\PluginUtility;
-use ComboStrap\TocUtility;
+use ComboStrap\Toc;
 
 if (!defined('DOKU_INC')) die();
 

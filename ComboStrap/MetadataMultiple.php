@@ -21,7 +21,7 @@ abstract class MetadataMultiple extends Metadata
     /**
      * @var array|null
      */
-    protected $array;
+    protected ?array $array = null;
 
 
     /**
@@ -47,24 +47,26 @@ abstract class MetadataMultiple extends Metadata
         return DataType::TEXT_TYPE_VALUE;
     }
 
-    public function getValue(): ?array
+    public function getValue(): array
     {
         $this->buildCheck();
+        if ($this->array === null) {
+            throw new ExceptionNotFound("No multiple values");
+        }
         return $this->array;
     }
 
     public function getDefaultValue()
     {
-        return null;
+        throw new ExceptionNotFound("No default multiples value");
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public function getValueOrDefaults(): array
     {
-        $value = $this->getValue();
-        if ($value !== null) {
-            return $value;
-        }
-        return $this->getDefaultValue();
+        return $this->getValue();
     }
 
 
@@ -143,7 +145,7 @@ abstract class MetadataMultiple extends Metadata
          * String
          */
         if (!is_string($value)) {
-            throw new ExceptionBadArgument("The value for $this is not an array, nor a string (value: $value)",get_class($this));
+            throw new ExceptionBadArgument("The value for $this is not an array, nor a string (value: $value)", get_class($this));
         }
         $stringSeparator = $this->getStringSeparator();
         return explode($stringSeparator, $value);

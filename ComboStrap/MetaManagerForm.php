@@ -15,7 +15,7 @@ class MetaManagerForm
     public const TAB_INTEGRATION_VALUE = "integration";
     public const TAB_QUALITY_VALUE = "quality";
     public const TAB_IMAGE_VALUE = "image";
-    private $page;
+    private PageFragment $page;
 
     private const FORM_METADATA_LIST = [ResourceName::PROPERTY_NAME,
         PageTitle::PROPERTY_NAME,
@@ -79,15 +79,14 @@ class MetaManagerForm
          * with a new frontmatter
          * The frontmatter data should be first replicated into the metadata file
          */
-        $instructions = $this->page->getInstructionsDocument();
-        if (!$instructions->shouldProcess()) {
-            $instructions->process();
-        }
+        $this->page->getInstructionsDocument()
+            ->getFetchPathAsInstructionsArray();
 
         /**
          * Creation
          */
-        $formMeta = FormMeta::create($this->page->getDokuwikiId())
+        $name = $this->page->getPath()->toPathString();
+        $formMeta = FormMeta::create($name)
             ->setType(FormMeta::FORM_NAV_TABS_TYPE);
 
 

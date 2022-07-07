@@ -297,14 +297,6 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         $this->addPageIconMeta($head);
         $this->addTitleMeta($head);
 
-        /**
-         * Snippet (in header)
-         * Css and Js from the layout if any
-         *
-         * Note that Header may be added during rendering and must be
-         * then called after rendering
-         */
-        $this->addHeadElements($head);
 
         /**
          * Body
@@ -335,14 +327,25 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         try {
             $tocId = self::MAIN_TOC_ELEMENT;
             $tocElement = $this->getTemplateDomDocument()->querySelector('#' . $tocId);
-            global $TOC;
-            $tocHtml = TocUtility::renderToc($TOC);
+
+            $tocHtml = Toc::createForPage($this->getRequestedPage())
+                ->toXhtml();
             $tocVariable = Template::toValidVariableName($tocId);
             $htmlOutputByAreaName[$tocVariable] = $tocHtml;
             $tocElement->appendTextNode(Template::VARIABLE_PREFIX . $tocVariable);
         } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
             // no toc
         }
+
+        /**
+         * Snippet (in header)
+         * Css and Js from the layout if any
+         *
+         * Note that Header may be added during rendering and must be
+         * then called after rendering and toc
+         * At last then
+         */
+        $this->addHeadElements($head);
 
         /**
          * We save as XML because we strive to be XML compliant (ie XHTML)

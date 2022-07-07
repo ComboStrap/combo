@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\Metadata;
 use ComboStrap\PageFragment;
@@ -38,10 +39,12 @@ class action_plugin_combo_metakeywords extends DokuWiki_Action_Plugin
 
         $page = PageFragment::createFromRequestedPage();
 
-        $keywords = $page->getKeywordsOrDefault();
-        if ($keywords === null) {
+        try {
+            $keywords = $page->getKeywordsOrDefault();
+        } catch (ExceptionNotFound $e) {
             return;
         }
+
 
         Metadata::upsertMetaOnUniqueAttribute(
             $event->data['meta'],

@@ -2,10 +2,12 @@
 
 
 use ComboStrap\CallStack;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\LogUtility;
 use ComboStrap\MarkupDynamicRender;
 use ComboStrap\Outline;
 use ComboStrap\Site;
-use ComboStrap\TocUtility;
+use ComboStrap\Toc;
 use ComboStrap\WikiPath;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
@@ -66,7 +68,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 
         $runningMarkup = WikiPath::createRunningPageFragmentPathFromGlobalId();
         $requestedPath = WikiPath::createRequestedPagePathFromRequest();
-        if ($requestedPath->toPathString()!==$runningMarkup->toPathString()) {
+        if ($requestedPath->toPathString() !== $runningMarkup->toPathString()) {
             return;
         }
 
@@ -101,9 +103,12 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * TOC
          */
         $toc = $outline->getTocDokuwikiFormat();
-        if (TocUtility::shouldTocBePrinted($toc)) {
-            global $TOC;
-            $TOC = $toc;
+        try {
+            Toc::createForRequestedPage()
+                ->setValue($toc)
+                ->persist();
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::error("The Toc could not be persisted. Error:{$e->getMessage()}");
         }
 
 

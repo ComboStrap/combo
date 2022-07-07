@@ -12,7 +12,7 @@
 
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\TocUtility;
+use ComboStrap\Toc;
 
 if (!defined('DOKU_INC')) die();
 
@@ -137,9 +137,8 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_SPECIAL :
 
-                    if (TocUtility::showToc($renderer)) {
+                    if (Toc::showToc($renderer)) {
 
-                        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::CANONICAL);
 
                         /**
                          * Toc data
@@ -168,7 +167,9 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
                         /**
                          * Toc rendering
                          */
-                        $renderer->doc .= TocUtility::renderToc($toc);
+                        $renderer->doc .= Toc::createForRequestedPage()
+                            ->setValue($toc)
+                            ->toXhtml();
                     }
                     break;
 

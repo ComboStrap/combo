@@ -46,6 +46,10 @@ class DataType
      */
     public const INTEGER_TYPE_VALUE = "integer";
 
+    /**
+     * Array of array of array
+     */
+    const ARRAY_VALUE = "array";
 
     /**
      * The constant value
@@ -59,6 +63,7 @@ class DataType
         DataType::BOOLEAN_TYPE_VALUE,
         DataType::INTEGER_TYPE_VALUE,
     ];
+
 
     /**
      * @throws ExceptionBadArgument

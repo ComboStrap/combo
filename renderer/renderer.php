@@ -5,7 +5,7 @@ use ComboStrap\FsWikiUtility;
 use ComboStrap\XhtmlUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TableUtility;
-use ComboStrap\TocUtility;
+use ComboStrap\Toc;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');

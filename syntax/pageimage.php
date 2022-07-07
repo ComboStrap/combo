@@ -250,7 +250,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     break;
                 case self::LOGO_TYPE:
                     try {
-                        $imageFetcher = Site::getLogoAsSvgImage();
+                        $imageFetcher = FetcherSvg::createSvgFromPath(Site::getLogoAsSvgImage());
                     } catch (ExceptionNotFound $e) {
                         LogUtility::msg("No page image could be find for the page ($path)", LogUtility::LVL_MSG_INFO, self::CANONICAL);
                     }

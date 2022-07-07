@@ -16,7 +16,7 @@ namespace ComboStrap;
 use dokuwiki\Extension\SyntaxPlugin;
 use PHPUnit\Exception;
 
-class RenderUtility
+class MarkupRenderUtility
 {
 
     /**

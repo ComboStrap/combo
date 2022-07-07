@@ -403,7 +403,7 @@ class PluginUtility
      */
     public static function render($pageContent): ?string
     {
-        return RenderUtility::renderText2XhtmlAndStripPEventually($pageContent, false);
+        return MarkupRenderUtility::renderText2XhtmlAndStripPEventually($pageContent, false);
     }
 
 
@@ -1029,7 +1029,7 @@ class PluginUtility
 
     public static function getInstructionsWithoutRoot($markiCode)
     {
-        return RenderUtility::getInstructionsAndStripPEventually($markiCode);
+        return MarkupRenderUtility::getInstructionsAndStripPEventually($markiCode);
     }
 
     public static function isTest()
@@ -1088,7 +1088,7 @@ class PluginUtility
      */
     public static function renderInstructionsToXhtml($callStackHeaderInstructions): ?string
     {
-        return RenderUtility::renderInstructionsToXhtml($callStackHeaderInstructions);
+        return MarkupRenderUtility::renderInstructionsToXhtml($callStackHeaderInstructions);
     }
 
     /**

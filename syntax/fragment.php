@@ -12,7 +12,7 @@ use ComboStrap\PageCreationDate;
 use ComboStrap\PagePath;
 use ComboStrap\PagePublicationDate;
 use ComboStrap\PluginUtility;
-use ComboStrap\RenderUtility;
+use ComboStrap\MarkupRenderUtility;
 use ComboStrap\ResourceName;
 use ComboStrap\TagAttributes;
 
@@ -218,7 +218,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
                     $page = PageFragment::createFromRequestedPage();
                     $metadata = $page->getMetadataForRendering();
                     try {
-                        $renderer->doc .= RenderUtility::renderInstructionsToXhtml($templateStack, $metadata);
+                        $renderer->doc .= MarkupRenderUtility::renderInstructionsToXhtml($templateStack, $metadata);
                     } catch (ExceptionCompile $e) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the instruction. Error: {$e->getMessage()}");
                     }

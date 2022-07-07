@@ -119,7 +119,7 @@ class AdsUtility
             $name = $attributes["name"];
             $adsPageId = AdsUtility::getAdPage($name);
             if (page_exists($adsPageId)) {
-                $html .= RenderUtility::renderId2Xhtml($adsPageId);
+                $html .= MarkupRenderUtility::renderId2Xhtml($adsPageId);
             } else {
                 if (!(strpos($name, self::PREFIX_IN_ARTICLE_ADS) === 0)) {
                     $html .= "The ad page (" . $adsPageId . ") does not exist";

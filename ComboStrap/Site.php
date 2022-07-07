@@ -22,8 +22,8 @@ class Site
     const STRAP_TEMPLATE_NAME = "strap";
 
     const SVG_LOGO_IDS = array(
-        ':wiki:logo.svg',
-        ':logo.svg'
+        'wiki:logo.svg',
+        'logo.svg'
     );
 
     const PNG_LOGO_IDS = array(
@@ -167,11 +167,11 @@ class Site
     /**
      * @throws ExceptionNotFound
      */
-    public static function getLogoAsSvgImage(): FetcherSvg
+    public static function getLogoAsSvgImage(): WikiPath
     {
         foreach (self::SVG_LOGO_IDS as $svgLogo) {
-            $image = FetcherSvg::createSvgFromPath(WikiPath::createMediaPathFromId($svgLogo));
-            if (FileSystems::exists($image->getOriginalPath())) {
+            $image = WikiPath::createMediaPathFromId($svgLogo);
+            if (FileSystems::exists($image)) {
                 return $image;
             }
         }

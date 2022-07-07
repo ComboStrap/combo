@@ -87,9 +87,7 @@ class BrandButton
     /**
      * @throws ExceptionCompile
      */
-    public function __construct(
-        string $brandName,
-        string $typeButton)
+    public function __construct(string $brandName, string $typeButton)
     {
 
         $this->brand = Brand::create($brandName);
@@ -231,11 +229,7 @@ class BrandButton
                 }
                 $canonicalUrl = $this->getSharedUrlForPage($requestedPage);
                 $templateData["url"] = $canonicalUrl;
-                try {
-                    $templateData["title"] = $requestedPage->getTitleOrDefault();
-                } catch (ExceptionNotFound $e) {
-                    $templateData["title"] = "";
-                }
+                $templateData["title"] = $requestedPage->getTitleOrDefault();
 
                 try {
                     $templateData["description"] = $requestedPage->getDescription();
@@ -243,11 +237,7 @@ class BrandButton
                     $templateData["description"] = "";
                 }
 
-                try {
-                    $templateData["text"] = $this->getTextForPage($requestedPage);
-                } catch (ExceptionNotFound $e) {
-                    $templateData["text"] = "";
-                }
+                $templateData["text"] = $this->getTextForPage($requestedPage);
 
                 $via = null;
                 if ($this->brand->getName() == \action_plugin_combo_metatwitter::CANONICAL) {
@@ -418,7 +408,7 @@ EOF;
     public
     function getIdentifierClass(): string
     {
-        return "{$this->getStyleScriptIdentifier()}-combo";
+        return StyleUtility::addComboStrapSuffix($this->getStyleScriptIdentifier());
     }
 
     /**
@@ -513,11 +503,11 @@ EOF;
         if ($this->iconType === self::ICON_NONE_VALUE) {
             return false;
         }
-        if ($this->iconType !== null) {
-            if ($this->brand->getIconName($this->iconType) !== null) {
-                return true;
-            }
+
+        if ($this->brand->getIconName($this->iconType) !== null) {
+            return true;
         }
+
         if (!FileSystems::exists($this->getResourceIconFile())) {
             return false;
         }
@@ -526,7 +516,6 @@ EOF;
 
 
     /**
-     * @throws ExceptionNotFound
      */
     public
     function getTextForPage(PageFragment $requestedPage): string
@@ -659,7 +648,7 @@ EOF;
     private function getResourceIconFile(): WikiPath
     {
         $iconName = $this->getResourceIconName();
-        $iconPath = str_replace(IconDownloader::COMBO . ":", "", $iconName) . ".svg";
+        $iconPath = str_replace(IconDownloader::COMBO, "", $iconName) . ".svg";
         return WikiPath::createComboResource($iconPath);
     }
 
@@ -672,7 +661,7 @@ EOF;
     private function getResourceIconName(): string
     {
         $comboLibrary = IconDownloader::COMBO;
-        return "$comboLibrary:brand:{$this->getBrand()}:{$this->iconType}";
+        return "$comboLibrary:brand:{$this->getBrand()->getName()}:{$this->iconType}";
     }
 
 

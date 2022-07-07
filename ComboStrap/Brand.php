@@ -27,11 +27,11 @@ class Brand
     /**
      * @var array
      */
-    public static $brandDictionary;
+    public static array $brandDictionary;
     /**
      * @var bool
      */
-    private $unknown = false;
+    private bool $unknown = false;
     /**
      * @var mixed
      */
@@ -110,7 +110,7 @@ class Brand
      */
     public static function getBrandDictionary(): array
     {
-        if (Brand::$brandDictionary === null) {
+        if (!isset(Brand::$brandDictionary)) {
             Brand::$brandDictionary = Dictionary::getFrom("brands");
         }
         return Brand::$brandDictionary;
@@ -214,17 +214,16 @@ class Brand
     }
 
     /**
-     * @param string $type - the button type
+     * @param string|null $type - the button type
      * @return string|null
      */
-    public function getIconName(string $type): ?string
+    public function getIconName(?string $type): ?string
     {
 
         switch ($this->name) {
             case self::CURRENT_BRAND:
                 try {
                     return Site::getLogoAsSvgImage()
-                        ->getOriginalPath()
                         ->getWikiId();
                 } catch (ExceptionNotFound $e) {
                     // no logo installed

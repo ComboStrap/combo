@@ -10,7 +10,7 @@ class MarkupRenderer
     public const INSTRUCTION_EXTENSION = "i";
     const CANONICAL = "markup:renderer";
     private string $markup;
-    private bool $deleteRootElement;
+    private bool $deleteRootElement = false;
     private Mime $requestedMime;
     private array $instructions;
     /**
@@ -163,7 +163,7 @@ class MarkupRenderer
 
     private function deleteRootPElementsIfRequested(array $instructions): array
     {
-        if (!$this->deleteRootElement) {
+        if ($this->deleteRootElement==true) {
             return $instructions;
         }
 

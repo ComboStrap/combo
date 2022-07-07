@@ -41,6 +41,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     private WikiPath $requestedPagePath;
 
     private bool $removeRootBlockElement = false;
+    private string $resquestedRendererName = MarkupRenderer::DEFAULT_RENDERER;
 
 
     public static function createPageFragmentFetcherFromId(string $mainId): FetcherPageFragment
@@ -311,6 +312,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
                     $instructionsFetcher->close();
                 }
                 $markupRenderer = MarkupRenderer::createFromInstructions($instructions)
+                    ->setRendererName($this->getRequestedRendererNameOrDefault())
                     ->setRequestedMime($this->getMime());
                 try {
                     $content = $markupRenderer->process();
@@ -671,6 +673,20 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
     {
         $this->removeRootBlockElement = $b;
         return $this;
+    }
+
+    public function setRequestedRendererName(string $rendererName): FetcherPageFragment
+    {
+        $this->resquestedRendererName = $rendererName;
+        return $this;
+    }
+
+    private function getRequestedRendererNameOrDefault(): string
+    {
+        if(!isset($this->resquestedRendererName)){
+            return MarkupRenderer::DEFAULT_RENDERER;
+        }
+        return $this->resquestedRendererName;
     }
 
 }

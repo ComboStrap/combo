@@ -9,6 +9,7 @@ class MarkupRenderer
 
     public const INSTRUCTION_EXTENSION = "i";
     const CANONICAL = "markup:renderer";
+    const DEFAULT_RENDERER = "xhtml";
     private string $markup;
     private bool $deleteRootElement = false;
     private Mime $requestedMime;
@@ -113,7 +114,7 @@ class MarkupRenderer
                 /**
                  * Render
                  */
-                $result = p_render($this->getRendererName(), $this->instructions, $info);
+                $result = p_render($this->getRendererNameOrDefault(), $this->instructions, $info);
                 $this->cacheAfterRendering = $info['cache'];
                 return $result;
 
@@ -129,7 +130,7 @@ class MarkupRenderer
     }
 
 
-    function getRendererName(): string
+    function getRendererNameOrDefault(): string
     {
         if (isset($this->renderer)) {
             return $this->renderer;
@@ -137,7 +138,7 @@ class MarkupRenderer
         /**
          * Note: This value is passed to {@link p_get_renderer} to get the renderer class
          */
-        return "xhtml";
+        return self::DEFAULT_RENDERER;
     }
 
     public function setRendererName(string $rendererName): MarkupRenderer

@@ -117,6 +117,15 @@ class Mime
         }
     }
 
+    public static function getJson(): Mime
+    {
+        try {
+            return Mime::createFromExtension("json");
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntime("Json is a known extension and should not throw. Error :{$e->getMessage()}");
+        }
+    }
+
     public function __toString()
     {
         return $this->mime;

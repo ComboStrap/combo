@@ -6,6 +6,7 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\BrandButton;
@@ -95,61 +96,10 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER:
             case DOKU_LEXER_SPECIAL:
 
-                $callStack = CallStack::createFromHandler($handler);
                 $defaultAttributes = [];
                 $knownTypes = null;
                 $shareAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes)
                     ->setLogicalTag(self::TAG);
-
-
-                /**
-                 * The channel
-                 */
-                try {
-                    $brand = syntax_plugin_combo_brand::createButtonFromAttributes($shareAttributes, BrandButton::TYPE_BUTTON_FOLLOW);
-                } catch (ExceptionCompile $e) {
-                    $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The brand button creation returns an error ({$e->getMessage()}";
-                    return $returnArray;
-                }
-
-
-                /**
-                 * Standard link attribute
-                 * and add the link
-                 */
-                try {
-                    syntax_plugin_combo_brand::mixBrandButtonToTagAttributes($shareAttributes, $brand);
-                    if (
-                        !$shareAttributes->hasAttribute(syntax_plugin_combo_link::MARKUP_REF_ATTRIBUTE)
-                        && !$shareAttributes->hasAttribute(self::HANDLE_ATTRIBUTE)
-                    ) {
-                        $returnArray[PluginUtility::EXIT_CODE] = 1;
-                        $handleAttribute = self::HANDLE_ATTRIBUTE;
-                        $urlAttribute = syntax_plugin_combo_brand::URL_ATTRIBUTE;
-                        $returnArray[PluginUtility::EXIT_MESSAGE] = "The brand button does not have any follow url. You need to set at minimum the `$handleAttribute` or `$urlAttribute` attribute";
-                        return $returnArray;
-                    }
-                    syntax_plugin_combo_brand::addOpenLinkTagInCallStack($callStack, $shareAttributes);
-                } catch (ExceptionCompile $e) {
-                    $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "The brand button creation returns an error when creating the link ({$e->getMessage()}";
-                    return $returnArray;
-                }
-
-                /**
-                 * Icon
-                 */
-                try {
-                    syntax_plugin_combo_brand::addIconInCallStack($callStack, $brand);
-                } catch (ExceptionCompile $e) {
-                    $returnArray[PluginUtility::EXIT_CODE] = 1;
-                    $returnArray[PluginUtility::EXIT_MESSAGE] = "Getting the icon for the brand ($brand) returns an error ({$e->getMessage()}";
-                    return $returnArray;
-                }
-                if ($state === DOKU_LEXER_SPECIAL) {
-                    syntax_plugin_combo_link::addExitLinkTagInCallStack($callStack);
-                }
 
                 /**
                  * Return the data
@@ -192,13 +142,27 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_SPECIAL:
                 case DOKU_LEXER_ENTER:
 
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES])
+                        ->setLogicalTag(self::TAG);
+
+                    if (
+                        !$tagAttributes->hasAttribute(syntax_plugin_combo_link::MARKUP_REF_ATTRIBUTE)
+                        && !$tagAttributes->hasAttribute(self::HANDLE_ATTRIBUTE)
+                    ) {
+                        $handleAttribute = self::HANDLE_ATTRIBUTE;
+                        $urlAttribute = syntax_plugin_combo_brand::URL_ATTRIBUTE;
+                        $message = "The brand button does not have any follow url. You need to set at minimum the `$handleAttribute` or `$urlAttribute` attribute";
+                        $renderer->doc .= LogUtility::wrapInRedForHtml($message);
+                        return false;
+                    }
+
                     /**
-                     * Any error
+                     * The channel
                      */
-                    $errorMessage = $data[PluginUtility::EXIT_MESSAGE];
-                    if (!empty($errorMessage)) {
-                        LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        $renderer->doc .= "<span class=\"text-warning\">{$errorMessage}</span>";
+                    try {
+                        $brand = syntax_plugin_combo_brand::createButtonFromAttributes($tagAttributes, BrandButton::TYPE_BUTTON_FOLLOW);
+                    } catch (ExceptionCompile $e) {
+                        $renderer->doc .= "The brand button creation returns an error ({$e->getMessage()}";
                         return false;
                     }
 
@@ -206,27 +170,50 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                      * Add the Icon / CSS / Javascript snippet
                      * It should happen only in rendering
                      */
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     try {
-                        $socialChannel = syntax_plugin_combo_brand::createButtonFromAttributes($tagAttributes, BrandButton::TYPE_BUTTON_FOLLOW);
+                        $style = $brand->getStyle();
                     } catch (ExceptionCompile $e) {
-                        LogUtility::msg("The social channel could not be build. Error: {$e->getMessage()}");
+                        LogUtility::msg("The style of the share button ($brand) could not be determined. Error: {$e->getMessage()}");
                         return false;
                     }
-
-
-                    try {
-                        $style = $socialChannel->getStyle();
-                    } catch (ExceptionCompile $e) {
-                        LogUtility::msg("The style of the share button ($socialChannel) could not be determined. Error: {$e->getMessage()}");
-                        return false;
-                    }
-                    $snippetId = $socialChannel->getStyleScriptIdentifier();
+                    $snippetId = $brand->getStyleScriptIdentifier();
                     PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($snippetId, $style);
+
+
+                    /**
+                     * Standard link attribute
+                     * and add the link
+                     */
+                    try {
+                        $tagAttributes = syntax_plugin_combo_brand::mixBrandButtonToTagAttributes($tagAttributes, $brand);
+                        $renderer->doc .= $tagAttributes->toHtmlEnterTag("a");
+                    } catch (ExceptionCompile $e) {
+                        $renderer->doc .= LogUtility::wrapInRedForHtml("The brand button creation returns an error when creating the link ({$e->getMessage()}");
+                        return false;
+                    }
+
+                    /**
+                     * Icon
+                     */
+                    try {
+                        $iconAttributes = TagAttributes::createFromCallStackArray($brand->getIconAttributes());
+                        $renderer->doc .= Icon::createFromTagAttributes($iconAttributes)->toHtml();
+                    } catch (ExceptionCompile $e) {
+                        $renderer->doc .= LogUtility::wrapInRedForHtml("Getting the icon for the brand ($brand) returns an error ({$e->getMessage()}");
+                        return false;
+                    }
+
+                    if ($state === DOKU_LEXER_SPECIAL) {
+                        $renderer->doc .= "</a>";
+                    }
+
+
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
+                case DOKU_LEXER_EXIT:
+                    $renderer->doc .= "</a>";
                 default:
 
             }

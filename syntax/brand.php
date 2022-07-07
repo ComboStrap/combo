@@ -57,7 +57,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionCompile
      */
-    public static function mixBrandButtonToTagAttributes(TagAttributes $tagAttributes, BrandButton $brandButton)
+    public static function mixBrandButtonToTagAttributes(TagAttributes $tagAttributes, BrandButton $brandButton): TagAttributes
     {
         $brandLinkAttributes = $brandButton->getLinkAttributes();
         $urlAttribute = syntax_plugin_combo_brand::URL_ATTRIBUTE;
@@ -75,7 +75,10 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
             }
             $tagAttributes->addOutputAttributeValue("href", $url);
         }
-        $tagAttributes->mergeWithCallStackArray($brandLinkAttributes->toCallStackArray());
+        $brandLinkAttributes->mergeWithCallStackArray($tagAttributes->toCallStackArray());
+        // set the type back
+        $brandLinkAttributes->setType($tagAttributes->getType());
+        return $brandLinkAttributes;
     }
 
 
@@ -98,19 +101,19 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
         if ($width !== null) {
             $brandButton->setWidth($width);
         }
-        $title = $brandAttributes->getValue(syntax_plugin_combo_link::TITLE_ATTRIBUTE);
+        $title = $brandAttributes->getValueAndRemoveIfPresent(syntax_plugin_combo_link::TITLE_ATTRIBUTE);
         if ($title !== null) {
             $brandButton->setLinkTitle($title);
         }
-        $color = $brandAttributes->getValue(ColorRgb::PRIMARY_VALUE);
+        $color = $brandAttributes->getValueAndRemoveIfPresent(ColorRgb::PRIMARY_VALUE);
         if ($color !== null) {
             $brandButton->setPrimaryColor($color);
         }
-        $secondaryColor = $brandAttributes->getValue(ColorRgb::SECONDARY_VALUE);
+        $secondaryColor = $brandAttributes->getValueAndRemoveIfPresent(ColorRgb::SECONDARY_VALUE);
         if ($secondaryColor !== null) {
             $brandButton->setSecondaryColor($secondaryColor);
         }
-        $handle = $brandAttributes->getValue(syntax_plugin_combo_follow::HANDLE_ATTRIBUTE);
+        $handle = $brandAttributes->getValueAndRemoveIfPresent(syntax_plugin_combo_follow::HANDLE_ATTRIBUTE);
         if ($handle !== null) {
             $brandButton->setHandle($handle);
         }
@@ -337,7 +340,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                      * Link
                      */
                     try {
-                        self::mixBrandButtonToTagAttributes($tagAttributes, $brandButton);
+                        $tagAttributes = self::mixBrandButtonToTagAttributes($tagAttributes, $brandButton);
                     } catch (ExceptionCompile $e) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml("Error while getting the link data for the the brand ($brandName). Error: {$e->getMessage()}");
                         return false;

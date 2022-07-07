@@ -19,6 +19,7 @@ class Brand
      * The brand of the current application/website
      */
     public const CURRENT_BRAND = "current";
+    const CANONICAL = "brand";
 
 
     private $secondaryColor;
@@ -82,7 +83,6 @@ class Brand
 
     /**
      * @return string[]
-     * @throws ExceptionCompile
      */
     public static function getAllKnownBrandNames(): array
     {
@@ -97,7 +97,7 @@ class Brand
     }
 
     /**
-     * @throws ExceptionCompile
+     *
      */
     public static function getBrandNamesFromDictionary(): array
     {
@@ -106,12 +106,16 @@ class Brand
     }
 
     /**
-     * @throws ExceptionCompile
+     *
      */
     public static function getBrandDictionary(): array
     {
         if (!isset(Brand::$brandDictionary)) {
-            Brand::$brandDictionary = Dictionary::getFrom("brands");
+            try {
+                Brand::$brandDictionary = Dictionary::getFrom("brands");
+            } catch (ExceptionCompile $e) {
+                throw new ExceptionRuntimeInternal("We can't load the brands dictionary.", self::CANONICAL,1,$e);
+            }
         }
         return Brand::$brandDictionary;
     }

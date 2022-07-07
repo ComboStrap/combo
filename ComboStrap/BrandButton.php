@@ -412,7 +412,7 @@ EOF;
     }
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionNotFound
      */
     public
     function getIconAttributes(): array

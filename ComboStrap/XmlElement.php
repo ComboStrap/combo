@@ -169,7 +169,7 @@ class XmlElement
         return $this->element->hasAttribute($name);
     }
 
-    private function getDomElement(): DOMElement
+    public function getDomElement(): DOMElement
     {
         return $this->element;
     }

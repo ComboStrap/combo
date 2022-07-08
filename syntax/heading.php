@@ -106,27 +106,6 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         );
     }
 
-    public static function processHeadingMetadataH1($level, $text)
-    {
-        /**
-         * Capture the h1
-         */
-        if ($level === 1) {
-
-            try {
-                $page = PageFragment::createPageFromGlobalWikiId();
-            } catch (ExceptionNotFound $e) {
-                LogUtility::error("Unable to save the h1 heading text because the global Id was not found", self::CANONICAL);
-                return;
-            }
-            MetadataDokuWikiStore::getOrCreateFromResource($page)
-                ->setFromPersistentName(PageH1::H1_PARSED, trim($text))
-                ->persist();
-
-        }
-    }
-
-
     /**
      * @param $data
      * @param Doku_Renderer_metadata $renderer
@@ -146,7 +125,6 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
                 $text = trim($tagAttributes->getValue(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE));
                 $level = $tagAttributes->getValue(syntax_plugin_combo_heading::LEVEL);
-                self::processHeadingMetadataH1($level, $text);
                 $renderer->header($text, $level, null);
             }
         }

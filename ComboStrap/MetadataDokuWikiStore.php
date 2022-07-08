@@ -286,7 +286,6 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         $actualMeta = $this->getData();
         $wikiRequest = WikiRequestEnvironment::createAndCaptureState()
             ->setNewRunningId($dokuwikiId)
-            ->setNewRequestedId($dokuwikiId)
             ->setNewAct("show");
         try {
             $newMetadata = p_render_metadata($dokuwikiId, $actualMeta);

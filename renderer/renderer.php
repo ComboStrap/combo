@@ -95,19 +95,6 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
     function header($text, $level, $pos)
     {
 
-        /**
-         * Save the H1 even if the heading dokuwiki is not enable
-         */
-        if (!PluginUtility::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE)) {
-            /**
-             * $ACT == 'show'
-             * Otherwise we may capture the title of the admin page ...
-             */
-            global $ACT;
-            if ($ACT == 'show') {
-                syntax_plugin_combo_heading::processHeadingMetadataH1($level, $text);
-            }
-        }
 
         // We are going from 2 to 3
         // The parent is 2

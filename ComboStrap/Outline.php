@@ -23,8 +23,8 @@ class Outline
 
     public function __construct(CallStack $callStack)
     {
-
         $this->buildOutline($callStack);
+        $this->storeH1();
     }
 
     public static function createFromCallStack(CallStack $callStack): Outline
@@ -98,7 +98,11 @@ class Outline
                      * We append it first before the message check to
                      * build the {@link TreeNode::getTreeIdentifier()}
                      */
-                    $this->actualSection->appendChild($newOutlineSection);
+                    try {
+                        $this->actualSection->appendChild($newOutlineSection);
+                    } catch (ExceptionBadState $e) {
+                        throw new ExceptionRuntimeInternal("The node is not added multiple time, this error should not fired. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
+                    }
 
                     if ($sectionDiff > 1) {
                         $expectedLevel = $actualSectionLevel + 1;
@@ -121,16 +125,23 @@ class Outline
                         for ($i = 0; $i < abs($sectionDiff); $i++) {
                             $parent = $parent->getParent();
                         }
-                        $parent->appendChild($newOutlineSection);
+                        try {
+                            $parent->appendChild($newOutlineSection);
+                        } catch (ExceptionBadState $e) {
+                            throw new ExceptionRuntimeInternal("The node is not added multiple time, this error should not fired. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
+                        }
                     } catch (ExceptionNotFound $e) {
                         // no parent
                         LogUtility::internalError("Due to the level logic, the actual section should have a parent");
-                        $this->actualSection->appendChild($newOutlineSection);
+                        try {
+                            $this->actualSection->appendChild($newOutlineSection);
+                        } catch (ExceptionBadState $e) {
+                            throw new ExceptionRuntimeInternal("The node is not added multiple time, this error should not fired. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
+                        }
                     }
 
 
                 }
-
 
                 $newOutlineSection->addHeadingCall($actualCall);
                 $this->actualSection = $newOutlineSection;
@@ -397,7 +408,6 @@ class Outline
 
             }
 
-
             foreach ($outlineSection->getChildren() as $child) {
                 $this->toHtmlSectionOutlineCallsRecurse($child, $totalComboCalls, $sectionSequenceId, $contentHeaderDisplayToNone);
             }
@@ -528,6 +538,25 @@ class Outline
             return $element->getInstructionCall();
         }, $totalCalls);
 
+    }
+
+    private function storeH1()
+    {
+        try {
+            $outlineSection = $this->getRootOutlineSection()->getFirstChild();
+        } catch (ExceptionNotFound $e) {
+            //
+            return;
+        }
+        if ($outlineSection->getLevel() === 1) {
+            try {
+                PageH1::createForPage(PageFragment::createFromRequestedPage())
+                    ->setValue($outlineSection->getLabel())
+                    ->persist();
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::internalError("We were unable to store the scanned heading 1. Error: {$e->getMessage()}", self::CANONICAL);
+            }
+        }
     }
 
 

@@ -72,7 +72,8 @@ class WikiRequestEnvironment
      * A running id can be a secondary fragment
      * The requested id is the main fragment
      *
-     * Note that this should be set only once (for test purpose)
+     * Note that this should be set only once at the request level
+     * (ie in test purpose or the fetcher)
      *
      * @param string $requestedId
      * @return $this

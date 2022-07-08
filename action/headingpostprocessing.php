@@ -9,6 +9,7 @@ use ComboStrap\Outline;
 use ComboStrap\Site;
 use ComboStrap\Toc;
 use ComboStrap\WikiPath;
+use ComboStrap\WikiRequestEnvironment;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
@@ -65,51 +66,49 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     function _post_process_heading(&$event, $param)
     {
 
-
-        $runningMarkup = WikiPath::createRunningPageFragmentPathFromGlobalId();
-        $requestedPath = WikiPath::createRequestedPagePathFromRequest();
-        if ($requestedPath->toPathString() !== $runningMarkup->toPathString()) {
-            return;
-        }
-
         /**
          * @var Doku_Handler $handler
          */
         $handler = $event->data;
-        $callStack = CallStack::createFromHandler($handler);
-        $outline = Outline::createFromCallStack($callStack);
 
-        global $ACT;
-        switch ($ACT) {
+        $act = WikiRequestEnvironment::createAndCaptureState()->getActualAct();
+        switch ($act) {
             case MarkupDynamicRender::DYNAMIC_RENDERING:
+                $callStack = CallStack::createFromHandler($handler);
                 // no outline or edit button for dynamic rendering
                 // but closing of atx heading
-                $handler->calls = $outline->toDynamicInstructionCalls();
+                $handler->calls = Outline::createFromCallStack($callStack)
+                    ->toDynamicInstructionCalls();
                 return;
             case "show":
-                break;
+                $runningMarkup = WikiPath::createRunningPageFragmentPathFromGlobalId();
+                $requestedPath = WikiPath::createRequestedPagePathFromRequest();
+                if ($requestedPath->toPathString() !== $runningMarkup->toPathString()) {
+                    return;
+                }
+                $callStack = CallStack::createFromHandler($handler);
+                $outline = Outline::createFromCallStack($callStack);
+                if (Site::getTemplate() !== Site::STRAP_TEMPLATE_NAME) {
+                    $handler->calls = $outline->toDefaultTemplateInstructionCalls();
+                } else {
+                    $handler->calls = $outline->toHtmlSectionOutlineCalls();
+                }
+                /**
+                 * TOC
+                 */
+                $toc = $outline->getTocDokuwikiFormat();
+                try {
+                    Toc::createForRequestedPage()
+                        ->setValue($toc)
+                        ->persist();
+                } catch (ExceptionBadArgument $e) {
+                    LogUtility::error("The Toc could not be persisted. Error:{$e->getMessage()}");
+                }
+                return;
             default:
                 // No outline if not show (ie admin, edit, ...)
-                return;
         }
 
-        if (Site::getTemplate() !== Site::STRAP_TEMPLATE_NAME) {
-            $handler->calls = $outline->toDefaultTemplateInstructionCalls();
-        } else {
-            $handler->calls = $outline->toHtmlSectionOutlineCalls();
-        }
-
-        /**
-         * TOC
-         */
-        $toc = $outline->getTocDokuwikiFormat();
-        try {
-            Toc::createForRequestedPage()
-                ->setValue($toc)
-                ->persist();
-        } catch (ExceptionBadArgument $e) {
-            LogUtility::error("The Toc could not be persisted. Error:{$e->getMessage()}");
-        }
 
 
     }

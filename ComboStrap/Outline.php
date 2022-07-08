@@ -14,6 +14,7 @@ class Outline
 
 
     const CANONICAL = "outline";
+    private const OUTLINE_HEADING_PREFIX = "outline-heading";
     private OutlineSection $rootSection;
 
     private OutlineSection $actualSection; // the actual section that is created
@@ -216,6 +217,11 @@ class Outline
         $this->saveOutlineToMetadata();
 
 
+    }
+
+    public static function getOutlineHeadingClass(): string
+    {
+        return StyleUtility::addComboStrapSuffix(self::OUTLINE_HEADING_PREFIX);
     }
 
     public function getRootOutlineSection(): OutlineSection

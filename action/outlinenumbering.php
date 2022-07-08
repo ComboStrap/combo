@@ -3,6 +3,7 @@
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\FetcherPage;
+use ComboStrap\Outline;
 use ComboStrap\PluginUtility;
 use ComboStrap\Toc;
 
@@ -72,7 +73,7 @@ class action_plugin_combo_outlinenumbering extends DokuWiki_Action_Plugin
                  * the outline heading consistently
                  * We do it then with the class value
                  */
-                $outlineClass = syntax_plugin_combo_heading::OUTLINE_HEADING_CLASS;
+                $outlineClass = Outline::getOutlineHeadingClass();
                 return <<<EOF
 $mainContainerSelector { counter-set: h2 0 h3 0 h4 0 h5 0 h6 0; }
 $mainContainerSelector h2.$outlineClass::before { counter-increment: h2; counter-set: h3 0 h4 0 h5 0 h6 0; content: "$prefix" counter(h2, $level2CounterStyle) "$suffix\A"; }

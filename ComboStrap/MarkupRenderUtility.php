@@ -31,7 +31,7 @@ class MarkupRenderUtility
             ->setDeleteRootBlockElement($strip)
             ->setRequestedMimeToXhtml();
         try {
-            return $markupRenderer->process();
+            return $markupRenderer->getOutput();
         } finally {
             $markupRenderer->close();
         }
@@ -47,9 +47,10 @@ class MarkupRenderUtility
     {
 
         $markupRenderer = MarkupRenderer::createFromMarkup($pageContent)
+            ->setRequestedMimeToInstruction()
             ->setDeleteRootBlockElement($stripOpenAndEnd);
         try {
-            return $markupRenderer->process();
+            return $markupRenderer->getOutput();
         } finally {
             $markupRenderer->close();
         }

@@ -72,7 +72,7 @@ class MarkupRenderer
         return $this;
     }
 
-    public function process()
+    public function getOutput()
     {
 
         $this->build();
@@ -108,7 +108,7 @@ class MarkupRenderer
                 if (!isset($this->instructions)) {
                     $this->instructions = MarkupRenderer::createFromMarkup($this->markup)
                         ->setRequestedMimeToInstruction()
-                        ->process();
+                        ->getOutput();
                 }
 
                 /**
@@ -164,7 +164,7 @@ class MarkupRenderer
 
     private function deleteRootPElementsIfRequested(array $instructions): array
     {
-        if ($this->deleteRootElement==true) {
+        if ($this->deleteRootElement === false) {
             return $instructions;
         }
 

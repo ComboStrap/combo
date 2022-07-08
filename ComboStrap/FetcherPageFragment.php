@@ -298,7 +298,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
                     ->setRequestedMimeToInstruction()
                     ->setDeleteRootBlockElement($this->removeRootBlockElement);
                 try {
-                    $content = $markupRenderer->process();
+                    $content = $markupRenderer->getOutput();
                 } finally {
                     $markupRenderer->close();
                 }
@@ -315,7 +315,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
                     ->setRendererName($this->getRequestedRendererNameOrDefault())
                     ->setRequestedMime($this->getMime());
                 try {
-                    $content = $markupRenderer->process();
+                    $content = $markupRenderer->getOutput();
                 } finally {
                     $markupRenderer->close();
                 }

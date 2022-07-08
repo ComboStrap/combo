@@ -502,5 +502,10 @@ class Outline
 
     }
 
+    public function extractHeaderInstructionsCallsAndSetTheDisplayToNone(): array
+    {
+        return[];
+    }
+
 
 }

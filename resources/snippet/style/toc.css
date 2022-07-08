@@ -1,22 +1,20 @@
-#main-toc ul {
+.toc-cs ul {
     list-style: none;
 }
-#main-toc > ul {
+.toc-cs > ul {
     padding-left: 0;
 }
 
-
-
-#main-toc li {
+.toc-cs li {
     margin-bottom: 0.25rem;
     padding-left: initial;
 }
 
-#main-toc a:not(:hover) {
+.toc-cs a:not(:hover) {
     text-decoration: none;
 }
 
-#toc-header {
+.toc-cs .toc-header-cs {
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
     text-decoration: underline;

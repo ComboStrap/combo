@@ -12,6 +12,7 @@
 
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 use ComboStrap\Toc;
 
 if (!defined('DOKU_INC')) die();
@@ -104,15 +105,12 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
-        switch ($state) {
-
-            case DOKU_LEXER_SPECIAL :
-                $attributes = PluginUtility::getTagAttributes($match);
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
-                );
-
+        if ($state == DOKU_LEXER_SPECIAL) {
+            $attributes = PluginUtility::getTagAttributes($match);
+            return array(
+                PluginUtility::STATE => $state,
+                PluginUtility::ATTRIBUTES => $attributes
+            );
         }
         return array();
 
@@ -130,51 +128,24 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
      */
     function render($format, Doku_Renderer $renderer, $data): bool
     {
+
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
-            switch ($state) {
-                case DOKU_LEXER_SPECIAL :
-
-                    if (Toc::showToc($renderer)) {
-
-
-                        /**
-                         * Toc data
-                         */
-                        global $TOC;
-                        $toc = $data[PluginUtility::ATTRIBUTES][self::TOC_ATTRIBUTE];
-                        if ($toc !== null) {
-                            $TOC = $toc;
-                            /**
-                             * The {@link tpl_toc()} uses the global variable
-                             */
-                        } else {
-
-                            $toc = $TOC;
-                            // If the TOC is null (The toc may be initialized by a plugin)
-                            if (!is_array($toc) or count($toc) == 0) {
-                                $toc = $renderer->toc;
-                            }
-
-                            if ($toc === null) {
-                                $renderer->doc .= LogUtility::wrapInRedForHtml("No Toc found");
-                                return false;
-                            }
-
-                        }
-                        /**
-                         * Toc rendering
-                         */
-                        $renderer->doc .= Toc::createForRequestedPage()
-                            ->setValue($toc)
-                            ->toXhtml();
-                    }
-                    break;
-
+            /**
+             * Toc rendering
+             */
+            if ($state == DOKU_LEXER_SPECIAL) {
+                $tocNavHtml = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES])
+                ->setLogicalTag(self::TAG)
+                    ->toHtmlEnterTag("nav");
+                $tocHtml = Toc::createForRequestedPage()
+                    ->toXhtml();
+                $renderer->doc .= "{$tocNavHtml}{$tocHtml}</nav>";
+                return true;
             }
-            return true;
+
         }
 
         // unsupported $mode

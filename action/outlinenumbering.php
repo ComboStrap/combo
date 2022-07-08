@@ -93,7 +93,7 @@ EOF;
                 // global $conf;
                 // $topTocLevel = $conf['toptoclevel'];
 
-                $tocSelector = "#" . FetcherPage::MAIN_TOC_ELEMENT ." ul";
+                $tocSelector = "." . Toc::getClass() ." ul";
                 return <<<EOF
 $tocSelector li { counter-increment: toc2; }
 $tocSelector li li { counter-increment: toc3; }

@@ -30,6 +30,11 @@ class Toc extends Metadata
         return self::createForPage(PageFragment::createFromRequestedPage());
     }
 
+    public static function getClass(): string
+    {
+        return StyleUtility::addComboStrapSuffix(self::CANONICAL);
+    }
+
 
     public function toXhtml(): string
     {
@@ -111,8 +116,9 @@ class Toc extends Metadata
         // closing
         $ulMarkup .= str_repeat("</li></ul>", $previousLevel - $topTocLevel + 1);
         $tocHeaderLang = $lang['toc'];
+        $tocHeaderClass = StyleUtility::addComboStrapSuffix("toc-header");
         return <<<EOF
-<p id="toc-header">$tocHeaderLang</p>
+<p class="$tocHeaderClass">$tocHeaderLang</p>
 $ulMarkup
 EOF;
 

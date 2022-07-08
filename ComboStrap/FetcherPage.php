@@ -327,7 +327,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         try {
             $tocId = self::MAIN_TOC_ELEMENT;
             $tocElement = $this->getTemplateDomDocument()->querySelector('#' . $tocId);
-
+            $tocElement->addClass(Toc::getClass());
             $tocHtml = Toc::createForPage($this->getRequestedPage())
                 ->toXhtml();
             $tocVariable = Template::toValidVariableName($tocId);
@@ -882,7 +882,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     {
         $this->buildObjectIfNeeded();
         $element = $this->pageElements[$elementId];
-        if($element===null){
+        if ($element === null) {
             throw new ExceptionNotFound("No element ($elementId) found for the layout ({$this->getLayout()})");
         }
         return $element;

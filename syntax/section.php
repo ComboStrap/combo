@@ -6,6 +6,7 @@ use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\StyleUtility;
 use ComboStrap\TagAttributes;
 
 
@@ -137,8 +138,8 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
                 $tag = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                 $level = $tag->getComponentAttributeValueAndRemoveIfPresent(syntax_plugin_combo_heading::LEVEL);
                 if ($level !== null) {
-                    $tag->addClassName("outline-section");
-                    $tag->addClassName("outline-level-$level");
+                    $tag->addClassName(StyleUtility::addComboStrapSuffix( "outline-section"));
+                    $tag->addClassName(StyleUtility::addComboStrapSuffix("outline-level-$level"));
                 }
                 $renderer->doc .= $tag->toHtmlEnterTag("section");
                 break;

@@ -114,7 +114,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     {
 
 
-        $this->buildObject();
+        $this->buildObjectIfNeeded();
 
         $cache = FetcherCache::createFrom($this)
             ->addFileDependency($this->pageCssPath)
@@ -424,7 +424,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     /**
      *
      */
-    private function buildObject(): void
+    private function buildObjectIfNeeded(): void
     {
 
         if ($this->build) {
@@ -837,26 +837,55 @@ class FetcherPage extends FetcherAbs implements FetcherSource
      */
     private function getPageElements(): array
     {
-        $this->buildObject();
+        $this->buildObjectIfNeeded();
         return $this->pageElements;
     }
 
     private function getTemplateDomDocument(): XmlDocument
     {
-        $this->buildObject();
+        $this->buildObjectIfNeeded();
         return $this->templateDomDocument;
     }
 
     private function getRequestedPage()
     {
-        $this->buildObject();
+        $this->buildObjectIfNeeded();
         return $this->requestedPage;
     }
 
     private function getLayout()
     {
-        $this->buildObject();
+        $this->buildObjectIfNeeded();
         return $this->layoutName;
+    }
+
+    public function hasContentHeader(): bool
+    {
+        $this->buildObjectIfNeeded();
+        try {
+            $element = $this->getPageElement(self::MAIN_HEADER_ELEMENT);
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
+        try {
+            $element->getPageFragmentFetcher();
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getPageElement(string $elementId): PageElement
+    {
+        $this->buildObjectIfNeeded();
+        $element = $this->pageElements[$elementId];
+        if($element===null){
+            throw new ExceptionNotFound("No element ($elementId) found for the layout ({$this->getLayout()})");
+        }
+        return $element;
     }
 
 }

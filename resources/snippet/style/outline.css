@@ -1,4 +1,4 @@
-.outline-heading {
+.outline-heading-cs {
     background-color: inherit;
     /* The content will go outside of the parent
      The border will stop to the end of the content */
@@ -11,23 +11,21 @@
     font-weight: bold;
 }
 
-section.outline-level-3, section.outline-level-4, section.outline-level-5, section.outline-level-6 {
+section.outline-level-3-cs, section.outline-level-4-cs, section.outline-level-5-cs, section.outline-level-6-cs {
     margin-left: 15px;
 }
 
 /* No margin left on small screen */
 @media (min-width: 0px) and (max-width: 576px) {
 
-    .outline-section {
+    .outline-section-cs {
         margin-left: 0 !important;
     }
 
 }
 
-.outline-section, .outline-header {
+.outline-section-cs, .outline-header-cs {
     position: relative;
 }
-
-
 
 

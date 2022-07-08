@@ -47,19 +47,28 @@ class PageElement
     private ?array $attributes = null;
 
     /**
-     * @throws ExceptionBadArgument - when the area name is unknown
-     * @throws ExceptionCompile - when the strap template is not available
      */
-    public static function getSlotNameForArea($area)
+    public static function getSlotNameForElementId($elementId)
     {
-        switch ($area) {
+        switch ($elementId) {
             case FetcherPage::PAGE_HEADER_ELEMENT:
                 return Site::getPageHeaderSlotName();
             case FetcherPage::PAGE_FOOTER_ELEMENT:
                 return Site::getPageFooterSlotName();
+            case FetcherPage::MAIN_CONTENT_ELEMENT:
+                throw new ExceptionRuntimeInternal("Main content area is not a slot and does not have any last slot name");
+            case FetcherPage::PAGE_SIDE_ELEMENT:
+                return Site::getSidebarName();
+            case FetcherPage::MAIN_SIDE_ELEMENT:
+                return Site::getPageSideSlotName();
+            case FetcherPage::MAIN_HEADER_ELEMENT:
+                return "slot_main_header";
+            case FetcherPage::MAIN_FOOTER_ELEMENT:
+                return "slot_main_footer";
             default:
-                throw new ExceptionBadArgument("The area ($area) is unknown");
+                throw new ExceptionRuntimeInternal("Internal: The element ($elementId) was unexpected.");
         }
+
     }
 
     /**
@@ -68,7 +77,7 @@ class PageElement
      * @param string $areaId
      * @return WikiPath
      */
-    public static function getDefaultAreaContentPath(string $areaId): WikiPath
+    public static function getDefaultElementContentPath(string $areaId): WikiPath
     {
         return WikiPath::createComboResource(":pages:$areaId.md");
     }
@@ -89,24 +98,7 @@ class PageElement
         if (!$this->isSlot()) {
             throw new ExceptionNotFound("No slot name for container element");
         }
-        switch ($elementId) {
-            case FetcherPage::PAGE_HEADER_ELEMENT:
-                return Site::getPageHeaderSlotName();
-            case FetcherPage::PAGE_FOOTER_ELEMENT:
-                return Site::getPageFooterSlotName();
-            case FetcherPage::MAIN_CONTENT_ELEMENT:
-                throw new ExceptionRuntimeInternal("Main content area is not a slot and does not have any last slot name");
-            case FetcherPage::PAGE_SIDE_ELEMENT:
-                return Site::getSidebarName();
-            case FetcherPage::MAIN_SIDE_ELEMENT:
-                return Site::getPageSideSlotName();
-            case FetcherPage::MAIN_HEADER_ELEMENT:
-                return "slot_main_header";
-            case FetcherPage::MAIN_FOOTER_ELEMENT:
-                return "slot_main_footer";
-            default:
-                throw new ExceptionRuntimeInternal("Internal: The element ($elementId) was unexpected.");
-        }
+        return self::getSlotNameForElementId($elementId);
     }
 
 
@@ -186,7 +178,7 @@ class PageElement
                     }
                     break;
             }
-            $closestPath = self::getDefaultAreaContentPath($this->getId());
+            $closestPath = self::getDefaultElementContentPath($this->getId());
             if (!FileSystems::exists($closestPath)) {
                 throw new ExceptionNotFound("The default slot page for the area ($this) does not exist at ($closestPath)");
             }

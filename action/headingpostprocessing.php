@@ -3,6 +3,7 @@
 
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionBadArgument;
+use ComboStrap\FetcherPage;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupDynamicRender;
 use ComboStrap\Outline;
@@ -91,7 +92,16 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                 if (Site::getTemplate() !== Site::STRAP_TEMPLATE_NAME) {
                     $handler->calls = $outline->toDefaultTemplateInstructionCalls();
                 } else {
-                    $handler->calls = $outline->toHtmlSectionOutlineCalls();
+                    $fetcherPage = FetcherPage::createPageFetcherFromRequestedPage();
+                    try {
+                        if (!$fetcherPage->hasContentHeader()) {
+                            $handler->calls = $outline->toHtmlSectionOutlineCalls();
+                        } else {
+                            $handler->calls = $outline->toHtmlSectionOutlineCallsWithoutHeader();
+                        }
+                    } finally {
+                        $fetcherPage->close();
+                    }
                 }
                 /**
                  * TOC

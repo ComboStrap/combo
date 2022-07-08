@@ -355,7 +355,7 @@ class Outline
 
     }
 
-    private function toHtmlSectionOutlineCallsRecurse(OutlineSection $outlineSection, array &$totalComboCalls, int &$sectionSequenceId): void
+    private function toHtmlSectionOutlineCallsRecurse(OutlineSection $outlineSection, array &$totalComboCalls, int &$sectionSequenceId, bool $contentHeaderDisplayToNone): void
     {
 
         $totalComboCalls[] = Call::createComboCall(
@@ -370,29 +370,36 @@ class Outline
              * in a header tag
              * The header tag helps also to get the edit button to stay in place
              */
-            $openHeader = Call::createComboCall(
-                \syntax_plugin_combo_box::TAG,
-                DOKU_LEXER_ENTER,
-                array(\syntax_plugin_combo_box::TAG_ATTRIBUTE => "header",
-                    TagAttributes::CLASS_KEY => "outline-header",
-                )
-            );
-            $closeHeader = Call::createComboCall(
-                \syntax_plugin_combo_box::TAG,
-                DOKU_LEXER_EXIT,
-                array(\syntax_plugin_combo_box::TAG_ATTRIBUTE => "header")
-            );
-            $totalComboCalls = array_merge(
-                $totalComboCalls,
-                [$openHeader],
-                $outlineSection->getHeadingCalls(),
-                $contentCalls,
-            );
-            $this->addSectionEditButtonComboFormatIfNeeded($outlineSection, $sectionSequenceId, $totalComboCalls);
-            $totalComboCalls[] = $closeHeader;
+
+            $isContentHeader = in_array($outlineSection->getLevel(), [0, 1]);
+            if (!($contentHeaderDisplayToNone && $isContentHeader)) {
+
+                $openHeader = Call::createComboCall(
+                    \syntax_plugin_combo_box::TAG,
+                    DOKU_LEXER_ENTER,
+                    array(\syntax_plugin_combo_box::TAG_ATTRIBUTE => "header",
+                        TagAttributes::CLASS_KEY => StyleUtility::addComboStrapSuffix("outline-header"),
+                    )
+                );
+                $closeHeader = Call::createComboCall(
+                    \syntax_plugin_combo_box::TAG,
+                    DOKU_LEXER_EXIT,
+                    array(\syntax_plugin_combo_box::TAG_ATTRIBUTE => "header")
+                );
+                $totalComboCalls = array_merge(
+                    $totalComboCalls,
+                    [$openHeader],
+                    $outlineSection->getHeadingCalls(),
+                    $contentCalls,
+                );
+                $this->addSectionEditButtonComboFormatIfNeeded($outlineSection, $sectionSequenceId, $totalComboCalls);
+                $totalComboCalls[] = $closeHeader;
+
+            }
+
 
             foreach ($outlineSection->getChildren() as $child) {
-                $this->toHtmlSectionOutlineCallsRecurse($child, $totalComboCalls, $sectionSequenceId);
+                $this->toHtmlSectionOutlineCallsRecurse($child, $totalComboCalls, $sectionSequenceId, $contentHeaderDisplayToNone);
             }
 
         } else {
@@ -415,11 +422,13 @@ class Outline
     {
         $totalCalls = [];
         $sectionSequenceId = 0;
+        $headerDisplayToNone = false;
 
         /**
          * Transform and collect the calls in Instructions calls
          */
-        $this->toHtmlSectionOutlineCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId);
+
+        $this->toHtmlSectionOutlineCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId, $headerDisplayToNone);
 
         return array_map(function (Call $element) {
             return $element->getInstructionCall();
@@ -502,9 +511,23 @@ class Outline
 
     }
 
-    public function extractHeaderInstructionsCallsAndSetTheDisplayToNone(): array
+
+    public function toHtmlSectionOutlineCallsWithoutHeader(): array
     {
-        return[];
+
+        $totalCalls = [];
+        $sectionSequenceId = 0;
+        $headerToNone = true;
+
+        /**
+         * Transform and collect the calls in Instructions calls
+         */
+        $this->toHtmlSectionOutlineCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId, $headerToNone);
+
+        return array_map(function (Call $element) {
+            return $element->getInstructionCall();
+        }, $totalCalls);
+
     }
 
 

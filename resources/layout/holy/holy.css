@@ -43,7 +43,7 @@ main > *, #page-core {
 
     #main-toc {
         grid-column: side;
-        grid-row: 1;
+        grid-row: 2;
         position: -webkit-sticky;
         position: sticky;
         top: 5rem;
@@ -52,7 +52,7 @@ main > *, #page-core {
     }
 
     #main-header {
-        grid-column: main;
+        grid-column: main / span 2;
     }
 
     #main-content {

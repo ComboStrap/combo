@@ -104,10 +104,10 @@ class Outline
                         throw new ExceptionRuntimeInternal("The node is not added multiple time, this error should not fired. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
                     }
 
-                    if ($sectionDiff > 1) {
+                    if ($sectionDiff > 1 & !($actualSectionLevel === 0 && $newSectionLevel === 2)) {
                         $expectedLevel = $actualSectionLevel + 1;
                         if ($actualSectionLevel === 0) {
-                            $message = "The first section heading should have the level 1 (not $newSectionLevel).";
+                            $message = "The first section heading should have the level 1 or 2 (not $newSectionLevel).";
                         } else {
                             $message = "The child section heading ($actualSectionLevel) has the level ($newSectionLevel) but is parent ({$this->actualSection->getLabel()}) has the level ($actualSectionLevel). The expected level is ($expectedLevel).";
                         }

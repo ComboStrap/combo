@@ -121,7 +121,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             ->addFileDependency($this->pageJsPath)
             ->addFileDependency($this->pageHtmlTemplatePath);
 
-        $htmlOutputByAreaName = [];
+        $htmlFragmentByVariables = [];
 
         /**
          * Run the main slot
@@ -233,7 +233,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
                  * And replace them after the loop
                  */
                 $layoutVariable = $pageElement->getVariableName();
-                $htmlOutputByAreaName[$layoutVariable] = $fetcherHtmlString;
+                $htmlFragmentByVariables[$layoutVariable] = $fetcherHtmlString;
                 $domElement->appendTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
 
             } catch (ExceptionNotFound $e) {
@@ -317,7 +317,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         }
         $this->addTaskRunnerImage($bodyElement);
 
-        if (sizeof($htmlOutputByAreaName) === 0) {
+        if (sizeof($htmlFragmentByVariables) === 0) {
             LogUtility::internalError("No slot was rendered");
         }
 
@@ -331,7 +331,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
             $tocHtml = Toc::createForPage($this->getRequestedPage())
                 ->toXhtml();
             $tocVariable = Template::toValidVariableName($tocId);
-            $htmlOutputByAreaName[$tocVariable] = $tocHtml;
+            $htmlFragmentByVariables[$tocVariable] = $tocHtml;
             $tocElement->appendTextNode(Template::VARIABLE_PREFIX . $tocVariable);
         } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
             // no toc
@@ -345,14 +345,14 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          * then called after rendering and toc
          * At last then
          */
-        $this->addHeadElements($head);
+        $this->addHeadElements($head,$htmlFragmentByVariables);
 
         /**
          * We save as XML because we strive to be XML compliant (ie XHTML)
          * And we want to load it as XML to check the XHTML namespace (ie xmlns)
          */
         $htmlBodyDocumentString = $this->getTemplateDomDocument()->toHtml();
-        $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlOutputByAreaName)->render();
+        $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlFragmentByVariables)->render();
 
         /**
          * DocType is required by bootstrap
@@ -740,7 +740,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
 
     }
 
-    private function addHeadElements(XmlElement $head)
+    private function addHeadElements(XmlElement $head, &$htmlFragmentByVariables)
     {
 
 
@@ -779,17 +779,11 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         } finally {
             ob_end_clean();
         }
+        $variableName = "headElements";
+        $htmlFragmentByVariables[$variableName] = $htmlHeaders;
+        $head->appendTextNode(Template::VARIABLE_PREFIX . $variableName);
 
-        try {
-            $headerDocument = XmlDocument::createHtmlDocFromMarkup("<div>$htmlHeaders</div>");
-        } catch (ExceptionBadSyntax $e) {
-            LogUtility::error("The created meta html header string could not be read. Error:{$e->getMessage()}", self::CANONICAL);
-            return;
-        }
-        $headers = $headerDocument->getElement()->getChildrenElement();
-        foreach ($headers as $childElement) {
-            $head->appendChild($childElement);
-        }
+
 
     }
 

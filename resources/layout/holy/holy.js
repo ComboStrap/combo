@@ -5,6 +5,10 @@
 window.addEventListener("load", function () {
     let mediaListener = function (mediaQuery) {
         let side = document.getElementById("main-side");
+        if (side === null) {
+            // may be deleted if it does not exist
+            return;
+        }
         if (mediaQuery.matches) {
             if (side.parentElement.getAttribute("id") !== "main-toc") {
                 let toc = document.getElementById("main-toc");

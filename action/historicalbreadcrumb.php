@@ -14,6 +14,7 @@
 use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
 use ComboStrap\HistoricalBreadcrumbMenuItem;
+use ComboStrap\Site;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -41,12 +42,11 @@ class action_plugin_combo_historicalbreadcrumb extends DokuWiki_Action_Plugin
     public function handle_breadcrumb_history(Doku_Event $event, $param)
     {
 
-        global $conf;
 
         //check if enabled
-        if (!$conf['breadcrumbs']) return;
+        if (Site::getVisitedPagesCountInHistoricalBreadCrumb() <= 0) return;
 
-        if(Bootstrap::getBootStrapMajorVersion()== Bootstrap::BootStrapFiveMajorVersion) {
+        if (Bootstrap::getBootStrapMajorVersion() == Bootstrap::BootStrapFiveMajorVersion) {
 
 
             /**
@@ -56,23 +56,12 @@ class action_plugin_combo_historicalbreadcrumb extends DokuWiki_Action_Plugin
              */
             if ($event->data['view'] != 'site') return;
 
-            /**
-             * Making popover active
-             */
-            PluginUtility::getSnippetManager()->attachJavascriptInternalInlineForRequest("popover");
-
-            /**
-             * Css
-             */
-            PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
 
             array_splice($event->data['items'], -1, 0, array(new HistoricalBreadcrumbMenuItem()));
 
         }
 
     }
-
-
 
 
 }

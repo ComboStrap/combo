@@ -12,6 +12,8 @@ use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Reference;
 use ComboStrap\References;
+use ComboStrap\WikiPath;
+use dokuwiki\Menu\Item\Backlink;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -57,13 +59,10 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
          */
         if ($event->data['view'] != 'page') return;
 
-        global $INFO;
-        if (!$INFO['exists']) {
-            return;
-        }
+
         $menuItems = &$event->data["items"];
         foreach ($menuItems as $key => $menuItem) {
-            if ($menuItem instanceof \dokuwiki\Menu\Item\Backlink) {
+            if ($menuItem instanceof Backlink) {
                 $menuItems[$key] = new BacklinkMenuItem();
                 break;
             }
@@ -71,9 +70,9 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
         /**
          * Add the wl to build the link to the backlinks actions
          */
-        $id = PluginUtility::getRequestedWikiId();
+        $pagePath = WikiPath::getRequestedPagePath();
         global $JSINFO;
-        $JSINFO[self::WHREF] = wl($id);
+        $JSINFO[self::WHREF] = wl($pagePath->getWikiId());
 
     }
 

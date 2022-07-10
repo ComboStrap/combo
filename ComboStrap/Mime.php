@@ -126,6 +126,15 @@ class Mime
         }
     }
 
+    public static function getHtml(): Mime
+    {
+        try {
+            return Mime::createFromExtension("html");
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntime("Html is a known extension and should not throw. Error :{$e->getMessage()}");
+        }
+    }
+
     public function __toString()
     {
         return $this->mime;

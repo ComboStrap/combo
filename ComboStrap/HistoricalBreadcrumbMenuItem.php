@@ -27,6 +27,8 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
 {
 
 
+
+
     const RECENT_PAGES_VISITED = "Recent Pages Visited";
 
     /**
@@ -36,12 +38,28 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
     const HISTORICAL_BREADCRUMB_NAME = "historical-breadcrumb";
     const CANONICAL = "breadcrumb";
 
+    public function __construct()
+    {
+        /**
+         * Making popover active
+         */
+        PluginUtility::getSnippetManager()->attachJavascriptInternalInlineForRequest("popover");
+
+        /**
+         * Css
+         */
+        PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
+
+        parent::__construct();
+
+    }
+
 
     /**
      *
      * @return string
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         return self::RECENT_PAGES_VISITED;
     }
@@ -101,7 +119,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         return $linkAttributes;
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         /**
          * The title (unfortunately) is deleted from the anchor
@@ -110,7 +128,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         return self::RECENT_PAGES_VISITED;
     }
 
-    public function getSvg()
+    public function getSvg(): string
     {
         /** @var string icon file */
         return DirectoryLayout::getComboImagesDirectory()->resolve('history.svg')->toPathString();

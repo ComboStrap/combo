@@ -248,7 +248,7 @@ class SnippetManager
                                     $cssInternalArray["href"] = $fetchUrl->toHtmlString(); // html string at this point
                                 } catch (ExceptionNotFound $e) {
                                     // the file should have been found at this point
-                                    LogUtility::internalError("The internal css could not be added. Error:{$e->getMessage()}",self::CANONICAL);
+                                    LogUtility::internalError("The internal css could not be added. Error:{$e->getMessage()}", self::CANONICAL);
                                     continue 3;
                                 }
 
@@ -538,7 +538,7 @@ class SnippetManager
         foreach ($snippets as $htmlElement => $tags) {
 
             foreach ($tags as $tag) {
-                $xhtmlContent .= DOKU_LF . "<$htmlElement";
+                $xhtmlContent .= "<$htmlElement";
                 $attributes = "";
                 $content = null;
 
@@ -576,13 +576,12 @@ class SnippetManager
                 if (!empty($content)) {
                     $xhtmlContent .= $content;
                 }
-                $xhtmlContent .= "</$htmlElement>" . DOKU_LF;
+                $xhtmlContent .= "</$htmlElement>";
             }
 
         }
         return $xhtmlContent;
     }
-
 
 
 }

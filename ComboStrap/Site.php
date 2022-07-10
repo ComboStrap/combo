@@ -198,6 +198,28 @@ class Site
 
     }
 
+    /**
+     * @return int
+     * https://www.dokuwiki.org/config:breadcrumbs
+     */
+    public static function getVisitedPagesCountInHistoricalBreadCrumb(): int
+    {
+        global $conf;
+        $confKey = 'breadcrumbs';
+        $visitedPagesInBreadCrumb = $conf[$confKey];
+        $defaultReturnValue = 10;
+        if ($visitedPagesInBreadCrumb === null) {
+            return $defaultReturnValue;
+        }
+        try {
+            return DataType::toInteger($visitedPagesInBreadCrumb);
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::error("The configuration ($confKey) has value ($visitedPagesInBreadCrumb) that is not an integer. Error:{$e->getMessage()}");
+            return $defaultReturnValue;
+        }
+
+    }
+
 
     function getEmailObfuscationConfiguration()
     {

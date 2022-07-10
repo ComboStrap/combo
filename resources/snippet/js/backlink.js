@@ -3,7 +3,6 @@
 
 window.addEventListener("DOMContentLoaded", function () {
 
-
         document.querySelectorAll(".combo-backlink-item").forEach((metadataControlItem) => {
 
             metadataControlItem.addEventListener("click", async function (event) {
@@ -24,12 +23,12 @@ window.addEventListener("DOMContentLoaded", function () {
                     .getText();
                 html = `<p>List of pages that link back to the page (${pageId}).</p>${html}`;
 
-                let dokuWikiBacklinkButton = document.createElement("a");
-                dokuWikiBacklinkButton.classList.add("btn", "btn-secondary")
-                dokuWikiBacklinkButton.setAttribute("role", "button")
-                dokuWikiBacklinkButton.setAttribute("title", "Go to the original backlinks page")
-                dokuWikiBacklinkButton.innerHTML = "Original Backlinks Page";
-                dokuWikiBacklinkButton.setAttribute("href", JSINFO["whref"] + "?do=backlink")
+                let wikiBacklinkButton = document.createElement("a");
+                wikiBacklinkButton.classList.add("btn", "btn-secondary")
+                wikiBacklinkButton.setAttribute("role", "button")
+                wikiBacklinkButton.setAttribute("title", "Go to the original backlinks page")
+                wikiBacklinkButton.innerHTML = "Original Backlinks Page";
+                wikiBacklinkButton.setAttribute("href", JSINFO["whref"] + "?do=backlink")
 
                 /**
                  * The modal
@@ -39,7 +38,7 @@ window.addEventListener("DOMContentLoaded", function () {
                     .setCentered(true)
                     .setHeader(`Backlinks for the page (${pageId})`)
                     .addBody(html)
-                    .addFooterButton(dokuWikiBacklinkButton)
+                    .addFooterButton(wikiBacklinkButton)
                     .addFooterCloseButton()
                     .show();
             });

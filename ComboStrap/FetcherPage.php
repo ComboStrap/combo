@@ -33,6 +33,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
         self::MAIN_CONTENT_ELEMENT,
         self::MAIN_SIDE_ELEMENT,
         self::MAIN_FOOTER_ELEMENT,
+        self::PAGE_TOOL_ELEMENT
     ];
     const DATA_LAYOUT_CONTAINER_ATTRIBUTE = "data-layout-container";
     const DATA_EMPTY_ACTION_ATTRIBUTE = "data-empty-action";
@@ -130,7 +131,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
          * Get the HTML fragment
          * The first one should be the main because it has the frontmatter
          */
-        $mainElement = $this->pageElements[self::MAIN_CONTENT_ELEMENT];
+        $mainElement = $this->getPageElement(self::MAIN_CONTENT_ELEMENT);
         try {
 
             /**
@@ -148,7 +149,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
             $cache->addFileDependency($path);
         } catch (ExceptionNotFound $e) {
             // it should be found
-            throw new ExceptionNotFound("The main page markup document was not found. Error:{$e->getMessage()}", self::CANONICAL);
+            throw new ExceptionNotFound("The main page markup document was not found. Error: {$e->getMessage()}", self::CANONICAL);
         }
 
         /**

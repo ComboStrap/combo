@@ -7,11 +7,9 @@ use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\FetcherSystem;
 use ComboStrap\Mime;
 use ComboStrap\PluginUtility;
-use ComboStrap\StringUtility;
-use ComboStrap\StyleUtility;
 use ComboStrap\Url;
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 
 /**

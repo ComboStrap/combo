@@ -54,7 +54,7 @@ class HttpResponse
             ->setStatus($status);
     }
 
-    public static function createFromException(ExceptionBadArgument $e)
+    public static function createFromException(\Exception $e): HttpResponse
     {
         $httpResponse = HttpResponse::create();
         try {

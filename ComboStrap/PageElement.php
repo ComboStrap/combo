@@ -66,7 +66,7 @@ class PageElement
             case FetcherPage::MAIN_FOOTER_ELEMENT:
                 return "slot_main_footer";
             default:
-                throw new ExceptionRuntimeInternal("Internal: The element ($elementId) was unexpected.");
+                throw new ExceptionRuntimeInternal("Internal: The element ($elementId) was unexpected, it's not a slot");
         }
 
     }
@@ -138,6 +138,9 @@ class PageElement
     public
     function isSlot(): bool
     {
+        if ($this->getId() === FetcherPage::PAGE_TOOL_ELEMENT) {
+            return false;
+        }
         return !$this->domElement->hasChildrenElement();
     }
 
@@ -197,7 +200,7 @@ class PageElement
     }
 
     /**
-     * @throws ExceptionNotFound if the page/markup fragment was not found (a container element does not have any also)
+     * @throws ExceptionNotFound|ExceptionBadArgument if the page/markup fragment was not found (a container element does not have any also)
      */
     public function getPageFragmentFetcher(): FetcherPageFragment
     {

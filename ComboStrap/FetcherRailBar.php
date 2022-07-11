@@ -19,7 +19,7 @@ use dokuwiki\Menu\UserMenu;
  *
  * https://material.io/components/navigation-rail|Navigation rail
  */
-class FetcherRailBar extends IFetcherAbs
+class FetcherRailBar extends IFetcherAbs implements IFetcherString
 {
 
     const CANONICAL = "railbar";

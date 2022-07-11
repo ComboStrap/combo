@@ -8,7 +8,7 @@ window.addEventListener('load', async function () {
     let formData = new URLSearchParams();
     formData.append('call', 'combo');
     formData.append('fetcher', 'railbar');
-    formData.append('q', searchTerm);
+    formData.append('viewport', window.innerWidth.toString(10))
     let response = await fetch(DOKU_BASE + 'lib/exe/ajax.php',
         {
             method: "POST",
@@ -19,9 +19,8 @@ window.addEventListener('load', async function () {
         });
     let htmlFragment = await response.text();
 
-
     // Trim to never return a text node of whitespace as the result
-    pageToolContainer.insertAdjacentHTML('beforeend', trim(htmlFragment));
+    pageToolContainer.insertAdjacentHTML('beforeend', htmlFragment.trim());
 
 
 });

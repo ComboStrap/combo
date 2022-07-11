@@ -89,7 +89,7 @@ class FetcherSystem
                 return $fetcher;
             }
         }
-        throw new ExceptionNotFound("No fetcher found with the name ($fetcherName");
+        throw new ExceptionNotFound("No fetcher found with the name ($fetcherName)");
 
     }
 

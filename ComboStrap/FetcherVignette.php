@@ -39,22 +39,6 @@ class FetcherVignette extends FetcherImage
 
     private string $buster;
 
-    /**
-     * @param PageFragment $page
-     * @param Mime|null $mime
-     * @throws ExceptionBadArgument - bad mime
-     * @throws ExceptionNotFound - page not found
-     */
-    public function __construct(PageFragment $page, Mime $mime = null)
-    {
-        $this->setPage($page);
-        if ($mime === null) {
-            $mime = Mime::create(Mime::WEBP);
-        }
-        $this->setMime($mime);
-        parent::__construct();
-
-    }
 
 
     /**
@@ -63,7 +47,14 @@ class FetcherVignette extends FetcherImage
      */
     public static function createForPage(PageFragment $page, Mime $mime = null): FetcherVignette
     {
-        return new FetcherVignette($page, $mime);
+        $fetcherVignette = new FetcherVignette();
+        $fetcherVignette->setPage($page);
+        if ($mime === null) {
+            $mime = Mime::create(Mime::WEBP);
+        }
+        $fetcherVignette->setMime($mime);
+        return $fetcherVignette;
+
     }
 
     /**

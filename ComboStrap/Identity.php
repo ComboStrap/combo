@@ -98,8 +98,7 @@ class Identity
     {
         if ($wikiId === null) {
             try {
-                $wikiId = PageFragment::createPageFromGlobalWikiId()
-                    ->getPath()
+                $wikiId = WikiPath::getCurrentPagePath()
                     ->getWikiId();
             } catch (ExceptionNotFound $e) {
                 LogUtility::msg("Internal Error: The global ID is not defined, we couldn't detect the page requested. No writer permission given");

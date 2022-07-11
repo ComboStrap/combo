@@ -97,30 +97,29 @@ class SnippetManager
 
 
     /**
-     * Transform in dokuwiki format
+     * Returns all snippets (request and slot scoped)
      *
      * @return array of node type and an array of array of html attributes
      */
-    public function getAllSnippetsInDokuwikiArrayFormat(): array
+    public function getAllSnippets(): array
     {
-        $snippets = Snippet::getSnippets();
-        return $this->snippetsToDokuwikiArray($snippets);
+        return Snippet::getSnippets();
     }
 
     /**
-     * @return array - the slot snippets (not the request snippet)
+     * @return Snippet[] - the slot snippets (not the request snippet)
      */
-    public function getSlotSnippetsInDokuwikiArrayFormat(): array
+    private function getSlotSnippets(): array
     {
         $snippets = Snippet::getSnippets();
         $slotSnippets = [];
         foreach ($snippets as $snippet) {
-            if ($snippet->hasSlot(Snippet::REQUEST_SLOT)) {
+            if ($snippet->hasSlot(Snippet::REQUEST_SCOPE)) {
                 continue;
             }
             $slotSnippets[] = $snippet;
         }
-        return $this->snippetsToDokuwikiArray($slotSnippets);
+        return $slotSnippets;
     }
 
     /**
@@ -326,7 +325,7 @@ class SnippetManager
      *
      * This function should be called with a ACTION_HEADERS_SEND event
      * (not DOKUWIKI_STARTED because the {@link \action_plugin_combo_router} should
-     * have run to set back the wiki id propertly
+     * have run to set back the wiki id properly
      *
      * If you need to split the css by type of action, see {@link \action_plugin_combo_docss::handleCssForDoAction()}
      */
@@ -400,7 +399,7 @@ class SnippetManager
     function &attachSnippetFromRequest($componentName, $type, $internalOrUrlIdentifier): Snippet
     {
         $snippet = Snippet::getOrCreateSnippet($internalOrUrlIdentifier, $type, $componentName)
-            ->addSlot(Snippet::REQUEST_SLOT);
+            ->addSlot(Snippet::REQUEST_SCOPE);
         return $snippet;
     }
 
@@ -514,28 +513,49 @@ class SnippetManager
         return Snippet::getSnippets();
     }
 
-    public function getRequestSnippetsInDokuwikiArrayFormat(): array
+    private function getRequestSnippets(): array
     {
         $snippets = Snippet::getSnippets();
         $slotSnippets = [];
         foreach ($snippets as $snippet) {
-            if (!$snippet->hasSlot(Snippet::REQUEST_SLOT)) {
+            if (!$snippet->hasSlot(Snippet::REQUEST_SCOPE)) {
                 continue;
             }
             $slotSnippets[] = $snippet;
         }
-        return $this->snippetsToDokuwikiArray($slotSnippets);
+        return $slotSnippets;
     }
 
     /**
      * Output the snippet in HTML format
+     * The scope is mandatory:
+     *  * {@link Snippet::ALL_SCOPE}
+     *  * {@link Snippet::REQUEST_SCOPE}
+     *  * {@link Snippet::SLOT_SCOPE}
+     *
      * @return string - html string
      */
-    public function toHtml(): string
+    private function toHtml($scope): string
     {
-        $snippets = $this->getSlotSnippetsInDokuwikiArrayFormat();
+        switch ($scope) {
+            case Snippet::SLOT_SCOPE:
+                $snippets = $this->getSlotSnippets();
+                break;
+            case Snippet::REQUEST_SCOPE:
+                $snippets = $this->getRequestSnippets();
+                break;
+            default:
+            case Snippet::ALL_SCOPE:
+                $snippets = $this->getAllSnippets();
+                if($scope!==Snippet::ALL_SCOPE){
+                    LogUtility::internalError("Scope ($scope) is unknown, we have defaulted to all");
+                }
+                break;
+        }
+
+        $snippetsArray = $this->snippetsToDokuwikiArray($snippets);
         $xhtmlContent = "";
-        foreach ($snippets as $htmlElement => $tags) {
+        foreach ($snippetsArray as $htmlElement => $tags) {
 
             foreach ($tags as $tag) {
                 $xhtmlContent .= "<$htmlElement";
@@ -581,6 +601,16 @@ class SnippetManager
 
         }
         return $xhtmlContent;
+    }
+
+    public function toHtmlForAllSnippets(): string
+    {
+        return $this->toHtml(Snippet::ALL_SCOPE);
+    }
+
+    public function toHtmlForSlotSnippets(): string
+    {
+        return $this->toHtml(Snippet::SLOT_SCOPE);
     }
 
 

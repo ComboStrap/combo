@@ -1,0 +1,43 @@
+#railbar-fixed-cs {
+    position: absolute;
+    top: 0;
+    right: -66px;
+    width: 44px;
+}
+
+#railbar-fixed-cs div {
+    position: fixed;
+}
+
+#railbar-fixed-cs div ul {
+    position: absolute;
+    right: -22px;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+#railbar-fixed-cs div ul li a span {
+    display: none;
+}
+
+[dir=rtl] #railbar-fixed-cs {
+    right: auto;
+    left: -44px;
+}
+
+[dir=rtl] #railbar-fixed-cs div.tools ul {
+    right: auto;
+    left: 0;
+    text-align: left;
+}
+
+#railbar-fixed-cs:hover ul {
+    background-color: #fff;
+    border-color: #ccc;
+    border-radius: 2px;
+    box-shadow: 2px 2px 2px #999;
+}
+
+#railbar-fixed-cs:hover ul li a span {
+    display: inline-block;
+}

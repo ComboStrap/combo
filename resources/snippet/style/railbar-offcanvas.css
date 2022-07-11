@@ -1,0 +1,31 @@
+#railbar-offcanvas-wrapper-cs .btn {
+    background-color: #e2f1ff;
+    border-color: #e2f1ff;
+    color: #2b73b7;
+}
+
+#railbar-offcanvas-open-cs {
+    position: fixed;
+    right: 0;
+    top: 45vh;
+}
+
+#railbar-offcanvas-open-cs:before {
+    content: "<";
+}
+
+#railbar-offcanvas-close-cs {
+    position: relative;
+    left: -37px;
+    width: fit-content;
+    top: 45vh;
+    opacity: 1;
+}
+
+#railbar-offcanvas-close-cs:before {
+    content: ">";
+}
+
+#railbar-offcanvas-cs {
+    width: fit-content;
+}

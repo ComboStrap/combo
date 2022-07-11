@@ -69,7 +69,7 @@ class Snippet implements JsonSerializable
      *
      * They are unique on a request scope
      *
-     * TlDR: The snippet does not depends to a slot and cannot therefore be cached along.
+     * TlDR: The snippet does not depends to a slot but to a {@link FetcherPage page} and cannot therefore be cached along.
      *
      * The code that adds this snippet is not created by the parsing of content
      * or depends on the page.
@@ -78,8 +78,13 @@ class Snippet implements JsonSerializable
      * Generally, this is an action plugin with a `TPL_METAHEADER_OUTPUT` hook
      * such as {@link Bootstrap}, {@link HistoricalBreadcrumbMenuItem},
      * ,...
+     *
+     * The request scope snippets are needed in admin page where there is no parsing at all
+     *
      */
-    const REQUEST_SLOT = "request";
+    const REQUEST_SCOPE = "request";
+    const SLOT_SCOPE = "slot";
+    const ALL_SCOPE = "all";
 
 
     protected static $globalSnippets;
@@ -121,7 +126,7 @@ class Snippet implements JsonSerializable
 
     /**
      * @var array - the slots that needs this snippet (as key to get only one snippet by scope)
-     * A special slot exists for {@link Snippet::REQUEST_SLOT}
+     * A special slot exists for {@link Snippet::REQUEST_SCOPE}
      * where a snippet is for the whole requested page
      *
      * It's also used in the cache because not all bars
@@ -129,7 +134,7 @@ class Snippet implements JsonSerializable
      *
      * There is two scope:
      *   * a slot - cached along the HTML
-     *   * or  {@link Snippet::REQUEST_SLOT} - never cached
+     *   * or  {@link Snippet::REQUEST_SCOPE} - never cached
      */
     private $slots;
     /**

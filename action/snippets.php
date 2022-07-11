@@ -145,7 +145,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             }
         }
 
-        $allSnippets = $snippetManager->getAllSnippetsInDokuwikiArrayFormat();
+        $allSnippets = $snippetManager->snippetsToDokuwikiArray($snippetManager->getAllSnippets());
         foreach ($allSnippets as $tagType => $tags) {
 
             foreach ($tags as $tag) {
@@ -233,7 +233,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             $class = self::CLASS_SNIPPET_IN_CONTENT;
             $xhtmlContent .= <<<EOF
 <div class="$class">
-    {$snippetManager->toHtml()}
+    {$snippetManager->toHtmlForSlotSnippets()}
 </div>
 EOF;
             $snippetManager->reset();

@@ -114,6 +114,22 @@ class syntax_plugin_combo_math extends DokuWiki_Syntax_Plugin
             case 'xhtml':
             case 'odt':
                 /** @var Doku_Renderer_xhtml $renderer */
+
+                /**
+                 * MathJax finds the item via the the FindMath Interface
+                 *
+                 * FindMath Interface that has three implementations (https://github.com/mathjax/MathJax-src/blob/master/ts/core/FindMath.ts)
+                 *      * tex (https://github.com/mathjax/MathJax-src/blob/master/ts/input/tex.ts)
+                 *      * asciimath (https://github.com/mathjax/MathJax-src/blob/master/ts/input/asciimath.ts)
+                 *      * mathml (https://github.com/mathjax/MathJax-src/blob/master/ts/input/mathml.ts)
+                 *
+                 * For Tex and AsciiMath, FindMath will all text text
+                 * and scan them to find the math formula through delimiter.
+                 * The ProtoItem interface (MathJax Item) stores the start and end location - https://github.com/mathjax/MathJax-src/blob/master/ts/core/MathItem.ts#L219
+                 *
+                 * We output then the math expression as character data that will end up
+                 * in a text node.
+                 */
                 $renderer->doc .= $renderer->_xmlEntities($content) . DOKU_LF;
 
                 /**
@@ -142,9 +158,9 @@ EOD;
 
                 $snippetManager
                     ->attachInternalJavascriptForSlot(
-                    self::TAG,
-                    $headHtmlElement
-                )
+                        self::TAG,
+                        $headHtmlElement
+                    )
                     ->addHtmlAttribute("type", "text/x-mathjax-config");
                 $snippetManager
                     ->attachJavascriptLibraryForSlot(
@@ -156,6 +172,7 @@ EOD;
 
             case 'latexport':
                 // Pass math expressions to latexport renderer
+                /** @noinspection PhpUndefinedMethodInspection */
                 $renderer->mathjax_content($content);
                 break;
 
@@ -169,12 +186,12 @@ EOD;
 
     }
 
-    static public function getTags()
+    static public function getTags(): array
     {
         return PluginUtility::getTags(get_called_class());
     }
 
-    public static function getComponentName()
+    public static function getComponentName(): string
     {
         return PluginUtility::getTagName(get_called_class());
     }

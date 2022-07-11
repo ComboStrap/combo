@@ -22,11 +22,12 @@ use dokuwiki\Menu\UserMenu;
 class FetcherRailBar extends IFetcherAbs implements IFetcherString
 {
 
+    use FetcherTraitLocalPath;
+
     const CANONICAL = "railbar";
     const FIXED_LAYOUT = "fixed";
     const OFFCANVAS_LAYOUT = "offcanvas";
 
-    private WikiPath $path;
     private int $requestedViewPort = 1000;
 
 
@@ -40,6 +41,19 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
         return StyleUtility::addComboStrapSuffix(self::CANONICAL);
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
+     */
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): IFetcher
+    {
+        $this->buildOriginalPathFromTagAttributes($tagAttributes);
+        return parent::buildFromTagAttributes($tagAttributes);
+    }
+
+
     function getFetchPath(): Path
     {
         throw new ExceptionRuntimeInternal("No fetch path: Railbar is not a file but a dynamic HTML document");
@@ -49,8 +63,8 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
     {
 
         $wikiRequest = WikiRequestEnvironment::createAndCaptureState()
-            ->setNewRunningId($this->path->getWikiId())
-            ->setNewRequestedId($this->path->getWikiId())
+            ->setNewRunningId($this->getOriginalPath()->getWikiId())
+            ->setNewRequestedId($this->getOriginalPath()->getWikiId())
             ->setNewAct("show");
 
         try {

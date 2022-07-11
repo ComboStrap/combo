@@ -142,6 +142,7 @@ class FileSystems
 
 
     /**
+     * @return Path[]
      */
     public static function getChildren(Path $path, string $type = null): array
     {

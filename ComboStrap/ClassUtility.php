@@ -30,6 +30,11 @@ class ClassUtility
 
     public static function getClassImplementingInterface(string $interface): array
     {
+        /**
+         * The class created by reflection are not loaded
+         * We need to load them explicitly
+         */
+        self::loadingComboStrapClasses();
         $class = [];
         $getDeclaredClasses = get_declared_classes();
         foreach ($getDeclaredClasses as $className) {
@@ -59,5 +64,17 @@ class ClassUtility
     public static function isLoaded(string $class): bool
     {
         return class_exists($class, false);
+    }
+
+    private static function loadingComboStrapClasses()
+    {
+        try {
+            $parent = ClassUtility::getClassPath(ClassUtility::class)->getParent();
+        } catch (ExceptionNotFound|\ReflectionException $e) {
+            throw new ExceptionRuntimeInternal("We could load the ClassUtility class. Error: {$e->getMessage()}");
+        }
+        foreach (FileSystems::getChildrenLeaf($parent) as $child) {
+            include_once $child->toPathString();
+        }
     }
 }

@@ -27,6 +27,7 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
     const CANONICAL = "railbar";
     const FIXED_LAYOUT = "fixed";
     const OFFCANVAS_LAYOUT = "offcanvas";
+    const VIEWPORT_WIDTH = "viewport";
 
     private int $requestedViewPort = 1000;
 
@@ -49,7 +50,21 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
      */
     public function buildFromTagAttributes(TagAttributes $tagAttributes): IFetcher
     {
+        /**
+         * Capture the id
+         */
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
+        /**
+         * Capture the
+         */
+        $viewPortWidth = $tagAttributes->getValueAndRemoveIfPresent(self::VIEWPORT_WIDTH);
+        if ($viewPortWidth !== null) {
+            try {
+                $this->setRequestedViewPort(DataType::toInteger($viewPortWidth));
+            } catch (ExceptionBadArgument $e) {
+                throw new ExceptionBadArgument("The viewport width is not a valid integer. Error:{$e->getMessage()}", self::CANONICAL);
+            }
+        }
         return parent::buildFromTagAttributes($tagAttributes);
     }
 
@@ -181,7 +196,7 @@ EOF;
             return self::FIXED_LAYOUT;
         }
         $breakPoint = 1000; // to implement
-        if($this->getRequestedViewPort()> $breakPoint){
+        if ($this->getRequestedViewPort() > $breakPoint) {
             return self::FIXED_LAYOUT;
         } else {
             return self::OFFCANVAS_LAYOUT;

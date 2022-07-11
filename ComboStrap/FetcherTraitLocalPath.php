@@ -12,7 +12,7 @@ namespace ComboStrap;
  *
  *
  * This is the case for the {@link FetcherSvg image}
- * and {@link FetcherRaster}
+ * and {@link FetcherRaster} but also for the {@link FetcherRailBar} that depends on the requested page
  *
  * Not all image depends on a path, that's why this is a trait to
  * share the code

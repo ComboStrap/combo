@@ -3,7 +3,7 @@
 namespace ComboStrap;
 
 /**
- * A class that returns {@link Fetcher::getFetchPath() a path}
+ * A class that returns {@link IFetcher::getFetchPath() a path}
  *
  * It represents a fetch file and possible processing attributes
  *
@@ -11,8 +11,8 @@ namespace ComboStrap;
  *   * svg file if the requested image width is set, it will generate it
  *
  * The request may come from:
- *   * a {@link Fetcher::buildFromUrl() URL}
- *   * a {@link Fetcher::buildFromTagAttributes() attributes}
+ *   * a {@link IFetcher::buildFromUrl() URL}
+ *   * a {@link IFetcher::buildFromTagAttributes() attributes}
  *
  * The hierarchy is {@link Mime} based.
  *
@@ -26,7 +26,7 @@ namespace ComboStrap;
  *
 
  */
-interface Fetcher
+interface IFetcher
 {
     /**
      * buster got the same value
@@ -52,11 +52,6 @@ interface Fetcher
      */
     function getFetchUrl(Url $url = null): Url;
 
-    /**
-     * Return the path of the resource
-     * @return Path
-     */
-    function getFetchPath(): Path;
 
     /**
      * The buster that should be added to the url.
@@ -69,7 +64,7 @@ interface Fetcher
     /**
      * @return Mime - the mime of the output
      *
-     * You can also ask it via {@link Fetcher::getFetchPath()} but it will
+     * You can also ask it via {@link IFetcher::getFetchPath()} but it will
      * perform the processing. If you want to create a cache file path with the good extension
      * this is the way to go.
      */
@@ -77,17 +72,17 @@ interface Fetcher
 
     /**
      * A convenient way to build a fetcher from a URL
-     * This method calls the function {@link Fetcher::buildFromTagAttributes()}
+     * This method calls the function {@link IFetcher::buildFromTagAttributes()}
      * @param Url $url
-     * @return Fetcher
+     * @return IFetcher
      */
-    public function buildFromUrl(Url $url): Fetcher;
+    public function buildFromUrl(Url $url): IFetcher;
 
     /**
      * @param TagAttributes $tagAttributes - the attributes
-     * @return Fetcher
+     * @return IFetcher
      */
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): Fetcher;
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): IFetcher;
 
     /**
      * Get the cache value requested

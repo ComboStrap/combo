@@ -380,6 +380,12 @@ class SnippetManager
         return $snippet;
     }
 
+    public function &attachInternalJavascriptForRequest($snippetId): Snippet
+    {
+        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE);
+        return $snippet;
+    }
+
     /**
      * @param string $componentId
      * @param string $type

@@ -5,6 +5,7 @@ use ComboStrap\FileSystems;
 use ComboStrap\Json;
 use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
+use ComboStrap\Mime;
 use ComboStrap\PluginUtility;
 use ComboStrap\Search;
 use ComboStrap\Sqlite;
@@ -84,8 +85,9 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
 
         global $lang;
         if (!count($pages)) {
-            \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
-                ->sendHtmlMessage("<div>" . $lang['nothingfound'] . "</div>");
+            \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
+                ->setBody("<div>" . $lang['nothingfound'] . "</div>", Mime::getHtml())
+                ->send();
             return;
         }
 
@@ -132,8 +134,9 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
 </div>
 EOF;
         }
-        \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
-            ->sendHtmlMessage($html);
+        \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
+            ->setBody($html, Mime::getHtml())
+            ->send();
 
     }
 

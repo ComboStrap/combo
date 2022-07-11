@@ -25,7 +25,7 @@ class CacheLog
         ];
     const CANONICAL = "support";
 
-    public static function deleteCacheIfExistsAndLog(FetcherSource $outputDocument, string $event, string $message)
+    public static function deleteCacheIfExistsAndLog(IFetcherSource $outputDocument, string $event, string $message)
     {
         $instructionsFile = $outputDocument->getFetchPath();
         if (FileSystems::exists($instructionsFile)) {
@@ -45,7 +45,7 @@ class CacheLog
         }
     }
 
-    public static function renderCacheAndLog(FetcherSource $outputDocument, string $event, string $message)
+    public static function renderCacheAndLog(IFetcherSource $outputDocument, string $event, string $message)
     {
         $outputDocument->getFetchPath();
         try {

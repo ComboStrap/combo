@@ -11,7 +11,7 @@ namespace ComboStrap;
  *
  *
  */
-interface CachedDocument extends Fetcher
+interface CachedDocument extends IFetcher
 {
 
 

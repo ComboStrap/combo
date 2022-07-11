@@ -53,7 +53,7 @@ class TagAttributes
         self::SCRIPT_KEY, // no script attribute for security reason
         TagAttributes::TYPE_KEY, // type is the component class
         MediaMarkup::LINKING_KEY, // internal to image
-        FetcherAbs::CACHE_KEY, // internal also
+        IFetcherAbs::CACHE_KEY, // internal also
         \syntax_plugin_combo_webcode::RENDERING_MODE_ATTRIBUTE,
         Vertical::VERTICAL_ATTRIBUTE,
         self::OPEN_TAG,

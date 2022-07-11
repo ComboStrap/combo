@@ -99,7 +99,7 @@ class MediaMarkup
     private ?string $lazyLoadMethod = null;
     private TagAttributes $tagAttributes;
     private ?string $linkingClass = null;
-    private Fetcher $fetcher;
+    private IFetcher $fetcher;
 
     private function __construct()
     {
@@ -169,7 +169,7 @@ class MediaMarkup
         return (new MediaMarkup())->setUrl($fetchUrl);
     }
 
-    public static function createFromFetcher(Fetcher $fetcher): MediaMarkup
+    public static function createFromFetcher(IFetcher $fetcher): MediaMarkup
     {
         return (new MediaMarkup())
             ->setFetcher($fetcher);
@@ -635,7 +635,7 @@ class MediaMarkup
         }
 
         try {
-            $this->fetcher = FetcherAbs::createFetcherFromFetchUrl($fetchUrl);
+            $this->fetcher = FetcherSystem::createPathFetcherFromUrl($fetchUrl);
         } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionInternal|ExceptionNotExists|ExceptionNotFound $e) {
             // we don't support http fetch
             if (!($this->getMarkupRef()->getSchemeType() === MarkupRef::WEB_URI)) {
@@ -673,10 +673,10 @@ class MediaMarkup
 
     /**
      * Private method use {@link MediaMarkup::createFromFetcher()} to create a media markup via a Fetcher
-     * @param Fetcher $fetcher
+     * @param IFetcher $fetcher
      * @return MediaMarkup
      */
-    private function setFetcher(Fetcher $fetcher): MediaMarkup
+    private function setFetcher(IFetcher $fetcher): MediaMarkup
     {
         $this->fetcher = $fetcher;
         return $this;
@@ -684,9 +684,9 @@ class MediaMarkup
 
 
     /**
-     * @return Fetcher
+     * @return IFetcher
      */
-    public function getFetcher(): Fetcher
+    public function getFetcher(): IFetcher
     {
         return $this->fetcher;
     }

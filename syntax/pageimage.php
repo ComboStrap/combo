@@ -11,7 +11,7 @@ use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetcherImage;
-use ComboStrap\FetcherLocalImage;
+use ComboStrap\IFetcherLocalImage;
 use ComboStrap\FetcherSvg;
 use ComboStrap\FetcherVignette;
 use ComboStrap\FirstImage;
@@ -359,7 +359,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
          * Take the image and the page images
          * of the first page with an image
          */
-        $selectedPageImage = FetcherLocalImage::createImageFetchFromPageImageMetadata($page);
+        $selectedPageImage = IFetcherLocalImage::createImageFetchFromPageImageMetadata($page);
         $stringRatio = $tagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
         if ($stringRatio === null) {
 
@@ -382,7 +382,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
         foreach ($pageImages as $pageImage) {
             $path = $pageImage->getImagePath();
             try {
-                $fetcherImage = FetcherLocalImage::createImageFetchFromPath($path);
+                $fetcherImage = IFetcherLocalImage::createImageFetchFromPath($path);
             } catch (ExceptionBadArgument $e) {
                 LogUtility::msg("An image object could not be build from ($path). Is it an image file ?. Error: {$e->getMessage()}");
                 continue;

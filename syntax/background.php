@@ -6,7 +6,7 @@ use ComboStrap\Background;
 use ComboStrap\FetcherSvg;
 use ComboStrap\MarkupRef;
 use ComboStrap\MediaMarkup;
-use ComboStrap\FetcherAbs;
+use ComboStrap\IFetcherAbs;
 use ComboStrap\FetcherCache;
 use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
@@ -204,7 +204,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                                 MediaMarkup::DOKUWIKI_SRC => $imageAttribute[0],
                                 Dimension::WIDTH_KEY => $imageAttribute[3],
                                 Dimension::HEIGHT_KEY => $imageAttribute[4],
-                                FetcherAbs::CACHE_KEY => $imageAttribute[5]
+                                IFetcherAbs::CACHE_KEY => $imageAttribute[5]
                             ];
                         }
                         $backgroundAttributes[Background::BACKGROUND_IMAGE] = $backgroundImageAttribute;

@@ -24,7 +24,7 @@ trait FetcherTraitLocalPath
     private WikiPath $path;
 
 
-    public function setOriginalPath(WikiPath $dokuPath): Fetcher
+    public function setOriginalPath(WikiPath $dokuPath): IFetcher
     {
         $this->path = $dokuPath;
         return $this;
@@ -32,13 +32,13 @@ trait FetcherTraitLocalPath
 
     /**
      * @param TagAttributes $tagAttributes
-     * @return Fetcher
+     * @return IFetcher
      * @throws ExceptionBadArgument - if the media property was not found and the path was not set
      * @throws ExceptionBadSyntax - if the media has a bad syntax (no width, ...)
      * @throws ExceptionNotExists -  if the media does not exists
      * @throws ExceptionNotFound - if the media or any mandatory metadata (ie dimension) was not found
      */
-    public function buildOriginalPathFromTagAttributes(TagAttributes $tagAttributes): Fetcher
+    public function buildOriginalPathFromTagAttributes(TagAttributes $tagAttributes): IFetcher
     {
 
         if (!isset($this->path)) {

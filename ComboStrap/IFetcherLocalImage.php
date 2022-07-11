@@ -3,13 +3,11 @@
 namespace ComboStrap;
 
 /**
- * A local image
  *
- * This was to check for the social image
- * in a list of image if the image was also the first image
- * based on the path.
+ * This class represents a fetcher that sends back a local image processed or not.
+ *
  */
-abstract class FetcherLocalImage extends FetcherImage implements FetcherSource
+abstract class IFetcherLocalImage extends FetcherImage implements IFetcherSource
 {
 
     /**
@@ -17,7 +15,7 @@ abstract class FetcherLocalImage extends FetcherImage implements FetcherSource
      * @return FetcherRaster|FetcherSvg
      * @throws ExceptionBadArgument - if the path is not an image
      */
-    public static function createImageFetchFromPath(WikiPath $path): FetcherLocalImage
+    public static function createImageFetchFromPath(WikiPath $path): IFetcherLocalImage
     {
 
         try {
@@ -48,13 +46,13 @@ abstract class FetcherLocalImage extends FetcherImage implements FetcherSource
     /**
      * @param string $imageId
      * @param string|null $rev
-     * @return FetcherLocalImage
+     * @return IFetcherLocalImage
      * @throws ExceptionBadArgument - if the path is not an image
      */
-    public static function createImageFetchFromId(string $imageId, string $rev = null): FetcherLocalImage
+    public static function createImageFetchFromId(string $imageId, string $rev = null): IFetcherLocalImage
     {
         $dokuPath = WikiPath::createMediaPathFromId($imageId, $rev);
-        return FetcherLocalImage::createImageFetchFromPath($dokuPath);
+        return IFetcherLocalImage::createImageFetchFromPath($dokuPath);
     }
 
     /**
@@ -66,7 +64,7 @@ abstract class FetcherLocalImage extends FetcherImage implements FetcherSource
         foreach ($page->getPageMetadataImages() as $pageMetadataImage) {
             try {
                 $pageMetadataImagePath = $pageMetadataImage->getImagePath();
-                $selectedPageImage = FetcherLocalImage::createImageFetchFromPath($pageMetadataImagePath);
+                $selectedPageImage = IFetcherLocalImage::createImageFetchFromPath($pageMetadataImagePath);
             } catch (ExceptionBadArgument $e) {
                 LogUtility::internalError("The file ($pageMetadataImagePath) is not a valid image for the page ($page). Error: {$e->getMessage()}");
                 continue;

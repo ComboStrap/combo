@@ -133,10 +133,15 @@ class Url extends PathAbs
         return new Url();
     }
 
-    public static function createFromGetGlobalVariable(): Url
+    public static function createFromGetOrPostGlobalVariable(): Url
     {
+        /**
+         * $_REQUEST is a merge between get and post property
+         * Shared check between post and get HTTP method
+         * {@link \TestRequest} is using it
+         */
         $url = Url::createEmpty();
-        foreach ($_GET as $key => $value) {
+        foreach ($_REQUEST as $key => $value) {
             if (is_array($value)) {
                 foreach ($value as $val) {
                     $url->addQueryParameter($key, $val);
@@ -566,7 +571,7 @@ class Url extends PathAbs
         if ($this->hasProperty(FetcherLocalPath::$MEDIA_QUERY_PARAMETER)) {
 
             try {
-                return FetcherLocalPath::createFetcherFromFetchUrl($this)->getMime()->getExtension();
+                return FetcherSystem::createPathFetcherFromUrl($this)->getMime()->getExtension();
             } catch (ExceptionCompile $e) {
                 LogUtility::internalError("Build error from a Media Fetch URL. We were unable to get the mime. Error: {$e->getMessage()}");
             }

@@ -36,23 +36,58 @@ class HttpResponse
      * @var array
      */
     private $headers = [];
-    private $msg;
 
     private string $body;
+    private Mime $mime;
 
 
     /**
-     * Error constructor.
+     * TODO: constructor should be
      */
-    public function __construct($status, $msg)
+    private function __construct()
     {
-        $this->status = $status;
-        $this->msg = $msg;
     }
 
-    public static function create(int $status, string $msg = null): HttpResponse
+    public static function createForStatus(int $status): HttpResponse
     {
-        return new HttpResponse($status, $msg);
+        return (new HttpResponse())
+            ->setStatus($status);
+    }
+
+    public static function createFromException(ExceptionBadArgument $e)
+    {
+        $httpResponse = HttpResponse::create();
+        try {
+            $status = self::getStatusFromException($e);
+            $httpResponse->setStatus($status);
+        } catch (ExceptionBadArgument $e) {
+            $httpResponse->setStatus(HttpResponse::STATUS_INTERNAL_ERROR)
+                ->setBody($e->getMessage(), Mime::getText());
+        }
+        return $httpResponse;
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public static function getStatusFromException(\Exception $e): int
+    {
+        if ($e instanceof ExceptionNotFound || $e instanceof ExceptionNotExists) {
+            return HttpResponse::STATUS_NOT_FOUND;
+        } elseif ($e instanceof ExceptionBadArgument) {
+            return HttpResponse::STATUS_BAD_REQUEST; // bad request
+        } elseif ($e instanceof ExceptionBadSyntax) {
+            return 415; // unsupported media type
+        } elseif ($e instanceof ExceptionBadState || $e instanceof ExceptionInternal) {
+            return HttpResponse::STATUS_INTERNAL_ERROR; //
+        }
+        throw new ExceptionBadArgument("The exception is unknown.");
+    }
+
+
+    public static function create(): HttpResponse
+    {
+        return new HttpResponse();
     }
 
 
@@ -62,11 +97,15 @@ class HttpResponse
         return $this;
     }
 
-    public function send($payload = null, $contentType = Mime::PLAIN_TEXT)
+
+    public function send()
     {
 
-        Http::setMime($contentType);
-
+        if (isset($this->mime)) {
+            Http::setMime($this->mime->toString());
+        } else {
+            Http::setMime(Mime::PLAIN_TEXT);
+        }
 
         // header should before the status
         // because for instance a `"Location` header changes the status to 302
@@ -87,17 +126,17 @@ class HttpResponse
         /**
          * Payload
          */
-        if ($payload !== null) {
-            echo $payload;
+        if (isset($this->body)) {
+            echo $this->body;
         }
 
         /**
          * Exit
          */
         if (!PluginUtility::isTest()) {
-            if ($this->status !== self::STATUS_ALL_GOOD && $this->msg !== null) {
+            if ($this->status !== self::STATUS_ALL_GOOD && isset($this->body)) {
                 // if this is a 304, there is no body, no message
-                LogUtility::log2file("Bad Http Response: $this->status : $this->msg", LogUtility::LVL_MSG_ERROR, $this->canonical);
+                LogUtility::log2file("Bad Http Response: $this->status : {$this->getBody()}", LogUtility::LVL_MSG_ERROR, $this->canonical);
             }
             exit;
         } else {
@@ -115,8 +154,8 @@ class HttpResponse
              */
             $testRequest = TestRequest::getRunning();
 
-            if ($testRequest !== null) {
-                $testRequest->addData(self::EXIT_KEY, $payload);
+            if ($testRequest !== null && isset($this->body)) {
+                $testRequest->addData(self::EXIT_KEY, $this->body);
             }
 
             /**
@@ -153,29 +192,21 @@ class HttpResponse
     /**
      * @param string|array $messages
      */
-    public function sendMessage($messages)
+    public function setBodyAsJsonMessage($messages): HttpResponse
     {
         if (is_array($messages) && sizeof($messages) == 0) {
             $messages = ["No information, no errors"];
         }
         $message = json_encode(["message" => $messages]);
-        $this->send($message, Mime::JSON);
-
+        $this->setBody($message, Mime::getJson());
+        return $this;
     }
 
-    public function sendTxtMessage($message)
-    {
-        $this->send($message);
-    }
 
-    public function sendHtmlMessage(string $html)
-    {
-        $this->send($html, Mime::HTML);
-    }
-
-    public function setBody(string $body): HttpResponse
+    public function setBody(string $body, Mime $mime): HttpResponse
     {
         $this->body = $body;
+        $this->mime = $mime;
         return $this;
     }
 
@@ -244,5 +275,25 @@ class HttpResponse
     {
         return XmlDocument::createHtmlDocFromMarkup($this->getBody());
     }
+
+    public function setStatus(int $status): HttpResponse
+    {
+        $this->status = $status;
+        return $this;
+    }
+
+
+    public function setStatusAndBodyFromException(\Exception $e): HttpResponse
+    {
+
+        try {
+            $this->setStatus(self::getStatusFromException($e));
+        } catch (ExceptionBadArgument $e) {
+            $this->setStatus(self::STATUS_INTERNAL_ERROR);
+            $this->setBody($e->getMessage(), Mime::getText());
+        }
+        return $this;
+    }
+
 
 }

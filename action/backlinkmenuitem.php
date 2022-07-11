@@ -103,10 +103,11 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
         }
 
         if (empty($id)) {
-            \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_BAD_REQUEST)
+            \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_BAD_REQUEST)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
-                ->send("The page id should not be empty", Mime::HTML);
+                ->setBody("The page id should not be empty", Mime::getHtml())
+                ->send();
             return;
         }
 
@@ -115,10 +116,11 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
         $html = syntax_plugin_combo_related::getHtmlRelated($backlinkPages);
 
 
-        \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
+        \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
             ->setEvent($event)
             ->setCanonical(self::CANONICAL)
-            ->send($html, Mime::HTML);
+            ->setBody($html, Mime::getHtml())
+            ->send();
 
     }
 

@@ -9,10 +9,10 @@ namespace ComboStrap;
  * width, height, ...)
  *
  * Image may be generated that's why they don't extends {@link FetcherLocalPath}.
- * Image that depends on a source file use the {@link FetcherTraitLocalPath} and extends {@link FetcherLocalImage}
+ * Image that depends on a source file use the {@link FetcherTraitLocalPath} and extends {@link IFetcherLocalImage}
  *
  */
-abstract class FetcherImage extends FetcherAbs
+abstract class FetcherImage extends IFetcherAbs implements IFetcherPath
 {
 
     const TOK = "tok";
@@ -94,7 +94,7 @@ abstract class FetcherImage extends FetcherAbs
         /**
          * Dokuwiki Compliance
          */
-        if (!($this instanceof FetcherLocalImage)) {
+        if (!($this instanceof IFetcherLocalImage)) {
             throw new ExceptionNotNeeded("No tok for non local image");
         }
         try {

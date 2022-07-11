@@ -135,6 +135,15 @@ class Mime
         }
     }
 
+    public static function getText(): Mime
+    {
+        try {
+            return Mime::createFromExtension("txt");
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntime("Txt is a known extension and should not throw. Error :{$e->getMessage()}");
+        }
+    }
+
     public function __toString()
     {
         return $this->mime;

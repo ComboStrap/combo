@@ -5,7 +5,7 @@ namespace ComboStrap;
 /**
  * Fetcher that create their output from a source file
  */
-interface FetcherSource extends Fetcher
+interface IFetcherSource extends IFetcher
 {
 
     public function getOriginalPath(): WikiPath;

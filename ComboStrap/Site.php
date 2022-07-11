@@ -917,7 +917,7 @@ class Site
                 if (!Identity::isReader($logoImagePath->getWikiId())) {
                     continue;
                 }
-                $imageFetcher = FetcherLocalImage::createImageFetchFromPath($logoImagePath)
+                $imageFetcher = IFetcherLocalImage::createImageFetchFromPath($logoImagePath)
                     ->setRequestedHeight(72)
                     ->setRequestedWidth(72);
                 if ($imageFetcher instanceof FetcherSvg) {

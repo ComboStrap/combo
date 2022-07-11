@@ -10,7 +10,7 @@ use dokuwiki\Cache\CacheRenderer;
 use Exception;
 use http\Exception\RuntimeException;
 
-class FetcherPageFragment extends FetcherAbs implements FetcherSource
+class FetcherPageFragment extends IFetcherAbs implements IFetcherSource
 {
 
     use FetcherTraitLocalPath;
@@ -420,7 +420,7 @@ class FetcherPageFragment extends FetcherAbs implements FetcherSource
         try {
             $requestedCache = $this->getRequestedCache();
         } catch (ExceptionNotFound $e) {
-            $requestedCache = FetcherAbs::RECACHE_VALUE;
+            $requestedCache = IFetcherAbs::RECACHE_VALUE;
         }
         $cacheAge = $this->getCacheMaxAgeInSec($requestedCache);
         return $this->cacheAfterRendering ? $cacheAge : 0;

@@ -82,7 +82,7 @@ class LdJson extends MetadataJson
             if (in_array($mime, $supportedMime)) {
                 if (FileSystems::exists($pageImagePath)) {
                     try {
-                        $fetcherPageImage = FetcherLocalImage::createImageFetchFromPath($pageImagePath);
+                        $fetcherPageImage = IFetcherLocalImage::createImageFetchFromPath($pageImagePath);
                     } catch (ExceptionBadArgument $e) {
                         LogUtility::error("The image ($pageImagePath) could not be added as page image. Error: {$e->getMessage()}");
                         continue;

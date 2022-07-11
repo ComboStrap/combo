@@ -61,7 +61,7 @@ class MarkupRef
     private string $ref;
     private ?Url $url = null;
 
-    private ?WikiPath $path = null;
+    private ?Path $path = null;
     private ?InterWiki $interWiki = null;
 
 
@@ -519,10 +519,10 @@ class MarkupRef
             /**
              * Cache
              */
-            $noCacheValue = FetcherAbs::NOCACHE_VALUE;
+            $noCacheValue = IFetcherAbs::NOCACHE_VALUE;
             $found = preg_match('/^(' . $noCacheValue . ')/i', $token, $matches);
             if ($found) {
-                $this->url->addQueryParameter(FetcherAbs::CACHE_KEY, $noCacheValue);
+                $this->url->addQueryParameter(IFetcherAbs::CACHE_KEY, $noCacheValue);
                 $token = substr($token, strlen($noCacheValue));
                 if ($token == "") {
                     // no anchor behind we continue

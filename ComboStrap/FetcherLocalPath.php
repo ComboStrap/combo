@@ -5,7 +5,7 @@ namespace ComboStrap;
 /**
  * Return raw files
  */
-class FetcherLocalPath extends FetcherAbs implements FetcherSource
+class FetcherLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherSource
 {
 
     use FetcherTraitLocalPath;
@@ -78,7 +78,7 @@ class FetcherLocalPath extends FetcherAbs implements FetcherSource
 
 
     /**
-     * Buster for the {@link Fetcher} interface
+     * Buster for the {@link IFetcher} interface
      * @throws ExceptionNotFound
      */
     function getBuster(): string

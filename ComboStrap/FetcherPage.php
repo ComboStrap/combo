@@ -5,7 +5,7 @@ namespace ComboStrap;
 
 use syntax_plugin_combo_container;
 
-class FetcherPage extends FetcherAbs implements FetcherSource
+class FetcherPage extends IFetcherAbs implements IFetcherSource
 {
 
     use FetcherTraitLocalPath;
@@ -20,8 +20,9 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     const MAIN_SIDE_ELEMENT = "main-side";
     const MAIN_CONTENT_ELEMENT = "main-content";
     const MAIN_HEADER_ELEMENT = "main-header";
-    const MAIN_TOC_ELEMENT = "main-toc";
+    const MAIN_TOC_ELEMENT = "main-tool";
     const MAIN_FOOTER_ELEMENT = "main-footer";
+
     const LAYOUT_ELEMENTS = [
         self::PAGE_CORE_ELEMENT,
         self::PAGE_SIDE_ELEMENT,
@@ -40,6 +41,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
     const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
     const POSITION_RELATIVE_CLASS = "position-relative";
     const TASK_RUNNER_ID = "task-runner";
+    const PAGE_TOOL_ELEMENT = "page-tool";
 
     private string $requestedLayout;
     private WikiRequestEnvironment $wikiRequestEnvironment;
@@ -284,19 +286,6 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          */
         $this->setRemFontSizeToHtml($html);
 
-        /**
-         * Head
-         */
-        try {
-            $head = $this->getTemplateDomDocument()->querySelector("head");
-        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-            throw new ExceptionRuntimeInternal("The template ($this->pageHtmlTemplatePath) does not have a head element");
-        }
-        $this->checkCharSetMeta($head);
-        $this->checkViewPortMeta($head);
-        $this->addPageIconMeta($head);
-        $this->addTitleMeta($head);
-
 
         /**
          * Body
@@ -326,16 +315,53 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          */
         try {
             $tocId = self::MAIN_TOC_ELEMENT;
-            $tocElement = $this->getTemplateDomDocument()->querySelector('#' . $tocId);
+            $tocElement = $this->getPageElement($tocId)->getDomElement();
             $tocElement->addClass(Toc::getClass());
             $tocHtml = Toc::createForPage($this->getRequestedPage())
                 ->toXhtml();
             $tocVariable = Template::toValidVariableName($tocId);
             $htmlFragmentByVariables[$tocVariable] = $tocHtml;
             $tocElement->appendTextNode(Template::VARIABLE_PREFIX . $tocVariable);
-        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+        } catch (ExceptionNotFound $e) {
             // no toc
         }
+
+        /**
+         * Page Tool
+         *
+         */
+        try {
+            /**
+             * Page tool is located relatively to its parent
+             */
+            $pageToolElement = $this->getPageElement(self::PAGE_TOOL_ELEMENT)->getDomElement();
+            try {
+                $pageToolParent = $pageToolElement->getParent();
+            } catch (ExceptionNotFound $e){
+                throw new ExceptionRuntimeInternal("The page tool element has no parent in the template ($this->pageHtmlTemplatePath)");
+            }
+            $pageToolParent->addClass(self::POSITION_RELATIVE_CLASS);
+            /**
+             * The javascript
+             */
+            SnippetManager::getOrCreate()->attachInternalJavascriptForRequest(FetcherRailBar::CANONICAL);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("The template ($this->pageHtmlTemplatePath) does not have a page tool element");
+        }
+
+        /**
+         * Head
+         * (At the end, please)
+         */
+        try {
+            $head = $this->getTemplateDomDocument()->querySelector("head");
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("The template ($this->pageHtmlTemplatePath) does not have a head element");
+        }
+        $this->checkCharSetMeta($head);
+        $this->checkViewPortMeta($head);
+        $this->addPageIconMeta($head);
+        $this->addTitleMeta($head);
 
         /**
          * Snippet (in header)
@@ -345,7 +371,7 @@ class FetcherPage extends FetcherAbs implements FetcherSource
          * then called after rendering and toc
          * At last then
          */
-        $this->addHeadElements($head,$htmlFragmentByVariables);
+        $this->addHeadElements($head, $htmlFragmentByVariables);
 
         /**
          * We save as XML because we strive to be XML compliant (ie XHTML)
@@ -782,7 +808,6 @@ class FetcherPage extends FetcherAbs implements FetcherSource
         $variableName = "headElements";
         $htmlFragmentByVariables[$variableName] = $htmlHeaders;
         $head->appendTextNode(Template::VARIABLE_PREFIX . $variableName);
-
 
 
     }

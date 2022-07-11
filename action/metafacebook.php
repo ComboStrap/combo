@@ -5,7 +5,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\FetcherLocalImage;
+use ComboStrap\IFetcherLocalImage;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
@@ -143,7 +143,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                 $dokuPath = WikiPath::createMediaPathFromId($defaultFacebookImage);
                 if (FileSystems::exists($dokuPath)) {
                     try {
-                        $facebookImages[] = FetcherLocalImage::createImageFetchFromPath($dokuPath);
+                        $facebookImages[] = IFetcherLocalImage::createImageFetchFromPath($dokuPath);
                     } catch (ExceptionCompile $e) {
                         LogUtility::error("We were unable to add the default facebook image ($defaultFacebookImage) because of the following error: {$e->getMessage()}", self::CANONICAL);
                     }

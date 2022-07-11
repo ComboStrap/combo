@@ -215,10 +215,11 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         }
 
         if (empty($id)) {
-            HttpResponse::create(HttpResponse::STATUS_BAD_REQUEST)
+            HttpResponse::createForStatus(HttpResponse::STATUS_BAD_REQUEST)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
-                ->send("The page id should not be empty", Mime::HTML);
+                ->setBody("The page id should not be empty", Mime::getHtml())
+                ->send();
             return;
         }
 
@@ -226,9 +227,10 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
          * Quality is just for the writers
          */
         if (!Identity::isWriter($id)) {
-            HttpResponse::create(HttpResponse::STATUS_NOT_AUTHORIZED)
+            HttpResponse::createForStatus(HttpResponse::STATUS_NOT_AUTHORIZED)
                 ->setEvent($event)
-                ->send("Quality is only for writer", Mime::HTML);
+                ->setBody("Quality is only for writer", Mime::getHtml())
+                ->send();
             return;
         }
 
@@ -242,10 +244,11 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
             $status = HttpResponse::STATUS_ALL_GOOD;
         }
 
-        HttpResponse::create($status)
+        HttpResponse::createForStatus($status)
             ->setEvent($event)
             ->setCanonical(self::CANONICAL)
-            ->send($message->getContent(), Mime::HTML);
+            ->setBody($message->getContent(), Mime::getHtml())
+            ->send();
 
     }
 }

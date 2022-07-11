@@ -7,10 +7,19 @@ use dokuwiki\Menu\SiteMenu;
 use dokuwiki\Menu\UserMenu;
 
 /**
+ * A fetcher for the menu rail bar
+ *
+ * The idea was to add Javascript in the generated page
+ * that would call this fetcher.
+ *
+ * The problem is that it's difficult for now to share the code with the template
+ * For now, there is a comment inserted that is replaced at runtime on strap
+ *
+ * And this code is just FYI
  *
  * https://material.io/components/navigation-rail|Navigation rail
  */
-class FetcherRailBar extends FetcherAbs
+class FetcherRailBar extends IFetcherAbs
 {
 
     const CANONICAL = "railbar";

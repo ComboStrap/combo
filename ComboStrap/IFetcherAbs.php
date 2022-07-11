@@ -11,7 +11,7 @@ namespace ComboStrap;
  * This is why there is a cache attribute - this is the cache of the generated file
  * if any
  */
-abstract class FetcherAbs implements Fetcher
+abstract class IFetcherAbs implements IFetcher
 {
 
     public const NOCACHE_VALUE = "nocache";
@@ -32,62 +32,6 @@ abstract class FetcherAbs implements Fetcher
 
     private string $requestedUrlFragment;
 
-
-    /**
-     * @param Url $fetchUrl
-     * @return Fetcher
-     * @throws ExceptionBadArgument
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionNotExists
-     * @throws ExceptionNotFound
-     * @throws ExceptionInternal
-     */
-    public static function createFetcherFromFetchUrl(Url $fetchUrl): Fetcher
-    {
-
-        try {
-            $fetcherAtt = $fetchUrl->getQueryPropertyValue(Fetcher::FETCHER_KEY);
-            try {
-                $fetchers = ClassUtility::getObjectImplementingInterface(Fetcher::class);
-            } catch (\ReflectionException $e) {
-                throw new ExceptionInternal("We could read fetch classes via reflection Error: {$e->getMessage()}");
-            }
-            foreach ($fetchers as $fetcher) {
-                /**
-                 * @var Fetcher $fetcher
-                 */
-                if ($fetcher->getFetcherName() === $fetcherAtt) {
-                    $fetcher->buildFromUrl($fetchUrl);
-                    return $fetcher;
-                }
-            }
-        } catch (ExceptionNotFound $e) {
-            // no fetcher property
-        }
-
-        try {
-            $fetchDoku = FetcherLocalPath::createLocalFromFetchUrl($fetchUrl);
-            $dokuPath = $fetchDoku->getOriginalPath();
-        } catch (ExceptionBadArgument $e) {
-            throw new ExceptionNotFound("No fetcher could be matched to the url ($fetchUrl)");
-        }
-        try {
-            $mime = FileSystems::getMime($dokuPath);
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionNotFound("No fetcher could be created. The mime is unknown for the path ($dokuPath). Error: {$e->getMessage()}");
-        }
-        switch ($mime->toString()) {
-            case Mime::SVG:
-                return FetcherSvg::createSvgFromFetchUrl($fetchUrl);
-            default:
-                if ($mime->isImage()) {
-                    return FetcherRaster::createRasterFromFetchUrl($fetchUrl);
-                } else {
-                    return $fetchDoku;
-                }
-        }
-
-    }
 
     /**
      * @param Url|null $url
@@ -124,14 +68,14 @@ abstract class FetcherAbs implements Fetcher
          */
         $buster = $this->getBuster();
         if ($buster !== "") {
-            $url->setQueryParameter(Fetcher::CACHE_BUSTER_KEY, $buster);
+            $url->setQueryParameter(IFetcher::CACHE_BUSTER_KEY, $buster);
         }
 
         /**
          * The fetcher name
          */
         $fetcherName = $this->getFetcherName();
-        $url->setQueryParameter(Fetcher::FETCHER_KEY, $fetcherName);
+        $url->setQueryParameter(IFetcher::FETCHER_KEY, $fetcherName);
 
         return $url;
     }
@@ -140,7 +84,7 @@ abstract class FetcherAbs implements Fetcher
     /**
      * @throws ExceptionBadArgument
      */
-    public function buildFromUrl(Url $url): Fetcher
+    public function buildFromUrl(Url $url): IFetcher
     {
         $query = $url->getQuery();
         $tagAttributes = TagAttributes::createFromCallStackArray($query);
@@ -156,7 +100,7 @@ abstract class FetcherAbs implements Fetcher
     /**
      * @throws ExceptionBadArgument
      */
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): Fetcher
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): IFetcher
     {
 
         $cache = $tagAttributes->getValueAndRemove(self::CACHE_KEY);
@@ -241,9 +185,9 @@ abstract class FetcherAbs implements Fetcher
      *
      * The fragment may be used by plugin to jump into a media.
      * This is the case of the PDF plugin
-     * @param string $urlFragment a fragment added to the {@link Fetcher::getFetchUrl() fetch URL}
+     * @param string $urlFragment a fragment added to the {@link IFetcher::getFetchUrl() fetch URL}
      */
-    public function setRequestedUrlFragment(string $urlFragment): Fetcher
+    public function setRequestedUrlFragment(string $urlFragment): IFetcher
     {
         $this->requestedUrlFragment = $urlFragment;
         return $this;

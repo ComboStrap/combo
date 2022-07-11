@@ -610,7 +610,7 @@ class PageFragment extends ResourceComboAbs
      * @throws ExceptionNotFound
      */
     public
-    function getFirstImage(): FetcherLocalImage
+    function getFirstImage(): IFetcherLocalImage
     {
         $firstImage = FirstImage::createForPage($this);
         return $firstImage->getLocalImageFetcher();
@@ -730,9 +730,9 @@ class PageFragment extends ResourceComboAbs
      * There is a metadata recursion logic to avoid rendering
      * that is not easy to grasp
      * and therefore you may get no metadata and no backlinks
+     * @throws ExceptionBadArgument
      */
-    public
-    function renderMetadataAndFlush(): PageFragment
+    public function renderMetadataAndFlush(): PageFragment
     {
 
         if (!$this->exists()) {
@@ -743,10 +743,22 @@ class PageFragment extends ResourceComboAbs
         }
 
         /**
-         * @var MetadataDokuWikiStore $metadataStore
+         * Setting the running id
+         * (Used only in test)
          */
-        $metadataStore = $this->getReadStoreOrDefault();
-        $metadataStore->renderAndPersist();
+        $wikiPath = WikiPath::createFromPathObject($this->getPath());
+        $wikiRequest = WikiRequestEnvironment::createAndCaptureState()
+            ->setNewRequestedId($wikiPath->getWikiId())
+            ->setNewRunningId($wikiPath->getWikiId());
+        try {
+            /**
+             * @var MetadataDokuWikiStore $metadataStore
+             */
+            $metadataStore = $this->getReadStoreOrDefault();
+            $metadataStore->renderAndPersist();
+        } finally {
+            $wikiRequest->restoreState();
+        }
 
         /**
          * Return

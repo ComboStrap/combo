@@ -18,7 +18,7 @@ namespace ComboStrap;
  *      * or a {@link FetcherRaster::getFetchUrl() fetch url} to use in a {@link RasterImageLink img html tag}
  *
  */
-class FetcherRaster extends FetcherLocalImage
+class FetcherRaster extends IFetcherLocalImage
 {
 
     use FetcherTraitLocalPath {
@@ -43,7 +43,7 @@ class FetcherRaster extends FetcherLocalImage
      */
     public static function createImageRasterFetchFromId(string $imageId, $rev = null): FetcherRaster
     {
-        return FetcherLocalImage::createImageFetchFromPath(WikiPath::createMediaPathFromId($imageId, $rev));
+        return IFetcherLocalImage::createImageFetchFromPath(WikiPath::createMediaPathFromId($imageId, $rev));
     }
 
     /**

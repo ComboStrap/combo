@@ -24,13 +24,13 @@ class FetcherCache
 
 
     private array $fileDependencies = [];
-    private Fetcher $fetcher;
+    private IFetcher $fetcher;
 
 
     /**
      * Cache constructor.
      */
-    public function __construct(Fetcher $fetcher)
+    public function __construct(IFetcher $fetcher)
     {
 
         $this->fetcher = $fetcher;
@@ -42,7 +42,7 @@ class FetcherCache
 
     }
 
-    public static function createFrom(Fetcher $fetch): FetcherCache
+    public static function createFrom(IFetcher $fetch): FetcherCache
     {
         return new FetcherCache($fetch);
     }

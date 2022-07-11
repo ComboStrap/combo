@@ -108,8 +108,10 @@ class HttpRequest
         if ($statusCode === null) {
             $statusCode = HttpResponse::STATUS_ALL_GOOD;
         }
-        $httpResponse = HttpResponse::create($statusCode)
-            ->setBody($response->getContent())
+        $contentType  = $response->getHeader("Content-Type");
+        $mime = Mime::create($contentType);
+        $httpResponse = HttpResponse::createForStatus($statusCode)
+            ->setBody($response->getContent(), $mime)
             ->setHeaders($response->getHeaders());
 
         try {

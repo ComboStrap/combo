@@ -20,7 +20,7 @@ use DOMElement;
  *   * or by {@link FetcherSvg::setMarkup() Svg Markup}
  *
  */
-class FetcherSvg extends FetcherLocalImage
+class FetcherSvg extends IFetcherLocalImage
 {
 
     use FetcherTraitLocalPath {
@@ -458,7 +458,7 @@ class FetcherSvg extends FetcherLocalImage
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
      */
-    public function setOriginalPath(WikiPath $dokuPath): FetcherLocalImage
+    public function setOriginalPath(WikiPath $dokuPath): IFetcherLocalImage
     {
 
         try {

@@ -310,7 +310,7 @@ class XmlElement
             $error,
             $attributeFilter
         );
-        if($error!==null){
+        if ($error !== null) {
             throw new ExceptionNotEquals($error);
         }
     }
@@ -318,8 +318,20 @@ class XmlElement
     public function removeClass(string $string): XmlElement
     {
         $class = $this->getClass();
-        $newClass = str_replace($string,"",$class);
-        $this->setAttribute("class",$newClass);
+        $newClass = str_replace($string, "", $class);
+        $this->setAttribute("class", $newClass);
         return $this;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getParent(): XmlElement
+    {
+        $parentNode = $this->element->parentNode;
+        if ($parentNode === null) {
+            throw new ExceptionNotFound("No parent node found");
+        }
+        return new XmlElement($parentNode, $this->document);
     }
 }

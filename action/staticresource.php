@@ -3,14 +3,15 @@
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotExists;
-use ComboStrap\FetcherAbs;
+use ComboStrap\FetcherSystem;
+use ComboStrap\IFetcherAbs;
 use ComboStrap\FetcherCache;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadState;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\Fetcher;
+use ComboStrap\IFetcher;
 use ComboStrap\FetcherRaster;
 use ComboStrap\FileSystems;
 use ComboStrap\Http;
@@ -48,7 +49,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     const CANONICAL = "cache";
 
     /**
-     * Enable an infinite cache on static resources (image, script, ...) with a {@link Fetcher::CACHE_BUSTER_KEY}
+     * Enable an infinite cache on static resources (image, script, ...) with a {@link IFetcher::CACHE_BUSTER_KEY}
      */
     public const CONF_STATIC_CACHE_ENABLED = "staticCacheEnabled";
 
@@ -82,7 +83,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     {
 
         $drive = $_GET[WikiPath::DRIVE_ATTRIBUTE];
-        $fetcher = $_GET[Fetcher::FETCHER_KEY];
+        $fetcher = $_GET[IFetcher::FETCHER_KEY];
         if ($drive === null && $fetcher === null) {
             return;
         }
@@ -109,11 +110,11 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         /**
          * Add the extra attributes
          */
-        $fetchUrl = Url::createFromGetGlobalVariable();
+        $fetchUrl = Url::createFromGetOrPostGlobalVariable();
 
         try {
 
-            $fetcher = FetcherAbs::createFetcherFromFetchUrl($fetchUrl);
+            $fetcher = FetcherSystem::createPathFetcherFromUrl($fetchUrl);
             $fetchPath = $fetcher->getFetchPath();
             $event->data['file'] = $fetchPath;
             $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
@@ -151,7 +152,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         /**
          * If there is no buster key, the infinite cache is off
          */
-        $busterKey = $_GET[Fetcher::CACHE_BUSTER_KEY];
+        $busterKey = $_GET[IFetcher::CACHE_BUSTER_KEY];
         if ($busterKey === null) {
             return;
         }
@@ -238,10 +239,11 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             header("ETag: $etag");
         } catch (ExceptionNotFound $e) {
             // internal error
-            HttpResponse::create(HttpResponse::STATUS_INTERNAL_ERROR)
+            HttpResponse::createForStatus(HttpResponse::STATUS_INTERNAL_ERROR)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
-                ->sendMessage("We were unable to get the etag because the media was not found. Error: {$e->getMessage()}");
+                ->setBodyAsJsonMessage("We were unable to get the etag because the media was not found. Error: {$e->getMessage()}")
+                ->send();
             return;
         }
 
@@ -253,10 +255,11 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
             $ifNoneMatch = stripslashes($_SERVER['HTTP_IF_NONE_MATCH']);
             if ($ifNoneMatch && $ifNoneMatch === $etag) {
-                HttpResponse::create(HttpResponse::STATUS_NOT_MODIFIED)
+                HttpResponse::createForStatus(HttpResponse::STATUS_NOT_MODIFIED)
                     ->setEvent($event)
                     ->setCanonical(self::CANONICAL)
-                    ->sendMessage("File not modified");
+                    ->setBodyAsJsonMessage("File not modified")
+                    ->send();
                 return;
             }
         }
@@ -269,10 +272,11 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         try {
             $mime = FileSystems::getMime($mediaToSend);
         } catch (ExceptionNotFound $e) {
-            HttpResponse::create(HttpResponse::STATUS_INTERNAL_ERROR)
+            HttpResponse::createForStatus(HttpResponse::STATUS_INTERNAL_ERROR)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
-                ->sendMessage("Mime not found");
+                ->setBodyAsJsonMessage("Mime not found")
+                ->send();
             return;
         }
         $download = $event->data["download"];
@@ -325,8 +329,9 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
                 }
             }
         } else {
-            HttpResponse::create(HttpResponse::STATUS_INTERNAL_ERROR)
-                ->sendMessage("Could not read $mediaToSend - bad permissions?");
+            HttpResponse::createForStatus(HttpResponse::STATUS_INTERNAL_ERROR)
+                ->setBodyAsJsonMessage("Could not read $mediaToSend - bad permissions?")
+                ->send();
         }
 
     }
@@ -348,7 +353,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
              * tok is just added when w and h are on the url
              * Buster is the timestamp
              */
-            if (in_array($key, ["media", "tok", Fetcher::CACHE_BUSTER_KEY])) {
+            if (in_array($key, ["media", "tok", IFetcher::CACHE_BUSTER_KEY])) {
                 continue;
             }
             /**

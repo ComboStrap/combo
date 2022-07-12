@@ -22,11 +22,16 @@ use dokuwiki\Menu\Item\AbstractItem;
 class SlotManagerMenuItem extends AbstractItem
 {
 
-    const CLASS_HTML = "combo-edit-page-item";
-    const CANONICAL = "edit-page";
+    const CANONICAL = "slot:manager";
+    const TAG = "slot-manager";
+
     const EDIT_ACTION = "Edit";
     const CREATE_ACTION = "Create";
-    const TAG = "slot";
+
+    private static function getClass(): string
+    {
+        return StyleUtility::addComboStrapSuffix(self::TAG);
+    }
 
 
     /**
@@ -41,8 +46,8 @@ class SlotManagerMenuItem extends AbstractItem
     public function getLinkAttributes($classprefix = 'menuitem '): array
     {
 
-        PluginUtility::getSnippetManager()->attachJavascriptInternalInlineForRequest("popover");
-        PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest("popover");
+        $snippetManager = PluginUtility::getSnippetManager()->addPopoverLibrary();
+        $snippetManager->attachJavascriptInternalInlineForRequest(self::TAG);
 
         $linkAttributes = parent::getLinkAttributes($classprefix);
         /**
@@ -51,7 +56,7 @@ class SlotManagerMenuItem extends AbstractItem
          * a page (For instance if you want to display it in a layout at a
          * breakpoint and at another in another breakpoint
          */
-        $linkAttributes['class'] = self::CLASS_HTML;
+        $linkAttributes['class'] = self::getClass();
         $linkAttributes['href'] = "#";
         $dataAttributeNamespace = Bootstrap::getDataNamespace();
         $linkAttributes["data{$dataAttributeNamespace}-toggle"] = "popover";
@@ -75,7 +80,6 @@ class SlotManagerMenuItem extends AbstractItem
         // https://getbootstrap.com/docs/5.1/components/popovers/#dismiss-on-next-click
         $linkAttributes['tabindex'] = "0";
 
-        $linkAttributes["data{$dataAttributeNamespace}custom-class"] = self::CLASS_HTML;
         return $linkAttributes;
 
 
@@ -95,7 +99,7 @@ class SlotManagerMenuItem extends AbstractItem
     public function createHtml(): string
     {
         $requestedPage = PageFragment::createFromRequestedPage();
-        $url = UrlEndpoint::createComboStrapUrl()->setPath("/". self::TAG);
+        $url = UrlEndpoint::createComboStrapUrl()->setPath("/" . self::TAG);
         $html = "<p>Edit and/or create the <a href=\"{$url->toHtmlString()}\">slots</a> of the page</p>";
         foreach (Site::getSecondarySlotNames() as $secondarySlot) {
 

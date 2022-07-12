@@ -50,6 +50,8 @@ class FetcherRaster extends IFetcherLocalImage
      * @param Path $path
      * @return FetcherRaster
      * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
      */
     public static function createImageRasterFetchFromPath(Path $path): FetcherRaster
     {

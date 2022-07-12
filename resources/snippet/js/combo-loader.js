@@ -1,6 +1,6 @@
 // noinspection ES6ConvertVarToLetConst
-var combos = (function (module){
-    module.loader= {
+var combos = (function (module) {
+    module.loader = {
         loadExternalScript: function (src, integrity, callback) {
             let script = document.createElement('script');
             script.src = src; // Set the location of the script

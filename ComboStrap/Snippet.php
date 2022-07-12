@@ -85,6 +85,7 @@ class Snippet implements JsonSerializable
     const REQUEST_SCOPE = "request";
     const SLOT_SCOPE = "slot";
     const ALL_SCOPE = "all";
+    public const COMBO_POPOVER = "combo-popover";
 
 
     protected static $globalSnippets;

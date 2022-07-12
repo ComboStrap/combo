@@ -27,8 +27,6 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
 {
 
 
-
-
     const RECENT_PAGES_VISITED = "Recent Pages Visited";
 
     /**
@@ -43,12 +41,15 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         /**
          * Making popover active
          */
-        PluginUtility::getSnippetManager()->attachJavascriptInternalInlineForRequest("popover");
+        $snippetManager = PluginUtility::getSnippetManager();
+        $snippetManager
+            ->addPopoverLibrary()
+            ->attachJavascriptInternalInlineForRequest(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
 
         /**
          * Css
          */
-        PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
+        $snippetManager->attachCssInternalStylesheetForRequest(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
 
         parent::__construct();
 
@@ -115,7 +116,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         // https://getbootstrap.com/docs/5.1/components/popovers/#dismiss-on-next-click
         $linkAttributes['tabindex'] = "0";
 
-        $linkAttributes["data{$dataAttributeNamespace}custom-class"] = "historical-breadcrumb";
+        $linkAttributes["data{$dataAttributeNamespace}-custom-class"] = "historical-breadcrumb";
         return $linkAttributes;
     }
 
@@ -154,7 +155,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         } catch (ExceptionCompile $e) {
             return LogUtility::wrapInRedForHtml("Error on breadcrumb markup ref. Message: {$e->getMessage()}");
         }
-        if($class!==null){
+        if ($class !== null) {
             $attributes->addClassName($class);
         }
 

@@ -9,6 +9,9 @@ window.addEventListener('load', async function () {
     formData.append('call', 'combo');
     formData.append('fetcher', 'railbar');
     formData.append('viewport', window.innerWidth.toString(10))
+    if ('layout' in pageToolContainer.dataset) {
+        formData.append('layout', pageToolContainer.dataset.layout)
+    }
     let response = await fetch(DOKU_BASE + 'lib/exe/ajax.php',
         {
             method: "POST",

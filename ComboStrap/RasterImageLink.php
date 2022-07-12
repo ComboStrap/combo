@@ -40,20 +40,6 @@ class RasterImageLink extends ImageLink
     const CONF_RESPONSIVE_IMAGE_MARGIN = "responsiveImageMargin";
     const CONF_RETINA_SUPPORT_ENABLED = "retinaRasterImageEnable";
 
-    /**
-     * When the container query are a thing, we may change the breakpoint
-     * https://twitter.com/addyosmani/status/1524039090655481857
-     * https://groups.google.com/a/chromium.org/g/blink-dev/c/gwzxnTJDLJ8
-     *
-     */
-    const BREAKPOINTS =
-        array(
-            "xs" => 375,
-            "sm" => 576,
-            "md" => 768,
-            "lg" => 992
-        );
-
     private FetcherRaster $fetchRaster;
 
 
@@ -204,7 +190,7 @@ class RasterImageLink extends ImageLink
         /**
          * Add smaller sizes
          */
-        foreach (self::BREAKPOINTS as $breakpointWidth) {
+        foreach (Breakpoint::BREAKPOINTS as $breakpointWidth) {
 
             if ($breakpointWidth > $targetWidth) {
                 continue;

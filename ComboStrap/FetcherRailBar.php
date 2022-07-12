@@ -28,8 +28,10 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
     const FIXED_LAYOUT = "fixed";
     const OFFCANVAS_LAYOUT = "offcanvas";
     const VIEWPORT_WIDTH = "viewport";
+    const LAYOUT_ATTRIBUTE = "layout";
 
     private int $requestedViewPort = 1000;
+    private string $requestedLayout;
 
 
     public static function createRailBar(): FetcherRailBar
@@ -55,7 +57,7 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
          */
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
         /**
-         * Capture the
+         * Capture the view port
          */
         $viewPortWidth = $tagAttributes->getValueAndRemoveIfPresent(self::VIEWPORT_WIDTH);
         if ($viewPortWidth !== null) {
@@ -63,6 +65,17 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
                 $this->setRequestedViewPort(DataType::toInteger($viewPortWidth));
             } catch (ExceptionBadArgument $e) {
                 throw new ExceptionBadArgument("The viewport width is not a valid integer. Error:{$e->getMessage()}", self::CANONICAL);
+            }
+        }
+        /**
+         * Capture the layout
+         */
+        $layout = $tagAttributes->getValueAndRemoveIfPresent(self::LAYOUT_ATTRIBUTE);
+        if ($layout !== null) {
+            try {
+                $this->setRequestedLayout($layout);
+            } catch (ExceptionBadArgument $e) {
+                throw new ExceptionBadArgument("The layout is not a valid. Error:{$e->getMessage()}", self::CANONICAL);
             }
         }
         return parent::buildFromTagAttributes($tagAttributes);
@@ -76,6 +89,9 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
 
     function getFetchString(): string
     {
+        if ($this->notPrinted()) {
+            return "";
+        }
 
         $wikiRequest = WikiRequestEnvironment::createAndCaptureState()
             ->setNewRunningId($this->getOriginalPath()->getWikiId())
@@ -87,6 +103,7 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
             $railBarLayout = $this->getLayout();
             switch ($railBarLayout) {
                 case self::FIXED_LAYOUT:
+                    $railBar = $this->toFixedLayout($railBarHtmlListItems);
                     break;
                 case self::OFFCANVAS_LAYOUT:
                     $railBar = $this->toOffCanvasLayout($railBarHtmlListItems);
@@ -161,12 +178,13 @@ EOF;
 
     private function toOffCanvasLayout(string $railBarHtmlListItems): string
     {
-        $railBarOffCanvasWrapperId = StyleUtility::addComboStrapSuffix("railbar-offcanvas-wrapper");
-        $railBarOffCanvasId = StyleUtility::addComboStrapSuffix("railbar-offcanvas");
-        $railBarOffCanvasLabelId = StyleUtility::addComboStrapSuffix("railbar-offcanvas-label");
-        $railBarOffcanvasBodyId = StyleUtility::addComboStrapSuffix("railbar-offcanvas-body");
-        $railBarOffCanvasCloseId = StyleUtility::addComboStrapSuffix("railbar-offcanvas-close");
-        $railBarOffCanvasOpenId = StyleUtility::addComboStrapSuffix("railbar-offcanvas-open");
+        $railBarOffCanvasPrefix = "railbar-offcanvas";
+        $railBarOffCanvasId = StyleUtility::addComboStrapSuffix($railBarOffCanvasPrefix);
+        $railBarOffCanvasWrapperId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-wrapper");
+        $railBarOffCanvasLabelId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-label");
+        $railBarOffcanvasBodyId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-body");
+        $railBarOffCanvasCloseId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-close");
+        $railBarOffCanvasOpenId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-open");
         return <<<EOF
 <div id="$railBarOffCanvasWrapperId">
     <button id="$railBarOffCanvasOpenId" class="btn" type="button" data-bs-toggle="offcanvas"
@@ -189,13 +207,18 @@ EOF;
 
     }
 
-    private function getLayout(): string
+    public function getLayout(): string
     {
+
+        if (isset($this->requestedLayout)) {
+            return $this->requestedLayout;
+        }
+
         $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
         if ($bootstrapVersion === Bootstrap::BootStrapFourMajorVersion) {
             return self::FIXED_LAYOUT;
         }
-        $breakPoint = 1000; // to implement
+        $breakPoint = $this->getBreakPointInPixel(); // to implement
         if ($this->getRequestedViewPort() > $breakPoint) {
             return self::FIXED_LAYOUT;
         } else {
@@ -216,6 +239,67 @@ EOF;
     public function getRequestedViewPort(): int
     {
         return $this->requestedViewPort;
+    }
+
+    private function notPrinted(): bool
+    {
+        try {
+            Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            if (
+                tpl_getConf(TplUtility::CONF_PRIVATE_RAIL_BAR) === 1
+                && empty($_SERVER['REMOTE_USER'])
+            ) {
+                return true;
+            }
+        } catch (ExceptionCompile $e) {
+            //
+        }
+        return false;
+
+    }
+
+    private function getBreakPointInPixel(): int
+    {
+        try {
+            Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+        } catch (ExceptionCompile $e) {
+            return Breakpoint::getPixelFromShortName("lg");
+        }
+        $breakpointName = tpl_getConf(TplUtility::CONF_BREAKPOINT_RAIL_BAR, TplUtility::BREAKPOINT_LARGE_NAME);
+        if ($breakpointName === "never") {
+            return 9999;
+        }
+        return Breakpoint::getPixelFromName($breakpointName);
+
+    }
+
+    private function toFixedLayout(string $railBarHtmlListItems): string
+    {
+        $fixedId = StyleUtility::addComboStrapSuffix("railbar-fixed");
+        $zIndexRailbar = 1000; // A navigation bar (below the drop down because we use it in the search box for auto-completion)
+        return <<<EOF
+<div id="$fixedId" class="d-flex" style="z-index: $zIndexRailbar;">
+    <div>
+        $railBarHtmlListItems
+    </div>
+</div>
+EOF;
+
+    }
+
+    /**
+     * The layout may be requested (example in a landing page where you don't want to see it)
+     * @param string $layout
+     * @return FetcherRailBar
+     * @throws ExceptionBadArgument
+     */
+    public function setRequestedLayout(string $layout): FetcherRailBar
+    {
+        if (!in_array($layout, [self::FIXED_LAYOUT, self::OFFCANVAS_LAYOUT])) {
+            throw new ExceptionBadArgument("The layout ($layout) is not valid");
+        }
+        $this->requestedLayout = $layout;
+        return $this;
     }
 
 }

@@ -619,5 +619,12 @@ class SnippetManager
         return $this->toHtml(Snippet::SLOT_SCOPE);
     }
 
+    public function addPopoverLibrary()
+    {
+        $this->attachJavascriptInternalInlineForRequest(Snippet::COMBO_POPOVER);
+        $this->attachCssInternalStylesheetForRequest(Snippet::COMBO_POPOVER);
+        return $this;
+    }
+
 
 }

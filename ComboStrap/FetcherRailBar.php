@@ -105,6 +105,7 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
                 case self::FIXED_LAYOUT:
                     $railBar = $this->toFixedLayout($railBarHtmlListItems);
                     break;
+                default:
                 case self::OFFCANVAS_LAYOUT:
                     $railBar = $this->toOffCanvasLayout($railBarHtmlListItems);
                     break;
@@ -116,11 +117,15 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
 
             $snippets = $snippetManager->toHtmlForAllSnippets();
             $snippetClass = self::getSnippetClass();
+            /**
+             * Snippets should be last because they works
+             * on the added HTML
+             */
             return <<<EOF
+$railBar
 <div id="$snippetClass" class="$snippetClass">
 $snippets
 </div>
-$railBar
 EOF;
         } finally {
             $wikiRequest->restoreState();
@@ -143,7 +148,7 @@ EOF;
         return self::CANONICAL;
     }
 
-    public function setRequestedPageWikiId(string $wikiId)
+    public function setRequestedPageWikiId(string $wikiId): FetcherRailBar
     {
         $this->path = WikiPath::createPagePathFromId($wikiId);
         return $this;

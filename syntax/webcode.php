@@ -19,6 +19,7 @@
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\Display;
+use ComboStrap\StyleUtility;
 use ComboStrap\WikiPath;
 use ComboStrap\FetcherRawLocalPath;
 use ComboStrap\MediaMarkup;
@@ -72,6 +73,12 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
     const DOKUWIKI_LANG = 'dw';
     const MARKIS = [self::MARKI_LANG, self::DOKUWIKI_LANG];
     const CANONICAL = self::TAG;
+    const IFRAME_BOOLEAN_ATTRIBUTE = "iframe";
+
+    public static function getClass(): string
+    {
+        return StyleUtility::addComboStrapSuffix(self::TAG);
+    }
 
     /**
      * Syntax Type.
@@ -191,7 +198,8 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                 // 'width' and 'scrolling' gets their natural value
 
                 // Parse and create the call stack array
-                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes);
+                $knownTypes = [];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
                 $callStackArray = $tagAttributes->toCallStackArray();
 
                 return array(
@@ -383,7 +391,8 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                          * due to lazy loading, such as relative link, ...
                          *
                          */
-                        if (!$tagAttributes->hasComponentAttribute("iframe")) {
+
+                        if (!$tagAttributes->hasComponentAttribute(self::IFRAME_BOOLEAN_ATTRIBUTE)) {
                             /**
                              * the div is to be able to apply some CSS
                              * such as don't show editbutton on webcode
@@ -393,7 +402,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "</div>";
                             return true;
                         }
-
+                        $tagAttributes->removeComponentAttribute(self::IFRAME_BOOLEAN_ATTRIBUTE);
                         $queryParams = array(
                             'call' => action_plugin_combo_webcode::CALL_ID,
                             action_plugin_combo_webcode::MARKI_PARAM => $markupCode
@@ -407,12 +416,10 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                         // Js, Html, Css
                         /** @noinspection JSUnresolvedLibraryURL */
-                        $iframeSrcValue = <<<EOF
-<html lang="en">
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-    <title>Made by WebCode</title>
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css">
+
+                        $head = <<<EOF
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+<link id="normalize" rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css"/>
 EOF;
 
 
@@ -438,55 +445,57 @@ EOF;
                             $fileExtension = $pathInfo['extension'];
                             switch ($fileExtension) {
                                 case 'css':
-                                    $iframeSrcValue .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"$externalResource\"/>";
+                                    $head .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"$externalResource\"/>";
                                     break;
                                 case 'js':
-                                    $iframeSrcValue .= "<script type=\"text/javascript\" src=\"$externalResource\"></script>";
+                                    $head .= "<script type=\"text/javascript\" src=\"$externalResource\"></script>";
                                     break;
                             }
                         }
 
                         // WebConsole style sheet
+                        $webcodeClass = self::getClass();
                         try {
-                            $cssUrl = FetcherRawLocalPath::createFromPath(WikiPath::createComboResource("webcode:webcode-iframe.css"))->getFetchUrl();
-                            $iframeSrcValue .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"$cssUrl\"/>";
+                            $cssUrl = FetcherRawLocalPath::createFromPath(WikiPath::createComboResource("webcode:webcode-iframe.css"))->getFetchUrl()->toHtmlString();
+                            $head .= "<link class='$webcodeClass' rel=\"stylesheet\" type=\"text/css\" href=\"$cssUrl\"/>";
                         } catch (ExceptionNotFound $e) {
                             LogUtility::error("The web console stylesheet was not found", self::CANONICAL);
                         }
 
                         // A little margin to make it neater
                         // that can be overwritten via cascade
-                        $iframeSrcValue .= '<style>body { margin:10px } /* default margin */</style>';
+                        $head .= "<style class=\"$webcodeClass\">body { margin:10px } /* default margin */</style>";
 
                         // The css
                         if (array_key_exists('css', $codes)) {
-                            $iframeSrcValue .= '<!-- The CSS code -->';
-                            $iframeSrcValue .= '<style>' . $codes['css'] . '</style>';
+                            $head .= '<!-- The CSS code -->';
+                            $head .= '<style>' . $codes['css'] . '</style>';
                         };
 
                         // The javascript console script should be first to handle console.log in the content
                         $useConsole = $data[self::USE_CONSOLE_ATTRIBUTE];
                         if ($useConsole) {
                             try {
-                                $url = FetcherRawLocalPath::createFromPath(WikiPath::createComboResource("webcode:webcode-console.js"))->getFetchUrl();
-                                $iframeSrcValue .= <<<EOF
-<script type="text/javascript" src="$url"></script>
+                                $url = FetcherRawLocalPath::createFromPath(WikiPath::createComboResource("webcode:webcode-console.js"))->getFetchUrl()->toHtmlString();
+                                $head .= <<<EOF
+<script class="$webcodeClass" type="text/javascript" src="$url"></script>
 EOF;
                             } catch (ExceptionNotFound $e) {
-                                LogUtility::error("The webcode console  was not found");
+                                LogUtility::error("The webcode console was not found");
                             }
 
                         }
-                        $iframeSrcValue .= '</head><body>';
+                        $body = "";
                         if (array_key_exists('html', $codes)) {
-                            $iframeSrcValue .= '<!-- The HTML code -->';
-                            $iframeSrcValue .= $codes['html'];
+                            $body .= '<!-- The HTML code -->';
+                            $body .= $codes['html'];
                         }
                         // The javascript console area is based at the end of the HTML document
                         if ($useConsole) {
 
-                            $iframeSrcValue .= <<<EOF
-<div>
+                            $body .= <<<EOF
+<!-- WebCode Console -->
+<div class="webcode-console-wrapper">
     <p class="webConsoleTitle">Console Output:</p>
     <div id="webCodeConsole"></div>
 </div>
@@ -495,14 +504,24 @@ EOF;
                         // The javascript comes at the end because it may want to be applied on previous HTML element
                         // as the page load in the IO order, javascript must be placed at the end
                         if (array_key_exists('javascript', $codes)) {
-                            $iframeSrcValue .= '<!-- The Javascript code -->';
-                            $iframeSrcValue .= '<script type="text/javascript">' . $codes['javascript'] . '</script>';
+                            $body .= '<!-- The Javascript code -->';
+                            $body .= '<script class="webcode-javascript" type="text/javascript">' . $codes['javascript'] . '</script>';
                         }
                         if (array_key_exists('babel', $codes)) {
-                            $iframeSrcValue .= '<!-- The Babel code -->';
-                            $iframeSrcValue .= '<script type="text/babel">' . $codes['babel'] . '</script>';
+                            $body .= '<!-- The Babel code -->';
+                            $body .= '<script type="text/babel">' . $codes['babel'] . '</script>';
                         }
-                        $iframeSrcValue .= '</body></html>';
+                        $iframeSrcValue = <<<EOF
+<html lang="en">
+<head>
+<title>Made by WebCode</title>
+$head
+</head>
+<body>
+$body
+</body>
+</html>
+EOF;
                         $tagAttributes->addOutputAttributeValue("srcdoc", $iframeSrcValue);
 
                         // Code bar with button

@@ -193,7 +193,10 @@ class SnippetManager
                                 $wikiPath = $snippet->getInternalPath();
                                 try {
                                     $fetchUrl = FetcherRawLocalPath::createFromPath($wikiPath)->getFetchUrl();
-                                    $jsDokuwiki["src"] = $fetchUrl->toHtmlString(); // html string at this point
+                                    /**
+                                     * Dokuwiki transforms them in HTML format
+                                     */
+                                    $jsDokuwiki["src"] = $fetchUrl->toString();
                                     if (!$snippet->getCritical()) {
                                         $jsDokuwiki["defer"] = null;
                                     }
@@ -251,7 +254,10 @@ class SnippetManager
                                 try {
                                     $fetchUrl = FetcherRawLocalPath::createFromPath($snippet->getInternalPath())->getFetchUrl();
                                     $cssInternalArray["rel"] = "stylesheet";
-                                    $cssInternalArray["href"] = $fetchUrl->toHtmlString(); // html string at this point
+                                    /**
+                                     * Dokuwiki transforms them in HTML
+                                     */
+                                    $cssInternalArray["href"] = $fetchUrl->toString();
                                 } catch (ExceptionNotFound $e) {
                                     // the file should have been found at this point
                                     LogUtility::internalError("The internal css could not be added. Error:{$e->getMessage()}", self::CANONICAL);

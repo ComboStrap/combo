@@ -167,9 +167,9 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          * this is a outline
          */
         $parent = $callStack->moveToParent();
-        if ($parent != false && $parent->getTagName() == syntax_plugin_combo_webcode::TAG) {
-            $parent = $callStack->moveToParent();
-        }
+//        if ($parent != false && $parent->getTagName() == syntax_plugin_combo_webcode::TAG) {
+//            $parent = $callStack->moveToParent();
+//        }
         if ($parent != false && $parent->getComponentName() != "section_open") {
             $headingType = self::TYPE_TITLE;
         } else {

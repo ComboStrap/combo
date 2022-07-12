@@ -598,7 +598,8 @@ class TagAttributes
                 if (!in_array($key, [
                     TagAttributes::TYPE_KEY,
                     TagAttributes::GENERATED_ID_KEY,
-                    TagAttributes::OPEN_TAG
+                    TagAttributes::OPEN_TAG,
+                    "name" // used in webcode iframe
                 ])) {
 
                     /**

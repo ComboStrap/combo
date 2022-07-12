@@ -568,6 +568,9 @@ class Snippet implements JsonSerializable
     /**
      * Returns if the internal snippet should be incorporated
      * in the page or not
+     *
+     * Requiring a lot of small javascript file adds a penalty to page load
+     *
      * @return bool
      */
     public function shouldBeInHtmlPage(): bool

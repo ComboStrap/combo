@@ -51,8 +51,15 @@ class action_plugin_combo_ajax extends DokuWiki_Action_Plugin
         $event->preventDefault();
 
 
-        $fetchUrl = Url::createFromGetOrPostGlobalVariable();
         try {
+            $fetchUrl = Url::createFromGetOrPostGlobalVariable();
+        } catch (ExceptionBadArgument $e) {
+            \ComboStrap\HttpResponse::createFromException($e)
+                ->send();
+            return;
+        }
+        try {
+
             $fetcher = FetcherSystem::createFetcherStringFromUrl($fetchUrl);
         } catch (ExceptionInternal|ExceptionBadArgument|ExceptionNotFound $e) {
             if (PluginUtility::isTest()) {

@@ -52,6 +52,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
      * Enable an infinite cache on static resources (image, script, ...) with a {@link IFetcher::CACHE_BUSTER_KEY}
      */
     public const CONF_STATIC_CACHE_ENABLED = "staticCacheEnabled";
+    const NO_TRANSFORM = "no-transform";
 
 
     /**
@@ -107,7 +108,14 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         /**
          * Add the extra attributes
          */
-        $fetchUrl = Url::createFromGetOrPostGlobalVariable();
+        try {
+            $fetchUrl = Url::createFromGetOrPostGlobalVariable();
+        } catch (ExceptionBadArgument $e) {
+            $httpResponse = HttpResponse::createFromException($e);
+            $event->data['statusmessage'] = $e->getMessage();
+            $event->data['status'] = $httpResponse->getStatus();
+            return;
+        }
 
         try {
 
@@ -153,7 +161,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * The media to send
          */
         $originalFile = $event->data["orig"]; // the original file
-        $physicalFile = $event->data["file"]; // the file modified
+        $physicalFile = $event->data["file"]; // the file modified or the file to send
         if (empty($physicalFile)) {
             $physicalFile = $originalFile;
         }
@@ -210,11 +218,15 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         $expires = time() + $infiniteMaxAge;
         header('Expires: ' . gmdate("D, d M Y H:i:s", $expires) . ' GMT');
         $cacheControlDirective = ["public", "max-age=$infiniteMaxAge", "immutable"];
-        if ($mediaToSend->getExtension() === "js") {
-            // if a SRI is given and that a proxy is
-            // reducing javascript, it will not match
-            // no-transform will avoid that
-            $cacheControlDirective[] = "no-transform";
+        try {
+            if ($mediaToSend->getExtension() === "js") {
+                // if a SRI is given and that a proxy is
+                // reducing javascript, it will not match
+                // no-transform will avoid that
+                $cacheControlDirective[] = self::NO_TRANSFORM;
+            }
+        } catch (ExceptionNotFound $e) {
+            LogUtility::warning("The media ($mediaToSend) does not have any extension.");
         }
         header("Cache-Control: " . implode(", ", $cacheControlDirective));
         Http::removeHeaderIfPresent("Pragma");

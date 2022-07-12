@@ -224,16 +224,12 @@ class HttpResponse
      */
     public function getHeaders(string $headerName): array
     {
-        $results = array();
-        foreach ($this->headers as $header) {
-            if (substr($header, 0, strlen($headerName) + 1) == $headerName . ':') {
-                $results[] = $header;
-            }
-        }
+        $results = Http::getHeader($headerName,$this->headers);
 
         if (count($results) === 0) {
             throw new ExceptionNotFound("No header with the name $headerName");
         }
+
         return $results;
 
     }

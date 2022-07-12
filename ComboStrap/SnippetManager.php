@@ -192,7 +192,7 @@ class SnippetManager
 
                                 $wikiPath = $snippet->getInternalPath();
                                 try {
-                                    $fetchUrl = FetcherLocalPath::createFromPath($wikiPath)->getFetchUrl();
+                                    $fetchUrl = FetcherRawLocalPath::createFromPath($wikiPath)->getFetchUrl();
                                     $jsDokuwiki["src"] = $fetchUrl->toHtmlString(); // html string at this point
                                     if (!$snippet->getCritical()) {
                                         $jsDokuwiki["defer"] = null;
@@ -249,7 +249,7 @@ class SnippetManager
                                 }
                             } else {
                                 try {
-                                    $fetchUrl = FetcherLocalPath::createFromPath($snippet->getInternalPath())->getFetchUrl();
+                                    $fetchUrl = FetcherRawLocalPath::createFromPath($snippet->getInternalPath())->getFetchUrl();
                                     $cssInternalArray["rel"] = "stylesheet";
                                     $cssInternalArray["href"] = $fetchUrl->toHtmlString(); // html string at this point
                                 } catch (ExceptionNotFound $e) {
@@ -437,7 +437,7 @@ class SnippetManager
 
         $dokuPath = WikiPath::createComboResource($relativeId);
         try {
-            $url = FetcherLocalPath::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
+            $url = FetcherRawLocalPath::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
         } catch (ExceptionNotFound $e) {
             LogUtility::internalError($e->getMessage());
             $url = "";
@@ -457,7 +457,7 @@ class SnippetManager
     {
         $dokuPath = WikiPath::createComboResource($relativeId);
         try {
-            $url = FetcherLocalPath::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
+            $url = FetcherRawLocalPath::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
         } catch (ExceptionNotFound $e) {
             LogUtility::internalError($e->getMessage());
             $url = "";

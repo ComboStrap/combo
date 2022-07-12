@@ -2,7 +2,7 @@
 
 namespace ComboStrap;
 
-class FetcherPdf extends FetcherLocalPath
+class FetcherPdf extends FetcherRawLocalPath
 {
 
 

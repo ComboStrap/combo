@@ -17,12 +17,22 @@ class Http
 
     }
 
-    public static function getHeader(string $name)
+    public static function getHeader(string $name, array $headers = null)
     {
 
+        if ($headers === null) {
+            $headers = self::getHeaders();
+        }
         $result = array();
-        foreach (self::getHeaders() as $header) {
-            if (substr($header, 0, strlen($name) + 1) == $name . ':') {
+        $headerNameNormalized = trim(strtolower($name));
+        foreach ($headers as $header) {
+            $loc = strpos($header, ":");
+            if ($loc === false) {
+                continue;
+            }
+            $actualHeaderName = substr($header, 0, $loc);
+            $actualHeaderNameNormalized = trim(strtolower($actualHeaderName));
+            if ($actualHeaderNameNormalized === $headerNameNormalized) {
                 $result[] = $header;
             }
         }
@@ -86,12 +96,12 @@ class Http
      */
     function sendAsyncRequest($url)
     {
-        $parts=parse_url($url);
-        $fp = fsockopen($parts['host'],isset($parts['port'])?$parts['port']:80,$errno, $errstr, 30);
-        $out = "GET ".$parts['path'] . "?" . $parts['query'] . " HTTP/1.1\r\n";
-        $out.= "Host: ".$parts['host']."\r\n";
-        $out.= "Content-Length: 0"."\r\n";
-        $out.= "Connection: Close\r\n\r\n";
+        $parts = parse_url($url);
+        $fp = fsockopen($parts['host'], isset($parts['port']) ? $parts['port'] : 80, $errno, $errstr, 30);
+        $out = "GET " . $parts['path'] . "?" . $parts['query'] . " HTTP/1.1\r\n";
+        $out .= "Host: " . $parts['host'] . "\r\n";
+        $out .= "Content-Length: 0" . "\r\n";
+        $out .= "Connection: Close\r\n\r\n";
 
         fwrite($fp, $out);
         fclose($fp);

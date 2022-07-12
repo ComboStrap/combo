@@ -133,6 +133,9 @@ class Url extends PathAbs
         return new Url();
     }
 
+    /**
+     * @throws ExceptionBadArgument - if the url key were badly html encoded and have the prefix `amp;`
+     */
     public static function createFromGetOrPostGlobalVariable(): Url
     {
         /**
@@ -147,6 +150,16 @@ class Url extends PathAbs
                     $url->addQueryParameter($key, $val);
                 }
             } else {
+                /**
+                 * Bad URL format test
+                 * In the `src` attribute of `script`, the url should not be encoded
+                 * with {@link Url::AMPERSAND_URL_ENCODED_FOR_HTML}
+                 * otherwise we get `amp;` as prefix
+                 * in Chrome
+                 */
+                if (strpos($key, "amp;") === 0) {
+                    throw new ExceptionBadArgument("The url in src has a bad encoding (the attribute have a amp; prefix. Infinite cache will not work.");
+                }
                 $url->addQueryParameter($key, $value);
             }
         }
@@ -160,7 +173,7 @@ class Url extends PathAbs
      */
     public static function toUrlSeparator(string $pathString)
     {
-        return str_replace('\\','/',$pathString);
+        return str_replace('\\', '/', $pathString);
     }
 
 
@@ -568,7 +581,7 @@ class Url extends PathAbs
      */
     public function getExtension(): string
     {
-        if ($this->hasProperty(FetcherLocalPath::$MEDIA_QUERY_PARAMETER)) {
+        if ($this->hasProperty(FetcherRawLocalPath::$MEDIA_QUERY_PARAMETER)) {
 
             try {
                 return FetcherSystem::createPathFetcherFromUrl($this)->getMime()->getExtension();

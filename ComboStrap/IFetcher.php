@@ -22,7 +22,7 @@ namespace ComboStrap;
  *     * {@link FetcherRaster} that can process and return raster image
  *     * {@link FetcherVignette} that returns a raster image from page metadata
  *     * {@link FetcherSnapshot} that returns a snapshot image from a page
- *   * {@link FetcherLocalPath} that returns all type of local file without processing
+ *   * {@link FetcherRawLocalPath} that returns all type of local file without processing
  *
 
  */

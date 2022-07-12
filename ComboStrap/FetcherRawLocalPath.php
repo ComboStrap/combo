@@ -3,18 +3,19 @@
 namespace ComboStrap;
 
 /**
- * Return raw files
+ * Return raw files.
+ * The mime is determined by the path.
  */
-class FetcherLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherSource
+class FetcherRawLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherSource
 {
 
     use FetcherTraitLocalPath;
 
     const SRC_QUERY_PARAMETER = "src";
-    const RAW = "raw";
+    const NAME = "raw";
 
 
-    public static function createFromPath(WikiPath $wikiPath): FetcherLocalPath
+    public static function createFromPath(WikiPath $wikiPath): FetcherRawLocalPath
     {
         $fetcherRaw = self::createEmpty();
         $fetcherRaw->setOriginalPath($wikiPath);
@@ -23,19 +24,19 @@ class FetcherLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherSour
 
     /**
      * Empty because a fetch is mostly build through an URL
-     * @return FetcherLocalPath
+     * @return FetcherRawLocalPath
      */
-    public static function createEmpty(): FetcherLocalPath
+    public static function createEmpty(): FetcherRawLocalPath
     {
-        return new FetcherLocalPath();
+        return new FetcherRawLocalPath();
     }
 
     /**
      * @throws ExceptionBadArgument
      */
-    public static function createLocalFromFetchUrl(Url $fetchUrl): FetcherLocalPath
+    public static function createLocalFromFetchUrl(Url $fetchUrl): FetcherRawLocalPath
     {
-        $fetchRaw = FetcherLocalPath::createEmpty();
+        $fetchRaw = FetcherRawLocalPath::createEmpty();
         $fetchRaw->buildFromUrl($fetchUrl);
         return $fetchRaw;
     }
@@ -56,13 +57,13 @@ class FetcherLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherSour
 
     /**
      * @param TagAttributes $tagAttributes
-     * @return FetcherLocalPath
+     * @return FetcherRawLocalPath
      * @throws ExceptionBadArgument - if the media/id was not found
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
      * @throws ExceptionNotFound
      */
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherLocalPath
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherRawLocalPath
     {
 
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
@@ -90,6 +91,6 @@ class FetcherLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherSour
     public
     function getFetcherName(): string
     {
-        return self::RAW;
+        return self::NAME;
     }
 }

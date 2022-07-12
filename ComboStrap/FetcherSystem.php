@@ -19,7 +19,7 @@ class FetcherSystem
     {
 
         try {
-            $fetcherAtt = $fetchUrl->getQueryPropertyValue(IFetcher::FETCHER_KEY);
+            $fetcherName = $fetchUrl->getQueryPropertyValue(IFetcher::FETCHER_KEY);
             try {
                 $fetchers = ClassUtility::getObjectImplementingInterface(IFetcherPath::class);
             } catch (\ReflectionException $e) {
@@ -29,7 +29,7 @@ class FetcherSystem
                 /**
                  * @var IFetcherPath $fetcher
                  */
-                if ($fetcher->getFetcherName() === $fetcherAtt) {
+                if ($fetcher->getFetcherName() === $fetcherName) {
                     $fetcher->buildFromUrl($fetchUrl);
                     return $fetcher;
                 }
@@ -38,8 +38,10 @@ class FetcherSystem
             // no fetcher property
         }
 
+
+
         try {
-            $fetchDoku = FetcherLocalPath::createLocalFromFetchUrl($fetchUrl);
+            $fetchDoku = FetcherRawLocalPath::createLocalFromFetchUrl($fetchUrl);
             $dokuPath = $fetchDoku->getOriginalPath();
         } catch (ExceptionBadArgument $e) {
             throw new ExceptionNotFound("No fetcher could be matched to the url ($fetchUrl)");

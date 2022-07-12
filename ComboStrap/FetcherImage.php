@@ -8,7 +8,7 @@ namespace ComboStrap;
  * with requested attribute (ie a file and its transformation attribute if any such as
  * width, height, ...)
  *
- * Image may be generated that's why they don't extends {@link FetcherLocalPath}.
+ * Image may be generated that's why they don't extends {@link FetcherRawLocalPath}.
  * Image that depends on a source file use the {@link FetcherTraitLocalPath} and extends {@link IFetcherLocalImage}
  *
  */

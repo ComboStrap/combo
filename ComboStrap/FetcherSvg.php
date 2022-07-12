@@ -618,7 +618,7 @@ class FetcherSvg extends IFetcherLocalImage
     {
 
         try {
-            $dokuPath = FetcherLocalPath::createEmpty()->buildFromUrl($url)->getFetchPath();
+            $dokuPath = FetcherRawLocalPath::createEmpty()->buildFromUrl($url)->getFetchPath();
         } catch (ExceptionBadArgument $e) {
             return false;
         }

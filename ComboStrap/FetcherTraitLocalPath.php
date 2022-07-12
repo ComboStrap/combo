@@ -44,7 +44,7 @@ trait FetcherTraitLocalPath
         if (!isset($this->path)) {
             $id = $tagAttributes->getValueAndRemove(self::$MEDIA_QUERY_PARAMETER);
             if ($id === null) {
-                $id = $tagAttributes->getValueAndRemove(FetcherLocalPath::SRC_QUERY_PARAMETER);
+                $id = $tagAttributes->getValueAndRemove(FetcherRawLocalPath::SRC_QUERY_PARAMETER);
             }
             if ($id === null) {
                 $id = $tagAttributes->getValueAndRemove(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
@@ -78,7 +78,7 @@ trait FetcherTraitLocalPath
     /**
      * Add media and rev to url
      * For dokuwiki implementation, see {@link ml()}
-     * We still use the {@link FetcherLocalPath::MEDIA_QUERY_PARAMETER}
+     * We still use the {@link FetcherRawLocalPath::MEDIA_QUERY_PARAMETER}
      * to be Dokuwiki Compatible even if we can serve from other drive know
      * @param Url $url
      * @param string $wikiIdKey - the key used to set the wiki id (ie {@link FetcherTraitLocalPath::$MEDIA_QUERY_PARAMETER}

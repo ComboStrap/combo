@@ -624,7 +624,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
                 $head->getDocument()
                     ->createElement("link")
                     ->setAttribute("rel", "shortcut icon")
-                    ->setAttribute("href", FetcherLocalPath::createFromPath($icoWikiPath)->getFetchUrl()->toAbsoluteUrl()->toString())
+                    ->setAttribute("href", FetcherRawLocalPath::createFromPath($icoWikiPath)->getFetchUrl()->toAbsoluteUrl()->toString())
             );
         } catch (ExceptionNotFound|\DOMException $e) {
             LogUtility::internalError("The file should be found and the local name should be good. Error: {$e->getMessage()}");
@@ -666,7 +666,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
                         ->setAttribute("rel", "icon")
                         ->setAttribute("sizes", $sizeValue)
                         ->setAttribute("type", Mime::PNG)
-                        ->setAttribute("href", FetcherLocalPath::createFromPath($iconPath)->getFetchUrl()->toAbsoluteUrl()->toString())
+                        ->setAttribute("href", FetcherRawLocalPath::createFromPath($iconPath)->getFetchUrl()->toAbsoluteUrl()->toString())
                 );
             } catch (ExceptionNotFound|\DOMException $e) {
                 LogUtility::internalError("The file ($iconPath) should be found and the local name should be good. Error: {$e->getMessage()}");

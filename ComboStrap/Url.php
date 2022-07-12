@@ -164,7 +164,7 @@ class Url extends PathAbs
     }
 
 
-    function getQuery(): array
+    function getQueryProperties(): array
     {
         return $this->query->getOriginalArray();
     }
@@ -432,8 +432,8 @@ class Url extends PathAbs
         /**
          * Query
          */
-        $actualQuery = $this->getQuery();
-        $expectedQuery = $expectedUrl->getQuery();
+        $actualQuery = $this->getQueryProperties();
+        $expectedQuery = $expectedUrl->getQueryProperties();
         foreach ($actualQuery as $key => $value) {
             $expectedValue = $expectedQuery[$key];
             if ($expectedValue === null) {

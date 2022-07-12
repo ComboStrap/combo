@@ -10,9 +10,9 @@ interface IFetcherPath extends IFetcher
 {
 
     /**
-     * Return the path of the resource
-     * @return Path
+     * Return the local path of the resource
+     * @return LocalPath
      */
-    function getFetchPath(): Path;
+    function getFetchPath(): LocalPath;
 
 }

@@ -103,9 +103,6 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             }
         }
 
-        // ACLs and precondition checks
-        if ($event->data['status'] >= 400 && $event->data['status'] != HttpResponse::STATUS_NOT_FOUND) return;
-
 
         /**
          * Add the extra attributes
@@ -116,7 +113,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
 
             $fetcher = FetcherSystem::createPathFetcherFromUrl($fetchUrl);
             $fetchPath = $fetcher->getFetchPath();
-            $event->data['file'] = $fetchPath;
+            $event->data['file'] = $fetchPath->toPathString();
             $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
             $mime = $fetcher->getMime();
             $event->data["mime"] = $mime->toString();
@@ -129,18 +126,13 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
                 $event->data['download'] = true;
             }
             $event->data['statusmessage'] = '';
-        } catch (ExceptionInternal|ExceptionBadState|ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists|ExceptionNotFound $e) {
+        } catch (\Exception $e) {
+
+            $httpResponse = HttpResponse::createFromException($e);
             $event->data['file'] = WikiPath::createComboResource("images:error-bad-format.svg")->toLocalPath()->toAbsolutePath()->toPathString();
             $event->data['statusmessage'] = $e->getMessage();
-            if ($e instanceof ExceptionNotFound || $e instanceof ExceptionNotExists) {
-                $event->data['status'] = HttpResponse::STATUS_NOT_FOUND;
-            } elseif ($e instanceof ExceptionBadArgument) {
-                $event->data['status'] = HttpResponse::STATUS_BAD_REQUEST; // bad request
-            } elseif ($e instanceof ExceptionBadSyntax) {
-                $event->data['status'] = 415; // unsupported media type
-            } elseif ($e instanceof ExceptionBadState || $e instanceof ExceptionInternal) {
-                $event->data['status'] = HttpResponse::STATUS_INTERNAL_ERROR; //
-            }
+            $event->data['status'] = $httpResponse->getStatus();
+
         }
 
     }
@@ -167,6 +159,9 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         }
         $mediaToSend = LocalPath::createFromPath($physicalFile);
         if (!FileSystems::exists($mediaToSend)) {
+            if (PluginUtility::isDevOrTest()) {
+                LogUtility::internalError("The media ($mediaToSend) does not exist", self::CANONICAL);
+            }
             return;
         }
 

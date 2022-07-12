@@ -295,5 +295,10 @@ class HttpResponse
         return $this;
     }
 
+    public function getStatus(): int
+    {
+        return $this->status;
+    }
+
 
 }

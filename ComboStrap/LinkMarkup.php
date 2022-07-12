@@ -350,7 +350,7 @@ EOF;
                 $uri = $url->getPath();
                 $uri = $this->obfuscateEmail($uri);
                 $uri = urlencode($uri);
-                $queryParameters = $url->getQuery();
+                $queryParameters = $url->getQueryProperties();
                 if (sizeof($queryParameters) > 0) {
                     $uri .= "?";
                     foreach ($queryParameters as $key => $value) {
@@ -602,7 +602,7 @@ EOF;
         switch ($this->markupRef->getSchemeType()) {
             case MarkupRef::WIKI_URI:
                 $showDokuProperty = [self::SEARCH_HIGHLIGHT_QUERY_PROPERTY, DokuWikiId::DOKUWIKI_ID_ATTRIBUTE];
-                foreach ($this->getMarkupRef()->getUrl()->getQuery() as $key => $value) {
+                foreach ($this->getMarkupRef()->getUrl()->getQueryProperties() as $key => $value) {
                     if (!in_array($key, $showDokuProperty)) {
                         $this->getMarkupRef()->getUrl()->removeQueryParameter($key);
                         if (!TagAttributes::isEmptyValue($value)) {
@@ -615,7 +615,7 @@ EOF;
                 break;
             case
             MarkupRef::EMAIL_URI:
-                foreach ($this->getMarkupRef()->getUrl()->getQuery() as $key => $value) {
+                foreach ($this->getMarkupRef()->getUrl()->getQueryProperties() as $key => $value) {
                     if (!in_array($key, self::EMAIL_VALID_PARAMETERS)) {
                         $this->stylingAttributes->addComponentAttributeValue($key, $value);
                     }

@@ -86,7 +86,7 @@ abstract class IFetcherAbs implements IFetcher
      */
     public function buildFromUrl(Url $url): IFetcher
     {
-        $query = $url->getQuery();
+        $query = $url->getQueryProperties();
         $tagAttributes = TagAttributes::createFromCallStackArray($query);
         $this->buildFromTagAttributes($tagAttributes);
         try {

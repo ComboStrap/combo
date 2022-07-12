@@ -97,7 +97,7 @@ class HttpRequest
             throw new RuntimeException("Real HTTP fetch not yet implemented, only test fetch");
         }
 
-        $query = $this->url->getQuery();
+        $query = $this->url->getQueryProperties();
 
         HttpRequest::purgeStaticDataRequestedScoped();
 

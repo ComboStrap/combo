@@ -176,7 +176,12 @@ class SnippetManager
                             break;
                         case Snippet::INTERNAL_TYPE:
                             $jsDokuwiki = []; //reset
-                            if ($snippet->hasInlineContent()) {
+                            /**
+                             * This may broke the dependencies
+                             * if a small javascript depend on a large one
+                             * that is not yet loaded and does not wait for it
+                             */
+                            if ($snippet->shouldBeInHtmlPage()) {
                                 try {
                                     $jsDokuwiki[self::DATA_DOKUWIKI_ATT] = $snippet->getInternalInlineAndFileContent();
                                 } catch (ExceptionNotFound $e) {
@@ -184,6 +189,7 @@ class SnippetManager
                                     continue 3;
                                 }
                             } else {
+
                                 $wikiPath = $snippet->getInternalPath();
                                 try {
                                     $fetchUrl = FetcherLocalPath::createFromPath($wikiPath)->getFetchUrl();
@@ -204,7 +210,8 @@ class SnippetManager
                             LogUtility::msg("Unknown javascript snippet type");
                     }
                     break;
-                case Snippet::EXTENSION_CSS:
+                case
+                Snippet::EXTENSION_CSS:
                     switch ($type) {
                         case Snippet::EXTERNAL_TYPE:
                             $cssDokuwiki = array(
@@ -364,7 +371,8 @@ class SnippetManager
      * @param string|null $script
      * @return Snippet a snippet not in a slot
      */
-    public function &attachJavascriptInternalInlineForRequest($snippetId, string $script = null): Snippet
+    public
+    function &attachJavascriptInternalInlineForRequest($snippetId, string $script = null): Snippet
     {
         $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE);
         if ($script != null) {
@@ -373,14 +381,16 @@ class SnippetManager
         return $snippet;
     }
 
-    public function &attachInternalJavascriptFromPathForRequest($snippetId, WikiPath $path): Snippet
+    public
+    function &attachInternalJavascriptFromPathForRequest($snippetId, WikiPath $path): Snippet
     {
         $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE)
             ->setInternalPath($path);
         return $snippet;
     }
 
-    public function &attachInternalJavascriptForRequest($snippetId): Snippet
+    public
+    function &attachInternalJavascriptForRequest($snippetId): Snippet
     {
         $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE);
         return $snippet;
@@ -421,7 +431,8 @@ class SnippetManager
      * @param string $snippetId - the snippet id
      * @param string $relativeId - the relative id from the resources directory
      */
-    public function attachJavascriptScriptForRequest(string $snippetId, string $relativeId): Snippet
+    public
+    function attachJavascriptScriptForRequest(string $snippetId, string $relativeId): Snippet
     {
 
         $dokuPath = WikiPath::createComboResource($relativeId);
@@ -441,7 +452,8 @@ class SnippetManager
      * @param string|null $integrity
      * @return Snippet
      */
-    public function attachJavascriptComboResourceForSlot(string $snippetId, string $relativeId, string $integrity = null): Snippet
+    public
+    function attachJavascriptComboResourceForSlot(string $snippetId, string $relativeId, string $integrity = null): Snippet
     {
         $dokuPath = WikiPath::createComboResource($relativeId);
         try {
@@ -487,7 +499,8 @@ class SnippetManager
     }
 
 
-    public function attachJavascriptLibraryForRequest(string $componentName, string $url, string $integrity): Snippet
+    public
+    function attachJavascriptLibraryForRequest(string $componentName, string $url, string $integrity): Snippet
     {
         return $this
             ->attachSnippetFromRequest(
@@ -498,7 +511,8 @@ class SnippetManager
 
     }
 
-    private function addHtmlAttributes(array $attributesArray, Snippet $snippet): array
+    private
+    function addHtmlAttributes(array $attributesArray, Snippet $snippet): array
     {
         $htmlAttributes = $snippet->getHtmlAttributes();
         if ($htmlAttributes !== null) {
@@ -514,12 +528,14 @@ class SnippetManager
     /**
      * @return Snippet[]
      */
-    public function getSnippets(): array
+    public
+    function getSnippets(): array
     {
         return Snippet::getSnippets();
     }
 
-    private function getRequestSnippets(): array
+    private
+    function getRequestSnippets(): array
     {
         $snippets = Snippet::getSnippets();
         $slotSnippets = [];
@@ -541,7 +557,8 @@ class SnippetManager
      *
      * @return string - html string
      */
-    private function toHtml($scope): string
+    private
+    function toHtml($scope): string
     {
         switch ($scope) {
             case Snippet::SLOT_SCOPE:
@@ -553,7 +570,7 @@ class SnippetManager
             default:
             case Snippet::ALL_SCOPE:
                 $snippets = $this->getAllSnippets();
-                if($scope!==Snippet::ALL_SCOPE){
+                if ($scope !== Snippet::ALL_SCOPE) {
                     LogUtility::internalError("Scope ($scope) is unknown, we have defaulted to all");
                 }
                 break;
@@ -609,22 +626,23 @@ class SnippetManager
         return $xhtmlContent;
     }
 
-    public function toHtmlForAllSnippets(): string
+    public
+    function toHtmlForAllSnippets(): string
     {
         return $this->toHtml(Snippet::ALL_SCOPE);
     }
 
-    public function toHtmlForSlotSnippets(): string
+    public
+    function toHtmlForSlotSnippets(): string
     {
         return $this->toHtml(Snippet::SLOT_SCOPE);
     }
 
-    public function addPopoverLibrary()
+    public function addPopoverLibrary(): SnippetManager
     {
         $this->attachJavascriptInternalInlineForRequest(Snippet::COMBO_POPOVER);
         $this->attachCssInternalStylesheetForRequest(Snippet::COMBO_POPOVER);
         return $this;
     }
-
 
 }

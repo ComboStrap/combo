@@ -558,4 +558,33 @@ class Snippet implements JsonSerializable
     {
         return isset($this->inlineContent);
     }
+
+    private
+    function getMaxInlineSize()
+    {
+        return PluginUtility::getConfValue(SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG, 2) * 1024;
+    }
+
+    /**
+     * Returns if the internal snippet should be incorporated
+     * in the page or not
+     * @return bool
+     */
+    public function shouldBeInHtmlPage(): bool
+    {
+        /**
+         * If there is inline content, true
+         */
+        if ($this->hasInlineContent()) {
+            return true;
+        }
+        /**
+         * If this is a path, true if the file is small enough
+         */
+        $internalPath = $this->getInternalPath();
+        if (FileSystems::getSize($internalPath) > $this->getMaxInlineSize()) {
+            return false;
+        }
+        return true;
+    }
 }

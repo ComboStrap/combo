@@ -36,7 +36,6 @@ abstract class IFetcherAbs implements IFetcher
     /**
      * @param Url|null $url
      * @return Url
-     * @throws ExceptionNotFound
      */
     function getFetchUrl(Url $url = null): Url
     {
@@ -66,10 +65,15 @@ abstract class IFetcherAbs implements IFetcher
         /**
          * The buster
          */
-        $buster = $this->getBuster();
-        if ($buster !== "") {
-            $url->setQueryParameter(IFetcher::CACHE_BUSTER_KEY, $buster);
+        try {
+            $buster = $this->getBuster();
+            if ($buster !== "") {
+                $url->setQueryParameter(IFetcher::CACHE_BUSTER_KEY, $buster);
+            }
+        } catch (ExceptionNotFound $e) {
+            //
         }
+
 
         /**
          * The fetcher name

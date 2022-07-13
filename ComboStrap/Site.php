@@ -220,6 +220,17 @@ class Site
 
     }
 
+    /**
+     * This setting enables the standard DokuWiki XHTML renderer to be replaced by a render plugin that also provides XHTML output.
+     * @param string $string
+     * @return void
+     */
+    public static function setXhtmlRenderer(string $string)
+    {
+        global $conf;
+        $conf["renderer_xhtml"] = $string;
+    }
+
 
     function getEmailObfuscationConfiguration()
     {

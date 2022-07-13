@@ -19,6 +19,8 @@
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\Display;
+use ComboStrap\ExceptionBadState;
+use ComboStrap\FetcherMarkup;
 use ComboStrap\StyleUtility;
 use ComboStrap\WikiPath;
 use ComboStrap\FetcherRawLocalPath;
@@ -402,14 +404,25 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "</div>";
                             return true;
                         }
+
+                        /**
+                         * Iframe output
+                         */
                         $tagAttributes->removeComponentAttribute(self::IFRAME_BOOLEAN_ATTRIBUTE);
-                        $queryParams = array(
-                            'call' => action_plugin_combo_webcode::CALL_ID,
-                            action_plugin_combo_webcode::MARKI_PARAM => $markupCode
-                        );
-                        $queryString = http_build_query($queryParams, '', Url::AMPERSAND_CHARACTER);
-                        $url = Site::getAjaxUrl() . "?$queryString";
-                        $tagAttributes->addOutputAttributeValue("src", $url);
+
+                        if (!$tagAttributes->hasAttribute(TagAttributes::NAME_ATTRIBUTE)) {
+                            $tagAttributes->addOutputAttributeValueIfNotEmpty(TagAttributes::NAME_ATTRIBUTE, "WebCode iFrame");
+                        }
+                        try {
+                            $url = FetcherMarkup::createFetcherMarkup($markupCode)
+                                ->getFetchUrl()
+                                ->toString();
+                            $tagAttributes->addOutputAttributeValue("src", $url);
+                        } catch (ExceptionBadState $e) {
+                            // The markup is provided, we shouldn't have a bad state
+                            LogUtility::internalError("We were unable to set the iframe URL. Error:{$e->getMessage()}", self::CANONICAL);
+                        }
+
 
                     } else {
 
@@ -540,22 +553,13 @@ EOF;
                          * Adjust the height attribute
                          * of the iframe element
                          * Any styling attribute would take over
+                         *
+                         * Note: CSS `height:auto` does not work in our case.
+                         * It works only on element with a natural size (ie image)
+                         * when loaded asynchronously but not when there is only text in the iframe
                          */
                         PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::TAG);
-                        /**
-                         * CSS Height auto works when an image is loaded asynchronously but not
-                         * when there is only text in the iframe
-                         */
-                        //$iFrameAttributes->addStyleDeclaration("height", "auto");
-                        /**
-                         * Due to margin at the bottom with css height=auto,
-                         * we may see a scroll bar
-                         * This block of code is to avoid scrolling,
-                         * then scrolling = no if not set
-                         */
-                        if (!$tagAttributes->hasComponentAttribute("scrolling")) {
-                            $tagAttributes->addOutputAttributeValue("scrolling", "no");
-                        }
+
 
                     }
 

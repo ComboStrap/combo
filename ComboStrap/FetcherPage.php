@@ -80,6 +80,21 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
     }
 
     /**
+     * An utility wrapper to capture the HTML head tags
+     * @return string
+     */
+    public static function getHtmlHeadTags(): string
+    {
+        ob_start();
+        try {
+            tpl_metaheaders();
+            return ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+    }
+
+    /**
      * @param Url|null $url
      * @return Url
      *
@@ -799,13 +814,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
         /**
          * Start the meta headers
          */
-        ob_start();
-        try {
-            tpl_metaheaders();
-            $htmlHeaders = ob_get_contents();
-        } finally {
-            ob_end_clean();
-        }
+        $htmlHeaders = self::getHtmlHeadTags();
         $variableName = "headElements";
         $htmlFragmentByVariables[$variableName] = $htmlHeaders;
         $head->appendTextNode(Template::VARIABLE_PREFIX . $variableName);

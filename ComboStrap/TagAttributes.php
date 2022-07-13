@@ -170,6 +170,7 @@ class TagAttributes
     const PROTECTED_ATTRIBUTES = [
         TagAttributes::TYPE_KEY
     ];
+    const NAME_ATTRIBUTE = "name";
 
 
     /**

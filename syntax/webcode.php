@@ -20,17 +20,14 @@ use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\Display;
 use ComboStrap\ExceptionBadState;
-use ComboStrap\FetcherMarkup;
-use ComboStrap\StyleUtility;
-use ComboStrap\WikiPath;
-use ComboStrap\FetcherRawLocalPath;
-use ComboStrap\MediaMarkup;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\FetcherMarkup;
+use ComboStrap\FetcherRawLocalPath;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Site;
+use ComboStrap\StyleUtility;
 use ComboStrap\TagAttributes;
-use ComboStrap\Url;
+use ComboStrap\WikiPath;
 
 if (!defined('DOKU_INC')) die();
 
@@ -76,6 +73,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
     const MARKIS = [self::MARKI_LANG, self::DOKUWIKI_LANG];
     const CANONICAL = self::TAG;
     const IFRAME_BOOLEAN_ATTRIBUTE = "iframe";
+    const FRAMEBORDER_ATTRIBUTE = "frameborder";
 
     public static function getClass(): string
     {
@@ -517,6 +515,12 @@ EOF;
                         // The javascript comes at the end because it may want to be applied on previous HTML element
                         // as the page load in the IO order, javascript must be placed at the end
                         if (array_key_exists('javascript', $codes)) {
+                            /**
+                             * The user should escapes the following character * <, >, ", ', \, and &.
+                             * because they will interfere with the HTML parser
+                             *
+                             * The user should write `<\/script>` and note `</script>`
+                             */
                             $body .= '<!-- The Javascript code -->';
                             $body .= '<script class="webcode-javascript" type="text/javascript">' . $codes['javascript'] . '</script>';
                         }
@@ -571,6 +575,14 @@ EOF;
                      * set a a max-width
                      */
                     $tagAttributes->addStyleDeclarationIfNotSet("width", "100%");
+
+                    /**
+                     * FrameBorder
+                     */
+                    $frameBorder = $tagAttributes->getValueAndRemoveIfPresent(self::FRAMEBORDER_ATTRIBUTE);
+                    if ($frameBorder !== null && $frameBorder == 0) {
+                        $tagAttributes->addStyleDeclarationIfNotSet("border", "none");
+                    }
 
                     $iFrameHtml = $tagAttributes->toHtmlEnterTag("iframe") . '</iframe>';
                     $bar .= '</div>'; // close the bar

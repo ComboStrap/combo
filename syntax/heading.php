@@ -155,22 +155,23 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      * @param CallStack $callStack
      * @return string
      */
-    public static function getContext($callStack): string
+    public static function getContext(CallStack $callStack): string
     {
 
         /**
          * If the heading is inside a component,
          * it's a title heading, otherwise it's a outline heading
-         * (Except for {@link syntax_plugin_combo_webcode} that can wrap outline heading)
+         *
+         * (Except for {@link syntax_plugin_combo_webcode} that can wrap several outline heading)
          *
          * When the parent is empty, a section_open (ie another outline heading)
          * this is a outline
          */
         $parent = $callStack->moveToParent();
-//        if ($parent != false && $parent->getTagName() == syntax_plugin_combo_webcode::TAG) {
-//            $parent = $callStack->moveToParent();
-//        }
-        if ($parent != false && $parent->getComponentName() != "section_open") {
+        if ($parent != false && $parent->getTagName() === syntax_plugin_combo_webcode::TAG) {
+            $parent = $callStack->moveToParent();
+        }
+        if ($parent != false && $parent->getComponentName() !== "section_open") {
             $headingType = self::TYPE_TITLE;
         } else {
             $headingType = self::TYPE_OUTLINE;

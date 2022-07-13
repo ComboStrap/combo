@@ -105,17 +105,6 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                         $fetcherPage->close();
                     }
                 }
-                /**
-                 * TOC
-                 */
-                $toc = $outline->getTocDokuwikiFormat();
-                try {
-                    Toc::createForRequestedPage()
-                        ->setValue($toc)
-                        ->persist();
-                } catch (ExceptionBadArgument $e) {
-                    LogUtility::error("The Toc could not be persisted. Error:{$e->getMessage()}");
-                }
                 return;
             default:
                 // No outline if not show (ie admin, edit, ...)

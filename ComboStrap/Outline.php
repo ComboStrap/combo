@@ -25,6 +25,7 @@ class Outline
     {
         $this->buildOutline($callStack);
         $this->storeH1();
+        $this->storeToc();
     }
 
     public static function createFromCallStack(CallStack $callStack): Outline
@@ -556,6 +557,18 @@ class Outline
             } catch (ExceptionBadArgument $e) {
                 LogUtility::internalError("We were unable to store the scanned heading 1. Error: {$e->getMessage()}", self::CANONICAL);
             }
+        }
+    }
+
+    private function storeToc()
+    {
+        $toc = $this->getTocDokuwikiFormat();
+        try {
+            Toc::createForRequestedPage()
+                ->setValue($toc)
+                ->persist();
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::error("The Toc could not be persisted. Error:{$e->getMessage()}");
         }
     }
 

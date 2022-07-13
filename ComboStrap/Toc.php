@@ -35,6 +35,20 @@ class Toc extends Metadata
         return StyleUtility::addComboStrapSuffix(self::CANONICAL);
     }
 
+    /**
+     * @throws ExceptionBadArgument - if the TOC is not an array
+     * @throws ExceptionNotFound - if the TOC variable was not found
+     */
+    public static function createFromGlobalVariable(): Toc
+    {
+        global $TOC;
+        if ($TOC === null) {
+            throw new ExceptionNotFound("No global TOC variable found");
+        }
+        return (new Toc())
+            ->setValue($TOC);
+    }
+
 
     public function toXhtml(): string
     {
@@ -205,8 +219,14 @@ EOF;
     }
 
 
+    /**
+     * @throws ExceptionBadArgument
+     */
     public function setValue($value): Toc
     {
+        if (!is_array($value)) {
+            throw new ExceptionBadArgument("The toc value ($value) is not an array");
+        }
         $this->tocData = $value;
         global $TOC;
         $TOC = $value;

@@ -19,10 +19,6 @@ class MarkupDynamicRender
 {
 
     /**
-     * The id used if
-     */
-    public const DEFAULT_SLOT_ID_FOR_TEST = "test-slot-id";
-    /**
      * When the rendering is a snippet or an instructions
      */
     public const DYNAMIC_RENDERING = "dynamic";
@@ -101,7 +97,7 @@ class MarkupDynamicRender
         try {
 
             if ($ID === null && PluginUtility::isTest()) {
-                $ID = self::DEFAULT_SLOT_ID_FOR_TEST;
+                $ID = WikiRequestEnvironment::DEFAULT_SLOT_ID_FOR_TEST;
             }
             $ACT = self::DYNAMIC_RENDERING;
 

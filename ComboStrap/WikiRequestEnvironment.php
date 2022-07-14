@@ -22,6 +22,10 @@ class WikiRequestEnvironment
 {
 
 
+    /**
+     * The id used if
+     */
+    public const DEFAULT_SLOT_ID_FOR_TEST = "test-slot-id";
     private ?string $actualGlobalId;
     /**
      * It may be an array when preview/save/cancel
@@ -150,6 +154,7 @@ class WikiRequestEnvironment
          * This is the case with event triggered
          * before DokuWiki such as
          * https://www.dokuwiki.org/devel:event:init_lang_load
+         * REQUEST is a mixed of post and get parameters
          */
         global $_REQUEST;
         if (isset($_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE])) {
@@ -161,7 +166,7 @@ class WikiRequestEnvironment
             LogUtility::internalError("Internal Error: The requested wiki id could not be determined");
         }
 
-        return MarkupDynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
+        return self::DEFAULT_SLOT_ID_FOR_TEST;
 
     }
 
@@ -180,7 +185,18 @@ class WikiRequestEnvironment
 
     public function getActualGlobalId(): ?string
     {
-        return $this->actualGlobalId;
+        if ($this->actualGlobalId !== null) {
+            return $this->actualGlobalId;
+        }
+        /**
+         * It can happen during test
+         */
+        if (!PluginUtility::isTest()) {
+            LogUtility::error("The global wiki ID is null");
+        }
+        return self::DEFAULT_SLOT_ID_FOR_TEST;
+
     }
+
 
 }

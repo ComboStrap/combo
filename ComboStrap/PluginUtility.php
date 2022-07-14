@@ -1092,19 +1092,11 @@ class PluginUtility
     }
 
     /**
-     * @deprecated for {@link WikiPath::createRunningPageFragmentPathFromGlobalId()}
+     * @deprecated for {@link WikiRequestEnvironment::getActualGlobalId()}
      */
     public static function getCurrentSlotId(): string
     {
-        global $ID;
-        $slot = $ID;
-        if ($slot === null) {
-            if (!PluginUtility::isTest()) {
-                LogUtility::msg("The slot could not be identified (global ID is null)");
-            }
-            return MarkupDynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
-        }
-        return $slot;
+        return WikiRequestEnvironment::createAndCaptureState()->getActualGlobalId();
     }
 
 

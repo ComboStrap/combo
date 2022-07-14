@@ -54,7 +54,6 @@ interface MetadataStore
      * Flush to disk on a file system or commit in a database
      * @return mixed
      *
-     * Resource got an {@link ResourceComboAbs::persist() alias of this function} for easy persisting.
      *
      * Don't persist in the setter function of the metadata object
      *

@@ -216,7 +216,7 @@ class MarkupRenderer
     {
         $this->wikiEnvRequest = WikiRequestEnvironment::createAndCaptureState();
         if ($this->wikiEnvRequest->getActualGlobalId() === null && PluginUtility::isTest()) {
-            $this->wikiEnvRequest->setNewRunningId(MarkupDynamicRender::DEFAULT_SLOT_ID_FOR_TEST);
+            $this->wikiEnvRequest->setNewRunningId(WikiRequestEnvironment::DEFAULT_SLOT_ID_FOR_TEST);
         }
         if (
             isset($this->markup)

@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use syntax_plugin_combo_header;
 use syntax_plugin_combo_heading;
 use syntax_plugin_combo_headingatx;
 use syntax_plugin_combo_headingwiki;
@@ -15,6 +16,7 @@ class Outline
 
     const CANONICAL = "outline";
     private const OUTLINE_HEADING_PREFIX = "outline-heading";
+    const CONTEXT = self::CANONICAL;
     private OutlineSection $rootSection;
 
     private OutlineSection $actualSection; // the actual section that is created
@@ -36,7 +38,6 @@ class Outline
     private function buildOutline(CallStack $callStack)
     {
 
-
         /**
          * Processing variable about the context
          */
@@ -49,6 +50,21 @@ class Outline
 
             $tagName = $actualCall->getTagName();
 
+            /**
+             * We don't take the outline and document call if any
+             * This is the case when we build from an actual stored instructions
+             * (to bundle multiple page for instance)
+             */
+            switch ($tagName) {
+                case "document_start":
+                case "document_end":
+                case syntax_plugin_combo_section::TAG:
+                    continue 2;
+                case syntax_plugin_combo_header::TAG:
+                    if ($actualCall->getContext() === self::CONTEXT) {
+                        continue 2;
+                    }
+            }
 
             /**
              * Enter new section ?
@@ -387,16 +403,19 @@ class Outline
             if (!($contentHeaderDisplayToNone && $isContentHeader)) {
 
                 $openHeader = Call::createComboCall(
-                    \syntax_plugin_combo_box::TAG,
+                    \syntax_plugin_combo_header::TAG,
                     DOKU_LEXER_ENTER,
-                    array(\syntax_plugin_combo_box::TAG_ATTRIBUTE => "header",
+                    array(
                         TagAttributes::CLASS_KEY => StyleUtility::addComboStrapSuffix("outline-header"),
-                    )
+                    ),
+                    self::CONTEXT
                 );
                 $closeHeader = Call::createComboCall(
-                    \syntax_plugin_combo_box::TAG,
+                    \syntax_plugin_combo_header::TAG,
                     DOKU_LEXER_EXIT,
-                    array(\syntax_plugin_combo_box::TAG_ATTRIBUTE => "header")
+                    [],
+                    self::CONTEXT
+
                 );
                 $totalComboCalls = array_merge(
                     $totalComboCalls,

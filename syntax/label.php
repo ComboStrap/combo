@@ -13,9 +13,7 @@ use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 
-require_once(__DIR__ . '/../ComboStrap/HeaderUtility.php');
 
-if (!defined('DOKU_INC')) die();
 
 
 class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
@@ -197,6 +195,7 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "<div class=\"card-header\" id=\"$headingId\">" . DOKU_LF;
                             $renderer->doc .= "<h2 class=\"mb-0\">";
                             $dataNamespace = Bootstrap::getDataNamespace();
+                            /** @noinspection HtmlUnknownAttribute */
                             $renderer->doc .= "<button class=\"btn btn-link btn-block text-left $collapsedClass\" type=\"button\" data{$dataNamespace}-toggle=\"collapse\" data{$dataNamespace}-target=\"#$collapseId\" aria-expanded=\"true\" aria-controls=\"$collapseId\">";
                             break;
                         case syntax_plugin_combo_tabs::TAG:

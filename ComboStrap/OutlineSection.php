@@ -126,27 +126,32 @@ class OutlineSection extends TreeNode
     public function getHeadingCalls(): array
     {
 
-        if ($this->headingEnterCall !== null && $this->headingEnterCall->isPluginCall()) {
-
+        if (
+            $this->headingEnterCall !== null &&
+            $this->headingEnterCall->isPluginCall() &&
+            !$this->headingEnterCall->hasAttribute("id")
+        ) {
             $this->headingEnterCall->addAttribute("id", $this->getHeadingId());
-
         }
         return $this->headingCalls;
     }
 
 
-    public function getHeadingCall(): ?Call
+    public
+    function getHeadingCall(): ?Call
     {
         return $this->headingEnterCall;
     }
 
 
-    public function getCalls(): array
+    public
+    function getCalls(): array
     {
         return array_merge($this->headingCalls, $this->contentCalls);
     }
 
-    public function getContentCalls(): array
+    public
+    function getContentCalls(): array
     {
         return $this->contentCalls;
     }
@@ -154,7 +159,8 @@ class OutlineSection extends TreeNode
     /**
      * @return int
      */
-    public function getLevel(): int
+    public
+    function getLevel(): int
     {
         if ($this->headingEnterCall === null) {
             return 0;
@@ -177,32 +183,39 @@ class OutlineSection extends TreeNode
         }
     }
 
-    public function getStartPosition(): int
+    public
+    function getStartPosition(): int
     {
         return $this->startFileIndex;
     }
 
-    public function getEndPosition(): ?int
+    public
+    function getEndPosition(): ?int
     {
         return $this->endFileIndex;
     }
 
-    public function hasContentCall(): bool
+    public
+    function hasContentCall(): bool
     {
         return sizeof($this->contentCalls) > 0;
     }
 
     /**
      */
-    public function getHeadingId()
+    public
+    function getHeadingId()
     {
 
-        $id = $this->headingEnterCall->getAttribute("id");
-        if ($id !== null) {
-            return $id;
+        if (!isset($this->headingId)) {
+            $id = $this->headingEnterCall->getAttribute("id");
+            if ($id !== null) {
+                return $id;
+            }
+            $label = $this->getLabel();
+            $this->headingId = sectionID($label, $this->tocUniqueId);
         }
-        $label = $this->getLabel();
-        return sectionID($label, $this->tocUniqueId);
+        return $this->headingId;
 
     }
 
@@ -212,7 +225,8 @@ class OutlineSection extends TreeNode
      * heading making a section without heading
      * @return bool
      */
-    public function hasHeading(): bool
+    public
+    function hasHeading(): bool
     {
         return $this->headingEnterCall !== null;
     }
@@ -220,7 +234,8 @@ class OutlineSection extends TreeNode
     /**
      * @return OutlineSection[]
      */
-    public function getChildren(): array
+    public
+    function getChildren(): array
     {
         return parent::getChildren();
     }

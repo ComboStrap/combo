@@ -1,17 +1,9 @@
 <?php
 
-// implementation of
-// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
 
-// must be run within Dokuwiki
-use ComboStrap\LogUtility;
+
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
-use ComboStrap\TitleUtility;
-
-require_once(__DIR__ . '/../ComboStrap/HeaderUtility.php');
-
-if (!defined('DOKU_INC')) die();
 
 
 class syntax_plugin_combo_style extends DokuWiki_Syntax_Plugin
@@ -124,7 +116,6 @@ EOF;
                 return array(
                     PluginUtility::STATE => $state
                 );
-                break;
 
         }
         return array();

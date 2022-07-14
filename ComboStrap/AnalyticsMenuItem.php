@@ -26,6 +26,7 @@ use renderer_plugin_combo_analytics;
  */
 class AnalyticsMenuItem extends AbstractItem
 {
+
     const ITEM_ID = renderer_plugin_combo_analytics::RENDERER_NAME_MODE . "_item_id";
 
 

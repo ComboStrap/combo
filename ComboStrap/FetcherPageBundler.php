@@ -30,7 +30,35 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
 
     public function getFetchString(): string
     {
-        return "";
+
+        $outline = $this->getOutline();
+        $instructionsCalls = $outline->toHtmlSectionOutlineCalls();
+        $mainContent = MarkupRenderer::createFromInstructions($instructionsCalls)
+            ->setRequestedMime($this->getMime())
+            ->getOutput();
+
+        $htmlHeadTags = HtmlHeadTags::create()
+            ->get();
+
+        $title = PageTitle::createForPage(PageFragment::createPageFromPathObject($this->requestedPath))
+            ->getValueOrDefault();
+
+        /**
+         * Html
+         */
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>$title</title>
+$htmlHeadTags
+</head>
+<body>
+$mainContent
+</body>
+</html>
+HTML;
+
     }
 
     public function getOutline(): Outline
@@ -41,7 +69,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
 
         $childrenPages = PageFileSystem::getOrCreate()->getChildren($requestedPage, FileSystems::LEAF);
         foreach ($childrenPages as $child) {
-            Outline::merge($outline,$child->getOutline());
+            Outline::merge($outline, $child->getOutline());
         }
         return $outline;
     }

@@ -220,12 +220,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
 
 
             /**
-             * Relative positioning is important for the positioning of the pagetools (page-core), edit button, ...
-             * for absolutely positioning at the left corner of the viewport (message, tool, ...)
-             */
-            $domElement->addClass(self::POSITION_RELATIVE_CLASS);
-
-            /**
              * Rendering
              */
             if (!$pageElement->isSlot()) {

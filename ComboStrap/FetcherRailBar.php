@@ -93,12 +93,29 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
             return "";
         }
 
+
         $wikiRequest = WikiRequestEnvironment::createAndCaptureState()
             ->setNewRunningId($this->getOriginalPath()->getWikiId())
             ->setNewRequestedId($this->getOriginalPath()->getWikiId())
             ->setNewAct("show");
 
         try {
+
+            /**
+             * page info is needed and used by all other plugins
+             * in all hooks (should be first)
+             */
+            global $INFO;
+            $INFO = pageinfo();
+
+            /**
+             * Uses by {@link action_plugin_move_rename} to set
+             * if it will add the button
+             */
+            $tmp = array();
+            \dokuwiki\Extension\Event::createAndTrigger('DOKUWIKI_STARTED', $tmp);
+
+
             $railBarHtmlListItems = $this->getRailBarHtmlListItems();
             $railBarLayout = $this->getLayout();
             switch ($railBarLayout) {

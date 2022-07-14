@@ -56,7 +56,7 @@ class Index
          */
 
         // There is two much pages with the start name
-        $lastName = $pageToMatch->getPath()->getLastName();
+        $lastName = $pageToMatch->getPathObject()->getLastName();
         if ($lastName === Site::getIndexPageName()) {
             return [];
         }
@@ -69,7 +69,7 @@ class Index
                 continue;
             }
             $actualPage = PageFragment::createPageFromId($pageId);
-            if ($actualPage->getPath()->getLastName() === $lastName) {
+            if ($actualPage->getPathObject()->getLastName() === $lastName) {
                 $matchedPages[] = $actualPage;
             }
         }

@@ -42,7 +42,7 @@ class action_plugin_combo_metatitle extends DokuWiki_Action_Plugin
 
         // Namespace name
         try {
-            $parentPage = $currentPage->getParentPage();
+            $parentPage = $currentPage->getParent();
             $pageTitle .= self::TITLE_SEPARATOR . $parentPage->getNameOrDefault();
         } catch (ExceptionNotFound $e) {
             // no parent

@@ -4,6 +4,7 @@
 use ComboStrap\Console;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\PageFragment;
 use ComboStrap\PluginUtility;
@@ -71,7 +72,7 @@ class action_plugin_combo_fulldatabasereplication extends DokuWiki_Action_Plugin
          * They receive even the deleted page
          */
         $databasePage = $page->getDatabasePage();
-        if (!$page->exists()) {
+        if (!FileSystems::exists($page)) {
             $databasePage->delete();
             return;
         }

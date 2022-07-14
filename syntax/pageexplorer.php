@@ -409,10 +409,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         switch ($pageExplorerType) {
                             case self::LIST_TYPE:
                                 $requestedPage = PageFragment::createFromRequestedPage();
-                                $namespacePath = $requestedPage->getPath()->getParent();
+                                $namespacePath = $requestedPage->getPathObject()->getParent();
                                 if ($namespacePath === null) {
                                     // root
-                                    $namespacePath = $requestedPage->getPath();
+                                    $namespacePath = $requestedPage->getPathObject();
                                 }
                                 CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
                                 break;
@@ -423,10 +423,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     LogUtility::msg("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
                                     return false;
                                 }
-                                $namespacePath = $renderedPage->getPath()->getParent();
+                                $namespacePath = $renderedPage->getPathObject()->getParent();
                                 if ($namespacePath === null) {
                                     // root
-                                    $namespacePath = $renderedPage->getPath();
+                                    $namespacePath = $renderedPage->getPathObject();
                                 }
                                 break;
                             default:
@@ -527,7 +527,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $parentAttributes = $data[self::PARENT_ATTRIBUTES];
                             if (!($parentInstructions === null && $indexAttributes !== null)) {
                                 try {
-                                    $parentPage = $currentIndexPage->getParentPage();
+                                    $parentPage = $currentIndexPage->getParent();
                                     if ($parentPage->exists()) {
 
                                         $parentTagAttributes = TagAttributes::createFromCallStackArray($parentAttributes);
@@ -550,7 +550,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                             }
                                         } else {
                                             try {
-                                                $parentWikiId = $parentPage->getPath()->getWikiId();
+                                                $parentWikiId = $parentPage->getPathObject()->getWikiId();
                                                 $renderer->doc .= LinkMarkup::createFromPageIdOrPath($parentWikiId)
                                                     ->toAttributes()
                                                     ->toHtmlEnterTag("a");
@@ -726,8 +726,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "<ul>" . DOKU_LF;
 
                             try {
-                                $wikiPath = $namespacePath->getPath();
-                                $tree = PathTreeNode::buildTreeViaFileSystemChildren($wikiPath);
+                                $tree = PathTreeNode::buildTreeViaFileSystemChildren($namespacePath);
                                 self::treeProcessTree($renderer->doc, $tree, $data);
                             } catch (ExceptionBadSyntax $e) {
                                 $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the tree sub-namespace. Error: {$e->getMessage()}");
@@ -926,7 +925,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         if ($pageInstructions === null && $pageAttributes !== null) {
             return;
         }
-        if (!FileSystems::exists($page->getPath())) {
+        if (!FileSystems::exists($page->getPathObject())) {
             LogUtility::error("The given leaf page ($page) does not exist and was not added to the page-explorer tree", self::CANONICAL);
             return;
         }

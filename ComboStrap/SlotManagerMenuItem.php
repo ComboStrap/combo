@@ -103,7 +103,7 @@ class SlotManagerMenuItem extends AbstractItem
         $html = "<p>Edit and/or create the <a href=\"{$url->toHtmlString()}\">slots</a> of the page</p>";
         foreach (Site::getSecondarySlotNames() as $secondarySlot) {
 
-            $actualPath = $requestedPage->getPath();
+            $actualPath = $requestedPage->getPathObject();
             $label = $secondarySlot;
             switch ($secondarySlot) {
                 case Site::getSidebarName():

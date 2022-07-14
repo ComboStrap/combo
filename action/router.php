@@ -5,6 +5,8 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\AliasType;
 use ComboStrap\DatabasePageRow;
+use ComboStrap\FileSystem;
+use ComboStrap\FileSystems;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
@@ -260,7 +262,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
         $id = self::getOriginalIdFromRequest();
         $page = PageFragment::createPageFromId($id);
-        if (!$page->exists()) {
+        if (!FileSystems::exists($page)) {
             // Well known
             if (self::isWellKnownFile($id)) {
                 $this->logRedirection($id, "", self::TARGET_ORIGIN_WELL_KNOWN, self::REDIRECT_NOTFOUND_METHOD);
@@ -335,7 +337,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                  */
                 if ($requestedPage->getDatabasePage()->exists()) {
                     $this->executePermanentRedirect(
-                        $requestedPage->getCanonicalUrl([], true),
+                        $requestedPage->getCanonicalUrl()->toAbsoluteUrlString(),
                         self::TARGET_ORIGIN_PERMALINK_EXTENDED
                     );
                 }
@@ -350,14 +352,14 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Page Id Website / root Permalink ?
          */
-        $shortPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($requestedPage->getPath()->getLastNameWithoutExtension());
+        $shortPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($requestedPage->getPathObject()->getLastNameWithoutExtension());
         if ($shortPageId !== null) {
             $pageId = PageUrlPath::decodePageId($shortPageId);
-            if ($requestedPage->getParentPage() === null && $pageId !== null) {
+            if ($requestedPage->getParent() === null && $pageId !== null) {
                 $page = DatabasePageRow::createFromPageId($pageId)->getPage();
                 if ($page !== null && $page->exists()) {
                     $this->executePermanentRedirect(
-                        $page->getCanonicalUrl([], true),
+                        $page->getCanonicalUrl()->toAbsoluteUrlString(),
                         self::TARGET_ORIGIN_PERMALINK
                     );
                 }
@@ -394,7 +396,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                         // it's a good idea to pick one of those URLs as your preferred (canonical) destination,
                         // and use redirects to send traffic from the other URLs to your preferred URL.
                         $this->executePermanentRedirect(
-                            $page->getCanonicalUrl([], true),
+                            $page->getCanonicalUrl()->toAbsoluteUrlString(),
                             self::TARGET_ORIGIN_PERMALINK_EXTENDED
                         );
                         return;
@@ -455,7 +457,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             $buildAlias = $aliasRequestedPage->getBuildAlias();
             switch ($buildAlias->getType()) {
                 case AliasType::REDIRECT:
-                    $res = $this->executePermanentRedirect($aliasRequestedPage->getCanonicalUrl([], true), self::TARGET_ORIGIN_ALIAS);
+                    $res = $this->executePermanentRedirect($aliasRequestedPage->getCanonicalUrl()->toAbsoluteUrlString(), self::TARGET_ORIGIN_ALIAS);
                     if ($res) {
                         return;
                     }
@@ -468,7 +470,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                     break;
                 default:
                     LogUtility::msg("The alias type ({$buildAlias->getType()}) is unknown. A permanent redirect was performed for the alias $identifier");
-                    $res = $this->executePermanentRedirect($aliasRequestedPage->getCanonicalUrl([], true), self::TARGET_ORIGIN_ALIAS);
+                    $res = $this->executePermanentRedirect($aliasRequestedPage->getCanonicalUrl()->toAbsoluteUrlString(), self::TARGET_ORIGIN_ALIAS);
                     if ($res) {
                         return;
                     }

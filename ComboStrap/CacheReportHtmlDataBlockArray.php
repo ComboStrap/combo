@@ -47,7 +47,7 @@ class CacheReportHtmlDataBlockArray
                 $mode = $result->getMode();
                 $pageFragment = $result->getPageFragment();
                 try {
-                    $pageFragmentPath = WikiPath::createFromPathObject($pageFragment->getPath());
+                    $pageFragmentPath = WikiPath::createFromPathObject($pageFragment->getPathObject());
                 } catch (ExceptionBadArgument $e) {
                     // should not
                     throw new ExceptionRuntimeInternal("The path should be local wiki based");

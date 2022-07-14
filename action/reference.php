@@ -75,7 +75,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
          * {@link \ComboStrap\PageId} is given only when the page exists
          * This event can be called even if the page does not exist
          */
-        if (!FileSystems::exists($page->getPath())) {
+        if (!FileSystems::exists($page->getPathObject())) {
             return;
         }
 

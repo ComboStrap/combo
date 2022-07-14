@@ -89,7 +89,7 @@ class ResourceName extends MetadataText
          * If this is a home page, the default
          * is the parent path name
          */
-        $path = $resourceCombo->getPath();
+        $path = $resourceCombo->getPathObject();
         if ($resourceCombo instanceof PageFragment) {
 
 

@@ -15,7 +15,7 @@ abstract class ResourceComboAbs implements ResourceCombo
 
     public function exists(): bool
     {
-        return FileSystems::exists($this->getPath());
+        return FileSystems::exists($this->getPathObject());
     }
 
 

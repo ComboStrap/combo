@@ -234,7 +234,7 @@ class PageUrlPath extends MetadataWikiPath
     public function getUrlPathFromType(string $urlType): string
     {
         $page = $this->getResource();
-        $pagePath = $page->getPath()->toPathString();
+        $pagePath = $page->getPathObject()->toPathString();
         if ((!$page instanceof PageFragment)) {
             $message = "The url path is only for page resources";
             LogUtility::internalError($message, $this->getCanonical());
@@ -259,7 +259,7 @@ class PageUrlPath extends MetadataWikiPath
                 $parentPage = $page;
                 while (true) {
                     try {
-                        $parentPage = $parentPage->getParentPage();
+                        $parentPage = $parentPage->getParent();
                     } catch (ExceptionNotFound $e){
                         break;
                     }
@@ -271,7 +271,7 @@ class PageUrlPath extends MetadataWikiPath
             case PageUrlType::CONF_VALUE_HOMED_SLUG:
                 $urlPath = $page->getSlugOrDefault();
                 try {
-                    $parentPage = $page->getParentPage();
+                    $parentPage = $page->getParent();
                     if (!$parentPage->isRootHomePage()) {
                         $urlPath = Slug::toSlugPath($parentPage->getNameOrDefault()) . $urlPath;
                     }

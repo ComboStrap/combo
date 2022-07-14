@@ -30,7 +30,7 @@ class DokuwikiId extends MetadataText
 
     public function getValue(): string
     {
-        $path = $this->getResource()->getPath();
+        $path = $this->getResource()->getPathObject();
         if($path instanceof WikiPath){
             return $path->getWikiId();
         }

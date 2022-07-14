@@ -97,7 +97,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
         $lowerSearchTerm = strtolower($searchTerm);
         foreach ($pages as $page) {
             $id = $page->getWikiId();
-            $path = $page->getPath()->toPathString();
+            $path = $page->getPathObject()->toPathString();
             /**
              * The name is the label that is put
              * punt in the markup link
@@ -120,7 +120,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
                 $label = "Title: $title";
             }
             $class = "";
-            if (!FileSystems::exists($page->getPath())) {
+            if (!FileSystems::exists($page->getPathObject())) {
                 $errorClass = LinkMarkup::getHtmlClassNotExist();
                 $class = "class=\"$errorClass\"";
             }

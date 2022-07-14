@@ -205,14 +205,14 @@ class CacheDependencies
             case CacheDependencies::NAMESPACE_OLD_VALUE:
             case CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY:
                 try {
-                    $parentPath = $requestedPage->getPath()->getParent();
+                    $parentPath = $requestedPage->getPathObject()->getParent();
                     return $parentPath->toPathString();
                 } catch (ExceptionNotFound $e) {
                     // root
                     return ":";
                 }
             case CacheDependencies::REQUESTED_PAGE_DEPENDENCY:
-                return $requestedPage->getPath()->toPathString();
+                return $requestedPage->getPathObject()->toPathString();
             default:
                 throw new ExceptionCompile("The requested dependency value ($dependenciesValue) has no calculation");
         }

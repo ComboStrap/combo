@@ -75,7 +75,7 @@ class Canonical extends MetadataWikiPath
         /**
          * Takes the last names part
          */
-        $namesOriginal = $this->getResource()->getPath()->getNames();
+        $namesOriginal = $this->getResource()->getPathObject()->getNames();
         /**
          * Delete the identical names at the end
          * To resolve this problem
@@ -108,7 +108,7 @@ class Canonical extends MetadataWikiPath
          * because the path `ns:ns` is also an index if the
          * page `ns:start` does not exists
          */
-        if ($resourceCombo->getPath()->getLastNameWithoutExtension() === Site::getIndexPageName()) {
+        if ($resourceCombo->getPathObject()->getLastNameWithoutExtension() === Site::getIndexPageName()) {
             $names = array_slice($names, 0, $namesLength - 1);
         }
         $calculatedCanonical = implode(":", $names);

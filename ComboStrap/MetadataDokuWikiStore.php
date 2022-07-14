@@ -97,7 +97,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             self::$storesByRequestedPage[$requestedId] = [];
             $storesByRequestedId = &self::$storesByRequestedPage[$requestedId];
         }
-        $path = $resourceCombo->getPath()->toPathString();
+        $path = $resourceCombo->getPathObject()->toPathString();
         if (isset($storesByRequestedId[$path])) {
             return $storesByRequestedId[$path];
         }
@@ -381,7 +381,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             LogUtility::msg("The resource type ({$resource->getType()}) meta file is unknown and can't be retrieved.");
             return null;
         }
-        $dokuwikiId = $resource->getPath()->getWikiId();
+        $dokuwikiId = $resource->getPathObject()->getWikiId();
         return LocalPath::create(metaFN($dokuwikiId, '.meta'));
     }
 

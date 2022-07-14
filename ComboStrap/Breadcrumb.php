@@ -82,7 +82,7 @@ class Breadcrumb
                 $parent = $actual;
                 while (true) {
                     try {
-                        $parent = $parent->getParentPage();
+                        $parent = $parent->getParent();
                     } catch (ExceptionNotFound $e) {
                         break;
                     }
@@ -108,7 +108,7 @@ class Breadcrumb
                 $htmlOutput = $tagAttributes->toHtmlEnterTag("span");
                 $lisHtmlOutput = "";
                 $actualDepth = 0;
-                while ($actual = $actual->getParentPage()) {
+                while ($actual = $actual->getParent()) {
                     $actualDepth = $actualDepth + 1;
                     $nameOrDefault = $actual->getNameOrDefault();
                     $liHtmlOutput = "<span class=\"breadcrumb-typography-item\">$nameOrDefault</span>";
@@ -150,7 +150,7 @@ class Breadcrumb
         }
         $liHtmlOutput = "<li class=\"breadcrumb-item$liClass\"$liArial>";
 
-        if (FileSystems::exists($page->getPath()) && $current === false) {
+        if (FileSystems::exists($page->getPathObject()) && $current === false) {
             if ($link) {
                 $liHtmlOutput .= $page->getHtmlAnchorLink(syntax_plugin_combo_breadcrumb::CANONICAL_HIERARCHICAL);
             } else {

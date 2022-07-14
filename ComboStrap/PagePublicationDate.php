@@ -119,7 +119,7 @@ class PagePublicationDate extends MetadataDateTime
 
     public function getDefaultValue(): DateTime
     {
-        $lastName = $this->getResource()->getPath()->getLastNameWithoutExtension();
+        $lastName = $this->getResource()->getPathObject()->getLastNameWithoutExtension();
         $result = preg_match("/(\d{4}-\d{2}-\d{2}).*/i", $lastName, $matches);
         if ($result === 1) {
             $date = $matches[1];

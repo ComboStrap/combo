@@ -121,7 +121,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
 
     public static function createPageFetcherFromPage(PageFragment $pageFragment): FetcherPage
     {
-        return self::createPageFetcherFromPath($pageFragment->getPath());
+        return self::createPageFetcherFromPath($pageFragment->getPathObject());
     }
 
     /**

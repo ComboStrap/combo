@@ -346,6 +346,9 @@ class Url extends PathAbs
         return $this;
     }
 
+    /**
+     * @return string - utility function that call {@link Url::toAbsoluteUrl()} absolute and {@link Url::toString()}
+     */
     public function toAbsoluteUrlString(): string
     {
         $this->toAbsoluteUrl();

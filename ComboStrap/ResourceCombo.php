@@ -13,9 +13,11 @@ namespace ComboStrap;
  *
  * A resource is a just a wrapper around path that adds metadata functionalities
  *
+ * @deprecated it's just a {@link Path}
  */
 interface ResourceCombo
 {
+
 
     public function getReadStoreOrDefault(): MetadataStore;
 
@@ -23,7 +25,7 @@ interface ResourceCombo
      * @return Path - a generic path system where the content raw resource is stored
      * ie the file system url, the dokuwiki url
      */
-    public function getPath(): Path;
+    public function getPathObject(): Path;
 
     /**
      * @return mixed - the unique id

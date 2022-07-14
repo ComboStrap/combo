@@ -85,7 +85,7 @@ class MetaManagerForm
         /**
          * Creation
          */
-        $name = $this->page->getPath()->toPathString();
+        $name = $this->page->getPathObject()->toPathString();
         $formMeta = FormMeta::create($name)
             ->setType(FormMeta::FORM_NAV_TABS_TYPE);
 

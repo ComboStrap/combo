@@ -71,7 +71,7 @@ class FetcherVignette extends FetcherImage
          * Building the cache dependencies
          */
         try {
-            $cache->addFileDependency($this->page->getPath())
+            $cache->addFileDependency($this->page->getPathObject())
                 ->addFileDependency(ClassUtility::getClassPath($this));
         } catch (\ReflectionException $e) {
             // It should not happen but yeah
@@ -121,7 +121,7 @@ class FetcherVignette extends FetcherImage
             /**
              * Category
              */
-            $parentPage = $this->page->getParentPage();
+            $parentPage = $this->page->getParent();
             if ($parentPage !== null) {
                 $yCategory = 120;
                 $categoryFontSize = 40;
@@ -287,7 +287,7 @@ class FetcherVignette extends FetcherImage
     function getFetchUrl(Url $url = null): Url
     {
         $url = parent::getFetchUrl($url)
-            ->addQueryParameter(self::VIGNETTE_NAME, $this->page->getPath()->getWikiId() . "." . $this->mime->getExtension());
+            ->addQueryParameter(self::VIGNETTE_NAME, $this->page->getPathObject()->getWikiId() . "." . $this->mime->getExtension());
         return $url;
 
     }
@@ -319,7 +319,7 @@ class FetcherVignette extends FetcherImage
         $extension = substr($vignette, $lastPoint + 1);
         $wikiId = substr($vignette, 0, $lastPoint);
         $this->setPage(PageFragment::createPageFromId($wikiId));
-        if (!FileSystems::exists($this->page->getPath())) {
+        if (!FileSystems::exists($this->page->getPathObject())) {
             throw new ExceptionNotFound("The page does not exists");
         }
         try {
@@ -344,7 +344,7 @@ class FetcherVignette extends FetcherImage
     public function setPage(PageFragment $page): FetcherVignette
     {
         $this->page = $page;
-        $this->buster = FileSystems::getCacheBuster($this->page->getPath());
+        $this->buster = FileSystems::getCacheBuster($this->page->getPathObject());
         return $this;
     }
 

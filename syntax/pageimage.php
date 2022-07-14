@@ -215,7 +215,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     $parent = $page;
                     while (true) {
                         try {
-                            $parent = $parent->getParentPage();
+                            $parent = $parent->getParent();
                         } catch (ExceptionNotFound $e) {
                             break;
                         }

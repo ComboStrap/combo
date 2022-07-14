@@ -61,7 +61,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
         $metaFilePath = $dokuwikiStore->getMetaFilePath();
         if ($metaFilePath !== null) {
             $metaModifiedTime = FileSystems::getModifiedTime($metaFilePath);
-            $pageModifiedTime = FileSystems::getModifiedTime($resourceCombo->getPath());
+            $pageModifiedTime = FileSystems::getModifiedTime($resourceCombo->getPathObject());
             $diff = $pageModifiedTime->diff($metaModifiedTime);
             $secondDiff = intval($diff->format('%s'));
             if ($secondDiff > 0) {
@@ -239,7 +239,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
      */
     public static function createFromPage(PageFragment $page): MetadataFrontmatterStore
     {
-        $content = FileSystems::getContent($page->getPath());
+        $content = FileSystems::getContent($page->getPathObject());
         $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
         if (strpos($content, $frontMatterStartTag) === 0) {
 

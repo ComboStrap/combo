@@ -107,7 +107,7 @@ class DatabasePageRow
             throw new ExceptionCompile("Sqlite is mandatory for database replication");
         }
 
-        if (!$this->page->exists()) {
+        if (!FileSystems::exists($this->page)) {
             throw new ExceptionCompile("You can't replicate the non-existing page ($this->page) on the file system");
         }
 
@@ -278,7 +278,7 @@ class DatabasePageRow
          * When the replication date is older than the actual document
          */
         try {
-            $modifiedTime = FileSystems::getModifiedTime($this->page->getPath());
+            $modifiedTime = FileSystems::getModifiedTime($this->page->getPathObject());
             if ($modifiedTime > $dateReplication) {
                 return true;
             }
@@ -413,7 +413,7 @@ class DatabasePageRow
         // Do we have a page attached to the path
 
         try {
-            $path = $page->getPath();
+            $path = $page->getPathObject();
             return $this->getDatabaseRowFromPath($path);
         } catch (ExceptionNotFound $e) {
             // not found
@@ -422,7 +422,7 @@ class DatabasePageRow
         /**
          * Do we have a page attached to this ID
          */
-        $id = $page->getPath()->getWikiId();
+        $id = $page->getPathObject()->getWikiId();
         try {
             return $this->getDatabaseRowFromDokuWikiId($id);
         } catch (ExceptionNotFound $e) {
@@ -460,7 +460,7 @@ class DatabasePageRow
     public function replicatePage(): void
     {
 
-        if (!$this->page->exists()) {
+        if (!FileSystems::exists($this->page)) {
             throw new ExceptionBadState("You can't replicate the page ($this->page) because it does not exists.");
         }
 
@@ -587,8 +587,8 @@ class DatabasePageRow
                 throw new ExceptionBadState("The page ($this->page) cannot be replicated to the database because it has the same page id abbreviation ($pageIdAbbr) than the page ($duplicatePage)");
             }
 
-            $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getPath()->getWikiId();
-            $values[PagePath::PROPERTY_NAME] = $this->page->getPath()->toAbsolutePath()->toPathString();
+            $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getPathObject()->getWikiId();
+            $values[PagePath::PROPERTY_NAME] = $this->page->getPathObject()->toAbsolutePath()->toPathString();
             /**
              * Default implements the auto-canonical feature
              */
@@ -1127,7 +1127,7 @@ class DatabasePageRow
     function addRedirectAliasWhileBuildingRow(PageFragment $pageAlias)
     {
 
-        $aliasPath = $pageAlias->getPath()->toPathString();
+        $aliasPath = $pageAlias->getPathObject()->toPathString();
         try {
             Aliases::createForPage($this->page)
                 ->addAlias($aliasPath)

@@ -94,16 +94,16 @@ class WikiPath extends PathAbs
      */
     const DRIVE_SEPARATOR = ">";
     /**
-     * @var string - the entered path (we use it for now to handle directory by adding a separator at the end)
+     * @var string - the absolute path (we use it for now to handle directory by adding a separator at the end)
      */
-    private $path;
+    protected $absolutePath;
 
     /**
      * DokuPath constructor.
      *
      * A path for the Dokuwiki File System
      *
-     * @param string $path - the dokuwiki absolute path (may not be relative but may be a namespace)
+     * @param string $path - the path (may be relative)
      * @param string $drive - the drive (media, page, combo) - same as in windows for the drive prefix (c, d, ...)
      * @param string|null $rev - the revision (mtime)
      *
@@ -132,7 +132,7 @@ class WikiPath extends PathAbs
         /**
          * Relative Path ?
          */
-        $this->path = $path;
+        $this->absolutePath = $path;
         $firstCharacter = substr($path, 0, 1);
         if ($drive === self::PAGE_DRIVE && $firstCharacter !== WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $parts = preg_split('/' . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . '/', $path);
@@ -145,7 +145,7 @@ class WikiPath extends PathAbs
                     } catch (ExceptionNotFound $e) {
                         // Root case: the relative path is in the root
                         // the root has no parent
-                        LogUtility::error("The current relative path ({$this->path}) returns an error: {$e->getMessage()}", self::CANONICAL);
+                        LogUtility::error("The current relative path ({$this->absolutePath}) returns an error: {$e->getMessage()}", self::CANONICAL);
                         $rootRelativePath = WikiPath::createPagePathFromPath(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
                     }
                     break;
@@ -157,11 +157,11 @@ class WikiPath extends PathAbs
                         try {
                             $rootRelativePath = $currentPagePath->getParent();
                         } catch (ExceptionNotFound $e) {
-                            LogUtility::error("The parent relative path ({$this->path}) returns an error: {$e->getMessage()}", self::CANONICAL);
+                            LogUtility::error("The parent relative path ({$this->absolutePath}) returns an error: {$e->getMessage()}", self::CANONICAL);
                             $rootRelativePath = $this->getCurrentPagePath();
                         }
                     } catch (ExceptionNotFound $e) {
-                        LogUtility::error("The parent relative path ({$this->path}) returns an error: {$e->getMessage()}", self::CANONICAL);
+                        LogUtility::error("The parent relative path ({$this->absolutePath}) returns an error: {$e->getMessage()}", self::CANONICAL);
                     }
                     break;
                 default:
@@ -172,7 +172,7 @@ class WikiPath extends PathAbs
                     try {
                         $rootRelativePath = $this->getCurrentPagePath();
                     } catch (ExceptionNotFound $e) {
-                        LogUtility::error("The named relative path ({$this->path}) returns an error: {$e->getMessage()}", self::CANONICAL);
+                        LogUtility::error("The named relative path ({$this->absolutePath}) returns an error: {$e->getMessage()}", self::CANONICAL);
                         $rootRelativePath = WikiPath::createPagePathFromPath(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
                     }
                     break;
@@ -192,7 +192,7 @@ class WikiPath extends PathAbs
             if ($isRelativeDirectoryPath && !WikiPath::isNamespacePath($absolutePathString)) {
                 $absolutePathString = $absolutePathString . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT;
             }
-            $this->path = $absolutePathString;
+            $this->absolutePath = $absolutePathString;
         }
 
 
@@ -204,7 +204,7 @@ class WikiPath extends PathAbs
          * We check if there is an extension
          * If this is the case, this is a media
          */
-        if ($drive == self::UNKNOWN_DRIVE) {
+        if ($drive === self::UNKNOWN_DRIVE) {
             $lastPosition = StringUtility::lastIndexOf($path, ".");
             if ($lastPosition === FALSE) {
                 $drive = self::PAGE_DRIVE;
@@ -220,10 +220,10 @@ class WikiPath extends PathAbs
         if ($drive === self::PAGE_DRIVE) {
             $textExtension = self::PAGE_FILE_TXT_EXTENSION;
             $textExtensionLength = strlen($textExtension);
-            $pathExtension = substr($this->path, -$textExtensionLength);
+            $pathExtension = substr($this->absolutePath, -$textExtensionLength);
             if ($pathExtension === $textExtension) {
                 // delete the extension, page does not have any extension
-                $this->path = substr($this->path, 0, strlen($this->path) - $textExtensionLength);
+                $this->absolutePath = substr($this->absolutePath, 0, strlen($this->absolutePath) - $textExtensionLength);
             }
         }
 
@@ -233,12 +233,12 @@ class WikiPath extends PathAbs
          * (Internal use only)
          */
         $comboInterWikiScheme = "combo>";
-        if (strpos($this->path, $comboInterWikiScheme) === 0) {
-            $this->id = substr($this->path, strlen($comboInterWikiScheme));
+        if (strpos($this->absolutePath, $comboInterWikiScheme) === 0) {
+            $this->id = substr($this->absolutePath, strlen($comboInterWikiScheme));
             $this->drive = self::COMBO_DRIVE;
         } else {
-            WikiPath::addRootSeparatorIfNotPresent($this->path);
-            $this->id = WikiPath::toDokuwikiId($this->path);
+            WikiPath::addRootSeparatorIfNotPresent($this->absolutePath);
+            $this->id = WikiPath::toDokuwikiId($this->absolutePath);
         }
 
 
@@ -426,18 +426,8 @@ class WikiPath extends PathAbs
      */
     public static function createRunningPageFragmentPathFromGlobalId(): WikiPath
     {
-        global $ID;
-        if ($ID === null) {
-            /**
-             * It can happen during dynamic test call
-             * TODO: It can happen in case of ajax call, check this test case
-             */
-            if (!PluginUtility::isTest()) {
-                LogUtility::error("The markup fragment could not be identified (global wiki ID is null)");
-            }
-            $ID = MarkupDynamicRender::DEFAULT_SLOT_ID_FOR_TEST;
-        }
-        return WikiPath::createPagePathFromId($ID);
+        $id = WikiRequestEnvironment::createAndCaptureState()->getActualGlobalId();
+        return WikiPath::createPagePathFromId($id);
     }
 
     public static function createRequestedPagePathFromRequest(): WikiPath
@@ -600,8 +590,6 @@ class WikiPath extends PathAbs
     }
 
 
-
-
     /**
      * The last part of the path
      * @throws ExceptionNotFound
@@ -710,7 +698,7 @@ class WikiPath extends PathAbs
     function getPath(): string
     {
 
-        return $this->path;
+        return $this->absolutePath;
 
     }
 
@@ -776,7 +764,7 @@ class WikiPath extends PathAbs
     function getAbsolutePath(): string
     {
 
-        return $this->path;
+        return $this->absolutePath;
 
     }
 
@@ -847,8 +835,8 @@ class WikiPath extends PathAbs
         /**
          * File path
          */
-        $filePathString = $this->path;
-        $isNamespacePath = self::isNamespacePath($this->path);
+        $filePathString = $this->absolutePath;
+        $isNamespacePath = self::isNamespacePath($this->absolutePath);
         if ($isNamespacePath) {
             /**
              * Namespace
@@ -920,13 +908,13 @@ class WikiPath extends PathAbs
      */
     function toPathString(): string
     {
-        return $this->path;
+        return $this->absolutePath;
     }
 
 
     function toAbsolutePath(): Path
     {
-        return new WikiPath($this->path, $this->drive, $this->rev);
+        return new WikiPath($this->absolutePath, $this->drive, $this->rev);
     }
 
     /**
@@ -983,10 +971,10 @@ class WikiPath extends PathAbs
     {
 
         // Directory path have already separator at the end, don't add it
-        if ($this->path[strlen($this->path) - 1] !== WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
-            $path = $this->path . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $name;
+        if ($this->absolutePath[strlen($this->absolutePath) - 1] !== WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+            $path = $this->absolutePath . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $name;
         } else {
-            $path = $this->path . $name;
+            $path = $this->absolutePath . $name;
         }
         try {
             return new WikiPath($path, $this->getDrive());

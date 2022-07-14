@@ -6,28 +6,34 @@ namespace ComboStrap;
 use action_plugin_combo_qualitymessage;
 use DateTime;
 use Exception;
-use http\Exception\RuntimeException;
 use renderer_plugin_combo_analytics;
 
 
 /**
  *
- * Class Page
- * @package ComboStrap
  *
- * A page (ie slot) is a logical unit that represents
- * one or more markdown file up to the whole HTML page
+ *
+ * A page fragment (ie slot) is a logical unit that represents
+ * a markup file
  *
  * For instance:
  *   * the main slot is the main markdown file and the header and footer slot
  *   * while the sidebar is a leaf
  *
+ * It has its own file system {@link PageFileSystem} explained in the
+ * https://combostrap.com/page/system (or system.txt file).
+ *
+ * We are not extending {@link WikiPath} because:
+ *   * we want to be able to return {@link PageFragment} in the {@link PageFragment::getParent()} function
+ * otherwise if we do, we get a hierarchical error.
+ *   * we can then accepts also {@link LocalPath}
  *
  */
-class PageFragment extends ResourceComboAbs
+class PageFragment implements ResourceCombo, Path
 {
 
-    private $path;
+    const CANONICAL_PAGE = "page-fragment";
+
 
     const TYPE = "page";
 
@@ -56,6 +62,7 @@ class PageFragment extends ResourceComboAbs
      */
     private $title;
 
+    private $uidObject;
 
     private LowQualityPageOverwrite $canBeOfLowQuality;
     /**
@@ -160,20 +167,22 @@ class PageFragment extends ResourceComboAbs
     private $readStore;
 
     /**
+     * @var Path - we wrap a path and not extends to be able to return a {@link PageFragment}
+     * otherwise we get an hierarchy error
+     */
+    private Path $path;
+
+    /**
      * Page constructor.
-     * @param Path $path - the qualified path (may be not relative)
      *
      */
     public function __construct(Path $path)
     {
 
         $this->path = $path;
-
-        if (FileSystems::isDirectory($this->path)) {
+        if (FileSystems::isDirectory($path)) {
             $this->setCorrectPathForDirectoryToIndexPage();
-
         }
-
         $this->buildPropertiesFromFileSystem();
 
     }
@@ -183,32 +192,37 @@ class PageFragment extends ResourceComboAbs
      */
     public static function createPageFromGlobalWikiId(): PageFragment
     {
-        $dokuPath = WikiPath::createRunningPageFragmentPathFromGlobalId();
-        return self::createPageFromPathObject($dokuPath);
+        $wikiPath = WikiPath::createRunningPageFragmentPathFromGlobalId();
+        return self::createPageFromPathObject($wikiPath);
     }
 
     public static function createPageFromId($id): PageFragment
     {
-        $path = WikiPath::createPagePathFromId($id);
-        return new PageFragment($path);
+        return new PageFragment(WikiPath::createPagePathFromId($id));
     }
 
+    /**
+     * @param $pathOrId
+     * @return PageFragment
+     */
     public static function createPageFromNonQualifiedPath($pathOrId): PageFragment
     {
-        global $ID;
-        $qualifiedId = $pathOrId;
-        resolve_pageid(getNS($ID), $qualifiedId, $exists);
-        /**
-         * Root correction
-         * yeah no root functionality in the {@link resolve_pageid resolution}
-         * meaning that we get an empty string
-         * they correct it in the link creation {@link wl()}
-         */
-        if ($qualifiedId === '') {
-            global $conf;
-            $qualifiedId = $conf['start'];
-        }
-        return PageFragment::createPageFromId($qualifiedId);
+
+//        global $ID;
+//        $qualifiedId = $pathOrId;
+//        resolve_pageid(getNS($ID), $qualifiedId, $exists);
+//        /**
+//         * Root correction
+//         * yeah no root functionality in the {@link resolve_pageid resolution}
+//         * meaning that we get an empty string
+//         * they correct it in the link creation {@link wl()}
+//         */
+//        if ($qualifiedId === '') {
+//            global $conf;
+//            $qualifiedId = $conf['start'];
+//        }
+//        return PageFragment::createPageFromId($qualifiedId);
+        return PageFragment::createPageFromQualifiedPath($pathOrId);
 
     }
 
@@ -221,9 +235,7 @@ class PageFragment extends ResourceComboAbs
         return PageFragment::createPageFromPathObject($path);
     }
 
-    /**
-     *
-     */
+
     public static function createPageFromPathObject(Path $path): PageFragment
     {
         return new PageFragment($path);
@@ -276,7 +288,7 @@ class PageFragment extends ResourceComboAbs
     {
         $slotNames = Site::getSecondarySlotNames();
         try {
-            $name = $this->getPath()->getLastNameWithoutExtension();
+            $name = $this->getPathObject()->getLastNameWithoutExtension();
         } catch (ExceptionNotFound $e) {
             // root case
             return false;
@@ -290,7 +302,7 @@ class PageFragment extends ResourceComboAbs
     public function isSideSlot(): bool
     {
         $slotNames = Site::getSidebarName();
-        $name = $this->getPath()->getLastNameWithoutExtension();
+        $name = $this->getPathObject()->getLastNameWithoutExtension();
         if ($name === null) {
             // root case
             return false;
@@ -309,7 +321,7 @@ class PageFragment extends ResourceComboAbs
         } catch (ExceptionCompile $e) {
             return false;
         }
-        $name = $this->getPath()->getLastNameWithoutExtension();
+        $name = $this->getPathObject()->getLastNameWithoutExtension();
         if ($name === null) {
             // root case
             return false;
@@ -388,7 +400,7 @@ class PageFragment extends ResourceComboAbs
     {
 
         try {
-            return FetcherPageFragment::createPageFragmentFetcherFromPath($this->getPath())
+            return FetcherPageFragment::createPageFragmentFetcherFromPath($this->getPathObject())
                 ->setRequestedMimeToXhtml();
         } catch (ExceptionBadArgument $e) {
             throw new ExceptionRuntimeInternal("The path should be local. Error: {$e->getMessage()}");
@@ -498,7 +510,7 @@ class PageFragment extends ResourceComboAbs
             return $this->title->getValueOrDefault();
         } catch (ExceptionNotFound $e) {
             LogUtility::internalError("Internal Error: The page ($this) does not have any default title");
-            return $this->getPath()->getLastNameWithoutExtension();
+            return $this->getPathObject()->getLastNameWithoutExtension();
         }
 
     }
@@ -546,7 +558,7 @@ class PageFragment extends ResourceComboAbs
     {
 
         try {
-            return FileSystems::getContent($this->getPath());
+            return FileSystems::getContent($this->getPathObject());
         } catch (ExceptionNotFound $e) {
             LogUtility::msg("The page ($this) was not found");
             return "";
@@ -560,7 +572,7 @@ class PageFragment extends ResourceComboAbs
     {
         $Indexer = idx_get_indexer();
         $pages = $Indexer->getPages();
-        $return = array_search($this->getPath()->getWikiId(), $pages, true);
+        $return = array_search($this->getPathObject()->getWikiId(), $pages, true);
         return $return !== false;
     }
 
@@ -568,7 +580,7 @@ class PageFragment extends ResourceComboAbs
     public
     function upsertContent($content, $summary = "Default"): PageFragment
     {
-        saveWikiText($this->getPath()->getWikiId(), $content, $summary);
+        saveWikiText($this->getPathObject()->getWikiId(), $content, $summary);
         return $this;
     }
 
@@ -586,7 +598,7 @@ class PageFragment extends ResourceComboAbs
         $keepACT = $ACT;
         try {
             $ACT = "show";
-            $ID = $this->getPath()->getWikiId();
+            $ID = $this->getPathObject()->getWikiId();
             idx_addPage($ID);
         } finally {
             $ID = $keep;
@@ -735,7 +747,7 @@ class PageFragment extends ResourceComboAbs
     public function renderMetadataAndFlush(): PageFragment
     {
 
-        if (!$this->exists()) {
+        if (!FileSystems::exists($this)) {
             if (PluginUtility::isDevOrTest()) {
                 LogUtility::msg("You can't render the metadata of a page that does not exist");
             }
@@ -746,7 +758,7 @@ class PageFragment extends ResourceComboAbs
          * Setting the running id
          * (Used only in test)
          */
-        $wikiPath = WikiPath::createFromPathObject($this->getPath());
+        $wikiPath = WikiPath::createFromPathObject($this->getPathObject());
         $wikiRequest = WikiRequestEnvironment::createAndCaptureState()
             ->setNewRequestedId($wikiPath->getWikiId())
             ->setNewRunningId($wikiPath->getWikiId());
@@ -801,13 +813,12 @@ class PageFragment extends ResourceComboAbs
      * Adapted from {@link FsWikiUtility::getHomePagePath()}
      * @return bool
      */
-    public
-    function isIndexPage(): bool
+    public function isIndexPage(): bool
     {
 
         $startPageName = Site::getIndexPageName();
         try {
-            if ($this->getPath()->getLastNameWithoutExtension() === $startPageName) {
+            if ($this->getPathObject()->getLastNameWithoutExtension() === $startPageName) {
                 return true;
             }
         } catch (ExceptionNotFound $e) {
@@ -819,13 +830,14 @@ class PageFragment extends ResourceComboAbs
              * page named like the NS inside the NS
              * ie ns:ns
              */
-            $namespace = $this->path->getParent();
-            if ($namespace->getLastNameWithoutExtension() === $this->getPath()->getLastNameWithoutExtension()) {
+            $objectPath = $this->path;
+            $parentPath = $this->path->getParent();
+            if ($parentPath->getLastNameWithoutExtension() === $objectPath->getLastNameWithoutExtension()) {
                 /**
                  * If the start page does not exists, this is the index page
                  */
-                $startPage = PageFragment::createPageFromId($namespace->getWikiId() . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $startPageName);
-                if (!FileSystems::exists($startPage->getPath())) {
+                $startPage = $parentPath->resolve($startPageName);
+                if (!FileSystems::exists($startPage)) {
                     return true;
                 }
             }
@@ -847,6 +859,14 @@ class PageFragment extends ResourceComboAbs
         return $this->publishedDate->getValueFromStore();
     }
 
+    /**
+     * @return bool
+     * @deprecated for {@link FileSystems::exists()}
+     */
+    public function exists(): bool
+    {
+        return FileSystems::exists($this);
+    }
 
     /**
      * @return DateTime
@@ -875,47 +895,39 @@ class PageFragment extends ResourceComboAbs
      *   * in the link
      *   * in the canonical ref
      *   * in the site map
-     * @param array $urlParameters
-     * @param bool $absoluteUrlMandatory - by default, dokuwiki allows the canonical to be relative but it's mandatory to be absolute for the HTML meta
-     * @param string $separator - TODO: delete. HTML encoded or not ampersand (the default should always be good because the encoding is done just before printing (ie {@link TagAttributes::encodeToHtmlValue()})
-     * @return string|null
+     * @return Url
      */
     public
-    function getCanonicalUrl(array $urlParameters = [], bool $absoluteUrlMandatory = false, string $separator = Url::AMPERSAND_CHARACTER): ?string
+    function getCanonicalUrl(): Url
     {
-
-        /**
-         * Conf
-         */
-        try {
-            $urlType = PageUrlType::createFromPage($this)->getValue();
-        } catch (ExceptionNotFound $e) {
-            $urlType = null;
-        }
-        if ($urlType === PageUrlType::CONF_VALUE_PAGE_PATH && $absoluteUrlMandatory == false) {
-            $absoluteUrlMandatory = Site::shouldUrlBeAbsolute();
-        }
 
         /**
          * Dokuwiki Methodology Taken from {@link tpl_metaheaders()}
          */
-        if ($absoluteUrlMandatory && $this->isRootHomePage()) {
-            return DOKU_URL;
+        if ($this->isRootHomePage()) {
+            try {
+                return UrlEndpoint::createBaseUrl();
+            } catch (ExceptionBadArgument|ExceptionBadSyntax $e) {
+                LogUtility::error("The base url returns an error, we have returned an empty url for this root page. Error: {$e->getMessage()}");
+                return Url::createEmpty();
+            }
         }
 
-        return wl($this->getUrlId(), $urlParameters, $absoluteUrlMandatory, $separator);
+        return UrlEndpoint::createDokuUrl()
+            ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getUrlId());
 
 
     }
 
-    public function getUrl($type = null): ?string
+    public function getUrlWhereIdIs($type = null): Url
     {
         if ($type === null) {
             return $this->getCanonicalUrl();
         }
         $pageUrlId = WikiPath::toDokuwikiId(PageUrlPath::createForPage($this)
             ->getUrlPathFromType($type));
-        return wl($pageUrlId);
+        return UrlEndpoint::createDokuUrl()
+            ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $pageUrlId);
     }
 
 
@@ -951,7 +963,7 @@ class PageFragment extends ResourceComboAbs
     public
     function getHtmlAnchorLink($logicalTag = null): string
     {
-        $id = $this->getPath()->getWikiId();
+        $id = $this->getPathObject()->getWikiId();
         try {
             return LinkMarkup::createFromPageIdOrPath($id)
                     ->toAttributes($logicalTag)
@@ -968,14 +980,14 @@ class PageFragment extends ResourceComboAbs
     /**
      * Without the `:` at the end
      * @return string
+     * @throws ExceptionNotFound
      * @deprecated / shortcut for {@link WikiPath::getParent()}
      * Because a page has always a parent, the string is never null.
      */
-    public
-    function getNamespacePath(): string
+    public function getNamespacePath(): string
     {
 
-        return $this->path->getParent()->toPathString();
+        return $this->getParent()->toPathString();
 
     }
 
@@ -1018,11 +1030,11 @@ class PageFragment extends ResourceComboAbs
     public
     function unsetMetadata($property)
     {
-        $meta = p_read_metadata($this->getPath()->getWikiId());
+        $meta = p_read_metadata($this->getPathObject()->getWikiId());
         if (isset($meta['persistent'][$property])) {
             unset($meta['persistent'][$property]);
         }
-        p_save_metadata($this->getPath()->getWikiId(), $meta);
+        p_save_metadata($this->getPathObject()->getWikiId(), $meta);
 
     }
 
@@ -1088,12 +1100,6 @@ class PageFragment extends ResourceComboAbs
         $array["now"] = Iso8601Date::createFromNow()->toString();
         return $array;
 
-    }
-
-    public
-    function __toString()
-    {
-        return $this->path->toUriString();
     }
 
 
@@ -1169,7 +1175,7 @@ class PageFragment extends ResourceComboAbs
     {
         global $conf;
         $startPageName = $conf['start'];
-        return $this->getPath()->toPathString() === ":$startPageName";
+        return $this->getPathObject()->toPathString() === ":$startPageName";
 
     }
 
@@ -1411,11 +1417,10 @@ class PageFragment extends ResourceComboAbs
      * @return PageFragment
      * @throws ExceptionNotFound
      */
-    public
-    function getParentPage(): PageFragment
+    public function getParent(): PageFragment
     {
 
-        $names = $this->getPath()->getNames();
+        $names = $this->getNames();
         if (sizeof($names) == 0) {
             throw new ExceptionNotFound("No parent page");
         }
@@ -1870,7 +1875,7 @@ class PageFragment extends ResourceComboAbs
     function getInstructionsDocument(): FetcherPageFragment
     {
 
-        return FetcherPageFragment::createPageFragmentFetcherFromPath($this->getPath())
+        return FetcherPageFragment::createPageFragmentFetcherFromPath($this->getPathObject())
             ->setRequestedMimeToInstructions();
 
     }
@@ -1885,12 +1890,12 @@ class PageFragment extends ResourceComboAbs
     }
 
     /**
-     * @return string|null -the absolute canonical url
+     * @return Url -the absolute canonical url
      */
     public
-    function getAbsoluteCanonicalUrl(): ?string
+    function getAbsoluteCanonicalUrl(): Url
     {
-        return $this->getCanonicalUrl([], true);
+        return $this->getCanonicalUrl()->toAbsoluteUrl();
     }
 
 
@@ -1913,22 +1918,23 @@ class PageFragment extends ResourceComboAbs
 
     /**
      * @return Path
+     * A page is now a path on itself
+     * (should be used only in the file system to path the function along)
      */
-    public
-    function getPath(): Path
+    public function getPathObject(): Path
     {
         return $this->path;
     }
 
 
     /**
-     * A shortcut for {@link PageFragment::getPath()::getDokuwikiId()}
+     * A shortcut for {@link PageFragment::getPathObject()::getDokuwikiId()}
      *
      */
     public
     function getWikiId(): string
     {
-        return $this->getPath()->getWikiId();
+        return $this->getPathObject()->getWikiId();
     }
 
     public
@@ -2053,16 +2059,16 @@ class PageFragment extends ResourceComboAbs
          * We don't return a page because it does not work in a constructor
          */
         $startPageName = Site::getIndexPageName();
-        $indexPage = $this->path->resolve($startPageName);
-        if (FileSystems::exists($indexPage)) {
+        $indexPath = $this->path->resolve($startPageName);
+        if (FileSystems::exists($indexPath)) {
             // start page inside namespace
-            $this->path = $indexPage;
+            $this->path = $indexPath;
             return;
         }
 
         // page named like the NS inside the NS
         try {
-            $parentName = $this->path->getLastNameWithoutExtension();
+            $parentName = $this->getLastNameWithoutExtension();
             $nsInsideNsIndex = $this->path->resolve($parentName);
             if (FileSystems::exists($nsInsideNsIndex)) {
                 $this->path = $nsInsideNsIndex;
@@ -2072,11 +2078,89 @@ class PageFragment extends ResourceComboAbs
             // no last name
         }
 
-
         // We don't support the child page
         // Does not exist but can be used by hierarchical function
-        $this->path = $indexPage;
+        $this->path = $indexPath;
     }
 
+
+    public function getUidObject(): Metadata
+    {
+        if ($this->uidObject === null) {
+            try {
+                $this->uidObject = Metadata::toMetadataObject($this->getUid())
+                    ->setResource($this);
+            } catch (ExceptionBadArgument $e) {
+                throw new ExceptionRuntimeInternal("Uid object is a metadata object. It should not happen.", self::CANONICAL_PAGE, 1, $e);
+            }
+        }
+
+        return $this->uidObject;
+    }
+
+    function getExtension()
+    {
+        return $this->path->getExtension();
+    }
+
+    function getLastNameWithoutExtension(): string
+    {
+        return $this->path->getLastNameWithoutExtension();
+    }
+
+    function getScheme(): string
+    {
+        return PageFileSystem::SCHEME;
+    }
+
+    function getLastName(): string
+    {
+        return $this->path->getLastName();
+    }
+
+    function getNames()
+    {
+        return $this->path->getNames();
+    }
+
+    function toPathString(): string
+    {
+        return $this->path->toPathString();
+    }
+
+    function toUriString(): string
+    {
+        return $this->path->toUriString();
+    }
+
+    function toAbsolutePath(): Path
+    {
+        return $this->path->toAbsolutePath();
+    }
+
+    function getMime(): Mime
+    {
+        return $this->path->getMime();
+    }
+
+    function resolve(string $name)
+    {
+        return $this->path->resolve($name);
+    }
+
+    function getUrl(): Url
+    {
+        return $this->path->getUrl();
+    }
+
+    function getHost(): string
+    {
+        return $this->path->getHost();
+    }
+
+    public function __toString(): string
+    {
+        return "$this->path";
+    }
 
 }

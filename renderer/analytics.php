@@ -155,7 +155,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
 
     public static function createAnalyticsFetcherForPageFragment(PageFragment $param): FetcherPageFragment
     {
-        $analyticsFetcher = FetcherPageFragment::createPageFragmentFetcherFromPath($param->getPath())
+        $analyticsFetcher = FetcherPageFragment::createPageFragmentFetcherFromPath($param->getPathObject())
             ->setRequestedMime(Mime::getJson())
             ->setRequestedRendererName(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
 

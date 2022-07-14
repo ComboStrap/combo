@@ -169,7 +169,7 @@ class PageElement
             switch ($this->getId()) {
                 case FetcherPage::PAGE_SIDE_ELEMENT:
                     try {
-                        $requestedPage->getPath()->getParent();
+                        $requestedPage->getPathObject()->getParent();
                     } catch (ExceptionNotFound $e) {
                         // no parent page, no side bar
                         throw new ExceptionNotFound("No page side for pages in the root directory.");

@@ -61,7 +61,7 @@ class PageKeywords extends MetadataMultiple
         $parentPage = $resource;
         while (true) {
             try {
-                $parentPage = $parentPage->getParentPage();
+                $parentPage = $parentPage->getParent();
             } catch (ExceptionNotFound $e) {
                 break;
             }

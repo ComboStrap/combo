@@ -20,6 +20,8 @@ class FileSystems
                 return LocalFileSystem::getOrCreate()->exists($path);
             case WikiFileSystem::SCHEME:
                 return WikiFileSystem::getOrCreate()->exists($path);
+            case PageFileSystem::SCHEME:
+                return PageFileSystem::getOrCreate()->exists($path);
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }
@@ -276,4 +278,8 @@ class FileSystems
 
     }
 
+    public static function getTree(Path $path): PathTreeNode
+    {
+        return PathTreeNode::buildTreeViaFileSystemChildren($path);
+    }
 }

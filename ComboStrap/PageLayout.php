@@ -75,7 +75,7 @@ class PageLayout extends MetadataText
             return self::HAMBURGER_LAYOUT_VALUE;
         }
         try {
-            switch ($page->getPath()->getLastNameWithoutExtension()) {
+            switch ($page->getPathObject()->getLastNameWithoutExtension()) {
                 case Site::getSidebarName():
                 case Site::getPrimaryHeaderSlotName():
                 case Site::getPrimaryFooterSlotName():

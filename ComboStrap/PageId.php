@@ -89,7 +89,7 @@ class PageId extends MetadataText
         }
 
         // null for non-existing page
-        if (!FileSystems::exists($resource->getPath())) {
+        if (!FileSystems::exists($resource->getPathObject())) {
             if (PluginUtility::isDevOrTest()) {
                 global $ACT;
                 if ($ACT !== "edit") {
@@ -142,7 +142,7 @@ class PageId extends MetadataText
                  * and we return the page id
                  */
                 $pageDbValue = PageFragment::createPageFromQualifiedPath($pathDbValue);
-                if (!FileSystems::exists($pageDbValue->getPath())) {
+                if (!FileSystems::exists($pageDbValue->getPathObject())) {
                     return parent::buildFromStoreValue($value);
                 }
 
@@ -151,7 +151,7 @@ class PageId extends MetadataText
                  * If they are the same, we return the page id
                  * (because due to duplicate in canonical, the row returned may be from another resource)
                  */
-                $resourcePath = $resource->getPath()->toPathString();
+                $resourcePath = $resource->getPathObject()->toPathString();
                 if ($pathDbValue === $resourcePath) {
                     return parent::buildFromStoreValue($value);
                 }

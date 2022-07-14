@@ -28,7 +28,7 @@ class ModificationDate extends MetadataDateTime
         }
 
         try {
-            $modificationTime = FileSystems::getModifiedTime($this->getResource()->getPath());
+            $modificationTime = FileSystems::getModifiedTime($this->getResource()->getPathObject());
             $this->setValue($modificationTime);
             return $this;
         } catch (ExceptionNotFound $e) {
@@ -92,7 +92,7 @@ class ModificationDate extends MetadataDateTime
     {
 
         try {
-            return FileSystems::getModifiedTime($this->getResource()->getPath());
+            return FileSystems::getModifiedTime($this->getResource()->getPathObject());
         } catch (ExceptionNotFound $e) {
             return PageCreationDate::createForPage($this->getResource())->getValue();
         }

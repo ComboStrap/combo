@@ -85,12 +85,12 @@ class RouterBestEndPage
         $bestPage = $candidatePagesWithSameLastName[0];
 
         // The name of the dokuwiki id
-        $requestedPageNames = $requestedPage->getPath()->getNames();
+        $requestedPageNames = $requestedPage->getPathObject()->getNames();
 
         // Loop
         foreach ($candidatePagesWithSameLastName as $candidatePage) {
 
-            $candidatePageNames = $candidatePage->getPath()->getNames();
+            $candidatePageNames = $candidatePage->getPathObject()->getNames();
             $score = 0;
             foreach ($candidatePageNames as $candidatePageName) {
                 if (in_array($candidatePageName, $requestedPageNames)) {

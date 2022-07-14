@@ -51,7 +51,7 @@ class IdManager
 
         if ($slotPath === null) {
 
-            $slotPath = PageFragment::createPageFromGlobalWikiId()->getPath();
+            $slotPath = PageFragment::createPageFromGlobalWikiId()->getPathObject();
 
         }
 

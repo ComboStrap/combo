@@ -531,9 +531,9 @@ EOF;
     }
 
     public
-    function getSharedUrlForPage(PageFragment $requestedPage): ?string
+    function getSharedUrlForPage(PageFragment $requestedPage): string
     {
-        return $requestedPage->getCanonicalUrl([], true);
+        return $requestedPage->getCanonicalUrl()->toAbsoluteUrlString();
     }
 
     /**

@@ -74,10 +74,10 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
         $id = WikiPath::normalizeWikiPath($id);
         self::setNormalizedId($id);
         $page = PageFragment::createPageFromId($id);
-        if (!FileSystems::exists($page->getPath())) {
+        if (!FileSystems::exists($page->getPathObject())) {
             // Is it a permanent link
             try {
-                $lastPartName = $page->getPath()->getLastNameWithoutExtension();
+                $lastPartName = $page->getPathObject()->getLastNameWithoutExtension();
             } catch (ExceptionNotFound $e) {
                 // only the root does not have any name, it should therefore never happen
                 LogUtility::internalError("No last name, we were unable to set the request id right", self::CANONICAL);
@@ -91,11 +91,11 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
                     if ($page === null) {
                         return;
                     }
-                    if (!FileSystems::exists($page->getPath())) {
+                    if (!FileSystems::exists($page->getPathObject())) {
                         return;
                     }
 
-                    self::setNormalizedId($page->getPath()->getWikiId());
+                    self::setNormalizedId($page->getPathObject()->getWikiId());
 
 
                 }

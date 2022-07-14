@@ -290,9 +290,9 @@ class EditButton
             unset($data[self::FORM_ID]);
             $data["summary"] = $message;
             try {
-                $data['rev'] = $page->getPath()->getRevisionOrDefault();
+                $data['rev'] = $page->getPathObject()->getRevisionOrDefault();
             } catch (ExceptionNotFound $e) {
-                LogUtility::internalError("The file ({$page->getPath()}) does not exist, we cannot set the last modified time on the edit buttons.", self::CANONICAL);
+                LogUtility::internalError("The file ({$page->getPathObject()}) does not exist, we cannot set the last modified time on the edit buttons.", self::CANONICAL);
             }
             $hiddenInputs = "";
             foreach ($data as $key => $val) {
@@ -302,7 +302,7 @@ class EditButton
                     ->addOutputAttributeValue("type", "hidden");
                 $hiddenInputs .= $inputAttributes->toHtmlEmptyTag("input");
             }
-            $url = $page->getUrl(PageUrlType::CONF_VALUE_PAGE_PATH);
+            $url = $page->getUrlWhereIdIs(PageUrlType::CONF_VALUE_PAGE_PATH);
             $classPageEdit = StyleUtility::addComboStrapSuffix(self::CLASS_SUFFIX);
 
             /**
@@ -312,7 +312,7 @@ class EditButton
             $editTableClass = "editbutton_{$target}";
             return <<<EOF
 <div class="$classPageEdit $editTableClass">
-    <form id="$formId" method="post" action="{$url}">
+    <form id="$formId" method="post" action="{$url->toHtmlString()}">
     $hiddenInputs
     <input name="do" type="hidden" value="edit"/>
     <button type="submit" title="$message">

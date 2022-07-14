@@ -21,9 +21,6 @@ window.addEventListener('load', async function () {
             },
         });
     let htmlFragment = await response.text();
+    combos.html.loadFragment(htmlFragment, pageToolContainer)
 
-    // Trim to never return a text node of whitespace as the result
-    pageToolContainer.insertAdjacentHTML('beforeend', htmlFragment.trim());
-
-
-});
+})

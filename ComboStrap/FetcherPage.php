@@ -360,7 +360,9 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
             /**
              * The javascript
              */
-            SnippetManager::getOrCreate()->attachInternalJavascriptForRequest(FetcherRailBar::CANONICAL);
+            $snippetManager = SnippetManager::getOrCreate();
+            $snippetManager->attachInternalJavascriptForRequest(Snippet::COMBO_HTML);
+            $snippetManager->attachInternalJavascriptForRequest(FetcherRailBar::CANONICAL);
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntimeInternal("The template ($this->pageHtmlTemplatePath) does not have a page tool element");
         }

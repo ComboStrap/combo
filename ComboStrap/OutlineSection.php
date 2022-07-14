@@ -240,5 +240,33 @@ class OutlineSection extends TreeNode
         return parent::getChildren();
     }
 
+    public function setLevel(int $level): OutlineSection
+    {
+        switch ($this->headingEnterCall->getTagName()) {
+            case self::HEADER_DOKUWIKI_CALL:
+                $this->headingEnterCall->getInstructionCall()[1][1] = $level;
+                break;
+            default:
+                $this->headingEnterCall->setAttribute(syntax_plugin_combo_heading::LEVEL, $level);
+                $headingExitCall = $this->headingCalls[count($this->headingCalls) - 1];
+                $headingExitCall->setAttribute(syntax_plugin_combo_heading::LEVEL, $level);
+                break;
+        }
+
+        /**
+         * Update the descdenants sections
+         * @param OutlineSection $parentSection
+         * @return void
+         */
+        $updateLevel = function (OutlineSection $parentSection) {
+            foreach ($parentSection->getChildren() as $child) {
+                $child->setLevel($parentSection->getLevel() + 1);
+            }
+        };
+        TreeVisit::visit($this, $updateLevel);
+
+        return $this;
+    }
+
 
 }

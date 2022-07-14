@@ -255,11 +255,7 @@ class WikiPath extends PathAbs
      */
     public static function createPagePathFromPath(string $path, string $rev = null): WikiPath
     {
-        try {
-            return new WikiPath($path, WikiPath::PAGE_DRIVE, $rev);
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionRuntime("Internal Error: The page drive is a known drive. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
-        }
+        return new WikiPath($path, WikiPath::PAGE_DRIVE, $rev);
     }
 
 
@@ -988,7 +984,7 @@ class WikiPath extends PathAbs
     {
         $driveSep = self::DRIVE_SEPARATOR;
         $uri = "{$this->getScheme()}://$this->drive$driveSep$this->id";
-        if ($this->rev !== null) {
+        if (!empty($this->rev)) {
             $uri = "$uri?rev={$this->rev}";
         }
         return $uri;

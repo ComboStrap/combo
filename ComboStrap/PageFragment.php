@@ -2039,6 +2039,13 @@ class PageFragment implements ResourceCombo, Path
         return HttpRequest::fetchXhtmlPageResponse($this->getWikiId());
     }
 
+    public function getOutline(): Outline
+    {
+        $instructions = $this->getInstructionsDocument()->getFetchPathAsInstructionsArray();
+        $callStack = CallStack::createFromInstructions($instructions);
+        return Outline::createFromCallStack($callStack);
+    }
+
     private function getPrimaryFooterPage(): ?PageFragment
     {
         $nearest = page_findnearest(Site::getPrimaryFooterSlotName());

@@ -146,6 +146,13 @@ abstract class TreeNode
         $this->levelChildIdentifier = $levelIdentifier;
     }
 
+    public function resetForImport(){
+
+        unset($this->levelChildIdentifier);
+        unset($this->parentNode);
+
+    }
+
     /**
      * @throws ExceptionNotFound
      */

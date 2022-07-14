@@ -35,11 +35,15 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
 
     public function getOutline(): Outline
     {
-//        $requestedPage = PageFragment::createPageFromPathObject($this->requestedPath);
-//        foreach (PageFileSystem::getChildren($requestedPage) as $child){
-//            FileSystems::
-//        }
-        throw new ExceptionRuntimeInternal("Todo");
+
+        $requestedPage = PageFragment::createPageFromPathObject($this->requestedPath);
+        $outline = $requestedPage->getOutline();
+
+        $childrenPages = PageFileSystem::getOrCreate()->getChildren($requestedPage, FileSystems::LEAF);
+        foreach ($childrenPages as $child) {
+            Outline::merge($outline,$child->getOutline());
+        }
+        return $outline;
     }
 
     public function setRequestedNamespace(WikiPath $namespaceRoot): FetcherPageBundler

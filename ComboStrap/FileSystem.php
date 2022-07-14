@@ -19,6 +19,8 @@ interface FileSystem
 
     function getModifiedTime(Path $path): DateTime;
 
+    public function getChildren(Path $path, string $type = null): array;
+
 
 
 }

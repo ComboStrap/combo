@@ -154,6 +154,8 @@ class FileSystems
                 return LocalFileSystem::getOrCreate()->getChildren($path, $type);
             case WikiFileSystem::SCHEME:
                 return WikiFileSystem::getOrCreate()->getChildren($path, $type);
+            case PageFileSystem::SCHEME:
+                return PageFileSystem::getOrCreate()->getChildren($path, $type);
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }

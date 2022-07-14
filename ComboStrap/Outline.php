@@ -258,6 +258,49 @@ class Outline
 
     }
 
+    /**
+     */
+    public static function merge(Outline $inner, Outline $outer)
+    {
+        /**
+         * Get the inner section where the outer section will be added
+         */
+        $innerRootOutlineSection = $inner->getRootOutlineSection();
+        $innerTopSections = $innerRootOutlineSection->getChildren();
+        if (count($innerTopSections) === 0) {
+            $firstInnerSection = $innerRootOutlineSection;
+        } else {
+            $firstInnerSection = $innerTopSections[count($innerTopSections)];
+        }
+        $firstInnerSectionLevel = $firstInnerSection->getLevel();
+
+        /**
+         * Add the outer sections
+         */
+        $outerRootOutlineSection = $outer->getRootOutlineSection();
+        foreach ($outerRootOutlineSection->getChildren() as $childOuterSection) {
+            /**
+             * One level less than where the section is included
+             */
+            $childOuterSection->setLevel($firstInnerSectionLevel + 1);
+            $childOuterSection->resetForImport();
+            try {
+                $firstInnerSection->appendChild($childOuterSection);
+            } catch (ExceptionBadState $e) {
+                // We add the node only once. This error should not happen
+                throw new ExceptionRuntimeInternal("Error while adding a section during the outline merge. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+            }
+        }
+
+    }
+
+    public static function mergeRecurse(Outline $inner, Outline $outer)
+    {
+        $innerRootOutlineSection = $inner->getRootOutlineSection();
+        $outerRootOutlineSection = $outer->getRootOutlineSection();
+
+    }
+
     public function getInstructionCalls(): array
     {
         $totalInstructionCalls = [];

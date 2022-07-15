@@ -1,6 +1,8 @@
 <?php
 
 use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionInternal;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetcherSystem;
 use ComboStrap\IFetcher;
 use ComboStrap\LogUtility;
@@ -64,8 +66,10 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
             \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
                 ->setBody($body, $mime)
                 ->send();
-        } catch (ExceptionBadArgument|\ComboStrap\ExceptionNotFound|\ComboStrap\ExceptionInternal $e) {
-            LogUtility::error("An error has occurred during the execution of the action. Error: {$e->getMessage()} ");
+        } catch (ExceptionBadArgument|ExceptionNotFound|ExceptionInternal $e) {
+            LogUtility::error("An error has occurred during the execution of the custom action ($action). Error: {$e->getMessage()} ");
+            \ComboStrap\HttpResponse::createFromException($e)
+                ->send();
         }
 
     }

@@ -42,7 +42,7 @@ class FetcherSystem
 
         try {
             $fetchDoku = FetcherRawLocalPath::createLocalFromFetchUrl($fetchUrl);
-            $dokuPath = $fetchDoku->getOriginalPath();
+            $dokuPath = $fetchDoku->getSourcePath();
         } catch (ExceptionBadArgument $e) {
             throw new ExceptionNotFound("No fetcher could be matched to the url ($fetchUrl)");
         }

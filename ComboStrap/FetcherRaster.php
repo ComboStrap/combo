@@ -21,8 +21,8 @@ namespace ComboStrap;
 class FetcherRaster extends IFetcherLocalImage
 {
 
-    use FetcherTraitLocalPath {
-        setOriginalPath as protected setOriginalPathTrait;
+    use FetcherTraitWikiPath {
+        setSourcePath as protected setOriginalPathTrait;
     }
 
     const CANONICAL = "raster";
@@ -57,7 +57,7 @@ class FetcherRaster extends IFetcherLocalImage
     {
         $path = WikiPath::createFromPathObject($path);
         return self::createEmptyRaster()
-            ->setOriginalPath($path);
+            ->setSourcePath($path);
     }
 
     public static function createEmptyRaster(): FetcherRaster
@@ -115,15 +115,15 @@ class FetcherRaster extends IFetcherLocalImage
     function analyzeImageIfNeeded()
     {
 
-        if (!FileSystems::exists($this->getOriginalPath())) {
-            throw new ExceptionNotExists("The path ({$this->getOriginalPath()}) does not exists");
+        if (!FileSystems::exists($this->getSourcePath())) {
+            throw new ExceptionNotExists("The path ({$this->getSourcePath()}) does not exists");
         }
 
         /**
          * Based on {@link media_image_preview_size()}
          * $dimensions = media_image_preview_size($this->id, '', false);
          */
-        $path = $this->getOriginalPath()->toLocalPath();
+        $path = $this->getSourcePath()->toLocalPath();
         $imageSize = getimagesize($path->toAbsolutePath()->toPathString());
         if ($imageSize === false) {
             throw new ExceptionBadSyntax("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", self::CANONICAL);
@@ -239,9 +239,9 @@ class FetcherRaster extends IFetcherLocalImage
      * @throws ExceptionBadSyntax - if the file is badly encoded
      * @throws ExceptionNotExists - if the file does not exists
      */
-    public function setOriginalPath(WikiPath $dokuPath): FetcherRaster
+    public function setSourcePath(WikiPath $path): FetcherRaster
     {
-        $this->setOriginalPathTrait($dokuPath);
+        $this->setOriginalPathTrait($path);
         $this->analyzeImageIfNeeded();
         return $this;
     }

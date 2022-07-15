@@ -9,7 +9,7 @@ namespace ComboStrap;
  * width, height, ...)
  *
  * Image may be generated that's why they don't extends {@link FetcherRawLocalPath}.
- * Image that depends on a source file use the {@link FetcherTraitLocalPath} and extends {@link IFetcherLocalImage}
+ * Image that depends on a source file use the {@link FetcherTraitWikiPath} and extends {@link IFetcherLocalImage}
  *
  */
 abstract class FetcherImage extends IFetcherAbs implements IFetcherPath
@@ -109,7 +109,7 @@ abstract class FetcherImage extends IFetcherAbs implements IFetcherPath
         }
         if ($requestedWidth !== null || $requestedHeight !== null) {
 
-            $id = $this->getOriginalPath()->getWikiId();
+            $id = $this->getSourcePath()->getWikiId();
             return media_get_token($id, $requestedWidth, $requestedHeight);
 
         }

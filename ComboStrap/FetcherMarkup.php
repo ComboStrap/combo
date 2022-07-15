@@ -13,7 +13,7 @@ use http\Exception\RuntimeException;
 class FetcherMarkup extends IFetcherAbs implements IFetcherSource
 {
 
-    use FetcherTraitLocalPath;
+    use FetcherTraitWikiPath;
 
     const XHTML_MODE = "xhtml";
     const MAX_CACHE_AGE = 999999;
@@ -94,7 +94,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
 
     /**
      *
-     * It's a duplicate of {@link FetcherMarkup::setOriginalPath()}
+     * It's a duplicate of {@link FetcherMarkup::setSourcePath()}
      * @param Path $path
      * @return $this
      */
@@ -107,7 +107,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
         } catch (ExceptionBadArgument $e) {
             throw new ExceptionRuntimeInternal("It should be", self::CANONICAL, 1, $e);
         }
-        $this->setOriginalPath($dokuPath);
+        $this->setSourcePath($dokuPath);
         return $this;
 
     }
@@ -161,7 +161,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
     function storeSnippets()
     {
 
-        $slotId = $this->getOriginalPath()->getWikiId();
+        $slotId = $this->getSourcePath()->getWikiId();
 
         /**
          * Snippet
@@ -457,11 +457,11 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
          * You need to close it with the {@link FetcherMarkup::close()}
          */
         $this->wikiRequestEnvironment = WikiRequestEnvironment::createAndCaptureState()
-            ->setNewRunningId($this->getOriginalPath()->getWikiId())
+            ->setNewRunningId($this->getSourcePath()->getWikiId())
             ->setNewAct("show")
             ->setNewRequestedId($this->getRequestedPagePathOrDefault()->getWikiId());
 
-        $wikiId = $this->getOriginalPath()->getWikiId();
+        $wikiId = $this->getSourcePath()->getWikiId();
 
         /**
          * The local path is part of the key cache and should be the same
@@ -514,7 +514,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
     {
         parent::buildFromTagAttributes($tagAttributes);
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
-        $this->setRequestedPath($this->getOriginalPath());
+        $this->setRequestedPath($this->getSourcePath());
         return $this;
     }
 
@@ -593,7 +593,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
         if (!in_array($this->getMime()->getExtension(), ["html", "xhtml"])) {
             return $text;
         }
-        if ($this->getOriginalPath()->getDrive() !== WikiPath::PAGE_DRIVE) {
+        if ($this->getSourcePath()->getDrive() !== WikiPath::PAGE_DRIVE) {
             // case when this is a default page in the resource directory
             return EditButton::deleteAll($text);
         } else {
@@ -660,7 +660,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
 
     private function getRequestedPath(): WikiPath
     {
-        return $this->getOriginalPath();
+        return $this->getSourcePath();
     }
 
     /**

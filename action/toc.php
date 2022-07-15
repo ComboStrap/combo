@@ -2,6 +2,7 @@
 
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\Toc;
+use ComboStrap\WikiRequestEnvironment;
 
 
 /**
@@ -39,6 +40,12 @@ class action_plugin_combo_toc extends DokuWiki_Action_Plugin
      */
     public function handle_toc(Doku_Event &$event, $param)
     {
+
+        $wikiReq = WikiRequestEnvironment::createAndCaptureState();
+        if ($wikiReq->getActualAct() !== "show") {
+            // admin may also have toc
+            return;
+        }
 
         try {
             $toc = Toc::createForRequestedPage()

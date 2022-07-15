@@ -8,6 +8,6 @@ namespace ComboStrap;
 interface IFetcherSource extends IFetcher
 {
 
-    public function getOriginalPath(): WikiPath;
+    public function getSourcePath(): WikiPath;
 
 }

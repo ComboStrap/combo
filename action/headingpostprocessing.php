@@ -90,7 +90,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                     return;
                 }
                 $callStack = CallStack::createFromHandler($handler);
-                $outline = Outline::createFromCallStack($callStack);
+                $requestedMarkup = Markup::createPageFromPathObject($requestedPath);
+                $outline = Outline::createFromCallStack($callStack, $requestedMarkup);
                 if (Site::getTemplate() !== Site::STRAP_TEMPLATE_NAME) {
                     $handler->calls = $outline->toDefaultTemplateInstructionCalls();
                 } else {

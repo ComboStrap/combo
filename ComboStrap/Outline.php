@@ -22,17 +22,26 @@ class Outline
     private OutlineSection $actualSection; // the actual section that is created
     private Call $actualHeadingCall; // the heading that is parsed
     private int $actualHeadingParsingState = DOKU_LEXER_EXIT;  // the state of the heading parsed (enter, closed), enter if we have entered an heading, exit if not;
+    private Markup $markup;
 
-    public function __construct(CallStack $callStack)
+    public function __construct(CallStack $callStack, Markup $markup = null)
     {
+        if ($markup !== null) {
+            $this->markup = $markup;
+        }
         $this->buildOutline($callStack);
         $this->storeH1();
-        $this->storeToc();
+        $this->storeTocForMarkupIfAny();
     }
 
-    public static function createFromCallStack(CallStack $callStack): Outline
+    /**
+     * @param CallStack $callStack
+     * @param Markup|null $markup - null if the markup is dynamic
+     * @return Outline
+     */
+    public static function createFromCallStack(CallStack $callStack, Markup $markup = null): Outline
     {
-        return new Outline($callStack);
+        return new Outline($callStack, $markup);
     }
 
     private function buildOutline(CallStack $callStack)
@@ -301,6 +310,20 @@ class Outline
 
     }
 
+    /**
+     * Utility class to create a outline from a markup string
+     * @param string $content
+     * @return Outline
+     */
+    public static function createFromMarkup(string $content): Outline
+    {
+        $instructions = MarkupRenderer::createFromMarkup($content)
+            ->setRequestedMimeToInstruction()
+            ->getOutput();
+        $callStack = CallStack::createFromInstructions($instructions);
+        return Outline::createFromCallStack($callStack);
+    }
+
     public function getInstructionCalls(): array
     {
         $totalInstructionCalls = [];
@@ -406,6 +429,7 @@ class Outline
      */
     public function getTocDokuwikiFormat(): array
     {
+
         $tableOfContent = [];
         $collectTableOfContent = function (OutlineSection $outlineSection) use (&$tableOfContent) {
 
@@ -622,11 +646,14 @@ class Outline
         }
     }
 
-    private function storeToc()
+    private function storeTocForMarkupIfAny()
     {
+        if(!isset($this->markup)){
+            return;
+        }
         $toc = $this->getTocDokuwikiFormat();
         try {
-            Toc::createForRequestedPage()
+            Toc::createForPage($this->markup)
                 ->setValue($toc)
                 ->persist();
         } catch (ExceptionBadArgument $e) {

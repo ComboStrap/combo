@@ -199,7 +199,7 @@ class FetcherVignette extends FetcherImage
              */
             try {
 
-                $imagePath = Site::getLogoAsRasterImage()->getOriginalPath();
+                $imagePath = Site::getLogoAsRasterImage()->getSourcePath();
                 $gdOriginalLogo = $this->getGdImageHandler($imagePath);
                 $targetLogoWidth = 120;
                 $targetLogoHandler = imagescale($gdOriginalLogo, $targetLogoWidth);

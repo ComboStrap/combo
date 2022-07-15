@@ -256,7 +256,7 @@ class MarkupRef
         switch ($type) {
             case self::MEDIA_TYPE:
                 $this->path = WikiPath::createMediaPathFromId($wikiPath, $rev);
-                $this->url->addQueryParameter(FetcherTraitLocalPath::$MEDIA_QUERY_PARAMETER, $wikiPath);
+                $this->url->addQueryParameter(FetcherTraitWikiPath::$MEDIA_QUERY_PARAMETER, $wikiPath);
                 $this->addRevToUrl($rev);
 
                 if ($fragment !== null) {

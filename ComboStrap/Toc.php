@@ -228,8 +228,13 @@ EOF;
             throw new ExceptionBadArgument("The toc value ($value) is not an array");
         }
         $this->tocData = $value;
-        global $TOC;
-        $TOC = $value;
+        /**
+         * We don't set the global TOC because
+         * if the global TOC is set {@link tpl_admin()}, will not
+         * ask the toc to the admin plugin
+         */
+//        global $TOC;
+//        $TOC = $value;
         return $this;
     }
 

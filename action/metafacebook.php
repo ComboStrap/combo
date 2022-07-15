@@ -163,7 +163,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
             $facebookMimes = [Mime::JPEG, Mime::GIF, Mime::PNG];
             foreach ($facebookImages as $facebookImage) {
 
-                $path = $facebookImage->getOriginalPath();
+                $path = $facebookImage->getSourcePath();
                 if (!FileSystems::exists($path)) {
                     LogUtility::error("The image ($path) does not exist and was not added", self::CANONICAL);
                     continue;
@@ -204,7 +204,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                 if ($toSmall) {
                     $message = "The facebook image ($facebookImage) is too small (" . $intrinsicWidth . " x " . $intrinsicHeight . "). The minimum size constraint is 200px by 200px";
                     try {
-                        $firstImagePath = $page->getFirstImage()->getOriginalPath();
+                        $firstImagePath = $page->getFirstImage()->getSourcePath();
                         if (
                             $path->toAbsolutePath()->toPathString() !== $firstImagePath->toAbsolutePath()->toPathString()
                         ) {

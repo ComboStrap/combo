@@ -33,7 +33,7 @@ class CacheLog
             try {
                 CacheLog::logCacheEvent(
                     $event,
-                    $outputDocument->getOriginalPath()->toPathString(),
+                    $outputDocument->getSourcePath()->toPathString(),
                     $outputDocument->getMime()->getExtension(),
                     CacheManager::CACHE_DELETION,
                     $message
@@ -51,7 +51,7 @@ class CacheLog
         try {
             CacheLog::logCacheEvent(
                 $event,
-                $outputDocument->getOriginalPath()->toPathString(),
+                $outputDocument->getSourcePath()->toPathString(),
                 $outputDocument->getMime()->getExtension(),
                 CacheManager::CACHE_CREATION,
                 $message

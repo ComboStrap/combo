@@ -7,7 +7,7 @@ namespace ComboStrap;
  * if they depends on a {@link WikiPath}
  *
  * This trait can:
- *   * build the {@link FetcherTraitLocalPath::getOriginalPath()} from {@link FetcherTraitLocalPath::buildOriginalPathFromTagAttributes() tag attributes}
+ *   * build the {@link FetcherTraitWikiPath::getSourcePath()} from {@link FetcherTraitWikiPath::buildOriginalPathFromTagAttributes() tag attributes}
  *   * add the {@link buildURLparams() url params to the fetch Url}
  *
  *
@@ -17,26 +17,30 @@ namespace ComboStrap;
  * Not all image depends on a path, that's why this is a trait to
  * share the code
  */
-trait FetcherTraitLocalPath
+trait FetcherTraitWikiPath
 {
 
     public static string $MEDIA_QUERY_PARAMETER = "media";
     private WikiPath $path;
 
 
-    public function setOriginalPath(WikiPath $dokuPath): IFetcher
+    /**
+     * @param WikiPath $path
+     * @return IFetcher
+     */
+    public function setSourcePath(WikiPath $path): IFetcher
     {
-        $this->path = $dokuPath;
+        $this->path = $path;
         return $this;
     }
 
     /**
      * @param TagAttributes $tagAttributes
      * @return IFetcher
-     * @throws ExceptionBadArgument - if the media property was not found and the path was not set
-     * @throws ExceptionBadSyntax - if the media has a bad syntax (no width, ...)
-     * @throws ExceptionNotExists -  if the media does not exists
-     * @throws ExceptionNotFound - if the media or any mandatory metadata (ie dimension) was not found
+     * @throws ExceptionBadArgument - if the wiki id (id/media) property was not found and the path was not set
+     * @throws ExceptionBadSyntax - thrown by other class via the overwritten of {@link setSourcePath} (bad image)
+     * @throws ExceptionNotExists - thrown by other class via the overwritten of {@link setSourceImage} (non-existing image)
+     * @throws ExceptionNotFound - thrown by other class via the overwritten of {@link setSourceImage} (not found image)
      */
     public function buildOriginalPathFromTagAttributes(TagAttributes $tagAttributes): IFetcher
     {
@@ -54,7 +58,9 @@ trait FetcherTraitLocalPath
             }
             $drive = $tagAttributes->getValueAndRemove(WikiPath::DRIVE_ATTRIBUTE, WikiPath::MEDIA_DRIVE);
             $rev = $tagAttributes->getValueAndRemove(WikiPath::REV_ATTRIBUTE);
-            $this->setOriginalPath(WikiPath::create($id, $drive, $rev));
+            $wikiPath = WikiPath::create($id, $drive, $rev);
+
+            $this->setSourcePath($wikiPath);
         }
 
         return $this;
@@ -62,7 +68,7 @@ trait FetcherTraitLocalPath
     }
 
 
-    public function getOriginalPath(): WikiPath
+    public function getSourcePath(): WikiPath
     {
         return $this->path;
     }
@@ -81,7 +87,7 @@ trait FetcherTraitLocalPath
      * We still use the {@link FetcherRawLocalPath::MEDIA_QUERY_PARAMETER}
      * to be Dokuwiki Compatible even if we can serve from other drive know
      * @param Url $url
-     * @param string $wikiIdKey - the key used to set the wiki id (ie {@link FetcherTraitLocalPath::$MEDIA_QUERY_PARAMETER}
+     * @param string $wikiIdKey - the key used to set the wiki id (ie {@link FetcherTraitWikiPath::$MEDIA_QUERY_PARAMETER}
      * or {@link DokuWikiId::DOKUWIKI_ID_ATTRIBUTE}
      */
     public function addLocalPathParametersToFetchUrl(Url $url, string $wikiIdKey): void

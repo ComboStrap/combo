@@ -290,7 +290,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                  */
                 $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                 try {
-                    $mediaPath = Icon::createFromTagAttributes($tagAttribute)->getFetchSvg()->getOriginalPath();
+                    $mediaPath = Icon::createFromTagAttributes($tagAttribute)->getFetchSvg()->getSourcePath();
                 } catch (ExceptionCompile $e) {
                     // error is already fired in the renderer
                     return false;

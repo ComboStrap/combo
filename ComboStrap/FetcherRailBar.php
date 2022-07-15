@@ -21,7 +21,7 @@ use dokuwiki\Menu\UserMenu;
 class FetcherRailBar extends IFetcherAbs implements IFetcherString
 {
 
-    use FetcherTraitLocalPath;
+    use FetcherTraitWikiPath;
 
     const CANONICAL = "railbar";
     const FIXED_LAYOUT = "fixed";
@@ -94,8 +94,8 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
 
 
         $wikiRequest = WikiRequestEnvironment::createAndCaptureState()
-            ->setNewRunningId($this->getOriginalPath()->getWikiId())
-            ->setNewRequestedId($this->getOriginalPath()->getWikiId())
+            ->setNewRunningId($this->getSourcePath()->getWikiId())
+            ->setNewRequestedId($this->getSourcePath()->getWikiId())
             ->setNewAct("show");
 
         try {

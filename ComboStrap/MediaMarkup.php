@@ -666,7 +666,7 @@ class MediaMarkup
 
         } catch (ExceptionNotFound $e) {
 
-            return $this->fetcher->getOriginalPath();
+            return $this->fetcher->getSourcePath();
 
         }
     }

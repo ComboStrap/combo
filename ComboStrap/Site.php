@@ -284,7 +284,7 @@ class Site
                 LogUtility::msg("The png Logo ($pngLogo) returns an error. {$e->getMessage()}");
                 continue;
             }
-            if (FileSystems::exists($image->getOriginalPath())) {
+            if (FileSystems::exists($image->getSourcePath())) {
                 return $image;
             }
         }

@@ -1451,7 +1451,6 @@ class Markup implements ResourceCombo, Path
             $message = "Error on getParentPage, null returned - Error: {$e->getMessage()}";
             LogUtility::internalError($message);
             throw new ExceptionNotFound($message);
-
         }
 
     }
@@ -2045,7 +2044,7 @@ class Markup implements ResourceCombo, Path
     {
         $instructions = $this->getInstructionsDocument()->getFetchPathAsInstructionsArray();
         $callStack = CallStack::createFromInstructions($instructions);
-        return Outline::createFromCallStack($callStack);
+        return Outline::createFromCallStack($callStack, $this);
     }
 
 

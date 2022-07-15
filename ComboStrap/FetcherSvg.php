@@ -15,16 +15,16 @@ use DOMElement;
  *   * an SvgFile for an HTTP response or any further processing
  *
  * The original svg can be set with:
- *   * the {@link FetcherSvg::setOriginalPath() original path}
- *   * the {@link FetcherSvg::setRequestedName() name} if this is an {@link FetcherSvg::setRequestedType() icon type}, the original path is then determined on {@link FetcherSvg::getOriginalPath() get}
+ *   * the {@link FetcherSvg::setSourcePath() original path}
+ *   * the {@link FetcherSvg::setRequestedName() name} if this is an {@link FetcherSvg::setRequestedType() icon type}, the original path is then determined on {@link FetcherSvg::getSourcePath() get}
  *   * or by {@link FetcherSvg::setMarkup() Svg Markup}
  *
  */
 class FetcherSvg extends IFetcherLocalImage
 {
 
-    use FetcherTraitLocalPath {
-        setOriginalPath as protected setOriginalPathTraitAlias;
+    use FetcherTraitWikiPath {
+        setSourcePath as protected setOriginalPathTraitAlias;
     }
 
     const EXTENSION = "svg";
@@ -138,7 +138,7 @@ class FetcherSvg extends IFetcherLocalImage
     public static function createSvgFromPath(WikiPath $path): FetcherSvg
     {
         $fetcher = self::createSvgEmpty();
-        $fetcher->setOriginalPath($path);
+        $fetcher->setSourcePath($path);
         return $fetcher;
     }
 
@@ -458,19 +458,19 @@ class FetcherSvg extends IFetcherLocalImage
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
      */
-    public function setOriginalPath(WikiPath $dokuPath): IFetcherLocalImage
+    public function setSourcePath(WikiPath $path): IFetcherLocalImage
     {
 
         try {
-            $this->xmlDocument = XmlDocument::createXmlDocFromPath($dokuPath);
+            $this->xmlDocument = XmlDocument::createXmlDocFromPath($path);
         } catch (ExceptionBadSyntax $e) {
-            throw new ExceptionBadSyntax("The svg file ($dokuPath) is not a valid svg. Error: {$e->getMessage()}");
+            throw new ExceptionBadSyntax("The svg file ($path) is not a valid svg. Error: {$e->getMessage()}");
         } catch (ExceptionNotFound $e) {
             // ok file not found
-            throw new ExceptionNotFound("The svg file ($dokuPath) was not found", self::CANONICAL);
+            throw new ExceptionNotFound("The svg file ($path) was not found", self::CANONICAL);
         }
         $this->setIntrinsicDimensions();
-        $this->setOriginalPathTraitAlias($dokuPath);
+        $this->setOriginalPathTraitAlias($path);
         return $this;
 
     }
@@ -555,7 +555,7 @@ class FetcherSvg extends IFetcherLocalImage
          * Generated svg file cache init
          */
         $fetchCache = FetcherCache::createFrom($this);
-        $files[] = $this->getOriginalPath();
+        $files[] = $this->getSourcePath();
         try {
             $files[] = ClassUtility::getClassPath(FetcherSvg::class);
         } catch (\ReflectionException $e) {
@@ -599,7 +599,7 @@ class FetcherSvg extends IFetcherLocalImage
      */
     public function getBuster(): string
     {
-        $buster = FileSystems::getCacheBuster($this->getOriginalPath());
+        $buster = FileSystems::getCacheBuster($this->getSourcePath());
         try {
             $configFile = FileSystems::getCacheBuster(DirectoryLayout::getConfLocalFilePath());
             $buster = "$buster-$configFile";
@@ -703,7 +703,7 @@ class FetcherSvg extends IFetcherLocalImage
     public
     function __toString()
     {
-        return $this->getOriginalPath()->__toString();
+        return $this->getSourcePath()->__toString();
 
     }
 
@@ -889,7 +889,7 @@ class FetcherSvg extends IFetcherLocalImage
             // or not squared
             // if the usage is determined or the svg is in the icon directory, it just takes over.
             try {
-                $isInIconDirectory = IconDownloader::isInIconDirectory($this->getOriginalPath());
+                $isInIconDirectory = IconDownloader::isInIconDirectory($this->getSourcePath());
             } catch (ExceptionNotFound $e) {
                 // not a svg from a path
                 $isInIconDirectory = false;
@@ -1111,7 +1111,7 @@ class FetcherSvg extends IFetcherLocalImage
                  * If the rectangle stay, we just see a black rectangle
                  */
                 try {
-                    $path = $this->getOriginalPath();
+                    $path = $this->getSourcePath();
                     $pathString = $path->toAbsolutePath()->toPathString();
                     if (
                         preg_match("/carbon|eva/i", $pathString) === 1
@@ -1408,7 +1408,7 @@ class FetcherSvg extends IFetcherLocalImage
          */
         try {
             $iconDownload =
-                !$tagAttributes->hasAttribute(FetcherTraitLocalPath::$MEDIA_QUERY_PARAMETER) &&
+                !$tagAttributes->hasAttribute(FetcherTraitWikiPath::$MEDIA_QUERY_PARAMETER) &&
                 $this->getRequestedType() === self::ICON_TYPE
                 && $this->getRequestedName() !== null;
             if ($iconDownload) {
@@ -1417,7 +1417,7 @@ class FetcherSvg extends IFetcherLocalImage
                 } catch (ExceptionCompile $e) {
                     throw new ExceptionBadArgument("We can't get the icon path. Error: {$e->getMessage()}. (ie media or icon name attribute is mandatory).", self::CANONICAL, 1, $e);
                 }
-                $this->setOriginalPath($dokuPath);
+                $this->setSourcePath($dokuPath);
 
             }
         } catch (ExceptionNotFound $e) {
@@ -1467,7 +1467,7 @@ class FetcherSvg extends IFetcherLocalImage
         } catch (ExceptionCompile $e) {
             throw new ExceptionCompile("The icon ($requestedName) could not be downloaded. Error: ({$e->getMessage()}.", self::CANONICAL);
         }
-        $this->setOriginalPath($originalPath);
+        $this->setSourcePath($originalPath);
         return $originalPath;
     }
 
@@ -1481,7 +1481,7 @@ class FetcherSvg extends IFetcherLocalImage
         try {
             return $this->getRequestedName();
         } catch (ExceptionNotFound $e) {
-            return $this->getOriginalPath()->getLastNameWithoutExtension();
+            return $this->getSourcePath()->getLastNameWithoutExtension();
         }
     }
 

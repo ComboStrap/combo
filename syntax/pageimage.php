@@ -293,7 +293,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
             /**
              * Zoom applies only to icon not to illustration
              */
-            $isIcon = IconDownloader::isInIconDirectory($imageFetcher->getOriginalPath());
+            $isIcon = IconDownloader::isInIconDirectory($imageFetcher->getSourcePath());
             if (!$isIcon) {
                 $imageFetcher->setRequestedZoom(1);
             } else {

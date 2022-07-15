@@ -8,7 +8,7 @@ use syntax_plugin_combo_container;
 class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 {
 
-    use FetcherTraitLocalPath;
+    use FetcherTraitWikiPath;
 
     const CANONICAL = "page";
 
@@ -447,7 +447,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
      */
     function getBuster(): string
     {
-        return FileSystems::getCacheBuster($this->getOriginalPath());
+        return FileSystems::getCacheBuster($this->getSourcePath());
     }
 
     public function getMime(): Mime
@@ -548,7 +548,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
     public function getRequestedPath(): WikiPath
     {
-        return $this->getOriginalPath();
+        return $this->getSourcePath();
     }
 
     public function setRequestedLayout(string $layoutValue): FetcherPage
@@ -783,7 +783,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         } catch (ExceptionBadArgument $e) {
             throw new ExceptionRuntimeInternal("Not a local wiki path", self::CANONICAL, 1, $e);
         }
-        $this->setOriginalPath($requestedPath);
+        $this->setSourcePath($requestedPath);
         return $this;
     }
 

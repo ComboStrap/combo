@@ -9,7 +9,7 @@ namespace ComboStrap;
 class FetcherRawLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherSource
 {
 
-    use FetcherTraitLocalPath;
+    use FetcherTraitWikiPath;
 
     const SRC_QUERY_PARAMETER = "src";
     const NAME = "raw";
@@ -18,7 +18,7 @@ class FetcherRawLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherS
     public static function createFromPath(WikiPath $wikiPath): FetcherRawLocalPath
     {
         $fetcherRaw = self::createEmpty();
-        $fetcherRaw->setOriginalPath($wikiPath);
+        $fetcherRaw->setSourcePath($wikiPath);
         return $fetcherRaw;
     }
 
@@ -74,7 +74,7 @@ class FetcherRawLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherS
 
     function getFetchPath(): LocalPath
     {
-        return $this->getOriginalPath()->toLocalPath();
+        return $this->getSourcePath()->toLocalPath();
     }
 
 
@@ -84,7 +84,7 @@ class FetcherRawLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherS
      */
     function getBuster(): string
     {
-        return FileSystems::getCacheBuster($this->getOriginalPath());
+        return FileSystems::getCacheBuster($this->getSourcePath());
     }
 
 

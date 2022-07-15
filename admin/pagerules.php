@@ -7,7 +7,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 
 /**
@@ -28,7 +28,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
     /**
      * @var PageRules
      */
-    private $pageRuleManager;
+    private PageRules $pageRuleManager;
 
 
 
@@ -64,7 +64,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
     /**
      * Access for managers allowed
      */
-    function forAdminOnly()
+    function forAdminOnly(): bool
     {
         return false;
     }
@@ -72,7 +72,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
     /**
      * return sort order for position in admin menu
      */
-    function getMenuSort()
+    function getMenuSort(): int
     {
         return 140;
     }
@@ -82,7 +82,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
      * @param string $language
      * @return string
      */
-    function getMenuText($language)
+    function getMenuText($language): string
     {
         return ucfirst(PluginUtility::$PLUGIN_NAME) . " - " . $this->lang['PageRules'];
     }

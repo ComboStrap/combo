@@ -170,7 +170,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         if (!empty($twitterImages)) {
             foreach ($twitterImages as $twitterImageFetcher) {
                 try {
-                  $twitterImagePath =   $twitterImageFetcher->getOriginalPath();
+                  $twitterImagePath =   $twitterImageFetcher->getSourcePath();
                 } catch (ExceptionNotFound $e) {
                     LogUtility::internalError("Twitter Image Path should exist in this fetcher. Error: {$e->getMessage()}", self::CANONICAL);
                     continue;

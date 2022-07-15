@@ -4,6 +4,13 @@ namespace ComboStrap;
 
 use syntax_plugin_combo_heading;
 
+/**
+ * Bundle page from the same namespace
+ * with {@link FetcherPageBundler::getBundledOutline() corrected outline}
+ *
+ * From a wiki app, just add: `?do=combo_pagebundler`
+ *
+ */
 class FetcherPageBundler extends IFetcherAbs implements IFetcherString
 {
 

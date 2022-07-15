@@ -2,11 +2,15 @@
 
 namespace ComboStrap;
 
+use syntax_plugin_combo_heading;
+
 class FetcherPageBundler extends IFetcherAbs implements IFetcherString
 {
 
     use FetcherTraitWikiPath;
 
+    const CANONICAL = self::NAME;
+    const NAME = "pagebundler";
     private Outline $bundledOutline;
 
     public static function createPageBundler(): FetcherPageBundler
@@ -23,6 +27,12 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
         return $this;
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
+     */
     public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherPageBundler
     {
         parent::buildFromTagAttributes($tagAttributes);
@@ -46,7 +56,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
 
     public function getFetcherName(): string
     {
-        return "pagebundler";
+        return self::NAME;
     }
 
     public function getFetchString(): string
@@ -101,7 +111,7 @@ HTML;
             $indexPage = $requestedPage;
         }
         if (FileSystems::exists($indexPage)) {
-            $indexOutline = $indexPage->getOutline();
+            $indexOutline = $this->addTitleSectionIfMissing($indexPage->getOutline());
         } else {
             $title = PageTitle::createForPage($indexPage)->getValueOrDefault();
             $content = <<<EOF
@@ -112,7 +122,8 @@ EOF;
 
         $childrenPages = MarkupFileSystem::getOrCreate()->getChildren($indexPage, FileSystems::LEAF);
         foreach ($childrenPages as $child) {
-            Outline::merge($indexOutline, $child->getOutline());
+            $outer = $this->addTitleSectionIfMissing($child->getOutline());
+            Outline::merge($indexOutline, $outer);
         }
         $this->bundledOutline = $indexOutline;
 
@@ -132,6 +143,68 @@ EOF;
     private function getContextPath(): WikiPath
     {
         return $this->getSourcePath();
+    }
+
+    /**
+     * If there is a header markup, the first section with the title
+     * are deleted, we recreate the title section here
+     * @param Outline $outline
+     * @return Outline
+     */
+    private function addTitleSectionIfMissing(Outline $outline): Outline
+    {
+        $rootOutlineSection = $outline->getRootOutlineSection();
+        try {
+            $firstChild = $rootOutlineSection->getFirstChild();
+        } catch (ExceptionNotFound $e) {
+            if (PluginUtility::isDevOrTest()) {
+                LogUtility::warning("No first child was found while checking the title section", self::CANONICAL);
+            }
+            return $outline;
+        }
+        if ($firstChild->getLevel() >= 2) {
+            $enterHeading = Call::createComboCall(
+                \syntax_plugin_combo_heading::TAG,
+                DOKU_LEXER_ENTER,
+                array(syntax_plugin_combo_heading::LEVEL => 1),
+                syntax_plugin_combo_heading::TYPE_OUTLINE,
+                null,
+                null,
+                0
+            );
+            $title = PageTitle::createForPage($outline->getMarkup())->getValueOrDefault();
+            $unmatchedHeading = Call::createComboCall(
+                \syntax_plugin_combo_heading::TAG,
+                DOKU_LEXER_UNMATCHED,
+                [],
+                null,
+                $title,
+                $title
+            );
+            $exitHeading = Call::createComboCall(
+                \syntax_plugin_combo_heading::TAG,
+                DOKU_LEXER_EXIT,
+                array(syntax_plugin_combo_heading::LEVEL => 1)
+            );
+            $h1Section = OutlineSection::createFromEnterHeadingCall($enterHeading)
+                ->addHeadingCall($unmatchedHeading)
+                ->addHeadingCall($exitHeading);
+            $children = $rootOutlineSection->getChildren();
+            foreach ($children as $child) {
+                $child->detachBeforeAppend();
+                try {
+                    $h1Section->appendChild($child);
+                } catch (ExceptionBadState $e) {
+                    LogUtility::error("An error occurs when trying to move the h2 children below the recreated heading title ($title)", self::CANONICAL);
+                }
+            }
+            try {
+                $rootOutlineSection->appendChild($h1Section);
+            } catch (ExceptionBadState $e) {
+                LogUtility::error("An error occurs when trying to add the recreated title heading ($title) to the root", self::CANONICAL);
+            }
+        }
+        return $outline;
     }
 
 }

@@ -115,7 +115,7 @@ class Outline
                     $newSectionLevel = $actualSectionLevel;
                 }
 
-                $newOutlineSection = new OutlineSection($actualCall);
+                $newOutlineSection = OutlineSection::createFromEnterHeadingCall($actualCall);
                 $sectionDiff = $newSectionLevel - $actualSectionLevel;
                 if ($sectionDiff > 0) {
 
@@ -166,10 +166,8 @@ class Outline
                         }
                     }
 
-
                 }
 
-                $newOutlineSection->addHeadingCall($actualCall);
                 $this->actualSection = $newOutlineSection;
                 continue;
             }
@@ -292,7 +290,7 @@ class Outline
              * One level less than where the section is included
              */
             $childOuterSection->setLevel($firstInnerSectionLevel + 1);
-            $childOuterSection->resetForImport();
+            $childOuterSection->detachBeforeAppend();
             try {
                 $firstInnerSection->appendChild($childOuterSection);
             } catch (ExceptionBadState $e) {
@@ -465,7 +463,6 @@ class Outline
              * in a header tag
              * The header tag helps also to get the edit button to stay in place
              */
-
             $isContentHeader = in_array($outlineSection->getLevel(), [0, 1]);
             if (!($contentHeaderDisplayToNone && $isContentHeader)) {
 
@@ -659,6 +656,11 @@ class Outline
         } catch (ExceptionBadArgument $e) {
             LogUtility::error("The Toc could not be persisted. Error:{$e->getMessage()}");
         }
+    }
+
+    public function getMarkup(): Markup
+    {
+        return $this->markup;
     }
 
 

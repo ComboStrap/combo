@@ -152,7 +152,7 @@ class Call
             PluginUtility::STATE => $state,
             PluginUtility::POSITION => $position
         );
-        if ($payload != null) {
+        if ($payload !== null) {
             $data[PluginUtility::PAYLOAD] = $payload;
         }
         $positionInText = $position;

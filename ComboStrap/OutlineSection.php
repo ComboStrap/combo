@@ -33,18 +33,20 @@ class OutlineSection extends TreeNode
     private array $tocUniqueId = [];
 
 
+
     /**
-     * @param Call|null $headingEnterCall
+     * @param Call|null $headingEnterCall - null if the section is the root
      */
-    public function __construct(Call $headingEnterCall = null)
+    private function __construct(Call $headingEnterCall = null)
     {
         $this->headingEnterCall = $headingEnterCall;
         if ($headingEnterCall !== null) {
             $this->startFileIndex = $headingEnterCall->getFirstMatchedCharacterPosition();
+            $this->addHeadingCall($headingEnterCall);
         } else {
             $this->startFileIndex = 0;
         }
-        $this->levelChildIdentifier = IdManager::getOrCreate()->generateNewHtmlIdForComponent(OutlineSection::class);
+
     }
 
 
@@ -64,6 +66,11 @@ class OutlineSection extends TreeNode
         $check = false;
         // for empty string, the below function returns `section`
         return sectionID($fragment, $check);
+    }
+
+    public static function createFromEnterHeadingCall(Call $enterHeadingCall): OutlineSection
+    {
+        return new OutlineSection($enterHeadingCall);
     }
 
     public function getFirstChild(): OutlineSection
@@ -125,7 +132,6 @@ class OutlineSection extends TreeNode
      */
     public function getHeadingCalls(): array
     {
-
         if (
             $this->headingEnterCall !== null &&
             $this->headingEnterCall->isPluginCall() &&

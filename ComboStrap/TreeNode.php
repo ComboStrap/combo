@@ -146,8 +146,9 @@ abstract class TreeNode
         $this->levelChildIdentifier = $levelIdentifier;
     }
 
-    public function resetForImport(){
+    public function detachBeforeAppend(){
 
+        unset($this->parentNode->children[$this->levelChildIdentifier]);
         unset($this->levelChildIdentifier);
         unset($this->parentNode);
 

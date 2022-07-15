@@ -11,28 +11,26 @@ use renderer_plugin_combo_analytics;
 
 /**
  *
- *
- *
- * A page fragment (ie slot) is a logical unit that represents
- * a markup file
+ * A markup (ie slot) is a logical unit
+ * that represents a markup file
  *
  * For instance:
  *   * the main slot is the main markdown file and the header and footer slot
  *   * while the sidebar is a leaf
  *
- * It has its own file system {@link PageFileSystem} explained in the
+ * It has its own file system {@link MarkupFileSystem} explained in the
  * https://combostrap.com/page/system (or system.txt file).
  *
  * We are not extending {@link WikiPath} because:
- *   * we want to be able to return {@link PageFragment} in the {@link PageFragment::getParent()} function
+ *   * we want to be able to return {@link Markup} in the {@link Markup::getParent()} function
  * otherwise if we do, we get a hierarchical error.
  *   * we can then accepts also {@link LocalPath}
  *
  */
-class PageFragment implements ResourceCombo, Path
+class Markup implements ResourceCombo, Path
 {
 
-    const CANONICAL_PAGE = "page-fragment";
+    const CANONICAL_PAGE = "markup";
 
 
     const TYPE = "page";
@@ -167,7 +165,7 @@ class PageFragment implements ResourceCombo, Path
     private $readStore;
 
     /**
-     * @var Path - we wrap a path and not extends to be able to return a {@link PageFragment}
+     * @var Path - we wrap a path and not extends to be able to return a {@link Markup}
      * otherwise we get an hierarchy error
      */
     private Path $path;
@@ -190,22 +188,22 @@ class PageFragment implements ResourceCombo, Path
     /**
      * The current running rendering markup
      */
-    public static function createPageFromGlobalWikiId(): PageFragment
+    public static function createPageFromGlobalWikiId(): Markup
     {
         $wikiPath = WikiPath::createRunningPageFragmentPathFromGlobalId();
         return self::createPageFromPathObject($wikiPath);
     }
 
-    public static function createPageFromId($id): PageFragment
+    public static function createPageFromId($id): Markup
     {
-        return new PageFragment(WikiPath::createPagePathFromId($id));
+        return new Markup(WikiPath::createPagePathFromId($id));
     }
 
     /**
      * @param $pathOrId
-     * @return PageFragment
+     * @return Markup
      */
-    public static function createPageFromNonQualifiedPath($pathOrId): PageFragment
+    public static function createPageFromNonQualifiedPath($pathOrId): Markup
     {
 
 //        global $ID;
@@ -222,23 +220,23 @@ class PageFragment implements ResourceCombo, Path
 //            $qualifiedId = $conf['start'];
 //        }
 //        return PageFragment::createPageFromId($qualifiedId);
-        return PageFragment::createPageFromQualifiedPath($pathOrId);
+        return Markup::createPageFromQualifiedPath($pathOrId);
 
     }
 
     /**
-     * @return PageFragment - the requested page
+     * @return Markup - the requested page
      */
-    public static function createFromRequestedPage(): PageFragment
+    public static function createFromRequestedPage(): Markup
     {
         $path = WikiPath::createRequestedPagePathFromRequest();
-        return PageFragment::createPageFromPathObject($path);
+        return Markup::createPageFromPathObject($path);
     }
 
 
-    public static function createPageFromPathObject(Path $path): PageFragment
+    public static function createPageFromPathObject(Path $path): Markup
     {
-        return new PageFragment($path);
+        return new Markup($path);
     }
 
 
@@ -247,18 +245,18 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionBadSyntax - if this is not a
      * @deprecated just pass a namespace path to the page creation and you will get the index page in return
      */
-    public static function getIndexPageFromNamespace(string $namespacePath): PageFragment
+    public static function getIndexPageFromNamespace(string $namespacePath): Markup
     {
         WikiPath::checkNamespacePath($namespacePath);
 
-        return PageFragment::createPageFromId($namespacePath);
+        return Markup::createPageFromId($namespacePath);
     }
 
 
-    static function createPageFromQualifiedPath($qualifiedPath): PageFragment
+    static function createPageFromQualifiedPath($qualifiedPath): Markup
     {
         $path = WikiPath::createPagePathFromPath($qualifiedPath);
-        return new PageFragment($path);
+        return new Markup($path);
     }
 
 
@@ -267,7 +265,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setCanonical($canonical): PageFragment
+    function setCanonical($canonical): Markup
     {
         $this->canonical
             ->setValue($canonical)
@@ -353,7 +351,7 @@ class PageFragment implements ResourceCombo, Path
      * @return $this
      */
     public
-    function rebuild(): PageFragment
+    function rebuild(): Markup
     {
         $this->readStore = null;
         $this->buildPropertiesFromFileSystem();
@@ -363,7 +361,7 @@ class PageFragment implements ResourceCombo, Path
 
     /**
      *
-     * @return PageFragment[]|null the internal links or null
+     * @return Markup[]|null the internal links or null
      */
     public
     function getLinkReferences(): ?array
@@ -385,7 +383,7 @@ class PageFragment implements ResourceCombo, Path
 
         $pages = [];
         foreach (array_keys($metadata['references']) as $referencePageId) {
-            $pages[$referencePageId] = PageFragment::createPageFromId($referencePageId);
+            $pages[$referencePageId] = Markup::createPageFromId($referencePageId);
         }
         return $pages;
 
@@ -396,11 +394,11 @@ class PageFragment implements ResourceCombo, Path
      *
      */
     public
-    function getHtmlFetcher(): FetcherPageFragment
+    function getHtmlFetcher(): FetcherMarkup
     {
 
         try {
-            return FetcherPageFragment::createPageFragmentFetcherFromPath($this->getPathObject())
+            return FetcherMarkup::createPageFragmentFetcherFromPath($this->getPathObject())
                 ->setRequestedMimeToXhtml();
         } catch (ExceptionBadArgument $e) {
             throw new ExceptionRuntimeInternal("The path should be local. Error: {$e->getMessage()}");
@@ -414,13 +412,13 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setCanBeOfLowQuality(bool $value): PageFragment
+    function setCanBeOfLowQuality(bool $value): Markup
     {
         return $this->setQualityIndicatorAndDeleteCacheIfNeeded($this->canBeOfLowQuality, $value);
     }
 
     /**
-     * @return PageFragment[] the backlinks
+     * @return Markup[] the backlinks
      * Duplicate of related
      *
      * Same as {@link WikiPath::getReferencedBy()} ?
@@ -435,7 +433,7 @@ class PageFragment implements ResourceCombo, Path
          */
         $ft_backlinks = ft_backlinks($this->getWikiId());
         foreach ($ft_backlinks as $backlinkId) {
-            $backlinks[$backlinkId] = PageFragment::createPageFromId($backlinkId);
+            $backlinks[$backlinkId] = Markup::createPageFromId($backlinkId);
         }
         return $backlinks;
     }
@@ -578,7 +576,7 @@ class PageFragment implements ResourceCombo, Path
 
 
     public
-    function upsertContent($content, $summary = "Default"): PageFragment
+    function upsertContent($content, $summary = "Default"): Markup
     {
         saveWikiText($this->getPathObject()->getWikiId(), $content, $summary);
         return $this;
@@ -744,7 +742,7 @@ class PageFragment implements ResourceCombo, Path
      * and therefore you may get no metadata and no backlinks
      * @throws ExceptionBadArgument
      */
-    public function renderMetadataAndFlush(): PageFragment
+    public function renderMetadataAndFlush(): Markup
     {
 
         if (!FileSystems::exists($this)) {
@@ -950,7 +948,7 @@ class PageFragment implements ResourceCombo, Path
 
     /**
      *
-     * @deprecated use a {@link FetcherPageFragment::getFetchPathAsHtmlString()} instead
+     * @deprecated use a {@link FetcherMarkup::getFetchPathAsHtmlString()} instead
      */
     public function toXhtml(): string
     {
@@ -997,7 +995,7 @@ class PageFragment implements ResourceCombo, Path
      * @deprecated use {@link MetadataDokuWikiStore::deleteAndFlush()}
      */
     public
-    function deleteMetadatasAndFlush(): PageFragment
+    function deleteMetadatasAndFlush(): Markup
     {
         MetadataDokuWikiStore::getOrCreateFromResource($this)
             ->deleteAndFlush();
@@ -1149,7 +1147,7 @@ class PageFragment implements ResourceCombo, Path
 
 
     public
-    function getAnalyticsDocument(): FetcherPageFragment
+    function getAnalyticsDocument(): FetcherMarkup
     {
         return renderer_plugin_combo_analytics::createAnalyticsFetcherForPageFragment($this);
     }
@@ -1182,11 +1180,11 @@ class PageFragment implements ResourceCombo, Path
     /**
      * Used when the page is moved to take the Page Id of the source
      * @param string|null $pageId
-     * @return PageFragment
+     * @return Markup
      * @throws ExceptionCompile
      */
     public
-    function setPageId(?string $pageId): PageFragment
+    function setPageId(?string $pageId): Markup
     {
 
         $this->pageId
@@ -1278,7 +1276,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setLowQualityIndicatorCalculation($bool): PageFragment
+    function setLowQualityIndicatorCalculation($bool): Markup
     {
         return $this->setQualityIndicatorAndDeleteCacheIfNeeded($this->lowQualityIndicatorCalculated, $bool);
     }
@@ -1290,11 +1288,11 @@ class PageFragment implements ResourceCombo, Path
      * and that the protection is on, delete the cache
      * @param MetadataBoolean $lowQualityAttributeName
      * @param bool $value
-     * @return PageFragment
+     * @return Markup
      * @throws ExceptionBadArgument - if the value cannot be persisted
      */
     private
-    function setQualityIndicatorAndDeleteCacheIfNeeded(MetadataBoolean $lowQualityAttributeName, bool $value): PageFragment
+    function setQualityIndicatorAndDeleteCacheIfNeeded(MetadataBoolean $lowQualityAttributeName, bool $value): Markup
     {
         try {
             $actualValue = $lowQualityAttributeName->getValue();
@@ -1338,7 +1336,7 @@ class PageFragment implements ResourceCombo, Path
      * @deprecated for {@link LdJson}
      */
     public
-    function setJsonLd($jsonLd): PageFragment
+    function setJsonLd($jsonLd): Markup
     {
         $this->ldJson
             ->setValue($jsonLd)
@@ -1350,7 +1348,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setPageType(string $value): PageFragment
+    function setPageType(string $value): Markup
     {
         $this->type
             ->setValue($value)
@@ -1414,10 +1412,10 @@ class PageFragment implements ResourceCombo, Path
      * If the page is at the root, the parent page is the root home
      * Only the root home does not have any parent page and return null.
      *
-     * @return PageFragment
+     * @return Markup
      * @throws ExceptionNotFound
      */
-    public function getParent(): PageFragment
+    public function getParent(): Markup
     {
 
         $names = $this->getNames();
@@ -1462,7 +1460,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setDescription($description): PageFragment
+    function setDescription($description): Markup
     {
 
         $this->description
@@ -1476,7 +1474,7 @@ class PageFragment implements ResourceCombo, Path
      * @deprecated uses {@link EndDate} instead
      */
     public
-    function setEndDate($value): PageFragment
+    function setEndDate($value): Markup
     {
         $this->endDate
             ->setFromStoreValue($value)
@@ -1489,7 +1487,7 @@ class PageFragment implements ResourceCombo, Path
      * @deprecated uses {@link StartDate} instead
      */
     public
-    function setStartDate($value): PageFragment
+    function setStartDate($value): Markup
     {
         $this->startDate
             ->setFromStoreValue($value)
@@ -1501,7 +1499,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setPublishedDate($value): PageFragment
+    function setPublishedDate($value): Markup
     {
         $this->publishedDate
             ->setFromStoreValue($value)
@@ -1515,7 +1513,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setPageName($value): PageFragment
+    function setPageName($value): Markup
     {
         $this->pageName
             ->setValue($value)
@@ -1528,7 +1526,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setTitle($value): PageFragment
+    function setTitle($value): Markup
     {
         $this->title
             ->setValue($value)
@@ -1540,7 +1538,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setH1($value): PageFragment
+    function setH1($value): Markup
     {
         $this->h1
             ->setValue($value)
@@ -1552,7 +1550,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws Exception
      */
     public
-    function setRegion($value): PageFragment
+    function setRegion($value): Markup
     {
         $this->region
             ->setFromStoreValue($value)
@@ -1564,7 +1562,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setLang($value): PageFragment
+    function setLang($value): Markup
     {
 
         $this->lang
@@ -1577,7 +1575,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setLayout($value): PageFragment
+    function setLayout($value): Markup
     {
         $this->layout
             ->setValue($value)
@@ -1654,7 +1652,7 @@ class PageFragment implements ResourceCombo, Path
     }
 
     public
-    function setDatabasePage(DatabasePageRow $databasePage): PageFragment
+    function setDatabasePage(DatabasePageRow $databasePage): Markup
     {
         $this->databasePage = $databasePage;
         return $this;
@@ -1688,7 +1686,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setSlug($slug): PageFragment
+    function setSlug($slug): Markup
     {
         $this->slug
             ->setFromStoreValue($slug)
@@ -1708,7 +1706,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setQualityMonitoringIndicator($boolean): PageFragment
+    function setQualityMonitoringIndicator($boolean): Markup
     {
         $this->qualityMonitoringIndicator
             ->setFromStoreValue($boolean)
@@ -1762,7 +1760,7 @@ class PageFragment implements ResourceCombo, Path
      * @return $this
      */
     public
-    function setReadStore($store): PageFragment
+    function setReadStore($store): Markup
     {
         $this->readStore = $store;
         return $this;
@@ -1813,7 +1811,7 @@ class PageFragment implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setKeywords($value): PageFragment
+    function setKeywords($value): Markup
     {
         $this->keywords
             ->setFromStoreValue($value)
@@ -1861,7 +1859,7 @@ class PageFragment implements ResourceCombo, Path
      * @deprecated for {@link CacheExpirationDate}
      */
     public
-    function setCacheExpirationDate(DateTime $cacheExpirationDate): PageFragment
+    function setCacheExpirationDate(DateTime $cacheExpirationDate): Markup
     {
         $this->cacheExpirationDate->setValue($cacheExpirationDate);
         return $this;
@@ -1872,10 +1870,10 @@ class PageFragment implements ResourceCombo, Path
      *
      */
     public
-    function getInstructionsDocument(): FetcherPageFragment
+    function getInstructionsDocument(): FetcherMarkup
     {
 
-        return FetcherPageFragment::createPageFragmentFetcherFromPath($this->getPathObject())
+        return FetcherMarkup::createPageFragmentFetcherFromPath($this->getPathObject())
             ->setRequestedMimeToInstructions();
 
     }
@@ -1928,7 +1926,7 @@ class PageFragment implements ResourceCombo, Path
 
 
     /**
-     * A shortcut for {@link PageFragment::getPathObject()::getDokuwikiId()}
+     * A shortcut for {@link Markup::getPathObject()::getDokuwikiId()}
      *
      */
     public
@@ -1950,6 +1948,10 @@ class PageFragment implements ResourceCombo, Path
         return WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $this->getWikiId();
     }
 
+    /**
+     * Todo, it should be a property of the markup not every markup file are main page markup.
+     * @return string
+     */
     function getType(): string
     {
         return self::TYPE;
@@ -1962,7 +1964,7 @@ class PageFragment implements ResourceCombo, Path
     }
 
 
-    public function getSideSlot(): ?PageFragment
+    public function getSideSlot(): ?Markup
     {
         /**
          * Only primary slot have a side slot
@@ -1976,7 +1978,7 @@ class PageFragment implements ResourceCombo, Path
         if ($nearestMainFooter === false) {
             return null;
         }
-        return PageFragment::createPageFromId($nearestMainFooter);
+        return Markup::createPageFromId($nearestMainFooter);
 
 
     }
@@ -2001,7 +2003,7 @@ class PageFragment implements ResourceCombo, Path
     /**
      * The slots that are independent from the primary slot
      *
-     * @return PageFragment[]
+     * @return Markup[]
      */
     public function getPrimaryIndependentSlots(): array
     {
@@ -2020,13 +2022,13 @@ class PageFragment implements ResourceCombo, Path
     }
 
 
-    public function getPrimaryHeaderPage(): ?PageFragment
+    public function getPrimaryHeaderPage(): ?Markup
     {
         $nearest = page_findnearest(Site::getPrimaryHeaderSlotName());
         if ($nearest === false) {
             return null;
         }
-        return PageFragment::createPageFromId($nearest);
+        return Markup::createPageFromId($nearest);
     }
 
     public function getHtmlFetcherAsPage(): FetcherPage
@@ -2046,13 +2048,20 @@ class PageFragment implements ResourceCombo, Path
         return Outline::createFromCallStack($callStack);
     }
 
-    private function getPrimaryFooterPage(): ?PageFragment
+
+    public function persistToDefaultMetaStore(): Markup
+    {
+        $this->getReadStoreOrDefault()->persist();
+        return $this;
+    }
+
+    private function getPrimaryFooterPage(): ?Markup
     {
         $nearest = page_findnearest(Site::getPrimaryFooterSlotName());
         if ($nearest === false) {
             return null;
         }
-        return PageFragment::createPageFromId($nearest);
+        return Markup::createPageFromId($nearest);
     }
 
     /**
@@ -2117,7 +2126,7 @@ class PageFragment implements ResourceCombo, Path
 
     function getScheme(): string
     {
-        return PageFileSystem::SCHEME;
+        return MarkupFileSystem::SCHEME;
     }
 
     function getLastName(): string

@@ -20,7 +20,7 @@ class LowQualityPageOverwrite extends MetadataBoolean
     public const PROPERTY_NAME = 'low_quality_page';
     public const CAN_BE_LOW_QUALITY_PAGE_DEFAULT = true;
 
-    public static function createForPage(PageFragment $page)
+    public static function createForPage(Markup $page)
     {
         return (new LowQualityPageOverwrite())
             ->setResource($page);

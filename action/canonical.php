@@ -3,7 +3,7 @@
 use ComboStrap\Canonical;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
@@ -47,7 +47,7 @@ class action_plugin_combo_canonical extends DokuWiki_Action_Plugin
     {
 
         global $JSINFO;
-        $page = PageFragment::createFromRequestedPage();
+        $page = Markup::createFromRequestedPage();
 
         try {
             $canonical = $page->getCanonical();

@@ -12,7 +12,7 @@ use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\Hero;
 use ComboStrap\LogUtility;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -108,7 +108,7 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
     {
         $tag = "div";
         try {
-            $page = PageFragment::createPageFromGlobalWikiId();
+            $page = Markup::createPageFromGlobalWikiId();
             if ($page->isPrimarySlot()) {
                 $tag = self::HTML_SECTION_TAG;
             }

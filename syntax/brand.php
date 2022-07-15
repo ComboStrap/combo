@@ -4,7 +4,7 @@
 // must be run within Dokuwiki
 use ComboStrap\Brand;
 use ComboStrap\BrandButton;
-use ComboStrap\CacheDependencies;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
@@ -14,7 +14,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\Icon;
 use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
@@ -66,8 +66,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
             $urlTemplate = Template::create($url);
             $variableDetected = $urlTemplate->getVariablesDetected();
             if (sizeof($variableDetected) === 1 && $variableDetected[0] === "path") {
-                CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
-                $page = PageFragment::createFromRequestedPage();
+                CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                $page = Markup::createFromRequestedPage();
                 $relativePath = str_replace(":", "/", $page->getWikiId());
                 $url = $urlTemplate
                     ->setProperty("path", $relativePath)

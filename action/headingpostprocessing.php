@@ -7,7 +7,7 @@ use ComboStrap\FetcherPage;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupDynamicRender;
 use ComboStrap\Outline;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PageLayout;
 use ComboStrap\Site;
 use ComboStrap\Toc;

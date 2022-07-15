@@ -40,7 +40,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
         $htmlHeadTags = HtmlHeadTags::create()
             ->get();
 
-        $title = PageTitle::createForPage(PageFragment::createPageFromPathObject($this->requestedPath))
+        $title = PageTitle::createForPage(Markup::createPageFromPathObject($this->requestedPath))
             ->getValueOrDefault();
 
         /**
@@ -64,10 +64,10 @@ HTML;
     public function getOutline(): Outline
     {
 
-        $requestedPage = PageFragment::createPageFromPathObject($this->requestedPath);
+        $requestedPage = Markup::createPageFromPathObject($this->requestedPath);
         $outline = $requestedPage->getOutline();
 
-        $childrenPages = PageFileSystem::getOrCreate()->getChildren($requestedPage, FileSystems::LEAF);
+        $childrenPages = MarkupFileSystem::getOrCreate()->getChildren($requestedPage, FileSystems::LEAF);
         foreach ($childrenPages as $child) {
             Outline::merge($outline, $child->getOutline());
         }

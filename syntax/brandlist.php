@@ -10,7 +10,7 @@ use ComboStrap\ExceptionRuntime;
 use ComboStrap\FetcherSvg;
 use ComboStrap\Icon;
 use ComboStrap\IconDownloader;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -175,7 +175,7 @@ EOF;
                         $html .= "<td>";
                         $page = null;
                         if ($type === BrandButton::TYPE_BUTTON_SHARE) {
-                            $page = PageFragment::createFromRequestedPage();
+                            $page = Markup::createFromRequestedPage();
                         }
                         $html .= $brandButton->getLinkAttributes($page)->toHtmlEnterTag("a");
 

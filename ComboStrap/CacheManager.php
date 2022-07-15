@@ -30,7 +30,7 @@ class CacheManager
 
 
     /**
-     * The list of cache runtimes dependencies by slot {@link CacheDependencies}
+     * The list of cache runtimes dependencies by slot {@link MarkupCacheDependencies}
      */
     private $slotCacheDependencies;
 
@@ -87,15 +87,15 @@ class CacheManager
 
     /**
      * @param Path $path
-     * @return CacheDependencies
+     * @return MarkupCacheDependencies
      */
-    public function getCacheDependenciesForPath(Path $path): CacheDependencies
+    public function getCacheDependenciesForPath(Path $path): MarkupCacheDependencies
     {
 
         $pathId = $path->toPathString();
         $cacheRuntimeDependencies = $this->slotCacheDependencies[$pathId];
         if ($cacheRuntimeDependencies === null) {
-            $cacheRuntimeDependencies = CacheDependencies::create($path, $this->requestedPath);
+            $cacheRuntimeDependencies = MarkupCacheDependencies::create($path, $this->requestedPath);
             $this->slotCacheDependencies[$pathId] = $cacheRuntimeDependencies;
         }
         return $cacheRuntimeDependencies;
@@ -179,7 +179,7 @@ class CacheManager
             return false;
         }
 
-        $page = PageFragment::createPageFromId($pageId);
+        $page = Markup::createPageFromId($pageId);
         try {
             $cacheExpirationFrequency = CacheExpirationFrequency::createForPage($page)
                 ->getValue();

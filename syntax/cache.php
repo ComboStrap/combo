@@ -6,7 +6,7 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -86,7 +86,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                 $status = self::PARSING_STATE_SUCCESSFUL;
 
 
-                $requestPage = PageFragment::createFromRequestedPage();
+                $requestPage = Markup::createFromRequestedPage();
 
                 try {
                     CacheExpirationFrequency::createForPage($requestPage)
@@ -138,7 +138,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
             case "metadata":
                 if ($data[self::PARSING_STATUS] === self::PARSING_STATE_SUCCESSFUL) {
                     $cronExpression = $data[PluginUtility::PAYLOAD];
-                    $requestPage = PageFragment::createFromRequestedPage();
+                    $requestPage = Markup::createFromRequestedPage();
                     try {
                         CacheExpirationFrequency::createForPage($requestPage)
                             ->setValue($cronExpression)

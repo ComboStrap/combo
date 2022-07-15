@@ -2,7 +2,7 @@
 
 
 use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 
 /**
  * Class action_plugin_combo_metasync
@@ -29,7 +29,7 @@ class action_plugin_combo_metasync
     {
 
         $id = $event->data["page"];
-        $page = PageFragment::createPageFromId($id);
+        $page = Markup::createPageFromId($id);
         $store = MetadataDokuWikiStore::getOrCreateFromResource($page);
         $result = $event->result;
         $store->setData($result);

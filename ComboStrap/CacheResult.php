@@ -49,9 +49,9 @@ class CacheResult
         return $this->cacheParser->mode;
     }
 
-    public function getPageFragment(): PageFragment
+    public function getPageFragment(): Markup
     {
-        return PageFragment::createPageFromId($this->cacheParser->page);
+        return Markup::createPageFromId($this->cacheParser->page);
     }
 
     public function getResult(): bool

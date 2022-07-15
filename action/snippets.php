@@ -2,8 +2,8 @@
 
 use ComboStrap\CacheManager;
 use ComboStrap\MarkupDynamicRender;
-use ComboStrap\FetcherPageFragment;
-use ComboStrap\PageFragment;
+use ComboStrap\FetcherMarkup;
+use ComboStrap\Markup;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
@@ -96,7 +96,6 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
             global $_SERVER;
             $scriptName = $_SERVER['SCRIPT_NAME'];
-
             /**
              * If this is an ajax call, return
              * only if this not from webcode
@@ -104,7 +103,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             if (strpos($scriptName, "/lib/exe/ajax.php") !== false) {
                 global $_REQUEST;
                 $call = $_REQUEST['call'];
-                if ($call != action_plugin_combo_webcode::CALL_ID) {
+                if ($call !== action_plugin_combo_ajax::COMBO_CALL_NAME ) {
                     return;
                 }
             } else if (!(strpos($scriptName, "/lib/exe/detail.php") !== false)) {
@@ -128,7 +127,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
                 foreach ($cacheReporter->getResults() as $report) {
 
-                    if ($report->getMode() !== FetcherPageFragment::XHTML_MODE) {
+                    if ($report->getMode() !== FetcherMarkup::XHTML_MODE) {
                         continue;
                     }
 

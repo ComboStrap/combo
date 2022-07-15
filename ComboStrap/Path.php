@@ -51,6 +51,9 @@ interface Path
 
     /**
      * @return string only the string representation of the path
+     * This is the {@link WikiPath::getWikiId()} with the root for a WikiPath
+     * This is the path element for all others
+     * It's used mostly in reporting as common name
      */
     function toPathString(): string;
 

@@ -286,7 +286,7 @@ class MarkupRef
                  * The path may be a namespace, in the page system
                  * the path should then be the index page
                  */
-                $this->path = PageFragment::createPageFromPathObject($path)->getPathObject();
+                $this->path = Markup::createPageFromPathObject($path)->getPathObject();
                 $this->url->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->path->getWikiId());
                 $this->addRevToUrl($rev);
 

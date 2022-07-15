@@ -41,7 +41,7 @@ EOF;
     /**
      * @param $searchTerm
      * @param array $columns
-     * @return PageFragment[]
+     * @return Markup[]
      */
     public static function getPages($searchTerm, array $columns = ["h1", "title", "name"]): array
     {
@@ -67,7 +67,7 @@ EOF;
                 ->execute()
                 ->getRows();
             foreach ($rows as $row) {
-                $pages[] = PageFragment::createPageFromId($row["id"]);
+                $pages[] = Markup::createPageFromId($row["id"]);
             }
             return $pages;
         } catch (ExceptionCompile $e) {

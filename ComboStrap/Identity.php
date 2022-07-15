@@ -36,7 +36,7 @@ class Identity
      * Is logged in
      * @return boolean
      */
-    public static function isLoggedIn()
+    public static function isLoggedIn(): bool
     {
         $loggedIn = false;
         global $INPUT;
@@ -230,7 +230,7 @@ EOF;
     private static function getPermissions(string $wikiId): int
     {
         if ($wikiId == null) {
-            $wikiId = PageFragment::createFromRequestedPage()->getWikiId();
+            $wikiId = Markup::createFromRequestedPage()->getWikiId();
         }
         if ($_SERVER['REMOTE_USER']) {
             $perm = auth_quickaclcheck($wikiId);

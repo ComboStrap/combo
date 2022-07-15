@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\CacheDependencies;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
@@ -16,7 +16,7 @@ use ComboStrap\IconDownloader;
 use ComboStrap\IdManager;
 use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\Path;
 use ComboStrap\PathTreeNode;
 use ComboStrap\PluginUtility;
@@ -388,12 +388,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                      * The cache output is composed of primary metadata
                      * (If it changes, the content change)
                      */
-                    CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
+                    CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
                     /**
                      * The content depend on the file system tree
                      * (if a file is added or deleted, the content will change)
                      */
-                    CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(CacheDependencies::PAGE_SYSTEM_DEPENDENCY);
+                    CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY);
 
                     /**
                      * NameSpacePath determination
@@ -408,17 +408,17 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     if ($namespacePath === null) {
                         switch ($pageExplorerType) {
                             case self::LIST_TYPE:
-                                $requestedPage = PageFragment::createFromRequestedPage();
+                                $requestedPage = Markup::createFromRequestedPage();
                                 $namespacePath = $requestedPage->getPathObject()->getParent();
                                 if ($namespacePath === null) {
                                     // root
                                     $namespacePath = $requestedPage->getPathObject();
                                 }
-                                CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
+                                CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
                                 break;
                             case self::TYPE_TREE:
                                 try {
-                                    $renderedPage = PageFragment::createPageFromGlobalWikiId();
+                                    $renderedPage = Markup::createPageFromGlobalWikiId();
                                 } catch (ExceptionCompile $e) {
                                     LogUtility::msg("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
                                     return false;
@@ -476,7 +476,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                              */
                             $indexInstructions = $data[self::INDEX_INSTRUCTIONS];
                             $indexAttributes = $data[self::INDEX_ATTRIBUTES];
-                            $currentIndexPage = PageFragment::createPageFromPathObject($namespacePath);
+                            $currentIndexPage = Markup::createPageFromPathObject($namespacePath);
                             if (!($indexInstructions === null && $indexAttributes !== null)) {
 
                                 if ($currentIndexPage->exists()) {
@@ -598,7 +598,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 // Namespace
                                 if (!($namespaceInstructions === null && $namespaceAttributes !== null)) {
                                     try {
-                                        $subNamespacePage = PageFragment::getIndexPageFromNamespace($subNamespacePath->toPathString());
+                                        $subNamespacePage = Markup::getIndexPageFromNamespace($subNamespacePath->toPathString());
                                     } catch (ExceptionBadSyntax $e) {
                                         LogUtility::msg("Bad syntax for the namespace $namespacePath. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                                         return false;
@@ -645,7 +645,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             }
 
                             foreach (FileSystems::getChildrenLeaf($namespacePath) as $childPagePath) {
-                                $childPage = PageFragment::createPageFromPathObject($childPagePath);
+                                $childPage = Markup::createPageFromPathObject($childPagePath);
                                 if ($childPage->isHidden()) {
                                     continue;
                                 }
@@ -761,7 +761,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
         /**
          * Home Page first
-         * @var PageFragment $homePage
+         * @var Markup $homePage
          */
         $homePage = null;
         /**
@@ -769,7 +769,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
          */
         $containerTreeNodes = [];
         /**
-         * @var PageFragment[] $nonHomePages
+         * @var Markup[] $nonHomePages
          */
         $nonHomePages = [];
 
@@ -792,7 +792,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 /**
                  * Page
                  */
-                $page = PageFragment::createPageFromPathObject($child->getPath());
+                $page = Markup::createPageFromPathObject($child->getPath());
                 if ($page->isIndexPage()) {
                     $homePage = $page;
                 } else {
@@ -854,7 +854,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
             // Button label
 
-            $subHomePage = PageFragment::getIndexPageFromNamespace($containerPath->toPathString());
+            $subHomePage = Markup::getIndexPageFromNamespace($containerPath->toPathString());
             if ($subHomePage->exists()) {
                 if ($namespaceInstructions !== null) {
                     try {
@@ -907,12 +907,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
     /**
      * @param string $html
-     * @param PageFragment $page
+     * @param Markup $page
      * @param array $data - the data array from the handler
      * @param string $type
      */
     private
-    static function treeProcessLeaf(string &$html, PageFragment $page, array $data, string $type)
+    static function treeProcessLeaf(string &$html, Markup $page, array $data, string $type)
     {
         /**
          * In callstack instructions

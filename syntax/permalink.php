@@ -2,7 +2,7 @@
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
-use ComboStrap\CacheDependencies;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
@@ -15,7 +15,7 @@ use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\OutlineSection;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PageUrlPath;
 use ComboStrap\PageUrlType;
 use ComboStrap\PluginUtility;
@@ -130,10 +130,10 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 /**
                  * Cache key dependencies
                  */
-                CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
 
 
-                $requestedPage = PageFragment::createFromRequestedPage();
+                $requestedPage = Markup::createFromRequestedPage();
                 $fragment = $attributes->getValueAndRemoveIfPresent(self::FRAGMENT_ATTRIBUTE);
                 switch ($type) {
                     case self::GENERATED_TYPE:

@@ -6,11 +6,11 @@ use ComboStrap\Canonical;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
-use ComboStrap\FetcherPageFragment;
+use ComboStrap\FetcherMarkup;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\Mime;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PageTitle;
 use ComboStrap\StringUtility;
 use dokuwiki\ChangeLog\PageChangeLog;
@@ -149,13 +149,13 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     protected $tableopen = false;
     private $plainTextId = 0;
     /**
-     * @var PageFragment
+     * @var Markup
      */
     private $page;
 
-    public static function createAnalyticsFetcherForPageFragment(PageFragment $param): FetcherPageFragment
+    public static function createAnalyticsFetcherForPageFragment(Markup $param): FetcherMarkup
     {
-        $analyticsFetcher = FetcherPageFragment::createPageFragmentFetcherFromPath($param->getPathObject())
+        $analyticsFetcher = FetcherMarkup::createPageFragmentFetcherFromPath($param->getPathObject())
             ->setRequestedMime(Mime::getJson())
             ->setRequestedRendererName(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
 
@@ -184,7 +184,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     {
         $this->reset();
         try {
-            $this->page = PageFragment::createPageFromGlobalWikiId();
+            $this->page = Markup::createPageFromGlobalWikiId();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("The global ID is unknown, we were unable to instantiate the requested page in analytics");
         }
@@ -596,7 +596,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * Metadata
          */
         try {
-            $requestedPage = PageFragment::createPageFromGlobalWikiId();
+            $requestedPage = Markup::createPageFromGlobalWikiId();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("The global ID is unknown, we can't find the requested page. Analytics was stopped");
             return;

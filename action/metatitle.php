@@ -4,7 +4,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\Html;
 use ComboStrap\LogUtility;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 
@@ -36,7 +36,7 @@ class action_plugin_combo_metatitle extends DokuWiki_Action_Plugin
 
         // Page Title
         // Root Home page
-        $currentPage = PageFragment::createFromRequestedPage();
+        $currentPage = Markup::createFromRequestedPage();
 
         $pageTitle = $currentPage->getTitleOrDefault();
 

@@ -25,7 +25,7 @@ namespace ComboStrap;
  *   - permanent page path (page id)
  *   - page path
  *
- * This is not the URL of the page but of the generated HTML web page (Ie {@link PageFragment}) with all pages (slots)
+ * This is not the URL of the page but of the generated HTML web page (Ie {@link Markup}) with all pages (slots)
  */
 class PageUrlPath extends MetadataWikiPath
 {
@@ -50,7 +50,7 @@ class PageUrlPath extends MetadataWikiPath
     public const CANONICAL = "page:url";
     const PROPERTY_NAME = "page-url-path";
 
-    public static function createForPage(PageFragment $page)
+    public static function createForPage(Markup $page)
     {
         return (new PageUrlPath())
             ->setResource($page);
@@ -74,7 +74,7 @@ class PageUrlPath extends MetadataWikiPath
     {
 
         $page = $this->getResource();
-        if (!($page instanceof PageFragment)) {
+        if (!($page instanceof Markup)) {
             throw new ExceptionNotFound("The Url Path is not implemented for the resource type (" . $page->getType() . ")");
         }
 
@@ -217,12 +217,12 @@ class PageUrlPath extends MetadataWikiPath
 
     /**
      * Utility to change the type of the resource
-     * @return PageFragment|null
+     * @return Markup|null
      */
-    private function getPage(): ?PageFragment
+    private function getPage(): ?Markup
     {
         $resource = $this->getResource();
-        if ($resource instanceof PageFragment) {
+        if ($resource instanceof Markup) {
             return $resource;
         }
         return null;
@@ -235,7 +235,7 @@ class PageUrlPath extends MetadataWikiPath
     {
         $page = $this->getResource();
         $pagePath = $page->getPathObject()->toPathString();
-        if ((!$page instanceof PageFragment)) {
+        if ((!$page instanceof Markup)) {
             $message = "The url path is only for page resources";
             LogUtility::internalError($message, $this->getCanonical());
             return $pagePath;

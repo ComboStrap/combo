@@ -55,7 +55,7 @@ class PageTitle extends MetadataText
     {
 
         $resource = $this->getResource();
-        if (!($resource instanceof PageFragment)) {
+        if (!($resource instanceof Markup)) {
             LogUtility::internalError("Resource that are not page have no title");
             return ResourceName::getFromPath($resource->getPathObject());
         }

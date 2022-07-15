@@ -21,7 +21,7 @@ use ComboStrap\Dimension;
 use ComboStrap\Display;
 use ComboStrap\ExceptionBadState;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\FetcherMarkup;
+use ComboStrap\FetcherMarkupWebcode;
 use ComboStrap\FetcherRawLocalPath;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -412,7 +412,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             $tagAttributes->addOutputAttributeValueIfNotEmpty(TagAttributes::NAME_ATTRIBUTE, "WebCode iFrame");
                         }
                         try {
-                            $url = FetcherMarkup::createFetcherMarkup($markupCode)
+                            $url = FetcherMarkupWebcode::createFetcherMarkup($markupCode)
                                 ->getFetchUrl()
                                 ->toString();
                             $tagAttributes->addOutputAttributeValue("src", $url);

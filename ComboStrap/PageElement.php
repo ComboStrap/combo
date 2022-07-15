@@ -10,7 +10,7 @@ namespace ComboStrap;
  * It wraps a DOM Element with extra properties needed in a page layout.
  *
  * It represents a:
- *   * a {@link PageElement::isSlot() slot} with {@link FetcherPageFragment content}
+ *   * a {@link PageElement::isSlot() slot} with {@link FetcherMarkup content}
  *   * or a {@link PageElement::isContainer() container} without content
  *
  * It's used in the {@link FetcherPage} as utility class
@@ -27,9 +27,9 @@ class PageElement
      */
     private XmlElement $domElement;
     /**
-     * @var FetcherPageFragment - the fetcher if this is a slot and has a page fragment source
+     * @var FetcherMarkup - the fetcher if this is a slot and has a page fragment source
      */
-    private FetcherPageFragment $fetcherFragment;
+    private FetcherMarkup $fetcherFragment;
 
 
     public function __construct(XmlElement $DOMElement, FetcherPage $fetcherPage)
@@ -165,7 +165,7 @@ class PageElement
             /**
              * Default page side is for page that are not in the root
              */
-            $requestedPage = PageFragment::createPageFromPathObject($this->fetcherPage->getRequestedPath());
+            $requestedPage = Markup::createPageFromPathObject($this->fetcherPage->getRequestedPath());
             switch ($this->getId()) {
                 case FetcherPage::PAGE_SIDE_ELEMENT:
                     try {
@@ -200,9 +200,10 @@ class PageElement
     }
 
     /**
-     * @throws ExceptionNotFound|ExceptionBadArgument if the page/markup fragment was not found (a container element does not have any also)
+     * @throws ExceptionNotFound if the page/markup fragment was not found (a container element does not have any also)
+     * @throws ExceptionBadArgument if the path can not be set as wiki path
      */
-    public function getPageFragmentFetcher(): FetcherPageFragment
+    public function getPageFragmentFetcher(): FetcherMarkup
     {
         if (isset($this->fetcherFragment)) {
             if (!$this->fetcherFragment->isClosed()) {
@@ -213,7 +214,7 @@ class PageElement
          * Rebuild the fragment if any
          */
         $fragmentPath = $this->getFragmentPath();
-        $this->fetcherFragment = FetcherPageFragment::createPageFragmentFetcherFromPath($fragmentPath)
+        $this->fetcherFragment = FetcherMarkup::createPageFragmentFetcherFromPath($fragmentPath)
             ->setRequestedPagePath($this->fetcherPage->getRequestedPath());
         return $this->fetcherFragment;
     }

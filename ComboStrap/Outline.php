@@ -613,7 +613,7 @@ class Outline
         }
         if ($outlineSection->getLevel() === 1) {
             try {
-                PageH1::createForPage(PageFragment::createFromRequestedPage())
+                PageH1::createForPage(Markup::createFromRequestedPage())
                     ->setValue($outlineSection->getLabel())
                     ->persist();
             } catch (ExceptionBadArgument $e) {

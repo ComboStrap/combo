@@ -35,13 +35,13 @@ class CacheExpirationDate extends MetadataDateTime
     public function getDefaultValue(): DateTime
     {
         $resourceCombo = $this->getResource();
-        if (!($resourceCombo instanceof PageFragment)) {
+        if (!($resourceCombo instanceof Markup)) {
             throw new ExceptionNotFound("Cache expiration is only available for page fragment");
         }
 
         /**
-         * We use {@link FetcherPageFragment::getCachePath()}
-         * and not {@link FetcherPageFragment::getFetchPath()}
+         * We use {@link FetcherMarkup::getCachePath()}
+         * and not {@link FetcherMarkup::getFetchPath()}
          * to not create the HTML
          */
         $path = $resourceCombo->getHtmlFetcher()->getCachePath();

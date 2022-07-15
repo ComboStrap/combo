@@ -55,7 +55,7 @@ class PagePublicationDate extends MetadataDateTime
         return PluginUtility::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true);
     }
 
-    public static function createFromPage(PageFragment $page)
+    public static function createFromPage(Markup $page)
     {
         return (new PagePublicationDate())
             ->setResource($page);

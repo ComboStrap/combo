@@ -47,7 +47,7 @@ class MetadataDbStore extends MetadataStoreAbs
     {
 
         $resource = $metadata->getResource();
-        if (!($resource instanceof PageFragment)) {
+        if (!($resource instanceof Markup)) {
             throw new ExceptionRuntime("The resource type ({$resource->getType()}) is not yet supported for the database metadata store", self::CANONICAL);
         }
 
@@ -57,7 +57,7 @@ class MetadataDbStore extends MetadataStoreAbs
 
         } else {
 
-            $pageMetaFromFileSystem = PageFragment::createPageFromQualifiedPath($resource->getPathObject()->toPathString());
+            $pageMetaFromFileSystem = Markup::createPageFromQualifiedPath($resource->getPathObject()->toPathString());
             $fsStore = MetadataDokuWikiStore::getOrCreateFromResource($pageMetaFromFileSystem);
             $pageMetaFromFileSystem->setReadStore($fsStore);
 

@@ -3,7 +3,7 @@
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\Metadata;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PageKeywords;
 
 
@@ -37,7 +37,7 @@ class action_plugin_combo_metakeywords extends DokuWiki_Action_Plugin
         }
 
 
-        $page = PageFragment::createFromRequestedPage();
+        $page = Markup::createFromRequestedPage();
 
         try {
             $keywords = $page->getKeywordsOrDefault();

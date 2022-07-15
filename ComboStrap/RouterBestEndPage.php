@@ -23,11 +23,11 @@ class RouterBestEndPage
 
 
     /**
-     * @param PageFragment $requestedPage
+     * @param Markup $requestedPage
      * @return array - the best poge id and its score
      * The score is the number of name that matches
      */
-    public static function getBestEndPageId(PageFragment $requestedPage): array
+    public static function getBestEndPageId(Markup $requestedPage): array
     {
 
         $pagesWithSameName = Index::getOrCreate()
@@ -42,11 +42,11 @@ class RouterBestEndPage
 
 
     /**
-     * @param PageFragment $missingPage
+     * @param Markup $missingPage
      * @return array with the best page and the type of redirect
      * @throws ExceptionCompile
      */
-    public static function process(PageFragment $missingPage): array
+    public static function process(Markup $missingPage): array
     {
 
         $return = array();
@@ -74,11 +74,11 @@ class RouterBestEndPage
     }
 
     /**
-     * @param PageFragment[] $candidatePagesWithSameLastName
-     * @param PageFragment $requestedPage
+     * @param Markup[] $candidatePagesWithSameLastName
+     * @param Markup $requestedPage
      * @return array
      */
-    public static function getBestEndPageIdFromPages(array $candidatePagesWithSameLastName, PageFragment $requestedPage): array
+    public static function getBestEndPageIdFromPages(array $candidatePagesWithSameLastName, Markup $requestedPage): array
     {
         // Default value
         $bestScore = 0;

@@ -7,7 +7,7 @@ use ComboStrap\Identity;
 use ComboStrap\LinkMarkup;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Mime;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Reference;

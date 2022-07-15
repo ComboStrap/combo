@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\CacheDependencies;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\CacheLog;
@@ -15,7 +15,7 @@ use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use dokuwiki\Cache\CacheRenderer;
@@ -116,13 +116,13 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
 
         /**
          * The cache file may be dependent on the requested id
-         * ie (@link CacheDependencies::OUTPUT_DEPENDENCIES}
+         * ie (@link MarkupCacheDependencies::OUTPUT_DEPENDENCIES}
          */
         global $ID;
         $keep = $ID;
         try {
             $ID = $requestedId;
-            $slot = PageFragment::createPageFromQualifiedPath($slotPath);
+            $slot = Markup::createPageFromQualifiedPath($slotPath);
 
             /**
              * Calculate a new expiration date

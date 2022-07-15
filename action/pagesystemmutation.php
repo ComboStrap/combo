@@ -1,10 +1,10 @@
 <?php
 
-use ComboStrap\CacheDependencies;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\Event;
 use ComboStrap\FileSystems;
 use ComboStrap\LocalPath;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PagePath;
 use ComboStrap\Site;
 
@@ -116,7 +116,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
 
         /**
          * We need to re-render the slot
-         * that are {@link \ComboStrap\CacheDependencies::PAGE_SYSTEM_DEPENDENCY}
+         * that are {@link \ComboStrap\MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY}
          * dependent
          */
         $data = $event->data;
@@ -125,9 +125,9 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
          * Re-render
          */
         $path = $data[PagePath::getPersistentName()];
-        CacheDependencies::reRenderSideSlotIfNeeded(
+        MarkupCacheDependencies::reRenderSideSlotIfNeeded(
             $path,
-            CacheDependencies::PAGE_SYSTEM_DEPENDENCY,
+            MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY,
             self::PAGE_SYSTEM_MUTATION_EVENT_NAME
         );
 

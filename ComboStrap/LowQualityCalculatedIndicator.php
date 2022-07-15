@@ -11,7 +11,7 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
 
     public const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
 
-    public static function createFromPage(PageFragment $page)
+    public static function createFromPage(Markup $page)
     {
         return (new LowQualityCalculatedIndicator())
             ->setResource($page);
@@ -41,7 +41,7 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
              * but if the analytics was done, we can get it
              */
             $resource = $this->getResource();
-            if (!($resource instanceof PageFragment)) {
+            if (!($resource instanceof Markup)) {
                 throw new ExceptionNotFound("Low Quality is only for page resources");
             }
             $analyticsCache = $resource->getAnalyticsDocument()->getCachePath();

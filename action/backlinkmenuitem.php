@@ -7,7 +7,7 @@ use ComboStrap\Identity;
 use ComboStrap\LinkMarkup;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Mime;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Reference;
@@ -112,7 +112,7 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
         }
 
 
-        $backlinkPages = PageFragment::createPageFromId($id);
+        $backlinkPages = Markup::createPageFromId($id);
         $html = syntax_plugin_combo_related::getHtmlRelated($backlinkPages);
 
 

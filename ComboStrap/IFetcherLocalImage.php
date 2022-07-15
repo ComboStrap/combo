@@ -58,7 +58,7 @@ abstract class IFetcherLocalImage extends FetcherImage implements IFetcherSource
     /**
      * @throws ExceptionNotFound
      */
-    public static function createImageFetchFromPageImageMetadata(PageFragment $page)
+    public static function createImageFetchFromPageImageMetadata(Markup $page)
     {
         $selectedPageImage = null;
         foreach ($page->getPageMetadataImages() as $pageMetadataImage) {

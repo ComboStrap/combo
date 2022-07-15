@@ -9,7 +9,7 @@ use ComboStrap\IFetcherLocalImage;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PageImageUsage;
 use ComboStrap\PageType;
 use ComboStrap\PluginUtility;
@@ -73,7 +73,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
 
-        $page = PageFragment::createPageFromId($ID);
+        $page = Markup::createPageFromId($ID);
         if (!$page->exists()) {
             return;
         }

@@ -1,13 +1,13 @@
 <?php
 
 
-use ComboStrap\CacheDependencies;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PageCreationDate;
 use ComboStrap\PagePath;
 use ComboStrap\PagePublicationDate;
@@ -177,7 +177,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
                 /**
                  * Cache dependent on the requested page
                  */
-                CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -215,7 +215,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
                         $renderer->doc .= LogUtility::wrapInRedForHtml("Template instructions should not be null");
                         return false;
                     }
-                    $page = PageFragment::createFromRequestedPage();
+                    $page = Markup::createFromRequestedPage();
                     $metadata = $page->getMetadataForRendering();
                     try {
                         $renderer->doc .= MarkupRenderUtility::renderInstructionsToXhtml($templateStack, $metadata);

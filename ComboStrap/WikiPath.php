@@ -107,7 +107,7 @@ class WikiPath extends PathAbs
      * @param string $drive - the drive (media, page, combo) - same as in windows for the drive prefix (c, d, ...)
      * @param string|null $rev - the revision (mtime)
      *
-     * Thee path should be a qualified/absolute path because in Dokuwiki, a link to a {@link PageFragment}
+     * Thee path should be a qualified/absolute path because in Dokuwiki, a link to a {@link Markup}
      * that ends with the {@link WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT} points to a start page
      * and not to a namespace. The qualification occurs in the transformation
      * from ref to page.
@@ -286,7 +286,7 @@ class WikiPath extends PathAbs
     /**
      * @param $url - a URL path http://whatever/hello/my/lord (The canonical)
      * @return WikiPath - a dokuwiki Id hello:my:lord
-     * @deprecated for {@link FetcherPageFragment::createPageFragmentFetcherFromUrl()}
+     * @deprecated for {@link FetcherMarkup::createPageFragmentFetcherFromUrl()}
      */
     public static function createFromUrl($url): WikiPath
     {

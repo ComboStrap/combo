@@ -14,7 +14,7 @@ use ComboStrap\FileSystems;
 use ComboStrap\LinkMarkup;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\ThirdPartyPlugins;
@@ -624,7 +624,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                              */
                             try {
                                 $path = $markupRef->getMarkupRef()->getPath();
-                                $linkedPage = PageFragment::createPageFromPathObject($path);
+                                $linkedPage = Markup::createPageFromPathObject($path);
                                 if (!FileSystems::exists($path)) {
                                     $stats[renderer_plugin_combo_analytics::INTERNAL_LINK_BROKEN_COUNT]++;
                                     $stats[renderer_plugin_combo_analytics::INFO][] = "The internal linked page `{$linkedPage}` does not exist";

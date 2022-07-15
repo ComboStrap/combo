@@ -67,7 +67,7 @@ class PageType extends MetadataText
     public function getDefaultValue(): ?string
     {
         $resource = $this->getResource();
-        if(!($resource instanceof PageFragment)){
+        if(!($resource instanceof Markup)){
             return null;
         }
 

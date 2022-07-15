@@ -5,7 +5,7 @@ use ComboStrap\WikiPath;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PageUrlPath;
 use ComboStrap\PluginUtility;
 
@@ -73,7 +73,7 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
         $id = getID("id", $clean);
         $id = WikiPath::normalizeWikiPath($id);
         self::setNormalizedId($id);
-        $page = PageFragment::createPageFromId($id);
+        $page = Markup::createPageFromId($id);
         if (!FileSystems::exists($page->getPathObject())) {
             // Is it a permanent link
             try {

@@ -45,35 +45,33 @@ class CacheReportHtmlDataBlockArray
                     }
                 }
                 $mode = $result->getMode();
-                $pageFragment = $result->getPageFragment();
-                try {
-                    $pageFragmentPath = WikiPath::createFromPathObject($pageFragment->getPathObject());
-                } catch (ExceptionBadArgument $e) {
-                    // should not
-                    throw new ExceptionRuntimeInternal("The path should be local wiki based");
+                $sourcePath = $result->getPageFragment()->getPathObject();
+                /**
+                 * If this is not a wiki path, we try to transform it as wiki path
+                 * to get a shorter path (ie id) in the report
+                 */
+                if(!($sourcePath instanceof WikiPath)) {
+                    try {
+                        $sourcePath = WikiPath::createFromPathObject($sourcePath);
+                    } catch (ExceptionBadArgument $e) {
+                        // could not be transformed as wiki path (missing a drive)
+                    }
                 }
-
-                $cacheFile = null;
-                try {
-                    $dokuPath = $result->getPath()->toWikiPath();
-                    $cacheFile = $dokuPath->getWikiId();
-                } catch (ExceptionCompile $e) {
-                    LogUtility::msg("The path ({$result->getPath()}) could not be transformed as wiki path. Error:{$e->getMessage()}");
-                }
+                $cacheFile = $result->getPath()->toPathString();
                 $data = [
                     self::RESULT_STATUS => $result->getResult(),
                     self::DATE_MODIFIED => $modifiedDate,
                     self::CACHE_FILE => $cacheFile
                 ];
 
-                if ($mode === FetcherPageFragment::XHTML_MODE) {
+                if ($mode === FetcherMarkup::XHTML_MODE) {
                     $dependencies = $cacheManager
-                        ->getCacheDependenciesForPath($pageFragmentPath)
+                        ->getCacheDependenciesForPath($sourcePath)
                         ->getDependencies();
                     $data[self::DEPENDENCY_ATT] = $dependencies;
                 }
 
-                $htmlDataBlock[$pageFragmentPath->getWikiId()][$mode] = $data;
+                $htmlDataBlock[$sourcePath->toPathString()][$mode] = $data;
 
             }
 

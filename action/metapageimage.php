@@ -3,7 +3,7 @@
 
 use ComboStrap\FileSystems;
 use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PageImages;
 
 /**
@@ -34,7 +34,7 @@ class action_plugin_combo_metapageimage
     function metadataPageImages($event)
     {
         $dokuwikiId = $event->data["page"];
-        $page = PageFragment::createPageFromId($dokuwikiId);
+        $page = Markup::createPageFromId($dokuwikiId);
         $pageImagesMeta = PageImages::createForPage($page);
         $pageImages = $pageImagesMeta->getValueAsPageImages();
         if ($pageImages === null) {

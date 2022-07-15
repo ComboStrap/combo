@@ -83,7 +83,7 @@ class PageId extends MetadataText
 
 
         $resource = $this->getResource();
-        if (!($resource instanceof PageFragment)) {
+        if (!($resource instanceof Markup)) {
             LogUtility::msg("Page Id is for now only for the page, this is not a page but {$this->getResource()->getType()}");
             return $this;
         }
@@ -141,7 +141,7 @@ class PageId extends MetadataText
                  * We think that the page was moved from the file system
                  * and we return the page id
                  */
-                $pageDbValue = PageFragment::createPageFromQualifiedPath($pathDbValue);
+                $pageDbValue = Markup::createPageFromQualifiedPath($pathDbValue);
                 if (!FileSystems::exists($pageDbValue->getPathObject())) {
                     return parent::buildFromStoreValue($value);
                 }

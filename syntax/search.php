@@ -2,7 +2,7 @@
 
 
 use ComboStrap\Bootstrap;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PluginUtility;
 
 /**
@@ -115,7 +115,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                         $extraClass = $parameters["class"];
                     }
 
-                    $id = PageFragment::createFromRequestedPage()->getWikiId();
+                    $id = Markup::createFromRequestedPage()->getWikiId();
                     $inputSearchId = 'internal-search-box';
 
                     // https://getbootstrap.com/docs/5.0/getting-started/accessibility/#visually-hidden-content

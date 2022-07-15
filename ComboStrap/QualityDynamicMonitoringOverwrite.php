@@ -15,7 +15,7 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
     public const PROPERTY_NAME = "dynamic_quality_monitoring";
     public const EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT = true;
 
-    public static function createFromPage(PageFragment $page)
+    public static function createFromPage(Markup $page)
     {
         return (new QualityDynamicMonitoringOverwrite())
             ->setResource($page);

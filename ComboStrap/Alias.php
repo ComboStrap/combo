@@ -49,10 +49,10 @@ class Alias
 
 
     /**
-     * @return PageFragment
+     * @return Markup
      */
     public
-    function getPage(): PageFragment
+    function getPage(): Markup
     {
         return $this->page;
     }

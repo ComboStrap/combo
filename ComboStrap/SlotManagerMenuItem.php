@@ -98,7 +98,7 @@ class SlotManagerMenuItem extends AbstractItem
 
     public function createHtml(): string
     {
-        $requestedPage = PageFragment::createFromRequestedPage();
+        $requestedPage = Markup::createFromRequestedPage();
         $url = UrlEndpoint::createComboStrapUrl()->setPath("/" . self::TAG);
         $html = "<p>Edit and/or create the <a href=\"{$url->toHtmlString()}\">slots</a> of the page</p>";
         foreach (Site::getSecondarySlotNames() as $secondarySlot) {
@@ -137,7 +137,7 @@ class SlotManagerMenuItem extends AbstractItem
                 }
                 $secondaryPath = $parentPath->resolve($secondarySlot);
 
-                $secondaryPage = PageFragment::createPageFromQualifiedPath($secondaryPath->toPathString());
+                $secondaryPage = Markup::createPageFromQualifiedPath($secondaryPath->toPathString());
                 $class = StyleUtility::addComboStrapSuffix(\syntax_plugin_combo_link::TAG);
                 if (FileSystems::exists($secondaryPath)) {
                     $action = self::EDIT_ACTION;

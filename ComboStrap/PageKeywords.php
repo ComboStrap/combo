@@ -10,7 +10,7 @@ class PageKeywords extends MetadataMultiple
     public const PROPERTY_NAME = "keywords";
 
 
-    public static function createForPage(PageFragment $page)
+    public static function createForPage(Markup $page)
     {
         return (new PageKeywords())
             ->setResource($page);
@@ -54,7 +54,7 @@ class PageKeywords extends MetadataMultiple
     {
 
         $resource = $this->getResource();
-        if (!($resource instanceof PageFragment)) {
+        if (!($resource instanceof Markup)) {
             return null;
         }
         $keyWords = explode(" ", $resource->getNameOrDefault());

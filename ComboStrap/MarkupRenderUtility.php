@@ -65,7 +65,7 @@ class MarkupRenderUtility
     static function renderId2Xhtml($pageId): string
     {
         $wikiPath = WikiPath::createPagePathFromId($pageId);
-        $fetcher = FetcherPageFragment::createPageFragmentFetcherFromPath($wikiPath)
+        $fetcher = FetcherMarkup::createPageFragmentFetcherFromPath($wikiPath)
             ->setRemoveRootBlockElement(true)
             ->setRequestedMimeToXhtml();
         try {
@@ -121,7 +121,7 @@ class MarkupRenderUtility
     /**
      * @throws ExceptionCompile
      */
-    public static function renderInstructionsToXhtmlFromPage($callStackHeaderInstructions, PageFragment $renderingPageId): string
+    public static function renderInstructionsToXhtmlFromPage($callStackHeaderInstructions, Markup $renderingPageId): string
     {
         return self::renderInstructionsToXhtml($callStackHeaderInstructions, $renderingPageId->getMetadataForRendering());
     }

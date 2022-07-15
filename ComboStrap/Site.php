@@ -560,13 +560,13 @@ class Site
         $cacheTime = $conf['cachetime'];
         if ($cacheTime === null) {
             LogUtility::internalError("The global `cachetime` configuration was not set.", self::CANONICAL);
-            return FetcherPageFragment::MAX_CACHE_AGE;
+            return FetcherMarkup::MAX_CACHE_AGE;
         }
         try {
             return DataType::toInteger($cacheTime);
         } catch (ExceptionBadArgument $e) {
             LogUtility::error("The global `cachetime` configuration has a value ($cacheTime) that is not an integer. Error: {$e->getMessage()}", self::CANONICAL);
-            return FetcherPageFragment::MAX_CACHE_AGE;
+            return FetcherMarkup::MAX_CACHE_AGE;
         }
     }
 

@@ -20,8 +20,8 @@ class FileSystems
                 return LocalFileSystem::getOrCreate()->exists($path);
             case WikiFileSystem::SCHEME:
                 return WikiFileSystem::getOrCreate()->exists($path);
-            case PageFileSystem::SCHEME:
-                return PageFileSystem::getOrCreate()->exists($path);
+            case MarkupFileSystem::SCHEME:
+                return MarkupFileSystem::getOrCreate()->exists($path);
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }
@@ -154,8 +154,8 @@ class FileSystems
                 return LocalFileSystem::getOrCreate()->getChildren($path, $type);
             case WikiFileSystem::SCHEME:
                 return WikiFileSystem::getOrCreate()->getChildren($path, $type);
-            case PageFileSystem::SCHEME:
-                return PageFileSystem::getOrCreate()->getChildren($path, $type);
+            case MarkupFileSystem::SCHEME:
+                return MarkupFileSystem::getOrCreate()->getChildren($path, $type);
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }

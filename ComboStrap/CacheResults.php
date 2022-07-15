@@ -44,9 +44,9 @@ class CacheResults
             /**
              * Add snippet and output dependencies
              */
-            if ($cacheParser->mode === FetcherPageFragment::XHTML_MODE) {
+            if ($cacheParser->mode === FetcherMarkup::XHTML_MODE) {
                 $page = $cacheParser->page;
-                $pageFragment = PageFragment::createPageFromId($page)->getHtmlFetcher();
+                $pageFragment = Markup::createPageFromId($page)->getHtmlFetcher();
                 try {
                     /**
                      * @var CacheParser[] $cacheStores

@@ -6,7 +6,7 @@ use ComboStrap\Event;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PluginUtility;
 
 /**
@@ -65,7 +65,7 @@ class action_plugin_combo_fulldatabasereplication extends DokuWiki_Action_Plugin
         } else {
             $id = $ID;
         }
-        $page = PageFragment::createPageFromId($id);
+        $page = Markup::createPageFromId($id);
 
         /**
          * From {@link idx_addPage}

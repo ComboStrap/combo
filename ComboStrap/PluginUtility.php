@@ -1068,7 +1068,7 @@ class PluginUtility
             return false;
         }
 
-        $page = PageFragment::createPageFromId($ID);
+        $page = Markup::createPageFromId($ID);
         if (!$page->exists()) {
             return false;
         }

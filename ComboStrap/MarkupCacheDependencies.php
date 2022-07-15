@@ -21,7 +21,7 @@ use dokuwiki\Cache\CacheParser;
  *   * side slots to have several output of a list {@link \syntax_plugin_combo_pageexplorer navigation pane} for different namespace (ie there is one cache by namespace)
  *   * header and footer main slot to have one output for each requested main page
  */
-class CacheDependencies
+class MarkupCacheDependencies
 {
     /**
      * The dependency value is the requested page path
@@ -34,14 +34,14 @@ class CacheDependencies
      */
     public const REQUESTED_NAMESPACE_DEPENDENCY = "requested_namespace";
     /**
-     * @deprecated use the {@link CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY}
+     * @deprecated use the {@link MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY}
      */
     public const NAMESPACE_OLD_VALUE = "current";
 
     /**
      * This dependencies have an impact on the
      * output location of the cache
-     * {@link CacheDependencies::getOrCalculateDependencyKey()}
+     * {@link MarkupCacheDependencies::getOrCalculateDependencyKey()}
      */
     public const OUTPUT_DEPENDENCIES = [self::REQUESTED_PAGE_DEPENDENCY, self::REQUESTED_NAMESPACE_DEPENDENCY];
 
@@ -123,6 +123,7 @@ class CacheDependencies
      */
     private function __construct(Path $pathFragment, Path $requestedPath)
     {
+
         $this->pathFragment = $pathFragment;
         $this->requestedPath = $requestedPath;
 
@@ -133,16 +134,16 @@ class CacheDependencies
 
     }
 
-    public static function create(Path $pathFragment, Path $requestedPath): CacheDependencies
+    public static function create(Path $pathFragment, Path $requestedPath): MarkupCacheDependencies
     {
-        return new CacheDependencies($pathFragment, $requestedPath);
+        return new MarkupCacheDependencies($pathFragment, $requestedPath);
     }
 
     /**
      * Rerender for now only the secondary slot if it has cache dependency
-     * (ie {@link CacheDependencies::PAGE_SYSTEM_DEPENDENCY} or {@link CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY})
+     * (ie {@link MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY} or {@link MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY})
      * @param $path
-     * @param string $dependency -  a {@link CacheDependencies} ie
+     * @param string $dependency -  a {@link MarkupCacheDependencies} ie
      * @param string $event
      */
     public static function reRenderSideSlotIfNeeded($path, string $dependency, string $event)
@@ -154,7 +155,7 @@ class CacheDependencies
             /**
              * Rerender secondary slot if needed
              */
-            $page = PageFragment::createPageFromId($ID);
+            $page = Markup::createPageFromId($ID);
             $independentSlots = $page->getPrimaryIndependentSlots();
             foreach ($independentSlots as $secondarySlot) {
                 $htmlDocument = $secondarySlot->getHtmlFetcher();
@@ -200,10 +201,10 @@ class CacheDependencies
          *
          * Scope is directory/namespace based
          */
-        $requestedPage = PageFragment::createPageFromPathObject($this->requestedPath);
+        $requestedPage = Markup::createPageFromPathObject($this->requestedPath);
         switch ($dependenciesValue) {
-            case CacheDependencies::NAMESPACE_OLD_VALUE:
-            case CacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY:
+            case MarkupCacheDependencies::NAMESPACE_OLD_VALUE:
+            case MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY:
                 try {
                     $parentPath = $requestedPage->getPathObject()->getParent();
                     return $parentPath->toPathString();
@@ -211,7 +212,7 @@ class CacheDependencies
                     // root
                     return ":";
                 }
-            case CacheDependencies::REQUESTED_PAGE_DEPENDENCY:
+            case MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY:
                 return $requestedPage->getPathObject()->toPathString();
             default:
                 throw new ExceptionCompile("The requested dependency value ($dependenciesValue) has no calculation");
@@ -253,9 +254,9 @@ class CacheDependencies
 
     /**
      * @param string $dependencyName
-     * @return CacheDependencies
+     * @return MarkupCacheDependencies
      */
-    public function addDependency(string $dependencyName): CacheDependencies
+    public function addDependency(string $dependencyName): MarkupCacheDependencies
     {
         if (PluginUtility::isDevOrTest()) {
             if (!in_array($dependencyName, self::OUTPUT_DEPENDENCIES) &&
@@ -310,8 +311,7 @@ class CacheDependencies
 
     /**
      */
-    public
-    function storeDependencies()
+    public function storeDependencies()
     {
 
         /**
@@ -339,19 +339,36 @@ class CacheDependencies
         if ($this->dependenciesCacheStore !== null) {
             return $this->dependenciesCacheStore;
         }
+
         /**
-         * We take the path and not the id
-         * because the markup may be not in a wiki path
+         * The local path to calculate the full qualified Os path
          */
-        try {
-            $localPath = LocalPath::createFromPathObject($this->pathFragment);
-        } catch (ExceptionBadArgument $e) {
-            throw new ExceptionRuntimeInternal("The page fragment path should be local. Error:{$e->getMessage()}",self::CANONICAL);
+        if ($this->pathFragment instanceof LocalPath) {
+            $localPath = $this->pathFragment;
+        } else {
+            try {
+                $localPath = LocalPath::createFromPathObject($this->pathFragment);
+            } catch (ExceptionBadArgument $e) {
+                throw new ExceptionRuntimeInternal("The page fragment path should be local. Error:{$e->getMessage()}", self::CANONICAL);
+            }
+        }
+        /**
+         * The wiki path for rendering (the path is shorter)
+         */
+        if ($this->pathFragment instanceof WikiPath) {
+            $shorterPath = $this->pathFragment;
+        } else {
+            try {
+                $shorterPath = WikiPath::createFromPathObject($this->pathFragment);
+            } catch (ExceptionBadArgument $e) {
+                // It could not be transformed
+                $shorterPath = $localPath;
+            }
         }
         $slotLocalFilePath = $localPath
             ->toAbsolutePath()
             ->toPathString();
-        $this->dependenciesCacheStore = new CacheParser($localPath->toPathString(), $slotLocalFilePath, "deps.json");
+        $this->dependenciesCacheStore = new CacheParser($shorterPath->toPathString(), $slotLocalFilePath, "deps.json");
         return $this->dependenciesCacheStore;
     }
 

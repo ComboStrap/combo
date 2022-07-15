@@ -2,7 +2,7 @@
 
 
 use ComboStrap\Breadcrumb;
-use ComboStrap\CacheDependencies;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\PageSqlTreeListener;
 use ComboStrap\PluginUtility;
@@ -118,9 +118,9 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
             if ($state === DOKU_LEXER_SPECIAL) {
                 $cacheManager = CacheManager::getOrCreateFromRequestedPath();
                 // the output has the data from the requested page
-                $cacheManager->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
                 // the data from the requested page is dependent on the name, title or description of the page
-                $cacheManager->addDependencyForCurrentSlot(CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
+                $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
 
                 $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
                 $renderer->doc .= Breadcrumb::toBreadCrumbHtml($tagAttributes);

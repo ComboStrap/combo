@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\CacheDependencies;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheLog;
 use ComboStrap\CacheManager;
 use ComboStrap\Event;
@@ -8,7 +8,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PagePath;
 use ComboStrap\Reference;
 use ComboStrap\References;
@@ -50,7 +50,7 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
 
         $data = $event->data;
         $pagePath = $data[PagePath::getPersistentName()];
-        $reference = PageFragment::createPageFromQualifiedPath($pagePath);
+        $reference = Markup::createPageFromQualifiedPath($pagePath);
 
         if ($reference->isSecondarySlot()) {
             return;
@@ -73,9 +73,9 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         /**
          * Render the (footer slot) if it has a backlink dependency
          */
-        CacheDependencies::reRenderSideSlotIfNeeded(
+        MarkupCacheDependencies::reRenderSideSlotIfNeeded(
             $pagePath,
-            CacheDependencies::BACKLINKS_DEPENDENCY,
+            MarkupCacheDependencies::BACKLINKS_DEPENDENCY,
             self::BACKLINK_MUTATION_EVENT_NAME
         );
 

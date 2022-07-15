@@ -4,23 +4,24 @@ namespace ComboStrap;
 
 use DateTime;
 
-class PageFileSystem implements FileSystem
+class MarkupFileSystem implements FileSystem
 {
 
-    const SCHEME = "page";
-    private static PageFileSystem $pageFileSystem;
+    const SCHEME = "markup";
 
-    public static function getOrCreate(): PageFileSystem
+    private static MarkupFileSystem $pageFileSystem;
+
+    public static function getOrCreate(): MarkupFileSystem
     {
         if (!isset(self::$pageFileSystem)) {
-            self::$pageFileSystem = new PageFileSystem();
+            self::$pageFileSystem = new MarkupFileSystem();
         }
         return self::$pageFileSystem;
     }
 
 
     /**
-     * @param PageFragment $path
+     * @param Markup $path
      * @return bool
      */
     function exists(Path $path): bool
@@ -29,7 +30,7 @@ class PageFileSystem implements FileSystem
     }
 
     /**
-     * @param PageFragment $path
+     * @param Markup $path
      * @throws ExceptionNotFound
      */
     function getContent(Path $path): string
@@ -38,7 +39,7 @@ class PageFileSystem implements FileSystem
     }
 
     /**
-     * @param PageFragment $path
+     * @param Markup $path
      * @throws ExceptionNotFound
      */
     function getModifiedTime(Path $path): DateTime
@@ -47,9 +48,9 @@ class PageFileSystem implements FileSystem
     }
 
     /**
-     * @param PageFragment $path
+     * @param Markup $path
      * @param string|null $type
-     * @return PageFragment[]
+     * @return Markup[]
      */
     public function getChildren(Path $path, string $type = null): array
     {
@@ -69,7 +70,7 @@ class PageFileSystem implements FileSystem
             if ($child->toUriString() === $pathObject->toUriString()) {
                 continue;
             }
-            $childrenPage[] = PageFragment::createPageFromPathObject($child);
+            $childrenPage[] = Markup::createPageFromPathObject($child);
         }
         return $childrenPage;
     }

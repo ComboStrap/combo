@@ -5,7 +5,7 @@ namespace ComboStrap;
 
 use syntax_plugin_combo_container;
 
-class FetcherPage extends IFetcherAbs implements IFetcherSource
+class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 {
 
     use FetcherTraitLocalPath;
@@ -57,7 +57,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
     private WikiPath $pageJsPath;
     private WikiPath $pageHtmlTemplatePath;
     private XmlDocument $templateDomDocument;
-    private PageFragment $requestedPage;
+    private Markup $requestedPage;
     private string $layoutName;
 
 
@@ -119,18 +119,20 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
     }
 
 
-    public static function createPageFetcherFromPage(PageFragment $pageFragment): FetcherPage
+    public static function createPageFetcherFromPage(Markup $pageFragment): FetcherPage
     {
         return self::createPageFetcherFromPath($pageFragment->getPathObject());
     }
 
-    /**
-     *
-     * @throws ExceptionNotFound - if the main markup page was not found
-     */
-    public function getFetchPath(): LocalPath
-    {
 
+    /**
+     * @return string
+     * @throws ExceptionBadSyntax - if the layout is incorrect (missing element, ...)
+     * @throws ExceptionNotFound - if the main markup fragment could not be found
+     * @throws ExceptionBadArgument - if the main markup fragment path can not be transformed as wiki path
+     */
+    public function getFetchString(): string
+    {
 
         $this->buildObjectIfNeeded();
 
@@ -146,11 +148,15 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
          * Get the HTML fragment
          * The first one should be the main because it has the frontmatter
          */
-        $mainElement = $this->getPageElement(self::MAIN_CONTENT_ELEMENT);
+        try {
+            $mainElement = $this->getPageElement(self::MAIN_CONTENT_ELEMENT);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionBadSyntax("The main element was not found in the html template ({$this->getLayout()}");
+        }
         try {
 
             /**
-             * The {@link FetcherPageFragment::getFetchPath() Get fetch path}
+             * The {@link FetcherMarkup::getFetchPath() Get fetch path}
              * will start the rendering if there is no HTML path
              * or the cache is not fresh
              */
@@ -165,6 +171,8 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
         } catch (ExceptionNotFound $e) {
             // it should be found
             throw new ExceptionNotFound("The main page markup document was not found. Error: {$e->getMessage()}", self::CANONICAL);
+        } catch (ExceptionBadArgument $e) {
+            throw new ExceptionBadArgument("The main page markup document could be served as wiki path. Error: {$e->getMessage()}", self::CANONICAL);
         }
 
         /**
@@ -190,10 +198,13 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
         /**
          * Do we create the page or return the cache
          */
-        if (
-            $cache->isCacheUsable() && $this->isPublicPage()
-        ) {
-            return $cache->getFile();
+        if ($cache->isCacheUsable() && $this->isPublicStaticPage()) {
+            try {
+                return FileSystems::getContent($cache->getFile());
+            } catch (ExceptionNotFound $e) {
+                // the cache file should exists
+                LogUtility::internalError("The cache HTML fragment file was not found", self::CANONICAL);
+            }
         }
 
         /**
@@ -354,7 +365,23 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
             $pageToolParent->addClass(self::POSITION_RELATIVE_CLASS);
             try {
                 Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-                $railBarHtml = TplUtility::getRailBar();
+
+                /**
+                 * The railbar
+                 */
+                $railBarHtml = null;
+                $attributeName = "data-layout";
+                $railBarLayout = $pageToolElement->getAttribute($attributeName);
+                if ($railBarLayout !== "") {
+                    $pageToolElement->removeAttribute($attributeName);
+                    if($railBarLayout==="offcanvas"){
+                        $railBarHtml = TplUtility::getRailBar(TplUtility::BREAKPOINT_NEVER_NAME);
+                    }
+                }
+                if($railBarHtml===null) {
+                    $railBarHtml = TplUtility::getRailBar();
+                }
+
                 $railBarVariable = Template::toValidVariableName("railbar");
                 $htmlFragmentByVariables[$railBarVariable] = $railBarHtml;
                 $pageToolElement->appendTextNode(Template::VARIABLE_PREFIX . $railBarVariable);
@@ -406,24 +433,14 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
         /**
          * We store only the public pages
          */
-        if ($this->isPublicPage()) {
+        if ($this->isPublicStaticPage()) {
             $cache->storeCache($finalHtmlBodyString);
         }
 
-        return $cache->getFile();
+        return $finalHtmlBodyString;
 
     }
 
-    function getFetchPathAsHtmlString(): string
-    {
-
-        /**
-         * TODO: add return {@link TplUtility::printMessage()}
-         */
-        return FileSystems::getContent($this->getFetchPath());
-
-
-    }
 
     /**
      * @throws ExceptionNotFound
@@ -445,10 +462,11 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
 
     /**
      * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
      */
     public function getFetchPathAsHtmlDom(): XmlDocument
     {
-        $content = $this->getFetchPathAsHtmlString();
+        $content = $this->getFetchString();
         return XmlDocument::createHtmlDocFromMarkup($content);
     }
 
@@ -484,7 +502,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
         }
         $this->build = true;
 
-        $this->requestedPage = PageFragment::createPageFromPathObject($this->getRequestedPath());
+        $this->requestedPage = Markup::createPageFromPathObject($this->getRequestedPath());
         $this->layoutName = PageLayout::createFromPage($this->requestedPage)->getValueOrDefault();
 
         $layoutDirectory = WikiPath::createWikiPath(":layout:$this->layoutName:", WikiPath::COMBO_DRIVE);
@@ -752,7 +770,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
             }
         }
 
-        $nodeValue = PageFragment::createPageFromPathObject($this->getRequestedPath());
+        $nodeValue = Markup::createPageFromPathObject($this->getRequestedPath());
         $title = PageTitle::createForPage($nodeValue)->getValueOrDefault();
         $titleMeta->setNodeValue($title);
 
@@ -889,7 +907,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
         return $this->requestedPage;
     }
 
-    private function getLayout()
+    private function getLayout(): string
     {
         $this->buildObjectIfNeeded();
         return $this->layoutName;
@@ -927,18 +945,16 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
     /**
      * The cache stores only public pages.
      *
-     * ie when the user is unknown and there is no railbar
-     * (
-     * railbar is dynamically created even for the public
-     * and the javascript for the menu item expects to run after a window load event
-     * )
+     * ie when the user is unknown
+     * and there is no railbar
+     * (railbar is dynamically created even for the public
+     * and the javascript for the menu item expects to run after a window load event)
      *
      * @return bool
      */
-    private function isPublicPage(): bool
+    private function isPublicStaticPage(): bool
     {
-        return tpl_getConf(TplUtility::CONF_PRIVATE_RAIL_BAR) === 1 && empty($_SERVER['REMOTE_USER']);
-
+        return tpl_getConf(TplUtility::CONF_PRIVATE_RAIL_BAR) === 1 && !Identity::isLoggedIn();
     }
 
 }

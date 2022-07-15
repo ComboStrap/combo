@@ -211,7 +211,7 @@ class BrandButton
      *   * and
      * @throws ExceptionBadArgument
      */
-    public function getBrandEndpointForPage(PageFragment $requestedPage = null): ?string
+    public function getBrandEndpointForPage(Markup $requestedPage = null): ?string
     {
 
         /**
@@ -518,7 +518,7 @@ EOF;
     /**
      */
     public
-    function getTextForPage(PageFragment $requestedPage): string
+    function getTextForPage(Markup $requestedPage): string
     {
 
         try {
@@ -531,7 +531,7 @@ EOF;
     }
 
     public
-    function getSharedUrlForPage(PageFragment $requestedPage): string
+    function getSharedUrlForPage(Markup $requestedPage): string
     {
         return $requestedPage->getCanonicalUrl()->toAbsoluteUrlString();
     }
@@ -541,7 +541,7 @@ EOF;
      * @throws ExceptionCompile
      */
     public
-    function getLinkAttributes(PageFragment $requestedPage = null): TagAttributes
+    function getLinkAttributes(Markup $requestedPage = null): TagAttributes
     {
 
 

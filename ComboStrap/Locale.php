@@ -11,7 +11,7 @@ class Locale extends MetadataText
 
     private string $separator = "_";
 
-    public static function createForPage(PageFragment $page, string $separator = "_"): Locale
+    public static function createForPage(Markup $page, string $separator = "_"): Locale
     {
         return (new Locale())
             ->setSeparator($separator)
@@ -40,7 +40,7 @@ class Locale extends MetadataText
     {
 
         $page = $this->getResource();
-        if (!($page instanceof PageFragment)) {
+        if (!($page instanceof Markup)) {
             LogUtility::internalError("The locale is only implemented for page resources");
             return $this->getDefaultValue();
         }

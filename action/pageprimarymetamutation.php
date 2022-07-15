@@ -1,6 +1,6 @@
 <?php /** @noinspection SpellCheckingInspection */
 
-use ComboStrap\CacheDependencies;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\DokuwikiId;
 use ComboStrap\Event;
 use ComboStrap\MetadataDokuWikiStore;
@@ -66,7 +66,7 @@ class action_plugin_combo_pageprimarymetamutation extends DokuWiki_Action_Plugin
 
         /**
          * We need to re-render the slot
-         * that are {@link \ComboStrap\CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY}
+         * that are {@link \ComboStrap\MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY}
          * dependent
          */
         $data = $event->data;
@@ -75,9 +75,9 @@ class action_plugin_combo_pageprimarymetamutation extends DokuWiki_Action_Plugin
          * Build the context back before getting the slots
          */
         $path = $data[PagePath::getPersistentName()];
-        CacheDependencies::reRenderSideSlotIfNeeded(
+        MarkupCacheDependencies::reRenderSideSlotIfNeeded(
             $path,
-            CacheDependencies::PAGE_PRIMARY_META_DEPENDENCY,
+            MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY,
             self::PRIMARY_META_MUTATION_EVENT_NAME
         );
 

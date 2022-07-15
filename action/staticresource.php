@@ -20,7 +20,7 @@ use ComboStrap\Identity;
 use ComboStrap\LocalPath;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\Url;

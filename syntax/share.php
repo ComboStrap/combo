@@ -3,14 +3,14 @@
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 use ComboStrap\BrandButton;
-use ComboStrap\CacheDependencies;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\Icon;
 use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
-use ComboStrap\PageFragment;
+use ComboStrap\Markup;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -164,9 +164,9 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                      * and Runtime Cache key dependencies
                      */
                     CacheManager::getOrCreateFromRequestedPath()
-                        ->addDependencyForCurrentSlot(CacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                        ->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
 
-                    $requestedPage = PageFragment::createFromRequestedPage();
+                    $requestedPage = Markup::createFromRequestedPage();
                     try {
                         $linkAttributes = $brandButton->getLinkAttributes($requestedPage)
                             ->setType($shareAttributes->getType())

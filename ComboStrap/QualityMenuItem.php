@@ -32,7 +32,7 @@ class QualityMenuItem extends AbstractItem
     const CLASS_HTML_LOW = "combo-quality-item-low";
 
     /**
-     * @var PageFragment
+     * @var Markup
      */
     private $page;
 
@@ -44,7 +44,7 @@ class QualityMenuItem extends AbstractItem
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetManager->attachJavascriptComboLibrary();
         $snippetManager->attachJavascriptInternalInlineForRequest(self::CANONICAL);
-        $this->page = PageFragment::createFromRequestedPage();
+        $this->page = Markup::createFromRequestedPage();
         if($this->page->isLowQualityPage()){
             $snippetManager->attachCssInternalStylesheetForRequest(self::CANONICAL);
         }

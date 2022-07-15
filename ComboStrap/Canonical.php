@@ -18,7 +18,7 @@ class Canonical extends MetadataWikiPath
      */
     public const CONF_CANONICAL_LAST_NAMES_COUNT = 'MinimalNamesCountForAutomaticCanonical';
 
-    public static function createForPage(PageFragment $page): Canonical
+    public static function createForPage(Markup $page): Canonical
     {
         return (new Canonical())
             ->setResource($page);
@@ -59,7 +59,7 @@ class Canonical extends MetadataWikiPath
     {
 
         $resourceCombo = $this->getResource();
-        if (!($resourceCombo instanceof PageFragment)) {
+        if (!($resourceCombo instanceof Markup)) {
             throw new ExceptionNotFound("No default value for other resources than page");
         }
 
@@ -104,7 +104,7 @@ class Canonical extends MetadataWikiPath
          * ie javascript:start will become javascript
          * (Not a home page)
          *
-         * We don't use the {@link PageFragment::isIndexPage()}
+         * We don't use the {@link Markup::isIndexPage()}
          * because the path `ns:ns` is also an index if the
          * page `ns:start` does not exists
          */

@@ -8,16 +8,15 @@ use dokuwiki\Menu\UserMenu;
 
 /**
  * A fetcher for the menu rail bar
+ * A javascript function added in the generated page call this fetcher.
  *
- * The idea was to add Javascript in the generated page
- * that would call this fetcher.
  *
- * The problem is that it's difficult for now to share the code with the template
- * For now, there is a comment inserted that is replaced at runtime on strap
+ * @deprecated Not really deprecated but on pause
+ * The problem is that plugins that add a item would expect
+ * to be loaded with the page and the javascript is in a listener waiting for the load event.
  *
- * And this code is just FYI
  *
- * https://material.io/components/navigation-rail|Navigation rail
+ * https://material.io/components/navigation-rail
  */
 class FetcherRailBar extends IFetcherAbs implements IFetcherString
 {

@@ -190,7 +190,9 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
         /**
          * Do we create the page or return the cache
          */
-        if ($cache->isCacheUsable()) {
+        if (
+            $cache->isCacheUsable() && $this->isPublicPage()
+        ) {
             return $cache->getFile();
         }
 
@@ -327,8 +329,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
             $tocId = self::MAIN_TOC_ELEMENT;
             $tocElement = $this->getPageElement($tocId)->getDomElement();
             $tocElement->addClass(Toc::getClass());
-            $tocHtml = Toc::createForPage($this->getRequestedPage())
-                ->toXhtml();
+            $tocHtml = Toc::createForPage($this->getRequestedPage())->toXhtml();
             $tocVariable = Template::toValidVariableName($tocId);
             $htmlFragmentByVariables[$tocVariable] = $tocHtml;
             $tocElement->appendTextNode(Template::VARIABLE_PREFIX . $tocVariable);
@@ -347,16 +348,20 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
             $pageToolElement = $this->getPageElement(self::PAGE_TOOL_ELEMENT)->getDomElement();
             try {
                 $pageToolParent = $pageToolElement->getParent();
-            } catch (ExceptionNotFound $e){
+            } catch (ExceptionNotFound $e) {
                 throw new ExceptionRuntimeInternal("The page tool element has no parent in the template ($this->pageHtmlTemplatePath)");
             }
             $pageToolParent->addClass(self::POSITION_RELATIVE_CLASS);
-            /**
-             * The javascript
-             */
-            $snippetManager = SnippetManager::getOrCreate();
-            $snippetManager->attachInternalJavascriptForRequest(Snippet::COMBO_HTML);
-            $snippetManager->attachInternalJavascriptForRequest(FetcherRailBar::CANONICAL);
+            try {
+                Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+                $railBarHtml = TplUtility::getRailBar();
+                $railBarVariable = Template::toValidVariableName("railbar");
+                $htmlFragmentByVariables[$railBarVariable] = $railBarHtml;
+                $pageToolElement->appendTextNode(Template::VARIABLE_PREFIX . $railBarVariable);
+            } catch (ExceptionCompile $e) {
+                // Different version between strap and combo
+                throw new ExceptionRuntimeInternal("We couldn't add the railbar. Error: {$e->getMessage()}");
+            }
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntimeInternal("The template ($this->pageHtmlTemplatePath) does not have a page tool element");
         }
@@ -397,7 +402,13 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
          * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
          */
         $finalHtmlBodyString = "<!doctype html>\n$finalHtmlBodyString";
-        $cache->storeCache($finalHtmlBodyString);
+
+        /**
+         * We store only the public pages
+         */
+        if ($this->isPublicPage()) {
+            $cache->storeCache($finalHtmlBodyString);
+        }
 
         return $cache->getFile();
 
@@ -911,6 +922,23 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource
             throw new ExceptionNotFound("No element ($elementId) found for the layout ({$this->getLayout()})");
         }
         return $element;
+    }
+
+    /**
+     * The cache stores only public pages.
+     *
+     * ie when the user is unknown and there is no railbar
+     * (
+     * railbar is dynamically created even for the public
+     * and the javascript for the menu item expects to run after a window load event
+     * )
+     *
+     * @return bool
+     */
+    private function isPublicPage(): bool
+    {
+        return tpl_getConf(TplUtility::CONF_PRIVATE_RAIL_BAR) === 1 && empty($_SERVER['REMOTE_USER']);
+
     }
 
 }

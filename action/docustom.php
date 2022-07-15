@@ -8,10 +8,9 @@ use ComboStrap\Url;
 
 /**
  * Implementation of custom do (ie ACT) to output {@link \ComboStrap\IFetcherString}
- * https://www.dokuwiki.org/devel:event:tpl_act_unknown
  *
- * The output is going in the admin area.
- * Not really useful if you want your own layout or do an export
+ *
+ *
  */
 class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 {
@@ -27,11 +26,15 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
     public function register(\Doku_Event_Handler $controller)
     {
         /**
-         * Allow the combo action
+         * Execute the combo action via an ACTION_ACT_PREPROCESS
+         *
+         * Not via the [TPL_ACT_UNKNOWN](https://www.dokuwiki.org/devel:event:tpl_act_unknown)
+         * because it would otherwise put the content in the middle of the page
+         * as an admin page. Not really useful if you want your own layout or do an export
          */
-        $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'allowComboDoAction');
+        $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'executeComboDoAction');
 
-        $controller->register_hook('TPL_ACT_UNKNOWN', 'BEFORE', $this, 'executeComboDoAction');
+
     }
 
     /**
@@ -40,7 +43,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
      * @return void
      *
      */
-    public function allowComboDoAction(Doku_Event $event, $param)
+    public function executeComboDoAction(Doku_Event $event, $param)
     {
         $action = $event->data;
         if (!$this->isComboDoAction($action)) return;
@@ -51,27 +54,22 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
          * More https://www.dokuwiki.org/devel:event:tpl_act_unknown#note_for_implementors
          */
         $event->preventDefault();
-    }
-
-    public function executeComboDoAction(Doku_Event $event, $param)
-    {
-
-        $action = $event->data;
-        if (!$this->isComboDoAction($action)) return;
-
-        $event->preventDefault();
-
 
         try {
             $url = Url::createFromGetOrPostGlobalVariable()
                 ->addQueryParameter(IFetcher::FETCHER_KEY,$this->getFetcherNameFromAction($action));
-            echo FetcherSystem::createFetcherStringFromUrl($url)
-                ->getFetchString();
+            $fetcher = FetcherSystem::createFetcherStringFromUrl($url);
+            $body = $fetcher->getFetchString();
+            $mime = $fetcher->getMime();
+            \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
+                ->setBody($body, $mime)
+                ->send();
         } catch (ExceptionBadArgument|\ComboStrap\ExceptionNotFound|\ComboStrap\ExceptionInternal $e) {
             LogUtility::error("An error has occurred during the execution of the action. Error: {$e->getMessage()} ");
         }
 
     }
+
 
     private function isComboDoAction($actionName): bool
     {

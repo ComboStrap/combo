@@ -261,7 +261,7 @@ class Call
                 }
             } else {
                 // To resolve: explode() expects parameter 2 to be string, array given
-                LogUtility::msg("The call (" . print_r($this->call, true) . ") has an array and not a string as component (" . print_r($component, true) . "). Page: " . Markup::createFromRequestedPage(), LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("The call (" . print_r($this->call, true) . ") has an array and not a string as component (" . print_r($component, true) . "). Page: " . MarkupPath::createFromRequestedPage(), LogUtility::LVL_MSG_ERROR);
                 $tagName = "";
             }
 

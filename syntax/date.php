@@ -9,7 +9,7 @@ use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\Iso8601Date;
 use ComboStrap\Lang;
 use ComboStrap\LogUtility;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -58,7 +58,7 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
                 LogUtility::error("Internal Error: The page content was not set. We were unable to get the page language. Defaulting to the site language");
                 $lang = Site::getLang();
             } else {
-                $page = Markup::createPageFromQualifiedPath($path);
+                $page = MarkupPath::createPageFromQualifiedPath($path);
                 $lang = Lang::createForPage($page)->getValueOrDefault();
             }
         }

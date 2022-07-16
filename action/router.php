@@ -15,7 +15,7 @@ use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PageId;
 use ComboStrap\PageRules;
 use ComboStrap\PageUrlPath;
@@ -261,7 +261,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     {
 
         $id = self::getOriginalIdFromRequest();
-        $page = Markup::createPageFromId($id);
+        $page = MarkupPath::createPageFromId($id);
         if (!FileSystems::exists($page)) {
             // Well known
             if (self::isWellKnownFile($id)) {
@@ -317,7 +317,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Page is an existing id ?
          */
-        $requestedPage = Markup::createPageFromId($ID);
+        $requestedPage = MarkupPath::createPageFromId($ID);
         if ($requestedPage->exists()) {
 
             /**
@@ -525,7 +525,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                 case self::GO_TO_BEST_END_PAGE_NAME:
 
                     /**
-                     * @var Markup $bestEndPage
+                     * @var MarkupPath $bestEndPage
                      */
                     list($bestEndPage, $method) = RouterBestEndPage::process($requestedPage);
                     if ($bestEndPage != null) {
@@ -710,7 +710,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     {
         /**
          * Because we set the ID globally for the ID redirect
-         * we make sure that this is not a {@link Markup}
+         * we make sure that this is not a {@link MarkupPath}
          * object otherwise we got an error in the {@link \ComboStrap\AnalyticsMenuItem}
          * because the constructor takes it {@link \dokuwiki\Menu\Item\AbstractItem}
          */

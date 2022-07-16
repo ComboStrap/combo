@@ -21,14 +21,14 @@ class PageImage
     private WikiPath $image;
     private $usages;
     /**
-     * @var Markup
+     * @var MarkupPath
      */
     private $page;
 
     /**
      * PageImage constructor.
      */
-    public function __construct(WikiPath $image, Markup $page)
+    public function __construct(WikiPath $image, MarkupPath $page)
     {
         $this->image = $image;
         $this->page = $page;
@@ -36,7 +36,7 @@ class PageImage
 
     /**
      * @param WikiPath $image
-     * @param Markup $page
+     * @param MarkupPath $page
      * @return PageImage
      */
     public static function create(WikiPath $image, ResourceCombo $page): PageImage
@@ -83,9 +83,9 @@ class PageImage
     }
 
     /**
-     * @return Markup
+     * @return MarkupPath
      */
-    public function getPage(): Markup
+    public function getPage(): MarkupPath
     {
         return $this->page;
     }

@@ -143,7 +143,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
      */
     public function createLink($id, $name, $class = null): string
     {
-        $page = Markup::createPageFromId($id);
+        $page = MarkupPath::createPageFromId($id);
         if ($name == "start") {
             $name = "Home Page";
         } else {

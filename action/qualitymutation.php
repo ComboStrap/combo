@@ -9,7 +9,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\LowQualityCalculatedIndicator;
 use ComboStrap\LowQualityPageOverwrite;
 use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PagePath;
 use ComboStrap\Site;
 
@@ -52,7 +52,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
 
         $data = $event->data;
         $path = $data[PagePath::getPersistentName()];
-        $page = Markup::createPageFromQualifiedPath($path);
+        $page = MarkupPath::createPageFromQualifiedPath($path);
 
         if (!$page->getCanBeOfLowQuality()) {
             return;

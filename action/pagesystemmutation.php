@@ -4,7 +4,7 @@ use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\Event;
 use ComboStrap\FileSystems;
 use ComboStrap\LocalPath;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PagePath;
 use ComboStrap\Site;
 

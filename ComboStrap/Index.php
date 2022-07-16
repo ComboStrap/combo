@@ -42,10 +42,10 @@ class Index
     /**
      * Return a list of page id that have the same last name
      *
-     * @param Markup $pageToMatch
-     * @return Markup[]
+     * @param MarkupPath $pageToMatch
+     * @return MarkupPath[]
      */
-    public function getPagesWithSameLastName(Markup $pageToMatch): array
+    public function getPagesWithSameLastName(MarkupPath $pageToMatch): array
     {
         /**
          * * A shortcut to:
@@ -68,7 +68,7 @@ class Index
             if ($pageToMatch->getWikiId() === $pageId) {
                 continue;
             }
-            $actualPage = Markup::createPageFromId($pageId);
+            $actualPage = MarkupPath::createPageFromId($pageId);
             if ($actualPage->getPathObject()->getLastName() === $lastName) {
                 $matchedPages[] = $actualPage;
             }
@@ -77,7 +77,7 @@ class Index
 
     }
 
-    public function deletePage(Markup $page)
+    public function deletePage(MarkupPath $page)
     {
 
         $this->indexer->deletePage($page->getWikiId());

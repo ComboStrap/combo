@@ -7,7 +7,7 @@
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -55,11 +55,11 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
 
 
     /**
-     * @param Markup $page
+     * @param MarkupPath $page
      * @param int|null $max
      * @return string
      */
-    public static function getHtmlRelated(Markup $page, ?int $max = null): string
+    public static function getHtmlRelated(MarkupPath $page, ?int $max = null): string
     {
         global $lang;
 
@@ -215,7 +215,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
 
         if ($format == 'xhtml') {
 
-            $page = Markup::createFromRequestedPage();
+            $page = MarkupPath::createFromRequestedPage();
             $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
             $max = $tagAttributes->getValue(self::MAX_LINKS_CONF);
             if ($max === NULL) {
@@ -228,11 +228,11 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
     }
 
     /**
-     * @param Markup $page
+     * @param MarkupPath $page
      * @param int|null $max
      * @return array
      */
-    public static function getRelatedPagesOrderedByBacklinkCount(Markup $page, ?int $max = null): array
+    public static function getRelatedPagesOrderedByBacklinkCount(MarkupPath $page, ?int $max = null): array
     {
 
         // Call the dokuwiki backlinks function

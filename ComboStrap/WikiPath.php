@@ -107,7 +107,7 @@ class WikiPath extends PathAbs
      * @param string $drive - the drive (media, page, combo) - same as in windows for the drive prefix (c, d, ...)
      * @param string|null $rev - the revision (mtime)
      *
-     * Thee path should be a qualified/absolute path because in Dokuwiki, a link to a {@link Markup}
+     * Thee path should be a qualified/absolute path because in Dokuwiki, a link to a {@link MarkupPath}
      * that ends with the {@link WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT} points to a start page
      * and not to a namespace. The qualification occurs in the transformation
      * from ref to page.
@@ -420,15 +420,15 @@ class WikiPath extends PathAbs
     /**
      * The running page fragment given by the global id
      */
-    public static function createRunningPageFragmentPathFromGlobalId(): WikiPath
+    public static function createRunningMarkupWikiPath(): WikiPath
     {
-        $id = WikiRequestEnvironment::createAndCaptureState()->getActualGlobalId();
+        $id = WikiRequest::get()->getActualRunningId();
         return WikiPath::createPagePathFromId($id);
     }
 
     public static function createRequestedPagePathFromRequest(): WikiPath
     {
-        $pageId = PluginUtility::getRequestedWikiId();
+        $pageId = WikiRequest::get()->getRequestedId();;
         return WikiPath::createPagePathFromId($pageId);
     }
 
@@ -554,7 +554,7 @@ class WikiPath extends PathAbs
      */
     public static function getCurrentPagePath(): WikiPath
     {
-        $requestedPath = WikiPath::createRunningPageFragmentPathFromGlobalId();;
+        $requestedPath = WikiPath::createRunningMarkupWikiPath();;
         try {
             $parent = $requestedPath->getParent();
         } catch (ExceptionNotFound $e) {

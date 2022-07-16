@@ -42,7 +42,7 @@ class LdJson extends MetadataJson
 
     public const CANONICAL = action_plugin_combo_metagoogle::CANONICAL;
 
-    public static function createForPage(Markup $page): LdJson
+    public static function createForPage(MarkupPath $page): LdJson
     {
         return (new LdJson())
             ->setResource($page);
@@ -50,9 +50,9 @@ class LdJson extends MetadataJson
 
     /**
      * @param array $ldJson
-     * @param Markup $page
+     * @param MarkupPath $page
      */
-    public static function addImage(array &$ldJson, Markup $page)
+    public static function addImage(array &$ldJson, MarkupPath $page)
     {
         /**
          * Image must belong to the page
@@ -166,7 +166,7 @@ class LdJson extends MetadataJson
 
         if ($value === null) {
             $resourceCombo = $this->getResource();
-            if (($resourceCombo instanceof Markup)) {
+            if (($resourceCombo instanceof MarkupPath)) {
                 // Deprecated, old organization syntax
                 if ($resourceCombo->getTypeOrDefault() === PageType::ORGANIZATION_TYPE) {
                     $store = $this->getReadStore();
@@ -214,7 +214,7 @@ class LdJson extends MetadataJson
     private function mergeWithDefaultValueAndGet($actualValue = null): ?array
     {
         $page = $this->getResource();
-        if (!($page instanceof Markup)) {
+        if (!($page instanceof MarkupPath)) {
             return $actualValue;
         }
 

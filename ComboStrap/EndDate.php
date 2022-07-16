@@ -10,7 +10,7 @@ class EndDate extends MetadataDateTime
 
     public const PROPERTY_NAME = "date_end";
 
-    public static function createFromPage(Markup $page)
+    public static function createFromPage(MarkupPath $page)
     {
         return (new EndDate())
             ->setResource($page);

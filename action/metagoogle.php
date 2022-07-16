@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\LdJson;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 
 
@@ -39,7 +39,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             return;
         }
 
-        $page = Markup::createFromRequestedPage();
+        $page = MarkupPath::createFromRequestedPage();
 
         $ldJson = LdJson::createForPage($page)
             ->getLdJsonMergedWithDefault();

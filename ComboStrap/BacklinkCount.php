@@ -12,7 +12,7 @@ class BacklinkCount extends MetadataInteger
 {
     const PROPERTY_NAME = 'backlink_count';
 
-    public static function createFromResource(Markup $page)
+    public static function createFromResource(MarkupPath $page)
     {
         return (new BacklinkCount())
             ->setResource($page);
@@ -50,7 +50,7 @@ class BacklinkCount extends MetadataInteger
         switch ($storeClass) {
             case MetadataDokuWikiStore::class:
                 $resource = $this->getResource();
-                if (!($resource instanceof Markup)) {
+                if (!($resource instanceof MarkupPath)) {
                     LogUtility::msg("Backlink count is not supported on the resource type ({$resource->getType()}");
                     return $this;
                 }

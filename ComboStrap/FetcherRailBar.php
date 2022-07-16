@@ -93,10 +93,8 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
         }
 
 
-        $wikiRequest = WikiRequestEnvironment::createAndCaptureState()
-            ->setNewRunningId($this->getSourcePath()->getWikiId())
-            ->setNewRequestedId($this->getSourcePath()->getWikiId())
-            ->setNewAct("show");
+        $requestedId = $this->getSourcePath()->getWikiId();
+        $wikiRequest = WikiRequest::createFromRequestId($requestedId);
 
         try {
 
@@ -144,7 +142,7 @@ $snippets
 </div>
 EOF;
         } finally {
-            $wikiRequest->restoreState();
+            $wikiRequest->close($requestedId);
         }
 
     }

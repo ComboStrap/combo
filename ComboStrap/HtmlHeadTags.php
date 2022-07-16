@@ -38,7 +38,7 @@ class HtmlHeadTags
          */
         global $EVENT_HANDLER;
         $EVENT_HANDLER->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'deleteNotNeededHeaders');
-        return FetcherPage::getHtmlHeadTags();
+        return PageLayout::getHtmlHeadTags();
     }
 
     /**

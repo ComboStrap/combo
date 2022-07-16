@@ -41,7 +41,7 @@ class PageUrlType extends MetadataText
         if (!$resourceCombo->exists()) {
             return PageUrlType::CONF_VALUE_PAGE_PATH;
         }
-        if (!($resourceCombo instanceof Markup)) {
+        if (!($resourceCombo instanceof MarkupPath)) {
             LogUtility::msg("The page type is only for page");
             return PageUrlType::CONF_VALUE_PAGE_PATH;
         }

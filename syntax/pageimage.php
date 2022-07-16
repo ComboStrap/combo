@@ -18,7 +18,7 @@ use ComboStrap\FirstImage;
 use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaMarkup;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -194,7 +194,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
          * Image selection
          */
         WikiPath::addRootSeparatorIfNotPresent($path);
-        $page = Markup::createPageFromQualifiedPath($path);
+        $page = MarkupPath::createPageFromQualifiedPath($path);
 
         /**
          * Image Order of precedence
@@ -352,7 +352,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
     /**
      * @throws ExceptionNotFound
      */
-    private function selectAndGetBestMetadataPageImageFetcherForRatio(Markup $page, TagAttributes $tagAttributes): FetcherImage
+    private function selectAndGetBestMetadataPageImageFetcherForRatio(MarkupPath $page, TagAttributes $tagAttributes): FetcherImage
     {
 
         /**

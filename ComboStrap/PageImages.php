@@ -27,7 +27,7 @@ class PageImages extends MetadataTabular
     }
 
 
-    public static function createForPage(Markup $page): PageImages
+    public static function createForPage(MarkupPath $page): PageImages
     {
         return (new PageImages())
             ->setResource($page);
@@ -53,7 +53,7 @@ class PageImages extends MetadataTabular
         }
 
         /**
-         * @var Markup $page ;
+         * @var MarkupPath $page ;
          */
         $page = $this->getResource();
 

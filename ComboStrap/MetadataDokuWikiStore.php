@@ -84,7 +84,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
 
         $requestedId = PluginUtility::getRequestedWikiId();
         if ($requestedId === null) {
-            if ($resourceCombo instanceof Markup) {
+            if ($resourceCombo instanceof MarkupPath) {
                 $requestedId = $resourceCombo->getWikiId();
             } else {
                 $requestedId = "not-a-page";
@@ -102,7 +102,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             return $storesByRequestedId[$path];
         }
 
-        if (!($resourceCombo instanceof Markup)) {
+        if (!($resourceCombo instanceof MarkupPath)) {
             LogUtility::msg("The resource is not a page. File System store supports only page resources");
             $data = null;
         } else {
@@ -154,7 +154,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         if ($resource === null) {
             throw new ExceptionBadState("A resource is mandatory", self::CANONICAL);
         }
-        if (!($resource instanceof Markup)) {
+        if (!($resource instanceof MarkupPath)) {
             throw new ExceptionBadState("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
         $dokuwikiId = $resource->getWikiId();
@@ -176,7 +176,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         if ($resource === null) {
             throw new ExceptionRuntime("A resource is mandatory", self::CANONICAL);
         }
-        if (!($resource instanceof Markup)) {
+        if (!($resource instanceof MarkupPath)) {
             throw new ExceptionRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
         return $this->getFromWikiId($resource->getWikiId(), $metadata->getName(), $default);
@@ -284,15 +284,14 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
          */
         $dokuwikiId = $this->getResource()->getWikiId();
         $actualMeta = $this->getData();
-        $wikiRequest = WikiRequestEnvironment::createAndCaptureState()
-            ->setNewRunningId($dokuwikiId)
-            ->setNewAct("show");
+        $wikiRequest = WikiRequest::get()
+            ->createRunningRequest($dokuwikiId,"show");
         try {
             $newMetadata = p_render_metadata($dokuwikiId, $actualMeta);
             p_save_metadata($dokuwikiId, $newMetadata);
             $this->data = $newMetadata;
         } finally {
-            $wikiRequest->restoreState();
+            $wikiRequest->close($dokuwikiId);
         }
         return $this;
     }
@@ -377,7 +376,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     function getMetaFilePath(): ?Path
     {
         $resource = $this->getResource();
-        if (!($resource instanceof Markup)) {
+        if (!($resource instanceof MarkupPath)) {
             LogUtility::msg("The resource type ({$resource->getType()}) meta file is unknown and can't be retrieved.");
             return null;
         }

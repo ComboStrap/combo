@@ -155,7 +155,7 @@ class MarkupCacheDependencies
             /**
              * Rerender secondary slot if needed
              */
-            $page = Markup::createPageFromId($ID);
+            $page = MarkupPath::createPageFromId($ID);
             $independentSlots = $page->getPrimaryIndependentSlots();
             foreach ($independentSlots as $secondarySlot) {
                 $htmlDocument = $secondarySlot->getHtmlFetcher();
@@ -201,7 +201,7 @@ class MarkupCacheDependencies
          *
          * Scope is directory/namespace based
          */
-        $requestedPage = Markup::createPageFromPathObject($this->requestedPath);
+        $requestedPage = MarkupPath::createPageFromPathObject($this->requestedPath);
         switch ($dependenciesValue) {
             case MarkupCacheDependencies::NAMESPACE_OLD_VALUE:
             case MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY:

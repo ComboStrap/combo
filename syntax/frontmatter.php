@@ -46,13 +46,13 @@ use ComboStrap\Metadata;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MetadataStoreTransfer;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PageH1;
 use ComboStrap\PageId;
 use ComboStrap\PageImagePath;
 use ComboStrap\PageImages;
 use ComboStrap\PageKeywords;
-use ComboStrap\PageLayout;
+use ComboStrap\PageLayoutName;
 use ComboStrap\PagePath;
 use ComboStrap\PagePublicationDate;
 use ComboStrap\PageTitle;
@@ -178,7 +178,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         $result = [];
 
         try {
-            $parsedPage = Markup::createPageFromGlobalWikiId();
+            $parsedPage = MarkupPath::createPageFromGlobalWikiId();
         } catch (ExceptionCompile $e) {
             LogUtility::error("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
             return [];
@@ -318,7 +318,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 /**
                  * Register media in index
                  */
-                $page = Markup::createPageFromId($ID);
+                $page = MarkupPath::createPageFromId($ID);
                 $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
                 if (isset($frontMatterJsonArray[PageImages::getPersistentName()])) {
                     $value = $frontMatterJsonArray[PageImages::getPersistentName()];

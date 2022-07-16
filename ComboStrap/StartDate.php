@@ -9,7 +9,7 @@ class StartDate extends MetadataDateTime
 
     public const PROPERTY_NAME = "date_start";
 
-    public static function createFromPage(Markup $page)
+    public static function createFromPage(MarkupPath $page)
     {
         return (new StartDate())
             ->setResource($page);

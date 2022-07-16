@@ -96,7 +96,7 @@ class MarkupRenderUtility
         try {
 
             if ($ID === null && PluginUtility::isTest()) {
-                $ID = WikiRequestEnvironment::DEFAULT_SLOT_ID_FOR_TEST;
+                $ID = WikiRequest::DEFAULT_SLOT_ID_FOR_TEST;
             }
             $ACT = MarkupDynamicRender::DYNAMIC_RENDERING;
             $output = p_render("xhtml", $callStackHeaderInstructions, $info);
@@ -121,7 +121,7 @@ class MarkupRenderUtility
     /**
      * @throws ExceptionCompile
      */
-    public static function renderInstructionsToXhtmlFromPage($callStackHeaderInstructions, Markup $renderingPageId): string
+    public static function renderInstructionsToXhtmlFromPage($callStackHeaderInstructions, MarkupPath $renderingPageId): string
     {
         return self::renderInstructionsToXhtml($callStackHeaderInstructions, $renderingPageId->getMetadataForRendering());
     }

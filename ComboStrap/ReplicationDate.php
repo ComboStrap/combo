@@ -15,7 +15,7 @@ class ReplicationDate extends MetadataDateTime
     public const PROPERTY_NAME = "date_replication";
     public const REPLICATION_CANONICAL = "replication";
 
-    public static function createFromPage(Markup $page)
+    public static function createFromPage(MarkupPath $page)
     {
         return (new ReplicationDate())
             ->setResource($page);

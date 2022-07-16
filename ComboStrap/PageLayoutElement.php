@@ -10,18 +10,18 @@ namespace ComboStrap;
  * It wraps a DOM Element with extra properties needed in a page layout.
  *
  * It represents a:
- *   * a {@link PageElement::isSlot() slot} with {@link FetcherMarkup content}
- *   * or a {@link PageElement::isContainer() container} without content
+ *   * a {@link PageLayoutElement::isSlot() slot} with {@link FetcherMarkup content}
+ *   * or a {@link PageLayoutElement::isContainer() container} without content
  *
  * It's used in the {@link FetcherPage} as utility class
  */
-class PageElement
+class PageLayoutElement
 {
 
     /**
-     * @var FetcherPage - the fetcher page of this page element
+     * @var PageLayout - the page layout of this page element
      */
-    private FetcherPage $fetcherPage;
+    private PageLayout $pageLayout;
     /**
      * @var XmlElement - the xml element of this page element
      */
@@ -32,10 +32,10 @@ class PageElement
     private FetcherMarkup $fetcherFragment;
 
 
-    public function __construct(XmlElement $DOMElement, FetcherPage $fetcherPage)
+    public function __construct(XmlElement $DOMElement, PageLayout $pageLayout)
     {
 
-        $this->fetcherPage = $fetcherPage;
+        $this->pageLayout = $pageLayout;
         $this->domElement = $DOMElement;
 
     }
@@ -51,19 +51,19 @@ class PageElement
     public static function getSlotNameForElementId($elementId)
     {
         switch ($elementId) {
-            case FetcherPage::PAGE_HEADER_ELEMENT:
+            case PageLayout::PAGE_HEADER_ELEMENT:
                 return Site::getPageHeaderSlotName();
-            case FetcherPage::PAGE_FOOTER_ELEMENT:
+            case PageLayout::PAGE_FOOTER_ELEMENT:
                 return Site::getPageFooterSlotName();
-            case FetcherPage::MAIN_CONTENT_ELEMENT:
+            case PageLayout::MAIN_CONTENT_ELEMENT:
                 throw new ExceptionRuntimeInternal("Main content area is not a slot and does not have any last slot name");
-            case FetcherPage::PAGE_SIDE_ELEMENT:
+            case PageLayout::PAGE_SIDE_ELEMENT:
                 return Site::getSidebarName();
-            case FetcherPage::MAIN_SIDE_ELEMENT:
+            case PageLayout::MAIN_SIDE_ELEMENT:
                 return Site::getPageSideSlotName();
-            case FetcherPage::MAIN_HEADER_ELEMENT:
+            case PageLayout::MAIN_HEADER_ELEMENT:
                 return "slot_main_header";
-            case FetcherPage::MAIN_FOOTER_ELEMENT:
+            case PageLayout::MAIN_FOOTER_ELEMENT:
                 return "slot_main_footer";
             default:
                 throw new ExceptionRuntimeInternal("Internal: The element ($elementId) was unexpected, it's not a slot");
@@ -83,7 +83,7 @@ class PageElement
     }
 
 
-    public function setAttributes(array $attributes): PageElement
+    public function setAttributes(array $attributes): PageLayoutElement
     {
         $this->attributes = $attributes;
         return $this;
@@ -105,7 +105,7 @@ class PageElement
     public
     function __toString()
     {
-        return "Page layout element {$this->fetcherPage->getRequestedPath()} / {$this->getId()}";
+        return "Page layout element {$this->pageLayout} / {$this->getId()}";
     }
 
 
@@ -138,7 +138,7 @@ class PageElement
     public
     function isSlot(): bool
     {
-        if ($this->getId() === FetcherPage::PAGE_TOOL_ELEMENT) {
+        if ($this->getId() === PageLayout::PAGE_TOOL_ELEMENT) {
             return false;
         }
         return !$this->domElement->hasChildrenElement();
@@ -153,8 +153,8 @@ class PageElement
             throw new ExceptionNotFound("No fragment path for container element");
         }
         // Main content
-        $requestedPath = $this->fetcherPage->getRequestedPath();
-        if ($this->getId() === FetcherPage::MAIN_CONTENT_ELEMENT) {
+        $requestedPath = $this->pageLayout->getRequestedContextPath();
+        if ($this->getId() === PageLayout::MAIN_CONTENT_ELEMENT) {
             return $requestedPath;
         }
         // Slot
@@ -165,9 +165,9 @@ class PageElement
             /**
              * Default page side is for page that are not in the root
              */
-            $requestedPage = Markup::createPageFromPathObject($this->fetcherPage->getRequestedPath());
+            $requestedPage = MarkupPath::createPageFromPathObject($this->pageLayout->getRequestedContextPath());
             switch ($this->getId()) {
-                case FetcherPage::PAGE_SIDE_ELEMENT:
+                case PageLayout::PAGE_SIDE_ELEMENT:
                     try {
                         $requestedPage->getPathObject()->getParent();
                     } catch (ExceptionNotFound $e) {
@@ -175,7 +175,7 @@ class PageElement
                         throw new ExceptionNotFound("No page side for pages in the root directory.");
                     }
                     break;
-                case FetcherPage::MAIN_HEADER_ELEMENT:
+                case PageLayout::MAIN_HEADER_ELEMENT:
                     if ($requestedPage->isRootHomePage()) {
                         throw new ExceptionNotFound("No $this for the home");
                     }
@@ -203,7 +203,7 @@ class PageElement
      * @throws ExceptionNotFound if the page/markup fragment was not found (a container element does not have any also)
      * @throws ExceptionBadArgument if the path can not be set as wiki path
      */
-    public function getPageFragmentFetcher(): FetcherMarkup
+    public function getMarkupFetcher(): FetcherMarkup
     {
         if (isset($this->fetcherFragment)) {
             if (!$this->fetcherFragment->isClosed()) {
@@ -215,7 +215,7 @@ class PageElement
          */
         $fragmentPath = $this->getFragmentPath();
         $this->fetcherFragment = FetcherMarkup::createPageFragmentFetcherFromPath($fragmentPath)
-            ->setRequestedPagePath($this->fetcherPage->getRequestedPath());
+            ->setRequestedPagePath($this->pageLayout->getRequestedContextPath());
         return $this->fetcherFragment;
     }
 

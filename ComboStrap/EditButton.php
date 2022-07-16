@@ -278,13 +278,13 @@ class EditButton
             unset($data[self::WIKI_ID]);
             if ($wikiId === null) {
                 try {
-                    $page = Markup::createPageFromGlobalWikiId();
+                    $page = MarkupPath::createPageFromGlobalWikiId();
                 } catch (ExceptionNotFound $e) {
                     LogUtility::internalError("A page id is mandatory for a edit button (no wiki id, no global ID were found). No edit buttons was created then.", self::CANONICAL);
                     return "";
                 }
             } else {
-                $page = Markup::createPageFromId($wikiId);
+                $page = MarkupPath::createPageFromId($wikiId);
             }
             $formId = $data[self::FORM_ID];
             unset($data[self::FORM_ID]);
@@ -410,7 +410,7 @@ EOF;
         if ($wikiId !== null) {
             return $wikiId;
         }
-        return PluginUtility::getCurrentSlotId();
+        return WikiRequest::get()->getActualRunningId();
 
     }
 

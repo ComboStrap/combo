@@ -14,7 +14,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\Icon;
 use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
@@ -67,7 +67,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
             $variableDetected = $urlTemplate->getVariablesDetected();
             if (sizeof($variableDetected) === 1 && $variableDetected[0] === "path") {
                 CacheManager::getOrCreateFromRequestedPath()->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
-                $page = Markup::createFromRequestedPage();
+                $page = MarkupPath::createFromRequestedPage();
                 $relativePath = str_replace(":", "/", $page->getWikiId());
                 $url = $urlTemplate
                     ->setProperty("path", $relativePath)

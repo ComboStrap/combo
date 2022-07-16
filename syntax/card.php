@@ -10,6 +10,7 @@ use ComboStrap\EditButton;
 use ComboStrap\IdManager;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\WikiRequest;
 
 
 require_once(__DIR__ . '/../vendor/autoload.php');
@@ -38,11 +39,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
     const CONF_ENABLE_SECTION_EDITING = "enableCardSectionEditing";
     const CANONICAL = self::TAG;
 
-
-    /**
-     * @var array of a counter for the actual requested wiki id
-     */
-    private $cardCounter = null;
 
 
     /**
@@ -366,28 +362,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      * Tag Attributes
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
-
-                    /**
-                     * Card counter that reset when an unknown request wiki id is asked
-                     */
-                    $requestedId = PluginUtility::getRequestedWikiId();
-                    $counter = &$this->cardCounter[$requestedId];
-                    if ($counter === null) {
-                        $this->cardCounter = null; // delete old counter
-                        $counter = 1;
-                        $this->cardCounter[$requestedId] = $counter;
-                    } else {
-                        $counter++;
-                    }
-
-                    if (!$tagAttributes->hasAttribute("id")) {
-                        /**
-                         * TODO: the value should normally also have the slot id (because other slot may have a card and be cached, the counter
-                         *   will then miss them)
-                         *   but do we really need this id ? Is it for testing purpose ?
-                         */
-                        $tagAttributes->addComponentAttributeValue("id", self::TAG . $counter);
-                    }
 
 
                     $context = $data[PluginUtility::CONTEXT];

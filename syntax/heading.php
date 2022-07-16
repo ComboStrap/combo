@@ -7,7 +7,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Outline;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PageH1;
 use ComboStrap\PluginUtility;
 use ComboStrap\SnippetManager;

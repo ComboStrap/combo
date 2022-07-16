@@ -22,12 +22,12 @@ use renderer_plugin_combo_analytics;
  * https://combostrap.com/page/system (or system.txt file).
  *
  * We are not extending {@link WikiPath} because:
- *   * we want to be able to return {@link Markup} in the {@link Markup::getParent()} function
+ *   * we want to be able to return {@link MarkupPath} in the {@link MarkupPath::getParent()} function
  * otherwise if we do, we get a hierarchical error.
  *   * we can then accepts also {@link LocalPath}
  *
  */
-class Markup implements ResourceCombo, Path
+class MarkupPath implements ResourceCombo, Path
 {
 
     const CANONICAL_PAGE = "markup";
@@ -82,7 +82,7 @@ class Markup implements ResourceCombo, Path
     private $lowQualityIndicatorCalculated;
 
     /**
-     * @var PageLayout
+     * @var PageLayoutName
      */
     private $layout;
     /**
@@ -165,7 +165,7 @@ class Markup implements ResourceCombo, Path
     private $readStore;
 
     /**
-     * @var Path - we wrap a path and not extends to be able to return a {@link Markup}
+     * @var Path - we wrap a path and not extends to be able to return a {@link MarkupPath}
      * otherwise we get an hierarchy error
      */
     private Path $path;
@@ -188,22 +188,22 @@ class Markup implements ResourceCombo, Path
     /**
      * The current running rendering markup
      */
-    public static function createPageFromGlobalWikiId(): Markup
+    public static function createPageFromGlobalWikiId(): MarkupPath
     {
-        $wikiPath = WikiPath::createRunningPageFragmentPathFromGlobalId();
+        $wikiPath = WikiPath::createRunningMarkupWikiPath();
         return self::createPageFromPathObject($wikiPath);
     }
 
-    public static function createPageFromId($id): Markup
+    public static function createPageFromId($id): MarkupPath
     {
-        return new Markup(WikiPath::createPagePathFromId($id));
+        return new MarkupPath(WikiPath::createPagePathFromId($id));
     }
 
     /**
      * @param $pathOrId
-     * @return Markup
+     * @return MarkupPath
      */
-    public static function createPageFromNonQualifiedPath($pathOrId): Markup
+    public static function createPageFromNonQualifiedPath($pathOrId): MarkupPath
     {
 
 //        global $ID;
@@ -220,23 +220,23 @@ class Markup implements ResourceCombo, Path
 //            $qualifiedId = $conf['start'];
 //        }
 //        return PageFragment::createPageFromId($qualifiedId);
-        return Markup::createPageFromQualifiedPath($pathOrId);
+        return MarkupPath::createPageFromQualifiedPath($pathOrId);
 
     }
 
     /**
-     * @return Markup - the requested page
+     * @return MarkupPath - the requested page
      */
-    public static function createFromRequestedPage(): Markup
+    public static function createFromRequestedPage(): MarkupPath
     {
         $path = WikiPath::createRequestedPagePathFromRequest();
-        return Markup::createPageFromPathObject($path);
+        return MarkupPath::createPageFromPathObject($path);
     }
 
 
-    public static function createPageFromPathObject(Path $path): Markup
+    public static function createPageFromPathObject(Path $path): MarkupPath
     {
-        return new Markup($path);
+        return new MarkupPath($path);
     }
 
 
@@ -245,18 +245,18 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionBadSyntax - if this is not a
      * @deprecated just pass a namespace path to the page creation and you will get the index page in return
      */
-    public static function getIndexPageFromNamespace(string $namespacePath): Markup
+    public static function getIndexPageFromNamespace(string $namespacePath): MarkupPath
     {
         WikiPath::checkNamespacePath($namespacePath);
 
-        return Markup::createPageFromId($namespacePath);
+        return MarkupPath::createPageFromId($namespacePath);
     }
 
 
-    static function createPageFromQualifiedPath($qualifiedPath): Markup
+    static function createPageFromQualifiedPath($qualifiedPath): MarkupPath
     {
         $path = WikiPath::createPagePathFromPath($qualifiedPath);
-        return new Markup($path);
+        return new MarkupPath($path);
     }
 
 
@@ -265,7 +265,7 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setCanonical($canonical): Markup
+    function setCanonical($canonical): MarkupPath
     {
         $this->canonical
             ->setValue($canonical)
@@ -351,7 +351,7 @@ class Markup implements ResourceCombo, Path
      * @return $this
      */
     public
-    function rebuild(): Markup
+    function rebuild(): MarkupPath
     {
         $this->readStore = null;
         $this->buildPropertiesFromFileSystem();
@@ -361,7 +361,7 @@ class Markup implements ResourceCombo, Path
 
     /**
      *
-     * @return Markup[]|null the internal links or null
+     * @return MarkupPath[]|null the internal links or null
      */
     public
     function getLinkReferences(): ?array
@@ -383,7 +383,7 @@ class Markup implements ResourceCombo, Path
 
         $pages = [];
         foreach (array_keys($metadata['references']) as $referencePageId) {
-            $pages[$referencePageId] = Markup::createPageFromId($referencePageId);
+            $pages[$referencePageId] = MarkupPath::createPageFromId($referencePageId);
         }
         return $pages;
 
@@ -412,13 +412,13 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setCanBeOfLowQuality(bool $value): Markup
+    function setCanBeOfLowQuality(bool $value): MarkupPath
     {
         return $this->setQualityIndicatorAndDeleteCacheIfNeeded($this->canBeOfLowQuality, $value);
     }
 
     /**
-     * @return Markup[] the backlinks
+     * @return MarkupPath[] the backlinks
      * Duplicate of related
      *
      * Same as {@link WikiPath::getReferencedBy()} ?
@@ -433,7 +433,7 @@ class Markup implements ResourceCombo, Path
          */
         $ft_backlinks = ft_backlinks($this->getWikiId());
         foreach ($ft_backlinks as $backlinkId) {
-            $backlinks[$backlinkId] = Markup::createPageFromId($backlinkId);
+            $backlinks[$backlinkId] = MarkupPath::createPageFromId($backlinkId);
         }
         return $backlinks;
     }
@@ -576,7 +576,7 @@ class Markup implements ResourceCombo, Path
 
 
     public
-    function upsertContent($content, $summary = "Default"): Markup
+    function upsertContent($content, $summary = "Default"): MarkupPath
     {
         saveWikiText($this->getPathObject()->getWikiId(), $content, $summary);
         return $this;
@@ -742,7 +742,7 @@ class Markup implements ResourceCombo, Path
      * and therefore you may get no metadata and no backlinks
      * @throws ExceptionBadArgument
      */
-    public function renderMetadataAndFlush(): Markup
+    public function renderMetadataAndFlush(): MarkupPath
     {
 
         if (!FileSystems::exists($this)) {
@@ -757,9 +757,7 @@ class Markup implements ResourceCombo, Path
          * (Used only in test)
          */
         $wikiPath = WikiPath::createFromPathObject($this->getPathObject());
-        $wikiRequest = WikiRequestEnvironment::createAndCaptureState()
-            ->setNewRequestedId($wikiPath->getWikiId())
-            ->setNewRunningId($wikiPath->getWikiId());
+        $wikiRequest = WikiRequest::getOrCreate($wikiPath->getWikiId());
         try {
             /**
              * @var MetadataDokuWikiStore $metadataStore
@@ -767,7 +765,7 @@ class Markup implements ResourceCombo, Path
             $metadataStore = $this->getReadStoreOrDefault();
             $metadataStore->renderAndPersist();
         } finally {
-            $wikiRequest->restoreState();
+            $wikiRequest->close($wikiPath->getWikiId());
         }
 
         /**
@@ -995,7 +993,7 @@ class Markup implements ResourceCombo, Path
      * @deprecated use {@link MetadataDokuWikiStore::deleteAndFlush()}
      */
     public
-    function deleteMetadatasAndFlush(): Markup
+    function deleteMetadatasAndFlush(): MarkupPath
     {
         MetadataDokuWikiStore::getOrCreateFromResource($this)
             ->deleteAndFlush();
@@ -1059,7 +1057,7 @@ class Markup implements ResourceCombo, Path
             PagePublicationDate::PROPERTY_NAME,
             StartDate::PROPERTY_NAME,
             EndDate::PROPERTY_NAME,
-            PageLayout::PROPERTY_NAME,
+            PageLayoutName::PROPERTY_NAME,
             // Dokuwiki id is deprecated for path, no more advertised
             DokuwikiId::DOKUWIKI_ID_ATTRIBUTE,
             PageLevel::PROPERTY_NAME
@@ -1180,11 +1178,11 @@ class Markup implements ResourceCombo, Path
     /**
      * Used when the page is moved to take the Page Id of the source
      * @param string|null $pageId
-     * @return Markup
+     * @return MarkupPath
      * @throws ExceptionCompile
      */
     public
-    function setPageId(?string $pageId): Markup
+    function setPageId(?string $pageId): MarkupPath
     {
 
         $this->pageId
@@ -1276,7 +1274,7 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setLowQualityIndicatorCalculation($bool): Markup
+    function setLowQualityIndicatorCalculation($bool): MarkupPath
     {
         return $this->setQualityIndicatorAndDeleteCacheIfNeeded($this->lowQualityIndicatorCalculated, $bool);
     }
@@ -1288,11 +1286,11 @@ class Markup implements ResourceCombo, Path
      * and that the protection is on, delete the cache
      * @param MetadataBoolean $lowQualityAttributeName
      * @param bool $value
-     * @return Markup
+     * @return MarkupPath
      * @throws ExceptionBadArgument - if the value cannot be persisted
      */
     private
-    function setQualityIndicatorAndDeleteCacheIfNeeded(MetadataBoolean $lowQualityAttributeName, bool $value): Markup
+    function setQualityIndicatorAndDeleteCacheIfNeeded(MetadataBoolean $lowQualityAttributeName, bool $value): MarkupPath
     {
         try {
             $actualValue = $lowQualityAttributeName->getValue();
@@ -1336,7 +1334,7 @@ class Markup implements ResourceCombo, Path
      * @deprecated for {@link LdJson}
      */
     public
-    function setJsonLd($jsonLd): Markup
+    function setJsonLd($jsonLd): MarkupPath
     {
         $this->ldJson
             ->setValue($jsonLd)
@@ -1348,7 +1346,7 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setPageType(string $value): Markup
+    function setPageType(string $value): MarkupPath
     {
         $this->type
             ->setValue($value)
@@ -1412,10 +1410,10 @@ class Markup implements ResourceCombo, Path
      * If the page is at the root, the parent page is the root home
      * Only the root home does not have any parent page and return null.
      *
-     * @return Markup
+     * @return MarkupPath
      * @throws ExceptionNotFound
      */
-    public function getParent(): Markup
+    public function getParent(): MarkupPath
     {
 
         $names = $this->getNames();
@@ -1459,7 +1457,7 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setDescription($description): Markup
+    function setDescription($description): MarkupPath
     {
 
         $this->description
@@ -1473,7 +1471,7 @@ class Markup implements ResourceCombo, Path
      * @deprecated uses {@link EndDate} instead
      */
     public
-    function setEndDate($value): Markup
+    function setEndDate($value): MarkupPath
     {
         $this->endDate
             ->setFromStoreValue($value)
@@ -1486,7 +1484,7 @@ class Markup implements ResourceCombo, Path
      * @deprecated uses {@link StartDate} instead
      */
     public
-    function setStartDate($value): Markup
+    function setStartDate($value): MarkupPath
     {
         $this->startDate
             ->setFromStoreValue($value)
@@ -1498,7 +1496,7 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setPublishedDate($value): Markup
+    function setPublishedDate($value): MarkupPath
     {
         $this->publishedDate
             ->setFromStoreValue($value)
@@ -1512,7 +1510,7 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setPageName($value): Markup
+    function setPageName($value): MarkupPath
     {
         $this->pageName
             ->setValue($value)
@@ -1525,7 +1523,7 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setTitle($value): Markup
+    function setTitle($value): MarkupPath
     {
         $this->title
             ->setValue($value)
@@ -1537,7 +1535,7 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setH1($value): Markup
+    function setH1($value): MarkupPath
     {
         $this->h1
             ->setValue($value)
@@ -1549,7 +1547,7 @@ class Markup implements ResourceCombo, Path
      * @throws Exception
      */
     public
-    function setRegion($value): Markup
+    function setRegion($value): MarkupPath
     {
         $this->region
             ->setFromStoreValue($value)
@@ -1561,7 +1559,7 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setLang($value): Markup
+    function setLang($value): MarkupPath
     {
 
         $this->lang
@@ -1574,7 +1572,7 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setLayout($value): Markup
+    function setLayout($value): MarkupPath
     {
         $this->layout
             ->setValue($value)
@@ -1637,7 +1635,7 @@ class Markup implements ResourceCombo, Path
         $this->qualityMonitoringIndicator = QualityDynamicMonitoringOverwrite::createFromPage($this);
         $this->modifiedTime = \ComboStrap\ModificationDate::createForPage($this);
         $this->pageUrlPath = PageUrlPath::createForPage($this);
-        $this->layout = PageLayout::createFromPage($this);
+        $this->layout = PageLayoutName::createFromPage($this);
 
     }
 
@@ -1651,7 +1649,7 @@ class Markup implements ResourceCombo, Path
     }
 
     public
-    function setDatabasePage(DatabasePageRow $databasePage): Markup
+    function setDatabasePage(DatabasePageRow $databasePage): MarkupPath
     {
         $this->databasePage = $databasePage;
         return $this;
@@ -1685,7 +1683,7 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setSlug($slug): Markup
+    function setSlug($slug): MarkupPath
     {
         $this->slug
             ->setFromStoreValue($slug)
@@ -1705,7 +1703,7 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setQualityMonitoringIndicator($boolean): Markup
+    function setQualityMonitoringIndicator($boolean): MarkupPath
     {
         $this->qualityMonitoringIndicator
             ->setFromStoreValue($boolean)
@@ -1759,7 +1757,7 @@ class Markup implements ResourceCombo, Path
      * @return $this
      */
     public
-    function setReadStore($store): Markup
+    function setReadStore($store): MarkupPath
     {
         $this->readStore = $store;
         return $this;
@@ -1810,7 +1808,7 @@ class Markup implements ResourceCombo, Path
      * @throws ExceptionCompile
      */
     public
-    function setKeywords($value): Markup
+    function setKeywords($value): MarkupPath
     {
         $this->keywords
             ->setFromStoreValue($value)
@@ -1858,7 +1856,7 @@ class Markup implements ResourceCombo, Path
      * @deprecated for {@link CacheExpirationDate}
      */
     public
-    function setCacheExpirationDate(DateTime $cacheExpirationDate): Markup
+    function setCacheExpirationDate(DateTime $cacheExpirationDate): MarkupPath
     {
         $this->cacheExpirationDate->setValue($cacheExpirationDate);
         return $this;
@@ -1915,8 +1913,7 @@ class Markup implements ResourceCombo, Path
 
     /**
      * @return Path
-     * A page is now a path on itself
-     * (should be used only in the file system to path the function along)
+     * A markup path wraps a path
      */
     public function getPathObject(): Path
     {
@@ -1925,13 +1922,15 @@ class Markup implements ResourceCombo, Path
 
 
     /**
-     * A shortcut for {@link Markup::getPathObject()::getDokuwikiId()}
+     * A shortcut for {@link MarkupPath::getPathObject()::getDokuwikiId()}
      *
+     * @throws ExceptionBadArgument - if the markup path is not a {@link WikiPath}
      */
     public
     function getWikiId(): string
     {
-        return $this->getPathObject()->getWikiId();
+        $path = $this->getPathObject();
+        return WikiPath::createFromPathObject($path)->getWikiId();
     }
 
     public
@@ -1963,7 +1962,7 @@ class Markup implements ResourceCombo, Path
     }
 
 
-    public function getSideSlot(): ?Markup
+    public function getSideSlot(): ?MarkupPath
     {
         /**
          * Only primary slot have a side slot
@@ -1977,7 +1976,7 @@ class Markup implements ResourceCombo, Path
         if ($nearestMainFooter === false) {
             return null;
         }
-        return Markup::createPageFromId($nearestMainFooter);
+        return MarkupPath::createPageFromId($nearestMainFooter);
 
 
     }
@@ -2002,7 +2001,7 @@ class Markup implements ResourceCombo, Path
     /**
      * The slots that are independent from the primary slot
      *
-     * @return Markup[]
+     * @return MarkupPath[]
      */
     public function getPrimaryIndependentSlots(): array
     {
@@ -2021,13 +2020,13 @@ class Markup implements ResourceCombo, Path
     }
 
 
-    public function getPrimaryHeaderPage(): ?Markup
+    public function getPrimaryHeaderPage(): ?MarkupPath
     {
         $nearest = page_findnearest(Site::getPrimaryHeaderSlotName());
         if ($nearest === false) {
             return null;
         }
-        return Markup::createPageFromId($nearest);
+        return MarkupPath::createPageFromId($nearest);
     }
 
     public function getHtmlFetcherAsPage(): FetcherPage
@@ -2048,19 +2047,19 @@ class Markup implements ResourceCombo, Path
     }
 
 
-    public function persistToDefaultMetaStore(): Markup
+    public function persistToDefaultMetaStore(): MarkupPath
     {
         $this->getReadStoreOrDefault()->persist();
         return $this;
     }
 
-    private function getPrimaryFooterPage(): ?Markup
+    private function getPrimaryFooterPage(): ?MarkupPath
     {
         $nearest = page_findnearest(Site::getPrimaryFooterSlotName());
         if ($nearest === false) {
             return null;
         }
-        return Markup::createPageFromId($nearest);
+        return MarkupPath::createPageFromId($nearest);
     }
 
     /**

@@ -22,9 +22,9 @@ class Outline
     private OutlineSection $actualSection; // the actual section that is created
     private Call $actualHeadingCall; // the heading that is parsed
     private int $actualHeadingParsingState = DOKU_LEXER_EXIT;  // the state of the heading parsed (enter, closed), enter if we have entered an heading, exit if not;
-    private Markup $markup;
+    private MarkupPath $markup;
 
-    public function __construct(CallStack $callStack, Markup $markup = null)
+    public function __construct(CallStack $callStack, MarkupPath $markup = null)
     {
         if ($markup !== null) {
             $this->markup = $markup;
@@ -36,10 +36,10 @@ class Outline
 
     /**
      * @param CallStack $callStack
-     * @param Markup|null $markup - null if the markup is dynamic
+     * @param MarkupPath|null $markup - null if the markup is dynamic
      * @return Outline
      */
-    public static function createFromCallStack(CallStack $callStack, Markup $markup = null): Outline
+    public static function createFromCallStack(CallStack $callStack, MarkupPath $markup = null): Outline
     {
         return new Outline($callStack, $markup);
     }
@@ -634,7 +634,7 @@ class Outline
         }
         if ($outlineSection->getLevel() === 1) {
             try {
-                PageH1::createForPage(Markup::createFromRequestedPage())
+                PageH1::createForPage(MarkupPath::createFromRequestedPage())
                     ->setValue($outlineSection->getLabel())
                     ->persist();
             } catch (ExceptionBadArgument $e) {
@@ -658,7 +658,7 @@ class Outline
         }
     }
 
-    public function getMarkup(): Markup
+    public function getMarkup(): MarkupPath
     {
         return $this->markup;
     }

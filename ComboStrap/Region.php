@@ -12,7 +12,7 @@ class Region extends MetadataText
     public const OLD_REGION_PROPERTY = "country";
     public const CONF_SITE_LANGUAGE_REGION = "siteLanguageRegion";
 
-    public static function createForPage(Markup $page)
+    public static function createForPage(MarkupPath $page)
     {
         return (new Region())
             ->setResource($page);

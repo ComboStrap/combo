@@ -67,7 +67,7 @@ class PageType extends MetadataText
     public function getDefaultValue(): ?string
     {
         $resource = $this->getResource();
-        if(!($resource instanceof Markup)){
+        if(!($resource instanceof MarkupPath)){
             return null;
         }
 

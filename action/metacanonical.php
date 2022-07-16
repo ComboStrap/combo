@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 
 /**
  * Class action_plugin_combo_metacanonical
@@ -37,7 +37,7 @@ class action_plugin_combo_metacanonical
             return;
         }
 
-        $page = Markup::createPageFromId($ID);
+        $page = MarkupPath::createPageFromId($ID);
 
         /**
          * No canonical for slot page

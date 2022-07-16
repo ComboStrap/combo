@@ -97,7 +97,7 @@ class MarkupDynamicRender
         try {
 
             if ($ID === null && PluginUtility::isTest()) {
-                $ID = WikiRequestEnvironment::DEFAULT_SLOT_ID_FOR_TEST;
+                $ID = WikiRequest::DEFAULT_SLOT_ID_FOR_TEST;
             }
             $ACT = self::DYNAMIC_RENDERING;
 

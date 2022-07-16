@@ -23,7 +23,7 @@ class EditButtonManager
     static function getOrCreate(): EditButtonManager
     {
 
-        $page = Markup::createFromRequestedPage();
+        $page = MarkupPath::createFromRequestedPage();
         $cacheKey = $page->getWikiId();
         $editButtonManager = self::$editButtonManagers[$cacheKey];
         if ($editButtonManager === null) {

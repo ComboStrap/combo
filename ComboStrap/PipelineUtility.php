@@ -244,7 +244,7 @@ class PipelineUtility
                 LogUtility::warning("Internal Error: The page content was not set. We were unable to get the page locale. Defaulting to the site locale");
                 $locale = Site::getLocale();
             } else {
-                $page = Markup::createPageFromQualifiedPath($path);
+                $page = MarkupPath::createPageFromQualifiedPath($path);
                 $locale = Locale::createForPage($page)->getValueOrDefault();
             }
         }

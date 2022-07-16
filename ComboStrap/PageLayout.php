@@ -1,126 +1,786 @@
 <?php
 
-
 namespace ComboStrap;
 
+use syntax_plugin_combo_container;
 
-class PageLayout extends MetadataText
+/**
+ * A page layout is an object that permits to create an HTML from a layout
+ *
+ * It's used by Fetcher that creates pages such
+ * as {@link FetcherPage}, {@link FetcherMarkupWebcode} or {@link FetcherPageBundler}
+ */
+class PageLayout
 {
 
-    public const PROPERTY_NAME = "layout";
-    public const HOLY_LAYOUT_VALUE = "holy";
-    public const MEDIAN_LAYOUT_VALUE = "median";
-    public const LANDING_LAYOUT_VALUE = "landing";
-    public const INDEX_LAYOUT_VALUE = "index";
-    public const HAMBURGER_LAYOUT_VALUE = "hamburger";
+    const CANONICAL = "layout";
+    public const MAIN_FOOTER_ELEMENT = "main-footer";
+    public const PAGE_SIDE_ELEMENT = "page-side";
+    public const MAIN_CONTENT_ELEMENT = "main-content";
+    public const PAGE_CORE_ELEMENT = "page-core";
+    public const LAYOUT_ELEMENTS = [
+        PageLayout::PAGE_CORE_ELEMENT,
+        PageLayout::PAGE_SIDE_ELEMENT,
+        PageLayout::PAGE_HEADER_ELEMENT,
+        PageLayout::PAGE_MAIN_ELEMENT,
+        PageLayout::PAGE_FOOTER_ELEMENT,
+        PageLayout::MAIN_HEADER_ELEMENT,
+        PageLayout::MAIN_CONTENT_ELEMENT,
+        PageLayout::MAIN_SIDE_ELEMENT,
+        PageLayout::MAIN_FOOTER_ELEMENT,
+        PageLayout::PAGE_TOOL_ELEMENT
+    ];
+    public const POSITION_RELATIVE_CLASS = "position-relative";
+    public const PAGE_TOOL_ELEMENT = "page-tool";
+    public const MAIN_SIDE_ELEMENT = "main-side";
+    public const PAGE_FOOTER_ELEMENT = "page-footer";
+    public const MAIN_HEADER_ELEMENT = "main-header";
+    public const PAGE_MAIN_ELEMENT = "page-main";
+    public const MAIN_TOC_ELEMENT = "main-tool";
+    public const PAGE_HEADER_ELEMENT = "page-header";
+    public const DATA_LAYOUT_CONTAINER_ATTRIBUTE = "data-layout-container";
+    public const DATA_EMPTY_ACTION_ATTRIBUTE = "data-empty-action";
+    public const UTF_8_CHARSET_VALUE = "utf-8";
+    public const VIEWPORT_RESPONSIVE_VALUE = "width=device-width,initial-scale=1";
+    public const TASK_RUNNER_ID = "task-runner";
+    public const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
+    private string $layoutName;
+    private WikiPath $cssPath;
+    private WikiPath $jsPath;
+    private WikiPath $htmlTemplatePath;
+    private XmlDocument $templateDomDocument;
 
-    public static function createFromPage(Markup $page): PageLayout
+    private string $requestedTitle;
+
+    /**
+     * @var PageLayoutElement[]
+     */
+    private array $pageElements = [];
+
+    private bool $requestedEnableTaskRunner = true;
+    private WikiPath $requestedContextPath;
+    private Lang $requestedLang;
+
+
+    /**
+     * @param string $layoutName
+     * @throws ExceptionNotFound - if the layout does not exist
+     * @throws ExceptionBadSyntax - if the layout html template is not valid
+     */
+    public function __construct(string $layoutName)
     {
-        return (new PageLayout())
-            ->setResource($page);
-    }
 
-    public function getTab(): string
-    {
-        return MetaManagerForm::TAB_PAGE_VALUE;
-    }
+        $this->layoutName = $layoutName;
 
-    public function getDescription(): string
-    {
-        return "A layout chooses the layout of your page (such as the slots and placement of the main content)";
-    }
+        $layoutDirectory = WikiPath::createWikiPath(":layout:$this->layoutName:", WikiPath::COMBO_DRIVE);
+        $this->cssPath = $layoutDirectory->resolve("$this->layoutName.css");
+        $this->jsPath = $layoutDirectory->resolve("$this->layoutName.js");
+        $this->htmlTemplatePath = $layoutDirectory->resolve("$this->layoutName.html");
+        $this->templateDomDocument = $this->htmlTemplatePathToHtmlDom($this->htmlTemplatePath);
 
-    public function getLabel(): string
-    {
-        return "Page Layout";
-    }
+        foreach (PageLayout::LAYOUT_ELEMENTS as $elementId) {
 
-    public function getPossibleValues(): ?array
-    {
-        return [
-            self::HOLY_LAYOUT_VALUE,
-            self::MEDIAN_LAYOUT_VALUE,
-            self::LANDING_LAYOUT_VALUE,
-            self::INDEX_LAYOUT_VALUE,
-            self::HAMBURGER_LAYOUT_VALUE
-        ];
-    }
+            /**
+             * If the id is not in the html template we don't show it
+             */
+            try {
+                $domElement = $this->templateDomDocument->querySelector("#$elementId");
+            } catch (ExceptionBadSyntax $e) {
+                LogUtility::internalError("The selector should not have a bad syntax");
+                continue;
+            } catch (ExceptionNotFound $e) {
+                continue;
+            }
 
+            $this->pageElements[$elementId] = new PageLayoutElement($domElement, $this);
 
-    static public function getName(): string
-    {
-        return self::PROPERTY_NAME;
-    }
+        }
 
-    public function getPersistenceType(): string
-    {
-        return Metadata::PERSISTENT_METADATA;
-    }
-
-    public function getMutable(): bool
-    {
-        return true;
     }
 
     /**
+     * @throws ExceptionNotFound - if the layout does not exist
+     * @throws ExceptionBadSyntax - if the layout html template is not valid
+     */
+    private function htmlTemplatePathToHtmlDom(WikiPath $layoutHtmlPath): XmlDocument
+    {
+        try {
+            $htmlStringLayout = FileSystems::getContent($layoutHtmlPath);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionNotFound("The layout file ($layoutHtmlPath) does not exist at $layoutHtmlPath", self::CANONICAL);
+        }
+        try {
+            return XmlDocument::createHtmlDocFromMarkup($htmlStringLayout);
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionBadSyntax("The html template file ($layoutHtmlPath) is not valid. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+        }
+    }
+
+
+    /**
+     * @throws ExceptionBadSyntax - bad html template
+     * @throws ExceptionNotFound - layout not found
+     */
+    public static function createFromLayoutName(string $layoutName): PageLayout
+    {
+        return new PageLayout($layoutName);
+    }
+
+    /**
+     * An utility wrapper to capture the HTML head tags
      * @return string
      */
-    public function getDefaultValue(): string
+    public static function getHtmlHeadTags(): string
+    {
+        ob_start();
+        try {
+            tpl_metaheaders();
+            return ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+    }
+
+    /**
+     * Add or not the task runner / web bug call
+     * @param bool $b
+     * @return void
+     */
+    public function setRequestedEnableTaskRunner(bool $b)
+    {
+        $this->requestedEnableTaskRunner = $b;
+    }
+
+    public function getCssPath(): WikiPath
+    {
+        return $this->cssPath;
+    }
+
+    public function getJsPath(): WikiPath
+    {
+        return $this->jsPath;
+    }
+
+    public function getHtmlTemplatePath(): WikiPath
+    {
+        return $this->htmlTemplatePath;
+    }
+
+    /**
+     * @return WikiPath from where the markup slot should be searched
+     */
+    public function getRequestedContextPath(): WikiPath
+    {
+        return $this->requestedContextPath;
+    }
+
+    public function generateAndGetPageHtml()
+    {
+
+        $htmlFragmentByVariables = [];
+        /**
+         * Creating the HTML document
+         *
+         */
+        foreach ($this->getPageElements() as $pageElement) {
+
+
+            $domElement = $pageElement->getDomElement();
+
+            /**
+             * Layout Container
+             * Page Header and Footer have a bar that permits to set the layout container value
+             *
+             * The page core does not have any
+             * It's by default contained for all layout
+             * generally applied on the page-core element ie
+             * <div id="page-core" data-layout-container=>
+             */
+            if ($domElement->hasAttribute(PageLayout::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
+                $domElement->removeAttribute(PageLayout::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
+                $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                $domElement->addClass(syntax_plugin_combo_container::getClassName($container));
+            }
+
+
+            /**
+             * Rendering
+             */
+            if (!$pageElement->isSlot()) {
+                // no rendering for container area, this is a parent
+                continue;
+            }
+
+
+            try {
+
+                $fetcher = $pageElement->getMarkupFetcher();
+                try {
+                    $fetcherHtmlString = $fetcher->getFetchPathAsHtmlString();
+                } finally {
+                    $fetcher->close();
+                }
+
+                /**
+                 * We don't load / add the HTML string in the actual DOM document
+                 * to no add by-effect, corrections during loading and writing
+                 *
+                 * We add a template variable, we save the HTML in a array
+                 * And replace them after the loop
+                 */
+                $layoutVariable = $pageElement->getVariableName();
+                $htmlFragmentByVariables[$layoutVariable] = $fetcherHtmlString;
+                $domElement->appendTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
+
+            } catch (ExceptionNotFound $e) {
+
+                /**
+                 * no fetcher fragment (page side for instance)
+                 * remove or empty ?
+                 *   * remove allows to not have any empty node but it may break css rules
+                 *   * empty permits not break any css rules (grid may be broken for instance)
+                 */
+                $action = $domElement->getAttributeOrDefault(PageLayout::DATA_EMPTY_ACTION_ATTRIBUTE, "none");
+                switch ($action) {
+                    case "remove":
+                        $domElement->remove();
+                        break;
+                    case "none":
+                        // the empty node will stay in the page
+                        break;
+                    default:
+                        LogUtility::internalError("The value ($action) of the attribute (" . PageLayout::DATA_EMPTY_ACTION_ATTRIBUTE . ") is unknown", self::CANONICAL);
+                }
+                continue;
+
+            }
+
+        }
+
+        /**
+         * Html
+         */
+        try {
+            $html = $this->getTemplateDomDocument()->querySelector("html");
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a html element");
+        }
+
+        $lang = $this->getRequestedLang();
+        $html
+            ->setAttribute("lang", $lang->getValueOrDefault())
+            ->setAttribute("dir", $lang->getDirection());
+        /**
+         * Not Xhtml bedcause it does not support boolean attribute without any value
+         *  ->setAttribute("xmlns", "http://www.w3.org/1999/xhtml")
+         *  ->setAttribute("xml:lang", $langValue)
+         */
+        $this->setRemFontSizeToHtml($html);
+
+
+        /**
+         * Body
+         * {@link tpl_classes} will add the dokuwiki class.
+         * See https://www.dokuwiki.org/devel:templates#dokuwiki_class
+         * dokuwiki__top ID is needed for the "Back to top" utility
+         * used also by some plugins
+         */
+        $tplClasses = tpl_classes();
+        try {
+            $layoutClass = StyleUtility::addComboStrapSuffix("layout-{$this->getLayoutName()}");
+            $bodyElement = $this->getTemplateDomDocument()->querySelector("body")
+                ->addClass($tplClasses)
+                ->addClass(PageLayout::POSITION_RELATIVE_CLASS)
+                ->addClass($layoutClass);
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a body element");
+        }
+
+        $this->addTaskRunnerImageIfRequested($bodyElement);
+
+        if (sizeof($htmlFragmentByVariables) === 0) {
+            LogUtility::internalError("No slot was rendered");
+        }
+
+        /**
+         * Toc
+         */
+        try {
+
+            $tocId = PageLayout::MAIN_TOC_ELEMENT;
+            $tocElement = $this->getPageElement($tocId)->getDomElement();
+            $tocElement->addClass(Toc::getClass());
+
+            $page = $this->getRequestedContextPath();
+            if (!FileSystems::isDirectory($page)) {
+                $tocHtml = Toc::createForPage($page)->toXhtml();
+                $tocVariable = Template::toValidVariableName($tocId);
+                $htmlFragmentByVariables[$tocVariable] = $tocHtml;
+                $tocElement->appendTextNode(Template::VARIABLE_PREFIX . $tocVariable);
+            } else {
+                LogUtility::error("The context path is not a page and does have therefore a toc but the template ($this) has a toc");
+            }
+
+
+        } catch (ExceptionNotFound $e) {
+            // no toc
+        }
+
+        /**
+         * Page Tool
+         *
+         */
+        try {
+            /**
+             * Page tool is located relatively to its parent
+             */
+            $pageToolElement = $this->getPageElement(PageLayout::PAGE_TOOL_ELEMENT)->getDomElement();
+            try {
+                $pageToolParent = $pageToolElement->getParent();
+            } catch (ExceptionNotFound $e) {
+                throw new ExceptionRuntimeInternal("The page tool element has no parent in the template ($this->htmlTemplatePath)");
+            }
+            $pageToolParent->addClass(PageLayout::POSITION_RELATIVE_CLASS);
+            try {
+                Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+
+                /**
+                 * The railbar
+                 */
+                $railBarHtml = null;
+                $attributeName = "data-layout";
+                $railBarLayout = $pageToolElement->getAttribute($attributeName);
+                if ($railBarLayout !== "") {
+                    $pageToolElement->removeAttribute($attributeName);
+                    if ($railBarLayout === "offcanvas") {
+                        $railBarHtml = TplUtility::getRailBar(TplUtility::BREAKPOINT_NEVER_NAME);
+                    }
+                }
+                if ($railBarHtml === null) {
+                    $railBarHtml = TplUtility::getRailBar();
+                }
+
+                $railBarVariable = Template::toValidVariableName("railbar");
+                $htmlFragmentByVariables[$railBarVariable] = $railBarHtml;
+                $pageToolElement->appendTextNode(Template::VARIABLE_PREFIX . $railBarVariable);
+            } catch (ExceptionCompile $e) {
+                // Different version between strap and combo
+                throw new ExceptionRuntimeInternal("We couldn't add the railbar. Error: {$e->getMessage()}");
+            }
+        } catch (ExceptionNotFound $e) {
+            // no page tool
+        }
+
+        /**
+         * Head
+         * (At the end, please)
+         */
+        try {
+            $head = $this->getTemplateDomDocument()->querySelector("head");
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a head element");
+        }
+        $this->checkCharSetMeta($head);
+        $this->checkViewPortMeta($head);
+        $this->addPageIconMeta($head);
+        $this->addTitleMeta($head);
+
+        /**
+         * Snippet (in header)
+         * Css and Js from the layout if any
+         *
+         * Note that Header may be added during rendering and must be
+         * then called after rendering and toc
+         * At last then
+         */
+        $this->addHeadElements($head, $htmlFragmentByVariables);
+
+        /**
+         * We save as XML because we strive to be XML compliant (ie XHTML)
+         * And we want to load it as XML to check the XHTML namespace (ie xmlns)
+         */
+        $htmlBodyDocumentString = $this->getTemplateDomDocument()->toHtml();
+        $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlFragmentByVariables)->render();
+
+        /**
+         * DocType is required by bootstrap
+         * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
+         */
+        $finalHtmlBodyString = "<!doctype html>\n$finalHtmlBodyString";
+
+    }
+
+    /**
+     * @return PageLayoutElement[]
+     */
+    private function getPageElements(): array
+    {
+        return $this->pageElements;
+    }
+
+    private function getTemplateDomDocument(): XmlDocument
+    {
+        return $this->templateDomDocument;
+    }
+
+    public function setRequestedContextPath(WikiPath $requestedMarkupPath): PageLayout
+    {
+        $this->requestedContextPath = $requestedMarkupPath;
+        return $this;
+    }
+
+    private function getRequestedLang(): Lang
+    {
+        return $this->requestedLang;
+    }
+
+    /**
+     * @param Lang $requestedLang
+     * @return PageLayout
+     */
+    public function setRequestedLang(Lang $requestedLang): PageLayout
+    {
+        $this->requestedLang = $requestedLang;
+        return $this;
+    }
+
+    private function setRemFontSizeToHtml(XmlElement $html)
     {
         /**
-         * @var Markup $page
+         * Same as {@link TplUtility::CONF_REM_SIZE}
          */
-        $page = $this->getResource();
-        if ($page->isRootHomePage()) {
-            return self::HAMBURGER_LAYOUT_VALUE;
+        $remSize = tpl_getConf("remSize", null);
+        if ($remSize === null) {
+            return;
         }
         try {
-            switch ($page->getPathObject()->getLastNameWithoutExtension()) {
-                case Site::getSidebarName():
-                case Site::getPrimaryHeaderSlotName():
-                case Site::getPrimaryFooterSlotName():
-                case Site::getPrimarySideSlotName():
-                    return self::MEDIAN_LAYOUT_VALUE;
-                case Site::getPageHeaderSlotName():
-                case Site::getPageFooterSlotName():
-                    /**
-                     * Header and footer contains bar
-                     * {@link \syntax_plugin_combo_menubar menubar} or
-                     * {@link \syntax_plugin_combo_bar}
-                     * They therefore should not be constrained
-                     * Landing page is perfect
-                     */
-                    return self::LANDING_LAYOUT_VALUE;
-            }
-        } catch (ExceptionCompile $e) {
-            // Strap not installed
+            $remSizeInt = DataType::toInteger($remSize);
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::error("The rem size configuration value ($remSize) is not an integer. Error:{$e->getMessage()}", self::CANONICAL);
+            return;
         }
-        if ($page->isIndexPage()) {
-            return self::INDEX_LAYOUT_VALUE;
-        }
-        return self::HOLY_LAYOUT_VALUE;
+        $html->addStyle("font-size", "{$remSizeInt}px");
+
     }
 
-    public function getCanonical(): string
+    private function getLayoutName(): string
     {
-        return self::PROPERTY_NAME;
+        return $this->layoutName;
     }
 
     /**
-     * @return string
+     * Adapted from {@link tpl_indexerWebBug()}
      */
-    public function getValueOrDefault(): string
+    private function addTaskRunnerImageIfRequested(XmlElement $bodyElement): void
+    {
+
+        if ($this->requestedEnableTaskRunner === false) {
+            return;
+        }
+        try {
+            $taskRunnerImg = $bodyElement->getDocument()->createElement("img");
+        } catch (\DOMException $e) {
+            LogUtility::internalError("img is a valid tag ban. No exception should happen .Error: {$e->getMessage()}.");
+            return;
+        }
+
+        $htmlUrl = UrlEndpoint::createTaskRunnerUrl()
+            ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getRequestedContextPath()->getWikiId())
+            ->addQueryParameter(time())
+            ->toHtmlString();
+        // no more 1x1 px image because of ad blockers
+        $taskRunnerImg
+            ->setAttribute("id", PageLayout::TASK_RUNNER_ID)
+            ->addClass("d-none")
+            ->setAttribute('width', 2)
+            ->setAttribute('height', 1)
+            ->setAttribute('alt', 'Task Runner')
+            ->setAttribute('src', $htmlUrl);
+        $bodyElement->appendChild($taskRunnerImg);
+
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getPageElement(string $elementId): PageLayoutElement
+    {
+        $element = $this->pageElements[$elementId];
+        if ($element === null) {
+            throw new ExceptionNotFound("No element ($elementId) found for the layout ($this)");
+        }
+        return $element;
+    }
+
+    public function __toString()
+    {
+        return $this->layoutName;
+    }
+
+
+    /**
+     * Character set
+     * Note: avoid using {@link Html::encode() character entities} in your HTML,
+     * provided their encoding matches that of the document (generally UTF-8)
+     */
+    private function checkCharSetMeta(XmlElement $head)
+    {
+        $charsetValue = PageLayout::UTF_8_CHARSET_VALUE;
+        try {
+            $metaCharset = $head->querySelector("meta[charset]");
+            $charsetActualValue = $metaCharset->getAttribute("charset");
+            if ($charsetActualValue !== $charsetValue) {
+                LogUtility::warning("The actual charset ($charsetActualValue) should be $charsetValue");
+            }
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            try {
+                $metaCharset = $head->getDocument()
+                    ->createElement("meta")
+                    ->setAttribute("charset", $charsetValue);
+                $head->appendChild($metaCharset);
+            } catch (\DOMException $e) {
+                throw new ExceptionRuntimeInternal("Bad local name meta, should not occur", self::CANONICAL, 1, $e);
+            }
+        }
+    }
+
+    /**
+     * @param XmlElement $head
+     * @return void
+     * Adapted from {@link TplUtility::renderFaviconMetaLinks()}
+     */
+    private function addPageIconMeta(XmlElement $head)
+    {
+        $this->addShortcutFavIconInHead($head);
+        $this->addIconInHead($head);
+        $this->addAppleTouchIconInHead($head);
+    }
+
+    /**
+     * Add a favIcon.ico
+     * @param XmlElement $head
+     * @return void
+     */
+    private function addShortcutFavIconInHead(XmlElement $head)
+    {
+
+        $internalFavIcon = WikiPath::createComboResource('images:favicon.ico');
+        $iconPaths = array(
+            WikiPath::createMediaPathFromId(':favicon.ico'),
+            WikiPath::createMediaPathFromId(':wiki:favicon.ico'),
+            $internalFavIcon
+        );
+        try {
+            /**
+             * @var WikiPath $icoWikiPath - we give wiki paths, we get wiki path
+             */
+            $icoWikiPath = FileSystems::getFirstExistingPath($iconPaths);
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("The internal fav icon ($internalFavIcon) should be at minimal found", self::CANONICAL);
+            return;
+        }
+
+        try {
+            $head->appendChild(
+                $head->getDocument()
+                    ->createElement("link")
+                    ->setAttribute("rel", "shortcut icon")
+                    ->setAttribute("href", FetcherRawLocalPath::createFromPath($icoWikiPath)->getFetchUrl()->toAbsoluteUrl()->toString())
+            );
+        } catch (ExceptionNotFound|\DOMException $e) {
+            LogUtility::internalError("The file should be found and the local name should be good. Error: {$e->getMessage()}");
+        }
+
+    }
+
+    /**
+     * Add Icon Png (16x16 and 32x32)
+     * @param XmlElement $head
+     * @return void
+     */
+    private function addIconInHead(XmlElement $head)
+    {
+
+
+        $sizeValues = ["32x32", "16x16"];
+        foreach ($sizeValues as $sizeValue) {
+
+            $internalIcon = WikiPath::createComboResource(":images:favicon-$sizeValue.png");
+            $iconPaths = array(
+                WikiPath::createMediaPathFromId(":favicon-$sizeValue.png"),
+                WikiPath::createMediaPathFromId(":wiki:favicon-$sizeValue.png"),
+                $internalIcon
+            );
+            try {
+                /**
+                 * @var WikiPath $iconPath - to say to the linter that this is a wiki path
+                 */
+                $iconPath = FileSystems::getFirstExistingPath($iconPaths);
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("The internal icon ($internalIcon) should be at minimal found", self::CANONICAL);
+                continue;
+            }
+            try {
+                $head->appendChild(
+                    $head->getDocument()
+                        ->createElement("link")
+                        ->setAttribute("rel", "icon")
+                        ->setAttribute("sizes", $sizeValue)
+                        ->setAttribute("type", Mime::PNG)
+                        ->setAttribute("href", FetcherRawLocalPath::createFromPath($iconPath)->getFetchUrl()->toAbsoluteUrl()->toString())
+                );
+            } catch (ExceptionNotFound|\DOMException $e) {
+                LogUtility::internalError("The file ($iconPath) should be found and the local name should be good. Error: {$e->getMessage()}");
+            }
+        }
+
+    }
+
+    /**
+     * Add Apple touch icon
+     * @param XmlElement $head
+     * @return void
+     */
+    private function addAppleTouchIconInHead(XmlElement $head)
+    {
+
+        $internalIcon = WikiPath::createComboResource(":images:apple-touch-icon.png");
+        $iconPaths = array(
+            WikiPath::createMediaPathFromId(":apple-touch-icon.png"),
+            WikiPath::createMediaPathFromId(":wiki:apple-touch-icon.png"),
+            $internalIcon
+        );
+        try {
+            /**
+             * @var WikiPath $iconPath - to say to the linter that this is a wiki path
+             */
+            $iconPath = FileSystems::getFirstExistingPath($iconPaths);
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("The internal apple icon ($internalIcon) should be at minimal found", self::CANONICAL);
+            return;
+        }
+        try {
+            $fetcherLocalPath = FetcherRaster::createImageRasterFetchFromPath($iconPath);
+            $sizesValue = "{$fetcherLocalPath->getIntrinsicWidth()}x{$fetcherLocalPath->getIntrinsicHeight()}";
+            $head->appendChild(
+                $head->getDocument()
+                    ->createElement("link")
+                    ->setAttribute("rel", self::APPLE_TOUCH_ICON_REL_VALUE)
+                    ->setAttribute("sizes", $sizesValue)
+                    ->setAttribute("type", Mime::PNG)
+                    ->setAttribute("href", $fetcherLocalPath->getFetchUrl()->toAbsoluteUrl()->toString())
+            );
+        } catch (ExceptionBadArgument|\DOMException $e) {
+            LogUtility::internalError("The file ($iconPath) should be found and the local name should be good. Error: {$e->getMessage()}");
+        }
+
+    }
+
+    private function addTitleMeta(XmlElement $head)
     {
 
         try {
-            $value = $this->getValue();
-            if ($value === "") {
-                return $this->getDefaultValue();
+            $titleMeta = $head->querySelector("title");
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            try {
+                $titleMeta = $head->getDocument()
+                    ->createElement("title");
+                $head->appendChild($titleMeta);
+            } catch (\DOMException $e) {
+                throw new ExceptionRuntimeInternal("Bad local name title, should not occur", self::CANONICAL, 1, $e);
             }
-            return $value;
-        } catch (ExceptionNotFound $e) {
-            return $this->getDefaultValue();
         }
+
+        $title = $this->getRequestedTitleOrDefault();
+        $titleMeta->setNodeValue($title);
+
+    }
+
+    private function getRequestedTitleOrDefault(): string
+    {
+        if (isset($this->requestedTitle)) {
+            return $this->requestedTitle;
+        }
+        return PageTitle::createForPage($this->getRequestedContextPath())
+            ->getValueOrDefault();
+
+    }
+
+    /**
+     * @param string $requestedTitle
+     * @return PageLayout
+     */
+    public function setRequestedTitle(string $requestedTitle): PageLayout
+    {
+        $this->requestedTitle = $requestedTitle;
+        return $this;
+    }
+
+    /**
+     * @param XmlElement $head
+     * @return void
+     *
+     * Responsive meta tag
+     */
+    private function checkViewPortMeta(XmlElement $head)
+    {
+        $expectedResponsiveContent = PageLayout::VIEWPORT_RESPONSIVE_VALUE;
+        try {
+            $responsiveMeta = $head->querySelector('meta[name="viewport"]');
+            $responsiveActualValue = $responsiveMeta->getAttribute("content");
+            if ($responsiveActualValue !== $expectedResponsiveContent) {
+                LogUtility::warning("The actual viewport meta ($responsiveActualValue) should be $expectedResponsiveContent");
+            }
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            try {
+                $head->appendChild(
+                    $head->getDocument()
+                        ->createElement("meta")
+                        ->setAttribute("name", "viewport")
+                        ->setAttribute("content", $expectedResponsiveContent)
+                );
+            } catch (\DOMException $e) {
+                throw new ExceptionRuntimeInternal("Bad responsive name meta, should not occur", self::CANONICAL, 1, $e);
+            }
+        }
+    }
+
+    private function addHeadElements(XmlElement $head, &$htmlFragmentByVariables)
+    {
+
+
+        /**
+         * Bootstrap meta-headers function registration
+         */
+        try {
+            Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            TplUtility::registerHeaderHandler();
+        } catch (ExceptionCompile $e) {
+            LogUtility::internalError("We were unable to register the head handler (ie adding Bootstrap). Because fetcher page is called by strap, strap should load.", self::CANONICAL);
+        }
+
+
+        /**
+         * Add the layout js and css first
+         */
+        $snippetManager = PluginUtility::getSnippetManager();
+        try {
+            $content = FileSystems::getContent($this->getCssPath());
+            $snippetManager->attachCssInternalStylesheetForRequest(self::CANONICAL, $content);
+        } catch (ExceptionNotFound $e) {
+            // no css found, not a problem
+        }
+        if (FileSystems::exists($this->getJsPath())) {
+            $snippetManager->attachInternalJavascriptFromPathForRequest(self::CANONICAL, $this->getJsPath());
+        }
+
+        /**
+         * Start the meta headers
+         */
+        $htmlHeaders = self::getHtmlHeadTags();
+        $variableName = "headElements";
+        $htmlFragmentByVariables[$variableName] = $htmlHeaders;
+        $head->appendTextNode(Template::VARIABLE_PREFIX . $variableName);
 
 
     }

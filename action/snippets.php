@@ -3,7 +3,7 @@
 use ComboStrap\CacheManager;
 use ComboStrap\MarkupDynamicRender;
 use ComboStrap\FetcherMarkup;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();

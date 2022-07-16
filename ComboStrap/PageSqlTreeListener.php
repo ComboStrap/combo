@@ -76,7 +76,7 @@ final class PageSqlTreeListener implements ParseTreeListener
      */
     private $actualPredicateColumn;
     /**
-     * @var Markup|null
+     * @var MarkupPath|null
      */
     private $requestedPage;
 
@@ -87,15 +87,15 @@ final class PageSqlTreeListener implements ParseTreeListener
      * @param PageSqlLexer $lexer
      * @param PageSqlParser $parser
      * @param string $sql
-     * @param Markup $pageContext
+     * @param MarkupPath $pageContext
      */
-    public function __construct(PageSqlLexer $lexer, PageSqlParser $parser, string $sql, Markup $pageContext = null)
+    public function __construct(PageSqlLexer $lexer, PageSqlParser $parser, string $sql, MarkupPath $pageContext = null)
     {
         $this->lexer = $lexer;
         $this->parser = $parser;
         $this->pageSqlString = $sql;
         if ($pageContext == null) {
-            $this->requestedPage = Markup::createFromRequestedPage();
+            $this->requestedPage = MarkupPath::createFromRequestedPage();
         } else {
             $this->requestedPage = $pageContext;
         }

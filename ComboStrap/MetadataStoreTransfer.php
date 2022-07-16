@@ -17,7 +17,7 @@ class MetadataStoreTransfer
     private $targetStore;
 
     /**
-     * @var Markup
+     * @var MarkupPath
      */
     private $page;
     /**
@@ -34,7 +34,7 @@ class MetadataStoreTransfer
 
     /**
      * MetadataStoreTransfer constructor.
-     * @param Markup $resource
+     * @param MarkupPath $resource
      */
     public function __construct(ResourceCombo $resource)
     {

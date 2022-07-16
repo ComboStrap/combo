@@ -19,8 +19,9 @@ class MarkupRenderer
      */
     private $cacheAfterRendering = true;
     private string $renderer;
-    private WikiRequestEnvironment $wikiEnvRequest;
+    private WikiRequest $wikiEnvRequest;
     private bool $closed = false;
+    private string $runningId;
 
     public static function createFromMarkup(string $markup): MarkupRenderer
     {
@@ -207,23 +208,24 @@ class MarkupRenderer
             // to avoid restoring a bad state
             throw new ExceptionRuntimeInternal("You can't close a already closed object", self::CANONICAL);
         }
-        $this->wikiEnvRequest->restoreState();
+        $this->wikiEnvRequest->close($this->runningId);
         $this->closed = true;
         return $this;
     }
 
     private function build()
     {
-        $this->wikiEnvRequest = WikiRequestEnvironment::createAndCaptureState();
-        if ($this->wikiEnvRequest->getActualGlobalId() === null && PluginUtility::isTest()) {
-            $this->wikiEnvRequest->setNewRunningId(WikiRequestEnvironment::DEFAULT_SLOT_ID_FOR_TEST);
-        }
+        $this->wikiEnvRequest = WikiRequest::getOrCreate(self::CANONICAL);
+
+        $this->runningId = $this->wikiEnvRequest->getActualRunningId();
+        $runningAct = $this->wikiEnvRequest->getActualAct();
         if (
             isset($this->markup)
             && $this->requestedMime->getExtension() !== self::INSTRUCTION_EXTENSION
         ) {
-            $this->wikiEnvRequest->setNewAct(MarkupDynamicRender::DYNAMIC_RENDERING);
+            $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
         }
+        $this->wikiEnvRequest->createRunningRequest($this->runningId,$runningAct);
     }
 
 }

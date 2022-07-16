@@ -7,7 +7,7 @@ use ComboStrap\Index;
 use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
 use ComboStrap\Message;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use dokuwiki\Extension\ActionPlugin;
 
 
@@ -145,7 +145,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
             // Add a list of page with the same name to the message
             // if the redirections is not planned
             if ($redirectSource != action_plugin_combo_router::TARGET_ORIGIN_PAGE_RULES) {
-                $pageOrigin = Markup::createPageFromId($pageIdOrigin);
+                $pageOrigin = MarkupPath::createPageFromId($pageIdOrigin);
                 $this->addToMessagePagesWithSameName($message, $pageOrigin);
             }
 
@@ -169,9 +169,9 @@ class action_plugin_combo_routermessage extends ActionPlugin
     /**
      * Add the page with the same page name but in an other location
      * @param Message $message
-     * @param Markup $pageOrigin
+     * @param MarkupPath $pageOrigin
      */
-    function addToMessagePagesWithSameName(Message $message, Markup $pageOrigin)
+    function addToMessagePagesWithSameName(Message $message, MarkupPath $pageOrigin)
     {
 
         if ($this->getConf(self::CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE) == 1) {

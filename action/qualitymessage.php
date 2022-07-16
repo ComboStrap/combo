@@ -6,7 +6,7 @@ use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\Message;
 use ComboStrap\Mime;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\QualityMenuItem;
 
@@ -46,7 +46,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         $this->setupLocale();
     }
 
-    public static function createHtmlQualityNote(Markup $page): Message
+    public static function createHtmlQualityNote(MarkupPath $page): Message
     {
         if ($page->isSecondarySlot()) {
             return Message::createErrorMessage("A has no quality metrics");
@@ -235,7 +235,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         }
 
 
-        $page = Markup::createPageFromId($id);
+        $page = MarkupPath::createPageFromId($id);
 
         $message = self::createHtmlQualityNote($page);
 

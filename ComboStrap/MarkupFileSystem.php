@@ -21,7 +21,7 @@ class MarkupFileSystem implements FileSystem
 
 
     /**
-     * @param Markup $path
+     * @param MarkupPath $path
      * @return bool
      */
     function exists(Path $path): bool
@@ -30,7 +30,7 @@ class MarkupFileSystem implements FileSystem
     }
 
     /**
-     * @param Markup $path
+     * @param MarkupPath $path
      * @throws ExceptionNotFound
      */
     function getContent(Path $path): string
@@ -39,7 +39,7 @@ class MarkupFileSystem implements FileSystem
     }
 
     /**
-     * @param Markup $path
+     * @param MarkupPath $path
      * @throws ExceptionNotFound
      */
     function getModifiedTime(Path $path): DateTime
@@ -48,9 +48,9 @@ class MarkupFileSystem implements FileSystem
     }
 
     /**
-     * @param Markup $path
+     * @param MarkupPath $path
      * @param string|null $type
-     * @return Markup[]
+     * @return MarkupPath[]
      */
     public function getChildren(Path $path, string $type = null): array
     {
@@ -70,7 +70,7 @@ class MarkupFileSystem implements FileSystem
             if ($child->toUriString() === $pathObject->toUriString()) {
                 continue;
             }
-            $childrenPage[] = Markup::createPageFromPathObject($child);
+            $childrenPage[] = MarkupPath::createPageFromPathObject($child);
         }
         return $childrenPage;
     }

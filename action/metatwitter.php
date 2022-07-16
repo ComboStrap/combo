@@ -6,7 +6,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\IFetcherLocalImage;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PageImageUsage;
 use ComboStrap\PluginUtility;
 use ComboStrap\ResourceName;
@@ -96,7 +96,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         }
 
 
-        $page = Markup::createPageFromId($ID);
+        $page = MarkupPath::createPageFromId($ID);
 
         if (!$page->exists()) {
             return;

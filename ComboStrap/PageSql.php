@@ -32,10 +32,10 @@ class PageSql
 
     /**
      * @param string $string
-     * @param Markup|null $contextualPage - the page where the sql applies to
+     * @param MarkupPath|null $contextualPage - the page where the sql applies to
      * @return PageSql
      */
-    public static function create(string $string, Markup $contextualPage = null): PageSql
+    public static function create(string $string, MarkupPath $contextualPage = null): PageSql
     {
         $parser = new PageSql($string);
         $parser->parse($contextualPage);
@@ -43,10 +43,10 @@ class PageSql
     }
 
     /**
-     * @param Markup|null $contextualPage - for the page
+     * @param MarkupPath|null $contextualPage - for the page
      * @return $this
      */
-    function parse(Markup $contextualPage = null): PageSql
+    function parse(MarkupPath $contextualPage = null): PageSql
     {
         $input = InputStream::fromString($this->sql);
         $lexer = new PageSqlLexer($input);

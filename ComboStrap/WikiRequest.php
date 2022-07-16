@@ -1,0 +1,351 @@
+<?php
+
+namespace ComboStrap;
+
+/**
+ * A object that permits to set the global state request data
+ *
+ *
+ *
+ * We don't restore the global state because this is useless
+ * Dokuwiki does not have the notion of request object, all request data are passed via global state
+ *
+ *
+ *   * Dokuwiki uses {@link Cache::useCache()} needs them also therefore if you split the process in two function: useCache
+ * and processing, you need to set and unset each time
+ *   * Get function may also needs them if the Object cache depends on them
+ *   * ...
+ *
+ * Before executing any request, this function should be call
+ */
+class WikiRequest
+{
+
+    /**
+     * @var array - the actual running request of id and act
+     */
+    private array $runningIds;
+
+    const CANONICAL = "wikiRequest";
+
+    /**
+     * @var WikiRequest[]
+     */
+    private static array $globalRequests = [];
+
+    /**
+     * The id used if
+     */
+    public const DEFAULT_SLOT_ID_FOR_TEST = "test-slot-id";
+    private ?string $capturedGlobalId;
+    /**
+     * It may be an array when preview/save/cancel
+     * @var array|string|null
+     */
+    private $capturedAct;
+    private ?string $capturedRequestedID;
+
+    /**
+     * @var string - to check if the requested id was set, if not the running id is set
+     */
+    private string $requestedId;
+    private string $requestedAct;
+
+    public function __construct(string $requestedId, string $requestedAct)
+    {
+        /**
+         * The running fragment
+         */
+        global $ID;
+        $this->capturedGlobalId = $ID;
+        $ID = $requestedId;
+
+        /**
+         * The requested action
+         */
+        global $ACT;
+        $this->capturedAct = $ACT;
+        $ACT = $requestedAct;
+
+        $this->createRunningRequest($requestedId, $requestedAct);
+
+        /**
+         * The captured requested Id
+         */
+        $this->capturedRequestedID = $this->getRequestedIdViaGlobalVariables();
+
+        /**
+         * The requested id and act
+         */
+        $this->requestedId = $requestedId;
+        $this->requestedAct = $requestedAct;
+
+    }
+
+    public static function createFromRequestId(string $requestedId, string $requestedAct = "show"): WikiRequest
+    {
+
+        $wikiRequest = self::$globalRequests[$requestedId];
+        if ($wikiRequest === null) {
+            if (count(self::$globalRequests) > 0) {
+                $requestObject = array_shift(self::$globalRequests);
+                // we throw, we don't want any state problem, otherwise data may be messed up
+                throw new ExceptionRuntimeInternal("The request ($requestObject) should be closed before running the new request ($requestedId)", self::CANONICAL);
+            }
+            $wikiRequest = new WikiRequest($requestedId, $requestedAct);
+            self::$globalRequests[$requestedId] = $wikiRequest;
+        }
+        return $wikiRequest;
+    }
+
+    private static function reset()
+    {
+        foreach (self::$globalRequests as $id => $globalRequest) {
+            $globalRequest->close($id);
+        }
+        self::$globalRequests = [];
+    }
+
+
+    /**
+     *
+     */
+    public static function get(): WikiRequest
+    {
+        $count = count(self::$globalRequests);
+        if (self::$globalRequests != 1) {
+            throw new ExceptionRuntimeInternal("There is $count request, there should be at minimal and maximal 1 request.", self::CANONICAL);
+        }
+        return array_shift(self::$globalRequests);
+    }
+
+    public static function getOrCreate(string $requestedId): WikiRequest
+    {
+        if (isset(self::$globalRequests[$requestedId])) {
+            $request = self::$globalRequests[$requestedId];
+            $request->createRunningRequest($requestedId,"show");
+            return $request;
+        }
+        return self::createFromRequestId($requestedId);
+    }
+
+
+    public function createRunningRequest(string $runningId, string $act): WikiRequest
+    {
+        global $ID;
+        global $ACT;
+
+        $beforeId = $ID;
+        $beforeAct = $ACT;
+
+        $this->runningIds[] = [$beforeId, $beforeAct];
+
+        $ID = $runningId;
+        $ACT = $act;
+        return $this;
+
+    }
+
+    public function __toString()
+    {
+        return $this->requestedId;
+    }
+
+
+    /**
+     * A running id can be a secondary fragment
+     * The requested id is the main fragment
+     *
+     * Note that this should be set only once at the request level
+     * (ie in test purpose or the fetcher)
+     *
+     * @param string $requestedId
+     * @return $this
+     */
+    public function setNewRequestedId(string $requestedId): WikiRequest
+    {
+        $this->requestedId = $requestedId;
+        global $INPUT;
+        $INPUT->set("id", $requestedId);
+        return $this;
+    }
+
+    public function setNewAct(string $string): WikiRequest
+    {
+        throw new ExceptionRuntimeInternal("delete");
+    }
+
+    private function closeRunningRequest($runningIdToClose)
+    {
+        /** @noinspection PhpUnusedLocalVariableInspection */
+        [$actualRunningId, $actualRunningAct] = array_pop($this->runningIds);
+        if ($actualRunningId !== $runningIdToClose) {
+            throw new ExceptionRuntimeInternal("The actual running id ($actualRunningId) is not the id to close ($runningIdToClose)", self::CANONICAL);
+        }
+        try {
+            [$previousId, $previousAct] = $this->getLastRunningRequest();
+            global $ACT;
+            $ACT = $previousAct;
+            global $ID;
+            $ID = $previousId;
+        } catch (ExceptionNotFound $e) {
+            global $ACT;
+            $ACT = $this->capturedAct;
+            global $ID;
+            $ID = $this->capturedGlobalId;
+        }
+
+    }
+
+    public function getCapturedRequestedId(): string
+    {
+        return $this->capturedRequestedID;
+    }
+
+
+    private function getRequestedIdViaGlobalVariables()
+    {
+        /**
+         * {@link getID()} reads the id from the input variable
+         *
+         * The {@link \action_plugin_combo_lang::load_lang()}
+         * set it back right
+         */
+        global $INPUT;
+        $id = $INPUT->str("id");
+        if (!empty($id)) {
+            return $id;
+        }
+
+        /**
+         * This should be less used
+         * but shows where the requested id is spilled in dokuwiki
+         *
+         * If the component is in a sidebar, we don't want the ID of the sidebar
+         * but the ID of the page.
+         */
+        global $INFO;
+        if ($INFO !== null) {
+            $callingId = $INFO['id'];
+            if (!empty($callingId)) {
+                return $callingId;
+            }
+        }
+
+
+        global $ID;
+        if ($ID !== null) {
+            return $ID;
+        }
+
+        /**
+         * This is the case with event triggered
+         * before DokuWiki such as
+         * https://www.dokuwiki.org/devel:event:init_lang_load
+         * REQUEST is a mixed of post and get parameters
+         */
+        global $_REQUEST;
+        if (isset($_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE])) {
+            return $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
+        }
+
+        if (!PluginUtility::isDevOrTest()) {
+            // should never happen, we don't throw an exception
+            LogUtility::internalError("Internal Error: The requested wiki id could not be determined");
+        }
+
+        return self::DEFAULT_SLOT_ID_FOR_TEST;
+
+    }
+
+    /**
+     * @return string
+     */
+    public function getRequestedId(): string
+    {
+        return $this->requestedId;
+    }
+
+    public function getActualAct()
+    {
+        /** @noinspection PhpUnusedLocalVariableInspection */
+        [$id, $act] = $this->getLastRunningRequest();
+        return $act;
+    }
+
+    public function getActualRunningId(): string
+    {
+        /** @noinspection PhpUnusedLocalVariableInspection */
+        [$id, $act] = $this->getLastRunningRequest();
+        return $id;
+
+    }
+
+    /**
+     * @param $requestId - control parameter, the request id to close (it should be the current running id or the top request otherwise a error is thrown)
+     * @return void close the running id on the stack of running request
+     *
+     */
+    public function close(string $requestId)
+    {
+        $runningRequestsCount = count($this->runningIds);
+        switch ($runningRequestsCount) {
+            case 0:
+                throw new ExceptionRuntimeInternal("There should be at minimal one running id (ie the requested id)");
+            case 1:
+                $this->closeRequest($requestId);
+                break;
+            default:
+                $this->closeRunningRequest($requestId);
+
+        }
+
+    }
+
+    private function closeRequest($requestToClose)
+    {
+
+        $this->closeRunningRequest($requestToClose);
+        if (count($this->runningIds) > 0) {
+            $runningIdsNotClosed = implode(", ", $this->runningIds);
+            throw new ExceptionRuntimeInternal("The running ids needs to be close before closing the request. Running Id not close ($runningIdsNotClosed)");
+        }
+
+        if ($this->requestedId !== $requestToClose) {
+            throw new ExceptionRuntimeInternal("The requested id ($this->requestedId) is not the id to close ($requestToClose)");
+        }
+
+        // restore state
+        global $INPUT;
+        $INPUT->set(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE, $this->capturedRequestedID);
+        global $ID;
+        $ID = $this->capturedGlobalId;
+        global $ACT;
+        $ACT = $this->capturedAct;
+
+        // delete static object
+        unset(self::$globalRequests[$this->requestedId]);
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getLastRunningRequest()
+    {
+        $lastKey = array_key_last($this->runningIds);
+        if ($lastKey === null) {
+            throw new ExceptionNotFound("No running requests was found");
+        }
+        return $this->runningIds[$lastKey];
+    }
+
+    /**
+     * @return string
+     */
+    public function getRequestedAct(): string
+    {
+        return $this->requestedAct;
+    }
+
+
+}

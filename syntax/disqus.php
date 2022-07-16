@@ -4,7 +4,7 @@ use ComboStrap\DisqusIdentifier;
 use ComboStrap\ExceptionNotExists;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 
 
@@ -114,7 +114,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                 list($attributes) = $data;
                 /** @var Doku_Renderer_xhtml $renderer */
 
-                $page = Markup::createFromRequestedPage();
+                $page = MarkupPath::createFromRequestedPage();
 
                 /**
                  * Disqus configuration

@@ -36,12 +36,12 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
     private string $renderer;
     private MarkupCacheDependencies $cacheDependencies;
     private bool $objectHasBeenBuild = false;
-    private WikiRequestEnvironment $wikiRequestEnvironment;
+    private WikiRequest $wikiRequest;
     private bool $closed = false;
-    private WikiPath $requestedPagePath;
+
 
     private bool $removeRootBlockElement = false;
-    private string $resquestedRendererName = MarkupRenderer::DEFAULT_RENDERER;
+    private string $requestedRendererName = MarkupRenderer::DEFAULT_RENDERER;
 
 
     public static function createPageFragmentFetcherFromId(string $mainId): FetcherMarkup
@@ -105,7 +105,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
         try {
             $dokuPath = WikiPath::createFromPathObject($path);
         } catch (ExceptionBadArgument $e) {
-            throw new ExceptionRuntimeInternal("It should be", self::CANONICAL, 1, $e);
+            throw new ExceptionRuntimeInternal("It should be a wiki path", self::CANONICAL, 1, $e);
         }
         $this->setSourcePath($dokuPath);
         return $this;
@@ -456,12 +456,10 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
          *
          * You need to close it with the {@link FetcherMarkup::close()}
          */
-        $this->wikiRequestEnvironment = WikiRequestEnvironment::createAndCaptureState()
-            ->setNewRunningId($this->getSourcePath()->getWikiId())
-            ->setNewAct("show")
-            ->setNewRequestedId($this->getRequestedPagePathOrDefault()->getWikiId());
+        $wikiId = $this->getRequestedPath()->getWikiId();
+        $this->wikiRequest = WikiRequest::getOrCreate($wikiId);
 
-        $wikiId = $this->getSourcePath()->getWikiId();
+
 
         /**
          * The local path is part of the key cache and should be the same
@@ -514,7 +512,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
     {
         parent::buildFromTagAttributes($tagAttributes);
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
-        $this->setRequestedPath($this->getSourcePath());
         return $this;
     }
 
@@ -560,14 +557,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
     }
 
 
-    private function getRequestedPagePathOrDefault(): WikiPath
-    {
-        try {
-            return $this->getRequestedPagePath();
-        } catch (ExceptionNotFound $e) {
-            return WikiPath::createRequestedPagePathFromRequest();
-        }
-    }
+
 
 
     private function checkNoSetAfterBuild()
@@ -636,8 +626,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
      */
     public function close(): FetcherMarkup
     {
-
-        $this->wikiRequestEnvironment->restoreState();
+        $this->wikiRequest->close($this->getRequestedPath()->getWikiId());
         $this->closed = true;
         return $this;
     }
@@ -647,16 +636,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
         return $this->closed = true;
     }
 
-    /**
-     * @throws ExceptionNotFound
-     */
-    private function getRequestedPagePath(): WikiPath
-    {
-        if (!isset($this->requestedPagePath)) {
-            throw new ExceptionNotFound("No requested page path");
-        }
-        return $this->requestedPagePath;
-    }
+
 
     private function getRequestedPath(): WikiPath
     {
@@ -677,16 +657,16 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
 
     public function setRequestedRendererName(string $rendererName): FetcherMarkup
     {
-        $this->resquestedRendererName = $rendererName;
+        $this->requestedRendererName = $rendererName;
         return $this;
     }
 
     private function getRequestedRendererNameOrDefault(): string
     {
-        if(!isset($this->resquestedRendererName)){
+        if(!isset($this->requestedRendererName)){
             return MarkupRenderer::DEFAULT_RENDERER;
         }
-        return $this->resquestedRendererName;
+        return $this->requestedRendererName;
     }
 
 }

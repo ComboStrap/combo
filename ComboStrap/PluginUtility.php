@@ -635,13 +635,12 @@ class PluginUtility
      * but the requested wiki id
      *
      * @return string
-     * @deprecated use {@link WikiRequestEnvironment}
+     * @deprecated use {@link WikiRequest}
      */
     public static function getRequestedWikiId(): string
     {
 
-        return WikiRequestEnvironment::createAndCaptureState()
-            ->getActualRequestedId();
+        return WikiRequest::get()->getRequestedId();
 
     }
 
@@ -1068,7 +1067,7 @@ class PluginUtility
             return false;
         }
 
-        $page = Markup::createPageFromId($ID);
+        $page = MarkupPath::createPageFromId($ID);
         if (!$page->exists()) {
             return false;
         }
@@ -1092,11 +1091,11 @@ class PluginUtility
     }
 
     /**
-     * @deprecated for {@link WikiRequestEnvironment::getActualGlobalId()}
+     * @deprecated for {@link WikiRequest::getActualRunningId()}
      */
     public static function getCurrentSlotId(): string
     {
-        return WikiRequestEnvironment::createAndCaptureState()->getActualGlobalId();
+        return WikiRequest::get()->getActualRunningId();
     }
 
 

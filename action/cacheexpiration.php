@@ -15,7 +15,7 @@ use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use dokuwiki\Cache\CacheRenderer;
@@ -122,7 +122,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
         $keep = $ID;
         try {
             $ID = $requestedId;
-            $slot = Markup::createPageFromQualifiedPath($slotPath);
+            $slot = MarkupPath::createPageFromQualifiedPath($slotPath);
 
             /**
              * Calculate a new expiration date

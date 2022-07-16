@@ -128,8 +128,8 @@ abstract class Metadata
             case LdJson::OLD_ORGANIZATION_PROPERTY:
             case LdJson::PROPERTY_NAME:
                 return new LdJson();
-            case PageLayout::PROPERTY_NAME:
-                return new PageLayout();
+            case PageLayoutName::PROPERTY_NAME:
+                return new PageLayoutName();
             case StartDate::PROPERTY_NAME:
                 return new StartDate();
             case EndDate::PROPERTY_NAME:
@@ -521,7 +521,7 @@ abstract class Metadata
         PagePublicationDate::PROPERTY_NAME,
         ResourceName::PROPERTY_NAME,
         LdJson::PROPERTY_NAME,
-        PageLayout::PROPERTY_NAME,
+        PageLayoutName::PROPERTY_NAME,
         StartDate::PROPERTY_NAME,
         EndDate::PROPERTY_NAME,
         PageDescription::PROPERTY_NAME,

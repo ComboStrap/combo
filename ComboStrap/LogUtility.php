@@ -140,7 +140,7 @@ class LogUtility
 
             /**
              * Adding page - context information
-             * We are not using {@link Markup::createFromRequestedPage()}
+             * We are not using {@link MarkupPath::createFromRequestedPage()}
              * because it throws an error message when the environment
              * is not good, creating a recursive call.
              */
@@ -224,7 +224,7 @@ class LogUtility
                 /**
                  * Adding page - context information
                  * We are not creating the page
-                 * direction from {@link Markup::createFromRequestedPage()}
+                 * direction from {@link MarkupPath::createFromRequestedPage()}
                  * because it throws an error message when the environment
                  * is not good, creating a recursive call.
                  */

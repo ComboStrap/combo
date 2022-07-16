@@ -2,7 +2,7 @@
 
 use ComboStrap\LogUtility;
 use ComboStrap\Metadata;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 
 
 /**
@@ -40,7 +40,7 @@ class action_plugin_combo_metadescription extends DokuWiki_Action_Plugin
          * Description
          * https://www.dokuwiki.org/devel:metadata
          */
-        $page = Markup::createPageFromId($ID);
+        $page = MarkupPath::createPageFromId($ID);
 
         $description = $page->getDescriptionOrElseDokuWiki();
         if (empty($description)) {

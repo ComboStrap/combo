@@ -27,7 +27,7 @@ class Toc extends Metadata
 
     public static function createForRequestedPage(): Toc
     {
-        return self::createForPage(Markup::createFromRequestedPage());
+        return self::createForPage(MarkupPath::createFromRequestedPage());
     }
 
     public static function getClass(): string

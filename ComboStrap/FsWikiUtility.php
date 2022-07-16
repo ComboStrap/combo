@@ -24,7 +24,7 @@ class FsWikiUtility
     /**
      * Determine if the current page is a sidebar (a bar)
      * @return bool
-     * TODO: Duplicate of {@link Markup::isSecondarySlot()}
+     * TODO: Duplicate of {@link MarkupPath::isSecondarySlot()}
      */
     public static function isSideBar()
     {
@@ -94,11 +94,11 @@ class FsWikiUtility
      * ie the index.html
      * @param $namespacePath - in dokuwiki format
      * @return string - the dokuwiki path
-     * @deprecated use {@link Markup::getIndexPageFromNamespace()} instead
+     * @deprecated use {@link MarkupPath::getIndexPageFromNamespace()} instead
      */
     public static function getHomePagePath($namespacePath): ?string
     {
-        $homePage = Markup::getIndexPageFromNamespace($namespacePath);
+        $homePage = MarkupPath::getIndexPageFromNamespace($namespacePath);
         if ($homePage->exists()) {
             return $homePage->getAbsolutePath();
         } else {
@@ -130,9 +130,9 @@ class FsWikiUtility
 
     /**
      * @param $namespacePath
-     * @return Markup|null the page path of the parent or null if it does not exist
+     * @return MarkupPath|null the page path of the parent or null if it does not exist
      */
-    public static function getParentPagePath($namespacePath): ?Markup
+    public static function getParentPagePath($namespacePath): ?MarkupPath
     {
 
         /**
@@ -153,7 +153,7 @@ class FsWikiUtility
             } else {
                 $parentNamespacePath = substr($namespacePath, 0, $pos);
             }
-            return Markup::getIndexPageFromNamespace($parentNamespacePath);
+            return MarkupPath::getIndexPageFromNamespace($parentNamespacePath);
 
         } else {
             return null;

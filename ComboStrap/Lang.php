@@ -96,7 +96,7 @@ class Lang extends MetadataText
 
     }
 
-    public static function createForPage(Markup $page): Lang
+    public static function createForPage(MarkupPath $page): Lang
     {
         $lang = new Lang();
         $lang->setResource($page);
@@ -193,6 +193,15 @@ class Lang extends MetadataText
     public function getCanonical(): string
     {
         return "lang";
+    }
+
+    public function getDirection()
+    {
+        /**
+         * TODO: should be base on the value
+         */
+        global $lang;
+        return $lang['direction'];
     }
 
 

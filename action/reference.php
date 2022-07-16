@@ -12,7 +12,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Reference;
 use ComboStrap\References;
@@ -69,7 +69,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
         /**
          * @var Call[] $links
          */
-        $page = Markup::createPageFromId($ID);
+        $page = MarkupPath::createPageFromId($ID);
 
         /**
          * {@link \ComboStrap\PageId} is given only when the page exists

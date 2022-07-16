@@ -14,7 +14,7 @@ use ComboStrap\Identity;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\PageDescription;
 use ComboStrap\PageH1;
 use ComboStrap\PageTitle;

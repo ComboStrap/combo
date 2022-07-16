@@ -46,7 +46,7 @@ class CacheResults
              */
             if ($cacheParser->mode === FetcherMarkup::XHTML_MODE) {
                 $page = $cacheParser->page;
-                $pageFragment = Markup::createPageFromId($page)->getHtmlFetcher();
+                $pageFragment = MarkupPath::createPageFromId($page)->getHtmlFetcher();
                 try {
                     /**
                      * @var CacheParser[] $cacheStores

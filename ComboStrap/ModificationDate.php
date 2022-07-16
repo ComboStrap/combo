@@ -9,7 +9,7 @@ class ModificationDate extends MetadataDateTime
 
     public const PROPERTY_NAME = 'date_modified';
 
-    public static function createForPage(Markup $page)
+    public static function createForPage(MarkupPath $page)
     {
         return (new ModificationDate())
             ->setResource($page);

@@ -85,7 +85,7 @@ class SnippetManager
     public static function getOrCreate(): SnippetManager
     {
 
-        $id = WikiRequestEnvironment::createAndCaptureState()->getActualRequestedId();
+        $id = WikiRequest::get()->getRequestedId();
         $snippetManager = self::$globalSnippetManager[$id];
         if ($snippetManager === null) {
             self::reset(); // delete old snippet manager for other request
@@ -411,7 +411,7 @@ class SnippetManager
     private
     function &attachSnippetFromSlot(string $componentId, string $type, string $identifier): Snippet
     {
-        $slot = PluginUtility::getCurrentSlotId();
+        $slot = WikiRequest::get()->getActualRunningId();
         $snippet = Snippet::getOrCreateSnippet($identifier, $type, $componentId)
             ->addSlot($slot);
         return $snippet;

@@ -51,7 +51,7 @@ class ResourceName extends MetadataText
         $resourceCombo = $this->getResource();
         $resourceType = $resourceCombo->getType();
         $desc = "The $resourceType name is the shortest $resourceType description. It should be at maximum a couple of words long.";
-        if ($resourceType === Markup::TYPE) {
+        if ($resourceType === MarkupPath::TYPE) {
             $desc = $desc . " It's used mainly in navigational components.";
         }
         return $desc;
@@ -90,7 +90,7 @@ class ResourceName extends MetadataText
          * is the parent path name
          */
         $path = $resourceCombo->getPathObject();
-        if ($resourceCombo instanceof Markup) {
+        if ($resourceCombo instanceof MarkupPath) {
 
 
             if ($resourceCombo->isIndexPage() && !$resourceCombo->isRootHomePage()) {

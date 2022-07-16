@@ -7,12 +7,12 @@ use ComboStrap\FetcherPage;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupDynamicRender;
 use ComboStrap\Outline;
-use ComboStrap\Markup;
-use ComboStrap\PageLayout;
+use ComboStrap\MarkupPath;
+use ComboStrap\PageLayoutName;
 use ComboStrap\Site;
 use ComboStrap\Toc;
 use ComboStrap\WikiPath;
-use ComboStrap\WikiRequestEnvironment;
+use ComboStrap\WikiRequest;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
@@ -74,7 +74,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          */
         $handler = $event->data;
 
-        $act = WikiRequestEnvironment::createAndCaptureState()->getActualAct();
+        $act = WikiRequest::get()->getActualAct();
         switch ($act) {
             case MarkupDynamicRender::DYNAMIC_RENDERING:
                 $callStack = CallStack::createFromHandler($handler);
@@ -84,27 +84,18 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                     ->toDynamicInstructionCalls();
                 return;
             case "show":
-                $runningMarkup = WikiPath::createRunningPageFragmentPathFromGlobalId();
+                $runningMarkup = WikiPath::createRunningMarkupWikiPath();
                 $requestedPath = WikiPath::createRequestedPagePathFromRequest();
                 if ($requestedPath->toPathString() !== $runningMarkup->toPathString()) {
                     return;
                 }
                 $callStack = CallStack::createFromHandler($handler);
-                $requestedMarkup = Markup::createPageFromPathObject($requestedPath);
+                $requestedMarkup = MarkupPath::createPageFromPathObject($requestedPath);
                 $outline = Outline::createFromCallStack($callStack, $requestedMarkup);
                 if (Site::getTemplate() !== Site::STRAP_TEMPLATE_NAME) {
                     $handler->calls = $outline->toDefaultTemplateInstructionCalls();
                 } else {
-                    $fetcherPage = FetcherPage::createPageFetcherFromRequestedPage();
-                    try {
-                        if (!$fetcherPage->hasContentHeader()) {
-                            $handler->calls = $outline->toHtmlSectionOutlineCalls();
-                        } else {
-                            $handler->calls = $outline->toHtmlSectionOutlineCallsWithoutHeader();
-                        }
-                    } finally {
-                        $fetcherPage->close();
-                    }
+                    $handler->calls = $outline->toHtmlSectionOutlineCalls();
                 }
                 return;
             default:

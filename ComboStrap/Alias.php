@@ -49,10 +49,10 @@ class Alias
 
 
     /**
-     * @return Markup
+     * @return MarkupPath
      */
     public
-    function getPage(): Markup
+    function getPage(): MarkupPath
     {
         return $this->page;
     }

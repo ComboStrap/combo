@@ -136,7 +136,7 @@ class CacheManager
     public function addDependencyForCurrentSlot(string $dependencyName): CacheManager
     {
 
-        $currentFragment = WikiPath::createRunningPageFragmentPathFromGlobalId();
+        $currentFragment = WikiPath::createRunningMarkupWikiPath();
         $cacheDependencies = $this->getCacheDependenciesForPath($currentFragment);
         $cacheDependencies->addDependency($dependencyName);
         return $this;
@@ -179,7 +179,7 @@ class CacheManager
             return false;
         }
 
-        $page = Markup::createPageFromId($pageId);
+        $page = MarkupPath::createPageFromId($pageId);
         try {
             $cacheExpirationFrequency = CacheExpirationFrequency::createForPage($page)
                 ->getValue();

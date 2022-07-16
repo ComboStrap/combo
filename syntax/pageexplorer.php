@@ -16,7 +16,7 @@ use ComboStrap\IconDownloader;
 use ComboStrap\IdManager;
 use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
-use ComboStrap\Markup;
+use ComboStrap\MarkupPath;
 use ComboStrap\Path;
 use ComboStrap\PathTreeNode;
 use ComboStrap\PluginUtility;
@@ -408,7 +408,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     if ($namespacePath === null) {
                         switch ($pageExplorerType) {
                             case self::LIST_TYPE:
-                                $requestedPage = Markup::createFromRequestedPage();
+                                $requestedPage = MarkupPath::createFromRequestedPage();
                                 $namespacePath = $requestedPage->getPathObject()->getParent();
                                 if ($namespacePath === null) {
                                     // root
@@ -418,7 +418,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 break;
                             case self::TYPE_TREE:
                                 try {
-                                    $renderedPage = Markup::createPageFromGlobalWikiId();
+                                    $renderedPage = MarkupPath::createPageFromGlobalWikiId();
                                 } catch (ExceptionCompile $e) {
                                     LogUtility::msg("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
                                     return false;
@@ -476,7 +476,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                              */
                             $indexInstructions = $data[self::INDEX_INSTRUCTIONS];
                             $indexAttributes = $data[self::INDEX_ATTRIBUTES];
-                            $currentIndexPage = Markup::createPageFromPathObject($namespacePath);
+                            $currentIndexPage = MarkupPath::createPageFromPathObject($namespacePath);
                             if (!($indexInstructions === null && $indexAttributes !== null)) {
 
                                 if ($currentIndexPage->exists()) {
@@ -598,7 +598,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 // Namespace
                                 if (!($namespaceInstructions === null && $namespaceAttributes !== null)) {
                                     try {
-                                        $subNamespacePage = Markup::getIndexPageFromNamespace($subNamespacePath->toPathString());
+                                        $subNamespacePage = MarkupPath::getIndexPageFromNamespace($subNamespacePath->toPathString());
                                     } catch (ExceptionBadSyntax $e) {
                                         LogUtility::msg("Bad syntax for the namespace $namespacePath. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                                         return false;
@@ -645,7 +645,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             }
 
                             foreach (FileSystems::getChildrenLeaf($namespacePath) as $childPagePath) {
-                                $childPage = Markup::createPageFromPathObject($childPagePath);
+                                $childPage = MarkupPath::createPageFromPathObject($childPagePath);
                                 if ($childPage->isHidden()) {
                                     continue;
                                 }
@@ -761,7 +761,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
         /**
          * Home Page first
-         * @var Markup $homePage
+         * @var MarkupPath $homePage
          */
         $homePage = null;
         /**
@@ -769,7 +769,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
          */
         $containerTreeNodes = [];
         /**
-         * @var Markup[] $nonHomePages
+         * @var MarkupPath[] $nonHomePages
          */
         $nonHomePages = [];
 
@@ -792,7 +792,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 /**
                  * Page
                  */
-                $page = Markup::createPageFromPathObject($child->getPath());
+                $page = MarkupPath::createPageFromPathObject($child->getPath());
                 if ($page->isIndexPage()) {
                     $homePage = $page;
                 } else {
@@ -854,7 +854,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
             // Button label
 
-            $subHomePage = Markup::getIndexPageFromNamespace($containerPath->toPathString());
+            $subHomePage = MarkupPath::getIndexPageFromNamespace($containerPath->toPathString());
             if ($subHomePage->exists()) {
                 if ($namespaceInstructions !== null) {
                     try {
@@ -907,12 +907,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
     /**
      * @param string $html
-     * @param Markup $page
+     * @param MarkupPath $page
      * @param array $data - the data array from the handler
      * @param string $type
      */
     private
-    static function treeProcessLeaf(string &$html, Markup $page, array $data, string $type)
+    static function treeProcessLeaf(string &$html, MarkupPath $page, array $data, string $type)
     {
         /**
          * In callstack instructions

@@ -78,7 +78,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
         $htmlHeadTags = HtmlHeadTags::create()
             ->get();
 
-        $title = PageTitle::createForPage(Markup::createPageFromPathObject($this->getSourcePath()))
+        $title = PageTitle::createForPage(MarkupPath::createPageFromPathObject($this->getSourcePath()))
             ->getValueOrDefault();
 
         /**
@@ -106,7 +106,7 @@ HTML;
             return $this->bundledOutline;
         }
 
-        $requestedPage = Markup::createPageFromPathObject($this->getContextPath());
+        $requestedPage = MarkupPath::createPageFromPathObject($this->getContextPath());
         if (!$requestedPage->isIndexPage()) {
             try {
                 $indexPage = $requestedPage->getParent();

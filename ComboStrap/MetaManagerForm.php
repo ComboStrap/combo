@@ -15,7 +15,7 @@ class MetaManagerForm
     public const TAB_INTEGRATION_VALUE = "integration";
     public const TAB_QUALITY_VALUE = "quality";
     public const TAB_IMAGE_VALUE = "image";
-    private Markup $page;
+    private MarkupPath $page;
 
     private const FORM_METADATA_LIST = [ResourceName::PROPERTY_NAME,
         PageTitle::PROPERTY_NAME,
@@ -26,7 +26,7 @@ class MetaManagerForm
         Canonical::PROPERTY_NAME,
         Slug::PROPERTY_NAME,
         PageUrlPath::PROPERTY_NAME,
-        PageLayout::PROPERTY_NAME,
+        PageLayoutName::PROPERTY_NAME,
         ModificationDate::PROPERTY_NAME,
         PageCreationDate::PROPERTY_NAME,
         PageImages::PROPERTY_NAME,
@@ -62,7 +62,7 @@ class MetaManagerForm
         $this->targetFormDataStore = MetadataFormDataStore::getOrCreateFromResource($page);
     }
 
-    public static function createForPage(Markup $page): MetaManagerForm
+    public static function createForPage(MarkupPath $page): MetaManagerForm
     {
         return new MetaManagerForm($page);
     }

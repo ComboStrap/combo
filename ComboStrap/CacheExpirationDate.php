@@ -35,7 +35,7 @@ class CacheExpirationDate extends MetadataDateTime
     public function getDefaultValue(): DateTime
     {
         $resourceCombo = $this->getResource();
-        if (!($resourceCombo instanceof Markup)) {
+        if (!($resourceCombo instanceof MarkupPath)) {
             throw new ExceptionNotFound("Cache expiration is only available for page fragment");
         }
 

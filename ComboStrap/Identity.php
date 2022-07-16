@@ -230,7 +230,7 @@ EOF;
     private static function getPermissions(string $wikiId): int
     {
         if ($wikiId == null) {
-            $wikiId = Markup::createFromRequestedPage()->getWikiId();
+            $wikiId = MarkupPath::createFromRequestedPage()->getWikiId();
         }
         if ($_SERVER['REMOTE_USER']) {
             $perm = auth_quickaclcheck($wikiId);

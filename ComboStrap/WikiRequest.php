@@ -28,6 +28,7 @@ class WikiRequest
 
     const CANONICAL = "wikiRequest";
 
+    private CacheManager $cacheManager;
     /**
      * This array should have only one value at a time
      * @var WikiRequest[]
@@ -111,7 +112,16 @@ class WikiRequest
         return self::createFromRequestId($requestedId, $act);
     }
 
-    private static function reset()
+    public static function getOrCreateFromEnv(): WikiRequest
+    {
+        try {
+            return self::get();
+        } catch (ExceptionNotFound $e) {
+            return self::createFromEnvironmentVariable();
+        }
+    }
+
+    public static function reset()
     {
         foreach (self::$globalRequests as $id => $globalRequest) {
             $globalRequest->close($id);
@@ -420,6 +430,21 @@ class WikiRequest
     public function getCapturedAct()
     {
         return $this->capturedAct;
+    }
+
+    public function getCacheManager(): CacheManager
+    {
+        if(!isset($this->cacheManager)){
+            $this->cacheManager = new CacheManager($this);
+        }
+        return $this->cacheManager;
+
+
+    }
+
+    public function getRequestedPath(): WikiPath
+    {
+        return WikiPath::createPagePathFromId($this->getRequestedId());
     }
 
 

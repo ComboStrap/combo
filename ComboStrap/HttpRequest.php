@@ -31,11 +31,13 @@ class HttpRequest
      */
     public static function purgeStaticDataRequestedScoped()
     {
+        //
+        WikiRequest::reset();
+
         // global scope
         MetadataDokuWikiStore::resetAll();
         MetadataDbStore::resetAll();
         // request scope
-        CacheManager::reset();
         SnippetManager::reset();
         IdManager::reset();
         // global variable

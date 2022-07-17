@@ -18,9 +18,10 @@ use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
+use ComboStrap\WikiRequest;
 use dokuwiki\Cache\CacheRenderer;
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Can we use the parser cache
@@ -93,7 +94,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
             }
         }
 
-        $cacheManager = PluginUtility::getCacheManager();
+        $cacheManager = WikiRequest::getOrCreateFromEnv()->getCacheManager();
         $shouldSlotExpire = $cacheManager->shouldSlotExpire($pageId);
         if ($shouldSlotExpire) {
             Event::createEvent(

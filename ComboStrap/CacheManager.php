@@ -44,44 +44,30 @@ class CacheManager
      */
     private $slotsExpiration;
 
-    private WikiPath $requestedPath;
+    private WikiRequest $wikiRequest;
 
-    public function __construct(WikiPath $requestedPath)
+    public function __construct(WikiRequest $wikiRequest)
     {
-        $this->requestedPath = $requestedPath;
+        $this->wikiRequest = $wikiRequest;
     }
 
 
     /**
+     * @deprecated for {@link WikiRequest::getCacheManager()}
      * @return CacheManager
      */
     public static function getOrCreateFromRequestedPath(): CacheManager
     {
 
-        $path = WikiPath::createRequestedPagePathFromRequest();
-        return self::getOrCreateForContextPage($path);
+        return WikiRequest::getOrCreateFromEnv()->getCacheManager();
 
     }
 
 
     public static function resetAndGet(): CacheManager
     {
-        self::reset();
-        return self::getOrCreateFromRequestedPath();
-    }
 
-    public static function getOrCreateForContextPage(WikiPath $requestedContextPath): CacheManager
-    {
-        $contextId = $requestedContextPath->getWikiId();
-        $cacheManager = self::$cacheManager[$contextId];
-        if ($cacheManager === null) {
-            // new run, delete all old cache managers
-            self::reset();
-            // create
-            $cacheManager = new CacheManager($requestedContextPath);
-            self::$cacheManager[$contextId] = $cacheManager;
-        }
-        return $cacheManager;
+        return self::getOrCreateFromRequestedPath();
     }
 
 
@@ -95,22 +81,11 @@ class CacheManager
         $pathId = $path->toPathString();
         $cacheRuntimeDependencies = $this->slotCacheDependencies[$pathId];
         if ($cacheRuntimeDependencies === null) {
-            $cacheRuntimeDependencies = MarkupCacheDependencies::create($path, $this->requestedPath);
+            $cacheRuntimeDependencies = MarkupCacheDependencies::create($path, $this->wikiRequest->getRequestedPath());
             $this->slotCacheDependencies[$pathId] = $cacheRuntimeDependencies;
         }
         return $cacheRuntimeDependencies;
 
-    }
-
-    /**
-     * Still needed even if the cache manager is scoped at the request level
-     * as the cache manager only save the first
-     * cache result (other will then be true)
-     *
-     */
-    public static function reset()
-    {
-        self::$cacheManager = [];
     }
 
 
@@ -172,8 +147,6 @@ class CacheManager
          * inside dokuwiki, we just return a result for
          * the first call to the function
          *
-         * We use the cache manager as scope element
-         * (ie it's {@link CacheManager::reset()} for each request
          */
         if (isset($this->slotsExpiration[$pageId])) {
             return false;

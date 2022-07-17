@@ -757,7 +757,7 @@ class MarkupPath implements ResourceCombo, Path
          * (Used only in test)
          */
         $wikiPath = WikiPath::createFromPathObject($this->getPathObject());
-        $wikiRequest = WikiRequest::getOrCreate($wikiPath->getWikiId());
+        $wikiRequest = WikiRequest::createRequestOrSubRequest($wikiPath->getWikiId());
         try {
             /**
              * @var MetadataDokuWikiStore $metadataStore

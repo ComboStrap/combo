@@ -174,16 +174,28 @@ class PageLayout
         return $this->requestedContextPath;
     }
 
-    public function generateAndGetPageHtmlAsString(): string
+    /**
+     * @param $mainHtml - the html in the main area
+     * @return string - the page as html string (not dom because that's not how works dokuwiki)
+     */
+    public function generateAndGetPageHtmlAsString(string $mainHtml): string
     {
 
         $htmlFragmentByVariables = [];
+        try {
+            $pageLayoutElement = $this->getMainElement();
+            $layoutVariable = $pageLayoutElement->getVariableName();
+            $htmlFragmentByVariables[$layoutVariable] = $mainHtml;
+            $pageLayoutElement->getDomElement()->appendTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
+        } catch (ExceptionNotFound $e) {
+            // main element is mandatory, an error should have been thrown at build time
+            throw new ExceptionRuntimeInternal("Main element was not found", self::CANONICAL, 1, $e);
+        }
+
         /**
          * Creating the HTML document
-         *
          */
         foreach ($this->getPageLayoutElements() as $pageElement) {
-
 
             $domElement = $pageElement->getDomElement();
 
@@ -206,8 +218,11 @@ class PageLayout
             /**
              * Rendering
              */
-            if (!$pageElement->isSlot()) {
-                // no rendering for container area, this is a parent
+            if (!$pageElement->isSlot() || $pageElement->isMain()) {
+                /**
+                 * No rendering for container area
+                 * or for the main (passed as argument)
+                 */
                 continue;
             }
 
@@ -804,5 +819,30 @@ class PageLayout
         return $slotElements;
     }
 
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getMainElement(): PageLayoutElement
+    {
+        return $this->getPageElement(PageLayout::MAIN_CONTENT_ELEMENT);
+    }
+
+
+    public function hasContentHeader(): bool
+    {
+        try {
+            $element = $this->getPageElement(PageLayout::MAIN_HEADER_ELEMENT);
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
+        try {
+            $element->getMarkupFetcher();
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+
+    }
 
 }

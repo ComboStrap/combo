@@ -96,7 +96,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
          * The first one should be the main because it has the frontmatter
          */
         try {
-            $mainElement = $this->getPageElement(PageLayout::MAIN_CONTENT_ELEMENT);
+            $mainElement = $this->pageLayout->getMainElement();
         } catch (ExceptionNotFound $e) {
             throw new ExceptionBadSyntax("The main element was not found in the html template ({$this->getLayout()}");
         }
@@ -126,6 +126,10 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
          * Run the secondary slots
          */
         foreach ($this->pageLayout->getPageLayoutElements() as $pageElement) {
+            if ($pageElement->isMain()) {
+                // already done
+                continue;
+            }
             try {
                 $fetcherPageFragment = $pageElement->getMarkupFetcher();
                 try {
@@ -151,7 +155,8 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
             }
         }
 
-        $htmlDocumentString = $this->pageLayout->generateAndGetPageHtmlAsString();
+        $main = $fetcherMainPageFragment->getFetchPathAsHtmlString();
+        $htmlDocumentString = $this->pageLayout->generateAndGetPageHtmlAsString($main);
 
         /**
          * We store only the public pages
@@ -192,7 +197,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $content = $this->getFetchString();
         return XmlDocument::createHtmlDocFromMarkup($content);
     }
-
 
 
     /**
@@ -249,8 +253,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     }
 
 
-
-
     private function setRequestedPath(Path $requestedPath): FetcherPage
     {
         try {
@@ -263,12 +265,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     }
 
 
-
-
-
-
-
-
     /**
      *
      */
@@ -277,8 +273,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $this->wikiRequest->close($this->getRequestedPath()->getWikiId());
         return $this;
     }
-
-
 
 
     private function getRequestedPage()
@@ -293,21 +287,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         return $this->requestedLayoutName;
     }
 
-    public function hasContentHeader(): bool
-    {
-        $this->buildObjectIfNeeded();
-        try {
-            $element = $this->getPageElement(PageLayout::MAIN_HEADER_ELEMENT);
-        } catch (ExceptionNotFound $e) {
-            return false;
-        }
-        try {
-            $element->getMarkupFetcher();
-        } catch (ExceptionNotFound $e) {
-            return false;
-        }
-        return true;
-    }
 
 
 

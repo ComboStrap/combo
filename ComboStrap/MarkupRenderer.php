@@ -215,17 +215,28 @@ class MarkupRenderer
 
     private function build()
     {
-        $this->wikiEnvRequest = WikiRequest::getOrCreate(self::CANONICAL);
 
-        $this->runningId = $this->wikiEnvRequest->getActualRunningId();
-        $runningAct = $this->wikiEnvRequest->getActualAct();
+        /**
+         * Dynamic rendering ?
+         */
+        $runningAct = null;
         if (
             isset($this->markup)
             && $this->requestedMime->getExtension() !== self::INSTRUCTION_EXTENSION
         ) {
             $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
         }
-        $this->wikiEnvRequest->createRunningRequest($this->runningId,$runningAct);
+
+        try {
+            $this->wikiEnvRequest = WikiRequest::get();
+            $this->runningId = $this->wikiEnvRequest->getActualRunningId();
+            $runningAct = $runningAct === null ? $this->wikiEnvRequest->getActualAct(): $runningAct;
+            $this->wikiEnvRequest->createRunningRequest($this->runningId,$runningAct);
+        } catch (ExceptionNotFound $e) {
+            $this->runningId = self::CANONICAL;
+            $this->wikiEnvRequest = WikiRequest::createFromRequestId($this->runningId, $runningAct);
+        }
+
     }
 
 }

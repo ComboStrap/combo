@@ -29,6 +29,7 @@ class WikiRequest
     const CANONICAL = "wikiRequest";
 
     /**
+     * This array should have only one value at a time
      * @var WikiRequest[]
      */
     private static array $globalRequests = [];
@@ -87,13 +88,14 @@ class WikiRequest
 
         $wikiRequest = self::$globalRequests[$requestedId];
         if ($wikiRequest === null) {
-            if (count(self::$globalRequests) > 0) {
-                $requestObject = self::$globalRequests[array_key_first(self::$globalRequests)];
+            try {
+                $actualRequest = self::getGlobalRequest();
                 // we throw, we don't want any state problem, otherwise data may be messed up
-                throw new ExceptionRuntimeInternal("The request ($requestObject) should be closed before running the new request ($requestedId)", self::CANONICAL);
+                throw new ExceptionRuntimeInternal("The request ($actualRequest) should be closed before running the new request ($requestedId)", self::CANONICAL);
+            } catch (ExceptionNotFound $e) {
+                $wikiRequest = new WikiRequest($requestedId, $requestedAct);
+                self::setGlobalRequest($wikiRequest);
             }
-            $wikiRequest = new WikiRequest($requestedId, $requestedAct);
-            self::addGlobalRequest($wikiRequest);
         }
         return $wikiRequest;
     }
@@ -114,52 +116,56 @@ class WikiRequest
         foreach (self::$globalRequests as $id => $globalRequest) {
             $globalRequest->close($id);
         }
-        self::globalRequestOperation('reset');
+        self::operateOnGlobalRequest('reset');
     }
 
 
     /**
      *
+     * @throws ExceptionNotFound - if there is no request
      */
     public static function get(): WikiRequest
     {
-        $count = count(self::$globalRequests);
-        if ($count !== 1) {
-            throw new ExceptionRuntimeInternal("There is $count request, there should be at minimal and maximal 1 request.", self::CANONICAL);
-        }
-        return self::$globalRequests[array_key_first(self::$globalRequests)];
+        return self::getGlobalRequest();
     }
 
-    public static function getOrCreate(string $requestedId): WikiRequest
+    /**
+     * When a request can be a sub-request, you can use this function.
+     * If a request is running a sub-request is created otherwise a request is created
+     * @param string $requestedId
+     * @return WikiRequest
+     */
+    public static function createRequestOrSubRequest(string $requestedId): WikiRequest
     {
-        if (isset(self::$globalRequests[$requestedId])) {
-            $request = self::$globalRequests[$requestedId];
-            $request->createRunningRequest($requestedId, "show");
-            return $request;
+
+        try {
+            $wikiRequest = self::getGlobalRequest();
+            $wikiRequest->createRunningRequest($requestedId, "show");
+            return $wikiRequest;
+        } catch (ExceptionNotFound $e) {
+            return self::createFromRequestId($requestedId);
         }
-        return self::createFromRequestId($requestedId);
+
     }
 
 
-    public function createRunningRequest(string $runningId, string $act): WikiRequest
+    public function createRunningRequest(string $runningId, string $runningAct): WikiRequest
     {
+
+        $this->runningIds[] = [$runningId, $runningAct];
+
         global $ID;
         global $ACT;
-
-        $beforeId = $ID;
-        $beforeAct = $ACT;
-
-        $this->runningIds[] = [$beforeId, $beforeAct];
-
         $ID = $runningId;
-        $ACT = $act;
+        $ACT = $runningAct;
+
         return $this;
 
     }
 
-    private static function addGlobalRequest(WikiRequest $wikiRequest)
+    private static function setGlobalRequest(WikiRequest $wikiRequest)
     {
-        self::globalRequestOperation('add', $wikiRequest);
+        self::operateOnGlobalRequest('add', $wikiRequest);
     }
 
     /**
@@ -169,7 +175,7 @@ class WikiRequest
      * @param WikiRequest|null $wikiRequest
      * @return void
      */
-    private static function globalRequestOperation(string $operation, WikiRequest $wikiRequest = null)
+    private static function operateOnGlobalRequest(string $operation, WikiRequest $wikiRequest = null)
     {
         switch ($operation) {
             case 'add':
@@ -183,6 +189,25 @@ class WikiRequest
                 break;
 
         }
+    }
+
+    /**
+     * The actual global request running (there should be only 1 at a time)
+     * or not found, if there is any
+     * @throws ExceptionNotFound
+     */
+    private static function getGlobalRequest(): WikiRequest
+    {
+        $count = count(self::$globalRequests);
+        switch ($count) {
+            case 0:
+                throw new ExceptionNotFound("No actual request");
+            case 1:
+                return self::$globalRequests[array_key_first(self::$globalRequests)];
+            default:
+                throw new ExceptionRuntimeInternal("There is more than one global request running ($count)");
+        }
+
     }
 
 
@@ -220,7 +245,7 @@ class WikiRequest
         /** @noinspection PhpUnusedLocalVariableInspection */
         [$actualRunningId, $actualRunningAct] = array_pop($this->runningIds);
         if ($actualRunningId !== $runningIdToClose) {
-            throw new ExceptionRuntimeInternal("The actual running id ($actualRunningId) is not the id to close ($runningIdToClose)", self::CANONICAL);
+            throw new ExceptionRuntimeInternal("The actual running id ($actualRunningId) is not the given id to close ($runningIdToClose)", self::CANONICAL);
         }
         try {
             [$previousId, $previousAct] = $this->getLastRunningRequest();

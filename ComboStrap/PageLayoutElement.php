@@ -219,5 +219,10 @@ class PageLayoutElement
         return $this->fetcherFragment;
     }
 
+    public function isMain(): bool
+    {
+        return $this->getId()===PageLayout::MAIN_CONTENT_ELEMENT;
+    }
+
 
 }

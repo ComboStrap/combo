@@ -457,7 +457,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
          * You need to close it with the {@link FetcherMarkup::close()}
          */
         $wikiId = $this->getRequestedPath()->getWikiId();
-        $this->wikiRequest = WikiRequest::getOrCreate($wikiId);
+        $this->wikiRequest = WikiRequest::createRequestOrSubRequest($wikiId);
 
 
 

@@ -96,7 +96,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
          * The first one should be the main because it has the frontmatter
          */
         try {
-            $mainElement = $this->pageLayout->getMainElement();
+            $mainFetcher = $this->pageLayout->getMainElement();
         } catch (ExceptionNotFound $e) {
             throw new ExceptionBadSyntax("The main element was not found in the html template ({$this->getLayout()}");
         }
@@ -107,7 +107,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
              * will start the rendering if there is no HTML path
              * or the cache is not fresh
              */
-            $fetcherMainPageFragment = $mainElement->getMarkupFetcher();
+            $fetcherMainPageFragment = $mainFetcher->getMarkupFetcher();
             try {
                 $path = $fetcherMainPageFragment->getFetchPath();
             } finally {
@@ -155,8 +155,13 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
             }
         }
 
-        $main = $fetcherMainPageFragment->getFetchPathAsHtmlString();
-        $htmlDocumentString = $this->pageLayout->generateAndGetPageHtmlAsString($main);
+        $mainFetcher = $this->pageLayout->getMainElement()->getMarkupFetcher();
+        try {
+            $mainHtml =  $mainFetcher->getFetchPathAsHtmlString();
+        } finally {
+            $mainFetcher->close();
+        }
+        $htmlDocumentString = $this->pageLayout->generateAndGetPageHtmlAsString($mainHtml);
 
         /**
          * We store only the public pages

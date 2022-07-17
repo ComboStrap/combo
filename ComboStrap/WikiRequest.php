@@ -412,5 +412,15 @@ class WikiRequest
         return $this->requestedAct;
     }
 
+    public function getCapturedRunningId(): ?string
+    {
+        return $this->capturedGlobalId;
+    }
+
+    public function getCapturedAct()
+    {
+        return $this->capturedAct;
+    }
+
 
 }

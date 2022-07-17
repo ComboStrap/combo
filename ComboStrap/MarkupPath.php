@@ -1620,13 +1620,13 @@ class MarkupPath implements ResourceCombo, Path
         $this->h1 = PageH1::createForPage($this);
         $this->type = PageType::createForPage($this);
         $this->creationTime = PageCreationDate::createForPage($this);
-        $this->title = PageTitle::createForPage($this);
+        $this->title = PageTitle::createForMarkup($this);
         $this->keywords = PageKeywords::createForPage($this);
         $this->publishedDate = PagePublicationDate::createFromPage($this);
         $this->startDate = StartDate::createFromPage($this);
         $this->endDate = EndDate::createFromPage($this);
         $this->locale = Locale::createForPage($this);
-        $this->lang = Lang::createForPage($this);
+        $this->lang = Lang::createForMarkup($this);
         $this->region = Region::createForPage($this);
         $this->slug = \ComboStrap\Slug::createForPage($this);
         $this->canBeOfLowQuality = LowQualityPageOverwrite::createForPage($this);

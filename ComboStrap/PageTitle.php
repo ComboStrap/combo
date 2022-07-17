@@ -10,7 +10,7 @@ class PageTitle extends MetadataText
     public const PROPERTY_NAME = 'title';
     public const TITLE = 'title';
 
-    public static function createForPage($page): PageTitle
+    public static function createForMarkup($page): PageTitle
     {
         return (new PageTitle())
             ->setResource($page);

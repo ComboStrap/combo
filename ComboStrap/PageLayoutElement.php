@@ -138,9 +138,9 @@ class PageLayoutElement
     public
     function isSlot(): bool
     {
-        if ($this->getId() === PageLayout::PAGE_TOOL_ELEMENT) {
+        if (in_array($this->getId(), [PageLayout::PAGE_TOOL_ELEMENT, PageLayout::MAIN_TOC_ELEMENT])){
             return false;
-        }
+    }
         return !$this->domElement->hasChildrenElement();
     }
 
@@ -221,7 +221,7 @@ class PageLayoutElement
 
     public function isMain(): bool
     {
-        return $this->getId()===PageLayout::MAIN_CONTENT_ELEMENT;
+        return $this->getId() === PageLayout::MAIN_CONTENT_ELEMENT;
     }
 
 

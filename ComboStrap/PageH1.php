@@ -67,7 +67,7 @@ class PageH1 extends MetadataText
             }
         }
         try {
-            return PageTitle::createForPage($this->getResource())
+            return PageTitle::createForMarkup($this->getResource())
                 ->getValue();
         } catch (ExceptionNotFound $e) {
             // ok

@@ -90,7 +90,7 @@ class PageDescription extends MetadataText
 
         $this->buildCheck();
         if ($this->defaultValue === "" || $this->defaultValue === null) {
-            return PageTitle::createForPage($this->getResource())
+            return PageTitle::createForMarkup($this->getResource())
                 ->getValueOrDefault();
         }
         return $this->defaultValue;

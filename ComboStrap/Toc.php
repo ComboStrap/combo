@@ -49,6 +49,11 @@ class Toc extends Metadata
             ->setValue($TOC);
     }
 
+    public static function createEmpty(): Toc
+    {
+        return new Toc();
+    }
+
 
     public function toXhtml(): string
     {

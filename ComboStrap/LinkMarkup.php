@@ -429,7 +429,7 @@ EOF;
                 if ($navigation) {
                     return ResourceName::createForResource($page)->getValueOrDefault();
                 } else {
-                    return PageTitle::createForPage($page)->getValueOrDefault();
+                    return PageTitle::createForMarkup($page)->getValueOrDefault();
                 }
             case MarkupRef::EMAIL_URI:
                 global $conf;

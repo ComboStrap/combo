@@ -75,27 +75,42 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
             ->setRequestedMime($this->getMime())
             ->getOutput();
 
-        $htmlHeadTags = HtmlHeadTags::create()
-            ->get();
 
-        $title = PageTitle::createForPage(MarkupPath::createPageFromPathObject($this->getSourcePath()))
-            ->getValueOrDefault();
+        $startMarkup = $this->getStartPath();
+        $title = PageTitle::createForMarkup($startMarkup)->getValueOrDefault();
+        $lang = Lang::createForMarkup($startMarkup);
+        try {
+            $startMarkupWikiPath = WikiPath::createFromPathObject($startMarkup->getPathObject());
+        } catch (ExceptionBadArgument $e) {
+            /**
+             * should not happen as this class accepts only wiki path as {@link FetcherPageBundler::setContextPath() context path}
+             */
+            throw new ExceptionRuntimeInternal("We were unable to get the start markup wiki path. Error:{$e->getMessage()}", self::CANONICAL);
+        }
 
-        /**
-         * Html
-         */
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<title>$title</title>
-$htmlHeadTags
-</head>
-<body>
-$mainContent
-</body>
-</html>
-HTML;
+        $layoutName = PageLayout::BLANK_LAYOUT;
+        try {
+            $toc = Toc::createEmpty()
+                ->setValue($this->getBundledOutline()->getTocDokuwikiFormat());
+        } catch (ExceptionBadArgument $e) {
+            // this is an array
+            throw new ExceptionRuntimeInternal("The toc could not be created. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
+        }
+        try {
+
+            return PageLayout::createFromLayoutName($layoutName)
+                ->setRequestedContextPath($startMarkupWikiPath)
+                ->setRequestedTitle($title)
+                ->setRequestedLang($lang)
+                ->setToc($toc)
+                ->setDeleteSocialHeadTags(true)
+                ->setRequestedEnableTaskRunner(false)
+                ->generateAndGetPageHtmlAsString($mainContent);
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            // layout should be good
+            throw new ExceptionRuntimeInternal("The $layoutName template returns an error", self::CANONICAL, 1, $e);
+        }
+
 
     }
 
@@ -106,30 +121,20 @@ HTML;
             return $this->bundledOutline;
         }
 
-        $requestedPage = MarkupPath::createPageFromPathObject($this->getContextPath());
-        if (!$requestedPage->isIndexPage()) {
-            try {
-                $indexPage = $requestedPage->getParent();
-            } catch (ExceptionNotFound $e) {
-                // home page case (should not happen - home page is a index page)
-                $indexPage = $requestedPage;
-            }
+        $startPath = $this->getStartPath();
+        if (FileSystems::exists($startPath)) {
+            $indexOutline = $startPath->getOutline();
         } else {
-            $indexPage = $requestedPage;
-        }
-        if (FileSystems::exists($indexPage)) {
-            $indexOutline = $this->addTitleSectionIfMissing($indexPage->getOutline());
-        } else {
-            $title = PageTitle::createForPage($indexPage)->getValueOrDefault();
+            $title = PageTitle::createForMarkup($startPath)->getValueOrDefault();
             $content = <<<EOF
 ====== $title ======
 EOF;
             $indexOutline = Outline::createFromMarkup($content);
         }
 
-        $childrenPages = MarkupFileSystem::getOrCreate()->getChildren($indexPage, FileSystems::LEAF);
+        $childrenPages = MarkupFileSystem::getOrCreate()->getChildren($startPath, FileSystems::LEAF);
         foreach ($childrenPages as $child) {
-            $outer = $this->addTitleSectionIfMissing($child->getOutline());
+            $outer = $child->getOutline();
             Outline::merge($indexOutline, $outer);
         }
         $this->bundledOutline = $indexOutline;
@@ -139,6 +144,9 @@ EOF;
     }
 
     /**
+     * The path from where the bundle should start
+     * If this is not an index markup, the index markup will be chosen {@link FetcherPageBundler::getStartPath()}
+     *
      * @throws ExceptionBadArgument - if the path is not a {@link WikiPath web path}
      */
     public function setContextPath(Path $requestedPath): FetcherPageBundler
@@ -147,71 +155,33 @@ EOF;
         return $this;
     }
 
-    private function getContextPath(): WikiPath
+    private function getRequestedContextPath(): WikiPath
     {
         return $this->getSourcePath();
     }
 
+
     /**
-     * If there is a header markup, the first section with the title
-     * are deleted, we recreate the title section here
-     * @param Outline $outline
-     * @return Outline
+     *
+     * @return MarkupPath The index path or the request path is none
+     *
      */
-    private function addTitleSectionIfMissing(Outline $outline): Outline
+    private function getStartPath(): MarkupPath
     {
-        $rootOutlineSection = $outline->getRootOutlineSection();
+        $requestedPath = MarkupPath::createPageFromPathObject($this->getRequestedContextPath());
+        if ($requestedPath->isIndexPage()) {
+            return $requestedPath;
+        }
         try {
-            $firstChild = $rootOutlineSection->getFirstChild();
+            /**
+             * Parent is an index path in the {@link MarkupFileSystem}
+             */
+            return $requestedPath->getParent();
         } catch (ExceptionNotFound $e) {
-            if (PluginUtility::isDevOrTest()) {
-                LogUtility::warning("No first child was found while checking the title section", self::CANONICAL);
-            }
-            return $outline;
+            // home markup case (should not happen - home page is a index page)
+            return $requestedPath;
         }
-        if ($firstChild->getLevel() >= 2) {
-            $enterHeading = Call::createComboCall(
-                \syntax_plugin_combo_heading::TAG,
-                DOKU_LEXER_ENTER,
-                array(syntax_plugin_combo_heading::LEVEL => 1),
-                syntax_plugin_combo_heading::TYPE_OUTLINE,
-                null,
-                null,
-                0
-            );
-            $title = PageTitle::createForPage($outline->getMarkup())->getValueOrDefault();
-            $unmatchedHeading = Call::createComboCall(
-                \syntax_plugin_combo_heading::TAG,
-                DOKU_LEXER_UNMATCHED,
-                [],
-                null,
-                $title,
-                $title
-            );
-            $exitHeading = Call::createComboCall(
-                \syntax_plugin_combo_heading::TAG,
-                DOKU_LEXER_EXIT,
-                array(syntax_plugin_combo_heading::LEVEL => 1)
-            );
-            $h1Section = OutlineSection::createFromEnterHeadingCall($enterHeading)
-                ->addHeadingCall($unmatchedHeading)
-                ->addHeadingCall($exitHeading);
-            $children = $rootOutlineSection->getChildren();
-            foreach ($children as $child) {
-                $child->detachBeforeAppend();
-                try {
-                    $h1Section->appendChild($child);
-                } catch (ExceptionBadState $e) {
-                    LogUtility::error("An error occurs when trying to move the h2 children below the recreated heading title ($title)", self::CANONICAL);
-                }
-            }
-            try {
-                $rootOutlineSection->appendChild($h1Section);
-            } catch (ExceptionBadState $e) {
-                LogUtility::error("An error occurs when trying to add the recreated title heading ($title) to the root", self::CANONICAL);
-            }
-        }
-        return $outline;
+
     }
 
 }

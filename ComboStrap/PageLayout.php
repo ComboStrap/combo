@@ -25,6 +25,7 @@ class PageLayout
         PageLayout::PAGE_MAIN_ELEMENT,
         PageLayout::PAGE_FOOTER_ELEMENT,
         PageLayout::MAIN_HEADER_ELEMENT,
+        PageLayout::MAIN_TOC_ELEMENT,
         PageLayout::MAIN_CONTENT_ELEMENT,
         PageLayout::MAIN_SIDE_ELEMENT,
         PageLayout::MAIN_FOOTER_ELEMENT,
@@ -36,7 +37,7 @@ class PageLayout
     public const PAGE_FOOTER_ELEMENT = "page-footer";
     public const MAIN_HEADER_ELEMENT = "main-header";
     public const PAGE_MAIN_ELEMENT = "page-main";
-    public const MAIN_TOC_ELEMENT = "main-tool";
+    public const MAIN_TOC_ELEMENT = "main-toc";
     public const PAGE_HEADER_ELEMENT = "page-header";
     public const DATA_LAYOUT_CONTAINER_ATTRIBUTE = "data-layout-container";
     public const DATA_EMPTY_ACTION_ATTRIBUTE = "data-empty-action";
@@ -44,6 +45,8 @@ class PageLayout
     public const VIEWPORT_RESPONSIVE_VALUE = "width=device-width,initial-scale=1";
     public const TASK_RUNNER_ID = "task-runner";
     public const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
+    const HAMBURGER_LAYOUT = "hamburger";
+    const BLANK_LAYOUT = "blank";
     private string $layoutName;
     private WikiPath $cssPath;
     private WikiPath $jsPath;
@@ -60,6 +63,8 @@ class PageLayout
     private bool $requestedEnableTaskRunner = true;
     private WikiPath $requestedContextPath;
     private Lang $requestedLang;
+    private Toc $toc;
+    private bool $deleteSocialHeads = false;
 
 
     /**
@@ -126,29 +131,17 @@ class PageLayout
         return new PageLayout($layoutName);
     }
 
-    /**
-     * An utility wrapper to capture the HTML head tags
-     * @return string
-     */
-    public static function getHtmlHeadTags(): string
-    {
-        ob_start();
-        try {
-            tpl_metaheaders();
-            return ob_get_contents();
-        } finally {
-            ob_end_clean();
-        }
-    }
+
 
     /**
      * Add or not the task runner / web bug call
      * @param bool $b
-     * @return void
+     * @return PageLayout
      */
-    public function setRequestedEnableTaskRunner(bool $b)
+    public function setRequestedEnableTaskRunner(bool $b): PageLayout
     {
         $this->requestedEnableTaskRunner = $b;
+        return $this;
     }
 
     public function getCssPath(): WikiPath
@@ -335,16 +328,10 @@ class PageLayout
             $tocElement = $this->getPageElement($tocId)->getDomElement();
             $tocElement->addClass(Toc::getClass());
 
-            $page = $this->getRequestedContextPath();
-            if (!FileSystems::isDirectory($page)) {
-                $tocHtml = Toc::createForPage($page)->toXhtml();
-                $tocVariable = Template::toValidVariableName($tocId);
-                $htmlFragmentByVariables[$tocVariable] = $tocHtml;
-                $tocElement->appendTextNode(Template::VARIABLE_PREFIX . $tocVariable);
-            } else {
-                LogUtility::error("The context path is not a page and does have therefore a toc but the template ($this) has a toc");
-            }
-
+            $toc = $this->getTocOrDefault();
+            $tocVariable = Template::toValidVariableName($tocId);
+            $htmlFragmentByVariables[$tocVariable] = $toc->toXhtml();
+            $tocElement->appendTextNode(Template::VARIABLE_PREFIX . $tocVariable);
 
         } catch (ExceptionNotFound $e) {
             // no toc
@@ -724,7 +711,7 @@ class PageLayout
         if (isset($this->requestedTitle)) {
             return $this->requestedTitle;
         }
-        return PageTitle::createForPage($this->getRequestedContextPath())
+        return PageTitle::createForMarkup($this->getRequestedContextPath())
             ->getValueOrDefault();
 
     }
@@ -800,12 +787,75 @@ class PageLayout
         /**
          * Start the meta headers
          */
-        $htmlHeaders = self::getHtmlHeadTags();
+        /**
+         * Meta headers
+         * To delete the not needed headers for an export
+         * such as manifest, alternate, ...
+         */
+        if($this->deleteSocialHeads) {
+            global $EVENT_HANDLER;
+            $EVENT_HANDLER->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'deleteSocialHeadTags');
+        }
+        ob_start();
+        try {
+            tpl_metaheaders();
+            $htmlHeaders = ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
         $variableName = "headElements";
         $htmlFragmentByVariables[$variableName] = $htmlHeaders;
         $head->appendTextNode(Template::VARIABLE_PREFIX . $variableName);
 
 
+    }
+
+    /**
+     * Delete all social heads (export or iframe case)
+     * @param $event
+     */
+    public function deleteSocialHeadTags(&$event)
+    {
+
+        $data = &$event->data;
+        foreach ($data as $tag => &$heads) {
+            switch ($tag) {
+                case "link":
+                    $deletedRel = ["manifest", "search", "start", "alternate", "canonical"];
+                    foreach ($heads as $id => $headAttributes) {
+                        if (isset($headAttributes['rel'])) {
+                            $rel = $headAttributes['rel'];
+                            if (in_array($rel, $deletedRel)) {
+                                unset($heads[$id]);
+                            }
+                        }
+                    }
+                    break;
+                case "meta":
+                    $deletedMeta = ["robots", "og:url", "og:description", "description"];
+                    foreach ($heads as $id => $headAttributes) {
+                        if (isset($headAttributes['name']) || isset($headAttributes['property'])) {
+                            $rel = $headAttributes['name'];
+                            if ($rel === null) {
+                                $rel = $headAttributes['property'];
+                            }
+                            if (in_array($rel, $deletedMeta)) {
+                                unset($heads[$id]);
+                            }
+                        }
+                    }
+                    break;
+                case "script":
+                    foreach ($heads as $id => $headAttributes) {
+                        if (isset($headAttributes['src'])) {
+                            $src = $headAttributes['src'];
+                            if (strpos($src, "lib/exe/js.php") !== false) {
+                                unset($heads[$id]);
+                            }
+                        }
+                    }
+            }
+        }
     }
 
     public function getSlotElements(): array
@@ -843,6 +893,36 @@ class PageLayout
             return false;
         }
 
+    }
+
+    public function setToc(Toc $toc): PageLayout
+    {
+        $this->toc = $toc;
+        return $this;
+    }
+
+    private function getTocOrDefault(): Toc
+    {
+        if (isset($this->toc)) {
+            return $this->toc;
+        }
+        $wikiPath = $this->getRequestedContextPath();
+        if (FileSystems::isDirectory($wikiPath)) {
+            LogUtility::error("We have a found an inconsistency. The context path is not a markup directory and does have therefore no toc but the template ($this) has a toc.");
+        }
+        return Toc::createForPage($wikiPath);
+
+    }
+
+    /**
+     * Delete the social head tags
+     * @param bool $deleteSocialHeads
+     * @return PageLayout
+     */
+    public function setDeleteSocialHeadTags(bool $deleteSocialHeads): PageLayout
+    {
+        $this->deleteSocialHeads = $deleteSocialHeads;
+        return $this;
     }
 
 }

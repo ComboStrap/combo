@@ -21,6 +21,7 @@ class HttpResponse
     public const STATUS_INTERNAL_ERROR = 500;
     public const STATUS_NOT_AUTHORIZED = 401;
     const MESSAGE_ATTRIBUTE = "message";
+    const CANONICAL = "http:response";
 
     /**
      * @var int
@@ -56,14 +57,19 @@ class HttpResponse
 
     public static function createFromException(\Exception $e): HttpResponse
     {
+        if(PluginUtility::isDevOrTest()){
+            throw new ExceptionRuntimeInternal($e,self::CANONICAL,1,$e);
+        }
         $httpResponse = HttpResponse::create();
+        $message = "<p>{$e->getMessage()}</p>";
         try {
             $status = self::getStatusFromException($e);
             $httpResponse->setStatus($status);
         } catch (ExceptionBadArgument $e) {
-            $httpResponse->setStatus(HttpResponse::STATUS_INTERNAL_ERROR)
-                ->setBody($e->getMessage(), Mime::getText());
+            $httpResponse->setStatus(HttpResponse::STATUS_INTERNAL_ERROR);
+            $message = "<p>{$e->getMessage()}</p>$message";
         }
+        $httpResponse->setBody($message, Mime::getHtml());
         return $httpResponse;
     }
 
@@ -224,7 +230,7 @@ class HttpResponse
      */
     public function getHeaders(string $headerName): array
     {
-        $results = Http::getHeader($headerName,$this->headers);
+        $results = Http::getHeader($headerName, $this->headers);
 
         if (count($results) === 0) {
             throw new ExceptionNotFound("No header with the name $headerName");

@@ -101,7 +101,7 @@ class Slug extends MetadataWikiPath
      */
     public function getDefaultValue(): string
     {
-        $title = PageTitle::createForPage($this->getResource())
+        $title = PageTitle::createForMarkup($this->getResource())
             ->getValueOrDefault();
         return self::toSlugPath($title);
     }

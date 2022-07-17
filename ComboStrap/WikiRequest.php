@@ -123,9 +123,6 @@ class WikiRequest
 
     public static function reset()
     {
-        foreach (self::$globalRequests as $id => $globalRequest) {
-            $globalRequest->close($id);
-        }
         self::operateOnGlobalRequest('reset');
     }
 

@@ -59,7 +59,7 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
                 $lang = Site::getLang();
             } else {
                 $page = MarkupPath::createPageFromQualifiedPath($path);
-                $lang = Lang::createForPage($page)->getValueOrDefault();
+                $lang = Lang::createForMarkup($page)->getValueOrDefault();
             }
         }
         $actualLocale = setlocale(LC_ALL, 0);

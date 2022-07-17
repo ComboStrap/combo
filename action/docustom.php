@@ -66,7 +66,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
             \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
                 ->setBody($body, $mime)
                 ->send();
-        } catch (ExceptionBadArgument|ExceptionNotFound|ExceptionInternal $e) {
+        } catch (\Exception $e) {
             LogUtility::error("An error has occurred during the execution of the custom action ($action). Error: {$e->getMessage()} ");
             \ComboStrap\HttpResponse::createFromException($e)
                 ->send();

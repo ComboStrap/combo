@@ -88,14 +88,25 @@ class WikiRequest
         $wikiRequest = self::$globalRequests[$requestedId];
         if ($wikiRequest === null) {
             if (count(self::$globalRequests) > 0) {
-                $requestObject = array_shift(self::$globalRequests);
+                $requestObject = self::$globalRequests[array_key_first(self::$globalRequests)];
                 // we throw, we don't want any state problem, otherwise data may be messed up
                 throw new ExceptionRuntimeInternal("The request ($requestObject) should be closed before running the new request ($requestedId)", self::CANONICAL);
             }
             $wikiRequest = new WikiRequest($requestedId, $requestedAct);
-            self::$globalRequests[$requestedId] = $wikiRequest;
+            self::addGlobalRequest($wikiRequest);
         }
         return $wikiRequest;
+    }
+
+    public static function createFromEnvironmentVariable(): WikiRequest
+    {
+        global $ACT;
+        $act = $ACT;
+        if ($ACT === null) {
+            $act = "show";
+        }
+        $requestedId = self::getRequestedIdViaGlobalVariables();
+        return self::createFromRequestId($requestedId, $act);
     }
 
     private static function reset()
@@ -103,7 +114,7 @@ class WikiRequest
         foreach (self::$globalRequests as $id => $globalRequest) {
             $globalRequest->close($id);
         }
-        self::$globalRequests = [];
+        self::globalRequestOperation('reset');
     }
 
 
@@ -113,17 +124,17 @@ class WikiRequest
     public static function get(): WikiRequest
     {
         $count = count(self::$globalRequests);
-        if (self::$globalRequests != 1) {
+        if ($count !== 1) {
             throw new ExceptionRuntimeInternal("There is $count request, there should be at minimal and maximal 1 request.", self::CANONICAL);
         }
-        return array_shift(self::$globalRequests);
+        return self::$globalRequests[array_key_first(self::$globalRequests)];
     }
 
     public static function getOrCreate(string $requestedId): WikiRequest
     {
         if (isset(self::$globalRequests[$requestedId])) {
             $request = self::$globalRequests[$requestedId];
-            $request->createRunningRequest($requestedId,"show");
+            $request->createRunningRequest($requestedId, "show");
             return $request;
         }
         return self::createFromRequestId($requestedId);
@@ -145,6 +156,35 @@ class WikiRequest
         return $this;
 
     }
+
+    private static function addGlobalRequest(WikiRequest $wikiRequest)
+    {
+        self::globalRequestOperation('add', $wikiRequest);
+    }
+
+    /**
+     * A function that permits to debug easily by seeing the operation on the global variable
+     * in one place
+     * @param string $operation
+     * @param WikiRequest|null $wikiRequest
+     * @return void
+     */
+    private static function globalRequestOperation(string $operation, WikiRequest $wikiRequest = null)
+    {
+        switch ($operation) {
+            case 'add':
+                self::$globalRequests[$wikiRequest->getRequestedId()] = $wikiRequest;
+                break;
+            case 'pop':
+                unset(self::$globalRequests[$wikiRequest->getRequestedId()]);
+                break;
+            case 'reset':
+                self::$globalRequests = [];
+                break;
+
+        }
+    }
+
 
     public function __toString()
     {
@@ -203,7 +243,7 @@ class WikiRequest
     }
 
 
-    private function getRequestedIdViaGlobalVariables()
+    private static function getRequestedIdViaGlobalVariables()
     {
         /**
          * {@link getID()} reads the id from the input variable

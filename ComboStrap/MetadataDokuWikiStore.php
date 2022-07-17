@@ -67,7 +67,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      *
      * @var MetadataDokuWikiStore[] a cache of store
      */
-    private static $storesByRequestedPage;
+    private static array $storesByRequestedPage;
 
 
     /**
@@ -82,18 +82,12 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     public static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
 
-        $requestedId = PluginUtility::getRequestedWikiId();
-        if ($requestedId === null) {
-            if ($resourceCombo instanceof MarkupPath) {
-                $requestedId = $resourceCombo->getWikiId();
-            } else {
-                $requestedId = "not-a-page";
-            }
-        }
+        $requestedId = WikiRequest::get()->getRequestedId();
+
         $storesByRequestedId = &self::$storesByRequestedPage[$requestedId];
         if ($storesByRequestedId === null) {
             // delete all previous stores by requested page id
-            self::$storesByRequestedPage = null;
+            self::resetAll();
             self::$storesByRequestedPage[$requestedId] = [];
             $storesByRequestedId = &self::$storesByRequestedPage[$requestedId];
         }

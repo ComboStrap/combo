@@ -799,10 +799,9 @@ class MarkupPath implements ResourceCombo, Path
         return $this->lang->getValueFromStore();
     }
 
-    public
-    function getLangOrDefault()
+    public function getLangOrDefault(): string
     {
-        return $this->lang->getValueFromStoreOrDefault();
+        return $this->lang->getValueOrDefault();
     }
 
     /**
@@ -2029,7 +2028,7 @@ class MarkupPath implements ResourceCombo, Path
         return MarkupPath::createPageFromId($nearest);
     }
 
-    public function getHtmlFetcherAsPage(): FetcherPage
+    public function createPageFetcherHtml(): FetcherPage
     {
         return FetcherPage::createPageFetcherFromPage($this);
     }

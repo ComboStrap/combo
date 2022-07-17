@@ -97,14 +97,13 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
 
                     self::setNormalizedId($page->getPathObject()->getWikiId());
 
-
                 }
             }
         }
         $pageLang = $page->getLangOrDefault();
         global $conf;
         $initialLang = $event->data;
-        if ($initialLang != $pageLang) {
+        if ($initialLang !== $pageLang) {
             $conf['lang'] = $pageLang;
             $event->data = $pageLang;
         }

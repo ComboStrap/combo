@@ -174,7 +174,7 @@ class PageLayout
         return $this->requestedContextPath;
     }
 
-    public function generateAndGetPageHtml()
+    public function generateAndGetPageHtmlAsString(): string
     {
 
         $htmlFragmentByVariables = [];
@@ -182,7 +182,7 @@ class PageLayout
          * Creating the HTML document
          *
          */
-        foreach ($this->getPageElements() as $pageElement) {
+        foreach ($this->getPageLayoutElements() as $pageElement) {
 
 
             $domElement = $pageElement->getDomElement();
@@ -232,7 +232,16 @@ class PageLayout
                 $htmlFragmentByVariables[$layoutVariable] = $fetcherHtmlString;
                 $domElement->appendTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
 
-            } catch (ExceptionNotFound $e) {
+            } catch (ExceptionNotFound|ExceptionBadArgument $e) {
+
+                if ($e instanceof ExceptionBadArgument) {
+                    if (PluginUtility::isDevOrTest()) {
+                        /**
+                         * The slot {@link Path} for now should be all {@link WikiPath}
+                         */
+                        throw new ExceptionRuntimeInternal("Internal Error: the path could not be transformed as Wiki Path, while trying to get the fetcher. Error:{$e->getMessage()}", self::CANONICAL);
+                    }
+                }
 
                 /**
                  * no fetcher fragment (page side for instance)
@@ -328,7 +337,6 @@ class PageLayout
 
         /**
          * Page Tool
-         *
          */
         try {
             /**
@@ -373,7 +381,7 @@ class PageLayout
 
         /**
          * Head
-         * (At the end, please)
+         * (At the end of all processing, please)
          */
         try {
             $head = $this->getTemplateDomDocument()->querySelector("head");
@@ -406,14 +414,14 @@ class PageLayout
          * DocType is required by bootstrap
          * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
          */
-        $finalHtmlBodyString = "<!doctype html>\n$finalHtmlBodyString";
+        return "<!doctype html>\n$finalHtmlBodyString";
 
     }
 
     /**
      * @return PageLayoutElement[]
      */
-    private function getPageElements(): array
+    public function getPageLayoutElements(): array
     {
         return $this->pageElements;
     }
@@ -783,6 +791,17 @@ class PageLayout
         $head->appendTextNode(Template::VARIABLE_PREFIX . $variableName);
 
 
+    }
+
+    public function getSlotElements(): array
+    {
+        $slotElements = [];
+        foreach ($this->getPageLayoutElements() as $element) {
+            if ($element->isSlot()) {
+                $slotElements[] = $element;
+            }
+        }
+        return $slotElements;
     }
 
 

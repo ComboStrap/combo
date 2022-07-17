@@ -125,25 +125,22 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         /**
          * Run the secondary slots
          */
-        foreach ($this->getPageElements() as $elementId => $pageElement) {
-            if ($elementId === PageLayout::MAIN_CONTENT_ELEMENT) {
-                // already added just below
-                continue;
-            }
+        foreach ($this->pageLayout->getPageLayoutElements() as $pageElement) {
             try {
-                $fetcherPageFragment = $pageElement->getPageFragmentFetcher();
+                $fetcherPageFragment = $pageElement->getMarkupFetcher();
                 try {
                     $cache->addFileDependency($fetcherPageFragment->getFetchPath());
                 } finally {
                     $fetcherPageFragment->close();
                 }
             } catch (ExceptionNotFound $e) {
-                // no fetcher or container
+                // no markup for this slot
             }
         }
 
         /**
-         * Do we create the page or return the cache
+         * Public static cache
+         * (Do we create the page or return the cache)
          */
         if ($cache->isCacheUsable() && $this->isPublicStaticPage()) {
             try {
@@ -154,16 +151,16 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
             }
         }
 
-        $finalHtmlBodyString = $this->pageLayout->generateAndGetPageHtml();
+        $htmlDocumentString = $this->pageLayout->generateAndGetPageHtmlAsString();
 
         /**
          * We store only the public pages
          */
         if ($this->isPublicStaticPage()) {
-            $cache->storeCache($finalHtmlBodyString);
+            $cache->storeCache($htmlDocumentString);
         }
 
-        return $finalHtmlBodyString;
+        return $htmlDocumentString;
 
     }
 
@@ -277,7 +274,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
      */
     public function close(): FetcherPage
     {
-        $this->wikiRequest->close();
+        $this->wikiRequest->close($this->getRequestedPath()->getWikiId());
         return $this;
     }
 

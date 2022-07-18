@@ -224,7 +224,7 @@ class PageLayout
 
                 $fetcher = $pageElement->getMarkupFetcher();
                 try {
-                    $fetcherHtmlString = $fetcher->getFetchPathAsHtmlString();
+                    $fetcherHtmlString = $fetcher->getFetchString();
                 } finally {
                     $fetcher->close();
                 }

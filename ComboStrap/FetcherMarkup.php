@@ -10,7 +10,16 @@ use dokuwiki\Cache\CacheRenderer;
 use Exception;
 use http\Exception\RuntimeException;
 
-class FetcherMarkup extends IFetcherAbs implements IFetcherSource
+/**
+ * A class that renders markup files.
+ * It does not output any full page (HTML document) but only fragment.
+ *
+ * This is not really a {@link IFetcher function} because it should not be called
+ * from the outside but to be able to use the {@link FetcherCache} we need to
+ * (Url dependent)
+ *
+ */
+class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherString
 {
 
     use FetcherTraitWikiPath;
@@ -572,7 +581,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
      * @return string - with replacement if any
      * TODO: edit button replacement could be a script tag with a json, permits to do DOM manipulation
      */
-    public function getFetchPathAsHtmlString(): string
+    public function getFetchString(): string
     {
         $path = $this->getFetchPath();
         try {
@@ -597,7 +606,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
      */
     public function getFetchPathAsHtmlDom(): XmlDocument
     {
-        return XmlDocument::createHtmlDocFromMarkup($this->getFetchPathAsHtmlString());
+        return XmlDocument::createHtmlDocFromMarkup($this->getFetchString());
     }
 
     /**
@@ -605,7 +614,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
      */
     public function getFetchPathAsXHtmlDom(): XmlDocument
     {
-        return XmlDocument::createXmlDocFromMarkup($this->getFetchPathAsHtmlString());
+        return XmlDocument::createXmlDocFromMarkup($this->getFetchString());
     }
 
     /**
@@ -668,5 +677,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource
         }
         return $this->requestedRendererName;
     }
+
 
 }

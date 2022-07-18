@@ -25,6 +25,7 @@ use ComboStrap\FetcherSvg;
 use ComboStrap\MediaMarkup;
 use ComboStrap\IconDownloader;
 use ComboStrap\Metadata;
+use ComboStrap\Outline;
 use ComboStrap\PageType;
 use ComboStrap\Prism;
 use ComboStrap\PageUrlType;
@@ -323,15 +324,15 @@ $conf["floatDefaultBreakpoint"] = "sm";
 
 /**
  * Outline Numbering
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_ENABLE}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_PREFIX}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_SUFFIX}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_ENABLE}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_PREFIX}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_SUFFIX}
  */
 $conf["outlineNumberingEnable"] = 0;
 $conf["outlineNumberingCounterStyleLevel2"] = "decimal";

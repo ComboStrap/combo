@@ -1,6 +1,6 @@
 <?php
 
-require_once(__DIR__ . '/../../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../../vendor/autoload.php');
 
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
@@ -14,6 +14,7 @@ use ComboStrap\LowQualityPage;
 use ComboStrap\LinkMarkup;
 use ComboStrap\MediaLink;
 use ComboStrap\MediaMarkup;
+use ComboStrap\Outline;
 use ComboStrap\PagePublicationDate;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlType;
@@ -73,7 +74,7 @@ $lang[action_plugin_combo_css::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET] = Plugin
 $lang[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = PluginUtility::getDocumentationHyperLink("frontend:optimization", "Frontend Optimization") . ' - If checked, the DokuWiki Stylesheet will not be loaded for a public user';
 
 /**
- * Metdataviewer
+ * Metadata viewer
  */
 $lang[syntax_plugin_combo_metadata::CONF_METADATA_DEFAULT_ATTRIBUTES] = PluginUtility::getDocumentationHyperLink("metadata:viewer", "Metadata Viewer") . ' - The default attributes of the metadata component';
 
@@ -205,15 +206,15 @@ $lang[FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT] = PluginUtility::getDocumen
 /**
  * Outline
  */
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_ENABLE] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - if checked, outline numbering will be applied");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 2");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 3");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 4");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 5");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 6");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The separator between counters");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_PREFIX] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The prefix of the outline numbering");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_SUFFIX] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The suffix of the outline numbering");
+$lang[Outline::CONF_OUTLINE_NUMBERING_ENABLE] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - if checked, outline numbering will be applied");
+$lang[Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The counter style for the level 2");
+$lang[Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The counter style for the level 3");
+$lang[Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The counter style for the level 4");
+$lang[Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The counter style for the level 5");
+$lang[Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The counter style for the level 6");
+$lang[Outline::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The separator between counters");
+$lang[Outline::CONF_OUTLINE_NUMBERING_PREFIX] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The prefix of the outline numbering");
+$lang[Outline::CONF_OUTLINE_NUMBERING_SUFFIX] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The suffix of the outline numbering");
 
 
 /**
@@ -273,4 +274,4 @@ $lang[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE]= PluginUtil
  */
 $lang[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_container::CANONICAL, "Set the horizontal alignment of the layout");
 
-?>
+

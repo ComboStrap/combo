@@ -3,6 +3,8 @@
 
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
+use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
@@ -332,7 +334,17 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         $snippetManager = SnippetManager::getOrCreate();
         if ($context === self::TYPE_OUTLINE) {
             $tagAttributes->addClassName(Outline::getOutlineHeadingClass());
+
             $snippetManager->attachCssInternalStyleSheetForSlot(self::TYPE_OUTLINE);
+            try {
+                $snippet = $snippetManager->attachCssInternalStyleSheetForSlot(Outline::HEADING_NUMBERING);
+                if (!$snippet->hasInlineContent()) {
+                    $css = Outline::getCssOutlineNumberingRuleFor(Outline::HEADING_NUMBERING);
+                    $snippet->setInlineContent($css);
+                }
+            } catch (ExceptionNotEnabled|ExceptionBadSyntax $e) {
+                LogUtility::internalError("An error has occurred while trying to add the outline heading numbering stylesheet. Error: {$e->getMessage()}", self::CANONICAL);
+            }
         }
         $snippetManager->attachCssInternalStyleSheetForSlot(syntax_plugin_combo_heading::TAG);
 

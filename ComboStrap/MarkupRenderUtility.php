@@ -69,7 +69,7 @@ class MarkupRenderUtility
             ->setRemoveRootBlockElement(true)
             ->setRequestedMimeToXhtml();
         try {
-            return $fetcher->getFetchPathAsHtmlString();
+            return $fetcher->getFetchString();
         } finally {
             $fetcher->close();
         }

@@ -157,7 +157,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
         $mainFetcher = $this->pageLayout->getMainElement()->getMarkupFetcher();
         try {
-            $mainHtml =  $mainFetcher->getFetchPathAsHtmlString();
+            $mainHtml =  $mainFetcher->getFetchString();
         } finally {
             $mainFetcher->close();
         }

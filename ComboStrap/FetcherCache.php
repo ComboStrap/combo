@@ -14,6 +14,7 @@ use dokuwiki\Cache\Cache;
  */
 class FetcherCache
 {
+
     const CANONICAL = "fetcher:cache";
 
 

@@ -77,8 +77,8 @@ class Toc extends Metadata
          * Adding toc number style
          */
         try {
-            $css = \action_plugin_combo_outlinenumbering::getCssOutlineNumberingRuleFor(\action_plugin_combo_outlinenumbering::TOC_NUMBERING);
-            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(\action_plugin_combo_outlinenumbering::TOC_NUMBERING, $css);
+            $css = Outline::getCssOutlineNumberingRuleFor(Outline::TOC_NUMBERING);
+            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(Outline::TOC_NUMBERING, $css);
         } catch (ExceptionNotEnabled $e) {
             // not enabled
         } catch (ExceptionBadSyntax $e) {

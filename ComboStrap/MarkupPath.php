@@ -945,12 +945,12 @@ class MarkupPath implements ResourceCombo, Path
 
     /**
      *
-     * @deprecated use a {@link FetcherMarkup::getFetchPathAsHtmlString()} instead
+     * @deprecated use a {@link FetcherMarkup::getFetchString()} instead
      */
     public function toXhtml(): string
     {
 
-        return $this->getHtmlFetcher()->getFetchPathAsHtmlString();
+        return $this->getHtmlFetcher()->getFetchString();
 
     }
 

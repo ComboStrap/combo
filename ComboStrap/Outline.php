@@ -17,6 +17,56 @@ class Outline
     const CANONICAL = "outline";
     private const OUTLINE_HEADING_PREFIX = "outline-heading";
     const CONTEXT = self::CANONICAL;
+    public const HEADING_NUMBERING = "heading-numbering";
+    public const TOC_NUMBERING = "toc-numbering";
+    /**
+     * As seen on
+     * https://drafts.csswg.org/css-counter-styles-3/#predefined-counters
+     */
+    public const CONF_COUNTER_STYLES_CHOICES = [
+        'arabic-indic',
+        'bengali',
+        'cambodian/khmer',
+        'cjk-decimal',
+        'decimal',
+        'decimal-leading-zero',
+        'devanagari',
+        'georgian',
+        'gujarati',
+        'gurmukhi',
+        'hebrew',
+        'hiragana',
+        'hiragana-iroha',
+        'kannada',
+        'katakana',
+        'katakana-iroha',
+        'lao',
+        'lower-alpha',
+        'lower-armenian',
+        'lower-greek',
+        'lower-roman',
+        'malayalam',
+        'mongolian',
+        'myanmar',
+        'oriya',
+        'persian',
+        'tamil',
+        'telugu',
+        'thai',
+        'tibetan',
+        'upper-alpha',
+        'upper-armenian',
+        'upper-roman'
+    ];
+    public const CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4 = "outlineNumberingCounterStyleLevel4";
+    public const CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3 = "outlineNumberingCounterStyleLevel3";
+    public const CONF_OUTLINE_NUMBERING_SUFFIX = "outlineNumberingSuffix";
+    public const CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2 = "outlineNumberingCounterStyleLevel2";
+    public const CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR = "outlineNumberingCounterSeparator";
+    public const CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6 = "outlineNumberingCounterStyleLevel6";
+    public const CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5 = "outlineNumberingCounterStyleLevel5";
+    public const CONF_OUTLINE_NUMBERING_PREFIX = "outlineNumberingPrefix";
+    public const CONF_OUTLINE_NUMBERING_ENABLE = "outlineNumberingEnable";
     private OutlineSection $rootSection;
 
     private OutlineSection $actualSection; // the actual section that is created
@@ -320,6 +370,89 @@ class Outline
             ->getOutput();
         $callStack = CallStack::createFromInstructions($instructions);
         return Outline::createFromCallStack($callStack);
+    }
+
+    /**
+     * Get the heading numbering snippet
+     * @param string $type heading or toc - for {@link Outline::TOC_NUMBERING} or {@link Outline::HEADING_NUMBERING}
+     * @return string - the css internal stylesheet
+     * @throws ExceptionNotEnabled
+     * @throws ExceptionBadSyntax
+     * Page on DokuWiki
+     * https://www.dokuwiki.org/tips:numbered_headings
+     */
+    public static function getCssOutlineNumberingRuleFor(string $type): string
+    {
+        $enable = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_ENABLE, 0);
+        if (!$enable) {
+            throw new ExceptionNotEnabled();
+        }
+
+        $level2CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2, "decimal");
+        $level3CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3, "decimal");
+        $level4CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4, "decimal");
+        $level5CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5, "decimal");
+        $level6CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6, "decimal");
+        $counterSeparator = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR, ".");
+        $prefix = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_PREFIX, "");
+        $suffix = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_SUFFIX, " - ");
+
+        switch ($type) {
+
+            case self::HEADING_NUMBERING:
+                global $ACT;
+                if ($ACT === "preview") {
+                    $mainContainerSelector = ".pad";
+                } else {
+                    $mainContainerSelector = "#".PageLayout::MAIN_CONTENT_ELEMENT;
+                }
+                /**
+                 * Because the HTML file structure is not really fixed
+                 * (we may have section HTML element with a bar, the sectioning heading
+                 * may be not enabled)
+                 * We can't select via html structure
+                 * the outline heading consistently
+                 * We do it then with the class value
+                 */
+                $outlineClass = Outline::getOutlineHeadingClass();
+                return <<<EOF
+$mainContainerSelector { counter-set: h2 0 h3 0 h4 0 h5 0 h6 0; }
+$mainContainerSelector h2.$outlineClass::before { counter-increment: h2; counter-set: h3 0 h4 0 h5 0 h6 0; content: "$prefix" counter(h2, $level2CounterStyle) "$suffix\A"; }
+$mainContainerSelector h3.$outlineClass::before { counter-increment: h3; counter-set: h4 0 h5 0 h6 0; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$suffix\A"; }
+$mainContainerSelector h4.$outlineClass::before { counter-increment: h4; counter-set: h5 0 h6 0; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$suffix\A"; }
+$mainContainerSelector h5.$outlineClass::before { counter-increment: h5; counter-set: h6 0; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$suffix\A"; }
+$mainContainerSelector h6.$outlineClass::before { counter-increment: h6; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$counterSeparator" counter(h6,$level6CounterStyle) "$suffix\A"; }
+EOF;
+            case self::TOC_NUMBERING:
+                /**
+                 * The level counter on the toc are based
+                 * on the https://www.dokuwiki.org/config:toptoclevel
+                 * configuration
+                 * if toptoclevel = 2, then level1 = h2 and not h1
+                 * @deprecated
+                 */
+                // global $conf;
+                // $topTocLevel = $conf['toptoclevel'];
+
+                $tocSelector = "." . Toc::getClass() . " ul";
+                return <<<EOF
+$tocSelector li { counter-increment: toc2; }
+$tocSelector li li { counter-increment: toc3; }
+$tocSelector li li li { counter-increment: toc4; }
+$tocSelector li li li li { counter-increment: toc5; }
+$tocSelector li li li li li { counter-increment: toc6; }
+$tocSelector li a::before { content: "$prefix" counter(toc2, $level2CounterStyle) "$suffix\A"; }
+$tocSelector li li a::before { content: "$prefix" counter(toc2, $level2CounterStyle) "$counterSeparator" counter(toc3,$level3CounterStyle) "$suffix\A"; }
+$tocSelector li li li a::before { content: "$prefix" counter(toc2, $level2CounterStyle) "$counterSeparator" counter(toc3,$level3CounterStyle) "$counterSeparator" counter(toc4,$level4CounterStyle) "$suffix\A"; }
+$tocSelector li li li li a::before { content: "$prefix" counter(toc2, $level2CounterStyle) "$counterSeparator" counter(toc3,$level3CounterStyle) "$counterSeparator" counter(toc4,$level4CounterStyle) "$counterSeparator" counter(toc5,$level5CounterStyle) "$suffix\A"; }
+$tocSelector li li li li li a::before { content: "$prefix" counter(toc2, $level2CounterStyle) "$counterSeparator" counter(toc3,$level3CounterStyle) "$counterSeparator" counter(toc4,$level4CounterStyle) "$counterSeparator" counter(toc5,$level5CounterStyle) "$counterSeparator" counter(toc6,$level6CounterStyle) "$suffix\A"; }
+EOF;
+
+            default:
+                throw new ExceptionBadSyntax("The type ($type) is unknown");
+        }
+
+
     }
 
     public function getInstructionCalls(): array

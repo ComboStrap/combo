@@ -186,7 +186,7 @@ class Snippet implements JsonSerializable
     {
 
         if ($identifier === Snippet::INTERNAL_TYPE) {
-            $snippetId = $identifier . "-" . $extension . "-" . $internalIdentifier;
+            $snippetId = self::getInternalGlobalSnippetIdentifier($internalIdentifier, $extension);
             $type = self::INTERNAL_TYPE;
             $url = null;
         } else {
@@ -236,6 +236,16 @@ class Snippet implements JsonSerializable
     public static function reset()
     {
         self::$globalSnippets = null;
+    }
+
+    /**
+     * @param $extension - the file type
+     * @param $snippetName - the component name if the snippet is generated or the file name otherwise
+     * @return string - the global identifier
+     */
+    public static function getInternalGlobalSnippetIdentifier($snippetName, $extension): string
+    {
+        return Snippet::INTERNAL_TYPE . "-" . $extension . "-" . $snippetName;
     }
 
 

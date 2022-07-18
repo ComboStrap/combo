@@ -123,7 +123,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
 
         $startPath = $this->getStartPath();
         if (FileSystems::exists($startPath)) {
-            $indexOutline = $startPath->getOutline();
+            $indexOutline = $this->addFirstSectionIfMissing($startPath->getOutline());
         } else {
             $title = PageTitle::createForMarkup($startPath)->getValueOrDefault();
             $content = <<<EOF
@@ -134,7 +134,7 @@ EOF;
 
         $childrenPages = MarkupFileSystem::getOrCreate()->getChildren($startPath, FileSystems::LEAF);
         foreach ($childrenPages as $child) {
-            $outer = $child->getOutline();
+            $outer = $this->addFirstSectionIfMissing($child->getOutline());
             Outline::merge($indexOutline, $outer);
         }
         $this->bundledOutline = $indexOutline;
@@ -184,4 +184,76 @@ EOF;
 
     }
 
+    /**
+     * If a page does not have any h1
+     * (Case of index page for instance)
+     *
+     * If this is the case, the outline is broken.
+     * @param Outline $outline
+     * @return Outline
+     */
+    private function addFirstSectionIfMissing(Outline $outline): Outline
+    {
+        $rootOutlineSection = $outline->getRootOutlineSection();
+        $addFirstSection = false;
+        try {
+            $firstChild = $rootOutlineSection->getFirstChild();
+            if ($firstChild->getLevel() >= 2) {
+                $addFirstSection = true;
+            }
+        } catch (ExceptionNotFound $e) {
+            $addFirstSection = true;
+        }
+        if ($addFirstSection) {
+            $enterHeading = Call::createComboCall(
+                \syntax_plugin_combo_heading::TAG,
+                DOKU_LEXER_ENTER,
+                array(syntax_plugin_combo_heading::LEVEL => 1),
+                syntax_plugin_combo_heading::TYPE_OUTLINE,
+                null,
+                null,
+                0
+            );
+            $title = PageTitle::createForMarkup($outline->getMarkup())->getValueOrDefault();
+            $unmatchedHeading = Call::createComboCall(
+                \syntax_plugin_combo_heading::TAG,
+                DOKU_LEXER_UNMATCHED,
+                [],
+                null,
+                $title,
+                $title
+            );
+            $exitHeading = Call::createComboCall(
+                \syntax_plugin_combo_heading::TAG,
+                DOKU_LEXER_EXIT,
+                array(syntax_plugin_combo_heading::LEVEL => 1)
+            );
+            $h1Section = OutlineSection::createFromEnterHeadingCall($enterHeading)
+                ->addHeaderCall($unmatchedHeading)
+                ->addHeaderCall($exitHeading);
+            $children = $rootOutlineSection->getChildren();
+            foreach ($children as $child) {
+                $child->detachBeforeAppend();
+                try {
+                    $h1Section->appendChild($child);
+                } catch (ExceptionBadState $e) {
+                    LogUtility::error("An error occurs when trying to move the h2 children below the recreated heading title ($title)", self::CANONICAL);
+                }
+            }
+            /**
+             * Without h1
+             * The content is in the root heading
+             */
+            foreach ($rootOutlineSection->getContentCalls() as $rootHeadingCall) {
+                $h1Section->addContentCall($rootHeadingCall);
+            }
+            $rootOutlineSection->deleteContentCalls();
+            try {
+                $rootOutlineSection->appendChild($h1Section);
+            } catch (ExceptionBadState $e) {
+                LogUtility::error("An error occurs when trying to add the recreated title heading ($title) to the root", self::CANONICAL);
+            }
+        }
+        return $outline;
+    }
 }

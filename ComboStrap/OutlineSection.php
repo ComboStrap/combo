@@ -12,6 +12,8 @@ class OutlineSection extends TreeNode
 
 
     /**
+     * Not to confound with header calls that are {@link OutlineSection::getContentCalls()}
+     * of a section that has children
      *
      * @var Call[] $headingCalls
      */
@@ -42,7 +44,7 @@ class OutlineSection extends TreeNode
         $this->headingEnterCall = $headingEnterCall;
         if ($headingEnterCall !== null) {
             $this->startFileIndex = $headingEnterCall->getFirstMatchedCharacterPosition();
-            $this->addHeadingCall($headingEnterCall);
+            $this->addHeaderCall($headingEnterCall);
         } else {
             $this->startFileIndex = 0;
         }
@@ -91,7 +93,7 @@ class OutlineSection extends TreeNode
 
     }
 
-    public function addHeadingCall(Call $actualCall): OutlineSection
+    public function addHeaderCall(Call $actualCall): OutlineSection
     {
 
         $this->headingCalls[] = $actualCall;
@@ -144,7 +146,7 @@ class OutlineSection extends TreeNode
 
 
     public
-    function getHeadingCall(): ?Call
+    function getEnterHeadingCall(): ?Call
     {
         return $this->headingEnterCall;
     }
@@ -271,6 +273,13 @@ class OutlineSection extends TreeNode
         };
         TreeVisit::visit($this, $updateLevel);
 
+        return $this;
+    }
+
+
+    public function deleteContentCalls(): OutlineSection
+    {
+        $this->contentCalls = [];
         return $this;
     }
 

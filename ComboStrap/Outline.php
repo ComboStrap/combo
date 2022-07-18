@@ -504,7 +504,7 @@ EOF;
                      * with the Dokuwiki {@link \Doku_Renderer_xhtml::header()} function
                      */
                     $sectionSequenceId++;
-                    $headingCall = $outlineSection->getHeadingCall();
+                    $headingCall = $outlineSection->getEnterHeadingCall();
                     if ($headingCall->isPluginCall()) {
                         $level = DataType::toIntegerOrDefaultIfNull($headingCall->getAttribute(syntax_plugin_combo_heading::LEVEL), 0);
                         if ($level <= Site::getTocMax()) {
@@ -538,7 +538,7 @@ EOF;
     private function addCallToSection(Call $actualCall)
     {
         if ($this->actualHeadingParsingState === DOKU_LEXER_ENTER && !$this->actualSection->hasContentCall()) {
-            $this->actualSection->addHeadingCall($actualCall);
+            $this->actualSection->addHeaderCall($actualCall);
         } else {
             // an content heading (not outline) or another call
             $this->actualSection->addContentCall($actualCall);
@@ -733,7 +733,7 @@ EOF;
             return;
         }
         if ($firstChild->getLevel() === 1) {
-            $headingCall = $firstChild->getHeadingCall();
+            $headingCall = $firstChild->getEnterHeadingCall();
             $headingCall->setAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $firstChild->getLabel());
         }
 

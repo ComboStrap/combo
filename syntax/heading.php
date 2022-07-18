@@ -339,7 +339,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
             try {
                 $snippet = $snippetManager->attachCssInternalStyleSheetForSlot(Outline::HEADING_NUMBERING);
                 if (!$snippet->hasInlineContent()) {
-                    $css = Outline::getCssOutlineNumberingRuleFor(Outline::HEADING_NUMBERING);
+                    $css = Outline::getCssNumberingRulesFor(Outline::HEADING_NUMBERING);
                     $snippet->setInlineContent($css);
                 }
             } catch (ExceptionNotEnabled|ExceptionBadSyntax $e) {

@@ -77,7 +77,7 @@ class Toc extends Metadata
          * Adding toc number style
          */
         try {
-            $css = Outline::getCssOutlineNumberingRuleFor(Outline::TOC_NUMBERING);
+            $css = Outline::getCssNumberingRulesFor(Outline::TOC_NUMBERING);
             PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(Outline::TOC_NUMBERING, $css);
         } catch (ExceptionNotEnabled $e) {
             // not enabled
@@ -90,50 +90,64 @@ class Toc extends Metadata
          */
         global $lang;
 
+        // To keep track of the HTML level (levels may be badly encoded)
+        $htmlLevel = 0;
         $previousLevel = 0;
         $topTocLevel = Site::getTopTocLevel();
         $ulMarkup = "";
         foreach ($toc as $tocItem) {
 
             $actualLevel = $tocItem["level"];
+
+            /**
+             * Skipping to the first top level
+             */
             if ($actualLevel < $topTocLevel) {
+                $previousLevel = $actualLevel;
                 continue;
             }
 
             /**
              * Closing
              */
-
-            if ($previousLevel !== $topTocLevel) {
-                /**
-                 * Same level
-                 */
-                if ($actualLevel === $previousLevel) {
+            $levelDiff = $previousLevel - $actualLevel;
+            switch (true) {
+                case $levelDiff === 0 && (!empty($ulMarkup)):
+                    /**
+                     * Same level
+                     */
                     $ulMarkup .= "</li>";
-                }
-                /**
-                 * One level down
-                 */
-                if ($actualLevel < $previousLevel) {
-                    $ulMarkup .= "</li></ul>";
-                }
+                    break;
+                case ($actualLevel < $previousLevel && !empty($ulMarkup)):
+                    /**
+                     * One or multiple level up
+                     * (from 4 to 2)
+                     */
+                    $htmlLevel += $levelDiff;
+                    $ulMarkup .= str_repeat("</li></ul>", $levelDiff);
+                    $ulMarkup .= "</li>";
+                    break;
+                default:
+                    /**
+                     * One level down
+                     * (We can't go multiple at once)
+                     */
+                    $htmlLevel -= 1;
+                    $ulMarkup .= "<ul>";
+                    break;
             }
-            /**
-             * One level up
-             */
-            if ($actualLevel > $previousLevel) {
-                $ulMarkup .= "<ul>";
-            }
+
             $href = $tocItem['link'];
             $label = $tocItem['title'];
-            $ulMarkup .= "<li><a href=\"$href\">$label</a>";
+            $tocLevelClass = StyleUtility::addComboStrapSuffix("toc-level-$actualLevel");
+            $ulMarkup .= "<li><a href=\"$href\" class=\"$tocLevelClass\">$label</a>";
             /**
              * Close
              */
             $previousLevel = $actualLevel;
         }
-        // closing
-        $ulMarkup .= str_repeat("</li></ul>", $previousLevel - $topTocLevel + 1);
+        // grand closing
+        $ulMarkup .= str_repeat("</li></ul>", abs($htmlLevel));
         $tocHeaderLang = $lang['toc'];
         $tocHeaderClass = StyleUtility::addComboStrapSuffix("toc-header");
         return <<<EOF

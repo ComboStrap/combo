@@ -428,7 +428,7 @@ class WikiPath extends PathAbs
 
     public static function createRequestedPagePathFromRequest(): WikiPath
     {
-        $pageId = WikiRequest::get()->getRequestedId();;
+        $pageId = WikiRequest::getOrCreateFromEnv()->getRequestedId();;
         return WikiPath::createPagePathFromId($pageId);
     }
 

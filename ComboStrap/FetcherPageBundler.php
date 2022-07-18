@@ -91,7 +91,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
         $layoutName = PageLayout::BLANK_LAYOUT;
         try {
             $toc = Toc::createEmpty()
-                ->setValue($this->getBundledOutline()->getTocDokuwikiFormat());
+                ->setValue($this->getBundledOutline()->toTocDokuwikiFormat());
         } catch (ExceptionBadArgument $e) {
             // this is an array
             throw new ExceptionRuntimeInternal("The toc could not be created. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);

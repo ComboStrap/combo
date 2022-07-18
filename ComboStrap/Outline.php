@@ -381,8 +381,9 @@ class Outline
      * Page on DokuWiki
      * https://www.dokuwiki.org/tips:numbered_headings
      */
-    public static function getCssOutlineNumberingRuleFor(string $type): string
+    public static function getCssNumberingRulesFor(string $type): string
     {
+
         $enable = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_ENABLE, 0);
         if (!$enable) {
             throw new ExceptionNotEnabled();
@@ -558,7 +559,7 @@ EOF;
     /**
      * @return array - Dokuwiki TOC array format
      */
-    public function getTocDokuwikiFormat(): array
+    public function toTocDokuwikiFormat(): array
     {
 
         $tableOfContent = [];
@@ -781,7 +782,7 @@ EOF;
         if(!isset($this->markup)){
             return;
         }
-        $toc = $this->getTocDokuwikiFormat();
+        $toc = $this->toTocDokuwikiFormat();
         try {
             Toc::createForPage($this->markup)
                 ->setValue($toc)

@@ -17,5 +17,12 @@
                 "ComboStrap/"
             ]
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ComboStrap\\": [
+                "_test/ComboStrap"
+            ]
+        }
     }
 }

@@ -5,6 +5,7 @@ require_once(__DIR__ . '/../../vendor/autoload.php');
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
+use ComboStrap\FetcherRailBar;
 use ComboStrap\FetcherSvg;
 use ComboStrap\FloatAttribute;
 use ComboStrap\IconDownloader;
@@ -274,4 +275,8 @@ $lang[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE]= PluginUtil
  */
 $lang[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_container::CANONICAL, "Set the horizontal alignment of the layout");
 
-
+/**
+ * Railbar
+ */
+$lang[FetcherRailBar::CONF_PRIVATE_RAIL_BAR] = PluginUtility::getDocumentationHyperLink(FetcherRailBar::CANONICAL::CANONICAL,'Enable private railbar');
+$lang[FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR] = PluginUtility::getDocumentationHyperLink(FetcherRailBar::CANONICAL ,'Breakpoint when the railbar toggle from offcanvas to fixed component');

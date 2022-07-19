@@ -7,29 +7,39 @@ use dokuwiki\Menu\SiteMenu;
 use dokuwiki\Menu\UserMenu;
 
 /**
- * A fetcher for the menu rail bar
- * A javascript function added in the generated page call this fetcher.
- *
- *
- * @deprecated Not really deprecated but on pause
- * The problem is that plugins that add a item would expect
- * to be loaded with the page and the javascript is in a listener waiting for the load event.
- *
- *
+ * A fetcher for a menu rail bar
  * https://material.io/components/navigation-rail
+ *
+ *
+ * Note: this class is a fetcher but it does not still work to call it via a javascript function included in the page.
+ * Why ? The problem is that plugins that add a item would expect
+ * to be loaded with the page and the related javascript is generally wrapped in a listener waiting for the page load event.
+ * It means that it would never be triggered.
+ *
  */
 class FetcherRailBar extends IFetcherAbs implements IFetcherString
 {
 
     use FetcherTraitWikiPath;
 
-    const CANONICAL = "railbar";
+    const CANONICAL = self::NAME;
+    const NAME = "railbar";
     const FIXED_LAYOUT = "fixed";
     const OFFCANVAS_LAYOUT = "offcanvas";
     const VIEWPORT_WIDTH = "viewport";
     const LAYOUT_ATTRIBUTE = "layout";
+    /**
+     * Do we show the rail bar for anonymous user
+     */
+    public const CONF_PRIVATE_RAIL_BAR = "privateRailbar";
+    /**
+     * When do we toggle from offcanvas to fixed railbar
+     */
+    public const CONF_BREAKPOINT_RAIL_BAR = "breakpointRailbar";
+    const BOTH_LAYOUT = "all_layout";
 
-    private int $requestedViewPort = 1000;
+
+    private int $requestedViewPort;
     private string $requestedLayout;
 
 
@@ -88,15 +98,22 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
 
     function getFetchString(): string
     {
-        if ($this->notPrinted()) {
+
+        if (!$this->shouldBePrinted()) {
             return "";
         }
 
-
-        $requestedId = $this->getSourcePath()->getWikiId();
-        $wikiRequest = WikiRequest::createFromRequestId($requestedId);
-
+        $localWikiRequest = null;
+        $localWikiId = null;
         try {
+            WikiRequest::get();
+        } catch (ExceptionNotFound $e) {
+
+            /**
+             * No actual request (called via ajax)
+             */
+            $localWikiId = $this->getSourcePath()->getWikiId();
+            $localWikiRequest = WikiRequest::createFromRequestId($localWikiId);
 
             /**
              * page info is needed and used by all other plugins
@@ -112,22 +129,36 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
             $tmp = array();
             \dokuwiki\Extension\Event::createAndTrigger('DOKUWIKI_STARTED', $tmp);
 
+        }
 
+
+        try {
+
+            $snippetManager = SnippetManager::getOrCreate();
             $railBarHtmlListItems = $this->getRailBarHtmlListItems();
             $railBarLayout = $this->getLayout();
             switch ($railBarLayout) {
                 case self::FIXED_LAYOUT:
                     $railBar = $this->toFixedLayout($railBarHtmlListItems);
+                    $snippetManager->attachCssInternalStylesheetForRequest("railbar-$railBarLayout");
                     break;
-                default:
                 case self::OFFCANVAS_LAYOUT:
                     $railBar = $this->toOffCanvasLayout($railBarHtmlListItems);
+                    $snippetManager->attachCssInternalStylesheetForRequest("railbar-$railBarLayout");
+                    break;
+                case self::BOTH_LAYOUT:
+                default:
+                    $snippetManager->attachCssInternalStylesheetForRequest("railbar-" . self::FIXED_LAYOUT);
+                    $snippetManager->attachCssInternalStylesheetForRequest("railbar-" . self::OFFCANVAS_LAYOUT);
+                    $breakpoint = $this->getBreakPointConfiguration();
+                    $railBar = $this->toFixedLayout($railBarHtmlListItems, $breakpoint)
+                        . $this->toOffCanvasLayout($railBarHtmlListItems, $breakpoint);
                     break;
             }
 
-            $snippetManager = SnippetManager::getOrCreate();
+
             $snippetManager->attachCssInternalStylesheetForRequest("railbar");
-            $snippetManager->attachCssInternalStylesheetForRequest("railbar-" . $this->getLayout());
+
 
             $snippets = $snippetManager->toHtmlForAllSnippets();
             $snippetClass = self::getSnippetClass();
@@ -142,7 +173,9 @@ $snippets
 </div>
 EOF;
         } finally {
-            $wikiRequest->close($requestedId);
+            if ($localWikiRequest !== null) {
+                $localWikiRequest->close($localWikiId);
+            }
         }
 
     }
@@ -159,7 +192,7 @@ EOF;
 
     public function getFetcherName(): string
     {
-        return self::CANONICAL;
+        return self::NAME;
     }
 
     public function setRequestedPageWikiId(string $wikiId): FetcherRailBar
@@ -195,8 +228,12 @@ EOF;
 
     }
 
-    private function toOffCanvasLayout(string $railBarHtmlListItems): string
+    private function toOffCanvasLayout(string $railBarHtmlListItems, Breakpoint $hideFromBreakpoint = null): string
     {
+        $htmlClassAttribute = "";
+        if($hideFromBreakpoint!==null){
+            $htmlClassAttribute = " class=\"d-{$hideFromBreakpoint->getShortName()}-none\"";
+        }
         $railBarOffCanvasPrefix = "railbar-offcanvas";
         $railBarOffCanvasId = StyleUtility::addComboStrapSuffix($railBarOffCanvasPrefix);
         $railBarOffCanvasWrapperId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-wrapper");
@@ -205,7 +242,7 @@ EOF;
         $railBarOffCanvasCloseId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-close");
         $railBarOffCanvasOpenId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-open");
         return <<<EOF
-<div id="$railBarOffCanvasWrapperId">
+<div id="$railBarOffCanvasWrapperId"$htmlClassAttribute>
     <button id="$railBarOffCanvasOpenId" class="btn" type="button" data-bs-toggle="offcanvas"
             data-bs-target="#$railBarOffCanvasId" aria-controls="railbar-offcanvas">
     </button>
@@ -232,16 +269,19 @@ EOF;
         if (isset($this->requestedLayout)) {
             return $this->requestedLayout;
         }
-
         $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
         if ($bootstrapVersion === Bootstrap::BootStrapFourMajorVersion) {
             return self::FIXED_LAYOUT;
         }
-        $breakPoint = $this->getBreakPointInPixel(); // to implement
-        if ($this->getRequestedViewPort() > $breakPoint) {
-            return self::FIXED_LAYOUT;
-        } else {
-            return self::OFFCANVAS_LAYOUT;
+        $breakPointConfigurationInPixel = $this->getBreakPointConfiguration()->getWidth();
+        try {
+            if ($this->getRequestedViewPort() > $breakPointConfigurationInPixel) {
+                return self::FIXED_LAYOUT;
+            } else {
+                return self::OFFCANVAS_LAYOUT;
+            }
+        } catch (ExceptionNotFound $e) {
+            return self::BOTH_LAYOUT;
         }
 
     }
@@ -253,51 +293,54 @@ EOF;
     }
 
     /**
+     * The call may indicate the view port that the railbar will be used for
+     * (ie breakpoint)
      * @return int
+     * @throws ExceptionNotFound
      */
     public function getRequestedViewPort(): int
     {
+        if (!isset($this->requestedViewPort)) {
+            throw new ExceptionNotFound("No requested view port");
+        }
         return $this->requestedViewPort;
     }
 
-    private function notPrinted(): bool
+    private function shouldBePrinted(): bool
     {
-        try {
-            Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            if (
-                tpl_getConf(TplUtility::CONF_PRIVATE_RAIL_BAR) === 1
-                && empty($_SERVER['REMOTE_USER'])
-            ) {
-                return true;
-            }
-        } catch (ExceptionCompile $e) {
-            //
+
+        if (
+            PluginUtility::getConfValue(self::CONF_PRIVATE_RAIL_BAR, 0) === 1
+            && !Identity::isLoggedIn()
+        ) {
+            return false;
         }
-        return false;
+        return true;
 
     }
 
-    private function getBreakPointInPixel(): int
+    private function getBreakPointConfiguration(): Breakpoint
     {
-        try {
-            Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-        } catch (ExceptionCompile $e) {
-            return Breakpoint::getPixelFromShortName("lg");
-        }
-        $breakpointName = tpl_getConf(TplUtility::CONF_BREAKPOINT_RAIL_BAR, TplUtility::BREAKPOINT_LARGE_NAME);
-        if ($breakpointName === "never") {
-            return 9999;
-        }
-        return Breakpoint::getPixelFromName($breakpointName);
-
+        $name = PluginUtility::getConfValue(self::CONF_BREAKPOINT_RAIL_BAR, Breakpoint::BREAKPOINT_LARGE_NAME);
+        return Breakpoint::createFromShortName($name);
     }
 
-    private function toFixedLayout(string $railBarHtmlListItems): string
+
+    /**
+     * @param string $railBarHtmlListItems
+     * @param Breakpoint|null $showFromBreakpoint
+     * @return string
+     */
+    private function toFixedLayout(string $railBarHtmlListItems, Breakpoint $showFromBreakpoint = null): string
     {
+        $class = "d-flex";
+        if ($showFromBreakpoint !== null) {
+            $class = "d-none d-{$showFromBreakpoint->getShortName()}-flex";
+        }
         $fixedId = StyleUtility::addComboStrapSuffix("railbar-fixed");
         $zIndexRailbar = 1000; // A navigation bar (below the drop down because we use it in the search box for auto-completion)
         return <<<EOF
-<div id="$fixedId" class="d-flex" style="z-index: $zIndexRailbar;">
+<div id="$fixedId" class="$class" style="z-index: $zIndexRailbar;">
     <div>
         $railBarHtmlListItems
     </div>

@@ -190,9 +190,10 @@ class RasterImageLink extends ImageLink
         /**
          * Add smaller sizes
          */
-        foreach (Breakpoint::BREAKPOINTS as $breakpointWidth) {
+        foreach (Breakpoint::getBreakpoints() as $breakpoint) {
 
-            if ($breakpointWidth > $targetWidth) {
+            $breakpointPixels = $breakpoint->getWidth();
+            if ($breakpointPixels > $targetWidth) {
                 continue;
             }
 
@@ -200,7 +201,7 @@ class RasterImageLink extends ImageLink
                 $srcSet .= ", ";
                 $sizes .= ", ";
             }
-            $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
+            $breakpointWidthMinusMargin = $breakpointPixels - $imageMargin;
 
             try {
 
@@ -223,11 +224,11 @@ class RasterImageLink extends ImageLink
 
             } catch (ExceptionCompile $e) {
                 // should not happen as the fetch url was already validated at build time but yeah
-                LogUtility::internalError("We are unable to create the breakpoint image url ($fetchRaster) for the size ($breakpointWidth). Error:{$e->getMessage()}");
+                LogUtility::internalError("We are unable to create the breakpoint image url ($fetchRaster) for the size ($breakpoint). Error:{$e->getMessage()}");
                 continue;
             }
             $srcSet .= "$breakpointUrl {$breakpointWidthMinusMargin}w";
-            $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
+            $sizes .= $this->getSizes($breakpoint->getWidth(), $breakpointWidthMinusMargin);
 
 
         }

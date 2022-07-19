@@ -784,7 +784,7 @@ class Site
             return;
         }
 
-        $templateUtilityFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
+        $templateUtilityFile = __DIR__ . '/../../../tpl/strap.old/class/TplUtility.php';
         if (file_exists($templateUtilityFile)) {
 
             Site::checkTemplateVersion();
@@ -955,7 +955,7 @@ class Site
          * Check the version
          */
         if (self::$STRAP_TEMPLATE_INFO === null) {
-            self::$STRAP_TEMPLATE_INFO = confToHash(__DIR__ . '/../../../tpl/strap/template.info.txt');
+            self::$STRAP_TEMPLATE_INFO = confToHash(__DIR__ . '/../../../tpl/strap.old/template.info.txt');
         }
         $templateVersion = self::$STRAP_TEMPLATE_INFO['version'];
         $comboVersion = PluginUtility::$INFO_PLUGIN['version'];

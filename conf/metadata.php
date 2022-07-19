@@ -6,9 +6,11 @@
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 use ComboStrap\AdsUtility;
+use ComboStrap\Breakpoint;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
 use ComboStrap\FetcherPage;
+use ComboStrap\FetcherRailBar;
 use ComboStrap\FetcherSvg;
 use ComboStrap\FloatAttribute;
 use ComboStrap\IconDownloader;
@@ -353,3 +355,17 @@ $meta[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF] = array('mul
  * Take over the show
  */
 $meta[FetcherPage::CONF_ENABLE_AS_SHOW_ACTION] = array("onoff");
+
+/**
+ * Railbar
+ */
+$meta[FetcherRailBar::CONF_PRIVATE_RAIL_BAR] = array('onoff');
+$meta[FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR] = array('multichoice', '_choices' => array(
+    Breakpoint::BREAKPOINT_EXTRA_SMALL_NAME,
+    Breakpoint::BREAKPOINT_SMALL_NAME,
+    Breakpoint::BREAKPOINT_MEDIUM_NAME,
+    Breakpoint::BREAKPOINT_LARGE_NAME,
+    Breakpoint::BREAKPOINT_EXTRA_LARGE_NAME,
+    Breakpoint::BREAKPOINT_EXTRA_EXTRA_LARGE_NAME,
+    Breakpoint::BREAKPOINT_NEVER_NAME
+));

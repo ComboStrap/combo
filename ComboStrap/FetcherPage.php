@@ -226,6 +226,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     /**
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
+     * @throws ExceptionBadArgument
      */
     public function getFetchPathAsHtmlDom(): XmlDocument
     {
@@ -310,7 +311,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     }
 
 
-    private function getRequestedPage()
+    private function getRequestedPage(): MarkupPath
     {
         $this->buildObjectIfNeeded();
         return $this->requestedMarkupPath;
@@ -335,7 +336,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
      */
     private function isPublicStaticPage(): bool
     {
-        return tpl_getConf(TplUtility::CONF_PRIVATE_RAIL_BAR) === 1 && !Identity::isLoggedIn();
+        return PluginUtility::getConfValue(FetcherRailBar::CONF_PRIVATE_RAIL_BAR, 0) === 1 && !Identity::isLoggedIn();
     }
 
     private function getRequestedLayoutOrDefault(): string

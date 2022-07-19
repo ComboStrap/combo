@@ -132,7 +132,6 @@ class PageLayout
     }
 
 
-
     /**
      * Add or not the task runner / web bug call
      * @param bool $b
@@ -352,26 +351,21 @@ class PageLayout
             }
             $pageToolParent->addClass(PageLayout::POSITION_RELATIVE_CLASS);
             try {
-                Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-
                 /**
                  * The railbar
                  */
                 $railBarHtml = null;
                 $attributeName = "data-layout";
+                $railBar = FetcherRailBar::createRailBar();
                 $railBarLayout = $pageToolElement->getAttribute($attributeName);
                 if ($railBarLayout !== "") {
                     $pageToolElement->removeAttribute($attributeName);
                     if ($railBarLayout === "offcanvas") {
-                        $railBarHtml = TplUtility::getRailBar(TplUtility::BREAKPOINT_NEVER_NAME);
+                        $railBar = $railBar->setRequestedLayout($railBarLayout);
                     }
                 }
-                if ($railBarHtml === null) {
-                    $railBarHtml = TplUtility::getRailBar();
-                }
-
-                $railBarVariable = Template::toValidVariableName("railbar");
-                $htmlFragmentByVariables[$railBarVariable] = $railBarHtml;
+                $railBarVariable = Template::toValidVariableName(FetcherRailBar::NAME);
+                $htmlFragmentByVariables[$railBarVariable] = $railBar->getFetchString();
                 $pageToolElement->appendTextNode(Template::VARIABLE_PREFIX . $railBarVariable);
             } catch (ExceptionCompile $e) {
                 // Different version between strap and combo
@@ -792,7 +786,7 @@ class PageLayout
          * To delete the not needed headers for an export
          * such as manifest, alternate, ...
          */
-        if($this->deleteSocialHeads) {
+        if ($this->deleteSocialHeads) {
             global $EVENT_HANDLER;
             $EVENT_HANDLER->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'deleteSocialHeadTags');
         }

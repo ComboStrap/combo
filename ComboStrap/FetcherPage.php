@@ -10,7 +10,15 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
     use FetcherTraitWikiPath;
 
+    const NAME = "page";
     const CANONICAL = "page";
+
+    /**
+     * A configuration to take over the show action
+     * of any template
+     */
+    const CONF_ENABLE_AS_SHOW_ACTION = "enablePage";
+    const CONF_ENABLE_AS_SHOW_ACTION_DEFAULT = 1;
 
     private string $requestedLayout;
     private WikiRequest $wikiRequest;
@@ -42,6 +50,15 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     }
 
     /**
+     * @return bool
+     */
+    public static function isEnabledAsShowAction(): bool
+    {
+        $confValue = PluginUtility::getConfValue(self::CONF_ENABLE_AS_SHOW_ACTION, self::CONF_ENABLE_AS_SHOW_ACTION_DEFAULT);
+        return $confValue === 1;
+    }
+
+    /**
      * @param Url|null $url
      * @return Url
      *
@@ -63,6 +80,19 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         }
         $this->addLocalPathParametersToFetchUrl($url, DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);;
         return $url;
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
+     */
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): IFetcher
+    {
+        parent::buildFromTagAttributes($tagAttributes);
+        $this->buildOriginalPathFromTagAttributes($tagAttributes);
+        return $this;
     }
 
 
@@ -117,9 +147,9 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
             $cache->addFileDependency($path);
         } catch (ExceptionNotFound $e) {
             // it should be found
-            throw new ExceptionNotFound("The main page markup document was not found. Error: {$e->getMessage()}", self::CANONICAL);
+            throw new ExceptionNotFound("The main page markup document was not found. Error: {$e->getMessage()}", self::NAME);
         } catch (ExceptionBadArgument $e) {
-            throw new ExceptionBadArgument("The main page markup document could be served as wiki path. Error: {$e->getMessage()}", self::CANONICAL);
+            throw new ExceptionBadArgument("The main page markup document could be served as wiki path. Error: {$e->getMessage()}", self::NAME);
         }
 
         /**
@@ -151,13 +181,13 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
                 return FileSystems::getContent($cache->getFile());
             } catch (ExceptionNotFound $e) {
                 // the cache file should exists
-                LogUtility::internalError("The cache HTML fragment file was not found", self::CANONICAL);
+                LogUtility::internalError("The cache HTML fragment file was not found", self::NAME);
             }
         }
 
         $mainFetcher = $this->pageLayout->getMainElement()->getMarkupFetcher();
         try {
-            $mainHtml =  $mainFetcher->getFetchString();
+            $mainHtml = $mainFetcher->getFetchString();
         } finally {
             $mainFetcher->close();
         }
@@ -190,7 +220,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
     public function getFetcherName(): string
     {
-        return self::CANONICAL;
+        return self::NAME;
     }
 
     /**
@@ -212,7 +242,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
         if ($this->build) {
             if ($this->closed) {
-                throw new ExceptionRuntimeInternal("This fetcher page object has already been close and cannot be reused", self::CANONICAL);
+                throw new ExceptionRuntimeInternal("This fetcher page object has already been close and cannot be reused", self::NAME);
             }
             return;
         }
@@ -263,7 +293,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         try {
             $requestedPath = WikiPath::createFromPathObject($requestedPath);
         } catch (ExceptionBadArgument $e) {
-            throw new ExceptionRuntimeInternal("Not a local wiki path", self::CANONICAL, 1, $e);
+            throw new ExceptionRuntimeInternal("Not a local wiki path", self::NAME, 1, $e);
         }
         $this->setSourcePath($requestedPath);
         return $this;
@@ -291,8 +321,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $this->buildObjectIfNeeded();
         return $this->requestedLayoutName;
     }
-
-
 
 
     /**

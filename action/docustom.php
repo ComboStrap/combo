@@ -3,6 +3,7 @@
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\FetcherPage;
 use ComboStrap\FetcherSystem;
 use ComboStrap\IFetcher;
 use ComboStrap\LogUtility;
@@ -48,6 +49,11 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
     public function executeComboDoAction(Doku_Event $event, $param)
     {
         $action = $event->data;
+
+        if (FetcherPage::isEnabledAsShowAction() && $action === "show") {
+            $action = self::DO_PREFIX . FetcherPage::NAME;
+        }
+
         if (!$this->isComboDoAction($action)) return;
 
         /**
@@ -59,7 +65,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
         try {
             $url = Url::createFromGetOrPostGlobalVariable()
-                ->addQueryParameter(IFetcher::FETCHER_KEY,$this->getFetcherNameFromAction($action));
+                ->addQueryParameter(IFetcher::FETCHER_KEY, $this->getFetcherNameFromAction($action));
             $fetcher = FetcherSystem::createFetcherStringFromUrl($url);
             $body = $fetcher->getFetchString();
             $mime = $fetcher->getMime();

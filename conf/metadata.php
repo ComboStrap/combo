@@ -3,23 +3,21 @@
 /**
  * Load all class via Plugin Utility
  */
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 use ComboStrap\AdsUtility;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
+use ComboStrap\FetcherPage;
 use ComboStrap\FetcherSvg;
-use ComboStrap\MediaMarkup;
-use ComboStrap\FirstImage;
 use ComboStrap\FloatAttribute;
 use ComboStrap\IconDownloader;
 use ComboStrap\Identity;
 use ComboStrap\LazyLoad;
 use ComboStrap\LinkMarkup;
 use ComboStrap\LowQualityPage;
-use ComboStrap\MediaLink;
+use ComboStrap\MediaMarkup;
 use ComboStrap\Outline;
-use ComboStrap\PageImages;
 use ComboStrap\PageProtection;
 use ComboStrap\PagePublicationDate;
 use ComboStrap\PageType;
@@ -27,9 +25,9 @@ use ComboStrap\PageUrlType;
 use ComboStrap\Prism;
 use ComboStrap\RasterImageLink;
 use ComboStrap\Region;
+use ComboStrap\RouterBestEndPage;
 use ComboStrap\Shadow;
 use ComboStrap\SvgImageLink;
-use ComboStrap\RouterBestEndPage;
 
 
 require_once(__DIR__ . '/../syntax/related.php');
@@ -350,3 +348,8 @@ $meta[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE] = array("on
  * Default layout container
  */
 $meta[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF] = array('multichoice', '_choices' => syntax_plugin_combo_container::CONTAINER_VALUES);
+
+/**
+ * Take over the show
+ */
+$meta[FetcherPage::CONF_ENABLE_AS_SHOW_ACTION] = array("onoff");

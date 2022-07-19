@@ -47,6 +47,7 @@ class PageLayout
     public const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
     const HAMBURGER_LAYOUT = "hamburger";
     const BLANK_LAYOUT = "blank";
+    public const CONF_REM_SIZE = "remSize";
     private string $layoutName;
     private WikiPath $cssPath;
     private WikiPath $jsPath;
@@ -129,6 +130,17 @@ class PageLayout
     public static function createFromLayoutName(string $layoutName): PageLayout
     {
         return new PageLayout($layoutName);
+    }
+
+    public static function getPoweredBy(): string
+    {
+
+        $domain = TplUtility::getApexDomainUrl();
+        $version = TplUtility::getFullQualifyVersion();
+        $poweredBy = "<div class=\"mx-auto\" style=\"width: 300px;text-align: center;margin-bottom: 1rem\">";
+        $poweredBy .= "  <small><i>Powered by <a href=\"$domain\" title=\"ComboStrap " . $version . "\" style=\"color:#495057\">ComboStrap</a></i></small>";
+        $poweredBy .= '</div>';
+        return $poweredBy;
     }
 
 
@@ -451,7 +463,7 @@ class PageLayout
     private function setRemFontSizeToHtml(XmlElement $html)
     {
         /**
-         * Same as {@link TplUtility::CONF_REM_SIZE}
+         * Same as {@link self::CONF_REM_SIZE}
          */
         $remSize = tpl_getConf("remSize", null);
         if ($remSize === null) {

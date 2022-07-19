@@ -3,10 +3,14 @@
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExceptionReporter;
 use ComboStrap\FetcherPage;
 use ComboStrap\FetcherSystem;
+use ComboStrap\Identity;
 use ComboStrap\IFetcher;
 use ComboStrap\LogUtility;
+use ComboStrap\Mime;
+use ComboStrap\TplUtility;
 use ComboStrap\Url;
 
 /**
@@ -73,8 +77,11 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
                 ->setBody($body, $mime)
                 ->send();
         } catch (\Exception $e) {
-            LogUtility::error("An error has occurred during the execution of the custom action ($action). Error: {$e->getMessage()} ");
+
+            $html = ExceptionReporter::createForException($e)
+                ->getHtmlPage("An error has occurred during the execution of the action ($action)");
             \ComboStrap\HttpResponse::createFromException($e)
+                ->setBody($html, Mime::getHtml())
                 ->send();
         }
 

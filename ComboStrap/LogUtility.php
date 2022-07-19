@@ -364,4 +364,5 @@ class LogUtility
     {
         self::error("Sorry. An internal error has occurred: $message", $canonical);
     }
+
 }

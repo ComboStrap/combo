@@ -490,9 +490,13 @@ class Snippet implements JsonSerializable
         return $this->type;
     }
 
-    public function getUrl(): string
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
+     */
+    public function getUrl(): Url
     {
-        return $this->url;
+        return Url::createFromString($this->url);
     }
 
     public function getIntegrity(): ?string

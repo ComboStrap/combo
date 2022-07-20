@@ -136,7 +136,7 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
 
             $snippetManager = SnippetManager::getOrCreate();
             $railBarHtmlListItems = $this->getRailBarHtmlListItems();
-            $railBarLayout = $this->getLayout();
+            $railBarLayout = $this->getLayoutTypeToApply();
             switch ($railBarLayout) {
                 case self::FIXED_LAYOUT:
                     $railBar = $this->toFixedLayout($railBarHtmlListItems);
@@ -263,7 +263,7 @@ EOF;
 
     }
 
-    public function getLayout(): string
+    public function getLayoutTypeToApply(): string
     {
 
         if (isset($this->requestedLayout)) {
@@ -273,7 +273,13 @@ EOF;
         if ($bootstrapVersion === Bootstrap::BootStrapFourMajorVersion) {
             return self::FIXED_LAYOUT;
         }
-        $breakPointConfigurationInPixel = $this->getBreakPointConfiguration()->getWidth();
+        try {
+            $breakPointConfigurationInPixel = $this->getBreakPointConfiguration()->getWidth();
+        } catch (ExceptionInfinite $e) {
+            // no breakpoint
+            return self::OFFCANVAS_LAYOUT;
+        }
+
         try {
             if ($this->getRequestedViewPort() > $breakPointConfigurationInPixel) {
                 return self::FIXED_LAYOUT;
@@ -281,6 +287,8 @@ EOF;
                 return self::OFFCANVAS_LAYOUT;
             }
         } catch (ExceptionNotFound $e) {
+            // no known target view port
+            // we send them both then
             return self::BOTH_LAYOUT;
         }
 

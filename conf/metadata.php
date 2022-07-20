@@ -347,7 +347,7 @@ $meta[ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF] = array("onoff");
 $meta[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE] = array("onoff");
 
 /**
- * Default layout container
+ * Default page layout container
  */
 $meta[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF] = array('multichoice', '_choices' => syntax_plugin_combo_container::CONTAINER_VALUES);
 
@@ -361,11 +361,11 @@ $meta[FetcherPage::CONF_ENABLE_AS_SHOW_ACTION] = array("onoff");
  */
 $meta[FetcherRailBar::CONF_PRIVATE_RAIL_BAR] = array('onoff');
 $meta[FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR] = array('multichoice', '_choices' => array(
-    Breakpoint::BREAKPOINT_EXTRA_SMALL_NAME,
+    Breakpoint::EXTRA_SMALL_NAME,
     Breakpoint::BREAKPOINT_SMALL_NAME,
     Breakpoint::BREAKPOINT_MEDIUM_NAME,
     Breakpoint::BREAKPOINT_LARGE_NAME,
     Breakpoint::BREAKPOINT_EXTRA_LARGE_NAME,
-    Breakpoint::BREAKPOINT_EXTRA_EXTRA_LARGE_NAME,
-    Breakpoint::BREAKPOINT_NEVER_NAME
+    Breakpoint::EXTRA_EXTRA_LARGE_NAME,
+    Breakpoint::NEVER_NAME
 ));

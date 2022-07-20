@@ -192,7 +192,12 @@ class RasterImageLink extends ImageLink
          */
         foreach (Breakpoint::getBreakpoints() as $breakpoint) {
 
-            $breakpointPixels = $breakpoint->getWidth();
+            try {
+                $breakpointPixels = $breakpoint->getWidth();
+            } catch (ExceptionInfinite $e) {
+                continue;
+            }
+
             if ($breakpointPixels > $targetWidth) {
                 continue;
             }

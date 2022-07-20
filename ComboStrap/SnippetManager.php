@@ -44,6 +44,12 @@ class SnippetManager
     const STYLE_TAG = "style";
     const DATA_DOKUWIKI_ATT = "_data";
 
+    /**
+     * Use CDN for local stored library
+     */
+    public const CONF_USE_CDN = "useCDN";
+    public const CONF_USE_CDN_DEFAULT = 1;
+
 
     /**
      * @var array SnippetManager array that contains one element (one {@link SnippetManager} scoped to the requested id

@@ -96,11 +96,16 @@ class Lang extends MetadataText
 
     }
 
-    public static function createForMarkup(MarkupPath $page): Lang
+    public static function createForMarkup(MarkupPath $markup): Lang
     {
         $lang = new Lang();
-        $lang->setResource($page);
+        $lang->setResource($markup);
         return $lang;
+    }
+
+    public static function createFromRequestedMarkup(): Lang
+    {
+        return self::createForMarkup(MarkupPath::createFromRequestedPage());
     }
 
     public function getTab(): ?string

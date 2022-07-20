@@ -44,16 +44,15 @@ class Json
 
     /**
      * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
      */
-    public static function createFromPath(Path $path)
+    public static function createFromPath(Path $path): Json
     {
 
-        try {
-            $content = FileSystems::getContent($path);
-        } catch (ExceptionNotFound $e) {
-            return self::createEmpty();
-        }
+
+        $content = FileSystems::getContent($path);
         return self::createFromString($content);
+
     }
 
     /**
@@ -93,7 +92,7 @@ class Json
     public
     static function createFromString($jsonString): Json
     {
-        if($jsonString===null || $jsonString === "" ){
+        if ($jsonString === null || $jsonString === "") {
             return new Json();
         }
         $jsonArray = json_decode($jsonString, true);
@@ -130,7 +129,7 @@ class Json
     private
     function getJsonString()
     {
-        return  json_encode($this->jsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        return json_encode($this->jsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
     /**

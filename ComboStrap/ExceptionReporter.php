@@ -2,6 +2,11 @@
 
 namespace ComboStrap;
 
+/**
+ * This class is here to help
+ * create report from an exception (HTML mostly to
+ * be send to the browser)
+ */
 class ExceptionReporter
 {
 

@@ -86,10 +86,10 @@ class Bootstrap
                 throw new Exception("Bootstrap version should not be false");
             }
         }
-        $scriptsMeta = self::buildBootstrapMetas($bootstrapVersion);
+        $scriptsMeta = self::buildBootstrapHeadTags($bootstrapVersion);
 
         // if cdn
-        $useCdn = tpl_getConf(action_plugin_combo_bootstrap::CONF_USE_CDN);
+        $useCdn = PluginUtility::getConfValue(SnippetManager::CONF_USE_CDN, SnippetManager::CONF_USE_CDN_DEFAULT);
 
 
         // Build the returned Js script array
@@ -162,29 +162,35 @@ class Bootstrap
      * @param $version - return only the selected version if set
      * @return array - an array of the meta JSON custom files
      */
-    public static function getStyleSheetsFromJsonFileAsArray($version = null)
+    public static function getStyleSheetsFromJsonFileAsArray($version = null): array
     {
 
-        $jsonAsArray = true;
-        $stylesheetsFile = __DIR__ . '/../bootstrap/bootstrapStylesheet.json';
-        $styleSheets = json_decode(file_get_contents($stylesheetsFile), $jsonAsArray);
-        if ($styleSheets == null) {
-            TplUtility::msg("Unable to read the file {$stylesheetsFile} as json");
+        /**
+         * Standard stylesheet
+         */
+        $stylesheetsFile = WikiPath::createComboResource(':library:bootstrap:bootstrapStylesheet.json');
+        try {
+            $styleSheets = Json::createFromPath($stylesheetsFile)->toArray();
+        } catch (ExceptionNotFound|ExceptionBadSyntax $e) {
+            LogUtility::internalError("An error has occurred reading the file ($stylesheetsFile). Error:{$e->getMessage()}", self::CANONICAL);
+            return [];
         }
 
-
-        $localStyleSheetsFile = __DIR__ . '/../bootstrap/bootstrapLocal.json';
-        if (file_exists($localStyleSheetsFile)) {
-            $localStyleSheets = json_decode(file_get_contents($localStyleSheetsFile), $jsonAsArray);
-            if ($localStyleSheets == null) {
-                TplUtility::msg("Unable to read the file {$localStyleSheets} as json");
-            }
+        /**
+         * User defined stylesheet
+         */
+        $localStyleSheetsFile = WikiPath::createComboResource(':library:bootstrap:bootstrapLocal.json');
+        try {
+            $localStyleSheets = Json::createFromPath($localStyleSheetsFile)->toArray();
             foreach ($styleSheets as $bootstrapVersion => &$stylesheetsFiles) {
                 if (isset($localStyleSheets[$bootstrapVersion])) {
                     $stylesheetsFiles = array_merge($stylesheetsFiles, $localStyleSheets[$bootstrapVersion]);
                 }
             }
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            // user file does not exists and that's okay
         }
+
 
         if (isset($version)) {
             if (!isset($styleSheets[$version])) {
@@ -202,11 +208,7 @@ class Bootstrap
          * Bootstrap needs another stylesheet
          * See https://getbootstrap.com/docs/5.0/getting-started/rtl/
          */
-        global $lang;
-        $direction = $lang["direction"];
-        if (empty($direction)) {
-            $direction = "ltr";
-        }
+        $direction = Lang::createFromRequestedMarkup()->getDirection();
         $directedStyleSheets = [];
         foreach ($styleSheets as $name => $styleSheetDefinition) {
             if (isset($styleSheetDefinition[$direction])) {
@@ -225,21 +227,20 @@ class Bootstrap
      * @param $version
      * @return array
      *
+     * @throws ExceptionNotFound
      */
-    public static function buildBootstrapMetas($version)
+    public static function buildBootstrapHeadTags($version): array
     {
-
-        $jsonAsArray = true;
-        $bootstrapJsonFile = __DIR__ . '/../bootstrap/bootstrapJavascript.json';
-        $bootstrapMetas = json_decode(file_get_contents($bootstrapJsonFile), $jsonAsArray);
-        // Decodage problem
-        if ($bootstrapMetas == null) {
-            TplUtility::msg("Unable to read the file {$bootstrapJsonFile} as json");
-            return array();
+        $bootstrapJsonFile = WikiPath::createComboResource(":library:bootstrap:bootstrapJavascript.json");
+        try {
+            $bootstrapMetas = Json::createFromPath($bootstrapJsonFile)->toArray();
+        } catch (ExceptionBadSyntax $e) {
+            // should not happen, no need to advertise it
+            throw new ExceptionRuntimeInternal("Unable to read the file {$bootstrapJsonFile} as json", self::CANONICAL, 1, $e);
         }
+
         if (!isset($bootstrapMetas[$version])) {
-            TplUtility::msg("The bootstrap version ($version) could not be found in the file $bootstrapJsonFile");
-            return array();
+            throw new ExceptionNotFound("The bootstrap version ($version) could not be found in the file $bootstrapJsonFile");
         }
         $bootstrapMetas = $bootstrapMetas[$version];
 
@@ -249,11 +250,10 @@ class Bootstrap
         $bootstrapCustomMetas = Bootstrap::getStyleSheetsFromJsonFileAsArray($version);
 
         if (!isset($bootstrapCustomMetas[$bootstrapCssFile])) {
-            TplUtility::msg("The bootstrap custom file ($bootstrapCssFile) could not be found in the custom CSS files for the version ($version)");
+            LogUtility::error("The bootstrap custom file ($bootstrapCssFile) could not be found in the custom CSS files for the version ($version)", self::CANONICAL);
         } else {
             $bootstrapMetas['css'] = $bootstrapCustomMetas[$bootstrapCssFile];
         }
-
 
         return $bootstrapMetas;
     }

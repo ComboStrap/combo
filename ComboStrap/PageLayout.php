@@ -764,18 +764,6 @@ class PageLayout
     private function addHeadElements(XmlElement $head, &$htmlFragmentByVariables)
     {
 
-
-        /**
-         * Bootstrap meta-headers function registration
-         */
-        try {
-            Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            TplUtility::registerHeaderHandler();
-        } catch (ExceptionCompile $e) {
-            LogUtility::internalError("We were unable to register the head handler (ie adding Bootstrap). Because fetcher page is called by strap, strap should load.", self::CANONICAL);
-        }
-
-
         /**
          * Add the layout js and css first
          */

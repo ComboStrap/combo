@@ -10,6 +10,7 @@
  *
  */
 
+use ComboStrap\Breakpoint;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -38,8 +39,8 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
      * The value of the default layout container
      */
     const DEFAULT_LAYOUT_CONTAINER_CONF = "defaultLayoutContainer";
-    const CONTAINER_VALUES = [self::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE, "md", "lg", "xl", "xxl", "fluid"];
-    const DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE = "sm";
+    const CONTAINER_VALUES = [self::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE, Breakpoint::MD, Breakpoint::LG, Breakpoint::XL, Breakpoint::XXL, Breakpoint::FLUID];
+    const DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE = Breakpoint::SM;
     const CONTAINER_ATTRIBUTE = "container";
     const CANONICAL = self::TAG;
 
@@ -47,7 +48,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
     public static function getClassName(?string $type): string
     {
         $containerPrefix = "";
-        if ($type !== "sm") {
+        if ($type !== Breakpoint::SM) {
             $containerPrefix = "-$type";
         }
         return "container{$containerPrefix}";

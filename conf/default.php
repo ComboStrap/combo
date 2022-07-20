@@ -30,6 +30,7 @@ use ComboStrap\PageType;
 use ComboStrap\Prism;
 use ComboStrap\PageUrlType;
 use ComboStrap\Region;
+use ComboStrap\SnippetManager;
 
 
 /**
@@ -423,3 +424,27 @@ $conf["defaultLayoutContainer"] = "sm";
 $conf["enablePageLayout"] = 1;
 
 
+/**
+ * CDN for library ?
+ * See {@link SnippetManager::CONF_USE_CDN}
+ */
+$conf['useCDN'] = 1;
+
+/**
+ * {@link Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET}
+ */
+$conf["bootstrapVersionStylesheet"] = "5.0.1 - bootstrap";
+
+/**
+ * {@link action_plugin_combo_bootstrap::CONF_PRELOAD_CSS}
+ */
+$conf['preloadCss'] = 0;
+
+/**
+ * {@link FetcherRailBar::CONF_PRIVATE_RAIL_BAR}
+ */
+$conf['privateRailbar'] = 0;
+/**
+ * {@link FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR}
+ */
+$conf['breakpointRailbar'] = "large";

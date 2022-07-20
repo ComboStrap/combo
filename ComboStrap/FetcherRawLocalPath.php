@@ -44,7 +44,6 @@ class FetcherRawLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherS
 
     /**
      * @return Url - an URL to download the media
-     * @throws ExceptionNotFound - if the file does not exists (no buster can be added)
      */
     function getFetchUrl(Url $url = null): Url
     {

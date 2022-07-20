@@ -67,18 +67,6 @@ class SnippetManager
 
 
     /**
-     * @param $tag
-     * @return string
-     * See also {@link Snippet::getClass()} function
-     */
-    public static function getClassFromSnippetId($tag): string
-    {
-        $snippet = Snippet::createUnknownSnippet($tag);
-        return $snippet->getClass();
-    }
-
-
-    /**
      * @return SnippetManager - the global reference
      * that is set for every run at the end of this file
      * TODO: migrate the attach function to {@link Snippet}

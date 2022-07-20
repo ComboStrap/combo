@@ -203,7 +203,7 @@ EOF;
 
     public static function getSnippetClass(): string
     {
-        return SnippetManager::getClassFromSnippetId(self::CANONICAL);
+        return Snippet::getClassFromSnippetId(self::CANONICAL);
     }
 
     private function getRailBarHtmlListItems(): string

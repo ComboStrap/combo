@@ -18,6 +18,9 @@ use Exception;
 class Bootstrap
 {
     const DEFAULT_STYLESHEET_NAME = "bootstrap";
+    private $jquerySnippet;
+    private Snippet $bootstrapJavascriptSnippet;
+    private Snippet $popperSnippet;
 
     /**
      * @param string $qualifiedVersion - the bootstrap version separated by the stylesheet
@@ -219,6 +222,8 @@ class Bootstrap
     /**
      * @throws ExceptionNotFound
      * @throws ExceptionBadState
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
      */
     private function buildBootstrapMetaIfNeeded(): void
     {
@@ -256,24 +261,37 @@ class Bootstrap
         // Build the returned Js script array
         $jsScripts = array();
         foreach ($bootstrapMetas as $key => $script) {
-            $path_parts = pathinfo($script["file"]);
-            $extension = $path_parts['extension'];
-            if ($extension === "js") {
-                $src = DOKU_BASE . "lib/tpl/strap/bootstrap/$version/" . $script["file"];
-                if ($useCdn) {
-                    if (isset($script["url"])) {
-                        $src = $script["url"];
+            $fileName = $script["file"];
+            $file = LocalPath::createFromPath($fileName);
+            $extension = $file->getExtension();
+            switch ($extension) {
+                case Snippet::EXTENSION_JS:
+                    $url = $script["url"];
+                    if ($useCdn && !empty($url)) {
+                        $url = Url::createFromString($url);
+                        $snippet = Snippet::createSnippet($url, $extension);
+                    } else {
+                        $path = WikiPath::createComboResource(":bootstrap:$version:$fileName");
+                        $snippet = Snippet::createSnippetFromPath($path, $extension);
                     }
-                }
-                $jsScripts[$key] =
-                    array(
-                        'src' => $src,
-                        'defer' => null
-                    );
-                if (isset($script['integrity'])) {
-                    $jsScripts[$key]['integrity'] = $script['integrity'];
-                    $jsScripts[$key]['crossorigin'] = 'anonymous';
-                }
+                    $snippet->setCritical(false);
+                    if (isset($script['integrity'])) {
+                        $snippet->setIntegrity($script['integrity']);
+                    }
+                    switch ($key){
+                        case "jquery":
+                            $this->jquerySnippet = $snippet;
+                            break;
+                        case "bootstrap":
+                            $this->bootstrapJavascriptSnippet = $snippet;
+                            break;
+                        case "popper":
+                            $this->popperSnippet = $snippet;
+                            break;
+                        default:
+                            throw new ExceptionBadState("The snippet key ($key) is unknown for bootstrap");
+                    }
+                    break;
             }
         }
 

@@ -231,6 +231,31 @@ class Site
         $conf["renderer_xhtml"] = $string;
     }
 
+    /**
+     * The host of the actual server
+     * (may be virtual)
+     * @return string
+     */
+    public static function getServerHost(): string
+    {
+        /**
+         * Based on {@link getBaseURL()}
+         * to be dokuwiki compliant
+         */
+        $remoteHost = $_SERVER['HTTP_HOST'];
+        if ($remoteHost !== null) {
+            return $remoteHost;
+        }
+        $remoteHost = $_SERVER['SERVER_NAME'];
+        if ($remoteHost !== null) {
+            return $remoteHost;
+        }
+        /**
+         * OS name
+         */
+        return php_uname('n');
+    }
+
 
     function getEmailObfuscationConfiguration()
     {

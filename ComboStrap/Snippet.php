@@ -96,7 +96,6 @@ class Snippet implements JsonSerializable
 
     protected static $globalSnippets;
 
-    private $snippetId;
     private $extension;
 
     /**
@@ -109,27 +108,17 @@ class Snippet implements JsonSerializable
      */
     private string $inlineContent;
 
-    /**
-     * @var string
-     */
-    private $url;
-    /**
-     * @var string
-     */
-    private $integrity;
-    /**
-     * @var array Extra html attributes if needed
-     */
-    private $htmlAttributes;
+    private Url $url;
+
+    private string $integrity;
+
+    private array $htmlAttributes;
 
     /**
      * @var string ie internal or external
      */
-    private $type;
-    /**
-     * @var string The name of the component (used for internal style sheet to retrieve the file)
-     */
-    private $internalIdentifier;
+    private string $type;
+
 
     /**
      * @var array - the slots that needs this snippet (as key to get only one snippet by scope)
@@ -144,22 +133,44 @@ class Snippet implements JsonSerializable
      *   * or  {@link Snippet::REQUEST_SCOPE} - never cached
      */
     private $slots;
+
     /**
      * @var bool run as soon as possible
      */
     private $async;
     private WikiPath $internalPath;
+    private $componentId;
 
     /**
-     * Snippet constructor.
+     * @param Url $url - the url
+     * @param $mime - the expected mime (extension for now) - an url may not have any extension in its path
+     * @throws ExceptionBadArgument
      */
-    public function __construct($snippetId, $mime, $type, $url, $internalIdentifier)
+    public function __construct(Url $url, $mime)
     {
-        $this->snippetId = $snippetId;
-        $this->extension = $mime;
-        $this->type = $type;
         $this->url = $url;
-        $this->internalIdentifier = $internalIdentifier;
+        $this->extension = $mime;
+        try {
+            $host = $url->getHost();
+            if ($host === Site::getServerHost()) {
+                $this->type = self::INTERNAL_TYPE;
+                $this->internalPath = FetcherRawLocalPath::createLocalFromFetchUrl($url)->getSourcePath();
+                $this->componentId = $this->internalPath->getLastNameWithoutExtension();
+            } else {
+                $this->type = self::EXTERNAL_TYPE;
+                try {
+                    $this->componentId = $this->url->getLastNameWithoutExtension();
+                } catch (ExceptionNotFound $e) {
+                    // a external snippet url should have a last name normally in its path
+                    // but it's not mandatory
+                    // if there is no host, this is not an external
+                    $this->componentId = $this->url->getHost();
+                }
+            }
+        } catch (ExceptionNotFound $e) {
+            $this->type = self::EXTERNAL_TYPE;
+        }
+        $this->url = $url;
     }
 
 
@@ -170,35 +181,17 @@ class Snippet implements JsonSerializable
 
 
     /**
-     * @param $componentId
-     * @return Snippet
-     * @deprecated You should create a snippet with a known type, this constructor was created for refactoring
-     */
-    public static function createUnknownSnippet($componentId): Snippet
-    {
-        return new Snippet("unknown", "unknwon", "unknwon", "unknwon", $componentId);
-    }
-
-    /**
      * The snippet id is the url for external resources (ie external javascript / stylesheet)
      * otherwise if it's internal, it's the component id and it's type
      * @param string $identifier - the snippet identifier - the url for an external snippet or {@link Snippet::INTERNAL_TYPE} for an internal one
      * @param string $extension - {@link Snippet::EXTENSION_CSS css} or {@link Snippet::EXTENSION_JS js}
-     * @param string $internalIdentifier - the internal snippet identifier to resolve the file.
+     * @param string $componentId - the component id is a short id that you will found in the class (for internal snippet, it helps also resolve the file)
      * @return Snippet
+     * @throws ExceptionBadArgument|ExceptionBadSyntax
      */
-    public static function &getOrCreateSnippet(string $identifier, string $extension, string $internalIdentifier): Snippet
+    public static function &getOrCreateSnippet(string $identifier, string $extension, string $componentId): Snippet
     {
 
-        if ($identifier === Snippet::INTERNAL_TYPE) {
-            $snippetId = self::getInternalGlobalSnippetIdentifier($internalIdentifier, $extension);
-            $type = self::INTERNAL_TYPE;
-            $url = null;
-        } else {
-            $type = self::EXTERNAL_TYPE;
-            $snippetId = $identifier;
-            $url = $identifier;
-        }
         $requestedPageId = PluginUtility::getRequestedWikiId();
         $snippets = &self::$globalSnippets[$requestedPageId];
         if ($snippets === null) {
@@ -206,10 +199,19 @@ class Snippet implements JsonSerializable
             self::$globalSnippets[$requestedPageId] = [];
             $snippets = &self::$globalSnippets[$requestedPageId];
         }
+        if ($identifier === Snippet::INTERNAL_TYPE) {
+            $snippetPath = self::getInternalPathFromNameAndExtension($componentId, $extension);
+            $snippetUrl = FetcherRawLocalPath::createFromPath($snippetPath)->getFetchUrl();
+        } else {
+            $snippetUrl = Url::createFromString($identifier);
+        }
+
+        $snippetId = $snippetUrl->toString();
         $snippet = &$snippets[$snippetId];
         if ($snippet === null) {
-            $snippets[$snippetId] = new Snippet($snippetId, $extension, $type, $url, $internalIdentifier);
-            $snippet = &$snippets[$snippetId];
+            $snippet = self::createSnippet($snippetUrl, $extension)
+                ->setComponentId($componentId);
+            $snippets[$snippetId] = $snippet;
         }
         return $snippet;
 
@@ -244,13 +246,34 @@ class Snippet implements JsonSerializable
     }
 
     /**
-     * @param $extension - the file type
-     * @param $snippetName - the component name if the snippet is generated or the file name otherwise
-     * @return string - the global identifier
+     * @param Url $url - the url
+     * @param string $extension
+     * @return Snippet
+     * @throws ExceptionBadArgument
      */
-    public static function getInternalGlobalSnippetIdentifier($snippetName, $extension): string
+    public static function createSnippet(Url $url, string $extension): Snippet
     {
-        return Snippet::INTERNAL_TYPE . "-" . $extension . "-" . $snippetName;
+        return new Snippet($url, $extension);
+    }
+
+
+    /**
+     * @param $snippetId - a logical id
+     * @return string - the class
+     * See also {@link Snippet::getClass()} function
+     */
+    public static function getClassFromSnippetId($snippetId): string
+    {
+        return StyleUtility::addComboStrapSuffix("snippet-" . $snippetId);
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public static function createSnippetFromPath(WikiPath $path, string $extension): Snippet
+    {
+        $url = FetcherRawLocalPath::createFromPath($path)->getFetchUrl();
+        return new Snippet($url, $extension);
     }
 
 
@@ -324,10 +347,13 @@ class Snippet implements JsonSerializable
 
     public function getInternalPath(): WikiPath
     {
-        if (isset($this->internalPath)) {
-            return $this->internalPath;
-        }
-        switch ($this->extension) {
+        return $this->internalPath;
+    }
+
+    public static function getInternalPathFromNameAndExtension($name, $extension): WikiPath
+    {
+
+        switch ($extension) {
             case self::EXTENSION_CSS:
                 $extension = "css";
                 $subDirectory = "style";
@@ -337,13 +363,13 @@ class Snippet implements JsonSerializable
                 $subDirectory = "js";
                 break;
             default:
-                $message = "Unknown snippet type ($this->extension)";
+                $message = "Unknown snippet type ($extension)";
                 throw new ExceptionRuntimeInternal($message);
 
         }
         return WikiPath::createComboResource("snippet")
             ->resolve($subDirectory)
-            ->resolve(strtolower($this->internalIdentifier) . ".$extension");
+            ->resolve(strtolower($name) . ".$extension");
     }
 
     public function hasSlot($slot): bool
@@ -356,7 +382,7 @@ class Snippet implements JsonSerializable
 
     public function __toString()
     {
-        return $this->snippetId . "-" . $this->extension;
+        return $this->url->toString();
     }
 
     public function getCritical(): bool
@@ -384,14 +410,14 @@ class Snippet implements JsonSerializable
          * the same class name, the inline `style` tag is not applied
          *
          */
-        return StyleUtility::addComboStrapSuffix("snippet-" . $this->internalIdentifier);
+        return StyleUtility::addComboStrapSuffix("snippet-" . $this->componentId);
 
     }
 
 
-    public function getId()
+    public function getComponentId(): string
     {
-        return $this->snippetId;
+        return $this->componentId;
     }
 
 
@@ -538,7 +564,7 @@ class Snippet implements JsonSerializable
     public function jsonSerialize(): array
     {
         $dataToSerialize = [
-            self::JSON_COMPONENT_PROPERTY => $this->internalIdentifier,
+            self::JSON_COMPONENT_PROPERTY => $this->getComponentId(),
             self::JSON_EXTENSION_PROPERTY => $this->extension,
             self::JSON_TYPE_PROPERTY => $this->type
         ];
@@ -561,11 +587,6 @@ class Snippet implements JsonSerializable
             $dataToSerialize[self::JSON_HTML_ATTRIBUTES_PROPERTY] = $this->htmlAttributes;
         }
         return $dataToSerialize;
-    }
-
-    public function getInternalId(): string
-    {
-        return $this->internalIdentifier;
     }
 
     public function setInternalPath(WikiPath $path): Snippet
@@ -752,6 +773,12 @@ class Snippet implements JsonSerializable
             default:
                 throw new ExceptionBadState("The extension ($extension) is unknown");
         }
+    }
+
+    private function setComponentId(string $componentId): Snippet
+    {
+        $this->componentId = $componentId;
+        return $this;
     }
 
 

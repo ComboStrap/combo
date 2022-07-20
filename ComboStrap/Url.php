@@ -325,21 +325,7 @@ class Url extends PathAbs
         try {
             $this->getHost();
         } catch (ExceptionNotFound $e) {
-            /**
-             * Based on {@link getBaseURL()}
-             * to be dokuwiki compliant
-             */
-            $remoteHost = $_SERVER['HTTP_HOST'];
-            if ($remoteHost !== null) {
-                $this->setHost($remoteHost);
-                return $this;
-            }
-            $remoteHost = $_SERVER['SERVER_NAME'];
-            if ($remoteHost !== null) {
-                $this->setHost($remoteHost);
-                return $this;
-            }
-            $remoteHost = php_uname('n');
+            $remoteHost = Site::getServerHost();
             $this->setHost($remoteHost);
 
         }

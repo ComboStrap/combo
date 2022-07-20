@@ -24,8 +24,7 @@ if (!defined('DOKU_INC')) die();
 class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
 {
 
-    const BOOTSTRAP_JAVASCRIPT_BUNDLE_COMBO_ID = "bootstrap-javascript-bundle-combo";
-    const BOOTSTRAP_STYLESHEET_COMBO_ID = "bootstrap-stylesheet-combo";
+
     public const CONF_PRELOAD_CSS = "preloadCss";
     /**
      * Jquery UI
@@ -58,7 +57,7 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
 
 
         $newHeaderTypes = array();
-        $bootstrapHeaders = Bootstrap::getBootstrapMetaHeaders();
+        $bootstrap = Bootstrap::get();
         $eventHeaderTypes = $event->data;
         foreach ($eventHeaderTypes as $headerType => $headerData) {
             switch ($headerType) {
@@ -66,8 +65,7 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
                 case "link":
                     // index, rss, manifest, search, alternate, stylesheet
                     // delete edit
-                    $bootstrapCss = $bootstrapHeaders[$headerType]['css'];
-                    $headerData[] = $bootstrapCss;
+                    $headerData[] = $bootstrap->getCssSnippet()->toDokuWikiArray();
 
                     // preload all CSS is an heresy as it creates a FOUC (Flash of non-styled element)
                     // but we know it only now and this is it

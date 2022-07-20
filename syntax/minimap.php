@@ -218,7 +218,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                         // The style will then change
                         $active = '';
                         if ($callingId == $pageId) {
-                            $linkAttribute->addEmptyOutputAttributeValue('active');
+                            $linkAttribute->addBooleanOutputAttributeValue('active');
                         }
 
                         // Not all page are printed

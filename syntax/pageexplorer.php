@@ -708,7 +708,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             if (!blank($namespaceId)) {
                                 $pageExplorerTagAttributes->addOutputAttributeValue("data-" . TagAttributes::WIKI_ID, $namespaceId);
                             } else {
-                                $pageExplorerTagAttributes->addEmptyOutputAttributeValue("data-" . TagAttributes::WIKI_ID);
+                                $pageExplorerTagAttributes->addBooleanOutputAttributeValue("data-" . TagAttributes::WIKI_ID);
                             }
 
 

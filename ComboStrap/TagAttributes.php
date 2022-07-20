@@ -702,7 +702,7 @@ class TagAttributes
     {
 
         if (blank($value)) {
-            LogUtility::error("The value of the output attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty");
+            LogUtility::error("The value of the output attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty / boolean function if the value can be empty");
         }
 
         $actualValue = $this->outputAttributes[$key];
@@ -1159,7 +1159,7 @@ class TagAttributes
      * @param string $key add an html attribute with the empty string
      */
     public
-    function addEmptyOutputAttributeValue($key)
+    function addBooleanOutputAttributeValue($key)
     {
 
         $this->outputAttributes[$key] = '';

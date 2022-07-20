@@ -39,10 +39,6 @@ class SnippetManager
 
 
     const CANONICAL = "snippet-manager";
-    const SCRIPT_TAG = "script";
-    const LINK_TAG = "link";
-    const STYLE_TAG = "style";
-    const DATA_DOKUWIKI_ATT = "_data";
 
     /**
      * Use CDN for local stored library
@@ -147,139 +143,15 @@ class SnippetManager
          *
          * The internal script may be dependent on the external javascript
          * and vice-versa (for instance, Math-Jax library is dependent
-         * on the config that is an internal script)
+         * on the config that is an internal inline script)
          *
          */
         foreach ($snippets as $snippet) {
 
-            $type = $snippet->getType();
-
-
-            $extension = $snippet->getExtension();
-            switch ($extension) {
-                case Snippet::EXTENSION_JS:
-                    switch ($type) {
-                        case Snippet::EXTERNAL_TYPE:
-
-                            $jsDokuwiki = array(
-                                "class" => $snippet->getClass(),
-                                "src" => $snippet->getUrl(),
-                                "crossorigin" => "anonymous"
-                            );
-                            $integrity = $snippet->getIntegrity();
-                            if ($integrity !== null) {
-                                $jsDokuwiki["integrity"] = $integrity;
-                            }
-                            $critical = $snippet->getCritical();
-                            if (!$critical) {
-                                $jsDokuwiki["defer"] = null;
-                                // not async: it will run as soon as possible
-                                // the dom main not be loaded completely, the script may miss HTML dom element
-                            }
-                            $jsDokuwiki = $this->addHtmlAttributes($jsDokuwiki, $snippet);
-                            ksort($jsDokuwiki);
-                            $returnedDokuWikiFormat[self::SCRIPT_TAG][] = $jsDokuwiki;
-                            break;
-                        case Snippet::INTERNAL_TYPE:
-                            $jsDokuwiki = []; //reset
-                            /**
-                             * This may broke the dependencies
-                             * if a small javascript depend on a large one
-                             * that is not yet loaded and does not wait for it
-                             */
-                            if ($snippet->shouldBeInHtmlPage()) {
-                                try {
-                                    $jsDokuwiki[self::DATA_DOKUWIKI_ATT] = $snippet->getInternalInlineAndFileContent();
-                                } catch (ExceptionNotFound $e) {
-                                    LogUtility::internalError("The internal js snippet ($snippet) has no content. Skipped", self::CANONICAL);
-                                    continue 3;
-                                }
-                            } else {
-
-                                $wikiPath = $snippet->getInternalPath();
-                                try {
-                                    $fetchUrl = FetcherRawLocalPath::createFromPath($wikiPath)->getFetchUrl();
-                                    /**
-                                     * Dokuwiki transforms them in HTML format
-                                     */
-                                    $jsDokuwiki["src"] = $fetchUrl->toString();
-                                    if (!$snippet->getCritical()) {
-                                        $jsDokuwiki["defer"] = null;
-                                    }
-                                } catch (ExceptionNotFound $e) {
-                                    LogUtility::internalError("The internal snippet path ($wikiPath) was not found. Skipped", self::CANONICAL);
-                                    continue 3;
-                                }
-
-                            }
-                            $jsDokuwiki = $this->addHtmlAttributes($jsDokuwiki, $snippet);
-                            $returnedDokuWikiFormat[self::SCRIPT_TAG][] = $jsDokuwiki;
-                            break;
-                        default:
-                            LogUtility::msg("Unknown javascript snippet type");
-                    }
-                    break;
-                case
-                Snippet::EXTENSION_CSS:
-                    switch ($type) {
-                        case Snippet::EXTERNAL_TYPE:
-                            $cssDokuwiki = array(
-                                "rel" => "stylesheet",
-                                "href" => $snippet->getUrl(),
-                                "crossorigin" => "anonymous"
-                            );
-                            $integrity = $snippet->getIntegrity();
-                            if ($integrity !== null) {
-                                $cssDokuwiki["integrity"] = $integrity;
-                            }
-                            $critical = $snippet->getCritical();
-                            if (!$critical && Site::getTemplate() === Site::STRAP_TEMPLATE_NAME) {
-                                $cssDokuwiki["rel"] = "preload";
-                                $cssDokuwiki['as'] = self::STYLE_TAG;
-                            }
-                            $cssDokuwiki = $this->addHtmlAttributes($cssDokuwiki, $snippet);
-                            ksort($cssDokuwiki);
-                            $returnedDokuWikiFormat[self::LINK_TAG][] = $cssDokuwiki;
-                            break;
-                        case Snippet::INTERNAL_TYPE:
-                            /**
-                             * CSS inline in script tag
-                             * If they are critical or inline dynamic content is set, we add them in the page
-                             */
-                            $cssInternalArray = []; // reset
-                            $inline = $snippet->getCritical() === true ||
-                                ($snippet->getCritical() === false && $snippet->hasInlineContent());
-                            if ($inline) {
-                                try {
-                                    $cssInternalArray[self::DATA_DOKUWIKI_ATT] = $snippet->getInternalInlineAndFileContent();
-                                } catch (ExceptionNotFound $e) {
-                                    LogUtility::internalError("The internal css snippet ($snippet) has no content. Skipped", self::CANONICAL);
-                                    continue 3;
-                                }
-                            } else {
-                                try {
-                                    $fetchUrl = FetcherRawLocalPath::createFromPath($snippet->getInternalPath())->getFetchUrl();
-                                    $cssInternalArray["rel"] = "stylesheet";
-                                    /**
-                                     * Dokuwiki transforms them in HTML
-                                     */
-                                    $cssInternalArray["href"] = $fetchUrl->toString();
-                                } catch (ExceptionNotFound $e) {
-                                    // the file should have been found at this point
-                                    LogUtility::internalError("The internal css could not be added. Error:{$e->getMessage()}", self::CANONICAL);
-                                    continue 3;
-                                }
-
-                            }
-                            $cssInternalArray = $this->addHtmlAttributes($cssInternalArray, $snippet);
-                            $returnedDokuWikiFormat[self::STYLE_TAG][] = $cssInternalArray;
-                            break;
-                        default:
-                            LogUtility::msg("Unknown css snippet type");
-                    }
-                    break;
-                default:
-                    LogUtility::msg("The extension ($extension) is unknown, the external snippet ($snippet) was not added");
+            try {
+                $returnedDokuWikiFormat[$snippet->getHtmlTag()][] = $snippet->toDokuWikiArray();
+            } catch (ExceptionBadState|ExceptionNotFound $e) {
+                LogUtility::error("An error has occurred while trying to add the HTML snippet ($snippet). Error:{$e->getMessage()}");
             }
 
         }
@@ -523,19 +395,6 @@ class SnippetManager
 
     }
 
-    private
-    function addHtmlAttributes(array $attributesArray, Snippet $snippet): array
-    {
-        $htmlAttributes = $snippet->getHtmlAttributes();
-        if ($htmlAttributes !== null) {
-            foreach ($htmlAttributes as $name => $value) {
-                $attributesArray[$name] = $value;
-            }
-        }
-        $attributesArray["class"] = $snippet->getClass();
-        return $attributesArray;
-    }
-
 
     /**
      * @return Snippet[]
@@ -656,7 +515,6 @@ class SnippetManager
         $this->attachCssInternalStylesheetForRequest(Snippet::COMBO_POPOVER);
         return $this;
     }
-
 
 
 }

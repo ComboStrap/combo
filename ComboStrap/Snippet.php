@@ -87,6 +87,11 @@ class Snippet implements JsonSerializable
     const ALL_SCOPE = "all";
     public const COMBO_POPOVER = "combo-popover";
     public const COMBO_HTML = "combo-html";
+    public const DATA_DOKUWIKI_ATT = "_data";
+    const CANONICAL = "snippet";
+    public const STYLE_TAG = "style";
+    public const SCRIPT_TAG = "script";
+    public const LINK_TAG = "link";
 
 
     protected static $globalSnippets;
@@ -601,4 +606,149 @@ class Snippet implements JsonSerializable
         }
         return true;
     }
+
+    /**
+     * @throws ExceptionBadState - an error where for instance an inline script doe snot have any content
+     * @throws ExceptionNotFound - an error where the source was not found
+     */
+    public function toDokuWikiArray(): array
+    {
+        $type = $this->getType();
+        $extension = $this->getExtension();
+        switch ($extension) {
+            case Snippet::EXTENSION_JS:
+                switch ($type) {
+                    case Snippet::EXTERNAL_TYPE:
+                        $htmlAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes());
+                        $htmlAttributes
+                            ->addClassName($this->getClass())
+                            ->addOutputAttributeValue("src", $this->getUrl())
+                            ->addOutputAttributeValue("crossorigin", "anonymous");
+                        $integrity = $this->getIntegrity();
+                        if ($integrity !== null) {
+                            $htmlAttributes->addOutputAttributeValue("integrity", $integrity);
+                        }
+                        $critical = $this->getCritical();
+                        if (!$critical) {
+                            $htmlAttributes->addBooleanOutputAttributeValue("defer");
+                            // not async: it will run as soon as possible
+                            // the dom main not be loaded completely, the script may miss HTML dom element
+                        }
+                        return $htmlAttributes->toCallStackArray();
+
+                    case Snippet::INTERNAL_TYPE:
+                    default:
+                        $htmlAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes());
+                        /**
+                         * This may broke the dependencies
+                         * if a small javascript depend on a large one
+                         * that is not yet loaded and does not wait for it
+                         */
+                        switch ($this->shouldBeInHtmlPage()) {
+                            default:
+                            case true:
+                                try {
+                                    $jsDokuwiki = $htmlAttributes->toCallStackArray();
+                                    $jsDokuwiki[self::DATA_DOKUWIKI_ATT] = $this->getInternalInlineAndFileContent();
+                                    return $jsDokuwiki;
+                                } catch (ExceptionNotFound $e) {
+                                    throw new ExceptionBadState("The internal js snippet ($this) has no content. Skipped", self::CANONICAL);
+                                }
+                            case false:
+
+                                $wikiPath = $this->getInternalPath();
+                                try {
+                                    $fetchUrl = FetcherRawLocalPath::createFromPath($wikiPath)->getFetchUrl();
+                                    /**
+                                     * Dokuwiki transforms them in HTML format
+                                     */
+                                    $htmlAttributes->addOutputAttributeValue("src", $fetchUrl->toString());
+                                    if (!$this->getCritical()) {
+                                        $htmlAttributes->addBooleanOutputAttributeValue("defer");
+                                    }
+                                } catch (ExceptionNotFound $e) {
+                                    throw new ExceptionNotFound("The internal snippet path ($wikiPath) was not found. Skipped", self::CANONICAL);
+                                }
+                                return $htmlAttributes->toCallStackArray();
+
+                        }
+                }
+
+            case Snippet::EXTENSION_CSS:
+                switch ($type) {
+                    case Snippet::EXTERNAL_TYPE:
+                        $htmlAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes())
+                            ->addOutputAttributeValue("rel", "stylesheet")
+                            ->addOutputAttributeValue("href", $this->getUrl())
+                            ->addOutputAttributeValue("crossorigin", "anonymous");
+
+                        $integrity = $this->getIntegrity();
+                        if ($integrity !== null) {
+                            $htmlAttributes->addOutputAttributeValue("integrity", $integrity);
+                        }
+                        $critical = $this->getCritical();
+                        if (!$critical && FetcherPage::isEnabledAsShowAction()) {
+                            $htmlAttributes->addOutputAttributeValue("rel", "preload")
+                                ->addOutputAttributeValue('as', self::STYLE_TAG);
+                        }
+                        return $htmlAttributes->toCallStackArray();
+                    case
+                    Snippet::INTERNAL_TYPE:
+                        /**
+                         * CSS inline in script tag
+                         * If they are critical or inline dynamic content is set, we add them in the page
+                         */
+                        $htmlAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes());
+                        $inline = $this->getCritical() === true ||
+                            ($this->getCritical() === false && $this->hasInlineContent());
+                        if ($inline) {
+                            try {
+                                $cssInternalArray = $htmlAttributes->toCallStackArray();
+                                $cssInternalArray[self::DATA_DOKUWIKI_ATT] = $this->getInternalInlineAndFileContent();
+                                return $cssInternalArray;
+                            } catch (ExceptionNotFound $e) {
+                                throw new ExceptionNotFound("The internal css snippet ($this) has no content.", self::CANONICAL);
+                            }
+                        } else {
+                            try {
+                                $fetchUrl = FetcherRawLocalPath::createFromPath($this->getInternalPath())->getFetchUrl();
+                                /**
+                                 * Dokuwiki transforms/encode the href in HTML
+                                 */
+                                return $htmlAttributes
+                                    ->addOutputAttributeValue("rel", "stylesheet")
+                                    ->addOutputAttributeValue("href", $fetchUrl->toString())
+                                    ->toCallStackArray();
+                            } catch (ExceptionNotFound $e) {
+                                // the file should have been found at this point
+                                throw new ExceptionNotFound("The internal css ($this) could not be added. Error:{$e->getMessage()}", self::CANONICAL);
+                            }
+                        }
+                    default:
+                        throw new ExceptionBadState("Unknown css snippet type ($type", self::CANONICAL);
+                }
+
+            default:
+                throw new ExceptionBadState("The extension ($extension) is unknown", self::CANONICAL);
+        }
+    }
+
+    /**
+     * The HTML tag
+     * @throws ExceptionBadState
+     */
+    public function getHtmlTag(): string
+    {
+        $extension = $this->getExtension();
+        switch ($extension) {
+            case Snippet::EXTENSION_JS:
+                return self::SCRIPT_TAG;
+            case Snippet::EXTENSION_CSS:
+                return Snippet::LINK_TAG;
+            default:
+                throw new ExceptionBadState("The extension ($extension) is unknown");
+        }
+    }
+
+
 }

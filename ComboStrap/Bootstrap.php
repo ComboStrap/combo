@@ -55,7 +55,7 @@ class Bootstrap
             } catch (ExceptionCompile $e) {
                 return $default;
             }
-            $bootstrapVersion = self::getBootStrapVersion();
+            $bootstrapVersion = self::getVersion();
             return $bootstrapVersion[0];
         }
         return $default;
@@ -69,23 +69,11 @@ class Bootstrap
      *
      * @throws Exception
      */
-    public static function getBootstrapMetaHeaders(): array
+    private function getBootstrapMetaHeaders(): array
     {
 
         // The version
-        $bootstrapVersion = self::getBootStrapVersion();
-        if ($bootstrapVersion === false) {
-            /**
-             * Strap may be called for test
-             * by combo
-             * In this case, the conf may not be reloaded
-             */
-            TplUtility::reloadConf();
-            $bootstrapVersion = self::getBootStrapVersion();
-            if ($bootstrapVersion === false) {
-                throw new Exception("Bootstrap version should not be false");
-            }
-        }
+        $bootstrapVersion = $this->getVersion();
         $scriptsMeta = self::buildBootstrapHeadTags($bootstrapVersion);
 
         // if cdn
@@ -143,9 +131,9 @@ class Bootstrap
 
     }
 
-    public static function getBootStrapVersion()
+    public static function getVersion()
     {
-        $bootstrapStyleSheetVersion = tpl_getConf(Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET, Bootstrap::DEFAULT_BOOTSTRAP_VERSION_STYLESHEET);
+        $bootstrapStyleSheetVersion = PluginUtility::getConfValue(Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET, Bootstrap::DEFAULT_BOOTSTRAP_VERSION_STYLESHEET);
         $bootstrapStyleSheetArray = explode(Bootstrap::BOOTSTRAP_VERSION_STYLESHEET_SEPARATOR, $bootstrapStyleSheetVersion);
         return $bootstrapStyleSheetArray[0];
     }
@@ -229,7 +217,7 @@ class Bootstrap
      *
      * @throws ExceptionNotFound
      */
-    public static function buildBootstrapHeadTags($version): array
+    private function buildBootstrapHeadTags($version): array
     {
         $bootstrapJsonFile = WikiPath::createComboResource(":library:bootstrap:bootstrapJavascript.json");
         try {
@@ -272,5 +260,35 @@ class Bootstrap
             }
         }
         return $listVersionStylesheetMeta;
+    }
+
+    public static function getClass(): string
+    {
+        return StyleUtility::addComboStrapSuffix(self::CANONICAL);
+    }
+
+    /**
+     * @return string the class attached to the tag
+     */
+    public static function getBundleClass(): string
+    {
+        return StyleUtility::addComboStrapSuffix(self::CANONICAL."-bundle");
+    }
+
+
+
+    public static function get(): Bootstrap
+    {
+        return new Bootstrap();
+    }
+
+    public function getCssSnippet(): Snippet
+    {
+        $this->buildBootstrapMetaIfNeeded();
+    }
+
+    private function buildBootstrapMetaIfNeeded()
+    {
+        self::getBootstrapMetaHeaders();
     }
 }

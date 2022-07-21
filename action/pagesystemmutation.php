@@ -70,7 +70,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
          */
         $rev = $data[3];
         $filePath = $data[0][0];
-        $file = LocalPath::createFromPath($filePath);
+        $file = LocalPath::createFromPathString($filePath);
         if (!FileSystems::exists($file) && $rev === false) {
             Event::createEvent(
                 action_plugin_combo_pagesystemmutation::PAGE_SYSTEM_MUTATION_EVENT_NAME,

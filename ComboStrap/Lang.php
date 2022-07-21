@@ -108,6 +108,18 @@ class Lang extends MetadataText
         return self::createForMarkup(MarkupPath::createFromRequestedPage());
     }
 
+    /**
+     * Set the direction of the text
+     * The global lang direction (not yet inside the Lang class)
+     * @param string $string
+     * @return void
+     */
+    public static function setDirection(string $string)
+    {
+        global $lang;
+        $lang["direction"] = $string;
+    }
+
     public function getTab(): ?string
     {
         return MetaManagerForm::TAB_LANGUAGE_VALUE;

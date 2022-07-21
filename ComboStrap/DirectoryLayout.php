@@ -22,12 +22,12 @@ class DirectoryLayout
     }
 
     public static function getConfDirectory(): LocalPath{
-        return LocalPath::createFromPath(DOKU_CONF);
+        return LocalPath::createFromPathString(DOKU_CONF);
     }
 
     public static function getComboHome(): LocalPath
     {
-        return LocalPath::createFromPath(DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME);
+        return LocalPath::createFromPathString(DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME);
     }
 
     public static function getComboImagesDirectory(): LocalPath

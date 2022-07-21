@@ -457,7 +457,7 @@ class WikiPath extends PathAbs
                 }
                 try {
                     $realPath = readlink($drivePath->toPathString());
-                    $drivePath = LocalPath::createFromPath($realPath);
+                    $drivePath = LocalPath::createFromPathString($realPath);
                     $relativePath = $path->relativize($drivePath);
                 } catch (ExceptionBadArgument $e) {
                     // not a relative path
@@ -843,10 +843,10 @@ class WikiPath extends PathAbs
             global $conf;
             switch ($this->drive) {
                 case self::MEDIA_DRIVE:
-                    $localPath = LocalPath::createFromPath($conf['mediadir']);
+                    $localPath = LocalPath::createFromPathString($conf['mediadir']);
                     break;
                 case self::PAGE_DRIVE:
-                    $localPath = LocalPath::createFromPath($conf['datadir']);
+                    $localPath = LocalPath::createFromPathString($conf['datadir']);
                     break;
                 default:
                     $localPath = WikiPath::getDriveRoots()[$this->drive];
@@ -894,7 +894,7 @@ class WikiPath extends PathAbs
                 }
                 break;
         }
-        return LocalPath::createFromPath($filePathString);
+        return LocalPath::createFromPathString($filePathString);
 
     }
 

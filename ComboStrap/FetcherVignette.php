@@ -82,7 +82,7 @@ class FetcherVignette extends FetcherImage
          * Can we use the cache ?
          */
         if ($cache->isCacheUsable()) {
-            return LocalPath::createFromPath($cache->getFile());
+            return LocalPath::createFromPathString($cache->getFile());
         }
 
         $width = $this->getIntrinsicWidth();

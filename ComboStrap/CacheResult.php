@@ -41,7 +41,7 @@ class CacheResult
 
     public function getPath(): LocalPath
     {
-        return LocalPath::createFromPath($this->cacheParser->cache);
+        return LocalPath::createFromPathString($this->cacheParser->cache);
     }
 
     public function getMode(): string

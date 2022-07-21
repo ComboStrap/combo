@@ -556,7 +556,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     {
         $this->buildObjectAndEnvironmentIfNeeded();
         $path = $this->cache->cache;
-        return LocalPath::createFromPath($path);
+        return LocalPath::createFromPathString($path);
     }
 
 

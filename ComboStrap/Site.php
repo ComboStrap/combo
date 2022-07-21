@@ -520,7 +520,7 @@ class Site
         if ($pageDirectory === null) {
             throw new ExceptionRuntime("The page directory ($pageDirectory) is null");
         }
-        return LocalPath::createFromPath($pageDirectory);
+        return LocalPath::createFromPathString($pageDirectory);
     }
 
     public static function disableHeadingSectionEditing()
@@ -548,7 +548,7 @@ class Site
         if ($dataDirectory === null) {
             throw new ExceptionRuntime("The data directory ($dataDirectory) is null");
         }
-        return LocalPath::createFromPath($dataDirectory);
+        return LocalPath::createFromPathString($dataDirectory);
     }
 
     public static function isLowQualityProtectionEnable(): bool
@@ -925,7 +925,7 @@ class Site
         if ($mediaDirectory === null) {
             throw new ExceptionRuntime("The media directory ($mediaDirectory) is null");
         }
-        return LocalPath::createFromPath($mediaDirectory);
+        return LocalPath::createFromPathString($mediaDirectory);
     }
 
     public static function getCacheDirectory(): LocalPath
@@ -935,7 +935,7 @@ class Site
         if ($cacheDirectory === null) {
             throw new ExceptionRuntime("The cache directory ($cacheDirectory) is null");
         }
-        return LocalPath::createFromPath($cacheDirectory);
+        return LocalPath::createFromPathString($cacheDirectory);
     }
 
 
@@ -1038,7 +1038,7 @@ class Site
     {
         $files = [];
         foreach (getConfigFiles('main') as $fileConfig) {
-            $files[] = LocalPath::createFromPath($fileConfig);
+            $files[] = LocalPath::createFromPathString($fileConfig);
         }
         return $files;
     }
@@ -1056,11 +1056,11 @@ class Site
         if (!empty($conf['basedir'])) {
             return $conf['basedir'];
         }
-        $scriptName = LocalPath::createFromPath($_SERVER['SCRIPT_NAME']);
+        $scriptName = LocalPath::createFromPathString($_SERVER['SCRIPT_NAME']);
         if ($scriptName->getExtension() === 'php') {
             return Url::toUrlSeparator($scriptName->getParent()->toPathString());
         }
-        $phpSelf = LocalPath::createFromPath($_SERVER['PHP_SELF']);
+        $phpSelf = LocalPath::createFromPathString($_SERVER['PHP_SELF']);
         if ($phpSelf->getExtension() === "php") {
             return Url::toUrlSeparator($scriptName->getParent()->toPathString());
         }

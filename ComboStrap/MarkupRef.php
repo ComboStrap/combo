@@ -138,7 +138,7 @@ class MarkupRef
          */
         if (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $ref)) {
             $this->refScheme = self::WINDOWS_SHARE_URI;
-            $this->url = LocalPath::createFromPath($ref)->getUrl();
+            $this->url = LocalPath::createFromPathString($ref)->getUrl();
             return;
         }
 

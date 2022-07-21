@@ -25,7 +25,7 @@ class ClassUtility
         if ($fileName === false) {
             throw new \ReflectionException("The class is defined in php core or in a php extension");
         }
-        return LocalPath::createFromPath($fileName);
+        return LocalPath::createFromPathString($fileName);
     }
 
     public static function getClassImplementingInterface(string $interface): array

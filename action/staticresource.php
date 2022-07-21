@@ -165,7 +165,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if (empty($physicalFile)) {
             $physicalFile = $originalFile;
         }
-        $mediaToSend = LocalPath::createFromPath($physicalFile);
+        $mediaToSend = LocalPath::createFromPathString($physicalFile);
         if (!FileSystems::exists($mediaToSend)) {
             if (PluginUtility::isDevOrTest()) {
                 LogUtility::internalError("The media ($mediaToSend) does not exist", self::CANONICAL);

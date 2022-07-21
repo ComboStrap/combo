@@ -34,7 +34,7 @@ class Font
         if (Os::isWindows()) {
             return self::getWindowsFontDirectory()->resolve('Arial.ttf');
         } else {
-            return LocalPath::createFromPath('/usr/share/fonts/liberation/LiberationSans-Regular.ttf');
+            return LocalPath::createFromPathString('/usr/share/fonts/liberation/LiberationSans-Regular.ttf');
         }
     }
 
@@ -65,6 +65,6 @@ class Font
 
     public static function getWindowsFontDirectory(): LocalPath
     {
-        return LocalPath::createFromPath('c:\windows\fonts');
+        return LocalPath::createFromPathString('c:\windows\fonts');
     }
 }

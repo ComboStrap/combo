@@ -239,7 +239,7 @@ class Bootstrap
 
         foreach ($bootstrapMetas as $key => $script) {
             $fileNameWithExtension = $script["file"];
-            $file = LocalPath::createFromPath($fileNameWithExtension);
+            $file = LocalPath::createFromPathString($fileNameWithExtension);
 
 
             $path = WikiPath::createComboResource(":bootstrap:$version:$fileNameWithExtension");

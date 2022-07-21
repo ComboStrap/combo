@@ -83,7 +83,7 @@ class LocalPath extends PathAbs
     /**
      * @param string $filePath
      * @return LocalPath
-     * @deprecated for {@link LocalPath::createFromPath()}
+     * @deprecated for {@link LocalPath::createFromPathString()}
      */
     public static function create(string $filePath): LocalPath
     {
@@ -125,11 +125,11 @@ class LocalPath extends PathAbs
         if ($home === false) {
             throw new ExceptionNotFound(" The home directory could not be found");
         }
-        return LocalPath::createFromPath($home);
+        return LocalPath::createFromPathString($home);
     }
 
 
-    public static function createFromPath(string $string, string $sep = null): LocalPath
+    public static function createFromPathString(string $string, string $sep = null): LocalPath
     {
         return new LocalPath($string, $sep);
     }
@@ -205,7 +205,7 @@ class LocalPath extends PathAbs
     {
 
         $newPath = $this->toCanonicalPath()->toPathString() . $this->getDirectorySeparator() . utf8_encodeFN($name);
-        return self::createFromPath($newPath);
+        return self::createFromPathString($newPath);
 
     }
 
@@ -223,18 +223,18 @@ class LocalPath extends PathAbs
              */
             if (is_link($this->path)) {
                 $realPath = readlink($this->path);
-                return LocalPath::createFromPath($realPath)
+                return LocalPath::createFromPathString($realPath)
                     ->relativize($localPath);
             }
             throw new ExceptionBadArgument("The path ($localPath) is not a parent path of the actual path ($actualPath)");
         }
         if ($actualPath->toPathString() === $localPath->toPathString()) {
-            return LocalPath::createFromPath("");
+            return LocalPath::createFromPathString("");
         }
         $sepCharacter = 1; // delete the sep characters
         $relativePath = substr($actualPath->toPathString(), strlen($localPath->toPathString()) + $sepCharacter);
         $relativePath = str_replace($this->getDirectorySeparator(), WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $relativePath);
-        return LocalPath::createFromPath($relativePath);
+        return LocalPath::createFromPathString($relativePath);
 
     }
 
@@ -266,7 +266,7 @@ class LocalPath extends PathAbs
          */
         $realPath = realpath($this->path);
         if ($realPath !== false) {
-            return LocalPath::createFromPath($realPath);
+            return LocalPath::createFromPathString($realPath);
         }
 
         /**
@@ -328,7 +328,7 @@ class LocalPath extends PathAbs
             $parts = array_reverse($parts);
             $realPath .= implode($this->getDirectorySeparator(), $parts);
         }
-        return LocalPath::createFromPath($realPath);
+        return LocalPath::createFromPathString($realPath);
     }
 
     public function getDirectorySeparator()

@@ -82,7 +82,7 @@ class FetcherCache
 
     public function getFile(): LocalPath
     {
-        return LocalPath::createFromPath($this->fileCache->cache);
+        return LocalPath::createFromPathString($this->fileCache->cache);
     }
 
     public function addFileDependency(Path $path): FetcherCache

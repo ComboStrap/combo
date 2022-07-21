@@ -284,4 +284,16 @@ class FileSystems
     {
         return PathTreeNode::buildTreeViaFileSystemChildren($path);
     }
+
+    /**
+     * @throws ExceptionBadArgument - if they are not local path
+     */
+    public static function copy(Path $source, Path $destination)
+    {
+        $sourceLocal = LocalPath::createFromPathObject($source);
+        $destinationLocal = LocalPath::createFromPathObject($destination);
+        copy($sourceLocal->toPathString(), $destinationLocal->toPathString());
+
+        // D:\dokuwiki\lib\plugins\combo\_test\resources\bootstrapLocal.json
+    }
 }

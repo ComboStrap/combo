@@ -311,7 +311,7 @@ class DatabasePageRow
         /**
          * When the database version file is higher
          */
-        $version = LocalPath::createFromPath(__DIR__ . "/../db/latest.version");
+        $version = LocalPath::createFromPathString(__DIR__ . "/../db/latest.version");
         try {
             $versionModifiedTime = FileSystems::getModifiedTime($version);
         } catch (ExceptionNotFound $e) {
@@ -324,7 +324,7 @@ class DatabasePageRow
         /**
          * When the class date time is higher
          */
-        $code = LocalPath::createFromPath(__DIR__ . "/DatabasePageRow.php");
+        $code = LocalPath::createFromPathString(__DIR__ . "/DatabasePageRow.php");
         try {
             $codeModified = FileSystems::getModifiedTime($code);
         } catch (ExceptionNotFound $e) {

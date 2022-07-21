@@ -251,7 +251,7 @@ class Snippet implements JsonSerializable
      * @param Path $snippetPath
      * @return Snippet
      */
-    private static function getOrCreateSnippetWithPath(Path $snippetPath)
+    public static function getOrCreateSnippetWithPath(Path $snippetPath)
     {
 
         $requestedPageId = WikiRequest::getOrCreateFromEnv()->getRequestedId();
@@ -376,7 +376,7 @@ class Snippet implements JsonSerializable
 
     public function __toString()
     {
-        return $this->externalUrl->toString();
+        return $this->path->toUriString();
     }
 
     public function getCritical(): bool
@@ -521,8 +521,14 @@ class Snippet implements JsonSerializable
         if ($this->hasInlineContent()) {
             return self::INTERNAL_TYPE;
         }
-        if (!FileSystems::exists($this->path)) {
-            return self::EXTERNAL_TYPE;
+        $fileExists = FileSystems::exists($this->path);
+        if (!$fileExists ) {
+            if (isset($this->externalUrl)){
+                return self::EXTERNAL_TYPE;
+            } else {
+                LogUtility::internalError("The snippet ($this) have a path ($this->path) that does not exists and does not have any external url.");
+                return self::INTERNAL_TYPE;
+            }
         }
         // if cdn
         $useCdn = $this->shouldUseCdn();
@@ -541,13 +547,10 @@ class Snippet implements JsonSerializable
         return FetcherRawLocalPath::createFromPath($path)->getFetchUrl();
     }
 
-    /**
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionBadArgument
-     */
+
     public function getExternalUrl(): Url
     {
-        return Url::createFromString($this->externalUrl);
+        return $this->externalUrl;
     }
 
     public function getIntegrity(): ?string

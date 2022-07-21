@@ -19,6 +19,8 @@ class Bootstrap
 {
     const DEFAULT_STYLESHEET_NAME = "bootstrap";
     const TAG = self::CANONICAL;
+    public const DEFAULT_BOOTSTRAP_4 = "4.5.0 - bootstrap";
+    public const DEFAULT_BOOTSTRAP_5 = "5.0.1 - bootstrap";
     private Snippet $jquerySnippet;
     private Snippet $jsSnippet;
     private Snippet $popperSnippet;

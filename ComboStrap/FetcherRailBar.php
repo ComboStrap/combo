@@ -230,24 +230,25 @@ EOF;
 
     private function toOffCanvasLayout(string $railBarHtmlListItems, Breakpoint $hideFromBreakpoint = null): string
     {
-        $htmlClassAttribute = "";
+        $breakpointHiding = "";
         if($hideFromBreakpoint!==null){
-            $htmlClassAttribute = " class=\"d-{$hideFromBreakpoint->getShortName()}-none\"";
+            $breakpointHiding = "d-{$hideFromBreakpoint->getShortName()}-none";
         }
         $railBarOffCanvasPrefix = "railbar-offcanvas";
-        $railBarOffCanvasId = StyleUtility::addComboStrapSuffix($railBarOffCanvasPrefix);
+        $railBarClass = StyleUtility::addComboStrapSuffix(self::NAME);
+        $railBarOffCanvasClassAndId = StyleUtility::addComboStrapSuffix($railBarOffCanvasPrefix);
         $railBarOffCanvasWrapperId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-wrapper");
         $railBarOffCanvasLabelId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-label");
         $railBarOffcanvasBodyId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-body");
         $railBarOffCanvasCloseId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-close");
         $railBarOffCanvasOpenId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-open");
         return <<<EOF
-<div id="$railBarOffCanvasWrapperId"$htmlClassAttribute>
+<div id="$railBarOffCanvasWrapperId" class="$railBarClass $railBarOffCanvasClassAndId $breakpointHiding">
     <button id="$railBarOffCanvasOpenId" class="btn" type="button" data-bs-toggle="offcanvas"
-            data-bs-target="#$railBarOffCanvasId" aria-controls="railbar-offcanvas">
+            data-bs-target="#$railBarOffCanvasClassAndId" aria-controls="railbar-offcanvas">
     </button>
 
-    <div id="$railBarOffCanvasId" class="offcanvas offcanvas-end" tabindex="-1" aria-labelledby="$railBarOffCanvasLabelId"
+    <div id="$railBarOffCanvasClassAndId" class="offcanvas offcanvas-end" tabindex="-1" aria-labelledby="$railBarOffCanvasLabelId"
          style="visibility: hidden;" aria-hidden="true">
          <h5 class="d-none" id="$railBarOffCanvasLabelId">Railbar</h5>
         <!-- Pseudo relative element  https://stackoverflow.com/questions/6040005/relatively-position-an-element-without-it-taking-up-space-in-document-flow -->
@@ -330,7 +331,7 @@ EOF;
     private function getBreakPointConfiguration(): Breakpoint
     {
         $name = PluginUtility::getConfValue(self::CONF_BREAKPOINT_RAIL_BAR, Breakpoint::BREAKPOINT_LARGE_NAME);
-        return Breakpoint::createFromShortName($name);
+        return Breakpoint::createFromLongName($name);
     }
 
 
@@ -341,14 +342,15 @@ EOF;
      */
     private function toFixedLayout(string $railBarHtmlListItems, Breakpoint $showFromBreakpoint = null): string
     {
-        $class = "d-flex";
+        $showFromBreakpointClasses = "";
         if ($showFromBreakpoint !== null) {
-            $class = "d-none d-{$showFromBreakpoint->getShortName()}-flex";
+            $showFromBreakpointClasses = "d-none d-{$showFromBreakpoint->getShortName()}-flex";
         }
-        $fixedId = StyleUtility::addComboStrapSuffix("railbar-fixed");
+        $railBarClass = StyleUtility::addComboStrapSuffix(self::NAME);
+        $railBarFixedClassOrId = StyleUtility::addComboStrapSuffix(self::NAME."-fixed");
         $zIndexRailbar = 1000; // A navigation bar (below the drop down because we use it in the search box for auto-completion)
         return <<<EOF
-<div id="$fixedId" class="$class" style="z-index: $zIndexRailbar;">
+<div id="$railBarFixedClassOrId" class="$railBarClass $railBarFixedClassOrId d-flex $showFromBreakpointClasses" style="z-index: $zIndexRailbar;">
     <div>
         $railBarHtmlListItems
     </div>

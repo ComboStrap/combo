@@ -406,9 +406,9 @@ class WikiPath extends PathAbs
 
     /**
      */
-    public static function createComboResource($dokuwikiId): WikiPath
+    public static function createComboResource($stringPath): WikiPath
     {
-        return new WikiPath($dokuwikiId, self::COMBO_DRIVE);
+        return new WikiPath($stringPath, self::COMBO_DRIVE);
     }
 
 

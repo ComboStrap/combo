@@ -293,32 +293,6 @@ class SnippetManager
 
 
     /**
-     * Add a local javascript script as tag
-     * (ie same as {@link SnippetManager::attachExternalJavascriptLibraryForRunningSlot()})
-     * but for local resource combo file (library)
-     *
-     * For instance:
-     *   * library:combo:combo.js
-     *   * for a file located at dokuwiki_home\lib\plugins\combo\resources\library\combo\combo.js
-     * @param string $snippetId - the snippet id
-     * @param string $relativeId - the relative id from the resources directory
-     */
-    public
-    function attachJavascriptScriptForRequest(string $snippetId, string $relativeId): Snippet
-    {
-
-        $dokuPath = WikiPath::createComboResource($relativeId);
-        try {
-            $url = FetcherRawLocalPath::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
-        } catch (ExceptionNotFound $e) {
-            LogUtility::internalError($e->getMessage());
-            $url = "";
-        }
-        return $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, $url);
-
-    }
-
-    /**
      * @param string $snippetId
      * @param string $relativeId
      * @param string|null $integrity
@@ -342,10 +316,25 @@ class SnippetManager
 
     }
 
+    /**
+     * Add a local javascript script as tag
+     * (ie same as {@link SnippetManager::attachExternalJavascriptLibraryForRunningSlot()})
+     * but for local resource combo file (library)
+     *
+     * For instance:
+     *   * library:combo:combo.js
+     *   * for a file located at dokuwiki_home\lib\plugins\combo\resources\library\combo\combo.js
+     * @param string $snippetId - the snippet id
+     * @param string $relativeId - the relative id from the resources directory
+     */
     public
     function attachJavascriptComboLibrary(): Snippet
     {
-        return $this->attachJavascriptScriptForRequest("combo", "library:combo:combo.min.js");
+
+        $dokuPath = WikiPath::createComboResource(":library:combo:combo.min.js");
+        return Snippet::getOrCreateSnippetWithPath($dokuPath)
+            ->setComponentId("combo");
+
     }
 
     /**

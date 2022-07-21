@@ -2030,7 +2030,7 @@ class MarkupPath implements ResourceCombo, Path
 
     public function createPageFetcherHtml(): FetcherPage
     {
-        return FetcherPage::createPageFetcherFromPage($this);
+        return FetcherPage::createPageFetcherFromMarkupPath($this);
     }
 
     public function getHttpResponse(): HttpResponse

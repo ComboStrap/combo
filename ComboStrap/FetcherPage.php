@@ -96,9 +96,9 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     }
 
 
-    public static function createPageFetcherFromPage(MarkupPath $pageFragment): FetcherPage
+    public static function createPageFetcherFromMarkupPath(MarkupPath $markupPath): FetcherPage
     {
-        return self::createPageFetcherFromPath($pageFragment->getPathObject());
+        return self::createPageFetcherFromPath($markupPath->getPathObject());
     }
 
 
@@ -228,7 +228,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
      * @throws ExceptionNotFound
      * @throws ExceptionBadArgument
      */
-    public function getFetchPathAsHtmlDom(): XmlDocument
+    public function getFetchAsHtmlDom(): XmlDocument
     {
         $content = $this->getFetchString();
         return XmlDocument::createHtmlDocFromMarkup($content);

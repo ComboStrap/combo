@@ -370,8 +370,8 @@ class Snippet implements JsonSerializable
 
     public function getCritical(): bool
     {
-        if ($this->critical === null) {
-            if ($this->path->getExtension() == self::EXTENSION_CSS) {
+        if (!isset($this->critical)) {
+            if ($this->path->getExtension() === self::EXTENSION_CSS) {
                 // All CSS should be loaded first
                 // The CSS animation / background can set this to false
                 return true;
@@ -536,8 +536,11 @@ class Snippet implements JsonSerializable
         return $this->integrity;
     }
 
-    public function getHtmlAttributes(): ?array
+    public function getHtmlAttributes(): array
     {
+        if (!isset($this->htmlAttributes)) {
+            return [];
+        }
         return $this->htmlAttributes;
     }
 

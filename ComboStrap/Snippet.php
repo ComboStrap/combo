@@ -675,16 +675,16 @@ class Snippet implements JsonSerializable
      */
     public function toDokuWikiArray(): array
     {
+        $htmlAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes())
+            ->addClassName($this->getClass());
         $type = $this->getType();
         $extension = $this->getExtension();
         switch ($extension) {
             case Snippet::EXTENSION_JS:
                 switch ($type) {
                     case Snippet::EXTERNAL_TYPE:
-                        $htmlAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes());
                         $htmlAttributes
-                            ->addClassName($this->getClass())
-                            ->addOutputAttributeValue("src", $this->getExternalUrl())
+                            ->addOutputAttributeValue("src", $this->getExternalUrl()->toString())
                             ->addOutputAttributeValue("crossorigin", "anonymous");
                         $integrity = $this->getIntegrity();
                         if ($integrity !== null) {
@@ -700,7 +700,6 @@ class Snippet implements JsonSerializable
 
                     case Snippet::INTERNAL_TYPE:
                     default:
-                        $htmlAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes());
                         /**
                          * This may broke the dependencies
                          * if a small javascript depend on a large one
@@ -739,9 +738,9 @@ class Snippet implements JsonSerializable
             case Snippet::EXTENSION_CSS:
                 switch ($type) {
                     case Snippet::EXTERNAL_TYPE:
-                        $htmlAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes())
+                        $htmlAttributes
                             ->addOutputAttributeValue("rel", "stylesheet")
-                            ->addOutputAttributeValue("href", $this->getExternalUrl())
+                            ->addOutputAttributeValue("href", $this->getExternalUrl()->toString())
                             ->addOutputAttributeValue("crossorigin", "anonymous");
 
                         $integrity = $this->getIntegrity();
@@ -760,7 +759,6 @@ class Snippet implements JsonSerializable
                          * CSS inline in script tag
                          * If they are critical or inline dynamic content is set, we add them in the page
                          */
-                        $htmlAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes());
                         $inline = $this->getCritical() === true ||
                             ($this->getCritical() === false && $this->hasInlineContent());
                         if ($inline) {

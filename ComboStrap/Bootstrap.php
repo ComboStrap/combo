@@ -174,18 +174,8 @@ class Bootstrap
         return $listVersionStylesheetMeta;
     }
 
-    public static function getClass(): string
-    {
-        return StyleUtility::addComboStrapSuffix(self::CANONICAL);
-    }
 
-    /**
-     * @return string the class attached to the tag
-     */
-    public static function getBundleClass(): string
-    {
-        return StyleUtility::addComboStrapSuffix(self::CANONICAL . "-bundle");
-    }
+
 
     /**
      * @return Bootstrap

@@ -28,6 +28,11 @@ class WikiRequest
 
     const CANONICAL = "wikiRequest";
 
+    /**
+     * @var array of objects that are scoped to this request
+     */
+    private array $objects;
+
     private CacheManager $cacheManager;
     /**
      * This array should have only one value at a time
@@ -442,6 +447,22 @@ class WikiRequest
     public function getRequestedPath(): WikiPath
     {
         return WikiPath::createPagePathFromId($this->getRequestedId());
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getObject(string $objectIdentifier)
+    {
+        if(isset($this->objects[$objectIdentifier])){
+            return $this->objects[$objectIdentifier];
+        }
+        throw new ExceptionNotFound("No object $objectIdentifier found");
+    }
+
+    public function setObject($objectIdentifier, $object)
+    {
+        $this->objects[$objectIdentifier]=$object;
     }
 
 

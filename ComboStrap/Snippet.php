@@ -25,6 +25,11 @@ use JsonSerializable;
  * A component to manage the extra HTML that
  * comes from components and that should come in the head HTML node
  *
+ * A snippet identifier is a {@link Snippet::getLocalUrl() local file}
+ *   * if there is content defined, it will be an {@link Snippet::hasInlineContent() inline}
+ *   * if not, it will be the local file with the {@link Snippet::getLocalUrl()}
+ *   * if not found or if the usage of the cdn is required, the {@link Snippet::getExternalUrl() url} is used
+ *
  */
 class Snippet implements JsonSerializable
 {
@@ -42,7 +47,6 @@ class Snippet implements JsonSerializable
     /**
      * Properties of the JSON array
      */
-    const JSON_TYPE_PROPERTY = "type"; // mandatory
     const JSON_COMPONENT_PROPERTY = "component"; // mandatory
     const JSON_EXTENSION_PROPERTY = "extension"; // mandatory
     const JSON_URL_PROPERTY = "url"; // mandatory if external
@@ -92,6 +96,10 @@ class Snippet implements JsonSerializable
     public const STYLE_TAG = "style";
     public const SCRIPT_TAG = "script";
     public const LINK_TAG = "link";
+    /**
+     * Use CDN for local stored library
+     */
+    public const CONF_USE_CDN = "useCDN";
 
 
     protected static $globalSnippets;
@@ -101,23 +109,18 @@ class Snippet implements JsonSerializable
     /**
      * @var bool
      */
-    private $critical;
+    private bool $critical;
 
     /**
      * @var string the text script / style (may be null if it's an external resources)
      */
     private string $inlineContent;
 
-    private Url $url;
+    private Url $externalUrl;
 
     private string $integrity;
 
     private array $htmlAttributes;
-
-    /**
-     * @var string ie internal or external
-     */
-    private string $type;
 
 
     /**
@@ -137,81 +140,64 @@ class Snippet implements JsonSerializable
     /**
      * @var bool run as soon as possible
      */
-    private $async;
-    private WikiPath $internalPath;
-    private $componentId;
+    private bool $async;
+    private Path $path;
+    private string $componentId;
 
     /**
-     * @param Url $url - the url
-     * @param $mime - the expected mime (extension for now) - an url may not have any extension in its path
-     * @throws ExceptionBadArgument
+     * @param Path $path
      */
-    public function __construct(Url $url, $mime)
+    public function __construct(Path $path)
     {
-        $this->url = $url;
-        $this->extension = $mime;
-        try {
-            $host = $url->getHost();
-            if ($host === Site::getServerHost()) {
-                $this->type = self::INTERNAL_TYPE;
-                $this->internalPath = FetcherRawLocalPath::createLocalFromFetchUrl($url)->getSourcePath();
-                $this->componentId = $this->internalPath->getLastNameWithoutExtension();
-            } else {
-                $this->type = self::EXTERNAL_TYPE;
-                try {
-                    $this->componentId = $this->url->getLastNameWithoutExtension();
-                } catch (ExceptionNotFound $e) {
-                    // a external snippet url should have a last name normally in its path
-                    // but it's not mandatory
-                    // if there is no host, this is not an external
-                    $this->componentId = $this->url->getHost();
-                }
-            }
-        } catch (ExceptionNotFound $e) {
-            $this->type = self::EXTERNAL_TYPE;
-        }
-        $this->url = $url;
+        $this->path = $path;
     }
 
 
-    public static function createInternalCssSnippet($componentId): Snippet
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public static function createCssSnippetFromComponentId($componentId): Snippet
     {
-        return self::getOrCreateSnippet(self::INTERNAL_TYPE, self::EXTENSION_CSS, $componentId);
+        return Snippet::createSnippetFromComponentId($componentId, self::EXTENSION_CSS);
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public static function createSnippetFromComponentId($componentId, $type): Snippet
+    {
+        $path = self::getInternalPathFromNameAndExtension($componentId, $type);
+        return Snippet::createSnippetFromPath($path)
+            ->setComponentId($componentId);
     }
 
 
     /**
      * The snippet id is the url for external resources (ie external javascript / stylesheet)
      * otherwise if it's internal, it's the component id and it's type
-     * @param string $identifier - the snippet identifier - the url for an external snippet or {@link Snippet::INTERNAL_TYPE} for an internal one
+     * @param string $snippetId - the component id is a short id that you will found in the class (for internal snippet, it helps also resolve the file)
      * @param string $extension - {@link Snippet::EXTENSION_CSS css} or {@link Snippet::EXTENSION_JS js}
-     * @param string $componentId - the component id is a short id that you will found in the class (for internal snippet, it helps also resolve the file)
      * @return Snippet
-     * @throws ExceptionBadArgument|ExceptionBadSyntax
      */
-    public static function &getOrCreateSnippet(string $identifier, string $extension, string $componentId): Snippet
+    public static function &getOrCreateSnippet(string $snippetId, string $extension): Snippet
     {
 
-        $requestedPageId = PluginUtility::getRequestedWikiId();
+        $requestedPageId = WikiRequest::getOrCreateFromEnv()->getRequestedId();
         $snippets = &self::$globalSnippets[$requestedPageId];
         if ($snippets === null) {
             self::reset();
             self::$globalSnippets[$requestedPageId] = [];
             $snippets = &self::$globalSnippets[$requestedPageId];
         }
-        if ($identifier === Snippet::INTERNAL_TYPE) {
-            $snippetPath = self::getInternalPathFromNameAndExtension($componentId, $extension);
-            $snippetUrl = FetcherRawLocalPath::createFromPath($snippetPath)->getFetchUrl();
-        } else {
-            $snippetUrl = Url::createFromString($identifier);
-        }
 
-        $snippetId = $snippetUrl->toString();
-        $snippet = &$snippets[$snippetId];
+        $snippetPath = self::getInternalPathFromNameAndExtension($snippetId, $extension);
+
+        $snippetGuid = $snippetPath->toUriString();
+        $snippet = &$snippets[$snippetGuid];
         if ($snippet === null) {
-            $snippet = self::createSnippet($snippetUrl, $extension)
-                ->setComponentId($componentId);
-            $snippets[$snippetId] = $snippet;
+            $snippet = self::createSnippet($snippetPath)
+                ->setComponentId($snippetId);
+            $snippets[$snippetGuid] = $snippet;
         }
         return $snippet;
 
@@ -246,14 +232,12 @@ class Snippet implements JsonSerializable
     }
 
     /**
-     * @param Url $url - the url
-     * @param string $extension
+     * @param WikiPath $path
      * @return Snippet
-     * @throws ExceptionBadArgument
      */
-    public static function createSnippet(Url $url, string $extension): Snippet
+    public static function createSnippet(Path $path): Snippet
     {
-        return new Snippet($url, $extension);
+        return new Snippet($path);
     }
 
 
@@ -270,10 +254,9 @@ class Snippet implements JsonSerializable
     /**
      * @throws ExceptionBadArgument
      */
-    public static function createSnippetFromPath(WikiPath $path, string $extension): Snippet
+    public static function createSnippetFromPath(WikiPath $path): Snippet
     {
-        $url = FetcherRawLocalPath::createFromPath($path)->getFetchUrl();
-        return new Snippet($url, $extension);
+        return new Snippet($path);
     }
 
 
@@ -341,13 +324,13 @@ class Snippet implements JsonSerializable
      */
     public function getInternalFileContent(): string
     {
-        $path = $this->getInternalPath();
+        $path = $this->getPath();
         return FileSystems::getContent($path);
     }
 
-    public function getInternalPath(): WikiPath
+    public function getPath(): Path
     {
-        return $this->internalPath;
+        return $this->path;
     }
 
     public static function getInternalPathFromNameAndExtension($name, $extension): WikiPath
@@ -382,13 +365,13 @@ class Snippet implements JsonSerializable
 
     public function __toString()
     {
-        return $this->url->toString();
+        return $this->externalUrl->toString();
     }
 
     public function getCritical(): bool
     {
         if ($this->critical === null) {
-            if ($this->extension == self::EXTENSION_CSS) {
+            if ($this->path->getExtension() == self::EXTENSION_CSS) {
                 // All CSS should be loaded first
                 // The CSS animation / background can set this to false
                 return true;
@@ -490,11 +473,14 @@ class Snippet implements JsonSerializable
 
     public function getExtension()
     {
-        return $this->extension;
+        return $this->path->getExtension();
     }
 
     public function setIntegrity(?string $integrity): Snippet
     {
+        if ($integrity === null) {
+            return $this;
+        }
         $this->integrity = $integrity;
         return $this;
     }
@@ -513,16 +499,36 @@ class Snippet implements JsonSerializable
 
     public function getType(): string
     {
-        return $this->type;
+        if ($this->hasInlineContent()) {
+            return self::INTERNAL_TYPE;
+        }
+        if (!FileSystems::exists($this->path)) {
+            return self::EXTERNAL_TYPE;
+        }
+        // if cdn
+        $useCdn = $this->shouldUseCdn();
+        if ($useCdn && isset($this->externalUrl)) {
+            return self::EXTERNAL_TYPE;
+        }
+        return self::INTERNAL_TYPE;
+    }
+
+    /**
+     * @throws ExceptionBadArgument - if the path cannot be served (ie transformed as wiki path)
+     */
+    public function getLocalUrl(): Url
+    {
+        $path = WikiPath::createFromPathObject($this->path);
+        return FetcherRawLocalPath::createFromPath($path)->getFetchUrl();
     }
 
     /**
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
      */
-    public function getUrl(): Url
+    public function getExternalUrl(): Url
     {
-        return Url::createFromString($this->url);
+        return Url::createFromString($this->externalUrl);
     }
 
     public function getIntegrity(): ?string
@@ -565,33 +571,32 @@ class Snippet implements JsonSerializable
     {
         $dataToSerialize = [
             self::JSON_COMPONENT_PROPERTY => $this->getComponentId(),
-            self::JSON_EXTENSION_PROPERTY => $this->extension,
-            self::JSON_TYPE_PROPERTY => $this->type
+            self::JSON_EXTENSION_PROPERTY => $this->getExtension()
         ];
-        if ($this->url !== null) {
-            $dataToSerialize[self::JSON_URL_PROPERTY] = $this->url;
+        if (isset($this->externalUrl)) {
+            $dataToSerialize[self::JSON_URL_PROPERTY] = $this->externalUrl->toString();
         }
-        if ($this->integrity !== null) {
+        if (isset($this->integrity)) {
             $dataToSerialize[self::JSON_INTEGRITY_PROPERTY] = $this->integrity;
         }
-        if ($this->critical !== null) {
+        if (isset($this->critical)) {
             $dataToSerialize[self::JSON_CRITICAL_PROPERTY] = $this->critical;
         }
-        if ($this->async !== null) {
+        if (isset($this->async)) {
             $dataToSerialize[self::JSON_ASYNC_PROPERTY] = $this->async;
         }
         if (isset($this->inlineContent)) {
             $dataToSerialize[self::JSON_CONTENT_PROPERTY] = $this->inlineContent;
         }
-        if ($this->htmlAttributes !== null) {
+        if (isset($this->htmlAttributes)) {
             $dataToSerialize[self::JSON_HTML_ATTRIBUTES_PROPERTY] = $this->htmlAttributes;
         }
         return $dataToSerialize;
     }
 
-    public function setInternalPath(WikiPath $path): Snippet
+    public function setPath(WikiPath $path): Snippet
     {
-        $this->internalPath = $path;
+        $this->path = $path;
         return $this;
     }
 
@@ -625,7 +630,7 @@ class Snippet implements JsonSerializable
         /**
          * If this is a path, true if the file is small enough
          */
-        $internalPath = $this->getInternalPath();
+        $internalPath = $this->getPath();
         if (FileSystems::getSize($internalPath) > $this->getMaxInlineSize()) {
             return false;
         }
@@ -647,7 +652,7 @@ class Snippet implements JsonSerializable
                         $htmlAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes());
                         $htmlAttributes
                             ->addClassName($this->getClass())
-                            ->addOutputAttributeValue("src", $this->getUrl())
+                            ->addOutputAttributeValue("src", $this->getExternalUrl())
                             ->addOutputAttributeValue("crossorigin", "anonymous");
                         $integrity = $this->getIntegrity();
                         if ($integrity !== null) {
@@ -681,7 +686,7 @@ class Snippet implements JsonSerializable
                                 }
                             case false:
 
-                                $wikiPath = $this->getInternalPath();
+                                $wikiPath = $this->getPath();
                                 try {
                                     $fetchUrl = FetcherRawLocalPath::createFromPath($wikiPath)->getFetchUrl();
                                     /**
@@ -704,7 +709,7 @@ class Snippet implements JsonSerializable
                     case Snippet::EXTERNAL_TYPE:
                         $htmlAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes())
                             ->addOutputAttributeValue("rel", "stylesheet")
-                            ->addOutputAttributeValue("href", $this->getUrl())
+                            ->addOutputAttributeValue("href", $this->getExternalUrl())
                             ->addOutputAttributeValue("crossorigin", "anonymous");
 
                         $integrity = $this->getIntegrity();
@@ -736,7 +741,7 @@ class Snippet implements JsonSerializable
                             }
                         } else {
                             try {
-                                $fetchUrl = FetcherRawLocalPath::createFromPath($this->getInternalPath())->getFetchUrl();
+                                $fetchUrl = FetcherRawLocalPath::createFromPath($this->getPath())->getFetchUrl();
                                 /**
                                  * Dokuwiki transforms/encode the href in HTML
                                  */
@@ -779,6 +784,23 @@ class Snippet implements JsonSerializable
     {
         $this->componentId = $componentId;
         return $this;
+    }
+
+    public function setExternalUrl(Url $url): Snippet
+    {
+        $this->externalUrl = $url;
+        return $this;
+    }
+
+    public function setScopeAsRunningSlot(): Snippet
+    {
+        return $this;
+    }
+
+
+    private function shouldUseCdn()
+    {
+        return PluginUtility::getConfValue(self::CONF_USE_CDN, SnippetManager::CONF_USE_CDN_DEFAULT);
     }
 
 

@@ -30,6 +30,7 @@ use ComboStrap\PageType;
 use ComboStrap\Prism;
 use ComboStrap\PageUrlType;
 use ComboStrap\Region;
+use ComboStrap\Snippet;
 use ComboStrap\SnippetManager;
 
 
@@ -426,7 +427,7 @@ $conf["enablePageLayout"] = 1;
 
 /**
  * CDN for library ?
- * See {@link SnippetManager::CONF_USE_CDN}
+ * See {@link Snippet::CONF_USE_CDN}
  */
 $conf['useCDN'] = 1;
 

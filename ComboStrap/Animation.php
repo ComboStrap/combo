@@ -97,7 +97,7 @@ window.addEventListener("load", function(event) {
 });
 EOF;
         $snippetManager->attachInternalJavascriptForSlot($wowSnippetId, $js);
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
             $wowSnippetId,
             "https://cdn.jsdelivr.net/npm/wowjs@1.1.3/dist/wow.min.js",
             "sha256-gHiUEskgBO+3ccSDRM+c5+nEwTGp64R99KYPfITpnuo="
@@ -113,12 +113,12 @@ EOF;
 
         $scrollMagicSnippetId = "scroll-magic";
         $snippetManager->attachInternalJavascriptForSlot($scrollMagicSnippetId);
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
             $scrollMagicSnippetId,
             "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/ScrollMagic.min.js",
             "sha512-8E3KZoPoZCD+1dgfqhPbejQBnQfBXe8FuwL4z/c8sTrgeDMFEnoyTlH3obB4/fV+6Sg0a0XF+L/6xS4Xx1fUEg=="
         );
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
             $scrollMagicSnippetId,
             "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/debug.addIndicators.min.js",
             "sha512-RvUydNGlqYJapy0t4AH8hDv/It+zKsv4wOQGb+iOnEfa6NnF2fzjXgRy+FDjSpMfC3sjokNUzsfYZaZ8QAwIxg=="

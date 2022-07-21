@@ -93,11 +93,11 @@ class Prism
         /**
          * Javascript
          */
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/components/prism-core.min.js",
             "sha256-vlRYHThwdq55dA+n1BKQRzzLwFtH9VINdSI68+5JhpU=");
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.min.js",
             "sha256-FyIVdIHL0+ppj4Q4Ft05K3wyCsYikpHIDGI7dcaBalU="
@@ -108,22 +108,22 @@ class Prism
             "sha256-kK4/JIYJUKI4Zdg9ZQ7FYyRIqeWPfYKi5QZHO2n/lJI="
         );
         // https://prismjs.com/plugins/normalize-whitespace/
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/normalize-whitespace/prism-normalize-whitespace.min.js",
             "sha256-gBzABGbXfQYYnyr8xmDFjx6KGO9dBYuypG1QBjO76pY=");
         // https://prismjs.com/plugins/copy-to-clipboard/
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js",
             "sha512-pUNGXbOrc+Y3dm5z2ZN7JYQ/2Tq0jppMDOUsN4sQHVJ9AUQpaeERCUfYYBAnaRB9r8d4gtPKMWICNhm3tRr4Fg==");
         // https://prismjs.com/plugins/show-language/
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/show-language/prism-show-language.min.js",
             "sha256-Z3GTw2RIadLG7KyP/OYB+aAxVYzvg2PByKzYrJlA1EM=");
         // https://prismjs.com/plugins/command-line/
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/command-line/prism-command-line.min.js",
             "sha256-9WlakH0Upf3N8DDteHlbeKCHxSsljby+G9ucUCQNiU0=");
@@ -133,7 +133,7 @@ class Prism
             "sha256-UvoA9bIYCYQkCMTYG5p2LM8ZpJmnC4G8k0oIc89nuQA="
         );
         //https://prismjs.com/plugins/line-numbers/
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.min.js",
             "sha256-K837BwIyiXo5k/9fCYgqUyA14bN4/Ve9P2SIT0KmZD0=");
@@ -144,7 +144,7 @@ class Prism
         );
 
         // https://prismjs.com/plugins/download-button/-->
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/download-button/prism-download-button.min.js",
             "sha256-CQyVQ5ejeTshlzOS/eCiry40br9f4fQ9jb5e4qPl7ZA=");
@@ -372,7 +372,7 @@ EOD;
     private static function addAutoloaderSnippet()
     {
         PluginUtility::getSnippetManager()
-            ->attachJavascriptLibraryForSlot(
+            ->attachExternalJavascriptLibraryForRunningSlot(
                 self::SNIPPET_ID_AUTOLOADER,
                 self::BASE_PRISM_CDN . "/plugins/autoloader/prism-autoloader.min.js"
             );

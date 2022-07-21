@@ -260,7 +260,7 @@ EOF;
 
     public static function getHtmlStyleTag(string $componentId): string
     {
-        $loginCss = Snippet::createInternalCssSnippet($componentId);
+        $loginCss = Snippet::createCssSnippetFromComponentId($componentId);
         try {
             $content = $loginCss->getInternalInlineAndFileContent();
         } catch (ExceptionNotFound $e) {

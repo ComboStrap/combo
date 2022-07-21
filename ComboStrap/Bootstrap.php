@@ -18,9 +18,10 @@ use Exception;
 class Bootstrap
 {
     const DEFAULT_STYLESHEET_NAME = "bootstrap";
-    private $jquerySnippet;
-    private Snippet $bootstrapJavascriptSnippet;
+    private Snippet $jquerySnippet;
+    private Snippet $jsSnippet;
     private Snippet $popperSnippet;
+    private Snippet $cssSnippet;
 
     /**
      * @param string $qualifiedVersion - the bootstrap version separated by the stylesheet
@@ -34,14 +35,16 @@ class Bootstrap
         } else {
             $this->styleSheetName = self::DEFAULT_STYLESHEET_NAME;
         }
+        $this->build();
+
     }
 
 
-    const BootStrapDefaultMajorVersion = "5";
-    const BootStrapFiveMajorVersion = "5";
+    const BootStrapDefaultMajorVersion = 5;
+    const BootStrapFiveMajorVersion = 5;
 
     const CONF_BOOTSTRAP_MAJOR_VERSION = "bootstrapMajorVersion";
-    const BootStrapFourMajorVersion = "4";
+    const BootStrapFourMajorVersion = 4;
     const CANONICAL = "bootstrap";
     /**
      * Stylesheet and Boostrap should have the same version
@@ -55,7 +58,7 @@ class Bootstrap
      */
     public const BOOTSTRAP_VERSION_STYLESHEET_SEPARATOR = " - ";
     public const DEFAULT_BOOTSTRAP_VERSION_STYLESHEET = "5.0.1" . Bootstrap::BOOTSTRAP_VERSION_STYLESHEET_SEPARATOR . "bootstrap";
-    private bool $wasBuild = false;
+
     /**
      * @var mixed|string
      */
@@ -74,21 +77,21 @@ class Bootstrap
         return $dataToggleNamespace;
     }
 
-    public static function getBootStrapMajorVersion()
+    public function getMajorVersion(): string
     {
-        $default = PluginUtility::getConfValue(self::CONF_BOOTSTRAP_MAJOR_VERSION, self::BootStrapDefaultMajorVersion);
-        if (Site::isStrapTemplate()) {
-            try {
-                Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            } catch (ExceptionCompile $e) {
-                return $default;
-            }
-            $bootstrapVersion = self::getVersion();
-            return $bootstrapVersion[0];
-        }
-        return $default;
+        $bootstrapVersion = $this->getVersion();
+        return $bootstrapVersion[0];
 
+    }
 
+    /**
+     * Utility function that returns the major version
+     * because this is really common in code
+     * @return string - the major version
+     */
+    public static function getBootStrapMajorVersion(): string
+    {
+        return Bootstrap::get()->getMajorVersion();
     }
 
 
@@ -102,7 +105,7 @@ class Bootstrap
         return new Bootstrap($boostrapVersion);
     }
 
-    public static function createFromConfiguration(string $boostrapVersion): Bootstrap
+    public static function createFromConfiguration(): Bootstrap
     {
         $bootstrapStyleSheetVersion = PluginUtility::getConfValue(Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET, Bootstrap::DEFAULT_BOOTSTRAP_VERSION_STYLESHEET);
         return new Bootstrap($bootstrapStyleSheetVersion);
@@ -115,10 +118,9 @@ class Bootstrap
 
     /**
      *
-     * @return array - an array of stylesheet tag (the standard stylesheet and the rtl stylesheet if any)
-     * @throws ExceptionBadState
+     * @return array - an array of stylesheet tag
      */
-    public function getStyleSheetTags(): array
+    public static function getStyleSheetMetas(): array
     {
 
         /**
@@ -138,42 +140,18 @@ class Bootstrap
         $localStyleSheetsFile = WikiPath::createComboResource(':library:bootstrap:bootstrapLocal.json');
         try {
             $localStyleSheets = Json::createFromPath($localStyleSheetsFile)->toArray();
-            foreach ($styleSheets as $bootstrapVersion => &$stylesheetsFiles) {
-                if (isset($localStyleSheets[$bootstrapVersion])) {
-                    $stylesheetsFiles = array_merge($stylesheetsFiles, $localStyleSheets[$bootstrapVersion]);
+            foreach ($localStyleSheets as $bootstrapVersion => &$localStyleSheetData) {
+                $actualStyleSheet = $styleSheets[$bootstrapVersion];
+                if (isset($actualStyleSheet)) {
+                    $styleSheets[$bootstrapVersion] = array_merge($actualStyleSheet, $localStyleSheetData);
+                } else {
+                    $styleSheets[$bootstrapVersion] = $localStyleSheetData;
                 }
             }
         } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
             // user file does not exists and that's okay
         }
-
-
-        $version = $this->getVersion();
-        if (!isset($styleSheets[$version])) {
-            throw new ExceptionBadState("The bootstrap version ($version) could not be found in the custom CSS file ($stylesheetsFile, or $localStyleSheetsFile)");
-        }
-        $styleSheetsForVersion = $styleSheets[$version];
-
-        $styleSheetName = $this->getStyleSheetName();
-        if (!isset($styleSheetsForVersion[$styleSheetName])) {
-            throw new ExceptionBadState("The bootstrap stylesheet ($styleSheetName) could not be found for the version ($version) in the distribution or custom configuration files ($stylesheetsFile, or $localStyleSheetsFile)");
-        }
-        $styleSheetForVersionAndName = $styleSheetsForVersion[$styleSheetName];
-
-        /**
-         * Select Rtl or Ltr
-         * Stylesheet name may have another level
-         * with direction property of the language
-         *
-         * Bootstrap needs another stylesheet
-         * See https://getbootstrap.com/docs/5.0/getting-started/rtl/
-         */
-        $direction = Lang::createFromRequestedMarkup()->getDirection();
-        if (isset($styleSheetForVersionAndName[$direction])) {
-            return $styleSheetForVersionAndName[$direction];
-        }
-
-        return $styleSheetForVersionAndName;
+        return $styleSheets;
 
 
     }
@@ -183,9 +161,9 @@ class Bootstrap
      * @return array - A list of all available stylesheets
      * This function is used to build the configuration as a list of files
      */
-    public static function getStylesheetsForMetadataConfiguration()
+    public static function getQualifiedVersions(): array
     {
-        $cssVersionsMetas = Bootstrap::getStyleSheetTags();
+        $cssVersionsMetas = Bootstrap::getStyleSheetMetas();
         $listVersionStylesheetMeta = array();
         foreach ($cssVersionsMetas as $bootstrapVersion => $cssVersionMeta) {
             foreach ($cssVersionMeta as $fileName => $values) {
@@ -208,109 +186,111 @@ class Bootstrap
         return StyleUtility::addComboStrapSuffix(self::CANONICAL . "-bundle");
     }
 
-
-    public static function get(): Bootstrap
+    public static function get()
     {
-        return new Bootstrap();
+        $wikiRequest = WikiRequest::getOrCreateFromEnv();
+        try {
+            return $wikiRequest->getObject(self::CANONICAL);
+        } catch (ExceptionNotFound $e) {
+            $bootstrap = Bootstrap::createFromConfiguration();
+            $wikiRequest->setObject(self::CANONICAL, $bootstrap);
+            return $bootstrap;
+        }
+
     }
 
-    public function getCssSnippet(): Snippet
-    {
-        $this->buildBootstrapMetaIfNeeded();
-    }
 
     /**
      * @throws ExceptionNotFound
-     * @throws ExceptionBadState
-     * @throws ExceptionBadArgument
-     * @throws ExceptionBadSyntax
      */
-    private function buildBootstrapMetaIfNeeded(): void
+    public function getCssSnippet(): Snippet
     {
-
-        if ($this->wasBuild) {
-            return;
+        if (isset($this->cssSnippet)) {
+            return $this->cssSnippet;
         }
-        $this->wasBuild = true;
+        throw new ExceptionNotFound("No css snippet");
+    }
+
+    /**
+     *
+     */
+    private function build(): void
+    {
 
 
         $version = $this->getVersion();
-        $styleSheetName = $this->getStyleSheetName();
 
-
-        // if cdn
-        $useCdn = PluginUtility::getConfValue(SnippetManager::CONF_USE_CDN, SnippetManager::CONF_USE_CDN_DEFAULT);
-
-        // metadata
+        // Javascript
         $bootstrapJsonFile = WikiPath::createComboResource(":library:bootstrap:bootstrapJavascript.json");
         try {
             $bootstrapJsonMetas = Json::createFromPath($bootstrapJsonFile)->toArray();
-        } catch (ExceptionBadSyntax $e) {
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
             // should not happen, no need to advertise it
-            throw new ExceptionRuntimeInternal("Unable to read the file {$bootstrapJsonFile} as json", self::CANONICAL, 1, $e);
+            throw new ExceptionRuntimeInternal("Unable to read the file {$bootstrapJsonFile} as json.", self::CANONICAL, 1, $e);
         }
         if (!isset($bootstrapJsonMetas[$version])) {
-            throw new ExceptionNotFound("The bootstrap version ($version) could not be found in the file $bootstrapJsonFile");
+            throw new ExceptionRuntimeInternal("The bootstrap version ($version) could not be found in the file $bootstrapJsonFile");
         }
         $bootstrapMetas = $bootstrapJsonMetas[$version];
 
         // Css
-        $bootstrapMetas["stylesheet"] = $this->getStyleSheetTags();
+        $bootstrapMetas["stylesheet"] = $this->getStyleSheetMeta();
 
-        $scriptsMeta = [];
-        // Build the returned Js script array
-        $jsScripts = array();
+
         foreach ($bootstrapMetas as $key => $script) {
-            $fileName = $script["file"];
-            $file = LocalPath::createFromPath($fileName);
-            $extension = $file->getExtension();
-            switch ($extension) {
-                case Snippet::EXTENSION_JS:
-                    $url = $script["url"];
-                    if ($useCdn && !empty($url)) {
-                        $url = Url::createFromString($url);
-                        $snippet = Snippet::createSnippet($url, $extension);
-                    } else {
-                        $path = WikiPath::createComboResource(":bootstrap:$version:$fileName");
-                        $snippet = Snippet::createSnippetFromPath($path, $extension);
-                    }
-                    $snippet->setCritical(false);
+            $fileNameWithExtension = $script["file"];
+            $file = LocalPath::createFromPath($fileNameWithExtension);
+
+
+            $path = WikiPath::createComboResource(":bootstrap:$version:$fileNameWithExtension");
+            $snippet = Snippet::createSnippet($path);
+            $url = $script["url"];
+            if (!empty($url)) {
+                try {
+                    $url = Url::createFromString($url);
+                    $snippet->setExternalUrl($url);
                     if (isset($script['integrity'])) {
                         $snippet->setIntegrity($script['integrity']);
                     }
-                    switch ($key){
+                } catch (ExceptionBadArgument|ExceptionBadSyntax $e) {
+                    LogUtility::internalError("The url ($url) for the bootstrap metadata ($fileNameWithExtension) from the bootstrap dictionary is not valid. Error:{$e->getMessage()}", self::CANONICAL);
+                }
+            }
+
+            try {
+                $extension = $file->getExtension();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("No extension was found on the file metadata ($fileNameWithExtension) from the bootstrap dictionary", self::CANONICAL);
+                continue;
+            }
+            switch ($extension) {
+                case Snippet::EXTENSION_JS:
+                    $snippet->setCritical(false);
+                    switch ($key) {
                         case "jquery":
                             $this->jquerySnippet = $snippet;
                             break;
-                        case "bootstrap":
-                            $this->bootstrapJavascriptSnippet = $snippet;
+                        case "js":
+                            $this->jsSnippet = $snippet;
                             break;
                         case "popper":
                             $this->popperSnippet = $snippet;
                             break;
                         default:
-                            throw new ExceptionBadState("The snippet key ($key) is unknown for bootstrap");
+                            LogUtility::internalError("The snippet key ($key) is unknown for bootstrap", self::CANONICAL);
+                            break;
                     }
                     break;
+                case Snippet::EXTENSION_CSS:
+                    switch ($key) {
+                        case "stylesheet":
+                            $this->cssSnippet = $snippet;
+                            break;
+                        default:
+                            LogUtility::internalError("The snippet key ($key) is unknown for bootstrap");
+                            break;
+                    }
             }
-        }
-
-        $css = array();
-        $cssScript = $scriptsMeta['css'];
-        $href = DOKU_BASE . "lib/tpl/strap/bootstrap/$version/" . $cssScript["file"];
-        if ($useCdn) {
-            if (isset($script["url"])) {
-                $href = $script["url"];
-            }
-        }
-        $css['css'] =
-            array(
-                'href' => $href,
-                'rel' => "stylesheet"
-            );
-        if (isset($script['integrity'])) {
-            $css['css']['integrity'] = $script['integrity'];
-            $css['css']['crossorigin'] = 'anonymous';
         }
 
 
@@ -318,6 +298,104 @@ class Bootstrap
 
     public function getSnippets(): array
     {
-        return [];
+
+        $snippets = [];
+        try {
+            $snippets[] = $this->getCssSnippet();
+        } catch (ExceptionNotFound $e) {
+            // error already send at build time
+        }
+
+        /**
+         * The javascript snippet order is important
+         */
+        try {
+            $snippets[] = $this->getJquerySnippet();
+        } catch (ExceptionNotFound $e) {
+            // error already send at build time
+            // or just not present
+        }
+        try {
+            $snippets[] = $this->getPopperSnippet();
+        } catch (ExceptionNotFound $e) {
+            // error already send at build time
+        }
+        try {
+            $snippets[] = $this->getJsSnippet();
+        } catch (ExceptionNotFound $e) {
+            // error already send at build time
+        }
+        return $snippets;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getPopperSnippet(): Snippet
+    {
+        if (isset($this->popperSnippet)) {
+            return $this->popperSnippet;
+        }
+        throw new ExceptionNotFound("No popper snippet");
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getJsSnippet(): Snippet
+    {
+        if (isset($this->jsSnippet)) {
+            return $this->jsSnippet;
+        }
+        throw new ExceptionNotFound("No js snippet");
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getJquerySnippet(): Snippet
+    {
+        if (isset($this->jquerySnippet)) {
+            return $this->jquerySnippet;
+        }
+        throw new ExceptionNotFound("No jquery snippet");
+    }
+
+    /**
+     * @return array - the stylesheet meta (file, url, ...) for the version
+     */
+    private function getStyleSheetMeta(): array
+    {
+
+        $styleSheets = self::getStyleSheetMetas();
+
+        $version = $this->getVersion();
+        if (!isset($styleSheets[$version])) {
+            LogUtility::internalError("The bootstrap version ($version) could not be found");
+            return [];
+        }
+        $styleSheetsForVersion = $styleSheets[$version];
+
+        $styleSheetName = $this->getStyleSheetName();
+        if (!isset($styleSheetsForVersion[$styleSheetName])) {
+            LogUtility::internalError("The bootstrap stylesheet ($styleSheetName) could not be found for the version ($version) in the distribution or custom configuration files");
+            return [];
+        }
+        $styleSheetForVersionAndName = $styleSheetsForVersion[$styleSheetName];
+
+        /**
+         * Select Rtl or Ltr
+         * Stylesheet name may have another level
+         * with direction property of the language
+         *
+         * Bootstrap needs another stylesheet
+         * See https://getbootstrap.com/docs/5.0/getting-started/rtl/
+         */
+        $direction = Lang::createFromRequestedMarkup()->getDirection();
+        if (isset($styleSheetForVersionAndName[$direction])) {
+            return $styleSheetForVersionAndName[$direction];
+        }
+
+        return $styleSheetForVersionAndName;
     }
 }

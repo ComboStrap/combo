@@ -77,7 +77,7 @@ class SvgImageLink extends ImageLink
             // !! There is a fork: https://github.com/tanem/svg-injector !!
             // Fallback ? : https://github.com/iconic/SVGInjector/#per-element-png-fallback
             $snippetManager
-                ->attachJavascriptLibraryForSlot(
+                ->attachExternalJavascriptLibraryForRunningSlot(
                     "svg-injector",
                     "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/dist/svg-injector.min.js",
                     "sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk="

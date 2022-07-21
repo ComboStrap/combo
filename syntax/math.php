@@ -163,7 +163,7 @@ EOD;
                     )
                     ->addHtmlAttribute("type", "text/x-mathjax-config");
                 $snippetManager
-                    ->attachJavascriptLibraryForSlot(
+                    ->attachExternalJavascriptLibraryForRunningSlot(
                         self::TAG,
                         "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js"
                     )

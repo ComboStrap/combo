@@ -40,10 +40,6 @@ class SnippetManager
 
     const CANONICAL = "snippet-manager";
 
-    /**
-     * Use CDN for local stored library
-     */
-    public const CONF_USE_CDN = "useCDN";
     public const CONF_USE_CDN_DEFAULT = 1;
 
 
@@ -186,11 +182,14 @@ class SnippetManager
      * @param $snippetId
      * @param string|null $script - the css snippet to add, otherwise it takes the file
      * @return Snippet a snippet not in a slot
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
      */
     public
     function &attachCssInternalStyleSheetForSlot($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_CSS, Snippet::INTERNAL_TYPE);
+        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_CSS);
         if ($script !== null) {
             $snippet->setInlineContent($script);
         }
@@ -222,11 +221,13 @@ class SnippetManager
      * @param $snippetId
      * @param string|null $script
      * @return Snippet a snippet in a slot
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
      */
-    public
-    function &attachInternalJavascriptForSlot($snippetId, string $script = null): Snippet
+    public function &attachInternalJavascriptForSlot($snippetId, string $script = null): Snippet
     {
-        $snippet = &$this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE);
+        $snippet = &$this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_JS);
         if ($script !== null) {
             try {
                 $content = "{$snippet->getInternalDynamicContent()} $script";
@@ -257,7 +258,7 @@ class SnippetManager
     function &attachInternalJavascriptFromPathForRequest($snippetId, WikiPath $path): Snippet
     {
         $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE)
-            ->setInternalPath($path);
+            ->setPath($path);
         return $snippet;
     }
 
@@ -269,24 +270,23 @@ class SnippetManager
     }
 
     /**
-     * @param string $componentId
+     * @param string $snippetId
      * @param string $type
-     * @param string $identifier
      * @return Snippet
      */
     private
-    function &attachSnippetFromSlot(string $componentId, string $type, string $identifier): Snippet
+    function &attachSnippetFromSlot(string $snippetId, string $type): Snippet
     {
-        $slot = WikiRequest::get()->getActualRunningId();
-        $snippet = Snippet::getOrCreateSnippet($identifier, $type, $componentId)
+        $slot = WikiRequest::getOrCreateFromEnv()->getActualRunningId();
+        $snippet = Snippet::getOrCreateSnippet($snippetId, $type)
             ->addSlot($slot);
         return $snippet;
     }
 
     private
-    function &attachSnippetFromRequest($componentName, $type, $internalOrUrlIdentifier): Snippet
+    function &attachSnippetFromRequest($componentName, $type): Snippet
     {
-        $snippet = Snippet::getOrCreateSnippet($internalOrUrlIdentifier, $type, $componentName)
+        $snippet = Snippet::getOrCreateSnippet($componentName, $type)
             ->addSlot(Snippet::REQUEST_SCOPE);
         return $snippet;
     }
@@ -294,7 +294,7 @@ class SnippetManager
 
     /**
      * Add a local javascript script as tag
-     * (ie same as {@link SnippetManager::attachJavascriptLibraryForSlot()})
+     * (ie same as {@link SnippetManager::attachExternalJavascriptLibraryForRunningSlot()})
      * but for local resource combo file (library)
      *
      * For instance:
@@ -334,7 +334,7 @@ class SnippetManager
             LogUtility::internalError($e->getMessage());
             $url = "";
         }
-        return $this->attachJavascriptLibraryForSlot(
+        return $this->attachExternalJavascriptLibraryForRunningSlot(
             $snippetId,
             $url,
             $integrity
@@ -348,26 +348,33 @@ class SnippetManager
         return $this->attachJavascriptScriptForRequest("combo", "library:combo:combo.min.js");
     }
 
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
+     */
     public
-    function attachJavascriptLibraryForSlot(string $snippetId, string $url, string $integrity = null): Snippet
+    function attachExternalJavascriptLibraryForRunningSlot(string $snippetId, string $url, string $integrity = null): Snippet
     {
-        return $this
-            ->attachSnippetFromSlot(
-                $snippetId,
-                Snippet::EXTENSION_JS,
-                $url)
-            ->setIntegrity($integrity);
+        $url = Url::createFromString($url);
+        return Snippet::getOrCreateSnippet($snippetId, Snippet::EXTENSION_JS)
+            ->setScopeAsRunningSlot()
+            ->setIntegrity($integrity)
+            ->setExternalUrl($url);
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
+     */
     public
     function attachCssExternalStyleSheetForSlot(string $snippetId, string $url, string $integrity = null): Snippet
     {
+        $url = Url::createFromString($url);
         return $this
-            ->attachSnippetFromSlot(
-                $snippetId,
-                Snippet::EXTENSION_CSS,
-                $url)
-            ->setIntegrity($integrity);
+            ->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_CSS)
+            ->setIntegrity($integrity)
+            ->setExternalUrl($url);
     }
 
 

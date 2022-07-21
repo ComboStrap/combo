@@ -18,8 +18,8 @@ namespace ComboStrap;
 interface Path
 {
 
-    function getExtension();
 
+    function getExtension();
 
     /**
      * @return string

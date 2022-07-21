@@ -117,7 +117,7 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
                             //'JSINFO', Don't delete Jsinfo !! It contains metadata information (that is used to get context)
                             'js.php'
                         ];
-                        if (Bootstrap::getBootStrapMajorVersion() == "5") {
+                        if (Bootstrap::get()->getBootStrapMajorVersion() === 5) {
                             // bs 5 does not depends on jquery
                             $scriptToDeletes[] = "jquery.php";
                         }

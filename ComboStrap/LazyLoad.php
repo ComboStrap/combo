@@ -75,7 +75,7 @@ class LazyLoad
 
         $snippetManager = PluginUtility::getSnippetManager();
 
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
             self::LAZY_SIDE_ID,
             "https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js",
             "sha256-bmG+LzdKASJRACVXiUC69++Nu8rz7MX1U1z8gb0c/Tk="
@@ -116,7 +116,7 @@ class LazyLoad
 
         // https://www.jsdelivr.com/package/npm/lozad
         $snippetManager
-            ->attachJavascriptLibraryForSlot(
+            ->attachExternalJavascriptLibraryForRunningSlot(
                 self::LOZAD_ID,
                 "https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js",
                 "sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc="

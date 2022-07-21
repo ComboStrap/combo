@@ -260,7 +260,7 @@ class syntax_plugin_combo_masonry extends DokuWiki_Syntax_Plugin
                             // https://masonry.desandro.com/layout.html#responsive-layouts
                             // https://masonry.desandro.com/extras.html#bootstrap
                             // https://masonry.desandro.com/#initialize-with-vanilla-javascript
-                            PluginUtility::getSnippetManager()->attachJavascriptLibraryForSlot(
+                            PluginUtility::getSnippetManager()->attachExternalJavascriptLibraryForRunningSlot(
                                 self::MASONRY_SCRIPT_ID,
                                 "https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js",
                                 "sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D"

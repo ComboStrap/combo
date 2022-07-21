@@ -48,7 +48,8 @@ class Snippet implements JsonSerializable
      * Properties of the JSON array
      */
     const JSON_COMPONENT_PROPERTY = "component"; // mandatory
-    const JSON_EXTENSION_PROPERTY = "extension"; // mandatory
+    const JSON_DRIVE_PROPERTY = "drive";
+    const JSON_PATH_PROPERTY = "path";
     const JSON_URL_PROPERTY = "url"; // mandatory if external
     const JSON_CRITICAL_PROPERTY = "critical";
     const JSON_ASYNC_PROPERTY = "async";
@@ -141,13 +142,14 @@ class Snippet implements JsonSerializable
      * @var bool run as soon as possible
      */
     private bool $async;
-    private Path $path;
+    private WikiPath $path;
     private string $componentId;
 
     /**
-     * @param Path $path
+     * @param WikiPath $path - wiki path mandatory
+     *   because it's the path of fetch and it's the storage format
      */
-    public function __construct(Path $path)
+    public function __construct(WikiPath $path)
     {
         $this->path = $path;
     }
@@ -175,31 +177,16 @@ class Snippet implements JsonSerializable
     /**
      * The snippet id is the url for external resources (ie external javascript / stylesheet)
      * otherwise if it's internal, it's the component id and it's type
-     * @param string $snippetId - the component id is a short id that you will found in the class (for internal snippet, it helps also resolve the file)
+     * @param string $componentId - the component id is a short id that you will found in the class (for internal snippet, it helps also resolve the file)
      * @param string $extension - {@link Snippet::EXTENSION_CSS css} or {@link Snippet::EXTENSION_JS js}
      * @return Snippet
      */
-    public static function &getOrCreateSnippet(string $snippetId, string $extension): Snippet
+    public static function getOrCreateSnippetWithComponentId(string $componentId, string $extension): Snippet
     {
 
-        $requestedPageId = WikiRequest::getOrCreateFromEnv()->getRequestedId();
-        $snippets = &self::$globalSnippets[$requestedPageId];
-        if ($snippets === null) {
-            self::reset();
-            self::$globalSnippets[$requestedPageId] = [];
-            $snippets = &self::$globalSnippets[$requestedPageId];
-        }
-
-        $snippetPath = self::getInternalPathFromNameAndExtension($snippetId, $extension);
-
-        $snippetGuid = $snippetPath->toUriString();
-        $snippet = &$snippets[$snippetGuid];
-        if ($snippet === null) {
-            $snippet = self::createSnippet($snippetPath)
-                ->setComponentId($snippetId);
-            $snippets[$snippetGuid] = $snippet;
-        }
-        return $snippet;
+        $snippetPath = self::getInternalPathFromNameAndExtension($componentId, $extension);
+        return self::getOrCreateSnippetWithPath($snippetPath)
+            ->setComponentId($componentId);
 
     }
 
@@ -257,6 +244,30 @@ class Snippet implements JsonSerializable
     public static function createSnippetFromPath(WikiPath $path): Snippet
     {
         return new Snippet($path);
+    }
+
+
+    /**
+     * @param Path $snippetPath
+     * @return Snippet
+     */
+    private static function getOrCreateSnippetWithPath(Path $snippetPath)
+    {
+
+        $requestedPageId = WikiRequest::getOrCreateFromEnv()->getRequestedId();
+        $snippets = &self::$globalSnippets[$requestedPageId];
+        if ($snippets === null) {
+            self::reset();
+            self::$globalSnippets[$requestedPageId] = [];
+            $snippets = &self::$globalSnippets[$requestedPageId];
+        }
+        $snippetGuid = $snippetPath->toUriString();
+        $snippet = &$snippets[$snippetGuid];
+        if ($snippet === null) {
+            $snippet = self::createSnippet($snippetPath);
+            $snippets[$snippetGuid] = $snippet;
+        }
+        return $snippet;
     }
 
 
@@ -328,7 +339,7 @@ class Snippet implements JsonSerializable
         return FileSystems::getContent($path);
     }
 
-    public function getPath(): Path
+    public function getPath(): WikiPath
     {
         return $this->path;
     }
@@ -393,14 +404,27 @@ class Snippet implements JsonSerializable
          * the same class name, the inline `style` tag is not applied
          *
          */
-        return StyleUtility::addComboStrapSuffix("snippet-" . $this->componentId);
+        try {
+            return StyleUtility::addComboStrapSuffix("snippet-" . $this->getComponentId());
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("A component id was not found for the snippet ($this)", self::CANONICAL);
+            return StyleUtility::addComboStrapSuffix("snippet");
+        }
 
     }
 
 
+    /**
+     * @return string - the component name identifier
+     * All snippet with this component id are from the same component
+     * @throws ExceptionNotFound
+     */
     public function getComponentId(): string
     {
-        return $this->componentId;
+        if (isset($this->componentId)) {
+            return $this->componentId;
+        }
+        throw new ExceptionNotFound("No component id was set");
     }
 
 
@@ -415,30 +439,25 @@ class Snippet implements JsonSerializable
      */
     public static function createFromJson($array): Snippet
     {
-        $snippetType = $array[self::JSON_TYPE_PROPERTY];
-        if ($snippetType === null) {
-            throw new ExceptionCompile("The snippet type property was not found in the json array");
-        }
-        switch ($snippetType) {
-            case Snippet::INTERNAL_TYPE:
-                $identifier = Snippet::INTERNAL_TYPE;
-                break;
-            case Snippet::EXTERNAL_TYPE:
-                $identifier = $array[self::JSON_URL_PROPERTY];
-                break;
-            default:
-                throw new ExceptionCompile("snippet type unknown ($snippetType");
-        }
-        $extension = $array[self::JSON_EXTENSION_PROPERTY];
-        if ($extension === null) {
-            throw new ExceptionCompile("The snippet extension property was not found in the json array");
-        }
-        $componentName = $array[self::JSON_COMPONENT_PROPERTY];
-        if ($componentName === null) {
-            throw new ExceptionCompile("The snippet component name property was not found in the json array");
-        }
-        $snippet = Snippet::getOrCreateSnippet($identifier, $extension, $componentName);
 
+
+        $path = $array[self::JSON_PATH_PROPERTY];
+        if ($path === null) {
+            throw new ExceptionCompile("The snippet path property was not found in the json array");
+        }
+
+        $drive = $array[self::JSON_DRIVE_PROPERTY];
+        if ($drive === null) {
+            throw new ExceptionCompile("The snippet drive property was not found in the json array");
+        }
+
+        $wikiPath = WikiPath::create($path, $drive);
+        $snippet = Snippet::getOrCreateSnippetWithPath($wikiPath);
+
+        $componentName = $array[self::JSON_COMPONENT_PROPERTY];
+        if ($componentName !== null) {
+            $snippet->setComponentId($componentName);
+        }
 
         $critical = $array[self::JSON_CRITICAL_PROPERTY];
         if ($critical !== null) {
@@ -570,12 +589,22 @@ class Snippet implements JsonSerializable
     }
 
 
+    /**
+     */
     public function jsonSerialize(): array
     {
+
         $dataToSerialize = [
-            self::JSON_COMPONENT_PROPERTY => $this->getComponentId(),
-            self::JSON_EXTENSION_PROPERTY => $this->getExtension()
+            self::JSON_PATH_PROPERTY => $this->getPath()->toPathString(),
+            self::JSON_DRIVE_PROPERTY => $this->getPath()->getDrive()
         ];
+
+        try {
+            $dataToSerialize[self::JSON_COMPONENT_PROPERTY] = $this->getComponentId();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("The component id was not set for the snippet ($this)");
+        }
+
         if (isset($this->externalUrl)) {
             $dataToSerialize[self::JSON_URL_PROPERTY] = $this->externalUrl->toString();
         }
@@ -783,7 +812,7 @@ class Snippet implements JsonSerializable
         }
     }
 
-    private function setComponentId(string $componentId): Snippet
+    public function setComponentId(string $componentId): Snippet
     {
         $this->componentId = $componentId;
         return $this;

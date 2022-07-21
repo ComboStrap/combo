@@ -66,7 +66,7 @@ class SnippetManager
      * @return SnippetManager - the global reference
      * that is set for every run at the end of this file
      * TODO: migrate the attach function to {@link Snippet}
-     *   because Snippet has already a global variable {@link Snippet::getOrCreateSnippet()}
+     *   because Snippet has already a global variable {@link Snippet::getOrCreateSnippetWithComponentId()}
      */
     public static function getOrCreate(): SnippetManager
     {
@@ -278,7 +278,7 @@ class SnippetManager
     function &attachSnippetFromSlot(string $snippetId, string $type): Snippet
     {
         $slot = WikiRequest::getOrCreateFromEnv()->getActualRunningId();
-        $snippet = Snippet::getOrCreateSnippet($snippetId, $type)
+        $snippet = Snippet::getOrCreateSnippetWithComponentId($snippetId, $type)
             ->addSlot($slot);
         return $snippet;
     }
@@ -286,7 +286,7 @@ class SnippetManager
     private
     function &attachSnippetFromRequest($componentName, $type): Snippet
     {
-        $snippet = Snippet::getOrCreateSnippet($componentName, $type)
+        $snippet = Snippet::getOrCreateSnippetWithComponentId($componentName, $type)
             ->addSlot(Snippet::REQUEST_SCOPE);
         return $snippet;
     }
@@ -356,7 +356,7 @@ class SnippetManager
     function attachExternalJavascriptLibraryForRunningSlot(string $snippetId, string $url, string $integrity = null): Snippet
     {
         $url = Url::createFromString($url);
-        return Snippet::getOrCreateSnippet($snippetId, Snippet::EXTENSION_JS)
+        return Snippet::getOrCreateSnippetWithComponentId($snippetId, Snippet::EXTENSION_JS)
             ->setScopeAsRunningSlot()
             ->setIntegrity($integrity)
             ->setExternalUrl($url);

@@ -27,9 +27,11 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
 
     public const CONF_PRELOAD_CSS = "preloadCss";
     /**
-     * Jquery UI
+     * Use the Jquery of Dokuwiki and not of Bootstrap
      */
     public const CONF_JQUERY_DOKU = 'jQueryDoku';
+    public const CONF_JQUERY_DOKU_DEFAULT = 0;
+
     /**
      * Disable the javascript of Dokuwiki
      * if public
@@ -42,6 +44,9 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
      * but fun to watch
      */
     const CONF_PRELOAD_CSS_DEFAULT = 0;
+    const JQUERY_CANONICAL = "jquery";
+    const FRONT_END_OPTIMIZATION_CANONICAL = 'frontend:optimization';
+
 
     /**
      * @param Doku_Event $event
@@ -58,20 +63,23 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
 
         $newHeaderTypes = array();
         $bootstrap = Bootstrap::get();
+        $bootStrapMajorVersion = $bootstrap->getMajorVersion();
         $eventHeaderTypes = $event->data;
-        foreach ($eventHeaderTypes as $headerType => $headerData) {
-            switch ($headerType) {
+        foreach ($eventHeaderTypes as $headTagName => $headTagsAsArray) {
+            switch ($headTagName) {
 
                 case "link":
-                    // index, rss, manifest, search, alternate, stylesheet
-                    // delete edit
-                    $headerData[] = $bootstrap->getCssSnippet()->toDokuWikiArray();
+                    /**
+                     * Link tag processing
+                     * ie index, rss, manifest, search, alternate, stylesheet
+                     */
+                    $headTagsAsArray[] = $bootstrap->getCssSnippet()->toDokuWikiArray();
 
                     // preload all CSS is an heresy as it creates a FOUC (Flash of non-styled element)
-                    // but we know it only now and this is it
+                    // but we know it only now and this is fun to experience for the user
                     $cssPreloadConf = PluginUtility::getConfValue(self::CONF_PRELOAD_CSS, self::CONF_PRELOAD_CSS_DEFAULT);
                     $newLinkData = array();
-                    foreach ($headerData as $linkData) {
+                    foreach ($headTagsAsArray as $linkData) {
                         switch ($linkData['rel']) {
                             case 'edit':
                                 break;
@@ -103,21 +111,24 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
                         }
                     }
 
-                    $newHeaderTypes[$headerType] = $newLinkData;
+                    $newHeaderTypes[$headTagName] = $newLinkData;
                     break;
 
                 case "script":
 
                     /**
+                     * Script processing
+                     *
                      * Do we delete the dokuwiki javascript ?
                      */
                     $scriptToDeletes = [];
-                    if (!Identity::isLoggedIn() && PluginUtility::getConfValue(self::CONF_DISABLE_BACKEND_JAVASCRIPT, 0)) {
+                    $disableBackend = PluginUtility::getConfValue(self::CONF_DISABLE_BACKEND_JAVASCRIPT, 0);
+                    if (!Identity::isLoggedIn() && $disableBackend) {
                         $scriptToDeletes = [
                             //'JSINFO', Don't delete Jsinfo !! It contains metadata information (that is used to get context)
                             'js.php'
                         ];
-                        if (Bootstrap::get()->getBootStrapMajorVersion() === 5) {
+                        if ($bootStrapMajorVersion == "5") {
                             // bs 5 does not depends on jquery
                             $scriptToDeletes[] = "jquery.php";
                         }
@@ -125,13 +136,20 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
 
                     /**
                      * The new script array
+                     * that will replace the actual
                      */
-                    $newScriptData = array();
-                    // A variable to hold the Jquery scripts
-                    // jquery-migrate, jquery, jquery-ui ou jquery.php
-                    // see https://www.dokuwiki.org/config:jquerycdn
-                    $jqueryDokuScripts = array();
-                    foreach ($headerData as $scriptData) {
+                    $newScriptTagAsArray = array();
+                    /**
+                     * Scan:
+                     *   * Capture the Dokuwiki Jquery Tags
+                     *   * Delete for optimization if needed
+                     *
+                     * @var array A variable to hold the Jquery scripts
+                     * jquery-migrate, jquery, jquery-ui ou jquery.php
+                     * see https://www.dokuwiki.org/config:jquerycdn
+                     */
+                    $jqueryDokuScriptsTagsAsArray = array();
+                    foreach ($headTagsAsArray as $scriptData) {
 
                         foreach ($scriptToDeletes as $scriptToDelete) {
                             if (isset($scriptData["_data"]) && !empty($scriptData["_data"])) {
@@ -177,78 +195,90 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
                             $jqueryFound = strpos($scriptData['src'], 'jquery');
                         }
                         if ($jqueryFound === false) {
-                            $newScriptData[] = $scriptData;
+                            $newScriptTagAsArray[] = $scriptData;
                         } else {
-                            $jqueryDokuScripts[] = $scriptData;
+                            $jqueryDokuScriptsTagsAsArray[] = $scriptData;
                         }
 
                     }
 
-                    // Add Jquery at the beginning
-                    $boostrapMajorVersion = Bootstrap::getBootStrapMajorVersion();
-                    if ($boostrapMajorVersion == "4") {
+                    /**
+                     * Add Bootstrap scripts
+                     * At the top of the queue
+                     */
+                    if ($bootStrapMajorVersion === "4") {
+                        $useJqueryDoku = PluginUtility::getConfValue(self::CONF_JQUERY_DOKU, self::CONF_JQUERY_DOKU_DEFAULT);
                         if (
-                            empty($_SERVER['REMOTE_USER'])
-                            && tpl_getConf(self::CONF_JQUERY_DOKU) == 0
+                            !Identity::isLoggedIn()
+                            && $useJqueryDoku === 0
                         ) {
-                            // We take the Jquery of Bootstrap
-                            $newScriptData = array_merge($bootstrapHeaders[$headerType], $newScriptData);
+                            /**
+                             * We take the Javascript of Bootstrap
+                             * (Jquery and others)
+                             */
+                            $boostrapSnippetsAsArray = [];
+                            foreach ($bootstrap->getJsSnippets() as $snippet) {
+                                $boostrapSnippetsAsArray[]=$snippet->toDokuWikiArray();
+                            }
+                            /**
+                             * At the top of the queue
+                             */
+                            $newScriptTagAsArray = array_merge($boostrapSnippetsAsArray, $newScriptTagAsArray);
                         } else {
                             // Logged in
                             // We take the Jqueries of doku and we add Bootstrap
-                            $newScriptData = array_merge($jqueryDokuScripts, $newScriptData); // js
+                            $newScriptTagAsArray = array_merge($jqueryDokuScriptsTagsAsArray, $newScriptTagAsArray); // js
                             // We had popper of Bootstrap
-                            $newScriptData[] = $bootstrapHeaders[$headerType]['popper'];
+                            $newScriptTagAsArray[] = $bootstrap->getPopperSnippet()->toDokuWikiArray();
                             // We had the js of Bootstrap
-                            $newScriptData[] = $bootstrapHeaders[$headerType]['js'];
+                            $newScriptTagAsArray[] = $bootstrap->getBootstrapJsSnippet()->toDokuWikiArray();
                         }
                     } else {
 
                         // There is no JQuery in 5
                         // We had the js of Bootstrap and popper
                         // Add Jquery before the js.php
-                        $newScriptData = array_merge($jqueryDokuScripts, $newScriptData); // js
+                        $newScriptTagAsArray = array_merge($jqueryDokuScriptsTagsAsArray, $newScriptTagAsArray); // js
                         // Then add at the top of the top (first of the first) bootstrap
                         // Why ? Because Jquery should be last to be able to see the missing icon
                         // https://stackoverflow.com/questions/17367736/jquery-ui-dialog-missing-close-icon
-                        $bootstrap[] = $bootstrapHeaders[$headerType]['popper'];
-                        $bootstrap[] = $bootstrapHeaders[$headerType]['js'];
-                        $newScriptData = array_merge($bootstrap, $newScriptData);
+                        $bootstrapTagArray[] = $bootstrap->getPopperSnippet()->toDokuWikiArray();
+                        $bootstrapTagArray[] = $bootstrap->getBootstrapJsSnippet()->toDokuWikiArray();
+                        $newScriptTagAsArray = array_merge($bootstrapTagArray, $newScriptTagAsArray);
 
                     }
 
-
-                    $newHeaderTypes[$headerType] = $newScriptData;
+                    $newHeaderTypes[$headTagName] = $newScriptTagAsArray;
                     break;
                 case "meta":
                     $newHeaderData = array();
-                    foreach ($headerData as $metaData) {
+                    foreach ($headTagsAsArray as $metaData) {
                         // Content should never be null
                         // Name may change
                         // https://www.w3.org/TR/html4/struct/global.html#edef-META
                         if (!key_exists("content", $metaData)) {
-                            $message = "Strap - The head meta (" . print_r($metaData, true) . ") does not have a content property";
-                            LogUtility::error($message);
+                            $message = "The head meta (" . print_r($metaData, true) . ") does not have a content property";
+                            LogUtility::error($message, self::FRONT_END_OPTIMIZATION_CANONICAL);
                         } else {
                             $content = $metaData["content"];
                             if (empty($content)) {
                                 $messageEmpty = "the below head meta has an empty content property (" . print_r($metaData, true) . ")";
-                                LogUtility::error($messageEmpty);
+                                LogUtility::error($messageEmpty, self::FRONT_END_OPTIMIZATION_CANONICAL);
                             } else {
                                 $newHeaderData[] = $metaData;
                             }
                         }
                     }
-                    $newHeaderTypes[$headerType] = $newHeaderData;
+                    $newHeaderTypes[$headTagName] = $newHeaderData;
                     break;
                 case "noscript": // https://github.com/ComboStrap/dokuwiki-plugin-gtm/blob/master/action.php#L32
                 case "style":
-                    $newHeaderTypes[$headerType] = $headerData;
+                    $newHeaderTypes[$headTagName] = $headTagsAsArray;
                     break;
                 default:
-                    $message = "Strap - The header type ($headerType) is unknown and was not controlled.";
-                    $newHeaderTypes[$headerType] = $headerData;
-                    LogUtility::error($message);
+                    $message = "The header type ($headTagName) is unknown and was not controlled.";
+                    $newHeaderTypes[$headTagName] = $headTagsAsArray;
+                    LogUtility::error($message, self::FRONT_END_OPTIMIZATION_CANONICAL);
 
             }
         }

@@ -449,3 +449,10 @@ $conf['privateRailbar'] = 0;
  * {@link FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR}
  */
 $conf['breakpointRailbar'] = "large";
+
+/**
+ * @see {@link action_plugin_combo_bootstrap::CONF_JQUERY_DOKU}
+ * @See {@link action_plugin_combo_bootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT}
+ */
+$conf['jQueryDoku'] = 0;
+$conf["disableBackendJavascript"] = 0;

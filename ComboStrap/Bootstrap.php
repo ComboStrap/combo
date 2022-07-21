@@ -18,6 +18,7 @@ use Exception;
 class Bootstrap
 {
     const DEFAULT_STYLESHEET_NAME = "bootstrap";
+    const TAG = self::CANONICAL;
     private Snippet $jquerySnippet;
     private Snippet $jsSnippet;
     private Snippet $popperSnippet;
@@ -186,6 +187,9 @@ class Bootstrap
         return StyleUtility::addComboStrapSuffix(self::CANONICAL . "-bundle");
     }
 
+    /**
+     * @return Bootstrap
+     */
     public static function get()
     {
         $wikiRequest = WikiRequest::getOrCreateFromEnv();
@@ -209,6 +213,36 @@ class Bootstrap
             return $this->cssSnippet;
         }
         throw new ExceptionNotFound("No css snippet");
+    }
+
+    /**
+     * @return Snippet[] the js snippets in order
+     */
+    public function getJsSnippets(): array
+    {
+
+        /**
+         * The javascript snippet order is important
+         */
+        $snippets = [];
+        try {
+            $snippets[] = $this->getJquerySnippet();
+        } catch (ExceptionNotFound $e) {
+            // error already send at build time
+            // or just not present
+        }
+        try {
+            $snippets[] = $this->getPopperSnippet();
+        } catch (ExceptionNotFound $e) {
+            // error already send at build time
+        }
+        try {
+            $snippets[] = $this->getBootstrapJsSnippet();
+        } catch (ExceptionNotFound $e) {
+            // error already send at build time
+        }
+        return $snippets;
+
     }
 
     /**
@@ -241,9 +275,9 @@ class Bootstrap
             $fileNameWithExtension = $script["file"];
             $file = LocalPath::createFromPathString($fileNameWithExtension);
 
-
             $path = WikiPath::createComboResource(":bootstrap:$version:$fileNameWithExtension");
-            $snippet = Snippet::createSnippet($path);
+            $snippet = Snippet::createSnippet($path)
+                ->setComponentId(self::TAG);
             $url = $script["url"];
             if (!empty($url)) {
                 try {
@@ -307,31 +341,17 @@ class Bootstrap
         }
 
         /**
-         * The javascript snippet order is important
+         * The javascript snippet
          */
-        try {
-            $snippets[] = $this->getJquerySnippet();
-        } catch (ExceptionNotFound $e) {
-            // error already send at build time
-            // or just not present
-        }
-        try {
-            $snippets[] = $this->getPopperSnippet();
-        } catch (ExceptionNotFound $e) {
-            // error already send at build time
-        }
-        try {
-            $snippets[] = $this->getJsSnippet();
-        } catch (ExceptionNotFound $e) {
-            // error already send at build time
-        }
+        $snippets[] = array_merge($snippets, $this->getJsSnippets());
+
         return $snippets;
     }
 
     /**
      * @throws ExceptionNotFound
      */
-    private function getPopperSnippet(): Snippet
+    public function getPopperSnippet(): Snippet
     {
         if (isset($this->popperSnippet)) {
             return $this->popperSnippet;
@@ -342,7 +362,7 @@ class Bootstrap
     /**
      * @throws ExceptionNotFound
      */
-    private function getJsSnippet(): Snippet
+    public function getBootstrapJsSnippet(): Snippet
     {
         if (isset($this->jsSnippet)) {
             return $this->jsSnippet;

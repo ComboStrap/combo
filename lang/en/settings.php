@@ -3,6 +3,7 @@
 require_once(__DIR__ . '/../../vendor/autoload.php');
 
 use ComboStrap\AdsUtility;
+use ComboStrap\Bootstrap;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
 use ComboStrap\FetcherRailBar;
@@ -280,3 +281,12 @@ $lang[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF]= PluginUtili
  */
 $lang[FetcherRailBar::CONF_PRIVATE_RAIL_BAR] = PluginUtility::getDocumentationHyperLink(FetcherRailBar::CANONICAL::CANONICAL,'Enable private railbar');
 $lang[FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR] = PluginUtility::getDocumentationHyperLink(FetcherRailBar::CANONICAL ,'Breakpoint when the railbar toggle from offcanvas to fixed component');
+
+/**
+ * Stylesheet and bootstrap
+ */
+$lang[Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET] = PluginUtility::getDocumentationHyperLink(Bootstrap::CANONICAL, 'The Bootstrap version and a corresponding stylesheet');
+
+$lang[action_plugin_combo_bootstrap::CONF_JQUERY_DOKU] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_bootstrap::JQUERY_CANONICAL,'Use the DokuWiki Jquery (Only valid for Bootstrap 4)');
+
+$lang[action_plugin_combo_bootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_bootstrap::FRONT_END_OPTIMIZATION_CANONICAL,'Delete backend javascript library for public users');

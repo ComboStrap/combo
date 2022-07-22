@@ -71,7 +71,7 @@ class SnippetManager
     public static function getOrCreate(): SnippetManager
     {
 
-        $id = WikiRequest::get()->getRequestedId();
+        $id = WikiRequest::getOrCreateFromEnv()->getRequestedId();
         $snippetManager = self::$globalSnippetManager[$id];
         if ($snippetManager === null) {
             self::reset(); // delete old snippet manager for other request

@@ -256,6 +256,12 @@ class Site
         return php_uname('n');
     }
 
+    public static function getLangDirection()
+    {
+        global $lang;
+        return $lang['direction'];
+    }
+
 
     function getEmailObfuscationConfiguration()
     {

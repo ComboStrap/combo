@@ -172,9 +172,13 @@ class PageLayout
 
     /**
      * @return WikiPath from where the markup slot should be searched
+     * @throws ExceptionNotFound
      */
     public function getRequestedContextPath(): WikiPath
     {
+        if (!isset($this->requestedContextPath)) {
+            throw new ExceptionNotFound("A requested context path was not found");
+        }
         return $this->requestedContextPath;
     }
 
@@ -294,10 +298,18 @@ class PageLayout
             throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a html element");
         }
 
-        $lang = $this->getRequestedLang();
+        try {
+            $lang = $this->getRequestedLang();
+            $langValue = $lang->getValueOrDefault();
+            $langDirection = $lang->getDirection();
+        } catch (ExceptionNotFound $e) {
+            // Site value
+            $langValue = Site::getLang();
+            $langDirection = Site::getLangDirection();
+        }
         $html
-            ->setAttribute("lang", $lang->getValueOrDefault())
-            ->setAttribute("dir", $lang->getDirection());
+            ->setAttribute("lang", $langValue)
+            ->setAttribute("dir", $langDirection);
         /**
          * Not Xhtml bedcause it does not support boolean attribute without any value
          *  ->setAttribute("xmlns", "http://www.w3.org/1999/xhtml")
@@ -362,29 +374,30 @@ class PageLayout
                 throw new ExceptionRuntimeInternal("The page tool element has no parent in the template ($this->htmlTemplatePath)");
             }
             $pageToolParent->addClass(PageLayout::POSITION_RELATIVE_CLASS);
-            try {
-                /**
-                 * The railbar
-                 */
-                $railBarHtml = null;
-                $attributeName = "data-layout";
-                $railBar = FetcherRailBar::createRailBar();
-                $railBarLayout = $pageToolElement->getAttribute($attributeName);
-                if ($railBarLayout !== "") {
-                    $pageToolElement->removeAttribute($attributeName);
-                    if ($railBarLayout === "offcanvas") {
+
+            /**
+             * The railbar
+             */
+            $attributeName = "data-layout";
+            $railBar = FetcherRailBar::createRailBar()
+                ->setRequestedPath($this->getRequestedContextPath());
+            $railBarLayout = $pageToolElement->getAttribute($attributeName);
+            if ($railBarLayout !== "") {
+                $pageToolElement->removeAttribute($attributeName);
+                if ($railBarLayout === "offcanvas") {
+                    try {
                         $railBar = $railBar->setRequestedLayout($railBarLayout);
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::internalError("The layout ($this) has railbar node that has a layout value of ($railBarLayout) that is unknown. Error:{$e->getMessage()}", self::CANONICAL);
                     }
                 }
-                $railBarVariable = Template::toValidVariableName(FetcherRailBar::NAME);
-                $htmlFragmentByVariables[$railBarVariable] = $railBar->getFetchString();
-                $pageToolElement->appendTextNode(Template::VARIABLE_PREFIX . $railBarVariable);
-            } catch (ExceptionCompile $e) {
-                // Different version between strap and combo
-                throw new ExceptionRuntimeInternal("We couldn't add the railbar. Error: {$e->getMessage()}");
             }
+            $railBarVariable = Template::toValidVariableName(FetcherRailBar::NAME);
+            $htmlFragmentByVariables[$railBarVariable] = $railBar->getFetchString();
+            $pageToolElement->appendTextNode(Template::VARIABLE_PREFIX . $railBarVariable);
+
         } catch (ExceptionNotFound $e) {
-            // no page tool
+            // no page tool or no requested context path
         }
 
         /**
@@ -445,8 +458,14 @@ class PageLayout
         return $this;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     private function getRequestedLang(): Lang
     {
+        if (!isset($this->requestedLang)) {
+            throw new ExceptionNotFound("No requested lang");
+        }
         return $this->requestedLang;
     }
 
@@ -486,6 +505,7 @@ class PageLayout
 
     /**
      * Adapted from {@link tpl_indexerWebBug()}
+     * @throws ExceptionNotFound
      */
     private function addTaskRunnerImageIfRequested(XmlElement $bodyElement): void
     {
@@ -500,10 +520,15 @@ class PageLayout
             return;
         }
 
-        $htmlUrl = UrlEndpoint::createTaskRunnerUrl()
-            ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getRequestedContextPath()->getWikiId())
-            ->addQueryParameter(time())
-            ->toHtmlString();
+        try {
+            $htmlUrl = UrlEndpoint::createTaskRunnerUrl()
+                ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getRequestedContextPath()->getWikiId())
+                ->addQueryParameter(time())
+                ->toHtmlString();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionNotFound("A request path is mandatory when adding a task runner. Disable it if you don't want one.");
+        }
+
         // no more 1x1 px image because of ad blockers
         $taskRunnerImg
             ->setAttribute("id", PageLayout::TASK_RUNNER_ID)
@@ -686,7 +711,7 @@ class PageLayout
                     ->setAttribute("type", Mime::PNG)
                     ->setAttribute("href", $fetcherLocalPath->getFetchUrl()->toAbsoluteUrl()->toString())
             );
-        } catch (ExceptionBadArgument|\DOMException $e) {
+        } catch (\Exception $e) {
             LogUtility::internalError("The file ($iconPath) should be found and the local name should be good. Error: {$e->getMessage()}");
         }
 
@@ -712,13 +737,21 @@ class PageLayout
 
     }
 
+    /**
+     * @throws ExceptionNotFound - if there is no title and not path
+     */
     private function getRequestedTitleOrDefault(): string
     {
         if (isset($this->requestedTitle)) {
             return $this->requestedTitle;
         }
-        return PageTitle::createForMarkup($this->getRequestedContextPath())
-            ->getValueOrDefault();
+        try {
+            return PageTitle::createForMarkup($this->getRequestedContextPath())
+                ->getValueOrDefault();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionNotFound("A title should be set when the requested path is not set");
+        }
+
 
     }
 
@@ -917,6 +950,14 @@ class PageLayout
     {
         $this->deleteSocialHeads = $deleteSocialHeads;
         return $this;
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    public function generateAndGetPageHtmlAsDom(string $mainHtml): XmlDocument
+    {
+        return XmlDocument::createHtmlDocFromMarkup($this->generateAndGetPageHtmlAsString($mainHtml));
     }
 
 }

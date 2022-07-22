@@ -693,6 +693,7 @@ class XmlDocument
     }
 
     /**
+     * @return XmlElement[]
      * @throws ExceptionBadSyntax
      */
     public function querySelectorAll(string $selector): array

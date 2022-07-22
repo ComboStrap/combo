@@ -202,8 +202,8 @@ EOF;
 
     public function setRequestedPageWikiId(string $wikiId): FetcherRailBar
     {
-        $this->path = WikiPath::createPagePathFromId($wikiId);
-        return $this;
+        $path = WikiPath::createPagePathFromId($wikiId);
+        return $this->setRequestedPath($path);
     }
 
     public static function getSnippetClass(): string
@@ -376,6 +376,12 @@ EOF;
             throw new ExceptionBadArgument("The layout ($layout) is not valid");
         }
         $this->requestedLayout = $layout;
+        return $this;
+    }
+
+    public function setRequestedPath(WikiPath $requestedPath): FetcherRailBar
+    {
+        $this->setSourcePath($requestedPath);
         return $this;
     }
 

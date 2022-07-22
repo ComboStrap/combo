@@ -215,10 +215,9 @@ class Lang extends MetadataText
     public function getDirection()
     {
         /**
-         * TODO: should be base on the value
+         * TODO: should be base on the page value
          */
-        global $lang;
-        return $lang['direction'];
+        return Site::getLangDirection();
     }
 
 

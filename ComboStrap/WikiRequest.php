@@ -96,7 +96,7 @@ class WikiRequest
         if ($wikiRequest === null) {
             try {
                 $actualRequest = self::getGlobalRequest();
-                // we throw, we don't want any state problem, otherwise data may be messed up
+                // we throw, we should have no request still open, we don't want any state problem, otherwise data may be messed up
                 throw new ExceptionRuntimeInternal("The request ($actualRequest) should be closed before running the new request ($requestedId)", self::CANONICAL);
             } catch (ExceptionNotFound $e) {
                 $wikiRequest = new WikiRequest($requestedId, $requestedAct);
@@ -401,7 +401,7 @@ class WikiRequest
         $ACT = $this->capturedAct;
 
         // delete static object
-        unset(self::$globalRequests[$this->requestedId]);
+        self::operateOnGlobalRequest('pop', $this);
     }
 
     /**
@@ -436,7 +436,7 @@ class WikiRequest
 
     public function getCacheManager(): CacheManager
     {
-        if(!isset($this->cacheManager)){
+        if (!isset($this->cacheManager)) {
             $this->cacheManager = new CacheManager($this);
         }
         return $this->cacheManager;
@@ -454,7 +454,7 @@ class WikiRequest
      */
     public function getObject(string $objectIdentifier)
     {
-        if(isset($this->objects[$objectIdentifier])){
+        if (isset($this->objects[$objectIdentifier])) {
             return $this->objects[$objectIdentifier];
         }
         throw new ExceptionNotFound("No object $objectIdentifier found");
@@ -462,7 +462,7 @@ class WikiRequest
 
     public function setObject($objectIdentifier, $object)
     {
-        $this->objects[$objectIdentifier]=$object;
+        $this->objects[$objectIdentifier] = $object;
     }
 
     public function getUrl(): Url

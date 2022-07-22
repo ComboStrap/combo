@@ -48,7 +48,8 @@ class WikiFileSystem implements FileSystem
      */
     function getContent(Path $path): string
     {
-        return FileSystems::getContent($path->toLocalPath());
+        $localPath = $path->toLocalPath();
+        return FileSystems::getContent($localPath);
     }
 
     /**

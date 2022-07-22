@@ -62,7 +62,7 @@ class WikiPath extends PathAbs
     const COMBO_DRIVE = "combo";
     const CACHE_DRIVE = "cache";
     const DRIVES = [self::COMBO_DRIVE, self::CACHE_DRIVE, self::MEDIA_DRIVE];
-    const PAGE_FILE_TXT_EXTENSION = ".txt";
+    const MARKUP_FILE_TXT_EXTENSION = ".txt";
     const REV_ATTRIBUTE = "rev";
     const CURRENT_PATH_CHARACTER = ".";
     const CURRENT_PARENT_PATH_CHARACTER = "..";
@@ -218,7 +218,7 @@ class WikiPath extends PathAbs
          * Path
          */
         if ($drive === self::PAGE_DRIVE) {
-            $textExtension = self::PAGE_FILE_TXT_EXTENSION;
+            $textExtension = self::MARKUP_FILE_TXT_EXTENSION;
             $textExtensionLength = strlen($textExtension);
             $pathExtension = substr($this->absolutePath, -$textExtensionLength);
             if ($pathExtension === $textExtension) {
@@ -601,7 +601,7 @@ class WikiPath extends PathAbs
             throw new ExceptionNotFound("This path ($this) does not have any last name");
         }
         if ($this->getDrive() === self::PAGE_DRIVE) {
-            return $lastName . self::PAGE_FILE_TXT_EXTENSION;
+            return $lastName . self::MARKUP_FILE_TXT_EXTENSION;
         }
         return $lastName;
     }

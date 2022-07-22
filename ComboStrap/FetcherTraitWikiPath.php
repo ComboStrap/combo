@@ -47,16 +47,18 @@ trait FetcherTraitWikiPath
 
         if (!isset($this->path)) {
             $id = $tagAttributes->getValueAndRemove(self::$MEDIA_QUERY_PARAMETER);
+            $defaultDrive = WikiPath::MEDIA_DRIVE;
             if ($id === null) {
                 $id = $tagAttributes->getValueAndRemove(FetcherRawLocalPath::SRC_QUERY_PARAMETER);
             }
             if ($id === null) {
                 $id = $tagAttributes->getValueAndRemove(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
+                $defaultDrive = WikiPath::PAGE_DRIVE;
             }
             if ($id === null) {
                 throw new ExceptionBadArgument("The (" . self::$MEDIA_QUERY_PARAMETER . ", " . self::SRC_QUERY_PARAMETER . " or " . DokuwikiId::DOKUWIKI_ID_ATTRIBUTE . ") query property is mandatory and was not defined");
             }
-            $drive = $tagAttributes->getValueAndRemove(WikiPath::DRIVE_ATTRIBUTE, WikiPath::MEDIA_DRIVE);
+            $drive = $tagAttributes->getValueAndRemove(WikiPath::DRIVE_ATTRIBUTE, $defaultDrive);
             $rev = $tagAttributes->getValueAndRemove(WikiPath::REV_ATTRIBUTE);
             $wikiPath = WikiPath::create($id, $drive, $rev);
 

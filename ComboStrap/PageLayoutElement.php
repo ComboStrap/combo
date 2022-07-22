@@ -159,7 +159,7 @@ class PageLayoutElement
         }
         // Slot
         try {
-            return FileSystems::closest($requestedPath, $this->getLastFileNameForSlot() . WikiPath::PAGE_FILE_TXT_EXTENSION);
+            return FileSystems::closest($requestedPath, $this->getLastFileNameForSlot() . WikiPath::MARKUP_FILE_TXT_EXTENSION);
         } catch (ExceptionNotFound $e) {
 
             /**

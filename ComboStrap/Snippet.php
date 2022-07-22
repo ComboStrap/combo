@@ -522,8 +522,8 @@ class Snippet implements JsonSerializable
             return self::INTERNAL_TYPE;
         }
         $fileExists = FileSystems::exists($this->path);
-        if (!$fileExists ) {
-            if (isset($this->externalUrl)){
+        if (!$fileExists) {
+            if (isset($this->externalUrl)) {
                 return self::EXTERNAL_TYPE;
             } else {
                 LogUtility::internalError("The snippet ($this) have a path ($this->path) that does not exists and does not have any external url.");
@@ -677,6 +677,17 @@ class Snippet implements JsonSerializable
      * @throws ExceptionNotFound - an error where the source was not found
      */
     public function toDokuWikiArray(): array
+    {
+        $array = $this->toDokuWikiArrayWithGeneratedId();
+        unset($array[TagAttributes::GENERATED_ID_KEY]);
+        return $array;
+    }
+
+    /**
+     * @throws ExceptionBadState - an error where for instance an inline script doe snot have any content
+     * @throws ExceptionNotFound - an error where the source was not found
+     */
+    private function toDokuWikiArrayWithGeneratedId(): array
     {
         $htmlAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes())
             ->addClassName($this->getClass());

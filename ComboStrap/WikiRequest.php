@@ -465,5 +465,14 @@ class WikiRequest
         $this->objects[$objectIdentifier]=$object;
     }
 
+    public function getUrl(): Url
+    {
+        try {
+            return Url::createFromGetOrPostGlobalVariable();
+        } catch (ExceptionBadArgument $e) {
+            throw new ExceptionRuntimeInternal("Error while creating the request url");
+        }
+    }
+
 
 }

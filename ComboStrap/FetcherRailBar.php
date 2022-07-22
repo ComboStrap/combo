@@ -159,19 +159,24 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
 
             $snippetManager->attachCssInternalStylesheetForRequest("railbar");
 
-
-            $snippets = $snippetManager->toHtmlForAllSnippets();
-            $snippetClass = self::getSnippetClass();
-            /**
-             * Snippets should be last because they works
-             * on the added HTML
-             */
-            return <<<EOF
+            if ($localWikiRequest !== null) {
+                $snippets = $snippetManager->toHtmlForAllSnippets();
+                $snippetClass = self::getSnippetClass();
+                /**
+                 * Snippets should be after the html because they works
+                 * on the added HTML
+                 */
+                $railBar = <<<EOF
 $railBar
 <div id="$snippetClass" class="$snippetClass">
 $snippets
 </div>
 EOF;
+            }
+
+            return $railBar;
+
+
         } finally {
             if ($localWikiRequest !== null) {
                 $localWikiRequest->close($localWikiId);
@@ -231,7 +236,7 @@ EOF;
     private function toOffCanvasLayout(string $railBarHtmlListItems, Breakpoint $hideFromBreakpoint = null): string
     {
         $breakpointHiding = "";
-        if($hideFromBreakpoint!==null){
+        if ($hideFromBreakpoint !== null) {
             $breakpointHiding = "d-{$hideFromBreakpoint->getShortName()}-none";
         }
         $railBarOffCanvasPrefix = "railbar-offcanvas";
@@ -347,7 +352,7 @@ EOF;
             $showFromBreakpointClasses = "d-none d-{$showFromBreakpoint->getShortName()}-flex";
         }
         $railBarClass = StyleUtility::addComboStrapSuffix(self::NAME);
-        $railBarFixedClassOrId = StyleUtility::addComboStrapSuffix(self::NAME."-fixed");
+        $railBarFixedClassOrId = StyleUtility::addComboStrapSuffix(self::NAME . "-fixed");
         $zIndexRailbar = 1000; // A navigation bar (below the drop down because we use it in the search box for auto-completion)
         return <<<EOF
 <div id="$railBarFixedClassOrId" class="$railBarClass $railBarFixedClassOrId d-flex $showFromBreakpointClasses" style="z-index: $zIndexRailbar;">
@@ -373,5 +378,6 @@ EOF;
         $this->requestedLayout = $layout;
         return $this;
     }
+
 
 }

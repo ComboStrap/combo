@@ -452,7 +452,7 @@ class WikiRequest
     /**
      * @throws ExceptionNotFound
      */
-    public function getObject(string $objectIdentifier)
+    public function &getObject(string $objectIdentifier)
     {
         if (isset($this->objects[$objectIdentifier])) {
             return $this->objects[$objectIdentifier];
@@ -460,9 +460,9 @@ class WikiRequest
         throw new ExceptionNotFound("No object $objectIdentifier found");
     }
 
-    public function setObject($objectIdentifier, $object)
+    public function setObject($objectIdentifier, &$object)
     {
-        $this->objects[$objectIdentifier] = $object;
+        $this->objects[$objectIdentifier] = &$object;
     }
 
     public function getUrl(): Url

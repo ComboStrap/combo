@@ -8,7 +8,7 @@ use DOMText;
 class XmlElement
 {
 
-    private DOMElement $element;
+    private DOMElement $domElement;
     private XmlDocument $document;
     private array $styleDeclaration = [];
 
@@ -18,7 +18,7 @@ class XmlElement
      */
     public function __construct(DOMElement $domElement, XmlDocument $document)
     {
-        $this->element = $domElement;
+        $this->domElement = $domElement;
         $this->document = $document;
 
     }
@@ -30,12 +30,12 @@ class XmlElement
 
     public function getAttribute(string $qualifiedName): string
     {
-        return $this->element->getAttribute($qualifiedName);
+        return $this->domElement->getAttribute($qualifiedName);
     }
 
     public function getClass(): string
     {
-        return $this->element->getAttribute("class");
+        return $this->domElement->getAttribute("class");
     }
 
     /**
@@ -43,7 +43,7 @@ class XmlElement
      */
     public function getFirstChild(): XmlElement
     {
-        $domNode = $this->element->firstChild;
+        $domNode = $this->domElement->firstChild;
         if ($domNode === null) {
             throw new ExceptionNotFound("No first child");
         }
@@ -59,7 +59,7 @@ class XmlElement
     public function getChildrenElement(): array
     {
         $childNodes = [];
-        foreach ($this->element->childNodes as $childNode) {
+        foreach ($this->domElement->childNodes as $childNode) {
             if ($childNode instanceof DOMElement) {
                 $childNodes[] = new XmlElement($childNode, $this->document);
             }
@@ -73,7 +73,7 @@ class XmlElement
     public function getChildrenNodeTextValues(): array
     {
         $childNodes = [];
-        foreach ($this->element->childNodes as $childNode) {
+        foreach ($this->domElement->childNodes as $childNode) {
             if ($childNode instanceof DOMText) {
                 $childNodes[] = $childNode->nodeValue;
             }
@@ -89,7 +89,7 @@ class XmlElement
     {
         $xpath = $this->document->cssSelectorToXpath($selector);
         $nodes = [];
-        foreach ($this->document->xpath($xpath, $this->element) as $child) {
+        foreach ($this->document->xpath($xpath, $this->domElement) as $child) {
             if ($child instanceof DOMElement) {
                 $nodes[] = new XmlElement($child, $this->document);
             }
@@ -100,37 +100,37 @@ class XmlElement
     public function getXmlTextNormalized(): string
     {
 
-        return $this->document->toXmlNormalized($this->element);
+        return $this->document->toXmlNormalized($this->domElement);
 
     }
 
     public function removeAttribute($attributeName): XmlElement
     {
-        $attr = $this->element->getAttributeNode($attributeName);
+        $attr = $this->domElement->getAttributeNode($attributeName);
         if ($attr == false) {
             return $this;
         }
-        $result = $this->element->removeAttributeNode($attr);
+        $result = $this->domElement->removeAttributeNode($attr);
         if ($result === false) {
-            throw new ExceptionRuntime("Not able to delete the attribute $attributeName of the node element {$this->element->tagName} in the Xml document");
+            throw new ExceptionRuntime("Not able to delete the attribute $attributeName of the node element {$this->domElement->tagName} in the Xml document");
         }
         return $this;
     }
 
     public function remove(): XmlElement
     {
-        $this->element->parentNode->removeChild($this->element);
+        $this->domElement->parentNode->removeChild($this->domElement);
         return $this;
     }
 
     public function getStyle(): string
     {
-        return $this->element->getAttribute("style");
+        return $this->domElement->getAttribute("style");
     }
 
     public function getNodeValue()
     {
-        return $this->element->nodeValue;
+        return $this->domElement->nodeValue;
     }
 
     /**
@@ -148,52 +148,54 @@ class XmlElement
 
     public function getLocalName()
     {
-        return $this->element->localName;
+        return $this->domElement->localName;
     }
 
     public function addClass(string $class): XmlElement
     {
         $classes = Html::mergeClassNames($class, $this->getClass());
-        $this->element->setAttribute("class", $classes);
+        $this->domElement->setAttribute("class", $classes);
         return $this;
     }
 
     public function setAttribute(string $name, string $value): XmlElement
     {
-        $this->element->setAttribute($name, $value);
+        $this->domElement->setAttribute($name, $value);
         return $this;
     }
 
     public function hasAttribute(string $name): bool
     {
-        return $this->element->hasAttribute($name);
+        return $this->domElement->hasAttribute($name);
     }
 
     public function getDomElement(): DOMElement
     {
-        return $this->element;
+        return $this->domElement;
     }
 
     /**
      * Append a text node as a child
-     * @param string $string
+     * @param string $string - the text
+     * @param string $position - the position on where to insert the text node
      * @return $this
+     * @throws ExceptionBadArgument
      */
-    public function appendTextNode(string $string): XmlElement
+    public function insertAdjacentTextNode(string $string, string $position = 'afterbegin'): XmlElement
     {
-        $textNode = $this->element->ownerDocument->createTextNode($string);
-        $this->element->appendChild($textNode);
+        $textNode = $this->domElement->ownerDocument->createTextNode($string);
+        $this->insertAdjacentDomElement($position,$textNode);
         return $this;
     }
 
     public function toHtml()
     {
-        return $this->element->ownerDocument->saveHTML($this->element);
+        return $this->domElement->ownerDocument->saveHTML($this->domElement);
     }
 
     public function toXhtml()
     {
-        return $this->element->ownerDocument->saveXML($this->element);
+        return $this->domElement->ownerDocument->saveXML($this->domElement);
     }
 
     public function getNodeValueWithoutCdata()
@@ -210,29 +212,8 @@ class XmlElement
         $externalElement = XmlDocument::createHtmlDocFromMarkup($html)->getElement()->getDomElement();
         // import/copy item from external document to internal document
         $internalElement = $this->importIfExternal($externalElement);
-        switch ($position) {
-            case 'beforeend':
-                $this->element->appendChild($internalElement);
-                return $this;
-            case 'afterbegin':
-                $firstChild = $this->element->firstChild;
-                if ($firstChild === null) {
-                    $this->element->appendChild($internalElement);
-                } else {
-                    // The object on which you actually call the insertBefore()
-                    // on the parent node of the reference node
-                    // otherwise you get a `not found`
-                    // https://www.php.net/manual/en/domnode.insertbefore.php#53506
-                    $firstChild->parentNode->insertBefore($internalElement, $firstChild);
-                }
-                return $this;
-            case 'beforebegin':
-                $this->element->parentNode->insertBefore($internalElement, $this->element);
-                return $this;
-            default:
-                throw new ExceptionBadArgument("The position ($position) is unknown");
-        }
-
+        $this->insertAdjacentDomElement($position, $internalElement);
+        return $this;
     }
 
 
@@ -257,8 +238,8 @@ class XmlElement
 
     public function appendChild(XmlElement $xmlElement): XmlElement
     {
-        $element = $this->importIfExternal($xmlElement->element);
-        $this->element->appendChild($element);
+        $element = $this->importIfExternal($xmlElement->domElement);
+        $this->domElement->appendChild($element);
         return $this;
     }
 
@@ -269,7 +250,7 @@ class XmlElement
 
     public function setNodeValue(string $nodeValue)
     {
-        $this->element->nodeValue = $nodeValue;
+        $this->domElement->nodeValue = $nodeValue;
     }
 
     public function addStyle(string $name, string $value): XmlElement
@@ -305,8 +286,8 @@ class XmlElement
     {
         $error = "";
         XmlSystems::diffNode(
-            $this->element,
-            $rightDocument->element,
+            $this->domElement,
+            $rightDocument->domElement,
             $error,
             $attributeFilter
         );
@@ -328,10 +309,42 @@ class XmlElement
      */
     public function getParent(): XmlElement
     {
-        $parentNode = $this->element->parentNode;
+        $parentNode = $this->domElement->parentNode;
         if ($parentNode === null) {
             throw new ExceptionNotFound("No parent node found");
         }
         return new XmlElement($parentNode, $this->document);
+    }
+
+    /**
+     * @param string $position
+     * @param \DOMNode $domNode - ie {@Link \DOMElement} or {@link \DOMNode}
+     * @return XmlElement
+     * @throws ExceptionBadArgument
+     */
+    private function insertAdjacentDomElement(string $position, \DOMNode $domNode): XmlElement
+    {
+        switch ($position) {
+            case 'beforeend':
+                $this->domElement->appendChild($domNode);
+                return $this;
+            case 'afterbegin':
+                $firstChild = $this->domElement->firstChild;
+                if ($firstChild === null) {
+                    $this->domElement->appendChild($domNode);
+                } else {
+                    // The object on which you actually call the insertBefore()
+                    // on the parent node of the reference node
+                    // otherwise you get a `not found`
+                    // https://www.php.net/manual/en/domnode.insertbefore.php#53506
+                    $firstChild->parentNode->insertBefore($domNode, $firstChild);
+                }
+                return $this;
+            case 'beforebegin':
+                $this->domElement->parentNode->insertBefore($domNode, $this->domElement);
+                return $this;
+            default:
+                throw new ExceptionBadArgument("The position ($position) is unknown");
+        }
     }
 }

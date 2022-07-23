@@ -46,6 +46,7 @@ class PageLayout
     public const TASK_RUNNER_ID = "task-runner";
     public const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
     public const CONF_REM_SIZE = "remSize";
+    public const PRELOAD_TAG = "preload";
     private string $layoutName;
     private WikiPath $cssPath;
     private WikiPath $jsPath;
@@ -183,6 +184,7 @@ class PageLayout
     /**
      * @param $mainHtml - the html in the main area
      * @return string - the page as html string (not dom because that's not how works dokuwiki)
+     * @throws ExceptionNotFound
      */
     public function generateAndGetPageHtmlAsString(string $mainHtml): string
     {
@@ -192,7 +194,7 @@ class PageLayout
             $pageLayoutElement = $this->getMainElement();
             $layoutVariable = $pageLayoutElement->getVariableName();
             $htmlFragmentByVariables[$layoutVariable] = $mainHtml;
-            $pageLayoutElement->getDomElement()->appendTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
+            $pageLayoutElement->getDomElement()->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
         } catch (ExceptionNotFound $e) {
             // main element is mandatory, an error should have been thrown at build time
             throw new ExceptionRuntimeInternal("Main element was not found", self::CANONICAL, 1, $e);
@@ -251,7 +253,7 @@ class PageLayout
                  */
                 $layoutVariable = $pageElement->getVariableName();
                 $htmlFragmentByVariables[$layoutVariable] = $fetcherHtmlString;
-                $domElement->appendTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
+                $domElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
 
             } catch (ExceptionNotFound|ExceptionBadArgument $e) {
 
@@ -352,7 +354,7 @@ class PageLayout
             $toc = $this->getTocOrDefault();
             $tocVariable = Template::toValidVariableName($tocId);
             $htmlFragmentByVariables[$tocVariable] = $toc->toXhtml();
-            $tocElement->appendTextNode(Template::VARIABLE_PREFIX . $tocVariable);
+            $tocElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $tocVariable);
 
         } catch (ExceptionNotFound $e) {
             // no toc
@@ -392,7 +394,7 @@ class PageLayout
             }
             $railBarVariable = Template::toValidVariableName(FetcherRailBar::NAME);
             $htmlFragmentByVariables[$railBarVariable] = $railBar->getFetchString();
-            $pageToolElement->appendTextNode(Template::VARIABLE_PREFIX . $railBarVariable);
+            $pageToolElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $railBarVariable);
 
         } catch (ExceptionNotFound $e) {
             // no page tool or no requested context path
@@ -421,6 +423,23 @@ class PageLayout
          * At last then
          */
         $this->addHeadElements($head, $htmlFragmentByVariables);
+
+        /**
+         * Preloaded Css
+         * Not really useful
+         * We add it just before the end of the body tag
+         */
+        try {
+            $preloadHtml = $this->getHtmlForPreloadedStyleSheets();
+            $preloadVariable = Template::toValidVariableName(self::PRELOAD_TAG);
+            $htmlFragmentByVariables[$preloadVariable] = $preloadHtml;
+            $bodyElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $preloadVariable, "beforeend");
+        } catch (ExceptionNotFound $e) {
+            // no preloaded stylesheet resources
+        } catch (ExceptionBadArgument $e) {
+            // if the insert position is not good, should not happen as it's hard coded by us
+            throw new ExceptionRuntimeInternal("Inserting the preloaded HTML returns an error. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
+        }
 
         /**
          * We save as XML because we strive to be XML compliant (ie XHTML)
@@ -832,7 +851,7 @@ class PageLayout
         }
         $variableName = "headElements";
         $htmlFragmentByVariables[$variableName] = $htmlHeaders;
-        $head->appendTextNode(Template::VARIABLE_PREFIX . $variableName);
+        $head->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $variableName);
 
 
     }
@@ -959,6 +978,45 @@ class PageLayout
     public function generateAndGetPageHtmlAsDom(string $mainHtml): XmlDocument
     {
         return XmlDocument::createHtmlDocFromMarkup($this->generateAndGetPageHtmlAsString($mainHtml));
+    }
+
+    /**
+     * Add the preloaded CSS resources
+     * at the end
+     * @throws ExceptionNotFound
+     */
+    private function getHtmlForPreloadedStyleSheets(): string
+    {
+
+        // For the preload if any
+        try {
+            $preloadedCss = WikiRequest::getOrCreateFromEnv()->getObject(self::PRELOAD_TAG);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionNotFound("No preloaded resources found");
+        }
+
+        //
+        // Note: Adding this css in an animationFrame
+        // such as https://github.com/jakearchibald/svgomg/blob/master/src/index.html#L183
+        // would be difficult to test
+
+        $class = StyleUtility::addComboStrapSuffix(self::PRELOAD_TAG);
+        $preloadHtml = "<div class=\"$class\">";
+        foreach ($preloadedCss as $link) {
+            $htmlLink = '<link rel="stylesheet" href="' . $link['href'] . '" ';
+            if ($link['crossorigin'] != "") {
+                $htmlLink .= ' crossorigin="' . $link['crossorigin'] . '" ';
+            }
+            if (!empty($link['class'])) {
+                $htmlLink .= ' class="' . $link['class'] . '" ';
+            }
+            // No integrity here
+            $htmlLink .= '>';
+            $preloadHtml .= $htmlLink;
+        }
+        $preloadHtml .= "</div>";
+        return $preloadHtml;
+
     }
 
 }

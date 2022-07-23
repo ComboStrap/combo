@@ -4,11 +4,16 @@
  *
  */
 
+use ComboStrap\ArrayCaseInsensitive;
 use ComboStrap\Bootstrap;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
+use ComboStrap\PageLayout;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\StyleUtility;
+use ComboStrap\WikiRequest;
 
 if (!defined('DOKU_INC')) die();
 
@@ -218,7 +223,7 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
                              */
                             $boostrapSnippetsAsArray = [];
                             foreach ($bootstrap->getJsSnippets() as $snippet) {
-                                $boostrapSnippetsAsArray[]=$snippet->toDokuWikiArray();
+                                $boostrapSnippetsAsArray[] = $snippet->toDokuWikiArray();
                             }
                             /**
                              * At the top of the queue
@@ -297,7 +302,13 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
         /**
          * Save the stylesheet to load it at the end
          */
-        global $preloadedCss;
+        $wikiRequest = WikiRequest::getOrCreateFromEnv();
+        try {
+            $preloadedCss = &$wikiRequest->getObject(PageLayout::PRELOAD_TAG);
+        } catch (ExceptionNotFound $e) {
+            $preloadedCss = [];
+            $wikiRequest->setObject(PageLayout::PRELOAD_TAG,$preloadedCss);
+        }
         $preloadedCss[] = $linkData;
 
         /**
@@ -309,39 +320,6 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
         return $linkData;
     }
 
-    /**
-     * Add the preloaded CSS resources
-     * at the end
-     */
-    public static function addPreloadedResources()
-    {
-        // For the preload if any
-        global $preloadedCss;
-        //
-        // Note: Adding this css in an animationFrame
-        // such as https://github.com/jakearchibald/svgomg/blob/master/src/index.html#L183
-        // would be difficult to test
-        if (isset($preloadedCss)) {
-            foreach ($preloadedCss as $link) {
-                $htmlLink = '<link rel="stylesheet" href="' . $link['href'] . '" ';
-                if ($link['crossorigin'] != "") {
-                    $htmlLink .= ' crossorigin="' . $link['crossorigin'] . '" ';
-                }
-                if (!empty($link['class'])) {
-                    $htmlLink .= ' class="' . $link['class'] . '" ';
-                }
-                // No integrity here
-                $htmlLink .= '>';
-                ptln($htmlLink);
-            }
-            /**
-             * Reset
-             * Needed in test when we start two requests
-             */
-            $preloadedCss = [];
-        }
-
-    }
 
 
     /**

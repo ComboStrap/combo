@@ -333,7 +333,6 @@ class XmlSystems
             throw new ExceptionRuntime("xpath query error ($xpathQuery");
         }
         for ($i = 0; $i < $svgElement->length; $i++) {
-
             $nodeElement = XmlElement::create($svgElement[$i], $xmlDocument);
             $nodeElement->remove();
         }

@@ -198,7 +198,7 @@ class XmlElement
 
     public function getNodeValueWithoutCdata()
     {
-        return XmlUtility::extractTextWithoutCdata($this->getNodeValue());
+        return XmlSystems::extractTextWithoutCdata($this->getNodeValue());
     }
 
     /**
@@ -304,7 +304,7 @@ class XmlElement
     public function equals(XmlElement $rightDocument, array $attributeFilter = [])
     {
         $error = "";
-        XmlUtility::diffNode(
+        XmlSystems::diffNode(
             $this->element,
             $rightDocument->element,
             $error,

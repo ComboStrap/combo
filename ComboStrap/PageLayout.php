@@ -45,8 +45,6 @@ class PageLayout
     public const VIEWPORT_RESPONSIVE_VALUE = "width=device-width,initial-scale=1";
     public const TASK_RUNNER_ID = "task-runner";
     public const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
-    const HAMBURGER_LAYOUT = "hamburger";
-    const BLANK_LAYOUT = "blank";
     public const CONF_REM_SIZE = "remSize";
     private string $layoutName;
     private WikiPath $cssPath;
@@ -452,9 +450,9 @@ class PageLayout
         return $this->templateDomDocument;
     }
 
-    public function setRequestedContextPath(WikiPath $requestedMarkupPath): PageLayout
+    public function setRequestedContextPath(WikiPath $wikiPath): PageLayout
     {
-        $this->requestedContextPath = $requestedMarkupPath;
+        $this->requestedContextPath = $wikiPath;
         return $this;
     }
 
@@ -746,7 +744,9 @@ class PageLayout
             return $this->requestedTitle;
         }
         try {
-            return PageTitle::createForMarkup($this->getRequestedContextPath())
+            $path = $this->getRequestedContextPath();
+            $markupPath = MarkupPath::createPageFromPathObject($path);
+            return PageTitle::createForMarkup($markupPath)
                 ->getValueOrDefault();
         } catch (ExceptionNotFound $e) {
             throw new ExceptionNotFound("A title should be set when the requested path is not set");
@@ -937,7 +937,8 @@ class PageLayout
         if (FileSystems::isDirectory($wikiPath)) {
             LogUtility::error("We have a found an inconsistency. The context path is not a markup directory and does have therefore no toc but the template ($this) has a toc.");
         }
-        return Toc::createForPage($wikiPath);
+        $markup = MarkupPath::createPageFromPathObject($wikiPath);
+        return Toc::createForPage($markup);
 
     }
 

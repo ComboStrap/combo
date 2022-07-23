@@ -13,7 +13,7 @@ require_once(__DIR__ . '/XmlUtility.php');
  * Class HtmlUtility
  * Static HTML utility
  *
- * On HTML as string, if you want to work on HTML as XML, see the {@link XmlUtility} class
+ * On HTML as string, if you want to work on HTML as XML, see the {@link XmlSystems} class
  *
  * @package ComboStrap
  *
@@ -50,7 +50,7 @@ class XhtmlUtility
         $rightDocument = (new XmlDocument($right, $loading))->getDomDocument();
 
         $error = "";
-        XmlUtility::diffNode(
+        XmlSystems::diffNode(
             $leftDocument,
             $rightDocument,
             $error,

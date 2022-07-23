@@ -13,6 +13,7 @@ class PageLayoutName extends MetadataText
     public const LANDING_LAYOUT_VALUE = "landing";
     public const INDEX_LAYOUT_VALUE = "index";
     public const HAMBURGER_LAYOUT_VALUE = "hamburger";
+    public const BLANK_LAYOUT = "blank";
 
     public static function createFromPage(MarkupPath $page): PageLayoutName
     {
@@ -42,7 +43,8 @@ class PageLayoutName extends MetadataText
             self::MEDIAN_LAYOUT_VALUE,
             self::LANDING_LAYOUT_VALUE,
             self::INDEX_LAYOUT_VALUE,
-            self::HAMBURGER_LAYOUT_VALUE
+            self::HAMBURGER_LAYOUT_VALUE,
+            self::BLANK_LAYOUT
         ];
     }
 

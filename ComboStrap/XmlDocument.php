@@ -569,7 +569,7 @@ class XmlDocument
     public function diff(XmlDocument $rightDocument)
     {
         $error = "";
-        XmlUtility::diffNode($this->getDomDocument(), $rightDocument->getDomDocument(), $error);
+        XmlSystems::diffNode($this->getDomDocument(), $rightDocument->getDomDocument(), $error);
         return $error;
     }
 

@@ -379,7 +379,7 @@ class FetcherSvg extends IFetcherLocalImage
                 if ($elementToDelete === "style" && $this->getRequestedPreserveStyleOrDefault()) {
                     continue;
                 }
-                XmlUtility::deleteAllElementsByName($elementToDelete, $this->getXmlDocument());
+                XmlSystems::deleteAllElementsByName($elementToDelete, $this->getXmlDocument());
             }
 
             // Delete If Empty
@@ -1116,7 +1116,7 @@ class FetcherSvg extends IFetcherLocalImage
                     if (
                         preg_match("/carbon|eva/i", $pathString) === 1
                     ) {
-                        XmlUtility::deleteAllElementsByName("rect", $this->getXmlDocument());
+                        XmlSystems::deleteAllElementsByName("rect", $this->getXmlDocument());
                     }
                 } catch (ExceptionNotFound $e) {
                     // ok

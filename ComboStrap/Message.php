@@ -181,7 +181,7 @@ class Message
              * In dev, to spot the XHTML compliance error
              */
             if (PluginUtility::isDevOrTest()) {
-                $isXml = XmlUtility::isXml($message);
+                $isXml = XmlSystems::isXml($message);
                 if (!$isXml) {
                     LogUtility::msg("This message is not xml compliant ($message)");
                     $message = <<<EOF

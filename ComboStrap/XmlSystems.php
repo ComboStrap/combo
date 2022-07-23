@@ -10,13 +10,13 @@ use DOMNode;
 use Exception;
 
 /**
- * Class XmlUtility
+ *
  * @package ComboStrap
- * Static function around the {@link DOMDocument}
+ * Static function around the {@link XmlDocument}
  *
  *
  */
-class XmlUtility
+class XmlSystems
 {
     const OPEN = "open";
     const CLOSED = "closed";
@@ -206,7 +206,7 @@ class XmlUtility
                                 } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
                                     $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ") and the left value is not an URL. Error:{$e->getMessage()}\n";
                                 }
-                            break;
+                                break;
                             default:
                                 $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ")\n";
                                 break;

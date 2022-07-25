@@ -24,12 +24,6 @@ class CacheManager
 
 
     /**
-     * @var CacheManager[]
-     */
-    private static array $cacheManager = [];
-
-
-    /**
      * The list of cache runtimes dependencies by slot {@link MarkupCacheDependencies}
      */
     private $slotCacheDependencies;
@@ -44,11 +38,11 @@ class CacheManager
      */
     private $slotsExpiration;
 
-    private ExecutionContext $wikiRequest;
+    private ExecutionContext $executionContext;
 
-    public function __construct(ExecutionContext $wikiRequest)
+    public function __construct(ExecutionContext $executionContext)
     {
-        $this->wikiRequest = $wikiRequest;
+        $this->executionContext = $executionContext;
     }
 
 
@@ -59,7 +53,7 @@ class CacheManager
     public static function getOrCreateFromRequestedPath(): CacheManager
     {
 
-        return ExecutionContext::getOrCreateFromEnv()->getCacheManager();
+        return ExecutionContext::getActualOrCreateFromEnv()->getCacheManager();
 
     }
 
@@ -81,7 +75,7 @@ class CacheManager
         $pathId = $path->toPathString();
         $cacheRuntimeDependencies = $this->slotCacheDependencies[$pathId];
         if ($cacheRuntimeDependencies === null) {
-            $cacheRuntimeDependencies = MarkupCacheDependencies::create($path, $this->wikiRequest->getRequestedPath());
+            $cacheRuntimeDependencies = MarkupCacheDependencies::create($path, $this->executionContext->getRequestedPath());
             $this->slotCacheDependencies[$pathId] = $cacheRuntimeDependencies;
         }
         return $cacheRuntimeDependencies;

@@ -94,7 +94,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
             }
         }
 
-        $cacheManager = ExecutionContext::getOrCreateFromEnv()->getCacheManager();
+        $cacheManager = ExecutionContext::getActualOrCreateFromEnv()->getCacheManager();
         $shouldSlotExpire = $cacheManager->shouldSlotExpire($pageId);
         if ($shouldSlotExpire) {
             Event::createEvent(

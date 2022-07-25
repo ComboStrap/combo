@@ -3,23 +3,20 @@
 namespace ComboStrap;
 
 /**
- * A object that permits to set the global state request data
+ * An execution object permits to get access to environment variable.
  *
  *
+ * They may be nested with {@link ExecutionContext::createSubExecutionContext()} this is because Dokuwiki use the global variable
+ * ID to get the actual parsed markup.
  *
- * We don't restore the global state because this is useless
- * Dokuwiki does not have the notion of request object, all request data are passed via global state
+ * When an execution context has finished, it should be {@link ExecutionContext::close() closed}
+ *
+ * You can get the actual execution context with {@link ExecutionContext::getActualOrCreateFromEnv()}
  *
  *
- *   * Dokuwiki uses {@link Cache::useCache()} needs them also therefore if you split the process in two function: useCache
- * and processing, you need to set and unset each time
- *   * Get function may also needs them if the Object cache depends on them
- *   * ...
- *
- * Before executing any request, this function should be call
- *
- * Trying to implement [routing context](https://vertx.io/docs/apidocs/index.html?io/vertx/ext/web/RoutingContext.html)
- *
+ * Same concept than [routing context](https://vertx.io/docs/apidocs/index.html?io/vertx/ext/web/RoutingContext.html)
+ * (Not yet fully implemented)
+ * ```java
  * if (pet.isPresent())
  *    routingContext
  *     .response()
@@ -29,6 +26,7 @@ namespace ComboStrap;
  * else
  *    routingContext.fail(404, new Exception("Pet not found"));
  * }
+ * ```
  */
 class ExecutionContext
 {
@@ -153,7 +151,10 @@ class ExecutionContext
 
     }
 
-    public static function getOrCreateFromEnv(): ExecutionContext
+    /**
+     * @return ExecutionContext - return the actual context or create one from the environment
+     */
+    public static function getActualOrCreateFromEnv(): ExecutionContext
     {
         try {
             return self::getActualContext();
@@ -380,11 +381,12 @@ class ExecutionContext
 
     public function getCacheManager(): CacheManager
     {
-        if (!isset($this->cacheManager)) {
-            $this->cacheManager = new CacheManager($this);
-        }
-        return $this->cacheManager;
 
+        $root = self::$rootExecutionContext;
+        if (!isset($root->cacheManager)) {
+            $root->cacheManager = new CacheManager($this);
+        }
+        return $root->cacheManager;
 
     }
 

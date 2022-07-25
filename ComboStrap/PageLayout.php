@@ -992,7 +992,7 @@ class PageLayout
 
         // For the preload if any
         try {
-            $preloadedCss = ExecutionContext::getOrCreateFromEnv()->getObject(self::PRELOAD_TAG);
+            $preloadedCss = ExecutionContext::getActualOrCreateFromEnv()->getObject(self::PRELOAD_TAG);
         } catch (ExceptionNotFound $e) {
             throw new ExceptionNotFound("No preloaded resources found");
         }

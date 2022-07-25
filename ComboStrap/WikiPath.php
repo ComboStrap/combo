@@ -422,13 +422,13 @@ class WikiPath extends PathAbs
      */
     public static function createRunningMarkupWikiPath(): WikiPath
     {
-        $id = ExecutionContext::getOrCreateFromEnv()->getWikiId();
+        $id = ExecutionContext::getActualOrCreateFromEnv()->getWikiId();
         return WikiPath::createPagePathFromId($id);
     }
 
     public static function createRequestedPagePathFromRequest(): WikiPath
     {
-        $pageId = ExecutionContext::getOrCreateFromEnv()->getWikiId();;
+        $pageId = ExecutionContext::getActualOrCreateFromEnv()->getWikiId();;
         return WikiPath::createPagePathFromId($pageId);
     }
 

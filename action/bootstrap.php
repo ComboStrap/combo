@@ -302,7 +302,7 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
         /**
          * Save the stylesheet to load it at the end
          */
-        $wikiRequest = ExecutionContext::getOrCreateFromEnv();
+        $wikiRequest = ExecutionContext::getActualOrCreateFromEnv();
         try {
             $preloadedCss = &$wikiRequest->getObject(PageLayout::PRELOAD_TAG);
         } catch (ExceptionNotFound $e) {

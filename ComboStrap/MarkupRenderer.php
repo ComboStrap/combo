@@ -227,7 +227,7 @@ class MarkupRenderer
             && $this->requestedMime->getExtension() !== self::INSTRUCTION_EXTENSION
         ) {
             $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
-            $executionContext = ExecutionContext::getOrCreateFromEnv();
+            $executionContext = ExecutionContext::getActualOrCreateFromEnv();
             try {
                 $this->runningId = $executionContext->getWikiId();
             } catch (ExceptionNotFound $e) {

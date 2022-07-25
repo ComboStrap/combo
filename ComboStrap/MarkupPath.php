@@ -757,7 +757,7 @@ class MarkupPath implements ResourceCombo, Path
          * (Used only in test)
          */
         $wikiPath = WikiPath::createFromPathObject($this->getPathObject());
-        $subExecutionContext = ExecutionContext::getOrCreateFromEnv()
+        $subExecutionContext = ExecutionContext::getActualOrCreateFromEnv()
             ->createSubExecutionContext($wikiPath->getWikiId());
         try {
             /**

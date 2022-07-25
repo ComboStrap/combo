@@ -1159,10 +1159,10 @@ class TagAttributes
      * @param string $key add an html attribute with the empty string
      */
     public
-    function addBooleanOutputAttributeValue($key)
+    function addBooleanOutputAttributeValue(string $key): TagAttributes
     {
 
-        $this->outputAttributes[$key] = '';
+        $this->outputAttributes[$key] = null;
         return $this;
 
     }

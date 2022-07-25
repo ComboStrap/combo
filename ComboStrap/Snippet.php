@@ -28,7 +28,7 @@ use JsonSerializable;
  * A snippet identifier is a {@link Snippet::getLocalUrl() local file}
  *   * if there is content defined, it will be an {@link Snippet::hasInlineContent() inline}
  *   * if not, it will be the local file with the {@link Snippet::getLocalUrl()}
- *   * if not found or if the usage of the cdn is required, the {@link Snippet::getExternalUrl() url} is used
+ *   * if not found or if the usage of the cdn is required, the {@link Snippet::getRemoteUrl() url} is used
  *
  */
 class Snippet implements JsonSerializable
@@ -122,7 +122,7 @@ class Snippet implements JsonSerializable
      */
     private string $inlineContent;
 
-    private Url $externalUrl;
+    private Url $remoteUrl;
 
     private string $integrity;
 
@@ -386,15 +386,21 @@ class Snippet implements JsonSerializable
 
     public function getCritical(): bool
     {
-        if (!isset($this->critical)) {
+
+        if (isset($this->critical)) {
+            return $this->critical;
+        }
+        try {
             if ($this->path->getExtension() === self::EXTENSION_CSS) {
                 // All CSS should be loaded first
                 // The CSS animation / background can set this to false
                 return true;
             }
-            return false;
+        } catch (ExceptionNotFound $e) {
+            // no path extension
         }
-        return $this->critical;
+        return false;
+
     }
 
     public function getClass(): string
@@ -528,7 +534,7 @@ class Snippet implements JsonSerializable
         }
         $fileExists = FileSystems::exists($this->path);
         if (!$fileExists) {
-            if (isset($this->externalUrl)) {
+            if (isset($this->remoteUrl)) {
                 return self::EXTERNAL_TYPE;
             } else {
                 LogUtility::internalError("The snippet ($this) have a path ($this->path) that does not exists and does not have any external url.");
@@ -537,7 +543,7 @@ class Snippet implements JsonSerializable
         }
         // if cdn
         $useCdn = $this->shouldUseCdn();
-        if ($useCdn && isset($this->externalUrl)) {
+        if ($useCdn && isset($this->remoteUrl)) {
             return self::EXTERNAL_TYPE;
         }
         return self::INTERNAL_TYPE;
@@ -553,9 +559,15 @@ class Snippet implements JsonSerializable
     }
 
 
-    public function getExternalUrl(): Url
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getRemoteUrl(): Url
     {
-        return $this->externalUrl;
+        if (!isset($this->remoteUrl)) {
+            throw new ExceptionNotFound("No remote url found");
+        }
+        return $this->remoteUrl;
     }
 
     /**
@@ -563,7 +575,7 @@ class Snippet implements JsonSerializable
      */
     public function getIntegrity(): ?string
     {
-        if(!isset($this->integrity)){
+        if (!isset($this->integrity)) {
             throw new ExceptionNotFound("No integrity");
         }
         return $this->integrity;
@@ -619,8 +631,8 @@ class Snippet implements JsonSerializable
             LogUtility::internalError("The component id was not set for the snippet ($this)");
         }
 
-        if (isset($this->externalUrl)) {
-            $dataToSerialize[self::JSON_URL_PROPERTY] = $this->externalUrl->toString();
+        if (isset($this->remoteUrl)) {
+            $dataToSerialize[self::JSON_URL_PROPERTY] = $this->remoteUrl->toString();
         }
         if (isset($this->integrity)) {
             $dataToSerialize[self::JSON_INTEGRITY_PROPERTY] = $this->integrity;
@@ -660,7 +672,7 @@ class Snippet implements JsonSerializable
      *
      * @return bool
      */
-    public function shouldBeInHtmlPage(): bool
+    public function shouldBeInlined(): bool
     {
         /**
          * If there is inline content, true
@@ -668,13 +680,29 @@ class Snippet implements JsonSerializable
         if ($this->hasInlineContent()) {
             return true;
         }
+
+        /**
+         *
+         */
+        $internalPath = $this->getPath();
+        if (!FileSystems::exists($internalPath)) {
+            try {
+                $this->getRemoteUrl();
+                return false;
+            } catch (ExceptionNotFound $e) {
+                // no remote url, no file, no inline: error
+                LogUtility::internalError("The snippet ($this) does not have content defined (the path does not exist, no inline content and no remote url)", self::CANONICAL);
+                return true;
+            }
+
+        }
         /**
          * If this is a path, true if the file is small enough
          */
-        $internalPath = $this->getPath();
         if (FileSystems::getSize($internalPath) > $this->getMaxInlineSize()) {
             return false;
         }
+
         return true;
     }
 
@@ -704,7 +732,7 @@ class Snippet implements JsonSerializable
                 switch ($type) {
                     case Snippet::EXTERNAL_TYPE:
                         $htmlAttributes
-                            ->addOutputAttributeValue("src", $this->getExternalUrl()->toString())
+                            ->addOutputAttributeValue("src", $this->getRemoteUrl()->toString())
                             ->addOutputAttributeValue("crossorigin", "anonymous");
                         try {
                             $integrity = $this->getIntegrity();
@@ -727,7 +755,7 @@ class Snippet implements JsonSerializable
                          * if a small javascript depend on a large one
                          * that is not yet loaded and does not wait for it
                          */
-                        switch ($this->shouldBeInHtmlPage()) {
+                        switch ($this->shouldBeInlined()) {
                             default:
                             case true:
                                 try {
@@ -762,7 +790,7 @@ class Snippet implements JsonSerializable
                     case Snippet::EXTERNAL_TYPE:
                         $htmlAttributes
                             ->addOutputAttributeValue("rel", "stylesheet")
-                            ->addOutputAttributeValue("href", $this->getExternalUrl()->toString())
+                            ->addOutputAttributeValue("href", $this->getRemoteUrl()->toString())
                             ->addOutputAttributeValue("crossorigin", "anonymous");
 
                         try {
@@ -825,8 +853,8 @@ class Snippet implements JsonSerializable
             case Snippet::EXTENSION_JS:
                 return self::SCRIPT_TAG;
             case Snippet::EXTENSION_CSS:
-                if ($this->hasInlineContent()) {
-                    return Snippet::SCRIPT_TAG;
+                if ($this->shouldBeInlined()) {
+                    return Snippet::STYLE_TAG;
                 } else {
                     return Snippet::LINK_TAG;
                 }
@@ -841,9 +869,9 @@ class Snippet implements JsonSerializable
         return $this;
     }
 
-    public function setExternalUrl(Url $url): Snippet
+    public function setRemoteUrl(Url $url): Snippet
     {
-        $this->externalUrl = $url;
+        $this->remoteUrl = $url;
         return $this;
     }
 

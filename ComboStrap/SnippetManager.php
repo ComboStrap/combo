@@ -359,7 +359,7 @@ class SnippetManager
         return Snippet::getOrCreateSnippetWithPath($path)
             ->setScopeAsRunningSlot()
             ->setIntegrity($integrity)
-            ->setExternalUrl($url)
+            ->setRemoteUrl($url)
             ->setComponentId($componentId);
     }
 
@@ -380,7 +380,7 @@ class SnippetManager
         return $this
             ->attachSnippetFromSlot($libraryName, Snippet::EXTENSION_CSS)
             ->setIntegrity($integrity)
-            ->setExternalUrl($url)
+            ->setRemoteUrl($url)
             ->setComponentId($componentId);
     }
 

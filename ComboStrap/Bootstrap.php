@@ -274,7 +274,7 @@ class Bootstrap
             if (!empty($url)) {
                 try {
                     $url = Url::createFromString($url);
-                    $snippet->setExternalUrl($url);
+                    $snippet->setRemoteUrl($url);
                     if (isset($script['integrity'])) {
                         $snippet->setIntegrity($script['integrity']);
                     }

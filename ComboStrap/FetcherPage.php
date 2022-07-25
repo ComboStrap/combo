@@ -252,7 +252,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         /**
          * Request / Environment First
          */
-        $this->wikiRequest = ExecutionContext::createFromRunningId($this->getRequestedPath()->getWikiId());
+        $this->wikiRequest = ExecutionContext::createFromWikiId($this->getRequestedPath()->getWikiId());
 
         $this->requestedMarkupPath = MarkupPath::createPageFromPathObject($this->getRequestedPath());
 

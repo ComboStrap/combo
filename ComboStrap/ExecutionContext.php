@@ -54,8 +54,9 @@ class ExecutionContext
 
     /**
      * A root execution context if any
+     * Null because you can unset a static variable
      */
-    private static ?ExecutionContext $rootExecutionContext;
+    private static ?ExecutionContext $rootExecutionContext = null;
 
     /**
      * The id used if
@@ -108,8 +109,9 @@ class ExecutionContext
         $this->capturedGlobalId = $ID;
         try {
 
-            $ID = $url->getQueryPropertyValue(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
-            $this->wikiId = $ID;
+            $urlId = $url->getQueryPropertyValue(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
+            $this->wikiId = $urlId;
+            $ID = $urlId;
 
         } catch (ExceptionNotFound $e) {
             // none
@@ -124,7 +126,7 @@ class ExecutionContext
      * @param string $requestedAct
      * @return ExecutionContext
      */
-    public static function createFromRunningId(string $requestedId, string $requestedAct = "show"): ExecutionContext
+    public static function createFromWikiId(string $requestedId, string $requestedAct = "show"): ExecutionContext
     {
 
         $url = Url::createEmpty()
@@ -139,10 +141,16 @@ class ExecutionContext
         return new ExecutionContext($url);
     }
 
-    public static function createFromEnvironmentVariable(): ExecutionContext
+    public static function createRootFromEnvironmentVariable(): ExecutionContext
     {
+        if (self::$rootExecutionContext !== null) {
+            LogUtility::internalError("The root context should be closed first");
+        }
         $url = Url::createFromGetOrPostGlobalVariable();
-        return self::createFromUrl($url);
+        $rootExecutionContext = self::createFromUrl($url);
+        self::$rootExecutionContext = $rootExecutionContext;
+        return $rootExecutionContext;
+
     }
 
     public static function getOrCreateFromEnv(): ExecutionContext
@@ -150,7 +158,7 @@ class ExecutionContext
         try {
             return self::getActualContext();
         } catch (ExceptionNotFound $e) {
-            return self::createFromEnvironmentVariable();
+            return self::createRootFromEnvironmentVariable();
         }
     }
 
@@ -192,14 +200,9 @@ class ExecutionContext
             $runningAct = "show";
         }
 
-        $subExecutionContext = self::createFromRunningId($runningId, $runningAct);
+        $subExecutionContext = self::createFromWikiId($runningId, $runningAct);
         $subExecutionContext->setParent($this);
         $this->childExecutionContext = $subExecutionContext;
-
-        global $ID;
-        global $ACT;
-        $ID = $runningId;
-        $ACT = $runningAct;
 
         return $subExecutionContext;
 
@@ -416,14 +419,18 @@ class ExecutionContext
         return $this->capturedRequestId;
     }
 
-    private function getId(): string
-    {
-        return $this->url->toString();
-    }
-
     private function setParent(ExecutionContext $parent)
     {
         $this->parent = $parent;
+    }
+
+    public function isRoot(): bool
+    {
+        if (!isset($this->parent)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 

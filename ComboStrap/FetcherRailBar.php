@@ -113,7 +113,7 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
              * No actual request (called via ajax)
              */
             $localWikiId = $this->getSourcePath()->getWikiId();
-            $localWikiRequest = ExecutionContext::createFromRunningId($localWikiId);
+            $localWikiRequest = ExecutionContext::createFromWikiId($localWikiId);
 
             /**
              * page info is needed and used by all other plugins

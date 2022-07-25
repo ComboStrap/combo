@@ -205,7 +205,11 @@ class Snippet implements JsonSerializable
             return [];
         }
         $keys = array_keys(self::$globalSnippets);
-        return self::$globalSnippets[$keys[0]];
+        $snippets = self::$globalSnippets[$keys[0]];
+        if ($snippets === null) {
+            return [];
+        }
+        return $snippets;
     }
 
     /**

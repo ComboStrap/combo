@@ -40,8 +40,6 @@ class SnippetManager
 
     const CANONICAL = "snippet-manager";
 
-    public const CONF_USE_CDN_DEFAULT = 1;
-
 
     /**
      * @var array SnippetManager array that contains one element (one {@link SnippetManager} scoped to the requested id
@@ -210,7 +208,7 @@ class SnippetManager
     public
     function &attachCssInternalStylesheetForRequest($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_CSS, Snippet::INTERNAL_TYPE);
+        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_CSS);
         if ($script != null) {
             $snippet->setInlineContent($script);
         }
@@ -247,7 +245,7 @@ class SnippetManager
     public
     function &attachJavascriptInternalInlineForRequest($snippetId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE);
+        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS);
         if ($script != null) {
             $snippet->setInlineContent($script);
         }
@@ -265,7 +263,7 @@ class SnippetManager
     public
     function &attachInternalJavascriptForRequest($snippetId): Snippet
     {
-        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE);
+        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS);
         return $snippet;
     }
 

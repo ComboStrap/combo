@@ -67,7 +67,7 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
 
 
         $newHeaderTypes = array();
-        $bootstrap = Bootstrap::get();
+        $bootstrap = Bootstrap::getFromContext();
         $bootStrapMajorVersion = $bootstrap->getMajorVersion();
         $eventHeaderTypes = $event->data;
         foreach ($eventHeaderTypes as $headTagName => $headTagsAsArray) {

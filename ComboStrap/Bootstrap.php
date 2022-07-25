@@ -94,7 +94,7 @@ class Bootstrap
      */
     public static function getBootStrapMajorVersion(): string
     {
-        return Bootstrap::get()->getMajorVersion();
+        return Bootstrap::getFromContext()->getMajorVersion();
     }
 
 
@@ -108,11 +108,6 @@ class Bootstrap
         return new Bootstrap($boostrapVersion);
     }
 
-    public static function createFromConfiguration(): Bootstrap
-    {
-        $bootstrapStyleSheetVersion = PluginUtility::getConfValue(Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET, Bootstrap::DEFAULT_BOOTSTRAP_VERSION_STYLESHEET);
-        return new Bootstrap($bootstrapStyleSheetVersion);
-    }
 
     public function getStyleSheetName(): string
     {
@@ -177,19 +172,19 @@ class Bootstrap
     }
 
 
-
-
     /**
      * @return Bootstrap
      */
-    public static function get()
+    public static function getFromContext(): Bootstrap
     {
-        $wikiRequest = ExecutionContext::getActualOrCreateFromEnv();
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         try {
-            return $wikiRequest->getObject(self::CANONICAL);
+            return $executionContext->getObject(self::CANONICAL);
         } catch (ExceptionNotFound $e) {
-            $bootstrap = Bootstrap::createFromConfiguration();
-            $wikiRequest->setObject(self::CANONICAL, $bootstrap);
+            $bootstrapStyleSheetVersion = ExecutionContext::getActualOrCreateFromEnv()
+                ->getConfValue(Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET, Bootstrap::DEFAULT_BOOTSTRAP_VERSION_STYLESHEET);
+            $bootstrap = new Bootstrap($bootstrapStyleSheetVersion);
+            $executionContext->setObject(self::CANONICAL, $bootstrap);
             return $bootstrap;
         }
 
@@ -267,7 +262,7 @@ class Bootstrap
             $fileNameWithExtension = $script["file"];
             $file = LocalPath::createFromPathString($fileNameWithExtension);
 
-            $path = WikiPath::createComboResource(":bootstrap:$version:$fileNameWithExtension");
+            $path = WikiPath::createComboResource(":library:bootstrap:$version:$fileNameWithExtension");
             $snippet = Snippet::createSnippet($path)
                 ->setComponentId(self::TAG);
             $url = $script["url"];

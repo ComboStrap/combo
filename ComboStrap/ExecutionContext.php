@@ -435,5 +435,16 @@ class ExecutionContext
         }
     }
 
+    public function setConf(string $key, $value): ExecutionContext
+    {
+        PluginUtility::setConf($key, $value);
+        return $this;
+    }
+
+    public function getConfValue(string $key, string $default)
+    {
+        return PluginUtility::getConfValue($key, $default);
+    }
+
 
 }

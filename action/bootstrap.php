@@ -13,7 +13,7 @@ use ComboStrap\PageLayout;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\StyleUtility;
-use ComboStrap\WikiRequest;
+use ComboStrap\ExecutionContext;
 
 if (!defined('DOKU_INC')) die();
 
@@ -302,7 +302,7 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
         /**
          * Save the stylesheet to load it at the end
          */
-        $wikiRequest = WikiRequest::getOrCreateFromEnv();
+        $wikiRequest = ExecutionContext::getOrCreateFromEnv();
         try {
             $preloadedCss = &$wikiRequest->getObject(PageLayout::PRELOAD_TAG);
         } catch (ExceptionNotFound $e) {

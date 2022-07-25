@@ -21,7 +21,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     const CONF_ENABLE_AS_SHOW_ACTION_DEFAULT = 1;
 
     private string $requestedLayout;
-    private WikiRequest $wikiRequest;
+    private ExecutionContext $wikiRequest;
     private bool $build = false;
     private bool $closed = false;
 
@@ -252,7 +252,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         /**
          * Request / Environment First
          */
-        $this->wikiRequest = WikiRequest::createFromRequestId($this->getRequestedPath()->getWikiId());
+        $this->wikiRequest = ExecutionContext::createFromRunningId($this->getRequestedPath()->getWikiId());
 
         $this->requestedMarkupPath = MarkupPath::createPageFromPathObject($this->getRequestedPath());
 

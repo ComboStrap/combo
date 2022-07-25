@@ -181,7 +181,7 @@ class CallStack
         global $ACT;
         $keepAct = $ACT;
         if ($ID === null && PluginUtility::isTest()) {
-            $ID = WikiRequest::DEFAULT_SLOT_ID_FOR_TEST;
+            $ID = ExecutionContext::DEFAULT_SLOT_ID_FOR_TEST;
         }
         try {
             $ACT = "show";

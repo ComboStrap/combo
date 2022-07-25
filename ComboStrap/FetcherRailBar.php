@@ -106,14 +106,14 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
         $localWikiRequest = null;
         $localWikiId = null;
         try {
-            WikiRequest::get();
+            ExecutionContext::getActualContext();
         } catch (ExceptionNotFound $e) {
 
             /**
              * No actual request (called via ajax)
              */
             $localWikiId = $this->getSourcePath()->getWikiId();
-            $localWikiRequest = WikiRequest::createFromRequestId($localWikiId);
+            $localWikiRequest = ExecutionContext::createFromRunningId($localWikiId);
 
             /**
              * page info is needed and used by all other plugins

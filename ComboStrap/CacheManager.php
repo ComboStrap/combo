@@ -44,22 +44,22 @@ class CacheManager
      */
     private $slotsExpiration;
 
-    private WikiRequest $wikiRequest;
+    private ExecutionContext $wikiRequest;
 
-    public function __construct(WikiRequest $wikiRequest)
+    public function __construct(ExecutionContext $wikiRequest)
     {
         $this->wikiRequest = $wikiRequest;
     }
 
 
     /**
-     * @deprecated for {@link WikiRequest::getCacheManager()}
      * @return CacheManager
+     * @deprecated for {@link ExecutionContext::getCacheManager()}
      */
     public static function getOrCreateFromRequestedPath(): CacheManager
     {
 
-        return WikiRequest::getOrCreateFromEnv()->getCacheManager();
+        return ExecutionContext::getOrCreateFromEnv()->getCacheManager();
 
     }
 

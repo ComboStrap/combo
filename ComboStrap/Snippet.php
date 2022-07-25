@@ -263,7 +263,7 @@ class Snippet implements JsonSerializable
     public static function getOrCreateSnippetWithPath(Path $snippetPath)
     {
 
-        $requestedPageId = WikiRequest::getOrCreateFromEnv()->getRequestedId();
+        $requestedPageId = ExecutionContext::getOrCreateFromEnv()->getWikiId();
         $snippets = &self::$globalSnippets[$requestedPageId];
         if ($snippets === null) {
             self::reset();

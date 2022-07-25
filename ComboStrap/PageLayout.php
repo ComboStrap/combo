@@ -240,6 +240,8 @@ class PageLayout
                 $fetcher = $pageElement->getMarkupFetcher();
                 try {
                     $fetcherHtmlString = $fetcher->getFetchString();
+                } catch (\Exception $e) {
+                    throw new ExceptionRuntimeInternal($e->getMessage(), self::CANONICAL, 1, $e);
                 } finally {
                     $fetcher->close();
                 }
@@ -990,7 +992,7 @@ class PageLayout
 
         // For the preload if any
         try {
-            $preloadedCss = WikiRequest::getOrCreateFromEnv()->getObject(self::PRELOAD_TAG);
+            $preloadedCss = ExecutionContext::getOrCreateFromEnv()->getObject(self::PRELOAD_TAG);
         } catch (ExceptionNotFound $e) {
             throw new ExceptionNotFound("No preloaded resources found");
         }

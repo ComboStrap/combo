@@ -45,7 +45,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     private string $renderer;
     private MarkupCacheDependencies $cacheDependencies;
     private bool $objectHasBeenBuild = false;
-    private WikiRequest $wikiRequest;
+    private ExecutionContext $executionContext;
     private bool $closed = false;
 
 
@@ -308,6 +308,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     ->setDeleteRootBlockElement($this->removeRootBlockElement);
                 try {
                     $content = $markupRenderer->getOutput();
+                } catch (\Exception $e) {
+                    throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
                 } finally {
                     $markupRenderer->close();
                 }
@@ -466,8 +468,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * You need to close it with the {@link FetcherMarkup::close()}
          */
         $wikiId = $this->getRequestedPath()->getWikiId();
-        $this->wikiRequest = WikiRequest::createRequestOrSubRequest($wikiId);
-
+        $this->executionContext = ExecutionContext::getOrCreateFromEnv()
+            ->createSubExecutionContext($wikiId);
 
 
         /**
@@ -566,9 +568,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     }
 
 
-
-
-
     private function checkNoSetAfterBuild()
     {
         if ($this->objectHasBeenBuild) {
@@ -635,7 +634,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     public function close(): FetcherMarkup
     {
-        $this->wikiRequest->close($this->getRequestedPath()->getWikiId());
+        $this->executionContext->close();
         $this->closed = true;
         return $this;
     }
@@ -644,7 +643,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     {
         return $this->closed = true;
     }
-
 
 
     private function getRequestedPath(): WikiPath
@@ -672,7 +670,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     private function getRequestedRendererNameOrDefault(): string
     {
-        if(!isset($this->requestedRendererName)){
+        if (!isset($this->requestedRendererName)) {
             return MarkupRenderer::DEFAULT_RENDERER;
         }
         return $this->requestedRendererName;

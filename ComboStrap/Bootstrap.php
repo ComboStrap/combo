@@ -184,7 +184,7 @@ class Bootstrap
      */
     public static function get()
     {
-        $wikiRequest = WikiRequest::getOrCreateFromEnv();
+        $wikiRequest = ExecutionContext::getOrCreateFromEnv();
         try {
             return $wikiRequest->getObject(self::CANONICAL);
         } catch (ExceptionNotFound $e) {

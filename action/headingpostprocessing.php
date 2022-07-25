@@ -12,7 +12,7 @@ use ComboStrap\PageLayoutName;
 use ComboStrap\Site;
 use ComboStrap\Toc;
 use ComboStrap\WikiPath;
-use ComboStrap\WikiRequest;
+use ComboStrap\ExecutionContext;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
@@ -74,7 +74,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          */
         $handler = $event->data;
 
-        $act = WikiRequest::get()->getActualAct();
+        $act = ExecutionContext::getOrCreateFromEnv()->getAct();
         switch ($act) {
             case MarkupDynamicRender::DYNAMIC_RENDERING:
                 $callStack = CallStack::createFromHandler($handler);

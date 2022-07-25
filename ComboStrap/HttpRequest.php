@@ -32,7 +32,7 @@ class HttpRequest
     public static function purgeStaticDataRequestedScoped()
     {
         //
-        WikiRequest::reset();
+        ExecutionContext::reset();
 
         // global scope
         MetadataDokuWikiStore::resetAll();

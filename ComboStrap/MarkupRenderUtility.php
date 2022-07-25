@@ -96,7 +96,7 @@ class MarkupRenderUtility
         try {
 
             if ($ID === null && PluginUtility::isTest()) {
-                $ID = WikiRequest::DEFAULT_SLOT_ID_FOR_TEST;
+                $ID = ExecutionContext::DEFAULT_SLOT_ID_FOR_TEST;
             }
             $ACT = MarkupDynamicRender::DYNAMIC_RENDERING;
             $output = p_render("xhtml", $callStackHeaderInstructions, $info);

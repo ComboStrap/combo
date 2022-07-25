@@ -10,7 +10,7 @@ use ComboStrap\EditButton;
 use ComboStrap\IdManager;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
-use ComboStrap\WikiRequest;
+use ComboStrap\ExecutionContext;
 
 
 require_once(__DIR__ . '/../vendor/autoload.php');

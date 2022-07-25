@@ -402,6 +402,7 @@ EOF;
 
     /**
      *
+     * @throws ExceptionNotFound - no wiki id found
      */
     private function getWikiId(): string
     {
@@ -410,7 +411,9 @@ EOF;
         if ($wikiId !== null) {
             return $wikiId;
         }
-        return WikiRequest::get()->getActualRunningId();
+
+        return ExecutionContext::getOrCreateFromEnv()->getWikiId();
+
 
     }
 

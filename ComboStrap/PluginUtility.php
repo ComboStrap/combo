@@ -635,12 +635,12 @@ class PluginUtility
      * but the requested wiki id
      *
      * @return string
-     * @deprecated use {@link WikiRequest}
+     * @deprecated use {@link ExecutionContext}
      */
     public static function getRequestedWikiId(): string
     {
 
-        return WikiRequest::get()->getRequestedId();
+        return ExecutionContext::getActualContext()->getWikiId();
 
     }
 
@@ -1091,11 +1091,11 @@ class PluginUtility
     }
 
     /**
-     * @deprecated for {@link WikiRequest::getActualRunningId()}
+     * @deprecated for {@link ExecutionContext::getWikiId()}
      */
     public static function getCurrentSlotId(): string
     {
-        return WikiRequest::get()->getActualRunningId();
+        return ExecutionContext::getActualContext()->getWikiId();
     }
 
 

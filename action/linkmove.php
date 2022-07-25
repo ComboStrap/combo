@@ -19,7 +19,7 @@ use ComboStrap\MarkupPath;
 use ComboStrap\PageId;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
-use ComboStrap\WikiRequest;
+use ComboStrap\ExecutionContext;
 
 
 /**

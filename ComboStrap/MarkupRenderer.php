@@ -19,7 +19,7 @@ class MarkupRenderer
      */
     private $cacheAfterRendering = true;
     private string $renderer;
-    private WikiRequest $wikiEnvRequest;
+    private ExecutionContext $dynamicRenderingExecutionContext;
     private bool $closed = false;
     private string $runningId;
 
@@ -208,7 +208,9 @@ class MarkupRenderer
             // to avoid restoring a bad state
             throw new ExceptionRuntimeInternal("You can't close a already closed object", self::CANONICAL);
         }
-        $this->wikiEnvRequest->close($this->runningId);
+        if(isset($this->dynamicRenderingExecutionContext)){
+            $this->dynamicRenderingExecutionContext->close();
+        }
         $this->closed = true;
         return $this;
     }
@@ -225,17 +227,17 @@ class MarkupRenderer
             && $this->requestedMime->getExtension() !== self::INSTRUCTION_EXTENSION
         ) {
             $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
+            $executionContext = ExecutionContext::getOrCreateFromEnv();
+            try {
+                $this->runningId = $executionContext->getWikiId();
+            } catch (ExceptionNotFound $e) {
+                $this->runningId = "markup-renderer-default";
+            }
+            $this->dynamicRenderingExecutionContext = $executionContext->createSubExecutionContext($this->runningId, $runningAct);
         }
 
-        try {
-            $this->wikiEnvRequest = WikiRequest::get();
-            $this->runningId = $this->wikiEnvRequest->getActualRunningId();
-            $runningAct = $runningAct === null ? $this->wikiEnvRequest->getActualAct(): $runningAct;
-            $this->wikiEnvRequest->createRunningRequest($this->runningId,$runningAct);
-        } catch (ExceptionNotFound $e) {
-            $this->runningId = self::CANONICAL;
-            $this->wikiEnvRequest = WikiRequest::createFromRequestId($this->runningId, $runningAct);
-        }
+
+
 
     }
 

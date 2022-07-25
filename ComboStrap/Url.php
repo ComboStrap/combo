@@ -134,7 +134,7 @@ class Url extends PathAbs
     }
 
     /**
-     * @throws ExceptionBadArgument - if the url key were badly html encoded and have the prefix `amp;`
+     *
      */
     public static function createFromGetOrPostGlobalVariable(): Url
     {
@@ -158,7 +158,12 @@ class Url extends PathAbs
                  * in Chrome
                  */
                 if (strpos($key, "amp;") === 0) {
-                    throw new ExceptionBadArgument("The url in src has a bad encoding (the attribute have a amp; prefix. Infinite cache will not work.");
+                    /**
+                     * We don't advertise this error, it should not happen
+                     * and there is nothing to do to get back on its feet
+                     */
+                    $message = "The url in src has a bad encoding (the attribute have a amp; prefix. Infinite cache will not work.";
+                    throw new ExceptionRuntimeInternal($message);
                 }
                 $url->addQueryParameter($key, $value);
             }

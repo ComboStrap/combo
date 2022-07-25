@@ -335,9 +335,7 @@ class Bootstrap
         /**
          * The javascript snippet
          */
-        $snippets[] = array_merge($snippets, $this->getJsSnippets());
-
-        return $snippets;
+        return array_merge($snippets, $this->getJsSnippets());
     }
 
     /**

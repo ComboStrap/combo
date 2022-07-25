@@ -255,11 +255,11 @@ class SnippetManager
     }
 
     public
-    function &attachInternalJavascriptFromPathForRequest($snippetId, WikiPath $path): Snippet
+    function attachInternalJavascriptFromPathForRequest($componentId, WikiPath $path): Snippet
     {
-        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS, Snippet::INTERNAL_TYPE)
-            ->setPath($path);
-        return $snippet;
+        return Snippet::getOrCreateSnippetWithPath($path)
+            ->addSlot(Snippet::REQUEST_SCOPE)
+            ->setComponentId($componentId);
     }
 
     public
@@ -324,46 +324,64 @@ class SnippetManager
      * For instance:
      *   * library:combo:combo.js
      *   * for a file located at dokuwiki_home\lib\plugins\combo\resources\library\combo\combo.js
-     * @param string $snippetId - the snippet id
-     * @param string $relativeId - the relative id from the resources directory
+     * @return Snippet
      */
     public
     function attachJavascriptComboLibrary(): Snippet
     {
 
-        $dokuPath = WikiPath::createComboResource(":library:combo:combo.min.js");
+        $wikiPath = ":library:combo:combo.min.js";
+        $componentId = "combo";
+        return $this->attachSnippetFromComboResourceDrive($wikiPath, $componentId);
+
+    }
+
+    public function attachSnippetFromComboResourceDrive(string $path, string $componentId): Snippet
+    {
+
+        $dokuPath = WikiPath::createComboResource($path);
         return Snippet::getOrCreateSnippetWithPath($dokuPath)
-            ->setComponentId("combo");
+            ->setComponentId($componentId);
 
     }
 
     /**
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
+     * @throws ExceptionNotFound
      */
     public
-    function attachExternalJavascriptLibraryForRunningSlot(string $snippetId, string $url, string $integrity = null): Snippet
+    function attachExternalJavascriptLibraryForRunningSlot(string $componentId, string $url, string $integrity = null): Snippet
     {
         $url = Url::createFromString($url);
-        return Snippet::getOrCreateSnippetWithComponentId($snippetId, Snippet::EXTENSION_JS)
+        $name = $url->getLastNameWithoutExtension();
+        $path = Snippet::getInternalPathFromNameAndExtension($name, Snippet::EXTENSION_JS, Snippet::LIBRARY_BASE);
+        return Snippet::getOrCreateSnippetWithPath($path)
             ->setScopeAsRunningSlot()
             ->setIntegrity($integrity)
-            ->setExternalUrl($url);
+            ->setExternalUrl($url)
+            ->setComponentId($componentId);
     }
 
     /**
+     * @param string $componentId - the component id attached to this URL
+     * @param string $url - the external url (The URL should have a file name as last name in the path)
+     * @param string|null $integrity - the file integrity
+     * @return Snippet
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
      */
     public
-    function attachCssExternalStyleSheetForSlot(string $snippetId, string $url, string $integrity = null): Snippet
+    function attachCssExternalStyleSheetForSlot(string $componentId, string $url, string $integrity = null): Snippet
     {
         $url = Url::createFromString($url);
+        $libraryName = $url->getLastName();
         return $this
-            ->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_CSS)
+            ->attachSnippetFromSlot($libraryName, Snippet::EXTENSION_CSS)
             ->setIntegrity($integrity)
-            ->setExternalUrl($url);
+            ->setExternalUrl($url)
+            ->setComponentId($componentId);
     }
 
 

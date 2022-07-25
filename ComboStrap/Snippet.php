@@ -91,7 +91,6 @@ class Snippet implements JsonSerializable
     const SLOT_SCOPE = "slot";
     const ALL_SCOPE = "all";
     public const COMBO_POPOVER = "combo-popover";
-    public const COMBO_HTML = "combo-html";
     public const DATA_DOKUWIKI_ATT = "_data";
     const CANONICAL = "snippet";
     public const STYLE_TAG = "style";
@@ -102,10 +101,16 @@ class Snippet implements JsonSerializable
      */
     public const CONF_USE_CDN = "useCDN";
 
+    /**
+     * Where to find the file in the combo resources
+     * if any in wiki path syntax
+     */
+    public const LIBRARY_BASE = ':library'; // external script, combo library
+    public const SNIPPET_BASE = ":snippet"; // quick internal snippet
 
-    protected static $globalSnippets;
 
-    private $extension;
+    protected static array $globalSnippets;
+
 
     /**
      * @var bool
@@ -215,7 +220,7 @@ class Snippet implements JsonSerializable
      */
     public static function reset()
     {
-        self::$globalSnippets = null;
+        self::$globalSnippets = [];
     }
 
     /**
@@ -344,7 +349,7 @@ class Snippet implements JsonSerializable
         return $this->path;
     }
 
-    public static function getInternalPathFromNameAndExtension($name, $extension): WikiPath
+    public static function getInternalPathFromNameAndExtension($name, $extension, $baseDirectory = self::SNIPPET_BASE): WikiPath
     {
 
         switch ($extension) {
@@ -361,7 +366,7 @@ class Snippet implements JsonSerializable
                 throw new ExceptionRuntimeInternal($message);
 
         }
-        return WikiPath::createComboResource("snippet")
+        return WikiPath::createComboResource($baseDirectory)
             ->resolve($subDirectory)
             ->resolve(strtolower($name) . ".$extension");
     }
@@ -553,8 +558,14 @@ class Snippet implements JsonSerializable
         return $this->externalUrl;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public function getIntegrity(): ?string
     {
+        if(!isset($this->integrity)){
+            throw new ExceptionNotFound("No integrity");
+        }
         return $this->integrity;
     }
 
@@ -629,11 +640,6 @@ class Snippet implements JsonSerializable
         return $dataToSerialize;
     }
 
-    public function setPath(WikiPath $path): Snippet
-    {
-        $this->path = $path;
-        return $this;
-    }
 
     public function hasInlineContent(): bool
     {
@@ -700,9 +706,11 @@ class Snippet implements JsonSerializable
                         $htmlAttributes
                             ->addOutputAttributeValue("src", $this->getExternalUrl()->toString())
                             ->addOutputAttributeValue("crossorigin", "anonymous");
-                        $integrity = $this->getIntegrity();
-                        if ($integrity !== null) {
+                        try {
+                            $integrity = $this->getIntegrity();
                             $htmlAttributes->addOutputAttributeValue("integrity", $integrity);
+                        } catch (ExceptionNotFound $e) {
+                            // ok
                         }
                         $critical = $this->getCritical();
                         if (!$critical) {
@@ -757,18 +765,20 @@ class Snippet implements JsonSerializable
                             ->addOutputAttributeValue("href", $this->getExternalUrl()->toString())
                             ->addOutputAttributeValue("crossorigin", "anonymous");
 
-                        $integrity = $this->getIntegrity();
-                        if ($integrity !== null) {
+                        try {
+                            $integrity = $this->getIntegrity();
                             $htmlAttributes->addOutputAttributeValue("integrity", $integrity);
+                        } catch (ExceptionNotFound $e) {
+                            // ok
                         }
+
                         $critical = $this->getCritical();
                         if (!$critical && FetcherPage::isEnabledAsShowAction()) {
                             $htmlAttributes->addOutputAttributeValue("rel", "preload")
                                 ->addOutputAttributeValue('as', self::STYLE_TAG);
                         }
                         return $htmlAttributes->toCallStackArray();
-                    case
-                    Snippet::INTERNAL_TYPE:
+                    case Snippet::INTERNAL_TYPE:
                         /**
                          * CSS inline in script tag
                          * If they are critical or inline dynamic content is set, we add them in the page
@@ -784,19 +794,16 @@ class Snippet implements JsonSerializable
                                 throw new ExceptionNotFound("The internal css snippet ($this) has no content.", self::CANONICAL);
                             }
                         } else {
-                            try {
-                                $fetchUrl = FetcherRawLocalPath::createFromPath($this->getPath())->getFetchUrl();
-                                /**
-                                 * Dokuwiki transforms/encode the href in HTML
-                                 */
-                                return $htmlAttributes
-                                    ->addOutputAttributeValue("rel", "stylesheet")
-                                    ->addOutputAttributeValue("href", $fetchUrl->toString())
-                                    ->toCallStackArray();
-                            } catch (ExceptionNotFound $e) {
-                                // the file should have been found at this point
-                                throw new ExceptionNotFound("The internal css ($this) could not be added. Error:{$e->getMessage()}", self::CANONICAL);
-                            }
+
+                            $fetchUrl = FetcherRawLocalPath::createFromPath($this->getPath())->getFetchUrl();
+                            /**
+                             * Dokuwiki transforms/encode the href in HTML
+                             */
+                            return $htmlAttributes
+                                ->addOutputAttributeValue("rel", "stylesheet")
+                                ->addOutputAttributeValue("href", $fetchUrl->toString())
+                                ->toCallStackArray();
+
                         }
                     default:
                         throw new ExceptionBadState("Unknown css snippet type ($type", self::CANONICAL);
@@ -818,7 +825,11 @@ class Snippet implements JsonSerializable
             case Snippet::EXTENSION_JS:
                 return self::SCRIPT_TAG;
             case Snippet::EXTENSION_CSS:
-                return Snippet::LINK_TAG;
+                if ($this->hasInlineContent()) {
+                    return Snippet::SCRIPT_TAG;
+                } else {
+                    return Snippet::LINK_TAG;
+                }
             default:
                 throw new ExceptionBadState("The extension ($extension) is unknown");
         }

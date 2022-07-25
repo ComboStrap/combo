@@ -82,7 +82,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     public static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
 
-        $requestedId = WikiRequest::get()->getRequestedId();
+        $requestedId = WikiRequest::getOrCreateFromEnv()->getRequestedId();
 
         $storesByRequestedId = &self::$storesByRequestedPage[$requestedId];
         if ($storesByRequestedId === null) {

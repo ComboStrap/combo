@@ -80,7 +80,6 @@ class Snippet implements JsonSerializable
     const SLOT_SCOPE = "slot";
     const ALL_SCOPE = "all";
     public const COMBO_POPOVER = "combo-popover";
-    public const DATA_DOKUWIKI_ATT = "_data";
     const CANONICAL = "snippet";
     public const STYLE_TAG = "style";
     public const SCRIPT_TAG = "script";
@@ -531,26 +530,39 @@ class Snippet implements JsonSerializable
         return $this;
     }
 
-    public function isLocal(): bool
+    public function useLocalUrl(): bool
     {
-        if ($this->hasInlineContent()) {
-            return true;
-        }
-        $fileExists = FileSystems::exists($this->path);
-        if (!$fileExists) {
-            if (isset($this->remoteUrl)) {
-                return false;
-            } else {
-                LogUtility::internalError("The snippet ($this) have a path ($this->path) that does not exists and does not have any external url.");
-                return true;
-            }
-        }
-        // if cdn
+
+        /**
+         * use cdn is on and there is a remote url
+         */
         $useCdn = ExecutionContext::getActualOrCreateFromEnv()->getConfValue(self::CONF_USE_CDN, self::CONF_USE_CDN_DEFAULT) === 1;
         if ($useCdn && isset($this->remoteUrl)) {
             return false;
         }
+
+        /**
+         * use cdn is off and there is a file
+         */
+        $fileExists = FileSystems::exists($this->path);
+        if ($fileExists) {
+            return true;
+        }
+
+        /**
+         * Use cdn is off and there is a remote url
+         */
+        if (isset($this->remoteUrl)) {
+            return false;
+        }
+
+        /**
+         * Error, we default to the local url that will return an error
+         * when fetched
+         */
+        LogUtility::internalError("The snippet ($this) have a path ($this->path) that does not exists and does not have any external url.");
         return true;
+
     }
 
     /**
@@ -686,7 +698,7 @@ class Snippet implements JsonSerializable
         }
 
         /**
-         *
+         * If the file does not exist and that there is a remote url
          */
         $internalPath = $this->getPath();
         if (!FileSystems::exists($internalPath)) {
@@ -698,10 +710,9 @@ class Snippet implements JsonSerializable
                 LogUtility::internalError("The snippet ($this) does not have content defined (the path does not exist, no inline content and no remote url)", self::CANONICAL);
                 return true;
             }
-
         }
         /**
-         * If this is a path, true if the file is small enough
+         * The file exists (inline if small size)
          */
         if (FileSystems::getSize($internalPath) > $this->getMaxInlineSize()) {
             return false;
@@ -716,131 +727,11 @@ class Snippet implements JsonSerializable
      */
     public function toDokuWikiArray(): array
     {
-        $array = $this->toDokuWikiArrayWithGeneratedId();
+        $array = $this->toTagAttributes()->toCallStackArray();
         unset($array[TagAttributes::GENERATED_ID_KEY]);
         return $array;
     }
 
-    /**
-     * @throws ExceptionBadState - an error where for instance an inline script doe snot have any content
-     * @throws ExceptionNotFound - an error where the source was not found
-     */
-    private function toDokuWikiArrayWithGeneratedId(): array
-    {
-        $htmlAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes())
-            ->addClassName($this->getClass());
-        $extension = $this->getExtension();
-        switch ($extension) {
-            case Snippet::EXTENSION_JS:
-                if ($this->isRemote()) {
-                    $htmlAttributes
-                        ->addOutputAttributeValue("src", $this->getRemoteUrl()->toString())
-                        ->addOutputAttributeValue("crossorigin", "anonymous");
-                    try {
-                        $integrity = $this->getIntegrity();
-                        $htmlAttributes->addOutputAttributeValue("integrity", $integrity);
-                    } catch (ExceptionNotFound $e) {
-                        // ok
-                    }
-                    $critical = $this->getCritical();
-                    if (!$critical) {
-                        $htmlAttributes->addBooleanOutputAttributeValue("defer");
-                        // not async: it will run as soon as possible
-                        // the dom main not be loaded completely, the script may miss HTML dom element
-                    }
-                    return $htmlAttributes->toCallStackArray();
-                }
-
-                /**
-                 * Local Snippet
-                 * This may broke the dependencies
-                 * if a small javascript depend on a large one
-                 * that is not yet loaded and does not wait for it
-                 */
-                switch ($this->shouldBeInlined()) {
-                    default:
-                    case true:
-                        try {
-                            $jsDokuwiki = $htmlAttributes->toCallStackArray();
-                            $jsDokuwiki[self::DATA_DOKUWIKI_ATT] = $this->getInternalInlineAndFileContent();
-                            return $jsDokuwiki;
-                        } catch (ExceptionNotFound $e) {
-                            throw new ExceptionBadState("The internal js snippet ($this) has no content. Skipped", self::CANONICAL);
-                        }
-                    case false:
-
-                        $wikiPath = $this->getPath();
-                        try {
-                            $fetchUrl = FetcherRawLocalPath::createFromPath($wikiPath)->getFetchUrl();
-                            /**
-                             * Dokuwiki transforms them in HTML format
-                             */
-                            $htmlAttributes->addOutputAttributeValue("src", $fetchUrl->toString());
-                            if (!$this->getCritical()) {
-                                $htmlAttributes->addBooleanOutputAttributeValue("defer");
-                            }
-                        } catch (ExceptionNotFound $e) {
-                            throw new ExceptionNotFound("The internal snippet path ($wikiPath) was not found. Skipped", self::CANONICAL);
-                        }
-                        return $htmlAttributes->toCallStackArray();
-
-                }
-
-            case Snippet::EXTENSION_CSS:
-                if ($this->isRemote()) {
-
-                    $htmlAttributes
-                        ->addOutputAttributeValue("rel", "stylesheet")
-                        ->addOutputAttributeValue("href", $this->getRemoteUrl()->toString())
-                        ->addOutputAttributeValue("crossorigin", "anonymous");
-
-                    try {
-                        $integrity = $this->getIntegrity();
-                        $htmlAttributes->addOutputAttributeValue("integrity", $integrity);
-                    } catch (ExceptionNotFound $e) {
-                        // ok
-                    }
-
-                    $critical = $this->getCritical();
-                    if (!$critical && FetcherPage::isEnabledAsShowAction()) {
-                        $htmlAttributes->addOutputAttributeValue("rel", "preload")
-                            ->addOutputAttributeValue('as', self::STYLE_TAG);
-                    }
-                    return $htmlAttributes->toCallStackArray();
-                }
-
-                /**
-                 * Local Css
-                 * CSS inline in script tag
-                 * If they are critical or inline dynamic content is set, we add them in the page
-                 */
-                $inline = $this->getCritical() === true ||
-                    ($this->getCritical() === false && $this->hasInlineContent());
-                if ($inline) {
-                    try {
-                        $cssInternalArray = $htmlAttributes->toCallStackArray();
-                        $cssInternalArray[self::DATA_DOKUWIKI_ATT] = $this->getInternalInlineAndFileContent();
-                        return $cssInternalArray;
-                    } catch (ExceptionNotFound $e) {
-                        throw new ExceptionNotFound("The internal css snippet ($this) has no content.", self::CANONICAL);
-                    }
-                } else {
-
-                    $fetchUrl = FetcherRawLocalPath::createFromPath($this->getPath())->getFetchUrl();
-                    /**
-                     * Dokuwiki transforms/encode the href in HTML
-                     */
-                    return $htmlAttributes
-                        ->addOutputAttributeValue("rel", "stylesheet")
-                        ->addOutputAttributeValue("href", $fetchUrl->toString())
-                        ->toCallStackArray();
-
-                }
-
-            default:
-                throw new ExceptionBadState("The extension ($extension) is unknown", self::CANONICAL);
-        }
-    }
 
     /**
      * The HTML tag
@@ -880,9 +771,116 @@ class Snippet implements JsonSerializable
         return $this;
     }
 
-    public function isRemote(): bool
+    public function useRemoteUrl(): bool
     {
-        return !$this->isLocal();
+        return !$this->useLocalUrl();
+    }
+
+    /**
+     * @throws ExceptionBadState
+     * @throws ExceptionNotFound
+     */
+    public function toTagAttributes(): TagAttributes
+    {
+        $tagAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes())
+            ->addClassName($this->getClass());
+        $extension = $this->getExtension();
+        switch ($extension) {
+            case Snippet::EXTENSION_JS:
+
+                if ($this->shouldBeInlined()) {
+
+                    try {
+                        $tagAttributes->setInnerText($this->getInternalInlineAndFileContent());
+                        return $tagAttributes;
+                    } catch (ExceptionNotFound $e) {
+                        throw new ExceptionBadState("The internal js snippet ($this) has no content. Skipped", self::CANONICAL);
+                    }
+
+                } else {
+
+                    if ($this->useRemoteUrl()) {
+                        $fetchUrl = $this->getRemoteUrl();
+                    } else {
+                        $wikiPath = $this->getPath();
+                        $fetchUrl = FetcherRawLocalPath::createFromPath($wikiPath)->getFetchUrl();
+                    }
+
+                    /**
+                     * Dokuwiki encodes the URL in HTML format
+                     */
+                    $tagAttributes
+                        ->addOutputAttributeValue("src", $fetchUrl->toString());
+                    try {
+                        $integrity = $this->getIntegrity();
+                        $tagAttributes
+                            ->addOutputAttributeValue("integrity", $integrity)
+                            ->addOutputAttributeValue("crossorigin", "anonymous");
+                    } catch (ExceptionNotFound $e) {
+                        // ok
+                    }
+                    $critical = $this->getCritical();
+                    if (!$critical) {
+                        $tagAttributes->addBooleanOutputAttributeValue("defer");
+                        // not async: it will run as soon as possible
+                        // the dom main not be loaded completely, the script may miss HTML dom element
+                    }
+                    return $tagAttributes;
+
+                }
+
+            case Snippet::EXTENSION_CSS:
+
+                if ($this->shouldBeInlined()) {
+
+                    try {
+                        $tagAttributes->setInnerText($this->getInternalInlineAndFileContent());
+                        return $tagAttributes;
+                    } catch (ExceptionNotFound $e) {
+                        throw new ExceptionNotFound("The internal css snippet ($this) has no content.", self::CANONICAL);
+                    }
+
+                } else {
+
+                    if ($this->useRemoteUrl()) {
+                        $fetchUrl = $this->getRemoteUrl();
+                        return $tagAttributes
+                            ->addOutputAttributeValue("rel", "stylesheet")
+                            ->addOutputAttributeValue("href", $fetchUrl->toString());
+                    } else {
+                        $fetchUrl = FetcherRawLocalPath::createFromPath($this->getPath())->getFetchUrl();
+                    }
+
+                    /**
+                     * Dokuwiki transforms/encode the href in HTML
+                     */
+                    $tagAttributes
+                        ->addOutputAttributeValue("rel", "stylesheet")
+                        ->addOutputAttributeValue("href", $fetchUrl->toString());
+
+                    try {
+                        $integrity = $this->getIntegrity();
+                        $tagAttributes
+                            ->addOutputAttributeValue("integrity", $integrity)
+                            ->addOutputAttributeValue("crossorigin", "anonymous");
+                    } catch (ExceptionNotFound $e) {
+                        // ok
+                    }
+
+                    $critical = $this->getCritical();
+                    if (!$critical && FetcherPage::isEnabledAsShowAction()) {
+                        $tagAttributes->addOutputAttributeValue("rel", "preload")
+                            ->addOutputAttributeValue('as', self::STYLE_TAG);
+                    }
+                    return $tagAttributes;
+
+                }
+
+
+            default:
+                throw new ExceptionBadState("The extension ($extension) is unknown", self::CANONICAL);
+        }
+
     }
 
 

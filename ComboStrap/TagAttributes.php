@@ -172,6 +172,12 @@ class TagAttributes
     ];
     const NAME_ATTRIBUTE = "name";
 
+    /**
+     * The dokuwiki name attribute to store
+     * text node data
+     */
+    public const DOKUWIKI_TEXT_NODE_ATTRIBUTE = "_data";
+
 
     /**
      * A global static counter
@@ -233,6 +239,7 @@ class TagAttributes
      */
     private $defaultStyleClassShouldBeAdded = true;
     private $knownTypes;
+    private string $innerText;
 
 
     /**
@@ -816,6 +823,9 @@ class TagAttributes
             // no style
         }
 
+        if(isset($this->innerText)){
+            $array[self::DOKUWIKI_TEXT_NODE_ATTRIBUTE] = $this->innerText;
+        }
         return $array;
     }
 
@@ -1212,6 +1222,18 @@ class TagAttributes
     }
 
     /**
+     * @throws ExceptionNotFound
+     */
+    function getOutputAttribute($attribute)
+    {
+        $value = $this->outputAttributes[$attribute];
+        if($value===null){
+            throw new ExceptionNotFound("No output attribute with the key ($attribute)");
+        }
+        return $value;
+    }
+
+    /**
      * Encoding should happen always to the target format output.
      * ie HTML
      *
@@ -1388,6 +1410,16 @@ class TagAttributes
             $this->removeComponentAttribute($key);
         }
         return $hasAttribute;
+    }
+
+    /**
+     * @param string $text - the text node content
+     * @return $this
+     */
+    public function setInnerText(string $text): TagAttributes
+    {
+        $this->innerText = $text;
+        return $this;
     }
 
 

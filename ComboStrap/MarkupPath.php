@@ -397,12 +397,8 @@ class MarkupPath implements ResourceCombo, Path
     function getHtmlFetcher(): FetcherMarkup
     {
 
-        try {
-            return FetcherMarkup::createPageFragmentFetcherFromPath($this->getPathObject())
-                ->setRequestedMimeToXhtml();
-        } catch (ExceptionBadArgument $e) {
-            throw new ExceptionRuntimeInternal("The path should be local. Error: {$e->getMessage()}");
-        }
+        return FetcherMarkup::createPageFragmentFetcherFromPath($this->getPathObject())
+            ->setRequestedMimeToXhtml();
 
     }
 

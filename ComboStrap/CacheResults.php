@@ -46,12 +46,12 @@ class CacheResults
              */
             if ($cacheParser->mode === FetcherMarkup::XHTML_MODE) {
                 $page = $cacheParser->page;
-                $pageFragment = MarkupPath::createPageFromId($page)->getHtmlFetcher();
+                $markupFetcher = MarkupPath::createPageFromId($page)->getHtmlFetcher();
                 try {
                     /**
                      * @var CacheParser[] $cacheStores
                      */
-                    $cacheStores = [$pageFragment->getSnippetCacheStore(), $pageFragment->getDependenciesCacheStore()];
+                    $cacheStores = [$markupFetcher->getSnippetCacheStore(), $markupFetcher->getDependenciesCacheStore()];
                     foreach ($cacheStores as $cacheStore) {
                         if (file_exists($cacheStore->cache)) {
                             $this->cacheResults[$cacheStore->mode] = (new CacheResult($cacheStore))
@@ -59,7 +59,7 @@ class CacheResults
                         }
                     }
                 } finally {
-                    $pageFragment->close();
+                    $markupFetcher->close();
                 }
             }
         }

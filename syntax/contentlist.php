@@ -11,8 +11,6 @@ use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
-require_once(__DIR__ . '/../ComboStrap/StyleUtility.php');
-require_once(__DIR__ . '/../ComboStrap/SnippetManager.php');
 
 
 /**

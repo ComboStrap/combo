@@ -53,10 +53,10 @@ class SnippetSystem
 
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         try {
-            return $executionContext->getObject(self::CANONICAL);
+            return $executionContext->getRuntimeObject(self::CANONICAL);
         } catch (ExceptionNotFound $e) {
             $snippetSystem = new SnippetSystem();
-            $executionContext->setObject(self::CANONICAL, $snippetSystem);
+            $executionContext->setRuntimeObject(self::CANONICAL, $snippetSystem);
             return $snippetSystem;
         }
 

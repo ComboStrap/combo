@@ -46,7 +46,7 @@ class ExecutionContext
     /**
      * @var array of objects that are scoped to this request
      */
-    private array $objects;
+    private array $runtimeVariables;
 
     private CacheManager $cacheManager;
 
@@ -149,10 +149,7 @@ class ExecutionContext
         if (self::$rootExecutionContext !== null) {
             LogUtility::internalError("The root context should be closed first");
         }
-        $url = Url::createEmpty()
-            ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $requestedId)
-            ->setQueryParameter(self::DO_ATTRIBUTE, $requestedAct);
-        self::$rootExecutionContext = self::createFromUrl($url);
+        self::$rootExecutionContext = self::createFromWikiId($requestedId, $requestedAct);
         return self::$rootExecutionContext;
 
     }
@@ -184,6 +181,14 @@ class ExecutionContext
         } catch (ExceptionNotFound $e) {
             return self::createRootFromEnvironmentVariable();
         }
+    }
+
+    private static function createFromWikiId(string $runningId, string $runningAct = "show"): ExecutionContext
+    {
+        $url = Url::createEmpty()
+            ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $runningId)
+            ->setQueryParameter(self::DO_ATTRIBUTE, $runningAct);
+        return self::createFromUrl($url);
     }
 
     public static function reset()
@@ -222,7 +227,7 @@ class ExecutionContext
             $runningAct = "show";
         }
 
-        $subExecutionContext = self::createRootFromWikiId($runningId, $runningAct);
+        $subExecutionContext = self::createFromWikiId($runningId, $runningAct);
         $subExecutionContext->setParent($this);
         $this->childExecutionContext = $subExecutionContext;
 
@@ -419,17 +424,18 @@ class ExecutionContext
     /**
      * @throws ExceptionNotFound
      */
-    public function &getObject(string $objectIdentifier)
+    public function &getRuntimeObject(string $objectIdentifier)
     {
-        if (isset($this->objects[$objectIdentifier])) {
-            return $this->objects[$objectIdentifier];
+        if (isset($this->runtimeVariables[$objectIdentifier])) {
+            return $this->runtimeVariables[$objectIdentifier];
         }
         throw new ExceptionNotFound("No object $objectIdentifier found");
     }
 
-    public function setObject($objectIdentifier, &$object)
+    public function setRuntimeObject($objectIdentifier, &$object): ExecutionContext
     {
-        $this->objects[$objectIdentifier] = &$object;
+        $this->runtimeVariables[$objectIdentifier] = &$object;
+        return $this;
     }
 
     public function getUrl(): Url
@@ -465,6 +471,24 @@ class ExecutionContext
     public function getConfValue(string $key, string $default)
     {
         return PluginUtility::getConfValue($key, $default);
+    }
+
+    public function setRuntimeBoolean(string $key, bool $b): ExecutionContext
+    {
+        $this->runtimeVariables[$key] = $b;
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getRuntimeBoolean(string $name): bool
+    {
+        $var = $this->runtimeVariables[$name];
+        if(!isset($var)){
+            throw new ExceptionNotFound("No $name runtime env was found");
+        }
+        return DataType::toBoolean($var);
     }
 
 

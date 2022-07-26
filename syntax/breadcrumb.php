@@ -116,7 +116,7 @@ class syntax_plugin_combo_breadcrumb extends DokuWiki_Syntax_Plugin
         if ($format === 'xhtml') {
             $state = $data[PluginUtility::STATE];
             if ($state === DOKU_LEXER_SPECIAL) {
-                $cacheManager = CacheManager::getOrCreateFromRequestedPath();
+                $cacheManager = CacheManager::getFromContextExecution();
                 // the output has the data from the requested page
                 $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
                 // the data from the requested page is dependent on the name, title or description of the page

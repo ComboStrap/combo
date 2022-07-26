@@ -37,7 +37,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @var CacheParser
      */
-    private $snippetCache;
+    private CacheParser $snippetCache;
 
 
     private Mime $mime;
@@ -231,6 +231,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     }
 
     /**
+     * @return CacheParser - the cache where the snippets are stored
      * Cache file
      * Using a cache parser, set the page id and will trigger
      * the parser cache use event in order to log/report the cache usage
@@ -239,7 +240,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public
     function getSnippetCacheStore(): CacheParser
     {
-        if ($this->snippetCache !== null) {
+        if (isset($this->snippetCache)) {
             return $this->snippetCache;
         }
 
@@ -468,8 +469,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * You need to close it with the {@link FetcherMarkup::close()}
          */
         $wikiId = $this->getRequestedPath()->getWikiId();
-        $this->executionContext = ExecutionContext::getActualOrCreateFromEnv()
-            ->createSubExecutionContext($wikiId);
+        $this->executionContext = ExecutionContext::getActualOrCreateFromEnv()->createSubExecutionContext($wikiId);
 
 
         /**
@@ -498,7 +498,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             default:
                 $this->cache = new CacheRenderer($wikiId, $localFile, $extension);
 
-                $this->cacheDependencies = CacheManager::getOrCreateFromRequestedPath()
+                $this->cacheDependencies = CacheManager::getFromContextExecution()
                     ->getCacheDependenciesForPath($this->getRequestedPath());
                 $this->cacheDependencies->rerouteCacheDestination($this->cache);
                 break;
@@ -634,7 +634,14 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     public function close(): FetcherMarkup
     {
-        $this->executionContext->close();
+        /**
+         * When the code gets the cache object {@link FetcherMarkup::getDependenciesCacheStore()}
+         * or {@link FetcherMarkup::getSnippetCacheStore()}
+         * there is no execution
+         */
+        if(isset($this->executionContext)) {
+            $this->executionContext->close();
+        }
         $this->closed = true;
         return $this;
     }

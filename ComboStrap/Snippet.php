@@ -189,7 +189,7 @@ class Snippet implements JsonSerializable
      */
     public static function &getSnippets(): array
     {
-        return ExecutionContext::getRootOrCreateFromEnv()->getObject(self::CANONICAL);
+        return ExecutionContext::getRootOrCreateFromEnv()->getRuntimeObject(self::CANONICAL);
     }
 
 
@@ -234,7 +234,7 @@ class Snippet implements JsonSerializable
             $snippets = &self::getSnippets();
         } catch (ExceptionNotFound $e) {
             $snippets = [];
-            ExecutionContext::getRootOrCreateFromEnv()->setObject(self::CANONICAL, $snippets);
+            ExecutionContext::getRootOrCreateFromEnv()->setRuntimeObject(self::CANONICAL, $snippets);
         }
         $snippetGuid = $localSnippetPath->toUriString();
         $snippet = &$snippets[$snippetGuid];

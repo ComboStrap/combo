@@ -304,10 +304,10 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
          */
         $wikiRequest = ExecutionContext::getActualOrCreateFromEnv();
         try {
-            $preloadedCss = &$wikiRequest->getObject(PageLayout::PRELOAD_TAG);
+            $preloadedCss = &$wikiRequest->getRuntimeObject(PageLayout::PRELOAD_TAG);
         } catch (ExceptionNotFound $e) {
             $preloadedCss = [];
-            $wikiRequest->setObject(PageLayout::PRELOAD_TAG,$preloadedCss);
+            $wikiRequest->setRuntimeObject(PageLayout::PRELOAD_TAG,$preloadedCss);
         }
         $preloadedCss[] = $linkData;
 

@@ -1039,7 +1039,7 @@ class PluginUtility
 
     public static function getCacheManager(): CacheManager
     {
-        return CacheManager::getOrCreateFromRequestedPath();
+        return CacheManager::getFromContextExecution();
     }
 
     public static function getModeFromPluginName($name)

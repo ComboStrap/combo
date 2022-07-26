@@ -1,10 +1,13 @@
 <?php
 
 use ComboStrap\CacheManager;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\MarkupDynamicRender;
 use ComboStrap\FetcherMarkup;
 use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
+use ComboStrap\SnippetSystem;
 
 if (!defined('DOKU_INC')) die();
 
@@ -18,11 +21,8 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 {
 
     const CLASS_SNIPPET_IN_CONTENT = "snippet-content-combo";
+    const SNIPPETS_WERE_ADDED = "snippet_added";
 
-    /**
-     * @var bool - to trace if the header output was called
-     */
-    private $headerOutputWasCalled = false;
 
     function __construct()
     {
@@ -54,24 +54,9 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('RENDERER_CONTENT_POSTPROCESS', 'AFTER', $this, 'componentSnippetContent', array());
 
-        /**
-         * To reset the value
-         */
-        $controller->register_hook('DOKUWIKI_DONE', 'BEFORE', $this, 'close', array());
-
 
     }
 
-    /**
-     * Reset variable
-     * Otherwise in test, when we call it two times, it just fail
-     */
-    function close()
-    {
-
-        $this->headerOutputWasCalled = false;
-
-    }
 
     /**
      *
@@ -83,17 +68,27 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
     {
 
         /**
-         * Advertise that this event has occured
+         * Advertise that this event has occurred
          * In a strap template, this event is last because head are added after content rendering
          * In another template, this event is first
          * The function {@link action_plugin_combo_snippets::componentSnippetContent()} used it to determine if
          * the snippets should be added into the content
          */
-        $this->headerOutputWasCalled = true;
+        $executionContext = ExecutionContext::getRootOrCreateFromEnv();
 
-        global $ID;
-        if (empty($ID)) {
+        try {
+            $snippetAlreadyAdded = $executionContext->getRuntimeBoolean(self::SNIPPETS_WERE_ADDED);
+            if ($snippetAlreadyAdded === true) {
+                return;
+            }
+        } catch (ExceptionNotFound $e) {
+            $executionContext->setRuntimeBoolean(self::SNIPPETS_WERE_ADDED, true);
+        }
 
+
+        try {
+            $executionContext->getWikiId();
+        } catch (ExceptionNotFound $e) {
             global $_SERVER;
             $scriptName = $_SERVER['SCRIPT_NAME'];
             /**
@@ -103,7 +98,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             if (strpos($scriptName, "/lib/exe/ajax.php") !== false) {
                 global $_REQUEST;
                 $call = $_REQUEST['call'];
-                if ($call !== action_plugin_combo_ajax::COMBO_CALL_NAME ) {
+                if ($call !== action_plugin_combo_ajax::COMBO_CALL_NAME) {
                     return;
                 }
             } else if (!(strpos($scriptName, "/lib/exe/detail.php") !== false)) {
@@ -115,13 +110,10 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             }
         }
 
-
-        $snippetManager = PluginUtility::getSnippetManager();
-
         /**
          * For each processed slot in the page, retrieve the snippets
          */
-        $cacheReporters = CacheManager::getOrCreateFromRequestedPath()->getCacheResults();
+        $cacheReporters = CacheManager::getFromContextExecution()->getCacheResults();
         if ($cacheReporters !== null) {
             foreach ($cacheReporters as $cacheReporter) {
 
@@ -140,11 +132,11 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
                 }
 
-
             }
         }
 
-        $allSnippets = $snippetManager->snippetsToDokuwikiArray($snippetManager->getAllSnippets());
+        $snippetSystem = SnippetSystem::getFromContext();
+        $allSnippets = $snippetSystem->snippetsToDokuwikiArray($snippetSystem->getAllSnippets());
         foreach ($allSnippets as $tagType => $tags) {
 
             foreach ($tags as $tag) {
@@ -152,7 +144,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             }
 
         }
-        $snippetManager->reset();
+
 
     }
 
@@ -161,11 +153,10 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
      * This function store the snippets in the HTML content when needed
      * (mostly admin page or any other template than strap ...)
      *
-     * In the strap template, this event/function is called first
-     * because strap parse the page first (the page is the driver)
+     * This event/function is called first because {@link \ComboStrap\FetcherPage} parse the main markup first (It's the driver)
      *
      * In any other template, they follows the creation of the page, the
-     * header are called first, then the page
+     * header are called first, then the content
      *
      *
      * @param $event
@@ -195,6 +186,14 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             return;
         }
 
+        $executionContext = ExecutionContext::getRootOrCreateFromEnv();
+
+        try {
+            $snippetsWereAlreadyAdded = $executionContext->getRuntimeBoolean(self::SNIPPETS_WERE_ADDED);
+        } catch (ExceptionNotFound $e) {
+            $snippetsWereAlreadyAdded = false;
+        }
+
         /**
          * Put snippet in the content
          * if this is not a show (ie Admin page rendering)
@@ -203,7 +202,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * (case that the template is not strap)
          */
         $putSnippetInContent =
-            $this->headerOutputWasCalled === true
+            $snippetsWereAlreadyAdded === true
             ||
             ($ACT !== "show" && $ACT !== null);
         if (!$putSnippetInContent) {
@@ -227,15 +226,13 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          */
 
         if (sizeof($snippetManager->getSnippets()) > 0) {
-
-            $this->headerOutputWasCalled = true;
+            $executionContext->setRuntimeBoolean(self::SNIPPETS_WERE_ADDED, true);
             $class = self::CLASS_SNIPPET_IN_CONTENT;
             $xhtmlContent .= <<<EOF
 <div class="$class">
     {$snippetManager->toHtmlForSlotSnippets()}
 </div>
 EOF;
-            $snippetManager->reset();
 
         }
 

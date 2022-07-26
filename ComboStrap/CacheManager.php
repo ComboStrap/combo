@@ -48,9 +48,8 @@ class CacheManager
 
     /**
      * @return CacheManager
-     * @deprecated for {@link ExecutionContext::getCacheManager()}
      */
-    public static function getOrCreateFromRequestedPath(): CacheManager
+    public static function getFromContextExecution(): CacheManager
     {
 
         return ExecutionContext::getActualOrCreateFromEnv()->getCacheManager();
@@ -58,11 +57,6 @@ class CacheManager
     }
 
 
-    public static function resetAndGet(): CacheManager
-    {
-
-        return self::getOrCreateFromRequestedPath();
-    }
 
 
     /**

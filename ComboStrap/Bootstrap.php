@@ -180,12 +180,12 @@ class Bootstrap
     {
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         try {
-            return $executionContext->getObject(self::CANONICAL);
+            return $executionContext->getRuntimeObject(self::CANONICAL);
         } catch (ExceptionNotFound $e) {
             $bootstrapStyleSheetVersion = ExecutionContext::getActualOrCreateFromEnv()
                 ->getConfValue(Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET, Bootstrap::DEFAULT_BOOTSTRAP_VERSION_STYLESHEET);
             $bootstrap = new Bootstrap($bootstrapStyleSheetVersion);
-            $executionContext->setObject(self::CANONICAL, $bootstrap);
+            $executionContext->setRuntimeObject(self::CANONICAL, $bootstrap);
             return $bootstrap;
         }
 

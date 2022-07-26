@@ -163,7 +163,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                      * Standard link attribute
                      * and Runtime Cache key dependencies
                      */
-                    CacheManager::getOrCreateFromRequestedPath()
+                    CacheManager::getFromContextExecution()
                         ->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
 
                     $requestedPage = MarkupPath::createFromRequestedPage();

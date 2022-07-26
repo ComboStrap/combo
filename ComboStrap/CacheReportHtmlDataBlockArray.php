@@ -25,7 +25,7 @@ class CacheReportHtmlDataBlockArray
      */
     public static function getFromRuntime(): array
     {
-        $cacheManager = CacheManager::getOrCreateFromRequestedPath();
+        $cacheManager = CacheManager::getFromContextExecution();
         $cacheReporters = $cacheManager->getCacheResults();
         if ($cacheReporters === null) {
             return [];

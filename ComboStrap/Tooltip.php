@@ -24,7 +24,7 @@ class Tooltip
             return;
         }
 
-        if(!is_array($tooltip)){
+        if (!is_array($tooltip)) {
             LogUtility::msg("The tooltip value ($tooltip) is not an array.");
             return;
         }
@@ -57,8 +57,6 @@ class Tooltip
 
             }
         }
-
-
 
 
         if (empty($title)) {
@@ -104,7 +102,8 @@ class Tooltip
     public
     static function addToolTipSnippetIfNeeded()
     {
-        PluginUtility::getSnippetManager()->attachLocalJavascript(syntax_plugin_combo_tooltip::TAG);
-        PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(syntax_plugin_combo_tooltip::TAG);
+        $snippetSystem = SnippetSystem::getFromContext();
+        $snippetSystem->attachLocalJavascript(syntax_plugin_combo_tooltip::TAG);
+        $snippetSystem->attachCssInternalStyleSheet(syntax_plugin_combo_tooltip::TAG);
     }
 }

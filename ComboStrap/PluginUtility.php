@@ -867,16 +867,16 @@ class PluginUtility
         );
     }
 
-    public
-    static function setConf($key, $value, $namespace = 'plugin')
+    /**
+     * @param $key
+     * @param $value
+     * @param string $namespace
+     * @return void
+     * @deprecated
+     */
+    public static function setConf($key, $value, string $namespace = 'plugin')
     {
-        global $conf;
-        if ($namespace !== null) {
-            $conf[$namespace][PluginUtility::PLUGIN_BASE_NAME][$key] = $value;
-        } else {
-            $conf[$key] = $value;
-        }
-
+        ExecutionContext::getRootOrCreateFromEnv()->setConf($key, $value, $namespace);
     }
 
     /**

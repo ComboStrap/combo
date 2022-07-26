@@ -2,6 +2,8 @@
 
 namespace ComboStrap;
 
+use TestUtility;
+
 /**
  * An execution object permits to get access to environment variable.
  *
@@ -80,6 +82,8 @@ class ExecutionContext
      * @var string
      */
     private $capturedRequestId;
+    private array $capturedConf;
+    private bool $isConsoleOn = false;
 
     public function __construct(Url $url)
     {
@@ -116,6 +120,7 @@ class ExecutionContext
         }
 
         $this->capturedRequestId = self::getRequestedIdViaGlobalVariables();
+
 
     }
 
@@ -161,11 +166,19 @@ class ExecutionContext
 
     public static function createRootFromEnvironmentVariable(): ExecutionContext
     {
+
+        $url = Url::createFromGetOrPostGlobalVariable();
+        return self::createRootFromUrl($url);
+
+    }
+
+    private static function createRootFromUrl(Url $url): ExecutionContext
+    {
         if (self::$rootExecutionContext !== null) {
             LogUtility::internalError("The root context should be closed first");
         }
-        $url = Url::createFromGetOrPostGlobalVariable();
-        $rootExecutionContext = self::createFromUrl($url);
+        $rootExecutionContext = self::createFromUrl($url)
+            ->captureRootEnv();
         self::$rootExecutionContext = $rootExecutionContext;
         return $rootExecutionContext;
 
@@ -360,12 +373,13 @@ class ExecutionContext
         } else {
 
             /**
-             * Closing a parent
+             * Closing the root
              */
             if (isset($this->childExecutionContext)) {
                 throw new ExceptionRuntimeInternal("The child context ($this->childExecutionContext) was not closed", self::CANONICAL);
             }
 
+            $this->restoreRootEnv();
 
             /**
              * Restore requested id if any
@@ -462,9 +476,20 @@ class ExecutionContext
         }
     }
 
-    public function setConf(string $key, $value): ExecutionContext
+    /**
+     * @param string $key
+     * @param $value
+     * @param string $namespace - if null, stored in the global conf namespace
+     * @return $this
+     */
+    public function setConf(string $key, $value, string $namespace = 'plugin'): ExecutionContext
     {
-        PluginUtility::setConf($key, $value);
+        global $conf;
+        if ($namespace !== null) {
+            $conf[$namespace][PluginUtility::PLUGIN_BASE_NAME][$key] = $value;
+        } else {
+            $conf[$key] = $value;
+        }
         return $this;
     }
 
@@ -489,6 +514,56 @@ class ExecutionContext
             throw new ExceptionNotFound("No $name runtime env was found");
         }
         return DataType::toBoolean($var);
+    }
+
+    public function setCacheXhtmlOn(): ExecutionContext
+    {
+        Site::setCacheXhtmlOn();
+        return $this;
+    }
+
+    public function setConsoleOn(): ExecutionContext
+    {
+        $this->isConsoleOn = true;
+        return $this;
+    }
+
+    public function setConsoleOff(): ExecutionContext
+    {
+        $this->isConsoleOn = false;
+        return $this;
+    }
+
+    public function setDisablePageFetcher(): ExecutionContext
+    {
+        $this->setConf(FetcherPage::CONF_ENABLE_AS_SHOW_ACTION, 0);
+        return $this;
+    }
+
+    /**
+     * Capture the environment to be able to restore it close
+     * @return ExecutionContext
+     */
+    private function captureRootEnv(): ExecutionContext
+    {
+        global $conf;
+        $this->capturedConf = $conf;
+        return $this;
+    }
+
+    /**
+     * Restore the configuration
+     * @return void
+     */
+    private function restoreRootEnv()
+    {
+        global $conf;
+        $conf = $this->capturedConf;
+    }
+
+    public function isConsoleOn(): bool
+    {
+        return $this->isConsoleOn;
     }
 
 

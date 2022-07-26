@@ -181,13 +181,10 @@ class SnippetSystem
      * @param $snippetId
      * @param string|null $script
      * @return Snippet a snippet in a slot
-     * @throws ExceptionBadArgument
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionNotFound
      */
-    public function &attachLocalJavascript($snippetId, string $script = null): Snippet
+    public function attachLocalJavascript($snippetId, string $script = null): Snippet
     {
-        $snippet = &$this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_JS);
+        $snippet = Snippet::getOrCreateFromComponentId($snippetId, Snippet::EXTENSION_JS);
         if ($script !== null) {
             try {
                 $content = "{$snippet->getInternalDynamicContent()} $script";

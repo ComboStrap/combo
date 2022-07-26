@@ -11,6 +11,11 @@ namespace ComboStrap;
  * Image may be generated that's why they don't extends {@link FetcherRawLocalPath}.
  * Image that depends on a source file use the {@link FetcherTraitWikiPath} and extends {@link IFetcherLocalImage}
  *
+ * See also third provider such as:
+ *   * https://docs.imgix.com/setup/quick-start - still need to host them (https://docs.imgix.com/apis/rendering)
+ *
+ *
+ *
  */
 abstract class FetcherImage extends IFetcherAbs implements IFetcherPath
 {

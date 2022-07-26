@@ -111,7 +111,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         }
 
         /**
-         * For each processed slot in the page, retrieve the snippets
+         * For each processed slot in the execution, retrieve the snippets
          */
         $cacheReporters = CacheManager::getFromContextExecution()->getCacheResults();
         if ($cacheReporters !== null) {

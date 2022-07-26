@@ -113,7 +113,7 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
              * No actual request (called via ajax)
              */
             $localWikiId = $this->getSourcePath()->getWikiId();
-            $localWikiRequest = ExecutionContext::createFromWikiId($localWikiId);
+            $localWikiRequest = ExecutionContext::createRootFromWikiId($localWikiId);
 
             /**
              * page info is needed and used by all other plugins
@@ -134,22 +134,22 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
 
         try {
 
-            $snippetManager = SnippetManager::getOrCreate();
+            $snippetManager = SnippetSystem::getFromContext();
             $railBarHtmlListItems = $this->getRailBarHtmlListItems();
             $railBarLayout = $this->getLayoutTypeToApply();
             switch ($railBarLayout) {
                 case self::FIXED_LAYOUT:
                     $railBar = $this->toFixedLayout($railBarHtmlListItems);
-                    $snippetManager->attachCssInternalStylesheetForRequest("railbar-$railBarLayout");
+                    $snippetManager->attachCssInternalStylesheet("railbar-$railBarLayout");
                     break;
                 case self::OFFCANVAS_LAYOUT:
                     $railBar = $this->toOffCanvasLayout($railBarHtmlListItems);
-                    $snippetManager->attachCssInternalStylesheetForRequest("railbar-$railBarLayout");
+                    $snippetManager->attachCssInternalStylesheet("railbar-$railBarLayout");
                     break;
                 case self::BOTH_LAYOUT:
                 default:
-                    $snippetManager->attachCssInternalStylesheetForRequest("railbar-" . self::FIXED_LAYOUT);
-                    $snippetManager->attachCssInternalStylesheetForRequest("railbar-" . self::OFFCANVAS_LAYOUT);
+                    $snippetManager->attachCssInternalStylesheet("railbar-" . self::FIXED_LAYOUT);
+                    $snippetManager->attachCssInternalStylesheet("railbar-" . self::OFFCANVAS_LAYOUT);
                     $breakpoint = $this->getBreakPointConfiguration();
                     $railBar = $this->toFixedLayout($railBarHtmlListItems, $breakpoint)
                         . $this->toOffCanvasLayout($railBarHtmlListItems, $breakpoint);
@@ -157,7 +157,7 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
             }
 
 
-            $snippetManager->attachCssInternalStylesheetForRequest("railbar");
+            $snippetManager->attachCssInternalStylesheet("railbar");
 
             if ($localWikiRequest !== null) {
                 $snippets = $snippetManager->toHtmlForAllSnippets();

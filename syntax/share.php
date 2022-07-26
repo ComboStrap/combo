@@ -213,7 +213,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
                         return false;
                     }
                     $snippetId = $brandButton->getStyleScriptIdentifier();
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($snippetId, $style);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet($snippetId, $style);
                     break;
                 case DOKU_LEXER_EXIT:
                     $renderer->doc .= "</a>";

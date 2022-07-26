@@ -46,7 +46,7 @@ class QualityMenuItem extends AbstractItem
         $snippetManager->attachJavascriptInternalInlineForRequest(self::CANONICAL);
         $this->page = MarkupPath::createFromRequestedPage();
         if($this->page->isLowQualityPage()){
-            $snippetManager->attachCssInternalStylesheetForRequest(self::CANONICAL);
+            $snippetManager->attachCssInternalStylesheet(self::CANONICAL);
         }
         parent::__construct();
 

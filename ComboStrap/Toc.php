@@ -64,7 +64,7 @@ class Toc extends Metadata
             return "";
         }
 
-        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::CANONICAL);
+        PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::CANONICAL);
 
         $toc = $this->tocData;
 
@@ -78,7 +78,7 @@ class Toc extends Metadata
          */
         try {
             $css = Outline::getCssNumberingRulesFor(Outline::TOC_NUMBERING);
-            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(Outline::TOC_NUMBERING, $css);
+            PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(Outline::TOC_NUMBERING, $css);
         } catch (ExceptionNotEnabled $e) {
             // not enabled
         } catch (ExceptionBadSyntax $e) {

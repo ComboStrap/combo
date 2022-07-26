@@ -104,7 +104,7 @@ class Tooltip
     public
     static function addToolTipSnippetIfNeeded()
     {
-        PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(syntax_plugin_combo_tooltip::TAG);
-        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(syntax_plugin_combo_tooltip::TAG);
+        PluginUtility::getSnippetManager()->attachLocalJavascript(syntax_plugin_combo_tooltip::TAG);
+        PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(syntax_plugin_combo_tooltip::TAG);
     }
 }

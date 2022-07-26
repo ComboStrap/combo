@@ -7,7 +7,7 @@
  */
 
 use ComboStrap\ExceptionCompile;
-use ComboStrap\SnippetManager;
+use ComboStrap\SnippetSystem;
 use ComboStrap\LinkMarkup;
 use ComboStrap\PluginUtility;
 
@@ -133,7 +133,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_SPECIAL :
 
 
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::MINIMAP_TAG_NAME);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::MINIMAP_TAG_NAME);
 
 
                     global $ID;

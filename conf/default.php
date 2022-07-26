@@ -31,7 +31,7 @@ use ComboStrap\Prism;
 use ComboStrap\PageUrlType;
 use ComboStrap\Region;
 use ComboStrap\Snippet;
-use ComboStrap\SnippetManager;
+use ComboStrap\SnippetSystem;
 
 
 /**

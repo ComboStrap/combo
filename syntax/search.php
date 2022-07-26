@@ -97,8 +97,8 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                     /**
                      * Add the debounce dependency first
                      */
-                    PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::COMBO_DEBOUNCE);
-                    PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::COMBO_SEARCH_BOX);
+                    PluginUtility::getSnippetManager()->attachLocalJavascript(self::COMBO_DEBOUNCE);
+                    PluginUtility::getSnippetManager()->attachLocalJavascript(self::COMBO_SEARCH_BOX);
 
                     /**
                      * Doku Base is not defined when the
@@ -106,8 +106,8 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                      * is used
                      */
                     $dokuBase = DOKU_BASE;
-                    PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::SNIPPET_ID, "var DOKU_BASE='$dokuBase';");
-                    PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::SNIPPET_ID);
+                    PluginUtility::getSnippetManager()->attachLocalJavascript(self::SNIPPET_ID, "var DOKU_BASE='$dokuBase';");
+                    PluginUtility::getSnippetManager()->attachLocalJavascript(self::SNIPPET_ID);
 
                     $parameters = $data[PluginUtility::ATTRIBUTES];
                     $extraClass = "";

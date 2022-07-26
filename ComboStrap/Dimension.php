@@ -114,11 +114,11 @@ class Dimension
                                 /**
                                  * Css of the button and other standard attribute
                                  */
-                                PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("height-toggle");
+                                PluginUtility::getSnippetManager()->attachCssInternalStyleSheet("height-toggle");
                                 /**
                                  * Set the color dynamically to the color of the parent
                                  */
-                                PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot("height-toggle");
+                                PluginUtility::getSnippetManager()->attachLocalJavascript("height-toggle");
                                 /**
                                  * The height when there is not the show class
                                  * is the original height
@@ -129,7 +129,7 @@ class Dimension
   transition: height .35s ease;
 }
 EOF;
-                                PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("height-toggle-show", $css);
+                                PluginUtility::getSnippetManager()->attachCssInternalStyleSheet("height-toggle-show", $css);
                                 $bootstrapDataNameSpace = Bootstrap::getDataNamespace();
                                 /** @noinspection HtmlUnknownAttribute */
                                 $button = <<<EOF
@@ -188,7 +188,7 @@ EOF;
             }
             if (!$controlFound) {
                 $toggleOnClickId = "height-toggle-onclick";
-                PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot($toggleOnClickId);
+                PluginUtility::getSnippetManager()->attachLocalJavascript($toggleOnClickId);
                 $openingCall->addClassName("{$toggleOnClickId}-combo");
                 $openingCall->addCssStyle("cursor", "pointer");
             }

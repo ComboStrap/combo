@@ -48,7 +48,7 @@ class Animation
             self::scrollMagicInit();
 
             $snippetManager
-                ->attachCssExternalStyleSheetForSlot(
+                ->attachRemoteCssStyleSheet(
                     self::ON_VIEW_SNIPPET_ID,
                     "https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css",
                     "sha256-X7rrn44l1+AUO65h1LGALBbOc5C5bOstSYsNlv9MhT8="
@@ -73,7 +73,7 @@ class Animation
         $wowClass = "wow";
         $wowSnippetId = "wow";
         PluginUtility::addClass2Attributes($wowClass, $attributes);
-        $snippetManager->attachCssInternalStyleSheetForSlot($wowSnippetId);
+        $snippetManager->attachCssInternalStyleSheet($wowSnippetId);
 
 
         $animateClass = self::ANIMATE_CLASS;
@@ -96,8 +96,8 @@ window.addEventListener("load", function(event) {
     wow.init();
 });
 EOF;
-        $snippetManager->attachInternalJavascriptForSlot($wowSnippetId, $js);
-        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
+        $snippetManager->attachLocalJavascript($wowSnippetId, $js);
+        $snippetManager->attachRemoteJavascriptLibrary(
             $wowSnippetId,
             "https://cdn.jsdelivr.net/npm/wowjs@1.1.3/dist/wow.min.js",
             "sha256-gHiUEskgBO+3ccSDRM+c5+nEwTGp64R99KYPfITpnuo="
@@ -112,13 +112,13 @@ EOF;
         $snippetManager = PluginUtility::getSnippetManager();
 
         $scrollMagicSnippetId = "scroll-magic";
-        $snippetManager->attachInternalJavascriptForSlot($scrollMagicSnippetId);
-        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
+        $snippetManager->attachLocalJavascript($scrollMagicSnippetId);
+        $snippetManager->attachRemoteJavascriptLibrary(
             $scrollMagicSnippetId,
             "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/ScrollMagic.min.js",
             "sha512-8E3KZoPoZCD+1dgfqhPbejQBnQfBXe8FuwL4z/c8sTrgeDMFEnoyTlH3obB4/fV+6Sg0a0XF+L/6xS4Xx1fUEg=="
         );
-        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
+        $snippetManager->attachRemoteJavascriptLibrary(
             $scrollMagicSnippetId,
             "https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/debug.addIndicators.min.js",
             "sha512-RvUydNGlqYJapy0t4AH8hDv/It+zKsv4wOQGb+iOnEfa6NnF2fzjXgRy+FDjSpMfC3sjokNUzsfYZaZ8QAwIxg=="

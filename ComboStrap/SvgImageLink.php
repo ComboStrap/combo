@@ -77,7 +77,7 @@ class SvgImageLink extends ImageLink
             // !! There is a fork: https://github.com/tanem/svg-injector !!
             // Fallback ? : https://github.com/iconic/SVGInjector/#per-element-png-fallback
             $snippetManager
-                ->attachExternalJavascriptLibraryForRunningSlot(
+                ->attachRemoteJavascriptLibrary(
                     "svg-injector",
                     "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/dist/svg-injector.min.js",
                     "sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk="
@@ -122,13 +122,13 @@ class SvgImageLink extends ImageLink
          */
         $svgFunctionalClass = "";
         if ($svgInjection && $lazyLoad) {
-            $snippetManager->attachInternalJavascriptForSlot("lozad-svg-injection");
+            $snippetManager->attachLocalJavascript("lozad-svg-injection");
             $svgFunctionalClass = StyleUtility::addComboStrapSuffix("lazy-svg-injection");
         } else if ($lazyLoad && !$svgInjection) {
-            $snippetManager->attachInternalJavascriptForSlot("lozad-svg");
+            $snippetManager->attachLocalJavascript("lozad-svg");
             $svgFunctionalClass = StyleUtility::addComboStrapSuffix("lazy-svg-cs");
         } else if ($svgInjection && !$lazyLoad) {
-            $snippetManager->attachInternalJavascriptForSlot("svg-injector");
+            $snippetManager->attachLocalJavascript("svg-injector");
             $svgFunctionalClass = StyleUtility::addComboStrapSuffix("svg-injection");
         }
         if ($lazyLoad) {

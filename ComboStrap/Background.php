@@ -53,7 +53,7 @@ class Background
          * Backgrounds set with the {@link \syntax_plugin_combo_background} component
          */
         if ($tagAttributes->hasComponentAttribute(self::BACKGROUNDS)) {
-            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::CANONICAL);
+            PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::CANONICAL);
             $backgrounds = $tagAttributes->getValueAndRemove(self::BACKGROUNDS);
             switch (sizeof($backgrounds)) {
                 case 1:
@@ -283,7 +283,7 @@ class Background
             /**
              * Attach the stylesheet
              */
-            PluginUtility::getSnippetManager()->attachCssExternalStyleSheetForSlot(
+            PluginUtility::getSnippetManager()->attachRemoteCssStyleSheet(
                 self::PATTERN_CSS_SNIPPET_ID,
                 "https://cdn.jsdelivr.net/npm/pattern.css@1.0.0/dist/pattern.min.css",
                 "sha256-Vwich3JPJa27TO9g6q+TxJGE7DNEigBaHNPm+KkMR6o=")

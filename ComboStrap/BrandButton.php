@@ -393,7 +393,7 @@ EOF;
 
     /**
      * The identifier of the {@link BrandButton::getStyle()} script
-     * used as script id in the {@link SnippetManager}
+     * used as script id in the {@link SnippetSystem}
      * @return string
      */
     public
@@ -581,7 +581,7 @@ EOF;
                          */
                         $linkAttributes->addOutputAttributeValue("rel", "noopener");
 
-                        PluginUtility::getSnippetManager()->attachExternalJavascriptLibraryForRunningSlot(
+                        PluginUtility::getSnippetManager()->attachRemoteJavascriptLibrary(
                             "sharer",
                             "https://cdn.jsdelivr.net/npm/sharer.js@0.5.0/sharer.min.js",
                             "sha256-AqqY/JJCWPQwZFY/mAhlvxjC5/880Q331aOmargQVLU="

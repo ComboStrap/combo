@@ -792,12 +792,12 @@ class PluginUtility
     /**
      * Plugin Utility is available to all plugin,
      * this is a convenient way to the the snippet manager
-     * @return SnippetManager
+     * @return SnippetSystem
      */
     public
-    static function getSnippetManager(): SnippetManager
+    static function getSnippetManager(): SnippetSystem
     {
-        return SnippetManager::getOrCreate();
+        return SnippetSystem::getFromContext();
     }
 
 

@@ -17,7 +17,7 @@ class action_plugin_combo_docss extends DokuWiki_Action_Plugin
     {
 
         /**
-         * See {@link \ComboStrap\SnippetManager::attachCssInternalStylesheetForRequest()}
+         * See {@link \ComboStrap\SnippetSystem::attachCssInternalStylesheet()}
          * for more explanation on the choice of the event
          */
         $controller->register_hook('ACTION_HEADERS_SEND', 'BEFORE', $this, 'handleCssForDoAction');
@@ -35,11 +35,11 @@ class action_plugin_combo_docss extends DokuWiki_Action_Plugin
         global $ACT;
         switch ($ACT) {
             case "media":
-                PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest("do-media");
+                PluginUtility::getSnippetManager()->attachCssInternalStylesheet("do-media");
                 break;
             case "edit":
             case "preview":
-                PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest("do-edit");
+                PluginUtility::getSnippetManager()->attachCssInternalStylesheet("do-edit");
                 break;
             case "admin":
                 $defaultColor = "black";
@@ -65,7 +65,7 @@ ul.admin_tasks a:hover, ul.admin_plugins a:hover{
     fill: {$iconColor->toRgbHex()};
 }
 EOF;
-                PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest("do-admin", $css);
+                PluginUtility::getSnippetManager()->attachCssInternalStylesheet("do-admin", $css);
                 break;
         }
 

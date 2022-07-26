@@ -250,7 +250,7 @@ class EditButton
          * Request based because the button are added only for a user that can write
          */
         $snippetManager = PluginUtility::getSnippetManager();
-        $snippetManager->attachCssInternalStylesheetForRequest(self::SNIPPET_ID);
+        $snippetManager->attachCssInternalStylesheet(self::SNIPPET_ID);
         $snippetManager->attachJavascriptInternalInlineForRequest(self::SNIPPET_ID);
 
         /**

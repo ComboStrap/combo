@@ -37,7 +37,7 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
         /**
          * DOKUWIKI_STARTED: Edit, preview, show mode
          *
-         * See {@link \ComboStrap\SnippetManager::attachCssInternalStylesheetForRequest()}
+         * See {@link \ComboStrap\SnippetSystem::attachCssInternalStylesheet()}
          * for more explanation on the choice of the event
          */
         $controller->register_hook('ACTION_HEADERS_SEND', 'BEFORE', $this, 'anchor', array());
@@ -87,7 +87,7 @@ main a:hover {
     color: {$primaryColorHoverText->toRgbHex()};
 }
 EOF;
-    $snippetManager->attachCssInternalStylesheetForRequest(self::ANCHOR_HTML_SNIPPET_ID, $aCss);
+    $snippetManager->attachCssInternalStylesheet(self::ANCHOR_HTML_SNIPPET_ID, $aCss);
 }
 
         }

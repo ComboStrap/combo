@@ -406,7 +406,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     $callStackAttributes = $data;
                 }
 
-                PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
+                PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::TAG);
 
                 switch ($state) {
                     case DOKU_LEXER_ENTER:

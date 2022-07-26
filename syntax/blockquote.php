@@ -391,7 +391,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                      * Add the CSS
                      */
                     $snippetManager = PluginUtility::getSnippetManager();
-                    $snippetManager->attachCssInternalStyleSheetForSlot(self::TAG);
+                    $snippetManager->attachCssInternalStyleSheet(self::TAG);
 
                     /**
                      * Create the HTML
@@ -416,7 +416,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                         case self::TWEET:
 
                             PluginUtility::getSnippetManager()
-                                ->attachExternalJavascriptLibraryForRunningSlot(self::TWEET, "https://platform.twitter.com/widgets.js")
+                                ->attachRemoteJavascriptLibrary(self::TWEET, "https://platform.twitter.com/widgets.js")
                                 ->addHtmlAttribute("id", "twitter-wjs");
 
                             $tagAttributes->addClassName("twitter-tweet");

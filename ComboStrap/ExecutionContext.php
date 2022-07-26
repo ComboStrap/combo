@@ -119,18 +119,41 @@ class ExecutionContext
 
     }
 
+    public static function getRootOrCreateFromEnv(): ExecutionContext
+    {
+        try {
+            return self::getRootContext();
+        } catch (ExceptionNotFound $e) {
+            return self::createRootFromEnvironmentVariable();
+        }
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private static function getRootContext(): ?ExecutionContext
+    {
+        if (!isset(self::$rootExecutionContext)) {
+            throw new ExceptionNotFound("No root context");
+        }
+        return self::$rootExecutionContext;
+    }
+
     /**
      * @param string $requestedId
      * @param string $requestedAct
      * @return ExecutionContext
      */
-    public static function createFromWikiId(string $requestedId, string $requestedAct = "show"): ExecutionContext
+    public static function createRootFromWikiId(string $requestedId, string $requestedAct = "show"): ExecutionContext
     {
-
+        if (self::$rootExecutionContext !== null) {
+            LogUtility::internalError("The root context should be closed first");
+        }
         $url = Url::createEmpty()
             ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $requestedId)
             ->setQueryParameter(self::DO_ATTRIBUTE, $requestedAct);
-        return self::createFromUrl($url);
+        self::$rootExecutionContext = self::createFromUrl($url);
+        return self::$rootExecutionContext;
 
     }
 
@@ -176,10 +199,8 @@ class ExecutionContext
     public static function getActualContext(): ExecutionContext
     {
 
-        if (!isset(self::$rootExecutionContext)) {
-            throw new ExceptionNotFound("No root context");
-        }
-        $actualContext = self::$rootExecutionContext;
+
+        $actualContext = self::getRootContext();
         while (isset($actualContext->childExecutionContext)) {
             $actualContext = $actualContext->childExecutionContext;
         }
@@ -201,7 +222,7 @@ class ExecutionContext
             $runningAct = "show";
         }
 
-        $subExecutionContext = self::createFromWikiId($runningId, $runningAct);
+        $subExecutionContext = self::createRootFromWikiId($runningId, $runningAct);
         $subExecutionContext->setParent($this);
         $this->childExecutionContext = $subExecutionContext;
 

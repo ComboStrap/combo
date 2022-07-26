@@ -160,7 +160,7 @@ class ConditionalLength
             if ($this->getLength() === "auto") {
                 if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion) {
                     // row-cols-auto is not in 4.0
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("row-cols-auto");
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet("row-cols-auto");
                 }
                 return "row-cols-auto";
             }

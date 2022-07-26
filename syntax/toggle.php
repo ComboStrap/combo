@@ -157,7 +157,7 @@ class syntax_plugin_combo_toggle extends DokuWiki_Syntax_Plugin
                     /**
                      * Snippet
                      */
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::CANONICAL);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::CANONICAL);
 
                     $bootstrapNamespace = "bs-";
                     if (Bootstrap::getBootStrapMajorVersion() == Bootstrap::BootStrapFourMajorVersion) {

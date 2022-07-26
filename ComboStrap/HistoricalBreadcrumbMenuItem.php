@@ -49,7 +49,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         /**
          * Css
          */
-        $snippetManager->attachCssInternalStylesheetForRequest(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
+        $snippetManager->attachCssInternalStylesheet(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
 
         parent::__construct();
 

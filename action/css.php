@@ -106,7 +106,7 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
 
         /**
          * It should be present in edit, preview, show, ...
-         * See {@link \ComboStrap\SnippetManager::attachCssInternalStylesheetForRequest()}
+         * See {@link \ComboStrap\SnippetSystem::attachCssInternalStylesheet()}
          * for more explanation
          */
         $controller->register_hook('ACTION_HEADERS_SEND', 'AFTER', $this, 'addAllCssSnippet', array());
@@ -302,7 +302,7 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
     public function addAllCssSnippet(Doku_Event &$event, $param)
     {
 
-        PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest("all");
+        PluginUtility::getSnippetManager()->attachCssInternalStylesheet("all");
 
     }
 

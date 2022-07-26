@@ -46,7 +46,7 @@ class Hero
              * but the unit scale goes only to 5 (=3 rem) and
              * the `xl` hero goes to 4 rem
              */
-            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::COMPONENT_NAME);
+            PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::COMPONENT_NAME);
         } catch (ExceptionBadArgument $e) {
             LogUtility::error($e->getMessage(), self::CANONICAL);
         }

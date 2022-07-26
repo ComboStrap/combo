@@ -85,7 +85,7 @@ class Shadow
                 return "shadow-sm";
             case self::CONF_MEDIUM_LEVEL_VALUE:
             case "md";
-                PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::SNIPPET_ID);
+                PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::SNIPPET_ID);
                 return self::MEDIUM_ELEVATION_CLASS;
             case self::CONF_LARGE_LEVEL_VALUE:
             case "lg":

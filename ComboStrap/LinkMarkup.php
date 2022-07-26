@@ -146,7 +146,7 @@ class LinkMarkup
          * because it encode too much
          */
         if ($url->hasProperty(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY)) {
-            PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot("search-hit");
+            PluginUtility::getSnippetManager()->attachCssInternalStyleSheet("search-hit");
         }
 
 
@@ -166,7 +166,7 @@ class LinkMarkup
                 }
                 // normal link for the `this` wiki
                 if ($interWiki->getWiki() !== "this") {
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(MarkupRef::INTERWIKI_URI);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(MarkupRef::INTERWIKI_URI);
                 }
                 /**
                  * Target
@@ -260,7 +260,7 @@ EOF;
                         $lowerCaseLowQualityAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
                         $outputAttributes->addClassName(StyleUtility::addComboStrapSuffix(LowQualityPage::CLASS_SUFFIX));
                         $snippetLowQualityPageId = $lowerCaseLowQualityAcronym;
-                        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($snippetLowQualityPageId);
+                        PluginUtility::getSnippetManager()->attachCssInternalStyleSheet($snippetLowQualityPageId);
                         /**
                          * Note The protection does occur on Javascript level, not on the HTML
                          * because the created page is valid for a anonymous or logged-in user

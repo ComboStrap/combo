@@ -260,14 +260,14 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 
                     // Theme customized from the below official theme
                     // https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.theme.css
-                    $snippetManager->attachCssInternalStyleSheetForSlot($snippetId)
+                    $snippetManager->attachCssInternalStyleSheet($snippetId)
                         ->setCritical(false);
 
                     /**
                      * The dependency first
                      */
-                    $snippetManager->attachInternalJavascriptForSlot("combo-loader");
-                    $snippetManager->attachInternalJavascriptForSlot($snippetId);
+                    $snippetManager->attachLocalJavascript("combo-loader");
+                    $snippetManager->attachLocalJavascript($snippetId);
 
                     break;
 

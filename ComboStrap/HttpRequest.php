@@ -31,14 +31,16 @@ class HttpRequest
      */
     public static function purgeStaticDataRequestedScoped()
     {
-        //
+        // The top context object
         ExecutionContext::reset();
 
+        /**
+         * TODO: They should be incorporated in the root execution context as object
+         */
         // global scope
         MetadataDokuWikiStore::resetAll();
         MetadataDbStore::resetAll();
         // request scope
-        SnippetManager::reset();
         IdManager::reset();
         // global variable
         global $TOC;

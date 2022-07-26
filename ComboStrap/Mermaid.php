@@ -15,8 +15,8 @@ class Mermaid
     {
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetId = \syntax_plugin_combo_mermaid::TAG;
-        $snippetManager->attachInternalJavascriptForSlot($snippetId);
-        $snippetManager->attachExternalJavascriptLibraryForRunningSlot(
+        $snippetManager->attachLocalJavascript($snippetId);
+        $snippetManager->attachRemoteJavascriptLibrary(
             $snippetId,
             "https://cdn.jsdelivr.net/npm/mermaid@8.12.1/dist/mermaid.min.js",
             "sha256-51Oz+q3qIYwzBL0k7JLyk158Ye4XqprPU0/9DUcZMQQ="

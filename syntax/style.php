@@ -106,7 +106,7 @@ class syntax_plugin_combo_style extends DokuWiki_Syntax_Plugin
     $match
 }
 EOF;
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($styleId, $css);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet($styleId, $css);
 
                 }
                 /**

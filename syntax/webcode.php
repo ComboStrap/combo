@@ -378,7 +378,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                     $bar = '<div class="webcode-bar">';
 
                     // Css
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::TAG);
 
                     // Dokuwiki Code ?
                     if (array_key_exists(self::MARKI_LANG, $codes)) {
@@ -562,7 +562,7 @@ EOF;
                          * It works only on element with a natural size (ie image)
                          * when loaded asynchronously but not when there is only text in the iframe
                          */
-                        PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(self::TAG);
+                        PluginUtility::getSnippetManager()->attachLocalJavascript(self::TAG);
 
 
                     }

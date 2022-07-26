@@ -142,8 +142,9 @@ class Snippet implements JsonSerializable
     /**
      * @param WikiPath $path - wiki path mandatory
      *   because it's the path of fetch and it's the storage format
+     * use {@link Snippet::getOrCreateFromContext()}
      */
-    public function __construct(WikiPath $path)
+    private function __construct(WikiPath $path)
     {
         $this->path = $path;
     }
@@ -175,11 +176,11 @@ class Snippet implements JsonSerializable
      * @param string $extension - {@link Snippet::EXTENSION_CSS css} or {@link Snippet::EXTENSION_JS js}
      * @return Snippet
      */
-    public static function getOrCreateSnippetWithComponentId(string $componentId, string $extension): Snippet
+    public static function getOrCreateFromComponentId(string $componentId, string $extension): Snippet
     {
 
         $snippetPath = self::getInternalPathFromNameAndExtension($componentId, $extension);
-        return self::getOrCreateSnippetWithPath($snippetPath)
+        return self::getOrCreateFromContext($snippetPath)
             ->setComponentId($componentId);
 
     }
@@ -246,26 +247,35 @@ class Snippet implements JsonSerializable
 
 
     /**
-     * @param Path $snippetPath
+     * @param Path $localSnippetPath - the path is the snippet identifier (it's not mandatory that the snippet is locally available
+     * but if it's, it permits to work without any connection by setting the {@link Snippet::CONF_USE_CDN cdn} to off
      * @return Snippet
      */
-    public static function getOrCreateSnippetWithPath(Path $snippetPath)
+    public static function getOrCreateFromContext(Path $localSnippetPath): Snippet
     {
 
-        $requestedPageId = ExecutionContext::getActualOrCreateFromEnv()->getWikiId();
-        $snippets = &self::$globalSnippets[$requestedPageId];
-        if ($snippets === null) {
-            self::reset();
-            self::$globalSnippets[$requestedPageId] = [];
-            $snippets = &self::$globalSnippets[$requestedPageId];
+        try {
+            $snippets = &ExecutionContext::getRootOrCreateFromEnv()->getObject(self::CANONICAL);
+        } catch (ExceptionNotFound $e) {
+            $snippets = [];
+            ExecutionContext::getRootOrCreateFromEnv()->setObject(self::CANONICAL, $snippets);
         }
-        $snippetGuid = $snippetPath->toUriString();
+        $snippetGuid = $localSnippetPath->toUriString();
         $snippet = &$snippets[$snippetGuid];
         if ($snippet === null) {
-            $snippet = self::createSnippet($snippetPath);
+            $snippet = self::createSnippet($localSnippetPath);
             $snippets[$snippetGuid] = $snippet;
         }
+
+        try {
+            $wikiId = ExecutionContext::getActualOrCreateFromEnv()->getWikiId();
+            $snippet->addSlot($wikiId);
+        } catch (ExceptionNotFound $e) {
+            $snippet->addSlot(Snippet::REQUEST_SCOPE);
+        }
+
         return $snippet;
+
     }
 
     /**
@@ -276,6 +286,52 @@ class Snippet implements JsonSerializable
     {
         $wikiPathObject = WikiPath::createComboResource($wikiPath);
         return self::createSnippetFromPath($wikiPathObject);
+    }
+
+    /**
+     * @param string $wikiPath - the wiki path should be absolute relative to the library namespace
+     * @return Snippet
+     *
+     * Example: `:bootstrap:4.5.0:bootstrap.min.css`
+     */
+    public static function getOrCreateFromLibraryNamespace(string $wikiPath): Snippet
+    {
+        $wikiPathObject = WikiPath::createComboResource(self::LIBRARY_BASE . $wikiPath);
+        return self::getOrCreateFromContext($wikiPathObject);
+    }
+
+    /**
+     * An utility class to create a snippet from a remote url
+     *
+     * If you want to be able to serve the library locally, you
+     * should create the snippet via the {@link Snippet::getOrCreateFromLibraryNamespace() local path}
+     * and set {@link Snippet::setRemoteUrl() remote url}
+     *
+     * @throws ExceptionBadArgument
+     */
+    public static function getOrCreateFromRemoteUrl(Url $url): Snippet
+    {
+
+        try {
+            $libraryName = $url->getLastName();
+        } catch (ExceptionNotFound $e) {
+            $messageFormat = "The following url ($url) does not have a file name. To create a snippet from a remote url, the url should have a path where the last is the name of the library file. ";
+            throw new ExceptionBadArgument($messageFormat);
+        }
+        /**
+         * The file generally does not exists
+         */
+        $localPath = WikiPath::createComboResource(Snippet::LIBRARY_BASE . ":$libraryName");
+        try {
+            $localPath->getExtension();
+        } catch (ExceptionNotFound $e) {
+            $messageFormat = "The url has a file name ($libraryName) that does not have any extension. To create a snippet from a remote url, the url should have a path where the last is the name of the library file. ";
+            throw new ExceptionBadArgument($messageFormat);
+        }
+        return self::getOrCreateFromContext($localPath)
+            ->setRemoteUrl($url);
+
+
     }
 
 
@@ -466,7 +522,7 @@ class Snippet implements JsonSerializable
         }
 
         $wikiPath = WikiPath::create($path, $drive);
-        $snippet = Snippet::getOrCreateSnippetWithPath($wikiPath);
+        $snippet = Snippet::getOrCreateFromContext($wikiPath);
 
         $componentName = $array[self::JSON_COMPONENT_PROPERTY];
         if ($componentName !== null) {

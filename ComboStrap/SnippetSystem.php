@@ -12,7 +12,6 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/Snippet.php');
 
 /**
  * @package ComboStrap
@@ -34,49 +33,33 @@ require_once(__DIR__ . '/Snippet.php');
  * sudo apt-get install default-jre
  *
  */
-class SnippetManager
+class SnippetSystem
 {
 
 
-    const CANONICAL = "snippet-manager";
+    const CANONICAL = "snippet-system";
+
+
 
 
     /**
-     * @var array SnippetManager array that contains one element (one {@link SnippetManager} scoped to the requested id
-     */
-    private static array $globalSnippetManager = [];
-
-    /**
-     *
-     * Still needed anymore even if we scope the global object to the requested id
-     * because the request id may not be set between test
-     * Meaning that when we render dynamic content (ie without request id), we
-     * will get the snippets of the first test and of the second
-     */
-    public static function reset()
-    {
-        self::$globalSnippetManager = [];
-        Snippet::reset();
-    }
-
-
-    /**
-     * @return SnippetManager - the global reference
+     * @return SnippetSystem - the global reference
      * that is set for every run at the end of this file
      * TODO: migrate the attach function to {@link Snippet}
-     *   because Snippet has already a global variable {@link Snippet::getOrCreateSnippetWithComponentId()}
+     *   because Snippet has already a global variable {@link Snippet::getOrCreateFromComponentId()}
      */
-    public static function getOrCreate(): SnippetManager
+    public static function getFromContext(): SnippetSystem
     {
 
-        $id = ExecutionContext::getActualOrCreateFromEnv()->getWikiId();
-        $snippetManager = self::$globalSnippetManager[$id];
-        if ($snippetManager === null) {
-            self::reset(); // delete old snippet manager for other request
-            $snippetManager = new SnippetManager();
-            self::$globalSnippetManager[$id] = $snippetManager;
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        try {
+            return $executionContext->getObject(self::CANONICAL);
+        } catch (ExceptionNotFound $e) {
+            $snippetSystem = new SnippetSystem();
+            $executionContext->setObject(self::CANONICAL, $snippetSystem);
+            return $snippetSystem;
         }
-        return $snippetManager;
+
     }
 
 
@@ -177,43 +160,22 @@ class SnippetManager
 
 
     /**
-     * @param $snippetId
+     * @param $componentId
      * @param string|null $script - the css snippet to add, otherwise it takes the file
      * @return Snippet a snippet not in a slot
-     * @throws ExceptionBadArgument
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionNotFound
+     *
+     * If you need to split the css by type of action, see {@link \action_plugin_combo_docss::handleCssForDoAction()}
      */
     public
-    function &attachCssInternalStyleSheetForSlot($snippetId, string $script = null): Snippet
+    function &attachCssInternalStyleSheet($componentId, string $script = null): Snippet
     {
-        $snippet = $this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_CSS);
+        $snippet = Snippet::getOrCreateFromComponentId($componentId, Snippet::EXTENSION_CSS);
         if ($script !== null) {
             $snippet->setInlineContent($script);
         }
         return $snippet;
     }
 
-    /**
-     * @param $snippetId
-     * @param string|null $script -  the css if any, otherwise the css file will be taken
-     * @return Snippet a snippet scoped at the request scope (not in a slot)
-     *
-     * This function should be called with a ACTION_HEADERS_SEND event
-     * (not DOKUWIKI_STARTED because the {@link \action_plugin_combo_router} should
-     * have run to set back the wiki id properly
-     *
-     * If you need to split the css by type of action, see {@link \action_plugin_combo_docss::handleCssForDoAction()}
-     */
-    public
-    function &attachCssInternalStylesheetForRequest($snippetId, string $script = null): Snippet
-    {
-        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_CSS);
-        if ($script != null) {
-            $snippet->setInlineContent($script);
-        }
-        return $snippet;
-    }
 
     /**
      * @param $snippetId
@@ -223,7 +185,7 @@ class SnippetManager
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
      */
-    public function &attachInternalJavascriptForSlot($snippetId, string $script = null): Snippet
+    public function &attachLocalJavascript($snippetId, string $script = null): Snippet
     {
         $snippet = &$this->attachSnippetFromSlot($snippetId, Snippet::EXTENSION_JS);
         if ($script !== null) {
@@ -255,7 +217,7 @@ class SnippetManager
     public
     function attachInternalJavascriptFromPathForRequest($componentId, WikiPath $path): Snippet
     {
-        return Snippet::getOrCreateSnippetWithPath($path)
+        return Snippet::getOrCreateFromContext($path)
             ->addSlot(Snippet::REQUEST_SCOPE)
             ->setComponentId($componentId);
     }
@@ -271,52 +233,52 @@ class SnippetManager
      * @param string $snippetId
      * @param string $type
      * @return Snippet
+     * @throws ExceptionNotFound
+     * @deprecated - the slot is now added automatically at creation time via the context system
      */
     private
     function &attachSnippetFromSlot(string $snippetId, string $type): Snippet
     {
         $slot = ExecutionContext::getActualOrCreateFromEnv()->getWikiId();
-        $snippet = Snippet::getOrCreateSnippetWithComponentId($snippetId, $type)
+        $snippet = Snippet::getOrCreateFromComponentId($snippetId, $type)
             ->addSlot($slot);
         return $snippet;
     }
 
+    /**
+     * @param $componentId
+     * @param $type
+     * @return Snippet
+     * @deprecated - the slot is now added automatically at creation time via the context system
+     */
     private
-    function &attachSnippetFromRequest($componentName, $type): Snippet
+    function attachSnippetFromRequest($componentId, $type): Snippet
     {
-        $snippet = Snippet::getOrCreateSnippetWithComponentId($componentName, $type)
+        return Snippet::getOrCreateFromComponentId($componentId, $type)
             ->addSlot(Snippet::REQUEST_SCOPE);
-        return $snippet;
     }
 
 
     /**
      * @param string $snippetId
-     * @param string $relativeId
+     * @param string $pathFromComboDrive
      * @param string|null $integrity
      * @return Snippet
      */
     public
-    function attachJavascriptComboResourceForSlot(string $snippetId, string $relativeId, string $integrity = null): Snippet
+    function attachJavascriptComboResourceForSlot(string $snippetId, string $pathFromComboDrive, string $integrity = null): Snippet
     {
-        $dokuPath = WikiPath::createComboResource($relativeId);
-        try {
-            $url = FetcherRawLocalPath::createFromPath($dokuPath)->getFetchUrl()->toAbsoluteUrlString();
-        } catch (ExceptionNotFound $e) {
-            LogUtility::internalError($e->getMessage());
-            $url = "";
-        }
-        return $this->attachExternalJavascriptLibraryForRunningSlot(
-            $snippetId,
-            $url,
-            $integrity
-        );
+
+        $dokuPath = WikiPath::createComboResource($pathFromComboDrive);
+        return Snippet::getOrCreateFromContext($dokuPath)
+            ->setComponentId($snippetId)
+            ->setIntegrity($integrity);
 
     }
 
     /**
      * Add a local javascript script as tag
-     * (ie same as {@link SnippetManager::attachExternalJavascriptLibraryForRunningSlot()})
+     * (ie same as {@link SnippetSystem::attachRemoteJavascriptLibrary()})
      * but for local resource combo file (library)
      *
      * For instance:
@@ -334,11 +296,11 @@ class SnippetManager
 
     }
 
-    public function attachSnippetFromComboResourceDrive(string $path, string $componentId): Snippet
+    public function attachSnippetFromComboResourceDrive(string $pathFromComboDrive, string $componentId): Snippet
     {
 
-        $dokuPath = WikiPath::createComboResource($path);
-        return Snippet::getOrCreateSnippetWithPath($dokuPath)
+        $dokuPath = WikiPath::createComboResource($pathFromComboDrive);
+        return Snippet::getOrCreateFromContext($dokuPath)
             ->setComponentId($componentId);
 
     }
@@ -349,12 +311,12 @@ class SnippetManager
      * @throws ExceptionNotFound
      */
     public
-    function attachExternalJavascriptLibraryForRunningSlot(string $componentId, string $url, string $integrity = null): Snippet
+    function attachRemoteJavascriptLibrary(string $componentId, string $url, string $integrity = null): Snippet
     {
         $url = Url::createFromString($url);
         $name = $url->getLastNameWithoutExtension();
         $path = Snippet::getInternalPathFromNameAndExtension($name, Snippet::EXTENSION_JS, Snippet::LIBRARY_BASE);
-        return Snippet::getOrCreateSnippetWithPath($path)
+        return Snippet::getOrCreateFromContext($path)
             ->setScopeAsRunningSlot()
             ->setIntegrity($integrity)
             ->setRemoteUrl($url)
@@ -371,12 +333,11 @@ class SnippetManager
      * @throws ExceptionNotFound
      */
     public
-    function attachCssExternalStyleSheetForSlot(string $componentId, string $url, string $integrity = null): Snippet
+    function attachRemoteCssStyleSheet(string $componentId, string $url, string $integrity = null): Snippet
     {
         $url = Url::createFromString($url);
-        $libraryName = $url->getLastName();
-        return $this
-            ->attachSnippetFromSlot($libraryName, Snippet::EXTENSION_CSS)
+
+        return Snippet::getOrCreateFromRemoteUrl($url)
             ->setIntegrity($integrity)
             ->setRemoteUrl($url)
             ->setComponentId($componentId);
@@ -509,10 +470,10 @@ class SnippetManager
         return $this->toHtml(Snippet::SLOT_SCOPE);
     }
 
-    public function addPopoverLibrary(): SnippetManager
+    public function addPopoverLibrary(): SnippetSystem
     {
         $this->attachJavascriptInternalInlineForRequest(Snippet::COMBO_POPOVER);
-        $this->attachCssInternalStylesheetForRequest(Snippet::COMBO_POPOVER);
+        $this->attachCssInternalStylesheet(Snippet::COMBO_POPOVER);
         return $this;
     }
 

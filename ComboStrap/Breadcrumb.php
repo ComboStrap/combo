@@ -103,7 +103,7 @@ class Breadcrumb
                     $requiredDepth = 1;
                 }
                 if ($requiredDepth > 1) {
-                    SnippetManager::getOrCreate()->attachCssInternalStyleSheetForSlot("breadcrumb-$type");
+                    SnippetSystem::getFromContext()->attachCssInternalStyleSheet("breadcrumb-$type");
                 }
                 $htmlOutput = $tagAttributes->toHtmlEnterTag("span");
                 $lisHtmlOutput = "";

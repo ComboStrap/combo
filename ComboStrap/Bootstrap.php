@@ -243,7 +243,7 @@ class Bootstrap
         $version = $this->getVersion();
 
         // Javascript
-        $bootstrapJsonFile = WikiPath::createComboResource(":library:bootstrap:bootstrapJavascript.json");
+        $bootstrapJsonFile = WikiPath::createComboResource(Snippet::LIBRARY_BASE.":bootstrap:bootstrapJavascript.json");
         try {
             $bootstrapJsonMetas = Json::createFromPath($bootstrapJsonFile)->toArray();
         } catch (ExceptionBadSyntax|ExceptionNotFound $e) {

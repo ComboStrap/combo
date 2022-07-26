@@ -147,7 +147,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::TAG);
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
                     $attributes->addClassName("alert");
                     $type = $attributes->getValue(TagAttributes::TYPE_KEY);

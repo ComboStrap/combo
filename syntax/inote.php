@@ -143,7 +143,7 @@ class syntax_plugin_combo_inote extends DokuWiki_Syntax_Plugin
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
                     $tagAttributes->addClassName("badge");
 
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::TAG);
 
                     $type = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
 

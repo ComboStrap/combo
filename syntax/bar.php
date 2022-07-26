@@ -235,7 +235,7 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 
                     $attributes->addClassName($barTag);
 
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($barTag);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet($barTag);
 
                     $htmlTag = $data[self::HTML_TAG_ATTRIBUTES];
                     $renderer->doc .= $attributes->toHtmlEnterTag($htmlTag);

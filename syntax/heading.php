@@ -12,7 +12,7 @@ use ComboStrap\Outline;
 use ComboStrap\MarkupPath;
 use ComboStrap\PageH1;
 use ComboStrap\PluginUtility;
-use ComboStrap\SnippetManager;
+use ComboStrap\SnippetSystem;
 use ComboStrap\TagAttributes;
 
 
@@ -297,7 +297,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 /**
                  * Make Bootstrap display responsive
                  */
-                PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(syntax_plugin_combo_heading::DISPLAY_BS_4_RESPONSIVE_SNIPPET_ID);
+                PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(syntax_plugin_combo_heading::DISPLAY_BS_4_RESPONSIVE_SNIPPET_ID);
 
                 if (in_array($type, self::DISPLAY_TYPES_ONLY_BS_5)) {
                     $displayClass = "display-4";
@@ -331,13 +331,13 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          *
          * The context is by default the parent name or outline.
          */
-        $snippetManager = SnippetManager::getOrCreate();
+        $snippetManager = SnippetSystem::getFromContext();
         if ($context === self::TYPE_OUTLINE) {
             $tagAttributes->addClassName(Outline::getOutlineHeadingClass());
 
-            $snippetManager->attachCssInternalStyleSheetForSlot(self::TYPE_OUTLINE);
+            $snippetManager->attachCssInternalStyleSheet(self::TYPE_OUTLINE);
             try {
-                $snippet = $snippetManager->attachCssInternalStyleSheetForSlot(Outline::HEADING_NUMBERING);
+                $snippet = $snippetManager->attachCssInternalStyleSheet(Outline::HEADING_NUMBERING);
                 if (!$snippet->hasInlineContent()) {
                     $css = Outline::getCssNumberingRulesFor(Outline::HEADING_NUMBERING);
                     $snippet->setInlineContent($css);
@@ -346,7 +346,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 LogUtility::internalError("An error has occurred while trying to add the outline heading numbering stylesheet. Error: {$e->getMessage()}", self::CANONICAL);
             }
         }
-        $snippetManager->attachCssInternalStyleSheetForSlot(syntax_plugin_combo_heading::TAG);
+        $snippetManager->attachCssInternalStyleSheet(syntax_plugin_combo_heading::TAG);
 
         /**
          * Not a HTML attribute

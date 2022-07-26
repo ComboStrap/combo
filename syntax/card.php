@@ -356,7 +356,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      * Add the CSS
                      */
                     $snippetManager = PluginUtility::getSnippetManager();
-                    $snippetManager->attachCssInternalStyleSheetForSlot(self::TAG);
+                    $snippetManager->attachCssInternalStyleSheet(self::TAG);
 
                     /**
                      * Tag Attributes

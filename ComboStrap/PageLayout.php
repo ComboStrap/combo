@@ -824,7 +824,7 @@ class PageLayout
         $snippetManager = PluginUtility::getSnippetManager();
         try {
             $content = FileSystems::getContent($this->getCssPath());
-            $snippetManager->attachCssInternalStylesheetForRequest(self::CANONICAL, $content);
+            $snippetManager->attachCssInternalStylesheet(self::CANONICAL, $content);
         } catch (ExceptionNotFound $e) {
             // no css found, not a problem
         }

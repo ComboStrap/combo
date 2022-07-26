@@ -177,7 +177,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                         return false;
                     }
                     $snippetId = $brand->getStyleScriptIdentifier();
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($snippetId, $style);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet($snippetId, $style);
 
 
                     /**

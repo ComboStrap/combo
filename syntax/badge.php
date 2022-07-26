@@ -242,7 +242,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
 
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::TAG);
 
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);

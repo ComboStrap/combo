@@ -83,7 +83,7 @@ EOF;
                          * if there is more than one
                          */
                         $snippetId = self::CANONICAL."-$id";
-                        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot($snippetId, $styleSheet);
+                        PluginUtility::getSnippetManager()->attachCssInternalStyleSheet($snippetId, $styleSheet);
 
                 }
             }

@@ -137,7 +137,7 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
          */
         global $lang;
         if ($lang['direction'] === "rtl") {
-            PluginUtility::getSnippetManager()->attachCssInternalStylesheetForRequest(self::CANONICAL . "-rtl");
+            PluginUtility::getSnippetManager()->attachCssInternalStylesheet(self::CANONICAL . "-rtl");
         }
 
 

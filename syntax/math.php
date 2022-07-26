@@ -136,7 +136,7 @@ class syntax_plugin_combo_math extends DokuWiki_Syntax_Plugin
                  * CSS
                  */
                 $snippetManager = PluginUtility::getSnippetManager();
-                $snippetManager->attachCssInternalStyleSheetForSlot(self::TAG);
+                $snippetManager->attachCssInternalStyleSheet(self::TAG);
 
                 /**
                  * Javascript config
@@ -157,13 +157,13 @@ MathJax.Hub.Config({
 EOD;
 
                 $snippetManager
-                    ->attachInternalJavascriptForSlot(
+                    ->attachLocalJavascript(
                         self::TAG,
                         $headHtmlElement
                     )
                     ->addHtmlAttribute("type", "text/x-mathjax-config");
                 $snippetManager
-                    ->attachExternalJavascriptLibraryForRunningSlot(
+                    ->attachRemoteJavascriptLibrary(
                         self::TAG,
                         "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js"
                     )

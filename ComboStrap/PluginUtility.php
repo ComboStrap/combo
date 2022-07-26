@@ -635,12 +635,13 @@ class PluginUtility
      * but the requested wiki id
      *
      * @return string
+     * @throws ExceptionNotFound
      * @deprecated use {@link ExecutionContext}
      */
     public static function getRequestedWikiId(): string
     {
 
-        return ExecutionContext::getActualContext()->getWikiId();
+        return ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
 
     }
 
@@ -876,7 +877,7 @@ class PluginUtility
      */
     public static function setConf($key, $value, string $namespace = 'plugin')
     {
-        ExecutionContext::getRootOrCreateFromEnv()->setConf($key, $value, $namespace);
+        ExecutionContext::getActualOrCreateFromEnv()->setConf($key, $value, $namespace);
     }
 
     /**
@@ -1091,11 +1092,11 @@ class PluginUtility
     }
 
     /**
-     * @deprecated for {@link ExecutionContext::getWikiId()}
+     * @deprecated for {@link ExecutionContext::getExecutingWikiId()}
      */
     public static function getCurrentSlotId(): string
     {
-        return ExecutionContext::getActualContext()->getWikiId();
+        return ExecutionContext::getActualOrCreateFromEnv()->getExecutingWikiId();
     }
 
 

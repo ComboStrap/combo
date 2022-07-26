@@ -82,7 +82,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     public static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
 
-        $requestedId = ExecutionContext::getActualOrCreateFromEnv()->getWikiId();
+        $requestedId = ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
 
         $storesByRequestedId = &self::$storesByRequestedPage[$requestedId];
         if ($storesByRequestedId === null) {
@@ -278,14 +278,14 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
          */
         $dokuwikiId = $this->getResource()->getWikiId();
         $actualMeta = $this->getData();
-        $wikiRequest = ExecutionContext::getActualContext()
-            ->createSubExecutionContext($dokuwikiId,"show");
+        $wikiRequest = ExecutionContext::getActualOrCreateFromEnv()
+            ->startSubExecutionEnv($dokuwikiId);
         try {
             $newMetadata = p_render_metadata($dokuwikiId, $actualMeta);
             p_save_metadata($dokuwikiId, $newMetadata);
             $this->data = $newMetadata;
         } finally {
-            $wikiRequest->close($dokuwikiId);
+            $wikiRequest->closeSubExecutionEnv();
         }
         return $this;
     }

@@ -14,7 +14,7 @@ class Console
      */
     public static function log($message)
     {
-        $consoleOn = ExecutionContext::getRootOrCreateFromEnv()->isConsoleOn();
+        $consoleOn = ExecutionContext::getActualOrCreateFromEnv()->isConsoleOn();
         if ($consoleOn) {
             fputs(STDOUT, "Console Info: " . $message . PHP_EOL);
         }
@@ -26,7 +26,7 @@ class Console
      */
     public static function setOff()
     {
-        ExecutionContext::getRootOrCreateFromEnv()->setConsoleOff();
+        ExecutionContext::getActualOrCreateFromEnv()->setConsoleOff();
     }
 
     /**
@@ -35,7 +35,7 @@ class Console
      */
     public static function setOn()
     {
-        ExecutionContext::getRootOrCreateFromEnv()->setConsoleOn();
+        ExecutionContext::getActualOrCreateFromEnv()->setConsoleOn();
     }
 
     public static function isConsoleRun(): bool

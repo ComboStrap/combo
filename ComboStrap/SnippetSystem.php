@@ -51,7 +51,7 @@ class SnippetSystem
     public static function getFromContext(): SnippetSystem
     {
 
-        $executionContext = ExecutionContext::getRootOrCreateFromEnv();
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         try {
             return $executionContext->getRuntimeObject(self::CANONICAL);
         } catch (ExceptionNotFound $e) {
@@ -223,7 +223,7 @@ class SnippetSystem
     public function emptySnippets()
     {
         $empty = [];
-        ExecutionContext::getRootOrCreateFromEnv()->setRuntimeObject(Snippet::CANONICAL, $empty);
+        ExecutionContext::getActualOrCreateFromEnv()->setRuntimeObject(Snippet::CANONICAL, $empty);
     }
 
     /**
@@ -236,7 +236,7 @@ class SnippetSystem
     private
     function &attachSnippetFromSlot(string $snippetId, string $type): Snippet
     {
-        $slot = ExecutionContext::getActualOrCreateFromEnv()->getWikiId();
+        $slot = ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
         $snippet = Snippet::getOrCreateFromComponentId($snippetId, $type)
             ->addSlot($slot);
         return $snippet;

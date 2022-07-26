@@ -754,7 +754,7 @@ class MarkupPath implements ResourceCombo, Path
          */
         $wikiPath = WikiPath::createFromPathObject($this->getPathObject());
         $subExecutionContext = ExecutionContext::getActualOrCreateFromEnv()
-            ->createSubExecutionContext($wikiPath->getWikiId());
+            ->startSubExecutionEnv($wikiPath->getWikiId());
         try {
             /**
              * @var MetadataDokuWikiStore $metadataStore
@@ -762,7 +762,7 @@ class MarkupPath implements ResourceCombo, Path
             $metadataStore = $this->getReadStoreOrDefault();
             $metadataStore->renderAndPersist();
         } finally {
-            $subExecutionContext->close();
+            $subExecutionContext->closeSubExecutionEnv();
         }
 
         /**

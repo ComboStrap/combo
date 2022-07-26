@@ -7,7 +7,6 @@ use DOMDocument;
 use Exception;
 use LibXMLError;
 
-require_once(__DIR__ . '/XmlUtility.php');
 
 /**
  * Class HtmlUtility

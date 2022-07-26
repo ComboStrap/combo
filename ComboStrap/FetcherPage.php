@@ -21,7 +21,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     const CONF_ENABLE_AS_SHOW_ACTION_DEFAULT = 1;
 
     private string $requestedLayout;
-    private ExecutionContext $wikiRequest;
+    private ExecutionContext $executionEnv;
     private bool $build = false;
     private bool $closed = false;
 
@@ -78,7 +78,13 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         } catch (ExceptionNotFound $e) {
             // no requested layout
         }
-        $this->addLocalPathParametersToFetchUrl($url, DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);;
+        $this->addLocalPathParametersToFetchUrl($url, DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
+
+        // the drive is not needed
+        $url->removeQueryParameter(WikiPath::DRIVE_ATTRIBUTE);
+        if (ExecutionContext::getActualOrCreateFromEnv()->isPageFetcherEnabled()) {
+            $url->removeQueryParameter(IFetcher::FETCHER_KEY);
+        }
         return $url;
     }
 
@@ -206,11 +212,11 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
 
     /**
-     * @throws ExceptionNotFound
+     *
      */
     function getBuster(): string
     {
-        return FileSystems::getCacheBuster($this->getSourcePath());
+        return "";
     }
 
     public function getMime(): Mime
@@ -252,7 +258,8 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         /**
          * Request / Environment First
          */
-        $this->wikiRequest = ExecutionContext::createRootFromWikiId($this->getRequestedPath()->getWikiId());
+        $this->executionEnv = ExecutionContext::getActualOrCreateFromEnv()
+            ->startSubExecutionEnv($this->getRequestedPath()->getWikiId());
 
         $this->requestedMarkupPath = MarkupPath::createPageFromPathObject($this->getRequestedPath());
 
@@ -306,7 +313,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
      */
     public function close(): FetcherPage
     {
-        $this->wikiRequest->close($this->getRequestedPath()->getWikiId());
+        $this->executionEnv->closeSubExecutionEnv();
         return $this;
     }
 

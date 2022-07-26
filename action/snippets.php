@@ -79,13 +79,13 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * The function {@link action_plugin_combo_snippets::componentSnippetContent()} used it to determine if
          * the snippets should be added into the content
          */
-        $executionContext = ExecutionContext::getRootOrCreateFromEnv()
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv()
             ->setRuntimeBoolean(self::HEAD_EVENT_WAS_CALLED, true);
 
 
 
         try {
-            $executionContext->getWikiId();
+            $executionContext->getRequestedWikiId();
         } catch (ExceptionNotFound $e) {
             global $_SERVER;
             $scriptName = $_SERVER['SCRIPT_NAME'];
@@ -191,7 +191,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             return;
         }
 
-        $executionContext = ExecutionContext::getRootOrCreateFromEnv();
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
 
         try {
             $headEventWasCalled = $executionContext->getRuntimeBoolean(self::HEAD_EVENT_WAS_CALLED);

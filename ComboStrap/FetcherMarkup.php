@@ -469,7 +469,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * You need to close it with the {@link FetcherMarkup::close()}
          */
         $wikiId = $this->getRequestedPath()->getWikiId();
-        $this->executionContext = ExecutionContext::getActualOrCreateFromEnv()->createSubExecutionContext($wikiId);
+        $this->executionContext = ExecutionContext::getActualOrCreateFromEnv()
+            ->startSubExecutionEnv($wikiId);
 
 
         /**
@@ -640,7 +641,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * there is no execution
          */
         if(isset($this->executionContext)) {
-            $this->executionContext->close();
+            $this->executionContext->closeSubExecutionEnv();
         }
         $this->closed = true;
         return $this;

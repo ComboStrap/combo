@@ -32,7 +32,7 @@ class HttpRequest
     public static function purgeStaticDataRequestedScoped()
     {
         // The top context object
-        ExecutionContext::reset();
+        ExecutionContext::setExecutionGlobalVariableToNull();
 
         /**
          * TODO: They should be incorporated in the root execution context as object

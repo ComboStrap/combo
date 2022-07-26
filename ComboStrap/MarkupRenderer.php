@@ -209,7 +209,7 @@ class MarkupRenderer
             throw new ExceptionRuntimeInternal("You can't close a already closed object", self::CANONICAL);
         }
         if(isset($this->dynamicRenderingExecutionContext)){
-            $this->dynamicRenderingExecutionContext->close();
+            $this->dynamicRenderingExecutionContext->closeSubExecutionEnv();
         }
         $this->closed = true;
         return $this;
@@ -221,7 +221,6 @@ class MarkupRenderer
         /**
          * Dynamic rendering ?
          */
-        $runningAct = null;
         if (
             isset($this->markup)
             && $this->requestedMime->getExtension() !== self::INSTRUCTION_EXTENSION
@@ -229,11 +228,11 @@ class MarkupRenderer
             $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
             $executionContext = ExecutionContext::getActualOrCreateFromEnv();
             try {
-                $this->runningId = $executionContext->getWikiId();
+                $this->runningId = $executionContext->getRequestedWikiId();
             } catch (ExceptionNotFound $e) {
                 $this->runningId = "markup-renderer-default";
             }
-            $this->dynamicRenderingExecutionContext = $executionContext->createSubExecutionContext($this->runningId, $runningAct);
+            $this->dynamicRenderingExecutionContext = $executionContext->startSubExecutionEnv($this->runningId, $runningAct);
         }
 
 

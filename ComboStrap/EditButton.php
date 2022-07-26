@@ -412,7 +412,7 @@ EOF;
             return $wikiId;
         }
 
-        return ExecutionContext::getActualOrCreateFromEnv()->getWikiId();
+        return ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
 
 
     }

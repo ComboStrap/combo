@@ -2,13 +2,14 @@
 
 namespace ComboStrap;
 
-use TestUtility;
+
+use http\Exception\RuntimeException;
 
 /**
  * An execution object permits to get access to environment variable.
  *
  *
- * They may be nested with {@link ExecutionContext::createSubExecutionContext()} this is because Dokuwiki use the global variable
+ * They may be nested with {@link ExecutionContext::startSubExecutionEnv()} this is because Dokuwiki use the global variable
  * ID to get the actual parsed markup.
  *
  * When an execution context has finished, it should be {@link ExecutionContext::close() closed}
@@ -38,10 +39,6 @@ class ExecutionContext
      */
     const DO_ATTRIBUTE = "do";
 
-    /**
-     * @var ExecutionContext - the sub execution context
-     */
-    private ExecutionContext $childExecutionContext;
 
     const CANONICAL = "wikiRequest";
 
@@ -56,8 +53,13 @@ class ExecutionContext
      * A root execution context if any
      * Null because you can unset a static variable
      */
-    private static ?ExecutionContext $rootExecutionContext = null;
+    private static ?ExecutionContext $executionContext = null;
 
+    /**
+     * Dokuwiki set an other global ID when running the parser
+     * @var array keep track of the previous running envs to restore them
+     */
+    private array $previousRunningEnvs = [];
     /**
      * The id used if
      */
@@ -73,10 +75,10 @@ class ExecutionContext
     /**
      * @var string - to check if the requested id was set, if not the running id is set
      */
-    private string $wikiId;
+    private string $requestedWikiId;
     private string $act;
     private Url $url;
-    private ExecutionContext $parent;
+
 
     /**
      * @var string
@@ -112,7 +114,7 @@ class ExecutionContext
         try {
 
             $urlId = $url->getQueryPropertyValue(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
-            $this->wikiId = $urlId;
+            $this->requestedWikiId = $urlId;
             $ID = $urlId;
 
         } catch (ExceptionNotFound $e) {
@@ -124,24 +126,17 @@ class ExecutionContext
 
     }
 
-    public static function getRootOrCreateFromEnv(): ExecutionContext
-    {
-        try {
-            return self::getRootContext();
-        } catch (ExceptionNotFound $e) {
-            return self::createRootFromEnvironmentVariable();
-        }
-    }
+
 
     /**
      * @throws ExceptionNotFound
      */
-    private static function getRootContext(): ?ExecutionContext
+    public static function getContext(): ?ExecutionContext
     {
-        if (!isset(self::$rootExecutionContext)) {
+        if (!isset(self::$executionContext)) {
             throw new ExceptionNotFound("No root context");
         }
-        return self::$rootExecutionContext;
+        return self::$executionContext;
     }
 
     /**
@@ -149,13 +144,13 @@ class ExecutionContext
      * @param string $requestedAct
      * @return ExecutionContext
      */
-    public static function createRootFromWikiId(string $requestedId, string $requestedAct = "show"): ExecutionContext
+    public static function createFromWikiId(string $requestedId, string $requestedAct = "show"): ExecutionContext
     {
-        if (self::$rootExecutionContext !== null) {
+        if (self::$executionContext !== null) {
             LogUtility::internalError("The root context should be closed first");
         }
-        self::$rootExecutionContext = self::createFromWikiId($requestedId, $requestedAct);
-        return self::$rootExecutionContext;
+        self::$executionContext = self::createFromWikiId($requestedId, $requestedAct);
+        return self::$executionContext;
 
     }
 
@@ -164,7 +159,7 @@ class ExecutionContext
         return new ExecutionContext($url);
     }
 
-    public static function createRootFromEnvironmentVariable(): ExecutionContext
+    public static function createFromEnvironmentVariable(): ExecutionContext
     {
 
         $url = Url::createFromGetOrPostGlobalVariable();
@@ -174,12 +169,12 @@ class ExecutionContext
 
     private static function createRootFromUrl(Url $url): ExecutionContext
     {
-        if (self::$rootExecutionContext !== null) {
+        if (self::$executionContext !== null) {
             LogUtility::internalError("The root context should be closed first");
         }
         $rootExecutionContext = self::createFromUrl($url)
             ->captureRootEnv();
-        self::$rootExecutionContext = $rootExecutionContext;
+        self::$executionContext = $rootExecutionContext;
         return $rootExecutionContext;
 
     }
@@ -190,68 +185,75 @@ class ExecutionContext
     public static function getActualOrCreateFromEnv(): ExecutionContext
     {
         try {
-            return self::getActualContext();
+            return self::getContext();
         } catch (ExceptionNotFound $e) {
-            return self::createRootFromEnvironmentVariable();
+            return self::createFromEnvironmentVariable();
         }
     }
 
-    private static function createFromWikiId(string $runningId, string $runningAct = "show"): ExecutionContext
+
+    public static function setExecutionGlobalVariableToNull()
     {
-        $url = Url::createEmpty()
-            ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $runningId)
-            ->setQueryParameter(self::DO_ATTRIBUTE, $runningAct);
-        return self::createFromUrl($url);
+        self::$executionContext = null;
     }
 
-    public static function reset()
-    {
-        self::$rootExecutionContext = null;
-    }
 
 
     /**
+     * Dokuwiki uses global variable to advertise an other parse environment
+     * That's fucked up but needs to live with it.
      *
-     * @throws ExceptionNotFound - if there is no request
-     */
-    public static function getActualContext(): ExecutionContext
-    {
-
-
-        $actualContext = self::getRootContext();
-        while (isset($actualContext->childExecutionContext)) {
-            $actualContext = $actualContext->childExecutionContext;
-        }
-        return $actualContext;
-    }
-
-
-    /**
-     * When a request can be a sub-request, you can use this function.
-     * If a request is running a sub-request is created otherwise a request is created
+     * Because we support also other template than the output {@link FetcherPage}, we need to give back this
+     * global variable also. We can't therefore create a stack of environment because if this is Dokuwiki that
+     * starts the parse, there is no sub environment created
+     *
+     * This utility function makes it clear and permits to set back the env with {@link ExecutionContext::closeSubExecutionEnv()}
+     *
      * @param string $runningId
-     * @param string|null $runningAct
+     * @param string|null $runningAct - when we run dynamic rendering, the act is set to advertise it (ie {@link MarkupDynamicRender::DYNAMIC_RENDERING}
      * @return ExecutionContext
      */
-    public function createSubExecutionContext(string $runningId, ?string $runningAct = "show"): ExecutionContext
+    public function startSubExecutionEnv(string $runningId, string $runningAct = 'show'): ExecutionContext
     {
 
-        if ($runningAct === null) {
-            $runningAct = "show";
+
+        global $ID;
+        global $ACT;
+
+        $this->previousRunningEnvs[] = [$ID, $ACT];
+        $ID = $runningId;
+        $ACT = $this->previousRunningEnvs;
+
+        return $this;
+
+    }
+
+    public function closeSubExecutionEnv(): ExecutionContext
+    {
+        [$previousId, $previousAct] = array_pop($this->previousRunningEnvs);
+        global $ID;
+        global $ACT;
+        $ID = $previousId;
+        $ACT = $previousAct;
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getExecutingWikiId(): string
+    {
+        global $ID;
+        if ($ID === null) {
+            throw new ExceptionNotFound("No executing id was found");
         }
-
-        $subExecutionContext = self::createFromWikiId($runningId, $runningAct);
-        $subExecutionContext->setParent($this);
-        $this->childExecutionContext = $subExecutionContext;
-
-        return $subExecutionContext;
-
+        return $ID;
     }
 
 
     public function __toString()
     {
-        return $this->wikiId;
+        return $this->requestedWikiId;
     }
 
 
@@ -267,7 +269,7 @@ class ExecutionContext
      */
     public function setNewRequestedId(string $requestedId): ExecutionContext
     {
-        $this->wikiId = $requestedId;
+        $this->requestedWikiId = $requestedId;
         global $INPUT;
         $INPUT->set("id", $requestedId);
         return $this;
@@ -338,12 +340,12 @@ class ExecutionContext
      * @return string - the wiki id of this context
      * @throws ExceptionNotFound
      */
-    public function getWikiId(): string
+    public function getRequestedWikiId(): string
     {
-        if (!isset($this->wikiId)) {
+        if (!isset($this->requestedWikiId)) {
             throw new ExceptionNotFound("No id");
         }
-        return $this->wikiId;
+        return $this->requestedWikiId;
     }
 
 
@@ -362,38 +364,17 @@ class ExecutionContext
     public function close()
     {
 
-        if (isset($this->parent)) {
-
-            /**
-             * Closing a sub-context
-             */
-            unset($this->parent->childExecutionContext);
-
-
-        } else {
-
-            /**
-             * Closing the root
-             */
-            if (isset($this->childExecutionContext)) {
-                throw new ExceptionRuntimeInternal("The child context ($this->childExecutionContext) was not closed", self::CANONICAL);
-            }
-
-            $this->restoreRootEnv();
-
-            /**
-             * Restore requested id if any
-             * (Not sure if it's needed)
-             */
-            global $INPUT;
-            $INPUT->set(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE, $this->capturedRequestId);
-
-            /**
-             * Closing the root context
-             */
-            self::reset();
-
+        if (count($this->previousRunningEnvs) > 0) {
+            throw new ExceptionRuntimeInternal("All sub execution environment were not closed");
         }
+        $this->restoreRootEnv();
+
+        /**
+         * Restore requested id if any
+         * (Not sure if it's needed)
+         */
+        global $INPUT;
+        $INPUT->set(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE, $this->capturedRequestId);
 
         /**
          * Environment restoration
@@ -404,6 +385,11 @@ class ExecutionContext
         $ACT = $this->getCapturedAct();
         global $ID;
         $ID = $this->getCapturedRunningId();
+
+        /**
+         * Deleting
+         */
+        self::setExecutionGlobalVariableToNull();
 
 
     }
@@ -422,7 +408,7 @@ class ExecutionContext
     public function getCacheManager(): CacheManager
     {
 
-        $root = self::$rootExecutionContext;
+        $root = self::$executionContext;
         if (!isset($root->cacheManager)) {
             $root->cacheManager = new CacheManager($this);
         }
@@ -432,7 +418,7 @@ class ExecutionContext
 
     public function getRequestedPath(): WikiPath
     {
-        return WikiPath::createPagePathFromId($this->getWikiId());
+        return WikiPath::createPagePathFromId($this->getRequestedWikiId());
     }
 
     /**
@@ -462,19 +448,6 @@ class ExecutionContext
         return $this->capturedRequestId;
     }
 
-    private function setParent(ExecutionContext $parent)
-    {
-        $this->parent = $parent;
-    }
-
-    public function isRoot(): bool
-    {
-        if (!isset($this->parent)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     /**
      * @param string $key
@@ -510,7 +483,7 @@ class ExecutionContext
     public function getRuntimeBoolean(string $name): bool
     {
         $var = $this->runtimeVariables[$name];
-        if(!isset($var)){
+        if (!isset($var)) {
             throw new ExceptionNotFound("No $name runtime env was found");
         }
         return DataType::toBoolean($var);
@@ -564,6 +537,12 @@ class ExecutionContext
     public function isConsoleOn(): bool
     {
         return $this->isConsoleOn;
+    }
+
+    public function isPageFetcherEnabled(): bool
+    {
+        // the non strict equality is needed, we get a string for an unknown reason
+        return $this->getConfValue(FetcherPage::CONF_ENABLE_AS_SHOW_ACTION, FetcherPage::CONF_ENABLE_AS_SHOW_ACTION_DEFAULT) == 1;
     }
 
 

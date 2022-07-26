@@ -21,7 +21,12 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 {
 
     const CLASS_SNIPPET_IN_CONTENT = "snippet-content-combo";
-    const SNIPPETS_WERE_ADDED = "snippet_added";
+
+    /**
+     * To known if we needs to put all snippet in the content
+     * or not
+     */
+    const HEAD_EVENT_WAS_CALLED = "head_event_was_called";
 
 
     function __construct()
@@ -74,16 +79,9 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * The function {@link action_plugin_combo_snippets::componentSnippetContent()} used it to determine if
          * the snippets should be added into the content
          */
-        $executionContext = ExecutionContext::getRootOrCreateFromEnv();
+        $executionContext = ExecutionContext::getRootOrCreateFromEnv()
+            ->setRuntimeBoolean(self::HEAD_EVENT_WAS_CALLED, true);
 
-        try {
-            $snippetAlreadyAdded = $executionContext->getRuntimeBoolean(self::SNIPPETS_WERE_ADDED);
-            if ($snippetAlreadyAdded === true) {
-                return;
-            }
-        } catch (ExceptionNotFound $e) {
-            $executionContext->setRuntimeBoolean(self::SNIPPETS_WERE_ADDED, true);
-        }
 
 
         try {
@@ -136,7 +134,8 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         }
 
         $snippetSystem = SnippetSystem::getFromContext();
-        $allSnippets = $snippetSystem->snippetsToDokuwikiArray($snippetSystem->getAllSnippets());
+        $snippets = $snippetSystem->getAllSnippets();
+        $allSnippets = $snippetSystem->snippetsToDokuwikiArray($snippets);
         foreach ($allSnippets as $tagType => $tags) {
 
             foreach ($tags as $tag) {
@@ -144,6 +143,12 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             }
 
         }
+        /**
+         * In a dokuwiki standard template, head is called
+         * first, then the content, to not add snippet also in the content
+         * we empty them
+         */
+        $snippetSystem->emptySnippets();
 
 
     }
@@ -189,9 +194,9 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         $executionContext = ExecutionContext::getRootOrCreateFromEnv();
 
         try {
-            $snippetsWereAlreadyAdded = $executionContext->getRuntimeBoolean(self::SNIPPETS_WERE_ADDED);
+            $headEventWasCalled = $executionContext->getRuntimeBoolean(self::HEAD_EVENT_WAS_CALLED);
         } catch (ExceptionNotFound $e) {
-            $snippetsWereAlreadyAdded = false;
+            $headEventWasCalled = false;
         }
 
         /**
@@ -201,11 +206,11 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * And if the header output was already called
          * (case that the template is not strap)
          */
-        $putSnippetInContent =
-            $snippetsWereAlreadyAdded === true
+        $putAllSnippetsInContent =
+            $headEventWasCalled === true
             ||
             ($ACT !== "show" && $ACT !== null);
-        if (!$putSnippetInContent) {
+        if (!$putAllSnippetsInContent) {
             return;
         }
 
@@ -225,14 +230,15 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * DOKUWIKI_STARTED hook
          */
 
-        if (sizeof($snippetManager->getSnippets()) > 0) {
-            $executionContext->setRuntimeBoolean(self::SNIPPETS_WERE_ADDED, true);
+        $snippets = $snippetManager->getSnippets();
+        if (sizeof($snippets) > 0) {
             $class = self::CLASS_SNIPPET_IN_CONTENT;
             $xhtmlContent .= <<<EOF
 <div class="$class">
     {$snippetManager->toHtmlForSlotSnippets()}
 </div>
 EOF;
+            $snippetManager->emptySnippets();
 
         }
 

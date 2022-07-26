@@ -51,7 +51,7 @@ class SnippetSystem
     public static function getFromContext(): SnippetSystem
     {
 
-        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        $executionContext = ExecutionContext::getRootOrCreateFromEnv();
         try {
             return $executionContext->getRuntimeObject(self::CANONICAL);
         } catch (ExceptionNotFound $e) {
@@ -219,11 +219,11 @@ class SnippetSystem
             ->setComponentId($componentId);
     }
 
-    public
-    function &attachInternalJavascriptForRequest($snippetId): Snippet
+
+    public function emptySnippets()
     {
-        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS);
-        return $snippet;
+        $empty = [];
+        ExecutionContext::getRootOrCreateFromEnv()->setRuntimeObject(Snippet::CANONICAL, $empty);
     }
 
     /**

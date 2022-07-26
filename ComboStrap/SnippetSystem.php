@@ -308,18 +308,13 @@ class SnippetSystem
     /**
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
-     * @throws ExceptionNotFound
      */
     public
     function attachRemoteJavascriptLibrary(string $componentId, string $url, string $integrity = null): Snippet
     {
         $url = Url::createFromString($url);
-        $name = $url->getLastNameWithoutExtension();
-        $path = Snippet::getInternalPathFromNameAndExtension($name, Snippet::EXTENSION_JS, Snippet::LIBRARY_BASE);
-        return Snippet::getOrCreateFromContext($path)
-            ->setScopeAsRunningSlot()
+        return Snippet::getOrCreateFromRemoteUrl($url)
             ->setIntegrity($integrity)
-            ->setRemoteUrl($url)
             ->setComponentId($componentId);
     }
 

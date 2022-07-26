@@ -98,9 +98,6 @@ class Snippet implements JsonSerializable
     public const CONF_USE_CDN_DEFAULT = 1;
 
 
-    protected static array $globalSnippets;
-
-
     /**
      * @var bool
      */
@@ -188,34 +185,13 @@ class Snippet implements JsonSerializable
 
     /**
      * @return Snippet[]
+     * @throws ExceptionNotFound
      */
-    public static function getSnippets(): array
+    public static function &getSnippets(): array
     {
-        if (self::$globalSnippets === null) {
-            return [];
-        }
-        $keys = array_keys(self::$globalSnippets);
-        $snippets = self::$globalSnippets[$keys[0]];
-        if ($snippets === null) {
-            return [];
-        }
-        return $snippets;
+        return ExecutionContext::getRootOrCreateFromEnv()->getObject(self::CANONICAL);
     }
 
-    /**
-     * When the snippets have been added to the page
-     * the snippets are cleared
-     *
-     * It can happens that some snippet are in the head
-     * and other are in the content
-     * when the template is not strap
-     *
-     * @return void
-     */
-    public static function reset()
-    {
-        self::$globalSnippets = [];
-    }
 
     /**
      * @param WikiPath $path
@@ -255,7 +231,7 @@ class Snippet implements JsonSerializable
     {
 
         try {
-            $snippets = &ExecutionContext::getRootOrCreateFromEnv()->getObject(self::CANONICAL);
+            $snippets = &self::getSnippets();
         } catch (ExceptionNotFound $e) {
             $snippets = [];
             ExecutionContext::getRootOrCreateFromEnv()->setObject(self::CANONICAL, $snippets);
@@ -866,12 +842,11 @@ class Snippet implements JsonSerializable
                      * Dokuwiki encodes the URL in HTML format
                      */
                     $tagAttributes
-                        ->addOutputAttributeValue("src", $fetchUrl->toString());
+                        ->addOutputAttributeValue("src", $fetchUrl->toString())
+                        ->addOutputAttributeValue("crossorigin", "anonymous");
                     try {
                         $integrity = $this->getIntegrity();
-                        $tagAttributes
-                            ->addOutputAttributeValue("integrity", $integrity)
-                            ->addOutputAttributeValue("crossorigin", "anonymous");
+                        $tagAttributes->addOutputAttributeValue("integrity", $integrity);
                     } catch (ExceptionNotFound $e) {
                         // ok
                     }
@@ -900,9 +875,6 @@ class Snippet implements JsonSerializable
 
                     if ($this->useRemoteUrl()) {
                         $fetchUrl = $this->getRemoteUrl();
-                        return $tagAttributes
-                            ->addOutputAttributeValue("rel", "stylesheet")
-                            ->addOutputAttributeValue("href", $fetchUrl->toString());
                     } else {
                         $fetchUrl = FetcherRawLocalPath::createFromPath($this->getPath())->getFetchUrl();
                     }
@@ -912,13 +884,12 @@ class Snippet implements JsonSerializable
                      */
                     $tagAttributes
                         ->addOutputAttributeValue("rel", "stylesheet")
-                        ->addOutputAttributeValue("href", $fetchUrl->toString());
+                        ->addOutputAttributeValue("href", $fetchUrl->toString())
+                        ->addOutputAttributeValue("crossorigin", "anonymous");
 
                     try {
                         $integrity = $this->getIntegrity();
-                        $tagAttributes
-                            ->addOutputAttributeValue("integrity", $integrity)
-                            ->addOutputAttributeValue("crossorigin", "anonymous");
+                        $tagAttributes->addOutputAttributeValue("integrity", $integrity);
                     } catch (ExceptionNotFound $e) {
                         // ok
                     }

@@ -184,7 +184,7 @@ class XmlElement
     public function insertAdjacentTextNode(string $string, string $position = 'afterbegin'): XmlElement
     {
         $textNode = $this->domElement->ownerDocument->createTextNode($string);
-        $this->insertAdjacentDomElement($position,$textNode);
+        $this->insertAdjacentDomElement($position, $textNode);
         return $this;
     }
 
@@ -346,5 +346,15 @@ class XmlElement
             default:
                 throw new ExceptionBadArgument("The position ($position) is unknown");
         }
+    }
+
+    public function getInnerText(): string
+    {
+        return implode('', $this->getChildrenNodeTextValues());
+    }
+
+    public function getInnerTextWithoutCdata()
+    {
+        return XmlSystems::extractTextWithoutCdata($this->getInnerText());
     }
 }

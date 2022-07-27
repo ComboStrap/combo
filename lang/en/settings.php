@@ -287,6 +287,6 @@ $lang[FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR] = PluginUtility::getDocumentatio
  */
 $lang[Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET] = PluginUtility::getDocumentationHyperLink(Bootstrap::CANONICAL, 'The Bootstrap version and a corresponding stylesheet');
 
-$lang[action_plugin_combo_bootstrap::CONF_JQUERY_DOKU] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_bootstrap::JQUERY_CANONICAL,'Use the DokuWiki Jquery (Only valid for Bootstrap 4)');
+$lang[action_plugin_combo_snippetsbootstrap::CONF_JQUERY_DOKU] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::JQUERY_CANONICAL,'Use the DokuWiki Jquery (Only valid for Bootstrap 4)');
 
-$lang[action_plugin_combo_bootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_bootstrap::FRONT_END_OPTIMIZATION_CANONICAL,'Delete backend javascript library for public users');
+$lang[action_plugin_combo_snippetsbootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::FRONT_END_OPTIMIZATION_CANONICAL,'Delete backend javascript library for public users');

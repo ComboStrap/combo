@@ -12,7 +12,7 @@
 
 namespace ComboStrap;
 
-use action_plugin_combo_bootstrap;
+use action_plugin_combo_snippetsbootstrap;
 use Exception;
 
 class Bootstrap

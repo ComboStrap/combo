@@ -437,7 +437,7 @@ $conf['useCDN'] = 1;
 $conf["bootstrapVersionStylesheet"] = "5.0.1 - bootstrap";
 
 /**
- * {@link action_plugin_combo_bootstrap::CONF_PRELOAD_CSS}
+ * {@link action_plugin_combo_snippetsbootstrap::CONF_PRELOAD_CSS}
  */
 $conf['preloadCss'] = 0;
 
@@ -451,8 +451,8 @@ $conf['privateRailbar'] = 0;
 $conf['breakpointRailbar'] = "large";
 
 /**
- * @see {@link action_plugin_combo_bootstrap::CONF_JQUERY_DOKU}
- * @See {@link action_plugin_combo_bootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT}
+ * @see {@link action_plugin_combo_snippetsbootstrap::CONF_JQUERY_DOKU}
+ * @See {@link action_plugin_combo_snippetsbootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT}
  */
 $conf['jQueryDoku'] = 0;
 $conf["disableBackendJavascript"] = 0;

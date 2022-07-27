@@ -4,29 +4,21 @@
  *
  */
 
-use ComboStrap\ArrayCaseInsensitive;
 use ComboStrap\Bootstrap;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\PageLayout;
 use ComboStrap\PluginUtility;
-use ComboStrap\Site;
-use ComboStrap\StyleUtility;
-use ComboStrap\ExecutionContext;
 
 if (!defined('DOKU_INC')) die();
 
 /**
- * Adding bootstrap if not present
  *
- * This is a little bit silly but make the experience better
- *
- * With the default dokuwiki, they set a color on a:link and a:visited
- * which conflicts immediately
  *
  */
-class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
+class action_plugin_combo_snippetsbootstrap extends DokuWiki_Action_Plugin
 {
 
 
@@ -302,12 +294,12 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
         /**
          * Save the stylesheet to load it at the end
          */
-        $wikiRequest = ExecutionContext::getActualOrCreateFromEnv();
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         try {
-            $preloadedCss = &$wikiRequest->getRuntimeObject(PageLayout::PRELOAD_TAG);
+            $preloadedCss = &$executionContext->getRuntimeObject(PageLayout::PRELOAD_TAG);
         } catch (ExceptionNotFound $e) {
             $preloadedCss = [];
-            $wikiRequest->setRuntimeObject(PageLayout::PRELOAD_TAG,$preloadedCss);
+            $executionContext->setRuntimeObject(PageLayout::PRELOAD_TAG,$preloadedCss);
         }
         $preloadedCss[] = $linkData;
 

@@ -333,7 +333,6 @@ class action_plugin_combo_bootstrap extends DokuWiki_Action_Plugin
 
         $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'handle_bootstrap');
 
-
     }
 
 

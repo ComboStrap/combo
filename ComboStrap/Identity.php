@@ -96,12 +96,15 @@ class Identity
      */
     public static function isWriter($wikiId = null): bool
     {
+
         if ($wikiId === null) {
+            $executionContext = ExecutionContext::getActualOrCreateFromEnv();
             try {
-                $wikiId = WikiPath::getCurrentPagePath()
-                    ->getWikiId();
+                $wikiId = $executionContext->getExecutingWikiId();
             } catch (ExceptionNotFound $e) {
-                LogUtility::msg("Internal Error: The global ID is not defined, we couldn't detect the page requested. No writer permission given");
+                if (PluginUtility::isDevOrTest()){
+                    LogUtility::internalError("We should have an id, otherwise why are we asking for it",self::CANONICAL,$e);
+                }
                 return false;
             }
         }
@@ -288,8 +291,6 @@ EOF;
         }
 
     }
-
-
 
 
 }

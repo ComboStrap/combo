@@ -241,7 +241,7 @@ class ExecutionContext
     public function getExecutingWikiId(): string
     {
         global $ID;
-        if ($ID === null) {
+        if (empty($ID)) {
             throw new ExceptionNotFound("No executing id was found");
         }
         return $ID;
@@ -365,6 +365,8 @@ class ExecutionContext
             throw new ExceptionRuntimeInternal("All sub execution environment were not closed");
         }
         $this->restoreRootEnv();
+
+        unset($this->runtimeVariables);
 
         /**
          * Log utility is not yet a conf

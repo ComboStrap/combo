@@ -41,7 +41,7 @@ class action_plugin_combo_toc extends DokuWiki_Action_Plugin
     public function handle_toc(Doku_Event &$event, $param)
     {
 
-        $wikiReq = ExecutionContext::getActualContext();
+        $wikiReq = ExecutionContext::getActualOrCreateFromEnv();
         if ($wikiReq->getAct() !== "show") {
             // admin may also have toc
             return;

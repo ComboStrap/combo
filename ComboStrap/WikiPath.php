@@ -418,14 +418,18 @@ class WikiPath extends PathAbs
     }
 
     /**
-     * The running page fragment given by the global id
+     * The executing markup given by the global id
+     * @throws ExceptionNotFound
      */
-    public static function createRunningMarkupWikiPath(): WikiPath
+    public static function createExecutingMarkupWikiPath(): WikiPath
     {
-        $id = ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
+        $id = ExecutionContext::getActualOrCreateFromEnv()->getExecutingWikiId();
         return WikiPath::createPagePathFromId($id);
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public static function createRequestedPagePathFromRequest(): WikiPath
     {
         $pageId = ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();;
@@ -554,7 +558,7 @@ class WikiPath extends PathAbs
      */
     public static function getCurrentPagePath(): WikiPath
     {
-        $requestedPath = WikiPath::createRunningMarkupWikiPath();;
+        $requestedPath = WikiPath::createExecutingMarkupWikiPath();;
         try {
             $parent = $requestedPath->getParent();
         } catch (ExceptionNotFound $e) {

@@ -84,7 +84,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                     ->toDynamicInstructionCalls();
                 return;
             case "show":
-                $runningMarkup = WikiPath::createRunningMarkupWikiPath();
+                $runningMarkup = WikiPath::createExecutingMarkupWikiPath();
                 $requestedPath = WikiPath::createRequestedPagePathFromRequest();
                 if ($requestedPath->toPathString() !== $runningMarkup->toPathString()) {
                     return;

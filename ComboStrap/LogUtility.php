@@ -367,7 +367,7 @@ class LogUtility
     {
         $internalErrorMessage = "Sorry. An internal error has occurred";
         if (PluginUtility::isDevOrTest()) {
-            throw new ExceptionRuntimeInternal($internalErrorMessage, $canonical, 1, $previous);
+            throw new ExceptionRuntimeInternal("$internalErrorMessage - $message", $canonical, 1, $previous);
         } else {
             $errorPreviousMessage = "";
             if ($previous !== null) {

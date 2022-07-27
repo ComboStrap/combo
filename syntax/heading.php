@@ -7,6 +7,7 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Outline;
@@ -341,14 +342,17 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
             // numbering
             try {
-                $snippet = $snippetManager->attachCssInternalStyleSheet(Outline::HEADING_NUMBERING);
-                if (!$snippet->hasInlineContent()) {
-                    $css = Outline::getCssNumberingRulesFor(Outline::HEADING_NUMBERING);
-                    $snippet->setInlineContent($css);
+                $enable = ExecutionContext::getActualOrCreateFromEnv()->getConfValue(Outline::CONF_OUTLINE_NUMBERING_ENABLE,Outline::CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT);
+                if ($enable) {
+                    $snippet = $snippetManager->attachCssInternalStyleSheet(Outline::OUTLINE_HEADING_NUMBERING);
+                    if (!$snippet->hasInlineContent()) {
+                        $css = Outline::getCssNumberingRulesFor(Outline::OUTLINE_HEADING_NUMBERING);
+                        $snippet->setInlineContent($css);
+                    }
                 }
             } catch (ExceptionBadSyntax $e) {
                 LogUtility::internalError("An error has occurred while trying to add the outline heading numbering stylesheet.", self::CANONICAL, $e);
-            } catch (ExceptionNotEnabled $e){
+            } catch (ExceptionNotEnabled $e) {
                 // ok
             }
 

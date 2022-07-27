@@ -187,10 +187,11 @@ class MarkupPath implements ResourceCombo, Path
 
     /**
      * The current running rendering markup
+     * @throws ExceptionNotFound
      */
     public static function createPageFromGlobalWikiId(): MarkupPath
     {
-        $wikiPath = WikiPath::createRunningMarkupWikiPath();
+        $wikiPath = WikiPath::createExecutingMarkupWikiPath();
         return self::createPageFromPathObject($wikiPath);
     }
 

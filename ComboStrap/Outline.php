@@ -17,7 +17,7 @@ class Outline
     const CANONICAL = "outline";
     private const OUTLINE_HEADING_PREFIX = "outline-heading";
     const CONTEXT = self::CANONICAL;
-    public const HEADING_NUMBERING = "heading-numbering";
+    public const OUTLINE_HEADING_NUMBERING = "outline-heading-numbering";
     public const TOC_NUMBERING = "toc-numbering";
     /**
      * As seen on
@@ -71,6 +71,7 @@ class Outline
      * To add hash tag to heading
      */
     public const OUTLINE_ANCHOR = "outline-anchor";
+    const CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT = 0;
     private OutlineSection $rootSection;
 
     private OutlineSection $actualSection; // the actual section that is created
@@ -378,7 +379,7 @@ class Outline
 
     /**
      * Get the heading numbering snippet
-     * @param string $type heading or toc - for {@link Outline::TOC_NUMBERING} or {@link Outline::HEADING_NUMBERING}
+     * @param string $type heading or toc - for {@link Outline::TOC_NUMBERING} or {@link Outline::OUTLINE_HEADING_NUMBERING}
      * @return string - the css internal stylesheet
      * @throws ExceptionNotEnabled
      * @throws ExceptionBadSyntax
@@ -388,7 +389,7 @@ class Outline
     public static function getCssNumberingRulesFor(string $type): string
     {
 
-        $enable = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_ENABLE, 0);
+        $enable = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_ENABLE, Outline::CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT);
         if (!$enable) {
             throw new ExceptionNotEnabled();
         }
@@ -404,7 +405,7 @@ class Outline
 
         switch ($type) {
 
-            case self::HEADING_NUMBERING:
+            case self::OUTLINE_HEADING_NUMBERING:
                 global $ACT;
                 if ($ACT === "preview") {
                     $mainContainerSelector = ".pad";

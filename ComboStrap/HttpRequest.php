@@ -108,15 +108,7 @@ class HttpRequest
         $testRequest = new \TestRequest();
         $response = $testRequest->get($query);
 
-        $statusCode = $response->getStatusCode();
-        if ($statusCode === null) {
-            $statusCode = HttpResponse::STATUS_ALL_GOOD;
-        }
-        $contentType  = $response->getHeader("Content-Type");
-        $mime = Mime::create($contentType);
-        $httpResponse = HttpResponse::createForStatus($statusCode)
-            ->setBody($response->getContent(), $mime)
-            ->setHeaders($response->getHeaders());
+        $httpResponse = HttpResponse::createFromDokuWikiResponse($response);
 
         try {
             /**

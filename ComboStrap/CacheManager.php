@@ -99,8 +99,13 @@ class CacheManager
     public function addDependencyForCurrentSlot(string $dependencyName): CacheManager
     {
 
-        $currentFragment = WikiPath::createRunningMarkupWikiPath();
-        $cacheDependencies = $this->getCacheDependenciesForPath($currentFragment);
+        try {
+            $currentMarkup = WikiPath::createExecutingMarkupWikiPath();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("We couldn't add the dependency ($dependencyName). The executing markup was unknown.");
+            return $this;
+        }
+        $cacheDependencies = $this->getCacheDependenciesForPath($currentMarkup);
         $cacheDependencies->addDependency($dependencyName);
         return $this;
 

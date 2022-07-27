@@ -51,7 +51,13 @@ class IdManager
 
         if ($slotPath === null) {
 
-            $slotPath = MarkupPath::createPageFromGlobalWikiId()->getPathObject();
+            try {
+                $slotPath = MarkupPath::createPageFromGlobalWikiId()->getPathObject();
+            } catch (ExceptionNotFound $e) {
+                if (PluginUtility::isDevOrTest()) {
+                    LogUtility::internalError("We should always an id, no ?", self::CANONICAL,  $e);
+                }
+            }
 
         }
 

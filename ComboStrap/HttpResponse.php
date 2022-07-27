@@ -96,6 +96,19 @@ class HttpResponse
         return new HttpResponse();
     }
 
+    public static function createFromDokuWikiResponse(\TestResponse $response): HttpResponse
+    {
+        $statusCode = $response->getStatusCode();
+        if ($statusCode === null) {
+            $statusCode = HttpResponse::STATUS_ALL_GOOD;
+        }
+        $contentType  = $response->getHeader("Content-Type");
+        $mime = Mime::create($contentType);
+        return HttpResponse::createForStatus($statusCode)
+            ->setBody($response->getContent(), $mime)
+            ->setHeaders($response->getHeaders());
+    }
+
 
     public function setEvent(\Doku_Event $event): HttpResponse
     {

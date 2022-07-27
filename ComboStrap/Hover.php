@@ -94,7 +94,7 @@ class Hover
                 $attributes->addOutputAttributeValue("data-hover-class", trim($comboDataHoverClasses));
 
                 // The javascript that manage the hover effect by adding the class in the data-hover class
-                $snippetManager->attachLocalJavascript(self::ON_HOVER_SNIPPET_ID);
+                $snippetManager->attachJavascriptFromComponentId(self::ON_HOVER_SNIPPET_ID);
 
             }
 

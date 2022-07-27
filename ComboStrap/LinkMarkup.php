@@ -13,25 +13,20 @@
 namespace ComboStrap;
 
 
-use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
 use dokuwiki\Utf8\Conversion;
 use http\Exception\RuntimeException;
 use syntax_plugin_combo_link;
-use syntax_plugin_combo_tooltip;
-use syntax_plugin_combo_variable;
 
-require_once(__DIR__ . '/PluginUtility.php');
 
 /**
  *
  * @package ComboStrap
  *
- * Parse the ref found in a markup link or media
- * and return an XHTML compliant array
+ * Parse the ref found in a markup link
+ * and return an {@link LinkMarkup::toAttributes()} array for an anchor (a)
  * with href, style, ... attributes
- *
  *
  */
 class LinkMarkup
@@ -44,6 +39,7 @@ class LinkMarkup
      * but this configuration permits to turn it back
      */
     const CONF_USE_DOKUWIKI_CLASS_NAME = "useDokuwikiLinkClassName";
+
     /**
      * This configuration will set for all internal link
      * the {@link LinkMarkup::PREVIEW_ATTRIBUTE} preview attribute
@@ -74,6 +70,11 @@ class LinkMarkup
      */
     const SEARCH_HIGHLIGHT_QUERY_PROPERTY = "s";
     const DATA_WIKI_ID = "data-wiki-id";
+
+    /**
+     * For styling on the anchor tag (ie a)
+     */
+    public const ANCHOR_HTML_SNIPPET_ID = "anchor-branding";
 
 
     private MarkupRef $markupRef;
@@ -147,6 +148,35 @@ class LinkMarkup
          */
         if ($url->hasProperty(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY)) {
             PluginUtility::getSnippetManager()->attachCssInternalStyleSheet("search-hit");
+        }
+
+        /**
+         * Default Link Color
+         * Saturation and lightness comes from the
+         * Note:
+         *   * blue color of Bootstrap #0d6efd s: 98, l: 52
+         *   * blue color of twitter #1d9bf0 s: 88, l: 53
+         *   * reddit gray with s: 16, l : 31
+         *   * the text is s: 11, l: 15
+         * We choose the gray/tone rendering to be close to black
+         * the color of the text
+         */
+        $primaryColor = Site::getPrimaryColor();
+        if (Site::isBrandingColorInheritanceEnabled() && $primaryColor !== null) {
+
+            $primaryColorText = Site::getPrimaryColorForText();
+            $primaryColorHoverText = Site::getPrimaryColorTextHover();
+            if ($primaryColorText !== null) {
+                $aCss = <<<EOF
+main a {
+    color: {$primaryColorText->toRgbHex()};
+}
+main a:hover {
+    color: {$primaryColorHoverText->toRgbHex()};
+}
+EOF;
+                SnippetSystem::getFromContext()->attachCssInternalStylesheet(self::ANCHOR_HTML_SNIPPET_ID, $aCss);
+            }
         }
 
 
@@ -420,7 +450,8 @@ EOF;
      * @throws ExceptionNotFound|ExceptionBadArgument
      *
      */
-    public function getDefaultLabel(bool $navigation = false): string
+    public
+    function getDefaultLabel(bool $navigation = false): string
     {
 
         switch ($this->getMarkupRef()->getSchemeType()) {
@@ -571,7 +602,8 @@ EOF;
     /**
      * @throws ExceptionNotFound
      */
-    private function getPage(): MarkupPath
+    private
+    function getPage(): MarkupPath
     {
         return MarkupPath::createPageFromPathObject($this->getMarkupRef()->getPath());
     }
@@ -583,7 +615,8 @@ EOF;
      * We don't want the styling attribute
      * in the URL
      */
-    private function collectStylingAttributeInUrl()
+    private
+    function collectStylingAttributeInUrl()
     {
 
 
@@ -629,7 +662,8 @@ EOF;
      * @return TagAttributes - the unknown attributes in a url are collected as styling attributes if this not a do query
      * by {@link LinkMarkup::collectStylingAttributeInUrl()}
      */
-    public function getStylingAttributes(): TagAttributes
+    public
+    function getStylingAttributes(): TagAttributes
     {
         return $this->stylingAttributes;
     }

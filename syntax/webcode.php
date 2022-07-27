@@ -562,7 +562,7 @@ EOF;
                          * It works only on element with a natural size (ie image)
                          * when loaded asynchronously but not when there is only text in the iframe
                          */
-                        PluginUtility::getSnippetManager()->attachLocalJavascript(self::TAG);
+                        PluginUtility::getSnippetManager()->attachJavascriptFromComponentId(self::TAG);
 
 
                     }

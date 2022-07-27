@@ -157,7 +157,7 @@ MathJax.Hub.Config({
 EOD;
 
                 $snippetManager
-                    ->attachLocalJavascript(
+                    ->attachJavascriptFromComponentId(
                         self::TAG,
                         $headHtmlElement
                     )

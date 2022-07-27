@@ -12,6 +12,8 @@
 
 namespace ComboStrap;
 
+use Throwable;
+
 require_once(__DIR__ . '/PluginUtility.php');
 
 class LogUtility
@@ -358,11 +360,21 @@ class LogUtility
      * written properly
      * @param string $message
      * @param string $canonical
+     * @param Throwable|null $previous
      * @return void
      */
-    public static function internalError(string $message, string $canonical = "support")
+    public static function internalError(string $message, string $canonical = "support", Throwable $previous = null)
     {
-        self::error("Sorry. An internal error has occurred: $message", $canonical);
+        $internalErrorMessage = "Sorry. An internal error has occurred";
+        if (PluginUtility::isDevOrTest()) {
+            throw new ExceptionRuntimeInternal($internalErrorMessage, $canonical, 1, $previous);
+        } else {
+            $errorPreviousMessage = "";
+            if ($previous !== null) {
+                $errorPreviousMessage = " Error: {$previous->getMessage()}";
+            }
+            self::error("{$internalErrorMessage}: $message.$errorPreviousMessage", $canonical);
+        }
     }
 
 }

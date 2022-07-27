@@ -182,7 +182,7 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
                         $snippetId = self::TAG;
                         $libraryId = "rrdiagram";
                         $snippetManager->attachCssInternalStyleSheet($snippetId);
-                        $snippetManager->attachLocalJavascript($snippetId);
+                        $snippetManager->attachJavascriptFromComponentId($snippetId);
 
                         /**
                          *

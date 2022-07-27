@@ -108,7 +108,7 @@ abstract class ImageLink extends MediaLink
                 }
                 $snippetManager = PluginUtility::getSnippetManager();
                 $snippetManager->attachJavascriptComboLibrary();
-                $snippetManager->attachLocalJavascript($snippetId);
+                $snippetManager->attachJavascriptFromComponentId($snippetId);
                 $snippetManager->attachCssInternalStyleSheet($snippetId);
                 return $tagAttributes->toHtmlEnterTag("a") . $htmlMediaMarkup . "</a>";
 

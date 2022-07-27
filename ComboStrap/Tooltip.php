@@ -103,7 +103,7 @@ class Tooltip
     static function addToolTipSnippetIfNeeded()
     {
         $snippetSystem = SnippetSystem::getFromContext();
-        $snippetSystem->attachLocalJavascript(syntax_plugin_combo_tooltip::TAG);
+        $snippetSystem->attachJavascriptFromComponentId(syntax_plugin_combo_tooltip::TAG);
         $snippetSystem->attachCssInternalStyleSheet(syntax_plugin_combo_tooltip::TAG);
     }
 }

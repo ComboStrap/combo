@@ -3,6 +3,7 @@
 
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
+use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\ExceptionNotFound;
@@ -333,18 +334,40 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          */
         $snippetManager = SnippetSystem::getFromContext();
         if ($context === self::TYPE_OUTLINE) {
+
             $tagAttributes->addClassName(Outline::getOutlineHeadingClass());
 
             $snippetManager->attachCssInternalStyleSheet(self::TYPE_OUTLINE);
+
+            // numbering
             try {
                 $snippet = $snippetManager->attachCssInternalStyleSheet(Outline::HEADING_NUMBERING);
                 if (!$snippet->hasInlineContent()) {
                     $css = Outline::getCssNumberingRulesFor(Outline::HEADING_NUMBERING);
                     $snippet->setInlineContent($css);
                 }
-            } catch (ExceptionNotEnabled|ExceptionBadSyntax $e) {
-                LogUtility::internalError("An error has occurred while trying to add the outline heading numbering stylesheet. Error: {$e->getMessage()}", self::CANONICAL);
+            } catch (ExceptionBadSyntax $e) {
+                LogUtility::internalError("An error has occurred while trying to add the outline heading numbering stylesheet.", self::CANONICAL, $e);
+            } catch (ExceptionNotEnabled $e){
+                // ok
             }
+
+            /**
+             * Anchor on id
+             */
+            $snippetManager = PluginUtility::getSnippetManager();
+            try {
+                $snippetManager->attachRemoteJavascriptLibrary(
+                    Outline::OUTLINE_ANCHOR,
+                    "https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js",
+                    "sha256-LGOWMG4g6/zc0chji4hZP1d8RxR2bPvXMzl/7oPZqjs="
+                );
+            } catch (ExceptionBadArgument|ExceptionBadSyntax $e) {
+                // The url has a file name. this error should not happen
+                LogUtility::internalError("Unable to add anchor. Error:{$e->getMessage()}", Outline::OUTLINE_ANCHOR);
+            }
+            $snippetManager->attachJavascriptFromComponentId(Outline::OUTLINE_ANCHOR);
+
         }
         $snippetManager->attachCssInternalStyleSheet(syntax_plugin_combo_heading::TAG);
 

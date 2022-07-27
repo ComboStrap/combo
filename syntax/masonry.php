@@ -265,7 +265,7 @@ class syntax_plugin_combo_masonry extends DokuWiki_Syntax_Plugin
                                 "https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js",
                                 "sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D"
                             );
-                            PluginUtility::getSnippetManager()->attachLocalJavascript(self::MASONRY_SCRIPT_ID);
+                            PluginUtility::getSnippetManager()->attachJavascriptFromComponentId(self::MASONRY_SCRIPT_ID);
                             $masonryClass = self::MASONRY_SCRIPT_ID;
                             $renderer->doc .= "<div class=\"row $masonryClass\">";
                             break;

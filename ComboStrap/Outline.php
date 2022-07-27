@@ -67,6 +67,10 @@ class Outline
     public const CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5 = "outlineNumberingCounterStyleLevel5";
     public const CONF_OUTLINE_NUMBERING_PREFIX = "outlineNumberingPrefix";
     public const CONF_OUTLINE_NUMBERING_ENABLE = "outlineNumberingEnable";
+    /**
+     * To add hash tag to heading
+     */
+    public const OUTLINE_ANCHOR = "outline-anchor";
     private OutlineSection $rootSection;
 
     private OutlineSection $actualSection; // the actual section that is created
@@ -187,8 +191,8 @@ class Outline
                         } else {
                             $message = "The child section heading ($actualSectionLevel) has the level ($newSectionLevel) but is parent ({$this->actualSection->getLabel()}) has the level ($actualSectionLevel). The expected level is ($expectedLevel).";
                         }
-                        LogUtility::error($message, self::CANONICAL);
-                        $actualCall->setAttribute(syntax_plugin_combo_heading::LEVEL, $expectedLevel);
+                        LogUtility::warning($message, self::CANONICAL);
+                        $actualCall->setAttribute(syntax_plugin_combo_heading::LEVEL, $newSectionLevel);
                     }
 
                 } else {

@@ -136,7 +136,7 @@ class LazyLoad
          * The others javascript snippet to download lazy load depend on the image type
          * and features and was therefore added in the code for svg or raster
          */
-        $snippetManager->attachLocalJavascript("lozad-print");
+        $snippetManager->attachJavascriptFromComponentId("lozad-print");
 
 
     }

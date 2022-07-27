@@ -118,7 +118,7 @@ class Dimension
                                 /**
                                  * Set the color dynamically to the color of the parent
                                  */
-                                PluginUtility::getSnippetManager()->attachLocalJavascript("height-toggle");
+                                PluginUtility::getSnippetManager()->attachJavascriptFromComponentId("height-toggle");
                                 /**
                                  * The height when there is not the show class
                                  * is the original height
@@ -188,7 +188,7 @@ EOF;
             }
             if (!$controlFound) {
                 $toggleOnClickId = "height-toggle-onclick";
-                PluginUtility::getSnippetManager()->attachLocalJavascript($toggleOnClickId);
+                PluginUtility::getSnippetManager()->attachJavascriptFromComponentId($toggleOnClickId);
                 $openingCall->addClassName("{$toggleOnClickId}-combo");
                 $openingCall->addCssStyle("cursor", "pointer");
             }

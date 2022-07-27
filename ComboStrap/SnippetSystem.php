@@ -40,8 +40,6 @@ class SnippetSystem
     const CANONICAL = "snippet-system";
 
 
-
-
     /**
      * @return SnippetSystem - the global reference
      * that is set for every run at the end of this file
@@ -178,13 +176,13 @@ class SnippetSystem
 
 
     /**
-     * @param $snippetId
+     * @param $componentId
      * @param string|null $script
      * @return Snippet a snippet in a slot
      */
-    public function attachLocalJavascript($snippetId, string $script = null): Snippet
+    public function attachJavascriptFromComponentId($componentId, string $script = null): Snippet
     {
-        $snippet = Snippet::getOrCreateFromComponentId($snippetId, Snippet::EXTENSION_JS);
+        $snippet = Snippet::getOrCreateFromComponentId($componentId, Snippet::EXTENSION_JS);
         if ($script !== null) {
             try {
                 $content = "{$snippet->getInternalDynamicContent()} $script";
@@ -196,20 +194,7 @@ class SnippetSystem
         return $snippet;
     }
 
-    /**
-     * @param $snippetId
-     * @param string|null $script
-     * @return Snippet a snippet not in a slot
-     */
-    public
-    function &attachJavascriptInternalInlineForRequest($snippetId, string $script = null): Snippet
-    {
-        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::EXTENSION_JS);
-        if ($script != null) {
-            $snippet->setInlineContent($script);
-        }
-        return $snippet;
-    }
+
 
     public
     function attachInternalJavascriptFromPathForRequest($componentId, WikiPath $path): Snippet
@@ -336,17 +321,7 @@ class SnippetSystem
     }
 
 
-    public
-    function attachJavascriptLibraryForRequest(string $componentName, string $url, string $integrity): Snippet
-    {
-        return $this
-            ->attachSnippetFromRequest(
-                $componentName,
-                Snippet::EXTENSION_JS,
-                $url)
-            ->setIntegrity($integrity);
 
-    }
 
 
     /**
@@ -464,7 +439,7 @@ class SnippetSystem
 
     public function addPopoverLibrary(): SnippetSystem
     {
-        $this->attachJavascriptInternalInlineForRequest(Snippet::COMBO_POPOVER);
+        $this->attachJavascriptFromComponentId(Snippet::COMBO_POPOVER);
         $this->attachCssInternalStylesheet(Snippet::COMBO_POPOVER);
         return $this;
     }

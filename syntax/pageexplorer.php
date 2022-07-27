@@ -717,7 +717,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                              * Open the tree until the current page
                              * and make it active
                              */
-                            PluginUtility::getSnippetManager()->attachLocalJavascript($snippetId);
+                            PluginUtility::getSnippetManager()->attachJavascriptFromComponentId($snippetId);
                             /**
                              * Styling
                              */

@@ -168,7 +168,7 @@ window.addEventListener('load', (event) => {
 
 });
 EOD;
-        $snippetManager->attachLocalJavascript(self::SNIPPET_NAME, $javascriptCode);
+        $snippetManager->attachJavascriptFromComponentId(self::SNIPPET_NAME, $javascriptCode);
 
     }
 

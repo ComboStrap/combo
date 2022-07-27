@@ -266,8 +266,8 @@ class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
                     /**
                      * The dependency first
                      */
-                    $snippetManager->attachLocalJavascript("combo-loader");
-                    $snippetManager->attachLocalJavascript($snippetId);
+                    $snippetManager->attachJavascriptFromComponentId("combo-loader");
+                    $snippetManager->attachJavascriptFromComponentId($snippetId);
 
                     break;
 

@@ -371,6 +371,11 @@ class ExecutionContext
         $this->restoreRootEnv();
 
         /**
+         * Log utility is not yet a conf
+         */
+        LogUtility::setTestExceptionLevelToDefault();
+
+        /**
          * Restore requested id if any
          * (Not sure if it's needed)
          */
@@ -560,6 +565,12 @@ class ExecutionContext
     {
         global $ACT;
         return $ACT;
+    }
+
+    public function setLogExceptionToError(): ExecutionContext
+    {
+        LogUtility::setTestExceptionLevelToError();
+        return $this;
     }
 
 

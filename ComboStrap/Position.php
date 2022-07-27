@@ -54,7 +54,7 @@ let topSpacing = fixedNavbar.offsetHeight;
 var stickyElements = Sticksy.initializeAll('.$stickyClass',{topSpacing: topSpacing})
 EOF;
                 $snippetManager
-                    ->attachLocalJavascript(self::STICKY)
+                    ->attachJavascriptFromComponentId(self::STICKY)
                     ->setInlineContent($jsSnippet);
             }
 

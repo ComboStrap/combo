@@ -43,7 +43,7 @@ class QualityMenuItem extends AbstractItem
     {
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetManager->attachJavascriptComboLibrary();
-        $snippetManager->attachJavascriptInternalInlineForRequest(self::CANONICAL);
+        $snippetManager->attachJavascriptFromComponentId(self::CANONICAL);
         $this->page = MarkupPath::createFromRequestedPage();
         if($this->page->isLowQualityPage()){
             $snippetManager->attachCssInternalStylesheet(self::CANONICAL);

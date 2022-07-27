@@ -122,13 +122,13 @@ class SvgImageLink extends ImageLink
          */
         $svgFunctionalClass = "";
         if ($svgInjection && $lazyLoad) {
-            $snippetManager->attachLocalJavascript("lozad-svg-injection");
+            $snippetManager->attachJavascriptFromComponentId("lozad-svg-injection");
             $svgFunctionalClass = StyleUtility::addComboStrapSuffix("lazy-svg-injection");
         } else if ($lazyLoad && !$svgInjection) {
-            $snippetManager->attachLocalJavascript("lozad-svg");
+            $snippetManager->attachJavascriptFromComponentId("lozad-svg");
             $svgFunctionalClass = StyleUtility::addComboStrapSuffix("lazy-svg-cs");
         } else if ($svgInjection && !$lazyLoad) {
-            $snippetManager->attachLocalJavascript("svg-injector");
+            $snippetManager->attachJavascriptFromComponentId("svg-injector");
             $svgFunctionalClass = StyleUtility::addComboStrapSuffix("svg-injection");
         }
         if ($lazyLoad) {

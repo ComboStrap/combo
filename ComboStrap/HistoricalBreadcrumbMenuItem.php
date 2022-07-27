@@ -44,7 +44,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetManager
             ->addPopoverLibrary()
-            ->attachJavascriptInternalInlineForRequest(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
+            ->attachJavascriptFromComponentId(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
 
         /**
          * Css

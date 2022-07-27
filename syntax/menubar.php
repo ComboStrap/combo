@@ -243,7 +243,7 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
                             $tagAttributes->addOutputAttributeValue("data-type", $fixedTopClass);
                             $fixedTopSnippetId = self::TAG . "-" . $fixedTopClass;
                             // See http://stackoverflow.com/questions/17181355/boostrap-using-fixed-navbar-and-anchor-tags-to-jump-to-sections
-                            PluginUtility::getSnippetManager()->attachLocalJavascript($fixedTopSnippetId);
+                            PluginUtility::getSnippetManager()->attachJavascriptFromComponentId($fixedTopSnippetId);
                             break;
                         case "normal":
                             // nothing

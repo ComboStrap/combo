@@ -23,7 +23,7 @@ class CacheReportHtmlDataBlockArray
      * @return array - a array that will be transformed as json HTML data block
      * to be included in a HTML page in order to insert cache results in the html page
      */
-    public static function getFromRuntime(): array
+    public static function getFromContext(): array
     {
         $cacheManager = CacheManager::getFromContextExecution();
         $cacheReporters = $cacheManager->getCacheResults();

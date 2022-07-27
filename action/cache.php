@@ -110,7 +110,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         if(!PluginUtility::isRenderingRequestedPageProcess()){
             return;
         }
-        $cacheSlotResults = CacheReportHtmlDataBlockArray::getFromRuntime();
+        $cacheSlotResults = CacheReportHtmlDataBlockArray::getFromContext();
         $cacheJson = \ComboStrap\Json::createFromArray($cacheSlotResults);
 
         if (PluginUtility::isDevOrTest()) {

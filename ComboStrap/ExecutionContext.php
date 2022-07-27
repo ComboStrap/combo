@@ -155,25 +155,21 @@ class ExecutionContext
 
     }
 
-    private static function createFromUrl(Url $url): ExecutionContext
-    {
-        return new ExecutionContext($url);
-    }
 
     public static function createFromEnvironmentVariable(): ExecutionContext
     {
 
         $url = Url::createFromGetOrPostGlobalVariable();
-        return self::createRootFromUrl($url);
+        return self::createFromUrl($url);
 
     }
 
-    private static function createRootFromUrl(Url $url): ExecutionContext
+    private static function createFromUrl(Url $url): ExecutionContext
     {
         if (self::$executionContext !== null) {
             LogUtility::internalError("The root context should be closed first");
         }
-        $rootExecutionContext = self::createFromUrl($url)
+        $rootExecutionContext = (new ExecutionContext($url))
             ->captureRootEnv();
         self::$executionContext = $rootExecutionContext;
         return $rootExecutionContext;

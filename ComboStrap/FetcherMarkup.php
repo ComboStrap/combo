@@ -311,8 +311,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     $content = $markupRenderer->getOutput();
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
-                } finally {
-                    $markupRenderer->close();
                 }
                 break;
             default:
@@ -326,11 +324,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 $markupRenderer = MarkupRenderer::createFromInstructions($instructions)
                     ->setRendererName($this->getRequestedRendererNameOrDefault())
                     ->setRequestedMime($this->getMime());
-                try {
-                    $content = $markupRenderer->getOutput();
-                } finally {
-                    $markupRenderer->close();
-                }
+                $content = $markupRenderer->getOutput();
+
                 $this->cacheAfterRendering = $markupRenderer->getCacheAfterRendering();
         }
 
@@ -640,7 +635,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * or {@link FetcherMarkup::getSnippetCacheStore()}
          * there is no execution
          */
-        if(isset($this->executionContext)) {
+        if (isset($this->executionContext)) {
             $this->executionContext->closeSubExecutionEnv();
         }
         $this->closed = true;

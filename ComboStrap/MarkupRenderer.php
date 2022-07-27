@@ -117,6 +117,11 @@ class MarkupRenderer
                  */
                 $result = p_render($this->getRendererNameOrDefault(), $this->instructions, $info);
                 $this->cacheAfterRendering = $info['cache'];
+
+                /**
+                 * Close
+                 */
+                $this->close();
                 return $result;
 
         }
@@ -202,17 +207,14 @@ class MarkupRenderer
         return $instructions;
     }
 
-    public function close(): MarkupRenderer
+    /**
+     * @return void - the counter part of build
+     */
+    private function close(): void
     {
-        if ($this->closed) {
-            // to avoid restoring a bad state
-            throw new ExceptionRuntimeInternal("You can't close a already closed object", self::CANONICAL);
-        }
-        if(isset($this->dynamicRenderingExecutionContext)){
+        if (isset($this->dynamicRenderingExecutionContext)) {
             $this->dynamicRenderingExecutionContext->closeSubExecutionEnv();
         }
-        $this->closed = true;
-        return $this;
     }
 
     private function build()
@@ -235,9 +237,7 @@ class MarkupRenderer
             $this->dynamicRenderingExecutionContext = $executionContext->startSubExecutionEnv($this->runningId, $runningAct);
         }
 
-
-
-
     }
+
 
 }

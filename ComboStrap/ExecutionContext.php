@@ -497,6 +497,10 @@ class ExecutionContext
         return $this;
     }
 
+    /**
+     *
+     * @return $this
+     */
     public function setConsoleOn(): ExecutionContext
     {
         $this->isConsoleOn = true;

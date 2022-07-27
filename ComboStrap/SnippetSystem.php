@@ -195,7 +195,6 @@ class SnippetSystem
     }
 
 
-
     public
     function attachInternalJavascriptFromPathForRequest($componentId, WikiPath $path): Snippet
     {
@@ -209,6 +208,21 @@ class SnippetSystem
     {
         $empty = [];
         ExecutionContext::getActualOrCreateFromEnv()->setRuntimeObject(Snippet::CANONICAL, $empty);
+    }
+
+    public function getSnippetsForComponent($componentId): array
+    {
+        $snippets = [];
+        foreach ($this->getSnippets() as $snippet) {
+            try {
+                if ($snippet->getComponentId() === $componentId) {
+                    $snippets[] = $snippet;
+                }
+            } catch (ExceptionNotFound $e) {
+                //
+            }
+        }
+        return $snippets;
     }
 
     /**
@@ -319,9 +333,6 @@ class SnippetSystem
             ->setRemoteUrl($url)
             ->setComponentId($componentId);
     }
-
-
-
 
 
     /**

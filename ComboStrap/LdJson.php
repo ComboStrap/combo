@@ -320,7 +320,7 @@ class LdJson extends MetadataJson
                         ->format(Iso8601Date::getFormat());
                 } catch (ExceptionNotFound $e) {
                     // Internal error, the page should exist
-                    LogUtility::error("Internal Error: We were unable to define the publication date for the page ($page)", self::CANONICAL);
+                    LogUtility::error("Internal Error: We were unable to define the publication date for the page ($page). Error: {$e->getMessage()}", self::CANONICAL);
                 }
 
                 /**

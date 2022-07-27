@@ -21,7 +21,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     const CONF_ENABLE_AS_SHOW_ACTION_DEFAULT = 1;
 
     private string $requestedLayout;
-    private ExecutionContext $executionEnv;
     private bool $build = false;
     private bool $closed = false;
 
@@ -84,6 +83,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $url->removeQueryParameter(WikiPath::DRIVE_ATTRIBUTE);
         if (ExecutionContext::getActualOrCreateFromEnv()->isPageFetcherEnabledAsShowAction()) {
             $url->removeQueryParameter(IFetcher::FETCHER_KEY);
+            $url->addQueryParameter("do", \action_plugin_combo_docustom::DO_PREFIX . FetcherPage::CANONICAL);
         }
         return $url;
     }
@@ -257,18 +257,24 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
         /**
          * Request / Environment First
+         * We correct the requested id, the env in test is created with
+         * a default id
          */
-        $this->executionEnv = ExecutionContext::getActualOrCreateFromEnv()
-            ->startSubExecutionEnv($this->getRequestedPath()->getWikiId());
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->setNewRequestedId($this->getRequestedPath()->getWikiId());
 
         $this->requestedMarkupPath = MarkupPath::createPageFromPathObject($this->getRequestedPath());
 
         $pageLang = Lang::createForMarkup($this->getRequestedPage());
         $title = PageTitle::createForMarkup($this->getRequestedPage())->getValueOrDefault();
-        $this->pageLayout = PageLayout::createFromLayoutName($this->getRequestedLayoutOrDefault())
-            ->setRequestedContextPath($this->getRequestedPath())
-            ->setRequestedLang($pageLang)
-            ->setRequestedTitle($title);
+        try {
+            $this->pageLayout = PageLayout::createFromLayoutName($this->getRequestedLayoutOrDefault())
+                ->setRequestedContextPath($this->getRequestedPath())
+                ->setRequestedLang($pageLang)
+                ->setRequestedTitle($title);
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("Layout error while trying to create the page: {$e->getMessage()}", self::NAME, 1, $e);
+        }
 
 
     }
@@ -313,7 +319,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
      */
     public function close(): FetcherPage
     {
-        $this->executionEnv->closeSubExecutionEnv();
+        // nothing to do
         return $this;
     }
 

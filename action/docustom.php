@@ -6,10 +6,13 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionReporter;
 use ComboStrap\FetcherPage;
 use ComboStrap\FetcherSystem;
+use ComboStrap\FileSystems;
 use ComboStrap\Identity;
 use ComboStrap\IFetcher;
+use ComboStrap\LocalPath;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
+use ComboStrap\PluginUtility;
 use ComboStrap\TplUtility;
 use ComboStrap\Url;
 
@@ -41,7 +44,6 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'executeComboDoAction');
 
-
     }
 
     /**
@@ -66,7 +68,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
          * More https://www.dokuwiki.org/devel:event:tpl_act_unknown#note_for_implementors
          */
         $event->preventDefault();
-        $event->stopPropagation();
+
 
         try {
             $url = Url::createFromGetOrPostGlobalVariable()
@@ -77,6 +79,18 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
             \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
                 ->setBody($body, $mime)
                 ->send();
+            /**
+             * In dev or test, we don't exit to get the data, the code execution will come here then
+             * but {@link act_dispatch() Act dispatch} calls always the template,
+             * We create a fake empty template
+             */
+            if (PluginUtility::isDevOrTest()) {
+                global $conf;
+                $template = "combo_test";
+                $conf['template'] = $template;
+                $main = LocalPath::createFromPathString(DOKU_INC . "lib/tpl/$template/main.php");
+                FileSystems::setContent($main, "");
+            }
         } catch (\Exception $e) {
 
             $html = ExceptionReporter::createForException($e)

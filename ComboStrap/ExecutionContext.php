@@ -260,7 +260,7 @@ class ExecutionContext
 
     /**
      * A running id can be a secondary fragment
-     * The requested id is the main fragment
+     * The requested id is the main fragment id (found in the URL)
      *
      * Note that this should be set only once at the request level
      * (ie in test purpose or the fetcher)

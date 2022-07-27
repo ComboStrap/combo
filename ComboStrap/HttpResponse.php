@@ -148,6 +148,8 @@ class HttpResponse
         } else {
 
             /**
+             * We try to set the dokuwiki processing
+             * but it does not work every time
              * Stop the propagation and prevent the default
              */
             if ($this->event !== null) {

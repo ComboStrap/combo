@@ -532,6 +532,11 @@ class Snippet implements JsonSerializable
             $snippet->setIntegrity($integrity);
         }
 
+        $remoteUrl = $array[self::JSON_URL_PROPERTY];
+        if ($remoteUrl !== null) {
+            $snippet->setRemoteUrl(Url::createFromString($remoteUrl));
+        }
+
         return $snippet;
 
     }

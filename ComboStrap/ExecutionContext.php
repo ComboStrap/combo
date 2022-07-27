@@ -40,7 +40,8 @@ class ExecutionContext
     const DO_ATTRIBUTE = "do";
 
 
-    const CANONICAL = "wikiRequest";
+    const CANONICAL = "execution-context";
+    const SHOW_ACTION =  "show";
 
     /**
      * @var array of objects that are scoped to this request
@@ -222,7 +223,7 @@ class ExecutionContext
 
         $this->previousRunningEnvs[] = [$ID, $ACT];
         $ID = $runningId;
-        $ACT = $this->previousRunningEnvs;
+        $ACT = $runningAct;
 
         return $this;
 
@@ -539,10 +540,26 @@ class ExecutionContext
         return $this->isConsoleOn;
     }
 
-    public function isPageFetcherEnabled(): bool
+    public function isPageFetcherEnabledAsShowAction(): bool
     {
         // the non strict equality is needed, we get a string for an unknown reason
         return $this->getConfValue(FetcherPage::CONF_ENABLE_AS_SHOW_ACTION, FetcherPage::CONF_ENABLE_AS_SHOW_ACTION_DEFAULT) == 1;
+    }
+
+    public function setEnablePageFetcherAsShowAction(): ExecutionContext
+    {
+        $this->getConfValue(FetcherPage::CONF_ENABLE_AS_SHOW_ACTION, 1);
+        return $this;
+    }
+
+    /**
+     * Dokuwiki handler name
+     * @return array|mixed|string
+     */
+    public function getExecutingAction()
+    {
+        global $ACT;
+        return $ACT;
     }
 
 

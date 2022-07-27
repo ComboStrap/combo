@@ -66,6 +66,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
          * More https://www.dokuwiki.org/devel:event:tpl_act_unknown#note_for_implementors
          */
         $event->preventDefault();
+        $event->stopPropagation();
 
         try {
             $url = Url::createFromGetOrPostGlobalVariable()

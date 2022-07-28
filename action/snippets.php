@@ -1,8 +1,10 @@
 <?php
 
 use ComboStrap\CacheManager;
+use ComboStrap\ExceptionBadState;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExecutionContext;
+use ComboStrap\LogUtility;
 use ComboStrap\MarkupDynamicRender;
 use ComboStrap\FetcherMarkup;
 use ComboStrap\MarkupPath;
@@ -27,6 +29,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
      * or not
      */
     const HEAD_EVENT_WAS_CALLED = "head_event_was_called";
+    const CANONICAL = "snippets";
 
 
     function __construct()
@@ -83,7 +86,6 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             ->setRuntimeBoolean(self::HEAD_EVENT_WAS_CALLED, true);
 
 
-
         try {
             $executionContext->getRequestedWikiId();
         } catch (ExceptionNotFound $e) {
@@ -134,21 +136,25 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         }
 
         $snippetSystem = SnippetSystem::getFromContext();
-        $snippets = $snippetSystem->getAllSnippets();
-        $allSnippets = $snippetSystem->snippetsToDokuwikiArray($snippets);
-        foreach ($allSnippets as $tagType => $tags) {
-
-            foreach ($tags as $tag) {
+        $snippets = $snippetSystem->getSnippets();
+        foreach ($snippets as $snippet) {
+            /**
+             * In a dokuwiki standard template, head is called
+             * first, then the content, to not add the snippet in the head and in the content
+             * there is an indicator that tracks if the output was asked
+             */
+            if (!$snippet->hasHtmlOutputAlreadyOccurred()) {
+                try {
+                    $tag = $snippet->toDokuWikiArray();
+                } catch (ExceptionBadState|ExceptionNotFound $e) {
+                    LogUtility::error("We couldn't get the attributes of the snippet ($snippet). It has been skipped. Error: {$e->getMessage()}",self::CANONICAL);
+                    continue;
+                }
+                $tagType = $snippet->getHtmlTag();
                 $event->data[$tagType][] = $tag;
             }
 
         }
-        /**
-         * In a dokuwiki standard template, head is called
-         * first, then the content, to not add snippet also in the content
-         * we empty them
-         */
-        $snippetSystem->emptySnippets();
 
 
     }
@@ -238,7 +244,6 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
     {$snippetManager->toHtmlForSlotSnippets()}
 </div>
 EOF;
-            $snippetManager->emptySnippets();
 
         }
 

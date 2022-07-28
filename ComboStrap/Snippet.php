@@ -137,6 +137,14 @@ class Snippet implements JsonSerializable
     private string $componentId;
 
     /**
+     * @var bool a property to track if a snippet has already been asked in a html output
+     * (ie with a to function such as {@link Snippet::toTagAttributes()} or {@link Snippet::toDokuWikiArray()}
+     * We use it to not delete the state of {@link ExecutionContext} in order to check the created snippet
+     * during an execution
+     */
+    private bool $hasHtmlOutputOccurred = false;
+
+    /**
      * @param WikiPath $path - wiki path mandatory
      *   because it's the path of fetch and it's the storage format
      * use {@link Snippet::getOrCreateFromContext()}
@@ -185,11 +193,15 @@ class Snippet implements JsonSerializable
 
     /**
      * @return Snippet[]
-     * @throws ExceptionNotFound
+     *
      */
-    public static function &getSnippets(): array
+    public static function getSnippets(): array
     {
-        return ExecutionContext::getActualOrCreateFromEnv()->getRuntimeObject(self::CANONICAL);
+        try {
+            return ExecutionContext::getActualOrCreateFromEnv()->getRuntimeObject(self::CANONICAL);
+        } catch (ExceptionNotFound $e) {
+            return [];
+        }
     }
 
 
@@ -231,7 +243,7 @@ class Snippet implements JsonSerializable
     {
 
         try {
-            $snippets = &self::getSnippets();
+            $snippets = &ExecutionContext::getActualOrCreateFromEnv()->getRuntimeObject(self::CANONICAL);
         } catch (ExceptionNotFound $e) {
             $snippets = [];
             ExecutionContext::getActualOrCreateFromEnv()->setRuntimeObject(self::CANONICAL, $snippets);
@@ -772,7 +784,6 @@ class Snippet implements JsonSerializable
 
     /**
      * The HTML tag
-     * @throws ExceptionBadState
      */
     public function getHtmlTag(): string
     {
@@ -787,7 +798,9 @@ class Snippet implements JsonSerializable
                     return Snippet::LINK_TAG;
                 }
             default:
-                throw new ExceptionBadState("The extension ($extension) is unknown");
+                // it should not happen as the devs are the creator of snippet (not the user)
+                LogUtility::internalError("The extension ($extension) is unknown", self::CANONICAL);
+                return "";
         }
     }
 
@@ -814,11 +827,17 @@ class Snippet implements JsonSerializable
     }
 
     /**
-     * @throws ExceptionBadState
-     * @throws ExceptionNotFound
+     * @throws ExceptionBadState - if no content was found
+     * @throws ExceptionNotFound - if the file was not found
      */
     public function toTagAttributes(): TagAttributes
     {
+
+        if ($this->hasHtmlOutputOccurred) {
+            LogUtility::internalError("The snippet ($this) has already been asked. It may have been added twice to the HTML page.");
+        }
+        $this->hasHtmlOutputOccurred = true;
+
         $tagAttributes = TagAttributes::createFromCallStackArray($this->getHtmlAttributes())
             ->addClassName($this->getClass());
         $extension = $this->getExtension();
@@ -888,7 +907,6 @@ class Snippet implements JsonSerializable
                      * Dokuwiki transforms/encode the href in HTML
                      */
                     $tagAttributes
-                        ->addOutputAttributeValue("rel", "stylesheet")
                         ->addOutputAttributeValue("href", $fetchUrl->toString())
                         ->addOutputAttributeValue("crossorigin", "anonymous");
 
@@ -901,9 +919,13 @@ class Snippet implements JsonSerializable
 
                     $critical = $this->getCritical();
                     if (!$critical && FetcherPage::isEnabledAsShowAction()) {
-                        $tagAttributes->addOutputAttributeValue("rel", "preload")
+                        $tagAttributes
+                            ->addOutputAttributeValue("rel", "preload")
                             ->addOutputAttributeValue('as', self::STYLE_TAG);
+                    } else {
+                        $tagAttributes->addOutputAttributeValue("rel", "stylesheet");
                     }
+
                     return $tagAttributes;
 
                 }
@@ -912,6 +934,18 @@ class Snippet implements JsonSerializable
             default:
                 throw new ExceptionBadState("The extension ($extension) is unknown", self::CANONICAL);
         }
+
+    }
+
+    /**
+     * @return bool - yes if the function {@link Snippet::toTagAttributes()}
+     * or {@link Snippet::toDokuWikiArray()} has been called
+     * to prevent having the snippet two times (one in the head and one in the body)
+     */
+    public function hasHtmlOutputAlreadyOccurred(): bool
+    {
+
+        return $this->hasHtmlOutputOccurred;
 
     }
 

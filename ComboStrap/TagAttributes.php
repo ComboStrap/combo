@@ -239,6 +239,10 @@ class TagAttributes
      */
     private $defaultStyleClassShouldBeAdded = true;
     private $knownTypes;
+
+    /**
+     * @var string - the inner Text (used for script or style tag mostly)
+     */
     private string $innerText;
 
 
@@ -1106,12 +1110,12 @@ class TagAttributes
     function removeAttributeIfPresent($string): TagAttributes
     {
         $this->removeComponentAttributeIfPresent($string);
-        $this->removeHTMLAttributeIfPresent($string);
+        $this->removeOutputAttributeIfPresent($string);
         return $this;
 
     }
 
-    public function removeHTMLAttributeIfPresent($string)
+    public function removeOutputAttributeIfPresent($string)
     {
         $lowerAtt = strtolower($string);
         if (isset($this->outputAttributes[$lowerAtt])) {
@@ -1420,6 +1424,17 @@ class TagAttributes
     {
         $this->innerText = $text;
         return $this;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getInnerText(): string
+    {
+        if(!isset($this->innerText)){
+            throw new ExceptionNotFound("No inner text set");
+        }
+        return $this->innerText;
     }
 
 

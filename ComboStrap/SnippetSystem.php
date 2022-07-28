@@ -64,7 +64,7 @@ class SnippetSystem
     /**
      * Returns all snippets (request and slot scoped)
      *
-     * @return array of node type and an array of array of html attributes
+     * @return Snippet[] of node type and an array of array of html attributes
      */
     public function getAllSnippets(): array
     {
@@ -203,12 +203,6 @@ class SnippetSystem
             ->setComponentId($componentId);
     }
 
-
-    public function emptySnippets()
-    {
-        $empty = [];
-        ExecutionContext::getActualOrCreateFromEnv()->setRuntimeObject(Snippet::CANONICAL, $empty);
-    }
 
     public function getSnippetsForComponent($componentId): array
     {
@@ -386,51 +380,49 @@ class SnippetSystem
                 break;
         }
 
-        $snippetsArray = $this->snippetsToDokuwikiArray($snippets);
         $xhtmlContent = "";
-        foreach ($snippetsArray as $htmlElement => $tags) {
+        foreach ($snippets as $snippet) {
 
-            foreach ($tags as $tag) {
-                $xhtmlContent .= "<$htmlElement";
-                $attributes = "";
-                $content = null;
+            if ($snippet->hasHtmlOutputAlreadyOccurred()) {
+                continue;
+            }
 
-                /**
-                 * This code runs in editing mode
-                 * or if the template is not strap
-                 * No preload is then supported
-                 */
-                if ($htmlElement === "link") {
-                    $relValue = $tag["rel"];
-                    $relAs = $tag["as"];
+            try {
+                $tagAttributes = $snippet->toTagAttributes();
+            } catch (ExceptionBadState|ExceptionNotFound $e) {
+                LogUtility::internalError("We couldn't output the snippet ($snippet). Error: {$e->getMessage()}", self::CANONICAL);
+                continue;
+            }
+            $htmlElement = $snippet->getHtmlTag();
+            /**
+             * This code runs in editing mode
+             * or if the template is not strap
+             * No preload is then supported
+             */
+            if ($htmlElement === "link") {
+                try {
+                    $relValue = $tagAttributes->getOutputAttribute("rel");
+                    $relAs = $tagAttributes->getOutputAttribute("as");
                     if ($relValue === "preload") {
                         if ($relAs === "style") {
-                            $tag["rel"] = "stylesheet";
-                            unset($tag["as"]);
+                            $tagAttributes->removeOutputAttributeIfPresent("rel");
+                            $tagAttributes->addOutputAttributeValue("rel", "stylesheet");
+                            $tagAttributes->removeOutputAttributeIfPresent("as");
                         }
                     }
+                } catch (ExceptionNotFound $e) {
+                    // rel or as was not found
                 }
-
-                /**
-                 * Print
-                 */
-                foreach ($tag as $attributeName => $attributeValue) {
-                    if ($attributeName !== "_data") {
-                        if ($attributeValue !== null) {
-                            $attributes .= " $attributeName=\"$attributeValue\"";
-                        } else {
-                            $attributes .= " $attributeName";
-                        }
-                    } else {
-                        $content = $attributeValue;
-                    }
-                }
-                $xhtmlContent .= "$attributes>";
-                if (!empty($content)) {
-                    $xhtmlContent .= $content;
-                }
-                $xhtmlContent .= "</$htmlElement>";
             }
+            $xhtmlContent .= $tagAttributes->toHtmlEnterTag($htmlElement);
+
+            try {
+                $xhtmlContent .= $tagAttributes->getInnerText();
+            } catch (ExceptionNotFound $e) {
+                // ok
+            }
+            $xhtmlContent .= "</$htmlElement>";
+
 
         }
         return $xhtmlContent;

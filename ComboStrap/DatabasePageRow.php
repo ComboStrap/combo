@@ -865,7 +865,7 @@ class DatabasePageRow
                  * Page Id Collision detection
                  */
                 if ($this->page != null && $id !== $this->page->getWikiId()) {
-                    $duplicatePage = MarkupPath::createPageFromId($id);
+                    $duplicatePage = MarkupPath::createMarkupFromId($id);
                     if (!$duplicatePage->exists()) {
                         // Move
                         LogUtility::msg("The non-existing duplicate page ($id) has been added as redirect alias for the page ($this->page)", LogUtility::LVL_MSG_INFO);
@@ -933,7 +933,7 @@ class DatabasePageRow
             case 1:
                 $id = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
                 if ($this->page !== null && $id !== $this->page->getWikiId()) {
-                    $duplicatePage = MarkupPath::createPageFromId($id);
+                    $duplicatePage = MarkupPath::createMarkupFromId($id);
                     if (!$duplicatePage->exists()) {
                         $this->addRedirectAliasWhileBuildingRow($duplicatePage);
                         LogUtility::msg("The non-existing duplicate page ($id) has been added as redirect alias for the page ($this->page)", LogUtility::LVL_MSG_INFO);
@@ -946,7 +946,7 @@ class DatabasePageRow
                 $existingPages = [];
                 foreach ($rows as $row) {
                     $id = $row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-                    $duplicatePage = MarkupPath::createPageFromId($id);
+                    $duplicatePage = MarkupPath::createMarkupFromId($id);
                     if (!$duplicatePage->exists()) {
 
                         $this->deleteIfExistsAndAddRedirectAlias($duplicatePage);
@@ -1022,7 +1022,7 @@ class DatabasePageRow
             case 1:
                 $value = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
                 if ($this->page != null && $value !== $this->page->getWikiId()) {
-                    $duplicatePage = MarkupPath::createPageFromId($value);
+                    $duplicatePage = MarkupPath::createMarkupFromId($value);
                     if (!$duplicatePage->exists()) {
                         $this->addRedirectAliasWhileBuildingRow($duplicatePage);
                     } else {
@@ -1034,7 +1034,7 @@ class DatabasePageRow
                 $existingPages = [];
                 foreach ($rows as $row) {
                     $value = $row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-                    $duplicatePage = MarkupPath::createPageFromId($value);
+                    $duplicatePage = MarkupPath::createMarkupFromId($value);
                     if (!$duplicatePage->exists()) {
 
                         $this->deleteIfExistsAndAddRedirectAlias($duplicatePage);
@@ -1064,7 +1064,7 @@ class DatabasePageRow
             $this->page === null
             && $this->row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] !== null
         ) {
-            $this->page = MarkupPath::createPageFromId($this->row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE]);
+            $this->page = MarkupPath::createMarkupFromId($this->row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE]);
         }
         return $this->page;
     }

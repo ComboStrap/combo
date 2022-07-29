@@ -381,7 +381,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                              * We use id until path is full in the database
                              */
                             $id = $sourceRow["ID"];
-                            $contextualPage = MarkupPath::createPageFromId($id);
+                            $contextualPage = MarkupPath::createMarkupFromId($id);
                             if ($contextualPage->isHidden()) {
                                 continue;
                             }

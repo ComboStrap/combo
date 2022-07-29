@@ -69,7 +69,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
         /**
          * @var Call[] $links
          */
-        $page = MarkupPath::createPageFromId($ID);
+        $page = MarkupPath::createMarkupFromId($ID);
 
         /**
          * {@link \ComboStrap\PageId} is given only when the page exists

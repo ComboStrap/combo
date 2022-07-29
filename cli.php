@@ -333,7 +333,7 @@ EOF;
         $totalNumberOfPages = sizeof($pages);
         while ($pageArray = array_shift($pages)) {
             $id = $pageArray['id'];
-            $page = MarkupPath::createPageFromId($id);
+            $page = MarkupPath::createMarkupFromId($id);
 
 
             $pageCounter++;
@@ -408,7 +408,7 @@ EOF;
             $id = $row['id'];
             if (!page_exists($id)) {
                 echo 'Page does not exist on the file system. Deleted from the database (' . $id . ")\n";
-                MarkupPath::createPageFromId($id)->getDatabasePage()->delete();
+                MarkupPath::createMarkupFromId($id)->getDatabasePage()->delete();
             }
         }
         LogUtility::msg("Sync finished ($counter pages checked)");
@@ -429,7 +429,7 @@ EOF;
             $id = $pageArray['id'];
             global $ID;
             $ID = $id;
-            $page = MarkupPath::createPageFromId($id);
+            $page = MarkupPath::createMarkupFromId($id);
             $pageCounter++;
             LogUtility::msg("Processing page {$id} ($pageCounter / $totalNumberOfPages) ", LogUtility::LVL_MSG_INFO);
             try {

@@ -318,7 +318,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 /**
                  * Register media in index
                  */
-                $page = MarkupPath::createPageFromId($ID);
+                $page = MarkupPath::createMarkupFromId($ID);
                 $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
                 if (isset($frontMatterJsonArray[PageImages::getPersistentName()])) {
                     $value = $frontMatterJsonArray[PageImages::getPersistentName()];

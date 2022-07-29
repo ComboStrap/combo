@@ -112,7 +112,7 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
         }
 
 
-        $backlinkPages = MarkupPath::createPageFromId($id);
+        $backlinkPages = MarkupPath::createMarkupFromId($id);
         $html = syntax_plugin_combo_related::getHtmlRelated($backlinkPages);
 
 

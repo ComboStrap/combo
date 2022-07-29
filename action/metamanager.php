@@ -104,7 +104,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 ->send();
             return;
         }
-        $page = MarkupPath::createPageFromId($id);
+        $page = MarkupPath::createMarkupFromId($id);
         if (!$page->exists()) {
             HttpResponse::createForStatus(HttpResponse::STATUS_DOES_NOT_EXIST)
                 ->setEvent($event)

@@ -96,7 +96,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         }
 
 
-        $page = MarkupPath::createPageFromId($ID);
+        $page = MarkupPath::createMarkupFromId($ID);
 
         if (!$page->exists()) {
             return;

@@ -65,7 +65,7 @@ class action_plugin_combo_fulldatabasereplication extends DokuWiki_Action_Plugin
         } else {
             $id = $ID;
         }
-        $page = MarkupPath::createPageFromId($id);
+        $page = MarkupPath::createMarkupFromId($id);
 
         /**
          * From {@link idx_addPage}

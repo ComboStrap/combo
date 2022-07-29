@@ -23,6 +23,7 @@ class Animation
     const ON_VIEW_ATTRIBUTE = "onview";
     const ON_VIEW_SNIPPET_ID = "onview";
     const ANIMATE_CLASS = "animate__animated";
+    const CANONICAL = "animation";
 
     /**
      * Based on https://wowjs.uk/
@@ -47,13 +48,18 @@ class Animation
 
             self::scrollMagicInit();
 
-            $snippetManager
-                ->attachRemoteCssStyleSheet(
-                    self::ON_VIEW_SNIPPET_ID,
-                    "https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css",
-                    "sha256-X7rrn44l1+AUO65h1LGALBbOc5C5bOstSYsNlv9MhT8="
-                )
-                ->setCritical(false);
+            try {
+                $snippetManager
+                    ->attachRemoteCssStyleSheet(
+                        self::ON_VIEW_SNIPPET_ID,
+                        "https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css",
+                        "sha256-X7rrn44l1+AUO65h1LGALBbOc5C5bOstSYsNlv9MhT8="
+                    )
+                    ->setCritical(false);
+            } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
+                // should not happen
+                LogUtility::internalError("Error while trying to add the animate css stylesheet",self::CANONICAL,$e);
+            }
 
         }
 

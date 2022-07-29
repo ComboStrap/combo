@@ -64,7 +64,12 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      * Not level 1 because this is the top level heading
      * Not level 2 because this is the most used level and we can confound with it
      */
-    const DEFAULT_LEVEL = "3";
+    const DEFAULT_LEVEL_TITLE_CONTEXT = "3";
+    /**
+     * 1 because in test if used without any, this is
+     * the first expected one in a outline
+     */
+    const DEFAULT_LEVEL_OUTLINE_CONTEXT = "1";
 
     /**
      * The section generation:
@@ -77,6 +82,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
     const CONF_SECTION_LAYOUT_VALUES = [self::CONF_SECTION_LAYOUT_COMBO, self::CONF_SECTION_LAYOUT_DOKUWIKI];
     const CONF_SECTION_LAYOUT_DEFAULT = self::CONF_SECTION_LAYOUT_COMBO;
+
 
 
     /**
@@ -342,7 +348,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
             // numbering
             try {
-                $enable = ExecutionContext::getActualOrCreateFromEnv()->getConfValue(Outline::CONF_OUTLINE_NUMBERING_ENABLE,Outline::CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT);
+                $enable = ExecutionContext::getActualOrCreateFromEnv()->getConfValue(Outline::CONF_OUTLINE_NUMBERING_ENABLE, Outline::CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT);
                 if ($enable) {
                     $snippet = $snippetManager->attachCssInternalStyleSheet(Outline::OUTLINE_HEADING_NUMBERING);
                     if (!$snippet->hasInlineContent()) {
@@ -484,6 +490,12 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 $tagAttributes = TagAttributes::createFromTagMatch($match);
 
                 /**
+                 * Context determination
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+                $context = self::getContext($callStack);
+
+                /**
                  * Level is mandatory (for the closing tag)
                  */
                 $level = $tagAttributes->getValue(syntax_plugin_combo_heading::LEVEL);
@@ -510,7 +522,11 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                      * Still null, default level
                      */
                     if ($level == null) {
-                        $level = self::DEFAULT_LEVEL;
+                        if ($context === self::TYPE_OUTLINE) {
+                            $level = self::DEFAULT_LEVEL_OUTLINE_CONTEXT;
+                        } else {
+                            $level = self::DEFAULT_LEVEL_TITLE_CONTEXT;
+                        }
                     }
                     /**
                      * Set the level
@@ -518,11 +534,6 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                     $tagAttributes->addComponentAttributeValue(self::LEVEL, $level);
                 }
 
-                /**
-                 * Context determination
-                 */
-                $callStack = CallStack::createFromHandler($handler);
-                $context = self::getContext($callStack);
 
                 return array(
                     PluginUtility::STATE => $state,

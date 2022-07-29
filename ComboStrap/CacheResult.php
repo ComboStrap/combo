@@ -51,7 +51,7 @@ class CacheResult
 
     public function getPageFragment(): MarkupPath
     {
-        return MarkupPath::createPageFromId($this->cacheParser->page);
+        return MarkupPath::createMarkupFromId($this->cacheParser->page);
     }
 
     public function getResult(): bool

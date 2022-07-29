@@ -1068,7 +1068,7 @@ class PluginUtility
             return false;
         }
 
-        $page = MarkupPath::createPageFromId($ID);
+        $page = MarkupPath::createMarkupFromId($ID);
         if (!$page->exists()) {
             return false;
         }

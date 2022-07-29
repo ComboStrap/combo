@@ -145,7 +145,7 @@ class CacheManager
             return false;
         }
 
-        $page = MarkupPath::createPageFromId($pageId);
+        $page = MarkupPath::createMarkupFromId($pageId);
         try {
             $cacheExpirationFrequency = CacheExpirationFrequency::createForPage($page)
                 ->getValue();

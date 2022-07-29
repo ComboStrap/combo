@@ -261,7 +261,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     {
 
         $id = self::getOriginalIdFromRequest();
-        $page = MarkupPath::createPageFromId($id);
+        $page = MarkupPath::createMarkupFromId($id);
         if (!FileSystems::exists($page)) {
             // Well known
             if (self::isWellKnownFile($id)) {
@@ -317,7 +317,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Page is an existing id ?
          */
-        $requestedPage = MarkupPath::createPageFromId($ID);
+        $requestedPage = MarkupPath::createMarkupFromId($ID);
         if ($requestedPage->exists()) {
 
             /**

@@ -847,7 +847,7 @@ class Site
      */
     public static function getPageFooterSlotName()
     {
-        return tpl_getConf("footerSlotPageName", "slot_footer");
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageLayout::CONF_PAGE_FOOTER_NAME, PageLayout::CONF_PAGE_FOOTER_NAME_DEFAULT);
     }
 
     /**
@@ -855,7 +855,7 @@ class Site
      */
     public static function getPageHeaderSlotName()
     {
-        return tpl_getConf("headerSlotPageName", "slot_header");
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageLayout::CONF_PAGE_HEADER_NAME, PageLayout::CONF_PAGE_HEADER_NAME_DEFAULT);
     }
 
     /**
@@ -863,7 +863,7 @@ class Site
      */
     public static function getPageSideSlotName()
     {
-        return tpl_getConf("sidekickSlotPageName", "slot_main_side");
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageLayout::CONF_PAGE_MAIN_SIDEKICK_NAME, PageLayout::CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT);
     }
 
     /**

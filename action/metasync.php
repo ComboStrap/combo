@@ -29,7 +29,7 @@ class action_plugin_combo_metasync
     {
 
         $id = $event->data["page"];
-        $page = MarkupPath::createPageFromId($id);
+        $page = MarkupPath::createMarkupFromId($id);
         $store = MetadataDokuWikiStore::getOrCreateFromResource($page);
         $result = $event->result;
         $store->setData($result);

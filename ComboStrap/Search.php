@@ -67,7 +67,7 @@ EOF;
                 ->execute()
                 ->getRows();
             foreach ($rows as $row) {
-                $pages[] = MarkupPath::createPageFromId($row["id"]);
+                $pages[] = MarkupPath::createMarkupFromId($row["id"]);
             }
             return $pages;
         } catch (ExceptionCompile $e) {

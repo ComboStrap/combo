@@ -87,41 +87,6 @@ class SnippetSystem
         return $slotSnippets;
     }
 
-    /**
-     * @param Snippet[] $snippets
-     * @return array
-     */
-    public function snippetsToDokuwikiArray(array $snippets): array
-    {
-        /**
-         * The returned array in dokuwiki format
-         */
-        $returnedDokuWikiFormat = array();
-
-        /**
-         * Processing the external resources
-         * and collecting the internal one
-         *
-         * The order is the order where they were added/created.
-         *
-         * The internal script may be dependent on the external javascript
-         * and vice-versa (for instance, Math-Jax library is dependent
-         * on the config that is an internal inline script)
-         *
-         */
-        foreach ($snippets as $snippet) {
-
-            try {
-                $returnedDokuWikiFormat[$snippet->getHtmlTag()][] = $snippet->toDokuWikiArray();
-            } catch (ExceptionBadState|ExceptionNotFound $e) {
-                LogUtility::error("An error has occurred while trying to add the HTML snippet ($snippet). Error:{$e->getMessage()}");
-            }
-
-        }
-
-        return $returnedDokuWikiFormat;
-    }
-
 
     public
     function getJsonArrayFromSlotSnippets($slot): ?array
@@ -204,6 +169,10 @@ class SnippetSystem
     }
 
 
+    /**
+     * @param $componentId
+     * @return Snippet[]
+     */
     public function getSnippetsForComponent($componentId): array
     {
         $snippets = [];
@@ -217,6 +186,17 @@ class SnippetSystem
             }
         }
         return $snippets;
+    }
+
+    /**
+     * Utility function used in test
+     * or to show how to test if snippets are present
+     * @param $componentId
+     * @return bool
+     */
+    public function hasSnippetsForComponent($componentId): bool
+    {
+        return count($this->getSnippetsForComponent($componentId)) > 0;
     }
 
     /**

@@ -94,11 +94,15 @@ class PageLayoutName extends MetadataText
                      */
                     return self::LANDING_LAYOUT_VALUE;
             }
-        } catch (ExceptionCompile $e) {
-            // Strap not installed
+        } catch (ExceptionNotFound $e) {
+            // No last name not installed
         }
         if ($page->isIndexPage()) {
             return self::INDEX_LAYOUT_VALUE;
+        }
+        if (PluginUtility::isDevOrTest()) {
+            // to speed test, no default page header, footer parsing
+            return self::BLANK_LAYOUT;
         }
         return self::HOLY_LAYOUT_VALUE;
     }

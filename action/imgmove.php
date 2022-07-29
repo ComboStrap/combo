@@ -45,7 +45,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         $sourceImageId = $event->data["src_id"];
         $targetImageId = $event->data["dst_id"];
         foreach ($affectedPagesId as $affectedPageId) {
-            $affectedPage = MarkupPath::createPageFromId($affectedPageId)
+            $affectedPage = MarkupPath::createMarkupFromId($affectedPageId)
                 ->setReadStore(MetadataDokuWikiStore::class);
 
             $pageImages = PageImages::createForPage($affectedPage);
@@ -127,7 +127,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          * The original move method
          * is {@link helper_plugin_move_handler::media()}
          */
-        $page = MarkupPath::createPageFromId("move-fake-id");
+        $page = MarkupPath::createMarkupFromId("move-fake-id");
         try {
             $metadataFrontmatterStore = MetadataFrontmatterStore::createFromFrontmatterString($page, $match);
         } catch (ExceptionCompile $e) {

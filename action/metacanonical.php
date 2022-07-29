@@ -37,7 +37,7 @@ class action_plugin_combo_metacanonical
             return;
         }
 
-        $page = MarkupPath::createPageFromId($ID);
+        $page = MarkupPath::createMarkupFromId($ID);
 
         /**
          * No canonical for slot page

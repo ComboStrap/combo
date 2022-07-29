@@ -47,6 +47,12 @@ class PageLayout
     public const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
     public const CONF_REM_SIZE = "remSize";
     public const PRELOAD_TAG = "preload";
+    const CONF_PAGE_FOOTER_NAME = "footerSlotPageName";
+    const CONF_PAGE_FOOTER_NAME_DEFAULT = "slot_footer";
+    const CONF_PAGE_HEADER_NAME = "headerSlotPageName";
+    const CONF_PAGE_HEADER_NAME_DEFAULT =  "slot_header" ;
+    const CONF_PAGE_MAIN_SIDEKICK_NAME = "sidekickSlotPageName";
+    const CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT = "slot_main_side";
     private string $layoutName;
     private WikiPath $cssPath;
     private WikiPath $jsPath;

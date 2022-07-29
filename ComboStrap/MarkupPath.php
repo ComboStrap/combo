@@ -195,7 +195,7 @@ class MarkupPath implements ResourceCombo, Path
         return self::createPageFromPathObject($wikiPath);
     }
 
-    public static function createPageFromId($id): MarkupPath
+    public static function createMarkupFromId($id): MarkupPath
     {
         return new MarkupPath(WikiPath::createPagePathFromId($id));
     }
@@ -250,7 +250,7 @@ class MarkupPath implements ResourceCombo, Path
     {
         WikiPath::checkNamespacePath($namespacePath);
 
-        return MarkupPath::createPageFromId($namespacePath);
+        return MarkupPath::createMarkupFromId($namespacePath);
     }
 
 
@@ -384,7 +384,7 @@ class MarkupPath implements ResourceCombo, Path
 
         $pages = [];
         foreach (array_keys($metadata['references']) as $referencePageId) {
-            $pages[$referencePageId] = MarkupPath::createPageFromId($referencePageId);
+            $pages[$referencePageId] = MarkupPath::createMarkupFromId($referencePageId);
         }
         return $pages;
 
@@ -430,7 +430,7 @@ class MarkupPath implements ResourceCombo, Path
          */
         $ft_backlinks = ft_backlinks($this->getWikiId());
         foreach ($ft_backlinks as $backlinkId) {
-            $backlinks[$backlinkId] = MarkupPath::createPageFromId($backlinkId);
+            $backlinks[$backlinkId] = MarkupPath::createMarkupFromId($backlinkId);
         }
         return $backlinks;
     }
@@ -1973,7 +1973,7 @@ class MarkupPath implements ResourceCombo, Path
         if ($nearestMainFooter === false) {
             return null;
         }
-        return MarkupPath::createPageFromId($nearestMainFooter);
+        return MarkupPath::createMarkupFromId($nearestMainFooter);
 
 
     }
@@ -2023,7 +2023,7 @@ class MarkupPath implements ResourceCombo, Path
         if ($nearest === false) {
             return null;
         }
-        return MarkupPath::createPageFromId($nearest);
+        return MarkupPath::createMarkupFromId($nearest);
     }
 
     public function createPageFetcherHtml(): FetcherPage
@@ -2056,7 +2056,7 @@ class MarkupPath implements ResourceCombo, Path
         if ($nearest === false) {
             return null;
         }
-        return MarkupPath::createPageFromId($nearest);
+        return MarkupPath::createMarkupFromId($nearest);
     }
 
     /**

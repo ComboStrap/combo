@@ -192,6 +192,14 @@ class Snippet implements JsonSerializable
 
 
     /**
+     *
+     *
+     * The order is the order where they were added/created.
+     *
+     * The internal script may be dependent on the external javascript
+     * and vice-versa (for instance, Math-Jax library is dependent
+     * on the config that is an internal inline script)
+     *
      * @return Snippet[]
      *
      */
@@ -220,7 +228,7 @@ class Snippet implements JsonSerializable
      * @return string - the class
      * See also {@link Snippet::getClass()} function
      */
-    public static function getClassFromSnippetId($snippetId): string
+    public static function getClassFromComponentId($snippetId): string
     {
         return StyleUtility::addComboStrapSuffix("snippet-" . $snippetId);
     }
@@ -252,6 +260,15 @@ class Snippet implements JsonSerializable
         $snippet = &$snippets[$snippetGuid];
         if ($snippet === null) {
             $snippet = self::createSnippet($localSnippetPath);
+            /**
+             *
+             * The order is the order where they were added/created.
+             *
+             * The internal script may be dependent on the external javascript
+             * and vice-versa (for instance, Math-Jax library is dependent
+             * on the config that is an internal inline script)
+             *
+             */
             $snippets[$snippetGuid] = $snippet;
         }
 

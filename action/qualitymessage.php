@@ -235,7 +235,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         }
 
 
-        $page = MarkupPath::createPageFromId($id);
+        $page = MarkupPath::createMarkupFromId($id);
 
         $message = self::createHtmlQualityNote($page);
 

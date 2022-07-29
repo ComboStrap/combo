@@ -149,7 +149,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
             /**
              * Check page id
              */
-            $targetPage = MarkupPath::createPageFromId($targetId);
+            $targetPage = MarkupPath::createMarkupFromId($targetId);
             $targetPageId = PageId::createForPage($targetPage);
             $targetPageIdValue = $targetPageId->getValueFromStore();
             $databasePageIdValue = $databasePage->getPageId();

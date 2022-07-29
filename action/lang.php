@@ -73,7 +73,7 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
         $id = getID("id", $clean);
         $id = WikiPath::normalizeWikiPath($id);
         self::setNormalizedId($id);
-        $page = MarkupPath::createPageFromId($id);
+        $page = MarkupPath::createMarkupFromId($id);
         if (!FileSystems::exists($page->getPathObject())) {
             // Is it a permanent link
             try {

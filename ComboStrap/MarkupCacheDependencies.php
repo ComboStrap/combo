@@ -155,7 +155,7 @@ class MarkupCacheDependencies
             /**
              * Rerender secondary slot if needed
              */
-            $page = MarkupPath::createPageFromId($ID);
+            $page = MarkupPath::createMarkupFromId($ID);
             $independentSlots = $page->getPrimaryIndependentSlots();
             foreach ($independentSlots as $secondarySlot) {
                 $htmlDocument = $secondarySlot->getHtmlFetcher();

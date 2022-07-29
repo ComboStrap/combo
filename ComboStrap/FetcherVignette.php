@@ -318,7 +318,7 @@ class FetcherVignette extends FetcherImage
         $lastPoint = strrpos($vignette, ".");
         $extension = substr($vignette, $lastPoint + 1);
         $wikiId = substr($vignette, 0, $lastPoint);
-        $this->setPage(MarkupPath::createPageFromId($wikiId));
+        $this->setPage(MarkupPath::createMarkupFromId($wikiId));
         if (!FileSystems::exists($this->page->getPathObject())) {
             throw new ExceptionNotFound("The page does not exists");
         }

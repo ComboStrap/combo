@@ -68,7 +68,7 @@ class Index
             if ($pageToMatch->getWikiId() === $pageId) {
                 continue;
             }
-            $actualPage = MarkupPath::createPageFromId($pageId);
+            $actualPage = MarkupPath::createMarkupFromId($pageId);
             if ($actualPage->getPathObject()->getLastName() === $lastName) {
                 $matchedPages[] = $actualPage;
             }

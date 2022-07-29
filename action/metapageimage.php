@@ -34,7 +34,7 @@ class action_plugin_combo_metapageimage
     function metadataPageImages($event)
     {
         $dokuwikiId = $event->data["page"];
-        $page = MarkupPath::createPageFromId($dokuwikiId);
+        $page = MarkupPath::createMarkupFromId($dokuwikiId);
         $pageImagesMeta = PageImages::createForPage($page);
         $pageImages = $pageImagesMeta->getValueAsPageImages();
         if ($pageImages === null) {

@@ -284,7 +284,7 @@ class EditButton
                     return "";
                 }
             } else {
-                $page = MarkupPath::createPageFromId($wikiId);
+                $page = MarkupPath::createMarkupFromId($wikiId);
             }
             $formId = $data[self::FORM_ID];
             unset($data[self::FORM_ID]);

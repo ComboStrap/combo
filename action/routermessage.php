@@ -145,7 +145,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
             // Add a list of page with the same name to the message
             // if the redirections is not planned
             if ($redirectSource != action_plugin_combo_router::TARGET_ORIGIN_PAGE_RULES) {
-                $pageOrigin = MarkupPath::createPageFromId($pageIdOrigin);
+                $pageOrigin = MarkupPath::createMarkupFromId($pageIdOrigin);
                 $this->addToMessagePagesWithSameName($message, $pageOrigin);
             }
 

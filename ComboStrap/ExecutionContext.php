@@ -575,5 +575,10 @@ class ExecutionContext
         return $this;
     }
 
+    public function getSnippetSystem(): SnippetSystem
+    {
+        return SnippetSystem::getFromContext();
+    }
+
 
 }

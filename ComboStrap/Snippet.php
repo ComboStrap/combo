@@ -58,25 +58,12 @@ class Snippet implements JsonSerializable
     const JSON_HTML_ATTRIBUTES_PROPERTY = "attributes";
 
     /**
-     * When a snippet is scoped to the request
-     * (ie not saved with a slot)
-     *
-     * They are unique on a request scope
-     *
-     * TlDR: The snippet does not depends to a slot but to a {@link FetcherPage page} and cannot therefore be cached along.
-     *
-     * The code that adds this snippet is not created by the parsing of content
-     * or depends on the page.
-     *
-     * It's always called and add the snippet whatsoever.
-     * Generally, this is an action plugin with a `TPL_METAHEADER_OUTPUT` hook
-     * such as {@link Bootstrap}, {@link HistoricalBreadcrumbMenuItem},
-     * ,...
-     *
-     * The request scope snippets are needed in admin page where there is no parsing at all
-     *
+     * This variable was to create snippet that were not dependent on markup
+     * but we found out that there is always an id (by default to the requested markup id)
+     * @deprecated A snippet should always be attached to a slot
      */
     const REQUEST_SCOPE = "request";
+
     const SLOT_SCOPE = "slot";
     const ALL_SCOPE = "all";
     public const COMBO_POPOVER = "combo-popover";
@@ -141,6 +128,9 @@ class Snippet implements JsonSerializable
      * (ie with a to function such as {@link Snippet::toTagAttributes()} or {@link Snippet::toDokuWikiArray()}
      * We use it to not delete the state of {@link ExecutionContext} in order to check the created snippet
      * during an execution
+     *
+     * The positive side effect is that even if the snippet is used in multiple markup for a page,
+     * It will be outputted only once.
      */
     private bool $hasHtmlOutputOccurred = false;
 
@@ -276,6 +266,7 @@ class Snippet implements JsonSerializable
             $wikiId = ExecutionContext::getActualOrCreateFromEnv()->getExecutingWikiId();
             $snippet->addSlot($wikiId);
         } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("A markup id was not found. Adding a snippet is always markup based (by default, the markup id requested)");
             $snippet->addSlot(Snippet::REQUEST_SCOPE);
         }
 

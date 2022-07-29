@@ -105,4 +105,9 @@ class ArrayUtility
     {
         return array_merge($default,$overwrite);
     }
+
+    public static function formatAsString(array $array): string
+    {
+        return Json::createFromArray($array)->toPrettyJsonString();
+    }
 }

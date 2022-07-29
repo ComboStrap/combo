@@ -153,17 +153,17 @@ class ExecutionContext
     }
 
     /**
+     * Utility class to set the requested id (used only in test,
+     * normally the environment is set from global PHP environment variable
+     * that get the HTTP request
      * @param string $requestedId
-     * @param string $requestedAct
      * @return ExecutionContext
      */
-    public static function createFromWikiId(string $requestedId, string $requestedAct = "show"): ExecutionContext
+    public static function getOrCreateFromWikiId(string $requestedId): ExecutionContext
     {
-        if (self::$executionContext !== null) {
-            LogUtility::internalError("The root context should be closed first");
-        }
-        self::$executionContext = self::createFromWikiId($requestedId, $requestedAct);
-        return self::$executionContext;
+
+        return self::getActualOrCreateFromEnv()
+            ->setNewRequestedId($requestedId);
 
     }
 
@@ -372,7 +372,8 @@ class ExecutionContext
     {
 
         if (count($this->previousRunningEnvs) > 0) {
-            throw new ExceptionRuntimeInternal("All sub execution environment were not closed");
+            $env = ArrayUtility::formatAsString($this->previousRunningEnvs);
+            throw new ExceptionRuntimeInternal("All sub execution environment were not closed. $env");
         }
         $this->restoreEnv();
 
@@ -548,7 +549,7 @@ class ExecutionContext
     {
 
         foreach ($this->configurationValuesToRestore as $guid => $value) {
-            [$plugin, $confKey] = explode(":",$guid);
+            [$plugin, $confKey] = explode(":", $guid);
             Site::setConf($confKey, $value, $plugin);
         }
     }

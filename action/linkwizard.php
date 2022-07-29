@@ -8,6 +8,7 @@ use ComboStrap\LinkMarkup;
 use ComboStrap\Mime;
 use ComboStrap\PluginUtility;
 use ComboStrap\Search;
+use ComboStrap\Site;
 use ComboStrap\Sqlite;
 use ComboStrap\StringUtility;
 
@@ -68,7 +69,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
             return;
         }
 
-        if (PluginUtility::getConfValue(self::CONF_ENABLE_ENHANCED_LINK_WIZARD, 1) === 0) {
+        if (Site::getConfValue(self::CONF_ENABLE_ENHANCED_LINK_WIZARD, 1) === 0) {
             return;
         }
 

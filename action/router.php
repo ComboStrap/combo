@@ -219,7 +219,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     function register(Doku_Event_Handler $controller)
     {
 
-        if (PluginUtility::getConfValue(self::ROUTER_ENABLE_CONF, 1)) {
+        if (Site::getConfValue(self::ROUTER_ENABLE_CONF, 1)) {
 
             /**
              * This will call the function {@link action_plugin_combo_router::_router()}

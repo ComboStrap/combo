@@ -63,7 +63,7 @@ class Shadow
     public
     static function getDefaultClass()
     {
-        $defaultValue = PluginUtility::getConfValue(self::CONF_DEFAULT_VALUE);
+        $defaultValue = Site::getConfValue(self::CONF_DEFAULT_VALUE);
         return self::getClass($defaultValue);
     }
 

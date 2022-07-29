@@ -21,7 +21,7 @@ use action_plugin_combo_css;
 class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
 {
 
-    const CANONICAL = "markup";
+    const CANONICAL = "webcode";
     const NAME = "markup";
 
     public const MARKUP_PROPERTY = "markup";
@@ -95,7 +95,7 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
         /**
          * Conf
          */
-        PluginUtility::setConf(action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET, true);
+        Site::setConf(action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET, true);
 
         $fetcherCache = FetcherCache::createFrom($this);
         if ($fetcherCache->isCacheUsable()) {
@@ -120,25 +120,14 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
 
         $title = $this->getRequestedTitle();
 
+        try {
+            $html = PageLayout::createFromLayoutName(PageLayoutName::BLANK_LAYOUT)
+                ->setRequestedTitle($title)
+                ->generateAndGetPageHtmlAsString($mainContent);
+        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("An error has occurred while creating the HTML page. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+        }
 
-        $htmlHeadTags = HtmlHeadTags::create()
-            ->get();
-
-        /**
-         * Html
-         */
-        $html = <<<HTML
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<title>$title</title>
-$htmlHeadTags
-</head>
-<body>
-$mainContent
-</body>
-</html>
-HTML;
         $fetcherCache->storeCache($html);
         return $html;
 

@@ -64,7 +64,7 @@ class SvgImageLink extends ImageLink
 
         $lazyLoad = $this->isLazyLoaded();
 
-        $svgInjection = PluginUtility::getConfValue(self::CONF_SVG_INJECTION_ENABLE, 1);
+        $svgInjection = Site::getConfValue(self::CONF_SVG_INJECTION_ENABLE, 1);
 
         /**
          * Snippet
@@ -255,7 +255,7 @@ class SvgImageLink extends ImageLink
 
     private function getMaxInlineSize()
     {
-        return PluginUtility::getConfValue(self::CONF_MAX_KB_SIZE_FOR_INLINE_SVG, 2) * 1024;
+        return Site::getConfValue(self::CONF_MAX_KB_SIZE_FOR_INLINE_SVG, 2) * 1024;
     }
 
 
@@ -264,7 +264,7 @@ class SvgImageLink extends ImageLink
         try {
             return $this->mediaMarkup->isLazy();
         } catch (ExceptionNotFound $e) {
-            return PluginUtility::getConfValue(SvgImageLink::CONF_LAZY_LOAD_ENABLE);
+            return Site::getConfValue(SvgImageLink::CONF_LAZY_LOAD_ENABLE);
         }
     }
 

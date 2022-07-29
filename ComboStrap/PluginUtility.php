@@ -725,17 +725,6 @@ class PluginUtility
 
     }
 
-    public
-    static function getConfValue($confName, $defaultValue = null)
-    {
-        global $conf;
-        $value = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName];
-        if ($value === null || trim($value) === "") {
-            return $defaultValue;
-        }
-        return $value;
-    }
-
     /**
      * @param $match
      * @return null|string - return the tag name or null if not found
@@ -866,18 +855,6 @@ class PluginUtility
             PluginUtility::PAYLOAD => $match,
             PluginUtility::CONTEXT => $context
         );
-    }
-
-    /**
-     * @param $key
-     * @param $value
-     * @param string $namespace
-     * @return void
-     * @deprecated
-     */
-    public static function setConf($key, $value, string $namespace = 'plugin')
-    {
-        ExecutionContext::getActualOrCreateFromEnv()->setConf($key, $value, $namespace);
     }
 
     /**

@@ -189,7 +189,7 @@ class Identity
              */
             $logoHtmlImgTag = "";
             if (
-                PluginUtility::getConfValue(Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS, 1)
+                Site::getConfValue(Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS, 1)
                 &&
                 $includeLogo === true
             ) {

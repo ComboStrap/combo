@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 
 
 /**
@@ -161,35 +162,6 @@ class syntax_plugin_combo_highlightmd extends DokuWiki_Syntax_Plugin
         }
 
         return false;
-    }
-
-    /**
-     * @param $match
-     * @return int
-     */
-    public
-    function getLevelFromMatch($match)
-    {
-        return 7 - strlen(trim($match));
-    }
-
-
-    private
-    function enableWikiHeading($mode)
-    {
-
-
-        /**
-         * Basically all mode that are not `base`
-         * To not take the dokuwiki heading
-         */
-        if (!(in_array($mode, ['base', 'header', 'table']))) {
-            return true;
-        } else {
-            return PluginUtility::getConfValue(self::CONF_WIKI_HIGHLIGHT_ENABLE, self::CONF_DEFAULT_WIKI_ENABLE_VALUE);
-        }
-
-
     }
 
 

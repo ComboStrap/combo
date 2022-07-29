@@ -13,6 +13,7 @@ use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\IdManager;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
@@ -333,7 +334,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                 /**
                  * End section
                  */
-                if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
+                if (Site::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                     /**
                      * Section
                      * +1 to go at the line
@@ -386,7 +387,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                     /**
                      * Section (Edit button)
                      */
-                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
+                    if (Site::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                         $position = $data[PluginUtility::POSITION];
                         $name = IdManager::getOrCreate()->generateNewHtmlIdForComponent(self::TAG);
                         EditButtonManager::getOrCreate()->createAndAddEditButtonToStack($name, $position);

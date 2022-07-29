@@ -9,6 +9,7 @@ use ComboStrap\MediaMarkup;
 use ComboStrap\EditButton;
 use ComboStrap\IdManager;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\TagAttributes;
 use ComboStrap\ExecutionContext;
 
@@ -303,7 +304,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 /**
                  * File Section editing
                  */
-                if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
+                if (Site::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                     /**
                      * +1 to go at the line ?
                      */

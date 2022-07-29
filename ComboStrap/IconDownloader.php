@@ -220,7 +220,7 @@ class IconDownloader
     public function __construct(string $name)
     {
 
-        $iconNameSpace = PluginUtility::getConfValue(self::CONF_ICONS_MEDIA_NAMESPACE, self::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
+        $iconNameSpace = Site::getConfValue(self::CONF_ICONS_MEDIA_NAMESPACE, self::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
         if (substr($iconNameSpace, 0, 1) != WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $iconNameSpace = WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $iconNameSpace;
         }
@@ -241,7 +241,7 @@ class IconDownloader
          * Name parsing to extract the library name and icon name
          */
         // default
-        $confValue = PluginUtility::getConfValue(self::CONF_DEFAULT_ICON_LIBRARY, self::CONF_DEFAULT_ICON_LIBRARY_DEFAULT);
+        $confValue = Site::getConfValue(self::CONF_DEFAULT_ICON_LIBRARY, self::CONF_DEFAULT_ICON_LIBRARY_DEFAULT);
         $this->setLibrary($confValue);
         $this->setIconName($name);
         // parse
@@ -267,7 +267,7 @@ class IconDownloader
     public static
     function isInIconDirectory(Path $path): bool
     {
-        $iconNameSpace = PluginUtility::getConfValue(IconDownloader::CONF_ICONS_MEDIA_NAMESPACE, IconDownloader::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
+        $iconNameSpace = Site::getConfValue(IconDownloader::CONF_ICONS_MEDIA_NAMESPACE, IconDownloader::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
         if (strpos($path->toPathString(), $iconNameSpace) !== false) {
             return true;
         }

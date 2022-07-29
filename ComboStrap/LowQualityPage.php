@@ -38,8 +38,8 @@ class LowQualityPage
 
     public static function getLowQualityProtectionMode()
     {
-        if (PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true)) {
-            return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE, PageProtection::CONF_VALUE_ACL);
+        if (Site::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true)) {
+            return Site::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE, PageProtection::CONF_VALUE_ACL);
         } else {
             return false;
         }
@@ -53,14 +53,14 @@ class LowQualityPage
     public static function isProtectionEnabled()
     {
 
-        return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true);
+        return Site::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true);
 
     }
 
     public static function getLowQualityLinkType()
     {
 
-        return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE, PageProtection::PAGE_PROTECTION_LINK_NORMAL);
+        return Site::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE, PageProtection::PAGE_PROTECTION_LINK_NORMAL);
 
     }
 

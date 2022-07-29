@@ -119,7 +119,7 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
 
     public function connectTo($mode)
     {
-        $enabled = PluginUtility::getConfValue(self::CONF_HIGHLIGHT_WIKI_ENABLE, self::CONF_DEFAULT_HIGHLIGHT_WIKI_ENABLE_VALUE);
+        $enabled = Site::getConfValue(self::CONF_HIGHLIGHT_WIKI_ENABLE, self::CONF_DEFAULT_HIGHLIGHT_WIKI_ENABLE_VALUE);
         if ($enabled) {
             $this->Lexer->addEntryPattern(self::ENTRY_PATTERN, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }

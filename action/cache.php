@@ -158,7 +158,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
      */
     public static function deleteVaryHeader(): void
     {
-        if (PluginUtility::getConfValue(action_plugin_combo_staticresource::CONF_STATIC_CACHE_ENABLED, 1)) {
+        if (Site::getConfValue(action_plugin_combo_staticresource::CONF_STATIC_CACHE_ENABLED, 1)) {
             Http::removeHeaderIfPresent("Vary");
         }
     }

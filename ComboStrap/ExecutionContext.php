@@ -3,7 +3,7 @@
 namespace ComboStrap;
 
 
-use http\Exception\RuntimeException;
+use dokuwiki\Extension\PluginTrait;
 
 /**
  * An execution object permits to get access to environment variable.
@@ -41,12 +41,25 @@ class ExecutionContext
 
 
     const CANONICAL = "execution-context";
-    const SHOW_ACTION =  "show";
+    const SHOW_ACTION = "show";
+
+    /**
+     * @var array - the configuration value to restore
+     *
+     * Note we can't capture the whole global $conf
+     * because the configuration are loaded at runtime via {@link PluginTrait::loadConfig()}
+     *
+     * Meaning that the configuration environment at the start is not fully loaded
+     * and does not represent the environment totally
+     *
+     * We capture then the change and restore them at the end
+     */
+    private array $configurationValuesToRestore = [];
 
     /**
      * @var array of objects that are scoped to this request
      */
-    private array $runtimeVariables;
+    private array $executionScopedVariables;
 
     private CacheManager $cacheManager;
 
@@ -128,7 +141,6 @@ class ExecutionContext
     }
 
 
-
     /**
      * @throws ExceptionNotFound
      */
@@ -169,8 +181,7 @@ class ExecutionContext
         if (self::$executionContext !== null) {
             LogUtility::internalError("The root context should be closed first");
         }
-        $rootExecutionContext = (new ExecutionContext($url))
-            ->captureRootEnv();
+        $rootExecutionContext = (new ExecutionContext($url));
         self::$executionContext = $rootExecutionContext;
         return $rootExecutionContext;
 
@@ -193,7 +204,6 @@ class ExecutionContext
     {
         self::$executionContext = null;
     }
-
 
 
     /**
@@ -364,9 +374,9 @@ class ExecutionContext
         if (count($this->previousRunningEnvs) > 0) {
             throw new ExceptionRuntimeInternal("All sub execution environment were not closed");
         }
-        $this->restoreRootEnv();
+        $this->restoreEnv();
 
-        unset($this->runtimeVariables);
+        unset($this->executionScopedVariables);
 
         /**
          * Log utility is not yet a conf
@@ -430,15 +440,15 @@ class ExecutionContext
      */
     public function &getRuntimeObject(string $objectIdentifier)
     {
-        if (isset($this->runtimeVariables[$objectIdentifier])) {
-            return $this->runtimeVariables[$objectIdentifier];
+        if (isset($this->executionScopedVariables[$objectIdentifier])) {
+            return $this->executionScopedVariables[$objectIdentifier];
         }
         throw new ExceptionNotFound("No object $objectIdentifier found");
     }
 
     public function setRuntimeObject($objectIdentifier, &$object): ExecutionContext
     {
-        $this->runtimeVariables[$objectIdentifier] = &$object;
+        $this->executionScopedVariables[$objectIdentifier] = &$object;
         return $this;
     }
 
@@ -456,28 +466,36 @@ class ExecutionContext
     /**
      * @param string $key
      * @param $value
-     * @param string $namespace - if null, stored in the global conf namespace
+     * @param string $pluginNamespace - if null, stored in the global conf namespace
      * @return $this
      */
-    public function setConf(string $key, $value, string $namespace = 'plugin'): ExecutionContext
+    public function setConf(string $key, $value, string $pluginNamespace = PluginUtility::PLUGIN_BASE_NAME): ExecutionContext
     {
-        global $conf;
-        if ($namespace !== null) {
-            $conf[$namespace][PluginUtility::PLUGIN_BASE_NAME][$key] = $value;
-        } else {
-            $conf[$key] = $value;
+        /**
+         * Environment within dokuwiki is a global variable
+         *
+         * We set it the global variable
+         *
+         * but we capture it {@link ExecutionContext::$capturedConf}
+         * to restore it when the execution context os {@link ExecutionContext::close()}
+         */
+        $globalKey = "$pluginNamespace:$key";
+        if (!isset($this->configurationValuesToRestore[$globalKey])) {
+            $oldValue = Site::getConfValue($key, $value, $pluginNamespace);
+            $this->configurationValuesToRestore[$globalKey] = $oldValue;
         }
+        Site::setConf($key, $value, $pluginNamespace);
         return $this;
     }
 
     public function getConfValue(string $key, string $default)
     {
-        return PluginUtility::getConfValue($key, $default);
+        return Site::getConfValue($key, $default);
     }
 
     public function setRuntimeBoolean(string $key, bool $b): ExecutionContext
     {
-        $this->runtimeVariables[$key] = $b;
+        $this->executionScopedVariables[$key] = $b;
         return $this;
     }
 
@@ -486,7 +504,7 @@ class ExecutionContext
      */
     public function getRuntimeBoolean(string $name): bool
     {
-        $var = $this->runtimeVariables[$name];
+        $var = $this->executionScopedVariables[$name];
         if (!isset($var)) {
             throw new ExceptionNotFound("No $name runtime env was found");
         }
@@ -521,25 +539,18 @@ class ExecutionContext
         return $this;
     }
 
-    /**
-     * Capture the environment to be able to restore it close
-     * @return ExecutionContext
-     */
-    private function captureRootEnv(): ExecutionContext
-    {
-        global $conf;
-        $this->capturedConf = $conf;
-        return $this;
-    }
 
     /**
      * Restore the configuration
      * @return void
      */
-    private function restoreRootEnv()
+    private function restoreEnv()
     {
-        global $conf;
-        $conf = $this->capturedConf;
+
+        foreach ($this->configurationValuesToRestore as $guid => $value) {
+            [$plugin, $confKey] = explode(":",$guid);
+            Site::setConf($confKey, $value, $plugin);
+        }
     }
 
     public function isConsoleOn(): bool

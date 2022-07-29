@@ -13,6 +13,7 @@
 use ComboStrap\Breakpoint;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
@@ -153,7 +154,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER:
 
                 $knownTypes = self::CONTAINER_VALUES;
-                $defaults["type"] = PluginUtility::getConfValue(self::DEFAULT_LAYOUT_CONTAINER_CONF, self::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                $defaults["type"] = Site::getConfValue(self::DEFAULT_LAYOUT_CONTAINER_CONF, self::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaults, $knownTypes);
                 return array(
                     PluginUtility::STATE => $state,

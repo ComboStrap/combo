@@ -4,6 +4,7 @@ use ComboStrap\Bootstrap;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use dokuwiki\Form\Form;
 
 if (!defined('DOKU_INC')) die();
@@ -35,7 +36,7 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
          * Event using the new object but not found anywhere
          * https://www.dokuwiki.org/devel:event:form_updateprofile_output
          */
-        if (PluginUtility::getConfValue(self::CONF_ENABLE_PROFILE_UPDATE_FORM, 1)) {
+        if (Site::getConfValue(self::CONF_ENABLE_PROFILE_UPDATE_FORM, 1)) {
             $controller->register_hook('HTML_UPDATEPROFILEFORM_OUTPUT', 'BEFORE', $this, 'handle_profile_update', array());
             $controller->register_hook('FORM_UPDATEPROFILE_OUTPUT', 'BEFORE', $this, 'handle_profile_update', array());
         }
@@ -49,7 +50,7 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
          * Event using the new object but not found anywhere
          * https://www.dokuwiki.org/devel:event:form_profiledelete_output
          */
-        if (PluginUtility::getConfValue(self::CONF_ENABLE_PROFILE_DELETE_FORM, 1)) {
+        if (Site::getConfValue(self::CONF_ENABLE_PROFILE_DELETE_FORM, 1)) {
             $controller->register_hook('HTML_PROFILEDELETEFORM_OUTPUT', 'BEFORE', $this, 'handle_profile_delete', array());
             $controller->register_hook('FORM_PROFILEDELETE_OUTPUT', 'BEFORE', $this, 'handle_profile_delete', array());
         }

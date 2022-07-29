@@ -259,7 +259,7 @@ EOF;
                     /**
                      * Preview tooltip
                      */
-                    $previewConfig = PluginUtility::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
+                    $previewConfig = Site::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
                     $preview = $outputAttributes->hasComponentAttributeAndRemove(self::PREVIEW_ATTRIBUTE);
                     if ($preview || $previewConfig === 1) {
                         Tooltip::addToolTipSnippetIfNeeded();
@@ -539,7 +539,7 @@ EOF;
     public
     static function getHtmlClassInternalLink(): string
     {
-        $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        $oldClassName = Site::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
             return "wikilink1";
         } else {
@@ -550,7 +550,7 @@ EOF;
     public
     static function getHtmlClassEmailLink(): string
     {
-        $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        $oldClassName = Site::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
             return "mail";
         } else {
@@ -561,7 +561,7 @@ EOF;
     public
     static function getHtmlClassInterWikiLink(): string
     {
-        $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        $oldClassName = Site::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
             return "interwiki";
         } else {
@@ -572,7 +572,7 @@ EOF;
     public
     static function getHtmlClassExternalLink(): string
     {
-        $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        $oldClassName = Site::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
             return "urlextern";
         } else {
@@ -584,7 +584,7 @@ EOF;
     public
     static function getHtmlClassNotExist(): string
     {
-        $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        $oldClassName = Site::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
             return "wikilink2";
         } else {

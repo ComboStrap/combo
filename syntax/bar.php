@@ -14,6 +14,7 @@ use ComboStrap\Hero;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
@@ -173,7 +174,7 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
                     }
                 }
 
-                if (PluginUtility::getConfValue(self::CONF_ENABLE_BAR_EDITING, 1)) {
+                if (Site::getConfValue(self::CONF_ENABLE_BAR_EDITING, 1)) {
 
                     $position = $openingTag->getFirstMatchedCharacterPosition();
                     try {
@@ -239,7 +240,7 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 
                     $htmlTag = $data[self::HTML_TAG_ATTRIBUTES];
                     $renderer->doc .= $attributes->toHtmlEnterTag($htmlTag);
-                    $layoutContainer = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                    $layoutContainer = Site::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
                     $containerClass = syntax_plugin_combo_container::getClassName($layoutContainer);
                     $renderer->doc .= "<div class=\"$barTag-body position-relative $containerClass\">";
                     break;

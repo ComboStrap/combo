@@ -269,7 +269,7 @@ class Outline
                         break;
 
                     case "header":
-                        if (PluginUtility::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE, syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE) == 1) {
+                        if (Site::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE, syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE) == 1) {
                             LogUtility::msg("The combo heading wiki is enabled, we should not see `header` calls in the call stack");
                         }
                         break;
@@ -389,19 +389,19 @@ class Outline
     public static function getCssNumberingRulesFor(string $type): string
     {
 
-        $enable = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_ENABLE, Outline::CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT);
+        $enable = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_ENABLE, Outline::CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT);
         if (!$enable) {
             throw new ExceptionNotEnabled();
         }
 
-        $level2CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2, "decimal");
-        $level3CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3, "decimal");
-        $level4CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4, "decimal");
-        $level5CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5, "decimal");
-        $level6CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6, "decimal");
-        $counterSeparator = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR, ".");
-        $prefix = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_PREFIX, "");
-        $suffix = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_SUFFIX, " - ");
+        $level2CounterStyle = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2, "decimal");
+        $level3CounterStyle = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3, "decimal");
+        $level4CounterStyle = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4, "decimal");
+        $level5CounterStyle = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5, "decimal");
+        $level6CounterStyle = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6, "decimal");
+        $counterSeparator = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR, ".");
+        $prefix = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_PREFIX, "");
+        $suffix = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_SUFFIX, " - ");
 
         switch ($type) {
 

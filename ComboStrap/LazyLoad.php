@@ -161,7 +161,7 @@ class LazyLoad
      */
     public static function getPlaceholderColor()
     {
-        return PluginUtility::getConfValue(self::CONF_LAZY_LOADING_PLACEHOLDER_COLOR, self::DEFAULT_COLOR);
+        return Site::getConfValue(self::CONF_LAZY_LOADING_PLACEHOLDER_COLOR, self::DEFAULT_COLOR);
     }
 
     /**
@@ -203,8 +203,8 @@ class LazyLoad
 
     public static function disable()
     {
-        PluginUtility::setConf(SvgImageLink::CONF_LAZY_LOAD_ENABLE, 0);
-        PluginUtility::setConf(RasterImageLink::CONF_LAZY_LOADING_ENABLE, 0);
+        Site::setConf(SvgImageLink::CONF_LAZY_LOAD_ENABLE, 0);
+        Site::setConf(RasterImageLink::CONF_LAZY_LOADING_ENABLE, 0);
     }
 
 }

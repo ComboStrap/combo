@@ -15,6 +15,12 @@ class PageLayoutName extends MetadataText
     public const HAMBURGER_LAYOUT_VALUE = "hamburger";
     public const BLANK_LAYOUT = "blank";
 
+    /**
+     * Not public, used in test to overwrite it to {@link PageLayoutName::BLANK_LAYOUT}
+     * to speed up test
+     */
+    const CONF_DEFAULT_NAME = "defaultLayoutName";
+
     public static function createFromPage(MarkupPath $page): PageLayoutName
     {
         return (new PageLayoutName())
@@ -100,11 +106,13 @@ class PageLayoutName extends MetadataText
         if ($page->isIndexPage()) {
             return self::INDEX_LAYOUT_VALUE;
         }
-        if (PluginUtility::isDevOrTest()) {
-            // to speed test, no default page header, footer parsing
-            return self::BLANK_LAYOUT;
-        }
-        return self::HOLY_LAYOUT_VALUE;
+
+        /**
+         * in test to speed the test execution, the default is {@link PageLayoutName::BLANK_LAYOUT}
+         */
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(self::CONF_DEFAULT_NAME, self::HOLY_LAYOUT_VALUE);
+
+
     }
 
     public function getCanonical(): string

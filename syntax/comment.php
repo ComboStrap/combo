@@ -5,6 +5,7 @@
 use ComboStrap\EditButtonManager;
 use ComboStrap\PluginUtility;
 use ComboStrap\EditButton;
+use ComboStrap\Site;
 
 if (!defined('DOKU_INC')) die();
 
@@ -35,7 +36,7 @@ class syntax_plugin_combo_comment extends DokuWiki_Syntax_Plugin
         if (strpos($normalizedContent, EditButton::EDIT_BUTTON_PREFIX)===0){
             return true;
         }
-        $confValue = PluginUtility::getConfValue(self::CONF_OUTPUT_COMMENT, 0);
+        $confValue = Site::getConfValue(self::CONF_OUTPUT_COMMENT, 0);
         if ($confValue === 1) {
             return true;
         }

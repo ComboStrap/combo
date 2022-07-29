@@ -138,7 +138,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
         $facebookImages = $page->getImagesForTheFollowingUsages([PageImageUsage::FACEBOOK, PageImageUsage::SOCIAL, PageImageUsage::ALL]);
         if (empty($facebookImages)) {
-            $defaultFacebookImage = PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
+            $defaultFacebookImage = Site::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
             if (!empty($defaultFacebookImage)) {
                 $dokuPath = WikiPath::createMediaPathFromId($defaultFacebookImage);
                 if (FileSystems::exists($dokuPath)) {

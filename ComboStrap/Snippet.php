@@ -743,7 +743,7 @@ class Snippet implements JsonSerializable
     private
     function getMaxInlineSize()
     {
-        return PluginUtility::getConfValue(SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG, 2) * 1024;
+        return Site::getConfValue(SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG, 2) * 1024;
     }
 
     /**

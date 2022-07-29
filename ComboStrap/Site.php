@@ -262,6 +262,43 @@ class Site
         return $lang['direction'];
     }
 
+    /**
+     * Set a site configuration outside a {@link ExecutionContext}
+     * It permits to configure the installation before execution
+     *
+     * For instance, we set the {@link PageLayoutName::CONF_DEFAULT_NAME default page layout} as {@link PageLayoutName::BLANK_LAYOUT}
+     * in test by default to speed ud test. In a normal environment, the default is {@link PageLayoutName::HOLY_LAYOUT_VALUE}
+     *
+     * @param $key
+     * @param $value
+     * @param string $namespace - the plugin name
+     * @return void
+     *
+     */
+    public static function setConf($key, $value, string $namespace = PluginUtility::PLUGIN_BASE_NAME)
+    {
+        global $conf;
+        if ($namespace !== null) {
+            $conf['plugin'][$namespace][$key] = $value;
+        } else {
+            $conf[$key] = $value;
+        }
+    }
+
+    public static function getConfValue($confName, $defaultValue = null, string $namespace = PluginUtility::PLUGIN_BASE_NAME)
+    {
+        global $conf;
+        if ($namespace !== null) {
+            $value = $conf['plugin'][$namespace][$confName];
+        } else {
+            $value = $conf[$confName];
+        }
+        if ($value === null || trim($value) === "") {
+            return $defaultValue;
+        }
+        return $value;
+    }
+
 
     function getEmailObfuscationConfiguration()
     {
@@ -386,7 +423,7 @@ class Site
      */
     public static function getLanguageRegion(): string
     {
-        $region = PluginUtility::getConfValue(Region::CONF_SITE_LANGUAGE_REGION);
+        $region = self::getConfValue(Region::CONF_SITE_LANGUAGE_REGION);
         if (!empty($region)) {
             return $region;
         } else {
@@ -559,7 +596,7 @@ class Site
 
     public static function isLowQualityProtectionEnable(): bool
     {
-        return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE) === 1;
+        return self::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE) === 1;
     }
 
     public static function getIndexPageName()
@@ -636,7 +673,7 @@ class Site
 
     public static function setPrimaryColor(string $primaryColorValue)
     {
-        PluginUtility::setConf(ColorRgb::PRIMARY_COLOR_CONF, $primaryColorValue);
+        self::setConf(ColorRgb::PRIMARY_COLOR_CONF, $primaryColorValue);
     }
 
     public static function getPrimaryColor($default = null): ?ColorRgb
@@ -672,18 +709,18 @@ class Site
 
     public static function setSecondaryColor(string $secondaryColorValue)
     {
-        PluginUtility::setConf(ColorRgb::SECONDARY_COLOR_CONF, $secondaryColorValue);
+        self::setConf(ColorRgb::SECONDARY_COLOR_CONF, $secondaryColorValue);
     }
 
     public static function unsetPrimaryColor()
     {
-        PluginUtility::setConf(ColorRgb::PRIMARY_COLOR_CONF, null);
+        self::setConf(ColorRgb::PRIMARY_COLOR_CONF, null);
     }
 
 
     public static function isBrandingColorInheritanceEnabled(): bool
     {
-        return PluginUtility::getConfValue(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT) === 1;
+        return self::getConfValue(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT) === 1;
     }
 
 
@@ -712,12 +749,12 @@ class Site
 
     public static function enableBrandingColorInheritance()
     {
-        PluginUtility::setConf(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, 1);
+        self::setConf(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, 1);
     }
 
     public static function setBrandingColorInheritanceToDefault()
     {
-        PluginUtility::setConf(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT);
+        self::setConf(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT);
     }
 
     public static function getPrimaryColorForText(string $default = null): ?ColorRgb
@@ -886,7 +923,7 @@ class Site
 
     public static function getPrimaryColorValue($default = null)
     {
-        $value = PluginUtility::getConfValue(ColorRgb::PRIMARY_COLOR_CONF, $default);
+        $value = self::getConfValue(ColorRgb::PRIMARY_COLOR_CONF, $default);
         if ($value !== null && trim($value) !== "") {
             return $value;
         }
@@ -902,7 +939,7 @@ class Site
 
     public static function getSecondaryColorValue($default = null)
     {
-        $value = PluginUtility::getConfValue(ColorRgb::SECONDARY_COLOR_CONF, $default);
+        $value = self::getConfValue(ColorRgb::SECONDARY_COLOR_CONF, $default);
         if ($value === null || trim($value) === "") {
             return null;
         }
@@ -911,12 +948,12 @@ class Site
 
     public static function setCanonicalUrlType(string $value)
     {
-        PluginUtility::setConf(PageUrlType::CONF_CANONICAL_URL_TYPE, $value);
+        self::setConf(PageUrlType::CONF_CANONICAL_URL_TYPE, $value);
     }
 
     public static function setCanonicalUrlTypeToDefault()
     {
-        PluginUtility::setConf(PageUrlType::CONF_CANONICAL_URL_TYPE, null);
+        self::setConf(PageUrlType::CONF_CANONICAL_URL_TYPE, null);
     }
 
     public static function isBrandingColorInheritanceFunctional(): bool
@@ -1105,7 +1142,7 @@ class Site
 
     public static function getDefaultMediaLinking(): string
     {
-        return PluginUtility::getConfValue(MediaMarkup::CONF_DEFAULT_LINKING, MediaMarkup::LINKING_DIRECT_VALUE);
+        return self::getConfValue(MediaMarkup::CONF_DEFAULT_LINKING, MediaMarkup::LINKING_DIRECT_VALUE);
     }
 
     public static function shouldEndpointUrlBeAbsolute(): bool

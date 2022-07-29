@@ -53,7 +53,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
      */
     public static function isEnabledAsShowAction(): bool
     {
-        $confValue = PluginUtility::getConfValue(self::CONF_ENABLE_AS_SHOW_ACTION, self::CONF_ENABLE_AS_SHOW_ACTION_DEFAULT);
+        $confValue = Site::getConfValue(self::CONF_ENABLE_AS_SHOW_ACTION, self::CONF_ENABLE_AS_SHOW_ACTION_DEFAULT);
         return $confValue === 1;
     }
 
@@ -349,7 +349,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
      */
     private function isPublicStaticPage(): bool
     {
-        return PluginUtility::getConfValue(FetcherRailBar::CONF_PRIVATE_RAIL_BAR, 0) === 1 && !Identity::isLoggedIn();
+        return Site::getConfValue(FetcherRailBar::CONF_PRIVATE_RAIL_BAR, 0) === 1 && !Identity::isLoggedIn();
     }
 
     private function getRequestedLayoutOrDefault(): string

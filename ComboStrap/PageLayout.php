@@ -224,7 +224,7 @@ class PageLayout
              */
             if ($domElement->hasAttribute(PageLayout::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
                 $domElement->removeAttribute(PageLayout::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
-                $container = PluginUtility::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                $container = Site::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
                 $domElement->addClass(syntax_plugin_combo_container::getClassName($container));
             }
 

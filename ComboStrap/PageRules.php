@@ -27,7 +27,7 @@ class PageRules
 
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setQueryParametrized('delete from PAGE_RULES where id = ?', $ruleId);
+            ->setQueryParametrized('delete from PAGE_RULES where id = ?', [$ruleId]);
         try {
             $request->execute();
         } catch (ExceptionCombo $e) {
@@ -161,11 +161,16 @@ class PageRules
         );
 
         $statement = 'update PAGE_RULES set matcher = ?, target = ?, priority = ?, timestamp = ? where id = ?';
-        $res = $this->sqlite->query($statement, $entry);
-        if (!$res) {
-            LogUtility::msg("There was a problem during the update");
+        $request = Sqlite::createOrGetSqlite()
+            ->createRequest()
+            ->setQueryParametrized($statement, $entry);
+        try {
+            $request->execute();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("There was a problem during the update. Error: {$e->getMessage()}");
+        } finally {
+            $request->close();
         }
-        $this->sqlite->res_close($res);
 
     }
 
@@ -177,6 +182,7 @@ class PageRules
     function deleteAll()
     {
 
+        /** @noinspection SqlWithoutWhere */
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
             ->setQuery("delete from PAGE_RULES");
@@ -226,7 +232,7 @@ class PageRules
 
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setQuery("select * from PAGE_RULES order by PRIORITY asc");
+            ->setQuery("select * from PAGE_RULES order by PRIORITY");
 
         try {
             return $request->execute()

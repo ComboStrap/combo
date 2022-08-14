@@ -21,12 +21,8 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  */
 class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 {
-
-
-    /**
-     * @var array|string[]
-     */
-    private $infoPlugin;
+    const DELETE_ACTION = 'Delete';
+    const SAVE_ACTION = 'save';
 
     /**
      * @var PageRules
@@ -46,7 +42,6 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
         // of use of $this->getLang
         $this->setupLocale();
         $this->currentDate = date("c");
-        $this->infoPlugin = $this->getInfo();
 
 
     }
@@ -109,7 +104,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
         /**
          * If one of the form submit has the add key
          */
-        if ($_POST['save'] && checkSecurityToken()) {
+        if ($_POST[self::SAVE_ACTION] && checkSecurityToken()) {
 
             $id = $_POST[PageRules::ID_NAME];
             $matcher = $_POST[PageRules::MATCHER_NAME];
@@ -145,7 +140,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 
         }
 
-        if ($_POST['Delete'] && checkSecurityToken()) {
+        if ($_POST[self::DELETE_ACTION] && checkSecurityToken()) {
 
             $ruleId = $_POST[PageRules::ID_NAME];
             $this->pageRuleManager->deleteRule($ruleId);
@@ -223,7 +218,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 
         } else {
 
-            ptln('<h2><a name="" id="pagerules_list">' . 'Rules' . '</a></h2>');
+            ptln('<h2><a id="pagerules_list">' . 'Rules' . '</a></h2>');
             ptln('<div class="level2">');
 
             ptln('<form class="pt-3 pb-3" action="" method="post">');

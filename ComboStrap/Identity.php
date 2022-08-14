@@ -59,11 +59,15 @@ class Identity
 
         if ($request != null) {
             $request->setServer('REMOTE_USER', $user);
-        } else {
-            global $INPUT;
-            $INPUT->server->set('REMOTE_USER', $user);
-            // same as $_SERVER['REMOTE_USER'] = $user;
         }
+
+        /**
+         * used by {@link getSecurityToken()}
+         */
+        global $INPUT;
+        $INPUT->server->set('REMOTE_USER', $user);
+        // same as $_SERVER['REMOTE_USER'] = $user;
+
 
         // $_SERVER[] = $user;
         // global $USERINFO;

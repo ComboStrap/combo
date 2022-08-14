@@ -61,8 +61,13 @@ $conf['ActionReaderSecond'] = 'GoToBestPageName';
  */
 $conf['ActionReaderThird'] = 'GoToSearchEngine';
 $conf['GoToEditMode'] = 1;
+/**
+ * ie {@link action_plugin_combo_routermessage::CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE}
+ * ie {@link action_plugin_combo_routermessage::CONF_SHOW_MESSAGE_CLASSIC}
+ */
 $conf['ShowPageNameIsNotUnique'] = 1;
 $conf['ShowMessageClassic'] = 1;
+
 $conf['WeightFactorForSamePageName'] = 4;
 $conf['WeightFactorForStartPage'] = 3;
 $conf['WeightFactorForSameNamespace'] = 5;

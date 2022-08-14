@@ -2,10 +2,10 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\Identity;
 use ComboStrap\Index;
 use ComboStrap\LogUtility;
 use ComboStrap\Message;
-use ComboStrap\PagesIndex;
 use dokuwiki\Extension\ActionPlugin;
 
 
@@ -26,6 +26,8 @@ class action_plugin_combo_routermessage extends ActionPlugin
     const ORIGIN_PAGE = 'redirectId';
     const ORIGIN_TYPE = 'redirectOrigin';
     const CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE = 'ShowPageNameIsNotUnique';
+    const CONF_SHOW_MESSAGE_CLASSIC = 'ShowMessageClassic';
+    const CONF_SHOW_MESSAGE_CLASSIC_DEFAULT = 1;
 
     function __construct()
     {
@@ -81,10 +83,8 @@ class action_plugin_combo_routermessage extends ActionPlugin
     function _displayRedirectMessage(&$event, $param)
     {
 
-
         $pageIdOrigin = null;
         $redirectSource = null;
-
 
         $messageQueryStringProperties = self::getMessageQueryStringProperties();
         if (!empty($messageQueryStringProperties)) {
@@ -96,6 +96,9 @@ class action_plugin_combo_routermessage extends ActionPlugin
             switch ($redirectSource) {
 
                 case action_plugin_combo_router::TARGET_ORIGIN_PAGE_RULES:
+                    if (!$this->showMessageIfPublicAndPlanned()) {
+                        return;
+                    }
                     $message = Message::createInfoMessage()
                         ->addHtmlContent("<p>" . sprintf($this->getLang('message_redirected_by_redirect'), hsc($pageIdOrigin)) . "</p>");
                     break;
@@ -104,12 +107,10 @@ class action_plugin_combo_routermessage extends ActionPlugin
                     $message = Message::createWarningMessage()
                         ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_startpage'], hsc($pageIdOrigin)) . "</p>");
                     break;
-
                 case  action_plugin_combo_router::TARGET_ORIGIN_BEST_PAGE_NAME:
                     $message = Message::createWarningMessage()
                         ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_bestpagename'], hsc($pageIdOrigin)) . "</p>");
                     break;
-
                 case action_plugin_combo_router::TARGET_ORIGIN_BEST_NAMESPACE:
                     $message = Message::createWarningMessage()
                         ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_bestnamespace'], hsc($pageIdOrigin)) . "</p>");
@@ -130,6 +131,9 @@ class action_plugin_combo_routermessage extends ActionPlugin
                         ->addHtmlContent("<p>" . $this->lang['message_redirected_from_permalink'] . "</p>");
                     break;
                 case action_plugin_combo_router::TARGET_ORIGIN_CANONICAL:
+                    if (!$this->showMessageIfPublicAndPlanned()) {
+                        return;
+                    }
                     $message = Message::createInfoMessage()
                         ->addHtmlContent("<p>" . $this->lang['message_redirected_from_canonical'] . "</p>");
                     break;
@@ -142,7 +146,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
 
             // Add a list of page with the same name to the message
             // if the redirections is not planned
-            if ($redirectSource != action_plugin_combo_router::TARGET_ORIGIN_PAGE_RULES) {
+            if ($redirectSource !== action_plugin_combo_router::TARGET_ORIGIN_PAGE_RULES) {
                 $this->addToMessagePagesWithSameName($message, $pageIdOrigin);
             }
 
@@ -171,54 +175,56 @@ class action_plugin_combo_routermessage extends ActionPlugin
     function addToMessagePagesWithSameName(Message $message, $pageIdOrigin)
     {
 
-        if ($this->getConf(self::CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE) == 1) {
+        if (!$this->getConf(self::CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE) == 1) {
+            return;
+        }
 
-            global $ID;
-            // The page name
-            $pageName = noNS($pageIdOrigin);
-            $pagesWithSameName = Index::getOrCreate()->getPagesWithSameLastName($pageIdOrigin);
+        global $ID;
+        // The page name
+        $pageName = noNS($pageIdOrigin);
+        $pagesWithSameName = Index::getOrCreate()->getPagesWithSameLastName($pageIdOrigin);
 
-            if (count($pagesWithSameName) > 0) {
+        if (count($pagesWithSameName) > 0) {
 
-                $message->setType(Message::TYPE_WARNING);
+            $message->setType(Message::TYPE_WARNING);
 
-                // Assign the value to a variable to be able to use the construct .=
-                if ($message->getPlainTextContent() <> '') {
-                    $message->addHtmlContent('<br/><br/>');
+            // Assign the value to a variable to be able to use the construct .=
+            if ($message->getPlainTextContent() <> '') {
+                $message->addHtmlContent('<br/><br/>');
+            }
+            $message->addHtmlContent($this->lang['message_pagename_exist_one']);
+            $message->addHtmlContent('<ul>');
+
+            $i = 0;
+            foreach ($pagesWithSameName as $pageId => $title) {
+                if ($pageId === $ID) {
+                    continue;
                 }
-                $message->addHtmlContent($this->lang['message_pagename_exist_one']);
-                $message->addHtmlContent('<ul>');
-
-                $i = 0;
-                foreach ($pagesWithSameName as $pageId => $title) {
-                    if ($pageId === $ID) {
-                        continue;
-                    }
-                    $i++;
-                    if ($i > 10) {
-                        $message->addHtmlContent('<li>' .
-                            tpl_link(
-                                wl($pageIdOrigin) . "?do=search&q=" . rawurldecode($pageName),
-                                "More ...",
-                                'class="" rel="nofollow" title="More..."',
-                                $return = true
-                            ) . '</li>');
-                        break;
-                    }
-                    if ($title == null) {
-                        $title = $pageId;
-                    }
+                $i++;
+                if ($i > 10) {
                     $message->addHtmlContent('<li>' .
                         tpl_link(
-                            wl($pageId),
-                            $title,
-                            'class="" rel="nofollow" title="' . $title . '"',
+                            wl($pageIdOrigin) . "?do=search&q=" . rawurldecode($pageName),
+                            "More ...",
+                            'class="" rel="nofollow" title="More..."',
                             $return = true
                         ) . '</li>');
+                    break;
                 }
-                $message->addHtmlContent('</ul>');
+                if ($title == null) {
+                    $title = $pageId;
+                }
+                $message->addHtmlContent('<li>' .
+                    tpl_link(
+                        wl($pageId),
+                        $title,
+                        'class="" rel="nofollow" title="' . $title . '"',
+                        $return = true
+                    ) . '</li>');
             }
+            $message->addHtmlContent('</ul>');
         }
+
     }
 
 
@@ -265,7 +271,6 @@ class action_plugin_combo_routermessage extends ActionPlugin
         // Close the session
         $phpVersion = phpversion();
         if ($phpVersion > "7.2.0") {
-            /** @noinspection PhpVoidFunctionResultUsedInspection */
             $result = session_write_close();
             if (!$result) {
                 // Session is really not a well known mechanism
@@ -276,6 +281,19 @@ class action_plugin_combo_routermessage extends ActionPlugin
             session_write_close();
         }
 
+    }
+
+    /**
+     * We don't saw the message if it was planned and
+     * it's a reader
+     * @return bool
+     */
+    private function showMessageIfPublicAndPlanned(): bool
+    {
+        if (Identity::isWriter()){
+            return true;
+        }
+        return $this->getConf(self::CONF_SHOW_MESSAGE_CLASSIC, self::CONF_SHOW_MESSAGE_CLASSIC_DEFAULT) == 1;
     }
 
 }

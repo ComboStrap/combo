@@ -29,6 +29,7 @@ use ComboStrap\RasterImageLink;
 use ComboStrap\Region;
 use ComboStrap\RouterBestEndPage;
 use ComboStrap\Shadow;
+use ComboStrap\Snippet;
 use ComboStrap\SvgImageLink;
 
 
@@ -369,3 +370,6 @@ $meta[FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR] = array('multichoice', '_choices
     Breakpoint::EXTRA_EXTRA_LARGE_NAME,
     Breakpoint::NEVER_NAME
 ));
+
+
+$meta[Snippet::CONF_USE_CDN] = array('onoff');

@@ -147,6 +147,14 @@ class Url extends PathAbs
         foreach ($_REQUEST as $key => $value) {
             if (is_array($value)) {
                 foreach ($value as $val) {
+                    if(is_array($val)){
+                        if($key!=="config"){
+                            // dokuwiki things
+                            LogUtility::warning("The key ($key) is an array of an array and was not taken into account in the request url.");
+
+                        }
+                        continue;
+                    }
                     $url->addQueryParameter($key, $val);
                 }
             } else {

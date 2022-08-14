@@ -59,7 +59,7 @@ class ExecutionContext
     /**
      * @var array of objects that are scoped to this request
      */
-    private array $executionScopedVariables;
+    private array $executionScopedVariables = [];
 
     private CacheManager $cacheManager;
 

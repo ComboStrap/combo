@@ -26,6 +26,7 @@ use ComboStrap\RasterImageLink;
 use ComboStrap\Region;
 use ComboStrap\RouterBestEndPage;
 use ComboStrap\Shadow;
+use ComboStrap\Snippet;
 use ComboStrap\SvgImageLink;
 
 
@@ -279,7 +280,7 @@ $lang[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF]= PluginUtili
 /**
  * Railbar
  */
-$lang[FetcherRailBar::CONF_PRIVATE_RAIL_BAR] = PluginUtility::getDocumentationHyperLink(FetcherRailBar::CANONICAL::CANONICAL,'Enable private railbar');
+$lang[FetcherRailBar::CONF_PRIVATE_RAIL_BAR] = PluginUtility::getDocumentationHyperLink(FetcherRailBar::CANONICAL,'Enable private railbar');
 $lang[FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR] = PluginUtility::getDocumentationHyperLink(FetcherRailBar::CANONICAL ,'Breakpoint when the railbar toggle from offcanvas to fixed component');
 
 /**
@@ -290,3 +291,5 @@ $lang[Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET] = PluginUtility::getDocument
 $lang[action_plugin_combo_snippetsbootstrap::CONF_JQUERY_DOKU] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::JQUERY_CANONICAL,'Use the DokuWiki Jquery (Only valid for Bootstrap 4)');
 
 $lang[action_plugin_combo_snippetsbootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::FRONT_END_OPTIMIZATION_CANONICAL,'Delete backend javascript library for public users');
+
+$lang[Snippet::CONF_USE_CDN] = PluginUtility::getDocumentationHyperLink(Snippet::CANONICAL,'If checked, the snippets (js, css) are served from the CDN URL if known');

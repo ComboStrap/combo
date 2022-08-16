@@ -1057,7 +1057,8 @@ class MarkupPath implements ResourceCombo, Path
             PageLayoutName::PROPERTY_NAME,
             // Dokuwiki id is deprecated for path, no more advertised
             DokuwikiId::DOKUWIKI_ID_ATTRIBUTE,
-            PageLevel::PROPERTY_NAME
+            PageLevel::PROPERTY_NAME,
+            PageKeywords::PROPERTY_NAME
         ];
 
         foreach ($metadataNames as $metadataName) {

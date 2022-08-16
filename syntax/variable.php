@@ -42,7 +42,6 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
      */
     public static function replaceVariablesWithValuesFromContext(string $string): string
     {
-
         $metadata = ContextManager::getOrCreate()->getContextData();
         return Template::create($string)->setProperties($metadata)->render();
     }

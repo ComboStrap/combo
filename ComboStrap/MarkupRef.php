@@ -663,7 +663,8 @@ EOF;
                     $url = wl(
                         $page->getDokuwikiId(),
                         $this->dokuwikiUrl->getQueryParameters(),
-                        $absoluteUrl
+                        $absoluteUrl,
+                        '&'
                     );
 
                 } else {

@@ -1184,14 +1184,16 @@ class DatabasePageRow
      */
     public function replicateAnalytics()
     {
-
+        $fetcherMarkup = $this->page->getAnalyticsDocument();
         try {
-            $analyticsJson = Json::createFromPath($this->page->getAnalyticsDocument()->getFetchPath());
+            $analyticsJson = Json::createFromPath($fetcherMarkup->getFetchPath());
         } catch (ExceptionCompile $e) {
             if (PluginUtility::isDevOrTest()) {
                 throw $e;
             }
             throw new ExceptionCompile("Unable to get the analytics document", self::CANONICAL, 0, $e);
+        } finally {
+            $fetcherMarkup->close();
         }
 
         /**

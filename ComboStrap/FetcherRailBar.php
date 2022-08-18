@@ -253,7 +253,7 @@ EOF;
             data-bs-target="#$railBarOffCanvasClassAndId" aria-controls="railbar-offcanvas">
     </button>
 
-    <div id="$railBarOffCanvasClassAndId" class="offcanvas offcanvas-end" tabindex="-1" aria-labelledby="$railBarOffCanvasLabelId"
+    <div id="$railBarOffCanvasClassAndId" class="offcanvas offcanvas-end" aria-labelledby="$railBarOffCanvasLabelId"
          style="visibility: hidden;" aria-hidden="true">
          <h5 class="d-none" id="$railBarOffCanvasLabelId">Railbar</h5>
         <!-- Pseudo relative element  https://stackoverflow.com/questions/6040005/relatively-position-an-element-without-it-taking-up-space-in-document-flow -->

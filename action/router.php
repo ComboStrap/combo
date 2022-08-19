@@ -600,7 +600,6 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                     $this->redirectToSearchEngine();
 
                     return;
-                    break;
 
                 // End Switch Action
             }
@@ -1042,7 +1041,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             // This is DokuWiki Id and should always be lowercase
             // The page rule may have change that
             $calculatedTarget = strtolower($calculatedTarget);
-            $res = $this->executeTransparentRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES);
+            $res = $this->executeHttpRedirect($calculatedTarget,self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
             if ($res) {
                 return true;
             } else {

@@ -332,6 +332,9 @@ EOD;
             case "antlr":
                 $language = "g4";
                 break;
+            case "bat":
+                $language = "dos";
+                break;
         }
 
         StringUtility::addEolCharacterIfNotPresent($renderer->doc);

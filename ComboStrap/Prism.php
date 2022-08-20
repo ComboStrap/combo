@@ -321,6 +321,7 @@ EOD;
                 $language = "r";
                 break;
             case "dos":
+            case "bat":
                 $language = "batch";
                 break;
             case "apache":
@@ -332,9 +333,7 @@ EOD;
             case "antlr":
                 $language = "g4";
                 break;
-            case "bat":
-                $language = "dos";
-                break;
+
         }
 
         StringUtility::addEolCharacterIfNotPresent($renderer->doc);

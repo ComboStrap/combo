@@ -3,7 +3,6 @@
 namespace ComboStrap;
 
 
-use syntax_plugin_combo_container;
 
 class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 {
@@ -124,7 +123,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
             ->addFileDependency($this->pageLayout->getJsPath())
             ->addFileDependency($this->pageLayout->getHtmlTemplatePath());
 
-        $htmlFragmentByVariables = [];
 
         /**
          * Run the main slot

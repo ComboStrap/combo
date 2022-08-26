@@ -293,9 +293,6 @@ abstract class MediaLink
         $parsedAttributes = $dokuwikiUrl->toArray();
         $path = $dokuwikiUrl->getPath();
         $linkingKey = $dokuwikiUrl->getQueryParameter(MediaLink::LINKING_KEY);
-        if ($linkingKey === null) {
-            $linkingKey = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::LINKING_DIRECT_VALUE);
-        }
         $parsedAttributes[MediaLink::LINKING_KEY] = $linkingKey;
 
         /**
@@ -600,6 +597,9 @@ abstract class MediaLink
             return "";
         }
         $linking = $this->getLinking();
+        if ($linking === null && $dokuPath->getMime()->isImage()) {
+            $linking = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::LINKING_DIRECT_VALUE);
+        }
         switch ($linking) {
             case self::LINKING_LINKONLY_VALUE: // show only a url
                 $src = ml(

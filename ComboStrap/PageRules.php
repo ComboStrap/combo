@@ -181,7 +181,7 @@ class PageRules
      * Delete all rules
      * Use with caution
      */
-    function deleteAll()
+    public function deleteAll()
     {
 
         /** @noinspection SqlWithoutWhere */
@@ -203,7 +203,7 @@ class PageRules
      * Return the number of page rules
      * @return integer
      */
-    function count()
+    public function count()
     {
 
         $request = Sqlite::createOrGetSqlite()
@@ -229,7 +229,7 @@ class PageRules
     /**
      * @return array
      */
-    function getRules()
+    public function getRules()
     {
 
         $request = Sqlite::createOrGetSqlite()

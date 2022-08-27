@@ -22,6 +22,8 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 require_once(__DIR__ . '/../ComboStrap/AnalyticsMenuItem.php');
 
 use Combostrap\AnalyticsMenuItem;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\Identity;
 
 /**
@@ -48,6 +50,13 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
 
     public function handle_rail_bar(Doku_Event $event, $param)
     {
+
+        try {
+            ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
+        } catch (ExceptionNotFound $e) {
+            // a search for instance
+            return;
+        }
 
         if (!Identity::isWriter()) {
             return;

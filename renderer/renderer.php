@@ -92,7 +92,7 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
      * @param int $level header level
      * @param int $pos byte position in the original source
      */
-    function header($text, $level, $pos)
+    function header($text, $level, $pos, $returnonly = false)
     {
 
 

@@ -1,4 +1,0 @@
-/** to avoid FOUC with the dynamic nav-bar fixed top, we set the navbar bottom margin on the core */
-#page-core {
-    margin-top: 1rem;
-}

@@ -104,12 +104,6 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
             $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'handle_css_metaheader');
         }
 
-        /**
-         * It should be present in edit, preview, show, ...
-         * See {@link \ComboStrap\SnippetSystem::attachCssInternalStylesheet()}
-         * for more explanation
-         */
-        $controller->register_hook('ACTION_HEADERS_SEND', 'AFTER', $this, 'addAllCssSnippet', array());
 
     }
 
@@ -295,16 +289,6 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
         }
     }
 
-    /**
-     * Add the all css snippet (ie all.css)
-     * The css that is always used whatever
-     */
-    public function addAllCssSnippet(Doku_Event &$event, $param)
-    {
-
-        PluginUtility::getSnippetManager()->attachCssInternalStylesheet("all");
-
-    }
 
 }
 

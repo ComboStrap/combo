@@ -418,7 +418,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 break;
                             case self::TYPE_TREE:
                                 try {
-                                    $renderedPage = MarkupPath::createPageFromGlobalWikiId();
+                                    $renderedPage = MarkupPath::createPageFromExecutingId();
                                 } catch (ExceptionCompile $e) {
                                     LogUtility::msg("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
                                     return false;

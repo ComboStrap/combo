@@ -3,8 +3,6 @@
 namespace ComboStrap;
 
 
-use http\Exception\RuntimeException;
-
 /**
  * Class DokuPath
  * @package ComboStrap
@@ -428,7 +426,8 @@ class WikiPath extends PathAbs
     }
 
     /**
-     * @throws ExceptionNotFound
+     *
+     * @throws ExceptionNotFound - no page was requested
      */
     public static function createRequestedPagePathFromRequest(): WikiPath
     {
@@ -976,11 +975,8 @@ class WikiPath extends PathAbs
         } else {
             $path = $this->absolutePath . $name;
         }
-        try {
-            return new WikiPath($path, $this->getDrive());
-        } catch (ExceptionNotFound $e) {
-            throw new RuntimeException("Internal Error: The drive should already exist", 0, $e);
-        }
+        return new WikiPath($path, $this->getDrive());
+
     }
 
 

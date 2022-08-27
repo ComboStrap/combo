@@ -51,8 +51,8 @@ $meta[syntax_plugin_combo_disqus::CONF_DEFAULT_ATTRIBUTES] = array('string');
  * Url Manager
  */
 $meta[action_plugin_combo_router::ROUTER_ENABLE_CONF] = array('onoff');
-$meta['ShowPageNameIsNotUnique'] = array('onoff');
-$meta['ShowMessageClassic'] = array('onoff');
+$meta[action_plugin_combo_routermessage::CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE] = array('onoff');
+$meta[action_plugin_combo_routermessage::CONF_SHOW_MESSAGE_CLASSIC] = array('onoff');
 
 $actionChoices = array('multichoice', '_choices' => array(
     action_plugin_combo_router::NOTHING,

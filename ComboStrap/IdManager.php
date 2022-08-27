@@ -52,10 +52,13 @@ class IdManager
         if ($slotPath === null) {
 
             try {
-                $slotPath = MarkupPath::createPageFromGlobalWikiId()->getPathObject();
+                $slotPath = MarkupPath::createPageFromExecutingId()->getPathObject();
             } catch (ExceptionNotFound $e) {
-                if (PluginUtility::isDevOrTest()) {
-                    LogUtility::internalError("We should always an id, no ?", self::CANONICAL,  $e);
+                if (
+                    PluginUtility::isDevOrTest()
+                    && ExecutionContext::getActualOrCreateFromEnv()->getAct()==="show"
+                ) {
+                    LogUtility::internalError("We should always have an id, no ?", self::CANONICAL, $e);
                 }
             }
 

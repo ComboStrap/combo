@@ -76,7 +76,9 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
 
     public function getData(): array
     {
-        if ($this->data === null) {
+        if (!is_array($this->data)){
+            $class = get_class($this->data);
+            LogUtility::msg("Error: The data set for the metadata ($this) was not an array but a $class");
             return [];
         }
         return $this->data;

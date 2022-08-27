@@ -59,11 +59,15 @@ class Identity
 
         if ($request != null) {
             $request->setServer('REMOTE_USER', $user);
-        } else {
-            global $INPUT;
-            $INPUT->server->set('REMOTE_USER', $user);
-            // same as $_SERVER['REMOTE_USER'] = $user;
         }
+
+        /**
+         * used by {@link getSecurityToken()}
+         */
+        global $INPUT;
+        $INPUT->server->set('REMOTE_USER', $user);
+        // same as $_SERVER['REMOTE_USER'] = $user;
+
 
         // $_SERVER[] = $user;
         // global $USERINFO;
@@ -100,7 +104,7 @@ class Identity
         if ($wikiId === null) {
             $executionContext = ExecutionContext::getActualOrCreateFromEnv();
             try {
-                $wikiId = $executionContext->getExecutingWikiId();
+                $wikiId = $executionContext->getRequestedWikiId();
             } catch (ExceptionNotFound $e) {
                 if (PluginUtility::isDevOrTest()){
                     LogUtility::internalError("We should have an id, otherwise why are we asking for it",self::CANONICAL,$e);

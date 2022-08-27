@@ -28,6 +28,7 @@ class action_plugin_combo_autofrontmatter extends DokuWiki_Action_Plugin
          * https://www.dokuwiki.org/devel:event:common_pagetpl_load
          */
         if (false) {
+            /** @noinspection PhpUnreachableStatementInspection */
             $controller->register_hook('COMMON_PAGETPL_LOAD', 'BEFORE', $this, 'handle_new_page', array());
         }
     }
@@ -35,7 +36,7 @@ class action_plugin_combo_autofrontmatter extends DokuWiki_Action_Plugin
     public function handle_new_page(Doku_Event $event, $param){
 
         try {
-            $page = MarkupPath::createPageFromGlobalWikiId();
+            $page = MarkupPath::createPageFromExecutingId();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("Unable to handle a new page because the global id is unknown");
         }

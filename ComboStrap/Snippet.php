@@ -58,9 +58,10 @@ class Snippet implements JsonSerializable
     const JSON_HTML_ATTRIBUTES_PROPERTY = "attributes";
 
     /**
-     * This variable was to create snippet that were not dependent on markup
-     * but we found out that there is always an id (by default to the requested markup id)
-     * @deprecated A snippet should always be attached to a slot
+     * Not all page requested have an id
+     * (for instance, the admin page)
+     * A menu item may want to add a snippet
+     * on a dynamic page
      */
     const REQUEST_SCOPE = "request";
 
@@ -266,7 +267,7 @@ class Snippet implements JsonSerializable
             $wikiId = ExecutionContext::getActualOrCreateFromEnv()->getExecutingWikiId();
             $snippet->addSlot($wikiId);
         } catch (ExceptionNotFound $e) {
-            LogUtility::internalError("A markup id was not found. Adding a snippet is always markup based (by default, the markup id requested)");
+            // admin page
             $snippet->addSlot(Snippet::REQUEST_SCOPE);
         }
 

@@ -7,7 +7,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 
 
-require_once(__DIR__ . '/../vendor/autoload.php');
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
 /**
@@ -22,8 +22,8 @@ require_once(__DIR__ . '/../vendor/autoload.php');
  */
 class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 {
-
-
+    const DELETE_ACTION = 'Delete';
+    const SAVE_ACTION = 'save';
 
     /**
      * @var PageRules
@@ -44,6 +44,8 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
         // of use of $this->getLang
         $this->setupLocale();
 
+
+
     }
 
     /**
@@ -53,7 +55,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
     private function initiatePageRuleManager()
     {
 
-        if ($this->pageRuleManager == null) {
+        if (!isset($this->pageRuleManager)) {
 
             $this->pageRuleManager = new PageRules();
 
@@ -104,7 +106,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
         /**
          * If one of the form submit has the add key
          */
-        if ($_POST['save'] && checkSecurityToken()) {
+        if ($_POST[self::SAVE_ACTION] && checkSecurityToken()) {
 
             $id = $_POST[PageRules::ID_NAME];
             $matcher = $_POST[PageRules::MATCHER_NAME];
@@ -140,7 +142,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 
         }
 
-        if ($_POST['Delete'] && checkSecurityToken()) {
+        if ($_POST[self::DELETE_ACTION] && checkSecurityToken()) {
 
             $ruleId = $_POST[PageRules::ID_NAME];
             $this->pageRuleManager->deleteRule($ruleId);

@@ -518,7 +518,7 @@ class Snippet implements JsonSerializable
             throw new ExceptionCompile("The snippet drive property was not found in the json array");
         }
 
-        $wikiPath = WikiPath::create($path, $drive);
+        $wikiPath = WikiPath::createFromPath($path, $drive);
         $snippet = Snippet::getOrCreateFromContext($wikiPath);
 
         $componentName = $array[self::JSON_COMPONENT_PROPERTY];

@@ -60,7 +60,8 @@ trait FetcherTraitWikiPath
             }
             $drive = $tagAttributes->getValueAndRemove(WikiPath::DRIVE_ATTRIBUTE, $defaultDrive);
             $rev = $tagAttributes->getValueAndRemove(WikiPath::REV_ATTRIBUTE);
-            $wikiPath = WikiPath::create($id, $drive, $rev);
+            $path = WikiPath::toValidAbsolutePath($id);
+            $wikiPath = WikiPath::createFromPath($path, $drive, $rev);
 
             $this->setSourcePath($wikiPath);
         }

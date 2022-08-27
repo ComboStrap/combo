@@ -547,7 +547,7 @@ class WikiPath extends PathAbs
      * @param string|null $rev
      * @return WikiPath
      */
-    public static function create(string $path, string $drive, string $rev = null): WikiPath
+    public static function createFromPath(string $path, string $drive, string $rev = null): WikiPath
     {
         return new WikiPath($path, $drive, $rev);
     }

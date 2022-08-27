@@ -489,7 +489,7 @@ class ExecutionContext
         return $this;
     }
 
-    public function getConfValue(string $key, string $default)
+    public function getConfValue(string $key, string $default = null)
     {
         return Site::getConfValue($key, $default);
     }

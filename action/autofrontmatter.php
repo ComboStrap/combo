@@ -28,7 +28,6 @@ class action_plugin_combo_autofrontmatter extends DokuWiki_Action_Plugin
          * https://www.dokuwiki.org/devel:event:common_pagetpl_load
          */
         if (false) {
-            /** @noinspection PhpUnreachableStatementInspection */
             $controller->register_hook('COMMON_PAGETPL_LOAD', 'BEFORE', $this, 'handle_new_page', array());
         }
     }

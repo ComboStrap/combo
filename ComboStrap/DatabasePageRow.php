@@ -1186,7 +1186,8 @@ class DatabasePageRow
     {
         $fetcherMarkup = $this->page->getAnalyticsDocument();
         try {
-            $analyticsJson = Json::createFromPath($fetcherMarkup->getFetchPath());
+            $fetchPath = $fetcherMarkup->getFetchPath();
+            $analyticsJson = Json::createFromPath($fetchPath);
         } catch (ExceptionCompile $e) {
             if (PluginUtility::isDevOrTest()) {
                 throw $e;

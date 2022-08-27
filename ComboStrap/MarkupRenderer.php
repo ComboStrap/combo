@@ -2,7 +2,6 @@
 
 namespace ComboStrap;
 
-use http\Exception\RuntimeException;
 
 class MarkupRenderer
 {
@@ -61,7 +60,7 @@ class MarkupRenderer
         try {
             $this->setRequestedMime(Mime::createFromExtension(self::INSTRUCTION_EXTENSION));
         } catch (ExceptionNotFound $e) {
-            throw new RuntimeException("Internal error: the mime is internal and should be good");
+            throw new ExceptionRuntime("Internal error: the mime is internal and should be good");
         }
         return $this;
 
@@ -109,6 +108,7 @@ class MarkupRenderer
                 if (!isset($this->instructions)) {
                     $this->instructions = MarkupRenderer::createFromMarkup($this->markup)
                         ->setRequestedMimeToInstruction()
+                        ->setDeleteRootBlockElement($this->deleteRootElement)
                         ->getOutput();
                 }
 
@@ -164,7 +164,7 @@ class MarkupRenderer
         try {
             return $this->setRequestedMime(Mime::createFromExtension("xhtml"));
         } catch (ExceptionNotFound $e) {
-            throw new RuntimeException("Internal error", 0, $e);
+            throw new ExceptionRuntime("Internal error", 0, $e);
         }
     }
 

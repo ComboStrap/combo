@@ -200,6 +200,8 @@ class ExecutionContext
     }
 
 
+
+
     public static function setExecutionGlobalVariableToNull()
     {
         self::$executionContext = null;

@@ -755,7 +755,7 @@ class MarkupPath implements ResourceCombo, Path
          */
         $wikiPath = WikiPath::createFromPathObject($this->getPathObject());
         $subExecutionContext = ExecutionContext::getActualOrCreateFromEnv()
-            ->startSubExecutionEnv($wikiPath->getWikiId());
+            ->startSubExecutionEnv(MarkupPath::class, $wikiPath->getWikiId());
         try {
             /**
              * @var MetadataDokuWikiStore $metadataStore
@@ -1143,7 +1143,7 @@ class MarkupPath implements ResourceCombo, Path
 
 
     public
-    function getAnalyticsDocument(): FetcherMarkup
+    function fetchAnalyticsDocument(): FetcherMarkup
     {
         return renderer_plugin_combo_analytics::createAnalyticsFetcherForPageFragment($this);
     }

@@ -216,18 +216,19 @@ class ExecutionContext
      *
      * This utility function makes it clear and permits to set back the env with {@link ExecutionContext::closeSubExecutionEnv()}
      *
+     * @param string $clazz - the origin class (to debug to see where the php execution is not consistent)
      * @param string $runningId
      * @param string|null $runningAct - when we run dynamic rendering, the act is set to advertise it (ie {@link MarkupDynamicRender::DYNAMIC_RENDERING}
      * @return ExecutionContext
      */
-    public function startSubExecutionEnv(string $runningId, string $runningAct = 'show'): ExecutionContext
+    public function startSubExecutionEnv(string $clazz, string $runningId, string $runningAct = 'show'): ExecutionContext
     {
 
 
         global $ID;
         global $ACT;
 
-        $this->previousRunningEnvs[] = [$ID, $ACT];
+        $this->previousRunningEnvs[] = [$ID, $ACT, $clazz];
         $ID = $runningId;
         $ACT = $runningAct;
 

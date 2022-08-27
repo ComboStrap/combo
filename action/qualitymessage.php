@@ -60,7 +60,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
 
         try {
-            $analyticsArray = \ComboStrap\Json::createFromPath($page->getAnalyticsDocument()->getFetchPath())->toArray();
+            $analyticsArray = \ComboStrap\Json::createFromPath($page->fetchAnalyticsDocument()->getFetchPath())->toArray();
         } catch (ExceptionCompile $e) {
             return Message::createErrorMessage("Error while trying to read the JSON analytics document. {$e->getMessage()}")
                 ->setStatus(HttpResponse::STATUS_INTERNAL_ERROR);

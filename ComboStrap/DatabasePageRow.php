@@ -287,10 +287,17 @@ class DatabasePageRow
         }
 
 
+        $fetcherMarkup = $this->page->fetchAnalyticsDocument();
+        try {
+            $path = $fetcherMarkup->getFetchPath();
+        } finally {
+            $fetcherMarkup->close();
+        }
+
         /**
          * When the file does not exist
          */
-        $exist = FileSystems::exists($this->page->getAnalyticsDocument()->getFetchPath());
+        $exist = FileSystems::exists($path);
         if (!$exist) {
             return true;
         }
@@ -299,7 +306,8 @@ class DatabasePageRow
          * When the analytics document is older
          */
         try {
-            $modifiedTime = FileSystems::getModifiedTime($this->page->getAnalyticsDocument()->getFetchPath());
+
+            $modifiedTime = FileSystems::getModifiedTime($path);
             if ($modifiedTime > $dateReplication) {
                 return true;
             }
@@ -1184,7 +1192,7 @@ class DatabasePageRow
      */
     public function replicateAnalytics()
     {
-        $fetcherMarkup = $this->page->getAnalyticsDocument();
+        $fetcherMarkup = $this->page->fetchAnalyticsDocument();
         try {
             $fetchPath = $fetcherMarkup->getFetchPath();
             $analyticsJson = Json::createFromPath($fetchPath);

@@ -218,7 +218,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     public function getData(): array
     {
         if (
-             $this->data === null
+            $this->data === null
             || sizeof($this->data[self::PERSISTENT_METADATA]) === 0 // move
         ) {
             $this->data = p_read_metadata($this->getResource()->getWikiId());
@@ -279,7 +279,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         $dokuwikiId = $this->getResource()->getWikiId();
         $actualMeta = $this->getData();
         $wikiRequest = ExecutionContext::getActualOrCreateFromEnv()
-            ->startSubExecutionEnv($dokuwikiId);
+            ->startSubExecutionEnv(MetadataDokuWikiStore::class, $dokuwikiId);
         try {
             $newMetadata = p_render_metadata($dokuwikiId, $actualMeta);
             p_save_metadata($dokuwikiId, $newMetadata);

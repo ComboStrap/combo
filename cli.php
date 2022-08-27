@@ -342,7 +342,7 @@ EOF;
             /**
              * Analytics
              */
-            $analytics = $page->getAnalyticsDocument();
+            $analytics = $page->fetchAnalyticsDocument();
             try {
                 $data = \ComboStrap\Json::createFromPath($analytics->getFetchPath())->toArray();
             } catch (ExceptionBadSyntax $e) {

@@ -8,7 +8,7 @@ use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheParser;
 use dokuwiki\Cache\CacheRenderer;
 use Exception;
-use http\Exception\RuntimeException;
+
 
 /**
  * A class that renders markup files.
@@ -135,7 +135,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             return Mime::createFromExtension(self::XHTML_MODE);
         } catch (ExceptionNotFound $e) {
             // should not happen
-            throw new RuntimeException("Internal error: The XHTML mime was not found.", self::CANONICAL, 1, $e);
+            throw new ExceptionRuntime("Internal error: The XHTML mime was not found.", self::CANONICAL, 1, $e);
         }
     }
 
@@ -406,7 +406,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         try {
             return $this->setRequestedMime(Mime::createFromExtension("xhtml"));
         } catch (ExceptionNotFound $e) {
-            throw new RuntimeException("Internal error", 0, $e);
+            throw new ExceptionRuntime("Internal error", 0, $e);
         }
 
     }
@@ -465,7 +465,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          */
         $wikiId = $this->getRequestedPath()->getWikiId();
         $this->executionContext = ExecutionContext::getActualOrCreateFromEnv()
-            ->startSubExecutionEnv($wikiId);
+            ->startSubExecutionEnv(FetcherMarkup::class, $wikiId);
 
 
         /**
@@ -528,7 +528,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         try {
             $this->setRequestedMime(Mime::createFromExtension(MarkupRenderer::INSTRUCTION_EXTENSION));
         } catch (ExceptionNotFound $e) {
-            throw new RuntimeException("Internal error: the mime is internal and should be good");
+            throw new ExceptionRuntime("Internal error: the mime is internal and should be good");
         }
         return $this;
 
@@ -582,7 +582,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         try {
             $text = FileSystems::getContent($path);
         } catch (ExceptionNotFound $e) {
-            throw new RuntimeException("Internal error: The fetch path should exists.", self::CANONICAL, 1, $e);
+            throw new ExceptionRuntime("Internal error: The fetch path should exists.", self::CANONICAL, 1, $e);
         }
         if (!in_array($this->getMime()->getExtension(), ["html", "xhtml"])) {
             return $text;

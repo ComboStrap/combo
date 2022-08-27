@@ -234,7 +234,7 @@ class MarkupRenderer
             } catch (ExceptionNotFound $e) {
                 $this->runningId = "markup-renderer-default";
             }
-            $this->dynamicRenderingExecutionContext = $executionContext->startSubExecutionEnv($this->runningId, $runningAct);
+            $this->dynamicRenderingExecutionContext = $executionContext->startSubExecutionEnv(MarkupRenderer::class, $this->runningId, $runningAct);
         }
 
     }

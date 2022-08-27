@@ -44,7 +44,7 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
             if (!($resource instanceof MarkupPath)) {
                 throw new ExceptionNotFound("Low Quality is only for page resources");
             }
-            $analyticsDocument = $resource->getAnalyticsDocument();
+            $analyticsDocument = $resource->fetchAnalyticsDocument();
             try {
                 $analyticsCache = $analyticsDocument->getCachePath();
             } finally {

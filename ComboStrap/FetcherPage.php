@@ -16,7 +16,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
      * A configuration to take over the show action
      * of any template
      */
-    const CONF_ENABLE_AS_SHOW_ACTION = "enablePage";
+    const CONF_ENABLE_AS_SHOW_ACTION = "enablePageAsShowAction";
     const CONF_ENABLE_AS_SHOW_ACTION_DEFAULT = 1;
 
     private string $requestedLayout;

@@ -427,7 +427,7 @@ $conf["defaultLayoutContainer"] = "sm";
 /**
  * Show overwrite {@link \ComboStrap\FetcherPage::CONF_ENABLE_AS_SHOW_ACTION}
  */
-$conf["enablePage"] = 1;
+$conf["enablePageAsShowAction"] = 1;
 
 
 /**

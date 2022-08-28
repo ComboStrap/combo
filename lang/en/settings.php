@@ -6,6 +6,7 @@ use ComboStrap\AdsUtility;
 use ComboStrap\Bootstrap;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
+use ComboStrap\FetcherPage;
 use ComboStrap\FetcherRailBar;
 use ComboStrap\FetcherSvg;
 use ComboStrap\FloatAttribute;
@@ -45,7 +46,7 @@ $lang[syntax_plugin_combo_disqus::CONF_DEFAULT_ATTRIBUTES] = PluginUtility::getD
 /**
  * Url Manager
  */
-$lang[action_plugin_combo_router::ROUTER_ENABLE_CONF] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_router::CANONICAL, action_plugin_combo_router::NAME ) . ' - If unchecked, the URL manager will be disabled';
+$lang[action_plugin_combo_router::ROUTER_ENABLE_CONF] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_router::CANONICAL, action_plugin_combo_router::NAME) . ' - If unchecked, the URL manager will be disabled';
 $lang['ActionReaderFirst'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_router::NAME . " - Redirection Actions") . ' - First redirection action for a reader';
 $lang['ActionReaderSecond'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_router::NAME . " - Redirection Actions") . ' - Second redirection action for a reader if the first action don\'t success.';
 $lang['ActionReaderThird'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_router::NAME . " - Redirection Actions") . ' - Third redirection action for a reader if the second action don\'t success.';
@@ -73,8 +74,10 @@ $lang[IconDownloader::CONF_DEFAULT_ICON_LIBRARY] = PluginUtility::getDocumentati
 /**
  * Front end Optimization
  */
-$lang[action_plugin_combo_css::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET] = PluginUtility::getDocumentationHyperLink("frontend:optimization", "Frontend Optimization") . ' - If enabled, the DokuWiki Stylesheet for a public user will be minimized';
-$lang[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = PluginUtility::getDocumentationHyperLink("frontend:optimization", "Frontend Optimization") . ' - If checked, the DokuWiki Stylesheet will not be loaded for a public user';
+$lang[action_plugin_combo_css::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::FRONT_END_OPTIMIZATION_CANONICAL, "Frontend Optimization") . ' - If enabled, the DokuWiki Stylesheet for a public user will be minimized';
+$lang[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::FRONT_END_OPTIMIZATION_CANONICAL, "Frontend Optimization") . ' - If checked, the DokuWiki Stylesheet will not be loaded for a public user';
+$lang[action_plugin_combo_snippetsbootstrap::CONF_PRELOAD_CSS] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::FRONT_END_OPTIMIZATION_CANONICAL, "Frontend Optimization") . ' - Load the style late (Not recommended, the page will go faster but will flicker)';
+$lang[action_plugin_combo_snippetsbootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::FRONT_END_OPTIMIZATION_CANONICAL, "Frontend Optimization") . ' - Delete backend javascript library for public users';
 
 /**
  * Metadata viewer
@@ -258,38 +261,42 @@ $lang[syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = Plu
 /**
  * Heading
  */
-$lang[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_heading::CANONICAL, "If unchecked, the combo wiki heading is disabled (You cannot add extra formatting syntax)");
+$lang[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_heading::CANONICAL, "If unchecked, the combo wiki heading is disabled (You cannot add extra formatting syntax)");
 
 /**
  * Colors
  */
-$lang[ColorRgb::PRIMARY_COLOR_CONF]= PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Set the primary branding color");
-$lang[ColorRgb::SECONDARY_COLOR_CONF]= PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Set the secondary branding color");
-$lang[ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF ]= PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Enable or disable the branding colors inheritance");
+$lang[ColorRgb::PRIMARY_COLOR_CONF] = PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Set the primary branding color");
+$lang[ColorRgb::SECONDARY_COLOR_CONF] = PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Set the secondary branding color");
+$lang[ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF] = PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Enable or disable the branding colors inheritance");
 
 /**
  * Highlight
  */
-$lang[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_highlightwiki::CANONICAL, "Enable or disable the wiki highlight component");
+$lang[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_highlightwiki::CANONICAL, "Enable or disable the wiki highlight component");
 
 /**
  * Container
  */
-$lang[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_container::CANONICAL, "Set the horizontal alignment of the layout");
+$lang[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_container::CANONICAL, "Set the horizontal alignment of the layout");
 
 /**
  * Railbar
  */
-$lang[FetcherRailBar::CONF_PRIVATE_RAIL_BAR] = PluginUtility::getDocumentationHyperLink(FetcherRailBar::CANONICAL,'Enable private railbar');
-$lang[FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR] = PluginUtility::getDocumentationHyperLink(FetcherRailBar::CANONICAL ,'Breakpoint when the railbar toggle from offcanvas to fixed component');
+$lang[FetcherRailBar::CONF_PRIVATE_RAIL_BAR] = PluginUtility::getDocumentationHyperLink(FetcherRailBar::CANONICAL, 'Enable private railbar');
+$lang[FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR] = PluginUtility::getDocumentationHyperLink(FetcherRailBar::CANONICAL, 'Breakpoint when the railbar toggle from offcanvas to fixed component');
 
 /**
  * Stylesheet and bootstrap
  */
-$lang[Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET] = PluginUtility::getDocumentationHyperLink(Bootstrap::CANONICAL, 'The Bootstrap version and a corresponding stylesheet');
+$lang[Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET] = PluginUtility::getDocumentationHyperLink(Bootstrap::CANONICAL, "Bootstrap"). ' - the Bootstrap version and its corresponding stylesheet';
 
-$lang[action_plugin_combo_snippetsbootstrap::CONF_JQUERY_DOKU] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::JQUERY_CANONICAL,'Use the DokuWiki Jquery (Only valid for Bootstrap 4)');
 
-$lang[action_plugin_combo_snippetsbootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::FRONT_END_OPTIMIZATION_CANONICAL,'Delete backend javascript library for public users');
+$lang[action_plugin_combo_snippetsbootstrap::CONF_JQUERY_DOKU] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::JQUERY_CANONICAL, "Jquery") . ' - use the DokuWiki Jquery version instead of Bootstrap';
 
-$lang[Snippet::CONF_USE_CDN] = PluginUtility::getDocumentationHyperLink(Snippet::CANONICAL,'If checked, the snippets (js, css) are served from the CDN URL if known');
+
+$lang[Snippet::CONF_USE_CDN] = PluginUtility::getDocumentationHyperLink(Snippet::CANONICAL, "Cdn") . ' If checked, the snippets (js, css) are served from the CDN URL if known';
+
+$lang[FetcherPage::CONF_ENABLE_AS_SHOW_ACTION] = PluginUtility::getDocumentationHyperLink(FetcherPage::CANONICAL, "Page Module") . ' If checked, the page will be rendered by combo and not by the template';
+
+

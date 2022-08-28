@@ -6,6 +6,7 @@
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 use ComboStrap\AdsUtility;
+use ComboStrap\Bootstrap;
 use ComboStrap\Breakpoint;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
@@ -373,3 +374,24 @@ $meta[FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR] = array('multichoice', '_choices
 
 
 $meta[Snippet::CONF_USE_CDN] = array('onoff');
+
+/**
+ * Bootstrap
+ */
+$bootstrapStyleSheet = Bootstrap::getQualifiedVersions();
+$meta[Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET] = array('multichoice', '_choices' => $bootstrapStyleSheet);
+
+/**
+ * Preload css ?
+ */
+$meta[action_plugin_combo_snippetsbootstrap::CONF_PRELOAD_CSS] = array('onoff');
+
+/**
+ * Jquery doku vs Bootstrap
+ */
+$meta[action_plugin_combo_snippetsbootstrap::CONF_JQUERY_DOKU] = array('onoff');
+
+/**
+ * Disable
+ */
+$meta[action_plugin_combo_snippetsbootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT] = array('onoff');

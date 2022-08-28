@@ -357,4 +357,15 @@ class XmlElement
     {
         return XmlSystems::extractTextWithoutCdata($this->getInnerText());
     }
+
+    public function getStyleProperties(): ArrayCaseInsensitive
+    {
+        $source = StyleUtility::HtmlStyleValueToArray($this->getStyle());
+        return new ArrayCaseInsensitive($source);
+    }
+
+    public function getStyleProperty(string $property): string
+    {
+        return $this->getStyleProperties()[$property];
+    }
 }

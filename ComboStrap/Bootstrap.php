@@ -19,9 +19,12 @@ class Bootstrap
 {
     const DEFAULT_STYLESHEET_NAME = "bootstrap";
     const TAG = self::CANONICAL;
-    public const DEFAULT_BOOTSTRAP_4 = "4.5.0 - bootstrap";
-    public const DEFAULT_BOOTSTRAP_5 = self::VERSION_501 . " - bootstrap";
-    const VERSION_501 = "5.0.1";
+    public const VERSION_501 = "5.0.1";
+    public const DEFAULT_BOOTSTRAP_4_VERSION = "4.5.0";
+    public const DEFAULT_BOOTSTRAP_5_VERSION = self::VERSION_501;
+    public const DEFAULT_BOOTSTRAP_STYLESHEET_4_VERSION = self::DEFAULT_BOOTSTRAP_4_VERSION . " - " . self::DEFAULT_STYLESHEET_NAME;
+    public const DEFAULT_BOOTSTRAP_STYLESHEET_5_VERSION = self::DEFAULT_BOOTSTRAP_5_VERSION . " - " . self::DEFAULT_STYLESHEET_NAME;
+
     private Snippet $jquerySnippet;
     private Snippet $jsSnippet;
     private Snippet $popperSnippet;
@@ -34,20 +37,34 @@ class Bootstrap
     {
         $bootstrapStyleSheetArray = explode(Bootstrap::BOOTSTRAP_VERSION_STYLESHEET_SEPARATOR, $qualifiedVersion);
         $this->version = $bootstrapStyleSheetArray[0];
+        /**
+         * In case the input is just the major version
+         */
+        switch ($this->version) {
+            case "4":
+                $this->version = self::DEFAULT_BOOTSTRAP_4_VERSION;
+                break;
+            case "5":
+                $this->version = self::DEFAULT_BOOTSTRAP_5_VERSION;
+                break;
+        }
+
+        /**
+         * Stylesheet
+         */
         if (isset($bootstrapStyleSheetArray[1])) {
             $this->styleSheetName = $bootstrapStyleSheetArray[1];
         } else {
             $this->styleSheetName = self::DEFAULT_STYLESHEET_NAME;
         }
+
         $this->build();
 
     }
 
 
-    const BootStrapDefaultMajorVersion = 5;
     const BootStrapFiveMajorVersion = 5;
 
-    const CONF_BOOTSTRAP_MAJOR_VERSION = "bootstrapMajorVersion";
     const BootStrapFourMajorVersion = 4;
     const CANONICAL = "bootstrap";
     /**
@@ -243,7 +260,7 @@ class Bootstrap
         $version = $this->getVersion();
 
         // Javascript
-        $bootstrapJsonFile = WikiPath::createComboResource(Snippet::LIBRARY_BASE.":bootstrap:bootstrapJavascript.json");
+        $bootstrapJsonFile = WikiPath::createComboResource(Snippet::LIBRARY_BASE . ":bootstrap:bootstrapJavascript.json");
         try {
             $bootstrapJsonMetas = Json::createFromPath($bootstrapJsonFile)->toArray();
         } catch (ExceptionBadSyntax|ExceptionNotFound $e) {

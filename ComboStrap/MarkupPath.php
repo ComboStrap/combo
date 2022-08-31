@@ -2039,9 +2039,14 @@ class MarkupPath implements ResourceCombo, Path
 
     public function getOutline(): Outline
     {
-        $instructions = $this->getInstructionsDocument()->getFetchPathAsInstructionsArray();
-        $callStack = CallStack::createFromInstructions($instructions);
-        return Outline::createFromCallStack($callStack, $this);
+        $fetcherMarkup = $this->getInstructionsDocument();
+        try {
+            $instructions = $fetcherMarkup->getFetchPathAsInstructionsArray();
+            $callStack = CallStack::createFromInstructions($instructions);
+            return Outline::createFromCallStack($callStack, $this);
+        } finally {
+            $fetcherMarkup->close();
+        }
     }
 
 

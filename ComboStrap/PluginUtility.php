@@ -1038,25 +1038,8 @@ class PluginUtility
     public static function isRenderingRequestedPageProcess(): bool
     {
 
-        global $ID;
-        if (empty($ID)) {
-            // $ID is null
-            // case on "/lib/exe/mediamanager.php"
-            return false;
-        }
-
-        $page = MarkupPath::createMarkupFromId($ID);
-        if (!$page->exists()) {
-            return false;
-        }
-
-        /**
-         * No metadata for bars
-         */
-        if ($page->isSecondarySlot()) {
-            return false;
-        }
-        return true;
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->isHtmlPublication();
 
     }
 

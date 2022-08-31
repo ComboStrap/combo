@@ -42,6 +42,8 @@ class ExecutionContext
 
     const CANONICAL = "execution-context";
     const SHOW_ACTION = "show";
+    const EDIT_ACTION = "edit";
+    const ADMIN_ACTION = "admin";
 
     /**
      * @var array - the configuration value to restore
@@ -198,8 +200,6 @@ class ExecutionContext
             return self::createFromEnvironmentVariable();
         }
     }
-
-
 
 
     public static function setExecutionGlobalVariableToNull()
@@ -593,6 +593,27 @@ class ExecutionContext
     public function getSnippetSystem(): SnippetSystem
     {
         return SnippetSystem::getFromContext();
+    }
+
+    public function isHtmlPublication(): bool
+    {
+
+        try {
+            $id = $this->getRequestedWikiId();
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
+
+        if (in_array($this->getAct(), [self::EDIT_ACTION, self::ADMIN_ACTION])) {
+            return false;
+        }
+
+        $page = MarkupPath::createMarkupFromId($id);
+        if (!FileSystems::exists($page)) {
+            return false;
+        }
+
+        return true;
     }
 
 

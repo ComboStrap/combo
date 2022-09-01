@@ -845,7 +845,7 @@ class Snippet implements JsonSerializable
         if ($this->hasHtmlOutputOccurred) {
             $message = "The snippet ($this) has already been asked. It may have been added twice to the HTML page";
             if (PluginUtility::isTest()) {
-                $message = "Error: you may run two pages fetch in the same execution context. $message";
+                $message = "Error: you may be running two pages fetch in the same execution context. $message";
             }
             LogUtility::internalError($message);
         }

@@ -146,16 +146,22 @@ class Url extends PathAbs
         $url = Url::createEmpty();
         foreach ($_REQUEST as $key => $value) {
             if (is_array($value)) {
-                foreach ($value as $val) {
-                    if(is_array($val)){
-                        if($key!=="config"){
+                foreach ($value as $subkey => $subval) {
+                    if (is_array($subval)) {
+                        if ($key !== "config") {
                             // dokuwiki things
                             LogUtility::warning("The key ($key) is an array of an array and was not taken into account in the request url.");
 
                         }
                         continue;
                     }
-                    $url->addQueryParameter($key, $val);
+                    if ($key == "do") {
+                        // for whatever reason, dokuwiki puts the value in the key
+                        $url->addQueryParameter($key, $subkey);
+                        continue;
+                    }
+                    $url->addQueryParameter($key, $subval);
+
                 }
             } else {
                 /**

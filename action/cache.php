@@ -2,6 +2,7 @@
 
 use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheManager;
+use ComboStrap\ExecutionContext;
 use ComboStrap\FetcherCache;
 use ComboStrap\CacheMenuItem;
 use ComboStrap\CacheReportHtmlDataBlockArray;
@@ -107,7 +108,9 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     function addCacheLogHtmlDataBlock(Doku_Event $event, $params)
     {
 
-        if(!PluginUtility::isRenderingRequestedPageProcess()){
+        $isPublic = ExecutionContext::getActualOrCreateFromEnv()
+            ->isPublicationAction();
+        if(!$isPublic){
             return;
         }
         $cacheSlotResults = CacheReportHtmlDataBlockArray::getFromContext();

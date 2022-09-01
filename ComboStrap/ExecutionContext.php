@@ -8,6 +8,8 @@ use dokuwiki\Extension\PluginTrait;
 /**
  * An execution object permits to get access to environment variable.
  *
+ * Note that normally every page has a page context
+ * meaning that you can go from an admin page to show the page.
  *
  * They may be nested with {@link ExecutionContext::startSubExecutionEnv()} this is because Dokuwiki use the global variable
  * ID to get the actual parsed markup.
@@ -41,9 +43,18 @@ class ExecutionContext
 
 
     const CANONICAL = "execution-context";
+
+    /**
+     * All action (handler)
+     */
     const SHOW_ACTION = "show";
     const EDIT_ACTION = "edit";
+    const PREVIEW_ACTION = "preview";
     const ADMIN_ACTION = "admin";
+    const DRAFT_ACTION = "draft";
+    // private actions does not render page
+    const PRIVATES_ACTION = [self::EDIT_ACTION, self::PREVIEW_ACTION, self::ADMIN_ACTION, self::DRAFT_ACTION];
+
 
     /**
      * @var array - the configuration value to restore
@@ -595,7 +606,10 @@ class ExecutionContext
         return SnippetSystem::getFromContext();
     }
 
-    public function isHtmlPublication(): bool
+    /**
+     * @return bool - does the action create a publication (render a page)
+     */
+    public function isPublicationAction(): bool
     {
 
         try {
@@ -604,7 +618,7 @@ class ExecutionContext
             return false;
         }
 
-        if (in_array($this->getAct(), [self::EDIT_ACTION, self::ADMIN_ACTION])) {
+        if (in_array($this->getAct(), self::PRIVATES_ACTION)) {
             return false;
         }
 

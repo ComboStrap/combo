@@ -1031,17 +1031,6 @@ class PluginUtility
         return getenv("CI") === "true";
     }
 
-    /**
-     * Tells if the process is to output a page
-     * @return bool
-     */
-    public static function isRenderingRequestedPageProcess(): bool
-    {
-
-        return ExecutionContext::getActualOrCreateFromEnv()
-            ->isHtmlPublication();
-
-    }
 
     /**
      * @throws ExceptionCompile

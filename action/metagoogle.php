@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\ExecutionContext;
 use ComboStrap\LdJson;
 use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
@@ -34,8 +35,10 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
     function metaGoogleProcessing($event)
     {
 
+        $isPublic = ExecutionContext::getActualOrCreateFromEnv()
+            ->isPublicationAction();
 
-        if (!PluginUtility::isRenderingRequestedPageProcess()) {
+        if (!$isPublic) {
             return;
         }
 

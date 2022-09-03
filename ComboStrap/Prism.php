@@ -101,12 +101,21 @@ class Prism
             "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.min.js",
             "sha256-FyIVdIHL0+ppj4Q4Ft05K3wyCsYikpHIDGI7dcaBalU="
         );
+        $snippetManager->attachCssExternalStyleSheetForSlot(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.css",
+            "sha256-kK4/JIYJUKI4Zdg9ZQ7FYyRIqeWPfYKi5QZHO2n/lJI="
+        );
         // https://prismjs.com/plugins/normalize-whitespace/
         $snippetManager->attachJavascriptLibraryForSlot(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/normalize-whitespace/prism-normalize-whitespace.min.js",
             "sha256-gBzABGbXfQYYnyr8xmDFjx6KGO9dBYuypG1QBjO76pY=");
-
+        // https://prismjs.com/plugins/copy-to-clipboard/
+        $snippetManager->attachJavascriptLibraryForSlot(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js",
+            "sha512-pUNGXbOrc+Y3dm5z2ZN7JYQ/2Tq0jppMDOUsN4sQHVJ9AUQpaeERCUfYYBAnaRB9r8d4gtPKMWICNhm3tRr4Fg==");
         // https://prismjs.com/plugins/show-language/
         $snippetManager->attachJavascriptLibraryForSlot(
             self::SNIPPET_NAME,
@@ -117,12 +126,21 @@ class Prism
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/command-line/prism-command-line.min.js",
             "sha256-9WlakH0Upf3N8DDteHlbeKCHxSsljby+G9ucUCQNiU0=");
-
+        $snippetManager->attachCssExternalStyleSheetForSlot(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/plugins/command-line/prism-command-line.css",
+            "sha256-UvoA9bIYCYQkCMTYG5p2LM8ZpJmnC4G8k0oIc89nuQA="
+        );
         //https://prismjs.com/plugins/line-numbers/
         $snippetManager->attachJavascriptLibraryForSlot(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.min.js",
             "sha256-K837BwIyiXo5k/9fCYgqUyA14bN4/Ve9P2SIT0KmZD0=");
+        $snippetManager->attachCssExternalStyleSheetForSlot(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.css",
+            "sha256-ye8BkHf2lHXUtqZ18U0KI3xjJ1Yv7P8lvdKBt9xmVJM="
+        );
 
         // https://prismjs.com/plugins/download-button/-->
         $snippetManager->attachJavascriptLibraryForSlot(
@@ -130,115 +148,21 @@ class Prism
             "$BASE_PRISM_CDN/plugins/download-button/prism-download-button.min.js",
             "sha256-CQyVQ5ejeTshlzOS/eCiry40br9f4fQ9jb5e4qPl7ZA=");
 
+        // Loading the theme
+        $snippetManager->attachCssExternalStyleSheetForSlot(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/themes/$themeStyleSheet",
+            $themeIntegrity
+        );
 
         $javascriptCode = <<<EOD
 window.addEventListener('load', (event) => {
-
-    if (typeof self === 'undefined' || !self.Prism || !self.document) {
-        return;
-    }
-
-    // Loading the css from https://cdnjs.com/libraries/prism
-    const head = document.querySelector('head');
-    const baseCdn = "$BASE_PRISM_CDN";
-    const stylesheets = [
-        ["themes/$themeStyleSheet", "$themeIntegrity"],
-        ["plugins/toolbar/prism-toolbar.css","sha256-kK4/JIYJUKI4Zdg9ZQ7FYyRIqeWPfYKi5QZHO2n/lJI="],
-        /*https://prismjs.com/plugins/command-line/*/
-        ["plugins/command-line/prism-command-line.css","sha256-UvoA9bIYCYQkCMTYG5p2LM8ZpJmnC4G8k0oIc89nuQA="],
-        /*https://prismjs.com/plugins/line-numbers/*/
-        ["plugins/line-numbers/prism-line-numbers.css","sha256-ye8BkHf2lHXUtqZ18U0KI3xjJ1Yv7P8lvdKBt9xmVJM="]
-    ];
-
-    stylesheets.forEach(stylesheet => {
-            let link = document.createElement('link');
-            link.rel="stylesheet"
-            link.href=baseCdn+"/"+stylesheet[0];
-            link.integrity=stylesheet[1];
-            link.crossOrigin="anonymous";
-            head.append(link);
-        }
-    )
-
 
     Prism.plugins.NormalizeWhitespace.setDefaults({
         'remove-trailing': true,
         'remove-indent': true,
         'left-trim': true,
         'right-trim': true,
-    });
-
-    if (!Prism.plugins.toolbar) {
-        console.warn('Copy to Clipboard plugin loaded before Toolbar plugin.');
-
-        return;
-    }
-
-    let ClipboardJS = window.ClipboardJS || undefined;
-
-    if (!ClipboardJS && typeof require === 'function') {
-        ClipboardJS = require('clipboard');
-    }
-
-    const callbacks = [];
-
-    if (!ClipboardJS) {
-        const script = document.createElement('script');
-        const head = document.querySelector('head');
-
-        script.onload = function() {
-            ClipboardJS = window.ClipboardJS;
-
-            if (ClipboardJS) {
-                while (callbacks.length) {
-                    callbacks.pop()();
-                }
-            }
-        };
-
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js';
-        head.appendChild(script);
-    }
-
-    Prism.plugins.toolbar.registerButton('copy-to-clipboard', function (env) {
-        var linkCopy = document.createElement('button');
-        linkCopy.textContent = 'Copy';
-        linkCopy.setAttribute('type', 'button');
-
-        var element = env.element;
-
-        if (!ClipboardJS) {
-            callbacks.push(registerClipboard);
-        } else {
-            registerClipboard();
-        }
-
-        return linkCopy;
-
-        function registerClipboard() {
-            var clip = new ClipboardJS(linkCopy, {
-                'text': function () {
-                    return element.textContent;
-                }
-            });
-
-            clip.on('success', function() {
-                linkCopy.textContent = 'Copied!';
-
-                resetText();
-            });
-            clip.on('error', function () {
-                linkCopy.textContent = 'Press Ctrl+C to copy';
-
-                resetText();
-            });
-        }
-
-        function resetText() {
-            setTimeout(function () {
-                linkCopy.textContent = 'Copy';
-            }, 5000);
-        }
     });
 
 });

@@ -391,6 +391,8 @@ EOF;
                         }
                     }
                 }
+                // replace href
+                $outputAttributes->removeOutputAttributeIfPresent("href");
                 $outputAttributes->addOutputAttributeValue("href", 'mailto:' . $uri);
                 break;
             case MarkupRef::WEB_URI:

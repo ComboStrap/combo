@@ -50,7 +50,7 @@ class FsWikiUtility
      */
     static function getChildren(string $path): array
     {
-        require_once(__DIR__ . '/../../../../inc/search.php');
+        require_once(DOKU_INC . '/inc/search.php');
         global $conf;
 
 

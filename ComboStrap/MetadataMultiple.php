@@ -51,7 +51,7 @@ abstract class MetadataMultiple extends Metadata
     {
         $this->buildCheck();
         if ($this->array === null) {
-            throw new ExceptionNotFound("No multiple values");
+            throw new ExceptionNotFound("No multiple values was found");
         }
         return $this->array;
     }

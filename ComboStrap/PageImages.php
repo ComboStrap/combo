@@ -187,11 +187,11 @@ class PageImages extends MetadataTabular
             if ($pageImageUsage !== null) {
                 try {
                     $usages = $pageImageUsage->getValue();
-                    if ($usages !== null) {
-                        $pageImage->setUsages($usages);
-                    }
+                    $pageImage->setUsages($usages);
+                } catch (ExceptionNotFound $e) {
+                    // ok, no images
                 } catch (ExceptionCompile $e) {
-                    LogUtility::msg("Bad Usage value. Should not happen on get");
+                    LogUtility::internalError("Bad Usage value. Should not happen on get. Error: " . $e->getMessage(), self::CANONICAL, $e);
                 }
             }
             $pageImages[] = $pageImage;

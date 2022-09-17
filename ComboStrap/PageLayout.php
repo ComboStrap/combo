@@ -551,7 +551,7 @@ class PageLayout
                 ->addQueryParameter(time())
                 ->toHtmlString();
         } catch (ExceptionNotFound $e) {
-            throw new ExceptionNotFound("A request path is mandatory when adding a task runner. Disable it if you don't want one.");
+            throw new ExceptionNotFound("A request path is mandatory when adding a task runner. Disable it if you don't want one in the layout ($this).");
         }
 
         // no more 1x1 px image because of ad blockers

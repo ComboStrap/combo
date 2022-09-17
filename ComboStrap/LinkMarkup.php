@@ -16,7 +16,6 @@ namespace ComboStrap;
 use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
 use dokuwiki\Utf8\Conversion;
-use http\Exception\RuntimeException;
 use syntax_plugin_combo_link;
 
 
@@ -84,12 +83,12 @@ class LinkMarkup
 
     /**
      * Link constructor.
-     * @param $ref
+     * @param String $ref
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
      */
-    public function __construct($ref)
+    public function __construct(string $ref)
     {
 
         $this->stylingAttributes = TagAttributes::createEmpty(syntax_plugin_combo_link::TAG);
@@ -107,7 +106,7 @@ class LinkMarkup
         try {
             return new LinkMarkup($id);
         } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
-            throw new RuntimeException("Internal error: an id should be a good reference");
+            throw new ExceptionRuntime("Internal error: an id should be a good reference");
         }
     }
 

@@ -296,11 +296,6 @@ class ExecutionContext
         return $this;
     }
 
-    public function setNewAct(string $string): ExecutionContext
-    {
-        throw new ExceptionRuntimeInternal("delete");
-    }
-
 
     private static function getRequestedIdViaGlobalVariables()
     {

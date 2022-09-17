@@ -26,7 +26,7 @@ class FsWikiUtility
      * @return bool
      * TODO: Duplicate of {@link MarkupPath::isSecondarySlot()}
      */
-    public static function isSideBar()
+    public static function isSideBar(): bool
     {
         global $INFO;
         global $ID;

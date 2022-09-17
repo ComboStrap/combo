@@ -557,7 +557,7 @@ class WikiPath extends PathAbs
      */
     public static function getCurrentPagePath(): WikiPath
     {
-        $requestedPath = WikiPath::createExecutingMarkupWikiPath();;
+        $requestedPath = WikiPath::createExecutingMarkupWikiPath();
         try {
             $parent = $requestedPath->getParent();
         } catch (ExceptionNotFound $e) {
@@ -931,7 +931,7 @@ class WikiPath extends PathAbs
         $names = $this->getNames();
         switch (sizeof($names)) {
             case 0:
-                throw new ExceptionNotFound("No parent found");
+                throw new ExceptionNotFound("The path `{$this}` does not have any parent");
             case 1:
                 return new WikiPath(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $this->drive, $this->rev);
             default:

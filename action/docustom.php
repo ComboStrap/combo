@@ -80,18 +80,6 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
             \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
                 ->setBody($body, $mime)
                 ->send();
-            /**
-             * In dev or test, we don't exit to get the data, the code execution will come here then
-             * but {@link act_dispatch() Act dispatch} calls always the template,
-             * We create a fake empty template
-             */
-            if (PluginUtility::isDevOrTest()) {
-                global $conf;
-                $template = "combo_test";
-                $conf['template'] = $template;
-                $main = LocalPath::createFromPathString(DOKU_INC . "lib/tpl/$template/main.php");
-                FileSystems::setContent($main, "");
-            }
         } catch (\Exception $e) {
 
             $html = ExceptionReporter::createForException($e)

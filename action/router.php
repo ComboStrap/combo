@@ -1014,7 +1014,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             $ruleTarget = $rule[PageRules::TARGET_NAME];
 
             // Glob to Rexgexp
-            $regexpPattern = '/' . str_replace("*", "(.*)", $ruleMatcher) . '/';
+            $regexpPattern = '/' . str_replace("*", "(.*)", $ruleMatcher) . '/i';
 
             // Match ?
             // https://www.php.net/manual/en/function.preg-match.php

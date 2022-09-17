@@ -57,8 +57,8 @@ class HttpResponse
 
     public static function createFromException(\Exception $e): HttpResponse
     {
-        if(PluginUtility::isDevOrTest()){
-            throw new ExceptionRuntimeInternal($e,self::CANONICAL,1,$e);
+        if (PluginUtility::isDevOrTest()) {
+            throw new ExceptionRuntimeInternal($e, self::CANONICAL, 1, $e);
         }
         $httpResponse = HttpResponse::create();
         $message = "<p>{$e->getMessage()}</p>";
@@ -102,7 +102,7 @@ class HttpResponse
         if ($statusCode === null) {
             $statusCode = HttpResponse::STATUS_ALL_GOOD;
         }
-        $contentType  = $response->getHeader("Content-Type");
+        $contentType = $response->getHeader("Content-Type");
         $mime = Mime::create($contentType);
         return HttpResponse::createForStatus($statusCode)
             ->setBody($response->getContent(), $mime)
@@ -193,6 +193,18 @@ class HttpResponse
              */
             ob_start(function ($value) {
             });
+
+            /**
+             * In dev or test, we don't exit to get the data, the code execution will come here then
+             * but {@link act_dispatch() Act dispatch} calls always the template,
+             * We create a fake empty template
+             */
+            global $conf;
+            $template = "combo_test";
+            $conf['template'] = $template;
+            $main = LocalPath::createFromPathString(DOKU_INC . "lib/tpl/$template/main.php");
+            FileSystems::setContent($main, "");
+
 
         }
     }

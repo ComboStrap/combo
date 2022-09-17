@@ -289,7 +289,12 @@ class MarkupCacheDependencies
     public
     function getDefaultKey(): string
     {
-        $keyDokuWikiCompliant = str_replace("\\", "/", $this->pathFragment->getPath()->toLocalPath()->toPathString());
+        try {
+            $keyDokuWikiCompliant = str_replace("\\", "/", LocalPath::createFromPathObject($this->pathFragment)->toPathString());
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::warning("Error while getting the dokuwiki compliant key. Error: " . $e->getMessage());
+            $keyDokuWikiCompliant = $this->pathFragment->toPathString();
+        }
         return $keyDokuWikiCompliant . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
     }
 

@@ -47,6 +47,7 @@ class CacheManager
 
 
     /**
+     * @deprecated use the {@link ExecutionContext::getCacheManager()} instead otherwise you may mix context run
      * @return CacheManager
      */
     public static function getFromContextExecution(): CacheManager

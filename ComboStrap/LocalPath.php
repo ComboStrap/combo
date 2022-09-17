@@ -33,10 +33,10 @@ class LocalPath extends PathAbs
      */
     public static function createFromPathObject(Path $path)
     {
-        if($path instanceof LocalPath){
+        if ($path instanceof LocalPath) {
             return $path;
         }
-        if($path instanceof WikiPath){
+        if ($path instanceof WikiPath) {
             return $path->toLocalPath();
         }
         throw new ExceptionBadArgument("The path is not a local path nor a wiki path, we can't transform it");

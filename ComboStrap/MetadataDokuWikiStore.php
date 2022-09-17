@@ -269,6 +269,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
 
     /**
      * @return MetadataDokuWikiStore
+     * @throws ExceptionBadArgument
      */
     public function renderAndPersist(): MetadataDokuWikiStore
     {

@@ -637,5 +637,12 @@ class ExecutionContext
         return $this;
     }
 
+    public function setUseHeadingAsTitle(): ExecutionContext
+    {
+        // https://www.dokuwiki.org/config:useheading
+        $this->setConf('useheading', 1, null);
+        return $this;
+    }
+
 
 }

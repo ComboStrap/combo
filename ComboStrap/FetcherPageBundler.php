@@ -214,7 +214,7 @@ EOF;
                 null,
                 0
             );
-            $title = PageTitle::createForMarkup($outline->getMarkup())->getValueOrDefault();
+            $title = PageTitle::createForMarkup($outline->getMarkupPath())->getValueOrDefault();
             $unmatchedHeading = Call::createComboCall(
                 \syntax_plugin_combo_heading::TAG,
                 DOKU_LEXER_UNMATCHED,

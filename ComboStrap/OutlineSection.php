@@ -114,7 +114,7 @@ class OutlineSection extends TreeNode
                 $label .= trim($call->getCapturedContent());
             }
         }
-        return $label;
+        return trim($label);
     }
 
     public function setStartPosition(int $startPosition): OutlineSection

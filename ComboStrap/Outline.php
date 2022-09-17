@@ -77,12 +77,12 @@ class Outline
     private OutlineSection $actualSection; // the actual section that is created
     private Call $actualHeadingCall; // the heading that is parsed
     private int $actualHeadingParsingState = DOKU_LEXER_EXIT;  // the state of the heading parsed (enter, closed), enter if we have entered an heading, exit if not;
-    private MarkupPath $markup;
+    private MarkupPath $markupPath;
 
     public function __construct(CallStack $callStack, MarkupPath $markup = null)
     {
         if ($markup !== null) {
-            $this->markup = $markup;
+            $this->markupPath = $markup;
         }
         $this->buildOutline($callStack);
         $this->storeH1();
@@ -91,12 +91,12 @@ class Outline
 
     /**
      * @param CallStack $callStack
-     * @param MarkupPath|null $markup - null if the markup is dynamic
+     * @param MarkupPath|null $markupPath - null if the markup is dynamic
      * @return Outline
      */
-    public static function createFromCallStack(CallStack $callStack, MarkupPath $markup = null): Outline
+    public static function createFromCallStack(CallStack $callStack, MarkupPath $markupPath = null): Outline
     {
-        return new Outline($callStack, $markup);
+        return new Outline($callStack, $markupPath);
     }
 
     private function buildOutline(CallStack $callStack)
@@ -410,7 +410,7 @@ class Outline
                 if ($ACT === "preview") {
                     $mainContainerSelector = ".pad";
                 } else {
-                    $mainContainerSelector = "#".PageLayout::MAIN_CONTENT_ELEMENT;
+                    $mainContainerSelector = "#" . PageLayout::MAIN_CONTENT_ELEMENT;
                 }
                 /**
                  * Because the HTML file structure is not really fixed
@@ -459,6 +459,18 @@ EOF;
         }
 
 
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function createFromMarkupPath(MarkupPath $markupPath): Outline
+    {
+        $instructions = MarkupRenderer::createFromMarkup(FileSystems::getContent($markupPath->getPathObject()))
+            ->setRequestedMimeToInstruction()
+            ->getOutput();
+        $callStack = CallStack::createFromInstructions($instructions);
+        return new Outline($callStack, $markupPath);
     }
 
     public function getInstructionCalls(): array
@@ -772,24 +784,21 @@ EOF;
             return;
         }
         if ($outlineSection->getLevel() === 1) {
-            try {
-                PageH1::createForPage(MarkupPath::createFromRequestedPage())
-                    ->setValue($outlineSection->getLabel())
-                    ->persist();
-            } catch (ExceptionBadArgument $e) {
-                LogUtility::internalError("We were unable to store the scanned heading 1. Error: {$e->getMessage()}", self::CANONICAL);
-            }
+            $label = $outlineSection->getLabel();
+            PageH1::createForPage($this->markupPath)
+                ->persistDefaultValue($label);
         }
     }
 
-    private function storeTocForMarkupIfAny()
+    private
+    function storeTocForMarkupIfAny()
     {
-        if(!isset($this->markup)){
+        if (!isset($this->markupPath)) {
             return;
         }
         $toc = $this->toTocDokuwikiFormat();
         try {
-            Toc::createForPage($this->markup)
+            Toc::createForPage($this->markupPath)
                 ->setValue($toc)
                 ->persist();
         } catch (ExceptionBadArgument $e) {
@@ -797,9 +806,10 @@ EOF;
         }
     }
 
-    public function getMarkup(): MarkupPath
+    public
+    function getMarkupPath(): MarkupPath
     {
-        return $this->markup;
+        return $this->markupPath;
     }
 
 

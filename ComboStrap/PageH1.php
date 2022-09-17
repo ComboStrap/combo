@@ -43,7 +43,6 @@ class PageH1 extends MetadataText
     }
 
 
-
     public function getMutable(): bool
     {
         return true;
@@ -56,12 +55,12 @@ class PageH1 extends MetadataText
     {
         $store = $this->getReadStore();
         if ($store instanceof MetadataDokuWikiStore) {
-            $h1Parsed = $store->getCurrentFromName( self::H1_PARSED);
+            $h1Parsed = $store->getFromPersistentName(self::H1_PARSED);
             if (!empty($h1Parsed)) {
                 return $h1Parsed;
             }
             // dokuwiki
-            $h1 = $store->getCurrentFromName( "title");
+            $h1 = $store->getCurrentFromName("title");
             if (!empty($h1)) {
                 return $h1;
             }
@@ -94,6 +93,17 @@ class PageH1 extends MetadataText
     public function getCanonical(): string
     {
         return $this->getName();
+    }
+
+    public function persistDefaultValue(string $defaultValue): PageH1
+    {
+        $store = $this->getWriteStore();
+        if ($store instanceof MetadataDokuWikiStore) {
+            $store
+                ->setFromPersistentName(self::H1_PARSED, $defaultValue);
+        }
+        return $this;
+
     }
 
 

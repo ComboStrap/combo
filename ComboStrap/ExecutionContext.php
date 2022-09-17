@@ -476,10 +476,10 @@ class ExecutionContext
     /**
      * @param string $key
      * @param $value
-     * @param string $pluginNamespace - if null, stored in the global conf namespace
+     * @param string|null $pluginNamespace - if null, stored in the global conf namespace
      * @return $this
      */
-    public function setConf(string $key, $value, string $pluginNamespace = PluginUtility::PLUGIN_BASE_NAME): ExecutionContext
+    public function setConf(string $key, $value, ?string $pluginNamespace = PluginUtility::PLUGIN_BASE_NAME): ExecutionContext
     {
         /**
          * Environment within dokuwiki is a global variable
@@ -623,6 +623,18 @@ class ExecutionContext
         }
 
         return true;
+    }
+
+    public function setEnableSectionEditing(): ExecutionContext
+    {
+        $this->setConf('maxseclevel', 999, null);
+        return $this;
+    }
+
+    public function setCanonicalUrlType(string $value): ExecutionContext
+    {
+        $this->setConf(PageUrlType::CONF_CANONICAL_URL_TYPE, $value);
+        return $this;
     }
 
 

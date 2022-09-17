@@ -270,11 +270,10 @@ class Site
      *
      * @param $key
      * @param $value
-     * @param string $namespace - the plugin name
+     * @param string|null $namespace - the plugin name
      * @return void
-     *
      */
-    public static function setConf($key, $value, string $namespace = PluginUtility::PLUGIN_BASE_NAME)
+    public static function setConf($key, $value, ?string $namespace = PluginUtility::PLUGIN_BASE_NAME)
     {
         global $conf;
         if ($namespace !== null) {
@@ -284,7 +283,7 @@ class Site
         }
     }
 
-    public static function getConfValue($confName, $defaultValue = null, string $namespace = PluginUtility::PLUGIN_BASE_NAME)
+    public static function getConfValue($confName, $defaultValue = null, ?string $namespace = PluginUtility::PLUGIN_BASE_NAME)
     {
         global $conf;
         if ($namespace !== null) {

@@ -14,13 +14,14 @@ use Facebook\WebDriver\WebDriverDimension;
 
 /**
  * Download chrome driver with the same version
+ * https://chromedriver.chromium.org/downloads
  *
  * Then run:
  * ```
  * chromedriver.exe --port=4444
  * ```
  */
-class FetcherSnapshot extends FetcherImage
+class FetcherScreenshot extends FetcherImage
 {
 
 
@@ -31,9 +32,9 @@ class FetcherSnapshot extends FetcherImage
     private Url $url;
 
 
-    public static function createSnapshotFromUrl(Url $urlToSnapshot): FetcherSnapshot
+    public static function createSnapshotFromUrl(Url $urlToSnapshot): FetcherScreenshot
     {
-        return (new FetcherSnapshot())
+        return (new FetcherScreenshot())
             ->setUrlToSnapshot($urlToSnapshot);
 
     }
@@ -54,7 +55,7 @@ class FetcherSnapshot extends FetcherImage
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
      */
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherSnapshot
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherScreenshot
     {
         $urlString = $tagAttributes->getValue(self::URL);
         if ($urlString === null) {
@@ -109,7 +110,7 @@ class FetcherSnapshot extends FetcherImage
             );
         } /** @noinspection PhpRedundantCatchClauseInspection */ catch (WebDriverCurlException $e) {
             // this exception is thrown even if it's not advertised
-            throw new ExceptionInternal("Web driver is not available at " . self::WEB_DRIVER_ENDPOINT . ". Error: {$e->getMessage()}");
+            throw new ExceptionInternal("Web driver is not available at " . self::WEB_DRIVER_ENDPOINT . ". Did you run `chromedriver.exe --port=4444` ? Error: {$e->getMessage()}");
         }
         try {
 
@@ -178,8 +179,7 @@ class FetcherSnapshot extends FetcherImage
                 } catch (ExceptionNotFound $e) {
                     $lastNameWithoutExtension = $url->getHost();
                 }
-                $screenShotPath = LocalPath::createHomeDirectory()
-                    ->resolve("Desktop")
+                $screenShotPath = LocalPath::createDesktopDirectory()
                     ->resolve($lastNameWithoutExtension . "." . $this->getMime()->getExtension());
             }
             $webDriver->takeScreenshot($screenShotPath);
@@ -201,7 +201,7 @@ class FetcherSnapshot extends FetcherImage
      */
     function getBuster(): string
     {
-        return FileSystems::getCacheBuster(ClassUtility::getClassPath(FetcherSnapshot::class));
+        return FileSystems::getCacheBuster(ClassUtility::getClassPath(FetcherScreenshot::class));
     }
 
     public function getMime(): Mime
@@ -232,7 +232,7 @@ class FetcherSnapshot extends FetcherImage
         }
     }
 
-    private function setUrlToSnapshot(Url $urlToSnapshot): FetcherSnapshot
+    private function setUrlToSnapshot(Url $urlToSnapshot): FetcherScreenshot
     {
         $this->url = $urlToSnapshot;
         return $this;

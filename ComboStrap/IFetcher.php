@@ -21,7 +21,7 @@ namespace ComboStrap;
  *     * {@link FetcherSvg} that can process and return svg
  *     * {@link FetcherRaster} that can process and return raster image
  *     * {@link FetcherVignette} that returns a raster image from page metadata
- *     * {@link FetcherSnapshot} that returns a snapshot image from a page
+ *     * {@link FetcherScreenshot} that returns a snapshot image from a page
  *   * {@link FetcherRawLocalPath} that returns all type of local file without processing
  *
 

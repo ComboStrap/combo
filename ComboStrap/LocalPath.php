@@ -42,6 +42,15 @@ class LocalPath extends PathAbs
         throw new ExceptionBadArgument("The path is not a local path nor a wiki path, we can't transform it");
     }
 
+    /**
+     *
+     * @throws ExceptionNotFound - if the env directory is not found
+     */
+    public static function createDesktopDirectory(): LocalPath
+    {
+        return LocalPath::createHomeDirectory()->resolve("Desktop");
+    }
+
 
     public function toUriString(): string
     {
@@ -123,7 +132,7 @@ class LocalPath extends PathAbs
             $home = getenv("USERPROFILE");
         }
         if ($home === false) {
-            throw new ExceptionNotFound(" The home directory could not be found");
+            throw new ExceptionNotFound(" The home directory variable could not be found");
         }
         return LocalPath::createFromPathString($home);
     }

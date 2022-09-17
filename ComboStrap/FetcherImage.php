@@ -38,7 +38,7 @@ abstract class FetcherImage extends IFetcherAbs implements IFetcherPath
     public function __construct()
     {
         /**
-         * Image can be generated, ie {@link FetcherVignette}, {@link FetcherSnapshot}
+         * Image can be generated, ie {@link FetcherVignette}, {@link FetcherScreenshot}
          */
     }
 

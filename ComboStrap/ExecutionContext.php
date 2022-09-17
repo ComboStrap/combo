@@ -359,7 +359,7 @@ class ExecutionContext
     public function getRequestedWikiId(): string
     {
         if (!isset($this->requestedWikiId)) {
-            throw new ExceptionNotFound("No id");
+            throw new ExceptionNotFound("No requested id was found in the context");
         }
         return $this->requestedWikiId;
     }

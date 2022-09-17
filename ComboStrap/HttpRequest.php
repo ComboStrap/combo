@@ -2,8 +2,8 @@
 
 namespace ComboStrap;
 
-use http\Env\Request;
-use http\Exception\RuntimeException;
+
+
 
 /**
  * A request to the application
@@ -38,7 +38,6 @@ class HttpRequest
          * TODO: They should be incorporated in the root execution context as object
          */
         // global scope
-        MetadataDokuWikiStore::resetAll();
         MetadataDbStore::resetAll();
         // request scope
         IdManager::reset();
@@ -98,7 +97,7 @@ class HttpRequest
     {
 
         if (!$this->withTestRequest) {
-            throw new RuntimeException("Real HTTP fetch not yet implemented, only test fetch");
+            throw new ExceptionRuntime("Real HTTP fetch not yet implemented, only test fetch");
         }
 
         $query = $this->url->getQueryProperties();

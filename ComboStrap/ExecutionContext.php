@@ -355,6 +355,7 @@ class ExecutionContext
     /**
      * @return string - the wiki id of this context
      * @throws ExceptionNotFound
+     * Note that
      */
     public function getRequestedWikiId(): string
     {

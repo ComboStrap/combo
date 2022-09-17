@@ -57,17 +57,14 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
 
 
     const CANONICAL = Metadata::CANONICAL;
+
     /**
      * When the value of a metadata has changed
      */
     public const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
     const NEW_VALUE_ATTRIBUTE = "new_value";
 
-    /**
-     *
-     * @var MetadataDokuWikiStore[] a cache of store
-     */
-    private static array $storesByRequestedPage;
+
 
 
     /**
@@ -82,18 +79,17 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     public static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
 
-        $requestedId = ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
+        $context = ExecutionContext::getActualOrCreateFromEnv();
 
-        $storesByRequestedId = &self::$storesByRequestedPage[$requestedId];
-        if ($storesByRequestedId === null) {
-            // delete all previous stores by requested page id
-            self::resetAll();
-            self::$storesByRequestedPage[$requestedId] = [];
-            $storesByRequestedId = &self::$storesByRequestedPage[$requestedId];
+        try {
+            $executionCachedStores = $context->getRuntimeObject(MetadataDokuWikiStore::class);
+        } catch (ExceptionNotFound $e) {
+            $executionCachedStores = [];
+            $context->setRuntimeObject(self::CANONICAL, $stores);
         }
         $path = $resourceCombo->getPathObject()->toPathString();
-        if (isset($storesByRequestedId[$path])) {
-            return $storesByRequestedId[$path];
+        if (isset($executionCachedStores[$path])) {
+            return $executionCachedStores[$path];
         }
 
         if (!($resourceCombo instanceof MarkupPath)) {
@@ -104,27 +100,13 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         }
 
         $metadataStore = new MetadataDokuWikiStore($resourceCombo, $data);
-        $storesByRequestedId[$path] = $metadataStore;
+        $executionCachedStores[$path] = $metadataStore;
         return $metadataStore;
 
     }
 
 
-    /**
-     * @return MetadataDokuWikiStore[]
-     */
-    public static function getStores(): array
-    {
-        return self::$storesByRequestedPage;
-    }
 
-    /**
-     * Delete the in-memory data store
-     */
-    public static function resetAll()
-    {
-        self::$storesByRequestedPage = [];
-    }
 
     /**
      * @throws ExceptionBadState - if for any reason, it's not possible to store the data

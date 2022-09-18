@@ -18,9 +18,7 @@ class MarkupRenderer
      */
     private $cacheAfterRendering = true;
     private string $renderer;
-    private ExecutionContext $dynamicRenderingExecutionContext;
-    private bool $closed = false;
-    private string $runningId;
+
 
     public static function createFromMarkup(string $markup): MarkupRenderer
     {
@@ -75,55 +73,72 @@ class MarkupRenderer
     public function getOutput()
     {
 
-        $this->build();
+        /**
+         * Dynamic rendering ?
+         */
+        $dynamicRenderingExecutionContext = null;
+        if (
+            isset($this->markup)
+            && $this->requestedMime->getExtension() !== self::INSTRUCTION_EXTENSION
+        ) {
+            $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
+            $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+            try {
+                $runningId = $executionContext->getRequestedWikiId();
+            } catch (ExceptionNotFound $e) {
+                $runningId = "markup-renderer-default";
+            }
+            $dynamicRenderingExecutionContext = $executionContext->startSubExecutionEnv(MarkupRenderer::class, $runningId, $runningAct);
+        }
 
-        $extension = $this->requestedMime->getExtension();
-        switch ($extension) {
-            case self::INSTRUCTION_EXTENSION:
-                /**
-                 * Get the instructions
-                 * Adapted from {@link p_cached_instructions()}
-                 *
-                 * Note that this code may not run at first rendering
-                 *
-                 * Why ?
-                 * Because dokuwiki asks first page information
-                 * via the {@link pageinfo()} method.
-                 * This function then render the metadata (ie {@link p_render_metadata()} and therefore will trigger
-                 * the rendering with this function
-                 * ```p_cached_instructions(wikiFN($id),false,$id)```
-                 *
-                 * The best way to manipulate the instructions is not before but after
-                 * the parsing. See {@link \action_plugin_combo_headingpostprocessing}
-                 *
-                 */
-                $instructions = p_get_instructions($this->markup);
-                return $this->deleteRootPElementsIfRequested($instructions);
+        try {
+            $extension = $this->requestedMime->getExtension();
+            switch ($extension) {
+                case self::INSTRUCTION_EXTENSION:
+                    /**
+                     * Get the instructions
+                     * Adapted from {@link p_cached_instructions()}
+                     *
+                     * Note that this code may not run at first rendering
+                     *
+                     * Why ?
+                     * Because dokuwiki asks first page information
+                     * via the {@link pageinfo()} method.
+                     * This function then render the metadata (ie {@link p_render_metadata()} and therefore will trigger
+                     * the rendering with this function
+                     * ```p_cached_instructions(wikiFN($id),false,$id)```
+                     *
+                     * The best way to manipulate the instructions is not before but after
+                     * the parsing. See {@link \action_plugin_combo_headingpostprocessing}
+                     *
+                     */
+                    $instructions = p_get_instructions($this->markup);
+                    return $this->deleteRootPElementsIfRequested($instructions);
 
-            default:
-                /**
-                 * The code below is adapted from {@link p_cached_output()}
-                 * $ret = p_cached_output($file, 'xhtml', $pageid);
-                 */
-                if (!isset($this->instructions)) {
-                    $this->instructions = MarkupRenderer::createFromMarkup($this->markup)
-                        ->setRequestedMimeToInstruction()
-                        ->setDeleteRootBlockElement($this->deleteRootElement)
-                        ->getOutput();
-                }
+                default:
+                    /**
+                     * The code below is adapted from {@link p_cached_output()}
+                     * $ret = p_cached_output($file, 'xhtml', $pageid);
+                     */
+                    if (!isset($this->instructions)) {
+                        $this->instructions = MarkupRenderer::createFromMarkup($this->markup)
+                            ->setRequestedMimeToInstruction()
+                            ->setDeleteRootBlockElement($this->deleteRootElement)
+                            ->getOutput();
+                    }
 
-                /**
-                 * Render
-                 */
-                $result = p_render($this->getRendererNameOrDefault(), $this->instructions, $info);
-                $this->cacheAfterRendering = $info['cache'];
+                    /**
+                     * Render
+                     */
+                    $result = p_render($this->getRendererNameOrDefault(), $this->instructions, $info);
+                    $this->cacheAfterRendering = $info['cache'];
+                    return $result;
 
-                /**
-                 * Close
-                 */
-                $this->close();
-                return $result;
-
+            }
+        } finally {
+            if ($dynamicRenderingExecutionContext!=null) {
+                $dynamicRenderingExecutionContext->closeSubExecutionEnv();
+            }
         }
 
 
@@ -205,38 +220,6 @@ class MarkupRenderer
         }
 
         return $instructions;
-    }
-
-    /**
-     * @return void - the counter part of build
-     */
-    private function close(): void
-    {
-        if (isset($this->dynamicRenderingExecutionContext)) {
-            $this->dynamicRenderingExecutionContext->closeSubExecutionEnv();
-        }
-    }
-
-    private function build()
-    {
-
-        /**
-         * Dynamic rendering ?
-         */
-        if (
-            isset($this->markup)
-            && $this->requestedMime->getExtension() !== self::INSTRUCTION_EXTENSION
-        ) {
-            $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
-            $executionContext = ExecutionContext::getActualOrCreateFromEnv();
-            try {
-                $this->runningId = $executionContext->getRequestedWikiId();
-            } catch (ExceptionNotFound $e) {
-                $this->runningId = "markup-renderer-default";
-            }
-            $this->dynamicRenderingExecutionContext = $executionContext->startSubExecutionEnv(MarkupRenderer::class, $this->runningId, $runningAct);
-        }
-
     }
 
 

@@ -263,14 +263,14 @@ EOF;
             return $this->status;
         }
         if ($this->type === null) {
-            return HttpResponse::STATUS_ALL_GOOD;
+            return HttpResponseStatus::ALL_GOOD;
         }
         switch ($this->type) {
             case self::TYPE_ERROR:
-                return HttpResponse::STATUS_INTERNAL_ERROR;
+                return HttpResponseStatus::INTERNAL_ERROR;
             case self::TYPE_INFO:
             default:
-                return HttpResponse::STATUS_ALL_GOOD;
+                return HttpResponseStatus::ALL_GOOD;
         }
 
     }

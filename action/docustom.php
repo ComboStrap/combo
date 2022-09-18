@@ -4,9 +4,11 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionReporter;
+use ComboStrap\ExecutionContext;
 use ComboStrap\FetcherPage;
 use ComboStrap\FetcherSystem;
 use ComboStrap\FileSystems;
+use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
 use ComboStrap\IFetcher;
 use ComboStrap\LocalPath;
@@ -54,7 +56,21 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
      */
     public function executeComboDoAction(Doku_Event $event, $param)
     {
+
+        /**
+         * The router may have done a redirection
+         * Dokuwiki does not stop unfortunately
+         */
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        $hasEnded = $executionContext
+            ->response()
+            ->hasEnded();
+        if ($hasEnded) {
+            return;
+        }
+
         $action = $event->data;
+
 
         if (FetcherPage::isEnabledAsShowAction() && $action === "show") {
             $action = self::DO_PREFIX . FetcherPage::NAME;
@@ -77,16 +93,16 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
             $fetcher = FetcherSystem::createFetcherStringFromUrl($url);
             $body = $fetcher->getFetchString();
             $mime = $fetcher->getMime();
-            \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
+            \ComboStrap\HttpResponse::createForStatus(HttpResponseStatus::ALL_GOOD)
                 ->setBody($body, $mime)
-                ->send();
+                ->end();
         } catch (\Exception $e) {
 
             $html = ExceptionReporter::createForException($e)
                 ->getHtmlPage("An error has occurred during the execution of the action ($action)");
             \ComboStrap\HttpResponse::createFromException($e)
                 ->setBody($html, Mime::getHtml())
-                ->send();
+                ->end();
         }
 
     }

@@ -11,15 +11,6 @@ class HttpResponse
     public const EXIT_KEY = 'exit';
 
 
-    const STATUS_NOT_FOUND = 404;
-    public const STATUS_ALL_GOOD = 200;
-    const STATUS_NOT_MODIFIED = 304;
-    const STATUS_PERMANENT_REDIRECT = 301;
-    public const STATUS_DOES_NOT_EXIST = 404;
-    public const STATUS_UNSUPPORTED_MEDIA_TYPE = 415;
-    public const STATUS_BAD_REQUEST = 400; // 422 ?
-    public const STATUS_INTERNAL_ERROR = 500;
-    public const STATUS_NOT_AUTHORIZED = 401;
     const MESSAGE_ATTRIBUTE = "message";
     const CANONICAL = "http:response";
 
@@ -40,6 +31,7 @@ class HttpResponse
 
     private string $body;
     private Mime $mime;
+    private bool $hasEnded = false;
 
 
     /**
@@ -49,6 +41,12 @@ class HttpResponse
     {
     }
 
+    /**
+     * @param int $status
+     * @return HttpResponse
+     * @deprecated use the {@link ExecutionContext::response()} instead
+     * to access the response
+     */
     public static function createForStatus(int $status): HttpResponse
     {
         return (new HttpResponse())
@@ -66,7 +64,7 @@ class HttpResponse
             $status = self::getStatusFromException($e);
             $httpResponse->setStatus($status);
         } catch (ExceptionBadArgument $e) {
-            $httpResponse->setStatus(HttpResponse::STATUS_INTERNAL_ERROR);
+            $httpResponse->setStatus(HttpResponseStatus::INTERNAL_ERROR);
             $message = "<p>{$e->getMessage()}</p>$message";
         }
         $httpResponse->setBody($message, Mime::getHtml());
@@ -79,13 +77,13 @@ class HttpResponse
     public static function getStatusFromException(\Exception $e): int
     {
         if ($e instanceof ExceptionNotFound || $e instanceof ExceptionNotExists) {
-            return HttpResponse::STATUS_NOT_FOUND;
+            return HttpResponseStatus::NOT_FOUND;
         } elseif ($e instanceof ExceptionBadArgument) {
-            return HttpResponse::STATUS_BAD_REQUEST; // bad request
+            return HttpResponseStatus::BAD_REQUEST; // bad request
         } elseif ($e instanceof ExceptionBadSyntax) {
             return 415; // unsupported media type
         } elseif ($e instanceof ExceptionBadState || $e instanceof ExceptionInternal) {
-            return HttpResponse::STATUS_INTERNAL_ERROR; //
+            return HttpResponseStatus::INTERNAL_ERROR; //
         }
         throw new ExceptionBadArgument("The exception is unknown.");
     }
@@ -100,7 +98,7 @@ class HttpResponse
     {
         $statusCode = $response->getStatusCode();
         if ($statusCode === null) {
-            $statusCode = HttpResponse::STATUS_ALL_GOOD;
+            $statusCode = HttpResponseStatus::ALL_GOOD;
         }
         $contentType = $response->getHeader("Content-Type");
         $mime = Mime::create($contentType);
@@ -117,8 +115,10 @@ class HttpResponse
     }
 
 
-    public function send()
+    public function end()
     {
+
+        $this->hasEnded = true;
 
         if (isset($this->mime)) {
             Http::setMime($this->mime->toString());
@@ -137,7 +137,7 @@ class HttpResponse
         } else {
             $status = Http::getStatus();
             if ($status === null) {
-                Http::setStatus(self::STATUS_INTERNAL_ERROR);
+                Http::setStatus(HttpResponseStatus::INTERNAL_ERROR);
                 LogUtility::log2file("No status was set for this soft exit, the default was set instead", LogUtility::LVL_MSG_ERROR, $this->canonical);
             }
         }
@@ -153,7 +153,7 @@ class HttpResponse
          * Exit
          */
         if (!PluginUtility::isTest()) {
-            if ($this->status !== self::STATUS_ALL_GOOD && isset($this->body)) {
+            if ($this->status !== HttpResponseStatus::ALL_GOOD && isset($this->body)) {
                 // if this is a 304, there is no body, no message
                 LogUtility::log2file("Bad Http Response: $this->status : {$this->getBody()}", LogUtility::LVL_MSG_ERROR, $this->canonical);
             }
@@ -253,17 +253,11 @@ class HttpResponse
 
 
     /**
-     * @throws ExceptionNotFound
      */
     public function getHeaders(string $headerName): array
     {
-        $results = Http::getHeader($headerName, $this->headers);
 
-        if (count($results) === 0) {
-            throw new ExceptionNotFound("No header with the name $headerName");
-        }
-
-        return $results;
+        return Http::getHeadersForName($headerName, $this->headers);
 
     }
 
@@ -273,6 +267,9 @@ class HttpResponse
     public function getHeader(string $headerName): string
     {
         $headers = $this->getHeaders($headerName);
+        if(count($headers)==0){
+            throw new ExceptionNotFound("No header found for the name $headerName");
+        }
         return $headers[0];
 
     }
@@ -318,7 +315,7 @@ class HttpResponse
         try {
             $this->setStatus(self::getStatusFromException($e));
         } catch (ExceptionBadArgument $e) {
-            $this->setStatus(self::STATUS_INTERNAL_ERROR);
+            $this->setStatus(HttpResponseStatus::INTERNAL_ERROR);
             $this->setBody($e->getMessage(), Mime::getText());
         }
         return $this;
@@ -327,6 +324,11 @@ class HttpResponse
     public function getStatus(): int
     {
         return $this->status;
+    }
+
+    public function hasEnded(): bool
+    {
+        return $this->hasEnded;
     }
 
 

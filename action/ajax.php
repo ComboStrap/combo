@@ -5,6 +5,7 @@ use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\FetcherSystem;
+use ComboStrap\HttpResponseStatus;
 use ComboStrap\Mime;
 use ComboStrap\PluginUtility;
 use ComboStrap\Url;
@@ -57,7 +58,7 @@ class action_plugin_combo_ajax extends DokuWiki_Action_Plugin
             $fetchUrl = Url::createFromGetOrPostGlobalVariable();
         } catch (ExceptionBadArgument $e) {
             \ComboStrap\HttpResponse::createFromException($e)
-                ->send();
+                ->end();
             return;
         }
         try {
@@ -69,14 +70,14 @@ class action_plugin_combo_ajax extends DokuWiki_Action_Plugin
             }
             \ComboStrap\HttpResponse::createFromException($e)
                 ->setBody("Error while creating the fetcher for the fetch Url ($fetchUrl)", Mime::getText())
-                ->send();
+                ->end();
             return;
         }
 
         \ComboStrap\HttpResponse::create()
-            ->setStatus(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
+            ->setStatus(HttpResponseStatus::ALL_GOOD)
             ->setBody($fetcher->getFetchString(), $fetcher->getMime())
-            ->send();
+            ->end();
 
     }
 

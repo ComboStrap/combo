@@ -1,7 +1,9 @@
 <?php
 
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExecutionContext;
 use ComboStrap\FileSystems;
+use ComboStrap\HttpResponseStatus;
 use ComboStrap\Json;
 use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
@@ -86,9 +88,11 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
 
         global $lang;
         if (!count($pages)) {
-            \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
+            ExecutionContext::getActualOrCreateFromEnv()
+                ->response()
+                ->setStatus(HttpResponseStatus::ALL_GOOD)
                 ->setBody("<div>" . $lang['nothingfound'] . "</div>", Mime::getHtml())
-                ->send();
+                ->end();
             return;
         }
 
@@ -135,9 +139,11 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
 </div>
 EOF;
         }
-        \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->response()
+            ->setStatus(HttpResponseStatus::ALL_GOOD)
             ->setBody($html, Mime::getHtml())
-            ->send();
+            ->end();
 
     }
 

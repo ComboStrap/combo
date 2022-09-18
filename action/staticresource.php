@@ -4,6 +4,7 @@ use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotExists;
 use ComboStrap\FetcherSystem;
+use ComboStrap\HttpResponseStatus;
 use ComboStrap\IFetcherAbs;
 use ComboStrap\FetcherCache;
 use ComboStrap\Site;
@@ -100,7 +101,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if ($drive === WikiPath::CACHE_DRIVE) {
             $event->data['download'] = false;
             if (!Identity::isManager()) {
-                $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
+                $event->data['status'] = HttpResponseStatus::NOT_AUTHORIZED;
                 return;
             }
         }
@@ -123,7 +124,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             $fetcher = FetcherSystem::createPathFetcherFromUrl($fetchUrl);
             $fetchPath = $fetcher->getFetchPath();
             $event->data['file'] = $fetchPath->toPathString();
-            $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
+            $event->data['status'] = HttpResponseStatus::ALL_GOOD;
             $mime = $fetcher->getMime();
             $event->data["mime"] = $mime->toString();
             /**
@@ -247,11 +248,11 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             header("ETag: $etag");
         } catch (ExceptionNotFound $e) {
             // internal error
-            HttpResponse::createForStatus(HttpResponse::STATUS_INTERNAL_ERROR)
+            HttpResponse::createForStatus(HttpResponseStatus::INTERNAL_ERROR)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
                 ->setBodyAsJsonMessage("We were unable to get the etag because the media was not found. Error: {$e->getMessage()}")
-                ->send();
+                ->end();
             return;
         }
 
@@ -263,11 +264,11 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
             $ifNoneMatch = stripslashes($_SERVER['HTTP_IF_NONE_MATCH']);
             if ($ifNoneMatch && $ifNoneMatch === $etag) {
-                HttpResponse::createForStatus(HttpResponse::STATUS_NOT_MODIFIED)
+                HttpResponse::createForStatus(HttpResponseStatus::NOT_MODIFIED)
                     ->setEvent($event)
                     ->setCanonical(self::CANONICAL)
                     ->setBodyAsJsonMessage("File not modified")
-                    ->send();
+                    ->end();
                 return;
             }
         }
@@ -280,11 +281,11 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         try {
             $mime = FileSystems::getMime($mediaToSend);
         } catch (ExceptionNotFound $e) {
-            HttpResponse::createForStatus(HttpResponse::STATUS_INTERNAL_ERROR)
+            HttpResponse::createForStatus(HttpResponseStatus::INTERNAL_ERROR)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
                 ->setBodyAsJsonMessage("Mime not found")
-                ->send();
+                ->end();
             return;
         }
         $download = $event->data["download"];
@@ -337,9 +338,9 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
                 }
             }
         } else {
-            HttpResponse::createForStatus(HttpResponse::STATUS_INTERNAL_ERROR)
+            HttpResponse::createForStatus(HttpResponseStatus::INTERNAL_ERROR)
                 ->setBodyAsJsonMessage("Could not read $mediaToSend - bad permissions?")
-                ->send();
+                ->end();
         }
 
     }

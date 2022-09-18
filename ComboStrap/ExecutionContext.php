@@ -52,8 +52,17 @@ class ExecutionContext
     const PREVIEW_ACTION = "preview";
     const ADMIN_ACTION = "admin";
     const DRAFT_ACTION = "draft";
-    // private actions does not render page
-    const PRIVATES_ACTION = [self::EDIT_ACTION, self::PREVIEW_ACTION, self::ADMIN_ACTION, self::DRAFT_ACTION];
+    const SEARCH_ACTION = "search";
+    // private actions does not render a page to be indexed
+    // by a search engine
+    const PRIVATES_ACTION = [
+        self::EDIT_ACTION,
+        self::PREVIEW_ACTION,
+        self::ADMIN_ACTION,
+        self::DRAFT_ACTION,
+        self::SEARCH_ACTION,
+    ];
+
 
 
     /**
@@ -113,11 +122,14 @@ class ExecutionContext
     private $capturedRequestId;
     private array $capturedConf;
     private bool $isConsoleOn = false;
+    private HttpResponse $response;
 
     public function __construct(Url $url)
     {
 
         $this->url = $url;
+
+        $this->response = HttpResponse::create();
 
         /**
          * The requested action
@@ -609,7 +621,7 @@ class ExecutionContext
     {
 
         try {
-            $id = $this->getRequestedWikiId();
+            $this->getRequestedWikiId();
         } catch (ExceptionNotFound $e) {
             return false;
         }
@@ -618,12 +630,8 @@ class ExecutionContext
             return false;
         }
 
-        $page = MarkupPath::createMarkupFromId($id);
-        if (!FileSystems::exists($page)) {
-            return false;
-        }
-
         return true;
+
     }
 
     public function setEnableSectionEditing(): ExecutionContext
@@ -643,6 +651,11 @@ class ExecutionContext
         // https://www.dokuwiki.org/config:useheading
         $this->setConf('useheading', 1, null);
         return $this;
+    }
+
+    public function response(): HttpResponse
+    {
+        return $this->response;
     }
 
 

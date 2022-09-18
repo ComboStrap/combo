@@ -5,8 +5,11 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\AliasType;
 use ComboStrap\DatabasePageRow;
+use ComboStrap\ExecutionContext;
+use ComboStrap\FetcherPage;
 use ComboStrap\FileSystem;
 use ComboStrap\FileSystems;
+use ComboStrap\HttpResponseStatus;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
@@ -266,8 +269,10 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             // Well known
             if (self::isWellKnownFile($id)) {
                 $this->logRedirection($id, "", self::TARGET_ORIGIN_WELL_KNOWN, self::REDIRECT_NOTFOUND_METHOD);
-                HttpResponse::createForStatus(HttpResponse::STATUS_NOT_FOUND)
-                    ->send();
+                ExecutionContext::getActualOrCreateFromEnv()
+                    ->response()
+                    ->setStatus(HttpResponseStatus::NOT_FOUND)
+                    ->end();
                 return;
             }
 
@@ -288,8 +293,13 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     function router(&$event, $param)
     {
 
-        global $ACT;
-        if ($ACT !== 'show') return;
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
+        $isPublicationAction = $executionContext
+            ->isPublicationAction();
+        if (!$isPublicationAction) {
+            return;
+        }
 
 
         global $ID;
@@ -860,19 +870,23 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
         switch ($method) {
             case self::REDIRECT_PERMANENT_METHOD:
-                HttpResponse::createForStatus(HttpResponse::STATUS_PERMANENT_REDIRECT)
+                ExecutionContext::getActualOrCreateFromEnv()
+                    ->response()
+                    ->setStatus(HttpResponseStatus::PERMANENT_REDIRECT)
                     ->addHeader(self::LOCATION_HEADER_PREFIX . $targetUrl)
-                    ->send();
+                    ->end();
                 return true;
             case self::REDIRECT_NOTFOUND_METHOD:
 
                 // Empty 404 body to not get the standard 404 page of the browser
                 // but a blank page to avoid a sort of FOUC.
                 // ie the user see a page briefly
-                HttpResponse::createForStatus(HttpResponse::STATUS_NOT_FOUND)
+                ExecutionContext::getActualOrCreateFromEnv()
+                    ->response()
+                    ->setStatus(HttpResponseStatus::NOT_FOUND)
                     ->addHeader(self::REFRESH_HEADER_PREFIX . $targetUrl)
                     ->setBody(self::PAGE_404, Mime::getHtml())
-                    ->send();
+                    ->end();
                 return true;
 
             default:
@@ -1059,7 +1073,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             // This is DokuWiki Id and should always be lowercase
             // The page rule may have change that
             $calculatedTarget = strtolower($calculatedTarget);
-            $res = $this->executeHttpRedirect($calculatedTarget,self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
+            $res = $this->executeHttpRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
             if ($res) {
                 return true;
             } else {

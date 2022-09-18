@@ -17,27 +17,20 @@ class Http
 
     }
 
-    public static function getHeader(string $name, array $headers = null)
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function getFirstHeader(string $name, array $headers = null): string
     {
 
-        if ($headers === null) {
-            $headers = self::getHeaders();
-        }
-        $result = array();
-        $headerNameNormalized = trim(strtolower($name));
-        foreach ($headers as $header) {
-            $loc = strpos($header, ":");
-            if ($loc === false) {
-                continue;
-            }
-            $actualHeaderName = substr($header, 0, $loc);
-            $actualHeaderNameNormalized = trim(strtolower($actualHeaderName));
-            if ($actualHeaderNameNormalized === $headerNameNormalized) {
-                $result[] = $header;
-            }
+        $result = self::getHeadersForName($name, $headers);
+
+        if (count($result) == 0) {
+            throw new ExceptionNotFound("No header was found with the header name $name");
         }
 
-        return count($result) == 1 ? $result[0] : $result;
+        return $result[0];
+
 
     }
 
@@ -71,7 +64,7 @@ class Http
     public static function getStatus()
     {
         /**
-         * See also {@link Http::getHeader()}
+         * See also {@link Http::getFirstHeader()}
          * if this does not work
          */
         return http_response_code();
@@ -83,9 +76,27 @@ class Http
         header("$contentTypeHeader: $mime");
     }
 
-    public static function setJsonMime()
+
+    public static function getHeadersForName(string $name, ?array $headers): array
     {
-        Http::setMime(Mime::JSON);
+        if ($headers === null) {
+            $headers = self::getHeaders();
+        }
+
+        $result = array();
+        $headerNameNormalized = trim(strtolower($name));
+        foreach ($headers as $header) {
+            $loc = strpos($header, ":");
+            if ($loc === false) {
+                continue;
+            }
+            $actualHeaderName = substr($header, 0, $loc);
+            $actualHeaderNameNormalized = trim(strtolower($actualHeaderName));
+            if ($actualHeaderNameNormalized === $headerNameNormalized) {
+                $result[] = $header;
+            }
+        }
+        return $result;
     }
 
     /**

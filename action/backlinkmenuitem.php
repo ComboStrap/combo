@@ -3,6 +3,7 @@
 use ComboStrap\BacklinkMenuItem;
 use ComboStrap\Event;
 use ComboStrap\FileSystems;
+use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
 use ComboStrap\LinkMarkup;
 use ComboStrap\MetadataDokuWikiStore;
@@ -103,11 +104,11 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
         }
 
         if (empty($id)) {
-            \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_BAD_REQUEST)
+            \ComboStrap\HttpResponse::createForStatus(HttpResponseStatus::BAD_REQUEST)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
                 ->setBody("The page id should not be empty", Mime::getHtml())
-                ->send();
+                ->end();
             return;
         }
 
@@ -116,11 +117,11 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
         $html = syntax_plugin_combo_related::getHtmlRelated($backlinkPages);
 
 
-        \ComboStrap\HttpResponse::createForStatus(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
+        \ComboStrap\HttpResponse::createForStatus(HttpResponseStatus::ALL_GOOD)
             ->setEvent($event)
             ->setCanonical(self::CANONICAL)
             ->setBody($html, Mime::getHtml())
-            ->send();
+            ->end();
 
     }
 

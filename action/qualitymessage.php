@@ -3,6 +3,7 @@
 
 use ComboStrap\ExceptionCompile;
 use ComboStrap\HttpResponse;
+use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
 use ComboStrap\Message;
 use ComboStrap\Mime;
@@ -63,7 +64,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
             $analyticsArray = \ComboStrap\Json::createFromPath($page->fetchAnalyticsDocument()->getFetchPath())->toArray();
         } catch (ExceptionCompile $e) {
             return Message::createErrorMessage("Error while trying to read the JSON analytics document. {$e->getMessage()}")
-                ->setStatus(HttpResponse::STATUS_INTERNAL_ERROR);
+                ->setStatus(HttpResponseStatus::INTERNAL_ERROR);
         }
 
         $rules = $analyticsArray[renderer_plugin_combo_analytics::QUALITY][renderer_plugin_combo_analytics::RULES];
@@ -215,11 +216,11 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         }
 
         if (empty($id)) {
-            HttpResponse::createForStatus(HttpResponse::STATUS_BAD_REQUEST)
+            HttpResponse::createForStatus(HttpResponseStatus::BAD_REQUEST)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
                 ->setBody("The page id should not be empty", Mime::getHtml())
-                ->send();
+                ->end();
             return;
         }
 
@@ -227,10 +228,10 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
          * Quality is just for the writers
          */
         if (!Identity::isWriter($id)) {
-            HttpResponse::createForStatus(HttpResponse::STATUS_NOT_AUTHORIZED)
+            HttpResponse::createForStatus(HttpResponseStatus::NOT_AUTHORIZED)
                 ->setEvent($event)
                 ->setBody("Quality is only for writer", Mime::getHtml())
-                ->send();
+                ->end();
             return;
         }
 
@@ -241,14 +242,14 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
         $status = $message->getStatus();
         if ($status === null) {
-            $status = HttpResponse::STATUS_ALL_GOOD;
+            $status = HttpResponseStatus::ALL_GOOD;
         }
 
         HttpResponse::createForStatus($status)
             ->setEvent($event)
             ->setCanonical(self::CANONICAL)
             ->setBody($message->getContent(), Mime::getHtml())
-            ->send();
+            ->end();
 
     }
 }

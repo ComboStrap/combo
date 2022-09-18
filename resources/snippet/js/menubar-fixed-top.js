@@ -1,16 +1,20 @@
-window.addEventListener("DOMContentLoaded",function(){
+(function IIFE() {
+
+    let bodyElementWasChanged = false;
+    let fixedMenuSelector = `.navbar[data-type="fixed-top"]`;
 
     /**
-     * The request animation frame is there to
-     * update the class on the navbar and the padding on the
-     * body at the same time to not have any layout shift
+     * anchor scroll:
+     * Add the target style before anchor navigation
+     * otherwise the content is below the menubar
      */
-    window.requestAnimationFrame(function() {
-        let fixedNavbar = document.querySelector(".navbar[data-type=\"fixed-top\"]")
-        fixedNavbar.classList.add("fixed-top");
-        // correct body padding
+    window.addEventListener("DOMContentLoaded", function () {
+
+        let fixedNavbar = document.querySelector(fixedMenuSelector)
+        if (fixedNavbar == null) {
+            return;
+        }
         let offsetHeight = fixedNavbar.offsetHeight;
-        document.body.style.setProperty("padding-top",offsetHeight+"px");
         // correct direct navigation via fragment to heading
         let style = document.createElement("style");
         style.classList.add("menubar-fixed-top")
@@ -19,6 +23,35 @@ window.addEventListener("DOMContentLoaded",function(){
   scroll-margin-top: ${offsetHeight}px;
 }`;
         document.head.appendChild(style);
-    });
+    })
 
-});
+    /**
+     * We do the work after the first scroll
+     * to prevent a bad cls (content layout shift) metrics
+     * from Google search
+     */
+    window.addEventListener("scroll", function () {
+
+        if (bodyElementWasChanged) {
+            return;
+        }
+        bodyElementWasChanged = true;
+
+        /**
+         * The request animation frame is there to
+         * update the class on the navbar and the padding on the
+         * body at the same time to not have any layout shift
+         */
+        window.requestAnimationFrame(function () {
+            let fixedNavbar = document.querySelector(fixedMenuSelector)
+            if (fixedNavbar == null) {
+                return;
+            }
+            let offsetHeight = fixedNavbar.offsetHeight;
+            fixedNavbar.classList.add("fixed-top")
+            // correct body padding
+            document.body.style.setProperty("padding-top", offsetHeight + "px");
+        });
+
+    });
+})();

@@ -1,12 +1,33 @@
 (function IIFE() {
 
+    let done = false;
+    let fixedMenuSelector = `.navbar[data-type="fixed-top"]`;
+
+    /**
+     * Add the target style before anchor navigation
+     */
+    window.addEventListener("DOMContentLoaded", function () {
+
+        let fixedNavbar = document.querySelector(fixedMenuSelector)
+        if (fixedNavbar == null) {
+            return;
+        }
+        let offsetHeight = fixedNavbar.offsetHeight;
+        // correct direct navigation via fragment to heading
+        let style = document.createElement("style");
+        style.classList.add("menubar-fixed-top")
+        // textContent and not innerText (it adds br elements)
+        style.textContent = `:target {
+  scroll-margin-top: ${offsetHeight}px;
+}`;
+        document.head.appendChild(style);
+    })
+
     /**
      * We do the work after the first scroll
-     * to prevent a cls (layout shift)
-     * @type {boolean}
+     * to prevent a bad cls (content layout shift) metrics
+     * from Google search
      */
-    let done = false;
-
     window.addEventListener("scroll", function () {
 
         if (done) {
@@ -20,22 +41,14 @@
          * body at the same time to not have any layout shift
          */
         window.requestAnimationFrame(function () {
-            let fixedNavbar = document.querySelector(".navbar[data-type=\"fixed-top\"]")
+            let fixedNavbar = document.querySelector(fixedMenuSelector)
             if (fixedNavbar == null) {
                 return;
             }
+            let offsetHeight = fixedNavbar.offsetHeight;
             fixedNavbar.classList.add("fixed-top")
             // correct body padding
-            let offsetHeight = fixedNavbar.offsetHeight;
             document.body.style.setProperty("padding-top", offsetHeight + "px");
-            // correct direct navigation via fragment to heading
-            let style = document.createElement("style");
-            style.classList.add("menubar-fixed-top")
-            // textContent and not innerText (it adds br elements)
-            style.textContent = `:target {
-  scroll-margin-top: ${offsetHeight}px;
-}`;
-            document.head.appendChild(style);
         });
 
     });

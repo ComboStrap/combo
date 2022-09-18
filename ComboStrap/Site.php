@@ -485,7 +485,7 @@ class Site
     /**
      * @return string - the name of the sidebar page
      */
-    public static function getSidebarName()
+    public static function getSidebarName(): string
     {
         global $conf;
         return $conf["sidebar"];
@@ -808,17 +808,17 @@ class Site
                 Site::getSidebarName(),
                 Site::getPageHeaderSlotName(),
                 Site::getPageFooterSlotName(),
-                Site::getPrimaryHeaderSlotName(),
-                Site::getPrimaryFooterSlotName(),
-                Site::getPrimarySideSlotName()
+                Site::getMainHeaderSlotName(),
+                Site::getMainFooterSlotName(),
+                Site::getMainSideSlotName()
             ];
         } catch (ExceptionCompile $e) {
             LogUtility::msg("An error has occurred while retrieving the name of the secondary slots. Error: {$e->getMessage()}");
             // We known at least this one
             return [
                 Site::getSidebarName(),
-                Site::getPrimaryHeaderSlotName(),
-                Site::getPrimaryFooterSlotName()
+                Site::getMainHeaderSlotName(),
+                Site::getMainFooterSlotName()
             ];
         }
 
@@ -829,7 +829,7 @@ class Site
     /**
      *
      */
-    public static function getPrimaryHeaderSlotName(): ?string
+    public static function getMainHeaderSlotName(): ?string
     {
         return self::SLOT_MAIN_HEADER_NAME;
     }
@@ -868,15 +868,7 @@ class Site
 
     }
 
-    /**
-     *
-     */
-    public static function getPrimarySideSlotName(): string
-    {
 
-        return self::SLOT_MAIN_SIDE_NAME;
-
-    }
 
     /**
      */
@@ -896,7 +888,7 @@ class Site
     /**
      *
      */
-    public static function getPageSideSlotName()
+    public static function getMainSideSlotName()
     {
         return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageLayout::CONF_PAGE_MAIN_SIDEKICK_NAME, PageLayout::CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT);
     }
@@ -914,7 +906,7 @@ class Site
     /**
      *
      */
-    public static function getPrimaryFooterSlotName(): string
+    public static function getMainFooterSlotName(): string
     {
         return self::SLOT_MAIN_FOOTER_NAME;
     }

@@ -77,11 +77,6 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
 
 
         /**
-         * Delete the all.css file due to `group` class
-         */
-        $controller->register_hook('CSS_STYLES_INCLUDED', 'BEFORE', $this, 'handle_css_styles');
-
-        /**
          * For front-end/public only
          */
         $urlPropertyValue = PluginUtility::getPropertyValue(self::WHICH_END_KEY, self::VALUE_BACK);
@@ -248,46 +243,6 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
         }
     }
 
-    /**
-     * Handle all CSS script list.
-     *
-     * @param Doku_Event $event event object by reference
-     * @param mixed $param [the parameters passed as fifth argument to register_hook() when this
-     *                           handler was registered]
-     * @return void
-     */
-    public function handle_css_styles(Doku_Event &$event, $param)
-    {
-
-        /**
-         * There is one call by:
-         *   * mediatype (ie scree, all, print, speech)
-         *   * and one call for the dokuwiki default
-         */
-        switch ($event->data['mediatype']) {
-
-            case 'print':
-            case 'screen':
-            case 'all':
-                /**
-                 * Get the file by reference
-                 */
-                $files = &$event->data['files'];
-                /**
-                 * Strap has a copy of
-                 * the all.css without the group clear fix
-                 */
-                global $conf;
-                if ($conf['template'] == PluginUtility::TEMPLATE_STRAP_NAME) {
-                    foreach ($files as $file => $dir) {
-                        if (strpos($file, 'lib/styles/all.css')) {
-                            unset($files[$file]);
-                        }
-                    }
-                }
-                break;
-        }
-    }
 
 
 }

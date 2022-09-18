@@ -52,7 +52,7 @@ class PageLayout
     const CONF_PAGE_HEADER_NAME = "headerSlotPageName";
     const CONF_PAGE_HEADER_NAME_DEFAULT =  "slot_header" ;
     const CONF_PAGE_MAIN_SIDEKICK_NAME = "sidekickSlotPageName";
-    const CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT = "slot_main_side";
+    const CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT = Site::SLOT_MAIN_SIDE_NAME;
     private string $layoutName;
     private WikiPath $cssPath;
     private WikiPath $jsPath;
@@ -139,9 +139,8 @@ class PageLayout
 
     public static function getPoweredBy(): string
     {
-
-        $domain = TplUtility::getApexDomainUrl();
-        $version = TplUtility::getFullQualifyVersion();
+        $domain = PluginUtility::$URL_APEX;
+        $version = PluginUtility::$INFO_PLUGIN['version'] . " (" . PluginUtility::$INFO_PLUGIN['date'] . ")";
         $poweredBy = "<div class=\"mx-auto\" style=\"width: 300px;text-align: center;margin-bottom: 1rem\">";
         $poweredBy .= "  <small><i>Powered by <a href=\"$domain\" title=\"ComboStrap " . $version . "\" style=\"color:#495057\">ComboStrap</a></i></small>";
         $poweredBy .= '</div>';

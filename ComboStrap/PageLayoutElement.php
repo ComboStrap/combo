@@ -60,7 +60,7 @@ class PageLayoutElement
             case PageLayout::PAGE_SIDE_ELEMENT:
                 return Site::getSidebarName();
             case PageLayout::MAIN_SIDE_ELEMENT:
-                return Site::getPageSideSlotName();
+                return Site::getMainSideSlotName();
             case PageLayout::MAIN_HEADER_ELEMENT:
                 return "slot_main_header";
             case PageLayout::MAIN_FOOTER_ELEMENT:

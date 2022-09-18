@@ -316,7 +316,7 @@ class MarkupPath implements ResourceCombo, Path
     {
 
         try {
-            $slotNames = [Site::getPrimaryHeaderSlotName(), Site::getPrimaryFooterSlotName()];
+            $slotNames = [Site::getMainHeaderSlotName(), Site::getMainFooterSlotName()];
         } catch (ExceptionCompile $e) {
             return false;
         }
@@ -2020,7 +2020,7 @@ class MarkupPath implements ResourceCombo, Path
 
     public function getPrimaryHeaderPage(): ?MarkupPath
     {
-        $nearest = page_findnearest(Site::getPrimaryHeaderSlotName());
+        $nearest = page_findnearest(Site::getMainHeaderSlotName());
         if ($nearest === false) {
             return null;
         }
@@ -2058,7 +2058,7 @@ class MarkupPath implements ResourceCombo, Path
 
     private function getPrimaryFooterPage(): ?MarkupPath
     {
-        $nearest = page_findnearest(Site::getPrimaryFooterSlotName());
+        $nearest = page_findnearest(Site::getMainFooterSlotName());
         if ($nearest === false) {
             return null;
         }

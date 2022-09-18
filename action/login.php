@@ -165,7 +165,7 @@ EOF;
              *
              * https://www.dokuwiki.org/devel:event:form_login_output
              */
-            $controller->register_hook('FORM_LOGIN_OUTPUT', 'BEFORE', $this, 'handle_login_html_new', array());
+            // $controller->register_hook('FORM_LOGIN_OUTPUT', 'BEFORE', $this, 'handle_login_html_new', array());
         }
 
 

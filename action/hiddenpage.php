@@ -34,26 +34,12 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
         /**
          * Caching the slot and private namespace
          */
-        $pattern = "(" . $conf['sidebar'] . "|" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
-        if ($conf['template'] == PluginUtility::TEMPLATE_STRAP_NAME) {
-            try {
-                Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            } catch (ExceptionCompile $e) {
-                return;
-            }
-
-            $pattern .= "|" . TplUtility::getFooterSlotPageName();
-
-            $pattern .= "|" . TplUtility::getHeaderSlotPageName();
-            $name = TplUtility::getMainSideSlotName();
-            if (!empty($name)) {
-                $pattern .= "|" . $name;
-            }
-
-        }
-        $pattern .= "|" . Site::getPrimaryFooterSlotName();
-        $pattern .= "|" . Site::getPrimaryHeaderSlotName();
-        $pattern .= "|" . Site::getPrimarySideSlotName();
+        $pattern = "(" . Site::getSidebarName() . "|" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
+        $pattern .= "|" . Site::getPageHeaderSlotName();
+        $pattern .= "|" . Site::getPageFooterSlotName();
+        $pattern .= "|" . Site::getMainSideSlotName();
+        $pattern .= "|" . Site::getMainFooterSlotName();
+        $pattern .= "|" . Site::getMainHeaderSlotName();
         $pattern .= ")";
         if (preg_match('/' . $pattern . '/ui', ':' . $event->data['id'])) {
             $event->data['hidden'] = true;

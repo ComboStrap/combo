@@ -85,9 +85,9 @@ class PageLayoutName extends MetadataText
         try {
             switch ($page->getPathObject()->getLastNameWithoutExtension()) {
                 case Site::getSidebarName():
-                case Site::getPrimaryHeaderSlotName():
-                case Site::getPrimaryFooterSlotName():
-                case Site::getPrimarySideSlotName():
+                case Site::getMainHeaderSlotName():
+                case Site::getMainFooterSlotName():
+                case Site::getMainSideSlotName():
                     return self::MEDIAN_LAYOUT_VALUE;
                 case Site::getPageHeaderSlotName():
                 case Site::getPageFooterSlotName():

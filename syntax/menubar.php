@@ -220,9 +220,9 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
                     if (array_key_exists("position", $attributes)) {
                         $position = $attributes["position"];
                         if ($position === "top") {
-                            $fixedTopClass = 'fixed-top';
-                            $attributes["class"] .= ' ' . $fixedTopClass . '';
-                            $fixedTopSnippetId = self::TAG."-".$fixedTopClass;
+                            $fixedTopName = 'fixed-top';
+                            $attributes["data-type"] .= $fixedTopName;
+                            $fixedTopSnippetId = self::TAG."-".$fixedTopName;
                             // See http://stackoverflow.com/questions/17181355/boostrap-using-fixed-navbar-and-anchor-tags-to-jump-to-sections
                             PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot($fixedTopSnippetId);
                         }

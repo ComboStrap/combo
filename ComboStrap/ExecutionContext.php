@@ -188,7 +188,8 @@ class ExecutionContext
     {
 
         return self::getActualOrCreateFromEnv()
-            ->setNewRequestedId($requestedId);
+            ->setNewRequestedId($requestedId)
+            ->setExecutingId($requestedId);
 
     }
 
@@ -656,6 +657,13 @@ class ExecutionContext
     public function response(): HttpResponse
     {
         return $this->response;
+    }
+
+    private function setExecutingId(string $executingId): ExecutionContext
+    {
+        global $ID;
+        $ID = $executingId;
+        return $this;
     }
 
 

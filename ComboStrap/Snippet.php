@@ -615,11 +615,16 @@ class Snippet implements JsonSerializable
         }
 
         /**
-         * Error, we default to the local url that will return an error
+         *
+         * This is a inline script (no local file then)
+         *
+         * We default to the local url that will return an error
          * when fetched
          */
-        LogUtility::internalError("The snippet ($this) have a path ($this->path) that does not exists and does not have any external url.");
-        return true;
+        if(!$this->shouldBeInlined()) {
+            LogUtility::internalError("The snippet ($this) is not a inline script, it has a path ($this->path) that does not exists and does not have any external url.");
+        }
+        return false;
 
     }
 
@@ -825,10 +830,6 @@ class Snippet implements JsonSerializable
         return $this;
     }
 
-    public function setScopeAsRunningSlot(): Snippet
-    {
-        return $this;
-    }
 
     public function useRemoteUrl(): bool
     {

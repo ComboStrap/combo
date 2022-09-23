@@ -53,6 +53,7 @@ class ExecutionContext
     const ADMIN_ACTION = "admin";
     const DRAFT_ACTION = "draft";
     const SEARCH_ACTION = "search";
+    const LOGIN_ACTION = "login";
     // private actions does not render a page to be indexed
     // by a search engine
     const PRIVATES_ACTION = [
@@ -61,6 +62,7 @@ class ExecutionContext
         self::ADMIN_ACTION,
         self::DRAFT_ACTION,
         self::SEARCH_ACTION,
+        self::LOGIN_ACTION
     ];
 
 

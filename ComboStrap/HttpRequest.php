@@ -71,7 +71,7 @@ class HttpRequest
         return $this;
     }
 
-    private static function createRequest(Url $url): HttpRequest
+    public static function createRequest(Url $url): HttpRequest
     {
         return new HttpRequest($url);
     }

@@ -557,7 +557,16 @@ class WikiPath extends PathAbs
      */
     public static function getCurrentPagePath(): WikiPath
     {
-        $requestedPath = WikiPath::createExecutingMarkupWikiPath();
+        try {
+            $requestedPath = WikiPath::createExecutingMarkupWikiPath();
+        } catch (ExceptionNotFound $e) {
+            // in a admin
+            if (!ExecutionContext::getActualOrCreateFromEnv()->isPublicationAction()) {
+                // the id are based on the root
+                return WikiPath::createRootPagePath();
+            }
+            throw $e;
+        }
         try {
             $parent = $requestedPath->getParent();
         } catch (ExceptionNotFound $e) {
@@ -566,9 +575,15 @@ class WikiPath extends PathAbs
         return $parent;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public static function getRequestedPagePath(): WikiPath
     {
-        return WikiPath::createPagePathFromId(PluginUtility::getRequestedWikiId());
+
+        $requestedWikidId = ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
+        return WikiPath::createPagePathFromId($requestedWikidId);
+
     }
 
     /**
@@ -586,6 +601,11 @@ class WikiPath extends PathAbs
     public static function normalizeWikiPath(string $id)
     {
         return str_replace(WikiPath::NAMESPACE_SEPARATOR_SLASH, WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $id);
+    }
+
+    private static function createRootPagePath(): WikiPath
+    {
+        return WikiPath::createPagePathFromPath(self::NAMESPACE_SEPARATOR_DOUBLE_POINT);
     }
 
 

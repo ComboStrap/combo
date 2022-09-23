@@ -33,7 +33,6 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
     const CONF_ENABLE_LOGIN_FORM = "enableLoginForm";
 
 
-
     /**
      * Update the old form
      * @param Doku_Form $form
@@ -165,7 +164,7 @@ EOF;
              *
              * https://www.dokuwiki.org/devel:event:form_login_output
              */
-            // $controller->register_hook('FORM_LOGIN_OUTPUT', 'BEFORE', $this, 'handle_login_html_new', array());
+            $controller->register_hook('FORM_LOGIN_OUTPUT', 'BEFORE', $this, 'handle_login_html', array());
         }
 
 
@@ -197,7 +196,6 @@ EOF;
     }
 
 
-
     /**
      * Login
      * @return string
@@ -214,9 +212,110 @@ EOF;
 
     }
 
+    /**
+     * https://www.dokuwiki.org/devel:form - documentation
+     * @param Form $form
+     * @return void
+     */
     private static function updateNewFormLogin(Form &$form)
     {
-        // TODO
+        /**
+         * The Login page is an admin page created via buffer
+         * We print before the forms
+         * to avoid a FOUC
+         */
+        print Identity::getHtmlStyleTag(self::TAG);
+
+
+        $form->addClass(Identity::FORM_IDENTITY_CLASS . " " . self::FORM_LOGIN_CLASS);
+
+        return;
+
+        /**
+         * Heading
+         */
+        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_LOGIN_CLASS);
+
+        /**
+         * Field
+         */
+        foreach ($form->_content as $field) {
+            if (!is_array($field)) {
+                continue;
+            }
+            $fieldName = $field["name"];
+            if ($fieldName == null) {
+                // this is not an input field
+                if ($field["type"] == "submit") {
+                    /**
+                     * This is important to keep the submit element intact
+                     * for forms integration such as captcha
+                     * They search the submit button to insert before it
+                     */
+                    $classes = "btn btn-primary btn-block";
+                    if (isset($field["class"])) {
+                        $field["class"] = $field["class"] . " " . $classes;
+                    } else {
+                        $field["class"] = $classes;
+                    }
+                    $newFormContent[] = $field;
+                }
+                continue;
+            }
+            switch ($fieldName) {
+                case "u":
+                    $loginText = $field["_text"];
+                    $loginValue = $field["value"];
+                    $loginHTMLField = <<<EOF
+<div class="form-floating">
+    <input type="text" id="inputUserName" class="form-control" placeholder="$loginText" required="required" autofocus="" name="u" value="$loginValue">
+    <label for="inputUserName">$loginText</label>
+</div>
+EOF;
+                    $newFormContent[] = $loginHTMLField;
+                    break;
+                case "p":
+                    $passwordText = $field["_text"];
+                    $passwordFieldHTML = <<<EOF
+<div class="form-floating">
+    <input type="password" id="inputPassword" class="form-control" placeholder="$passwordText" required="required" name="p">
+    <label for="inputPassword">$passwordText</label>
+</div>
+EOF;
+                    $newFormContent[] = $passwordFieldHTML;
+                    break;
+                case "r":
+                    $rememberText = $field["_text"];
+                    $rememberValue = $field["value"];
+                    $rememberMeHtml = <<<EOF
+<div class="checkbox rememberMe">
+    <label><input type="checkbox" id="remember__me" name="r" value="$rememberValue"> $rememberText</label>
+</div>
+EOF;
+                    $newFormContent[] = $rememberMeHtml;
+                    break;
+                default:
+                    $tag = self::TAG;
+                    LogUtility::msg("The $tag field name ($fieldName) is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+
+
+            }
+        }
+
+
+        $registerHtml = action_plugin_combo_registration::getRegisterLinkAndParagraph();
+        if (!empty($registerHtml)) {
+            $newFormContent[] = $registerHtml;
+        }
+        $resendPwdHtml = action_plugin_combo_resend::getResendPasswordParagraphWithLinkToFormPage();
+        if (!empty($resendPwdHtml)) {
+            $newFormContent[] = $resendPwdHtml;
+        }
+
+        /**
+         * Set the new in place of the old one
+         */
+        $form->_content = $newFormContent;
     }
 
 }

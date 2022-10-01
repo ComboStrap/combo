@@ -58,7 +58,7 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
                 LogUtility::error("Internal Error: The page content was not set. We were unable to get the page language. Defaulting to the site language");
                 $lang = Site::getLang();
             } else {
-                $page = MarkupPath::createPageFromQualifiedPath($path);
+                $page = MarkupPath::createPageFromQualifiedId($path);
                 $lang = Lang::createForMarkup($page)->getValueOrDefault();
             }
         }

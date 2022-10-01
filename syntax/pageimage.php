@@ -194,7 +194,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
          * Image selection
          */
         WikiPath::addRootSeparatorIfNotPresent($path);
-        $page = MarkupPath::createPageFromQualifiedPath($path);
+        $page = MarkupPath::createPageFromQualifiedId($path);
 
         /**
          * Image Order of precedence

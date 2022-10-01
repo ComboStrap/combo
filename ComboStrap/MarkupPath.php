@@ -221,7 +221,7 @@ class MarkupPath implements ResourceCombo, Path
 //            $qualifiedId = $conf['start'];
 //        }
 //        return PageFragment::createPageFromId($qualifiedId);
-        return MarkupPath::createPageFromQualifiedPath($pathOrId);
+        return MarkupPath::createPageFromQualifiedId($pathOrId);
 
     }
 
@@ -254,9 +254,9 @@ class MarkupPath implements ResourceCombo, Path
     }
 
 
-    static function createPageFromQualifiedPath($qualifiedPath): MarkupPath
+    static function createPageFromQualifiedId($qualifiedPath): MarkupPath
     {
-        $path = WikiPath::createMarkupPathFromPath($qualifiedPath);
+        $path = WikiPath::createMarkupPathFromId($qualifiedPath);
         return new MarkupPath($path);
     }
 

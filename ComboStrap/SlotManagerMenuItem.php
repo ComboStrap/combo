@@ -137,7 +137,7 @@ class SlotManagerMenuItem extends AbstractItem
                 }
                 $secondaryPath = $parentPath->resolve($secondarySlot);
 
-                $secondaryPage = MarkupPath::createPageFromQualifiedPath($secondaryPath->toPathString());
+                $secondaryPage = MarkupPath::createPageFromQualifiedId($secondaryPath->toPathString());
                 $class = StyleUtility::addComboStrapSuffix(\syntax_plugin_combo_link::TAG);
                 if (FileSystems::exists($secondaryPath)) {
                     $action = self::EDIT_ACTION;

@@ -55,7 +55,7 @@ class Breadcrumb
             LogUtility::error("Internal Error: The page context was not set. Defaulting to the requested page", syntax_plugin_combo_breadcrumb::CANONICAL_HIERARCHICAL);
             $actual = MarkupPath::createFromRequestedPage();
         } else {
-            $actual = MarkupPath::createPageFromQualifiedPath($path);
+            $actual = MarkupPath::createPageFromQualifiedId($path);
         }
 
 

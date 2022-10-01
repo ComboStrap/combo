@@ -50,7 +50,7 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
 
         $data = $event->data;
         $pagePath = $data[PagePath::getPersistentName()];
-        $reference = MarkupPath::createPageFromQualifiedPath($pagePath);
+        $reference = MarkupPath::createPageFromQualifiedId($pagePath);
 
         if ($reference->isSecondarySlot()) {
             return;

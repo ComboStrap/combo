@@ -123,7 +123,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
         $keep = $ID;
         try {
             $ID = $requestedId;
-            $slot = MarkupPath::createPageFromQualifiedPath($slotPath);
+            $slot = MarkupPath::createPageFromQualifiedId($slotPath);
 
             /**
              * Calculate a new expiration date

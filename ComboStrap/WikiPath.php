@@ -188,7 +188,7 @@ class WikiPath extends PathAbs
             foreach ($parts as $part) {
                 $rootRelativePath = $rootRelativePath->resolve($part);
             }
-            $absolutePathString = $rootRelativePath->toPathString();
+            $absolutePathString = $rootRelativePath->getAbsolutePath();
             if ($isRelativeDirectoryPath && !WikiPath::isNamespacePath($absolutePathString)) {
                 $absolutePathString = $absolutePathString . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT;
             }
@@ -237,13 +237,30 @@ class WikiPath extends PathAbs
 
     /**
      *
-     * @param string $path
+     * @param string $path - may be relative
      * @param string|null $rev
      * @return WikiPath
      */
     public static function createMarkupPathFromPath(string $path, string $rev = null): WikiPath
     {
-        return new WikiPath($path, WikiPath::MARKUP_DRIVE, $rev);
+        if (WikiPath::isNamespacePath($path)) {
+            return new WikiPath($path, self::MARKUP_DRIVE, $rev);
+        }
+        $defaultWikiPath = new WikiPath($path . '.' . self::MARKUP_DEFAULT_TXT_EXTENSION, self::MARKUP_DRIVE, $rev);
+        if (FileSystems::exists($defaultWikiPath)) {
+            return $defaultWikiPath;
+        }
+        foreach (self::ALL_MARKUP_EXTENSIONS as $markupExtension) {
+            if ($markupExtension == self::MARKUP_DEFAULT_TXT_EXTENSION) {
+                continue;
+            }
+            $markupWikiPath = new WikiPath($path . '.' . $markupExtension, self::MARKUP_DRIVE, $rev);
+            if (FileSystems::exists($markupWikiPath)) {
+                return $markupWikiPath;
+            }
+        }
+        return $defaultWikiPath;
+
     }
 
 
@@ -356,24 +373,7 @@ class WikiPath extends PathAbs
     {
         WikiPath::addRootSeparatorIfNotPresent($id);
 
-        if (WikiPath::isNamespacePath($id)) {
-            return new WikiPath($id, self::MARKUP_DRIVE, $rev);
-        }
-
-        $defaultWikiPath = new WikiPath($id . '.' . self::MARKUP_DEFAULT_TXT_EXTENSION, self::MARKUP_DRIVE, $rev);
-        if (FileSystems::exists($defaultWikiPath)) {
-            return $defaultWikiPath;
-        }
-        foreach (self::ALL_MARKUP_EXTENSIONS as $markupExtension) {
-            if ($markupExtension == self::MARKUP_DEFAULT_TXT_EXTENSION) {
-                continue;
-            }
-            $markupWikiPath = new WikiPath($id . '.' . $markupExtension, self::MARKUP_DRIVE, $rev);
-            if (FileSystems::exists($markupWikiPath)) {
-                return $markupWikiPath;
-            }
-        }
-        return $defaultWikiPath;
+        return self::createMarkupPathFromPath($id);
     }
 
     /**
@@ -917,7 +917,7 @@ class WikiPath extends PathAbs
                 try {
                     $extension = $this->getExtension();
                 } catch (ExceptionNotFound $e) {
-                    LogUtility::internalError("For a  markup path file, the extension should have been set");
+                    LogUtility::internalError("For a  markup path file, the extension should have been set. This is not the case for ($this)");
                     $extension = self::MARKUP_DEFAULT_TXT_EXTENSION;
                 }
                 if (empty($this->rev)) {

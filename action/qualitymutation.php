@@ -52,7 +52,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
 
         $data = $event->data;
         $path = $data[PagePath::getPersistentName()];
-        $page = MarkupPath::createPageFromQualifiedPath($path);
+        $page = MarkupPath::createPageFromQualifiedId($path);
 
         if (!$page->getCanBeOfLowQuality()) {
             return;

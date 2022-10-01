@@ -180,7 +180,7 @@ class syntax_plugin_combo_codemarkdown extends DokuWiki_Syntax_Plugin
 
         if ($format == 'xhtml') {
 
-            /** @var Doku_Renderer_xhtml $renderer */
+            /** @var $renderer Doku_Renderer_xhtml */
             $state = $data [PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :

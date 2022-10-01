@@ -270,13 +270,13 @@ class MarkupRef
                  * The path may be an id if it exists
                  * otherwise it's a relative path
                  */
-                $path = WikiPath::createPagePathFromPath($wikiPath, $rev);
+                $path = WikiPath::createMarkupPathFromPath($wikiPath, $rev);
                 if (!FileSystems::exists($path) && $wikiPath !== "") {
                     // We test for an empty wikiPath string
                     // because if the wiki path is the empty string,
                     // this is the current requested page
                     // An empty id is the root and always exists
-                    $idPath = WikiPath::createPagePathFromId($wikiPath, $rev);
+                    $idPath = WikiPath::createMarkupPathFromId($wikiPath, $rev);
                     if (FileSystems::exists($idPath)) {
                         $path = $idPath;
                     }

@@ -174,7 +174,7 @@ class EditButton
              * to make it unique on the whole page
              * because the edit button may also be on the secondary slot
              */
-            $slotPath = WikiPath::createPagePathFromId($wikiId);
+            $slotPath = WikiPath::createMarkupPathFromId($wikiId);
             $formId = IdManager::getOrCreate()->generateNewHtmlIdForComponent(self::CANONICAL, $slotPath);
             $data[self::FORM_ID] = $formId;
         } else {

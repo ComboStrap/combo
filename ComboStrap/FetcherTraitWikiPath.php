@@ -53,7 +53,7 @@ trait FetcherTraitWikiPath
             }
             if ($id === null) {
                 $id = $tagAttributes->getValueAndRemove(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
-                $defaultDrive = WikiPath::PAGE_DRIVE;
+                $defaultDrive = WikiPath::MARKUP_DRIVE;
             }
             if ($id === null) {
                 throw new ExceptionBadArgument("The (" . self::$MEDIA_QUERY_PARAMETER . ", " . self::SRC_QUERY_PARAMETER . " or " . DokuwikiId::DOKUWIKI_ID_ATTRIBUTE . ") query property is mandatory and was not defined");

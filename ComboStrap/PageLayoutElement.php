@@ -138,9 +138,9 @@ class PageLayoutElement
     public
     function isSlot(): bool
     {
-        if (in_array($this->getId(), [PageLayout::PAGE_TOOL_ELEMENT, PageLayout::MAIN_TOC_ELEMENT])){
+        if (in_array($this->getId(), [PageLayout::PAGE_TOOL_ELEMENT, PageLayout::MAIN_TOC_ELEMENT])) {
             return false;
-    }
+        }
         return !$this->domElement->hasChildrenElement();
     }
 
@@ -158,35 +158,47 @@ class PageLayoutElement
             return $requestedPath;
         }
         // Slot
+        $contextExtension = $requestedPath->getExtension();
         try {
-            return FileSystems::closest($requestedPath, $this->getLastFileNameForSlot() . WikiPath::MARKUP_FILE_TXT_EXTENSION);
+            return FileSystems::closest($requestedPath, $this->getLastFileNameForSlot() . '.' . $contextExtension);
         } catch (ExceptionNotFound $e) {
-
-            /**
-             * Default page side is for page that are not in the root
-             */
-            $requestedPage = MarkupPath::createPageFromPathObject($this->pageLayout->getRequestedContextPath());
-            switch ($this->getId()) {
-                case PageLayout::PAGE_SIDE_ELEMENT:
-                    try {
-                        $requestedPage->getPathObject()->getParent();
-                    } catch (ExceptionNotFound $e) {
-                        // no parent page, no side bar
-                        throw new ExceptionNotFound("No page side for pages in the root directory.");
-                    }
-                    break;
-                case PageLayout::MAIN_HEADER_ELEMENT:
-                    if ($requestedPage->isRootHomePage()) {
-                        throw new ExceptionNotFound("No $this for the home");
-                    }
-                    break;
+            foreach (WikiPath::ALL_MARKUP_EXTENSIONS as $markupExtension){
+                if($markupExtension==$contextExtension){
+                    continue;
+                }
+                try {
+                    return FileSystems::closest($requestedPath, $this->getLastFileNameForSlot() . '.' . $contextExtension);
+                } catch (ExceptionNotFound $e) {
+                    // not found, we let it go to the default if needed
+                }
             }
-            $closestPath = self::getDefaultElementContentPath($this->getId());
-            if (!FileSystems::exists($closestPath)) {
-                throw new ExceptionNotFound("The default slot page for the area ($this) does not exist at ($closestPath)");
-            }
-            return $closestPath;
         }
+
+        /**
+         * Default content for element (such as header, ...)
+         */
+        $requestedPage = MarkupPath::createPageFromPathObject($this->pageLayout->getRequestedContextPath());
+        switch ($this->getId()) {
+            case PageLayout::PAGE_SIDE_ELEMENT:
+                try {
+                    $requestedPage->getPathObject()->getParent();
+                } catch (ExceptionNotFound $e) {
+                    // no parent page, no side bar
+                    throw new ExceptionNotFound("No page side for pages in the root directory.");
+                }
+                break;
+            case PageLayout::MAIN_HEADER_ELEMENT:
+                if ($requestedPage->isRootHomePage()) {
+                    throw new ExceptionNotFound("No $this for the home");
+                }
+                break;
+        }
+        $closestPath = self::getDefaultElementContentPath($this->getId());
+        if (!FileSystems::exists($closestPath)) {
+            throw new ExceptionNotFound("The default slot page for the area ($this) does not exist at ($closestPath)");
+        }
+        return $closestPath;
+
     }
 
     public function getId(): string

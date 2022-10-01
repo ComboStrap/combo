@@ -66,7 +66,6 @@ class ExecutionContext
     ];
 
 
-
     /**
      * @var array - the configuration value to restore
      *
@@ -458,7 +457,7 @@ class ExecutionContext
 
     public function getRequestedPath(): WikiPath
     {
-        return WikiPath::createPagePathFromId($this->getRequestedWikiId());
+        return WikiPath::createMarkupPathFromId($this->getRequestedWikiId());
     }
 
     /**
@@ -665,6 +664,12 @@ class ExecutionContext
     {
         global $ID;
         $ID = $executingId;
+        return $this;
+    }
+
+    public function setConfGlobal(string $key, string $value): ExecutionContext
+    {
+        $this->setConf($key, $value, null);
         return $this;
     }
 

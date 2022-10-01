@@ -151,7 +151,7 @@ class MarkupCacheDependencies
         global $ID;
         $keep = $ID;
         try {
-            $ID = WikiPath::toDokuwikiId($path);
+            $ID = WikiPath::toDokuWikiIdDriveContextual($path);
             /**
              * Rerender secondary slot if needed
              */

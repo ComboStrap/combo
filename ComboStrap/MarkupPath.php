@@ -197,14 +197,14 @@ class MarkupPath implements ResourceCombo, Path
 
     public static function createMarkupFromId($id): MarkupPath
     {
-        return new MarkupPath(WikiPath::createPagePathFromId($id));
+        return new MarkupPath(WikiPath::createMarkupPathFromId($id));
     }
 
     /**
      * @param $pathOrId
      * @return MarkupPath
      */
-    public static function createPageFromNonQualifiedPath($pathOrId): MarkupPath
+    public static function createMarkupFromPath($pathOrId): MarkupPath
     {
 
 //        global $ID;
@@ -256,7 +256,7 @@ class MarkupPath implements ResourceCombo, Path
 
     static function createPageFromQualifiedPath($qualifiedPath): MarkupPath
     {
-        $path = WikiPath::createPagePathFromPath($qualifiedPath);
+        $path = WikiPath::createMarkupPathFromPath($qualifiedPath);
         return new MarkupPath($path);
     }
 
@@ -917,7 +917,7 @@ class MarkupPath implements ResourceCombo, Path
         if ($type === null) {
             return $this->getCanonicalUrl();
         }
-        $pageUrlId = WikiPath::toDokuwikiId(PageUrlPath::createForPage($this)
+        $pageUrlId = WikiPath::toDokuWikiId(PageUrlPath::createForPage($this)
             ->getUrlPathFromType($type));
         return UrlEndpoint::createDokuUrl()
             ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $pageUrlId);
@@ -1693,7 +1693,7 @@ class MarkupPath implements ResourceCombo, Path
     public
     function getUrlId()
     {
-        return WikiPath::toDokuwikiId($this->getUrlPath());
+        return WikiPath::toDokuWikiId($this->getUrlPath());
     }
 
 
@@ -2071,12 +2071,22 @@ class MarkupPath implements ResourceCombo, Path
      */
     private function setCorrectPathForDirectoryToIndexPage(): void
     {
+
+
+        if (!($this->path instanceof WikiPath)) {
+            return;
+        }
+        /**
+         * @var $path WikiPath
+         */
+        $path = $this->path;
+
         /**
          * We correct the path
          * We don't return a page because it does not work in a constructor
          */
         $startPageName = Site::getIndexPageName();
-        $indexPath = $this->path->resolve($startPageName);
+        $indexPath = $path->resolveId($startPageName);
         if (FileSystems::exists($indexPath)) {
             // start page inside namespace
             $this->path = $indexPath;
@@ -2086,7 +2096,7 @@ class MarkupPath implements ResourceCombo, Path
         // page named like the NS inside the NS
         try {
             $parentName = $this->getLastNameWithoutExtension();
-            $nsInsideNsIndex = $this->path->resolve($parentName);
+            $nsInsideNsIndex = $this->path->resolveId($parentName);
             if (FileSystems::exists($nsInsideNsIndex)) {
                 $this->path = $nsInsideNsIndex;
                 return;

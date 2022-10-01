@@ -55,7 +55,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public static function createPageFragmentFetcherFromId(string $mainId): FetcherMarkup
     {
-        $page = WikiPath::createPagePathFromId($mainId);
+        $page = WikiPath::createMarkupPathFromId($mainId);
         return FetcherMarkup::createPageFragmentFetcherFromPath($page);
     }
 
@@ -587,7 +587,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         if (!in_array($this->getMime()->getExtension(), ["html", "xhtml"])) {
             return $text;
         }
-        if ($this->getSourcePath()->getDrive() !== WikiPath::PAGE_DRIVE) {
+        if ($this->getSourcePath()->getDrive() !== WikiPath::MARKUP_DRIVE) {
             // case when this is a default page in the resource directory
             return EditButton::deleteAll($text);
         } else {

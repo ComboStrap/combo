@@ -233,6 +233,7 @@ class PageUrlPath extends MetadataWikiPath
      */
     public function getUrlPathFromType(string $urlType): string
     {
+
         $page = $this->getResource();
         $pagePath = $page->getPathObject()->toPathString();
         if ((!$page instanceof MarkupPath)) {

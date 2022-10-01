@@ -93,7 +93,8 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
             $fetcher = FetcherSystem::createFetcherStringFromUrl($url);
             $body = $fetcher->getFetchString();
             $mime = $fetcher->getMime();
-            \ComboStrap\HttpResponse::createForStatus(HttpResponseStatus::ALL_GOOD)
+            $executionContext->response()
+                ->setStatus(HttpResponseStatus::ALL_GOOD)
                 ->setBody($body, $mime)
                 ->end();
         } catch (\Exception $e) {

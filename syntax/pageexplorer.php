@@ -403,7 +403,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     $namespacePath = null;
                     if ($namespaceAttribute !== null) {
                         WikiPath::addNamespaceEndSeparatorIfNotPresent($namespaceAttribute);
-                        $namespacePath = WikiPath::createPagePathFromPath($namespaceAttribute);
+                        $namespacePath = WikiPath::createMarkupPathFromPath($namespaceAttribute);
                     }
                     if ($namespacePath === null) {
                         switch ($pageExplorerType) {

@@ -202,7 +202,7 @@ EOF;
 
     public function setRequestedPageWikiId(string $wikiId): FetcherRailBar
     {
-        $path = WikiPath::createPagePathFromId($wikiId);
+        $path = WikiPath::createMarkupPathFromId($wikiId);
         return $this->setRequestedPath($path);
     }
 

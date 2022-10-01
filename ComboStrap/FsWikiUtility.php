@@ -59,7 +59,7 @@ class FsWikiUtility
         /**
          * To the wiki id form
          */
-        $dokuPath = WikiPath::createPagePathFromPath($path);
+        $dokuPath = WikiPath::createMarkupPathFromPath($path);
         // delete the last separator
         $dokuwikiId = substr( $dokuPath->getWikiId(),0,-1);
         $relativeFileSystemPath = str_replace(":", "/", $dokuwikiId);

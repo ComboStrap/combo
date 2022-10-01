@@ -43,7 +43,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
     public static function createPageFetcherFromId(string $wikiId): FetcherPage
     {
-        $wikiPath = WikiPath::createPagePathFromId($wikiId);
+        $wikiPath = WikiPath::createMarkupPathFromId($wikiId);
         return self::createPageFetcherFromPath($wikiPath);
     }
 

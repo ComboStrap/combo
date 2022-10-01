@@ -11,7 +11,7 @@ namespace ComboStrap;
  *
  * The drive is just a local path on the local file system
  *
- * Dokuwiki knows only two drives ({@link WikiPath::PAGE_DRIVE} and {@link WikiPath::MEDIA_DRIVE}
+ * Dokuwiki knows only two drives ({@link WikiPath::MARKUP_DRIVE} and {@link WikiPath::MEDIA_DRIVE}
  * but we have added a couple more such as the {@link WikiPath::COMBO_DRIVE combo resources}
  * and the {@link WikiPath::CACHE_DRIVE}
  *
@@ -20,7 +20,7 @@ class WikiPath extends PathAbs
 {
 
     const MEDIA_DRIVE = "media";
-    const PAGE_DRIVE = "page";
+    const MARKUP_DRIVE = "markup";
     const UNKNOWN_DRIVE = "unknown";
     const NAMESPACE_SEPARATOR_DOUBLE_POINT = ":";
 
@@ -60,11 +60,13 @@ class WikiPath extends PathAbs
     const COMBO_DRIVE = "combo";
     const CACHE_DRIVE = "cache";
     const DRIVES = [self::COMBO_DRIVE, self::CACHE_DRIVE, self::MEDIA_DRIVE];
-    const MARKUP_FILE_TXT_EXTENSION = ".txt";
+    const MARKUP_DEFAULT_TXT_EXTENSION = "txt";
+    const MARKUP_MD_TXT_EXTENSION = "md";
     const REV_ATTRIBUTE = "rev";
     const CURRENT_PATH_CHARACTER = ".";
     const CURRENT_PARENT_PATH_CHARACTER = "..";
     const CANONICAL = "wiki-path";
+    const ALL_MARKUP_EXTENSIONS = [self::MARKUP_DEFAULT_TXT_EXTENSION, self::MARKUP_MD_TXT_EXTENSION];
 
     /**
      * @var string[]
@@ -132,7 +134,7 @@ class WikiPath extends PathAbs
          */
         $this->absolutePath = $path;
         $firstCharacter = substr($path, 0, 1);
-        if ($drive === self::PAGE_DRIVE && $firstCharacter !== WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+        if ($drive === self::MARKUP_DRIVE && $firstCharacter !== WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $parts = preg_split('/' . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . '/', $path);
             switch ($parts[0]) {
                 case WikiPath::CURRENT_PATH_CHARACTER:
@@ -144,7 +146,7 @@ class WikiPath extends PathAbs
                         // Root case: the relative path is in the root
                         // the root has no parent
                         LogUtility::error("The current relative path ({$this->absolutePath}) returns an error: {$e->getMessage()}", self::CANONICAL);
-                        $rootRelativePath = WikiPath::createPagePathFromPath(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
+                        $rootRelativePath = WikiPath::createMarkupPathFromPath(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
                     }
                     break;
                 case WikiPath::CURRENT_PARENT_PATH_CHARACTER:
@@ -171,7 +173,7 @@ class WikiPath extends PathAbs
                         $rootRelativePath = $this->getCurrentPagePath();
                     } catch (ExceptionNotFound $e) {
                         LogUtility::error("The named relative path ({$this->absolutePath}) returns an error: {$e->getMessage()}", self::CANONICAL);
-                        $rootRelativePath = WikiPath::createPagePathFromPath(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
+                        $rootRelativePath = WikiPath::createMarkupPathFromPath(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
                     }
                     break;
             }
@@ -205,25 +207,12 @@ class WikiPath extends PathAbs
         if ($drive === self::UNKNOWN_DRIVE) {
             $lastPosition = StringUtility::lastIndexOf($path, ".");
             if ($lastPosition === FALSE) {
-                $drive = self::PAGE_DRIVE;
+                $drive = self::MARKUP_DRIVE;
             } else {
                 $drive = self::MEDIA_DRIVE;
             }
         }
         $this->drive = $drive;
-
-        /**
-         * Path
-         */
-        if ($drive === self::PAGE_DRIVE) {
-            $textExtension = self::MARKUP_FILE_TXT_EXTENSION;
-            $textExtensionLength = strlen($textExtension);
-            $pathExtension = substr($this->absolutePath, -$textExtensionLength);
-            if ($pathExtension === $textExtension) {
-                // delete the extension, page does not have any extension
-                $this->absolutePath = substr($this->absolutePath, 0, strlen($this->absolutePath) - $textExtensionLength);
-            }
-        }
 
 
         /**
@@ -232,11 +221,12 @@ class WikiPath extends PathAbs
          */
         $comboInterWikiScheme = "combo>";
         if (strpos($this->absolutePath, $comboInterWikiScheme) === 0) {
-            $this->id = substr($this->absolutePath, strlen($comboInterWikiScheme));
+            $pathPart = substr($this->absolutePath, strlen($comboInterWikiScheme));
+            $this->id = $this->toDokuWikiIdDriveContextual($pathPart);
             $this->drive = self::COMBO_DRIVE;
         } else {
             WikiPath::addRootSeparatorIfNotPresent($this->absolutePath);
-            $this->id = WikiPath::toDokuwikiId($this->absolutePath);
+            $this->id = $this->toDokuWikiIdDriveContextual($this->absolutePath);
         }
 
 
@@ -251,9 +241,9 @@ class WikiPath extends PathAbs
      * @param string|null $rev
      * @return WikiPath
      */
-    public static function createPagePathFromPath(string $path, string $rev = null): WikiPath
+    public static function createMarkupPathFromPath(string $path, string $rev = null): WikiPath
     {
-        return new WikiPath($path, WikiPath::PAGE_DRIVE, $rev);
+        return new WikiPath($path, WikiPath::MARKUP_DRIVE, $rev);
     }
 
 
@@ -301,7 +291,7 @@ class WikiPath extends PathAbs
             $urlPath = parse_url($url, PHP_URL_PATH);
             $id = substr(str_replace("/", ":", $urlPath), 1);
         }
-        return self::createPagePathFromPath(":$id");
+        return self::createMarkupPathFromPath(":$id");
     }
 
     /**
@@ -336,22 +326,22 @@ class WikiPath extends PathAbs
         return WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $id;
     }
 
-    public
-    static function toDokuwikiId($path)
+    protected function toDokuWikiIdDriveContextual($path): string
     {
         /**
          * Delete the first separator
          */
-        if ($path[0] === WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
-            $path = substr($path, 1);
-        }
+        $id = self::toDokuWikiId($path);
+
         /**
-         * Delete the extra separator from namespace
+         * If this is a markup, we delete the textual extension if any
          */
-        if (substr($path, -1) === WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
-            $path = substr($path, 0, strlen($path) - 1);
+        if ($this->getDrive() === self::MARKUP_DRIVE) {
+            foreach (self::ALL_MARKUP_EXTENSIONS as $markupExtension) {
+                StringUtility::rtrim($id, '.' . $markupExtension);
+            }
         }
-        return $path;
+        return $id;
 
     }
 
@@ -362,10 +352,28 @@ class WikiPath extends PathAbs
     }
 
 
-    public static function createPagePathFromId($id, $rev = null): WikiPath
+    public static function createMarkupPathFromId($id, $rev = null): WikiPath
     {
         WikiPath::addRootSeparatorIfNotPresent($id);
-        return new WikiPath($id, self::PAGE_DRIVE, $rev);
+
+        if (WikiPath::isNamespacePath($id)) {
+            return new WikiPath($id, self::MARKUP_DRIVE, $rev);
+        }
+
+        $defaultWikiPath = new WikiPath($id . '.' . self::MARKUP_DEFAULT_TXT_EXTENSION, self::MARKUP_DRIVE, $rev);
+        if (FileSystems::exists($defaultWikiPath)) {
+            return $defaultWikiPath;
+        }
+        foreach (self::ALL_MARKUP_EXTENSIONS as $markupExtension) {
+            if ($markupExtension == self::MARKUP_DEFAULT_TXT_EXTENSION) {
+                continue;
+            }
+            $markupWikiPath = new WikiPath($id . '.' . $markupExtension, self::MARKUP_DRIVE, $rev);
+            if (FileSystems::exists($markupWikiPath)) {
+                return $markupWikiPath;
+            }
+        }
+        return $defaultWikiPath;
     }
 
     /**
@@ -422,7 +430,7 @@ class WikiPath extends PathAbs
     public static function createExecutingMarkupWikiPath(): WikiPath
     {
         $id = ExecutionContext::getActualOrCreateFromEnv()->getExecutingWikiId();
-        return WikiPath::createPagePathFromId($id);
+        return WikiPath::createMarkupPathFromId($id);
     }
 
     /**
@@ -432,7 +440,7 @@ class WikiPath extends PathAbs
     public static function createRequestedPagePathFromRequest(): WikiPath
     {
         $pageId = ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();;
-        return WikiPath::createPagePathFromId($pageId);
+        return WikiPath::createMarkupPathFromId($pageId);
     }
 
     /**
@@ -485,7 +493,7 @@ class WikiPath extends PathAbs
     {
         return [
             self::MEDIA_DRIVE => Site::getMediaDirectory(),
-            self::PAGE_DRIVE => Site::getPageDirectory(),
+            self::MARKUP_DRIVE => Site::getPageDirectory(),
             self::COMBO_DRIVE => DirectoryLayout::getComboResourcesDirectory(),
             self::CACHE_DRIVE => Site::getCacheDirectory()
         ];
@@ -582,7 +590,7 @@ class WikiPath extends PathAbs
     {
 
         $requestedWikidId = ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
-        return WikiPath::createPagePathFromId($requestedWikidId);
+        return WikiPath::createMarkupPathFromId($requestedWikidId);
 
     }
 
@@ -605,7 +613,20 @@ class WikiPath extends PathAbs
 
     private static function createRootPagePath(): WikiPath
     {
-        return WikiPath::createPagePathFromPath(self::NAMESPACE_SEPARATOR_DOUBLE_POINT);
+        return WikiPath::createMarkupPathFromPath(self::NAMESPACE_SEPARATOR_DOUBLE_POINT);
+    }
+
+    /**
+     * @param $path
+     * @return string with the root path
+     */
+    public static function toDokuWikiId($path): string
+    {
+        $id = $path;
+        if ($id[0] === WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+            $id = substr($id, 1);
+        }
+        return $id;
     }
 
 
@@ -623,9 +644,6 @@ class WikiPath extends PathAbs
         if ($lastName === null) {
             throw new ExceptionNotFound("This path ($this) does not have any last name");
         }
-        if ($this->getDrive() === self::PAGE_DRIVE) {
-            return $lastName . self::MARKUP_FILE_TXT_EXTENSION;
-        }
         return $lastName;
     }
 
@@ -633,7 +651,7 @@ class WikiPath extends PathAbs
     function getNames(): array
     {
 
-        $actualNames = explode(self::NAMESPACE_SEPARATOR_DOUBLE_POINT, $this->getWikiId());
+        $actualNames = explode(self::NAMESPACE_SEPARATOR_DOUBLE_POINT, $this->absolutePath);
 
         /**
          * First element can be an empty string
@@ -663,7 +681,7 @@ class WikiPath extends PathAbs
     {
 
         if (
-            $this->drive === self::PAGE_DRIVE
+            $this->drive === self::MARKUP_DRIVE
             &&
             !$this->isGlob()
         ) {
@@ -868,7 +886,7 @@ class WikiPath extends PathAbs
                 case self::MEDIA_DRIVE:
                     $localPath = LocalPath::createFromPathString($conf['mediadir']);
                     break;
-                case self::PAGE_DRIVE:
+                case self::MARKUP_DRIVE:
                     $localPath = LocalPath::createFromPathString($conf['datadir']);
                     break;
                 default:
@@ -891,16 +909,34 @@ class WikiPath extends PathAbs
                     $filePathString = mediaFN($this->id);
                 }
                 break;
-            case self::PAGE_DRIVE:
+            case self::MARKUP_DRIVE:
                 /**
-                 * TODO handle it to check if the id point to a directory
-                 *   and returns the directory path in place if the txt file does not exist
+                 * Adaptation of {@link WikiFN}
                  */
-                if (!empty($rev)) {
-                    $filePathString = wikiFN($this->id, $rev);
-                } else {
-                    $filePathString = wikiFN($this->id);
+                global $conf;
+                try {
+                    $extension = $this->getExtension();
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError("For a  markup path file, the extension should have been set");
+                    $extension = self::MARKUP_DEFAULT_TXT_EXTENSION;
                 }
+                if (empty($this->rev)) {
+                    $filePathString = $conf['datadir'] . '/' . utf8_encodeFN($this->id) . '.' . $extension;
+                } else {
+                    $filePathString = $conf['olddir'] . '/' . utf8_encodeFN($this->id) . '.' . $this->rev . '.' . $extension;
+                    if ($conf['compression']) {
+                        //test for extensions here, we want to read both compressions
+                        if (file_exists($filePathString . '.gz')) {
+                            $filePathString .= '.gz';
+                        } elseif (file_exists($filePathString . '.bz2')) {
+                            $filePathString .= '.bz2';
+                        } else {
+                            //file doesnt exist yet, so we take the configured extension
+                            $filePathString .= '.' . $conf['compression'];
+                        }
+                    }
+                }
+
                 break;
             default:
                 $baseDirectory = WikiPath::getDriveRoots()[$this->drive];
@@ -921,13 +957,13 @@ class WikiPath extends PathAbs
 
     }
 
+
     /**
-     * @return string - Returns the string representation of this path (to be able to use it in url)
-     * To get the full string version see {@link WikiPath::toUriString()}
+     * @return string - the wiki path version
      */
     function toPathString(): string
     {
-        return $this->absolutePath;
+        return self::NAMESPACE_SEPARATOR_DOUBLE_POINT . $this->getWikiId();
     }
 
 
@@ -971,7 +1007,7 @@ class WikiPath extends PathAbs
 
     function getMime(): ?Mime
     {
-        if ($this->drive === self::PAGE_DRIVE) {
+        if ($this->drive === self::MARKUP_DRIVE) {
             return new Mime(Mime::PLAIN_TEXT);
         }
         return parent::getMime();
@@ -1019,6 +1055,20 @@ class WikiPath extends PathAbs
     function getHost(): string
     {
         return "localhost";
+    }
+
+    public function resolveId($markupId): WikiPath
+    {
+        if ($this->getDrive() !== self::MARKUP_DRIVE) {
+            return $this->resolve($markupId);
+        }
+        try {
+            $parentId = $this->getParent()->getWikiId();
+        } catch (ExceptionNotFound $e) {
+            $parentId = "";
+        }
+        return WikiPath::createMarkupPathFromId($parentId . self::NAMESPACE_SEPARATOR_DOUBLE_POINT . $markupId);
+
     }
 
 

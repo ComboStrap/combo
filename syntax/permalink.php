@@ -185,7 +185,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
 
                         $urlPath = PageUrlPath::createForPage($requestedPage)
                             ->getUrlPathFromType(PageUrlType::CONF_VALUE_CANONICAL_PATH);
-                        $urlId = WikiPath::toDokuwikiId($urlPath);
+                        $urlId = WikiPath::toDokuWikiIdDriveContextual($urlPath);
                         $canonicalUrl = UrlEndpoint::createDokuUrl()
                             ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $urlId)
                             ->toAbsoluteUrl();

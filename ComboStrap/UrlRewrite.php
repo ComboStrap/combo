@@ -8,15 +8,25 @@ namespace ComboStrap;
 class UrlRewrite
 {
 
+    public const CONF_KEY = 'userewrite';
+
+    public const NO_REWRITE_DOKU_VALUE = 0;
     public const NO_REWRITE = "no_rewrite";
+    public const WEB_SERVER_REWRITE_DOKU_VALUE = 1;
     public const WEB_SERVER_REWRITE = "web_server";
+    public const DOKU_REWRITE_DOKU_VALUE = 2;
     /**
      * Doku Rewrite is value 2
      * https://www.dokuwiki.org/rewrite#further_details_for_the_technically_savvy
      */
-    public const DOKU_REWRITE = "doku_rewrite";
+    public const VALUE_DOKU_REWRITE = "doku_rewrite";
+
+
+
     const EXPORT_PREFIX = "export_";
     const CANONICAL = "url_rewrite";
+
+
 
     /**
      * Apply all rewrite URL logic (from relative to absolute
@@ -118,7 +128,7 @@ class UrlRewrite
 
                 }
                 break;
-            case self::DOKU_REWRITE:
+            case self::VALUE_DOKU_REWRITE:
                 if ($path === UrlEndpoint::DOKU_PHP) {
                     try {
                         $id = $url->getQueryPropertyValueAndRemoveIfPresent(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE);

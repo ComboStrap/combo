@@ -70,7 +70,7 @@ class PathTreeNode extends TreeNode
          */
         $nodeByIds = [];
         foreach ($ids as $id) {
-            $path = WikiPath::createPagePathFromId($id);
+            $path = WikiPath::createMarkupPathFromId($id);
             $actualNode = $nodeByIds[$path->getWikiId()];
             if ($actualNode === null) {
                 $actualNode = PathTreeNode::createPathTreeNodeFromPath($path);

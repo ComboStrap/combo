@@ -1109,7 +1109,7 @@ class Site
     public static function getUrlRewrite(): string
     {
         global $conf;
-        $confKey = 'userewrite';
+        $confKey = UrlRewrite::CONF_KEY;
         $urlRewrite = $conf[$confKey];
         try {
             $urlRewriteInt = DataType::toInteger($urlRewrite);
@@ -1118,12 +1118,12 @@ class Site
             return UrlRewrite::NO_REWRITE;
         }
         switch ($urlRewriteInt) {
-            case 0:
+            case UrlRewrite::NO_REWRITE_DOKU_VALUE:
                 return UrlRewrite::NO_REWRITE;
-            case 1:
+            case UrlRewrite::WEB_SERVER_REWRITE_DOKU_VALUE:
                 return UrlRewrite::WEB_SERVER_REWRITE;
-            case 2:
-                return UrlRewrite::DOKU_REWRITE;
+            case UrlRewrite::DOKU_REWRITE_DOKU_VALUE:
+                return UrlRewrite::VALUE_DOKU_REWRITE;
             default:
                 LogUtility::internalError("The ($confKey) configuration value ($urlRewriteInt) is not a valid value (0, 1 or 2). No rewrite");
                 return UrlRewrite::NO_REWRITE;

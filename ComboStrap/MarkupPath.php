@@ -825,6 +825,9 @@ class MarkupPath implements ResourceCombo, Path
              */
             $objectPath = $this->path;
             $parentPath = $this->path->getParent();
+            if (!($parentPath instanceof WikiPath)) {
+                return false;
+            }
             if ($parentPath->getLastNameWithoutExtension() === $objectPath->getLastNameWithoutExtension()) {
                 /**
                  * If the start page does not exists, this is the index page

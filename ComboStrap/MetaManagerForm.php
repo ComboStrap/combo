@@ -79,8 +79,13 @@ class MetaManagerForm
          * with a new frontmatter
          * The frontmatter data should be first replicated into the metadata file
          */
-        $this->page->getInstructionsDocument()
-            ->getFetchPathAsInstructionsArray();
+        $fetcherMarkup = $this->page->getInstructionsDocument();
+        try {
+            $fetcherMarkup
+                ->getFetchPathAsInstructionsArray();
+        } finally {
+            $fetcherMarkup->close();
+        }
 
         /**
          * Creation

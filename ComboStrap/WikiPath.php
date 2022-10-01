@@ -238,8 +238,8 @@ class WikiPath extends PathAbs
     /**
      *
      * @param string $path - the path in a wiki form that may be relative - if the path is blank, it's the current markup (the requested markup)
-     * @param string|null $rev
-     * @return WikiPath
+     * @param string|null $rev - the revision (ie timestamp in number format)
+     * @return WikiPath - the wiki path
      */
     public static function createMarkupPathFromPath(string $path, string $rev = null): WikiPath
     {

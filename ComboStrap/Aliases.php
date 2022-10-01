@@ -49,10 +49,12 @@ class Aliases extends MetadataTabular
              */
             $aliasType = $row[AliasType::getPersistentName()];
             if ($aliasType !== null) {
-                $aliasTypeValue = $aliasType->getValue();
-                if ($aliasTypeValue !== null) {
+                try {
                     $alias->setType($aliasType->getValue());
+                } catch (ExceptionNotFound $e) {
+                    // ok
                 }
+
             }
             $aliases[] = $alias;
         }

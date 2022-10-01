@@ -151,7 +151,7 @@ class MarkupCacheDependencies
         global $ID;
         $keep = $ID;
         try {
-            $ID = WikiPath::toDokuWikiIdDriveContextual($path);
+            $ID = WikiPath::toDokuWikiId($path);
             /**
              * Rerender secondary slot if needed
              */
@@ -159,7 +159,11 @@ class MarkupCacheDependencies
             $independentSlots = $page->getPrimaryIndependentSlots();
             foreach ($independentSlots as $secondarySlot) {
                 $htmlDocument = $secondarySlot->getHtmlFetcher();
-                $cacheDependencies = $htmlDocument->getCacheDependencies();
+                try {
+                    $cacheDependencies = $htmlDocument->getCacheDependencies();
+                } finally {
+                    $htmlDocument->close();
+                }
                 if ($cacheDependencies->hasDependency($dependency)) {
                     $link = PluginUtility::getDocumentationHyperLink("cache:slot", "Slot Dependency", false);
                     $message = "$link ($dependency) was met with the primary slot ($path).";

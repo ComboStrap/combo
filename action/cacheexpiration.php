@@ -156,22 +156,36 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
              * Cache deletion
              */
             $message = "Expiration Date has expired";
-            CacheLog::deleteCacheIfExistsAndLog(
-                $slot->getInstructionsDocument(),
-                self::SLOT_CACHE_EXPIRATION_EVENT,
-                $message);
-            CacheLog::deleteCacheIfExistsAndLog(
-                $slot->getHtmlFetcher(),
-                self::SLOT_CACHE_EXPIRATION_EVENT,
-                $message);
-
+            $outputDocument = $slot->getInstructionsDocument();
+            try {
+                CacheLog::deleteCacheIfExistsAndLog(
+                    $outputDocument,
+                    self::SLOT_CACHE_EXPIRATION_EVENT,
+                    $message);
+            } finally {
+                $outputDocument->close();
+            }
+            $fetcher = $slot->getHtmlFetcher();
+            try {
+                CacheLog::deleteCacheIfExistsAndLog(
+                    $fetcher,
+                    self::SLOT_CACHE_EXPIRATION_EVENT,
+                    $message);
+            } finally {
+                $fetcher->close();
+            }
             /**
              * Re-render
              */
-            CacheLog::renderCacheAndLog(
-                $slot->getHtmlFetcher(),
-                self::SLOT_CACHE_EXPIRATION_EVENT,
-                $message);
+            $fetcher2 = $slot->getHtmlFetcher();
+            try {
+                CacheLog::renderCacheAndLog(
+                    $fetcher2,
+                    self::SLOT_CACHE_EXPIRATION_EVENT,
+                    $message);
+            } finally {
+                $fetcher2->close();
+            }
 
         } finally {
             $ID = $keep;

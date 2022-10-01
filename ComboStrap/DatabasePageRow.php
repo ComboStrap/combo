@@ -287,12 +287,7 @@ class DatabasePageRow
         }
 
 
-        $fetcherMarkup = $this->page->fetchAnalyticsDocument();
-        try {
-            $path = $fetcherMarkup->getFetchPath();
-        } finally {
-            $fetcherMarkup->close();
-        }
+        $path = $this->page->fetchAnalyticsPath();
 
         /**
          * When the file does not exist
@@ -565,7 +560,7 @@ class DatabasePageRow
             }
             if ($countChanges !== 1) {
                 // internal error
-                LogUtility::error("The database replication has not updated exactly 1 record but ($countChanges) record", \action_plugin_combo_fulldatabasereplication::CANONICAL);
+                LogUtility::error("The database replication has not updated exactly 1 record but ($countChanges) record", \action_plugin_combo_indexer::CANONICAL);
             }
 
         } else {
@@ -1192,17 +1187,15 @@ class DatabasePageRow
      */
     public function replicateAnalytics()
     {
-        $fetcherMarkup = $this->page->fetchAnalyticsDocument();
+
         try {
-            $fetchPath = $fetcherMarkup->getFetchPath();
+            $fetchPath = $this->page->fetchAnalyticsPath();
             $analyticsJson = Json::createFromPath($fetchPath);
         } catch (ExceptionCompile $e) {
             if (PluginUtility::isDevOrTest()) {
                 throw $e;
             }
             throw new ExceptionCompile("Unable to get the analytics document", self::CANONICAL, 0, $e);
-        } finally {
-            $fetcherMarkup->close();
         }
 
         /**

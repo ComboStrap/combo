@@ -261,7 +261,7 @@ EOF;
             $ID = $id;
             /**
              * Indexing the page start the database replication
-             * See {@link action_plugin_combo_fulldatabasereplication}
+             * See {@link action_plugin_combo_indexer}
              */
             $pageCounter++;
             try {
@@ -342,14 +342,14 @@ EOF;
             /**
              * Analytics
              */
-            $analytics = $page->fetchAnalyticsDocument();
+            $analyticsPath = $page->fetchAnalyticsPath();
             try {
-                $data = \ComboStrap\Json::createFromPath($analytics->getFetchPath())->toArray();
+                $data = \ComboStrap\Json::createFromPath($analyticsPath)->toArray();
             } catch (ExceptionBadSyntax $e) {
                 LogUtility::error("The analytics json of the page ($page) is not conform");
                 continue;
             } catch (ExceptionNotFound $e) {
-                LogUtility::error("The analytics document ({$analytics->getFetchPath()}) for the page ($page) was not found");
+                LogUtility::error("The analytics document ({$analyticsPath}) for the page ($page) was not found");
                 continue;
             }
 

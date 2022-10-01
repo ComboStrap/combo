@@ -950,7 +950,12 @@ class MarkupPath implements ResourceCombo, Path
     public function toXhtml(): string
     {
 
-        return $this->getHtmlFetcher()->getFetchString();
+        $fetcherMarkup = $this->getHtmlFetcher();
+        try {
+            return $fetcherMarkup->getFetchString();
+        } finally {
+            $fetcherMarkup->close();
+        }
 
     }
 
@@ -1148,6 +1153,17 @@ class MarkupPath implements ResourceCombo, Path
     function fetchAnalyticsDocument(): FetcherMarkup
     {
         return renderer_plugin_combo_analytics::createAnalyticsFetcherForPageFragment($this);
+    }
+
+    public
+    function fetchAnalyticsPath(): Path
+    {
+        $fetcher = renderer_plugin_combo_analytics::createAnalyticsFetcherForPageFragment($this);
+        try {
+            return $fetcher->getFetchPath();
+        } finally {
+            $fetcher->close();
+        }
     }
 
     public

@@ -64,12 +64,16 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
          */
         foreach ($page->getBacklinks() as $backlink) {
             $htmlDocument = $backlink->getHtmlFetcher();
-            $desc = $data[self::DESC];
-            CacheLog::deleteCacheIfExistsAndLog(
-                $htmlDocument,
-                self::QUALITY_MUTATION_EVENT_NAME,
-                "The {$backlink->getWikiId()} of {$path} had its HTML cache deleted ($desc)."
-            );
+            try {
+                $desc = $data[self::DESC];
+                CacheLog::deleteCacheIfExistsAndLog(
+                    $htmlDocument,
+                    self::QUALITY_MUTATION_EVENT_NAME,
+                    "The {$backlink->getWikiId()} of {$path} had its HTML cache deleted ($desc)."
+                );
+            } finally {
+                $htmlDocument->close();
+            }
         }
     }
 

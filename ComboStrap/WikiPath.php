@@ -237,12 +237,16 @@ class WikiPath extends PathAbs
 
     /**
      *
-     * @param string $path - may be relative
+     * @param string $path - the path in a wiki form that may be relative - if the path is blank, it's the current markup (the requested markup)
      * @param string|null $rev
      * @return WikiPath
      */
     public static function createMarkupPathFromPath(string $path, string $rev = null): WikiPath
     {
+        if ($path == "") {
+            return ExecutionContext::getActualOrCreateFromEnv()
+                ->getRequestedPath();
+        }
         if (WikiPath::isNamespacePath($path)) {
             return new WikiPath($path, self::MARKUP_DRIVE, $rev);
         }

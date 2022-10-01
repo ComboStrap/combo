@@ -185,7 +185,7 @@ class ExecutionContext
      * @param string $requestedId
      * @return ExecutionContext
      */
-    public static function getOrCreateFromWikiId(string $requestedId): ExecutionContext
+    public static function getOrCreateFromRequestedWikiId(string $requestedId): ExecutionContext
     {
 
         return self::getActualOrCreateFromEnv()

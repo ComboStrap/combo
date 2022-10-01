@@ -207,6 +207,7 @@ class Event
         $tmp = []; // No event data
         $tmp['page'] = $pageId;
         $evt = new \dokuwiki\Extension\Event('INDEXER_TASKS_RUN', $tmp);
+        $evt->advise_before();
         $evt->advise_after();
     }
 

@@ -98,12 +98,11 @@ class SlotManagerMenuItem extends AbstractItem
 
     public function createHtml(): string
     {
-        $requestedPage = MarkupPath::createFromRequestedPage();
+        $requestedPath = WikiPath::getRequestedPagePath();
         $url = UrlEndpoint::createComboStrapUrl()->setPath("/" . self::TAG);
         $html = "<p>Edit and/or create the <a href=\"{$url->toHtmlString()}\">slots</a> of the page</p>";
         foreach (Site::getSecondarySlotNames() as $secondarySlot) {
 
-            $actualPath = $requestedPage->getPathObject();
             $label = $secondarySlot;
             switch ($secondarySlot) {
                 case Site::getSidebarName():
@@ -128,14 +127,14 @@ class SlotManagerMenuItem extends AbstractItem
             $html .= "<p class='mb-0 mt-1'><strong>$label</strong></p>";
             $html .= "<table>";
 
-            $parentPath = $actualPath;
+            $parentPath = $requestedPath;
             while (true) {
                 try {
                     $parentPath = $parentPath->getParent();
                 } catch (ExceptionNotFound $e) {
                     break;
                 }
-                $secondaryPath = $parentPath->resolve($secondarySlot);
+                $secondaryPath = $parentPath->resolveId($secondarySlot);
 
                 $secondaryPage = MarkupPath::createPageFromQualifiedId($secondaryPath->toPathString());
                 $class = StyleUtility::addComboStrapSuffix(\syntax_plugin_combo_link::TAG);

@@ -588,14 +588,10 @@ class WikiPath extends PathAbs
     }
 
     /**
-     * @throws ExceptionNotFound
      */
     public static function getRequestedPagePath(): WikiPath
     {
-
-        $requestedWikidId = ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
-        return WikiPath::createMarkupPathFromId($requestedWikidId);
-
+        return ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath();
     }
 
     /**

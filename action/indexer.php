@@ -4,6 +4,7 @@
 use ComboStrap\Console;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
@@ -111,6 +112,7 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
     public function handle_markup_extension(Doku_Event $event, $param)
     {
 
+        throw new ExceptionRuntimeInternal("To implements");
 
 
 

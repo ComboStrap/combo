@@ -920,10 +920,11 @@ class WikiPath extends PathAbs
                     LogUtility::internalError("For a  markup path file, the extension should have been set. This is not the case for ($this)");
                     $extension = self::MARKUP_DEFAULT_TXT_EXTENSION;
                 }
+                $idFileSystem = str_replace(':', '/', $this->id);
                 if (empty($this->rev)) {
-                    $filePathString = $conf['datadir'] . '/' . utf8_encodeFN($this->id) . '.' . $extension;
+                    $filePathString = $conf['datadir'] . '/' . utf8_encodeFN($idFileSystem) . '.' . $extension;
                 } else {
-                    $filePathString = $conf['olddir'] . '/' . utf8_encodeFN($this->id) . '.' . $this->rev . '.' . $extension;
+                    $filePathString = $conf['olddir'] . '/' . utf8_encodeFN($idFileSystem) . '.' . $this->rev . '.' . $extension;
                     if ($conf['compression']) {
                         //test for extensions here, we want to read both compressions
                         if (file_exists($filePathString . '.gz')) {
@@ -1062,12 +1063,16 @@ class WikiPath extends PathAbs
         if ($this->getDrive() !== self::MARKUP_DRIVE) {
             return $this->resolve($markupId);
         }
-        try {
-            $parentId = $this->getParent()->getWikiId();
-        } catch (ExceptionNotFound $e) {
-            $parentId = "";
+        if (!WikiPath::isNamespacePath($this->absolutePath)) {
+            try {
+                $contextId = $this->getParent()->getWikiId() . self::NAMESPACE_SEPARATOR_DOUBLE_POINT;
+            } catch (ExceptionNotFound $e) {
+                $contextId = "";
+            }
+        } else {
+            $contextId = $this->getWikiId();
         }
-        return WikiPath::createMarkupPathFromId($parentId . self::NAMESPACE_SEPARATOR_DOUBLE_POINT . $markupId);
+        return WikiPath::createMarkupPathFromId($contextId . $markupId);
 
     }
 

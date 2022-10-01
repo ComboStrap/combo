@@ -744,7 +744,7 @@ class MarkupPath implements ResourceCombo, Path
 
         if (!FileSystems::exists($this)) {
             if (PluginUtility::isDevOrTest()) {
-                LogUtility::msg("You can't render the metadata of a page that does not exist");
+                LogUtility::msg("You can't render the metadata of a markup that does not exist ($this)");
             }
             return $this;
         }
@@ -829,7 +829,7 @@ class MarkupPath implements ResourceCombo, Path
                 /**
                  * If the start page does not exists, this is the index page
                  */
-                $startPage = $parentPath->resolve($startPageName);
+                $startPage = $parentPath->resolveId($startPageName);
                 if (!FileSystems::exists($startPage)) {
                     return true;
                 }
@@ -837,7 +837,6 @@ class MarkupPath implements ResourceCombo, Path
         } catch (ExceptionNotFound $e) {
             // no parent, no last name, etc
         }
-
 
         return false;
     }

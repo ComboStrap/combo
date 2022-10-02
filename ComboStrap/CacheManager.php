@@ -67,7 +67,7 @@ class CacheManager
     public function getCacheDependenciesForPath(Path $path): MarkupCacheDependencies
     {
 
-        $pathId = $path->toPathString();
+        $pathId = $path->toQualifiedId();
         $cacheRuntimeDependencies = $this->slotCacheDependencies[$pathId];
         if ($cacheRuntimeDependencies === null) {
             $cacheRuntimeDependencies = MarkupCacheDependencies::create($path, $this->executionContext->getRequestedPath());

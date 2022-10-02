@@ -394,13 +394,20 @@ class MarkupPath implements ResourceCombo, Path
     /**
      *
      */
-    public
-    function getHtmlFetcher(): FetcherMarkup
+    public function getHtmlFetcher(): FetcherMarkup
     {
-
         return FetcherMarkup::createPageFragmentFetcherFromPath($this->getPathObject())
             ->setRequestedMimeToXhtml();
+    }
 
+    public function getHtmlPath(): LocalPath
+    {
+        $fetcher = $this->getHtmlFetcher();
+        try {
+            return $fetcher->processIfNeededAndGetFetchPath();
+        } finally {
+            $fetcher->close();
+        }
     }
 
     /**
@@ -987,7 +994,7 @@ class MarkupPath implements ResourceCombo, Path
     public function getNamespacePath(): string
     {
 
-        return $this->getParent()->toPathString();
+        return $this->getParent()->toQualifiedId();
 
     }
 
@@ -1160,7 +1167,7 @@ class MarkupPath implements ResourceCombo, Path
     {
         $fetcher = renderer_plugin_combo_analytics::createAnalyticsFetcherForPageFragment($this);
         try {
-            return $fetcher->getFetchPath();
+            return $fetcher->processIfNeededAndGetFetchPath();
         } finally {
             $fetcher->close();
         }
@@ -1187,7 +1194,7 @@ class MarkupPath implements ResourceCombo, Path
     {
         global $conf;
         $startPageName = $conf['start'];
-        return $this->getPathObject()->toPathString() === ":$startPageName";
+        return $this->getPathObject()->toQualifiedId() === ":$startPageName";
 
     }
 
@@ -2074,6 +2081,19 @@ class MarkupPath implements ResourceCombo, Path
         return $this;
     }
 
+    public function getInstructionsPath(): LocalPath
+    {
+        $instructionsDocument = $this->getInstructionsDocument();
+        try {
+
+            return $instructionsDocument->processIfNeededAndGetFetchPath();
+
+        } finally {
+
+            $instructionsDocument->close();
+        }
+    }
+
     private function getPrimaryFooterPage(): ?MarkupPath
     {
         $nearest = page_findnearest(Site::getMainFooterSlotName());
@@ -2168,9 +2188,9 @@ class MarkupPath implements ResourceCombo, Path
         return $this->path->getNames();
     }
 
-    function toPathString(): string
+    function toQualifiedId(): string
     {
-        return $this->path->toPathString();
+        return $this->path->toQualifiedId();
     }
 
     function toUriString(): string

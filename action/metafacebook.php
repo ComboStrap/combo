@@ -206,7 +206,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                     try {
                         $firstImagePath = $page->getFirstImage()->getSourcePath();
                         if (
-                            $path->toAbsolutePath()->toPathString() !== $firstImagePath->toAbsolutePath()->toPathString()
+                            $path->toAbsolutePath()->toQualifiedId() !== $firstImagePath->toAbsolutePath()->toQualifiedId()
                         ) {
                             // specified image
                             LogUtility::error($message, self::CANONICAL);

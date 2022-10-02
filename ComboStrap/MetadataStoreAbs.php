@@ -22,7 +22,7 @@ abstract class MetadataStoreAbs implements MetadataStore
 
     protected function checkResource(ResourceCombo $requestedResource)
     {
-        if ($this->page->getPathObject()->toPathString() !== $requestedResource->getPathObject()->toPathString()) {
+        if ($this->page->getPathObject()->toQualifiedId() !== $requestedResource->getPathObject()->toQualifiedId()) {
             throw new ExceptionRuntime("The page ($requestedResource) is unknown. We got data for the page ($this->page)", $this->getCanonical());
         }
     }

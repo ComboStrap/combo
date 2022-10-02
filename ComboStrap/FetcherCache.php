@@ -88,7 +88,7 @@ class FetcherCache
     public function addFileDependency(Path $path): FetcherCache
     {
         try {
-            $this->fileDependencies[] = LocalPath::createFromPathObject($path)->toAbsolutePath()->toPathString();
+            $this->fileDependencies[] = LocalPath::createFromPathObject($path)->toAbsolutePath()->toQualifiedId();
         } catch (ExceptionBadArgument $e) {
             throw new ExceptionRuntimeInternal("The path seems to be not local, it should never happen.", self::CANONICAL, 1, $e);
         }

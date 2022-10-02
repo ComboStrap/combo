@@ -27,7 +27,7 @@ class LocalFileSystem implements FileSystem
 
     function exists(Path $path): bool
     {
-        return file_exists($path->toAbsolutePath()->toPathString());
+        return file_exists($path->toAbsolutePath()->toQualifiedId());
     }
 
     /**
@@ -49,7 +49,7 @@ class LocalFileSystem implements FileSystem
         } catch (ExceptionNotFound $e) {
             LogUtility::error("The mime is unknown for the path ($path). Trying to returning the content as text.");
         }
-        $content = @file_get_contents($path->toAbsolutePath()->toPathString());
+        $content = @file_get_contents($path->toAbsolutePath()->toQualifiedId());
         if ($content === false) {
             // file does not exists
             throw new ExceptionNotFound("The file ($path) does not exists");
@@ -65,7 +65,7 @@ class LocalFileSystem implements FileSystem
         if (!self::exists($path)) {
             throw new ExceptionNotFound("Local File System Modified Time: The file ($path) does not exist");
         }
-        return Iso8601Date::createFromTimestamp(filemtime($path->toAbsolutePath()->toPathString()))->getDateTime();
+        return Iso8601Date::createFromTimestamp(filemtime($path->toAbsolutePath()->toQualifiedId()))->getDateTime();
     }
 
     /**
@@ -76,14 +76,14 @@ class LocalFileSystem implements FileSystem
         if (!$this->exists($path)) {
             throw new ExceptionNotFound("The path ($path) does not exists, no creation time");
         }
-        $filePath = $path->toAbsolutePath()->toPathString();
+        $filePath = $path->toAbsolutePath()->toQualifiedId();
         $timestamp = filectime($filePath);
         return Iso8601Date::createFromTimestamp($timestamp)->getDateTime();
     }
 
     public function delete(Path $path)
     {
-        unlink($path->toAbsolutePath()->toPathString());
+        unlink($path->toAbsolutePath()->toQualifiedId());
     }
 
     /**
@@ -92,7 +92,7 @@ class LocalFileSystem implements FileSystem
      */
     public function getSize(Path $path)
     {
-        return filesize($path->toAbsolutePath()->toPathString());
+        return filesize($path->toAbsolutePath()->toQualifiedId());
     }
 
     /**
@@ -100,7 +100,7 @@ class LocalFileSystem implements FileSystem
      */
     public function createDirectory(Path $dirPath): Path
     {
-        $result = mkdir($dirPath->toAbsolutePath()->toPathString(), $mode = 0770, $recursive = true);
+        $result = mkdir($dirPath->toAbsolutePath()->toQualifiedId(), $mode = 0770, $recursive = true);
         if ($result === false) {
             throw new ExceptionCompile("Unable to create the directory path ($dirPath)");
         }
@@ -198,12 +198,12 @@ class LocalFileSystem implements FileSystem
      */
     public function createRegularFile(Path $path)
     {
-        touch($path->toPathString());
+        touch($path->toQualifiedId());
     }
 
     public function setContent(Path $path, string $content)
     {
-        io_saveFile($path->toPathString(), $content, false);
+        io_saveFile($path->toQualifiedId(), $content, false);
     }
 
 }

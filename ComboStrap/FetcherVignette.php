@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpComposerExtensionStubsInspection */
 
 namespace ComboStrap;
 
@@ -107,8 +107,8 @@ class FetcherVignette extends FetcherImage
              */
             $margin = 80;
             $x = $margin;
-            $normalFont = Font::getLiberationSansFontRegularPath()->toPathString();
-            $boldFont = Font::getLiberationSansFontBoldPath()->toPathString();
+            $normalFont = Font::getLiberationSansFontRegularPath()->toQualifiedId();
+            $boldFont = Font::getLiberationSansFontBoldPath()->toQualifiedId();
             try {
                 $mutedRgb = ColorRgb::createFromString("gray");
                 $blackGdColor = imagecolorallocate($vignetteImageHandler, 0, 0, 0);
@@ -216,11 +216,11 @@ class FetcherVignette extends FetcherImage
             switch ($extension) {
                 case self::PNG_EXTENSION:
                     imagetruecolortopalette($vignetteImageHandler, false, 255);
-                    imagepng($vignetteImageHandler, $cache->getFile()->toPathString());
+                    imagepng($vignetteImageHandler, $cache->getFile()->toQualifiedId());
                     break;
                 case self::JPG_EXTENSION:
                 case self::JPEG_EXTENSION:
-                    imagejpeg($vignetteImageHandler, $cache->getFile()->toPathString());
+                    imagejpeg($vignetteImageHandler, $cache->getFile()->toQualifiedId());
                     break;
                 case self::WEBP_EXTENSION:
                     /**
@@ -229,7 +229,7 @@ class FetcherVignette extends FetcherImage
                      * Fatal error: Palette image not supported by webp
                      * `
                      */
-                    imagewebp($vignetteImageHandler, $cache->getFile()->toPathString());
+                    imagewebp($vignetteImageHandler, $cache->getFile()->toQualifiedId());
                     break;
                 default:
                     LogUtility::internalError("The possible mime error should have been caught in the setter");
@@ -271,12 +271,12 @@ class FetcherVignette extends FetcherImage
 
         switch ($extension) {
             case self::PNG_EXTENSION:
-                return imagecreatefrompng($imagePath->toPathString());
+                return imagecreatefrompng($imagePath->toQualifiedId());
             case self::JPG_EXTENSION:
             case self::JPEG_EXTENSION:
-                return imagecreatefromjpeg($imagePath->toPathString());
+                return imagecreatefromjpeg($imagePath->toQualifiedId());
             case self::WEBP_EXTENSION:
-                return imagecreatefromwebp($imagePath->toPathString());
+                return imagecreatefromwebp($imagePath->toQualifiedId());
             default:
                 throw new ExceptionNotFound("Bad mime should have been caught by the setter");
         }

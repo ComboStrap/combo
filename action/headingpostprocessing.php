@@ -86,7 +86,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             case "show":
                 $runningMarkup = WikiPath::createExecutingMarkupWikiPath();
                 $requestedPath = WikiPath::createRequestedPagePathFromRequest();
-                if ($requestedPath->toPathString() !== $runningMarkup->toPathString()) {
+                if ($requestedPath->toQualifiedId() !== $runningMarkup->toQualifiedId()) {
                     return;
                 }
                 $callStack = CallStack::createFromHandler($handler);

@@ -61,7 +61,15 @@ trait FetcherTraitWikiPath
             $drive = $tagAttributes->getValueAndRemove(WikiPath::DRIVE_ATTRIBUTE, $defaultDrive);
             $rev = $tagAttributes->getValueAndRemove(WikiPath::REV_ATTRIBUTE);
             $path = WikiPath::toValidAbsolutePath($id);
-            $wikiPath = WikiPath::createFromPath($path, $drive, $rev);
+            if($drive==WikiPath::MARKUP_DRIVE){
+                /**
+                 * Markup id have by default a txt extension
+                 * but they may have other
+                 */
+                $wikiPath = WikiPath::createMarkupPathFromPath($path, $rev);
+            } else {
+                $wikiPath = WikiPath::createFromPath($path, $drive, $rev);
+            }
 
             $this->setSourcePath($wikiPath);
         }

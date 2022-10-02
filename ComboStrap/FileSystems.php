@@ -292,7 +292,7 @@ class FileSystems
     {
         $sourceLocal = LocalPath::createFromPathObject($source);
         $destinationLocal = LocalPath::createFromPathObject($destination);
-        copy($sourceLocal->toPathString(), $destinationLocal->toPathString());
+        copy($sourceLocal->toQualifiedId(), $destinationLocal->toQualifiedId());
 
         // D:\dokuwiki\lib\plugins\combo\_test\resources\bootstrapLocal.json
     }

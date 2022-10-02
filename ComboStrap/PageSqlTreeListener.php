@@ -355,7 +355,7 @@ where
 EOF;
 
                         if ($this->requestedPage !== null) {
-                            $this->parameters[] = $this->requestedPage->getPathObject()->toPathString();
+                            $this->parameters[] = $this->requestedPage->getPathObject()->toQualifiedId();
                         } else {
                             LogUtility::msg("The page is unknown. A Page SQL with backlinks should be asked within a page request scope.", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
                             $this->parameters[] = "unknown page";

@@ -161,22 +161,23 @@ class MarkupCacheDependencies
                 $htmlDocument = $secondarySlot->getHtmlFetcher();
                 try {
                     $cacheDependencies = $htmlDocument->getCacheDependencies();
+
+                    if ($cacheDependencies->hasDependency($dependency)) {
+                        $link = PluginUtility::getDocumentationHyperLink("cache:slot", "Slot Dependency", false);
+                        $message = "$link ($dependency) was met with the primary slot ($path).";
+                        CacheLog::deleteCacheIfExistsAndLog(
+                            $htmlDocument,
+                            $event,
+                            $message
+                        );
+                        CacheLog::renderCacheAndLog(
+                            $htmlDocument,
+                            $event,
+                            $message
+                        );
+                    }
                 } finally {
                     $htmlDocument->close();
-                }
-                if ($cacheDependencies->hasDependency($dependency)) {
-                    $link = PluginUtility::getDocumentationHyperLink("cache:slot", "Slot Dependency", false);
-                    $message = "$link ($dependency) was met with the primary slot ($path).";
-                    CacheLog::deleteCacheIfExistsAndLog(
-                        $htmlDocument,
-                        $event,
-                        $message
-                    );
-                    CacheLog::renderCacheAndLog(
-                        $htmlDocument,
-                        $event,
-                        $message
-                    );
                 }
             }
         } finally {
@@ -211,13 +212,13 @@ class MarkupCacheDependencies
             case MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY:
                 try {
                     $parentPath = $requestedPage->getPathObject()->getParent();
-                    return $parentPath->toPathString();
+                    return $parentPath->toQualifiedId();
                 } catch (ExceptionNotFound $e) {
                     // root
                     return ":";
                 }
             case MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY:
-                return $requestedPage->getPathObject()->toPathString();
+                return $requestedPage->getPathObject()->toQualifiedId();
             default:
                 throw new ExceptionCompile("The requested dependency value ($dependenciesValue) has no calculation");
         }
@@ -294,10 +295,10 @@ class MarkupCacheDependencies
     function getDefaultKey(): string
     {
         try {
-            $keyDokuWikiCompliant = str_replace("\\", "/", LocalPath::createFromPathObject($this->pathFragment)->toPathString());
+            $keyDokuWikiCompliant = str_replace("\\", "/", LocalPath::createFromPathObject($this->pathFragment)->toQualifiedId());
         } catch (ExceptionBadArgument $e) {
             LogUtility::warning("Error while getting the dokuwiki compliant key. Error: " . $e->getMessage());
-            $keyDokuWikiCompliant = $this->pathFragment->toPathString();
+            $keyDokuWikiCompliant = $this->pathFragment->toQualifiedId();
         }
         return $keyDokuWikiCompliant . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
     }
@@ -376,8 +377,8 @@ class MarkupCacheDependencies
         }
         $slotLocalFilePath = $localPath
             ->toAbsolutePath()
-            ->toPathString();
-        $this->dependenciesCacheStore = new CacheParser($shorterPath->toPathString(), $slotLocalFilePath, "deps.json");
+            ->toQualifiedId();
+        $this->dependenciesCacheStore = new CacheParser($shorterPath->toQualifiedId(), $slotLocalFilePath, "deps.json");
         return $this->dependenciesCacheStore;
     }
 

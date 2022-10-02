@@ -27,6 +27,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     private MarkupPath $requestedMarkupPath;
     private string $requestedLayoutName;
     private PageLayout $pageLayout;
+    private FetcherCache $fetcherCache;
 
 
     public static function createPageFetcherFromRequestedPage(): FetcherPage
@@ -118,7 +119,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
         $this->buildObjectIfNeeded();
 
-        $cache = FetcherCache::createFrom($this)
+        $cache = $this->fetcherCache
             ->addFileDependency($this->pageLayout->getCssPath())
             ->addFileDependency($this->pageLayout->getJsPath())
             ->addFileDependency($this->pageLayout->getHtmlTemplatePath());
@@ -137,13 +138,13 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         try {
 
             /**
-             * The {@link FetcherMarkup::getFetchPath() Get fetch path}
+             * The {@link FetcherMarkup::processIfNeededAndGetFetchPath() Get fetch path}
              * will start the rendering if there is no HTML path
              * or the cache is not fresh
              */
             $fetcherMainPageFragment = $mainFetcher->getMarkupFetcher();
             try {
-                $path = $fetcherMainPageFragment->getFetchPath();
+                $path = $fetcherMainPageFragment->processIfNeededAndGetFetchPath();
             } finally {
                 $fetcherMainPageFragment->close();
             }
@@ -167,7 +168,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
             try {
                 $fetcherPageFragment = $pageElement->getMarkupFetcher();
                 try {
-                    $cache->addFileDependency($fetcherPageFragment->getFetchPath());
+                    $cache->addFileDependency($fetcherPageFragment->processIfNeededAndGetFetchPath());
                 } finally {
                     $fetcherPageFragment->close();
                 }
@@ -251,6 +252,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
             }
             return;
         }
+        $this->fetcherCache = FetcherCache::createFrom($this);
         $this->build = true;
 
         /**
@@ -357,6 +359,12 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         } catch (ExceptionNotFound $e) {
             return PageLayoutName::createFromPage($this->getRequestedPage())->getValueOrDefault();
         }
+    }
+
+    public function getCachePath(): LocalPath
+    {
+        $this->buildObjectIfNeeded();
+        return $this->fetcherCache->getFile();
     }
 
 }

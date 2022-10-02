@@ -126,7 +126,7 @@ class WikiPath extends PathAbs
         $path = self::normalizeWikiPath($path);
 
         if (trim($path) === "") {
-            $path = WikiPath::getRequestedPagePath()->toPathString();
+            $path = WikiPath::getRequestedPagePath()->toQualifiedId();
         }
 
         /**
@@ -467,11 +467,11 @@ class WikiPath extends PathAbs
                 /**
                  * May be a symlink link
                  */
-                if (!is_link($drivePath->toPathString())) {
+                if (!is_link($drivePath->toQualifiedId())) {
                     continue;
                 }
                 try {
-                    $realPath = readlink($drivePath->toPathString());
+                    $realPath = readlink($drivePath->toQualifiedId());
                     $drivePath = LocalPath::createFromPathString($realPath);
                     $relativePath = $path->relativize($drivePath);
                 } catch (ExceptionBadArgument $e) {
@@ -479,7 +479,7 @@ class WikiPath extends PathAbs
                     continue;
                 }
             }
-            $wikiPath = $relativePath->toPathString();
+            $wikiPath = $relativePath->toQualifiedId();
             if (FileSystems::isDirectory($path)) {
                 WikiPath::addNamespaceEndSeparatorIfNotPresent($wikiPath);
             }
@@ -950,7 +950,7 @@ class WikiPath extends PathAbs
                     foreach ($this->getNames() as $name) {
                         $filePath = $filePath->resolve($name);
                     }
-                    $filePathString = $filePath->toPathString();
+                    $filePathString = $filePath->toQualifiedId();
                 }
                 break;
         }
@@ -962,7 +962,7 @@ class WikiPath extends PathAbs
     /**
      * @return string - the wiki path version
      */
-    function toPathString(): string
+    function toQualifiedId(): string
     {
         return self::NAMESPACE_SEPARATOR_DOUBLE_POINT . $this->getWikiId();
     }

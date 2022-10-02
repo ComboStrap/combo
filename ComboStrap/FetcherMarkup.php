@@ -250,7 +250,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         $slotLocalFilePath = $this->getRequestedPath()
             ->toLocalPath()
             ->toAbsolutePath()
-            ->toPathString();
+            ->toQualifiedId();
         $this->snippetCache = new CacheParser($id, $slotLocalFilePath, "snippet.json");
 
         /**
@@ -279,15 +279,36 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     }
 
     /**
-     *
+     * @return LocalPath the fetch path - start the process and returns a path. If the cache is on, return the {@link FetcherMarkup::getCachePath()}
      */
-    function getFetchPath(): Path
+    function processIfNeededAndGetFetchPath(): LocalPath
     {
-
         $this->buildObjectAndEnvironmentIfNeeded();
 
         if (!$this->shouldProcess()) {
             return $this->getCachePath();
+        }
+
+        $this->feedCache();
+
+        /**
+         * The cache path may have change due to the cache key rerouting
+         * We should there always use the {@link FetcherMarkup::getCachePath()}
+         * as fetch path
+         */
+        return $this->getCachePath();
+
+    }
+
+    /**
+     * @return IFetcher
+     */
+    public function feedCache(): IFetcher
+    {
+        $this->buildObjectAndEnvironmentIfNeeded();
+
+        if (!$this->shouldProcess()) {
+            return $this;
         }
 
         /**
@@ -298,7 +319,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             $markup = FileSystems::getContent($path);
         } catch (ExceptionNotFound $e) {
             $markup = "";
-            LogUtility::error("The path ($path) does not exist, we have set the markup to the empty string during rendering", self::CANONICAL);
+            LogUtility::error("The path ($path) does not exist, we have set the markup to the empty string during rendering. If you want to delete the cache path, ask it via the cache path function", self::CANONICAL);
         }
 
         $extension = $this->getMime()->getExtension();
@@ -370,14 +391,9 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          */
         $this->cache->storeCache($content);
 
-        /**
-         * The cache path may have change due to the cache key rerouting
-         * We should there always use the {@link FetcherMarkup::getCachePath()}
-         * as fetch path
-         */
-        return $this->getCachePath();
-
+        return $this;
     }
+
 
     function getBuster(): string
     {
@@ -494,7 +510,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             default:
                 $this->cache = new CacheRenderer($wikiId, $localFile, $extension);
 
-                $this->cacheDependencies = CacheManager::getFromContextExecution()
+                $this->cacheDependencies = ExecutionContext::getActualOrCreateFromEnv()
+                    ->getCacheManager()
                     ->getCacheDependenciesForPath($this->getRequestedPath());
                 $this->cacheDependencies->rerouteCacheDestination($this->cache);
                 break;
@@ -505,7 +522,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public function __toString()
     {
-        return $this->getRequestedPath() . $this->getMime()->toString();
+        return parent::__toString() . " (" . $this->getRequestedPath() . $this->getMime()->toString() . ")";
     }
 
 
@@ -542,7 +559,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public function getFetchPathAsInstructionsArray()
     {
         try {
-            $contents = FileSystems::getContent($this->getFetchPath());
+            $contents = FileSystems::getContent($this->processIfNeededAndGetFetchPath());
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntimeInternal("The fetch path was not found but should be present", self::CANONICAL, 1, $e);
         }
@@ -550,9 +567,17 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     }
 
 
+    /**
+     * @return LocalPath - the cache path is where the result is stored if the cache is on
+     * The cache path may have change due to the cache key rerouting
+     * We should there always use the {@link FetcherMarkup::getCachePath()}
+     * as fetch path
+     */
     public function getCachePath(): LocalPath
     {
-        $this->buildObjectAndEnvironmentIfNeeded();
+        if (!$this->objectHasBeenBuild) {
+            $this->buildObjectAndEnvironmentIfNeeded();
+        }
         $path = $this->cache->cache;
         return LocalPath::createFromPathString($path);
     }
@@ -560,6 +585,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public function getCacheDependencies(): MarkupCacheDependencies
     {
+        $this->buildObjectAndEnvironmentIfNeeded();
         return $this->cacheDependencies;
     }
 
@@ -578,7 +604,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     public function getFetchString(): string
     {
-        $path = $this->getFetchPath();
+        $path = $this->processIfNeededAndGetFetchPath();
         try {
             $text = FileSystems::getContent($path);
         } catch (ExceptionNotFound $e) {

@@ -25,7 +25,7 @@ class CacheReportHtmlDataBlockArray
      */
     public static function getFromContext(): array
     {
-        $cacheManager = CacheManager::getFromContextExecution();
+        $cacheManager = ExecutionContext::getActualOrCreateFromEnv()->getCacheManager();
         $cacheReporters = $cacheManager->getCacheResults();
         if ($cacheReporters === null) {
             return [];
@@ -50,18 +50,25 @@ class CacheReportHtmlDataBlockArray
                  * If this is not a wiki path, we try to transform it as wiki path
                  * to get a shorter path (ie id) in the report
                  */
-                if(!($sourcePath instanceof WikiPath)) {
+                if (!($sourcePath instanceof WikiPath)) {
                     try {
                         $sourcePath = WikiPath::createFromPathObject($sourcePath);
                     } catch (ExceptionBadArgument $e) {
                         // could not be transformed as wiki path (missing a drive)
                     }
                 }
-                $cacheFile = $result->getPath()->toPathString();
+                $cacheFile = $result->getPath();
+                try {
+                    $cacheFile = $cacheFile->toWikiPath();
+                } catch (ExceptionBadArgument $e) {
+                    LogUtility::error("Cache reporter: The cache file could not be transformed as a wiki path. Error: " . $e->getMessage());
+                }
+
+
                 $data = [
                     self::RESULT_STATUS => $result->getResult(),
                     self::DATE_MODIFIED => $modifiedDate,
-                    self::CACHE_FILE => $cacheFile
+                    self::CACHE_FILE => $cacheFile->toQualifiedId()
                 ];
 
                 if ($mode === FetcherMarkup::XHTML_MODE) {
@@ -71,7 +78,7 @@ class CacheReportHtmlDataBlockArray
                     $data[self::DEPENDENCY_ATT] = $dependencies;
                 }
 
-                $htmlDataBlock[$sourcePath->toPathString()][$mode] = $data;
+                $htmlDataBlock[$sourcePath->toQualifiedId()][$mode] = $data;
 
             }
 

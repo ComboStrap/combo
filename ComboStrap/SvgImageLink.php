@@ -240,7 +240,7 @@ class SvgImageLink extends ImageLink
              * Svg tag
              */
             try {
-                $fetchPath = $this->mediaMarkup->getFetcher()->getFetchPath();
+                $fetchPath = $this->mediaMarkup->getFetcher()->processIfNeededAndGetFetchPath();
                 $imgHTML = FileSystems::getContent($fetchPath);
             } catch (ExceptionNotFound $e) {
                 LogUtility::error("Unable to include the svg in the document. Error: {$e->getMessage()}");

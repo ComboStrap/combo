@@ -92,11 +92,25 @@ interface IFetcher
     public function getRequestedCache(): string;
 
     /**
+     * @return LocalPath - the cache if any
+     * @throws ExceptionNotSupported
+     */
+    public function getCachePath(): LocalPath;
+
+    /**
      * @return string - an unique name that is added in the fetcher key of the URL
      *
      * Note that because dokuwiki does a sanitizing on the do custom action.
      * The name should not have any space or separator (What fuck up is fucked up)
      */
     public function getFetcherName(): string;
+
+
+    /**
+     * @return IFetcher - process and feed the cache
+     * @throws ExceptionNotSupported - if the cache is not supported
+     */
+    public function feedCache(): IFetcher;
+
 
 }

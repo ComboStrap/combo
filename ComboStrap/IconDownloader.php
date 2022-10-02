@@ -268,7 +268,7 @@ class IconDownloader
     function isInIconDirectory(Path $path): bool
     {
         $iconNameSpace = Site::getConfValue(IconDownloader::CONF_ICONS_MEDIA_NAMESPACE, IconDownloader::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
-        if (strpos($path->toPathString(), $iconNameSpace) !== false) {
+        if (strpos($path->toQualifiedId(), $iconNameSpace) !== false) {
             return true;
         }
         return false;
@@ -482,7 +482,7 @@ class IconDownloader
             ErrorHandler::restore();
         }
 
-        $numberOfByte = file_put_contents($mediaDokuPath->toLocalPath()->toAbsolutePath()->toPathString(), $filePointer);
+        $numberOfByte = file_put_contents($mediaDokuPath->toLocalPath()->toAbsolutePath()->toQualifiedId(), $filePointer);
         if ($numberOfByte != false) {
             LogUtility::msg("The icon ($this) from the library ($library) was downloaded to ($mediaDokuPath)", LogUtility::LVL_MSG_INFO, Icon::ICON_CANONICAL_NAME);
         } else {

@@ -36,7 +36,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
          */
         try {
             $pageHeaderSlotName = Site::getPageHeaderSlotName();
-            if ($page->getPathObject()->toPathString() === ":$pageHeaderSlotName") {
+            if ($page->getPathObject()->toQualifiedId() === ":$pageHeaderSlotName") {
                 $pageHeaderPath = PageLayoutElement::getDefaultElementContentPath(PageLayout::PAGE_HEADER_ELEMENT);
                 try {
                     $event->data["tpl"] = FileSystems::getContent($pageHeaderPath);
@@ -56,7 +56,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
          */
         try {
             $pageFooterSlotName = Site::getPageFooterSlotName();
-            if ($page->getPathObject()->toPathString() === ":$pageFooterSlotName") {
+            if ($page->getPathObject()->toQualifiedId() === ":$pageFooterSlotName") {
                 $pageFooterPath = PageLayoutElement::getDefaultElementContentPath(PageLayout::PAGE_FOOTER_ELEMENT);
                 try {
                     $event->data["tpl"] = FileSystems::getContent($pageFooterPath);

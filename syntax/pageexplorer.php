@@ -598,7 +598,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 // Namespace
                                 if (!($namespaceInstructions === null && $namespaceAttributes !== null)) {
                                     try {
-                                        $subNamespacePage = MarkupPath::getIndexPageFromNamespace($subNamespacePath->toPathString());
+                                        $subNamespacePage = MarkupPath::getIndexPageFromNamespace($subNamespacePath->toQualifiedId());
                                     } catch (ExceptionBadSyntax $e) {
                                         LogUtility::msg("Bad syntax for the namespace $namespacePath. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                                         return false;
@@ -854,7 +854,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
             // Button label
 
-            $subHomePage = MarkupPath::getIndexPageFromNamespace($containerPath->toPathString());
+            $subHomePage = MarkupPath::getIndexPageFromNamespace($containerPath->toQualifiedId());
             if ($subHomePage->exists()) {
                 if ($namespaceInstructions !== null) {
                     try {

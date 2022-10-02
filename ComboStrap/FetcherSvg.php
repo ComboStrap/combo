@@ -618,7 +618,7 @@ class FetcherSvg extends IFetcherLocalImage
     {
 
         try {
-            $dokuPath = FetcherRawLocalPath::createEmpty()->buildFromUrl($url)->getFetchPath();
+            $dokuPath = FetcherRawLocalPath::createEmpty()->buildFromUrl($url)->processIfNeededAndGetFetchPath();
         } catch (ExceptionBadArgument $e) {
             return false;
         }
@@ -1112,7 +1112,7 @@ class FetcherSvg extends IFetcherLocalImage
                  */
                 try {
                     $path = $this->getSourcePath();
-                    $pathString = $path->toAbsolutePath()->toPathString();
+                    $pathString = $path->toAbsolutePath()->toQualifiedId();
                     if (
                         preg_match("/carbon|eva/i", $pathString) === 1
                     ) {
@@ -1614,4 +1614,7 @@ class FetcherSvg extends IFetcherLocalImage
             throw new ExceptionBadSyntax("The media width ($width) of the svg image ($this) is not a valid integer value");
         }
     }
+
+
+
 }

@@ -11,7 +11,7 @@ namespace ComboStrap;
  *
  * For the path operations, see {@link FileSystems}
  *
- * The {@link Path::toPathString()} function is just the path part (no other URI query parameters)
+ * The {@link Path::toQualifiedId()} function is just the path part (no other URI query parameters)
  *
  * A lot of overlap with {@link Url}
  */
@@ -55,7 +55,7 @@ interface Path
      * This is the path element for all others
      * It's used mostly in reporting as common name
      */
-    function toPathString(): string;
+    function toQualifiedId(): string;
 
     /**
      * @return string the uri string representation of this path (with all information, drive, attributes)

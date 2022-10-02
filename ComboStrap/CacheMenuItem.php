@@ -68,7 +68,7 @@ class CacheMenuItem extends AbstractItem
     public function getSvg(): string
     {
         /** @var string icon file */
-        return DirectoryLayout::getComboImagesDirectory()->resolve('mdi-cache.svg')->toPathString();
+        return DirectoryLayout::getComboImagesDirectory()->resolve('mdi-cache.svg')->toQualifiedId();
     }
 
 

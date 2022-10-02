@@ -46,6 +46,10 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
      * @param $event
      * @throws Exception
      * @link https://www.dokuwiki.org/devel:event:io_wikipage_write
+     *
+     * On update to an existing page this event is called twice, once for the transfer of the old version to the attic
+     * (rev will have a value)
+     * and once to write the new version of the page into the wiki (rev is false)
      */
     function createFileSystemMutation($event)
     {
@@ -76,7 +80,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
                 action_plugin_combo_pagesystemmutation::PAGE_SYSTEM_MUTATION_EVENT_NAME,
                 [
                     self::TYPE_ATTRIBUTE => self::TYPE_CREATION,
-                    PagePath::getPersistentName() => $file->toWikiPath()->toPathString()
+                    PagePath::getPersistentName() => $file->toWikiPath()->toQualifiedId()
                 ]
             );
             return;
@@ -88,7 +92,8 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
          *
          * ```
          * Page deletion may be detected by checking for empty page content.
-         * On update to an existing page this event is called twice, once for the transfer of the old version to the attic (rev will have a value)
+         * On update to an existing page this event is called twice, once for the transfer
+         * of the old version to the attic (rev will have a value)
          * and once to write the new version of the page into the wiki (rev is false)
          * ```
          * From https://www.dokuwiki.org/devel:event:io_wikipage_write
@@ -103,7 +108,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
                     action_plugin_combo_pagesystemmutation::PAGE_SYSTEM_MUTATION_EVENT_NAME,
                     [
                         self::TYPE_ATTRIBUTE => self::TYPE_DELETION,
-                        PagePath::getPersistentName() => $file->toWikiPath()->toPathString()
+                        PagePath::getPersistentName() => $file->toWikiPath()->toQualifiedId()
                     ]
                 );
             }

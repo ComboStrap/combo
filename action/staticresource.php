@@ -123,7 +123,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
 
             $fetcher = FetcherSystem::createPathFetcherFromUrl($fetchUrl);
             $fetchPath = $fetcher->getFetchPath();
-            $event->data['file'] = $fetchPath->toPathString();
+            $event->data['file'] = $fetchPath->toQualifiedId();
             $event->data['status'] = HttpResponseStatus::ALL_GOOD;
             $mime = $fetcher->getMime();
             $event->data["mime"] = $mime->toString();
@@ -139,7 +139,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         } catch (\Exception $e) {
 
             $httpResponse = HttpResponse::createFromException($e);
-            $event->data['file'] = WikiPath::createComboResource("images:error-bad-format.svg")->toLocalPath()->toAbsolutePath()->toPathString();
+            $event->data['file'] = WikiPath::createComboResource("images:error-bad-format.svg")->toLocalPath()->toAbsolutePath()->toQualifiedId();
             $event->data['statusmessage'] = $e->getMessage();
             $event->data['status'] = $httpResponse->getStatus();
 
@@ -309,12 +309,12 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Use x-sendfile header to pass the delivery to compatible web servers
          * (Taken over from SendFile)
          */
-        http_sendfile($mediaToSend->toAbsolutePath()->toPathString());
+        http_sendfile($mediaToSend->toAbsolutePath()->toQualifiedId());
 
         /**
          * Send the file
          */
-        $filePointer = @fopen($mediaToSend->toAbsolutePath()->toPathString(), "rb");
+        $filePointer = @fopen($mediaToSend->toAbsolutePath()->toQualifiedId(), "rb");
         if ($filePointer) {
             http_rangeRequest($filePointer, FileSystems::getSize($mediaToSend), $mime->toString());
             /**

@@ -112,7 +112,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
                 try {
                     $path = $link->getPath();
                     $ref = Reference::createFromResource($page)
-                        ->buildFromStoreValue($path->toPathString());
+                        ->buildFromStoreValue($path->toQualifiedId());
                     $references->addRow([$ref]);
                 } catch (ExceptionNotFound $e) {
                     // no local path ok

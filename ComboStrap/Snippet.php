@@ -700,7 +700,7 @@ class Snippet implements JsonSerializable
     {
 
         $dataToSerialize = [
-            self::JSON_PATH_PROPERTY => $this->getPath()->toPathString(),
+            self::JSON_PATH_PROPERTY => $this->getPath()->toQualifiedId(),
             self::JSON_DRIVE_PROPERTY => $this->getPath()->getDrive()
         ];
 

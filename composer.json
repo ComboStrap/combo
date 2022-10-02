@@ -8,6 +8,7 @@
         "carica/phpcss": "^2.0",
         "ext-dom": "*",
         "ext-json": "*",
+        "ext-gd2": "*",
         "antlr/antlr4-php-runtime": "0.5.1",
         "php-webdriver/webdriver": "^1.12"
     },

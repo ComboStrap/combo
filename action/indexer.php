@@ -39,7 +39,11 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
 
         $controller->register_hook('INDEXER_TASKS_RUN', 'AFTER', $this, 'handle_async_event', array());
 
-        $controller->register_hook('INDEXER_TASKS_RUN', 'BEFORE', $this, 'handle_markup_extension', array());
+        /**
+         * We support other extension for markup
+         * but dokuwiki does not index other extension
+         * in {@link idx_addPage} (page is the id)
+         */
 
     }
 
@@ -106,18 +110,7 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
 
     }
 
-    /**
-     * We support other extension for markup
-     */
-    public function handle_markup_extension(Doku_Event $event, $param)
-    {
 
-        throw new ExceptionRuntimeInternal("To implements");
-
-
-
-
-    }
 
 
 }

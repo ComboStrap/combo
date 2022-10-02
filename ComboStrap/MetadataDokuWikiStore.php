@@ -87,7 +87,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             $executionCachedStores = [];
             $context->setRuntimeObject(self::CANONICAL, $stores);
         }
-        $path = $resourceCombo->getPathObject()->toPathString();
+        $path = $resourceCombo->getPathObject()->toQualifiedId();
         if (isset($executionCachedStores[$path])) {
             return $executionCachedStores[$path];
         }

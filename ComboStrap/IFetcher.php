@@ -3,16 +3,26 @@
 namespace ComboStrap;
 
 /**
- * A class that returns {@link IFetcher::getFetchPath() a path}
  *
- * It represents a fetch file and possible processing attributes
+ *
+ * A class that returns
+ *
+ * It represents a fetch of:
+ *   * a {@link IFetcherPath::getFetchPath() file}
+ *   * or {@link IFetcherString::getFetchString() string}
  *
  * Example
- *   * svg file if the requested image width is set, it will generate it
+ *   * serving a svg file with different request properties (if the requested image width is set, it will generate a new svg from the source)
  *
  * The request may come from:
  *   * a {@link IFetcher::buildFromUrl() URL}
  *   * a {@link IFetcher::buildFromTagAttributes() attributes}
+ *
+ * TODO: The handler/fetcher should also be able to be call in a process function
+ *   passing the the {@link ExecutionContext} and pass it the result (a string or a file or whatever)
+ *   you get then a functional interface (Then we don't need to know the returned type
+ *   and the interface {@link IFetcherPath} and {@link IFetcherString} are not needed
+ *   we could also add a function that could cast the result
  *
  * The hierarchy is {@link Mime} based.
  *
@@ -24,7 +34,6 @@ namespace ComboStrap;
  *     * {@link FetcherScreenshot} that returns a snapshot image from a page
  *   * {@link FetcherRawLocalPath} that returns all type of local file without processing
  *
-
  */
 interface IFetcher
 {

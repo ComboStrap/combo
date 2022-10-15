@@ -236,13 +236,16 @@ class SvgImageLink extends ImageLink
 
         } else {
 
-            /**
-             * Svg tag
-             */
+
             try {
-                $fetchPath = $this->mediaMarkup->getFetcher()->processIfNeededAndGetFetchPath();
+                /**
+                 * Svg tag
+                 * @var FetcherSvg $fetcherSvg
+                 */
+                $fetcherSvg = $this->mediaMarkup->getFetcher();
+                $fetchPath = $fetcherSvg->getFetchPath();
                 $imgHTML = FileSystems::getContent($fetchPath);
-            } catch (ExceptionNotFound $e) {
+            } catch (ExceptionNotFound|ExceptionBadArgument|ExceptionBadState|ExceptionBadSyntax|ExceptionCompile $e) {
                 LogUtility::error("Unable to include the svg in the document. Error: {$e->getMessage()}");
                 $imgHTML = $this->createImgHTMLTag();
             }

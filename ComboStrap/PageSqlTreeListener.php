@@ -363,9 +363,13 @@ EOF;
                         break;
                     case self::DESCENDANTS:
                         if ($this->requestedPage !== null) {
-                            $query = $this->requestedPage->getPathObject()->getParent()->resolve("%")->toPathString();
-                            $this->parameters[] = $query;
-                            $this->parameters[] = PageLevel::createForPage($this->requestedPage)->getValue();
+                            try {
+                                $query = $this->requestedPage->getPathObject()->getParent()->resolve("%")->toQualifiedId();
+                                $this->parameters[] = $query;
+                                $this->parameters[] = PageLevel::createForPage($this->requestedPage)->getValue();
+                            } catch (ExceptionNotFound $e) {
+                                // root
+                            }
                         } else {
                             LogUtility::msg("The page is unknown. A Page SQL with a depth attribute should be asked within a page request scope. The start depth has been set to 0", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
                             $this->parameters[] = 0;

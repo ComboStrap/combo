@@ -433,18 +433,19 @@ class FetcherSvg extends IFetcherLocalImage
     /**
      * @return string
      * @throws ExceptionBadArgument
+     * @throws ExceptionBadState
      * @throws ExceptionBadSyntax
+     * @throws ExceptionCompile
      * @throws ExceptionNotFound
      */
     public function processAndGetMarkup(): string
     {
 
-
-        return $this->process()
-            ->getMarkup();
+        return $this->process()->getMarkup();
 
 
     }
+    
 
     /**
      * @throws ExceptionBadState - if no svg was set to be processed
@@ -545,7 +546,9 @@ class FetcherSvg extends IFetcherLocalImage
      * from cache if possible. Used when making a fetch with the URL
      * @return LocalPath
      * @throws ExceptionBadArgument
+     * @throws ExceptionBadState
      * @throws ExceptionBadSyntax - the file is not a svg file
+     * @throws ExceptionCompile
      * @throws ExceptionNotFound - the file was not found
      */
     public function getFetchPath(): LocalPath
@@ -1614,7 +1617,6 @@ class FetcherSvg extends IFetcherLocalImage
             throw new ExceptionBadSyntax("The media width ($width) of the svg image ($this) is not a valid integer value");
         }
     }
-
 
 
 }

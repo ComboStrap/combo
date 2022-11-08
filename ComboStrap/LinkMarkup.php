@@ -323,10 +323,11 @@ EOF;
                         $className = StyleUtility::addComboStrapSuffix(PagePublicationDate::LATE_PUBLICATION_CLASS_PREFIX_NAME);
                         $outputAttributes->addClassName($className);
                         if (PagePublicationDate::isLatePublicationProtectionEnabled()) {
-                            $acronym = PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM;
+                            $outputAttributes->removeOutputAttributeIfPresent(PageProtection::DATA_PP_LINK);
+                            $outputAttributes->removeOutputAttributeIfPresent(PageProtection::DATA_PP_SOURCE);
+                            $outputAttributes->addOutputAttributeValue(PageProtection::DATA_PP_LINK, PageProtection::PAGE_PROTECTION_LINK_LOGIN);
                             $lowerCaseLatePublicationAcronym = strtolower(PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM);
-                            $outputAttributes->addOutputAttributeValue("data-$pageProtectionAcronym-link", PageProtection::PAGE_PROTECTION_LINK_LOGIN);
-                            $outputAttributes->addOutputAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLatePublicationAcronym);
+                            $outputAttributes->addOutputAttributeValue(PageProtection::DATA_PP_SOURCE, $lowerCaseLatePublicationAcronym);
                             PageProtection::addPageProtectionSnippet();
                         }
 

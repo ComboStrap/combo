@@ -6,6 +6,9 @@ namespace ComboStrap;
 use Doku_Renderer_xhtml;
 use syntax_plugin_combo_code;
 
+/**
+ * Concurrent: https://highlightjs.org/ used by remark powerpoint
+ */
 class Prism
 {
 

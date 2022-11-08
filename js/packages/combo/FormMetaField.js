@@ -454,7 +454,9 @@ export default class FormMetaField {
                 case FormMetaField.JSON:
                     htmlTag = "textarea";
                     if (value !== null) {
-                        value = JSON.stringify(JSON.parse(value), null, 2);
+                        if(typeof value === 'object'){
+                            value = JSON.stringify(value, null, 2);
+                        }
                         value = Html.toEntities(value);
                         htmlValue = `${value}`;
                     }

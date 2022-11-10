@@ -75,7 +75,7 @@ class Canonical extends MetadataWikiPath
         /**
          * Takes the last names part
          */
-        $namesOriginal = $this->getResource()->getPathObject()->getNames();
+        $namesOriginal = $this->getResource()->getPathObject()->getNamesWithoutExtension();
         /**
          * Delete the identical names at the end
          * To resolve this problem

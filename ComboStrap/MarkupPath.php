@@ -27,7 +27,7 @@ use renderer_plugin_combo_analytics;
  *   * we can then accepts also {@link LocalPath}
  *
  */
-class MarkupPath implements ResourceCombo, Path
+class MarkupPath extends PathAbs implements ResourceCombo, Path
 {
 
     const CANONICAL_PAGE = "markup";
@@ -2163,7 +2163,7 @@ class MarkupPath implements ResourceCombo, Path
         return $this->uidObject;
     }
 
-    function getExtension()
+    function getExtension(): string
     {
         return $this->path->getExtension();
     }

@@ -43,6 +43,25 @@ abstract class PathAbs implements Path
         return pathinfo($lastName, PATHINFO_FILENAME);
     }
 
+    /**
+     *
+     */
+    public function getNamesWithoutExtension()
+    {
+        $names = $this->getNames();
+        $sizeof = sizeof($names);
+        if ($sizeof == 0) {
+            return $names;
+        }
+        $lastName = $names[$sizeof - 1];
+        $index = strrpos($lastName, ".");
+        if ($index === false) {
+            return $names;
+        }
+        $names[$sizeof - 1] = substr($lastName, 0,$index);
+        return $names;
+    }
+
     public function __toString()
     {
         return $this->toUriString();

@@ -41,7 +41,15 @@ interface Path
      */
     function getLastName(): string;
 
+    /**
+     * @return mixed - the names are the words between the separator
+     */
     function getNames();
+
+    /**
+     * @return mixed - the names but without the extension
+     */
+    function getNamesWithoutExtension();
 
     /**
      * @return Path

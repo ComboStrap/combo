@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\ExceptionCombo;
+use ComboStrap\Identity;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TplUtility;
@@ -19,7 +20,16 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 
     function register(Doku_Event_Handler $controller)
     {
+        /**
+         * To serve fragment
+         */
         $controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE', $this, '_ajax_call');
+
+        /**
+         * To enforce security
+         */
+        $controller->register_hook('COMMON_WIKIPAGE_SAVE', 'BEFORE', $this, '_enforceSecurity');
+
     }
 
     /**
@@ -73,7 +83,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
              * Html
              */
             $htmlBeforeHeads = '<!DOCTYPE html>' . DOKU_LF;
-            $htmlBeforeHeads .= '<html>' . DOKU_LF;
+            $htmlBeforeHeads .= '<html lang="en">' . DOKU_LF;
             $htmlBeforeHeads .= '<head>' . DOKU_LF;
             $htmlBeforeHeads .= "  <title>$title</title>" . DOKU_LF;
             // we echo because the tpl function just flush
@@ -123,9 +133,9 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
     /**
      * Dynamically called in the previous function
      * to delete the head
-     * @param $event
+     * * @param $event Doku_Event
      */
-    public function _delete_not_needed_headers(&$event)
+    public function _delete_not_needed_headers(Doku_Event &$event)
     {
         $data = &$event->data;
 
@@ -166,5 +176,27 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
         }
     }
 
+    /**
+     * @param $event Doku_Event https://www.dokuwiki.org/devel:event:common_wikipage_save
+     * @return void
+     */
+    function _enforceSecurity(Doku_Event &$event)
+    {
+
+        $data = $event->data;
+        $text = $data["newContent"];
+        $pattern = PluginUtility::getContainerTagPattern(syntax_plugin_combo_webcode::TAG);
+        $result = preg_match("/" . $pattern . "/ms", $text);
+        if ($result === 0) {
+            return;
+        }
+
+        $isAdmin = Identity::isAdmin();
+        $isMember = Identity::isMember("@" . action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME);
+        if (!($isAdmin || $isMember)) {
+            $event->preventDefault();
+        }
+
+    }
 
 }

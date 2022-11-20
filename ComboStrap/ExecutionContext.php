@@ -46,6 +46,7 @@ class ExecutionContext
 
     /**
      * All action (handler)
+     * That's what you will found in the `do` parameters
      */
     const SHOW_ACTION = "show";
     const EDIT_ACTION = "edit";
@@ -54,6 +55,10 @@ class ExecutionContext
     const DRAFT_ACTION = "draft";
     const SEARCH_ACTION = "search";
     const LOGIN_ACTION = "login";
+    const SAVE_ACTION = "save";
+    const DRAFT_DEL_ACTION = "draftdel";
+    const REDIRECT_ACTION = "redirect";
+
     // private actions does not render a page to be indexed
     // by a search engine
     const PRIVATES_ACTION = [
@@ -61,9 +66,13 @@ class ExecutionContext
         self::PREVIEW_ACTION,
         self::ADMIN_ACTION,
         self::DRAFT_ACTION,
+        self::DRAFT_DEL_ACTION,
         self::SEARCH_ACTION,
-        self::LOGIN_ACTION
+        self::LOGIN_ACTION,
+        self::SAVE_ACTION,
+        self::REDIRECT_ACTION
     ];
+
 
 
     /**

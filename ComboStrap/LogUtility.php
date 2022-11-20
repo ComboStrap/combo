@@ -73,7 +73,7 @@ class LogUtility
      * @param int $level - the level see LVL constant
      * @param string $canonical - the canonical
      */
-    public static function msg(string $message, int $level = self::LVL_MSG_ERROR, string $canonical = "support")
+    public static function msg(string $message, int $level = self::LVL_MSG_ERROR, string $canonical = "support", \Exception $e = null)
     {
 
         try {
@@ -100,13 +100,13 @@ class LogUtility
          * TODO: Make it a configuration ?
          */
         if ($level >= self::LVL_MSG_WARNING) {
-            self::log2file($message, $level, $canonical);
+            self::log2file($message, $level, $canonical, $e);
         }
 
         /**
          * If test, we throw an error
          */
-        self::throwErrorIfTest($level, $message);
+        self::throwErrorIfTest($level, $message, $e);
     }
 
     /**
@@ -118,8 +118,9 @@ class LogUtility
      * @param null|string $msg - may be null always this is the default if a variable is not initialized.
      * @param int $logLevel
      * @param null $canonical
+     * @param \Exception $e
      */
-    static function log2file(?string $msg, int $logLevel = self::LVL_MSG_ERROR, $canonical = null)
+    static function log2file(?string $msg, int $logLevel = self::LVL_MSG_ERROR, $canonical = null, \Exception $e = null)
     {
 
         try {
@@ -157,7 +158,7 @@ class LogUtility
             }
 
 
-            self::throwErrorIfTest($logLevel, $msg);
+            self::throwErrorIfTest($logLevel, $msg, $e);
 
 
         }
@@ -263,13 +264,20 @@ class LogUtility
         // TODO
     }
 
-    private static function throwErrorIfTest($level, $message)
+
+    /**
+     * @param $level
+     * @param $message
+     * @param $e - the original exception for chaining
+     * @return void
+     */
+    private static function throwErrorIfTest($level, $message, \Exception $e = null)
     {
         if (PluginUtility::isTest()
             && ($level >= self::$exceptionLevelOnTest)
             && self::$throwExceptionOnDevTest
         ) {
-            throw new LogException($message);
+            throw new LogException($message, $level, $e);
         }
     }
 
@@ -319,9 +327,15 @@ class LogUtility
         return $trace;
     }
 
-    public static function error(string $message, string $canonical = "support")
+    /**
+     * @param string $message the message
+     * @param string $canonical the page
+     * @param \Exception|null $e the original exception for trace chaining
+     * @return void
+     */
+    public static function error(string $message, string $canonical = "support", \Exception $e = null)
     {
-        self::msg($message, LogUtility::LVL_MSG_ERROR, $canonical);
+        self::msg($message, LogUtility::LVL_MSG_ERROR, $canonical, $e);
     }
 
     public static function warning(string $message, string $canonical = "support")

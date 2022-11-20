@@ -319,7 +319,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             $markup = FileSystems::getContent($path);
         } catch (ExceptionNotFound $e) {
             $markup = "";
-            LogUtility::error("The path ($path) does not exist, we have set the markup to the empty string during rendering. If you want to delete the cache path, ask it via the cache path function", self::CANONICAL);
+            LogUtility::error("The path ($path) does not exist, we have set the markup to the empty string during rendering. If you want to delete the cache path, ask it via the cache path function", self::CANONICAL, $e);
         }
 
         $extension = $this->getMime()->getExtension();

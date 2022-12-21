@@ -21,6 +21,8 @@ if (!defined('DOKU_INC')) die();
 
 /**
  * Separator: See: https://getwaves.io/
+ *
+ * * horizontal block are known as section in mjml
  */
 class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 {

@@ -38,7 +38,7 @@ class syntax_plugin_combo_hr extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        return 'normal';
     }
 
     function getAllowedTypes()
@@ -58,13 +58,12 @@ class syntax_plugin_combo_hr extends DokuWiki_Syntax_Plugin
          * HR is a void element and support both syntax
          * https://dev.w3.org/html5/html-author/#void-elements-0
          */
-        $this->Lexer->addSpecialPattern(PluginUtility::getEmptyTagPattern(self::TAG), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         $this->Lexer->addSpecialPattern(PluginUtility::getVoidElementTagPattern(self::TAG), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
 
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
         switch ($state) {

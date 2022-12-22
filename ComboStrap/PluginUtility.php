@@ -347,6 +347,12 @@ class PluginUtility
         return '<' . $tag . '(?=[/ ]{1})(?![^/]>)[^>]*\/>';
     }
 
+    public static function getEmptyTagPatternGeneral(): string
+    {
+
+        return self::getEmptyTagPattern("[\w-]+");
+    }
+
     /**
      * Just call this function from a class like that
      *     getTageName(get_called_class())
@@ -730,7 +736,7 @@ class PluginUtility
      * @return null|string - return the tag name or null if not found
      */
     public
-    static function getTag($match)
+    static function getTag($match): ?string
     {
 
         // Trim to start clean
@@ -738,11 +744,16 @@ class PluginUtility
 
         // Until the first >
         $pos = strpos($match, ">");
-        if ($pos == false) {
+        if (!$pos) {
             LogUtility::msg("The match does not contain any tag. Match: {$match}", LogUtility::LVL_MSG_ERROR);
             return null;
         }
         $match = substr($match, 0, $pos);
+
+        // if this is a empty tag with / at the end we delete it
+        if($match[strlen($match)-1]=="/"){
+            $match = substr($match, 0,-1);
+        }
 
         // Suppress the <
         if ($match[0] == "<") {

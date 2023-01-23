@@ -2,5 +2,6 @@
 a.link-interwiki:not(.btn) {
     background-repeat: no-repeat;
     background-position: 0 center;
-    padding: 0 0 0 18px;
+    padding: 0 0 0 1.4em;
+    background-size: 1.2em;
 }

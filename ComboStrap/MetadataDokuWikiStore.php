@@ -382,6 +382,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
 
     private function getFromWikiId($dokuwikiId, string $name, $default = null)
     {
+
         /**
          * Note that {@link p_get_metadata()} can trigger a rendering of the meta again
          * and it has a fucking cache
@@ -395,10 +396,17 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
          *
          * This variable is unset at the end function of {@link p_render_metadata()}
          */
+        if($dokuwikiId==null){
+            LogUtility::msg("MetadataDokuwWIkiStore: dokuwikiId should not be null");
+            return null;
+        }
         global $METADATA_RENDERERS;
-        $value = $METADATA_RENDERERS[$dokuwikiId][MetadataDokuWikiStore::PERSISTENT_METADATA][$name];
-        if ($value !== null) {
-            return $value;
+        $metadataRendererForWikiId = $METADATA_RENDERERS[$dokuwikiId];
+        if($metadataRendererForWikiId!=null) {
+            $value = $metadataRendererForWikiId[MetadataDokuWikiStore::PERSISTENT_METADATA][$name];
+            if ($value !== null) {
+                return $value;
+            }
         }
 
         /**

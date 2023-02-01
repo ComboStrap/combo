@@ -1,17 +1,18 @@
 <?php
 
-// implementation of
-// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/hr
+
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 // must be run within Dokuwiki
+use ComboStrap\HrTag;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
 
 /**
- * The empty pattern
+ * The empty pattern / void element
  */
 class syntax_plugin_combo_emptytag extends DokuWiki_Syntax_Plugin
 {
@@ -50,7 +51,8 @@ class syntax_plugin_combo_emptytag extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $this->Lexer->addSpecialPattern(PluginUtility::getEmptyTagPatternGeneral(), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $pattern = PluginUtility::getEmptyTagPatternGeneral();
+        $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
@@ -87,12 +89,13 @@ class syntax_plugin_combo_emptytag extends DokuWiki_Syntax_Plugin
             $tag = $data[PluginUtility::TAG];
             $attributes = $data[PluginUtility::ATTRIBUTES];
             $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-            switch ($tag){
-                case syntax_plugin_combo_hr::TAG:
-                    $renderer->doc .= $tagAttributes->toHtmlEmptyTag($tag);
+            switch ($tag) {
+                case HrTag::TAG:
+                    $renderer->doc .= HrTag::render($tagAttributes);
                     break;
+                default:
+                    LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not process.");
             }
-
 
 
         }

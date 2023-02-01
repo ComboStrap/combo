@@ -128,7 +128,7 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                $defaults = [Hero::ATTRIBUTE=>"sm"];
+                $defaults = [Hero::ATTRIBUTE => "sm"];
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaults)
                     ->setLogicalTag(self::TAG);
 
@@ -143,9 +143,10 @@ class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
                     $tagAttributes->setComponentAttributeValue(Hero::ATTRIBUTE, $size);
                 }
 
+                $attributesArray = $tagAttributes->toCallStackArray();
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
+                    PluginUtility::ATTRIBUTES => $attributesArray,
                     self::HTML_TAG_ATTRIBUTES => $htmlTag
                 );
 

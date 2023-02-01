@@ -394,6 +394,7 @@ class TagAttributes
      */
     public function getStyle(): string
     {
+
         if (sizeof($this->styleDeclaration) === 0) {
             throw new ExceptionNotFound("No style");
         }

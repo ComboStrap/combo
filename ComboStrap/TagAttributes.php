@@ -383,9 +383,9 @@ class TagAttributes
 
     }
 
-    public function getClass()
+    public function getClass($default = null)
     {
-        return $this->getValue(self::CLASS_KEY);
+        return $this->getValue(self::CLASS_KEY, $default);
     }
 
     /**

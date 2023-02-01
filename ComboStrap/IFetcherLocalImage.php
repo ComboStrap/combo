@@ -12,8 +12,10 @@ abstract class IFetcherLocalImage extends FetcherImage implements IFetcherSource
 
     /**
      * @param WikiPath $path
-     * @return FetcherRaster|FetcherSvg
+     * @return IFetcherLocalImage
      * @throws ExceptionBadArgument - if the path is not an image
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
      */
     public static function createImageFetchFromPath(WikiPath $path): IFetcherLocalImage
     {

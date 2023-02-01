@@ -445,7 +445,7 @@ class FetcherSvg extends IFetcherLocalImage
 
 
     }
-    
+
 
     /**
      * @throws ExceptionBadState - if no svg was set to be processed

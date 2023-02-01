@@ -77,13 +77,13 @@ class LdJson extends MetadataJson
         $schemaImages = array();
         foreach ($imagesSet as $pageImage) {
 
-            $pageImagePath = $pageImage->getImagePath();
+            $pageImagePath = $pageImage->getSourcePath();
             $mime = $pageImagePath->getMime()->toString();
             if (in_array($mime, $supportedMime)) {
                 if (FileSystems::exists($pageImagePath)) {
                     try {
                         $fetcherPageImage = IFetcherLocalImage::createImageFetchFromPath($pageImagePath);
-                    } catch (ExceptionBadArgument $e) {
+                    } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
                         LogUtility::error("The image ($pageImagePath) could not be added as page image. Error: {$e->getMessage()}");
                         continue;
                     }

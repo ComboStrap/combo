@@ -1789,7 +1789,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     /**
      * @param array $usages
-     * @return PageImage[]
+     * @return IFetcherLocalImage[]
      */
     public
     function getImagesForTheFollowingUsages(array $usages): array
@@ -1799,7 +1799,16 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         foreach ($this->getPageMetadataImages() as $pageImage) {
             foreach ($usages as $usage) {
                 if (in_array($usage, $pageImage->getUsages())) {
-                    $images[] = $pageImage->getImagePath();
+                    $path = $pageImage->getImagePath();
+                    try {
+                        $images[] = IFetcherLocalImage::createImageFetchFromPath($path);
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::error(`The page image $path of the page $this is not an image`);
+                    } catch (ExceptionBadSyntax $e) {
+                        LogUtility::error(`The page image $path has a bad syntax`);
+                    } catch (ExceptionNotExists $e) {
+                        LogUtility::error(`The page image $path does not exists`);
+                    }
                     continue 2;
                 }
             }

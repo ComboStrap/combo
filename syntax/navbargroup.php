@@ -100,6 +100,20 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
 
     }
 
+    public function accepts($mode)
+    {
+
+        $accept = syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
+        // P element are not welcome in a navbar
+        if ($mode == "eol") {
+            $accept = false;
+        }
+
+        return $accept;
+
+    }
+
     public function postConnect()
     {
         $this->Lexer->addExitPattern('</' . self::TAG . '>', 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());

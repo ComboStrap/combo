@@ -162,20 +162,20 @@ class action_plugin_combo_metacanonical
     /**
      * @throws ExceptionComboNotFound
      */
-    private function getMetaArrayIndex(string $key, string $value, $metas)
+    private function getMetaArrayIndex(string $keyToSearch, string $keyValueToSearch, $metas)
     {
         // Search if the canonical property is already present
-        foreach ($metas as $key => $meta) {
-            if (array_key_exists($key, $meta)) {
+        foreach ($metas as $metaKey => $metaValue) {
+            if (array_key_exists($keyToSearch, $metaValue)) {
                 /**
                  * We may have several properties
                  */
-                if ($meta[$key] == $value) {
-                    return $key;
+                if ($metaValue[$keyToSearch] == $keyValueToSearch) {
+                    return $metaKey;
                 }
             }
         }
-        throw new ExceptionComboNotFound(`The meta key $key with the value $value was not found`);
+        throw new ExceptionComboNotFound("The meta key {$keyToSearch} with the value {$keyValueToSearch} was not found");
     }
 
 

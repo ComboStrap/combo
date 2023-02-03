@@ -266,11 +266,13 @@ EOF;
         $primaryColor = Site::getPrimaryColorValue();
         if ($primaryColor !== null) {
             $identityClass = self::FORM_IDENTITY_CLASS;
+            $cssFormControl = BrandColors::getCssFormControlFocusColor($primaryColor);
             $content .= <<<EOF
 .$identityClass button[type="submit"]{
    background-color: $primaryColor;
    border-color: $primaryColor;
 }
+$cssFormControl
 EOF;
         }
         return $content;

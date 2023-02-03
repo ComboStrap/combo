@@ -70,6 +70,7 @@ require_once(__DIR__ . '/Boldness.php');
 require_once(__DIR__ . '/Boolean.php');
 require_once(__DIR__ . '/Bootstrap.php');
 require_once(__DIR__ . '/Brand.php');
+require_once(__DIR__ . '/BrandColors.php');
 require_once(__DIR__ . '/BrandButton.php');
 require_once(__DIR__ . '/CacheDependencies.php');
 require_once(__DIR__ . '/CacheExpirationDate.php');
@@ -1329,24 +1330,6 @@ class PluginUtility
         );
     }
 
-    /**
-     * Add an end call dynamically
-     * @param \Doku_Handler $handler
-     * @param $tagName
-     * @param array $callStackArray
-     */
-    public
-    static function addEndCall(\Doku_Handler $handler, $tagName, $callStackArray = array())
-    {
-        $pluginName = PluginUtility::getComponentName($tagName);
-        $handler->addPluginCall(
-            $pluginName,
-            $callStackArray,
-            DOKU_LEXER_END,
-            null,
-            null
-        );
-    }
 
     /**
      * General Debug

@@ -7,6 +7,7 @@
  * @author     Nicolas GERARD
  */
 
+use ComboStrap\BrandColors;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -319,7 +320,7 @@ EOF;
         $newPwdField->attr("placeholder", $passwordText);
         $newPwdField->attr("required", "required");
         $pwdFieldId = $newPwdField->attr("id");
-        if(empty($pwdFieldId)){
+        if (empty($pwdFieldId)) {
             $pwdFieldId = "input__password";
             $newPwdField->id($pwdFieldId);
         }
@@ -350,7 +351,6 @@ EOF;
         $form->addHTML("<div class=\"form-check py-2\">", $rememberPosition);
         $form->addHTML("<label for=\"$remFieldId\" class=\"form-check-label\">$remberText</label>", $rememberPosition + 2);
         $form->addHTML("</div>", $rememberPosition + 3);
-
 
 
 //        $registerHtml = action_plugin_combo_registration::getRegisterLinkAndParagraph();

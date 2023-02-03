@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\BrandColors;
 use ComboStrap\ColorRgb;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
@@ -37,18 +38,6 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
 
     const HTML_TAG = "mark";
 
-    /**
-     * @throws ExceptionCombo
-     */
-    public static function toBackgroundColor(ColorRgb $primaryColor): ColorRgb
-    {
-        return $primaryColor
-            ->toHsl()
-            ->setLightness(98)
-            ->toRgb()
-            ->toMinimumContrastRatioAgainstWhite(1.1, 1);
-    }
-
     public static function getOpenTagHighlight(string $tag): string
     {
         $htmlTag = self::HTML_TAG;
@@ -61,7 +50,7 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
         }
         $tagAttributes = TagAttributes::createEmpty($tag);
         try {
-            $colorRgb = self::toBackgroundColor($primaryColor);
+            $colorRgb = BrandColors::toBackgroundColor($primaryColor);
             $tagAttributes->addComponentAttributeValue(ColorRgb::BACKGROUND_COLOR, $colorRgb
                 ->toRgbHex());
         } catch (ExceptionCombo $e) {

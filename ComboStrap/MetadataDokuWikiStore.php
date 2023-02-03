@@ -397,7 +397,12 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
          * This variable is unset at the end function of {@link p_render_metadata()}
          */
         if($dokuwikiId==null){
-            LogUtility::msg("MetadataDokuwWIkiStore: dokuwikiId should not be null");
+            /**
+             * On edit page, we got null
+             * We don't send the error on this quick fix to the page
+             * This error will fail a test
+             */
+            LogUtility::log2file("MetadataDokuwWIkiStore: dokuwikiId should not be null");
             return null;
         }
         global $METADATA_RENDERERS;

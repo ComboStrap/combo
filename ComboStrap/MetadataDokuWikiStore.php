@@ -168,7 +168,12 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         if (!($resource instanceof Page)) {
             throw new ExceptionComboRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
-        return $this->getFromWikiId($resource->getDokuwikiId(), $metadata->getName(), $default);
+        $dokuwikiId = $resource->getDokuwikiId();
+        if ($dokuwikiId === null) {
+            LogUtility::msg("The dokuwiki id should not be null");
+            return null;
+        }
+        return $this->getFromWikiId($dokuwikiId, $metadata->getName(), $default);
 
 
     }
@@ -396,18 +401,18 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
          *
          * This variable is unset at the end function of {@link p_render_metadata()}
          */
-        if($dokuwikiId==null){
+        if ($dokuwikiId === null) {
             /**
              * On edit page, we got null
              * We don't send the error on this quick fix to the page
              * This error will fail a test
              */
-            LogUtility::log2file("MetadataDokuwWIkiStore: dokuwikiId should not be null");
+            LogUtility::log2file("MetadataDokuwWikiStore: dokuwikiId should not be null");
             return null;
         }
         global $METADATA_RENDERERS;
         $metadataRendererForWikiId = $METADATA_RENDERERS[$dokuwikiId];
-        if($metadataRendererForWikiId!=null) {
+        if ($metadataRendererForWikiId != null) {
             $value = $metadataRendererForWikiId[MetadataDokuWikiStore::PERSISTENT_METADATA][$name];
             if ($value !== null) {
                 return $value;

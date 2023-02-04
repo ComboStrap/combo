@@ -65,8 +65,6 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     const NEW_VALUE_ATTRIBUTE = "new_value";
 
 
-
-
     /**
      * @return MetadataDokuWikiStore
      * We don't use a global static variable
@@ -106,8 +104,6 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     }
 
 
-
-
     /**
      * @throws ExceptionBadState - if for any reason, it's not possible to store the data
      */
@@ -141,8 +137,6 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      * @param Metadata $metadata
      * @param null $default
      * @return mixed|null
-     *
-     *
      */
     public function get(Metadata $metadata, $default = null)
     {
@@ -155,7 +149,13 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         if (!($resource instanceof MarkupPath)) {
             throw new ExceptionRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
-        return $this->getFromWikiId($resource->getWikiId(), $metadata->getName(), $default);
+        try {
+            $dokuwikiId = $resource->getWikiId();
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::error("Error", self::CANONICAL, $e);
+            return null;
+        }
+        return $this->getFromWikiId($dokuwikiId, $metadata->getName(), $default);
 
 
     }
@@ -383,13 +383,18 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
          *
          * This variable is unset at the end function of {@link p_render_metadata()}
          */
-        if($dokuwikiId==null){
-            LogUtility::msg("MetadataDokuwWIkiStore: dokuwikiId should not be null");
+        if ($dokuwikiId === null) {
+            /**
+             * On edit page, we got null
+             * We don't send the error on this quick fix to the page
+             * This error will fail a test
+             */
+            LogUtility::log2file("MetadataDokuwWikiStore: dokuwikiId should not be null");
             return null;
         }
         global $METADATA_RENDERERS;
         $metadataRendererForWikiId = $METADATA_RENDERERS[$dokuwikiId];
-        if($metadataRendererForWikiId!=null) {
+        if ($metadataRendererForWikiId !== null) {
             $value = $metadataRendererForWikiId[MetadataDokuWikiStore::PERSISTENT_METADATA][$name];
             if ($value !== null) {
                 return $value;

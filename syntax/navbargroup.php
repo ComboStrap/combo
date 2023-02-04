@@ -67,6 +67,7 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
     {
         return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
+
     /**
      * @see Doku_Parser_Mode::getSort()
      *
@@ -103,6 +104,7 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
         }
 
     }
+
 
     public function postConnect()
     {

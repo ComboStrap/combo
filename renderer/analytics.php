@@ -151,15 +151,13 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     /**
      * @var MarkupPath
      */
-    private $page;
+    private MarkupPath $page;
 
     public static function createAnalyticsFetcherForPageFragment(MarkupPath $param): FetcherMarkup
     {
-        $analyticsFetcher = FetcherMarkup::createPageFragmentFetcherFromPath($param->getPathObject())
+        return FetcherMarkup::createPageFragmentFetcherFromPath($param->getPathObject())
             ->setRequestedMime(Mime::getJson())
             ->setRequestedRendererName(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
-
-        return $analyticsFetcher;
     }
 
     /**

@@ -388,8 +388,13 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         /**
          * We store always the output in the cache
          * if the cache is not on, the file is just overwritten
+         *
+         * We don't use
+         * {{@link CacheParser::storeCache()}
+         * because it uses the protected parameter `__nocache`
+         * to will disallow the storage
          */
-        $this->cache->storeCache($content);
+        io_saveFile($this->cache->cache, $content);
 
         return $this;
     }

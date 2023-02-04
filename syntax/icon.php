@@ -8,6 +8,7 @@ use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
 use ComboStrap\ConditionalLength;
 use ComboStrap\Dimension;
+use ComboStrap\IconTag;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\FetcherSvg;
@@ -44,17 +45,6 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 {
     const TAG = "icon";
     const CANONICAL = self::TAG;
-
-    private static function exceptionHandling(Exception $e, $tagAttribute): string
-    {
-        $errorClass = syntax_plugin_combo_media::SVG_RENDERING_ERROR_CLASS;
-        $message = "Icon ({$tagAttribute->getValue("name")}). Error while rendering: {$e->getMessage()}";
-        $html = "<span class=\"text-danger $errorClass\">" . hsc(trim($message)) . "</span>";
-        if (!PluginUtility::isTest()) {
-            LogUtility::msg($message, LogUtility::LVL_MSG_WARNING, self::CANONICAL);
-        }
-        return $html;
-    }
 
 
     /**
@@ -121,10 +111,6 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-
-        $specialPattern = PluginUtility::getEmptyTagPattern(self::TAG);
-        $this->Lexer->addSpecialPattern($specialPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
-
         /**
          * The content is used to add a {@link syntax_plugin_combo_tooltip}
          */
@@ -159,55 +145,10 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 
         switch ($state) {
 
-            case DOKU_LEXER_SPECIAL:
             case DOKU_LEXER_ENTER:
-                // Get the parameters
-                $knownTypes = [];
-                $defaultAttributes = [];
-                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
-                $callStack = CallStack::createFromHandler($handler);
-                $parent = $callStack->moveToParent();
-                $context = "";
-                if ($parent !== false) {
-                    $context = $parent->getTagName();
-                    if ($context === syntax_plugin_combo_link::TAG) {
-                        $context = $parent->getTagName();
-                    }
-                }
-                /**
-                 * Color setting should know the color of its parent
-                 * For now, we don't set any color if the parent is a button, note, link
-                 * As a header is not a parent, we may say that if the icon is contained, the default
-                 * branding color is not set ?
-                 */
-                $requestedColor = $tagAttributes->getValue(ColorRgb::COLOR);
-                if (
-                    $requestedColor === null &&
-                    Site::isBrandingColorInheritanceEnabled() &&
-                    !in_array($context, [
-                        syntax_plugin_combo_button::TAG,
-                        syntax_plugin_combo_note::TAG,
-                        syntax_plugin_combo_link::TAG
-                    ])
-                ) {
-                    $requestedWidth = $tagAttributes->getValue(Dimension::WIDTH_KEY, FetcherSvg::DEFAULT_ICON_WIDTH);
-                    $requestedWidthInPx = ConditionalLength::createFromString($requestedWidth)->toPixelNumber();
-                    if ($requestedWidthInPx > 36) {
-                        // Illustrative icon
-                        $color = Site::getPrimaryColor();
-                    } else {
-                        // Character icon
-                        $color = Site::getSecondaryColor();
-                    }
-                    if ($color !== null) {
-                        $tagAttributes->setComponentAttributeValue(ColorRgb::COLOR, $color);
-                    }
-                }
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
-                    PluginUtility::CONTEXT => $context
-                );
+                $contextArray = IconTag::handle($match, $handler);
+                $contextArray[PluginUtility::STATE] = $state;
+                return $contextArray;
             case DOKU_LEXER_EXIT:
                 $callStack = CallStack::createFromHandler($handler);
                 $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
@@ -216,7 +157,6 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                     PluginUtility::ATTRIBUTES => $openingCall->getAttributes(),
                     PluginUtility::CONTEXT => $openingCall->getContext()
                 );
-
 
         }
 
@@ -246,10 +186,6 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                     switch ($state) {
 
 
-                        case DOKU_LEXER_SPECIAL:
-                            $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                            $renderer->doc .= $this->printIcon($tagAttributes);
-                            break;
                         case DOKU_LEXER_ENTER:
 
                             $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
@@ -268,7 +204,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                             /**
                              * Print the icon
                              */
-                            $renderer->doc .= $this->printIcon($tagAttributes);
+                            $renderer->doc .= IconTag::printIcon($tagAttributes);
                             /**
                              * Close the span if we are in a tooltip context
                              */
@@ -302,23 +238,6 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 
         }
         return true;
-    }
-
-    /**
-     * @param TagAttributes $tagAttributes
-     * @return string
-     */
-    private function printIcon(TagAttributes $tagAttributes): string
-    {
-
-        try {
-            return Icon::createFromTagAttributes($tagAttributes)
-                ->toHtml();
-        } catch (ExceptionCompile $e) {
-            return self::exceptionHandling($e, $tagAttributes);
-        }
-
-
     }
 
 

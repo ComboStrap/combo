@@ -189,7 +189,7 @@ class PageLayout
     /**
      * @param $mainHtml - the html in the main area
      * @return string - the page as html string (not dom because that's not how works dokuwiki)
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotFound|ExceptionBadArgument
      */
     public function generateAndGetPageHtmlAsString(string $mainHtml): string
     {

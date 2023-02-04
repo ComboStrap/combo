@@ -5,6 +5,7 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 // must be run within Dokuwiki
 use ComboStrap\HrTag;
+use ComboStrap\IconTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\SearchTag;
@@ -69,6 +70,11 @@ class syntax_plugin_combo_emptytag extends DokuWiki_Syntax_Plugin
                     'autocomplete' => false
                 );
                 break;
+            case syntax_plugin_combo_icon::TAG:
+                $theArray = IconTag::handle($match, $handler);
+                $theArray[PluginUtility::STATE] = $state;
+                $theArray[PluginUtility::TAG] = syntax_plugin_combo_icon::TAG;
+                return $theArray;
         }
         $tag = TagAttributes::createFromTagMatch($match, $defaultAttributes);
         return array(
@@ -106,8 +112,12 @@ class syntax_plugin_combo_emptytag extends DokuWiki_Syntax_Plugin
                 case SearchTag::TAG:
                     $renderer->doc .= SearchTag::render($tagAttributes);
                     break;
+                case syntax_plugin_combo_icon::TAG:
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $renderer->doc .= IconTag::printIcon($tagAttributes);
+                    break;
                 default:
-                    LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not process.");
+                    LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");
             }
 
 

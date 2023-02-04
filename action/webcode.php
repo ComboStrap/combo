@@ -2,6 +2,7 @@
 
 
 use ComboStrap\Identity;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
@@ -11,7 +12,6 @@ if (!defined('DOKU_INC')) die();
  */
 class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 {
-
 
 
     function register(Doku_Event_Handler $controller)
@@ -41,10 +41,19 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
         }
 
         $isAdmin = Identity::isAdmin();
-        $isMember = Identity::isMember("@" . action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME);
-        if (!($isAdmin || $isMember)) {
-            $event->preventDefault();
+        if ($isAdmin) {
+            return;
         }
+
+        $group = "@" . action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME;
+        $isMember = Identity::isMember($group);
+        if ($isMember) {
+            return;
+        }
+
+        LogUtility::error("You don't have the right to save a webcode component. You should be admin or part of the ($group) group.");
+        $event->preventDefault();
+
 
     }
 

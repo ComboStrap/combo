@@ -582,7 +582,11 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public
     function upsertContent($content, $summary = "Default"): MarkupPath
     {
-        saveWikiText($this->getPathObject()->getWikiId(), $content, $summary);
+        $path = $this->getPathObject();
+        if(!($path instanceof WikiPath)){
+            throw new ExceptionRuntime("The path of this markup is not a wiki path");
+        }
+        saveWikiText($path->getWikiId(), $content, $summary);
         return $this;
     }
 
@@ -751,7 +755,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
         if (!FileSystems::exists($this)) {
             if (PluginUtility::isDevOrTest()) {
-                LogUtility::msg("You can't render the metadata of a markup that does not exist ($this)");
+                LogUtility::msg("You can't render the metadata of a markup path that does not exist ($this)");
             }
             return $this;
         }

@@ -67,9 +67,9 @@ class StyleUtility
         }
     }
 
-    public static function addComboStrapSuffix($logicalTag): string
+    public static function addComboStrapSuffix($name): string
     {
-        return $logicalTag . "-" . self::COMBOSTRAP_FIX;
+        return $name . "-" . self::COMBOSTRAP_FIX;
     }
 
     public static function HtmlStyleValueToArray(string $htmlStyleValue): array

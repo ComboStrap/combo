@@ -131,9 +131,10 @@ class Dimension
 EOF;
                                 PluginUtility::getSnippetManager()->attachCssInternalStyleSheet("height-toggle-show", $css);
                                 $bootstrapDataNameSpace = Bootstrap::getDataNamespace();
+                                $buttonClass = StyleUtility::addComboStrapSuffix("height-toggle");
                                 /** @noinspection HtmlUnknownAttribute */
                                 $button = <<<EOF
-<button class="height-toggle-combo" data$bootstrapDataNameSpace-toggle="collapse" data$bootstrapDataNameSpace-target="#$id" aria-expanded="false"></button>
+<button class="$buttonClass" data$bootstrapDataNameSpace-toggle="collapse" data$bootstrapDataNameSpace-target="#$id" aria-expanded="false"></button>
 EOF;
 
                                 $attributes->addHtmlAfterEnterTag($button);
@@ -189,7 +190,7 @@ EOF;
             if (!$controlFound) {
                 $toggleOnClickId = "height-toggle-onclick";
                 PluginUtility::getSnippetManager()->attachJavascriptFromComponentId($toggleOnClickId);
-                $openingCall->addClassName("{$toggleOnClickId}-combo");
+                $openingCall->addClassName(StyleUtility::addComboStrapSuffix($toggleOnClickId));
                 $openingCall->addCssStyle("cursor", "pointer");
             }
 

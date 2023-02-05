@@ -140,8 +140,9 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
                  * export of code functionality
                  * and display = none
                  */
-                $tag = new Tag(self::CODE_TAG, array(), $state, $handler);
-                $tagAttributes = $tag->getParent()->getAttributes();
+                $callStack = CallStack::createFromHandler($handler);
+                $parentTag = $callStack->moveToParent();
+                $tagAttributes = $parentTag->getAttributes();
                 $data[PluginUtility::ATTRIBUTES] = $tagAttributes;
                 return $data;
 

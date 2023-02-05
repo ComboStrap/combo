@@ -84,14 +84,13 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
                 $tagAttributes = PluginUtility::getTagAttributes($match);
-
-                $tag = new Tag(self::TAG, $tagAttributes, $state, $handler);
-                $parentTag = $tag->getParent();
+                $callStack = CallStack::createFromHandler($handler);
+                $parentTag = $callStack->moveToParent();
                 $context = null;
-                if ($parentTag != null) {
-                    $grandfather = $parentTag->getParent();
-                    if ($grandfather != null) {
-                        $grandFatherName = $grandfather->getName();
+                if ($parentTag!==false) {
+                    $grandfather = $callStack->moveToParent();
+                    if ($grandfather !== false) {
+                        $grandFatherName = $grandfather->getTagName();
                         switch ($grandFatherName) {
                             case syntax_plugin_combo_accordion::TAG:
                                 $id = $parentTag->getAttribute("id");
@@ -169,7 +168,7 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {

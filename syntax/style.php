@@ -1,9 +1,8 @@
 <?php
 
 
-
+use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 
 
 class syntax_plugin_combo_style extends DokuWiki_Syntax_Plugin
@@ -21,7 +20,7 @@ class syntax_plugin_combo_style extends DokuWiki_Syntax_Plugin
     /**
      * You can't write in a style block
      */
-    function getType()
+    function getType(): string
     {
         return 'protected';
     }
@@ -45,7 +44,7 @@ class syntax_plugin_combo_style extends DokuWiki_Syntax_Plugin
         return array();
     }
 
-    function getSort()
+    function getSort(): int
     {
         return 201;
     }
@@ -74,11 +73,11 @@ class syntax_plugin_combo_style extends DokuWiki_Syntax_Plugin
                     PluginUtility::ATTRIBUTES => $attributes
                 );
             case DOKU_LEXER_UNMATCHED :
-                $tag = new Tag(self::TAG, array(), DOKU_LEXER_UNMATCHED, $handler);
-                $parent = $tag->getParent();
+                $callStack = CallStack::createFromHandler($handler);
+                $parent = $callStack->moveToParent();
                 $stateAttribute = $parent->getAttribute(self::STATE_ATTRIBUTE);
-                $opa = $parent->getParent();
-                if (!empty($opa)) {
+                $opa = $callStack->moveToParent();
+                if ($opa !== false) {
                     $stateSelector = "";
                     if (!empty($stateAttribute)) {
                         $stateSelector = ":" . $stateAttribute;

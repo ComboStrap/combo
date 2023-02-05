@@ -637,7 +637,8 @@ class ExecutionContext
             return false;
         }
 
-        if (in_array($this->getAct(), self::PRIVATES_ACTION)) {
+        $act = $this->getAct();
+        if (in_array($act, self::PRIVATES_ACTION)) {
             return false;
         }
 

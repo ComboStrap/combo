@@ -128,8 +128,9 @@ class syntax_plugin_combo_file extends DokuWiki_Syntax_Plugin
                 /**
                  * Attribute are send for display = none
                  */
-                $tag = new Tag(self::TAG, array(), $state, $handler);
-                $tagAttributes = $tag->getParent()->getAttributes();
+                $callStack = CallStack::createFromHandler($handler);
+                $parentTag = $callStack->moveToParent();
+                $tagAttributes = $parentTag->getAttributes();
                 $data[PluginUtility::ATTRIBUTES] = $tagAttributes;
                 return $data;
 

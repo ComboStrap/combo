@@ -53,12 +53,10 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
     const LABEL = 'label';
 
     /**
-     * A tabs with this context will create
-     * the HTML for a navigational element
-     * The calls with this context are derived
-     * and created
+     * A tabs with this context will render the `ul` HTML tags
+     * (ie tabs enclose the navigation partition)
      */
-    const NAVIGATIONAL_ELEMENT_CONTEXT = "tabHeader";
+    const NAVIGATION_CONTEXT = "navigation-context";
 
     /**
      * Type tabs
@@ -249,7 +247,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                 $tagAttributes->addClassName("nav")
                     ->addClassName("nav-$skin");
                 $tagAttributes->addOutputAttributeValue('role', 'tablist');
-                $html = $tagAttributes->toHtmlEnterTag(" ul");
+                $html = $tagAttributes->toHtmlEnterTag("ul");
                 break;
             case self::ENCLOSED_TABS_TYPE:
             case self::ENCLOSED_PILLS_TYPE:
@@ -399,116 +397,96 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG, array(), $state, $handler);
-                $openingTag = $tag->getOpeningTag();
-                $descendant = $openingTag->getFirstMeaningFullDescendant();
+                $callStack = CallStack::createFromHandler($handler);
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $previousOpeningTag = $callStack->previous();
+                $callStack->next();
+                $firstChild = $callStack->moveToFirstChildTag();
                 $context = null;
-                if ($descendant != null) {
+                if ($firstChild !== false) {
                     /**
                      * Add the context to the opening and ending tag
                      */
-                    $context = $descendant->getName();
+                    $context = $firstChild->getTagName();
                     $openingTag->setContext($context);
+                    /**
+                     * Does tabs enclosed Panel (new syntax)
+                     */
                     if ($context == syntax_plugin_combo_panel::TAG) {
 
                         /**
-                         * Copy the descendant before manipulating the stack
+                         * We scan the tabs and derived:
+                         * * the navigation tabs element (ie ul/li nav-tab)
+                         * * the tab pane element
                          */
-                        $descendants = $openingTag->getDescendants();
 
                         /**
-                         * Start the navigation tabs element
-                         * We add calls in the stack to create the tabs navigational element
+                         * This call will create the ul
+                         * <ul class="nav nav-tabs mb-3" role="tablist">
+                         * thanks to the {@link self::NAVIGATION_CONTEXT}
                          */
-                        $navigationalCallElements[] = Call::createComboCall(
+                        $navigationalCalls[] = Call::createComboCall(
                             self::TAG,
                             DOKU_LEXER_ENTER,
                             $openingTag->getAttributes(),
-                            self::NAVIGATIONAL_ELEMENT_CONTEXT
-                        )->toCallArray();
-                        $labelStacksToDelete = array();
-                        foreach ($descendants as $descendant) {
+                            self::NAVIGATION_CONTEXT
+                        );
 
-                            /**
-                             * Define the panel attributes
-                             * (May be null)
-                             */
-                            if (empty($panelAttributes)) {
-                                $panelAttributes = array();
-                            }
+                        /**
+                         * The tab pane elements
+                         */
+                        $tabPaneCalls = [$openingTag, $firstChild];
 
-                            /**
-                             * If this is a panel tag, we capture the attributes
-                             */
+                        /**
+                         * Copy the stack
+                         */
+                        $labelState = "label";
+                        $nonLabelState = "non-label";
+                        $scanningState = $nonLabelState;
+                        while ($actual = $callStack->next()) {
+
                             if (
-                                $descendant->getName() == syntax_plugin_combo_panel::TAG
+                                $actual->getTagName() == syntax_plugin_combo_label::TAG
                                 &&
-                                $descendant->getState() == DOKU_LEXER_ENTER
+                                $actual->getState() == DOKU_LEXER_ENTER
                             ) {
-                                $panelAttributes = $descendant->getAttributes();
-                                continue;
+                                $scanningState = $labelState;
                             }
 
-                            /**
-                             * If this is a label tag, we capture the tags
-                             */
+                            if ($labelState === $scanningState) {
+                                $navigationalCalls[] = $actual;
+                            } else {
+                                $tabPaneCalls[] = $actual;
+                            }
+
                             if (
-                                $descendant->getName() == syntax_plugin_combo_label::TAG
+                                $actual->getTagName() == syntax_plugin_combo_label::TAG
                                 &&
-                                $descendant->getState() == DOKU_LEXER_ENTER
+                                $actual->getState() == DOKU_LEXER_EXIT
                             ) {
-
-                                $labelStacks = $descendant->getDescendants();
-
-                                /**
-                                 * Get the labels call to delete
-                                 * (done at the end)
-                                 */
-                                $labelStacksSize = sizeof($labelStacks);
-                                $firstPosition = $descendant->getActualPosition(); // the enter label is deleted
-                                $lastPosition = $labelStacks[$labelStacksSize - 1]->getActualPosition() + 1; // the exit label is deleted
-                                $labelStacksToDelete[] = [$firstPosition, $lastPosition];
-
-
-                                /**
-                                 * Build the navigational call stack for this label
-                                 * with another context just to tag them and see them in the stack
-                                 */
-                                $firstLabelCall = $handler->calls[$descendant->getActualPosition()];
-                                $firstLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
-                                $navigationalCallElements[] = $firstLabelCall;
-                                for ($i = 1; $i <= $labelStacksSize; $i++) {
-                                    $intermediateLabelCall = $handler->calls[$descendant->getActualPosition() + $i];
-                                    $intermediateLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
-                                    $navigationalCallElements[] = $intermediateLabelCall;
-                                }
-                                $lastLabelCall = $handler->calls[$lastPosition];
-                                $lastLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
-                                $navigationalCallElements[] = $lastLabelCall;
+                                $scanningState = $nonLabelState;
                             }
+
 
                         }
-                        $navigationalCallElements[] = Call::createComboCall(
+
+                        /**
+                         * End navigational tabs
+                         */
+                        $navigationalCalls[] = Call::createComboCall(
                             self::TAG,
                             DOKU_LEXER_EXIT,
                             $openingTag->getAttributes(),
-                            self::NAVIGATIONAL_ELEMENT_CONTEXT
-                        )->toCallArray();
-
+                            self::NAVIGATION_CONTEXT
+                        );
 
                         /**
-                         * Deleting the labels first
-                         * because the navigational tabs are added (and would then move the position)
+                         * Rebuild
                          */
-                        foreach ($labelStacksToDelete as $labelStackToDelete) {
-                            $start = $labelStackToDelete[0];
-                            $end = $labelStackToDelete[1];
-                            CallStack::deleteCalls($handler->calls, $start, $end);
-                        }
-                        /**
-                         * Then deleting
-                         */
-                        CallStack::insertCallStackUpWards($handler->calls, $openingTag->getActualPosition(), $navigationalCallElements);
+                        $callStack->deleteAllCallsAfter($previousOpeningTag);
+                        $callStack->appendCallsAtTheEnd($navigationalCalls);
+                        $callStack->appendCallsAtTheEnd($tabPaneCalls);
+
                     }
                 }
 
@@ -535,7 +513,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {
@@ -559,10 +537,10 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                         /**
                          * When the tag tabs are derived (new syntax)
                          */
-                        case self::NAVIGATIONAL_ELEMENT_CONTEXT:
-                            /**
-                             * Old syntax, when the tag had to be added specifically
-                             */
+                        case self::NAVIGATION_CONTEXT:
+                        /**
+                         * Old syntax, when the tag had to be added specifically
+                         */
                         case syntax_plugin_combo_tab::TAG:
                             $renderer->doc .= self::openNavigationalTabsElement($tagAttributes);
                             break;
@@ -586,10 +564,10 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                          * Old syntax
                          */
                         case syntax_plugin_combo_tab::TAG:
-                            /**
-                             * New syntax (Derived)
-                             */
-                        case self::NAVIGATIONAL_ELEMENT_CONTEXT:
+                        /**
+                         * New syntax (Derived)
+                         */
+                        case self::NAVIGATION_CONTEXT:
                             $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                             $type = self::getComponentType($tagAttributes);
                             $renderer->doc .= self::closeNavigationalHeaderComponent($type);

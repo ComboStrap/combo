@@ -8,13 +8,10 @@ use ComboStrap\CallStack;
 use ComboStrap\DataType;
 use ComboStrap\EditButton;
 use ComboStrap\EditButtonManager;
-use ComboStrap\ExceptionBadArgument;
-use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\IdManager;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
@@ -222,10 +219,10 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 
                 // Context
                 $tagAttributes = PluginUtility::getTagAttributes($match);
-                $tag = new Tag(self::TAG, $tagAttributes, $state, $handler);
-                $parent = $tag->getParent();
-                if ($parent != null) {
-                    $context = $parent->getName();
+                $callStack = CallStack::createFromHandler($handler);
+                $parent = $callStack->moveToParent();
+                if ($parent !== false) {
+                    $context = $parent->getTagName();
                 } else {
                     /**
                      * The panel may be alone in preview
@@ -253,7 +250,8 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                             $tagAttributes["id"] = $id;
                             break;
                         case self::CONTEXT_PREVIEW_ALONE:
-                            $tagAttributes["id"] = "alone";
+                            $id = "alone";
+                            $tagAttributes["id"] = $id;
                             break;
                         default:
                             LogUtility::msg("An id should be given for the context ($context)", LogUtility::LVL_MSG_ERROR, self::TAG);
@@ -271,13 +269,12 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 
                     $context = self::OLD_TAB_PANEL_TAG;
 
-                    $siblingTag = $parent->getPreviousSibling();
+                    $siblingTag = $callStack->moveToPreviousSiblingTag();
                     if ($siblingTag != null) {
-                        if ($siblingTag->getName() === syntax_plugin_combo_tabs::TAG) {
-                            $descendants = $siblingTag->getDescendants();
+                        if ($siblingTag->getTagName() === syntax_plugin_combo_tabs::TAG) {
                             $tagAttributes[self::SELECTED] = false;
-                            foreach ($descendants as $descendant) {
-                                $descendantName = $descendant->getName();
+                            while ($descendant = $callStack->next()) {
+                                $descendantName = $descendant->getTagName();
                                 $descendantPanel = $descendant->getAttribute("panel");
                                 $descendantSelected = $descendant->getAttribute(self::SELECTED);
                                 if (
@@ -289,7 +286,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                                 }
                             }
                         } else {
-                            LogUtility::msg("The direct element above a " . self::OLD_TAB_PANEL_TAG . " should be a `tabs` and not a `" . $siblingTag->getName() . "`", LogUtility::LVL_MSG_ERROR, "tabs");
+                            LogUtility::msg("The direct element above a " . self::OLD_TAB_PANEL_TAG . " should be a `tabs` and not a `" . $siblingTag->getTagName() . "`", LogUtility::LVL_MSG_ERROR, "tabs");
                         }
                     }
                 }
@@ -435,7 +432,6 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                             $aloneVariable = TagAttributes::createFromCallStackArray(syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE_ATTRIBUTES);
                             $renderer->doc .= syntax_plugin_combo_tabs::closeTabPanelsElement($aloneVariable);
                             break;
-
                     }
 
                     /**

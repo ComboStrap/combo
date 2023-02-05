@@ -4,7 +4,6 @@ namespace ComboStrap;
 
 
 
-
 /**
  * A request to the application
  * It's now a wrapper around {@link \TestRequest}
@@ -13,10 +12,13 @@ class HttpRequest
 {
 
     const CANONICAL = "httpRequest";
+    const POST = "post";
+    const GET = "get";
     private bool $withTestRequest = true;
 
     private Url $url;
     private HttpResponse $response;
+    private string $method = self::GET;
 
 
     public function __construct(Url $url)
@@ -60,7 +62,7 @@ class HttpRequest
 
         return HttpRequest::createRequest($url)
             ->withTestRequest()
-            ->fetch();
+            ->send();
 
     }
 
@@ -93,9 +95,15 @@ class HttpRequest
 
     }
 
-    public function fetch(): HttpResponse
-    {
 
+    public function post(): HttpRequest
+    {
+        $this->method = self::POST;
+        return $this;
+    }
+
+    public function send(): HttpResponse
+    {
         if (!$this->withTestRequest) {
             throw new ExceptionRuntime("Real HTTP fetch not yet implemented, only test fetch");
         }
@@ -105,7 +113,17 @@ class HttpRequest
         HttpRequest::purgeStaticDataRequestedScoped();
 
         $testRequest = new \TestRequest();
-        $response = $testRequest->get($query);
+        switch ($this->method) {
+            case self::GET:
+                $response = $testRequest->get($query);
+                break;
+            case self::POST:
+                $response = $testRequest->post($query);
+                break;
+            default:
+                throw new ExceptionRuntime("The method ({$this->method}) is not implemented");
+        }
+
 
         $httpResponse = HttpResponse::createFromDokuWikiResponse($response);
 

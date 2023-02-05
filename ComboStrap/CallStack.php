@@ -1149,5 +1149,12 @@ class CallStack
         return $children;
     }
 
+    public function appendCallsAtTheEnd(array $calls)
+    {
+        foreach($calls as $call){
+            $this->appendCallAtTheEnd($call);
+        }
+    }
+
 
 }

@@ -83,7 +83,7 @@ class Call
          * The inline of combo
          */
         \syntax_plugin_combo_link::TAG,
-        \syntax_plugin_combo_icon::TAG,
+        IconTag::TAG,
         \syntax_plugin_combo_inote::TAG,
         \syntax_plugin_combo_button::TAG,
         \syntax_plugin_combo_tooltip::TAG,

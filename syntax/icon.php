@@ -38,13 +38,10 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  * !!!!!!!!!!! The component name must be the name of the php file !!!
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  *
- * https://icons.getbootstrap.com/
- * https://remixicon.com/
  */
 class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 {
-    const TAG = "icon";
-    const CANONICAL = self::TAG;
+    const CANONICAL = IconTag::TAG;
 
 
     /**
@@ -114,7 +111,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
         /**
          * The content is used to add a {@link syntax_plugin_combo_tooltip}
          */
-        $entryPattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $entryPattern = PluginUtility::getContainerTagPattern(IconTag::TAG);
         $this->Lexer->addEntryPattern($entryPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
@@ -122,7 +119,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 
     public function postConnect()
     {
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $this->Lexer->addExitPattern('</' . IconTag::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
     }
 
 
@@ -146,18 +143,13 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER:
-                $contextArray = IconTag::handle($match, $handler);
+                $contextArray = IconTag::handleEnter($match, $handler);
                 $contextArray[PluginUtility::STATE] = $state;
                 return $contextArray;
             case DOKU_LEXER_EXIT:
-                $callStack = CallStack::createFromHandler($handler);
-                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $openingCall->getAttributes(),
-                    PluginUtility::CONTEXT => $openingCall->getContext()
-                );
-
+                $contextArray = IconTag::handleExit($match, $handler);
+                $contextArray[PluginUtility::STATE] = $state;
+                return $contextArray;
         }
 
         return array();
@@ -225,15 +217,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                  * @var Doku_Renderer_metadata $renderer
                  */
                 $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                try {
-                    $mediaPath = Icon::createFromTagAttributes($tagAttribute)->getFetchSvg()->getSourcePath();
-                } catch (ExceptionCompile $e) {
-                    // error is already fired in the renderer
-                    return false;
-                }
-                if (FileSystems::exists($mediaPath)) {
-                    syntax_plugin_combo_media::registerFirstImage($renderer, $mediaPath);
-                }
+                IconTag::metadata($renderer, $tagAttribute);
                 break;
 
         }

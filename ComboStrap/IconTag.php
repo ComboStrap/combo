@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 use Doku_Handler;
+use Doku_Renderer_metadata;
 use Exception;
 use syntax_plugin_combo_button;
 use syntax_plugin_combo_icon;
@@ -14,8 +15,9 @@ class IconTag
 {
 
     const CANONICAL = "icon";
+    public const TAG = "icon";
 
-    public static function handle($match, Doku_Handler $handler): array
+    public static function handleSpecial($match, Doku_Handler $handler): array
     {
         // Get the parameters
         $knownTypes = [];
@@ -96,5 +98,39 @@ class IconTag
             return IconTag::exceptionHandling($e, $tagAttributes);
         }
 
+    }
+
+    /**
+     * @param Doku_Renderer_metadata $renderer
+     * @param $tagAttribute
+     * @return void
+     */
+    public static function metadata(Doku_Renderer_metadata $renderer, $tagAttribute)
+    {
+
+        try {
+            $mediaPath = Icon::createFromTagAttributes($tagAttribute)->getFetchSvg()->getSourcePath();
+        } catch (ExceptionCompile $e) {
+            // error is already fired in the renderer
+            return;
+        }
+        if (FileSystems::exists($mediaPath)) {
+            syntax_plugin_combo_media::registerFirstImage($renderer, $mediaPath);
+        }
+    }
+
+    public static function handleEnter(string $match, Doku_Handler $handler): array
+    {
+        return self::handleSpecial($match, $handler);
+    }
+
+    public static function handleExit(string $match, Doku_Handler $handler): array
+    {
+        $callStack = CallStack::createFromHandler($handler);
+        $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+        return array(
+            PluginUtility::ATTRIBUTES => $openingCall->getAttributes(),
+            PluginUtility::CONTEXT => $openingCall->getContext()
+        );
     }
 }

@@ -604,7 +604,7 @@ class TagAttributes
             }
 
             // We only add the common HTML attribute
-            if (in_array($key, self::HTML_ATTRIBUTES)) {
+            if (in_array($key, self::HTML_ATTRIBUTES) || strpos($key, 'data-') === 0) {
                 $tempHtmlArray[$key] = $value;
             } else {
 

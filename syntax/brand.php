@@ -4,6 +4,7 @@
 // must be run within Dokuwiki
 use ComboStrap\Brand;
 use ComboStrap\BrandButton;
+use ComboStrap\IconTag;
 use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\Call;
@@ -257,7 +258,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 $callStack->moveToEnd();
                 while ($actualCall = $callStack->previous()) {
                     $tagName = $actualCall->getTagName();
-                    if (in_array($tagName, [syntax_plugin_combo_icon::TAG, syntax_plugin_combo_media::TAG])) {
+                    if (in_array($tagName, [IconTag::TAG, syntax_plugin_combo_media::TAG])) {
 
 
                         if ($textFound && $openTagContext === syntax_plugin_combo_menubar::TAG) {
@@ -278,7 +279,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                         }
 
                         $primary = $openTagAttributes->getValue(ColorRgb::PRIMARY_VALUE);
-                        if ($primary !== null && $tagName === syntax_plugin_combo_icon::TAG) {
+                        if ($primary !== null && $tagName === IconTag::TAG) {
                             try {
                                 $brandButton = self::createButtonFromAttributes($openTagAttributes);
                                 $actualCall->addAttribute(ColorRgb::COLOR, $brandButton->getTextColor());
@@ -481,7 +482,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
 
         $callStack->appendCallAtTheEnd(
             Call::createComboCall(
-                syntax_plugin_combo_icon::TAG,
+                IconTag::TAG,
                 DOKU_LEXER_SPECIAL,
                 $iconAttributes
             ));

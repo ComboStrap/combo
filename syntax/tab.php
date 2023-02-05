@@ -4,15 +4,9 @@
  *
  */
 
-use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 
-if (!defined('DOKU_INC')) {
-    die();
-}
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
  *

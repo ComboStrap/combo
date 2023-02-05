@@ -8,10 +8,8 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
-if (!defined('DOKU_INC')) die();
 
 /**
  *
@@ -140,7 +138,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
 
         /**
          * No need to connect
-         * This syntax plugin is added dynamically with the {@link Tag::processEolToEndStack()}
+         * This syntax plugin is added dynamically with the {@link CallStack::processEolToEndStack()}
          * function
          */
 

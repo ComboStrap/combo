@@ -9,7 +9,6 @@ use ComboStrap\Bootstrap;
 use ComboStrap\Hero;
 use ComboStrap\PluginUtility;
 use ComboStrap\Spacing;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 

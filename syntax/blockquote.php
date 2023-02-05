@@ -9,19 +9,10 @@ use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
-use ComboStrap\LinkMarkup;
 use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
-if (!defined('DOKU_INC')) {
-    die();
-}
-
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
-require_once(__DIR__ . '/../ComboStrap/StringUtility.php');
-require_once(__DIR__ . '/../ComboStrap/Tag.php');
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism

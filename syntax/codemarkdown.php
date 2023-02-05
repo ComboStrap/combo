@@ -7,7 +7,6 @@
 use ComboStrap\Html;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../ComboStrap/StringUtility.php');

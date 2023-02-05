@@ -6,14 +6,8 @@
 // must be run within Dokuwiki
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
-use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
-use ComboStrap\TagAttributes;
-
-
-
 
 
 class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin

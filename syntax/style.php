@@ -110,7 +110,6 @@ EOF;
                 }
                 /**
                  * State is mandatory when we traverse the stack
-                 * with {@link Tag}
                  */
                 return array(
                     PluginUtility::STATE => $state

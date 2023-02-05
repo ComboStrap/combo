@@ -329,7 +329,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     ->setRequestedMimeToInstruction()
                     ->setDeleteRootBlockElement($this->removeRootBlockElement);
                 try {
-                    $content = $markupRenderer->getOutput();
+                    $instructions = $markupRenderer->getOutput();
+                    $content = serialize($instructions);
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
                 }

@@ -71,7 +71,6 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
         $action = $event->data;
 
-
         if (FetcherPage::isEnabledAsShowAction() && $action === "show") {
             $action = self::DO_PREFIX . FetcherPage::NAME;
         }

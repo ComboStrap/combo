@@ -86,7 +86,7 @@ class IconTag
      * @param TagAttributes $tagAttributes
      * @return string
      */
-    public static function printIcon(TagAttributes $tagAttributes): string
+    public static function render(TagAttributes $tagAttributes): string
     {
 
         try {

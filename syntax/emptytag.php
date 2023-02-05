@@ -113,8 +113,7 @@ class syntax_plugin_combo_emptytag extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= SearchTag::render($tagAttributes);
                     break;
                 case syntax_plugin_combo_icon::TAG:
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $renderer->doc .= IconTag::printIcon($tagAttributes);
+                    $renderer->doc .= IconTag::render($tagAttributes);
                     break;
                 default:
                     LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");

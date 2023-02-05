@@ -204,7 +204,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                             /**
                              * Print the icon
                              */
-                            $renderer->doc .= IconTag::printIcon($tagAttributes);
+                            $renderer->doc .= IconTag::render($tagAttributes);
                             /**
                              * Close the span if we are in a tooltip context
                              */

@@ -151,72 +151,77 @@ class HttpResponse
 
         /**
          * Exit
+         * (Test run ?)
          */
-        if (!PluginUtility::isTest()) {
+        $testRequest = TestRequest::getRunning();
+        if ($testRequest === null) {
             if ($this->status !== HttpResponseStatus::ALL_GOOD && isset($this->body)) {
                 // if this is a 304, there is no body, no message
                 LogUtility::log2file("Bad Http Response: $this->status : {$this->getBody()}", LogUtility::LVL_MSG_ERROR, $this->canonical);
             }
             exit;
-        } else {
-
-            /**
-             * We try to set the dokuwiki processing
-             * but it does not work every time
-             * Stop the propagation and prevent the default
-             */
-            if ($this->event !== null) {
-                $this->event->stopPropagation();
-                $this->event->preventDefault();
-            }
-
-            /**
-             * Add test info into the request
-             */
-            $testRequest = TestRequest::getRunning();
-
-            if ($testRequest !== null && isset($this->body)) {
-                $testRequest->addData(self::EXIT_KEY, $this->body);
-            }
-
-            /**
-             * Output buffer
-             * Stop the buffer
-             * Test request starts a buffer at {@link TestRequest::execute()},
-             * it will capture the body until this point
-             */
-            ob_end_clean();
-            /**
-             * To avoid phpunit warning `Test code or tested code did not (only) close its own output buffers`
-             * and
-             * Send the output to the void
-             */
-            ob_start(function ($value) {
-            });
-
-            /**
-             * In dev or test, we don't exit to get the data, the code execution will come here then
-             * but {@link act_dispatch() Act dispatch} calls always the template,
-             * We create a fake empty template
-             */
-            global $conf;
-            $template = "combo_test";
-            $conf['template'] = $template;
-            $main = LocalPath::createFromPathString(DOKU_INC . "lib/tpl/$template/main.php");
-            FileSystems::setContent($main, "");
-
-
         }
+
+        /**
+         * Test run
+         * We can't exit, we need
+         * to send all data back to the {@link TestRequest}
+         */
+
+
+
+        if (isset($this->body)) {
+            $testRequest->addData(self::EXIT_KEY, $this->body);
+        }
+
+        /**
+         * Output buffer
+         * Stop the buffer
+         * Test request starts a buffer at {@link TestRequest::execute()},
+         * it will capture the body until this point
+         */
+        ob_end_clean();
+        /**
+         * To avoid phpunit warning `Test code or tested code did not (only) close its own output buffers`
+         * and
+         * Send the output to the void
+         */
+        ob_start(function ($value) {
+        });
+
+        /**
+         * We try to set the dokuwiki processing
+         * but it does not work every time
+         * to stop the propagation and prevent the default
+         */
+        if ($this->event !== null) {
+            $this->event->stopPropagation();
+            $this->event->preventDefault();
+        }
+
+        /**
+         * In test, we don't exit to get the data, the code execution will come here then
+         * but {@link act_dispatch() Act dispatch} calls always the template,
+         * We create a fake empty template
+         */
+        global $conf;
+        $template = "combo_test";
+        $conf['template'] = $template;
+        $main = LocalPath::createFromPathString(DOKU_INC . "lib/tpl/$template/main.php");
+        FileSystems::setContent($main, "");
+
     }
 
-    public function setCanonical($canonical): HttpResponse
+    public
+    function setCanonical($canonical): HttpResponse
     {
         $this->canonical = $canonical;
         return $this;
     }
 
 
-    public function addHeader(string $header): HttpResponse
+    public
+    function addHeader(string $header): HttpResponse
     {
         $this->headers[] = $header;
         return $this;
@@ -225,7 +230,8 @@ class HttpResponse
     /**
      * @param string|array $messages
      */
-    public function setBodyAsJsonMessage($messages): HttpResponse
+    public
+    function setBodyAsJsonMessage($messages): HttpResponse
     {
         if (is_array($messages) && sizeof($messages) == 0) {
             $messages = ["No information, no errors"];
@@ -236,7 +242,8 @@ class HttpResponse
     }
 
 
-    public function setBody(string $body, Mime $mime): HttpResponse
+    public
+    function setBody(string $body, Mime $mime): HttpResponse
     {
         $this->body = $body;
         $this->mime = $mime;
@@ -246,7 +253,8 @@ class HttpResponse
     /**
      * @return string
      */
-    public function getBody(): string
+    public
+    function getBody(): string
     {
         return $this->body;
     }
@@ -254,7 +262,8 @@ class HttpResponse
 
     /**
      */
-    public function getHeaders(string $headerName): array
+    public
+    function getHeaders(string $headerName): array
     {
 
         return Http::getHeadersForName($headerName, $this->headers);
@@ -264,10 +273,11 @@ class HttpResponse
     /**
      * @throws ExceptionNotFound
      */
-    public function getHeader(string $headerName): string
+    public
+    function getHeader(string $headerName): string
     {
         $headers = $this->getHeaders($headerName);
-        if(count($headers)==0){
+        if (count($headers) == 0) {
             throw new ExceptionNotFound("No header found for the name $headerName");
         }
         return $headers[0];
@@ -278,7 +288,8 @@ class HttpResponse
      * @throws ExceptionNotFound - if the header was not found
      * @throws ExceptionNotExists - if the header value could not be identified
      */
-    public function getHeaderValue(string $headerName): string
+    public
+    function getHeaderValue(string $headerName): string
     {
         $header = $this->getHeader($headerName);
         $positionDoublePointSeparator = strpos($header, ':');
@@ -288,7 +299,8 @@ class HttpResponse
         return trim(substr($header, $positionDoublePointSeparator + 1));
     }
 
-    public function setHeaders(array $headers): HttpResponse
+    public
+    function setHeaders(array $headers): HttpResponse
     {
         $this->headers = $headers;
         return $this;
@@ -297,19 +309,22 @@ class HttpResponse
     /**
      * @throws ExceptionBadSyntax
      */
-    public function getBodyAsHtmlDom(): XmlDocument
+    public
+    function getBodyAsHtmlDom(): XmlDocument
     {
         return XmlDocument::createHtmlDocFromMarkup($this->getBody());
     }
 
-    public function setStatus(int $status): HttpResponse
+    public
+    function setStatus(int $status): HttpResponse
     {
         $this->status = $status;
         return $this;
     }
 
 
-    public function setStatusAndBodyFromException(\Exception $e): HttpResponse
+    public
+    function setStatusAndBodyFromException(\Exception $e): HttpResponse
     {
 
         try {
@@ -321,12 +336,14 @@ class HttpResponse
         return $this;
     }
 
-    public function getStatus(): int
+    public
+    function getStatus(): int
     {
         return $this->status;
     }
 
-    public function hasEnded(): bool
+    public
+    function hasEnded(): bool
     {
         return $this->hasEnded;
     }

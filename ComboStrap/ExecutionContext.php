@@ -4,6 +4,7 @@ namespace ComboStrap;
 
 
 use dokuwiki\Extension\PluginTrait;
+use TestRequest;
 
 /**
  * An execution object permits to get access to environment variable.
@@ -72,7 +73,6 @@ class ExecutionContext
         self::SAVE_ACTION,
         self::REDIRECT_ACTION
     ];
-
 
 
     /**
@@ -681,6 +681,15 @@ class ExecutionContext
     {
         $this->setConf($key, $value, null);
         return $this;
+    }
+
+    /**
+     * @return bool - if this execution is a test running
+     */
+    public function isTestRun(): bool
+    {
+        $testRequest = TestRequest::getRunning();
+        return $testRequest !== null;
     }
 
 

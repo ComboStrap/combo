@@ -26,6 +26,8 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  * Then we found
  * https://glidejs.com/
  *
+ * If we need another, the <a href="https://themes.getbootstrap.com/preview/?theme_id=5348">purpose template</a>
+ * send us to the popular https://swiperjs.com/
  *
  *
  */

@@ -59,13 +59,23 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
         /**
          * The router may have done a redirection
-         * Dokuwiki does not stop unfortunately
+         * (The Dokuwiki testRequest does not stop unfortunately)
          */
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         $hasEnded = $executionContext
             ->response()
             ->hasEnded();
         if ($hasEnded) {
+            if($executionContext->isTestRun()){
+                /**
+                 * This info helps the developer to see
+                 * why nothing happens when it sends two dokuwiki {@link TestRequest}
+                 *
+                 * And not two {@link \ComboStrap\HttpResponse}
+                 * that reinitialize the global scope
+                 */
+                LogUtility::info("ExecuteDoAction: The response has already be send (ended).");
+            }
             return;
         }
 

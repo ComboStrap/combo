@@ -167,9 +167,6 @@ class HttpResponse
          * We can't exit, we need
          * to send all data back to the {@link TestRequest}
          */
-
-
-
         if (isset($this->body)) {
             $testRequest->addData(self::EXIT_KEY, $this->body);
         }

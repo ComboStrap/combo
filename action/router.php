@@ -327,8 +327,8 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Page is an existing id ?
          */
-        $requestedPage = MarkupPath::createMarkupFromId($ID);
-        if ($requestedPage->exists()) {
+        $requestedMarkupPath = MarkupPath::createMarkupFromId($ID);
+        if (FileSystems::exists($requestedMarkupPath)) {
 
             /**
              * If this is not the root home page
@@ -337,7 +337,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
              * redirect
              */
             if (
-                $originalId !== $requestedPage->getUrlId() // The id may have been changed
+                $originalId !== $requestedMarkupPath->getUrlId() // The id may have been changed
                 && $ID != Site::getIndexPageName()
                 && !isset($_REQUEST["rev"])
             ) {
@@ -345,9 +345,9 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                  * TODO: When saving for the first time, the page is not stored in the database
                  *   but that's not the case actually
                  */
-                if ($requestedPage->getDatabasePage()->exists()) {
+                if ($requestedMarkupPath->getDatabasePage()->exists()) {
                     $this->executePermanentRedirect(
-                        $requestedPage->getCanonicalUrl()->toAbsoluteUrlString(),
+                        $requestedMarkupPath->getCanonicalUrl()->toAbsoluteUrlString(),
                         self::TARGET_ORIGIN_PERMALINK_EXTENDED
                     );
                 }
@@ -362,10 +362,10 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Page Id Website / root Permalink ?
          */
-        $shortPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($requestedPage->getPathObject()->getLastNameWithoutExtension());
+        $shortPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($requestedMarkupPath->getPathObject()->getLastNameWithoutExtension());
         if ($shortPageId !== null) {
             $pageId = PageUrlPath::decodePageId($shortPageId);
-            if ($requestedPage->getParent() === null && $pageId !== null) {
+            if ($requestedMarkupPath->getParent() === null && $pageId !== null) {
                 $page = DatabasePageRow::createFromPageId($pageId)->getPage();
                 if ($page !== null && $page->exists()) {
                     $this->executePermanentRedirect(
@@ -537,7 +537,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                     /**
                      * @var MarkupPath $bestEndPage
                      */
-                    list($bestEndPage, $method) = RouterBestEndPage::process($requestedPage);
+                    list($bestEndPage, $method) = RouterBestEndPage::process($requestedMarkupPath);
                     if ($bestEndPage != null) {
                         $res = false;
                         switch ($method) {
@@ -745,6 +745,12 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         global $INFO;
         $sourceId = $ID;
         $ID = $targetPageId;
+        if (isset($_REQUEST["id"])) {
+            $_REQUEST["id"] = $targetPageId;
+        }
+        if (isset($_GET["id"])) {
+            $_GET["id"] = $targetPageId;
+        }
 
         /**
          * Refresh the $INFO data

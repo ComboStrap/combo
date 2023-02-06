@@ -2,7 +2,6 @@
 
 namespace ComboStrap;
 
-use syntax_plugin_combo_breadcrumb;
 
 /**
  * Utility class for breadcrumb
@@ -15,12 +14,16 @@ class Breadcrumb
      * Navigation is a markup that should be present
      * only once in a page
      */
-    public const NAVIGATION_TYPE = "navigation";
+    public const NAVIGATION_TYPE = "nav";
     /**
      * Typography is when a breadcrumb is used in a iterator
      * for instance as sub-title
      */
-    public const TYPOGRAPHY_TYPE = "typography";
+    public const TYPOGRAPHY_TYPE = "typo";
+    public const TAG = "breadcrumb";
+    public const CANONICAL_HIERARCHICAL = "breadcrumb-hierarchical";
+    public const DEPTH_ATTRIBUTE = "depth";
+    const TYPES = [ self::TYPOGRAPHY_TYPE, self::NAVIGATION_TYPE];
 
     /**
      * Hierarchical breadcrumbs (you are here)
@@ -36,13 +39,12 @@ class Breadcrumb
      *
      * @param TagAttributes|null $tagAttributes
      * @return string
-     * @throws ExceptionNotFound
      */
     public static function toBreadCrumbHtml(TagAttributes $tagAttributes = null): string
     {
 
         if ($tagAttributes === null) {
-            $tagAttributes = TagAttributes::createEmpty(syntax_plugin_combo_breadcrumb::TAG);
+            $tagAttributes = TagAttributes::createEmpty(self::TAG);
         }
 
 
@@ -52,7 +54,7 @@ class Breadcrumb
         $path = ContextManager::getOrCreate()->getAttribute(PagePath::PROPERTY_NAME);
         if ($path === null) {
             // should never happen but yeah
-            LogUtility::error("Internal Error: The page context was not set. Defaulting to the requested page", syntax_plugin_combo_breadcrumb::CANONICAL_HIERARCHICAL);
+            LogUtility::error("Internal Error: The page context was not set. Defaulting to the requested page", self::CANONICAL_HIERARCHICAL);
             $actual = MarkupPath::createFromRequestedPage();
         } else {
             $actual = MarkupPath::createPageFromQualifiedId($path);
@@ -79,10 +81,9 @@ class Breadcrumb
                 $htmlOutput .= '<ol class="breadcrumb">';
 
                 $lisHtmlOutput = self::getLiHtmlOutput($actual, true);
-                $parent = $actual;
                 while (true) {
                     try {
-                        $parent = $parent->getParent();
+                        $actual = $actual->getParent();
                     } catch (ExceptionNotFound $e) {
                         break;
                     }
@@ -97,7 +98,7 @@ class Breadcrumb
             case self::TYPOGRAPHY_TYPE:
 
                 try {
-                    $requiredDepth = DataType::toInteger($tagAttributes->getValueAndRemoveIfPresent(PageSqlTreeListener::DEPTH));
+                    $requiredDepth = DataType::toInteger($tagAttributes->getValueAndRemoveIfPresent(self::DEPTH_ATTRIBUTE));
                 } catch (ExceptionBadArgument $e) {
                     LogUtility::error("We were unable to determine the depth attribute. The depth was set to 1. Error: {$e->getMessage()}");
                     $requiredDepth = 1;
@@ -108,10 +109,15 @@ class Breadcrumb
                 $htmlOutput = $tagAttributes->toHtmlEnterTag("span");
                 $lisHtmlOutput = "";
                 $actualDepth = 0;
-                while ($actual = $actual->getParent()) {
+                while (true) {
+                    try {
+                        $actual = $actual->getParent();
+                    } catch (ExceptionNotFound $e) {
+                        break;
+                    }
                     $actualDepth = $actualDepth + 1;
                     $nameOrDefault = $actual->getNameOrDefault();
-                    $liHtmlOutput = "<span class=\"breadcrumb-typography-item\">$nameOrDefault</span>";
+                    $liHtmlOutput = "<span class=\"breadcrumb-$type-item\">$nameOrDefault</span>";
                     $lisHtmlOutput = $liHtmlOutput . $lisHtmlOutput;
                     if ($actualDepth >= $requiredDepth) {
                         break;
@@ -152,14 +158,32 @@ class Breadcrumb
 
         if (FileSystems::exists($page->getPathObject()) && $current === false) {
             if ($link) {
-                $liHtmlOutput .= $page->getHtmlAnchorLink(syntax_plugin_combo_breadcrumb::CANONICAL_HIERARCHICAL);
+                $liHtmlOutput .= $page->getHtmlAnchorLink(self::CANONICAL_HIERARCHICAL);
             } else {
                 $liHtmlOutput .= $page->getNameOrDefault();
             }
         } else {
             $liHtmlOutput .= $page->getNameOrDefault();
         }
-        $liHtmlOutput .= '</li>' . PHP_EOL;
+        $liHtmlOutput .= '</li>';
         return $liHtmlOutput;
+    }
+
+    /**
+     * Same rendering for typographic or navigational breadcrumb
+     * @param TagAttributes $tagAttributes
+     * @return string
+     */
+    public static function render(TagAttributes $tagAttributes): string
+    {
+
+        $cacheManager = CacheManager::getFromContextExecution();
+        // the output has the data from the requested page
+        $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+        // the data from the requested page is dependent on the name, title or description of the page
+        $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
+
+        return Breadcrumb::toBreadCrumbHtml($tagAttributes);
+
     }
 }

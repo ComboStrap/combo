@@ -4,6 +4,7 @@
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 // must be run within Dokuwiki
+use ComboStrap\Breadcrumb;
 use ComboStrap\HrTag;
 use ComboStrap\IconTag;
 use ComboStrap\LogUtility;
@@ -35,6 +36,9 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
      */
     function getPType(): string
     {
+        /**
+         * Empty tag may be also block (ie Navigational {@link Breadcrumb} for instance
+         */
         return 'normal';
     }
 
@@ -63,6 +67,12 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
 
         $logicalTag = PluginUtility::getTag($match);
         $defaultAttributes = [];
+        $knownTypes = [];
+        /**
+         * Common
+         */
+        $commonReturnedAttributes[PluginUtility::STATE] = $state;
+        $commonReturnedAttributes[PluginUtility::TAG] = $logicalTag;
         switch ($logicalTag) {
             case SearchTag::TAG:
                 $defaultAttributes = array(
@@ -71,17 +81,16 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
                 );
                 break;
             case IconTag::TAG:
-                $theArray = IconTag::handleSpecial($match, $handler);
-                $theArray[PluginUtility::STATE] = $state;
-                $theArray[PluginUtility::TAG] = IconTag::TAG;
-                return $theArray;
+                $attributes = IconTag::handleSpecial($match, $handler);
+                return array_merge($commonReturnedAttributes, $attributes);
+            case Breadcrumb::TAG:
+                $knownTypes = Breadcrumb::TYPES;
+                $defaultAttributes = [TagAttributes::TYPE_KEY => Breadcrumb::NAVIGATION_TYPE];
+                break;
         }
-        $tag = TagAttributes::createFromTagMatch($match, $defaultAttributes);
-        return array(
-            PluginUtility::TAG => $tag->getLogicalTag(),
-            PluginUtility::ATTRIBUTES => $tag->toCallStackArray(),
-            PluginUtility::STATE => $state
-        );
+        $tag = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
+        $defaultArray = array(PluginUtility::ATTRIBUTES => $tag->toCallStackArray());
+        return array_merge($commonReturnedAttributes, $defaultArray);
 
     }
 
@@ -100,7 +109,8 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
 
         $tag = $data[PluginUtility::TAG];
         $attributes = $data[PluginUtility::ATTRIBUTES];
-        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+        $tagAttributes = TagAttributes::createFromCallStackArray($attributes)
+            ->setLogicalTag($tag);
         switch ($format) {
             case "xhtml":
                 /** @var Doku_Renderer_xhtml $renderer */
@@ -113,6 +123,9 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
                         break;
                     case IconTag::TAG:
                         $renderer->doc .= IconTag::render($tagAttributes);
+                        break;
+                    case Breadcrumb::TAG:
+                        $renderer->doc .= Breadcrumb::render($tagAttributes);
                         break;
                     default:
                         LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");

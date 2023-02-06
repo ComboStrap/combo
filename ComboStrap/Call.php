@@ -14,7 +14,6 @@ namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
 use syntax_plugin_combo_media;
-use syntax_plugin_combo_pageimage;
 
 
 /**
@@ -88,7 +87,7 @@ class Call
         \syntax_plugin_combo_button::TAG,
         \syntax_plugin_combo_tooltip::TAG,
         \syntax_plugin_combo_pipeline::TAG,
-        \syntax_plugin_combo_ibreadcrumb::TAG,
+        Breadcrumb::TAG, // only the typo is inline but yeah
     );
 
 
@@ -111,7 +110,7 @@ class Call
      */
     const IMAGE_TAGS = [
         syntax_plugin_combo_media::TAG,
-        syntax_plugin_combo_pageimage::TAG
+        PageImageTag::TAG
     ];
     const CANONICAL = "call";
 

@@ -97,7 +97,6 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
             throw new ExceptionRuntimeInternal("The toc could not be created. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
         }
         try {
-
             return PageLayout::createFromLayoutName($layoutName)
                 ->setRequestedContextPath($startMarkupWikiPath)
                 ->setRequestedTitle($title)
@@ -106,7 +105,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
                 ->setDeleteSocialHeadTags(true)
                 ->setRequestedEnableTaskRunner(false)
                 ->generateAndGetPageHtmlAsString($mainContent);
-        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+        } catch (ExceptionBadSyntax|ExceptionNotFound|ExceptionBadArgument $e) {
             // layout should be good
             throw new ExceptionRuntimeInternal("The $layoutName template returns an error", self::CANONICAL, 1, $e);
         }

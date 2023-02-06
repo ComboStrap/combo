@@ -135,7 +135,8 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
                 $text = trim($tagAttributes->getValue(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE));
                 $level = $tagAttributes->getValue(syntax_plugin_combo_heading::LEVEL);
-                $renderer->header($text, $level, null);
+                $pos = 0; // mandatory for header but not for metadata, we set 0 to make the code analyser happy
+                $renderer->header($text, $level, $pos);
             }
         }
 
@@ -155,7 +156,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
                 $text = $tagAttributes->getValue(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE);
                 $level = $tagAttributes->getValue(syntax_plugin_combo_heading::LEVEL);
-                $renderer->header($text, $level, null);
+                $renderer->header($text, $level, 0);
             }
         }
     }
@@ -178,10 +179,10 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          * this is a outline
          */
         $parent = $callStack->moveToParent();
-        if ($parent != false && $parent->getTagName() === syntax_plugin_combo_webcode::TAG) {
+        if ($parent && $parent->getTagName() === syntax_plugin_combo_webcode::TAG) {
             $parent = $callStack->moveToParent();
         }
-        if ($parent != false && $parent->getComponentName() !== "section_open") {
+        if ($parent && $parent->getComponentName() !== "section_open") {
             $headingType = self::TYPE_TITLE;
         } else {
             $headingType = self::TYPE_OUTLINE;

@@ -17,12 +17,10 @@ class IconTag
     const CANONICAL = "icon";
     public const TAG = "icon";
 
-    public static function handleSpecial($match, Doku_Handler $handler): array
+    public static function handleSpecial(TagAttributes $tagAttributes, Doku_Handler $handler): array
     {
         // Get the parameters
-        $knownTypes = [];
-        $defaultAttributes = [];
-        $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
+
         $callStack = CallStack::createFromHandler($handler);
         $parent = $callStack->moveToParent();
         $context = "";
@@ -67,10 +65,7 @@ class IconTag
                 $tagAttributes->setComponentAttributeValue(ColorRgb::COLOR, $color);
             }
         }
-        return array(
-            PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
-            PluginUtility::CONTEXT => $context
-        );
+        return array(PluginUtility::CONTEXT => $context);
     }
 
     public static function exceptionHandling(Exception $e, $tagAttribute): string
@@ -119,12 +114,12 @@ class IconTag
         }
     }
 
-    public static function handleEnter(string $match, Doku_Handler $handler): array
+    public static function handleEnter(TagAttributes $tagAttributes, Doku_Handler $handler): array
     {
-        return self::handleSpecial($match, $handler);
+        return self::handleSpecial($tagAttributes, $handler);
     }
 
-    public static function handleExit(string $match, Doku_Handler $handler): array
+    public static function handleExit(Doku_Handler $handler): array
     {
         $callStack = CallStack::createFromHandler($handler);
         $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();

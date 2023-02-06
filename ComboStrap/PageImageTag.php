@@ -1,132 +1,61 @@
 <?php
 
+namespace ComboStrap;
 
-use ComboStrap\CallStack;
-use ComboStrap\ConditionalLength;
-use ComboStrap\ContextManager;
-use ComboStrap\Dimension;
-use ComboStrap\WikiPath;
-use ComboStrap\ExceptionBadArgument;
-use ComboStrap\ExceptionBadSyntax;
-use ComboStrap\ExceptionCompile;
-use ComboStrap\ExceptionNotFound;
-use ComboStrap\FetcherImage;
-use ComboStrap\IFetcherLocalImage;
-use ComboStrap\FetcherSvg;
-use ComboStrap\FetcherVignette;
-use ComboStrap\FirstImage;
-use ComboStrap\IconDownloader;
-use ComboStrap\LogUtility;
-use ComboStrap\MediaMarkup;
-use ComboStrap\MarkupPath;
-use ComboStrap\PagePath;
-use ComboStrap\PluginUtility;
-use ComboStrap\Site;
-use ComboStrap\TagAttributes;
+use Exception;
+use syntax_plugin_combo_card;
 
-
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
-
-
-/**
- * Set the cache of the bar
- * Ie add the possibility to add a time
- * over {@link \dokuwiki\Parsing\ParserMode\Nocache}
- */
-class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
+class PageImageTag
 {
 
-
-    const TAG = "pageimage";
-
-    const MARKUP = "page-image";
-
-
-    const CANONICAL = self::TAG;
-    const DEFAULT_ATTRIBUTE = "default";
-
-    const META_TYPE = "meta";
-    const DESCENDANT_TYPE = "descendant";
-    const VIGNETTE_TYPE = "vignette";
-    const FIRST_TYPE = "first";
-    const LOGO_TYPE = "logo";
-    const NONE_TYPE = "none";
-
-    const DEFAULT_ORDER = [
-        self::META_TYPE,
-        self::FIRST_TYPE,
-        self::DESCENDANT_TYPE,
-        self::VIGNETTE_TYPE,
-        self::LOGO_TYPE
+    public const CANONICAL = PageImageTag::TAG;
+    public const VIGNETTE_TYPE = "vignette";
+    public const DEFAULT_ATTRIBUTE = "default";
+    public const MARKUP = "page-image";
+    public const LOGO_TYPE = "logo";
+    public const DEFAULT_ORDER = [
+        PageImageTag::META_TYPE,
+        PageImageTag::FIRST_TYPE,
+        PageImageTag::DESCENDANT_TYPE,
+        PageImageTag::VIGNETTE_TYPE,
+        PageImageTag::LOGO_TYPE
     ];
-    const ORDER_OF_PREFERENCE = "order";
+    public const ORDER_OF_PREFERENCE = "order";
+    public const DESCENDANT_TYPE = "descendant";
+    public const TAG = "pageimage";
+    public const META_TYPE = "meta";
+    public const NONE_TYPE = "none";
+    public const FIRST_TYPE = "first";
 
+    public const TYPES = [
+        PageImageTag::META_TYPE,
+        PageImageTag::FIRST_TYPE,
+        PageImageTag::VIGNETTE_TYPE,
+        PageImageTag::DESCENDANT_TYPE,
+        PageImageTag::LOGO_TYPE
+    ];
 
-    function getType(): string
-    {
-        return 'formatting';
-    }
 
     /**
-     * How Dokuwiki will add P element
+     * Because the pageimage can also be used
+     * in a template
      *
-     *  * 'normal' - The plugin can be used inside paragraphs (inline)
-     *  * 'block'  - Open paragraphs need to be closed before plugin output - block should not be inside paragraphs
-     *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
+     * The calculation are done in the {@link syntax_plugin_combo_pageimage::render render function}
      *
-     * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType(): string
+    public static function handle($tagAttributes, $handler): array
     {
-        return 'normal';
-    }
-
-    function getAllowedTypes(): array
-    {
-        return array();
-    }
-
-    function getSort(): int
-    {
-        return 201;
-    }
-
-
-    function connectTo($mode)
-    {
-
-        $this->Lexer->addSpecialPattern(PluginUtility::getVoidElementTagPattern(self::MARKUP), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
-
-    }
-
-
-    function handle($match, $state, $pos, Doku_Handler $handler): array
-    {
-
-        /**
-         * Because the pageimage can also be used
-         * in a template
-         *
-         * The calculation are done in the {@link syntax_plugin_combo_pageimage::render render function}
-         *
-         */
-        if ($state !== DOKU_LEXER_SPECIAL) {
-            return [];
-        }
-
-        $knownTypes = [self::META_TYPE, self::FIRST_TYPE, self::VIGNETTE_TYPE, self::DESCENDANT_TYPE, self::LOGO_TYPE];
-        $tagAttributes = TagAttributes::createFromTagMatch($match, [], $knownTypes);
 
         /**
          * Page Image Order Calculation
          */
-        $type = $tagAttributes->getComponentAttributeValue(TagAttributes::TYPE_KEY, self::META_TYPE);
+        $type = $tagAttributes->getComponentAttributeValue(TagAttributes::TYPE_KEY, PageImageTag::META_TYPE);
         // the type is first
         $orderOfPreference[] = $type;
         // then the default one
-        $default = $tagAttributes->getValueAndRemoveIfPresent(self::DEFAULT_ATTRIBUTE);
+        $default = $tagAttributes->getValueAndRemoveIfPresent(PageImageTag::DEFAULT_ATTRIBUTE);
         if ($default === null) {
-            $defaultOrderOfPrecedence = self::DEFAULT_ORDER;
+            $defaultOrderOfPrecedence = PageImageTag::DEFAULT_ORDER;
         } else {
             $defaultOrderOfPrecedence = explode("|", $default);
         }
@@ -142,41 +71,21 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
          * Context
          */
         $callStack = CallStack::createFromHandler($handler);
-        $context = self::TAG;
+        $context = PageImageTag::TAG;
         $parent = $callStack->moveToParent();
         if ($parent !== false) {
             $context = $parent->getTagName();
         }
 
-
         return array(
-            PluginUtility::STATE => $state,
             PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
             PluginUtility::CONTEXT => $context,
-            self::ORDER_OF_PREFERENCE => $orderOfPreference
+            PageImageTag::ORDER_OF_PREFERENCE => $orderOfPreference
         );
-
-
     }
 
-    /**
-     * Render the output
-     * @param string $format
-     * @param Doku_Renderer $renderer
-     * @param array $data - what the function handle() return'ed
-     * @return boolean - rendered correctly? (however, returned value is not used at the moment)
-     * @see DokuWiki_Syntax_Plugin::render()
-     *
-     */
-    function render($format, Doku_Renderer $renderer, $data): bool
+    public static function render(TagAttributes $tagAttributes, array $data)
     {
-
-        if ($format !== 'xhtml') {
-            // unsupported $mode
-            return false;
-        }
-
-        $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
 
 
         $path = $tagAttributes->getValueAndRemove(PagePath::PROPERTY_NAME);
@@ -185,7 +94,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
             $path = $contextManager->getAttribute(PagePath::PROPERTY_NAME);
             if ($path === null) {
                 // It should never happen, dev error
-                LogUtility::error("Internal Error: Bad state: page image cannot retrieve the page path from the context", self::CANONICAL);
+                LogUtility::error("Internal Error: Bad state: page image cannot retrieve the page path from the context", PageImageTag::CANONICAL);
                 return false;
             }
         }
@@ -199,18 +108,18 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
         /**
          * Image Order of precedence
          */
-        $order = $data[self::ORDER_OF_PREFERENCE];
+        $order = $data[PageImageTag::ORDER_OF_PREFERENCE];
         $imageFetcher = null;
         foreach ($order as $pageImageProcessing) {
             switch ($pageImageProcessing) {
-                case self::META_TYPE:
+                case PageImageTag::META_TYPE:
                     try {
-                        $imageFetcher = $this->selectAndGetBestMetadataPageImageFetcherForRatio($page, $tagAttributes);
+                        $imageFetcher = self::selectAndGetBestMetadataPageImageFetcherForRatio($page, $tagAttributes);
                     } catch (ExceptionNotFound $e) {
                         // ok
                     }
                     break;
-                case self::DESCENDANT_TYPE:
+                case PageImageTag::DESCENDANT_TYPE:
                 case "parent": // old
                     $parent = $page;
                     while (true) {
@@ -220,7 +129,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                             break;
                         }
                         try {
-                            $imageFetcher = $this->selectAndGetBestMetadataPageImageFetcherForRatio($parent, $tagAttributes);
+                            $imageFetcher = self::selectAndGetBestMetadataPageImageFetcherForRatio($parent, $tagAttributes);
                         } catch (ExceptionNotFound $e) {
                             try {
                                 $imageFetcher = FirstImage::createForPage($parent)
@@ -232,7 +141,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                         break;
                     }
                     break;
-                case self::FIRST_TYPE:
+                case PageImageTag::FIRST_TYPE:
                     try {
                         $imageFetcher = FirstImage::createForPage($page)
                             ->getLocalImageFetcher();
@@ -240,7 +149,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                         continue 2;
                     }
                     break;
-                case self::VIGNETTE_TYPE:
+                case PageImageTag::VIGNETTE_TYPE:
 
                     try {
                         $imageFetcher = FetcherVignette::createForPage($page);
@@ -248,17 +157,17 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                         LogUtility::error("Error while creating the vignette for the page ($page). Error: {$e->getMessage()}");
                     }
                     break;
-                case self::LOGO_TYPE:
+                case PageImageTag::LOGO_TYPE:
                     try {
                         $imageFetcher = FetcherSvg::createSvgFromPath(Site::getLogoAsSvgImage());
                     } catch (ExceptionNotFound $e) {
-                        LogUtility::msg("No page image could be find for the page ($path)", LogUtility::LVL_MSG_INFO, self::CANONICAL);
+                        LogUtility::msg("No page image could be find for the page ($path)", LogUtility::LVL_MSG_INFO, PageImageTag::CANONICAL);
                     }
                     break;
-                case self::NONE_TYPE:
+                case PageImageTag::NONE_TYPE:
                     return false;
                 default:
-                    LogUtility::error("The image ($pageImageProcessing) is an unknown page image type", self::CANONICAL);
+                    LogUtility::error("The image ($pageImageProcessing) is an unknown page image type", PageImageTag::CANONICAL);
                     continue 2;
             }
             if ($imageFetcher !== null) {
@@ -276,7 +185,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
         try {
             $imageFetcher->buildFromTagAttributes($tagAttributes);
         } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionCompile $e) {
-            LogUtility::error("The image could not be build. Error: {$e->getMessage()}", self::CANONICAL);
+            LogUtility::error("The image could not be build. Error: {$e->getMessage()}", PageImageTag::CANONICAL);
         }
 
         /**
@@ -326,8 +235,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
 
         /**
          * Img/Svg Tag
-         */
-        /**
+         *
          * Used as an illustration in a card
          * If the image is too small, we allow that it will stretch
          * to take the whole space
@@ -338,31 +246,30 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
         }
 
 
+        $tagAttributes->setType(self::MARKUP);
+
         try {
-            $renderer->doc .= MediaMarkup::createFromFetcher($imageFetcher)
+            return MediaMarkup::createFromFetcher($imageFetcher)
                 ->setHtmlOrSetterTagAttributes($tagAttributes)
                 ->toHtml();
         } catch (ExceptionCompile $e) {
-            $renderer->doc .= "Error while rendering the page image: {$e->getMessage()}";
+            return "Error while rendering the page image: {$e->getMessage()}";
         }
-        return true;
 
     }
 
     /**
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotFound - if the page was not found
      */
-    private function selectAndGetBestMetadataPageImageFetcherForRatio(MarkupPath $page, TagAttributes $tagAttributes): FetcherImage
+    private static function selectAndGetBestMetadataPageImageFetcherForRatio(MarkupPath $page, TagAttributes $tagAttributes): IFetcherLocalImage
     {
-
         /**
          * Take the image and the page images
          * of the first page with an image
          */
         $selectedPageImage = IFetcherLocalImage::createImageFetchFromPageImageMetadata($page);
-        $stringRatio = $tagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
+        $stringRatio = $tagAttributes->getValue(Dimension::RATIO_ATTRIBUTE);
         if ($stringRatio === null) {
-
             return $selectedPageImage;
         }
 
@@ -374,7 +281,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
         try {
             $targetRatio = Dimension::convertTextualRatioToNumber($stringRatio);
         } catch (ExceptionBadSyntax $e) {
-            LogUtility::error("The ratio ($stringRatio) is not a valid ratio. Error: {$e->getMessage()}", self::CANONICAL);
+            LogUtility::error("The ratio ($stringRatio) is not a valid ratio. Error: {$e->getMessage()}", PageImageTag::CANONICAL);
             return $selectedPageImage;
         }
 
@@ -383,26 +290,16 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
             $path = $pageImage->getImagePath();
             try {
                 $fetcherImage = IFetcherLocalImage::createImageFetchFromPath($path);
-            } catch (ExceptionBadArgument $e) {
+            } catch (Exception $e) {
                 LogUtility::msg("An image object could not be build from ($path). Is it an image file ?. Error: {$e->getMessage()}");
                 continue;
             }
-            try {
-                $ratioDistance = $targetRatio - $fetcherImage->getIntrinsicAspectRatio();
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("The page image ($fetcherImage) of the page ($page) returns an error. Error: {$e->getMessage()}");
-                continue;
-            }
+            $ratioDistance = $targetRatio - $fetcherImage->getIntrinsicAspectRatio();
             if ($ratioDistance < $bestRatioDistance) {
                 $bestRatioDistance = $ratioDistance;
                 $selectedPageImage = $fetcherImage;
             }
         }
         return $selectedPageImage;
-
-
     }
-
-
 }
-

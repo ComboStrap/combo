@@ -7,7 +7,6 @@ namespace ComboStrap;
 use dokuwiki\Extension\SyntaxPlugin;
 use syntax_plugin_combo_button;
 use syntax_plugin_combo_link;
-use syntax_plugin_combo_pageimage;
 
 class Dimension
 {
@@ -221,15 +220,15 @@ EOF;
         try {
             $width = DataType::toInteger($width);
         } catch (ExceptionCompile $e) {
-            throw new ExceptionBadSyntax("The width value ($width) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
+            throw new ExceptionBadSyntax("The width value ($width) of the ratio `$stringRatio` is not numeric", PageImageTag::CANONICAL);
         }
         try {
             $height = DataType::toInteger($height);
         } catch (ExceptionCompile $e) {
-            throw new ExceptionBadSyntax("The width value ($height) of the ratio `$stringRatio` is not numeric", syntax_plugin_combo_pageimage::CANONICAL);
+            throw new ExceptionBadSyntax("The width value ($height) of the ratio `$stringRatio` is not numeric", PageImageTag::CANONICAL);
         }
         if ($height === 0) {
-            throw new ExceptionBadSyntax("The height value of the ratio `$stringRatio` should not be zero", syntax_plugin_combo_pageimage::CANONICAL);
+            throw new ExceptionBadSyntax("The height value of the ratio `$stringRatio` should not be zero", PageImageTag::CANONICAL);
         }
         return floatval($width / $height);
 

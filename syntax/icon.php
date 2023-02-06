@@ -143,11 +143,12 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER:
-                $contextArray = IconTag::handleEnter($match, $handler);
+                $tagAttributes = TagAttributes::createFromTagMatch($match);
+                $contextArray = IconTag::handleEnter($tagAttributes, $handler);
                 $contextArray[PluginUtility::STATE] = $state;
                 return $contextArray;
             case DOKU_LEXER_EXIT:
-                $contextArray = IconTag::handleExit($match, $handler);
+                $contextArray = IconTag::handleExit($handler);
                 $contextArray[PluginUtility::STATE] = $state;
                 return $contextArray;
         }

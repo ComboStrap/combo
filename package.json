@@ -51,7 +51,7 @@
         }
     },
     "dependencies": {
-        "nanoid": "^3.1.30"
+        "nanoid": "^3.1.31"
     },
     "peerDependencies": {
         "@popperjs/core": "^2.10.2",

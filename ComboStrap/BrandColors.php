@@ -20,6 +20,10 @@ class BrandColors
     border-color: $colorRgb;
     box-shadow: 0 0 0 0.25rem rgb({$primaryColor->getRed()} {$primaryColor->getGreen()} {$primaryColor->getBlue()} / 25%);
 }
+.form-check-input:focus {
+    border-color: $colorRgb;
+    box-shadow: 0 0 0 0.25rem rgb({$primaryColor->getRed()} {$primaryColor->getGreen()} {$primaryColor->getBlue()} / 25%);
+}
 EOF;
 
 

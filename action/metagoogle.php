@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExecutionContext;
 use ComboStrap\FileSystems;
 use ComboStrap\LdJson;
@@ -43,7 +44,12 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             return;
         }
 
-        $page = MarkupPath::createFromRequestedPage();
+        try {
+            $page = MarkupPath::createFromRequestedPage();
+        } catch (ExceptionNotFound $e) {
+            return;
+        }
+
         if (!FileSystems::exists($page)) {
             return;
         }

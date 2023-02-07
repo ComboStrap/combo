@@ -309,7 +309,7 @@ class LdJson extends MetadataJson
                 $ldJson = array(
                     "@context" => "https://schema.org",
                     "@type" => $schemaType,
-                    'url' => $page->getAbsoluteCanonicalUrl(),
+                    'url' => $page->getAbsoluteCanonicalUrl()->toString(),
                     "headline" => $page->getTitleOrDefault(),
 
                 );
@@ -399,7 +399,7 @@ class LdJson extends MetadataJson
                 $ldJson = array(
                     '@context' => 'https://schema.org',
                     '@type' => $type,
-                    'url' => $page->getAbsoluteCanonicalUrl()
+                    'url' => $page->getAbsoluteCanonicalUrl()->toString()
                 );
                 break;
         }

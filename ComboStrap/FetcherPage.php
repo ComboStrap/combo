@@ -81,10 +81,10 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
         // the drive is not needed
         $url->removeQueryParameter(WikiPath::DRIVE_ATTRIBUTE);
-        if (ExecutionContext::getActualOrCreateFromEnv()->isPageFetcherEnabledAsShowAction()) {
-            $url->removeQueryParameter(IFetcher::FETCHER_KEY);
-            $url->addQueryParameter("do", \action_plugin_combo_docustom::getDoParameterValue($this->getFetcherName()));
-        }
+
+        // this is the default fetcher, no need to add it as parameter
+        $url->removeQueryParameter(IFetcher::FETCHER_KEY);
+
         return $url;
     }
 

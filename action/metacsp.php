@@ -4,7 +4,6 @@ use ComboStrap\LogUtility;
 use ComboStrap\Site;
 use ComboStrap\StringUtility;
 
-if (!defined('DOKU_INC')) die();
 
 /**
  *

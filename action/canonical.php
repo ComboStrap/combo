@@ -32,8 +32,10 @@ class action_plugin_combo_canonical extends DokuWiki_Action_Plugin
 
         /**
          * Add canonical to javascript
+         * The {@link jsinfo()} is called in the {@link tpl_metaheaders()}
+         * We use therefore the 'TPL_METAHEADER_OUTPUT' event
          */
-        $controller->register_hook('TPL_ACT_RENDER', 'BEFORE', $this, 'addCanonicalToJavascript', array());
+        $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'addCanonicalToJavascript', array());
 
     }
 
@@ -47,9 +49,12 @@ class action_plugin_combo_canonical extends DokuWiki_Action_Plugin
     function addCanonicalToJavascript($event)
     {
 
+        try {
+            $page = MarkupPath::createFromRequestedPage();
+        } catch (ExceptionNotFound $e) {
+            return;
+        }
         global $JSINFO;
-        $page = MarkupPath::createFromRequestedPage();
-
         try {
             $canonical = $page->getCanonical();
             $JSINFO[Canonical::PROPERTY_NAME] = $canonical;

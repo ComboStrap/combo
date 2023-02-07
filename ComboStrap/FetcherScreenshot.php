@@ -248,4 +248,10 @@ class FetcherScreenshot extends FetcherImage
         }
         return $this->url;
     }
+
+    public function getLabel(): string
+    {
+        return self::CANONICAL;
+    }
+
 }

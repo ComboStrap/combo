@@ -255,4 +255,9 @@ EOF;
         }
         return $outline;
     }
+
+    public function getLabel(): string
+    {
+        return self::CANONICAL;
+    }
 }

@@ -367,4 +367,9 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         return $this->fetcherCache->getFile();
     }
 
+    public function getLabel(): string
+    {
+        $sourcePath = $this->getSourcePath();
+        return ResourceName::getFromPath($sourcePath);
+    }
 }

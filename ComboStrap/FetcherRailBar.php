@@ -386,4 +386,9 @@ EOF;
     }
 
 
+    public function getLabel(): string
+    {
+        return self::NAME;
+    }
+
 }

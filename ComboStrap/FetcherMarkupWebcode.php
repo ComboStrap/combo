@@ -164,4 +164,9 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
     }
 
 
+    public function getLabel(): string
+    {
+        return self::CANONICAL;
+    }
+
 }

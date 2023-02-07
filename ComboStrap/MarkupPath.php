@@ -518,12 +518,8 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     }
 
-    /**
-     * @return mixed
-     * @throws ExceptionNotFound
-     */
-    public
-    function getH1OrDefault()
+
+    public function getH1OrDefault(): string
     {
 
         return $this->h1->getValueOrDefault();
@@ -584,7 +580,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     function upsertContent($content, $summary = "Default"): MarkupPath
     {
         $path = $this->getPathObject();
-        if(!($path instanceof WikiPath)){
+        if (!($path instanceof WikiPath)) {
             throw new ExceptionRuntime("The path of this markup is not a wiki path");
         }
         saveWikiText($path->getWikiId(), $content, $summary);

@@ -511,7 +511,7 @@ class WikiPath extends PathAbs
             if (FileSystems::isDirectory($path)) {
                 WikiPath::addNamespaceEndSeparatorIfNotPresent($wikiPath);
             }
-            return WikiPath::createWikiPath(":$wikiPath", $driveRoot);
+            return WikiPath::createWikiPath($wikiPath, $driveRoot);
 
         }
         throw new ExceptionBadArgument("The local path ($path) is not inside a wiki path drive");

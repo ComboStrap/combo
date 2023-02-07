@@ -250,10 +250,34 @@ class WikiPath extends PathAbs
         if (WikiPath::isNamespacePath($path)) {
             return new WikiPath($path, self::MARKUP_DRIVE, $rev);
         }
-        $defaultWikiPath = new WikiPath($path . '.' . self::MARKUP_DEFAULT_TXT_EXTENSION, self::MARKUP_DRIVE, $rev);
+
+        /**
+         * Default Path
+         * (we add the txt extension if not present)
+         */
+        $defaultPath = $path;
+        $lastName = $path;
+        $lastSeparator = strrpos($path, self::NAMESPACE_SEPARATOR_DOUBLE_POINT);
+        if ($lastSeparator !== false) {
+            $lastName = substr($path, $lastSeparator);
+        }
+        $lastPoint = strpos($lastName, ".");
+        if ($lastPoint === false) {
+            $defaultPath = $defaultPath . '.' . self::MARKUP_DEFAULT_TXT_EXTENSION;
+        } else {
+            $extension = substr($lastName, $lastPoint + 1);
+            if (!in_array($extension, self::ALL_MARKUP_EXTENSIONS)) {
+                $defaultPath = $defaultPath . '.' . self::MARKUP_DEFAULT_TXT_EXTENSION;
+            }
+        }
+        $defaultWikiPath = new WikiPath($defaultPath, self::MARKUP_DRIVE, $rev);
         if (FileSystems::exists($defaultWikiPath)) {
             return $defaultWikiPath;
         }
+
+        /**
+         * Markup extension (Markdown, ...)
+         */
         foreach (self::ALL_MARKUP_EXTENSIONS as $markupExtension) {
             if ($markupExtension == self::MARKUP_DEFAULT_TXT_EXTENSION) {
                 continue;
@@ -263,6 +287,10 @@ class WikiPath extends PathAbs
                 return $markupWikiPath;
             }
         }
+
+        /**
+         * Return the non-existen default wiki path
+         */
         return $defaultWikiPath;
 
     }

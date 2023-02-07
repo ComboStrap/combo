@@ -310,6 +310,14 @@ class XmlElement
     public function getParent(): XmlElement
     {
         $parentNode = $this->domElement->parentNode;
+        if ($parentNode !== null) {
+            while (!($parentNode instanceof DOMElement)) {
+                $parentNode = $parentNode->parentNode;
+                if ($parentNode === null) {
+                    break;
+                }
+            }
+        }
         if ($parentNode === null) {
             throw new ExceptionNotFound("No parent node found");
         }
@@ -367,5 +375,18 @@ class XmlElement
     public function getStyleProperty(string $property): string
     {
         return $this->getStyleProperties()[$property];
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
+     */
+    public function getAttributeAsUrl(string $attributeName): Url
+    {
+        $value = $this->getAttribute($attributeName);
+        if (empty($value)) {
+            return Url::createEmpty();
+        }
+        return Url::createFromString($value);
     }
 }

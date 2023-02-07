@@ -103,6 +103,10 @@ class Lang extends MetadataText
         return $lang;
     }
 
+
+    /**
+     * @throws ExceptionNotFound
+     */
     public static function createFromRequestedMarkup(): Lang
     {
         return self::createForMarkup(MarkupPath::createFromRequestedPage());

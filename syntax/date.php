@@ -6,6 +6,8 @@ use ComboStrap\CallStack;
 use ComboStrap\ContextManager;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\Iso8601Date;
 use ComboStrap\Lang;
 use ComboStrap\LogUtility;
@@ -52,14 +54,12 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
         // To format dates in other languages, you should use the setlocale() and strftime() functions instead of date().
         $localeSeparator = '_';
         if ($lang === null) {
-            $path = ContextManager::getOrCreate()->getAttribute(PagePath::PROPERTY_NAME);
-            if ($path === null) {
+            try {
+                $lang = Lang::createFromRequestedMarkup()->getValueOrDefault();
+            } catch (ExceptionNotFound $e) {
                 // should never happen but yeah
-                LogUtility::error("Internal Error: The page content was not set. We were unable to get the page language. Defaulting to the site language");
+                LogUtility::error("Internal Error: The requested page was not found. We were unable to get the page language. Defaulting to the site language");
                 $lang = Site::getLang();
-            } else {
-                $page = MarkupPath::createPageFromQualifiedId($path);
-                $lang = Lang::createForMarkup($page)->getValueOrDefault();
             }
         }
         $actualLocale = setlocale(LC_ALL, 0);

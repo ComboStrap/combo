@@ -227,6 +227,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     /**
      * @return MarkupPath - the requested page
+     * @throws ExceptionNotFound
      */
     public static function createFromRequestedPage(): MarkupPath
     {

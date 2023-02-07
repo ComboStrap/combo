@@ -92,4 +92,10 @@ class FetcherRawLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherS
     {
         return self::NAME;
     }
+
+    public function getLabel(): string
+    {
+        $sourcePath = $this->getSourcePath();
+        return ResourceName::getFromPath($sourcePath);
+    }
 }

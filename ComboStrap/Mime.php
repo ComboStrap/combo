@@ -33,6 +33,13 @@ class Mime
     const CSS = "text/css";
     const MARKDOWN = "text/markdown";
     const PDF = "application/pdf";
+    public const RASTER_MIMES = [
+        Mime::BMP,
+        Mime::WEBP,
+        Mime::JPEG,
+        Mime::GIF,
+        MIME::PNG
+    ];
     /**
      * @var array|null
      */

@@ -121,5 +121,14 @@ interface IFetcher
      */
     public function feedCache(): IFetcher;
 
+    /**
+     * @return string - a label to the resource to be fetched
+     * If the resource is:
+     * - based on a local path, the path name
+     * - generated from a page, the title page
+     * ...
+     */
+    public function getLabel(): string;
+
 
 }

@@ -30,8 +30,7 @@ abstract class ImageLink extends MediaLink
         try {
             return $this->mediaMarkup->getLabel();
         } catch (ExceptionNotFound $e) {
-            $path = $this->mediaMarkup->getPath();
-            return ResourceName::getFromPath($path);
+            return $this->mediaMarkup->getFetcher()->getLabel();
         }
 
     }
@@ -60,22 +59,18 @@ abstract class ImageLink extends MediaLink
         /**
          * Do we add a link to the image ?
          */
-        $dokuPath = $this->mediaMarkup->getPath();
-        if (!($dokuPath instanceof WikiPath)) {
+        $fetcher = $this->mediaMarkup->getFetcher();
+        if (!($fetcher instanceof IFetcherSource)) {
             // not an internal image
             return $htmlMediaMarkup;
         }
-        try {
-            $isImage = FileSystems::getMime($dokuPath)->isImage();
-            if (!$isImage) {
-                return $htmlMediaMarkup;
-            }
-        } catch (ExceptionNotFound $e) {
-            LogUtility::warning("A media link could not be added. Error:{$e->getMessage()}");
+
+        $isImage = $fetcher->getMime()->isImage();
+        if (!$isImage) {
             return $htmlMediaMarkup;
         }
 
-
+        $dokuPath = $fetcher->getSourcePath();
         try {
             $linking = $this->mediaMarkup->getLinking();
         } catch (ExceptionNotFound $e) {

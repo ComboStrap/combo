@@ -110,7 +110,7 @@ class Call
      */
     const IMAGE_TAGS = [
         syntax_plugin_combo_media::TAG,
-        PageImageTag::TAG
+        PageImageTag::MARKUP
     ];
     const CANONICAL = "call";
 
@@ -221,6 +221,7 @@ class Call
      */
     public function getTagName()
     {
+
         $mode = $this->call[0];
         if ($mode != "plugin") {
 
@@ -234,39 +235,45 @@ class Call
              * We delete this is not in the doc and therefore not logical
              */
             $tagName = str_replace("_close", "", $dokuWikiNodeName);
-            $tagName = str_replace("_open", "", $tagName);
-
-        } else {
-
-            /**
-             * This is a plugin node
-             */
-            $pluginDokuData = $this->call[1];
-            $component = $pluginDokuData[0];
-            if (!is_array($component)) {
-                /**
-                 * Tag name from class
-                 */
-                $componentNames = explode("_", $component);
-                /**
-                 * To take care of
-                 * PHP Warning:  sizeof(): Parameter must be an array or an object that implements Countable
-                 * in lib/plugins/combo/class/Tag.php on line 314
-                 */
-                if (is_array($componentNames)) {
-                    $tagName = $componentNames[sizeof($componentNames) - 1];
-                } else {
-                    $tagName = $component;
-                }
-            } else {
-                // To resolve: explode() expects parameter 2 to be string, array given
-                LogUtility::msg("The call (" . print_r($this->call, true) . ") has an array and not a string as component (" . print_r($component, true) . "). Page: " . MarkupPath::createFromRequestedPage(), LogUtility::LVL_MSG_ERROR);
-                $tagName = "";
-            }
-
-
+            return str_replace("_open", "", $tagName);
         }
-        return $tagName;
+
+        /**
+         * This is a plugin node
+         */
+        $pluginDokuData = $this->call[1];
+
+        /**
+         * If the tag is set
+         */
+        $pluginData = $pluginDokuData[1];
+        if (isset($pluginData[PluginUtility::TAG])) {
+            return $pluginData[PluginUtility::TAG];
+        }
+
+        $component = $pluginDokuData[0];
+        if (!is_array($component)) {
+            /**
+             * Tag name from class
+             */
+            $componentNames = explode("_", $component);
+            /**
+             * To take care of
+             * PHP Warning:  sizeof(): Parameter must be an array or an object that implements Countable
+             * in lib/plugins/combo/class/Tag.php on line 314
+             */
+            if (is_array($componentNames)) {
+                $tagName = $componentNames[sizeof($componentNames) - 1];
+            } else {
+                $tagName = $component;
+            }
+            return $tagName;
+        }
+
+        // To resolve: explode() expects parameter 2 to be string, array given
+        LogUtility::msg("The call (" . print_r($this->call, true) . ") has an array and not a string as component (" . print_r($component, true) . "). Page: " . MarkupPath::createFromRequestedPage(), LogUtility::LVL_MSG_ERROR);
+        return "";
+
 
     }
 
@@ -276,7 +283,8 @@ class Call
      * @return mixed
      * May be null (example eol, internallink, ...)
      */
-    public function getState()
+    public
+    function getState()
     {
         $mode = $this->call[0];
         if ($mode !== "plugin") {
@@ -313,7 +321,8 @@ class Call
     /**
      * @return mixed the data returned from the {@link DokuWiki_Syntax_Plugin::handle} (ie attributes, payload, ...)
      */
-    public function &getPluginData($attribute = null)
+    public
+    function &getPluginData($attribute = null)
     {
         $data = &$this->call[1][1];
         if ($attribute === null) {
@@ -326,7 +335,8 @@ class Call
     /**
      * @return mixed the matched content from the {@link DokuWiki_Syntax_Plugin::handle}
      */
-    public function getCapturedContent()
+    public
+    function getCapturedContent()
     {
         $caller = $this->call[0];
         switch ($caller) {
@@ -352,7 +362,8 @@ class Call
     /**
      *
      */
-    public function &getAttributes(): ?array
+    public
+    function &getAttributes(): ?array
     {
 
 
@@ -379,7 +390,8 @@ class Call
         }
     }
 
-    public function removeAttributes()
+    public
+    function removeAttributes()
     {
 
         $data = &$this->getPluginData();
@@ -389,7 +401,8 @@ class Call
 
     }
 
-    public function updateToPluginComponent($component, $state, $attributes = array())
+    public
+    function updateToPluginComponent($component, $state, $attributes = array())
     {
         if ($this->call[0] == "plugin") {
             $match = $this->call[1][3];
@@ -418,7 +431,8 @@ class Call
      * but can be a block (ie top image of a card)
      * @return bool
      */
-    public function isDisplaySet(): bool
+    public
+    function isDisplaySet(): bool
     {
         return isset($this->call[1][1][PluginUtility::DISPLAY]);
     }
@@ -427,7 +441,8 @@ class Call
      * @return string|null
      * {@link Call::INLINE_DISPLAY} or {@link Call::BlOCK_DISPLAY}
      */
-    public function getDisplay(): ?string
+    public
+    function getDisplay(): ?string
     {
         $mode = $this->getMode();
         if ($mode == "plugin") {
@@ -496,7 +511,8 @@ class Call
      * but fully qualified
      * @return string
      */
-    public function getComponentName()
+    public
+    function getComponentName()
     {
         $mode = $this->call[0];
         if ($mode == "plugin") {
@@ -507,7 +523,8 @@ class Call
         }
     }
 
-    public function updateEolToSpace()
+    public
+    function updateEolToSpace()
     {
         $mode = $this->call[0];
         if ($mode != "eol") {
@@ -521,7 +538,8 @@ class Call
 
     }
 
-    public function &addAttribute($key, $value)
+    public
+    function &addAttribute($key, $value)
     {
         $mode = $this->call[0];
         if ($mode == "plugin") {
@@ -535,7 +553,8 @@ class Call
         }
     }
 
-    public function getContext()
+    public
+    function getContext()
     {
         $mode = $this->call[0];
         if ($mode == "plugin") {
@@ -550,12 +569,14 @@ class Call
      *
      * @return array
      */
-    public function toCallArray()
+    public
+    function toCallArray()
     {
         return $this->call;
     }
 
-    public function __toString()
+    public
+    function __toString()
     {
         $name = $this->key;
         if (!empty($name)) {
@@ -573,7 +594,8 @@ class Call
      * in the function {@link TagAttributes::createFromTagMatch()}
      * as third attribute
      */
-    public function getType(): ?string
+    public
+    function getType(): ?string
     {
         if ($this->getState() == DOKU_LEXER_UNMATCHED) {
             return null;
@@ -587,7 +609,8 @@ class Call
      * @param null $default
      * @return array|string|null
      */
-    public function &getAttribute($key, $default = null)
+    public
+    function &getAttribute($key, $default = null)
     {
         $attributes = &$this->getAttributes();
         if (isset($attributes[$key])) {
@@ -860,19 +883,22 @@ class Call
         }
     }
 
-    public function setAttribute(string $name, $value): Call
+    public
+    function setAttribute(string $name, $value): Call
     {
         $this->getPluginData()[PluginUtility::ATTRIBUTES][$name] = $value;
         return $this;
     }
 
-    public function setPluginData(string $name, $value): Call
+    public
+    function setPluginData(string $name, $value): Call
     {
         $this->getPluginData()[$name] = $value;
         return $this;
     }
 
-    public function getIdOrDefault()
+    public
+    function getIdOrDefault()
     {
         $id = $this->getAttribute(TagAttributes::ID_KEY);
         if ($id !== null) {
@@ -881,7 +907,8 @@ class Call
         return $this->getAttribute(TagAttributes::GENERATED_ID_KEY);
     }
 
-    public function getAttributeAndRemove(string $key)
+    public
+    function getAttributeAndRemove(string $key)
     {
         $value = $this->getAttribute($key);
         $this->removeAttribute($key);

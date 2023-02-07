@@ -40,17 +40,21 @@ class RasterImageLink extends ImageLink
     const CONF_RESPONSIVE_IMAGE_MARGIN = "responsiveImageMargin";
     const CONF_RETINA_SUPPORT_ENABLED = "retinaRasterImageEnable";
 
-    private FetcherRaster $fetchRaster;
+    private FetcherImage $fetchRaster;
 
 
     /**
-     * @throws ExceptionBadArgument
+     * @throws ExceptionBadArgument - if the fetcher is not a raster mime and image fetcher
      */
     public function __construct(MediaMarkup $mediaMarkup)
     {
         $fetcher = $mediaMarkup->getFetcher();
-        if(!($fetcher instanceof FetcherRaster)) {
-           throw new ExceptionBadArgument("The fetcher is not a raster fetcher but is a ".get_class($fetcher));
+        $mime = $fetcher->getMime();
+        if (!in_array($mime, Mime::RASTER_MIMES)) {
+            throw new ExceptionBadArgument("The mime value ($mime) is not a raster.", self::CANONICAL);
+        }
+        if (!($fetcher instanceof FetcherImage)) {
+            throw new ExceptionBadArgument("The fetcher is not a fetcher image but is a " . get_class($fetcher));
         }
         $this->fetchRaster = $fetcher;
         parent::__construct($mediaMarkup);
@@ -66,11 +70,6 @@ class RasterImageLink extends ImageLink
      */
     public function renderMediaTag(): string
     {
-
-        $path = $this->mediaMarkup->getPath();
-        if (!FileSystems::exists($path)) {
-            return "<span class=\"text-danger\">The image ($path) does not exist</span>";
-        }
 
 
         $fetchRaster = $this->fetchRaster;
@@ -210,7 +209,7 @@ class RasterImageLink extends ImageLink
 
             try {
 
-                $breakpointRaster = FetcherRaster::createRasterFromFetchUrl($fetchRaster->getFetchUrl());
+                $breakpointRaster = clone $fetchRaster;
                 if (
                     !$fetchRaster->hasHeightRequested() // breakpoint url needs only the h attribute in this case
                     || $fetchRaster->hasAspectRatioRequested() // width and height are mandatory

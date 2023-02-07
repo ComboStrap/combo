@@ -32,18 +32,19 @@ class FetcherVignette extends FetcherImage
     const WEBP_EXTENSION = "webp";
 
 
-    private MarkupPath $page;
+    private ?MarkupPath $page = null;
 
     private Mime $mime;
 
 
     private string $buster;
 
+    private WikiPath $pagePath;
 
 
     /**
      * @throws ExceptionNotFound - if the page does not exists
-     * @throws ExceptionBadArgument - if the mime is not supported
+     * @throws ExceptionBadArgument - if the mime is not supported or the path of the page is not a wiki path
      */
     public static function createForPage(MarkupPath $page, Mime $mime = null): FetcherVignette
     {
@@ -286,9 +287,10 @@ class FetcherVignette extends FetcherImage
 
     function getFetchUrl(Url $url = null): Url
     {
-        $url = parent::getFetchUrl($url)
-            ->addQueryParameter(self::VIGNETTE_NAME, $this->page->getPathObject()->getWikiId() . "." . $this->mime->getExtension());
-        return $url;
+
+        $vignetteNameValue = $this->pagePath->getWikiId() . "." . $this->mime->getExtension();
+        return parent::getFetchUrl($url)
+            ->addQueryParameter(self::VIGNETTE_NAME, $vignetteNameValue);
 
     }
 
@@ -312,21 +314,25 @@ class FetcherVignette extends FetcherImage
     {
 
         $vignette = $tagAttributes->getValueAndRemove(self::VIGNETTE_NAME);
-        if ($vignette === null) {
-            throw new ExceptionBadArgument("The vignette query property was not present");
+        if ($vignette === null && $this->page === null) {
+            throw new ExceptionBadArgument("The vignette query property is mandatory when the vignette was created without page.");
         }
-        $lastPoint = strrpos($vignette, ".");
-        $extension = substr($vignette, $lastPoint + 1);
-        $wikiId = substr($vignette, 0, $lastPoint);
-        $this->setPage(MarkupPath::createMarkupFromId($wikiId));
-        if (!FileSystems::exists($this->page->getPathObject())) {
-            throw new ExceptionNotFound("The page does not exists");
+
+        if ($vignette !== null) {
+            $lastPoint = strrpos($vignette, ".");
+            $extension = substr($vignette, $lastPoint + 1);
+            $wikiId = substr($vignette, 0, $lastPoint);
+            $this->setPage(MarkupPath::createMarkupFromId($wikiId));
+            if (!FileSystems::exists($this->page->getPathObject())) {
+                throw new ExceptionNotFound("The page does not exists");
+            }
+            try {
+                $this->setMime(Mime::createFromExtension($extension));
+            } catch (ExceptionNotFound $e) {
+                throw new ExceptionBadArgument("The vignette mime is unknown. Error: {$e->getMessage()}");
+            }
         }
-        try {
-            $this->setMime(Mime::createFromExtension($extension));
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionBadArgument("The vignette mime is unknown. Error: {$e->getMessage()}");
-        }
+
         parent::buildFromTagAttributes($tagAttributes);
         return $this;
 
@@ -340,11 +346,21 @@ class FetcherVignette extends FetcherImage
 
     /**
      * @throws ExceptionNotFound
+     * @throws ExceptionBadArgument - if the markup path is not
      */
     public function setPage(MarkupPath $page): FetcherVignette
     {
         $this->page = $page;
-        $this->buster = FileSystems::getCacheBuster($this->page->getPathObject());
+        $path = $this->page->getPathObject();
+        if (!($path instanceof WikiPath)) {
+            if ($path instanceof LocalPath) {
+                $path = $path->toWikiPath();
+            } else {
+                throw new ExceptionBadArgument("The path of the markup file is not a wiki path and could not be transformed.");
+            }
+        }
+        $this->pagePath = $path;
+        $this->buster = FileSystems::getCacheBuster($path);
         return $this;
     }
 
@@ -377,5 +393,10 @@ class FetcherVignette extends FetcherImage
                 throw new ExceptionBadArgument("The mime ($mime) is not supported");
         }
         return $this;
+    }
+
+    public function getLabel(): string
+    {
+        return ResourceName::getFromPath($this->pagePath);
     }
 }

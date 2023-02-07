@@ -59,13 +59,7 @@ abstract class MediaLink
         /**
          * Processing
          */
-        try {
-            $mime = FileSystems::getMime($mediaMarkup->getPath());
-        } catch (ExceptionNotFound $e) {
-            // no mime
-            LogUtility::error($e->getMessage());
-            return new ThirdMediaLink($mediaMarkup);
-        }
+        $mime = $mediaMarkup->getFetcher()->getMime();
         switch ($mime->toString()) {
             case Mime::SVG:
                 return new SvgImageLink($mediaMarkup);
@@ -81,18 +75,16 @@ abstract class MediaLink
     }
 
 
-
-
     /**
      * @return string - the HTML of the image
      */
     public abstract function renderMediaTag(): string;
 
 
-    public function getFetchUrl(): Url{
+    public function getFetchUrl(): Url
+    {
         return $this->mediaMarkup->getFetchUrl();
     }
-
 
 
 }

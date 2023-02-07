@@ -712,4 +712,9 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     }
 
 
+    public function getLabel(): string
+    {
+        $sourcePath = $this->getSourcePath();
+        return ResourceName::getFromPath($sourcePath);
+    }
 }

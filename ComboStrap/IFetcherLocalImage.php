@@ -79,7 +79,6 @@ abstract class IFetcherLocalImage extends FetcherImage implements IFetcherSource
     }
 
 
-
     function getBuster(): string
     {
         try {
@@ -89,5 +88,14 @@ abstract class IFetcherLocalImage extends FetcherImage implements IFetcherSource
             return strval((new \DateTime())->getTimestamp());
         }
     }
+
+    public function getLabel(): string
+    {
+
+        $sourcePath = $this->getSourcePath();
+        return ResourceName::getFromPath($sourcePath);
+
+    }
+
 
 }

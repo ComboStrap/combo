@@ -150,7 +150,6 @@ class PageImageTag
                     }
                     break;
                 case PageImageTag::VIGNETTE_TYPE:
-
                     try {
                         $imageFetcher = FetcherVignette::createForPage($page);
                     } catch (ExceptionNotFound|ExceptionBadArgument $e) {
@@ -185,7 +184,7 @@ class PageImageTag
         try {
             $imageFetcher->buildFromTagAttributes($tagAttributes);
         } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionCompile $e) {
-            LogUtility::error("The image could not be build. Error: {$e->getMessage()}", PageImageTag::CANONICAL);
+            LogUtility::error("The image could not be build. Error: {$e->getMessage()}", PageImageTag::CANONICAL, $e);
         }
 
         /**
@@ -253,7 +252,9 @@ class PageImageTag
                 ->setHtmlOrSetterTagAttributes($tagAttributes)
                 ->toHtml();
         } catch (ExceptionCompile $e) {
-            return "Error while rendering the page image: {$e->getMessage()}";
+            $message = "Error while rendering the page image: {$e->getMessage()}";
+            LogUtility::error($message, self::CANONICAL,$e);
+            return $message;
         }
 
     }

@@ -657,6 +657,9 @@ class MediaMarkup
     }
 
     /**
+     * @throws ExceptionNotFound - if this markup does not have a path origin
+     * @deprecated A media may be generated (ie {@link FetcherVignette}
+     * therefore the path may be not present
      */
     public function getPath(): WikiPath
     {
@@ -666,7 +669,10 @@ class MediaMarkup
 
         } catch (ExceptionNotFound $e) {
 
-            return $this->fetcher->getSourcePath();
+            if ($this->fetcher instanceof IFetcherSource) {
+                return $this->fetcher->getSourcePath();
+            }
+            throw $e;
 
         }
     }

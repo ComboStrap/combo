@@ -3,6 +3,7 @@
 
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetcherPage;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupDynamicRender;
@@ -84,8 +85,19 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                     ->toDynamicInstructionCalls();
                 return;
             case "show":
-                $runningMarkup = WikiPath::createExecutingMarkupWikiPath();
-                $requestedPath = WikiPath::createRequestedPagePathFromRequest();
+            case action_plugin_combo_docustom::getDoParameterValue(FetcherPage::NAME):
+                try {
+                    $runningMarkup = WikiPath::createExecutingMarkupWikiPath();
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::error("The executing markup wiki path was not found", self::CANONICAL, $e);
+                    return;
+                }
+                try {
+                    $requestedPath = WikiPath::createRequestedPagePathFromRequest();
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::error("The requested page path from request was not found", self::CANONICAL, $e);
+                    return;
+                }
                 if ($requestedPath->toQualifiedId() !== $runningMarkup->toQualifiedId()) {
                     return;
                 }
@@ -107,7 +119,6 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             default:
                 // No outline if not show (ie admin, edit, ...)
         }
-
 
 
     }

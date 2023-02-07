@@ -83,7 +83,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $url->removeQueryParameter(WikiPath::DRIVE_ATTRIBUTE);
         if (ExecutionContext::getActualOrCreateFromEnv()->isPageFetcherEnabledAsShowAction()) {
             $url->removeQueryParameter(IFetcher::FETCHER_KEY);
-            $url->addQueryParameter("do", \action_plugin_combo_docustom::DO_PREFIX . FetcherPage::CANONICAL);
+            $url->addQueryParameter("do", \action_plugin_combo_docustom::getDoParameterValue($this->getFetcherName()));
         }
         return $url;
     }

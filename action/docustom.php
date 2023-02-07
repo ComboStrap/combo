@@ -29,6 +29,11 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
     const DO_PREFIX = "combo_";
 
+    public static function getDoParameterValue(string $fetcherName): string
+    {
+        return self::DO_PREFIX . $fetcherName;
+    }
+
     /**
      *
      * @param Doku_Event_Handler $controller
@@ -66,7 +71,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
             ->response()
             ->hasEnded();
         if ($hasEnded) {
-            if($executionContext->isTestRun()){
+            if ($executionContext->isTestRun()) {
                 /**
                  * This info helps the developer to see
                  * why nothing happens when it sends two dokuwiki {@link TestRequest}
@@ -82,7 +87,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
         $action = $event->data;
 
         if (FetcherPage::isEnabledAsShowAction() && $action === "show") {
-            $action = self::DO_PREFIX . FetcherPage::NAME;
+            $action = self::getDoParameterValue(FetcherPage::NAME);
         }
 
         if (!$this->isComboDoAction($action)) return;

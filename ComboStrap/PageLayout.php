@@ -208,7 +208,8 @@ class PageLayout
         /**
          * Creating the HTML document
          */
-        foreach ($this->getPageLayoutElements() as $pageElement) {
+        $pageLayoutElements = $this->getPageLayoutElements();
+        foreach ($pageLayoutElements as $pageElement) {
 
             $domElement = $pageElement->getDomElement();
 

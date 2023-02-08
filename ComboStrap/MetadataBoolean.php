@@ -3,7 +3,6 @@
 
 namespace ComboStrap;
 
-use http\Exception\RuntimeException;
 
 /**
  * Class MetadataBoolean
@@ -25,7 +24,7 @@ abstract class MetadataBoolean extends Metadata
     public function getValue(): bool
     {
         $this->buildCheck();
-        if($this->value===null){
+        if ($this->value === null) {
             throw new ExceptionNotFound("No ($this) found");
         }
         return $this->value;
@@ -74,7 +73,11 @@ abstract class MetadataBoolean extends Metadata
     {
 
         $store = $this->getWriteStore();
-        $value = $this->getValue();
+        try {
+            $value = $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return null;
+        }
 
         if ($store instanceof MetadataFormDataStore) {
             return $value;

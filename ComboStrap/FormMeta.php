@@ -3,7 +3,6 @@
 
 namespace ComboStrap;
 
-use http\Exception\RuntimeException;
 
 /**
  * Class FormMeta
@@ -183,7 +182,6 @@ class FormMeta
     /**
      * @param Metadata $metadata
      * @return FormMeta
-     * @throws ExceptionCompile
      */
     public function addFormFieldFromMetadata(Metadata $metadata): FormMeta
     {

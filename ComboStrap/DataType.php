@@ -138,5 +138,14 @@ class DataType
         }
     }
 
+    /**
+     * @param mixed|null $value
+     * @return bool - true if the value is built-in boolean or null
+     */
+    public static function isBoolean($value): bool
+    {
+        return is_bool($value);
+    }
+
 
 }

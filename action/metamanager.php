@@ -41,7 +41,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const CANONICAL = "meta-manager";
 
 
-
     /**
      * The canonical for the metadata page
      */
@@ -281,7 +280,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * Response
          */
-        HttpResponse::createForStatus(HttpResponseStatus::ALL_GOOD)
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->response()
+            ->setStatus(HttpResponseStatus::ALL_GOOD)
             ->setEvent($event)
             ->setBodyAsJsonMessage($responseMessages)
             ->end();
@@ -327,19 +328,17 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         ksort($current);
         $form = FormMeta::create("raw_metadata")
             ->addField(
-                FormMetaField::create(MetadataDokuWikiStore::PERSISTENT_METADATA)
+                FormMetaField::create(MetadataDokuWikiStore::PERSISTENT_METADATA, DataType::JSON_TYPE_VALUE)
                     ->setLabel("Persistent Metadata (User Metadata)")
                     ->setTab("persistent")
                     ->setDescription("The persistent metadata contains raw values. They contains the values set by the user and the fixed values such as page id.")
                     ->addValue(json_encode($persistent))
-                    ->setType(DataType::JSON_TYPE_VALUE)
             )
-            ->addField(FormMetaField::create(MetadataDokuWikiStore::CURRENT_METADATA)
+            ->addField(FormMetaField::create(MetadataDokuWikiStore::CURRENT_METADATA, DataType::JSON_TYPE_VALUE)
                 ->setLabel("Current (Derived) Metadata")
                 ->setTab("current")
                 ->setDescription("The current metadata are the derived / calculated / runtime metadata values (extended with the persistent metadata).")
                 ->addValue(json_encode($current))
-                ->setType(DataType::JSON_TYPE_VALUE)
                 ->setMutable(false)
             )
             ->toAssociativeArray();

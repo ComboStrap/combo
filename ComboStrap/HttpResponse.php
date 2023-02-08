@@ -55,8 +55,8 @@ class HttpResponse
     /**
      * @param int $status
      * @return HttpResponse
-     * @deprecated use the {@link ExecutionContext::response()} instead
-     * to access the response
+     * @deprecated
+     * use the {@link ExecutionContext::response()} instead to access the response
      */
     public static function createForStatus(int $status): HttpResponse
     {

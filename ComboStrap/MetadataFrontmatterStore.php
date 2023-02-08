@@ -25,11 +25,11 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
     /**
      * @var bool Do we have a frontmatter on the page
      */
-    private $isPresent = false;
+    private bool $isPresent = false;
     /**
      * @var string
      */
-    private $contentWithoutFrontMatter;
+    private string $contentWithoutFrontMatter;
 
     /**
      * @throws ExceptionCompile

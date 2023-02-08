@@ -85,19 +85,24 @@ class FormMetaField
 
     /**
      * FormField constructor.
+     * The name is mandatory
+     * and the type to be able to control the values
      */
-    public function __construct($name)
+    public function __construct($name, $type)
     {
         $this->name = $name;
         $this->label = ucfirst($name);
         $this->description = $name;
-        $this->type = DataType::TEXT_TYPE_VALUE;
+        if (!in_array($type, DataType::TYPES)) {
+            throw new ExceptionRuntimeInternal("The type ($type) is not a known field type");
+        }
+        $this->type = $type;
         $this->mutable = true;
     }
 
-    public static function create(string $name): FormMetaField
+    public static function create(string $name, string $type): FormMetaField
     {
-        return new FormMetaField($name);
+        return new FormMetaField($name, $type);
     }
 
     /**
@@ -108,7 +113,7 @@ class FormMetaField
      */
     public static function createFromMetadata(Metadata $metadata): FormMetaField
     {
-        $field = FormMetaField::create($metadata->getName());
+        $field = FormMetaField::create($metadata->getName(), $metadata->getDataType());
 
         self::setCommonDataToFieldFromMetadata($field, $metadata);
 
@@ -130,16 +135,9 @@ class FormMetaField
             static::setLeafDataToFieldFromMetadata($field, $metadata);
 
             // Value
-            try {
-                $value = $metadata->toStoreValue();
-            } catch (ExceptionNotFound $e) {
-                $value = "";
-            }
-            try {
-                $defaultValue = $metadata->toStoreDefaultValue();
-            } catch (ExceptionNotFound $e) {
-                $defaultValue = "";
-            }
+            $value = $metadata->toStoreValue();
+            $defaultValue = $metadata->toStoreDefaultValue();
+
             $field->addValue($value, $defaultValue);
 
         } else {
@@ -156,7 +154,7 @@ class FormMetaField
                         LogUtility::internalError("The metadata class/object ($childMetadataClass) is not a metadata class");
                         continue;
                     }
-                    $childField = FormMetaField::create($childMetadata);
+                    $childField = FormMetaField::createFromMetadata($childMetadata);
                     static::setCommonDataToFieldFromMetadata($childField, $childMetadata);
                     static::setLeafDataToFieldFromMetadata($childField, $childMetadata);
                     $field->addColumn($childField);
@@ -363,21 +361,19 @@ class FormMetaField
     public
     function addValue($value, $defaultValuePlaceholderOrReturned = null): FormMetaField
     {
+        if ($this->getType() === DataType::BOOLEAN_TYPE_VALUE) {
+            if ($value != null && !DataType::isBoolean($value)) {
+                throw new ExceptionRuntimeInternal("The value ($value) is not a boolean");
+            }
+            if ($defaultValuePlaceholderOrReturned != null && !DataType::isBoolean($defaultValuePlaceholderOrReturned)) {
+                throw new ExceptionRuntimeInternal("The default value ($defaultValuePlaceholderOrReturned) is not a boolean");
+            }
+        }
         $this->values[] = $value;
         $this->defaults[] = $defaultValuePlaceholderOrReturned;
         return $this;
     }
 
-    public
-    function setType(string $type): FormMetaField
-    {
-        if (!in_array($type, DataType::TYPES)) {
-            LogUtility::msg("The type ($type) is not a known field type");
-            return $this;
-        }
-        $this->type = $type;
-        return $this;
-    }
 
     public
     function setDomainValues(array $domainValues): FormMetaField
@@ -505,7 +501,7 @@ class FormMetaField
     static
     function setCommonDataToFieldFromMetadata(FormMetaField $field, Metadata $metadata)
     {
-        $field->setType($metadata->getDataType())
+        $field
             ->setCanonical($metadata->getCanonical())
             ->setLabel($metadata->getLabel())
             ->setDescription($metadata->getDescription());
@@ -535,5 +531,11 @@ class FormMetaField
         }
 
     }
+
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
 
 }

@@ -69,7 +69,6 @@ class MetaManagerForm
 
     /**
      * @return FormMeta
-     * @throws ExceptionCompile
      */
     function toFormMeta(): FormMeta
     {

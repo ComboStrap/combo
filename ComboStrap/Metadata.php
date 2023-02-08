@@ -405,14 +405,24 @@ abstract class Metadata
 
 
     /**
-     * @return string|array the value to be persisted by the store
+     * @return null|string|array the value to be persisted by the store
      * the reverse action is {@link Metadata::setFromStoreValue()}
      *
-     * @throws ExceptionNotFound - if the value is null
+     * Null may be returned (no exception is thrown)
+     * as this is a possible storage value
      */
     public function toStoreValue()
     {
-        return $this->getValue();
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            /**
+             * The only case when we return null
+             * and not throw an exception
+             * because it may be stored
+             */
+            return null;
+        }
     }
 
 
@@ -421,11 +431,18 @@ abstract class Metadata
      * The store default value is used to
      * see if the value set is the same than the default one
      * It this is the case, the data is not stored
-     * @throws ExceptionNotFound -  if there is no value to store
      */
     public function toStoreDefaultValue()
     {
-        return $this->getDefaultValue();
+        try {
+            return $this->getDefaultValue();
+        } catch (ExceptionNotFound $e) {
+            /**
+             * We don't throw an null exception here because
+             * null may be stored
+             */
+            return null;
+        }
     }
 
     /**

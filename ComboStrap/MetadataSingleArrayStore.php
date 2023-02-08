@@ -16,9 +16,9 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
     /**
      * @var bool
      */
-    protected $hasChanged = false;
+    protected bool $hasChanged = false;
 
-    protected $data = null;
+    protected ?array $data = null;
 
     /**
      * MetadataSingleArrayStore constructor.
@@ -76,11 +76,6 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
 
     public function getData(): array
     {
-        if (!is_array($this->data)){
-            $class = get_class($this->data);
-            LogUtility::msg("Error: The data set for the metadata ($this) was not an array but a $class");
-            return [];
-        }
         return $this->data;
     }
 

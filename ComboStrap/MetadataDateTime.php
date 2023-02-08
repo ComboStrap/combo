@@ -20,13 +20,16 @@ abstract class MetadataDateTime extends Metadata
     /**
      * Helper function for date metadata
      * @return string|array (may be an array for dokuwiki ie {@link PageCreationDate::toStoreValue()} for instance
-     * @throws ExceptionNotFound
      */
     public function toStoreValue()
     {
 
         $this->buildCheck();
-        $value = $this->getValue();
+        try {
+            $value = $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return null;
+        }
         return $this->toPersistentDateTimeUtility($value);
 
     }
@@ -56,19 +59,21 @@ abstract class MetadataDateTime extends Metadata
         return $this->setValue($this->fromPersistentDateTimeUtility($value));
     }
 
-    /**
-     * @throws ExceptionNotFound
-     */
-    public function toStoreDefaultValue(): string
+
+    public function toStoreDefaultValue(): ?string
     {
 
-        $defaultValue = $this->getDefaultValue();
+        try {
+            $defaultValue = $this->getDefaultValue();
+        } catch (ExceptionNotFound $e) {
+            return null;
+        }
         try {
             return $this->toPersistentDateTimeUtility($defaultValue);
         } catch (ExceptionBadArgument $e) {
             $message = "The date time ($this) has a default value ($defaultValue) that is not valid. Error: {$e->getMessage()}";
             LogUtility::internalError($message);
-            throw new ExceptionNotFound($message);
+            return null;
         }
 
     }
@@ -118,14 +123,16 @@ abstract class MetadataDateTime extends Metadata
     }
 
 
-
+    /**
+     * @throws ExceptionBadArgument - if the value is not valid
+     */
     private function toPersistentDateTimeUtility($value): string
     {
         if ($value === null) {
-            throw new ExceptionRuntimeInternal("The passed value is null");
+            throw new ExceptionBadArgument("The passed value is null");
         }
         if (!($value instanceof DateTime)) {
-            throw new ExceptionRuntimeInternal("This is not a date time");
+            throw new ExceptionBadArgument("This is not a date time");
         }
         return Iso8601Date::createFromDateTime($value)->toString();
     }

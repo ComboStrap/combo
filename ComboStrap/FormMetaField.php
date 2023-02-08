@@ -119,7 +119,8 @@ class FormMetaField
 
         $childrenMetadata = $metadata->getChildrenClass();
 
-        if ($metadata->getParent() === null) {
+        $parent = $metadata->getParent();
+        if ($parent === null) {
             /**
              * Only the top field have a tab value
              */
@@ -134,11 +135,14 @@ class FormMetaField
 
             static::setLeafDataToFieldFromMetadata($field, $metadata);
 
-            // Value
-            $value = $metadata->toStoreValue();
-            $defaultValue = $metadata->toStoreDefaultValue();
-
-            $field->addValue($value, $defaultValue);
+            /**
+             * When tabular, the value comes from the parent
+             */
+            if ($metadata->isScalar()) {
+                $value = $metadata->toStoreValue();
+                $defaultValue = $metadata->toStoreDefaultValue();
+                $field->addValue($value, $defaultValue);
+            }
 
         } else {
 
@@ -185,16 +189,8 @@ class FormMetaField
                                     continue;
                                 }
                             }
-                            try {
-                                $storeValue = $colValue->toStoreValue();
-                            } catch (ExceptionNotFound $e) {
-                                $storeValue = "";
-                            }
-                            try {
-                                $defaultStoreValue = $colValue->toStoreDefaultValue();
-                            } catch (ExceptionNotFound $e) {
-                                $defaultStoreValue = "";
-                            }
+                            $storeValue = $colValue->toStoreValue();
+                            $defaultStoreValue = $colValue->toStoreDefaultValue();
                             $childField->addValue($storeValue, $defaultStoreValue);
                         }
 

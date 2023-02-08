@@ -209,6 +209,19 @@ abstract class Metadata
 
     }
 
+    /**
+     * @return bool - true if single value, false if an array
+     */
+    public function isScalar(): bool
+    {
+
+        if ($this->getParent() !== null && $this->getParent()->getDataType() === DataType::TABULAR_TYPE_VALUE) {
+            return false;
+        }
+        return true;
+
+    }
+
 
     /**
      * @param $store

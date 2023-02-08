@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\PageLayout;
+use ComboStrap\PluginUtility;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
@@ -12,7 +13,10 @@ use ComboStrap\MarkupPath;
 use ComboStrap\Site;
 
 /**
- * Write the default slot
+ * When a slot/fragment
+ * is created,
+ * this action will write the default slot
+ * into the edit html section
  */
 class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
 {
@@ -29,47 +33,45 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
     {
 
 
-        $page = MarkupPath::createFromRequestedPage();
+        try {
+            $page = MarkupPath::createFromRequestedPage();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::error("The requested page was not found");
+            return;
+        }
 
         /**
          * Header
          */
-        try {
-            $pageHeaderSlotName = Site::getPageHeaderSlotName();
-            if ($page->getPathObject()->toQualifiedId() === ":$pageHeaderSlotName") {
-                $pageHeaderPath = PageLayoutElement::getDefaultElementContentPath(PageLayout::PAGE_HEADER_ELEMENT);
-                try {
-                    $event->data["tpl"] = FileSystems::getContent($pageHeaderPath);
-                    $event->data["doreplace"] = false;
-                } catch (ExceptionNotFound $e) {
-                    // Should not happen
-                    LogUtility::errorIfDevOrTest("Internal Error: The default page header was not found");
-                }
-                return;
+        $pageHeaderSlotName = Site::getPageHeaderSlotName();
+        $toQualifiedId = $page->getPathObject()->toQualifiedId();
+        if ($toQualifiedId === ":$pageHeaderSlotName") {
+            $pageHeaderPath = PageLayoutElement::getDefaultElementContentPath(PageLayout::PAGE_HEADER_ELEMENT);
+            try {
+                $event->data["tpl"] = FileSystems::getContent($pageHeaderPath);
+                $event->data["doreplace"] = false;
+            } catch (ExceptionNotFound $e) {
+                // Should not happen
+                LogUtility::errorIfDevOrTest("Internal Error: The default page header was not found");
             }
-        } catch (ExceptionCompile $e) {
-            LogUtility::error("We were unable to retrieve the page header slot name. Error: {$e->getMessage()}");
+            return;
         }
+
 
         /**
          * Footer
          */
-        try {
-            $pageFooterSlotName = Site::getPageFooterSlotName();
-            if ($page->getPathObject()->toQualifiedId() === ":$pageFooterSlotName") {
-                $pageFooterPath = PageLayoutElement::getDefaultElementContentPath(PageLayout::PAGE_FOOTER_ELEMENT);
-                try {
-                    $event->data["tpl"] = FileSystems::getContent($pageFooterPath);
-                    $event->data["doreplace"] = false;
-                } catch (ExceptionNotFound $e) {
-                    // Should not happen
-                    LogUtility::errorIfDevOrTest("Internal Error: The default page footer was not found");
-                }
-                return;
+
+        $pageFooterSlotName = Site::getPageFooterSlotName();
+        if ($toQualifiedId === ":$pageFooterSlotName") {
+            $pageFooterPath = PageLayoutElement::getDefaultElementContentPath(PageLayout::PAGE_FOOTER_ELEMENT);
+            try {
+                $event->data["tpl"] = FileSystems::getContent($pageFooterPath);
+                $event->data["doreplace"] = false;
+            } catch (ExceptionNotFound $e) {
+                // Should not happen
+                LogUtility::errorIfDevOrTest("Internal Error: The default page footer was not found");
             }
-        } catch (ExceptionCompile $e) {
-            LogUtility::error("We were unable to retrieve the page footer slot name. Error: {$e->getMessage()}");
-            return;
         }
 
 

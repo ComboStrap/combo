@@ -1,4 +1,5 @@
-<?php
+<?php /** @noinspection PhpComposerExtensionStubsInspection */
+
 /**
  * Copyright (c) 2021. ComboStrap, Inc. and its affiliates. All Rights Reserved.
  *
@@ -17,10 +18,8 @@ use DOMDocument;
 use DOMElement;
 use DOMNodeList;
 use DOMXPath;
-use Exception;
 use LibXMLError;
 use PhpCss;
-use PHPUnit\Util\Xml;
 
 
 require_once(__DIR__ . '/File.php');
@@ -751,6 +750,21 @@ class XmlDocument
     {
         $element = $this->domDocument->createElement($localName);
         return XmlElement::create($element, $this);
+    }
+
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadState
+     */
+    public function xpathFirstDomElement(string $xpath): DOMElement
+    {
+        $domList = $this->xpath($xpath);
+        $domElement = $domList->item(0);
+        if ($domElement instanceof DOMElement) {
+            return $domElement;
+        } else {
+            throw new ExceptionBadState("The first DOM node is not a DOM element");
+        }
     }
 
 

@@ -3,7 +3,6 @@
 namespace ComboStrap;
 
 
-
 class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 {
 
@@ -196,6 +195,21 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         } finally {
             $mainFetcher->close();
         }
+
+        /**
+         * Found in {@link tpl_content()}
+         * Used to add html such as {@link \action_plugin_combo_routermessage}
+         * Not sure if this is the right place to add it.
+         */
+        ob_start();
+        global $ACT;
+        \dokuwiki\Extension\Event::createAndTrigger('TPL_ACT_RENDER', $ACT);
+        $tplActRenderOutput = ob_get_clean();
+        $mainHtml = $tplActRenderOutput . $mainHtml;
+
+        /**
+         * Generate the whole html page via the layout
+         */
         $htmlDocumentString = $this->pageLayout->generateAndGetPageHtmlAsString($mainHtml);
 
         /**

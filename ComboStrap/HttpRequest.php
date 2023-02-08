@@ -179,5 +179,11 @@ class HttpRequest
         return $this;
     }
 
+    public function get(): HttpRequest
+    {
+        $this->method = self::GET;
+        return $this;
+    }
+
 
 }

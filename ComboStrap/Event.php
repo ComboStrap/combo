@@ -254,6 +254,7 @@ class Event
         /**
          * Execute
          */
+        /** @noinspection SqlWithoutWhere */
         $request = $sqlite->createRequest()
             ->setQuery("delete from " . self::EVENT_TABLE_NAME);
         try {
@@ -265,6 +266,8 @@ class Event
             $request->close();
         }
     }
+
+
 
 
 }

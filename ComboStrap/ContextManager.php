@@ -51,21 +51,25 @@ class ContextManager
      */
     public static function getOrCreate(): ContextManager
     {
-        $id = PluginUtility::getRequestedWikiId();
-        if ($id === null) {
-            if (PluginUtility::isTest()) {
-                $id = "test_dynamic_context_execution";
-            } else {
-                LogUtility::msg("The requested Id could not be found, the context may not be scoped properly");
+
+        try {
+            $wikiRequestedPath = WikiPath::createRequestedPagePathFromRequest();
+        } catch (ExceptionNotFound $e) {
+            if (!PluginUtility::isTest()) {
+                LogUtility::error("The requested Id could not be found, the context may not be scoped properly");
             }
+            $wikiRequestedPath = WikiPath::createMarkupPathFromId("test_dynamic_context_execution");
         }
 
-        $context = self::$globalContext[$id];
+        $wikiId = $wikiRequestedPath->getWikiId();
+        $context = self::$globalContext[$wikiId];
         if ($context === null) {
             self::$globalContext = null; // delete old snippet manager for other request
-            $defaultContextData = MarkupPath::createFromRequestedPage()->getMetadataForRendering();
+
+            $defaultContextData = MarkupPath::createPageFromPathObject($wikiRequestedPath)
+                ->getMetadataForRendering();
             $context = new ContextManager($defaultContextData);
-            self::$globalContext[$id] = $context;
+            self::$globalContext[$wikiId] = $context;
         }
         return $context;
     }

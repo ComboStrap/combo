@@ -77,7 +77,7 @@ class Outline
     private OutlineSection $actualSection; // the actual section that is created
     private Call $actualHeadingCall; // the heading that is parsed
     private int $actualHeadingParsingState = DOKU_LEXER_EXIT;  // the state of the heading parsed (enter, closed), enter if we have entered an heading, exit if not;
-    private MarkupPath $markupPath;
+    private ?MarkupPath $markupPath = null;
 
     public function __construct(CallStack $callStack, MarkupPath $markup = null)
     {
@@ -783,7 +783,7 @@ EOF;
             //
             return;
         }
-        if ($outlineSection->getLevel() === 1) {
+        if ($this->markupPath != null && $outlineSection->getLevel() === 1) {
             $label = $outlineSection->getLabel();
             PageH1::createForPage($this->markupPath)
                 ->persistDefaultValue($label);

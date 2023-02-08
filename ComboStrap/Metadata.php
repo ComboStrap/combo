@@ -176,16 +176,20 @@ abstract class Metadata
 
     }
 
+
     /**
-     * @throws ExceptionNotFound
+     * @return array|mixed|string|null
+     * Store value may returns null as they may be stored
+     * Be careful
      */
     public function toStoreValueOrDefault()
     {
-        try {
-            return $this->toStoreValue();
-        } catch (ExceptionNotFound $e) {
-            return $this->toStoreDefaultValue();
+
+        $value = $this->toStoreValue();
+        if ($value !== null) {
+            return $value;
         }
+        return $this->toStoreDefaultValue();
 
     }
 

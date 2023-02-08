@@ -27,24 +27,23 @@ class action_plugin_combo_metakeywords extends DokuWiki_Action_Plugin
      * Add a key words description
      * @param $event
      * @param $param
+     * @throws ExceptionNotFound
      */
     function meta_keywords(&$event, $param)
     {
 
-        global $ID;
-        if (empty($ID)) {
-            return;  // Admin call for instance
+
+        try {
+            $page = action_plugin_combo_metacanonical::getContextPageForHeadHtmlMeta();
+        } catch (ExceptionNotFound $e) {
+            return;
         }
-
-
-        $page = MarkupPath::createFromRequestedPage();
 
         try {
             $keywords = $page->getKeywordsOrDefault();
         } catch (ExceptionNotFound $e) {
             return;
         }
-
 
         Metadata::upsertMetaOnUniqueAttribute(
             $event->data['meta'],

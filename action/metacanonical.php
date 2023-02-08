@@ -18,6 +18,31 @@ class action_plugin_combo_metacanonical
     const APPLE_MOBILE_WEB_APP_TITLE_META = "apple-mobile-web-app-title";
     const APPLICATION_NAME_META = "application-name";
 
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function getContextPageForHeadHtmlMeta(): MarkupPath
+    {
+
+        try {
+            $page = MarkupPath::createFromRequestedPage();
+        } catch (ExceptionNotFound $e) {
+            // $_SERVER['SCRIPT_NAME']== "/lib/exe/mediamanager.php"
+            // $ID is null
+            // Admin call for instance
+            throw new ExceptionNotFound("No requested page");
+        }
+
+        /**
+         * No metadata for slot page
+         */
+        if ($page->isSecondarySlot()) {
+            throw new ExceptionNotFound("Secondary slot");
+        }
+
+        return $page;
+    }
+
     public function register(Doku_Event_Handler $controller)
     {
         /**
@@ -32,21 +57,12 @@ class action_plugin_combo_metacanonical
     function htmlHeadMetadataProcessing($event)
     {
 
-        global $ID;
-        if (empty($ID)) {
-            // $_SERVER['SCRIPT_NAME']== "/lib/exe/mediamanager.php"
-            // $ID is null
+        try {
+            $page = self::getContextPageForHeadHtmlMeta();
+        } catch (ExceptionNotFound $e) {
             return;
         }
 
-        $page = MarkupPath::createMarkupFromId($ID);
-
-        /**
-         * No metadata for slot page
-         */
-        if ($page->isSecondarySlot()) {
-            return;
-        }
 
         /**
          * Add the canonical metadata value
@@ -143,7 +159,7 @@ class action_plugin_combo_metacanonical
             self::APPLICATION_NAME_META
         ];
         $metaNameKeyProperty = "name";
-        foreach ($applicationMetaNameValues as $applicationNameValue){
+        foreach ($applicationMetaNameValues as $applicationNameValue) {
 
             $appMobileWebAppTitle = array($metaNameKeyProperty => $applicationNameValue, "content" => $applicationName);;
             try {

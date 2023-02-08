@@ -8,15 +8,18 @@ use DateTime;
 
 abstract class MetadataDateTime extends Metadata
 {
+
     /**
-     * @var DateTime
+     * @var DateTime|null
+     * may be null as this is a stored value
+     * but throw a not found exception when the value is null
      */
-    protected $dateTimeValue;
+    protected ?DateTime $dateTimeValue = null;
 
 
     /**
      * Helper function for date metadata
-     * @return array|string
+     * @return string|array (may be an array for dokuwiki ie {@link PageCreationDate::toStoreValue()} for instance
      * @throws ExceptionNotFound
      */
     public function toStoreValue()
@@ -115,16 +118,14 @@ abstract class MetadataDateTime extends Metadata
     }
 
 
-    /**
-     * @throws ExceptionBadArgument
-     */
+
     private function toPersistentDateTimeUtility($value): string
     {
         if ($value === null) {
-            throw new ExceptionBadArgument("The passed value is null");
+            throw new ExceptionRuntimeInternal("The passed value is null");
         }
         if (!($value instanceof DateTime)) {
-            throw new ExceptionBadArgument("This is not a date time");
+            throw new ExceptionRuntimeInternal("This is not a date time");
         }
         return Iso8601Date::createFromDateTime($value)->toString();
     }

@@ -72,7 +72,7 @@ class Http
 
     public static function setMime(string $mime)
     {
-        $contentTypeHeader = Mime::HEADER_CONTENT_TYPE;
+        $contentTypeHeader = HttpResponse::HEADER_CONTENT_TYPE;
         header("$contentTypeHeader: $mime");
     }
 
@@ -97,6 +97,18 @@ class Http
             }
         }
         return $result;
+    }
+
+    /**
+     * @throws ExceptionNotExists
+     */
+    public static function extractHeaderValue(string $header): string
+    {
+        $positionDoublePointSeparator = strpos($header, ':');
+        if ($positionDoublePointSeparator === false) {
+            throw new ExceptionNotExists("No value found");
+        }
+        return trim(substr($header, $positionDoublePointSeparator + 1));
     }
 
     /**

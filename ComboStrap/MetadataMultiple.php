@@ -66,7 +66,11 @@ abstract class MetadataMultiple extends Metadata
      */
     public function getValueOrDefaults(): array
     {
-        return $this->getValue();
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
     }
 
 

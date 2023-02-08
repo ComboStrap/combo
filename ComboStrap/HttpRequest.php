@@ -3,7 +3,6 @@
 namespace ComboStrap;
 
 
-
 /**
  * A request to the application
  * It's now a wrapper around {@link \TestRequest}
@@ -19,6 +18,8 @@ class HttpRequest
     private Url $url;
     private HttpResponse $response;
     private string $method = self::GET;
+    private bool $asAdmin = false;
+    private array $postData = [];
 
 
     public function __construct(Url $url)
@@ -50,6 +51,11 @@ class HttpRequest
     }
 
 
+    /**
+     * @param string $wikiId
+     * @return HttpResponse
+     * With the path uri: '/doku.php'
+     */
     public static function fetchXhtmlPageResponse(string $wikiId): HttpResponse
     {
 
@@ -62,7 +68,7 @@ class HttpRequest
 
         return HttpRequest::createRequest($url)
             ->withTestRequest()
-            ->send();
+            ->fetch();
 
     }
 
@@ -96,29 +102,53 @@ class HttpRequest
     }
 
 
-    public function post(): HttpRequest
+    /**
+     * @param array $data - data post body as if it was from a form
+     * @return $this
+     */
+    public function post(array $data = array()): HttpRequest
     {
         $this->method = self::POST;
+        $this->postData = $data;
         return $this;
     }
 
-    public function send(): HttpResponse
+
+    public function fetch(): HttpResponse
     {
         if (!$this->withTestRequest) {
             throw new ExceptionRuntime("Real HTTP fetch not yet implemented, only test fetch");
         }
 
-        $query = $this->url->getQueryProperties();
+
+        try {
+            $path = $this->url->getPath();
+            if (!in_array($path, UrlEndpoint::DOKU_ENDPOINTS)) {
+                throw new ExceptionRuntime("The url path is not a doku endpoint path");
+            }
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntime("The path is mandatory");
+        }
 
         HttpRequest::purgeStaticDataRequestedScoped();
 
         $testRequest = new \TestRequest();
+
+        if ($this->asAdmin) {
+            Identity::becomeSuperUser($testRequest);
+        }
+
         switch ($this->method) {
             case self::GET:
-                $response = $testRequest->get($query);
+                $query = $this->url->getQueryProperties();
+                $response = $testRequest->get($query, $path);
                 break;
             case self::POST:
-                $response = $testRequest->post($query);
+                $query = $this->url->getQueryProperties();
+                foreach ($query as $queryKey => $queryValue) {
+                    $testRequest->setGet($queryKey, $queryValue);
+                }
+                $response = $testRequest->post($this->postData, $path);
                 break;
             default:
                 throw new ExceptionRuntime("The method ({$this->method}) is not implemented");
@@ -142,4 +172,12 @@ class HttpRequest
 
         return $httpResponse;
     }
+
+    public function asAdmin(): HttpRequest
+    {
+        $this->asAdmin = true;
+        return $this;
+    }
+
+
 }

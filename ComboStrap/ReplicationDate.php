@@ -56,8 +56,12 @@ class ReplicationDate extends MetadataDateTime
         return false;
     }
 
+    /**
+     * @return mixed
+     * @throws ExceptionNotFound
+     */
     public function getDefaultValue()
     {
-        return null;
+        throw new ExceptionNotFound("No default replication date");
     }
 }

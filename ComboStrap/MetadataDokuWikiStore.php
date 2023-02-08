@@ -106,6 +106,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
 
     /**
      * @throws ExceptionBadState - if for any reason, it's not possible to store the data
+     * @throws ExceptionNoValueToStore - if there
      */
     public function set(Metadata $metadata)
     {
@@ -114,7 +115,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         try {
             $persistentValue = $metadata->toStoreValue();
         } catch (ExceptionNotFound $e) {
-            throw new ExceptionBadState("There is no value to store", self::CANONICAL);
+            $persistentValue = null;
         }
         try {
             $defaultValue = $metadata->toStoreDefaultValue();

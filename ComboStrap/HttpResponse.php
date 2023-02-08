@@ -15,6 +15,17 @@ class HttpResponse
     const CANONICAL = "http:response";
 
     /**
+     * The value must be `Content-type` and not `Content-Type`
+     *
+     * Php will change it this way.
+     * For instance with {@link header()}, the following:
+     * `header("Content-Type: text/html")`
+     * is rewritten as:
+     * `Content-type: text/html;charset=UTF-8`
+     */
+    public const HEADER_CONTENT_TYPE = "Content-type";
+
+    /**
      * @var int
      */
     private $status;
@@ -100,8 +111,13 @@ class HttpResponse
         if ($statusCode === null) {
             $statusCode = HttpResponseStatus::ALL_GOOD;
         }
-        $contentType = $response->getHeader("Content-Type");
-        $mime = Mime::create($contentType);
+        try {
+            $contentTypeHeader = Http::getFirstHeader(self::HEADER_CONTENT_TYPE, $response->getHeaders());
+            $contentTypeValue = Http::extractHeaderValue($contentTypeHeader);
+            $mime = Mime::create($contentTypeValue);
+        } catch (ExceptionNotFound|ExceptionNotExists $e) {
+            $mime = Mime::getBinary();
+        }
         return HttpResponse::createForStatus($statusCode)
             ->setBody($response->getContent(), $mime)
             ->setHeaders($response->getHeaders());
@@ -289,11 +305,7 @@ class HttpResponse
     function getHeaderValue(string $headerName): string
     {
         $header = $this->getHeader($headerName);
-        $positionDoublePointSeparator = strpos($header, ':');
-        if ($positionDoublePointSeparator === false) {
-            throw new ExceptionNotExists("No value found");
-        }
-        return trim(substr($header, $positionDoublePointSeparator + 1));
+        return Http::extractHeaderValue($header);
     }
 
     public
@@ -343,6 +355,11 @@ class HttpResponse
     function hasEnded(): bool
     {
         return $this->hasEnded;
+    }
+
+    public function getBodyAsJsonArray(): array
+    {
+        return json_decode($this->getBody(), true);
     }
 
 

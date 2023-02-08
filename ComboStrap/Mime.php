@@ -13,16 +13,6 @@ class Mime
     public const HTML = "text/html";
     public const XHTML = "text/xhtml";
     const PLAIN_TEXT = "text/plain";
-    /**
-     * The value must be `Content-type` and not `Content-Type`
-     *
-     * Php will change it this way.
-     * For instance with {@link header()}, the following:
-     * `header("Content-Type: text/html")`
-     * is rewritten as:
-     * `Content-type: text/html;charset=UTF-8`
-     */
-    const HEADER_CONTENT_TYPE = "Content-type";
     public const SVG = "image/svg+xml";
     public const JAVASCRIPT = "text/javascript";
     const PNG = "image/png";
@@ -33,6 +23,7 @@ class Mime
     const CSS = "text/css";
     const MARKDOWN = "text/markdown";
     const PDF = "application/pdf";
+    const BINARY_MIME = "application/octet-stream";
     public const RASTER_MIMES = [
         Mime::BMP,
         Mime::WEBP,
@@ -40,6 +31,7 @@ class Mime
         Mime::GIF,
         MIME::PNG
     ];
+
     /**
      * @var array|null
      */
@@ -151,6 +143,11 @@ class Mime
         }
     }
 
+    public static function getBinary(): Mime
+    {
+        return new Mime(self::BINARY_MIME);
+    }
+
     public function __toString()
     {
         return $this->mime;
@@ -197,7 +194,7 @@ class Mime
 
         $secondPart = explode("/", $this->mime)[1];
         // case such as "image/svg+xml";
-        return explode("+",$secondPart)[0];
+        return explode("+", $secondPart)[0];
 
     }
 

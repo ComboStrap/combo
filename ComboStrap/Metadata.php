@@ -408,7 +408,7 @@ abstract class Metadata
      * @return string|array the value to be persisted by the store
      * the reverse action is {@link Metadata::setFromStoreValue()}
      *
-     * @throws ExceptionNotFound - if there is no value to store
+     * @throws ExceptionNotFound - if the value is null
      */
     public function toStoreValue()
     {
@@ -689,7 +689,7 @@ abstract class Metadata
 
     /**
      * @return mixed - the memory value
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotFound - if the value is null
      */
     public abstract function getValue();
 

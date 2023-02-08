@@ -67,9 +67,7 @@ class PageCreationDate extends MetadataDateTime
             return parent::toStoreValue();
         }
         $value = $this->getValue();
-        if ($value === null) {
-            return null;
-        }
+
         return array(
             self::DATE_DOKUWIKI_PROPERTY_NAME => [self::DOKUWIKI_SUB_KEY => $value->getTimestamp()]
         );

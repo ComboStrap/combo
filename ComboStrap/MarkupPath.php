@@ -120,10 +120,8 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
      * @var PageImages
      */
     private $pageImages;
-    /**
-     * @var PageKeywords
-     */
-    private $keywords;
+
+    private PageKeywords $keywords;
     /**
      * @var CacheExpirationFrequency
      */

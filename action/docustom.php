@@ -5,6 +5,7 @@ use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionReporter;
 use ComboStrap\ExecutionContext;
+use ComboStrap\FetcherIdentityForms;
 use ComboStrap\FetcherPage;
 use ComboStrap\FetcherSystem;
 use ComboStrap\FileSystems;
@@ -100,8 +101,11 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
                 case "show":
                     $action = self::getDoParameterValue(FetcherPage::NAME);
                     break;
-                case "login":
-                    $action = self::getDoParameterValue($action);
+                case ExecutionContext::LOGIN_ACTION:
+                case ExecutionContext::REGISTER_ACTION:
+                case ExecutionContext::RESEND_PWD_ACTION:
+                case ExecutionContext::PROFILE_ACTION:
+                    $action = self::getDoParameterValue(FetcherIdentityForms::NAME);
                     break;
             }
         }

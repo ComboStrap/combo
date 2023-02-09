@@ -74,6 +74,9 @@ class ExecutionContext
         self::SAVE_ACTION,
         self::REDIRECT_ACTION
     ];
+    const REGISTER_ACTION = "register";
+    const RESEND_PWD_ACTION = "resendpwd";
+    const PROFILE_ACTION = "profile";
 
 
     /**

@@ -47,7 +47,7 @@ class action_plugin_combo_registration extends DokuWiki_Action_Plugin
          * New Event using the new object
          * https://www.dokuwiki.org/devel:event:form_register_output
          */
-        $controller->register_hook('FORM_REGISTER_OUTPUT', 'BEFORE', $this, 'handle_register', array());
+        $controller->register_hook('FORM_REGISTER_OUTPUT', 'BEFORE', $this, 'handle_register_page', array());
 
 
     }

@@ -11,9 +11,10 @@ namespace ComboStrap;
 class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
 {
 
-    const NAME = "login";
-    const CANONICAL = "login";
+    const NAME = "identity";
+    const CANONICAL = "identity";
 
+    use FetcherTraitWikiPath;
 
     private string $requestedLayout;
     private bool $build = false;
@@ -55,15 +56,16 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
 
         if (!$this->build) {
 
-            $this->fetcherCache = FetcherCache::createFrom($this);
             $this->build = true;
             $pageLang = Site::getLangObject();
             $title = $this->getLabel();
+
             try {
                 $this->pageLayout = PageLayout::createFromLayoutName($this->getRequestedLayoutOrDefault())
                     ->setRequestedLang($pageLang)
                     ->setRequestedEnableTaskRunner(false) // no page id
-                    ->setRequestedTitle($title);
+                    ->setRequestedTitle($title)
+                    ->setRequestedContextPath($this->getSourcePath());
             } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
                 throw new ExceptionRuntimeInternal("Layout error: {$e->getMessage()}", self::NAME, 1, $e);
             }
@@ -173,11 +175,33 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
 
     public function getLabel(): string
     {
-        return ucfirst($this->getAction());
+        global $ACT;
+        $label = "Identity forms";
+        switch ($ACT){
+            case ExecutionContext::RESEND_PWD_ACTION:
+                $label = "Resend Password";
+                break;
+            case ExecutionContext::LOGIN_ACTION:
+                $label = "Login";
+                break;
+            case ExecutionContext::REGISTER_ACTION:
+                $label = "Register";
+                break;
+        }
+        return $label;
     }
 
-    private function getAction(): string
+
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotExists
+     * @throws ExceptionNotFound
+     */
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): IFetcher
     {
-        return self::NAME;
+        parent::buildFromTagAttributes($tagAttributes);
+        $this->buildOriginalPathFromTagAttributes($tagAttributes);
+        return $this;
     }
 }

@@ -16,6 +16,7 @@ use ComboStrap\LocalPath;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\TplUtility;
 use ComboStrap\Url;
 
@@ -31,9 +32,24 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
     const DO_PREFIX = "combo_";
 
     /**
+     * A configuration to enable the template system
+     */
+    public const CONF_ENABLE_TEMPLATING = "combo-conf-001";
+    public const CONF_ENABLE_TEMPLATING_DEFAULT = 1;
+
+    /**
      * @var bool to avoid recursion that may happen using {@link tpl_content()}
      */
     private bool $doCustomExecuting = false;
+
+    /**
+     * @return bool
+     */
+    public static function isTemplateEnabled(): bool
+    {
+        $confValue = Site::getConfValue(self::CONF_ENABLE_TEMPLATING, self::CONF_ENABLE_TEMPLATING_DEFAULT);
+        return $confValue === 1;
+    }
 
     public static function getDoParameterValue(string $fetcherName): string
     {
@@ -96,7 +112,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
         $action = $event->data;
 
-        if (FetcherPage::isEnabledAsShowAction()) {
+        if (self::isTemplateEnabled()) {
             switch ($action) {
                 case "show":
                     $action = self::getDoParameterValue(FetcherPage::NAME);

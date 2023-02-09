@@ -297,6 +297,6 @@ $lang[action_plugin_combo_snippetsbootstrap::CONF_JQUERY_DOKU] = PluginUtility::
 
 $lang[Snippet::CONF_USE_CDN] = PluginUtility::getDocumentationHyperLink(Snippet::CANONICAL, "Cdn") . ' If checked, the snippets (js, css) are served from the CDN URL if known';
 
-$lang[FetcherPage::CONF_ENABLE_AS_SHOW_ACTION] = PluginUtility::getDocumentationHyperLink(FetcherPage::CANONICAL, "Page Module") . ' If checked, the page will be rendered by combo and not by the template';
+$lang[action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING] = PluginUtility::getDocumentationHyperLink(FetcherPage::CANONICAL, "Page Module") . ' If checked, the page will be rendered by combo and not by the template';
 
 

@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_docustom;
 use JsonSerializable;
 
 /**
@@ -932,7 +933,7 @@ class Snippet implements JsonSerializable
                     }
 
                     $critical = $this->getCritical();
-                    if (!$critical && FetcherPage::isEnabledAsShowAction()) {
+                    if (!$critical && action_plugin_combo_docustom::isTemplateEnabled()) {
                         $tagAttributes
                             ->addOutputAttributeValue("rel", "preload")
                             ->addOutputAttributeValue('as', self::STYLE_TAG);

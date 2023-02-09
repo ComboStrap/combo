@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_docustom;
 use dokuwiki\Extension\PluginTrait;
 use TestRequest;
 
@@ -573,7 +574,7 @@ class ExecutionContext
 
     public function setDisablePageFetcher(): ExecutionContext
     {
-        $this->setConf(FetcherPage::CONF_ENABLE_AS_SHOW_ACTION, 0);
+        $this->setConf(action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING, 0);
         return $this;
     }
 
@@ -599,12 +600,12 @@ class ExecutionContext
     public function isPageFetcherEnabledAsShowAction(): bool
     {
         // the non strict equality is needed, we get a string for an unknown reason
-        return $this->getConfValue(FetcherPage::CONF_ENABLE_AS_SHOW_ACTION, FetcherPage::CONF_ENABLE_AS_SHOW_ACTION_DEFAULT) == 1;
+        return $this->getConfValue(action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING, action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING_DEFAULT) == 1;
     }
 
     public function setEnablePageFetcherAsShowAction(): ExecutionContext
     {
-        $this->getConfValue(FetcherPage::CONF_ENABLE_AS_SHOW_ACTION, 1);
+        $this->getConfValue(action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING, 1);
         return $this;
     }
 

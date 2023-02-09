@@ -356,7 +356,7 @@ $meta[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF] = array('mul
 /**
  * Take over the show
  */
-$meta[FetcherPage::CONF_ENABLE_AS_SHOW_ACTION] = array("onoff");
+$meta[action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING] = array("onoff");
 
 /**
  * Railbar

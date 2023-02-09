@@ -11,13 +11,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     const NAME = "page";
     const CANONICAL = "page";
 
-    /**
-     * A configuration to take over the show action
-     * of any template
-     */
-    const CONF_ENABLE_AS_SHOW_ACTION = "enablePageAsShowAction";
-    const CONF_ENABLE_AS_SHOW_ACTION_DEFAULT = 1;
-
     private string $requestedLayout;
     private bool $build = false;
     private bool $closed = false;
@@ -45,15 +38,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     {
         $wikiPath = WikiPath::createMarkupPathFromId($wikiId);
         return self::createPageFetcherFromPath($wikiPath);
-    }
-
-    /**
-     * @return bool
-     */
-    public static function isEnabledAsShowAction(): bool
-    {
-        $confValue = Site::getConfValue(self::CONF_ENABLE_AS_SHOW_ACTION, self::CONF_ENABLE_AS_SHOW_ACTION_DEFAULT);
-        return $confValue === 1;
     }
 
     /**

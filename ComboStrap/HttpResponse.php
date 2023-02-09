@@ -169,8 +169,9 @@ class HttpResponse
          * Exit
          * (Test run ?)
          */
-        $testRequest = TestRequest::getRunning();
-        if ($testRequest === null) {
+        $isTestRun = ExecutionContext::getActualOrCreateFromEnv()
+            ->isTestRun();
+        if (!$isTestRun) {
             if ($this->status !== HttpResponseStatus::ALL_GOOD && isset($this->body)) {
                 // if this is a 304, there is no body, no message
                 LogUtility::log2file("Bad Http Response: $this->status : {$this->getBody()}", LogUtility::LVL_MSG_ERROR, $this->canonical);
@@ -182,7 +183,11 @@ class HttpResponse
          * Test run
          * We can't exit, we need
          * to send all data back to the {@link TestRequest}
+         *
+         * Note that the {@link TestRequest} exists only in a test
+         * run (note in a normal installation)
          */
+        $testRequest = TestRequest::getRunning();
         if (isset($this->body)) {
             $testRequest->addData(self::EXIT_KEY, $this->body);
         }

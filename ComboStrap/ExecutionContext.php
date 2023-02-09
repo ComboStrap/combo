@@ -6,6 +6,7 @@ namespace ComboStrap;
 use dokuwiki\Extension\PluginTrait;
 use TestRequest;
 
+
 /**
  * An execution object permits to get access to environment variable.
  *
@@ -688,8 +689,17 @@ class ExecutionContext
      */
     public function isTestRun(): bool
     {
-        $testRequest = TestRequest::getRunning();
-        return $testRequest !== null;
+        /**
+         * Test Requested is loaded only in a test run
+         * Does not exist in a normal installation
+         * and is not found, triggering an exception
+         */
+        if (class_exists('TestRequest')) {
+            $testRequest = TestRequest::getRunning();
+            return $testRequest !== null;
+        }
+        return false;
+
     }
 
 

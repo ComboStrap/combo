@@ -278,7 +278,6 @@ EOF;
                      * (It has a higher priority than preview and
                      * the code comes then after)
                      */
-                    $pageProtectionAcronym = strtolower(PageProtection::ACRONYM);
                     if ($page->isLowQualityPage()) {
 
                         /**
@@ -326,6 +325,7 @@ EOF;
                             $outputAttributes->removeOutputAttributeIfPresent(PageProtection::DATA_PP_LINK);
                             $outputAttributes->removeOutputAttributeIfPresent(PageProtection::DATA_PP_SOURCE);
                             $outputAttributes->addOutputAttributeValue(PageProtection::DATA_PP_LINK, PageProtection::PAGE_PROTECTION_LINK_LOGIN);
+                            $acronym = PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM;
                             $lowerCaseLatePublicationAcronym = strtolower(PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM);
                             $outputAttributes->addOutputAttributeValue(PageProtection::DATA_PP_SOURCE, $lowerCaseLatePublicationAcronym);
                             PageProtection::addPageProtectionSnippet();

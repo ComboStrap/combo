@@ -15,6 +15,7 @@ namespace ComboStrap;
 
 use Doku_Form;
 use dokuwiki\Form\Form;
+use dokuwiki\Ui\UserProfile;
 use TestRequest;
 
 class Identity
@@ -69,13 +70,24 @@ class Identity
         $INPUT->server->set('REMOTE_USER', $user);
         // same as $_SERVER['REMOTE_USER'] = $user;
 
-
-        // $_SERVER[] = $user;
-        // global $USERINFO;
-        // $USERINFO['grps'] = array('admin', 'user');
-
         // global $INFO;
         // $INFO['ismanager'] = true;
+
+
+        /**
+         *
+         * Userinfo
+         *
+         * Email is Mandatory otherwise the {@link UserProfile}
+         * does not work
+         *
+         * USERINFO is also available via $INFO['userinfo']
+         * See {@link basicinfo()}
+         */
+        global $USERINFO;
+        $USERINFO['mail'] = "email@example.com";
+        // $USERINFO['grps'] = array('admin', 'user');
+
 
     }
 
@@ -107,8 +119,8 @@ class Identity
             try {
                 $wikiId = $executionContext->getRequestedWikiId();
             } catch (ExceptionNotFound $e) {
-                if (PluginUtility::isDevOrTest()){
-                    LogUtility::internalError("We should have an id, otherwise why are we asking for it",self::CANONICAL,$e);
+                if (PluginUtility::isDevOrTest()) {
+                    LogUtility::internalError("We should have an id, otherwise why are we asking for it", self::CANONICAL, $e);
                 }
                 return false;
             }
@@ -175,7 +187,7 @@ class Identity
     private static function getUserGroups()
     {
         global $USERINFO;
-        return is_array($USERINFO) ? $USERINFO['grps'] : array();
+        return is_array($USERINFO) && isset($USERINFO['grps']) ? $USERINFO['grps'] : array();
     }
 
     /**

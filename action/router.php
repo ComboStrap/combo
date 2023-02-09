@@ -293,11 +293,12 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     function router(&$event, $param)
     {
 
+        /**
+         * Just the {@link ExecutionContext::SHOW_ACTION}
+         * may be redirected
+         */
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
-
-        $isPublicationAction = $executionContext
-            ->isPublicationAction();
-        if (!$isPublicationAction) {
+        if ($executionContext->getAct()!==ExecutionContext::SHOW_ACTION) {
             return;
         }
 

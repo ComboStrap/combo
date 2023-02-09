@@ -63,8 +63,8 @@ class ExecutionContext
     const REDIRECT_ACTION = "redirect";
 
     // private actions does not render a page to be indexed
-    // by a search engine
-    const PRIVATES_ACTION = [
+    // by a search engine (ie no redirect)
+    const PRIVATES_ACTION_NO_REDIRECT = [
         self::EDIT_ACTION,
         self::PREVIEW_ACTION,
         self::ADMIN_ACTION,
@@ -73,7 +73,10 @@ class ExecutionContext
         self::SEARCH_ACTION,
         self::LOGIN_ACTION,
         self::SAVE_ACTION,
-        self::REDIRECT_ACTION
+        self::REDIRECT_ACTION,
+        self::REGISTER_ACTION,
+        self::RESEND_PWD_ACTION,
+        self::PROFILE_ACTION,
     ];
     const REGISTER_ACTION = "register";
     const RESEND_PWD_ACTION = "resendpwd";
@@ -643,7 +646,7 @@ class ExecutionContext
         }
 
         $act = $this->getAct();
-        if (in_array($act, self::PRIVATES_ACTION)) {
+        if (in_array($act, self::PRIVATES_ACTION_NO_REDIRECT)) {
             return false;
         }
 

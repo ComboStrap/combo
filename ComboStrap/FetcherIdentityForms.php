@@ -3,6 +3,11 @@
 namespace ComboStrap;
 
 
+/**
+ * No Cache for the idenity forms
+ * as if there is a cache problems,
+ * We can't login anymore for instance
+ */
 class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
 {
 
@@ -15,7 +20,6 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
 
 
     private PageLayout $pageLayout;
-    private FetcherCache $fetcherCache;
 
 
     /**
@@ -66,10 +70,6 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
 
         }
 
-        $cache = $this->fetcherCache
-            ->addFileDependency($this->pageLayout->getCssPath())
-            ->addFileDependency($this->pageLayout->getJsPath())
-            ->addFileDependency($this->pageLayout->getHtmlTemplatePath());
 
 
         /**
@@ -83,7 +83,7 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
             try {
                 $fetcherPageFragment = $pageElement->getMarkupFetcher();
                 try {
-                    $cache->addFileDependency($fetcherPageFragment->processIfNeededAndGetFetchPath());
+                    $fetcherPageFragment->processIfNeededAndGetFetchPath();
                 } finally {
                     $fetcherPageFragment->close();
                 }
@@ -92,18 +92,6 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
             }
         }
 
-        /**
-         * Public static cache
-         * (Do we create the page or return the cache)
-         */
-        if (false && $cache->isCacheUsable() && $this->isPublicAction()) {
-            try {
-                return FileSystems::getContent($cache->getFile());
-            } catch (ExceptionNotFound $e) {
-                // the cache file should exists
-                LogUtility::internalError("The cache HTML fragment file was not found", self::NAME);
-            }
-        }
 
         /**
          * The content
@@ -125,16 +113,7 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
         /**
          * Generate the whole html page via the layout
          */
-        $htmlDocumentString = $this->pageLayout->generateAndGetPageHtmlAsString($mainHtml);
-
-        /**
-         * We store only the public pages
-         */
-        if ($this->isPublicAction()) {
-            $cache->storeCache($htmlDocumentString);
-        }
-
-        return $htmlDocumentString;
+        return $this->pageLayout->generateAndGetPageHtmlAsString($mainHtml);
 
     }
 
@@ -158,12 +137,6 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
     }
 
 
-    public function setRequestedLayout(string $layoutValue): FetcherIdentityForms
-    {
-        $this->requestedLayout = $layoutValue;
-        return $this;
-    }
-
     /**
      * @throws ExceptionNotFound
      */
@@ -186,15 +159,7 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
     }
 
 
-    /**
-     * Can we cache the output
-     *
-     * @return bool
-     */
-    private function isPublicAction(): bool
-    {
-        return self::NAME === ExecutionContext::LOGIN_ACTION;
-    }
+
 
     private function getRequestedLayoutOrDefault(): string
     {

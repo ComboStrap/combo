@@ -12,6 +12,7 @@ use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
+use ComboStrap\ShareTag;
 use ComboStrap\TagAttributes;
 
 
@@ -69,10 +70,6 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        /**
-         * The empty tag pattern should be before the container pattern
-         */
-        $this->Lexer->addSpecialPattern(PluginUtility::getEmptyTagPattern(self::TAG), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
         /**
          * Container
@@ -145,75 +142,8 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_SPECIAL:
                 case DOKU_LEXER_ENTER:
-
                     $shareAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-
-                    /**
-                     * The channel
-                     */
-                    try {
-                        $brandButton = syntax_plugin_combo_brand::createButtonFromAttributes($shareAttributes, BrandButton::TYPE_BUTTON_SHARE);
-                    } catch (ExceptionCompile $e) {
-                        $renderer->doc .= LogUtility::wrapInRedForHtml("The brand creation returns an error ({$e->getMessage()}");
-                        return false;
-                    }
-
-
-                    /**
-                     * Standard link attribute
-                     * and Runtime Cache key dependencies
-                     */
-                    CacheManager::getFromContextExecution()
-                        ->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
-
-                    $requestedPage = MarkupPath::createFromRequestedPage();
-                    try {
-                        $linkAttributes = $brandButton->getLinkAttributes($requestedPage)
-                            ->setType($shareAttributes->getType())
-                            ->setLogicalTag(self::TAG);
-                    } catch (ExceptionCompile $e) {
-                        $renderer->doc .= LogUtility::wrapInRedForHtml("The social channel creation returns an error when creating the link ({$e->getMessage()}");
-                        return false;
-                    }
-
-                    /**
-                     * Add the link
-                     */
-                    $renderer->doc .= $linkAttributes->toHtmlEnterTag("a");
-
-                    /**
-                     * Icon
-                     */
-                    if ($brandButton->hasIcon()) {
-                        try {
-                            $iconAttributes = $brandButton->getIconAttributes();
-                            $tagIconAttributes = TagAttributes::createFromCallStackArray($iconAttributes);
-                            $renderer->doc .= Icon::createFromTagAttributes($tagIconAttributes)
-                                ->toHtml();
-                        } catch (ExceptionCompile $e) {
-                            $message = "Getting the icon for the social channel ($brandButton) returns an error ({$e->getMessage()}";
-                            if (PluginUtility::isDevOrTest()) {
-                                throw new ExceptionRuntime($message, self::CANONICAL, 1, $e);
-                            }
-                            $renderer->doc .= LogUtility::wrapInRedForHtml($message);
-                            // don't return because the anchor link is open
-                        }
-                    }
-
-
-                    if ($state === DOKU_LEXER_SPECIAL) {
-                        $renderer->doc .= "</a>";
-                    }
-
-
-                    try {
-                        $style = $brandButton->getStyle();
-                    } catch (ExceptionCompile $e) {
-                        $renderer->doc .= LogUtility::wrapInRedForHtml("The style of the share button ($brandButton) could not be determined. Error: {$e->getMessage()}");
-                        return false;
-                    }
-                    $snippetId = $brandButton->getStyleScriptIdentifier();
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet($snippetId, $style);
+                    $renderer->doc .= ShareTag::render($shareAttributes, $state);
                     break;
                 case DOKU_LEXER_EXIT:
                     $renderer->doc .= "</a>";

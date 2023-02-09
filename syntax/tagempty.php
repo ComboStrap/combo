@@ -4,7 +4,11 @@
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 // must be run within Dokuwiki
+use ComboStrap\Brand;
+use ComboStrap\BrandButton;
+use ComboStrap\BrandListTag;
 use ComboStrap\Breadcrumb;
+use ComboStrap\ExceptionInternal;
 use ComboStrap\HrTag;
 use ComboStrap\IconTag;
 use ComboStrap\LogUtility;
@@ -12,6 +16,7 @@ use ComboStrap\PageImage;
 use ComboStrap\PageImageTag;
 use ComboStrap\PluginUtility;
 use ComboStrap\SearchTag;
+use ComboStrap\ShareTag;
 use ComboStrap\TagAttributes;
 
 
@@ -87,6 +92,13 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
             case PageImageTag::MARKUP:
                 $knownTypes = PageImageTag::TYPES;
                 break;
+            case ShareTag::MARKUP:
+                $knownTypes = Brand::getBrandNamesForButtonType(BrandButton::TYPE_BUTTON_SHARE);
+                break;
+            case BrandListTag::MARKUP:
+                $knownTypes = BrandButton::TYPE_BUTTONS;
+                $defaultAttributes = [TagAttributes::TYPE_KEY => BrandButton::TYPE_BUTTON_BRAND];
+                break;
         }
         $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes)
             ->setLogicalTag($logicalTag);
@@ -122,14 +134,13 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
      * @param array $data - what the function handle() return'ed
      * @return boolean - rendered correctly? (however, returned value is not used at the moment)
      * @see DokuWiki_Syntax_Plugin::render()
-     *
-     *
      */
     function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         $tag = $data[PluginUtility::TAG];
         $attributes = $data[PluginUtility::ATTRIBUTES];
+        $state = DOKU_LEXER_SPECIAL;
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes)->setLogicalTag($tag);
         switch ($format) {
             case "xhtml":
@@ -149,6 +160,12 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
                         break;
                     case PageImageTag::MARKUP:
                         $renderer->doc .= PageImageTag::render($tagAttributes, $data);
+                        break;
+                    case ShareTag::MARKUP:
+                        $renderer->doc .= ShareTag::render($tagAttributes, $state);
+                        break;
+                    case BrandListTag::MARKUP:
+                        $renderer->doc .= BrandListTag::render($tagAttributes);
                         break;
                     default:
                         LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");

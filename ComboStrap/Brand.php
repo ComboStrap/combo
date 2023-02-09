@@ -41,7 +41,6 @@ class Brand
     /**
      * Brand constructor.
      * @param string $name
-     * @throws ExceptionCompile
      */
     public function __construct(string $name)
     {
@@ -96,13 +95,27 @@ class Brand
         );
     }
 
-    /**
-     *
-     */
+
     public static function getBrandNamesFromDictionary(): array
     {
         $brandDictionary = self::getBrandDictionary();
         return array_keys($brandDictionary);
+    }
+
+    /**
+     * @param $type - the button type (ie one of {@link BrandButton::TYPE_BUTTONS}
+     * @return array - the brand names that can be used as type in the brand button
+     */
+    public static function getBrandNamesForButtonType($type): array
+    {
+        $brandNames = self::getBrandNamesFromDictionary();
+        $brandNamesForType = [];
+        foreach ($brandNames as $brandName) {
+            if (Brand::create($brandName)->supportButtonType($type)) {
+                $brandNamesForType[] = $brandName;
+            }
+        }
+        return $brandNamesForType;
     }
 
     /**
@@ -114,7 +127,9 @@ class Brand
             try {
                 Brand::$brandDictionary = Dictionary::getFrom("brands");
             } catch (ExceptionCompile $e) {
-                throw new ExceptionRuntimeInternal("We can't load the brands dictionary.", self::CANONICAL,1,$e);
+                // Should never happens
+                Brand::$brandDictionary = [];
+                LogUtility::error("We can't load the brands dictionary. Error: " . $e->getMessage(), self::CANONICAL, $e);
             }
         }
         return Brand::$brandDictionary;
@@ -129,9 +144,7 @@ class Brand
      */
     private $name;
 
-    /**
-     * @throws ExceptionCompile
-     */
+
     public static function create(string $brandName): Brand
     {
         return new Brand($brandName);

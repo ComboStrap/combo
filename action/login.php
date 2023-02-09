@@ -32,6 +32,7 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
     const FORM_LOGIN_CLASS = "form-" . self::TAG;
 
     const CONF_ENABLE_LOGIN_FORM = "enableLoginForm";
+    const FIELD_SET_TO_DELETE = ["fieldsetopen", "fieldsetclose"];
 
 
     /**
@@ -252,8 +253,7 @@ EOF;
         /**
          * Fieldset delete
          */
-        $elementsTypeToDelete = ["fieldsetopen", "fieldsetclose"];
-        foreach ($elementsTypeToDelete as $type) {
+        foreach (self::FIELD_SET_TO_DELETE as $type) {
             $field = $form->findPositionByType($type);
             if ($field !== false) {
                 $form->removeElement($field);

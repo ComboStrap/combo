@@ -33,6 +33,7 @@ class Identity
     const JS_NAVIGATION_INDICATOR = "navigation";
 
     const FORM_IDENTITY_CLASS = "form-identity";
+    public const FIELD_SET_TO_DELETE = ["fieldsetopen", "fieldsetclose"];
 
     /**
      * Is logged in
@@ -335,6 +336,26 @@ EOF;
             $class = $formClass;
         }
 
+    }
+
+    public static function deleteFieldSetAndBrFromForm(Form $form)
+    {
+        foreach (self::FIELD_SET_TO_DELETE as $type) {
+            $field = $form->findPositionByType($type);
+            if ($field !== false) {
+                $form->removeElement($field);
+            }
+        }
+
+        for ($i = 0; $i < $form->elementCount(); $i++) {
+            $fieldBr = $form->getElementAt($i);
+            if (trim($fieldBr->val()) === "<br>") {
+                $form->removeElement($i);
+                // removing the element, rearrange the array and shift the array index of minus 1
+                // to delete two br one after the other, we need to readjust the counter
+                $i--;
+            }
+        }
     }
 
 

@@ -6,6 +6,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use dokuwiki\Form\Form;
+use dokuwiki\Form\InputElement;
 
 if (!defined('DOKU_INC')) die();
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -191,7 +192,87 @@ EOF;
 
     private static function updateNewFormProfileUpdate(Form &$form)
     {
-        // TODO
+        /**
+         * The Login page is an admin page created via buffer
+         * We print before the forms
+         * to avoid a FOUC
+         */
+        print Identity::getHtmlStyleTag(self::TAG_UPDATE);
+
+
+        $form
+            ->addClass(Identity::FORM_IDENTITY_CLASS . " " . self::FORM_PROFILE_UPDATE_CLASS);
+
+
+        /**
+         * Heading
+         */
+        $headerHTML = Identity::getHeaderHTML($form, self::FORM_PROFILE_UPDATE_CLASS);
+        if ($headerHTML != "") {
+            $form->addHTML($headerHTML, 1);
+        }
+
+        Identity::deleteFieldSetAndBrFromForm($form);
+
+        /**
+         * Submit button
+         */
+        $submitButtonPosition = $form->findPositionByAttribute("type", "submit");
+        if ($submitButtonPosition === false) {
+            LogUtility::msg("Internal error: No submit button found");
+            return;
+        }
+        $form->getElementAt($submitButtonPosition)
+            ->addClass("btn")
+            ->addClass("btn-primary")
+            ->addClass("btn-block")
+            ->addClass("mb-2")
+            ->addClass("me-2");
+
+        /**
+         * Reset button
+         */
+        $resetButtonPosition = $form->findPositionByAttribute("type", "reset");
+        if ($resetButtonPosition === false) {
+            LogUtility::msg("Internal error: No submit button found");
+            return;
+        }
+        $form->getElementAt($resetButtonPosition)
+            ->addClass("btn")
+            ->addClass("btn-secondary")
+            ->addClass("btn-block")
+            ->addClass("mb-2");
+
+        for ($i = 0; $i < $form->elementCount(); $i++) {
+            $element = $form->getElementAt($i);
+            if ($element instanceof InputElement) {
+                $inputType = $element->getType();
+                $inputName = $element->attr("name");
+                $labelObject = $element->getLabel();
+                $label = "";
+                if ($labelObject !== null) {
+                    $label = $labelObject->val();
+                }
+                $inputId = $element->attr("id");
+                if(empty($inputId)){
+                    $inputId = "user__update-input-$i";
+                    $element->id($inputId);
+                }
+                $newInputField = new InputElement($inputType, $inputName);
+                foreach ($element->attrs() as $keyAttr => $valueAttr) {
+                    $newInputField->attr($keyAttr, $valueAttr);
+                }
+                $newInputField->addClass("form-control");
+                $form->replaceElement($newInputField, $i);
+                $form->addHTML('<div class="row">', $i);
+                $form->addHTML("<label for=\"$inputId\" class=\"form-label\">$label</label>", $i + 1);
+                $form->addHTML('</div>', $i + 3);
+                $i = $i + 3;
+                //$form->addHTML("</div>", $i + 1);
+            }
+
+        }
+
     }
 
 
@@ -203,7 +284,6 @@ EOF;
          * We print before the forms to avoid a FOUC
          */
         print Identity::getHtmlStyleTag(self::TAG_UPDATE);
-
 
 
         $class = &$form->params["class"];

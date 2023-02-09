@@ -240,25 +240,11 @@ EOF;
             $form->addHTML($headerHTML, 1);
         }
 
-        $brPositionElement = [4, 5]; // 4 and 6 but when you delete 4, it's on 5
-        foreach ($brPositionElement as $brPosition) {
-            $fieldBr = $form->getElementAt($brPosition);
-            if ($fieldBr->val() === "<br>\n") {
-                $form->removeElement($brPosition);
-            } else {
-                LogUtility::msg("Internal: the login br $brPosition element was not found and not deleted");
-            }
-        }
 
         /**
-         * Fieldset delete
+         * Fieldset and br delete
          */
-        foreach (self::FIELD_SET_TO_DELETE as $type) {
-            $field = $form->findPositionByType($type);
-            if ($field !== false) {
-                $form->removeElement($field);
-            }
-        }
+        Identity::deleteFieldSetAndBrFromForm($form);
 
         /**
          * Field

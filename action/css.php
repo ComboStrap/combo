@@ -128,7 +128,7 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
                     }
 
                     if ($enableMinimalFrontEnd) {
-                        $link['href'] .= '&' . self::WHICH_END_KEY . '=' . self::VALUE_FRONT . '';
+                        $link['href'] .= '&' . self::WHICH_END_KEY . '=' . self::VALUE_FRONT;
                         return;
                     }
 

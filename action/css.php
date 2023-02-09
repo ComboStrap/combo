@@ -1,11 +1,9 @@
 <?php
 
 
+use ComboStrap\ExecutionContext;
 use ComboStrap\PluginUtility;
 
-if (!defined('DOKU_INC')) die();
-
-require_once(__DIR__ . '/../ComboStrap/' . 'PluginUtility.php');
 
 /**
  * Class action_plugin_combo_css
@@ -114,6 +112,7 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
      */
     public function handle_css_metaheader(Doku_Event &$event, $param)
     {
+
         $disableDokuwikiStylesheet = $this->getConf(self::CONF_DISABLE_DOKUWIKI_STYLESHEET, false);
         $enableMinimalFrontEnd = $this->getConf(self::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET, false);
 
@@ -242,7 +241,6 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
 
         }
     }
-
 
 
 }

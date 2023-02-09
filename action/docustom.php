@@ -29,6 +29,11 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
     const DO_PREFIX = "combo_";
 
+    /**
+     * @var bool to avoid recursion that may happen using {@link tpl_content()}
+     */
+    private bool $doCustomExecuting = false;
+
     public static function getDoParameterValue(string $fetcherName): string
     {
         return self::DO_PREFIX . $fetcherName;
@@ -62,6 +67,10 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
     public function executeComboDoAction(Doku_Event $event, $param)
     {
 
+        if ($this->doCustomExecuting) {
+            return;
+        }
+
         /**
          * The router may have done a redirection
          * (The Dokuwiki testRequest does not stop unfortunately)
@@ -86,11 +95,23 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
         $action = $event->data;
 
-        if (FetcherPage::isEnabledAsShowAction() && $action === "show") {
-            $action = self::getDoParameterValue(FetcherPage::NAME);
+        if (FetcherPage::isEnabledAsShowAction()) {
+            switch ($action) {
+                case "show":
+                    $action = self::getDoParameterValue(FetcherPage::NAME);
+                    break;
+                case "login":
+                    $action = self::getDoParameterValue($action);
+                    break;
+            }
         }
 
         if (!$this->isComboDoAction($action)) return;
+
+        /**
+         * To avoid recursion
+         */
+        $this->doCustomExecuting = true;
 
         /**
          * Otherwise the act_clean function sanitize the action
@@ -101,9 +122,9 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
 
         try {
-            $fectherName = $this->getFetcherNameFromAction($action);
+            $fetcherName = $this->getFetcherNameFromAction($action);
             $url = Url::createFromGetOrPostGlobalVariable()
-                ->addQueryParameter(IFetcher::FETCHER_KEY, $fectherName);
+                ->addQueryParameter(IFetcher::FETCHER_KEY, $fetcherName);
             $fetcher = FetcherSystem::createFetcherStringFromUrl($url);
             $body = $fetcher->getFetchString();
             $mime = $fetcher->getMime();

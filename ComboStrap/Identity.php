@@ -14,6 +14,7 @@ namespace ComboStrap;
 
 
 use Doku_Form;
+use dokuwiki\Form\Form;
 use TestRequest;
 
 class Identity
@@ -178,48 +179,74 @@ class Identity
     }
 
     /**
-     * @param Doku_Form $form
+     * @param Doku_Form|Form $form
      * @param string $classPrefix
      * @param bool $includeLogo
      * @return string
      */
-    public static function getHeaderHTML(Doku_Form $form, $classPrefix, $includeLogo = true): string
+    public static function getHeaderHTML($form, string $classPrefix, bool $includeLogo = true): string
     {
-        if (isset($form->_content[0]["_legend"])) {
-
-            $title = $form->_content[0]["_legend"];
-            /**
-             * Logo
-             */
-            $logoHtmlImgTag = "";
-            if (
-                Site::getConfValue(Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS, 1)
-                &&
-                $includeLogo === true
-            ) {
-                try {
-                    $logoHtmlImgTag = Site::getLogoHtml();
-                } catch (ExceptionNotFound $e) {
-                    // no logo found or readable
+        $class = get_class($form);
+        switch ($class) {
+            case Doku_Form::class:
+                /**
+                 * Old one
+                 * @var Doku_Form $form
+                 */
+                $legend = $form->_content[0]["_legend"];
+                if (!isset($legend)) {
+                    return "";
                 }
+
+                $title = $legend;
+                break;
+            case Form::class;
+                /**
+                 * New One
+                 * @var Form $form
+                 */
+                $pos = $form->findPositionByType("fieldsetopen");
+                if ($pos === false) {
+                    return "";
+                }
+
+                $title = $form->getElementAt($pos)->val();
+                break;
+            default:
+                LogUtility::msg("Internal Error: Unknown form class " . $class);
+                return "";
+        }
+
+        /**
+         * Logo
+         */
+        $logoHtmlImgTag = "";
+        if (
+            Site::getConfValue(Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS, 1)
+            &&
+            $includeLogo === true
+        ) {
+            try {
+                $logoHtmlImgTag = Site::getLogoHtml();
+            } catch (ExceptionNotFound $e) {
+                // ok
             }
-            /**
-             * Don't use `header` in place of
-             * div because this is a HTML5 tag
-             *
-             * On php 5.6, the php test library method {@link \phpQueryObject::htmlOuter()}
-             * add the below meta tag
-             * <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
-             *
-             */
-            return <<<EOF
+        }
+        /**
+         * Don't use `header` in place of
+         * div because this is a HTML5 tag
+         *
+         * On php 5.6, the php test library method {@link \phpQueryObject::htmlOuter()}
+         * add the below meta tag
+         * <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+         *
+         */
+        return <<<EOF
 <div class="$classPrefix-header">
     $logoHtmlImgTag
     <h1>$title</h1>
 </div>
 EOF;
-        }
-        return "";
     }
 
     public static function isReader(string $wikiId): bool

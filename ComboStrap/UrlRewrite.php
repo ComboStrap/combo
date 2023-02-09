@@ -122,8 +122,7 @@ class UrlRewrite
                             $url->setPath("/$idPath");
                             return;
                         } catch (ExceptionNotFound $e) {
-                            LogUtility::internalError("The id should be present for a doku script. No Url rewrite could be done.");
-                            // no id
+                            // no id (case of action such as login, ...)
                         }
 
                 }

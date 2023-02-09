@@ -16,6 +16,7 @@ class SearchTag
     public const COMBO_SEARCH_BOX = "combo-search-box";
     public const SNIPPET_ID = "search";
     public const COMBO_DEBOUNCE = "combo-debounce";
+    const CANONICAL = "search";
 
     public static function render(TagAttributes $tagAttributes): string
     {
@@ -43,7 +44,12 @@ class SearchTag
 
         $extraClass = $tagAttributes->getClass("");
 
-        $id = MarkupPath::createFromRequestedPage()->getWikiId();
+        try {
+            $id = WikiPath::createRequestedPagePathFromRequest()->getWikiId();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::error($e->getMessage(), self::CANONICAL,$e);;
+            $id = "not_found";
+        }
         $inputSearchId = 'internal-search-box';
 
         // https://getbootstrap.com/docs/5.0/getting-started/accessibility/#visually-hidden-content
@@ -59,6 +65,7 @@ class SearchTag
         if (!$tagAttributes->getBooleanValue('autocomplete')) {
             $browserAutoComplete = 'off';
         }
+        $tagClass = StyleUtility::addComboStrapSuffix(self::TAG);
         $action = wl();
         return <<<EOF
 <form
@@ -67,7 +74,7 @@ class SearchTag
     accept-charset="utf-8"
     method="get"
     role="search"
-    class="search form-inline $extraClass"
+    class="$tagClass form-inline $extraClass"
     >
 <input type="hidden" name="do" value="search" />
 <input type="hidden" name="id" value="$id" />

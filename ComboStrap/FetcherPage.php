@@ -316,7 +316,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     }
 
 
-    private function setRequestedPath(Path $requestedPath): FetcherPage
+    public function setRequestedPath(Path $requestedPath): FetcherPage
     {
         try {
             $requestedPath = WikiPath::createFromPathObject($requestedPath);

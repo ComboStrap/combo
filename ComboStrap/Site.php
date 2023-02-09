@@ -297,6 +297,11 @@ class Site
         return $value;
     }
 
+    public static function getLangObject(): Lang
+    {
+        return Lang::createFromValue(Site::getLang());
+    }
+
 
     function getEmailObfuscationConfiguration()
     {
@@ -975,7 +980,7 @@ class Site
     /**
      * @throws ExceptionNotFound
      */
-    public static function getLogoHtml(): ?string
+    public static function getLogoHtml(): string
     {
 
         $logoImagesPath = Site::getLogoImagesAsPath();
@@ -997,7 +1002,7 @@ class Site
                     ->setHtmlOrSetterTagAttributes($tagAttributes)
                     ->toHtml();
             } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound|ExceptionCompile $e) {
-                LogUtility::msg("Error while rendering in HTML the logo $imageFetcher");
+                LogUtility::msg("Error while rendering in HTML the logo $logoImagePath");
             }
 
         }

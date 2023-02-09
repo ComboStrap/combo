@@ -124,6 +124,13 @@ class Lang extends MetadataText
         $lang["direction"] = $string;
     }
 
+    public static function createFromValue(string $langValue): Lang
+    {
+        $lang = new Lang();
+        $lang->value = $langValue;
+        return $lang;
+    }
+
     public function getTab(): ?string
     {
         return MetaManagerForm::TAB_LANGUAGE_VALUE;

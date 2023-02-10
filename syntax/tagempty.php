@@ -79,6 +79,7 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
         $logicalTag = PluginUtility::getTag($match);
         $defaultAttributes = [];
         $knownTypes = [];
+        $allowAnyFirstBooleanAttributesAsType = false;
         switch ($logicalTag) {
             case SearchTag::TAG:
                 $defaultAttributes = array(
@@ -101,11 +102,11 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
                 $defaultAttributes = [TagAttributes::TYPE_KEY => BrandButton::TYPE_BUTTON_BRAND];
                 break;
             case BrandTag::MARKUP:
-                $knownTypes = Brand::getBrandNamesFromDictionary();
                 $defaultAttributes = [TagAttributes::TYPE_KEY => Brand::CURRENT_BRAND];
+                $allowAnyFirstBooleanAttributesAsType = true;
                 break;
         }
-        $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes)
+        $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes, $allowAnyFirstBooleanAttributesAsType)
             ->setLogicalTag($logicalTag);
 
         /**

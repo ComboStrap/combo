@@ -243,9 +243,9 @@ class PluginUtility
 
     }
 
-    public static function getTagAttributes($match, $knownTypes = null): array
+    public static function getTagAttributes(string $match, array $knownTypes = [], bool $allowFirstBooleanAttributesAsType = false): array
     {
-        return self::getQualifiedTagAttributes($match, false, "", $knownTypes);
+        return self::getQualifiedTagAttributes($match, false, "", $knownTypes, $allowFirstBooleanAttributesAsType);
     }
 
     /**
@@ -256,9 +256,10 @@ class PluginUtility
      * use for the code/file/console where they accept a name as third value
      * @param $keyThirdArgument - if a third argument is found, return it with this key
      * @param array|null $knownTypes
+     * @param bool $allowFirstBooleanAttributesAsType
      * @return array
      */
-    public static function getQualifiedTagAttributes($match, $hasThirdValue, $keyThirdArgument, array $knownTypes = null): array
+    public static function getQualifiedTagAttributes($match, $hasThirdValue, $keyThirdArgument, array $knownTypes = [], bool $allowFirstBooleanAttributesAsType = false): array
     {
 
         $match = PluginUtility::getPreprocessEnterTag($match);
@@ -283,10 +284,15 @@ class PluginUtility
             $nextArgument = $match;
         }
 
-        $isType = !strpos($nextArgument, "=");
-        if ($knownTypes !== null) {
-            if (!in_array($nextArgument, $knownTypes)) {
-                $isType = false;
+        $isBooleanAttribute = !strpos($nextArgument, "=");
+        $isType = false;
+        if ($isBooleanAttribute) {
+            if ($allowFirstBooleanAttributesAsType) {
+                $isType = true;
+            } else {
+                if (!empty($knownTypes) && in_array($nextArgument, $knownTypes)) {
+                    $isType = true;
+                }
             }
         }
         if ($isType) {
@@ -751,8 +757,8 @@ class PluginUtility
         $match = substr($match, 0, $pos);
 
         // if this is a empty tag with / at the end we delete it
-        if($match[strlen($match)-1]=="/"){
-            $match = substr($match, 0,-1);
+        if ($match[strlen($match) - 1] == "/") {
+            $match = substr($match, 0, -1);
         }
 
         // Suppress the <

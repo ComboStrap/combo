@@ -282,13 +282,14 @@ class TagAttributes
 
     /**
      * @param $match - the {@link SyntaxPlugin::handle()} match
-     * @param array $defaultAttributes
-     * @param array|null $knownTypes
+     * @param array $defaultAttributes - the default attributes values
+     * @param array $knownTypes - the known types
+     * @param bool $allowFirstBooleanAttributesAsType - if the first attribute is a boolean, make it a type
      * @return TagAttributes
      */
-    public static function createFromTagMatch($match, array $defaultAttributes = [], array $knownTypes = null): TagAttributes
+    public static function createFromTagMatch($match, array $defaultAttributes = [], array $knownTypes = [], bool $allowFirstBooleanAttributesAsType = false): TagAttributes
     {
-        $inlineHtmlAttributes = PluginUtility::getTagAttributes($match, $knownTypes);
+        $inlineHtmlAttributes = PluginUtility::getTagAttributes($match, $knownTypes, $allowFirstBooleanAttributesAsType);
         $tag = PluginUtility::getTag($match);
         $mergedAttributes = PluginUtility::mergeAttributes($inlineHtmlAttributes, $defaultAttributes);
         return self::createFromCallStackArray($mergedAttributes, $tag)

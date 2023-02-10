@@ -84,7 +84,6 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     const CONF_SECTION_LAYOUT_DEFAULT = self::CONF_SECTION_LAYOUT_COMBO;
 
 
-
     /**
      * A common function used to handle exit of headings
      * @param CallStack $callStack
@@ -488,7 +487,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                $tagAttributes = TagAttributes::createFromTagMatch($match);
+                $tagAttributes = TagAttributes::createFromTagMatch($match, [], self::ALL_TYPES);
 
                 /**
                  * Context determination

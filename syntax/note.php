@@ -105,7 +105,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $defaultAttributes = array("type" => self::INFO_TYPE);
+                $defaultAttributes = array(TagAttributes::TYPE_KEY => self::INFO_TYPE);
                 $knwonTypes = [self::INFO_TYPE, self::TIP_TYPE, self::IMPORTANT_TYPE, self::WARNING_TYPE];
                 $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knwonTypes);
                 return array(

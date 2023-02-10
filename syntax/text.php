@@ -106,7 +106,7 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                $attributes = TagAttributes::createFromTagMatch($match);
+                $attributes = TagAttributes::createFromTagMatch($match,[],[],true);
                 $callStackArray = $attributes->toCallStackArray();
 
                 return array(

@@ -21,6 +21,10 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
 
     const TAG = "note";
     const COMPONENT = "combo_note";
+    const INFO_TYPE = "info";
+    const IMPORTANT_TYPE = "important";
+    const WARNING_TYPE = "warning";
+    const TIP_TYPE = "tip";
 
     /**
      * Syntax Type.
@@ -28,7 +32,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'container';
     }
@@ -101,12 +105,12 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $defaultAttributes = array("type" => "info");
-                $inlineAttributes = PluginUtility::getTagAttributes($match);
-                $attributes = PluginUtility::mergeAttributes($inlineAttributes, $defaultAttributes);
+                $defaultAttributes = array("type" => self::INFO_TYPE);
+                $knwonTypes = [self::INFO_TYPE, self::TIP_TYPE, self::IMPORTANT_TYPE, self::WARNING_TYPE];
+                $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knwonTypes);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -153,15 +157,15 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
                     $type = $attributes->getValue(TagAttributes::TYPE_KEY);
                     // Switch for the color
                     switch ($type) {
-                        case "important":
+                        case self::IMPORTANT_TYPE:
                             $type = "warning";
                             break;
-                        case "warning":
+                        case self::WARNING_TYPE:
                             $type = "danger";
                             break;
                     }
 
-                    if ($type != "tip") {
+                    if ($type != self::TIP_TYPE) {
                         $attributes->addClassName("alert-" . $type);
                     } else {
                         // There is no alert-tip color

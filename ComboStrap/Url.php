@@ -852,5 +852,14 @@ class Url extends PathAbs
         unset($this->query[$key]);
     }
 
+    /**
+     * @return string - An url in the DOM use the ampersand character
+     * If you want to check the value of a DOM attribute, you need to check it with this value
+     */
+    public function toDomString()
+    {
+        return $this->toString();
+    }
+
 
 }

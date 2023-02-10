@@ -207,10 +207,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                $default = [
-                    TagAttributes::TYPE_KEY => self::LIST_TYPE
-                ];
-                $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
+                $default = [TagAttributes::TYPE_KEY => self::LIST_TYPE];
+                $knownTypes = [self::TYPE_TREE, self::LIST_TYPE];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $default, $knownTypes);
 
                 $callStackArray = $tagAttributes->toCallStackArray();
                 return array(

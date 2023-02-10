@@ -575,7 +575,7 @@ class ExecutionContext
         return $this;
     }
 
-    public function setDisablePageFetcher(): ExecutionContext
+    public function setDisableTemplating(): ExecutionContext
     {
         $this->setConf(action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING, 0);
         return $this;

@@ -165,7 +165,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
             } finally {
                 $outputDocument->close();
             }
-            $fetcher = $slot->getHtmlFetcher();
+            $fetcher = $slot->createHtmlFetcher();
             try {
                 CacheLog::deleteCacheIfExistsAndLog(
                     $fetcher,
@@ -177,7 +177,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
             /**
              * Re-render
              */
-            $fetcher2 = $slot->getHtmlFetcher();
+            $fetcher2 = $slot->createHtmlFetcher();
             try {
                 CacheLog::renderCacheAndLog(
                     $fetcher2,

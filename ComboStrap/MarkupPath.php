@@ -202,23 +202,9 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
      * @param $pathOrId
      * @return MarkupPath
      */
-    public static function createMarkupFromPath($pathOrId): MarkupPath
+    public static function createMarkupFromStringPath($pathOrId): MarkupPath
     {
 
-//        global $ID;
-//        $qualifiedId = $pathOrId;
-//        resolve_pageid(getNS($ID), $qualifiedId, $exists);
-//        /**
-//         * Root correction
-//         * yeah no root functionality in the {@link resolve_pageid resolution}
-//         * meaning that we get an empty string
-//         * they correct it in the link creation {@link wl()}
-//         */
-//        if ($qualifiedId === '') {
-//            global $conf;
-//            $qualifiedId = $conf['start'];
-//        }
-//        return PageFragment::createPageFromId($qualifiedId);
         return MarkupPath::createPageFromQualifiedId($pathOrId);
 
     }
@@ -393,7 +379,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     /**
      *
      */
-    public function getHtmlFetcher(): FetcherMarkup
+    public function createHtmlFetcher(): FetcherMarkup
     {
         return FetcherMarkup::createPageFragmentFetcherFromPath($this->getPathObject())
             ->setRequestedMimeToXhtml();
@@ -401,7 +387,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     public function getHtmlPath(): LocalPath
     {
-        $fetcher = $this->getHtmlFetcher();
+        $fetcher = $this->createHtmlFetcher();
         try {
             return $fetcher->processIfNeededAndGetFetchPath();
         } finally {
@@ -956,7 +942,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public function toXhtml(): string
     {
 
-        $fetcherMarkup = $this->getHtmlFetcher();
+        $fetcherMarkup = $this->createHtmlFetcher();
         try {
             return $fetcherMarkup->getFetchString();
         } finally {

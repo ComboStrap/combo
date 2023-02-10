@@ -123,7 +123,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                         continue;
                     }
 
-                    $pageFragment = $report->getPageFragment()->getHtmlFetcher();
+                    $pageFragment = $report->getPageFragment()->createHtmlFetcher();
                     try {
                         $pageFragment->loadSnippets();
                     } finally {

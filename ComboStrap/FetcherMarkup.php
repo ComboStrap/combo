@@ -305,6 +305,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     public function feedCache(): IFetcher
     {
+
         $this->buildObjectAndEnvironmentIfNeeded();
 
         if (!$this->shouldProcess()) {

@@ -63,7 +63,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
          *
          */
         foreach ($page->getBacklinks() as $backlink) {
-            $htmlDocument = $backlink->getHtmlFetcher();
+            $htmlDocument = $backlink->createHtmlFetcher();
             try {
                 $desc = $data[self::DESC];
                 CacheLog::deleteCacheIfExistsAndLog(

@@ -128,9 +128,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 /**
                  * Tag building
                  */
-                $knownTypes = Brand::getBrandNamesFromDictionary();
                 $defaultAttributes = [TagAttributes::TYPE_KEY => Brand::CURRENT_BRAND];
-                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes)
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, [], true)
                     ->setLogicalTag(BrandTag::MARKUP);
 
                 /**

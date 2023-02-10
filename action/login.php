@@ -250,22 +250,11 @@ EOF;
         /**
          * Field
          */
-        $submitButtonPosition = $form->findPositionByAttribute("type", "submit");
-        if ($submitButtonPosition === false) {
-            LogUtility::msg("Internal error: No submit button found");
-            return;
-        }
-        /**
-         * This is important to keep the submit element intact
-         * for forms integration such as captcha
-         * They search the submit button to insert before it
-         */
-        $form->getElementAt($submitButtonPosition)
-            ->addClass("btn")
-            ->addClass("btn-primary")
-            ->addClass("btn-block")
-            ->addClass("mb-2");
+        IdentityFormsHelper::toBootStrapSubmitButton($form);
 
+        /**
+         * Name
+         */
         $userPosition = $form->findPositionByAttribute("name", "u");
         if ($userPosition === false) {
             LogUtility::msg("Internal error: No user field found");

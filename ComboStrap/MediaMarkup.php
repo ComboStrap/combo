@@ -152,7 +152,7 @@ class MediaMarkup
             }
         }
         return self::createFromRef($ref)
-            ->setFromTagAttributes($tagAttributes);
+            ->setHtmlOrSetterTagAttributes($tagAttributes);
 
 
     }
@@ -697,7 +697,7 @@ class MediaMarkup
         return $this->fetcher;
     }
 
-    private function setFromTagAttributes(TagAttributes $tagAttributes): MediaMarkup
+    private function setFromTagAttributes(TagAttributes $tagAttributes): void
     {
         $linking = $tagAttributes->getValueAndRemoveIfPresent(self::LINKING_KEY);
         if ($linking !== null) {
@@ -715,7 +715,6 @@ class MediaMarkup
         if ($lazy !== null) {
             $this->setLazyLoadMethod($lazy);
         }
-        return $this;
     }
 
 

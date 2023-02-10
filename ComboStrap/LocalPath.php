@@ -287,10 +287,10 @@ class LocalPath extends PathAbs
          * realpath() is just a system/library call to actual realpath() function supported by OS.
          * real path handle also the windows name ie USERNAME~
          */
-//        $realPath = realpath($this->path);
-//        if ($realPath !== false) {
-//            return LocalPath::createFromPathString($realPath);
-//        }
+        $realPath = realpath($this->path);
+        if ($realPath !== false) {
+            return LocalPath::createFromPathString($realPath);
+        }
 
         /**
          * It returns false on on file that does not exists.
@@ -302,7 +302,6 @@ class LocalPath extends PathAbs
         $isRoot = false;
         $counter = 0; // breaker
         $workingPath = $this->path;
-        $realPath = false;
         while ($realPath === false) {
             $counter++;
             $parent = dirname($workingPath);

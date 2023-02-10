@@ -15,6 +15,7 @@ namespace ComboStrap;
 
 use Doku_Form;
 use dokuwiki\Form\Form;
+use dokuwiki\Form\InputElement;
 use dokuwiki\Ui\UserProfile;
 use TestRequest;
 
@@ -356,6 +357,38 @@ EOF;
                 $i--;
             }
         }
+    }
+
+    public static function toBootStrapInputAndGetNewLoopingPosition(Form $form, int $elementPosition, string $formName): int
+    {
+        $inputElement = $form->getElementAt($elementPosition);
+        if (!($inputElement instanceof InputElement)) {
+            LogUtility::internalError("The element should be an input element");
+            return $elementPosition;
+        }
+        $inputType = $inputElement->getType();
+        $inputName = $inputElement->attr("name");
+        $labelObject = $inputElement->getLabel();
+        $label = "";
+        if ($labelObject !== null) {
+            $label = $labelObject->val();
+        }
+        $inputId = $inputElement->attr("id");
+        if (empty($inputId)) {
+            $inputId = "user__$formName-input-$elementPosition";
+            $inputElement->id($inputId);
+        }
+        $newInputField = new InputElement($inputType, $inputName);
+        foreach ($inputElement->attrs() as $keyAttr => $valueAttr) {
+            $newInputField->attr($keyAttr, $valueAttr);
+        }
+        $newInputField->addClass("form-control");
+        $form->replaceElement($newInputField, $elementPosition);
+        $form->addHTML('<div class="form-control-row">', $elementPosition);
+        $form->addHTML("<label for=\"$inputId\" class=\"form-label\">$label</label>", $elementPosition + 1);
+        $form->addHTML('</div>', $elementPosition + 3);
+        return $elementPosition + 3;
+
     }
 
 

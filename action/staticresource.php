@@ -354,9 +354,11 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     public
     static function getEtagValue(Path $mediaFile, array $properties): string
     {
+        clearstatcache();
         $etagString = FileSystems::getModifiedTime($mediaFile)->format('r');
         ksort($properties);
         foreach ($properties as $key => $value) {
+
             /**
              * Media is already on the URL
              * tok is just added when w and h are on the url
@@ -368,7 +370,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             /**
              * If empty means not used
              */
-            if (empty($value)) {
+            if (trim($value) === "") {
                 continue;
             }
             $etagString .= "$key=$value";

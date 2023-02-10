@@ -66,7 +66,7 @@ interface Path
     function toQualifiedId(): string;
 
     /**
-     * @return string the uri string representation of this path (with all information, drive, attributes)
+     * @return string the uri string representation of this path (with all information, scheme, drive, attributes)
      */
     function toUriString(): string;
 

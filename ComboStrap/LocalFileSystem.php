@@ -65,7 +65,8 @@ class LocalFileSystem implements FileSystem
         if (!self::exists($path)) {
             throw new ExceptionNotFound("Local File System Modified Time: The file ($path) does not exist");
         }
-        return Iso8601Date::createFromTimestamp(filemtime($path->toAbsolutePath()->toQualifiedId()))->getDateTime();
+        $timestamp = filemtime($path->toAbsolutePath()->toQualifiedId());
+        return Iso8601Date::createFromTimestamp($timestamp)->getDateTime();
     }
 
     /**

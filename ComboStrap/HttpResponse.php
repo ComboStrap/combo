@@ -43,6 +43,7 @@ class HttpResponse
     private string $body;
     private Mime $mime;
     private bool $hasEnded = false;
+    private \TestResponse $dokuwikiResponseObject;
 
 
     /**
@@ -120,7 +121,8 @@ class HttpResponse
         }
         return HttpResponse::createForStatus($statusCode)
             ->setBody($response->getContent(), $mime)
-            ->setHeaders($response->getHeaders());
+            ->setHeaders($response->getHeaders())
+            ->setDokuWikiResponse($response);
     }
 
 
@@ -289,6 +291,7 @@ class HttpResponse
     }
 
     /**
+     * Return the first header value (as an header may have duplicates)
      * @throws ExceptionNotFound
      */
     public
@@ -365,6 +368,17 @@ class HttpResponse
     public function getBodyAsJsonArray(): array
     {
         return json_decode($this->getBody(), true);
+    }
+
+    private function setDokuWikiResponse(\TestResponse $response): HttpResponse
+    {
+        $this->dokuwikiResponseObject = $response;
+        return $this;
+    }
+
+    public function getDokuWikiResponse(): \TestResponse
+    {
+        return $this->dokuwikiResponseObject;
     }
 
 

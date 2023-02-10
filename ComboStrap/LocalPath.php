@@ -27,11 +27,12 @@ class LocalPath extends PathAbs
     const LINUX_SEPARATOR = "/";
     const WINDOWS_SEPARATOR = '\\';
     const SCHEME = "file";
+    const CANONICAL = "support";
 
     /**
      * @throws ExceptionBadArgument
      */
-    public static function createFromPathObject(Path $path)
+    public static function createFromPathObject(Path $path): LocalPath
     {
         if ($path instanceof LocalPath) {
             return $path;
@@ -68,10 +69,23 @@ class LocalPath extends PathAbs
     /**
      * LocalPath constructor.
      * @param string $path - relative or absolute
-     * @param string|null $sep - the directory separator - it permits to test to test linux path on windows, and vice-versa
+     * @param string|null $sep - the directory separator - it permits to test linux path on windows, and vice-versa
      */
     public function __construct(string $path, string $sep = null)
     {
+        /**
+         * php mon amour,
+         * if we pass a {@link LocalPath}, no error,
+         * it just pass the {@link PathAbs::__toString()}
+         */
+        if (strpos($path, self::SCHEME) === 0) {
+            try {
+                $path = Url::createFromString($path)->getPath();
+                LogUtility::errorIfDevOrTest("The path given as constructor should not be an uri or a path object");
+            } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
+                LogUtility::internalError("The uri path could not be created",self::CANONICAL, $e);
+            }
+        }
         if ($sep != null) {
             $this->sep = $sep;
         }
@@ -273,10 +287,10 @@ class LocalPath extends PathAbs
          * realpath() is just a system/library call to actual realpath() function supported by OS.
          * real path handle also the windows name ie USERNAME~
          */
-        $realPath = realpath($this->path);
-        if ($realPath !== false) {
-            return LocalPath::createFromPathString($realPath);
-        }
+//        $realPath = realpath($this->path);
+//        if ($realPath !== false) {
+//            return LocalPath::createFromPathString($realPath);
+//        }
 
         /**
          * It returns false on on file that does not exists.
@@ -288,6 +302,7 @@ class LocalPath extends PathAbs
         $isRoot = false;
         $counter = 0; // breaker
         $workingPath = $this->path;
+        $realPath = false;
         while ($realPath === false) {
             $counter++;
             $parent = dirname($workingPath);

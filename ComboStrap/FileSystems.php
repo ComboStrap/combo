@@ -296,4 +296,25 @@ class FileSystems
 
         // D:\dokuwiki\lib\plugins\combo\_test\resources\bootstrapLocal.json
     }
+
+    /**
+     * Debug
+     * @param Path $mediaFile
+     * @return void
+     * Unfortunately, due to php, the time may be not use
+     * at the second
+     * as for the same file, we may end up in the same
+     * process to two differents modified time.
+     * ie
+     * Fri, 10 Feb 2023 18:22:09 +0000
+     * Fri, 10 Feb 2023 18:22:30 +0000
+     */
+    public static function printModificationTimeToConsole(Path $mediaFile, string $log)
+    {
+        fputs(STDOUT, "ModificationTime of {$mediaFile->toQualifiedId()}".PHP_EOL);
+        $filename = $mediaFile->toAbsolutePath()->toQualifiedId();
+        fputs(STDOUT, "ModificationTime of $filename at $log ");
+        $timestamp = filemtime($filename);
+        fputs(STDOUT, " $timestamp" . PHP_EOL);
+    }
 }

@@ -83,7 +83,7 @@ class FetcherVignette extends FetcherImage
          * Can we use the cache ?
          */
         if ($cache->isCacheUsable()) {
-            return LocalPath::createFromPathString($cache->getFile());
+            return LocalPath::createFromPathObject($cache->getFile());
         }
 
         $width = $this->getIntrinsicWidth();
@@ -122,13 +122,16 @@ class FetcherVignette extends FetcherImage
             /**
              * Category
              */
-            $parentPage = $this->page->getParent();
-            if ($parentPage !== null) {
+            try {
+                $parentPage = $this->page->getParent();
                 $yCategory = 120;
                 $categoryFontSize = 40;
                 $lineToPrint = $parentPage->getNameOrDefault();
                 imagettftext($vignetteImageHandler, $categoryFontSize, 0, $x, $yCategory, $mutedGdColor, $normalFont, $lineToPrint);
+            } catch (ExceptionNotFound $e) {
+                // No parent
             }
+
 
             /**
              * Title
@@ -214,14 +217,15 @@ class FetcherVignette extends FetcherImage
             /**
              * Store
              */
+            $fileStringPath = $cache->getFile()->toAbsolutePath()->toQualifiedId();
             switch ($extension) {
                 case self::PNG_EXTENSION:
                     imagetruecolortopalette($vignetteImageHandler, false, 255);
-                    imagepng($vignetteImageHandler, $cache->getFile()->toQualifiedId());
+                    imagepng($vignetteImageHandler, $fileStringPath);
                     break;
                 case self::JPG_EXTENSION:
                 case self::JPEG_EXTENSION:
-                    imagejpeg($vignetteImageHandler, $cache->getFile()->toQualifiedId());
+                    imagejpeg($vignetteImageHandler, $fileStringPath);
                     break;
                 case self::WEBP_EXTENSION:
                     /**
@@ -230,7 +234,7 @@ class FetcherVignette extends FetcherImage
                      * Fatal error: Palette image not supported by webp
                      * `
                      */
-                    imagewebp($vignetteImageHandler, $cache->getFile()->toQualifiedId());
+                    imagewebp($vignetteImageHandler, $fileStringPath);
                     break;
                 default:
                     LogUtility::internalError("The possible mime error should have been caught in the setter");

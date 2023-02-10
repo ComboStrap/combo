@@ -112,7 +112,7 @@ class BrandButton
                 if ($typeIcon === self::ICON_NONE_VALUE) {
                     continue;
                 }
-                $variants[] = [\syntax_plugin_combo_brand::ICON_ATTRIBUTE => $typeIcon, TagAttributes::TYPE_KEY => $widget];
+                $variants[] = [BrandTag::ICON_ATTRIBUTE => $typeIcon, TagAttributes::TYPE_KEY => $widget];
             }
         }
         return $variants;
@@ -621,7 +621,7 @@ EOF;
     }
 
 
-    private
+    public
     function getType(): string
     {
         return $this->type;

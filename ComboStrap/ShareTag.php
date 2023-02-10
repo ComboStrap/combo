@@ -17,7 +17,7 @@ class ShareTag
          * The channel
          */
         try {
-            $brandButton = syntax_plugin_combo_brand::createButtonFromAttributes($shareAttributes, BrandButton::TYPE_BUTTON_SHARE);
+            $brandButton = BrandTag::createButtonFromAttributes($shareAttributes, BrandButton::TYPE_BUTTON_SHARE);
         } catch (ExceptionCompile $e) {
             return LogUtility::wrapInRedForHtml("The brand creation returns an error ({$e->getMessage()}");
         }

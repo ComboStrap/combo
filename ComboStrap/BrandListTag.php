@@ -32,7 +32,7 @@ Brand Name
     </th>
 EOF;
         foreach ($variants as $variant) {
-            $iconType = ucfirst($variant[syntax_plugin_combo_brand::ICON_ATTRIBUTE]);
+            $iconType = ucfirst($variant[BrandTag::ICON_ATTRIBUTE]);
             $widgetType = ucfirst($variant[TagAttributes::TYPE_KEY]);
             $html .= <<<EOF
     <th scope="col">
@@ -69,7 +69,7 @@ EOF;
 
 
                 foreach ($variants as $variant) {
-                    $iconType = $variant[syntax_plugin_combo_brand::ICON_ATTRIBUTE];
+                    $iconType = $variant[BrandTag::ICON_ATTRIBUTE];
                     $widgetType = $variant[TagAttributes::TYPE_KEY];
                     $brandButton
                         ->setIconType($iconType)

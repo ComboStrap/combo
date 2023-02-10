@@ -7,6 +7,7 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 use ComboStrap\Brand;
 use ComboStrap\BrandButton;
 use ComboStrap\BrandListTag;
+use ComboStrap\BrandTag;
 use ComboStrap\Breadcrumb;
 use ComboStrap\ExceptionInternal;
 use ComboStrap\HrTag;
@@ -49,12 +50,12 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
         return 'normal';
     }
 
-    function getAllowedTypes()
+    function getAllowedTypes(): array
     {
         return array();
     }
 
-    function getSort()
+    function getSort(): int
     {
         return 201;
     }
@@ -99,6 +100,10 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
                 $knownTypes = BrandButton::TYPE_BUTTONS;
                 $defaultAttributes = [TagAttributes::TYPE_KEY => BrandButton::TYPE_BUTTON_BRAND];
                 break;
+            case BrandTag::MARKUP:
+                $knownTypes = Brand::getBrandNamesFromDictionary();
+                $defaultAttributes = [TagAttributes::TYPE_KEY => Brand::CURRENT_BRAND];
+                break;
         }
         $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes)
             ->setLogicalTag($logicalTag);
@@ -113,6 +118,9 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
                 break;
             case PageImageTag::MARKUP:
                 $returnedArray = PageImageTag::handle($tagAttributes, $handler);
+                break;
+            case BrandTag::MARKUP:
+                $returnedArray = BrandTag::handle($tagAttributes, $handler);
                 break;
         }
 
@@ -166,6 +174,9 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
                         break;
                     case BrandListTag::MARKUP:
                         $renderer->doc .= BrandListTag::render($tagAttributes);
+                        break;
+                    case BrandTag::MARKUP:
+                        $renderer->doc .= BrandTag::render($tagAttributes, $state, $data);
                         break;
                     default:
                         LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");

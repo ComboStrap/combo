@@ -2,6 +2,7 @@
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
+use ComboStrap\BrandTag;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
@@ -150,7 +151,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                         && !$tagAttributes->hasAttribute(self::HANDLE_ATTRIBUTE)
                     ) {
                         $handleAttribute = self::HANDLE_ATTRIBUTE;
-                        $urlAttribute = syntax_plugin_combo_brand::URL_ATTRIBUTE;
+                        $urlAttribute = BrandTag::URL_ATTRIBUTE;
                         $message = "The brand button does not have any follow url. You need to set at minimum the `$handleAttribute` or `$urlAttribute` attribute";
                         $renderer->doc .= LogUtility::wrapInRedForHtml($message);
                         return false;
@@ -160,7 +161,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                      * The channel
                      */
                     try {
-                        $brand = syntax_plugin_combo_brand::createButtonFromAttributes($tagAttributes, BrandButton::TYPE_BUTTON_FOLLOW);
+                        $brand = BrandTag::createButtonFromAttributes($tagAttributes, BrandButton::TYPE_BUTTON_FOLLOW);
                     } catch (ExceptionCompile $e) {
                         $renderer->doc .= "The brand button creation returns an error ({$e->getMessage()}";
                         return false;
@@ -185,7 +186,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
                      * and add the link
                      */
                     try {
-                        $tagAttributes = syntax_plugin_combo_brand::mixBrandButtonToTagAttributes($tagAttributes, $brand);
+                        $tagAttributes = BrandTag::mixBrandButtonToTagAttributes($tagAttributes, $brand);
                         $renderer->doc .= $tagAttributes->toHtmlEnterTag("a");
                     } catch (ExceptionCompile $e) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml("The brand button creation returns an error when creating the link ({$e->getMessage()}");

@@ -147,7 +147,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                 try {
                     $tag = $snippet->toDokuWikiArray();
                 } catch (ExceptionBadState|ExceptionNotFound $e) {
-                    LogUtility::error("We couldn't get the attributes of the snippet ($snippet). It has been skipped. Error: {$e->getMessage()}",self::CANONICAL);
+                    LogUtility::error("We couldn't get the attributes of the snippet ($snippet). It has been skipped. Error: {$e->getMessage()}", self::CANONICAL);
                     continue;
                 }
                 $tagType = $snippet->getHtmlTag();
@@ -239,11 +239,16 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         $snippets = $snippetManager->getSnippets();
         if (sizeof($snippets) > 0) {
             $class = self::CLASS_SNIPPET_IN_CONTENT;
-            $xhtmlContent .= <<<EOF
+            $htmlForSlots = $snippetManager->toHtmlForSlotSnippets();
+            if (empty($htmlForSlots)) {
+                return;
+            }
+            $htmlForSlotsWrapper = <<<EOF
 <div class="$class">
-    {$snippetManager->toHtmlForSlotSnippets()}
+    {$htmlForSlots}
 </div>
 EOF;
+            $xhtmlContent .= $htmlForSlotsWrapper;
 
         }
 

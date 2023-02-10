@@ -46,7 +46,27 @@ EOF;
 
     private static function updateNewFormResend(Form &$form)
     {
-        // TODO
+        /**
+         * The Login page is an admin page created via buffer
+         * We print before the forms
+         * to avoid a FOUC
+         */
+        print IdentityFormsHelper::getHtmlStyleTag(self::CANONICAL);
+
+
+        $form->addClass(Identity::FORM_IDENTITY_CLASS . " " . self::FORM_RESEND_PWD_CLASS);
+        /**
+         * Heading
+         */
+        $headerHTML = IdentityFormsHelper::getHeaderHTML($form, self::FORM_RESEND_PWD_CLASS);
+        if ($headerHTML != "") {
+            $form->addHTML($headerHTML, 1);
+        }
+
+        IdentityFormsHelper::deleteFieldSetAndBrFromForm($form);
+        IdentityFormsHelper::toBoostrapInputElements($form, self::FORM_RESEND_PWD_CLASS);
+        IdentityFormsHelper::toBootStrapSubmitButton($form);
+
     }
 
 
@@ -157,7 +177,6 @@ EOF;
         $controller->register_hook('FORM_RESENDPWD_OUTPUT', 'BEFORE', $this, 'handle_resendpwd_html', array());
 
 
-
     }
 
     function handle_resendpwd_html(&$event, $param)
@@ -181,7 +200,6 @@ EOF;
                 self::updateNewFormResend($form);
                 return;
         }
-
 
 
     }

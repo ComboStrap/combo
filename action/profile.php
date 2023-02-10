@@ -200,8 +200,7 @@ EOF;
         print Identity::getHtmlStyleTag(self::TAG_UPDATE);
 
 
-        $form
-            ->addClass(Identity::FORM_IDENTITY_CLASS . " " . self::FORM_PROFILE_UPDATE_CLASS);
+        $form->addClass(Identity::FORM_IDENTITY_CLASS . " " . self::FORM_PROFILE_UPDATE_CLASS);
 
 
         /**
@@ -254,7 +253,7 @@ EOF;
                     $label = $labelObject->val();
                 }
                 $inputId = $element->attr("id");
-                if(empty($inputId)){
+                if (empty($inputId)) {
                     $inputId = "user__update-input-$i";
                     $element->id($inputId);
                 }
@@ -264,7 +263,7 @@ EOF;
                 }
                 $newInputField->addClass("form-control");
                 $form->replaceElement($newInputField, $i);
-                $form->addHTML('<div class="row">', $i);
+                $form->addHTML('<div class="form-control-row">', $i);
                 $form->addHTML("<label for=\"$inputId\" class=\"form-label\">$label</label>", $i + 1);
                 $form->addHTML('</div>', $i + 3);
                 $i = $i + 3;

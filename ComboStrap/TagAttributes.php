@@ -383,9 +383,16 @@ class TagAttributes
 
     }
 
+    /**
+     * @throws ExceptionNull
+     */
     public function getClass($default = null)
     {
-        return $this->getValue(self::CLASS_KEY, $default);
+        $value = $this->getValue(self::CLASS_KEY, $default);
+        if($value!==null){
+            return $value;
+        }
+        throw new ExceptionNull("No class was found");
     }
 
     /**

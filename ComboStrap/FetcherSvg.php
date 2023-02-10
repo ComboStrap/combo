@@ -575,7 +575,7 @@ class FetcherSvg extends IFetcherLocalImage
         }
 
         global $ACT;
-        if (PluginUtility::isDev() && $ACT === "preview") {
+        if (PluginUtility::isDev() && $ACT === ExecutionContext::PREVIEW_ACTION) {
             // in dev mode, don't cache
             $isCacheUsable = false;
         } else {
@@ -927,7 +927,7 @@ class FetcherSvg extends IFetcherLocalImage
          * A tag attributes to manage the add of style properties
          * in the style attribute
          */
-        $stylingAttributes = TagAttributes::createEmpty(self::TAG);
+        $extraAttributes = TagAttributes::createEmpty(self::TAG);
 
         /**
          * Dimension and other attributes by requested type
@@ -1000,8 +1000,8 @@ class FetcherSvg extends IFetcherLocalImage
                  * Adapt to the container by default
                  * Height `auto` and not `100%` otherwise you get a layout shift
                  */
-                $stylingAttributes->addStyleDeclarationIfNotSet("width", "100%");
-                $stylingAttributes->addStyleDeclarationIfNotSet("height", "auto");
+                $extraAttributes->addStyleDeclarationIfNotSet("width", "100%");
+                $extraAttributes->addStyleDeclarationIfNotSet("height", "auto");
 
 
                 if ($requestedWidth !== null) {
@@ -1017,7 +1017,7 @@ class FetcherSvg extends IFetcherLocalImage
                         LogUtility::msg("The requested width $requestedWidth could not be converted to pixel. It returns the following error ({$e->getMessage()}). Processing was stopped");
                         return $this->getXmlDocument()->toXml();
                     }
-                    $stylingAttributes->addStyleDeclarationIfNotSet("max-width", "{$widthInPixel}px");
+                    $extraAttributes->addStyleDeclarationIfNotSet("max-width", "{$widthInPixel}px");
 
                     /**
                      * To have an internal width
@@ -1284,8 +1284,8 @@ class FetcherSvg extends IFetcherLocalImage
          * Svg attribute are case sensitive
          * Styling
          */
-        $stylingAttributeAsArray = $stylingAttributes->toHtmlArray();
-        foreach ($stylingAttributeAsArray as $name => $value) {
+        $extraAttributeAsArray = $extraAttributes->toHtmlArray();
+        foreach ($extraAttributeAsArray as $name => $value) {
             $documentElement->setAttribute($name, $value);
         }
 

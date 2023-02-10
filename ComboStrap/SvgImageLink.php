@@ -96,7 +96,7 @@ class SvgImageLink extends ImageLink
          * (no cache for the img tag)
          * @var FetcherSvg $image
          */
-        $responseAttributes = $this->mediaMarkup->getTagAttributes()
+        $imgAttributes = $this->mediaMarkup->getTagAttributes()
             ->setLogicalTag(self::TAG);
 
         /**
@@ -104,13 +104,13 @@ class SvgImageLink extends ImageLink
          * It adds a `height: auto` that avoid a layout shift when
          * using the img tag
          */
-        $responseAttributes->addClassName(RasterImageLink::RESPONSIVE_CLASS);
+        $imgAttributes->addClassName(RasterImageLink::RESPONSIVE_CLASS);
 
 
         /**
          * Alt is mandatory
          */
-        $responseAttributes->addOutputAttributeValue("alt", $this->getAltNotEmpty());
+        $imgAttributes->addOutputAttributeValue("alt", $this->getAltNotEmpty());
 
 
         /**
@@ -135,7 +135,8 @@ class SvgImageLink extends ImageLink
             // A class to all component lazy loaded to download them before print
             $svgFunctionalClass .= " " . LazyLoad::getLazyClass();
         }
-        $responseAttributes->addClassName($svgFunctionalClass);
+        $imgAttributes->addClassName($svgFunctionalClass);
+
 
         /**
          * @var FetcherSvg $svgFetch
@@ -146,19 +147,19 @@ class SvgImageLink extends ImageLink
          * to avoid layout shift (CLS)
          * We add them as output attribute
          */
-        $responseAttributes->addOutputAttributeValue(Dimension::WIDTH_KEY, $svgFetch->getTargetWidth());
-        $responseAttributes->addOutputAttributeValue(Dimension::HEIGHT_KEY, $svgFetch->getTargetHeight());
+        $imgAttributes->addOutputAttributeValue(Dimension::WIDTH_KEY, $svgFetch->getTargetWidth());
+        $imgAttributes->addOutputAttributeValue(Dimension::HEIGHT_KEY, $svgFetch->getTargetHeight());
 
         /**
          * For styling, we add the width and height as component attribute
          */
         try {
-            $responseAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $svgFetch->getRequestedWidth());
+            $imgAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $svgFetch->getRequestedWidth());
         } catch (ExceptionNotFound $e) {
             // ok
         }
         try {
-            $responseAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $svgFetch->getRequestedHeight());
+            $imgAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $svgFetch->getRequestedHeight());
         } catch (ExceptionNotFound $e) {
             // ok
         }
@@ -172,22 +173,23 @@ class SvgImageLink extends ImageLink
             /**
              * Note: Responsive image srcset is not needed for svg
              */
-            $responseAttributes->addOutputAttributeValue("data-src", $srcValue);
-            $responseAttributes->addOutputAttributeValue("src", LazyLoad::getPlaceholder(
+            $imgAttributes->addOutputAttributeValue("data-src", $srcValue);
+            $imgAttributes->addOutputAttributeValue("src", LazyLoad::getPlaceholder(
                 $svgFetch->getTargetWidth(),
                 $svgFetch->getTargetHeight()
             ));
 
         } else {
 
-            $responseAttributes->addOutputAttributeValue("src", $srcValue);
+            $imgAttributes->addOutputAttributeValue("src", $srcValue);
 
         }
 
         /**
          * Return the image
          */
-        return '<img ' . $responseAttributes->toHTMLAttributeString() . '/>';
+        return $imgAttributes->toHtmlEmptyTag("img");
+
 
     }
 
@@ -243,6 +245,11 @@ class SvgImageLink extends ImageLink
                  * @var FetcherSvg $fetcherSvg
                  */
                 $fetcherSvg = $this->mediaMarkup->getFetcher();
+                try {
+                    $fetcherSvg->setRequestedClass($this->mediaMarkup->getTagAttributes()->getClass());
+                } catch (ExceptionNull $e) {
+                    // ok
+                }
                 $fetchPath = $fetcherSvg->getFetchPath();
                 $imgHTML = FileSystems::getContent($fetchPath);
             } catch (ExceptionNotFound|ExceptionBadArgument|ExceptionBadState|ExceptionBadSyntax|ExceptionCompile $e) {

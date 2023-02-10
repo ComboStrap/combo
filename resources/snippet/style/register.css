@@ -7,12 +7,14 @@
     text-align: initial;
 }
 
-.form-register .row {
+.form-register .form-control-row {
     margin-bottom: 1rem;
 }
 
 .form-register .logo {
-    margin-bottom: 1.5rem;
+    display: block!important;
+    height: 3rem;
+    margin: auto auto 1.5rem;
 }
 
 .form-register label::first-letter {
@@ -42,6 +44,7 @@
 .form-register button {
     margin-top: 1rem;
     margin-bottom: 3rem;
+    background-image: inherit!important;
 }
 
 .form-register .login {

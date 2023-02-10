@@ -8,6 +8,7 @@
  */
 
 use ComboStrap\Identity;
+use ComboStrap\IdentityFormsHelper;
 use ComboStrap\LogUtility;
 use dokuwiki\Form\Form;
 use dokuwiki\Menu\Item\Resendpwd;
@@ -56,21 +57,21 @@ EOF;
          * We print before the forms
          * to avoid a FOUC
          */
-        print Identity::getHtmlStyleTag(self::CANONICAL);
+        print IdentityFormsHelper::getHtmlStyleTag(self::CANONICAL);
 
 
         /**
          * @var Doku_Form $form
          */
         $class = &$form->params["class"];
-        Identity::addIdentityClass($class, self::FORM_RESEND_PWD_CLASS);
+        IdentityFormsHelper::addIdentityClass($class, self::FORM_RESEND_PWD_CLASS);
         $newFormContent = [];
 
 
         /**
          * Header (Logo / Title)
          */
-        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_RESEND_PWD_CLASS);
+        $newFormContent[] = IdentityFormsHelper::getHeaderHTML($form, self::FORM_RESEND_PWD_CLASS);
 
         /**
          * Form Attributes

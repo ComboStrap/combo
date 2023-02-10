@@ -2,6 +2,7 @@
 
 use ComboStrap\Bootstrap;
 use ComboStrap\Identity;
+use ComboStrap\IdentityFormsHelper;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -116,7 +117,7 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
          * We print before the forms
          * to avoid a FOUC
          */
-        print Identity::getHtmlStyleTag(self::TAG_DELETE);
+        print IdentityFormsHelper::getHtmlStyleTag(self::TAG_DELETE);
 
 
         $deleteFormClassSuffix = self::FORM_PROFILE_DELETE_CLASS;
@@ -125,12 +126,12 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
         /**
          * Heading
          */
-        $headerHTML = Identity::getHeaderHTML($form, $deleteFormClassSuffix, false);
+        $headerHTML = IdentityFormsHelper::getHeaderHTML($form, $deleteFormClassSuffix, false);
         if ($headerHTML != "") {
             $form->addHTML($headerHTML, 1);
         }
 
-        Identity::deleteFieldSetAndBrFromForm($form);
+        IdentityFormsHelper::deleteFieldSetAndBrFromForm($form);
 
 
         /**
@@ -155,7 +156,7 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
             return;
         }
 
-        Identity::toBootStrapInputAndGetNewLoopingPosition($form, $passwordElementPosition, $deleteFormClassSuffix);
+        IdentityFormsHelper::toBootStrapInputElementAndGetNewLoopingPosition($form, $passwordElementPosition, $deleteFormClassSuffix);
 
 
     }
@@ -167,17 +168,17 @@ class action_plugin_combo_profile extends DokuWiki_Action_Plugin
          * The profile page is created via buffer
          * We print before the forms to avoid a FOUC
          */
-        print Identity::getHtmlStyleTag(self::TAG_DELETE);
+        print IdentityFormsHelper::getHtmlStyleTag(self::TAG_DELETE);
 
 
         $class = &$form->params["class"];
-        Identity::addIdentityClass($class, self::FORM_PROFILE_DELETE_CLASS);
+        IdentityFormsHelper::addIdentityClass($class, self::FORM_PROFILE_DELETE_CLASS);
         $newFormContent = [];
 
         /**
          * Header (Logo / Title)
          */
-        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_PROFILE_DELETE_CLASS, false);
+        $newFormContent[] = IdentityFormsHelper::getHeaderHTML($form, self::FORM_PROFILE_DELETE_CLASS, false);
 
         /**
          * Field
@@ -243,7 +244,7 @@ EOF;
          * We print before the forms
          * to avoid a FOUC
          */
-        print Identity::getHtmlStyleTag(self::TAG_UPDATE);
+        print IdentityFormsHelper::getHtmlStyleTag(self::TAG_UPDATE);
 
 
         $form->addClass(Identity::FORM_IDENTITY_CLASS . " " . self::FORM_PROFILE_UPDATE_CLASS);
@@ -252,44 +253,23 @@ EOF;
         /**
          * Heading
          */
-        $headerHTML = Identity::getHeaderHTML($form, self::FORM_PROFILE_UPDATE_CLASS);
+        $headerHTML = IdentityFormsHelper::getHeaderHTML($form, self::FORM_PROFILE_UPDATE_CLASS);
         if ($headerHTML != "") {
             $form->addHTML($headerHTML, 1);
         }
 
-        Identity::deleteFieldSetAndBrFromForm($form);
+        IdentityFormsHelper::deleteFieldSetAndBrFromForm($form);
 
         /**
-         * Submit button
+         * Submit and reset button
          */
-        $submitButtonPosition = $form->findPositionByAttribute("type", "submit");
-        if ($submitButtonPosition === false) {
-            LogUtility::msg("Internal error: No submit button found");
-            return;
-        }
-        $form->getElementAt($submitButtonPosition)
-            ->addClass("btn")
-            ->addClass("btn-primary");
+        IdentityFormsHelper::toBootStrapSubmitButton($form);
+        IdentityFormsHelper::toBootstrapResetButton($form);
 
         /**
-         * Reset button
+         * Input elements
          */
-        $resetButtonPosition = $form->findPositionByAttribute("type", "reset");
-        if ($resetButtonPosition === false) {
-            LogUtility::msg("Internal error: No submit button found");
-            return;
-        }
-        $form->getElementAt($resetButtonPosition)
-            ->addClass("btn")
-            ->addClass("btn-secondary");
-
-        for ($i = 0; $i < $form->elementCount(); $i++) {
-            $inputElement = $form->getElementAt($i);
-            if ($inputElement instanceof InputElement) {
-                $i = Identity::toBootStrapInputAndGetNewLoopingPosition($form, $i, self::FORM_PROFILE_UPDATE_CLASS);
-            }
-
-        }
+        IdentityFormsHelper::toBoostrapInputElements($form, self::FORM_PROFILE_UPDATE_CLASS);
 
     }
 
@@ -301,17 +281,17 @@ EOF;
          * The profile page is created via buffer
          * We print before the forms to avoid a FOUC
          */
-        print Identity::getHtmlStyleTag(self::TAG_UPDATE);
+        print IdentityFormsHelper::getHtmlStyleTag(self::TAG_UPDATE);
 
 
         $class = &$form->params["class"];
-        Identity::addIdentityClass($class, self::FORM_PROFILE_UPDATE_CLASS);
+        IdentityFormsHelper::addIdentityClass($class, self::FORM_PROFILE_UPDATE_CLASS);
         $newFormContent = [];
 
         /**
          * Header (Logo / Title)
          */
-        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_PROFILE_UPDATE_CLASS);
+        $newFormContent[] = IdentityFormsHelper::getHeaderHTML($form, self::FORM_PROFILE_UPDATE_CLASS);
 
 
         /**

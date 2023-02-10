@@ -8,6 +8,7 @@
  */
 
 use ComboStrap\Identity;
+use ComboStrap\IdentityFormsHelper;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -47,7 +48,7 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
          * We print before the forms
          * to avoid a FOUC
          */
-        print Identity::getHtmlStyleTag(self::TAG);
+        print IdentityFormsHelper::getHtmlStyleTag(self::TAG);
 
 
         $form->params["class"] = Identity::FORM_IDENTITY_CLASS . " " . self::FORM_LOGIN_CLASS;
@@ -56,7 +57,7 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
         /**
          * Heading
          */
-        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_LOGIN_CLASS);
+        $newFormContent[] = IdentityFormsHelper::getHeaderHTML($form, self::FORM_LOGIN_CLASS);
 
         /**
          * Field
@@ -226,7 +227,7 @@ EOF;
          * We print before the forms
          * to avoid a FOUC
          */
-        print Identity::getHtmlStyleTag(self::TAG);
+        print IdentityFormsHelper::getHtmlStyleTag(self::TAG);
 
 
         $form->addClass(Identity::FORM_IDENTITY_CLASS . " " . self::FORM_LOGIN_CLASS);
@@ -235,7 +236,7 @@ EOF;
         /**
          * Heading
          */
-        $headerHTML = Identity::getHeaderHTML($form, self::FORM_LOGIN_CLASS);
+        $headerHTML = IdentityFormsHelper::getHeaderHTML($form, self::FORM_LOGIN_CLASS);
         if ($headerHTML != "") {
             $form->addHTML($headerHTML, 1);
         }
@@ -244,7 +245,7 @@ EOF;
         /**
          * Fieldset and br delete
          */
-        Identity::deleteFieldSetAndBrFromForm($form);
+        IdentityFormsHelper::deleteFieldSetAndBrFromForm($form);
 
         /**
          * Field

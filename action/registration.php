@@ -9,6 +9,7 @@
 
 use ComboStrap\Bootstrap;
 use ComboStrap\Identity;
+use ComboStrap\IdentityFormsHelper;
 use ComboStrap\LogUtility;
 use ComboStrap\Snippet;
 use dokuwiki\Form\Form;
@@ -109,7 +110,26 @@ EOF;
 
     private static function updateNewFormRegistration(Form &$form)
     {
-        // TODO
+        /**
+         * The Login page is an admin page created via buffer
+         * We print before the forms
+         * to avoid a FOUC
+         */
+        print IdentityFormsHelper::getHtmlStyleTag(self::TAG);
+
+
+        $form->addClass(Identity::FORM_IDENTITY_CLASS . " " . self::FORM_REGISTER_CLASS);
+        /**
+         * Heading
+         */
+        $headerHTML = IdentityFormsHelper::getHeaderHTML($form, self::FORM_REGISTER_CLASS);
+        if ($headerHTML != "") {
+            $form->addHTML($headerHTML, 1);
+        }
+
+        IdentityFormsHelper::deleteFieldSetAndBrFromForm($form);
+        IdentityFormsHelper::toBoostrapInputElements($form, self::FORM_REGISTER_CLASS);
+        IdentityFormsHelper::toBootStrapSubmitButton($form);
     }
 
     private static function updateDokuFormRegistration(Doku_Form &$form)
@@ -119,20 +139,20 @@ EOF;
          * We print before the forms
          * to avoid a FOUC
          */
-        print Identity::getHtmlStyleTag(self::TAG);
+        print IdentityFormsHelper::getHtmlStyleTag(self::TAG);
 
 
         /**
          * @var Doku_Form $form
          */
         $class = &$form->params["class"];
-        Identity::addIdentityClass($class, self::FORM_REGISTER_CLASS);
+        IdentityFormsHelper::addIdentityClass($class, self::FORM_REGISTER_CLASS);
         $newFormContent = [];
 
         /**
          * Header (Logo / Title)
          */
-        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_REGISTER_CLASS);
+        $newFormContent[] = IdentityFormsHelper::getHeaderHTML($form, self::FORM_REGISTER_CLASS);
 
 
         /**

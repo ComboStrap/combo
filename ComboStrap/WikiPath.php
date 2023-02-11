@@ -988,6 +988,7 @@ class WikiPath extends PathAbs
 
 
     /**
+     * The absolute path for a wiki path
      * @return string - the wiki path version
      */
     function toQualifiedId(): string

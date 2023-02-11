@@ -34,8 +34,9 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
     /**
      * A configuration to enable the template system
      */
-    public const CONF_ENABLE_TEMPLATING = "combo-conf-001";
+        public const CONF_ENABLE_TEMPLATING = "combo-conf-001";
     public const CONF_ENABLE_TEMPLATING_DEFAULT = 1;
+    const TEMPLATE_CANONICAL = "template";
 
     /**
      * @var bool to avoid recursion that may happen using {@link tpl_content()}

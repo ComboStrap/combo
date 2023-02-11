@@ -425,9 +425,10 @@ $conf["secondaryColor"] = "";
 $conf["defaultLayoutContainer"] = "sm";
 
 /**
- * Show overwrite {@link \ComboStrap\FetcherPage::CONF_ENABLE_AS_SHOW_ACTION}
+ * Enable templating
+ * See {@link action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING}
  */
-$conf["enablePageAsShowAction"] = 1;
+$conf["combo-conf-001"] = 1;
 
 
 /**

@@ -1,24 +1,18 @@
 <?php
 
-use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\CacheLog;
-use ComboStrap\CacheManager;
-use ComboStrap\FetcherCache;
-use ComboStrap\CacheMenuItem;
-use ComboStrap\CacheReportHtmlDataBlockArray;
 use ComboStrap\Cron;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCompile;
-use ComboStrap\FileSystems;
-use ComboStrap\Http;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\MarkupPath;
 use ComboStrap\PagePath;
-use ComboStrap\PluginUtility;
-use ComboStrap\ExecutionContext;
 use dokuwiki\Cache\CacheRenderer;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
@@ -52,7 +46,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
 
 
         /**
-         * process the Async event
+         * Process the Async event
          */
         $controller->register_hook(self::SLOT_CACHE_EXPIRATION_EVENT, 'AFTER', $this, 'handleSlotCacheExpiration');
 
@@ -94,14 +88,21 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
             }
         }
 
-        $cacheManager = ExecutionContext::getActualOrCreateFromEnv()->getCacheManager();
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        $cacheManager = $executionContext->getCacheManager();
         $shouldSlotExpire = $cacheManager->shouldSlotExpire($pageId);
         if ($shouldSlotExpire) {
+            try {
+                $requestedWikiId = $executionContext->getRequestedWikiId();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::errorIfDevOrTest($e);
+                return;
+            }
             Event::createEvent(
                 self::SLOT_CACHE_EXPIRATION_EVENT,
                 [
                     PagePath::getPersistentName() => $pageId,
-                    self::REQUESTED_ID => PluginUtility::getRequestedWikiId()
+                    self::REQUESTED_ID => $requestedWikiId
                 ]
             );
         }

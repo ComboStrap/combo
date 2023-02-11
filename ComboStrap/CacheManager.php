@@ -31,7 +31,7 @@ class CacheManager
     /**
      * The list of cache results slot {@link CacheResults}
      */
-    private $slotCacheResults;
+    private array $slotCacheResults = [];
 
     /**
      * @var array hold the result for slot cache expiration
@@ -85,13 +85,6 @@ class CacheManager
     }
 
 
-    public function hasNoCacheResult(): bool
-    {
-        if ($this->slotCacheResults === null) {
-            return true;
-        }
-        return sizeof($this->slotCacheResults) === 0;
-    }
 
     /**
      * @param string $dependencyName
@@ -124,9 +117,9 @@ class CacheManager
     }
 
     /**
-     * @return null|CacheResults[] - null if the page does not exists
+     * @return CacheResults[] - null if the page does not exists
      */
-    public function getCacheResults(): ?array
+    public function getCacheResults(): array
     {
         return $this->slotCacheResults;
     }

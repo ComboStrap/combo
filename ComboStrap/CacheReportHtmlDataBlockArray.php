@@ -27,9 +27,6 @@ class CacheReportHtmlDataBlockArray
     {
         $cacheManager = ExecutionContext::getActualOrCreateFromEnv()->getCacheManager();
         $cacheReporters = $cacheManager->getCacheResults();
-        if ($cacheReporters === null) {
-            return [];
-        }
         $htmlDataBlock = [];
         foreach ($cacheReporters as $cacheReporter) {
 

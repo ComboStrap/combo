@@ -148,41 +148,37 @@ class MarkupCacheDependencies
      */
     public static function reRenderSideSlotIfNeeded($path, string $dependency, string $event)
     {
-        global $ID;
-        $keep = $ID;
-        try {
-            $ID = WikiPath::toDokuWikiId($path);
-            /**
-             * Rerender secondary slot if needed
-             */
-            $page = MarkupPath::createMarkupFromId($ID);
-            $independentSlots = $page->getPrimaryIndependentSlots();
-            foreach ($independentSlots as $secondarySlot) {
-                $htmlDocument = $secondarySlot->createHtmlFetcher();
-                try {
-                    $cacheDependencies = $htmlDocument->getCacheDependencies();
 
-                    if ($cacheDependencies->hasDependency($dependency)) {
-                        $link = PluginUtility::getDocumentationHyperLink("cache:slot", "Slot Dependency", false);
-                        $message = "$link ($dependency) was met with the primary slot ($path).";
-                        CacheLog::deleteCacheIfExistsAndLog(
-                            $htmlDocument,
-                            $event,
-                            $message
-                        );
-                        CacheLog::renderCacheAndLog(
-                            $htmlDocument,
-                            $event,
-                            $message
-                        );
-                    }
-                } finally {
-                    $htmlDocument->close();
+        /**
+         * Rerender secondary slot if needed
+         */
+        $page = MarkupPath::createMarkupFromStringPath($path);
+        $slots = $page->getPrimaryIndependentSlots();
+        foreach ($slots as $slot) {
+            $slotFetcher = $slot->createHtmlFetcher()
+                ->setRequestedContextPath($page->getPathObject());
+            try {
+                $cacheDependencies = $slotFetcher->getCacheDependencies();
+
+                if ($cacheDependencies->hasDependency($dependency)) {
+                    $link = PluginUtility::getDocumentationHyperLink("cache:slot", "Slot Dependency", false);
+                    $message = "$link ($dependency) was met with the primary slot ($path).";
+                    CacheLog::deleteCacheIfExistsAndLog(
+                        $slotFetcher,
+                        $event,
+                        $message
+                    );
+                    CacheLog::renderCacheAndLog(
+                        $slotFetcher,
+                        $event,
+                        $message
+                    );
                 }
+            } finally {
+                $slotFetcher->close();
             }
-        } finally {
-            $ID = $keep;
         }
+
     }
 
 
@@ -386,9 +382,6 @@ class MarkupCacheDependencies
     function hasDependency(string $dependencyName): bool
     {
         $dependencies = $this->getDependencies();
-        if ($dependencies === null) {
-            return false;
-        }
         return in_array($dependencyName, $dependencies);
     }
 

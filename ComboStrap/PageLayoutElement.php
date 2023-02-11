@@ -227,7 +227,7 @@ class PageLayoutElement
          */
         $fragmentPath = $this->getFragmentPath();
         $this->fetcherFragment = FetcherMarkup::createPageFragmentFetcherFromPath($fragmentPath)
-            ->setRequestedPagePath($this->pageLayout->getRequestedContextPath());
+            ->setRequestedContextPath($this->pageLayout->getRequestedContextPath());
         return $this->fetcherFragment;
     }
 

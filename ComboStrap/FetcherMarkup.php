@@ -51,6 +51,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     private bool $removeRootBlockElement = false;
     private string $requestedRendererName = MarkupRenderer::DEFAULT_RENDERER;
+    private WikiPath $requestedContextPath;
 
 
     public static function createPageFragmentFetcherFromId(string $mainId): FetcherMarkup
@@ -651,9 +652,9 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      * @return $this
      * @throws ExceptionBadArgument - if the path cannot be transformed as wiki path
      */
-    public function setRequestedPagePath(Path $path): FetcherMarkup
+    public function setRequestedContextPath(Path $path): FetcherMarkup
     {
-        $this->requestedPagePath = WikiPath::createFromPathObject($path);
+        $this->requestedContextPath = WikiPath::createFromPathObject($path);
         return $this;
     }
 

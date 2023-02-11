@@ -254,7 +254,7 @@ class SvgImageLink extends ImageLink
                 $imgHTML = FileSystems::getContent($fetchPath);
                 ExecutionContext::getActualOrCreateFromEnv()
                     ->getSnippetSystem()
-                    ->attachCssInternalStyleSheet(self::TAG);
+                    ->attachCssInternalStyleSheet(PageLayout::DOKUWIKI_STYLESHEET_ID);
             } catch (ExceptionNotFound|ExceptionBadArgument|ExceptionBadState|ExceptionBadSyntax|ExceptionCompile $e) {
                 LogUtility::error("Unable to include the svg in the document. Error: {$e->getMessage()}");
                 $imgHTML = $this->createImgHTMLTag();

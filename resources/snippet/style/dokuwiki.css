@@ -1,4 +1,6 @@
 /**
+ * A stylesheet to fight the dokuwiki template css rules
+ *
  * Reversing Bad height default: https://github.com/splitbrain/dokuwiki/issues/3690
  */
 svg {

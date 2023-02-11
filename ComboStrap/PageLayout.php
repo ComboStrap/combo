@@ -13,6 +13,12 @@ use syntax_plugin_combo_container;
 class PageLayout
 {
 
+    /**
+     * When using dokuwiki template as background,
+     * there may be conflict, they are resolved
+     * with the dokuwiki.css stylesheet
+     */
+    public const DOKUWIKI_STYLESHEET_ID = "dokuwiki";
     const CANONICAL = "layout";
     public const MAIN_FOOTER_ELEMENT = "main-footer";
     public const PAGE_SIDE_ELEMENT = "page-side";

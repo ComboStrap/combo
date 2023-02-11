@@ -205,7 +205,12 @@ class ExecutionContext
     public static function getOrCreateFromRequestedWikiId(string $requestedId): ExecutionContext
     {
 
-        return self::getActualOrCreateFromEnv()
+
+        $execution = self::getActualOrCreateFromEnv();
+        if ($execution->getSubExecutionCount() !== 0) {
+            LogUtility::internalError("All subexecutions should be closed before starting an new environment for a request.");
+        }
+        return $execution
             ->setNewRequestedId($requestedId)
             ->setExecutingId($requestedId);
 
@@ -265,16 +270,22 @@ class ExecutionContext
      * @param string|null $runningAct - when we run dynamic rendering, the act is set to advertise it (ie {@link MarkupDynamicRender::DYNAMIC_RENDERING}
      * @return ExecutionContext
      */
-    public function startSubExecutionEnv(string $clazz, string $runningId, string $runningAct = 'show'): ExecutionContext
+    public function startSubExecutionEnv(string $clazz, string $runningId, string $runningAct = self::SHOW_ACTION): ExecutionContext
     {
 
 
-        global $ID;
-        global $ACT;
+        try {
+            $executingId = $this->getExecutingWikiId();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("No actual executing was found. We can't start a sub execution");
+            $executingId = null;
+        }
 
-        $this->previousRunningEnvs[] = [$ID, $ACT, $clazz];
-        $ID = $runningId;
-        $ACT = $runningAct;
+        $executingAction = $this->getExecutingAction();
+        $this->previousRunningEnvs[] = [$executingId, $executingAction, $clazz];
+        $this
+            ->setExecutingId($runningId)
+            ->setExecutingAction($runningAct);
 
         return $this;
 
@@ -283,12 +294,13 @@ class ExecutionContext
     public function closeSubExecutionEnv(): ExecutionContext
     {
         [$previousId, $previousAct] = array_pop($this->previousRunningEnvs);
-        global $ID;
-        global $ACT;
-        $ID = $previousId;
-        $ACT = $previousAct;
+
+        $this->setExecutingId($previousId);
+        $this->setExecutingAction($previousAct);
+
         return $this;
     }
+
 
     /**
      * @throws ExceptionNotFound
@@ -707,6 +719,18 @@ class ExecutionContext
         }
         return false;
 
+    }
+
+    private function setExecutingAction(?string $runningAct): ExecutionContext
+    {
+        global $ACT;
+        $ACT = $runningAct;
+        return $this;
+    }
+
+    public function getSubExecutionCount(): int
+    {
+        return count($this->previousRunningEnvs);
     }
 
 

@@ -561,7 +561,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
 
     public
-    function upsertContent($content, $summary = "Default"): MarkupPath
+    function setContent($content, $summary = "Default"): MarkupPath
     {
         $path = $this->getPathObject();
         if (!($path instanceof WikiPath)) {

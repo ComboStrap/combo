@@ -249,7 +249,7 @@ class PageImageTag
 
         try {
             return MediaMarkup::createFromFetcher($imageFetcher)
-                ->setHtmlOrSetterTagAttributes($tagAttributes)
+                ->buildFromTagAttributes($tagAttributes)
                 ->toHtml();
         } catch (ExceptionCompile $e) {
             $message = "Error while rendering the page image: {$e->getMessage()}";

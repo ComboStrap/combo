@@ -74,7 +74,7 @@ class RasterImageLink extends ImageLink
 
         $fetchRaster = $this->fetchRaster;
 
-        $attributes = $this->mediaMarkup->getTagAttributes()
+        $attributes = $this->mediaMarkup->getExtraMediaTagAttributes()
             ->setLogicalTag(self::CANONICAL);
 
         /**

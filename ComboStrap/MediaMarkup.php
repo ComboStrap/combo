@@ -9,7 +9,7 @@ use syntax_plugin_combo_media;
 /**
  * This class represents a media markup:
  *   - with a {@link MediaMarkup::getFetcher() fetcher}
- *   - and {@link MediaMarkup::getTagAttributes() tag/styling attributes}
+ *   - and {@link MediaMarkup::getExtraMediaTagAttributes() tag/styling attributes}
  *
  * You can create it:
  *   * via a {@link MediaMarkup::createFromRef() Markup Ref} (The string ref in the document)
@@ -97,13 +97,13 @@ class MediaMarkup
     private ?MarkupRef $markupRef = null;
     private ?string $linking = null;
     private ?string $lazyLoadMethod = null;
-    private TagAttributes $tagAttributes;
+    private TagAttributes $extraMediaTagAttributes;
     private ?string $linkingClass = null;
     private IFetcher $fetcher;
 
     private function __construct()
     {
-        $this->tagAttributes = TagAttributes::createEmpty();
+        $this->extraMediaTagAttributes = TagAttributes::createEmpty();
     }
 
 
@@ -152,7 +152,7 @@ class MediaMarkup
             }
         }
         return self::createFromRef($ref)
-            ->setHtmlOrSetterTagAttributes($tagAttributes);
+            ->buildFromTagAttributes($tagAttributes);
 
 
     }
@@ -412,15 +412,15 @@ class MediaMarkup
         try {
             $align = $this->getAlign();
             if ($align === "right") {
-                $this->tagAttributes->addComponentAttributeValue(FloatAttribute::FLOAT_KEY, "right");
+                $this->extraMediaTagAttributes->addComponentAttributeValue(FloatAttribute::FLOAT_KEY, "right");
             } else {
-                $this->tagAttributes->addComponentAttributeValue(Align::ALIGN_ATTRIBUTE, $align);
+                $this->extraMediaTagAttributes->addComponentAttributeValue(Align::ALIGN_ATTRIBUTE, $align);
             }
         } catch (ExceptionNotFound $e) {
             // ok
         }
 
-        return $this->tagAttributes;
+        return $this->extraMediaTagAttributes;
 
     }
 
@@ -484,14 +484,14 @@ class MediaMarkup
 
     }
 
-    public function getTagAttributes(): TagAttributes
+    public function getExtraMediaTagAttributes(): TagAttributes
     {
         try {
-            $this->tagAttributes->addComponentAttributeValue(Align::ALIGN_ATTRIBUTE, $this->getAlign());
+            $this->extraMediaTagAttributes->addComponentAttributeValue(Align::ALIGN_ATTRIBUTE, $this->getAlign());
         } catch (ExceptionNotFound $e) {
             // ok
         }
-        return $this->tagAttributes;
+        return $this->extraMediaTagAttributes;
     }
 
 
@@ -533,13 +533,33 @@ class MediaMarkup
 
 
     /**
-     * @param TagAttributes $tagAttributes - the tag attributes for HTML
+     * @param TagAttributes $tagAttributes - the attributes in a tag format
      * @return $this
      */
-    public function setHtmlOrSetterTagAttributes(TagAttributes $tagAttributes): MediaMarkup
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): MediaMarkup
     {
-        $this->setFromTagAttributes($tagAttributes);
-        $this->tagAttributes = $tagAttributes;
+
+        $linking = $tagAttributes->getValueAndRemoveIfPresent(self::LINKING_KEY);
+        if ($linking !== null) {
+            $this->setLinking($linking);
+        }
+        $label = $tagAttributes->getValueAndRemoveIfPresent(TagAttributes::TITLE_KEY);
+        if ($label !== null) {
+            $this->setLabel($label);
+        }
+        $align = $tagAttributes->getValueAndRemoveIfPresent(Align::ALIGN_ATTRIBUTE);
+        if ($align !== null) {
+            $this->setAlign($align);
+        }
+        $lazy = $tagAttributes->getValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD);
+        if ($lazy !== null) {
+            $this->setLazyLoadMethod($lazy);
+        }
+
+        foreach ($tagAttributes->getComponentAttributes() as $key => $value) {
+            $this->extraMediaTagAttributes->addComponentAttributeValue($key, $value);
+        }
+
         return $this;
     }
 
@@ -628,7 +648,7 @@ class MediaMarkup
         foreach (self::STYLE_ATTRIBUTES as $nonUrlAttribute) {
             try {
                 $value = $fetchUrl->getQueryPropertyValueAndRemoveIfPresent($nonUrlAttribute);
-                $this->tagAttributes->addComponentAttributeValue($nonUrlAttribute, $value);
+                $this->extraMediaTagAttributes->addComponentAttributeValue($nonUrlAttribute, $value);
             } catch (ExceptionNotFound $e) {
                 // ok
             }
@@ -697,25 +717,7 @@ class MediaMarkup
         return $this->fetcher;
     }
 
-    private function setFromTagAttributes(TagAttributes $tagAttributes): void
-    {
-        $linking = $tagAttributes->getValueAndRemoveIfPresent(self::LINKING_KEY);
-        if ($linking !== null) {
-            $this->setLinking($linking);
-        }
-        $label = $tagAttributes->getValueAndRemoveIfPresent(TagAttributes::TITLE_KEY);
-        if ($label !== null) {
-            $this->setLabel($label);
-        }
-        $align = $tagAttributes->getValueAndRemoveIfPresent(Align::ALIGN_ATTRIBUTE);
-        if ($align !== null) {
-            $this->setAlign($align);
-        }
-        $lazy = $tagAttributes->getValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD);
-        if ($lazy !== null) {
-            $this->setLazyLoadMethod($lazy);
-        }
-    }
+
 
 
 }

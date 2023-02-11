@@ -120,7 +120,7 @@ class Icon
 
         $mediaMarkup = MediaMarkup::createFromFetcher($this->fetchSvg);
         if (isset($this->tagAttributes)) {
-            $mediaMarkup->setHtmlOrSetterTagAttributes($this->tagAttributes);
+            $mediaMarkup->buildFromTagAttributes($this->tagAttributes);
         }
 
         return SvgImageLink::createFromMediaMarkup($mediaMarkup)

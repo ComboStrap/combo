@@ -16,7 +16,7 @@ class ThirdMediaLink extends MediaLink
     {
 
         $mediaMarkup = $this->mediaMarkup;
-        $tagAttributes = $this->mediaMarkup->getTagAttributes();
+        $tagAttributes = $this->mediaMarkup->getExtraMediaTagAttributes();
 
         $urlString = $mediaMarkup->getFetchUrl()->toString();
         $path = $mediaMarkup->getPath();

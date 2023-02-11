@@ -96,7 +96,7 @@ class SvgImageLink extends ImageLink
          * (no cache for the img tag)
          * @var FetcherSvg $image
          */
-        $imgAttributes = $this->mediaMarkup->getTagAttributes()
+        $imgAttributes = $this->mediaMarkup->getExtraMediaTagAttributes()
             ->setLogicalTag(self::TAG);
 
         /**
@@ -246,7 +246,7 @@ class SvgImageLink extends ImageLink
                  */
                 $fetcherSvg = $this->mediaMarkup->getFetcher();
                 try {
-                    $fetcherSvg->setRequestedClass($this->mediaMarkup->getTagAttributes()->getClass());
+                    $fetcherSvg->setRequestedClass($this->mediaMarkup->getExtraMediaTagAttributes()->getClass());
                 } catch (ExceptionNull $e) {
                     // ok
                 }

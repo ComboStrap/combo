@@ -65,6 +65,8 @@ class Html
      * @return string
      *
      * Note that if the `meta[charset]` matches the text encoding   , it should not be encoded
+     *
+     * True ? Beware that this still allows users to insert unsafe scripting vectors, such as markdown links like [xss](javascript:alert%281%29).
      */
     public static function encode($text): string
     {

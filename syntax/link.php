@@ -30,6 +30,11 @@ if (!defined('DOKU_INC')) die();
  * The handle of the move of link is to be found in the
  * admin action {@link action_plugin_combo_linkmove}
  *
+ * popular [[ wiki ]] syntax for linking notes
+ * and makes it easy to build personal wikis,
+ * team knowledge bases,
+ * or something like a Second Brain or a Zettelkasten.
+ *
  */
 class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 {

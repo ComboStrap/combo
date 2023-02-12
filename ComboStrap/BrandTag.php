@@ -232,7 +232,14 @@ class BrandTag
             $urlTemplate = Template::create($url);
             $variableDetected = $urlTemplate->getVariablesDetected();
             if (sizeof($variableDetected) === 1 && $variableDetected[0] === "path") {
-                CacheManager::getFromContextExecution()->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                try {
+                    ExecutionContext::getActualOrCreateFromEnv()
+                        ->getExecutingFetcherMarkup()
+                        ->getCacheDependencies()
+                        ->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                } catch (ExceptionNotFound $e) {
+                    // not a fetcher markup run
+                }
                 $page = MarkupPath::createFromRequestedPage();
                 $relativePath = str_replace(":", "/", $page->getWikiId());
                 $url = $urlTemplate

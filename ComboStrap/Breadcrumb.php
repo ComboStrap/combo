@@ -177,11 +177,17 @@ class Breadcrumb
     public static function render(TagAttributes $tagAttributes): string
     {
 
-        $cacheManager = CacheManager::getFromContextExecution();
-        // the output has the data from the requested page
-        $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
-        // the data from the requested page is dependent on the name, title or description of the page
-        $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
+        try {
+            ExecutionContext::getActualOrCreateFromEnv()
+                ->getExecutingFetcherMarkup()
+                ->getCacheDependencies()
+                // the output has the data from the requested page
+                ->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY)
+            // the data from the requested page is dependent on the name, title or description of the page
+                ->addDependency(MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
+        } catch (ExceptionNotFound $e) {
+            // not a fetcher markup run
+        }
 
         return Breadcrumb::toBreadCrumbHtml($tagAttributes);
 

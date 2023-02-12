@@ -1,6 +1,8 @@
 <?php
 
 
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\Call;
@@ -339,17 +341,24 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     }
 
                     $table = $pageSql->getTable();
-                    $cacheManager = CacheManager::getFromContextExecution();
-                    switch ($table) {
-                        case PageSqlTreeListener::BACKLINKS:
-                            $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::BACKLINKS_DEPENDENCY);
-                            // The requested page dependency could be determined by the backlinks dependency
-                            $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
-                            break;
-                        case PageSqlTreeListener::DESCENDANTS:
-                            $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY);
-                            break;
-                        default:
+                    try {
+                        $cacheDependencies = ExecutionContext::getActualOrCreateFromEnv()
+                            ->getExecutingFetcherMarkup()
+                            ->getCacheDependencies();
+
+                        switch ($table) {
+                            case PageSqlTreeListener::BACKLINKS:
+                                $cacheDependencies->addDependency(MarkupCacheDependencies::BACKLINKS_DEPENDENCY);
+                                // The requested page dependency could be determined by the backlinks dependency
+                                $cacheDependencies->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                                break;
+                            case PageSqlTreeListener::DESCENDANTS:
+                                $cacheDependencies->addDependency(MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY);
+                                break;
+                            default:
+                        }
+                    } catch (ExceptionNotFound $e) {
+                        // not a fetcher markup run
                     }
 
                     /**
@@ -385,7 +394,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                             if ($contextualPage->isHidden()) {
                                 continue;
                             }
-                            if(!$contextualPage->exists()){
+                            if (!$contextualPage->exists()) {
                                 LogUtility::error("Internal Error: the page selected ($contextualPage) was not added. It does not exist and was deleted from the database index.", self::CANONICAL);
                                 $contextualPage->getDatabasePage()->delete();
                                 continue;

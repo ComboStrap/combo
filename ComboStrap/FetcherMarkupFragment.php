@@ -21,6 +21,8 @@ use Exception;
  * from the outside but to be able to use the {@link FetcherCache} we need to.
  * (as fetcher cache uses the url as unique identifier)
  *
+ *
+ * TODO: {@link MarkupRenderer} could be one with {@link FetcherMarkupFragment} ?
  */
 class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetcherString
 {
@@ -33,7 +35,7 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
     const CANONICAL = "markup-fragment-fetcher";
 
     /**
-     * @var CacheRenderer cache file
+     * @var CacheParser cache file
      */
     protected CacheParser $cache;
 
@@ -268,13 +270,6 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
         return $this->snippetCache;
     }
 
-    public
-    function getDependencies(): MarkupCacheDependencies
-    {
-        $this->buildObjectAndEnvironmentIfNeeded();
-        return $this->cacheDependencies;
-    }
-
 
     public
     function getDependenciesCacheStore(): CacheParser
@@ -327,17 +322,26 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
             LogUtility::error("The path ($path) does not exist, we have set the markup to the empty string during rendering. If you want to delete the cache path, ask it via the cache path function", self::CANONICAL, $e);
         }
 
+        /**
+         * Rendering
+         */
+        $executionContext = (ExecutionContext::getActualOrCreateFromEnv());
+
+
         $extension = $this->getMime()->getExtension();
         switch ($extension) {
             case MarkupRenderer::INSTRUCTION_EXTENSION:
                 $markupRenderer = MarkupRenderer::createFromMarkup($markup, $path, $this->getRequestedContextPath())
                     ->setRequestedMimeToInstruction()
                     ->setDeleteRootBlockElement($this->removeRootBlockElement);
+                $executionContext->setExecutingFetcherMarkup($this);
                 try {
                     $instructions = $markupRenderer->getOutput();
                     $content = serialize($instructions);
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+                } finally {
+                    $executionContext->closeRunningFetcherMarkup();
                 }
                 break;
             default:
@@ -351,6 +355,7 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
                 } finally {
                     $instructionsFetcher->close();
                 }
+
                 $markupRenderer = MarkupRenderer::createFromInstructions(
                     $instructions,
                     $this->getRequestedPath(),
@@ -358,8 +363,14 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
                 )
                     ->setRendererName($this->getRequestedRendererNameOrDefault())
                     ->setRequestedMime($this->getMime());
-                $content = $markupRenderer->getOutput();
-
+                $executionContext->setExecutingFetcherMarkup($this);
+                try {
+                    $content = $markupRenderer->getOutput();
+                } catch (\Exception $e) {
+                    throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+                } finally {
+                    $executionContext->closeRunningFetcherMarkup();
+                }
                 $this->cacheAfterRendering = $markupRenderer->getCacheAfterRendering();
         }
 
@@ -528,8 +539,7 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
             default:
                 $this->cache = new CacheRenderer($wikiId, $localFile, $extension);
 
-                $this->cacheDependencies = MarkupCacheDependencies::create($this->getRequestedPath(), $this->getRequestedContextPath());
-                $this->cacheDependencies->rerouteCacheDestination($this->cache);
+                $this->getCacheDependencies()->rerouteCacheDestination($this->cache);
                 break;
         }
 
@@ -601,7 +611,9 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
 
     public function getCacheDependencies(): MarkupCacheDependencies
     {
-        $this->buildObjectAndEnvironmentIfNeeded();
+        if (!isset($this->cacheDependencies)) {
+            $this->cacheDependencies = MarkupCacheDependencies::create($this->getRequestedPath(), $this->getRequestedContextPath());
+        }
         return $this->cacheDependencies;
     }
 

@@ -391,18 +391,27 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                     $executionContext = ExecutionContext::getActualOrCreateFromEnv();
 
-                    /**
-                     * The cache output is composed of primary metadata
-                     * (If it changes, the content change)
-                     */
-                    $cacheManager = $executionContext->getCacheManager();
-                    $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
 
-                    /**
-                     * The content depend on the file system tree
-                     * (if a file is added or deleted, the content will change)
-                     */
-                    $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY);
+                    try {
+
+                        /**
+                         * {@link MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY}
+                         * The cache output is composed of primary metadata
+                         * (If it changes, the content change)
+                         *
+                         * {@link MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY}
+                         * The content depend on the file system tree
+                         * (if a file is added or deleted, the content will change)
+                         */
+                        $executionContext
+                            ->getExecutingFetcherMarkup()
+                            ->getCacheDependencies()
+                            ->addDependency(MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY)
+                            ->addDependency(MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY);
+                    } catch (ExceptionNotFound $e) {
+                        // no fetcher markup running
+                        // ie markup
+                    }
 
                     /**
                      * NameSpacePath determination
@@ -423,7 +432,14 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     // root
                                     $namespacePath = $requestedPage->getPathObject();
                                 }
-                                CacheManager::getFromContextExecution()->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
+                                try {
+                                    ExecutionContext::getActualOrCreateFromEnv()
+                                        ->getExecutingFetcherMarkup()
+                                        ->getCacheDependencies()
+                                        ->addDependency(MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
+                                } catch (ExceptionNotFound $e) {
+                                    // not a fetcher markup run
+                                }
                                 break;
                             case self::TYPE_TREE:
                                 try {

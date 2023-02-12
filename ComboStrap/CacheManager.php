@@ -14,11 +14,7 @@ use DateTime;
  * This is just another namespace extension of {@link ExecutionContext}
  * to not have all function in the same place
  *
- * It can be used by plugin to:
- * * report cache dependency {@link CacheManager::addDependencyForCurrentSlot()} reports and influence the cache
- * of all slot for a requested page
- * * report cache results
- * * ...
+ * Except for the cache dependencies of a {@link FetcherMarkupFragment::getCacheDependencies() Markup}
  */
 class CacheManager
 {
@@ -84,24 +80,6 @@ class CacheManager
 
 
 
-    /**
-     * @param string $dependencyName
-     * @return CacheManager
-     */
-    public function addDependencyForCurrentSlot(string $dependencyName): CacheManager
-    {
-
-        try {
-            $currentMarkup =  WikiPath::createExecutingMarkupWikiPath();
-        } catch (ExceptionNotFound $e) {
-            LogUtility::internalError("We couldn't add the dependency ($dependencyName). The executing markup was unknown.");
-            return $this;
-        }
-        $cacheDependencies = $this->getCacheDependenciesForPath($currentMarkup);
-        $cacheDependencies->addDependency($dependencyName);
-        return $this;
-
-    }
 
 
     public function getCacheResultsForSlot(string $id): CacheResults

@@ -40,8 +40,14 @@ class ShareTag
          * Standard link attribute
          * and Runtime Cache key dependencies
          */
-        CacheManager::getFromContextExecution()
-            ->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+        try {
+            ExecutionContext::getActualOrCreateFromEnv()
+                ->getExecutingFetcherMarkup()
+                ->getCacheDependencies()
+                ->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+        } catch (ExceptionNotFound $e) {
+            // not a fetcher markup run
+        }
 
         try {
             $requestedPage = MarkupPath::createFromRequestedPage();

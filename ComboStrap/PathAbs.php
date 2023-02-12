@@ -75,7 +75,7 @@ abstract class PathAbs implements Path
 
     /**
      * @throws ExceptionCompile
-     * @deprecated for {@link WikiPath::createFromPathObject()}
+     * Utility {@link WikiPath::createFromPathObject()}
      */
     function toWikiPath(): WikiPath
     {
@@ -85,7 +85,7 @@ abstract class PathAbs implements Path
         if ($this instanceof LocalPath) {
             return $this->toWikiPath();
         }
-        throw new ExceptionCompile("This is not a doku path or local path");
+        throw new ExceptionCompile("This is not a wiki path or local path");
     }
 
 

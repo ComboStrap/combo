@@ -2,6 +2,7 @@
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
+use ComboStrap\ExecutionContext;
 use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\Call;
@@ -130,7 +131,14 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 /**
                  * Cache key dependencies
                  */
-                CacheManager::getFromContextExecution()->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                try {
+                    ExecutionContext::getActualOrCreateFromEnv()
+                        ->getExecutingFetcherMarkup()
+                        ->getCacheDependencies()
+                        ->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                } catch (ExceptionNotFound $e) {
+                    // not a fetcher markup run
+                }
 
 
                 $requestedPage = MarkupPath::createFromRequestedPage();

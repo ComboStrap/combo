@@ -143,6 +143,11 @@ class ExecutionContext
     private HttpResponse $response;
     private IFetcher $executingFetcher;
 
+    /**
+     * @var FetcherMarkupFragment  - the fetcher markup actually runnning
+     */
+    private FetcherMarkupFragment $executingFetcherMarkup;
+
     public function __construct(Url $url)
     {
 
@@ -430,9 +435,13 @@ class ExecutionContext
         }
         $this->restoreEnv();
 
-        unset($this->executionScopedVariables);
         unset($this->executingFetcher);
+        unset($this->executingFetcherMarkup);
+
+        unset($this->executionScopedVariables);
+
         unset($this->cacheManager);
+
 
         /**
          * Log utility is not yet a conf
@@ -761,6 +770,42 @@ class ExecutionContext
     {
         unset($this->executingFetcher);
         return $this;
+    }
+
+    /**
+     * Code may access the running fetcher with this global variable
+     * @param FetcherMarkupFragment $fetcherMarkup
+     * @return $this
+     */
+    public function setExecutingFetcherMarkup(FetcherMarkupFragment $fetcherMarkup): ExecutionContext
+    {
+        if (isset($this->executingFetcherMarkup)) {
+            throw new ExceptionRuntimeInternal("Two fetcher markups cannot run at the same time");
+        }
+        $this->executingFetcherMarkup = $fetcherMarkup;
+        return $this;
+    }
+
+    public function closeRunningFetcherMarkup(): ExecutionContext
+    {
+        unset($this->executingFetcherMarkup);
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getExecutingFetcherMarkup(): FetcherMarkupFragment
+    {
+        /**
+         * Case of a markup text without context (ie webcode)
+         * TODO: May be without any context, we could have a default path context: the root
+         *   We could then have only one Fetcher Markup
+         */
+        if (!isset($this->executingFetcherMarkup)) {
+            throw new ExceptionNotFound("No fetcher markup running");
+        }
+        return $this->executingFetcherMarkup;
     }
 
 

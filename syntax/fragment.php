@@ -1,6 +1,8 @@
 <?php
 
 
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\CallStack;
@@ -177,7 +179,15 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
                 /**
                  * Cache dependent on the requested page
                  */
-                CacheManager::getFromContextExecution()->addDependencyForCurrentSlot(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                try {
+                    ExecutionContext::getActualOrCreateFromEnv()
+                        ->getExecutingFetcherMarkup()
+                        ->getCacheDependencies()
+                        ->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                } catch (ExceptionNotFound $e) {
+                    // not a fetcher markup run
+                }
+
 
                 return array(
                     PluginUtility::STATE => $state,

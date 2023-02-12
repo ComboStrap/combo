@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 use dokuwiki\Cache\CacheParser;
+use dokuwiki\Cache\CacheRenderer;
 
 /**
  *
@@ -303,8 +304,19 @@ class MarkupCacheDependencies
         return $keyDokuWikiCompliant . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
     }
 
+    /**
+     * Snippet.json, Cache dependency are data dependent
+     *
+     * For instance, the carrousel may add glide or grid as snippet. It depends on the the number of backlinks.
+     *
+     * Therefore the output should be unique by rendered fragment
+     * Therefore we reroute (recalculate the cache key to be the same than the html file)
+     *
+     * @param CacheParser $cache
+     * @return void
+     */
     public
-    function rerouteCacheDestination(&$cache)
+    function rerouteCacheDestination(CacheParser &$cache)
     {
 
         try {

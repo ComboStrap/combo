@@ -70,8 +70,8 @@ class CacheReportHtmlDataBlockArray
                 ];
 
                 if ($mode === FetcherMarkupFragment::XHTML_MODE) {
-                    $dependencies = $cacheManager
-                        ->getCacheDependenciesForPath($sourcePath)
+                    $dependencies = FetcherMarkupFragment::createPageFragmentFetcherFromPath($sourcePath, $sourcePath)
+                        ->getCacheDependencies()
                         ->getDependencies();
                     $data[self::DEPENDENCY_ATT] = $dependencies;
                 }

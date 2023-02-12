@@ -25,7 +25,8 @@ class CacheReportHtmlDataBlockArray
      */
     public static function getFromContext(): array
     {
-        $cacheManager = ExecutionContext::getActualOrCreateFromEnv()->getCacheManager();
+        $cacheManager = ExecutionContext::getActualOrCreateFromEnv()
+            ->getCacheManager();
         $cacheReporters = $cacheManager->getCacheResults();
         $htmlDataBlock = [];
         foreach ($cacheReporters as $cacheReporter) {
@@ -68,7 +69,7 @@ class CacheReportHtmlDataBlockArray
                     self::CACHE_FILE => $cacheFile->toQualifiedId()
                 ];
 
-                if ($mode === FetcherMarkup::XHTML_MODE) {
+                if ($mode === FetcherMarkupFragment::XHTML_MODE) {
                     $dependencies = $cacheManager
                         ->getCacheDependenciesForPath($sourcePath)
                         ->getDependencies();

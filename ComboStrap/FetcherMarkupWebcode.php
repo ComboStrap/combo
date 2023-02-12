@@ -9,7 +9,7 @@ use action_plugin_combo_css;
  *
  * This code permits to render a markup from a string passed as argument
  *
- * Technically, it's the same than {@link FetcherMarkup}
+ * Technically, it's the same than {@link FetcherMarkupFragment}
  * but:
  *   * it outputs the HTML within a minimal HTML page (no layout as in {@link FetcherPage})
  *   * it gets the input from the url query properties
@@ -112,7 +112,7 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
 
         $requestedMarkup = $this->getRequestedMarkup();
 
-        $mainContent = MarkupRenderer::createFromMarkup($requestedMarkup)
+        $mainContent = MarkupRenderer::createFromMarkup($requestedMarkup, null, null)
             ->setDeleteRootBlockElement(true)
             ->setRendererName("xhtml")
             ->setRequestedMimeToXhtml()
@@ -121,7 +121,7 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
         $title = $this->getRequestedTitle();
 
         try {
-            $html = PageLayout::createFromLayoutName(PageLayoutName::BLANK_LAYOUT)
+            $html = PageTemplate::createFromLayoutName(PageLayoutName::BLANK_LAYOUT)
                 ->setRequestedTitle($title)
                 ->setRequestedEnableTaskRunner(false)
                 ->generateAndGetPageHtmlAsString($mainContent);

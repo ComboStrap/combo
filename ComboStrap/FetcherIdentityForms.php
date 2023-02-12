@@ -20,7 +20,7 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
     private bool $build = false;
 
 
-    private PageLayout $pageLayout;
+    private PageTemplate $pageLayout;
 
 
     /**
@@ -61,7 +61,7 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
             $title = $this->getLabel();
 
             try {
-                $this->pageLayout = PageLayout::createFromLayoutName($this->getRequestedLayoutOrDefault())
+                $this->pageLayout = PageTemplate::createFromLayoutName($this->getRequestedLayoutOrDefault())
                     ->setRequestedLang($pageLang)
                     ->setRequestedEnableTaskRunner(false) // no page id
                     ->setRequestedTitle($title)

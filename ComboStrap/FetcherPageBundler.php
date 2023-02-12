@@ -71,9 +71,8 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
 
         $outline = $this->getBundledOutline();
         $instructionsCalls = $outline->toHtmlSectionOutlineCalls();
-        $mainContent = MarkupRenderer::createFromInstructions($instructionsCalls)
+        $mainContent = MarkupRenderer::createFromInstructions($instructionsCalls, $this->getStartPath(),$this->getRequestedContextPath())
             ->setRequestedMime($this->getMime())
-            ->setRequestedContextPath($this->getRequestedContextPath())
             ->getOutput();
 
 
@@ -98,7 +97,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
             throw new ExceptionRuntimeInternal("The toc could not be created. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
         }
         try {
-            return PageLayout::createFromLayoutName($layoutName)
+            return PageTemplate::createFromLayoutName($layoutName)
                 ->setRequestedContextPath($startMarkupWikiPath)
                 ->setRequestedTitle($title)
                 ->setRequestedLang($lang)
@@ -129,7 +128,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
             $content = <<<EOF
 ====== $title ======
 EOF;
-            $indexOutline = Outline::createFromMarkup($content);
+            $indexOutline = Outline::createFromMarkup($content, $this->getStartPath(), $this->getRequestedContextPath());
         }
 
         $childrenPages = MarkupFileSystem::getOrCreate()->getChildren($startPath, FileSystems::LEAF);

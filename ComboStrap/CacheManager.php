@@ -10,10 +10,15 @@ use DateTime;
  * Class CacheManager
  * @package ComboStrap
  *
- * The cache manager is public static object
- * that can be used by plugin to report cache dependency {@link CacheManager::addDependencyForCurrentSlot()}
- * reports and influence the cache
+ * The cache manager handles all things cache
+ * This is just another namespace extension of {@link ExecutionContext}
+ * to not have all function in the same place
+ *
+ * It can be used by plugin to:
+ * * report cache dependency {@link CacheManager::addDependencyForCurrentSlot()} reports and influence the cache
  * of all slot for a requested page
+ * * report cache results
+ * * ...
  */
 class CacheManager
 {
@@ -26,7 +31,7 @@ class CacheManager
     /**
      * The list of cache runtimes dependencies by slot {@link MarkupCacheDependencies}
      */
-    private $slotCacheDependencies;
+    private array $slotCacheDependencies = [];
 
     /**
      * The list of cache results slot {@link CacheResults}
@@ -36,7 +41,8 @@ class CacheManager
     /**
      * @var array hold the result for slot cache expiration
      */
-    private $slotsExpiration;
+    private array $slotsExpiration = [];
+
 
     private ExecutionContext $executionContext;
 
@@ -47,8 +53,8 @@ class CacheManager
 
 
     /**
-     * @deprecated use the {@link ExecutionContext::getCacheManager()} instead otherwise you may mix context run
      * @return CacheManager
+     * @deprecated use the {@link ExecutionContext::getCacheManager()} instead otherwise you may mix context run
      */
     public static function getFromContextExecution(): CacheManager
     {
@@ -56,8 +62,6 @@ class CacheManager
         return ExecutionContext::getActualOrCreateFromEnv()->getCacheManager();
 
     }
-
-
 
 
     /**
@@ -78,12 +82,6 @@ class CacheManager
     }
 
 
-    public function isCacheResultPresentForSlot($slotId, $mode): bool
-    {
-        $cacheReporter = $this->getCacheResultsForSlot($slotId);
-        return $cacheReporter->hasResultForMode($mode);
-    }
-
 
 
     /**
@@ -94,7 +92,7 @@ class CacheManager
     {
 
         try {
-            $currentMarkup = WikiPath::createExecutingMarkupWikiPath();
+            $currentMarkup =  WikiPath::createExecutingMarkupWikiPath();
         } catch (ExceptionNotFound $e) {
             LogUtility::internalError("We couldn't add the dependency ($dependencyName). The executing markup was unknown.");
             return $this;

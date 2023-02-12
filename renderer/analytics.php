@@ -6,13 +6,15 @@ use ComboStrap\Canonical;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
-use ComboStrap\FetcherMarkup;
+use ComboStrap\ExceptionRuntimeInternal;
+use ComboStrap\FetcherMarkupFragment;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\Mime;
 use ComboStrap\MarkupPath;
 use ComboStrap\PageTitle;
 use ComboStrap\StringUtility;
+use ComboStrap\WikiPath;
 use dokuwiki\ChangeLog\PageChangeLog;
 
 
@@ -153,9 +155,13 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
      */
     private MarkupPath $page;
 
-    public static function createAnalyticsFetcherForPageFragment(MarkupPath $param): FetcherMarkup
+    public static function createAnalyticsFetcherForPageFragment(MarkupPath $markupPath): FetcherMarkupFragment
     {
-        return FetcherMarkup::createPageFragmentFetcherFromPath($param->getPathObject())
+        $path = $markupPath->getPathObject();
+        if(!($path instanceof WikiPath)){
+            throw new ExceptionRuntimeInternal("The path ($path) is not a wiki path");
+        }
+        return FetcherMarkupFragment::createPageFragmentFetcherFromPath($path, $path)
             ->setRequestedMime(Mime::getJson())
             ->setRequestedRendererName(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
     }

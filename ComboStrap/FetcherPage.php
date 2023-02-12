@@ -18,7 +18,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
     private MarkupPath $requestedMarkupPath;
     private string $requestedLayoutName;
-    private PageLayout $pageLayout;
+    private PageTemplate $pageLayout;
     private FetcherCache $fetcherCache;
 
 
@@ -121,7 +121,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         try {
 
             /**
-             * The {@link FetcherMarkup::processIfNeededAndGetFetchPath() Get fetch path}
+             * The {@link FetcherMarkupFragment::processIfNeededAndGetFetchPath() Get fetch path}
              * will start the rendering if there is no HTML path
              * or the cache is not fresh
              */
@@ -267,7 +267,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $pageLang = Lang::createForMarkup($this->getRequestedPage());
         $title = PageTitle::createForMarkup($this->getRequestedPage())->getValueOrDefault();
         try {
-            $this->pageLayout = PageLayout::createFromLayoutName($this->getRequestedLayoutOrDefault())
+            $this->pageLayout = PageTemplate::createFromLayoutName($this->getRequestedLayoutOrDefault())
                 ->setRequestedContextPath($this->getRequestedPath())
                 ->setRequestedLang($pageLang)
                 ->setRequestedTitle($title);

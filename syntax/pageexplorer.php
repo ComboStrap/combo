@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\ExecutionContext;
 use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\Call;
@@ -388,16 +389,20 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         $pageExplorerTagAttributes->setComponentAttributeValue(TagAttributes::ID_KEY, $id);
                     }
 
+                    $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
                     /**
                      * The cache output is composed of primary metadata
                      * (If it changes, the content change)
                      */
-                    CacheManager::getFromContextExecution()->addDependencyForCurrentSlot(MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
+                    $cacheManager = $executionContext->getCacheManager();
+                    $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
+
                     /**
                      * The content depend on the file system tree
                      * (if a file is added or deleted, the content will change)
                      */
-                    CacheManager::getFromContextExecution()->addDependencyForCurrentSlot(MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY);
+                    $cacheManager->addDependencyForCurrentSlot(MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY);
 
                     /**
                      * NameSpacePath determination

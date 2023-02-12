@@ -2,6 +2,7 @@
 
 use ComboStrap\BacklinkMenuItem;
 use ComboStrap\Event;
+use ComboStrap\ExecutionContext;
 use ComboStrap\FileSystems;
 use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
@@ -102,9 +103,10 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
              */
             $id = $_REQUEST["id"];
         }
-
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         if (empty($id)) {
-            \ComboStrap\HttpResponse::createForStatus(HttpResponseStatus::BAD_REQUEST)
+            $executionContext->response()
+                ->setStatus(HttpResponseStatus::BAD_REQUEST)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
                 ->setBody("The page id should not be empty", Mime::getHtml())
@@ -117,7 +119,9 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
         $html = syntax_plugin_combo_related::getHtmlRelated($backlinkPages);
 
 
-        \ComboStrap\HttpResponse::createForStatus(HttpResponseStatus::ALL_GOOD)
+        $executionContext
+            ->response()
+            ->setStatus(HttpResponseStatus::ALL_GOOD)
             ->setEvent($event)
             ->setCanonical(self::CANONICAL)
             ->setBody($html, Mime::getHtml())

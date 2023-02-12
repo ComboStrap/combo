@@ -33,11 +33,32 @@ class MarkupRenderer
      */
     private WikiPath $requestedContextPath;
 
+    /**
+     * @var Path the path from where the instructions/markup where created
+     * This is mandatory to add cache dependency informations
+     * and set the path that is executing
+     */
+    private Path $sourcePath;
 
-    public static function createFromMarkup(string $markup): MarkupRenderer
+
+    /**
+     * @param string $markup
+     * @param Path|null $markupSourcePath - the source of the markup - may be null (case of webcode)
+     * @param WikiPath|null $contextPath - the requested markup path - may be null (case of webcode)
+     * @return MarkupRenderer
+     */
+    public static function createFromMarkup(string $markup, ?Path $markupSourcePath, ?WikiPath $contextPath): MarkupRenderer
     {
-        return (new MarkupRenderer())
+        $markupRenderer = (new MarkupRenderer())
             ->setMarkup($markup);
+        if ($markupSourcePath != null) {
+            $markupRenderer->setSourcePath($markupSourcePath);
+        }
+        if ($contextPath != null) {
+            $markupRenderer->setRequestedContextPath($contextPath);
+        }
+        return $markupRenderer;
+
     }
 
     private function setMarkup(string $markup): MarkupRenderer
@@ -46,10 +67,12 @@ class MarkupRenderer
         return $this;
     }
 
-    public static function createFromInstructions($instructions): MarkupRenderer
+    public static function createFromInstructions($instructions, Path $instructionsPath, WikiPath $contextPath): MarkupRenderer
     {
         return (new MarkupRenderer())
-            ->setInstructions($instructions);
+            ->setInstructions($instructions)
+            ->setRequestedContextPath($contextPath)
+            ->setSourcePath($instructionsPath);
     }
 
     /**
@@ -91,13 +114,21 @@ class MarkupRenderer
          * Context Path
          */
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
-        try {
-            $runningId = $this->getRequestedContextPath()->getWikiId();
-        } catch (ExceptionNotFound $e) {
+        if (isset($this->sourcePath)) {
+            if ($this->sourcePath instanceof WikiPath) {
+                $runningId = $this->sourcePath->getWikiId();
+            } else {
+                $runningId = $this->sourcePath->toQualifiedId();
+            }
+        } else {
             try {
-                $runningId = $executionContext->getRequestedWikiId();
+                $runningId = $this->getRequestedContextPath()->getWikiId();
             } catch (ExceptionNotFound $e) {
-                $runningId = "markup-renderer-default";
+                try {
+                    $runningId = $executionContext->getRequestedWikiId();
+                } catch (ExceptionNotFound $e) {
+                    $runningId = "markup-renderer-default";
+                }
             }
         }
 
@@ -111,7 +142,7 @@ class MarkupRenderer
         ) {
             $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
         }
-        $dynamicRenderingExecutionContext = $executionContext->startSubExecutionEnv(MarkupRenderer::class, $runningId, $runningAct);
+        $executionContext->startSubExecutionEnv(MarkupRenderer::class, $runningId, $runningAct);
 
         try {
             $extension = $this->requestedMime->getExtension();
@@ -142,7 +173,7 @@ class MarkupRenderer
                      * $ret = p_cached_output($file, 'xhtml', $pageid);
                      */
                     if (!isset($this->instructionsSource)) {
-                        $this->instructionsSource = MarkupRenderer::createFromMarkup($this->markupSource)
+                        $this->instructionsSource = MarkupRenderer::createFromMarkup($this->markupSource, $this->sourcePath, $this->requestedContextPath)
                             ->setRequestedMimeToInstruction()
                             ->setDeleteRootBlockElement($this->deleteRootElement)
                             ->getOutput();
@@ -157,9 +188,9 @@ class MarkupRenderer
 
             }
         } finally {
-            if ($dynamicRenderingExecutionContext != null) {
-                $dynamicRenderingExecutionContext->closeSubExecutionEnv();
-            }
+
+            $executionContext->closeSubExecutionEnv();
+
         }
 
 
@@ -199,7 +230,7 @@ class MarkupRenderer
      * @param WikiPath $path
      * @return $this
      */
-    public function setRequestedContextPath(WikiPath $path): MarkupRenderer
+    private function setRequestedContextPath(WikiPath $path): MarkupRenderer
     {
         $this->requestedContextPath = $path;
         return $this;
@@ -264,6 +295,12 @@ class MarkupRenderer
         }
         return $this->requestedContextPath;
 
+    }
+
+    private function setSourcePath(Path $sourcePath): MarkupRenderer
+    {
+        $this->sourcePath = $sourcePath;
+        return $this;
     }
 
 

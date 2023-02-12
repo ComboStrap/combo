@@ -34,21 +34,21 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
     /**
      * A configuration to enable the template system
      */
-        public const CONF_ENABLE_TEMPLATING = "combo-conf-001";
-    public const CONF_ENABLE_TEMPLATING_DEFAULT = 1;
+        public const CONF_ENABLE_FRONT_SYSTEM = "combo-conf-001";
+    public const CONF_ENABLE_FRONT_SYSTEM_DEFAULT = 1;
     const TEMPLATE_CANONICAL = "template";
 
     /**
      * @var bool to avoid recursion that may happen using {@link tpl_content()}
      */
-    private bool $doCustomExecuting = false;
+    private bool $doCustomActuallyExecuting = false;
 
     /**
      * @return bool
      */
-    public static function isTemplateEnabled(): bool
+    public static function isFrontSystemEnabled(): bool
     {
-        $confValue = Site::getConfValue(self::CONF_ENABLE_TEMPLATING, self::CONF_ENABLE_TEMPLATING_DEFAULT);
+        $confValue = Site::getConfValue(self::CONF_ENABLE_FRONT_SYSTEM, self::CONF_ENABLE_FRONT_SYSTEM_DEFAULT);
         return $confValue === 1;
     }
 
@@ -85,7 +85,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
     public function executeComboDoAction(Doku_Event $event, $param)
     {
 
-        if ($this->doCustomExecuting) {
+        if ($this->doCustomActuallyExecuting) {
             return;
         }
 
@@ -113,7 +113,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
         $action = $event->data;
 
-        if (self::isTemplateEnabled()) {
+        if (self::isFrontSystemEnabled()) {
             switch ($action) {
                 case "show":
                     $action = self::getDoParameterValue(FetcherPage::NAME);
@@ -132,7 +132,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
         /**
          * To avoid recursion
          */
-        $this->doCustomExecuting = true;
+        $this->doCustomActuallyExecuting = true;
 
         /**
          * Otherwise the act_clean function sanitize the action
@@ -146,9 +146,9 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
             $fetcherName = $this->getFetcherNameFromAction($action);
             $url = Url::createFromGetOrPostGlobalVariable()
                 ->addQueryParameter(IFetcher::FETCHER_KEY, $fetcherName);
-            $fetcher = FetcherSystem::createFetcherStringFromUrl($url);
+            $fetcher = $executionContext->createFetcherStringFromUrl($url);
             $body = $fetcher->getFetchString();
-            $this->doCustomExecuting = false;
+            $this->doCustomActuallyExecuting = false;
             $mime = $fetcher->getMime();
             $executionContext->response()
                 ->setStatus(HttpResponseStatus::ALL_GOOD)
@@ -158,7 +158,8 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
             $html = ExceptionReporter::createForException($e)
                 ->getHtmlPage("An error has occurred during the execution of the action ($action)");
-            \ComboStrap\HttpResponse::createFromException($e)
+            $executionContext->response()
+                ->setException($e)
                 ->setBody($html, Mime::getHtml())
                 ->end();
         }

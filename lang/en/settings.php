@@ -297,6 +297,6 @@ $lang[action_plugin_combo_snippetsbootstrap::CONF_JQUERY_DOKU] = PluginUtility::
 
 $lang[Snippet::CONF_USE_CDN] = PluginUtility::getDocumentationHyperLink(Snippet::CANONICAL, "Cdn") . ' If checked, the snippets (js, css) are served from the CDN URL if known';
 
-$lang[action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_docustom::TEMPLATE_CANONICAL, "Templating Module") . ' If checked, the combo template engine will be used and the dokuwiki template';
+$lang[action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_docustom::TEMPLATE_CANONICAL, "Templating Module") . ' If checked, the combo template engine will be used and the dokuwiki template';
 
 

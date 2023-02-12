@@ -426,7 +426,7 @@ $conf["defaultLayoutContainer"] = "sm";
 
 /**
  * Enable templating
- * See {@link action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING}
+ * See {@link action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM}
  */
 $conf["combo-conf-001"] = 1;
 

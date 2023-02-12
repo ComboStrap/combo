@@ -96,9 +96,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
              */
             $id = $_REQUEST["id"];
         }
-
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         if (empty($id)) {
-            HttpResponse::createForStatus(HttpResponseStatus::BAD_REQUEST)
+            $executionContext
+                ->response()
+                ->setStatus(HttpResponseStatus::BAD_REQUEST)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
                 ->setBodyAsJsonMessage("The page path (id form) is empty")
@@ -107,7 +109,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         }
         $page = MarkupPath::createMarkupFromId($id);
         if (!$page->exists()) {
-            HttpResponse::createForStatus(HttpResponseStatus::DOES_NOT_EXIST)
+            $executionContext->response()
+                ->setStatus(HttpResponseStatus::DOES_NOT_EXIST)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
                 ->setBodyAsJsonMessage("The page ($id) does not exist")
@@ -120,7 +123,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          */
         if (!$page->canBeUpdatedByCurrentUser()) {
             $user = Identity::getUser();
-            HttpResponse::createForStatus(HttpResponseStatus::NOT_AUTHORIZED)
+            $executionContext->response()
+                ->setStatus(HttpResponseStatus::NOT_AUTHORIZED)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
                 ->setBodyAsJsonMessage("Not Authorized: The user ($user) has not the `write` permission for the page (:$id).")
@@ -141,7 +145,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                      * We can't set the mime content in a {@link TestRequest}
                      */
                     if (!PluginUtility::isTest()) {
-                        HttpResponse::createForStatus(HttpResponseStatus::UNSUPPORTED_MEDIA_TYPE)
+                        $executionContext
+                            ->response()->setStatus(HttpResponseStatus::UNSUPPORTED_MEDIA_TYPE)
                             ->setEvent($event)
                             ->setCanonical(self::CANONICAL)
                             ->setBodyAsJsonMessage("The post content should be in json format")
@@ -159,7 +164,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     try {
                         $_POST = Json::createFromString($jsonString)->toArray();
                     } catch (ExceptionCompile $e) {
-                        HttpResponse::createForStatus(HttpResponseStatus::BAD_REQUEST)
+                        $executionContext
+                            ->response()
+                            ->setStatus(HttpResponseStatus::BAD_REQUEST)
                             ->setEvent($event)
                             ->setCanonical(self::CANONICAL)
                             ->setBodyAsJsonMessage("The json payload could not decoded. Error: {$e->getMessage()}")
@@ -314,7 +321,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     private function handleViewerGet(Doku_Event $event, MarkupPath $page)
     {
         if (!Identity::isManager()) {
-            HttpResponse::createForStatus(HttpResponseStatus::NOT_AUTHORIZED)
+            ExecutionContext::getActualOrCreateFromEnv()
+                ->response()
+                ->setStatus(HttpResponseStatus::NOT_AUTHORIZED)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
                 ->setBodyAsJsonMessage("Not Authorized (managers only)")
@@ -343,7 +352,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             )
             ->toAssociativeArray();
 
-        HttpResponse::createForStatus(HttpResponseStatus::ALL_GOOD)
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->response()
+            ->setStatus(HttpResponseStatus::ALL_GOOD)
             ->setEvent($event)
             ->setCanonical(self::CANONICAL)
             ->setBody(json_encode($form), Mime::getJson())
@@ -367,7 +378,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $persistentMetadataType = MetadataDokuWikiStore::PERSISTENT_METADATA;
         $postMeta = json_decode($post[$persistentMetadataType], true);
         if ($postMeta === null) {
-            HttpResponse::createForStatus(HttpResponseStatus::BAD_REQUEST)
+            ExecutionContext::getActualOrCreateFromEnv()
+                ->response()
+                ->setStatus(HttpResponseStatus::BAD_REQUEST)
                 ->setEvent($event)
                 ->setBodyAsJsonMessage("The metadata $persistentMetadataType should be in json format")
                 ->end();
@@ -449,7 +462,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         } else {
             $messagesToSend = "No metadata has been changed.";
         }
-        HttpResponse::createForStatus(HttpResponseStatus::ALL_GOOD)
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->response()
+            ->setStatus(HttpResponseStatus::ALL_GOOD)
             ->setEvent($event)
             ->setBodyAsJsonMessage($messagesToSend)
             ->end();

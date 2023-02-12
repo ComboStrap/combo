@@ -9,6 +9,7 @@ class FetcherSystem
 {
 
     /**
+     *
      * @param Url $fetchUrl
      * @return IFetcherPath
      * @throws ExceptionBadArgument

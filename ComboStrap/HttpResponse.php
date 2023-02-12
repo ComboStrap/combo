@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 
+use Exception;
 use TestRequest;
 
 class HttpResponse
@@ -44,6 +45,7 @@ class HttpResponse
     private Mime $mime;
     private bool $hasEnded = false;
     private \TestResponse $dokuwikiResponseObject;
+    private ExecutionContext $executionContext;
 
 
     /**
@@ -51,37 +53,9 @@ class HttpResponse
      */
     private function __construct()
     {
+
     }
 
-    /**
-     * @param int $status
-     * @return HttpResponse
-     * @deprecated
-     * use the {@link ExecutionContext::response()} instead to access the response
-     */
-    public static function createForStatus(int $status): HttpResponse
-    {
-        return (new HttpResponse())
-            ->setStatus($status);
-    }
-
-    public static function createFromException(\Exception $e): HttpResponse
-    {
-        if (PluginUtility::isDevOrTest()) {
-            throw new ExceptionRuntimeInternal($e, self::CANONICAL, 1, $e);
-        }
-        $httpResponse = HttpResponse::create();
-        $message = "<p>{$e->getMessage()}</p>";
-        try {
-            $status = self::getStatusFromException($e);
-            $httpResponse->setStatus($status);
-        } catch (ExceptionBadArgument $e) {
-            $httpResponse->setStatus(HttpResponseStatus::INTERNAL_ERROR);
-            $message = "<p>{$e->getMessage()}</p>$message";
-        }
-        $httpResponse->setBody($message, Mime::getHtml());
-        return $httpResponse;
-    }
 
     /**
      * @throws ExceptionBadArgument
@@ -101,9 +75,16 @@ class HttpResponse
     }
 
 
-    public static function create(): HttpResponse
+    public static function createFromExecutionContext(ExecutionContext $executionContext): HttpResponse
     {
-        return new HttpResponse();
+        return (new HttpResponse())->setExecutionContext($executionContext);
+    }
+
+    public function setExecutionContext(ExecutionContext $executionContext): HttpResponse
+    {
+        $this->executionContext = $executionContext;
+        return $this;
+
     }
 
     public static function createFromDokuWikiResponse(\TestResponse $response): HttpResponse
@@ -119,7 +100,8 @@ class HttpResponse
         } catch (ExceptionNotFound|ExceptionNotExists $e) {
             $mime = Mime::getBinary();
         }
-        return HttpResponse::createForStatus($statusCode)
+        return (new HttpResponse())
+            ->setStatus($statusCode)
             ->setBody($response->getContent(), $mime)
             ->setHeaders($response->getHeaders())
             ->setDokuWikiResponse($response);
@@ -137,6 +119,13 @@ class HttpResponse
     {
 
         $this->hasEnded = true;
+        /**
+         * Execution context can be unset
+         * when it's used via a {@link  self::createFromDokuWikiResponse()}
+         */
+        if (isset($this->executionContext)) {
+            $this->executionContext->endExecutingFetcher();
+        }
 
         if (isset($this->mime)) {
             Http::setMime($this->mime->toString());
@@ -379,6 +368,23 @@ class HttpResponse
     public function getDokuWikiResponse(): \TestResponse
     {
         return $this->dokuwikiResponseObject;
+    }
+
+    public function setException(Exception $e): HttpResponse
+    {
+        if (PluginUtility::isDevOrTest()) {
+            throw new ExceptionRuntimeInternal($e, self::CANONICAL, 1, $e);
+        }
+        $message = "<p>{$e->getMessage()}</p>";
+        try {
+            $status = self::getStatusFromException($e);
+            $this->setStatus($status);
+        } catch (ExceptionBadArgument $e) {
+            $this->setStatus(HttpResponseStatus::INTERNAL_ERROR);
+            $message = "<p>{$e->getMessage()}</p>$message";
+        }
+        $this->setBody($message, Mime::getHtml());
+        return $this;
     }
 
 

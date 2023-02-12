@@ -368,9 +368,9 @@ class Outline
      * @param string $content
      * @return Outline
      */
-    public static function createFromMarkup(string $content): Outline
+    public static function createFromMarkup(string $content, Path $contentPath, WikiPath $contextPath): Outline
     {
-        $instructions = MarkupRenderer::createFromMarkup($content)
+        $instructions = MarkupRenderer::createFromMarkup($content, $contentPath, $contextPath)
             ->setRequestedMimeToInstruction()
             ->getOutput();
         $callStack = CallStack::createFromInstructions($instructions);
@@ -410,7 +410,7 @@ class Outline
                 if ($ACT === "preview") {
                     $mainContainerSelector = ".pad";
                 } else {
-                    $mainContainerSelector = "#" . PageLayout::MAIN_CONTENT_ELEMENT;
+                    $mainContainerSelector = "#" . PageTemplate::MAIN_CONTENT_ELEMENT;
                 }
                 /**
                  * Because the HTML file structure is not really fixed
@@ -466,7 +466,12 @@ EOF;
      */
     public static function createFromMarkupPath(MarkupPath $markupPath): Outline
     {
-        $instructions = MarkupRenderer::createFromMarkup(FileSystems::getContent($markupPath->getPathObject()))
+        $path = $markupPath->getPathObject();
+        if(!($path instanceof WikiPath)){
+            throw new ExceptionRuntimeInternal("The path is not a wiki path");
+        }
+        $markup = FileSystems::getContent($path);
+        $instructions = MarkupRenderer::createFromMarkup($markup, $path, $path)
             ->setRequestedMimeToInstruction()
             ->getOutput();
         $callStack = CallStack::createFromInstructions($instructions);

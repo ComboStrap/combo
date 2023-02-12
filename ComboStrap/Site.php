@@ -636,13 +636,13 @@ class Site
         $cacheTime = $conf['cachetime'];
         if ($cacheTime === null) {
             LogUtility::internalError("The global `cachetime` configuration was not set.", self::CANONICAL);
-            return FetcherMarkup::MAX_CACHE_AGE;
+            return FetcherMarkupFragment::MAX_CACHE_AGE;
         }
         try {
             return DataType::toInteger($cacheTime);
         } catch (ExceptionBadArgument $e) {
             LogUtility::error("The global `cachetime` configuration has a value ($cacheTime) that is not an integer. Error: {$e->getMessage()}", self::CANONICAL);
-            return FetcherMarkup::MAX_CACHE_AGE;
+            return FetcherMarkupFragment::MAX_CACHE_AGE;
         }
     }
 
@@ -884,7 +884,7 @@ class Site
      */
     public static function getPageFooterSlotName()
     {
-        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageLayout::CONF_PAGE_FOOTER_NAME, PageLayout::CONF_PAGE_FOOTER_NAME_DEFAULT);
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageTemplate::CONF_PAGE_FOOTER_NAME, PageTemplate::CONF_PAGE_FOOTER_NAME_DEFAULT);
     }
 
     /**
@@ -892,7 +892,7 @@ class Site
      */
     public static function getPageHeaderSlotName()
     {
-        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageLayout::CONF_PAGE_HEADER_NAME, PageLayout::CONF_PAGE_HEADER_NAME_DEFAULT);
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageTemplate::CONF_PAGE_HEADER_NAME, PageTemplate::CONF_PAGE_HEADER_NAME_DEFAULT);
     }
 
     /**
@@ -900,7 +900,7 @@ class Site
      */
     public static function getMainSideSlotName()
     {
-        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageLayout::CONF_PAGE_MAIN_SIDEKICK_NAME, PageLayout::CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT);
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageTemplate::CONF_PAGE_MAIN_SIDEKICK_NAME, PageTemplate::CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT);
     }
 
     /**

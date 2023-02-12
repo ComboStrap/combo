@@ -10,32 +10,32 @@ namespace ComboStrap;
  * It wraps a DOM Element with extra properties needed in a page layout.
  *
  * It represents a:
- *   * a {@link PageLayoutElement::isSlot() slot} with {@link FetcherMarkup content}
- *   * or a {@link PageLayoutElement::isContainer() container} without content
+ *   * a {@link PageTemplateElement::isSlot() slot} with {@link FetcherMarkupFragment content}
+ *   * or a {@link PageTemplateElement::isContainer() container} without content
  *
  * It's used in the {@link FetcherPage} as utility class
  */
-class PageLayoutElement
+class PageTemplateElement
 {
 
     /**
-     * @var PageLayout - the page layout of this page element
+     * @var PageTemplate - the page layout of this page element
      */
-    private PageLayout $pageLayout;
+    private PageTemplate $pageLayout;
     /**
      * @var XmlElement - the xml element of this page element
      */
     private XmlElement $domElement;
     /**
-     * @var FetcherMarkup - the fetcher if this is a slot and has a page fragment source
+     * @var FetcherMarkupFragment - the fetcher if this is a slot and has a page fragment source
      */
-    private FetcherMarkup $fetcherFragment;
+    private FetcherMarkupFragment $fetcherFragment;
 
 
-    public function __construct(XmlElement $DOMElement, PageLayout $pageLayout)
+    public function __construct(PageTemplate $pageTemplate, XmlElement $DOMElement)
     {
 
-        $this->pageLayout = $pageLayout;
+        $this->pageLayout = $pageTemplate;
         $this->domElement = $DOMElement;
 
     }
@@ -51,19 +51,19 @@ class PageLayoutElement
     public static function getSlotNameForElementId($elementId)
     {
         switch ($elementId) {
-            case PageLayout::PAGE_HEADER_ELEMENT:
+            case PageTemplate::PAGE_HEADER_ELEMENT:
                 return Site::getPageHeaderSlotName();
-            case PageLayout::PAGE_FOOTER_ELEMENT:
+            case PageTemplate::PAGE_FOOTER_ELEMENT:
                 return Site::getPageFooterSlotName();
-            case PageLayout::MAIN_CONTENT_ELEMENT:
+            case PageTemplate::MAIN_CONTENT_ELEMENT:
                 throw new ExceptionRuntimeInternal("Main content area is not a slot and does not have any last slot name");
-            case PageLayout::PAGE_SIDE_ELEMENT:
+            case PageTemplate::PAGE_SIDE_ELEMENT:
                 return Site::getSidebarName();
-            case PageLayout::MAIN_SIDE_ELEMENT:
+            case PageTemplate::MAIN_SIDE_ELEMENT:
                 return Site::getMainSideSlotName();
-            case PageLayout::MAIN_HEADER_ELEMENT:
+            case PageTemplate::MAIN_HEADER_ELEMENT:
                 return "slot_main_header";
-            case PageLayout::MAIN_FOOTER_ELEMENT:
+            case PageTemplate::MAIN_FOOTER_ELEMENT:
                 return "slot_main_footer";
             default:
                 throw new ExceptionRuntimeInternal("Internal: The element ($elementId) was unexpected, it's not a slot");
@@ -83,7 +83,7 @@ class PageLayoutElement
     }
 
 
-    public function setAttributes(array $attributes): PageLayoutElement
+    public function setAttributes(array $attributes): PageTemplateElement
     {
         $this->attributes = $attributes;
         return $this;
@@ -138,7 +138,7 @@ class PageLayoutElement
     public
     function isSlot(): bool
     {
-        if (in_array($this->getId(), [PageLayout::PAGE_TOOL_ELEMENT, PageLayout::MAIN_TOC_ELEMENT])) {
+        if (in_array($this->getId(), [PageTemplate::PAGE_TOOL_ELEMENT, PageTemplate::MAIN_TOC_ELEMENT])) {
             return false;
         }
         return !$this->domElement->hasChildrenElement();
@@ -154,7 +154,7 @@ class PageLayoutElement
         }
         // Main content
         $requestedPath = $this->pageLayout->getRequestedContextPath();
-        if ($this->getId() === PageLayout::MAIN_CONTENT_ELEMENT) {
+        if ($this->getId() === PageTemplate::MAIN_CONTENT_ELEMENT) {
             return $requestedPath;
         }
         // Slot
@@ -179,7 +179,7 @@ class PageLayoutElement
          */
         $requestedPage = MarkupPath::createPageFromPathObject($this->pageLayout->getRequestedContextPath());
         switch ($this->getId()) {
-            case PageLayout::PAGE_SIDE_ELEMENT:
+            case PageTemplate::PAGE_SIDE_ELEMENT:
                 try {
                     $requestedPage->getPathObject()->getParent();
                 } catch (ExceptionNotFound $e) {
@@ -187,7 +187,7 @@ class PageLayoutElement
                     throw new ExceptionNotFound("No page side for pages in the root directory.");
                 }
                 break;
-            case PageLayout::MAIN_HEADER_ELEMENT:
+            case PageTemplate::MAIN_HEADER_ELEMENT:
                 if ($requestedPage->isRootHomePage()) {
                     throw new ExceptionNotFound("No $this for the home");
                 }
@@ -215,7 +215,7 @@ class PageLayoutElement
      * @throws ExceptionNotFound if the page/markup fragment was not found (a container element does not have any also)
      * @throws ExceptionBadArgument if the path can not be set as wiki path
      */
-    public function getMarkupFetcher(): FetcherMarkup
+    public function getMarkupFetcher(): FetcherMarkupFragment
     {
         if (isset($this->fetcherFragment)) {
             if (!$this->fetcherFragment->isClosed()) {
@@ -226,14 +226,14 @@ class PageLayoutElement
          * Rebuild the fragment if any
          */
         $fragmentPath = $this->getFragmentPath();
-        $this->fetcherFragment = FetcherMarkup::createPageFragmentFetcherFromPath($fragmentPath)
-            ->setRequestedContextPath($this->pageLayout->getRequestedContextPath());
+        $contextPath = $this->pageLayout->getRequestedContextPath();
+        $this->fetcherFragment = FetcherMarkupFragment::createPageFragmentFetcherFromPath($fragmentPath, $contextPath);
         return $this->fetcherFragment;
     }
 
     public function isMain(): bool
     {
-        return $this->getId() === PageLayout::MAIN_CONTENT_ELEMENT;
+        return $this->getId() === PageTemplate::MAIN_CONTENT_ELEMENT;
     }
 
 

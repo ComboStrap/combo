@@ -9,7 +9,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExecutionContext;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
-use ComboStrap\PageLayout;
+use ComboStrap\PageTemplate;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 
@@ -297,10 +297,10 @@ class action_plugin_combo_snippetsbootstrap extends DokuWiki_Action_Plugin
          */
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         try {
-            $preloadedCss = &$executionContext->getRuntimeObject(PageLayout::PRELOAD_TAG);
+            $preloadedCss = &$executionContext->getRuntimeObject(PageTemplate::PRELOAD_TAG);
         } catch (ExceptionNotFound $e) {
             $preloadedCss = [];
-            $executionContext->setRuntimeObject(PageLayout::PRELOAD_TAG,$preloadedCss);
+            $executionContext->setRuntimeObject(PageTemplate::PRELOAD_TAG,$preloadedCss);
         }
         $preloadedCss[] = $linkData;
 

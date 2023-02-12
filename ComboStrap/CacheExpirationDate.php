@@ -40,11 +40,11 @@ class CacheExpirationDate extends MetadataDateTime
         }
 
         /**
-         * We use {@link FetcherMarkup::getCachePath()}
-         * and not {@link FetcherMarkup::processIfNeededAndGetFetchPath()}
+         * We use {@link FetcherMarkupFragment::getCachePath()}
+         * and not {@link FetcherMarkupFragment::processIfNeededAndGetFetchPath()}
          * to not create the HTML
          */
-        $fetcherMarkup = $resourceCombo->createHtmlFetcher();
+        $fetcherMarkup = $resourceCombo->createHtmlFetcherWithContextPath();
         try {
             $path = $fetcherMarkup->getCachePath();
             if (!FileSystems::exists($path)) {

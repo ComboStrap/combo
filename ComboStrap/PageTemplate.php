@@ -5,12 +5,14 @@ namespace ComboStrap;
 use syntax_plugin_combo_container;
 
 /**
- * A page layout is an object that permits to create an HTML from a layout
+ * A page template is the object
+ * that generates a HTML page
+ * (The templating engine)
  *
  * It's used by Fetcher that creates pages such
  * as {@link FetcherPage}, {@link FetcherMarkupWebcode} or {@link FetcherPageBundler}
  */
-class PageLayout
+class PageTemplate
 {
 
     /**
@@ -25,17 +27,17 @@ class PageLayout
     public const MAIN_CONTENT_ELEMENT = "main-content";
     public const PAGE_CORE_ELEMENT = "page-core";
     public const LAYOUT_ELEMENTS = [
-        PageLayout::PAGE_CORE_ELEMENT,
-        PageLayout::PAGE_SIDE_ELEMENT,
-        PageLayout::PAGE_HEADER_ELEMENT,
-        PageLayout::PAGE_MAIN_ELEMENT,
-        PageLayout::PAGE_FOOTER_ELEMENT,
-        PageLayout::MAIN_HEADER_ELEMENT,
-        PageLayout::MAIN_TOC_ELEMENT,
-        PageLayout::MAIN_CONTENT_ELEMENT,
-        PageLayout::MAIN_SIDE_ELEMENT,
-        PageLayout::MAIN_FOOTER_ELEMENT,
-        PageLayout::PAGE_TOOL_ELEMENT
+        PageTemplate::PAGE_CORE_ELEMENT,
+        PageTemplate::PAGE_SIDE_ELEMENT,
+        PageTemplate::PAGE_HEADER_ELEMENT,
+        PageTemplate::PAGE_MAIN_ELEMENT,
+        PageTemplate::PAGE_FOOTER_ELEMENT,
+        PageTemplate::MAIN_HEADER_ELEMENT,
+        PageTemplate::MAIN_TOC_ELEMENT,
+        PageTemplate::MAIN_CONTENT_ELEMENT,
+        PageTemplate::MAIN_SIDE_ELEMENT,
+        PageTemplate::MAIN_FOOTER_ELEMENT,
+        PageTemplate::PAGE_TOOL_ELEMENT
     ];
     public const POSITION_RELATIVE_CLASS = "position-relative";
     public const PAGE_TOOL_ELEMENT = "page-tool";
@@ -56,7 +58,7 @@ class PageLayout
     const CONF_PAGE_FOOTER_NAME = "footerSlotPageName";
     const CONF_PAGE_FOOTER_NAME_DEFAULT = "slot_footer";
     const CONF_PAGE_HEADER_NAME = "headerSlotPageName";
-    const CONF_PAGE_HEADER_NAME_DEFAULT =  "slot_header" ;
+    const CONF_PAGE_HEADER_NAME_DEFAULT = "slot_header";
     const CONF_PAGE_MAIN_SIDEKICK_NAME = "sidekickSlotPageName";
     const CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT = Site::SLOT_MAIN_SIDE_NAME;
     private string $layoutName;
@@ -68,7 +70,7 @@ class PageLayout
     private string $requestedTitle;
 
     /**
-     * @var PageLayoutElement[]
+     * @var PageTemplateElement[]
      */
     private array $pageElements = [];
 
@@ -95,7 +97,7 @@ class PageLayout
         $this->htmlTemplatePath = $layoutDirectory->resolve("$this->layoutName.html");
         $this->templateDomDocument = $this->htmlTemplatePathToHtmlDom($this->htmlTemplatePath);
 
-        foreach (PageLayout::LAYOUT_ELEMENTS as $elementId) {
+        foreach (PageTemplate::LAYOUT_ELEMENTS as $elementId) {
 
             /**
              * If the id is not in the html template we don't show it
@@ -109,7 +111,7 @@ class PageLayout
                 continue;
             }
 
-            $this->pageElements[$elementId] = new PageLayoutElement($domElement, $this);
+            $this->pageElements[$elementId] = new PageTemplateElement($this, $domElement);
 
         }
 
@@ -138,9 +140,9 @@ class PageLayout
      * @throws ExceptionBadSyntax - bad html template
      * @throws ExceptionNotFound - layout not found
      */
-    public static function createFromLayoutName(string $layoutName): PageLayout
+    public static function createFromLayoutName(string $layoutName): PageTemplate
     {
-        return new PageLayout($layoutName);
+        return new PageTemplate($layoutName);
     }
 
     public static function getPoweredBy(): string
@@ -157,9 +159,9 @@ class PageLayout
     /**
      * Add or not the task runner / web bug call
      * @param bool $b
-     * @return PageLayout
+     * @return PageTemplate
      */
-    public function setRequestedEnableTaskRunner(bool $b): PageLayout
+    public function setRequestedEnableTaskRunner(bool $b): PageTemplate
     {
         $this->requestedEnableTaskRunner = $b;
         return $this;
@@ -228,8 +230,8 @@ class PageLayout
              * generally applied on the page-core element ie
              * <div id="page-core" data-layout-container=>
              */
-            if ($domElement->hasAttribute(PageLayout::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
-                $domElement->removeAttribute(PageLayout::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
+            if ($domElement->hasAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
+                $domElement->removeAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
                 $container = Site::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
                 $domElement->addClass(syntax_plugin_combo_container::getClassName($container));
             }
@@ -286,7 +288,7 @@ class PageLayout
                  *   * remove allows to not have any empty node but it may break css rules
                  *   * empty permits not break any css rules (grid may be broken for instance)
                  */
-                $action = $domElement->getAttributeOrDefault(PageLayout::DATA_EMPTY_ACTION_ATTRIBUTE, "none");
+                $action = $domElement->getAttributeOrDefault(PageTemplate::DATA_EMPTY_ACTION_ATTRIBUTE, "none");
                 switch ($action) {
                     case "remove":
                         $domElement->remove();
@@ -295,7 +297,7 @@ class PageLayout
                         // the empty node will stay in the page
                         break;
                     default:
-                        LogUtility::internalError("The value ($action) of the attribute (" . PageLayout::DATA_EMPTY_ACTION_ATTRIBUTE . ") is unknown", self::CANONICAL);
+                        LogUtility::internalError("The value ($action) of the attribute (" . PageTemplate::DATA_EMPTY_ACTION_ATTRIBUTE . ") is unknown", self::CANONICAL);
                 }
                 continue;
 
@@ -344,7 +346,7 @@ class PageLayout
             $layoutClass = StyleUtility::addComboStrapSuffix("layout-{$this->getLayoutName()}");
             $bodyElement = $this->getTemplateDomDocument()->querySelector("body")
                 ->addClass($tplClasses)
-                ->addClass(PageLayout::POSITION_RELATIVE_CLASS)
+                ->addClass(PageTemplate::POSITION_RELATIVE_CLASS)
                 ->addClass($layoutClass);
         } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
             throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a body element");
@@ -361,7 +363,7 @@ class PageLayout
          */
         try {
 
-            $tocId = PageLayout::MAIN_TOC_ELEMENT;
+            $tocId = PageTemplate::MAIN_TOC_ELEMENT;
             $tocElement = $this->getPageElement($tocId)->getDomElement();
             $tocElement->addClass(Toc::getClass());
 
@@ -381,13 +383,13 @@ class PageLayout
             /**
              * Page tool is located relatively to its parent
              */
-            $pageToolElement = $this->getPageElement(PageLayout::PAGE_TOOL_ELEMENT)->getDomElement();
+            $pageToolElement = $this->getPageElement(PageTemplate::PAGE_TOOL_ELEMENT)->getDomElement();
             try {
                 $pageToolParent = $pageToolElement->getParent();
             } catch (ExceptionNotFound $e) {
                 throw new ExceptionRuntimeInternal("The page tool element has no parent in the template ($this->htmlTemplatePath)");
             }
-            $pageToolParent->addClass(PageLayout::POSITION_RELATIVE_CLASS);
+            $pageToolParent->addClass(PageTemplate::POSITION_RELATIVE_CLASS);
 
             /**
              * The railbar
@@ -471,7 +473,7 @@ class PageLayout
     }
 
     /**
-     * @return PageLayoutElement[]
+     * @return PageTemplateElement[]
      */
     public function getPageLayoutElements(): array
     {
@@ -483,7 +485,7 @@ class PageLayout
         return $this->templateDomDocument;
     }
 
-    public function setRequestedContextPath(WikiPath $wikiPath): PageLayout
+    public function setRequestedContextPath(WikiPath $wikiPath): PageTemplate
     {
         $this->requestedContextPath = $wikiPath;
         return $this;
@@ -502,9 +504,9 @@ class PageLayout
 
     /**
      * @param Lang $requestedLang
-     * @return PageLayout
+     * @return PageTemplate
      */
-    public function setRequestedLang(Lang $requestedLang): PageLayout
+    public function setRequestedLang(Lang $requestedLang): PageTemplate
     {
         $this->requestedLang = $requestedLang;
         return $this;
@@ -562,7 +564,7 @@ class PageLayout
 
         // no more 1x1 px image because of ad blockers
         $taskRunnerImg
-            ->setAttribute("id", PageLayout::TASK_RUNNER_ID)
+            ->setAttribute("id", PageTemplate::TASK_RUNNER_ID)
             ->addClass("d-none")
             ->setAttribute('width', 2)
             ->setAttribute('height', 1)
@@ -575,7 +577,7 @@ class PageLayout
     /**
      * @throws ExceptionNotFound
      */
-    private function getPageElement(string $elementId): PageLayoutElement
+    private function getPageElement(string $elementId): PageTemplateElement
     {
         $element = $this->pageElements[$elementId];
         if ($element === null) {
@@ -597,7 +599,7 @@ class PageLayout
      */
     private function checkCharSetMeta(XmlElement $head)
     {
-        $charsetValue = PageLayout::UTF_8_CHARSET_VALUE;
+        $charsetValue = PageTemplate::UTF_8_CHARSET_VALUE;
         try {
             $metaCharset = $head->querySelector("meta[charset]");
             $charsetActualValue = $metaCharset->getAttribute("charset");
@@ -790,9 +792,9 @@ class PageLayout
 
     /**
      * @param string $requestedTitle
-     * @return PageLayout
+     * @return PageTemplate
      */
-    public function setRequestedTitle(string $requestedTitle): PageLayout
+    public function setRequestedTitle(string $requestedTitle): PageTemplate
     {
         $this->requestedTitle = $requestedTitle;
         return $this;
@@ -806,7 +808,7 @@ class PageLayout
      */
     private function checkViewPortMeta(XmlElement $head)
     {
-        $expectedResponsiveContent = PageLayout::VIEWPORT_RESPONSIVE_VALUE;
+        $expectedResponsiveContent = PageTemplate::VIEWPORT_RESPONSIVE_VALUE;
         try {
             $responsiveMeta = $head->querySelector('meta[name="viewport"]');
             $responsiveActualValue = $responsiveMeta->getAttribute("content");
@@ -933,16 +935,16 @@ class PageLayout
     /**
      * @throws ExceptionNotFound
      */
-    public function getMainElement(): PageLayoutElement
+    public function getMainElement(): PageTemplateElement
     {
-        return $this->getPageElement(PageLayout::MAIN_CONTENT_ELEMENT);
+        return $this->getPageElement(PageTemplate::MAIN_CONTENT_ELEMENT);
     }
 
 
     public function hasContentHeader(): bool
     {
         try {
-            $element = $this->getPageElement(PageLayout::MAIN_HEADER_ELEMENT);
+            $element = $this->getPageElement(PageTemplate::MAIN_HEADER_ELEMENT);
         } catch (ExceptionNotFound $e) {
             return false;
         }
@@ -955,7 +957,7 @@ class PageLayout
 
     }
 
-    public function setToc(Toc $toc): PageLayout
+    public function setToc(Toc $toc): PageTemplate
     {
         $this->toc = $toc;
         return $this;
@@ -978,9 +980,9 @@ class PageLayout
     /**
      * Delete the social head tags
      * @param bool $deleteSocialHeads
-     * @return PageLayout
+     * @return PageTemplate
      */
-    public function setDeleteSocialHeadTags(bool $deleteSocialHeads): PageLayout
+    public function setDeleteSocialHeadTags(bool $deleteSocialHeads): PageTemplate
     {
         $this->deleteSocialHeads = $deleteSocialHeads;
         return $this;

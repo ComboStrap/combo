@@ -3,6 +3,7 @@
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotExists;
+use ComboStrap\ExecutionContext;
 use ComboStrap\FetcherSystem;
 use ComboStrap\HttpResponseStatus;
 use ComboStrap\IFetcherAbs;
@@ -110,18 +111,11 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         /**
          * Add the extra attributes
          */
-        try {
-            $fetchUrl = Url::createFromGetOrPostGlobalVariable();
-        } catch (ExceptionBadArgument $e) {
-            $httpResponse = HttpResponse::createFromException($e);
-            $event->data['statusmessage'] = $e->getMessage();
-            $event->data['status'] = $httpResponse->getStatus();
-            return;
-        }
-
+        $fetchUrl = Url::createFromGetOrPostGlobalVariable();
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         try {
 
-            $fetcher = FetcherSystem::createPathFetcherFromUrl($fetchUrl);
+            $fetcher = $executionContext->createPathFetcherFromUrl($fetchUrl);
             $fetchPath = $fetcher->getFetchPath();
             $event->data['file'] = $fetchPath->toQualifiedId();
             $event->data['status'] = HttpResponseStatus::ALL_GOOD;
@@ -138,7 +132,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             $event->data['statusmessage'] = '';
         } catch (\Exception $e) {
 
-            $httpResponse = HttpResponse::createFromException($e);
+            $httpResponse = $executionContext->response()->setException($e);
             $event->data['file'] = WikiPath::createComboResource("images:error-bad-format.svg")->toLocalPath()->toAbsolutePath()->toQualifiedId();
             $event->data['statusmessage'] = $e->getMessage();
             $event->data['status'] = $httpResponse->getStatus();
@@ -233,6 +227,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         header("Cache-Control: " . implode(", ", $cacheControlDirective));
         Http::removeHeaderIfPresent("Pragma");
 
+        $excutingContext = ExecutionContext::getActualOrCreateFromEnv();
         /**
          * The Etag cache validator
          *
@@ -248,7 +243,8 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             header("ETag: $etag");
         } catch (ExceptionNotFound $e) {
             // internal error
-            HttpResponse::createForStatus(HttpResponseStatus::INTERNAL_ERROR)
+            $excutingContext->response()
+                ->setStatus(HttpResponseStatus::INTERNAL_ERROR)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
                 ->setBodyAsJsonMessage("We were unable to get the etag because the media was not found. Error: {$e->getMessage()}")
@@ -264,7 +260,9 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
             $ifNoneMatch = stripslashes($_SERVER['HTTP_IF_NONE_MATCH']);
             if ($ifNoneMatch && $ifNoneMatch === $etag) {
-                HttpResponse::createForStatus(HttpResponseStatus::NOT_MODIFIED)
+                $excutingContext
+                    ->response()
+                    ->setStatus(HttpResponseStatus::NOT_MODIFIED)
                     ->setEvent($event)
                     ->setCanonical(self::CANONICAL)
                     ->setBodyAsJsonMessage("File not modified")
@@ -281,7 +279,8 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         try {
             $mime = FileSystems::getMime($mediaToSend);
         } catch (ExceptionNotFound $e) {
-            HttpResponse::createForStatus(HttpResponseStatus::INTERNAL_ERROR)
+            $excutingContext->response()
+                ->setStatus(HttpResponseStatus::INTERNAL_ERROR)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
                 ->setBodyAsJsonMessage("Mime not found")
@@ -338,7 +337,8 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
                 }
             }
         } else {
-            HttpResponse::createForStatus(HttpResponseStatus::INTERNAL_ERROR)
+            $excutingContext->response()
+                ->setStatus(HttpResponseStatus::INTERNAL_ERROR)
                 ->setBodyAsJsonMessage("Could not read $mediaToSend - bad permissions?")
                 ->end();
         }

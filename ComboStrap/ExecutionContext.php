@@ -141,13 +141,14 @@ class ExecutionContext
     private array $capturedConf;
     private bool $isConsoleOn = false;
     private HttpResponse $response;
+    private IFetcher $executingFetcher;
 
     public function __construct(Url $url)
     {
 
         $this->url = $url;
 
-        $this->response = HttpResponse::create();
+        $this->response = HttpResponse::createFromExecutionContext($this);
 
         /**
          * The requested action
@@ -272,7 +273,6 @@ class ExecutionContext
      */
     public function startSubExecutionEnv(string $clazz, string $runningId, string $runningAct = self::SHOW_ACTION): ExecutionContext
     {
-
 
         try {
             $executingId = $this->getExecutingWikiId();
@@ -431,6 +431,8 @@ class ExecutionContext
         $this->restoreEnv();
 
         unset($this->executionScopedVariables);
+        unset($this->executingFetcher);
+        unset($this->cacheManager);
 
         /**
          * Log utility is not yet a conf
@@ -473,9 +475,8 @@ class ExecutionContext
         return $this->capturedAct;
     }
 
-    public function getCacheManager(Path $path): CacheManager
+    public function getCacheManager(): CacheManager
     {
-        throw new ExceptionRuntimeInternal("Cache manager is by requested path, should be on the fetcher");
         $root = self::$executionContext;
         if (!isset($root->cacheManager)) {
             $root->cacheManager = new CacheManager($this);
@@ -589,7 +590,7 @@ class ExecutionContext
 
     public function setDisableTemplating(): ExecutionContext
     {
-        $this->setConf(action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING, 0);
+        $this->setConf(action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM, 0);
         return $this;
     }
 
@@ -615,12 +616,12 @@ class ExecutionContext
     public function isPageFetcherEnabledAsShowAction(): bool
     {
         // the non strict equality is needed, we get a string for an unknown reason
-        return $this->getConfValue(action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING, action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING_DEFAULT) == 1;
+        return $this->getConfValue(action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM, action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM_DEFAULT) == 1;
     }
 
     public function setEnablePageFetcherAsShowAction(): ExecutionContext
     {
-        $this->getConfValue(action_plugin_combo_docustom::CONF_ENABLE_TEMPLATING, 1);
+        $this->getConfValue(action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM, 1);
         return $this;
     }
 
@@ -731,6 +732,35 @@ class ExecutionContext
     public function getSubExecutionCount(): int
     {
         return count($this->previousRunningEnvs);
+    }
+
+
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionInternal
+     * @throws ExceptionNotFound
+     */
+    public function createFetcherStringFromUrl(Url $fetchUrl): IFetcherString
+    {
+        $this->executingFetcher = FetcherSystem::createFetcherStringFromUrl($fetchUrl);
+        return $this->executingFetcher;
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionInternal
+     * @throws ExceptionNotFound
+     */
+    public function createPathFetcherFromUrl(Url $fetchUrl): IFetcherPath
+    {
+        $this->executingFetcher = FetcherSystem::createPathFetcherFromUrl($fetchUrl);
+        return $this->executingFetcher;
+    }
+
+    public function endExecutingFetcher(): ExecutionContext
+    {
+        unset($this->executingFetcher);
+        return $this;
     }
 
 

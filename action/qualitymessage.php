@@ -2,6 +2,7 @@
 
 
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExecutionContext;
 use ComboStrap\HttpResponse;
 use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
@@ -10,7 +11,6 @@ use ComboStrap\Mime;
 use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\QualityMenuItem;
-
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -214,9 +214,10 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
              */
             $id = $_REQUEST["id"];
         }
-
+        $executingContext = ExecutionContext::getActualOrCreateFromEnv();
         if (empty($id)) {
-            HttpResponse::createForStatus(HttpResponseStatus::BAD_REQUEST)
+            $executingContext->response()
+                ->setStatus(HttpResponseStatus::BAD_REQUEST)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
                 ->setBody("The page id should not be empty", Mime::getHtml())
@@ -228,7 +229,8 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
          * Quality is just for the writers
          */
         if (!Identity::isWriter($id)) {
-            HttpResponse::createForStatus(HttpResponseStatus::NOT_AUTHORIZED)
+            $executingContext->response()
+                ->setStatus(HttpResponseStatus::NOT_AUTHORIZED)
                 ->setEvent($event)
                 ->setBody("Quality is only for writer", Mime::getHtml())
                 ->end();
@@ -245,7 +247,8 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
             $status = HttpResponseStatus::ALL_GOOD;
         }
 
-        HttpResponse::createForStatus($status)
+        $executingContext->response()
+            ->setStatus($status)
             ->setEvent($event)
             ->setCanonical(self::CANONICAL)
             ->setBody($message->getContent(), Mime::getHtml())

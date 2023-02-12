@@ -121,11 +121,11 @@ class MarkupCacheDependencies
      * CacheManagerForSlot constructor.
      *
      */
-    private function __construct(Path $pathFragment, Path $requestedPath)
+    private function __construct(Path $pathFragment, Path $requestedContextPath)
     {
 
         $this->pathFragment = $pathFragment;
-        $this->requestedPath = $requestedPath;
+        $this->requestedPath = $requestedContextPath;
 
         $data = $this->getDependenciesCacheStore()->retrieveCache();
         if (!empty($data)) {
@@ -142,17 +142,17 @@ class MarkupCacheDependencies
     /**
      * Rerender for now only the secondary slot if it has cache dependency
      * (ie {@link MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY} or {@link MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY})
-     * @param $path
+     * @param $contextPath
      * @param string $dependency -  a {@link MarkupCacheDependencies} ie
      * @param string $event
      */
-    public static function reRenderSideSlotIfNeeded($path, string $dependency, string $event)
+    public static function reRenderSideSlotIfNeeded($contextPath, string $dependency, string $event)
     {
 
         /**
          * Rerender secondary slot if needed
          */
-        $page = MarkupPath::createMarkupFromStringPath($path);
+        $page = MarkupPath::createMarkupFromStringPath($contextPath);
         $wikiPath = $page->getPathObject();
         if (!($wikiPath instanceof WikiPath)) {
             LogUtility::errorIfDevOrTest("The path should be a wiki path");
@@ -161,13 +161,12 @@ class MarkupCacheDependencies
         $slots = $page->getPrimaryIndependentSlots();
         foreach ($slots as $slot) {
 
-            $slotFetcher = $slot->createHtmlFetcher()
-                ->setRequestedContextPath($wikiPath);
+            $slotFetcher = $slot->createHtmlFetcherWithContextPath($wikiPath);
             try {
                 $cacheDependencies = $slotFetcher->getCacheDependencies();
                 if ($cacheDependencies->hasDependency($dependency)) {
                     $link = PluginUtility::getDocumentationHyperLink("cache:slot", "Slot Dependency", false);
-                    $message = "$link ($dependency) was met with the primary slot ($path).";
+                    $message = "$link ($dependency) was met with the primary slot ($contextPath).";
                     CacheLog::deleteCacheIfExistsAndLog(
                         $slotFetcher,
                         $event,

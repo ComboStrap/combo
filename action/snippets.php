@@ -6,7 +6,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExecutionContext;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupDynamicRender;
-use ComboStrap\FetcherMarkup;
+use ComboStrap\FetcherMarkupFragment;
 use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\SnippetSystem;
@@ -119,11 +119,11 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
                 foreach ($cacheReporter->getResults() as $report) {
 
-                    if ($report->getMode() !== FetcherMarkup::XHTML_MODE) {
+                    if ($report->getMode() !== FetcherMarkupFragment::XHTML_MODE) {
                         continue;
                     }
 
-                    $pageFragment = $report->getPageFragment()->createHtmlFetcher();
+                    $pageFragment = $report->getPageFragment()->createHtmlFetcherWithContextPath();
                     try {
                         $pageFragment->loadSnippets();
                     } finally {

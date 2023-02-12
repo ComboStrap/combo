@@ -473,9 +473,9 @@ class ExecutionContext
         return $this->capturedAct;
     }
 
-    public function getCacheManager(): CacheManager
+    public function getCacheManager(Path $path): CacheManager
     {
-
+        throw new ExceptionRuntimeInternal("Cache manager is by requested path, should be on the fetcher");
         $root = self::$executionContext;
         if (!isset($root->cacheManager)) {
             $root->cacheManager = new CacheManager($this);

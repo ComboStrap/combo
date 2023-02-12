@@ -153,13 +153,18 @@ class MarkupCacheDependencies
          * Rerender secondary slot if needed
          */
         $page = MarkupPath::createMarkupFromStringPath($path);
+        $wikiPath = $page->getPathObject();
+        if (!($wikiPath instanceof WikiPath)) {
+            LogUtility::errorIfDevOrTest("The path should be a wiki path");
+            return;
+        }
         $slots = $page->getPrimaryIndependentSlots();
         foreach ($slots as $slot) {
+
             $slotFetcher = $slot->createHtmlFetcher()
-                ->setRequestedContextPath($page->getPathObject());
+                ->setRequestedContextPath($wikiPath);
             try {
                 $cacheDependencies = $slotFetcher->getCacheDependencies();
-
                 if ($cacheDependencies->hasDependency($dependency)) {
                     $link = PluginUtility::getDocumentationHyperLink("cache:slot", "Slot Dependency", false);
                     $message = "$link ($dependency) was met with the primary slot ($path).";

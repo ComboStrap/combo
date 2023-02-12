@@ -9,15 +9,29 @@ class MarkupRenderer
     public const INSTRUCTION_EXTENSION = "i";
     const CANONICAL = "markup:renderer";
     const DEFAULT_RENDERER = "xhtml";
-    private string $markup;
+    /**
+     * @var string source of the renderer is a markup (and not instructions)
+     */
+    private string $markupSource;
+    /**
+     * @var array source of the rendere is instructions
+     */
+    private array $instructionsSource;
+
     private bool $deleteRootElement = false;
     private Mime $requestedMime;
-    private array $instructions;
+
     /**
      * @var mixed
      */
     private $cacheAfterRendering = true;
     private string $renderer;
+
+    /**
+     * @var WikiPath the context path
+     * May be null (ie markup rendering without any context such as webcode)
+     */
+    private WikiPath $requestedContextPath;
 
 
     public static function createFromMarkup(string $markup): MarkupRenderer
@@ -28,7 +42,7 @@ class MarkupRenderer
 
     private function setMarkup(string $markup): MarkupRenderer
     {
-        $this->markup = $markup;
+        $this->markupSource = $markup;
         return $this;
     }
 
@@ -74,30 +88,37 @@ class MarkupRenderer
     {
 
         /**
-         * Dynamic rendering ?
+         * Context Path
          */
-        $dynamicRenderingExecutionContext = null;
-        if (
-            isset($this->markup)
-            && $this->requestedMime->getExtension() !== self::INSTRUCTION_EXTENSION
-        ) {
-            $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
-            $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        try {
+            $runningId = $this->getRequestedContextPath()->getWikiId();
+        } catch (ExceptionNotFound $e) {
             try {
                 $runningId = $executionContext->getRequestedWikiId();
             } catch (ExceptionNotFound $e) {
                 $runningId = "markup-renderer-default";
             }
-            $dynamicRenderingExecutionContext = $executionContext->startSubExecutionEnv(MarkupRenderer::class, $runningId, $runningAct);
         }
+
+        /**
+         * Dynamic rendering ?
+         */
+        $runningAct = $executionContext->getExecutingAction();
+        if (
+            isset($this->markupSource)
+            && $this->requestedMime->getExtension() !== self::INSTRUCTION_EXTENSION
+        ) {
+            $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
+        }
+        $dynamicRenderingExecutionContext = $executionContext->startSubExecutionEnv(MarkupRenderer::class, $runningId, $runningAct);
 
         try {
             $extension = $this->requestedMime->getExtension();
             switch ($extension) {
                 case self::INSTRUCTION_EXTENSION:
                     /**
-                     * Get the instructions
-                     * Adapted from {@link p_cached_instructions()}
+                     * Get the instructions adapted from {@link p_cached_instructions()}
                      *
                      * Note that this code may not run at first rendering
                      *
@@ -112,7 +133,7 @@ class MarkupRenderer
                      * the parsing. See {@link \action_plugin_combo_headingpostprocessing}
                      *
                      */
-                    $instructions = p_get_instructions($this->markup);
+                    $instructions = p_get_instructions($this->markupSource);
                     return $this->deleteRootPElementsIfRequested($instructions);
 
                 default:
@@ -120,8 +141,8 @@ class MarkupRenderer
                      * The code below is adapted from {@link p_cached_output()}
                      * $ret = p_cached_output($file, 'xhtml', $pageid);
                      */
-                    if (!isset($this->instructions)) {
-                        $this->instructions = MarkupRenderer::createFromMarkup($this->markup)
+                    if (!isset($this->instructionsSource)) {
+                        $this->instructionsSource = MarkupRenderer::createFromMarkup($this->markupSource)
                             ->setRequestedMimeToInstruction()
                             ->setDeleteRootBlockElement($this->deleteRootElement)
                             ->getOutput();
@@ -130,13 +151,13 @@ class MarkupRenderer
                     /**
                      * Render
                      */
-                    $result = p_render($this->getRendererNameOrDefault(), $this->instructions, $info);
+                    $result = p_render($this->getRendererNameOrDefault(), $this->instructionsSource, $info);
                     $this->cacheAfterRendering = $info['cache'];
                     return $result;
 
             }
         } finally {
-            if ($dynamicRenderingExecutionContext!=null) {
+            if ($dynamicRenderingExecutionContext != null) {
                 $dynamicRenderingExecutionContext->closeSubExecutionEnv();
             }
         }
@@ -146,7 +167,7 @@ class MarkupRenderer
 
     private function setInstructions(array $instructions): MarkupRenderer
     {
-        $this->instructions = $instructions;
+        $this->instructionsSource = $instructions;
         return $this;
     }
 
@@ -164,7 +185,6 @@ class MarkupRenderer
 
     public function setRendererName(string $rendererName): MarkupRenderer
     {
-
         $this->renderer = $rendererName;
         return $this;
     }
@@ -172,6 +192,17 @@ class MarkupRenderer
     public function getCacheAfterRendering()
     {
         return $this->cacheAfterRendering;
+    }
+
+    /**
+     * The page context in which this markup was requested
+     * @param WikiPath $path
+     * @return $this
+     */
+    public function setRequestedContextPath(WikiPath $path): MarkupRenderer
+    {
+        $this->requestedContextPath = $path;
+        return $this;
     }
 
     public function setRequestedMimeToXhtml(): MarkupRenderer
@@ -220,6 +251,19 @@ class MarkupRenderer
         }
 
         return $instructions;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getRequestedContextPath(): WikiPath
+    {
+
+        if (!isset($this->requestedContextPath)) {
+            throw new ExceptionNotFound("No requested context path");
+        }
+        return $this->requestedContextPath;
+
     }
 
 

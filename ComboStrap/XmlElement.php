@@ -389,4 +389,20 @@ class XmlElement
         }
         return Url::createFromString($value);
     }
+
+    public function __toString()
+    {
+        $toString = $this->getLocalName();
+        if ($this->getId() !== "") {
+            $toString .= "#" . $this->getId();
+        }
+        $class = $this->getClass();
+        if ($class !== "") {
+            $classes = StringUtility::explodeAndTrim($class, " ");
+            $toString .= implode(".", $classes);
+        }
+        return $toString;
+    }
+
+
 }

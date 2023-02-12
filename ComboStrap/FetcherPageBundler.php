@@ -73,6 +73,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
         $instructionsCalls = $outline->toHtmlSectionOutlineCalls();
         $mainContent = MarkupRenderer::createFromInstructions($instructionsCalls)
             ->setRequestedMime($this->getMime())
+            ->setRequestedContextPath($this->getRequestedContextPath())
             ->getOutput();
 
 

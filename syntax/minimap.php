@@ -11,7 +11,7 @@ use ComboStrap\SnippetSystem;
 use ComboStrap\LinkMarkup;
 use ComboStrap\PluginUtility;
 
-if (!defined('DOKU_INC')) die();
+
 
 
 class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin

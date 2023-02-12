@@ -9,7 +9,6 @@ use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
-if (!defined('DOKU_INC')) die();
 
 /**
  * Class syntax_plugin_combo_note

@@ -103,7 +103,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
 
     /**
-     *
+     * The source where the markup is stored
      * It's a duplicate of {@link FetcherMarkup::setSourcePath()}
      * @param Path $path
      * @return $this
@@ -269,6 +269,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public
     function getDependencies(): MarkupCacheDependencies
     {
+        $this->buildObjectAndEnvironmentIfNeeded();
         return $this->cacheDependencies;
     }
 
@@ -329,7 +330,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             case MarkupRenderer::INSTRUCTION_EXTENSION:
                 $markupRenderer = MarkupRenderer::createFromMarkup($markup)
                     ->setRequestedMimeToInstruction()
-                    ->setDeleteRootBlockElement($this->removeRootBlockElement);
+                    ->setDeleteRootBlockElement($this->removeRootBlockElement)
+                    ->setRequestedContextPath($this->getRequestedContextPath());
                 try {
                     $instructions = $markupRenderer->getOutput();
                     $content = serialize($instructions);
@@ -339,7 +341,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 break;
             default:
                 $instructionsFetcher = FetcherMarkup::createPageFragmentFetcherFromPath($this->getRequestedPath())
-                    ->setRequestedMimeToInstructions();
+                    ->setRequestedMimeToInstructions()
+                    ->setRequestedContextPath($this->getRequestedContextPath());
                 try {
                     $instructions = $instructionsFetcher->getFetchPathAsInstructionsArray();
                 } finally {
@@ -347,7 +350,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 }
                 $markupRenderer = MarkupRenderer::createFromInstructions($instructions)
                     ->setRendererName($this->getRequestedRendererNameOrDefault())
-                    ->setRequestedMime($this->getMime());
+                    ->setRequestedMime($this->getMime())
+                    ->setRequestedContextPath($this->getRequestedContextPath());
                 $content = $markupRenderer->getOutput();
 
                 $this->cacheAfterRendering = $markupRenderer->getCacheAfterRendering();
@@ -519,7 +523,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 $this->cache = new CacheRenderer($wikiId, $localFile, $extension);
 
                 $this->cacheDependencies = ExecutionContext::getActualOrCreateFromEnv()
-                    ->getCacheManager()
+                    ->getCacheManager($this->getRequestedContextPath())
                     ->getCacheDependenciesForPath($this->getRequestedPath());
                 $this->cacheDependencies->rerouteCacheDestination($this->cache);
                 break;
@@ -648,13 +652,12 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     /**
      * The page context in which this fragment was requested
-     * @param Path $path
+     * @param WikiPath $path
      * @return $this
-     * @throws ExceptionBadArgument - if the path cannot be transformed as wiki path
      */
-    public function setRequestedContextPath(Path $path): FetcherMarkup
+    public function setRequestedContextPath(WikiPath $path): FetcherMarkup
     {
-        $this->requestedContextPath = WikiPath::createFromPathObject($path);
+        $this->requestedContextPath = $path;
         return $this;
     }
 
@@ -718,5 +721,18 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     {
         $sourcePath = $this->getSourcePath();
         return ResourceName::getFromPath($sourcePath);
+    }
+
+    private function getRequestedContextPath(): WikiPath
+    {
+        if (!isset($this->requestedContextPath)) {
+            LogUtility::errorIfDevOrTest("The requested context path should be set");
+            try {
+                return WikiPath::createRequestedPagePathFromRequest();
+            } catch (ExceptionNotFound $e) {
+                throw new ExceptionRuntimeInternal("A requested context path could not be found", $e);
+            }
+        }
+        return $this->requestedContextPath;
     }
 }

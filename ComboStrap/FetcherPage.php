@@ -143,7 +143,8 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         /**
          * Run the secondary slots
          */
-        foreach ($this->pageLayout->getPageLayoutElements() as $pageElement) {
+        $pageLayoutElements = $this->pageLayout->getPageLayoutElements();
+        foreach ($pageLayoutElements as $pageElement) {
             if ($pageElement->isMain()) {
                 // already done
                 continue;

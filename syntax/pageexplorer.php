@@ -25,7 +25,7 @@ use ComboStrap\StyleUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\TreeNode;
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 
 /**
@@ -110,7 +110,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      */
     private static function toNamespaceName(WikiPath $namespacePath): string
     {
-        return ucfirst(trim(str_replace("_", " ", $namespacePath->getLastNameWithoutExtension())));
+        try {
+            return ucfirst(trim(str_replace("_", " ", $namespacePath->getLastNameWithoutExtension())));
+        } catch (ExceptionNotFound $e) {
+            // root
+            return "";
+        }
     }
 
 

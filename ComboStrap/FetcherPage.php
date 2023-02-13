@@ -121,7 +121,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         try {
 
             /**
-             * The {@link FetcherMarkupFragment::processIfNeededAndGetFetchPath() Get fetch path}
+             * The {@link FetcherMarkup::processIfNeededAndGetFetchPath() Get fetch path}
              * will start the rendering if there is no HTML path
              * or the cache is not fresh
              */

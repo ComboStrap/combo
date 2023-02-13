@@ -44,7 +44,7 @@ class CacheResults
             /**
              * Add snippet and output dependencies
              */
-            if ($cacheParser->mode === FetcherMarkupFragment::XHTML_MODE) {
+            if ($cacheParser->mode === FetcherMarkup::XHTML_MODE) {
                 $page = $cacheParser->page;
                 $markupFetcher = MarkupPath::createMarkupFromId($page)->createHtmlFetcherWithContextPath();
                 try {

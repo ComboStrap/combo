@@ -119,6 +119,8 @@ class WikiPath extends PathAbs
     protected function __construct(string $path, string $drive, string $rev = null)
     {
 
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
         /**
          * Due to the fact that the request environment is set on the setup in test,
          * the path may be not normalized
@@ -126,7 +128,11 @@ class WikiPath extends PathAbs
         $path = self::normalizeWikiPath($path);
 
         if (trim($path) === "") {
-            $path = WikiPath::getRequestedPagePath()->toQualifiedId();
+            try {
+                $path = WikiPath::getContextPath()->toQualifiedId();
+            } catch (ExceptionNotFound $e) {
+                throw new ExceptionRuntimeInternal("The context path is unknwon. The empty path string needs it.");
+            }
         }
 
         /**
@@ -141,7 +147,7 @@ class WikiPath extends PathAbs
                     // delete the relative character
                     $parts = array_splice($parts, 1);
                     try {
-                        $rootRelativePath = $this->getCurrentPagePath();
+                        $rootRelativePath = $executionContext->getContextNamespacePath();
                     } catch (ExceptionNotFound $e) {
                         // Root case: the relative path is in the root
                         // the root has no parent
@@ -152,29 +158,22 @@ class WikiPath extends PathAbs
                 case WikiPath::CURRENT_PARENT_PATH_CHARACTER:
                     // delete the relative character
                     $parts = array_splice($parts, 1);
+
+                    $currentPagePath = $executionContext->getContextNamespacePath();
                     try {
-                        $currentPagePath = $this->getCurrentPagePath();
-                        try {
-                            $rootRelativePath = $currentPagePath->getParent();
-                        } catch (ExceptionNotFound $e) {
-                            LogUtility::error("The parent relative path ({$this->absolutePath}) returns an error: {$e->getMessage()}", self::CANONICAL);
-                            $rootRelativePath = $this->getCurrentPagePath();
-                        }
+                        $rootRelativePath = $currentPagePath->getParent();
                     } catch (ExceptionNotFound $e) {
                         LogUtility::error("The parent relative path ({$this->absolutePath}) returns an error: {$e->getMessage()}", self::CANONICAL);
+                        $rootRelativePath = $executionContext->getContextNamespacePath();
                     }
+
                     break;
                 default:
                     /**
                      * just a relative name path
                      * (ie hallo)
                      */
-                    try {
-                        $rootRelativePath = $this->getCurrentPagePath();
-                    } catch (ExceptionNotFound $e) {
-                        LogUtility::error("The named relative path ({$this->absolutePath}) returns an error: {$e->getMessage()}", self::CANONICAL);
-                        $rootRelativePath = WikiPath::createMarkupPathFromPath(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
-                    }
+                    $rootRelativePath = $executionContext->getContextNamespacePath();
                     break;
             }
             // is relative directory path ?
@@ -243,9 +242,15 @@ class WikiPath extends PathAbs
      */
     public static function createMarkupPathFromPath(string $path, string $rev = null): WikiPath
     {
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         if ($path == "") {
-            return ExecutionContext::getActualOrCreateFromEnv()
-                ->getRequestedPath();
+            try {
+                return $executionContext
+                    ->getExecutingFetcherMarkup()
+                    ->getContextPath();
+            } catch (ExceptionNotFound $e) {
+                return $executionContext->getDefaultContextPath();
+            }
         }
         if (WikiPath::isNamespacePath($path)) {
             return new WikiPath($path, self::MARKUP_DRIVE, $rev);
@@ -323,7 +328,7 @@ class WikiPath extends PathAbs
     /**
      * @param $url - a URL path http://whatever/hello/my/lord (The canonical)
      * @return WikiPath - a dokuwiki Id hello:my:lord
-     * @deprecated for {@link FetcherMarkupFragment::createPageFragmentFetcherFromUrl()}
+     * @deprecated for {@link FetcherMarkup::createPageFragmentFetcherFromUrl()}
      */
     public static function createFromUrl($url): WikiPath
     {
@@ -595,31 +600,11 @@ class WikiPath extends PathAbs
     /**
      * @throws ExceptionNotFound
      */
-    public static function getCurrentPagePath(): WikiPath
+    public static function getContextPath(): WikiPath
     {
-        try {
-            $requestedPath = WikiPath::createExecutingMarkupWikiPath();
-        } catch (ExceptionNotFound $e) {
-            // in a admin
-            if (!ExecutionContext::getActualOrCreateFromEnv()->isPublicationAction()) {
-                // the id are based on the root
-                return WikiPath::createRootPagePath();
-            }
-            throw $e;
-        }
-        try {
-            $parent = $requestedPath->getParent();
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionNotFound("The current path ($requestedPath) does not have any parent.");
-        }
-        return $parent;
-    }
-
-    /**
-     */
-    public static function getRequestedPagePath(): WikiPath
-    {
-        return ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath();
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getExecutingFetcherMarkup()
+            ->getContextPath();
     }
 
     /**
@@ -639,7 +624,7 @@ class WikiPath extends PathAbs
         return str_replace(WikiPath::NAMESPACE_SEPARATOR_SLASH, WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $id);
     }
 
-    private static function createRootPagePath(): WikiPath
+    public static function createRootPathOnMarkupDrive(): WikiPath
     {
         return WikiPath::createMarkupPathFromPath(self::NAMESPACE_SEPARATOR_DOUBLE_POINT);
     }
@@ -945,7 +930,7 @@ class WikiPath extends PathAbs
                 try {
                     $extension = $this->getExtension();
                 } catch (ExceptionNotFound $e) {
-                    LogUtility::internalError("For a  markup path file, the extension should have been set. This is not the case for ($this)");
+                    LogUtility::internalError("For a markup path file, the extension should have been set. This is not the case for ($this)");
                     $extension = self::MARKUP_DEFAULT_TXT_EXTENSION;
                 }
                 $idFileSystem = str_replace(':', '/', $this->id);

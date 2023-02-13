@@ -269,16 +269,19 @@ class MarkupRef
                 /**
                  * The path may be an id if it exists
                  * otherwise it's a relative path
+                 * MarkupPath is important because a link to
+                 * a namespace (ie wikiPath = `ns:`)
+                 * should become `ns:start`)
                  */
-                $path = WikiPath::createMarkupPathFromPath($wikiPath, $rev);
-                if (!FileSystems::exists($path) && $wikiPath !== "") {
+                $markupPath = MarkupPath::createMarkupFromStringPath($wikiPath);
+                if (!FileSystems::exists($markupPath) && $wikiPath !== "") {
                     // We test for an empty wikiPath string
                     // because if the wiki path is the empty string,
                     // this is the current requested page
                     // An empty id is the root and always exists
-                    $idPath = WikiPath::createMarkupPathFromId($wikiPath, $rev);
+                    $idPath = MarkupPath::createMarkupFromId($wikiPath);
                     if (FileSystems::exists($idPath)) {
-                        $path = $idPath;
+                        $markupPath = $idPath;
                     }
                 }
 
@@ -286,7 +289,11 @@ class MarkupRef
                  * The path may be a namespace, in the page system
                  * the path should then be the index page
                  */
-                $this->path = MarkupPath::createPageFromPathObject($path)->getPathObject();
+                try {
+                    $this->path = $markupPath->getPathObject()->toWikiPath();
+                } catch (ExceptionCompile $e) {
+                    throw new ExceptionRuntimeInternal("Path should be a wiki path");
+                }
                 $this->url->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->path->getWikiId());
                 $this->addRevToUrl($rev);
 

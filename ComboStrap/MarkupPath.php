@@ -199,13 +199,13 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     }
 
     /**
-     * @param $pathOrId
+     * @param string $path -  relative or absolute
      * @return MarkupPath
      */
-    public static function createMarkupFromStringPath($pathOrId): MarkupPath
+    public static function createMarkupFromStringPath(string $path): MarkupPath
     {
-
-        return MarkupPath::createPageFromQualifiedId($pathOrId);
+        $wikiPath = WikiPath::createMarkupPathFromPath($path);
+        return new MarkupPath($wikiPath);
 
     }
 
@@ -379,7 +379,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     /**
      *
      */
-    public function createHtmlFetcherWithContextPath(WikiPath $contextPath = null): FetcherMarkupFragment
+    public function createHtmlFetcherWithContextPath(WikiPath $contextPath = null): FetcherMarkup
     {
         $path = $this->getPathObject();
         if ($contextPath === null) {
@@ -388,7 +388,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
             }
             $contextPath = $path;
         }
-        return FetcherMarkupFragment::createPageFragmentFetcherFromPath($path, $contextPath)
+        return FetcherMarkup::createPageFragmentFetcherFromPath($path, $contextPath)
             ->setRequestedMimeToXhtml();
     }
 
@@ -944,7 +944,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     /**
      *
-     * @deprecated use a {@link FetcherMarkupFragment::getFetchString()} instead
+     * @deprecated use a {@link FetcherMarkup::getFetchString()} instead
      */
     public function toXhtml(): string
     {
@@ -1149,7 +1149,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
 
     public
-    function fetchAnalyticsDocument(): FetcherMarkupFragment
+    function fetchAnalyticsDocument(): FetcherMarkup
     {
         return renderer_plugin_combo_analytics::createAnalyticsFetcherForPageFragment($this);
     }
@@ -1891,14 +1891,14 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
      *
      */
     public
-    function getInstructionsDocument(): FetcherMarkupFragment
+    function getInstructionsDocument(): FetcherMarkup
     {
 
         $path = $this->getPathObject();
         if ((!$path instanceof WikiPath)) {
             throw new ExceptionRuntimeInternal("The path ($path) is not a wiki path");
         }
-        return FetcherMarkupFragment::createPageFragmentFetcherFromPath($path, $path)
+        return FetcherMarkup::createPageFragmentFetcherFromPath($path, $path)
             ->setRequestedMimeToInstructions();
 
     }

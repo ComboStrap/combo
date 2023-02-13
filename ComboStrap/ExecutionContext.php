@@ -116,6 +116,7 @@ class ExecutionContext
     private array $previousRunningEnvs = [];
     /**
      * The id used if
+     * @deprecated to delete
      */
     public const DEFAULT_SLOT_ID_FOR_TEST = "test-slot-id";
     private ?string $capturedGlobalId;
@@ -144,9 +145,14 @@ class ExecutionContext
     private IFetcher $executingFetcher;
 
     /**
-     * @var FetcherMarkupFragment  - the fetcher markup actually runnning
+     * @var FetcherMarkup  - the fetcher markup actually runnning
      */
-    private FetcherMarkupFragment $executingFetcherMarkup;
+    private FetcherMarkup $executingFetcherMarkup;
+
+    /**
+     * @var WikiPath the {@link self::getContextPath()} when no context could be determined
+     */
+    private WikiPath $defaultContextPath;
 
     public function __construct(Url $url)
     {
@@ -252,6 +258,21 @@ class ExecutionContext
         } catch (ExceptionNotFound $e) {
             return self::createFromEnvironmentVariable();
         }
+    }
+
+    /**
+     * Return the actual context path
+     */
+    public function getContextNamespacePath(): WikiPath
+    {
+        $requestedPath = $this->getContextPath();
+        try {
+            return $requestedPath->getParent();
+        } catch (ExceptionNotFound $e) {
+            // root
+            return $requestedPath;
+        }
+
     }
 
 
@@ -774,10 +795,10 @@ class ExecutionContext
 
     /**
      * Code may access the running fetcher with this global variable
-     * @param FetcherMarkupFragment $fetcherMarkup
+     * @param FetcherMarkup $fetcherMarkup
      * @return $this
      */
-    public function setExecutingFetcherMarkup(FetcherMarkupFragment $fetcherMarkup): ExecutionContext
+    public function setExecutingFetcherMarkup(FetcherMarkup $fetcherMarkup): ExecutionContext
     {
         if (isset($this->executingFetcherMarkup)) {
             throw new ExceptionRuntimeInternal("Two fetcher markups cannot run at the same time");
@@ -795,7 +816,7 @@ class ExecutionContext
     /**
      * @throws ExceptionNotFound
      */
-    public function getExecutingFetcherMarkup(): FetcherMarkupFragment
+    public function getExecutingFetcherMarkup(): FetcherMarkup
     {
         /**
          * Case of a markup text without context (ie webcode)
@@ -808,5 +829,67 @@ class ExecutionContext
         return $this->executingFetcherMarkup;
     }
 
+    /**
+     * This function sets the default context path.
+     *
+     * Mostly used in test, to determine relative path
+     * when testing {@link LinkMarkup} and {@link WikiPath}
+     * and not use a {@link FetcherMarkup}
+     *
+     * @param WikiPath $contextPath - a markup file context path used (not a namespace)
+     * @return $this
+     */
+    public function setDefaultContextPath(WikiPath $contextPath): ExecutionContext
+    {
+        $this->defaultContextPath = $contextPath;
+        if (FileSystems::isDirectory($this->defaultContextPath)) {
+            /**
+             * Not a directory.
+             *
+             * If the link or path is the empty path, the path is not the directory
+             * but the actual markup
+             */
+            throw new ExceptionRuntimeInternal("The path ($contextPath) should not be a namespace path");
+        }
+        return $this;
+    }
+
+
+    /**
+     * @return WikiPath - the context path is a markup file that gives context.
+     * Ie this is the equivalent of the current directory.
+     * When a link/path is empty or relative, the program will check for the context path
+     * to calculate the absolute path
+     */
+    public function getContextPath(): WikiPath
+    {
+        try {
+            return $this
+                ->getExecutingFetcherMarkup()
+                ->getContextPath();
+        } catch (ExceptionNotFound $e) {
+
+            return $this->getDefaultContextPath();
+
+        }
+
+
+    }
+
+    public function getDefaultContextPath(): WikiPath
+    {
+        if (isset($this->defaultContextPath)) {
+            return $this->defaultContextPath;
+        }
+        // in a admin or dynamic rendering
+        // dokuwiki may have set a $ID
+        global $ID;
+        if (isset($ID) && $ID !== self::DEFAULT_SLOT_ID_FOR_TEST) {
+            return WikiPath::createMarkupPathFromId($ID);
+        }
+        return WikiPath::createRootPathOnMarkupDrive()->resolve(Site::getIndexPageName() . "." . WikiPath::MARKUP_DEFAULT_TXT_EXTENSION);
+
+
+    }
 
 }

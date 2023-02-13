@@ -12,6 +12,10 @@ use Exception;
 
 /**
  * A class that renders a markup fragment
+ * This is the context object
+ * during parsing and rendering is determined by {@link FetcherMarkup}
+ *
+ * You can get it in any place via {@link ExecutionContext::getExecutingFetcherMarkup()}
  *
  * It:
  * * does not output any full page (HTML document) but only fragment.
@@ -22,9 +26,9 @@ use Exception;
  * (as fetcher cache uses the url as unique identifier)
  *
  *
- * TODO: {@link MarkupRenderer} could be one with {@link FetcherMarkupFragment} ?
+ * TODO: {@link MarkupRenderer} could be one with {@link FetcherMarkup} ?
  */
-class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetcherString
+class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherString
 {
 
     use FetcherTraitWikiPath;
@@ -66,19 +70,21 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
     /**
      * @throws ExceptionBadArgument
      */
-    public static function createPageFragmentFetcherFromUrl(Url $fetchUrl): FetcherMarkupFragment
+    public static function createPageFragmentFetcherFromUrl(Url $fetchUrl): FetcherMarkup
     {
-        $pageFragment = new FetcherMarkupFragment();
+        $pageFragment = new FetcherMarkup();
         $pageFragment->buildFromUrl($fetchUrl);
         return $pageFragment;
     }
 
     /**
-     *
+     * @param Path $path - the path where we can find the markup
+     * @param WikiPath $contextPath - the context path (from where relative component are resolved (ie links, ...))
+     * @return FetcherMarkup
      */
-    public static function createPageFragmentFetcherFromPath(Path $path, WikiPath $contextPath): FetcherMarkupFragment
+    public static function createPageFragmentFetcherFromPath(Path $path, WikiPath $contextPath): FetcherMarkup
     {
-        return (new FetcherMarkupFragment())
+        return (new FetcherMarkup())
             ->setRequestedPath($path)
             ->setRequestedContextPath($contextPath);
     }
@@ -108,11 +114,11 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
 
     /**
      * The source where the markup is stored
-     * It's a duplicate of {@link FetcherMarkupFragment::setSourcePath()}
+     * It's a duplicate of {@link FetcherMarkup::setSourcePath()}
      * @param Path $path
      * @return $this
      */
-    private function setRequestedPath(Path $path): FetcherMarkupFragment
+    private function setRequestedPath(Path $path): FetcherMarkup
     {
 
         $this->checkNoSetAfterBuild();
@@ -278,7 +284,7 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
     }
 
     /**
-     * @return LocalPath the fetch path - start the process and returns a path. If the cache is on, return the {@link FetcherMarkupFragment::getCachePath()}
+     * @return LocalPath the fetch path - start the process and returns a path. If the cache is on, return the {@link FetcherMarkup::getCachePath()}
      */
     function processIfNeededAndGetFetchPath(): LocalPath
     {
@@ -292,7 +298,7 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
 
         /**
          * The cache path may have change due to the cache key rerouting
-         * We should there always use the {@link FetcherMarkupFragment::getCachePath()}
+         * We should there always use the {@link FetcherMarkup::getCachePath()}
          * as fetch path
          */
         return $this->getCachePath();
@@ -345,7 +351,7 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
                 }
                 break;
             default:
-                $instructionsFetcher = FetcherMarkupFragment::createPageFragmentFetcherFromPath(
+                $instructionsFetcher = FetcherMarkup::createPageFragmentFetcherFromPath(
                     $this->getRequestedPath(),
                     $this->getRequestedContextPath()
                 )
@@ -439,14 +445,14 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
 
     /**
      */
-    public function setRequestedMime(Mime $mime): FetcherMarkupFragment
+    public function setRequestedMime(Mime $mime): FetcherMarkup
     {
         $this->checkNoSetAfterBuild();
         $this->mime = $mime;
         return $this;
     }
 
-    public function setRequestedMimeToXhtml(): FetcherMarkupFragment
+    public function setRequestedMimeToXhtml(): FetcherMarkup
     {
         try {
             return $this->setRequestedMime(Mime::createFromExtension("xhtml"));
@@ -506,11 +512,11 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
          * A request is also send by dokuwiki to check the cache validity
          * We build it only once
          *
-         * You need to close it with the {@link FetcherMarkupFragment::close()}
+         * You need to close it with the {@link FetcherMarkup::close()}
          */
         $wikiId = $this->getRequestedPath()->getWikiId();
         $this->executionContext = ExecutionContext::getActualOrCreateFromEnv()
-            ->startSubExecutionEnv(FetcherMarkupFragment::class, $wikiId);
+            ->startSubExecutionEnv(FetcherMarkup::class, $wikiId);
 
 
         /**
@@ -558,7 +564,7 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
      * @throws ExceptionNotExists
      * @throws ExceptionNotFound
      */
-    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherMarkupFragment
+    public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherMarkup
     {
         parent::buildFromTagAttributes($tagAttributes);
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
@@ -566,7 +572,7 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
     }
 
 
-    public function setRequestedMimeToInstructions(): FetcherMarkupFragment
+    public function setRequestedMimeToInstructions(): FetcherMarkup
     {
         try {
             $this->setRequestedMime(Mime::createFromExtension(MarkupRenderer::INSTRUCTION_EXTENSION));
@@ -596,7 +602,7 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
     /**
      * @return LocalPath - the cache path is where the result is stored if the cache is on
      * The cache path may have change due to the cache key rerouting
-     * We should there always use the {@link FetcherMarkupFragment::getCachePath()}
+     * We should there always use the {@link FetcherMarkup::getCachePath()}
      * as fetch path
      */
     public function getCachePath(): LocalPath
@@ -671,7 +677,7 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
      * @param WikiPath $path
      * @return $this
      */
-    private function setRequestedContextPath(WikiPath $path): FetcherMarkupFragment
+    private function setRequestedContextPath(WikiPath $path): FetcherMarkup
     {
         $this->requestedContextPath = $path;
         return $this;
@@ -682,11 +688,11 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
      * Restore the environment variable
      * @return $this
      */
-    public function close(): FetcherMarkupFragment
+    public function close(): FetcherMarkup
     {
         /**
-         * When the code gets the cache object {@link FetcherMarkupFragment::getDependenciesCacheStore()}
-         * or {@link FetcherMarkupFragment::getSnippetCacheStore()}
+         * When the code gets the cache object {@link FetcherMarkup::getDependenciesCacheStore()}
+         * or {@link FetcherMarkup::getSnippetCacheStore()}
          * there is no execution
          */
         if (isset($this->executionContext)) {
@@ -713,13 +719,13 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
      * @param bool $b
      * @return $this
      */
-    public function setRemoveRootBlockElement(bool $b): FetcherMarkupFragment
+    public function setRemoveRootBlockElement(bool $b): FetcherMarkup
     {
         $this->removeRootBlockElement = $b;
         return $this;
     }
 
-    public function setRequestedRendererName(string $rendererName): FetcherMarkupFragment
+    public function setRequestedRendererName(string $rendererName): FetcherMarkup
     {
         $this->requestedRendererName = $rendererName;
         return $this;
@@ -750,6 +756,11 @@ class FetcherMarkupFragment extends IFetcherAbs implements IFetcherSource, IFetc
                 throw new ExceptionRuntimeInternal("A requested context path could not be found", $e);
             }
         }
+        return $this->requestedContextPath;
+    }
+
+    public function getContextPath(): WikiPath
+    {
         return $this->requestedContextPath;
     }
 }

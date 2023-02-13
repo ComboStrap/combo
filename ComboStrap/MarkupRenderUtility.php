@@ -62,7 +62,7 @@ class MarkupRenderUtility
     static function renderId2Xhtml($pageId): string
     {
         $wikiPath = WikiPath::createMarkupPathFromId($pageId);
-        $fetcher = FetcherMarkupFragment::createPageFragmentFetcherFromPath($wikiPath, $wikiPath)
+        $fetcher = FetcherMarkup::createPageFragmentFetcherFromPath($wikiPath, $wikiPath)
             ->setRemoveRootBlockElement(true)
             ->setRequestedMimeToXhtml();
         try {

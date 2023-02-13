@@ -9,7 +9,7 @@ use action_plugin_combo_css;
  *
  * This code permits to render a markup from a string passed as argument
  *
- * Technically, it's the same than {@link FetcherMarkupFragment}
+ * Technically, it's the same than {@link FetcherMarkup}
  * but:
  *   * it outputs the HTML within a minimal HTML page (no layout as in {@link FetcherPage})
  *   * it gets the input from the url query properties

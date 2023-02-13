@@ -98,7 +98,7 @@ class SlotManagerMenuItem extends AbstractItem
 
     public function createHtml(): string
     {
-        $requestedPath = WikiPath::getRequestedPagePath();
+        $requestedPath = WikiPath::getContextPath();
         $url = UrlEndpoint::createComboStrapUrl()->setPath("/" . self::TAG);
         $html = "<p>Edit and/or create the <a href=\"{$url->toHtmlString()}\">slots</a> of the page</p>";
         foreach (Site::getSecondarySlotNames() as $secondarySlot) {

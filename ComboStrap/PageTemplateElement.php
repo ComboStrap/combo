@@ -10,7 +10,7 @@ namespace ComboStrap;
  * It wraps a DOM Element with extra properties needed in a page layout.
  *
  * It represents a:
- *   * a {@link PageTemplateElement::isSlot() slot} with {@link FetcherMarkupFragment content}
+ *   * a {@link PageTemplateElement::isSlot() slot} with {@link FetcherMarkup content}
  *   * or a {@link PageTemplateElement::isContainer() container} without content
  *
  * It's used in the {@link FetcherPage} as utility class
@@ -27,9 +27,9 @@ class PageTemplateElement
      */
     private XmlElement $domElement;
     /**
-     * @var FetcherMarkupFragment - the fetcher if this is a slot and has a page fragment source
+     * @var FetcherMarkup - the fetcher if this is a slot and has a page fragment source
      */
-    private FetcherMarkupFragment $fetcherFragment;
+    private FetcherMarkup $fetcherFragment;
 
 
     public function __construct(PageTemplate $pageTemplate, XmlElement $DOMElement)
@@ -215,7 +215,7 @@ class PageTemplateElement
      * @throws ExceptionNotFound if the page/markup fragment was not found (a container element does not have any also)
      * @throws ExceptionBadArgument if the path can not be set as wiki path
      */
-    public function getMarkupFetcher(): FetcherMarkupFragment
+    public function getMarkupFetcher(): FetcherMarkup
     {
         if (isset($this->fetcherFragment)) {
             if (!$this->fetcherFragment->isClosed()) {
@@ -227,7 +227,7 @@ class PageTemplateElement
          */
         $fragmentPath = $this->getFragmentPath();
         $contextPath = $this->pageLayout->getRequestedContextPath();
-        $this->fetcherFragment = FetcherMarkupFragment::createPageFragmentFetcherFromPath($fragmentPath, $contextPath);
+        $this->fetcherFragment = FetcherMarkup::createPageFragmentFetcherFromPath($fragmentPath, $contextPath);
         return $this->fetcherFragment;
     }
 

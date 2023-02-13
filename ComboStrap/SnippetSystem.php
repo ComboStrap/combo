@@ -88,15 +88,11 @@ class SnippetSystem
     }
 
 
-    public
-    function getJsonArrayFromSlotSnippets($slot): ?array
+    public static
+    function toJsonArrayFromSlotSnippets($snippetsForSlot): array
     {
-        $snippets = Snippet::getSnippets();
-        $snippetsForSlot = array_filter($snippets,
-            function ($s) use ($slot) {
-                return $s->hasSlot($slot);
-            });
-        $jsonSnippets = null;
+
+        $jsonSnippets = [];
         foreach ($snippetsForSlot as $snippet) {
             $jsonSnippets[] = $snippet->toJsonArray();
         }
@@ -425,6 +421,19 @@ class SnippetSystem
         $this->attachJavascriptFromComponentId(Snippet::COMBO_POPOVER);
         $this->attachCssInternalStylesheet(Snippet::COMBO_POPOVER);
         return $this;
+    }
+
+    /**
+     * @param $slot
+     * @return Snippet[]
+     */
+    public function getSnippetsForSlot($slot): array
+    {
+        $snippets = Snippet::getSnippets();
+        return array_filter($snippets,
+            function ($s) use ($slot) {
+                return $s->hasSlot($slot);
+            });
     }
 
 

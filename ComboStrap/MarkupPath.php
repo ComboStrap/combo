@@ -726,17 +726,8 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
 
     /**
-     * Refresh the metadata (used only in test)
-     *
-     * Trigger a:
-     *  a {@link p_render_metadata() metadata render}
-     *  a {@link p_save_metadata() metadata save}
-     *
-     * Note that {@link p_get_metadata()} uses a strange recursion
-     * There is a metadata recursion logic to avoid rendering
-     * that is not easy to grasp
-     * and therefore you may get no metadata and no backlinks
-     * @throws ExceptionBadArgument
+     * Utility class, refresh the metadata (used only in test)
+     * @deprecated if possible used {@link FetcherMarkup} instead
      */
     public function renderMetadataAndFlush(): MarkupPath
     {
@@ -748,26 +739,17 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
             return $this;
         }
 
-        /**
-         * Setting the running id
-         * (Used only in test)
-         */
-        $wikiPath = WikiPath::createFromPathObject($this->getPathObject());
-        $subExecutionContext = ExecutionContext::getActualOrCreateFromEnv()
-            ->startSubExecutionEnv(MarkupPath::class, $wikiPath->getWikiId());
         try {
-            /**
-             * @var MetadataDokuWikiStore $metadataStore
-             */
-            $metadataStore = $this->getReadStoreOrDefault();
-            $metadataStore->renderAndPersist();
-        } finally {
-            $subExecutionContext->closeSubExecutionEnv();
+            $wikiPath = $this->getPathObject()->toWikiPath();
+            FetcherMarkup::createPageFragmentFetcherFromPath($wikiPath, $wikiPath)
+                ->setRequestedMimeToMetadata()
+                ->feedCache()
+                ->getFetchArray();
+        } catch (ExceptionCast $e) {
+            // not a wiki path, no meta
         }
 
-        /**
-         * Return
-         */
+
         return $this;
 
     }

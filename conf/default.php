@@ -341,7 +341,7 @@ $conf["floatDefaultBreakpoint"] = "sm";
  * {@link Outline::CONF_OUTLINE_NUMBERING_PREFIX}
  * {@link Outline::CONF_OUTLINE_NUMBERING_SUFFIX}
  */
-$conf["outlineNumberingEnable"] = 0;
+$conf["outlineNumberingEnable"] = 1;
 $conf["outlineNumberingCounterStyleLevel2"] = "decimal";
 $conf["outlineNumberingCounterStyleLevel3"] = "decimal";
 $conf["outlineNumberingCounterStyleLevel4"] = "decimal";

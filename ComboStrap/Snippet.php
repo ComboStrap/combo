@@ -265,8 +265,24 @@ class Snippet implements JsonSerializable
         }
 
         try {
-            $wikiId = ExecutionContext::getActualOrCreateFromEnv()->getExecutingWikiId();
-            $snippet->addSlot($wikiId);
+            $executingFetcher = ExecutionContext::getActualOrCreateFromEnv()
+                ->getExecutingFetcherMarkup();
+            /**
+             * New way
+             */
+            $executingFetcher->addSnippet($snippet);
+            try {
+                /**
+                 * Old way
+                 * @deprecated
+                 */
+                $wikiId = $executingFetcher->getSourcePath()->toWikiPath()->getWikiId();
+                $snippet->addSlot($wikiId);
+            } catch (ExceptionCast $e) {
+                // not a
+            } catch (ExceptionNotFound $e) {
+                // dynamic
+            }
         } catch (ExceptionNotFound $e) {
             // admin page
             $snippet->addSlot(Snippet::REQUEST_SCOPE);

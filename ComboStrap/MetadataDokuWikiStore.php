@@ -252,7 +252,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
 
     /**
      * @return MetadataDokuWikiStore
-     * @throws ExceptionBadArgument
+     * @deprecated should use a fetcher markup ?
      */
     public function renderAndPersist(): MetadataDokuWikiStore
     {
@@ -260,17 +260,16 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
          * Read/render the metadata from the file
          * with parsing
          */
-        $dokuwikiId = $this->getResource()->getWikiId();
-        $actualMeta = $this->getData();
-        $wikiRequest = ExecutionContext::getActualOrCreateFromEnv()
-            ->startSubExecutionEnv(MetadataDokuWikiStore::class, $dokuwikiId);
-        try {
-            $newMetadata = p_render_metadata($dokuwikiId, $actualMeta);
-            p_save_metadata($dokuwikiId, $newMetadata);
-            $this->data = $newMetadata;
-        } finally {
-            $wikiRequest->closeSubExecutionEnv();
+        $wikiPage = $this->getResource();
+        if(!$wikiPage instanceof WikiPath){
+            LogUtility::errorIfDevOrTest("The resource is not a wiki path");
+            return $this;
         }
+        $this->data = FetcherMarkup::createPageFragmentFetcherFromPath($wikiPage, $wikiPage)
+            ->setRequestedMimeToMetadata()
+            ->feedCache()
+            ->getFetchArray();
+
         return $this;
     }
 

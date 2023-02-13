@@ -794,7 +794,9 @@ class ExecutionContext
     }
 
     /**
-     * Code may access the running fetcher with this global variable
+     * This function sets the markup running context object globally,
+     * so that code may access it via this global variable
+     * (Fighting dokuwiki global scope)
      * @param FetcherMarkup $fetcherMarkup
      * @return $this
      */
@@ -866,7 +868,7 @@ class ExecutionContext
         try {
             return $this
                 ->getExecutingFetcherMarkup()
-                ->getContextPath();
+                ->getRequestedtContextPath();
         } catch (ExceptionNotFound $e) {
 
             return $this->getDefaultContextPath();

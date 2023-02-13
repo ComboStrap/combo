@@ -247,7 +247,7 @@ class WikiPath extends PathAbs
             try {
                 return $executionContext
                     ->getExecutingFetcherMarkup()
-                    ->getContextPath();
+                    ->getRequestedtContextPath();
             } catch (ExceptionNotFound $e) {
                 return $executionContext->getDefaultContextPath();
             }
@@ -604,7 +604,7 @@ class WikiPath extends PathAbs
     {
         return ExecutionContext::getActualOrCreateFromEnv()
             ->getExecutingFetcherMarkup()
-            ->getContextPath();
+            ->getRequestedtContextPath();
     }
 
     /**

@@ -74,7 +74,7 @@ abstract class PathAbs implements Path
     }
 
     /**
-     * @throws ExceptionCompile
+     * @throws ExceptionCast when
      * Utility {@link WikiPath::createFromPathObject()}
      */
     function toWikiPath(): WikiPath
@@ -83,9 +83,13 @@ abstract class PathAbs implements Path
             return $this;
         }
         if ($this instanceof LocalPath) {
-            return $this->toWikiPath();
+            try {
+                return $this->toWikiPath();
+            } catch (ExceptionBadArgument|ExceptionCast $e) {
+                throw new ExceptionCast($e);
+            }
         }
-        throw new ExceptionCompile("This is not a wiki path or local path");
+        throw new ExceptionCast("This is not a wiki path or local path");
     }
 
 

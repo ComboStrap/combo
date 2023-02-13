@@ -97,6 +97,8 @@ class Mime
                 return new Mime(Mime::PDF);
             case MarkupRenderer::INSTRUCTION_EXTENSION:
                 return new Mime("text/i");
+            case MarkupRenderer::METADATA_EXTENSION:
+                return new Mime("text/meta");
             default:
                 $mtypes = getMimeTypes();
                 $mimeString = $mtypes[$extension];

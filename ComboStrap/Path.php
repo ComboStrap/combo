@@ -96,4 +96,9 @@ interface Path
      */
     function getHost(): string;
 
+    /**
+     * @return WikiPath an utility function
+     * @throws ExceptionCast
+     */
+    function toWikiPath(): WikiPath;
 }

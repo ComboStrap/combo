@@ -109,7 +109,10 @@ class MarkupCacheDependencies
      */
     private $runtimeStoreDependencies;
 
-    private Path $pathFragment;
+    /**
+     * @var Path|null - the executing path, may be null if this a markup string
+     */
+    private ?Path $executingPath;
 
     /**
      * @var string the first key captured
@@ -122,22 +125,24 @@ class MarkupCacheDependencies
      * CacheManagerForSlot constructor.
      *
      */
-    private function __construct(Path $pathFragment, Path $requestedContextPath)
+    private function __construct(?Path $executingPath, Path $requestedContextPath)
     {
 
-        $this->pathFragment = $pathFragment;
+        $this->executingPath = $executingPath;
         $this->requestedPath = $requestedContextPath;
 
-        $data = $this->getDependenciesCacheStore()->retrieveCache();
-        if (!empty($data)) {
-            $this->runtimeStoreDependencies = json_decode($data, true);
+        if($executingPath!=null) {
+            $data = $this->getDependenciesCacheStore()->retrieveCache();
+            if (!empty($data)) {
+                $this->runtimeStoreDependencies = json_decode($data, true);
+            }
         }
 
     }
 
-    public static function create(Path $pathFragment, Path $requestedPath): MarkupCacheDependencies
+    public static function create(?Path $executingPath, Path $requestedPath): MarkupCacheDependencies
     {
-        return new MarkupCacheDependencies($pathFragment, $requestedPath);
+        return new MarkupCacheDependencies($executingPath, $requestedPath);
     }
 
     /**
@@ -296,10 +301,10 @@ class MarkupCacheDependencies
     function getDefaultKey(): string
     {
         try {
-            $keyDokuWikiCompliant = str_replace("\\", "/", LocalPath::createFromPathObject($this->pathFragment)->toQualifiedId());
+            $keyDokuWikiCompliant = str_replace("\\", "/", LocalPath::createFromPathObject($this->executingPath)->toQualifiedId());
         } catch (ExceptionBadArgument $e) {
             LogUtility::warning("Error while getting the dokuwiki compliant key. Error: " . $e->getMessage());
-            $keyDokuWikiCompliant = $this->pathFragment->toQualifiedId();
+            $keyDokuWikiCompliant = $this->executingPath->toQualifiedId();
         }
         return $keyDokuWikiCompliant . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
     }
@@ -325,7 +330,7 @@ class MarkupCacheDependencies
             $cache->cache = getCacheName($cache->key, '.' . $cache->mode);
 
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while trying to reroute the cache destination for the slot ({$this->pathFragment}). You may have cache problem. Error: {$e->getMessage()}");
+            LogUtility::msg("Error while trying to reroute the cache destination for the slot ({$this->executingPath}). You may have cache problem. Error: {$e->getMessage()}");
         }
 
     }
@@ -365,11 +370,11 @@ class MarkupCacheDependencies
         /**
          * The local path to calculate the full qualified Os path
          */
-        if ($this->pathFragment instanceof LocalPath) {
-            $localPath = $this->pathFragment;
+        if ($this->executingPath instanceof LocalPath) {
+            $localPath = $this->executingPath;
         } else {
             try {
-                $localPath = LocalPath::createFromPathObject($this->pathFragment);
+                $localPath = LocalPath::createFromPathObject($this->executingPath);
             } catch (ExceptionBadArgument $e) {
                 throw new ExceptionRuntimeInternal("The page fragment path should be local. Error:{$e->getMessage()}", self::CANONICAL);
             }
@@ -377,11 +382,11 @@ class MarkupCacheDependencies
         /**
          * The wiki path for rendering (the path is shorter)
          */
-        if ($this->pathFragment instanceof WikiPath) {
-            $shorterPath = $this->pathFragment;
+        if ($this->executingPath instanceof WikiPath) {
+            $shorterPath = $this->executingPath;
         } else {
             try {
-                $shorterPath = WikiPath::createFromPathObject($this->pathFragment);
+                $shorterPath = WikiPath::createFromPathObject($this->executingPath);
             } catch (ExceptionBadArgument $e) {
                 // It could not be transformed
                 $shorterPath = $localPath;

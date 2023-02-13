@@ -71,7 +71,7 @@ class Outline
      * To add hash tag to heading
      */
     public const OUTLINE_ANCHOR = "outline-anchor";
-    const CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT = 0;
+    const CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT = 1;
     private OutlineSection $rootSection;
 
     private OutlineSection $actualSection; // the actual section that is created

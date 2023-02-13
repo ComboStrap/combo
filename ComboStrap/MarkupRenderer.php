@@ -9,6 +9,7 @@ class MarkupRenderer
     public const INSTRUCTION_EXTENSION = "i";
     const CANONICAL = "markup:renderer";
     const DEFAULT_RENDERER = "xhtml";
+    const METADATA_EXTENSION = "meta";
     /**
      * @var string source of the renderer is a markup (and not instructions)
      */
@@ -34,25 +35,25 @@ class MarkupRenderer
     private WikiPath $requestedContextPath;
 
     /**
-     * @var Path the path from where the instructions/markup where created
+     * @var ?Path the path from where the instructions/markup where created
      * This is mandatory to add cache dependency informations
      * and set the path that is executing
      */
-    private Path $sourcePath;
+    private ?Path $executingPath;
 
 
     /**
      * @param string $markup
-     * @param Path|null $markupSourcePath - the source of the markup - may be null (case of webcode)
+     * @param Path|null $executingPath - the source of the markup - may be null (case of webcode)
      * @param WikiPath|null $contextPath - the requested markup path - may be null (case of webcode)
      * @return MarkupRenderer
      */
-    public static function createFromMarkup(string $markup, ?Path $markupSourcePath, ?WikiPath $contextPath): MarkupRenderer
+    public static function createFromMarkup(string $markup, ?Path $executingPath, ?WikiPath $contextPath): MarkupRenderer
     {
         $markupRenderer = (new MarkupRenderer())
             ->setMarkup($markup);
-        if ($markupSourcePath != null) {
-            $markupRenderer->setSourcePath($markupSourcePath);
+        if ($executingPath != null) {
+            $markupRenderer->setRequestedExecutingPath($executingPath);
         }
         if ($contextPath != null) {
             $markupRenderer->setRequestedContextPath($contextPath);
@@ -67,12 +68,12 @@ class MarkupRenderer
         return $this;
     }
 
-    public static function createFromInstructions($instructions, Path $instructionsPath, WikiPath $contextPath): MarkupRenderer
+    public static function createFromInstructions($instructions, FetcherMarkup $fetcherMarkup): MarkupRenderer
     {
         return (new MarkupRenderer())
             ->setInstructions($instructions)
-            ->setRequestedContextPath($contextPath)
-            ->setSourcePath($instructionsPath);
+            ->setRequestedContextPath($fetcherMarkup->getRequestedtContextPath())
+            ->setRequestedExecutingPath($fetcherMarkup->getSourcePathOrNull());
     }
 
     /**
@@ -114,11 +115,11 @@ class MarkupRenderer
          * Context Path
          */
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
-        if (isset($this->sourcePath)) {
-            if ($this->sourcePath instanceof WikiPath) {
-                $runningId = $this->sourcePath->getWikiId();
+        if (isset($this->executingPath)) {
+            if ($this->executingPath instanceof WikiPath) {
+                $runningId = $this->executingPath->getWikiId();
             } else {
-                $runningId = $this->sourcePath->toQualifiedId();
+                $runningId = $this->executingPath->toQualifiedId();
             }
         } else {
             try {
@@ -142,54 +143,48 @@ class MarkupRenderer
         ) {
             $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
         }
-        $executionContext->startSubExecutionEnv(MarkupRenderer::class, $runningId, $runningAct);
 
-        try {
-            $extension = $this->requestedMime->getExtension();
-            switch ($extension) {
-                case self::INSTRUCTION_EXTENSION:
-                    /**
-                     * Get the instructions adapted from {@link p_cached_instructions()}
-                     *
-                     * Note that this code may not run at first rendering
-                     *
-                     * Why ?
-                     * Because dokuwiki asks first page information
-                     * via the {@link pageinfo()} method.
-                     * This function then render the metadata (ie {@link p_render_metadata()} and therefore will trigger
-                     * the rendering with this function
-                     * ```p_cached_instructions(wikiFN($id),false,$id)```
-                     *
-                     * The best way to manipulate the instructions is not before but after
-                     * the parsing. See {@link \action_plugin_combo_headingpostprocessing}
-                     *
-                     */
-                    $instructions = p_get_instructions($this->markupSource);
-                    return $this->deleteRootPElementsIfRequested($instructions);
 
-                default:
-                    /**
-                     * The code below is adapted from {@link p_cached_output()}
-                     * $ret = p_cached_output($file, 'xhtml', $pageid);
-                     */
-                    if (!isset($this->instructionsSource)) {
-                        $this->instructionsSource = MarkupRenderer::createFromMarkup($this->markupSource, $this->sourcePath, $this->requestedContextPath)
-                            ->setRequestedMimeToInstruction()
-                            ->setDeleteRootBlockElement($this->deleteRootElement)
-                            ->getOutput();
-                    }
+        $extension = $this->requestedMime->getExtension();
+        switch ($extension) {
+            case self::INSTRUCTION_EXTENSION:
+                /**
+                 * Get the instructions adapted from {@link p_cached_instructions()}
+                 *
+                 * Note that this code may not run at first rendering
+                 *
+                 * Why ?
+                 * Because dokuwiki asks first page information
+                 * via the {@link pageinfo()} method.
+                 * This function then render the metadata (ie {@link p_render_metadata()} and therefore will trigger
+                 * the rendering with this function
+                 * ```p_cached_instructions(wikiFN($id),false,$id)```
+                 *
+                 * The best way to manipulate the instructions is not before but after
+                 * the parsing. See {@link \action_plugin_combo_headingpostprocessing}
+                 *
+                 */
+                $instructions = p_get_instructions($this->markupSource);
+                return $this->deleteRootPElementsIfRequested($instructions);
 
-                    /**
-                     * Render
-                     */
-                    $result = p_render($this->getRendererNameOrDefault(), $this->instructionsSource, $info);
-                    $this->cacheAfterRendering = $info['cache'];
-                    return $result;
+            default:
+                /**
+                 * The code below is adapted from {@link p_cached_output()}
+                 * $ret = p_cached_output($file, 'xhtml', $pageid);
+                 */
+                if (!isset($this->instructionsSource)) {
+                    $this->instructionsSource = MarkupRenderer::createFromMarkup($this->markupSource, $this->executingPath, $this->requestedContextPath)
+                        ->setRequestedMimeToInstruction()
+                        ->setDeleteRootBlockElement($this->deleteRootElement)
+                        ->getOutput();
+                }
 
-            }
-        } finally {
-
-            $executionContext->closeSubExecutionEnv();
+                /**
+                 * Render
+                 */
+                $result = p_render($this->getRendererNameOrDefault(), $this->instructionsSource, $info);
+                $this->cacheAfterRendering = $info['cache'];
+                return $result;
 
         }
 
@@ -297,9 +292,9 @@ class MarkupRenderer
 
     }
 
-    private function setSourcePath(Path $sourcePath): MarkupRenderer
+    private function setRequestedExecutingPath(?Path $executingPath): MarkupRenderer
     {
-        $this->sourcePath = $sourcePath;
+        $this->executingPath = $executingPath;
         return $this;
     }
 

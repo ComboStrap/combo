@@ -455,7 +455,13 @@ class WikiPath extends PathAbs
     }
 
 
-    public static function createWikiPath($path, $drive, $rev = ''): WikiPath
+    /**
+     * @param $path - relative or absolute path
+     * @param $drive - the drive
+     * @param string $rev - the revision
+     * @return WikiPath
+     */
+    public static function createWikiPath($path, $drive, string $rev = ''): WikiPath
     {
         return new WikiPath($path, $drive, $rev);
     }
@@ -512,11 +518,12 @@ class WikiPath extends PathAbs
                     continue;
                 }
             }
-            $wikiPath = $relativePath->toQualifiedId();
+            $wikiId = $relativePath->toQualifiedId();
             if (FileSystems::isDirectory($path)) {
-                WikiPath::addNamespaceEndSeparatorIfNotPresent($wikiPath);
+                WikiPath::addNamespaceEndSeparatorIfNotPresent($wikiId);
             }
-            return WikiPath::createWikiPath($wikiPath, $driveRoot);
+            WikiPath::addRootSeparatorIfNotPresent($wikiId);
+            return WikiPath::createWikiPath($wikiId, $driveRoot);
 
         }
         throw new ExceptionBadArgument("The local path ($path) is not inside a wiki path drive");

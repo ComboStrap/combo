@@ -644,7 +644,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                             }
 
-                            foreach (FileSystems::getChildrenLeaf($namespacePath) as $childPagePath) {
+                            $childrenLeaf = FileSystems::getChildrenLeaf($namespacePath);
+                            foreach ($childrenLeaf as $childPagePath) {
                                 $childPage = MarkupPath::createPageFromPathObject($childPagePath);
                                 if ($childPage->isHidden()) {
                                     continue;

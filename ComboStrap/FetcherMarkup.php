@@ -117,7 +117,10 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             try {
                 $contextPath = $executingPath->toWikiPath();
             } catch (ExceptionCast $e) {
-                throw new ExceptionRuntimeInternal("We couldn't determine a context path. The context path argument is null and the executing path cannot not become a wiki path.", $e);
+                /**
+                 * Not a wiki path, default to the default
+                 */
+                $contextPath = ExecutionContext::getActualOrCreateFromEnv()->getDefaultContextPath();
             }
         }
         return FetcherMarkup::getBuilder()

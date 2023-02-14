@@ -382,15 +382,6 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public function createHtmlFetcherWithContextPath(WikiPath $contextPath = null): FetcherMarkup
     {
         $path = $this->getPathObject();
-
-        if ($contextPath === null) {
-            try {
-                $contextPath = $path->toWikiPath();
-            } catch (ExceptionCast $e) {
-                $contextPath = ExecutionContext::getActualOrCreateFromEnv()
-                    ->getDefaultContextPath();
-            }
-        }
         return FetcherMarkup::createXhtmlMarkupFetcherFromPath($path, $contextPath);
     }
 

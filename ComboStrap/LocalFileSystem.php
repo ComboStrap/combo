@@ -58,6 +58,8 @@ class LocalFileSystem implements FileSystem
     }
 
     /**
+     * @param LocalPath $path
+     * @return DateTime
      * @throws ExceptionNotFound - if the file does not exist
      */
     public function getModifiedTime($path): DateTime
@@ -65,7 +67,7 @@ class LocalFileSystem implements FileSystem
         if (!self::exists($path)) {
             throw new ExceptionNotFound("Local File System Modified Time: The file ($path) does not exist");
         }
-        $timestamp = filemtime($path->toAbsolutePath()->toQualifiedId());
+        $timestamp = filemtime($path->toCanonicalPath()->toQualifiedId());
         return Iso8601Date::createFromTimestamp($timestamp)->getDateTime();
     }
 

@@ -4,6 +4,7 @@
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\FetcherMarkup;
 use ComboStrap\FetcherPage;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupDynamicRender;
@@ -77,7 +78,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 
         $act = ExecutionContext::getActualOrCreateFromEnv()->getExecutingAction();
         switch ($act) {
-            case MarkupDynamicRender::DYNAMIC_RENDERING:
+            case FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME:
                 $callStack = CallStack::createFromHandler($handler);
                 // no outline or edit button for dynamic rendering
                 // but closing of atx heading

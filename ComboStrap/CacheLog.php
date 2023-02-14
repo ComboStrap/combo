@@ -42,7 +42,7 @@ class CacheLog
         try {
             CacheLog::logCacheEvent(
                 $event,
-                $fetcher->getSourcePath()->toQualifiedId(),
+                $contentCachePath->toQualifiedId(),
                 $fetcher->getMime()->getExtension(),
                 CacheManager::CACHE_DELETION,
                 $message
@@ -55,18 +55,18 @@ class CacheLog
 
     }
 
-    public static function renderCacheAndLog(IFetcherSource $outputDocument, string $event, string $message)
+    public static function renderCacheAndLog(IFetcherSource $fetcher, string $event, string $message)
     {
         try {
-            $outputDocument->feedCache();
+            $fetcher->feedCache();
         } catch (ExceptionNotSupported $e) {
             return;
         }
         try {
             CacheLog::logCacheEvent(
                 $event,
-                $outputDocument->getSourcePath()->toQualifiedId(),
-                $outputDocument->getMime()->getExtension(),
+                $fetcher->getSourcePath()->toQualifiedId(),
+                $fetcher->getMime()->getExtension(),
                 CacheManager::CACHE_CREATION,
                 $message
             );

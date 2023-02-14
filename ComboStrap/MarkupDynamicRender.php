@@ -18,11 +18,6 @@ use PHPUnit\Exception;
 class MarkupDynamicRender
 {
 
-    /**
-     * When the rendering is a snippet or an instructions
-     */
-    public const DYNAMIC_RENDERING = "dynamic";
-
 
     /**
      * @var string the format (xhtml, ...)
@@ -99,7 +94,7 @@ class MarkupDynamicRender
             if ($ID === null && PluginUtility::isTest()) {
                 $ID = ExecutionContext::DEFAULT_SLOT_ID_FOR_TEST;
             }
-            $ACT = self::DYNAMIC_RENDERING;
+            $ACT = FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME;
 
             // Loop through the instructions
             foreach ($callStackHeaderInstructions as $instruction) {

@@ -73,7 +73,7 @@ class MarkupRenderer
     {
         return (new MarkupRenderer())
             ->setInstructions($instructions)
-            ->setRequestedContextPath($fetcherMarkup->getRequestedtContextPath())
+            ->setRequestedContextPath($fetcherMarkup->getRequestedContextPath())
             ->setRequestedExecutingPath($fetcherMarkup->getExecutingPathOrNull());
     }
 

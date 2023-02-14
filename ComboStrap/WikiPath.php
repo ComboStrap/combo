@@ -247,7 +247,7 @@ class WikiPath extends PathAbs
             try {
                 return $executionContext
                     ->getExecutingFetcherMarkup()
-                    ->getRequestedtContextPath();
+                    ->getRequestedContextPath();
             } catch (ExceptionNotFound $e) {
                 return $executionContext->getDefaultContextPath();
             }
@@ -604,7 +604,7 @@ class WikiPath extends PathAbs
     {
         return ExecutionContext::getActualOrCreateFromEnv()
             ->getExecutingFetcherMarkup()
-            ->getRequestedtContextPath();
+            ->getRequestedContextPath();
     }
 
     /**
@@ -624,7 +624,7 @@ class WikiPath extends PathAbs
         return str_replace(WikiPath::NAMESPACE_SEPARATOR_SLASH, WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $id);
     }
 
-    public static function createRootPathOnMarkupDrive(): WikiPath
+    public static function createRootNamespacePathOnMarkupDrive(): WikiPath
     {
         return WikiPath::createMarkupPathFromPath(self::NAMESPACE_SEPARATOR_DOUBLE_POINT);
     }

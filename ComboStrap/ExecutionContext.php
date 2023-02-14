@@ -298,7 +298,7 @@ class ExecutionContext
      *
      * @param string $clazz - the origin class (to debug to see where the php execution is not consistent)
      * @param string $runningId
-     * @param string|null $runningAct - when we run dynamic rendering, the act is set to advertise it (ie {@link MarkupDynamicRender::DYNAMIC_RENDERING}
+     * @param string|null $runningAct - when we run dynamic rendering, the act is set to advertise it (ie {@link FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME}
      * @return ExecutionContext
      */
     public function startSubExecutionEnv(string $clazz, string $runningId, string $runningAct = self::SHOW_ACTION): ExecutionContext
@@ -806,7 +806,7 @@ class ExecutionContext
          */
         $this->oldAct = $this->getExecutingAction();
         if ($fetcherMarkup->isMarkupStringExecution()) {
-            $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
+            $runningAct = FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME;
             $this->setExecutingAction($runningAct);
         }
 
@@ -829,7 +829,7 @@ class ExecutionContext
              */
             if ($fetcherMarkup->isFragmentExecution()) {
                 global $INFO;
-                $contextPath = $fetcherMarkup->getRequestedtContextPath();
+                $contextPath = $fetcherMarkup->getRequestedContextPath();
                 $INFO['id'] = $contextPath->getWikiId();
             }
 
@@ -853,20 +853,17 @@ class ExecutionContext
         return $this;
     }
 
+
     /**
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotFound - if there is no fetcher markup execution running
      */
     public function getExecutingFetcherMarkup(): FetcherMarkup
     {
-        /**
-         * Case of a markup text without context (ie webcode)
-         * TODO: May be without any context, we could have a default path context: the root
-         *   We could then have only one Fetcher Markup
-         */
-        if (!isset($this->executingFetcherMarkup)) {
-            throw new ExceptionNotFound("No fetcher markup running");
+        if(isset($this->executingFetcherMarkup)){
+            return $this->executingFetcherMarkup;
         }
-        return $this->executingFetcherMarkup;
+        throw new ExceptionNotFound("No markup execution running");
+
     }
 
     /**
@@ -906,7 +903,7 @@ class ExecutionContext
         try {
             return $this
                 ->getExecutingFetcherMarkup()
-                ->getRequestedtContextPath();
+                ->getRequestedContextPath();
         } catch (ExceptionNotFound $e) {
 
             return $this->getDefaultContextPath();
@@ -927,7 +924,7 @@ class ExecutionContext
         if (isset($ID) && $ID !== self::DEFAULT_SLOT_ID_FOR_TEST) {
             return WikiPath::createMarkupPathFromId($ID);
         }
-        return WikiPath::createRootPathOnMarkupDrive()->resolve(Site::getIndexPageName() . "." . WikiPath::MARKUP_DEFAULT_TXT_EXTENSION);
+        return WikiPath::createRootNamespacePathOnMarkupDrive()->resolve(Site::getIndexPageName() . "." . WikiPath::MARKUP_DEFAULT_TXT_EXTENSION);
 
 
     }

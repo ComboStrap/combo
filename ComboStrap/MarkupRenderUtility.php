@@ -95,7 +95,7 @@ class MarkupRenderUtility
             if ($ID === null && PluginUtility::isTest()) {
                 $ID = ExecutionContext::DEFAULT_SLOT_ID_FOR_TEST;
             }
-            $ACT = MarkupDynamicRender::DYNAMIC_RENDERING;
+            $ACT = FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME;
             $output = p_render("xhtml", $callStackHeaderInstructions, $info);
             if ($output === null) {
                 throw new ExceptionBadState("The rendering output was null");

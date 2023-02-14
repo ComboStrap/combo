@@ -50,6 +50,7 @@ class FileSystems
         $scheme = $path->getScheme();
         switch ($scheme) {
             case LocalFileSystem::SCHEME:
+                /** @noinspection PhpParamsInspection */
                 return LocalFileSystem::getOrCreate()->getModifiedTime($path);
             case WikiFileSystem::SCHEME:
                 return WikiFileSystem::getOrCreate()->getModifiedTime($path);
@@ -316,5 +317,16 @@ class FileSystems
         fputs(STDOUT, "ModificationTime of $filename at $log ");
         $timestamp = filemtime($filename);
         fputs(STDOUT, " $timestamp" . PHP_EOL);
+    }
+
+    public static function clearStatCache(Path $path)
+    {
+        try {
+            $pathString = $path->toLocalPath()->toCanonicalPath()->toQualifiedId();
+            clearstatcache(true,$pathString);
+        } catch (ExceptionCast $e) {
+            throw new ExceptionRuntimeInternal("The cache can be clear only for local path");
+        }
+
     }
 }

@@ -183,7 +183,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * We don't add any component at this moment
          */
         global $ACT;
-        if ($ACT === MarkupDynamicRender::DYNAMIC_RENDERING) {
+        if ($ACT === FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME) {
             return;
         }
 

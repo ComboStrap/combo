@@ -279,6 +279,7 @@ class LocalPath extends PathAbs
      * (ie windows short name or the path separator is not consistent (ie / in place of \ on windows)
      *
      * This function makes the path canonical meaning that two canonical path can be compared.
+     * This is also needed when you path a path string to a php function such as `clearstatcache`
      */
     public function toCanonicalPath(): LocalPath
     {

@@ -411,51 +411,28 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     }
 
                     /**
+                     * Context
+                     */
+                    $executingMarkupFetcher = $executionContext->getExecutingFetcherMarkup();
+                    $requestedContextPath = $executingMarkupFetcher->getRequestedContextPath();
+
+                    /**
                      * NameSpacePath determination
                      */
                     $pageExplorerType = $pageExplorerTagAttributes->getType();
                     $namespaceAttribute = $pageExplorerTagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
-                    $namespacePath = null;
                     if ($namespaceAttribute !== null) {
                         WikiPath::addNamespaceEndSeparatorIfNotPresent($namespaceAttribute);
                         $namespacePath = WikiPath::createMarkupPathFromPath($namespaceAttribute);
-                    }
-                    if ($namespacePath === null) {
-                        switch ($pageExplorerType) {
-                            case self::LIST_TYPE:
-                                $requestedPage = MarkupPath::createFromRequestedPage();
-                                $namespacePath = $requestedPage->getPathObject()->getParent();
-                                if ($namespacePath === null) {
-                                    // root
-                                    $namespacePath = $requestedPage->getPathObject();
-                                }
-                                try {
-                                    ExecutionContext::getActualOrCreateFromEnv()
-                                        ->getExecutingFetcherMarkup()
-                                        ->getCacheDependencies()
-                                        ->addDependency(MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
-                                } catch (ExceptionNotFound $e) {
-                                    // not a fetcher markup run
-                                }
-                                break;
-                            case self::TYPE_TREE:
-                                try {
-                                    $renderedPage = MarkupPath::createPageFromExecutingId();
-                                } catch (ExceptionCompile $e) {
-                                    LogUtility::msg("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
-                                    return false;
-                                }
-                                $namespacePath = $renderedPage->getPathObject()->getParent();
-                                if ($namespacePath === null) {
-                                    // root
-                                    $namespacePath = $renderedPage->getPathObject();
-                                }
-                                break;
-                            default:
-                                // Should never happens but yeah
-                                $renderer->doc .= LogUtility::wrapInRedForHtml("The type of the page explorer ($pageExplorerType) is unknown");
-                                return 2;
+                    } else {
+                        try {
+                            $namespacePath = $requestedContextPath->getParent();
+                        } catch (ExceptionNotFound $e) {
+                            $namespacePath = WikiPath::createRootNamespacePathOnMarkupDrive();
                         }
+                        $executingMarkupFetcher
+                            ->getCacheDependencies()
+                            ->addDependency(MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
                     }
 
 
@@ -481,7 +458,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Css
                              */
-                            PluginUtility::getSnippetManager()->attachCssInternalStyleSheet($componentClassPrefix);
+                            $executingMarkupFetcher
+                                ->getSnippetManager()
+                                ->attachCssInternalStyleSheet($componentClassPrefix);
 
                             /**
                              * Create the enter content list tag
@@ -501,7 +480,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $currentIndexPage = MarkupPath::createPageFromPathObject($namespacePath);
                             if (!($indexInstructions === null && $indexAttributes !== null)) {
 
-                                if ($currentIndexPage->exists()) {
+                                if (FileSystems::exists($currentIndexPage)) {
 
 
                                     $indexTagAttributes = TagAttributes::createFromCallStackArray($indexAttributes);
@@ -612,7 +591,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $pageAttributes = $data[self::PAGE_ATTRIBUTES];
                             $namespaceInstructions = $data[self::NAMESPACE_INSTRUCTIONS];
                             $namespaceAttributes = $data[self::NAMESPACE_ATTRIBUTES];
-
 
                             $pageNum = 0;
                             foreach (FileSystems::getChildrenContainer($namespacePath) as $subNamespacePath) {

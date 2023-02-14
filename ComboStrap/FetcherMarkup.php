@@ -36,6 +36,14 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     const CANONICAL = "markup-fragment-fetcher";
 
     /**
+     * When the rendering is done from:
+     * * a string
+     * * or an instructions (template)
+     * but not from a file
+     */
+    public const MARKUP_DYNAMIC_EXECUTION_NAME = "markup-dynamic-execution";
+
+    /**
      * @var CacheParser cache file (may be not set if this is a {@link self::isMarkupStringExecution() string execution}
      */
     protected CacheParser $contentCache;
@@ -653,24 +661,16 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public function getLabel(): string
     {
-        $sourcePath = $this->getSourcePath();
+        try {
+            $sourcePath = $this->getSourcePath();
+        } catch (ExceptionNotFound $e) {
+            return self::MARKUP_DYNAMIC_EXECUTION_NAME;
+        }
         return ResourceName::getFromPath($sourcePath);
     }
 
-    private function getRequestedContextPath(): WikiPath
-    {
-        if (!isset($this->requestedContextPath)) {
-            LogUtility::errorIfDevOrTest("The requested context path should be set");
-            try {
-                return WikiPath::createRequestedPagePathFromRequest();
-            } catch (ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("A requested context path could not be found", $e);
-            }
-        }
-        return $this->requestedContextPath;
-    }
 
-    public function getRequestedtContextPath(): WikiPath
+    public function getRequestedContextPath(): WikiPath
     {
         return $this->requestedContextPath;
     }
@@ -839,13 +839,18 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
              * If the context and executing path are not
              * the same, this is a fragment run
              */
-            if ($this->getRequestedtContextPath()->getWikiId() !== $this->getRequestedExecutingPath()->toWikiPath()->getWikiId()) {
+            if ($this->getRequestedContextPath()->getWikiId() !== $this->getRequestedExecutingPath()->toWikiPath()->getWikiId()) {
                 return true;
             }
         } catch (ExceptionNotFound|ExceptionCast $e) {
             // no executing path, not a wiki path
         }
         return false;
+    }
+
+    public function getSnippetManager(): SnippetSystem
+    {
+        return PluginUtility::getSnippetManager();
     }
 
 

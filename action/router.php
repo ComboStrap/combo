@@ -298,7 +298,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
          * may be redirected
          */
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
-        if ($executionContext->getAct()!==ExecutionContext::SHOW_ACTION) {
+        if ($executionContext->getExecutingAction()!==ExecutionContext::SHOW_ACTION) {
             return;
         }
 

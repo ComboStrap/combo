@@ -152,6 +152,11 @@ class ExecutionContext
      * @var WikiPath the {@link self::getContextPath()} when no context could be determined
      */
     private WikiPath $defaultContextPath;
+    /**
+     * @var mixed|string
+     */
+    private $oldAct;
+    private string $oldId;
 
     public function __construct(Url $url)
     {
@@ -434,15 +439,6 @@ class ExecutionContext
     }
 
 
-    public function getAct()
-    {
-        if (!isset($this->act)) {
-            throw new ExceptionRuntimeInternal("No act for this execution");
-        }
-        return $this->act;
-    }
-
-
     /**
      * @return void close the execution context
      */
@@ -687,7 +683,7 @@ class ExecutionContext
             return false;
         }
 
-        $act = $this->getAct();
+        $act = $this->getExecutingAction();
         if (in_array($act, self::PRIVATES_ACTION_NO_REDIRECT)) {
             return false;
         }
@@ -804,6 +800,43 @@ class ExecutionContext
         if (isset($this->executingFetcherMarkup)) {
             throw new ExceptionRuntimeInternal("Two fetcher markups cannot run at the same time");
         }
+
+        /**
+         * Act
+         */
+        $this->oldAct = $this->getExecutingAction();
+        if ($fetcherMarkup->isMarkupStringExecution()) {
+            $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
+            $this->setExecutingAction($runningAct);
+        }
+
+        /**
+         * Id
+         */
+        try {
+            $this->oldId = $this->getExecutingWikiId();
+        } catch (ExceptionNotFound $e) {
+            $this->oldId = null;
+        }
+        try {
+
+            $executingPath = $fetcherMarkup->getRequestedExecutingPath();
+            $executingId = $executingPath->toQualifiedId();
+            $this->setExecutingId($executingId);
+
+            /**
+             * Fragment run
+             */
+            if ($fetcherMarkup->isFragmentExecution()) {
+                global $INFO;
+                $contextPath = $fetcherMarkup->getRequestedtContextPath();
+                $INFO['id'] = $contextPath->getWikiId();
+            }
+
+        } catch (ExceptionNotFound $e) {
+            // no executing path dynamic markup execution
+        }
+
         $this->executingFetcherMarkup = $fetcherMarkup;
         return $this;
     }
@@ -811,6 +844,12 @@ class ExecutionContext
     public function closeRunningFetcherMarkup(): ExecutionContext
     {
         unset($this->executingFetcherMarkup);
+        $this->setExecutingAction($this->oldAct);
+        unset($this->oldAct);
+        $this->setExecutingId($this->oldId);
+        unset($this->oldId);
+        global $INFO;
+        unset($INFO['id']);
         return $this;
     }
 

@@ -75,7 +75,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          */
         $handler = $event->data;
 
-        $act = ExecutionContext::getActualOrCreateFromEnv()->getAct();
+        $act = ExecutionContext::getActualOrCreateFromEnv()->getExecutingAction();
         switch ($act) {
             case MarkupDynamicRender::DYNAMIC_RENDERING:
                 $callStack = CallStack::createFromHandler($handler);

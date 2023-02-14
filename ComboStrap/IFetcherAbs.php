@@ -210,7 +210,7 @@ abstract class IFetcherAbs implements IFetcher
 
     }
 
-    public function getCachePath(): LocalPath
+    public function getContentCachePath(): LocalPath
     {
         throw new ExceptionNotSupported("No cache support by default, overwrite this function to give access to your cache path");
     }

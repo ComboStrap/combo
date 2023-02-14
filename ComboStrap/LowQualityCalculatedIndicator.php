@@ -45,11 +45,7 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
                 throw new ExceptionNotFound("Low Quality is only for page resources");
             }
             $analyticsDocument = $resource->fetchAnalyticsDocument();
-            try {
-                $analyticsCache = $analyticsDocument->getCachePath();
-            } finally {
-                $analyticsDocument->close();
-            }
+            $analyticsCache = $analyticsDocument->getContentCachePath();
             if (!FileSystems::exists($analyticsCache)) {
                 throw new ExceptionNotFound("No analytics document could be found");
             }

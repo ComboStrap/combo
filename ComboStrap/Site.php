@@ -307,6 +307,19 @@ class Site
         Site::setCacheDefault();
     }
 
+    public static function getOldDirectory(): LocalPath
+    {
+        global $conf;
+        /**
+         * Data dir is the pages dir (savedir is the data dir)
+         */
+        $oldDirConf = $conf['olddir'];
+        if ($oldDirConf === null) {
+            throw new ExceptionRuntime("The old directory ($oldDirConf) is null");
+        }
+        return LocalPath::createFromPathString($oldDirConf);
+    }
+
 
     function getEmailObfuscationConfiguration()
     {
@@ -556,10 +569,6 @@ class Site
         return $conf['template'] == self::STRAP_TEMPLATE_NAME;
     }
 
-    public static function getAjaxUrl(): string
-    {
-        return self::getBaseUrl() . "lib/exe/ajax.php";
-    }
 
     public static function getPageDirectory(): LocalPath
     {
@@ -592,6 +601,9 @@ class Site
         return $conf['cachetime'] !== -1;
     }
 
+    /**
+     * @return LocalPath
+     */
     public static function getDataDirectory(): LocalPath
     {
         global $conf;

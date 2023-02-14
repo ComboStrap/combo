@@ -348,7 +348,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         }
     }
 
-    public function getCachePath(): LocalPath
+    public function getContentCachePath(): LocalPath
     {
         $this->buildObjectIfNeeded();
         return $this->fetcherCache->getFile();

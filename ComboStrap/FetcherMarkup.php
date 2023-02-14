@@ -4,9 +4,7 @@
 namespace ComboStrap;
 
 
-use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheParser;
-use dokuwiki\Cache\CacheRenderer;
 use Exception;
 
 
@@ -40,7 +38,9 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @var CacheParser cache file (may be not set if this is a {@link self::isMarkupStringExecution() string execution}
      */
-    protected CacheParser $cache;
+    protected CacheParser $contentCache;
+
+    protected string $rendererName;
 
     /**
      * @var CacheParser
@@ -51,7 +51,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     protected Mime $mime;
     private bool $cacheAfterRendering = true;
     protected MarkupCacheDependencies $cacheDependencies;
-
 
 
     /**
@@ -79,6 +78,14 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      * (ie instructions or metadata) for now
      */
     private array $fetchArray;
+    /**
+     * @var bool true if this fetcher has already run
+     * (
+     * Fighting file modified time, even if we cache has been stored,
+     * the modified time is not always good, this indicator will
+     * make the processing not run twice)
+     */
+    private bool $hasExecuted = false;
 
 
     /**
@@ -165,6 +172,10 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             return true;
         }
 
+        if ($this->hasExecuted) {
+            return false;
+        }
+
         /**
          * The cache is stored by requested page scope
          *
@@ -178,7 +189,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * the event coupled to the cache (ie PARSER_CACHE_USE)
          */
         $depends['age'] = $this->getCacheAge();
-        $useCache = $this->cache->useCache($depends);
+        $useCache = $this->contentCache->useCache($depends);
         return ($useCache === false);
 
     }
@@ -300,7 +311,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     }
 
     /**
-     * @return LocalPath the fetch path - start the process and returns a path. If the cache is on, return the {@link FetcherMarkup::getCachePath()}
+     * @return LocalPath the fetch path - start the process and returns a path. If the cache is on, return the {@link FetcherMarkup::getContentCachePath()}
      */
     function processIfNeededAndGetFetchPath(): LocalPath
     {
@@ -308,10 +319,10 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
         /**
          * The cache path may have change due to the cache key rerouting
-         * We should there always use the {@link FetcherMarkup::getCachePath()}
+         * We should there always use the {@link FetcherMarkup::getContentCachePath()}
          * as fetch path
          */
-        return $this->getCachePath();
+        return $this->getContentCachePath();
 
     }
 
@@ -322,10 +333,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public function feedCache(): FetcherMarkup
     {
 
-
-        if (!$this->shouldProcess()) {
-            return $this;
-        }
+        $this->hasExecuted = true;
 
         /**
          * Process
@@ -355,7 +363,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         $extension = $this->getMime()->getExtension();
         switch ($extension) {
             case MarkupRenderer::INSTRUCTION_EXTENSION:
-                $markupRenderer = MarkupRenderer::createFromMarkup($markup, $this->getSourcePathOrNull(), $this->getRequestedContextPath())
+                $markupRenderer = MarkupRenderer::createFromMarkup($markup, $this->getExecutingPathOrNull(), $this->getRequestedContextPath())
                     ->setRequestedMimeToInstruction()
                     ->setDeleteRootBlockElement($this->removeRootBlockElement);
                 $executionContext->setExecutingFetcherMarkup($this);
@@ -406,7 +414,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 $instructionsFetcher = FetcherMarkup::getBuilder()
                     ->setMarkupString($markup)
                     ->setRequestedContextPath($this->getRequestedContextPath())
-                    ->setRequestedExecutingPath($this->getSourcePathOrNull())
+                    ->setRequestedExecutingPath($this->getExecutingPathOrNull())
                     ->setRequestedMimeToInstructions()
                     ->build();
 
@@ -428,37 +436,34 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     $executionContext->closeRunningFetcherMarkup();
                 }
                 $this->cacheAfterRendering = $markupRenderer->getCacheAfterRendering();
+
+
                 break;
             default:
-                throw new ExceptionRuntimeInternal("Extension file ($extension) not supported by the parser/renderer");
-        }
-        /**
-         * We store always the output in the cache
-         * if the cache is not on, the file is just overwritten
-         *
-         * We don't use
-         * {{@link CacheParser::storeCache()}
-         * because it uses the protected parameter `__nocache`
-         * that will disallow the storage
-         */
-        if ($contentToStore != null && isset($this->cache->cache)) {
-            io_saveFile($this->cache->cache, $contentToStore);
+                /**
+                 * Other such as Analytics
+                 */
+                $markupRenderer = MarkupRenderer::createFromMarkup($markup, $this->getExecutingPathOrNull(), $this->getRequestedContextPath())
+                    ->setRequestedMime($this->getMime())
+                    ->setRendererName($this->rendererName);
+                $executionContext->setExecutingFetcherMarkup($this);
+                try {
+                    $output = $markupRenderer->getOutput();
+                    $contentToStore = $output;
+                } catch (\Exception $e) {
+                    throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+                } finally {
+                    $executionContext->closeRunningFetcherMarkup();
+                }
+                break;
         }
 
         /**
          * Snippets and dependencies if XHTML
          * (after processing as they can be added at runtime)
          */
-        if (
-            $this->getMime()->getExtension() === self::XHTML_MODE &&
-            !$this->isMarkupStringExecution()
-        ) {
+        if (!$this->isMarkupStringExecution()) {
 
-            /**
-             * Reroute the cache output by runtime dependencies
-             * set during processing
-             */
-            $this->cacheDependencies->rerouteCacheDestination($this->cache);
 
             /**
              * We make the Snippet store to Html store an atomic operation
@@ -479,6 +484,22 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
              * Cache output dependencies
              */
             $this->cacheDependencies->storeDependencies();
+
+            /**
+             * We store always the output in the cache
+             * if the cache is not on, the file is just overwritten
+             *
+             * We don't use
+             * {{@link CacheParser::storeCache()}
+             * because it uses the protected parameter `__nocache`
+             * that will disallow the storage
+             *
+             * Reroute the cache output by runtime dependencies
+             * set during processing
+             */
+            $this->cacheDependencies->rerouteCacheDestination($this->contentCache);
+            io_saveFile($this->contentCache->cache, $contentToStore);
+
 
         }
 
@@ -569,12 +590,12 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @return LocalPath - the cache path is where the result is stored if the cache is on
      * The cache path may have change due to the cache key rerouting
-     * We should there always use the {@link FetcherMarkup::getCachePath()}
+     * We should there always use the {@link FetcherMarkup::getContentCachePath()}
      * as fetch path
      */
-    public function getCachePath(): LocalPath
+    public function getContentCachePath(): LocalPath
     {
-        $path = $this->cache->cache;
+        $path = $this->contentCache->cache;
         return LocalPath::createFromPathString($path);
     }
 
@@ -667,9 +688,19 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     }
 
     /**
+     * Utility class that return the source path
+     * @return Path
+     * @throws ExceptionNotFound
+     */
+    public function getRequestedExecutingPath(): Path
+    {
+        return $this->getSourcePath();
+    }
+
+    /**
      * @return Path|null - utility class to get the source markup path or null (if this is a markup snippet/string rendering)
      */
-    public function getSourcePathOrNull(): ?Path
+    public function getExecutingPathOrNull(): ?Path
     {
         try {
             return $this->getSourcePath();
@@ -754,7 +785,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     }
 
-    private function isMarkupStringExecution(): bool
+    public function isMarkupStringExecution(): bool
     {
         if ($this->markupSourcePath === null) {
             if ($this->markupString !== null) {
@@ -790,12 +821,31 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             return $this->fetchArray;
         }
         try {
-            $contents = FileSystems::getContent($this->getCachePath());
+            $contents = FileSystems::getContent($this->getContentCachePath());
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntimeInternal("No cache path and no instructions arrays, did you process the fetch");
         }
         return !empty($contents) ? unserialize($contents) : array();
 
+    }
+
+    public function isFragmentExecution(): bool
+    {
+        if ($this->isMarkupStringExecution()) {
+            return false;
+        }
+        try {
+            /**
+             * If the context and executing path are not
+             * the same, this is a fragment run
+             */
+            if ($this->getRequestedtContextPath()->getWikiId() !== $this->getRequestedExecutingPath()->toWikiPath()->getWikiId()) {
+                return true;
+            }
+        } catch (ExceptionNotFound|ExceptionCast $e) {
+            // no executing path, not a wiki path
+        }
+        return false;
     }
 
 

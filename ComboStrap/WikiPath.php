@@ -1054,9 +1054,9 @@ class WikiPath extends PathAbs
                 }
                 $idFileSystem = str_replace(':', '/', $this->id);
                 if (empty($this->rev)) {
-                    $filePathString = $conf['datadir'] . '/' . utf8_encodeFN($idFileSystem) . '.' . $extension;
+                    $filePathString = Site::getPageDirectory()->resolve( utf8_encodeFN($idFileSystem) . '.' . $extension)->toQualifiedId();
                 } else {
-                    $filePathString = $conf['olddir'] . '/' . utf8_encodeFN($idFileSystem) . '.' . $this->rev . '.' . $extension;
+                    $filePathString = Site::getOldDirectory()->resolve( utf8_encodeFN($idFileSystem) . '.' . $this->rev . '.' . $extension)->toQualifiedId();
                     if ($conf['compression']) {
                         //test for extensions here, we want to read both compressions
                         if (file_exists($filePathString . '.gz')) {

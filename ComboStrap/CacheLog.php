@@ -29,7 +29,7 @@ class CacheLog
     {
 
         try {
-            $instructionsFile = $outputDocument->getCachePath();
+            $instructionsFile = $outputDocument->getContentCachePath();
         } catch (ExceptionNotFound $e) {
             return;
         }

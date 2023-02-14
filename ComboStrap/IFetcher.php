@@ -104,7 +104,7 @@ interface IFetcher
      * @return LocalPath - the cache if any
      * @throws ExceptionNotSupported
      */
-    public function getCachePath(): LocalPath;
+    public function getContentCachePath(): LocalPath;
 
     /**
      * @return string - an unique name that is added in the fetcher key of the URL

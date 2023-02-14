@@ -23,6 +23,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
     protected WikiPath $requestedContextPath;
     protected Mime $mime;
     protected bool $removeRootBlockElement = false;
+    protected string $rendererName = MarkupRenderer::DEFAULT_RENDERER;
 
     public function __construct()
     {
@@ -93,6 +94,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
 
     }
 
+
     public function setRequestedMimeToInstructions(): FetcherMarkupBuilder
     {
         try {
@@ -126,12 +128,14 @@ class FetcherMarkupBuilder extends FetcherMarkup
         $newFetcherMarkup->markupSourcePath = $this->markupSourcePath;
         $newFetcherMarkup->mime = $this->mime;
         $newFetcherMarkup->removeRootBlockElement = $this->removeRootBlockElement;
+        $newFetcherMarkup->rendererName = $this->rendererName;
 
         /**
          * We build the cache dependencies even if there is no source markup path (therefore no cache store)
          * (Why ? for test purpose, where we want to check if the dependencies was applied)
+         * !!! Attention, the build of the dependencies should happen after that the markup source path is set !!!
          */
-        $newFetcherMarkup->cacheDependencies = MarkupCacheDependencies::create($this->markupSourcePath, $this->requestedContextPath);
+        $newFetcherMarkup->cacheDependencies = MarkupCacheDependencies::create($newFetcherMarkup);
 
         /**
          * The cache object depends on the running request
@@ -174,11 +178,11 @@ class FetcherMarkupBuilder extends FetcherMarkup
             $extension = $this->mime->getExtension();
             switch ($extension) {
                 case MarkupRenderer::INSTRUCTION_EXTENSION:
-                    $newFetcherMarkup->cache = new CacheInstructions($wikiId, $localFile);
+                    $newFetcherMarkup->contentCache = new CacheInstructions($wikiId, $localFile);
                     break;
                 default:
-                    $newFetcherMarkup->cache = new CacheRenderer($wikiId, $localFile, $extension);
-                    $newFetcherMarkup->cacheDependencies->rerouteCacheDestination($newFetcherMarkup->cache);
+                    $newFetcherMarkup->contentCache = new CacheRenderer($wikiId, $localFile, $extension);
+                    $newFetcherMarkup->cacheDependencies->rerouteCacheDestination($newFetcherMarkup->contentCache);
                     break;
             }
         }
@@ -194,6 +198,12 @@ class FetcherMarkupBuilder extends FetcherMarkup
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntime("Internal error", 0, $e);
         }
+    }
+
+    public function setRequestedRenderer(string $rendererName): FetcherMarkupBuilder
+    {
+        $this->rendererName = $rendererName;
+        return $this;
     }
 
 }

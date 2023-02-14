@@ -58,7 +58,12 @@ interface Path
     function getParent(): Path;
 
     /**
+     *
      * @return string only the string representation of the path
+     *
+     * Same concept than the {@link WikiPath::getWikiId()} but enhanced to other
+     * type of path.
+     *
      * This is:
      * * the {@link WikiPath::getWikiId()} with the root for a WikiPath
      * * the path element for all others

@@ -56,7 +56,7 @@ class IdManager
             } catch (ExceptionNotFound $e) {
                 if (
                     PluginUtility::isDevOrTest()
-                    && ExecutionContext::getActualOrCreateFromEnv()->getAct()==="show"
+                    && ExecutionContext::getActualOrCreateFromEnv()->getExecutingAction()==="show"
                 ) {
                     LogUtility::internalError("We should always have an id, no ?", self::CANONICAL, $e);
                 }

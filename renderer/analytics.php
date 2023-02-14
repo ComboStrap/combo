@@ -96,6 +96,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     const HEADER_STRUCT = 'header_struct';
     const RENDERER_NAME_MODE = "combo_" . renderer_plugin_combo_analytics::RENDERER_FORMAT;
 
+
     /**
      * The format returned by the renderer
      */
@@ -158,12 +159,20 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public static function createAnalyticsFetcherForPageFragment(MarkupPath $markupPath): FetcherMarkup
     {
         $path = $markupPath->getPathObject();
-        if(!($path instanceof WikiPath)){
+        if (!($path instanceof WikiPath)) {
             throw new ExceptionRuntimeInternal("The path ($path) is not a wiki path");
         }
-        return FetcherMarkup::createXhtmlMarkupFetcherFromPath($path, $path)
+        return FetcherMarkup::getBuilder()
+            ->setRequestedExecutingPath($path)
+            ->setRequestedContextPath($path)
             ->setRequestedMime(Mime::getJson())
-            ->setRequestedRendererName(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
+            ->setRequestedRenderer(self::RENDERER_NAME_MODE)
+            ->build();
+    }
+
+    public static function getMime(): Mime
+    {
+        return Mime::create(self::RENDERER_NAME_MODE . "/json");
     }
 
     /**

@@ -2015,6 +2015,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
      * The slots that are independent from the primary slot
      *
      * @return MarkupPath[]
+     * @deprecated should be {@link PageTemplate} based
      */
     public function getPrimaryIndependentSlots(): array
     {

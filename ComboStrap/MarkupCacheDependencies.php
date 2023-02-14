@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 use dokuwiki\Cache\CacheParser;
 use dokuwiki\Cache\CacheRenderer;
+use splitbrain\slika\Exception;
 
 /**
  *
@@ -109,29 +110,24 @@ class MarkupCacheDependencies
      */
     private $runtimeStoreDependencies;
 
-    /**
-     * @var Path|null - the executing path, may be null if this a markup string
-     */
-    private ?Path $executingPath;
 
     /**
      * @var string the first key captured
      */
     private $firstActualKey;
-    private Path $requestedPath;
+    private FetcherMarkup $markupFetcher;
 
 
     /**
      * CacheManagerForSlot constructor.
      *
      */
-    private function __construct(?Path $executingPath, Path $requestedContextPath)
+    private function __construct(FetcherMarkup $markupFetcher)
     {
 
-        $this->executingPath = $executingPath;
-        $this->requestedPath = $requestedContextPath;
-
-        if($executingPath!=null) {
+        $this->markupFetcher = $markupFetcher;
+        $executingPath = $markupFetcher->getExecutingPathOrNull();
+        if ($executingPath !== null) {
             $data = $this->getDependenciesCacheStore()->retrieveCache();
             if (!empty($data)) {
                 $this->runtimeStoreDependencies = json_decode($data, true);
@@ -140,9 +136,9 @@ class MarkupCacheDependencies
 
     }
 
-    public static function create(?Path $executingPath, Path $requestedPath): MarkupCacheDependencies
+    public static function create(FetcherMarkup $fetcherMarkup): MarkupCacheDependencies
     {
-        return new MarkupCacheDependencies($executingPath, $requestedPath);
+        return new MarkupCacheDependencies($fetcherMarkup);
     }
 
     /**
@@ -168,25 +164,22 @@ class MarkupCacheDependencies
         foreach ($slots as $slot) {
 
             $slotFetcher = $slot->createHtmlFetcherWithContextPath($wikiPath);
-            try {
-                $cacheDependencies = $slotFetcher->getCacheDependencies();
-                if ($cacheDependencies->hasDependency($dependency)) {
-                    $link = PluginUtility::getDocumentationHyperLink("cache:slot", "Slot Dependency", false);
-                    $message = "$link ($dependency) was met with the primary slot ($contextPath).";
-                    CacheLog::deleteCacheIfExistsAndLog(
-                        $slotFetcher,
-                        $event,
-                        $message
-                    );
-                    CacheLog::renderCacheAndLog(
-                        $slotFetcher,
-                        $event,
-                        $message
-                    );
-                }
-            } finally {
-                $slotFetcher->close();
+            $cacheDependencies = $slotFetcher->getCacheDependencies();
+            if ($cacheDependencies->hasDependency($dependency)) {
+                $link = PluginUtility::getDocumentationHyperLink("cache:slot", "Slot Dependency", false);
+                $message = "$link ($dependency) was met with the primary slot ($contextPath).";
+                CacheLog::deleteCacheIfExistsAndLog(
+                    $slotFetcher,
+                    $event,
+                    $message
+                );
+                CacheLog::renderCacheAndLog(
+                    $slotFetcher,
+                    $event,
+                    $message
+                );
             }
+
         }
 
     }
@@ -197,7 +190,6 @@ class MarkupCacheDependencies
      *
      * For example:
      *   * the ':sidebar' html output may be dependent to the namespace `ns` or `ns2`
-     * @throws ExceptionCompile
      */
     public function getValueForKey($dependenciesValue): string
     {
@@ -212,7 +204,12 @@ class MarkupCacheDependencies
          *
          * Scope is directory/namespace based
          */
-        $requestedPage = MarkupPath::createPageFromPathObject($this->requestedPath);
+        try {
+            $path = $this->markupFetcher->getRequestedExecutingPath();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("No executing path markup fetcher should not ask for a dependencies key");
+        }
+        $requestedPage = MarkupPath::createPageFromPathObject($path);
         switch ($dependenciesValue) {
             case MarkupCacheDependencies::NAMESPACE_OLD_VALUE:
             case MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY:
@@ -301,12 +298,13 @@ class MarkupCacheDependencies
     function getDefaultKey(): string
     {
         try {
-            $keyDokuWikiCompliant = str_replace("\\", "/", LocalPath::createFromPathObject($this->executingPath)->toQualifiedId());
-        } catch (ExceptionBadArgument $e) {
-            LogUtility::warning("Error while getting the dokuwiki compliant key. Error: " . $e->getMessage());
-            $keyDokuWikiCompliant = $this->executingPath->toQualifiedId();
+            $toQualifiedId = $this->markupFetcher->getRequestedExecutingPath()->toQualifiedId();
+            $keyDokuWikiCompliant = str_replace("\\", "/", $toQualifiedId);
+            return $keyDokuWikiCompliant . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("No executing path to calculate the cache key");
         }
-        return $keyDokuWikiCompliant . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
+
     }
 
     /**
@@ -330,7 +328,7 @@ class MarkupCacheDependencies
             $cache->cache = getCacheName($cache->key, '.' . $cache->mode);
 
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while trying to reroute the cache destination for the slot ({$this->executingPath}). You may have cache problem. Error: {$e->getMessage()}");
+            LogUtility::msg("Error while trying to reroute the content cache destination for the fetcher ({$this->markupFetcher}). You may have cache problem. Error: {$e->getMessage()}");
         }
 
     }
@@ -370,32 +368,20 @@ class MarkupCacheDependencies
         /**
          * The local path to calculate the full qualified Os path
          */
-        if ($this->executingPath instanceof LocalPath) {
-            $localPath = $this->executingPath;
-        } else {
-            try {
-                $localPath = LocalPath::createFromPathObject($this->executingPath);
-            } catch (ExceptionBadArgument $e) {
-                throw new ExceptionRuntimeInternal("The page fragment path should be local. Error:{$e->getMessage()}", self::CANONICAL);
-            }
+        try {
+            $executingPath = $this->markupFetcher->getRequestedExecutingPath();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("There is no executing path, you can create a cache dependencies store", self::CANONICAL);
         }
-        /**
-         * The wiki path for rendering (the path is shorter)
-         */
-        if ($this->executingPath instanceof WikiPath) {
-            $shorterPath = $this->executingPath;
-        } else {
-            try {
-                $shorterPath = WikiPath::createFromPathObject($this->executingPath);
-            } catch (ExceptionBadArgument $e) {
-                // It could not be transformed
-                $shorterPath = $localPath;
-            }
+
+        try {
+            $localPath = $executingPath->toLocalPath()
+                ->toAbsolutePath();
+        } catch (ExceptionCast $e) {
+            throw new ExceptionRuntimeInternal("The executing path ($executingPath) could not be cast to a local path", self::CANONICAL, $e);
         }
-        $slotLocalFilePath = $localPath
-            ->toAbsolutePath()
-            ->toQualifiedId();
-        $this->dependenciesCacheStore = new CacheParser($shorterPath->toQualifiedId(), $slotLocalFilePath, "deps.json");
+
+        $this->dependenciesCacheStore = new CacheParser($localPath->toQualifiedId(), $localPath, "deps.json");
         return $this->dependenciesCacheStore;
     }
 

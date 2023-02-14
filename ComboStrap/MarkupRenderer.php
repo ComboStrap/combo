@@ -74,7 +74,7 @@ class MarkupRenderer
         return (new MarkupRenderer())
             ->setInstructions($instructions)
             ->setRequestedContextPath($fetcherMarkup->getRequestedtContextPath())
-            ->setRequestedExecutingPath($fetcherMarkup->getSourcePathOrNull());
+            ->setRequestedExecutingPath($fetcherMarkup->getExecutingPathOrNull());
     }
 
     /**
@@ -111,40 +111,6 @@ class MarkupRenderer
 
     public function getOutput()
     {
-
-        /**
-         * Context Path
-         */
-        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
-        if (isset($this->executingPath)) {
-            if ($this->executingPath instanceof WikiPath) {
-                $runningId = $this->executingPath->getWikiId();
-            } else {
-                $runningId = $this->executingPath->toQualifiedId();
-            }
-        } else {
-            try {
-                $runningId = $this->getRequestedContextPath()->getWikiId();
-            } catch (ExceptionNotFound $e) {
-                try {
-                    $runningId = $executionContext->getRequestedWikiId();
-                } catch (ExceptionNotFound $e) {
-                    $runningId = "markup-renderer-default";
-                }
-            }
-        }
-
-        /**
-         * Dynamic rendering ?
-         */
-        $runningAct = $executionContext->getExecutingAction();
-        if (
-            isset($this->markupSource)
-            && $this->requestedMime->getExtension() !== self::INSTRUCTION_EXTENSION
-        ) {
-            $runningAct = MarkupDynamicRender::DYNAMIC_RENDERING;
-        }
-
 
         $extension = $this->requestedMime->getExtension();
         switch ($extension) {

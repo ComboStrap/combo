@@ -277,11 +277,6 @@ class ExecutionContext
     }
 
 
-
-
-
-
-
     /**
      * @throws ExceptionNotFound
      */
@@ -455,7 +450,7 @@ class ExecutionContext
 
     public function getRequestedPath(): WikiPath
     {
-        return WikiPath::createMarkupPathFromId($this->getRequestedWikiId());
+        return $this->getContextPath();
     }
 
     /**
@@ -843,12 +838,27 @@ class ExecutionContext
     public function getContextPath(): WikiPath
     {
         try {
-            return $this
-                ->getExecutingFetcherMarkup()
+            /**
+             * Do we have a template page executing ?
+             */
+            return $this->getExecutingPageTemplate()
                 ->getRequestedContextPath();
         } catch (ExceptionNotFound $e) {
+            try {
+                /**
+                 * Do we a fetcher markup running ?
+                 */
+                return $this
+                    ->getExecutingFetcherMarkup()
+                    ->getRequestedContextPath();
+            } catch (ExceptionNotFound $e) {
 
-            return $this->getDefaultContextPath();
+                /**
+                 * Nope ? This is a dokuwiki run (admin page, ...)
+                 */
+                return $this->getDefaultContextPath();
+
+            }
 
         }
 
@@ -877,8 +887,8 @@ class ExecutionContext
      */
     public function getExecutingPageTemplate(): PageTemplate
     {
-        if (isset($this->executingPageTemplate)){
-          return $this->executingPageTemplate;
+        if (isset($this->executingPageTemplate)) {
+            return $this->executingPageTemplate;
         }
         throw new ExceptionNotFound("No page template execution running");
     }

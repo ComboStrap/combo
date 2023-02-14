@@ -476,16 +476,10 @@ class WikiPath extends PathAbs
         return WikiPath::createMarkupPathFromId($id);
     }
 
-    /**
-     *
-     * @throws ExceptionNotFound - no page was requested
-     */
+
     public static function createRequestedPagePathFromRequest(): WikiPath
     {
-        return ExecutionContext::getActualOrCreateFromEnv()
-            ->getExecutingPageTemplate()
-            ->getRequestedContextPath();
-
+        return ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath();
     }
 
     /**
@@ -606,14 +600,10 @@ class WikiPath extends PathAbs
         return new WikiPath($path, $drive, $rev);
     }
 
-    /**
-     * @throws ExceptionNotFound
-     */
+
     public static function getContextPath(): WikiPath
     {
-        return ExecutionContext::getActualOrCreateFromEnv()
-            ->getExecutingFetcherMarkup()
-            ->getRequestedContextPath();
+        return ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath();
     }
 
     /**
@@ -1063,9 +1053,9 @@ class WikiPath extends PathAbs
                 }
                 $idFileSystem = str_replace(':', '/', $this->id);
                 if (empty($this->rev)) {
-                    $filePathString = Site::getPageDirectory()->resolve( utf8_encodeFN($idFileSystem) . '.' . $extension)->toQualifiedId();
+                    $filePathString = Site::getPageDirectory()->resolve(utf8_encodeFN($idFileSystem) . '.' . $extension)->toQualifiedId();
                 } else {
-                    $filePathString = Site::getOldDirectory()->resolve( utf8_encodeFN($idFileSystem) . '.' . $this->rev . '.' . $extension)->toQualifiedId();
+                    $filePathString = Site::getOldDirectory()->resolve(utf8_encodeFN($idFileSystem) . '.' . $this->rev . '.' . $extension)->toQualifiedId();
                     if ($conf['compression']) {
                         //test for extensions here, we want to read both compressions
                         if (file_exists($filePathString . '.gz')) {

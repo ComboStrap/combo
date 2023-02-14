@@ -78,8 +78,7 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
          */
         try {
             $requestedContextPage = ExecutionContext::getActualOrCreateFromEnv()
-                ->getExecutingPageTemplate()
-                ->getRequestedContextPath();
+                ->getRequestedPath();
         } catch (ExceptionNotFound $e) {
             LogUtility::internalError("The requested context path should be available");
             return;

@@ -25,25 +25,25 @@ class CacheLog
     ];
     const CANONICAL = "support";
 
-    public static function deleteCacheIfExistsAndLog(IFetcherSource $outputDocument, string $event, string $message)
+    public static function deleteCacheIfExistsAndLog(IFetcher $fetcher, string $event, string $message)
     {
 
         try {
-            $instructionsFile = $outputDocument->getContentCachePath();
-        } catch (ExceptionNotFound $e) {
+            $contentCachePath = $fetcher->getContentCachePath();
+        } catch (ExceptionNotSupported $e) {
             return;
         }
 
-        if (!FileSystems::exists($instructionsFile)) {
+        if (!FileSystems::exists($contentCachePath)) {
             return;
         }
 
-        FileSystems::delete($instructionsFile);
+        FileSystems::delete($contentCachePath);
         try {
             CacheLog::logCacheEvent(
                 $event,
-                $outputDocument->getSourcePath()->toQualifiedId(),
-                $outputDocument->getMime()->getExtension(),
+                $fetcher->getSourcePath()->toQualifiedId(),
+                $fetcher->getMime()->getExtension(),
                 CacheManager::CACHE_DELETION,
                 $message
             );

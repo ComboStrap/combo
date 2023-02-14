@@ -64,10 +64,11 @@ class FetcherMarkupBuilder extends FetcherMarkup
             /**
              * Normalize to wiki path if possible
              * Why ?
-             * Because the parent path may be used a {@link MarkupCacheDependencies::getValueForKey()  cache key} and they will have different value
-             * With Local Path: C:\Users\gerardnico\AppData\Local\Temp\dwtests-1676386702.9751\data\pages\ns_without_scope
-             * With Wiki Path: ns_without_scope
-             * Making the cache file output key different
+             * Because the parent path may be used a {@link MarkupCacheDependencies::getValueForKey()  cache key}
+             * and they will have different value if the path type is different
+             * * With {@link LocalPath Local Path}: `C:\Users\gerardnico\AppData\Local\Temp\dwtests-1676386702.9751\data\pages\ns_without_scope`
+             * * With {@link WikiPath Wiki Path}: `ns_without_scope`
+             * It will then make the cache file path different (ie the md5 output key is the file name)
              */
             $this->markupSourcePath = $executingPath->toWikiPath();
         } catch (ExceptionCast $e) {

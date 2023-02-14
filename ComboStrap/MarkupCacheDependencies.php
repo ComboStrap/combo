@@ -144,17 +144,17 @@ class MarkupCacheDependencies
     /**
      * Rerender for now only the secondary slot if it has cache dependency
      * (ie {@link MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY} or {@link MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY})
-     * @param $contextPath
+     * @param $pathAddedOrDeleted
      * @param string $dependency -  a {@link MarkupCacheDependencies} ie
      * @param string $event
      */
-    public static function reRenderSideSlotIfNeeded($contextPath, string $dependency, string $event)
+    public static function reRenderSideSlotIfNeeded($pathAddedOrDeleted, string $dependency, string $event)
     {
 
         /**
          * Rerender secondary slot if needed
          */
-        $page = MarkupPath::createMarkupFromStringPath($contextPath);
+        $page = MarkupPath::createMarkupFromStringPath($pathAddedOrDeleted);
         $wikiPath = $page->getPathObject();
         if (!($wikiPath instanceof WikiPath)) {
             LogUtility::errorIfDevOrTest("The path should be a wiki path");
@@ -167,7 +167,7 @@ class MarkupCacheDependencies
             $cacheDependencies = $slotFetcher->getCacheDependencies();
             if ($cacheDependencies->hasDependency($dependency)) {
                 $link = PluginUtility::getDocumentationHyperLink("cache:slot", "Slot Dependency", false);
-                $message = "$link ($dependency) was met with the primary slot ($contextPath).";
+                $message = "$link ($dependency) was met with the primary slot ($pathAddedOrDeleted).";
                 CacheLog::deleteCacheIfExistsAndLog(
                     $slotFetcher,
                     $event,

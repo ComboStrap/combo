@@ -129,9 +129,9 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
         /**
          * Re-render
          */
-        $path = $data[PagePath::getPersistentName()];
+        $pathAddedOrDeleted = $data[PagePath::getPersistentName()];
         MarkupCacheDependencies::reRenderSideSlotIfNeeded(
-            $path,
+            $pathAddedOrDeleted,
             MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY,
             self::PAGE_SYSTEM_MUTATION_EVENT_NAME
         );

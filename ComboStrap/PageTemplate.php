@@ -202,274 +202,279 @@ class PageTemplate
     public function generateAndGetPageHtmlAsString(string $mainHtml): string
     {
 
-        ExecutionContext::getActualOrCreateFromEnv()
+        $executionContext = (ExecutionContext::getActualOrCreateFromEnv())
             ->setExecutingPageTemplate($this);
-
-        $htmlFragmentByVariables = [];
         try {
-            $pageLayoutElement = $this->getMainElement();
-            $layoutVariable = $pageLayoutElement->getVariableName();
-            $htmlFragmentByVariables[$layoutVariable] = $mainHtml;
-            $pageLayoutElement->getDomElement()->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
-        } catch (ExceptionNotFound $e) {
-            // main element is mandatory, an error should have been thrown at build time
-            throw new ExceptionRuntimeInternal("Main element was not found", self::CANONICAL, 1, $e);
-        }
 
-        /**
-         * Creating the HTML document
-         */
-        $pageLayoutElements = $this->getPageLayoutElements();
-        foreach ($pageLayoutElements as $pageElement) {
-
-            $domElement = $pageElement->getDomElement();
-
-            /**
-             * Layout Container
-             * Page Header and Footer have a bar that permits to set the layout container value
-             *
-             * The page core does not have any
-             * It's by default contained for all layout
-             * generally applied on the page-core element ie
-             * <div id="page-core" data-layout-container=>
-             */
-            if ($domElement->hasAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
-                $domElement->removeAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
-                $container = Site::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
-                $domElement->addClass(syntax_plugin_combo_container::getClassName($container));
-            }
-
-
-            /**
-             * Rendering
-             */
-            if (!$pageElement->isSlot() || $pageElement->isMain()) {
-                /**
-                 * No rendering for container area
-                 * or for the main (passed as argument)
-                 */
-                continue;
-            }
-
-
+            $htmlFragmentByVariables = [];
             try {
-
-                $fetcher = $pageElement->getMarkupFetcher();
-                try {
-                    $fetcherHtmlString = $fetcher->getFetchString();
-                } catch (\Exception $e) {
-                    throw new ExceptionRuntimeInternal($e->getMessage(), self::CANONICAL, 1, $e);
-                }
-
-                /**
-                 * We don't load / add the HTML string in the actual DOM document
-                 * to no add by-effect, corrections during loading and writing
-                 *
-                 * We add a template variable, we save the HTML in a array
-                 * And replace them after the loop
-                 */
-                $layoutVariable = $pageElement->getVariableName();
-                $htmlFragmentByVariables[$layoutVariable] = $fetcherHtmlString;
-                $domElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
-
-            } catch (ExceptionNotFound|ExceptionBadArgument $e) {
-
-                if ($e instanceof ExceptionBadArgument) {
-                    if (PluginUtility::isDevOrTest()) {
-                        /**
-                         * The slot {@link Path} for now should be all {@link WikiPath}
-                         */
-                        throw new ExceptionRuntimeInternal("Internal Error: the path could not be transformed as Wiki Path, while trying to get the fetcher. Error:{$e->getMessage()}", self::CANONICAL);
-                    }
-                }
-
-                /**
-                 * no fetcher fragment (page side for instance)
-                 * remove or empty ?
-                 *   * remove allows to not have any empty node but it may break css rules
-                 *   * empty permits not break any css rules (grid may be broken for instance)
-                 */
-                $action = $domElement->getAttributeOrDefault(PageTemplate::DATA_EMPTY_ACTION_ATTRIBUTE, "none");
-                switch ($action) {
-                    case "remove":
-                        $domElement->remove();
-                        break;
-                    case "none":
-                        // the empty node will stay in the page
-                        break;
-                    default:
-                        LogUtility::internalError("The value ($action) of the attribute (" . PageTemplate::DATA_EMPTY_ACTION_ATTRIBUTE . ") is unknown", self::CANONICAL);
-                }
-                continue;
-
-            }
-
-        }
-
-        /**
-         * Html
-         */
-        try {
-            $html = $this->getTemplateDomDocument()->querySelector("html");
-        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-            throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a html element");
-        }
-
-        try {
-            $lang = $this->getRequestedLang();
-            $langValue = $lang->getValueOrDefault();
-            $langDirection = $lang->getDirection();
-        } catch (ExceptionNotFound $e) {
-            // Site value
-            $langValue = Site::getLang();
-            $langDirection = Site::getLangDirection();
-        }
-        $html
-            ->setAttribute("lang", $langValue)
-            ->setAttribute("dir", $langDirection);
-        /**
-         * Not Xhtml bedcause it does not support boolean attribute without any value
-         *  ->setAttribute("xmlns", "http://www.w3.org/1999/xhtml")
-         *  ->setAttribute("xml:lang", $langValue)
-         */
-        $this->setRemFontSizeToHtml($html);
-
-
-        /**
-         * Body
-         * {@link tpl_classes} will add the dokuwiki class.
-         * See https://www.dokuwiki.org/devel:templates#dokuwiki_class
-         * dokuwiki__top ID is needed for the "Back to top" utility
-         * used also by some plugins
-         */
-        $tplClasses = tpl_classes();
-        try {
-            $layoutClass = StyleUtility::addComboStrapSuffix("layout-{$this->getLayoutName()}");
-            $bodyElement = $this->getTemplateDomDocument()->querySelector("body")
-                ->addClass($tplClasses)
-                ->addClass(PageTemplate::POSITION_RELATIVE_CLASS)
-                ->addClass($layoutClass);
-        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-            throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a body element");
-        }
-
-        $this->addTaskRunnerImageIfRequested($bodyElement);
-
-        if (sizeof($htmlFragmentByVariables) === 0) {
-            LogUtility::internalError("No slot was rendered");
-        }
-
-        /**
-         * Toc
-         */
-        try {
-
-            $tocId = PageTemplate::MAIN_TOC_ELEMENT;
-            $tocElement = $this->getPageElement($tocId)->getDomElement();
-            $tocElement->addClass(Toc::getClass());
-
-            $toc = $this->getTocOrDefault();
-            $tocVariable = Template::toValidVariableName($tocId);
-            $htmlFragmentByVariables[$tocVariable] = $toc->toXhtml();
-            $tocElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $tocVariable);
-
-        } catch (ExceptionNotFound $e) {
-            // no toc
-        }
-
-        /**
-         * Page Tool
-         */
-        try {
-            /**
-             * Page tool is located relatively to its parent
-             */
-            $pageToolElement = $this->getPageElement(PageTemplate::PAGE_TOOL_ELEMENT)->getDomElement();
-            try {
-                $pageToolParent = $pageToolElement->getParent();
+                $pageLayoutElement = $this->getMainElement();
+                $layoutVariable = $pageLayoutElement->getVariableName();
+                $htmlFragmentByVariables[$layoutVariable] = $mainHtml;
+                $pageLayoutElement->getDomElement()->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
             } catch (ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("The page tool element has no parent in the template ($this->htmlTemplatePath)");
+                // main element is mandatory, an error should have been thrown at build time
+                throw new ExceptionRuntimeInternal("Main element was not found", self::CANONICAL, 1, $e);
             }
-            $pageToolParent->addClass(PageTemplate::POSITION_RELATIVE_CLASS);
 
             /**
-             * The railbar
+             * Creating the HTML document
              */
-            $attributeName = "data-layout";
-            $railBar = FetcherRailBar::createRailBar()
-                ->setRequestedPath($this->getRequestedContextPath());
-            $railBarLayout = $pageToolElement->getAttribute($attributeName);
-            if ($railBarLayout !== "") {
-                $pageToolElement->removeAttribute($attributeName);
-                if ($railBarLayout === "offcanvas") {
+            $pageLayoutElements = $this->getPageLayoutElements();
+            foreach ($pageLayoutElements as $pageElement) {
+
+                $domElement = $pageElement->getDomElement();
+
+                /**
+                 * Layout Container
+                 * Page Header and Footer have a bar that permits to set the layout container value
+                 *
+                 * The page core does not have any
+                 * It's by default contained for all layout
+                 * generally applied on the page-core element ie
+                 * <div id="page-core" data-layout-container=>
+                 */
+                if ($domElement->hasAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
+                    $domElement->removeAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
+                    $container = Site::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                    $domElement->addClass(syntax_plugin_combo_container::getClassName($container));
+                }
+
+
+                /**
+                 * Rendering
+                 */
+                if (!$pageElement->isSlot() || $pageElement->isMain()) {
+                    /**
+                     * No rendering for container area
+                     * or for the main (passed as argument)
+                     */
+                    continue;
+                }
+
+
+                try {
+
+                    $fetcher = $pageElement->getMarkupFetcher();
                     try {
-                        $railBar = $railBar->setRequestedLayout($railBarLayout);
-                    } catch (ExceptionBadArgument $e) {
-                        LogUtility::internalError("The layout ($this) has railbar node that has a layout value of ($railBarLayout) that is unknown. Error:{$e->getMessage()}", self::CANONICAL);
+                        $fetcherHtmlString = $fetcher->getFetchString();
+                    } catch (\Exception $e) {
+                        throw new ExceptionRuntimeInternal($e->getMessage(), self::CANONICAL, 1, $e);
+                    }
+
+                    /**
+                     * We don't load / add the HTML string in the actual DOM document
+                     * to no add by-effect, corrections during loading and writing
+                     *
+                     * We add a template variable, we save the HTML in a array
+                     * And replace them after the loop
+                     */
+                    $layoutVariable = $pageElement->getVariableName();
+                    $htmlFragmentByVariables[$layoutVariable] = $fetcherHtmlString;
+                    $domElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
+
+                } catch (ExceptionNotFound|ExceptionBadArgument $e) {
+
+                    if ($e instanceof ExceptionBadArgument) {
+                        if (PluginUtility::isDevOrTest()) {
+                            /**
+                             * The slot {@link Path} for now should be all {@link WikiPath}
+                             */
+                            throw new ExceptionRuntimeInternal("Internal Error: the path could not be transformed as Wiki Path, while trying to get the fetcher. Error:{$e->getMessage()}", self::CANONICAL);
+                        }
+                    }
+
+                    /**
+                     * no fetcher fragment (page side for instance)
+                     * remove or empty ?
+                     *   * remove allows to not have any empty node but it may break css rules
+                     *   * empty permits not break any css rules (grid may be broken for instance)
+                     */
+                    $action = $domElement->getAttributeOrDefault(PageTemplate::DATA_EMPTY_ACTION_ATTRIBUTE, "none");
+                    switch ($action) {
+                        case "remove":
+                            $domElement->remove();
+                            break;
+                        case "none":
+                            // the empty node will stay in the page
+                            break;
+                        default:
+                            LogUtility::internalError("The value ($action) of the attribute (" . PageTemplate::DATA_EMPTY_ACTION_ATTRIBUTE . ") is unknown", self::CANONICAL);
+                    }
+                    continue;
+
+                }
+
+            }
+
+            /**
+             * Html
+             */
+            try {
+                $html = $this->getTemplateDomDocument()->querySelector("html");
+            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+                throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a html element");
+            }
+
+            try {
+                $lang = $this->getRequestedLang();
+                $langValue = $lang->getValueOrDefault();
+                $langDirection = $lang->getDirection();
+            } catch (ExceptionNotFound $e) {
+                // Site value
+                $langValue = Site::getLang();
+                $langDirection = Site::getLangDirection();
+            }
+            $html
+                ->setAttribute("lang", $langValue)
+                ->setAttribute("dir", $langDirection);
+            /**
+             * Not Xhtml bedcause it does not support boolean attribute without any value
+             *  ->setAttribute("xmlns", "http://www.w3.org/1999/xhtml")
+             *  ->setAttribute("xml:lang", $langValue)
+             */
+            $this->setRemFontSizeToHtml($html);
+
+
+            /**
+             * Body
+             * {@link tpl_classes} will add the dokuwiki class.
+             * See https://www.dokuwiki.org/devel:templates#dokuwiki_class
+             * dokuwiki__top ID is needed for the "Back to top" utility
+             * used also by some plugins
+             */
+            $tplClasses = tpl_classes();
+            try {
+                $layoutClass = StyleUtility::addComboStrapSuffix("layout-{$this->getLayoutName()}");
+                $bodyElement = $this->getTemplateDomDocument()->querySelector("body")
+                    ->addClass($tplClasses)
+                    ->addClass(PageTemplate::POSITION_RELATIVE_CLASS)
+                    ->addClass($layoutClass);
+            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+                throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a body element");
+            }
+
+            $this->addTaskRunnerImageIfRequested($bodyElement);
+
+            if (sizeof($htmlFragmentByVariables) === 0) {
+                LogUtility::internalError("No slot was rendered");
+            }
+
+            /**
+             * Toc
+             */
+            try {
+
+                $tocId = PageTemplate::MAIN_TOC_ELEMENT;
+                $tocElement = $this->getPageElement($tocId)->getDomElement();
+                $tocElement->addClass(Toc::getClass());
+
+                $toc = $this->getTocOrDefault();
+                $tocVariable = Template::toValidVariableName($tocId);
+                $htmlFragmentByVariables[$tocVariable] = $toc->toXhtml();
+                $tocElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $tocVariable);
+
+            } catch (ExceptionNotFound $e) {
+                // no toc
+            }
+
+            /**
+             * Page Tool
+             */
+            try {
+                /**
+                 * Page tool is located relatively to its parent
+                 */
+                $pageToolElement = $this->getPageElement(PageTemplate::PAGE_TOOL_ELEMENT)->getDomElement();
+                try {
+                    $pageToolParent = $pageToolElement->getParent();
+                } catch (ExceptionNotFound $e) {
+                    throw new ExceptionRuntimeInternal("The page tool element has no parent in the template ($this->htmlTemplatePath)");
+                }
+                $pageToolParent->addClass(PageTemplate::POSITION_RELATIVE_CLASS);
+
+                /**
+                 * The railbar
+                 */
+                $attributeName = "data-layout";
+                $railBar = FetcherRailBar::createRailBar()
+                    ->setRequestedPath($this->getRequestedContextPath());
+                $railBarLayout = $pageToolElement->getAttribute($attributeName);
+                if ($railBarLayout !== "") {
+                    $pageToolElement->removeAttribute($attributeName);
+                    if ($railBarLayout === "offcanvas") {
+                        try {
+                            $railBar = $railBar->setRequestedLayout($railBarLayout);
+                        } catch (ExceptionBadArgument $e) {
+                            LogUtility::internalError("The layout ($this) has railbar node that has a layout value of ($railBarLayout) that is unknown. Error:{$e->getMessage()}", self::CANONICAL);
+                        }
                     }
                 }
+                $railBarVariable = Template::toValidVariableName(FetcherRailBar::NAME);
+                $htmlFragmentByVariables[$railBarVariable] = $railBar->getFetchString();
+                $pageToolElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $railBarVariable);
+
+            } catch (ExceptionNotFound $e) {
+                // no page tool or no requested context path
             }
-            $railBarVariable = Template::toValidVariableName(FetcherRailBar::NAME);
-            $htmlFragmentByVariables[$railBarVariable] = $railBar->getFetchString();
-            $pageToolElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $railBarVariable);
 
-        } catch (ExceptionNotFound $e) {
-            // no page tool or no requested context path
+            /**
+             * Head
+             * (At the end of all processing, please)
+             */
+            try {
+                $head = $this->getTemplateDomDocument()->querySelector("head");
+            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
+                throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a head element");
+            }
+            $this->checkCharSetMeta($head);
+            $this->checkViewPortMeta($head);
+            $this->addPageIconMeta($head);
+            $this->addTitleMeta($head);
+
+            /**
+             * Snippet (in header)
+             * Css and Js from the layout if any
+             *
+             * Note that Header may be added during rendering and must be
+             * then called after rendering and toc
+             * At last then
+             */
+            $this->addHeadElements($head, $htmlFragmentByVariables);
+
+            /**
+             * Preloaded Css
+             * Not really useful
+             * We add it just before the end of the body tag
+             */
+            try {
+                $preloadHtml = $this->getHtmlForPreloadedStyleSheets();
+                $preloadVariable = Template::toValidVariableName(self::PRELOAD_TAG);
+                $htmlFragmentByVariables[$preloadVariable] = $preloadHtml;
+                $bodyElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $preloadVariable, "beforeend");
+            } catch (ExceptionNotFound $e) {
+                // no preloaded stylesheet resources
+            } catch (ExceptionBadArgument $e) {
+                // if the insert position is not good, should not happen as it's hard coded by us
+                throw new ExceptionRuntimeInternal("Inserting the preloaded HTML returns an error. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
+            }
+
+            /**
+             * We save as XML because we strive to be XML compliant (ie XHTML)
+             * And we want to load it as XML to check the XHTML namespace (ie xmlns)
+             */
+            $htmlBodyDocumentString = $this->getTemplateDomDocument()->toHtml();
+            $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlFragmentByVariables)->render();
+
+            /**
+             * DocType is required by bootstrap
+             * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
+             */
+            return "<!doctype html>\n$finalHtmlBodyString";
+        } finally {
+            $executionContext
+                ->closeExecutingPageTemplate();
         }
-
-        /**
-         * Head
-         * (At the end of all processing, please)
-         */
-        try {
-            $head = $this->getTemplateDomDocument()->querySelector("head");
-        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-            throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a head element");
-        }
-        $this->checkCharSetMeta($head);
-        $this->checkViewPortMeta($head);
-        $this->addPageIconMeta($head);
-        $this->addTitleMeta($head);
-
-        /**
-         * Snippet (in header)
-         * Css and Js from the layout if any
-         *
-         * Note that Header may be added during rendering and must be
-         * then called after rendering and toc
-         * At last then
-         */
-        $this->addHeadElements($head, $htmlFragmentByVariables);
-
-        /**
-         * Preloaded Css
-         * Not really useful
-         * We add it just before the end of the body tag
-         */
-        try {
-            $preloadHtml = $this->getHtmlForPreloadedStyleSheets();
-            $preloadVariable = Template::toValidVariableName(self::PRELOAD_TAG);
-            $htmlFragmentByVariables[$preloadVariable] = $preloadHtml;
-            $bodyElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $preloadVariable, "beforeend");
-        } catch (ExceptionNotFound $e) {
-            // no preloaded stylesheet resources
-        } catch (ExceptionBadArgument $e) {
-            // if the insert position is not good, should not happen as it's hard coded by us
-            throw new ExceptionRuntimeInternal("Inserting the preloaded HTML returns an error. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
-        }
-
-        /**
-         * We save as XML because we strive to be XML compliant (ie XHTML)
-         * And we want to load it as XML to check the XHTML namespace (ie xmlns)
-         */
-        $htmlBodyDocumentString = $this->getTemplateDomDocument()->toHtml();
-        $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlFragmentByVariables)->render();
-
-        /**
-         * DocType is required by bootstrap
-         * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
-         */
-        return "<!doctype html>\n$finalHtmlBodyString";
 
     }
 

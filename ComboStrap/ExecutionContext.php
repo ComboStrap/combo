@@ -906,9 +906,9 @@ class ExecutionContext
         return $this;
     }
 
-    public function closeExecutingPageTemplate(PageTemplate $pageTemplate): ExecutionContext
+    public function closeExecutingPageTemplate(): ExecutionContext
     {
-        $this->executingPageTemplate = $pageTemplate;
+        unset($this->executingPageTemplate);
         return $this;
     }
 

@@ -58,7 +58,7 @@ class action_plugin_combo_ajax extends DokuWiki_Action_Plugin
         $fetchUrl = Url::createFromGetOrPostGlobalVariable();
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         try {
-            $fetcher = $executionContext->createFetcherStringFromUrl($fetchUrl);
+            $fetcher = $executionContext->createStringMainFetcherFromRequestedUrl($fetchUrl);
         } catch (ExceptionInternal|ExceptionBadArgument|ExceptionNotFound $e) {
             if (PluginUtility::isTest()) {
                 throw new ExceptionRuntimeInternal("Error while creating the ajax fetcher.", self::CANONICAL, 1, $e);

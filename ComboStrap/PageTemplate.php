@@ -202,6 +202,9 @@ class PageTemplate
     public function generateAndGetPageHtmlAsString(string $mainHtml): string
     {
 
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->setExecutingPageTemplate($this);
+
         $htmlFragmentByVariables = [];
         try {
             $pageLayoutElement = $this->getMainElement();

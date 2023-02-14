@@ -557,7 +557,7 @@ class Call
     function getContext()
     {
         $mode = $this->call[0];
-        if ($mode == "plugin") {
+        if ($mode === "plugin") {
             return $this->call[1][1][PluginUtility::CONTEXT];
         } else {
             LogUtility::msg("You can't ask for a context from a non plugin call mode (" . $mode . ")", LogUtility::LVL_MSG_WARNING, "support");

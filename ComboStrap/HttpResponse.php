@@ -124,7 +124,7 @@ class HttpResponse
          * when it's used via a {@link  self::createFromDokuWikiResponse()}
          */
         if (isset($this->executionContext)) {
-            $this->executionContext->endExecutingFetcher();
+            $this->executionContext->closeMainExecutingFetcher();
         }
 
         if (isset($this->mime)) {

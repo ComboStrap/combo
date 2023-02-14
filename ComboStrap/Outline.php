@@ -125,7 +125,7 @@ class Outline
                 case syntax_plugin_combo_section::TAG:
                     continue 2;
                 case syntax_plugin_combo_header::TAG:
-                    if ($actualCall->getContext() === self::CONTEXT) {
+                    if ($actualCall->isPluginCall() && $actualCall->getContext() === self::CONTEXT) {
                         continue 2;
                     }
             }
@@ -163,12 +163,22 @@ class Outline
                     $this->actualSection->setEndPosition($actualCall->getFirstMatchedCharacterPosition() - 1);
                 }
                 $actualSectionLevel = $this->actualSection->getLevel();
-                try {
-                    $newSectionLevel = DataType::toInteger($actualCall->getAttribute(syntax_plugin_combo_heading::LEVEL));
-                } catch (ExceptionBadArgument $e) {
-                    LogUtility::internalError("The level was not present on the heading call", self::CANONICAL);
-                    $newSectionLevel = $actualSectionLevel;
+
+                if ($actualCall->isPluginCall()) {
+                    try {
+                        $newSectionLevel = DataType::toInteger($actualCall->getAttribute(syntax_plugin_combo_heading::LEVEL));
+                    } catch (ExceptionBadArgument $e) {
+                        LogUtility::internalError("The level was not present on the heading call", self::CANONICAL);
+                        $newSectionLevel = $actualSectionLevel;
+                    }
+                } else {
+                    $headerTagName = $actualCall->getTagName();
+                    if ($headerTagName !== "header") {
+                        throw new ExceptionRuntimeInternal("This is not a dokuwiki header call", self::CANONICAL);
+                    }
+                    $newSectionLevel = $actualCall->getInstructionCall()[1][1];
                 }
+
 
                 $newOutlineSection = OutlineSection::createFromEnterHeadingCall($actualCall);
                 $sectionDiff = $newSectionLevel - $actualSectionLevel;
@@ -467,7 +477,7 @@ EOF;
     public static function createFromMarkupPath(MarkupPath $markupPath): Outline
     {
         $path = $markupPath->getPathObject();
-        if(!($path instanceof WikiPath)){
+        if (!($path instanceof WikiPath)) {
             throw new ExceptionRuntimeInternal("The path is not a wiki path");
         }
         $markup = FileSystems::getContent($path);
@@ -756,7 +766,10 @@ EOF;
         }
         if ($firstChild->getLevel() === 1) {
             $headingCall = $firstChild->getEnterHeadingCall();
-            $headingCall->setAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $firstChild->getLabel());
+            // not dokuwiki header ?
+            if($headingCall->isPluginCall()) {
+                $headingCall->setAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $firstChild->getLabel());
+            }
         }
 
     }

@@ -22,12 +22,15 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     private FetcherCache $fetcherCache;
 
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public static function createPageFetcherFromRequestedPage(): FetcherPage
     {
         return self::createPageFetcherFromPath(WikiPath::createRequestedPagePathFromRequest());
     }
 
-    private static function createPageFetcherFromPath(Path $path): FetcherPage
+    public static function createPageFetcherFromPath(Path $path): FetcherPage
     {
         $fetcherPage = new FetcherPage();
         $fetcherPage->setRequestedPath($path);
@@ -45,7 +48,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
      * @return Url
      *
      * Note: The fetch url is the {@link FetcherCache keyCache}
-     * @throws ExceptionNotFound
      */
     function getFetchUrl(Url $url = null): Url
     {

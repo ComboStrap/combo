@@ -146,7 +146,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
             $fetcherName = $this->getFetcherNameFromAction($action);
             $url = Url::createFromGetOrPostGlobalVariable()
                 ->addQueryParameter(IFetcher::FETCHER_KEY, $fetcherName);
-            $fetcher = $executionContext->createFetcherStringFromUrl($url);
+            $fetcher = $executionContext->createStringMainFetcherFromRequestedUrl($url);
             $body = $fetcher->getFetchString();
             $this->doCustomActuallyExecuting = false;
             $mime = $fetcher->getMime();

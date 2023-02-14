@@ -109,11 +109,6 @@ class ExecutionContext
     private static ?ExecutionContext $executionContext = null;
 
     /**
-     * Dokuwiki set an other global ID when running the parser
-     * @var array keep track of the previous running envs to restore them
-     */
-    private array $previousRunningEnvs = [];
-    /**
      * The id used if
      * @deprecated to delete
      */
@@ -130,7 +125,7 @@ class ExecutionContext
      * @var string - to check if the requested id was set, if not the running id is set
      */
     private string $requestedWikiId;
-    private string $act;
+
     private Url $url;
 
 
@@ -141,7 +136,7 @@ class ExecutionContext
     private array $capturedConf;
     private bool $isConsoleOn = false;
     private HttpResponse $response;
-    private IFetcher $executingFetcher;
+    private IFetcher $executingMainFetcher;
 
     /**
      * @var FetcherMarkup  - the fetcher markup actually runnning
@@ -157,6 +152,7 @@ class ExecutionContext
      */
     private $oldAct;
     private string $oldId;
+    private PageTemplate $executingPageTemplate;
 
     public function __construct(Url $url)
     {
@@ -176,7 +172,6 @@ class ExecutionContext
             // the default value
             $urlAct = "show";
         }
-        $this->act = $urlAct;
         $ACT = $urlAct;
 
         /**
@@ -217,18 +212,14 @@ class ExecutionContext
      * that get the HTTP request
      * @param string $requestedId
      * @return ExecutionContext
+     * @deprecated use {@link self::setDefaultContextPath()} if you want to set a context path
+     * without using a {@link PageTemplate} or {@link FetcherMarkup}
      */
     public static function getOrCreateFromRequestedWikiId(string $requestedId): ExecutionContext
     {
 
-
-        $execution = self::getActualOrCreateFromEnv();
-        if ($execution->getSubExecutionCount() !== 0) {
-            LogUtility::internalError("All subexecutions should be closed before starting an new environment for a request.");
-        }
-        return $execution
-            ->setNewRequestedId($requestedId)
-            ->setExecutingId($requestedId);
+        return self::getActualOrCreateFromEnv()
+            ->setDefaultContextPath(WikiPath::createMarkupPathFromId($requestedId));
 
     }
 
@@ -286,50 +277,9 @@ class ExecutionContext
     }
 
 
-    /**
-     * Dokuwiki uses global variable to advertise an other parse environment
-     * That's fucked up but needs to live with it.
-     *
-     * Because we support also other template than the output {@link FetcherPage}, we need to give back this
-     * global variable also. We can't therefore create a stack of environment because if this is Dokuwiki that
-     * starts the parse, there is no sub environment created
-     *
-     * This utility function makes it clear and permits to set back the env with {@link ExecutionContext::closeSubExecutionEnv()}
-     *
-     * @param string $clazz - the origin class (to debug to see where the php execution is not consistent)
-     * @param string $runningId
-     * @param string|null $runningAct - when we run dynamic rendering, the act is set to advertise it (ie {@link FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME}
-     * @return ExecutionContext
-     */
-    public function startSubExecutionEnv(string $clazz, string $runningId, string $runningAct = self::SHOW_ACTION): ExecutionContext
-    {
 
-        try {
-            $executingId = $this->getExecutingWikiId();
-        } catch (ExceptionNotFound $e) {
-            LogUtility::internalError("No actual executing was found. We can't start a sub execution");
-            $executingId = null;
-        }
 
-        $executingAction = $this->getExecutingAction();
-        $this->previousRunningEnvs[] = [$executingId, $executingAction, $clazz];
-        $this
-            ->setExecutingId($runningId)
-            ->setExecutingAction($runningAct);
 
-        return $this;
-
-    }
-
-    public function closeSubExecutionEnv(): ExecutionContext
-    {
-        [$previousId, $previousAct] = array_pop($this->previousRunningEnvs);
-
-        $this->setExecutingId($previousId);
-        $this->setExecutingAction($previousAct);
-
-        return $this;
-    }
 
 
     /**
@@ -445,19 +395,12 @@ class ExecutionContext
     public function close()
     {
 
-        if (count($this->previousRunningEnvs) > 0) {
-            $env = ArrayUtility::formatAsString($this->previousRunningEnvs);
-            throw new ExceptionRuntimeInternal("All sub execution environment were not closed. $env");
-        }
         $this->restoreEnv();
 
-        unset($this->executingFetcher);
+        unset($this->executingMainFetcher);
         unset($this->executingFetcherMarkup);
-
         unset($this->executionScopedVariables);
-
         unset($this->cacheManager);
-
 
         /**
          * Log utility is not yet a conf
@@ -754,37 +697,37 @@ class ExecutionContext
         return $this;
     }
 
-    public function getSubExecutionCount(): int
-    {
-        return count($this->previousRunningEnvs);
-    }
-
 
     /**
+     * Set the main fetcher, the entry point of the request (ie the url of the browser)
+     * that will return a string
      * @throws ExceptionBadArgument
      * @throws ExceptionInternal
      * @throws ExceptionNotFound
      */
-    public function createFetcherStringFromUrl(Url $fetchUrl): IFetcherString
+    public function createStringMainFetcherFromRequestedUrl(Url $fetchUrl): IFetcherString
     {
-        $this->executingFetcher = FetcherSystem::createFetcherStringFromUrl($fetchUrl);
-        return $this->executingFetcher;
+        $this->executingMainFetcher = FetcherSystem::createFetcherStringFromUrl($fetchUrl);
+        return $this->executingMainFetcher;
     }
 
+
     /**
+     * Set the main fetcher (with the url of the browser)
+     * that will return a path (image, ...)
      * @throws ExceptionBadArgument
      * @throws ExceptionInternal
      * @throws ExceptionNotFound
      */
-    public function createPathFetcherFromUrl(Url $fetchUrl): IFetcherPath
+    public function createPathMainFetcherFromUrl(Url $fetchUrl): IFetcherPath
     {
-        $this->executingFetcher = FetcherSystem::createPathFetcherFromUrl($fetchUrl);
-        return $this->executingFetcher;
+        $this->executingMainFetcher = FetcherSystem::createPathFetcherFromUrl($fetchUrl);
+        return $this->executingMainFetcher;
     }
 
-    public function endExecutingFetcher(): ExecutionContext
+    public function closeMainExecutingFetcher(): ExecutionContext
     {
-        unset($this->executingFetcher);
+        unset($this->executingMainFetcher);
         return $this;
     }
 
@@ -859,11 +802,10 @@ class ExecutionContext
      */
     public function getExecutingFetcherMarkup(): FetcherMarkup
     {
-        if(isset($this->executingFetcherMarkup)){
+        if (isset($this->executingFetcherMarkup)) {
             return $this->executingFetcherMarkup;
         }
         throw new ExceptionNotFound("No markup execution running");
-
     }
 
     /**
@@ -927,6 +869,37 @@ class ExecutionContext
         return WikiPath::createRootNamespacePathOnMarkupDrive()->resolve(Site::getIndexPageName() . "." . WikiPath::MARKUP_DEFAULT_TXT_EXTENSION);
 
 
+    }
+
+    /**
+     * The page global context object
+     * @throws ExceptionNotFound
+     */
+    public function getExecutingPageTemplate(): PageTemplate
+    {
+        if (isset($this->executingPageTemplate)){
+          return $this->executingPageTemplate;
+        }
+        throw new ExceptionNotFound("No page template execution running");
+    }
+
+    /**
+     * Set the page template that is executing.
+     * It's the context object for all page related
+     * (mostly header event)
+     * @param PageTemplate $pageTemplate
+     * @return $this
+     */
+    public function setExecutingPageTemplate(PageTemplate $pageTemplate): ExecutionContext
+    {
+        $this->executingPageTemplate = $pageTemplate;
+        return $this;
+    }
+
+    public function closeExecutingPageTemplate(PageTemplate $pageTemplate): ExecutionContext
+    {
+        $this->executingPageTemplate = $pageTemplate;
+        return $this;
     }
 
 }

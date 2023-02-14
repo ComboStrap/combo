@@ -108,11 +108,18 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     /**
      * @param Path $executingPath - the path where we can find the markup
-     * @param WikiPath $contextPath - the context path (from where relative component are resolved (ie links, ...))
+     * @param ?WikiPath $contextPath - the context path, the requested path in the browser url (from where relative component are resolved (ie links, ...))
      * @return FetcherMarkup
      */
-    public static function createXhtmlMarkupFetcherFromPath(Path $executingPath, WikiPath $contextPath): FetcherMarkup
+    public static function createXhtmlMarkupFetcherFromPath(Path $executingPath, WikiPath $contextPath = null): FetcherMarkup
     {
+        if ($contextPath === null) {
+            try {
+                $contextPath = $executingPath->toWikiPath();
+            } catch (ExceptionCast $e) {
+                throw new ExceptionRuntimeInternal("We couldn't determine a context path. The context path argument is null and the executing path cannot not become a wiki path.", $e);
+            }
+        }
         return FetcherMarkup::getBuilder()
             ->setRequestedExecutingPath($executingPath)
             ->setRequestedContextPath($contextPath)

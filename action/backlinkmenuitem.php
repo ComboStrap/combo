@@ -2,11 +2,15 @@
 
 use ComboStrap\BacklinkMenuItem;
 use ComboStrap\Event;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExecutionContext;
+use ComboStrap\FetcherMarkup;
+use ComboStrap\FetcherPage;
 use ComboStrap\FileSystems;
 use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
 use ComboStrap\LinkMarkup;
+use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Mime;
 use ComboStrap\MarkupPath;
@@ -70,11 +74,18 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
             }
         }
         /**
-         * Add the wl to build the link to the backlinks actions
+         * Add the link to build the link to the backlinks actions
          */
-        $pagePath = WikiPath::getContextPath();
+        try {
+            $requestedContextPage = ExecutionContext::getActualOrCreateFromEnv()
+                ->getExecutingPageTemplate()
+                ->getRequestedContextPath();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("The requested context path should be available");
+            return;
+        }
         global $JSINFO;
-        $JSINFO[self::WHREF] = wl($pagePath->getWikiId());
+        $JSINFO[self::WHREF] = FetcherPage::createPageFetcherFromPath($requestedContextPage)->getFetchUrl()->toString();
 
     }
 

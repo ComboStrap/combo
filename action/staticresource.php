@@ -115,7 +115,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         try {
 
-            $fetcher = $executionContext->createPathFetcherFromUrl($fetchUrl);
+            $fetcher = $executionContext->createPathMainFetcherFromUrl($fetchUrl);
             $fetchPath = $fetcher->getFetchPath();
             $event->data['file'] = $fetchPath->toQualifiedId();
             $event->data['status'] = HttpResponseStatus::ALL_GOOD;

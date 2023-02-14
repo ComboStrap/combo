@@ -223,7 +223,7 @@ class MarkupCacheDependencies
             case MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY:
                 return $requestedPage->getPathObject()->toQualifiedId();
             default:
-                throw new ExceptionCompile("The requested dependency value ($dependenciesValue) has no calculation");
+                throw new ExceptionRuntimeInternal("The requested dependency value ($dependenciesValue) has no calculation");
         }
 
 

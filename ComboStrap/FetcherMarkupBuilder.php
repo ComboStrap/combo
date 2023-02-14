@@ -60,7 +60,19 @@ class FetcherMarkupBuilder extends FetcherMarkup
     public function setRequestedExecutingPath(?Path $executingPath): FetcherMarkupBuilder
     {
 
-        $this->markupSourcePath = $executingPath;
+        try {
+            /**
+             * Normalize to wiki path if possible
+             * Why ?
+             * Because the parent path may be used a {@link MarkupCacheDependencies::getValueForKey()  cache key} and they will have different value
+             * With Local Path: C:\Users\gerardnico\AppData\Local\Temp\dwtests-1676386702.9751\data\pages\ns_without_scope
+             * With Wiki Path: ns_without_scope
+             * Making the cache file output key different
+             */
+            $this->markupSourcePath = $executingPath->toWikiPath();
+        } catch (ExceptionCast $e) {
+            $this->markupSourcePath = $executingPath;
+        }
         return $this;
 
     }

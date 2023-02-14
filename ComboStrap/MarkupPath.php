@@ -382,24 +382,24 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public function createHtmlFetcherWithContextPath(WikiPath $contextPath = null): FetcherMarkup
     {
         $path = $this->getPathObject();
+
         if ($contextPath === null) {
-            if ((!$path instanceof WikiPath)) {
-                throw new ExceptionRuntimeInternal("The path ($path) is not a wiki path");
+            try {
+                $contextPath = $path->toWikiPath();
+            } catch (ExceptionCast $e) {
+                $contextPath = ExecutionContext::getActualOrCreateFromEnv()
+                    ->getDefaultContextPath();
             }
-            $contextPath = $path;
         }
-        return FetcherMarkup::createPageFragmentFetcherFromPath($path, $contextPath)
-            ->setRequestedMimeToXhtml();
+        return FetcherMarkup::createXhtmlMarkupFetcherFromPath($path, $contextPath);
     }
 
     public function getHtmlPath(): LocalPath
     {
+
         $fetcher = $this->createHtmlFetcherWithContextPath();
-        try {
-            return $fetcher->processIfNeededAndGetFetchPath();
-        } finally {
-            $fetcher->close();
-        }
+        return $fetcher->processIfNeededAndGetFetchPath();
+
     }
 
     /**
@@ -741,7 +741,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
         try {
             $wikiPath = $this->getPathObject()->toWikiPath();
-            FetcherMarkup::createPageFragmentFetcherFromPath($wikiPath, $wikiPath)
+            FetcherMarkup::createXhtmlMarkupFetcherFromPath($wikiPath, $wikiPath)
                 ->setRequestedMimeToMetadata()
                 ->feedCache()
                 ->getFetchArray();
@@ -932,11 +932,8 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     {
 
         $fetcherMarkup = $this->createHtmlFetcherWithContextPath();
-        try {
-            return $fetcherMarkup->getFetchString();
-        } finally {
-            $fetcherMarkup->close();
-        }
+        return $fetcherMarkup->getFetchString();
+
 
     }
 
@@ -1140,11 +1137,8 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     function fetchAnalyticsPath(): Path
     {
         $fetcher = renderer_plugin_combo_analytics::createAnalyticsFetcherForPageFragment($this);
-        try {
-            return $fetcher->processIfNeededAndGetFetchPath();
-        } finally {
-            $fetcher->close();
-        }
+        return $fetcher->processIfNeededAndGetFetchPath();
+
     }
 
     public
@@ -1870,18 +1864,27 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
 
     /**
-     *
+     * Utility class
+     * Get the instructions document as if it was the main page.
+     * Ie the context path is:
+     *  * the markup path itself)
+     *  * or the default context path if the path cannot be transformed as wiki path.
      */
-    public
-    function getInstructionsDocument(): FetcherMarkup
+    public function getInstructionsDocument(): FetcherMarkup
     {
 
         $path = $this->getPathObject();
-        if ((!$path instanceof WikiPath)) {
-            throw new ExceptionRuntimeInternal("The path ($path) is not a wiki path");
+        try {
+            $contextPath = $path->toWikiPath();
+        } catch (ExceptionCast $e) {
+            $contextPath = ExecutionContext::getActualOrCreateFromEnv()
+                ->getDefaultContextPath();
         }
-        return FetcherMarkup::createPageFragmentFetcherFromPath($path, $path)
-            ->setRequestedMimeToInstructions();
+        return FetcherMarkup::getBuilder()
+            ->setRequestedExecutingPath($path)
+            ->setRequestedContextPath($contextPath)
+            ->setRequestedMimeToInstructions()
+            ->build();
 
     }
 
@@ -2052,13 +2055,10 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public function getOutline(): Outline
     {
         $fetcherMarkup = $this->getInstructionsDocument();
-        try {
-            $instructions = $fetcherMarkup->getFetchPathAsInstructionsArray();
-            $callStack = CallStack::createFromInstructions($instructions);
-            return Outline::createFromCallStack($callStack, $this);
-        } finally {
-            $fetcherMarkup->close();
-        }
+        $instructions = $fetcherMarkup->getFetchPathAsInstructionsArray();
+        $callStack = CallStack::createFromInstructions($instructions);
+        return Outline::createFromCallStack($callStack, $this);
+
     }
 
 
@@ -2070,15 +2070,10 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     public function getInstructionsPath(): LocalPath
     {
+
         $instructionsDocument = $this->getInstructionsDocument();
-        try {
+        return $instructionsDocument->processIfNeededAndGetFetchPath();
 
-            return $instructionsDocument->processIfNeededAndGetFetchPath();
-
-        } finally {
-
-            $instructionsDocument->close();
-        }
     }
 
     private function getPrimaryFooterPage(): ?MarkupPath

@@ -58,7 +58,7 @@ abstract class PathAbs implements Path
         if ($index === false) {
             return $names;
         }
-        $names[$sizeof - 1] = substr($lastName, 0,$index);
+        $names[$sizeof - 1] = substr($lastName, 0, $index);
         return $names;
     }
 
@@ -90,6 +90,20 @@ abstract class PathAbs implements Path
             }
         }
         throw new ExceptionCast("This is not a wiki path or local path");
+    }
+
+    /**
+     * @throws ExceptionCast when
+     */
+    function toLocalPath(): LocalPath
+    {
+        if ($this instanceof LocalPath) {
+            return $this;
+        }
+        if ($this instanceof WikiPath) {
+            return $this->toLocalPath();
+        }
+        throw new ExceptionCast("Unable to cast to LocalPath as this path is not a wiki path or a local path but a " . get_class($this));
     }
 
 

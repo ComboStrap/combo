@@ -256,8 +256,6 @@ class PageTemplate
                     $fetcherHtmlString = $fetcher->getFetchString();
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal($e->getMessage(), self::CANONICAL, 1, $e);
-                } finally {
-                    $fetcher->close();
                 }
 
                 /**

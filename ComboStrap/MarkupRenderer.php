@@ -8,7 +8,8 @@ class MarkupRenderer
 
     public const INSTRUCTION_EXTENSION = "i";
     const CANONICAL = "markup:renderer";
-    const DEFAULT_RENDERER = "xhtml";
+    const XHTML_RENDERER = "xhtml";
+    const DEFAULT_RENDERER = self::XHTML_RENDERER;
     const METADATA_EXTENSION = "meta";
     /**
      * @var string source of the renderer is a markup (and not instructions)

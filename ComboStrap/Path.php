@@ -101,4 +101,12 @@ interface Path
      * @throws ExceptionCast
      */
     function toWikiPath(): WikiPath;
+
+    /**
+     * @return LocalPath an utility function
+     * @throws ExceptionCast
+     */
+    function toLocalPath(): LocalPath;
+
+
 }

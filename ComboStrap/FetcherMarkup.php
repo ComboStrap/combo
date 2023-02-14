@@ -48,13 +48,10 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     private CacheParser $snippetCache;
 
 
-    private Mime $mime;
+    protected Mime $mime;
     private bool $cacheAfterRendering = true;
-    private string $renderer;
-    private MarkupCacheDependencies $cacheDependencies;
-    private bool $objectHasBeenBuild = false;
-    private ExecutionContext $executionContext;
-    private bool $closed = false;
+    protected MarkupCacheDependencies $cacheDependencies;
+
 
 
     /**
@@ -62,21 +59,20 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     private array $snippets = [];
 
-    private bool $removeRootBlockElement = false;
-    private string $requestedRendererName = MarkupRenderer::DEFAULT_RENDERER;
+    protected bool $removeRootBlockElement = false;
 
     /**
      * @var WikiPath the context path, it's important to resolve relative link and to create cache for each context namespace for instance
      */
-    private WikiPath $requestedContextPath;
+    protected WikiPath $requestedContextPath;
 
     /**
      * @var ?Path the source path of the markup (may be not set if we render a markup string for instance)
      */
-    private ?Path $markupSourcePath = null;
+    protected ?Path $markupSourcePath = null;
 
 
-    private ?string $markupString = null;
+    protected ?string $markupString = null;
 
     /**
      * @var array the data fetch as array
@@ -96,32 +92,24 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     }
 
     /**
-     * @param ?Path $executingPath - the path where we can find the markup
+     * @param Path $executingPath - the path where we can find the markup
      * @param WikiPath $contextPath - the context path (from where relative component are resolved (ie links, ...))
      * @return FetcherMarkup
      */
-    public static function createPageFragmentFetcherFromPath(?Path $executingPath, WikiPath $contextPath): FetcherMarkup
+    public static function createXhtmlMarkupFetcherFromPath(Path $executingPath, WikiPath $contextPath): FetcherMarkup
     {
-        return (new FetcherMarkup())
+        return FetcherMarkup::getBuilder()
             ->setRequestedExecutingPath($executingPath)
-            ->setRequestedContextPath($contextPath);
+            ->setRequestedContextPath($contextPath)
+            ->setRequestedMimeToXhtml()
+            ->build();
     }
 
-    public static function createPageFragmentFetcherFromMarkupString(string $markupString, WikiPath $contextPath): FetcherMarkup
+
+    public static function getBuilder(): FetcherMarkupBuilder
     {
-        return (new FetcherMarkup())
-            ->setMarkupString($markupString)
-            ->setRequestedContextPath($contextPath);
+        return new FetcherMarkupBuilder();
     }
-
-    private static function createFromMarkupString(string $markup, ?Path $executingPath, WikiPath $requestedContextPath): FetcherMarkup
-    {
-        return (new FetcherMarkup())
-            ->setMarkupString($markup)
-            ->setRequestedExecutingPath($executingPath)
-            ->setRequestedContextPath($requestedContextPath);
-    }
-
 
     /**
      *
@@ -150,21 +138,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     }
 
-
-    /**
-     * The source where the markup is stored (null if dynamic)
-     * It's a duplicate of {@link FetcherMarkup::setSourcePath()}
-     * @param ?Path $executingPath
-     * @return $this
-     */
-    private function setRequestedExecutingPath(?Path $executingPath): FetcherMarkup
-    {
-
-        $this->checkNoSetAfterBuild();
-        $this->markupSourcePath = $executingPath;
-        return $this;
-
-    }
 
     /**
      * @return Mime
@@ -200,11 +173,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * And the global environment are not always passed
          * in all actions and is needed to log the {@link  CacheResult cache
          * result}
-         */
-        $this->buildObjectAndEnvironmentIfNeeded();
-
-
-        /**
+         *
          * Use cache should be always called because it trigger
          * the event coupled to the cache (ie PARSER_CACHE_USE)
          */
@@ -292,13 +261,23 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             return $this->snippetCache;
         }
 
-        $this->buildObjectAndEnvironmentIfNeeded();
-
-        $id = $this->getSourcePath()->getWikiId();
-        $slotLocalFilePath = $this->getSourcePath()
-            ->toLocalPath()
-            ->toAbsolutePath()
-            ->toQualifiedId();
+        $path = null;
+        try {
+            $path = $this->getSourcePath();
+        } catch (ExceptionNotFound $e) {
+            if (!$this->isMarkupStringExecution()) {
+                throw new ExceptionRuntimeInternal("A source path should be available as this is not a markup string execution");
+            }
+        }
+        $id = $path->toQualifiedId();
+        try {
+            $slotLocalFilePath = $path
+                ->toLocalPath()
+                ->toAbsolutePath()
+                ->toQualifiedId();
+        } catch (ExceptionCast $e) {
+            throw new ExceptionRuntimeInternal("The path type ($path) is not supported, we couldn't store the snippets.");
+        }
         $this->snippetCache = new CacheParser($id, $slotLocalFilePath, "snippet.json");
 
         /**
@@ -343,7 +322,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public function feedCache(): FetcherMarkup
     {
 
-        $this->buildObjectAndEnvironmentIfNeeded();
 
         if (!$this->shouldProcess()) {
             return $this;
@@ -424,26 +402,22 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     $executionContext->closeRunningFetcherMarkup();
                 }
                 break;
-            default:
-                $instructionsFetcher = FetcherMarkup::createFromMarkupString(
-                    $markup,
-                    $this->getSourcePathOrNull(),
-                    $this->getRequestedContextPath()
-                )
-                    ->setRequestedMimeToInstructions();
-                try {
-                    $instructions = $instructionsFetcher
-                        ->processIfNeeded()
-                        ->getInstructionsArray();
-                } finally {
-                    $instructionsFetcher->close();
-                }
+            case MarkupRenderer::XHTML_RENDERER:
+                $instructionsFetcher = FetcherMarkup::getBuilder()
+                    ->setMarkupString($markup)
+                    ->setRequestedContextPath($this->getRequestedContextPath())
+                    ->setRequestedExecutingPath($this->getSourcePathOrNull())
+                    ->setRequestedMimeToInstructions()
+                    ->build();
+
+                $instructions = $instructionsFetcher
+                    ->processIfNeeded()
+                    ->getInstructionsArray();
 
                 $markupRenderer = MarkupRenderer::createFromInstructions(
                     $instructions,
                     $this
                 )
-                    ->setRendererName($this->getRequestedRendererNameOrDefault())
                     ->setRequestedMime($this->getMime());
                 $executionContext->setExecutingFetcherMarkup($this);
                 try {
@@ -454,6 +428,9 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     $executionContext->closeRunningFetcherMarkup();
                 }
                 $this->cacheAfterRendering = $markupRenderer->getCacheAfterRendering();
+                break;
+            default:
+                throw new ExceptionRuntimeInternal("Extension file ($extension) not supported by the parser/renderer");
         }
         /**
          * We store always the output in the cache
@@ -523,25 +500,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     }
 
 
-    /**
-     */
-    public function setRequestedMime(Mime $mime): FetcherMarkup
-    {
-        $this->checkNoSetAfterBuild();
-        $this->mime = $mime;
-        return $this;
-    }
-
-    public function setRequestedMimeToXhtml(): FetcherMarkup
-    {
-        try {
-            return $this->setRequestedMime(Mime::createFromExtension("xhtml"));
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionRuntime("Internal error", 0, $e);
-        }
-
-    }
-
     private function getCacheAge(): int
     {
 
@@ -566,78 +524,9 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     }
 
 
-    /**
-     * Build object (mostly the cache)
-     * Setter should not be used after this
-     * function has been called
-     */
-    private function buildObjectAndEnvironmentIfNeeded(): void
-    {
-
-        if ($this->objectHasBeenBuild === true) {
-            if ($this->closed) {
-                /**
-                 * Just a check
-                 */
-                throw new ExceptionRuntimeInternal("The fetcher page fragment has already been closed and cannnot be used anymore");
-            }
-            return;
-        }
-        $this->objectHasBeenBuild = true;
-
-        /**
-         * The cache object depends on the running request
-         * We build it then just
-         *
-         * A request is also send by dokuwiki to check the cache validity
-         * We build it only once
-         *
-         */
-
-
-        /**
-         * The local path is part of the key cache and should be the same
-         * than dokuwiki
-         *
-         * For whatever reason, Dokuwiki uses:
-         *   * `/` as separator on Windows
-         *   * and Windows short path `GERARD~1` not gerardnico
-         * See {@link wikiFN()}
-         * There is also a cache in the function
-         *
-         * We can't use our {@link Path} class to be compatible because the
-         * path is on windows format without the short path format
-         */
-        try {
-            $wikiId = $this->getSourcePath()->toWikiPath()->getWikiId();
-        } catch (ExceptionCast|ExceptionNotFound $e) {
-            if ($this->getSourcePathOrNull() != null) {
-                LogUtility::errorIfDevOrTest("There is a source path / executing, we should be able to cache");
-            }
-            return;
-        }
-        $localFile = wikiFN($wikiId);
-
-        /**
-         * Cache by extension (ie type)
-         */
-        $extension = $this->getMime()->getExtension();
-        switch ($extension) {
-            case MarkupRenderer::INSTRUCTION_EXTENSION:
-                $this->cache = new CacheInstructions($wikiId, $localFile);
-                break;
-            default:
-                $this->cache = new CacheRenderer($wikiId, $localFile, $extension);
-                $this->getCacheDependencies()->rerouteCacheDestination($this->cache);
-                break;
-        }
-
-
-    }
-
     public function __toString()
     {
-        if($this->isMarkupStringExecution()){
+        if ($this->isMarkupStringExecution()) {
             $name = "Markup String Execution";
         } else {
             try {
@@ -646,7 +535,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 throw new ExceptionRuntimeInternal("A source path should be defined if it's not a markup string execution");
             }
         }
-        return parent::__toString() . " (" . $name .", ". $this->getMime()->toString() . ")";
+        return parent::__toString() . " (" . $name . ", " . $this->getMime()->toString() . ")";
     }
 
 
@@ -659,17 +548,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         return $this;
     }
 
-
-    public function setRequestedMimeToInstructions(): FetcherMarkup
-    {
-        try {
-            $this->setRequestedMime(Mime::createFromExtension(MarkupRenderer::INSTRUCTION_EXTENSION));
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionRuntime("Internal error: the mime is internal and should be good");
-        }
-        return $this;
-
-    }
 
     /**
      * Utility function that returns the fetch path as instructions array
@@ -696,9 +574,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     public function getCachePath(): LocalPath
     {
-        if (!$this->objectHasBeenBuild) {
-            $this->buildObjectAndEnvironmentIfNeeded();
-        }
         $path = $this->cache->cache;
         return LocalPath::createFromPathString($path);
     }
@@ -706,18 +581,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public function getCacheDependencies(): MarkupCacheDependencies
     {
-        if (!isset($this->cacheDependencies)) {
-            $this->cacheDependencies = MarkupCacheDependencies::create($this->getSourcePathOrNull(), $this->getRequestedContextPath());
-        }
         return $this->cacheDependencies;
-    }
-
-
-    private function checkNoSetAfterBuild()
-    {
-        if ($this->objectHasBeenBuild) {
-            LogUtility::internalError("You can't set when the object has been build");
-        }
     }
 
 
@@ -737,12 +601,15 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         if (!in_array($this->getMime()->getExtension(), ["html", "xhtml"])) {
             return $text;
         }
-        if ($this->getSourcePath()->getDrive() !== WikiPath::MARKUP_DRIVE) {
-            // case when this is a default page in the resource directory
-            return EditButton::deleteAll($text);
-        } else {
-            return EditButton::replaceOrDeleteAll($text);
+        try {
+            if ($this->getSourcePath()->toWikiPath()->getDrive() !== WikiPath::MARKUP_DRIVE) {
+                // case when this is a default page in the resource/template directory
+                return EditButton::deleteAll($text);
+            }
+        } catch (ExceptionNotFound|ExceptionCast $e) {
+            // not a wiki path
         }
+        return EditButton::replaceOrDeleteAll($text);
 
     }
 
@@ -760,60 +627,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public function getFetchPathAsXHtmlDom(): XmlDocument
     {
         return XmlDocument::createXmlDocFromMarkup($this->getFetchString());
-    }
-
-    /**
-     * The page context in which this fragment was requested
-     * @param WikiPath $contextPath
-     * @return $this
-     */
-    private function setRequestedContextPath(WikiPath $contextPath): FetcherMarkup
-    {
-        $this->requestedContextPath = $contextPath;
-        return $this;
-
-    }
-
-    /**
-     * Restore the environment variable
-     * @return $this
-     */
-    public function close(): FetcherMarkup
-    {
-        $this->closed = true;
-        return $this;
-    }
-
-    public function isClosed(): bool
-    {
-        return $this->closed = true;
-    }
-
-
-    /**
-     * The renderer will add a p block element
-     * if the first one is not one
-     * @param bool $b
-     * @return $this
-     */
-    public function setRemoveRootBlockElement(bool $b): FetcherMarkup
-    {
-        $this->removeRootBlockElement = $b;
-        return $this;
-    }
-
-    public function setRequestedRendererName(string $rendererName): FetcherMarkup
-    {
-        $this->requestedRendererName = $rendererName;
-        return $this;
-    }
-
-    private function getRequestedRendererNameOrDefault(): string
-    {
-        if (!isset($this->requestedRendererName)) {
-            return MarkupRenderer::DEFAULT_RENDERER;
-        }
-        return $this->requestedRendererName;
     }
 
 
@@ -841,14 +654,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         return $this->requestedContextPath;
     }
 
-    public function setRequestedMimeToMetadata(): FetcherMarkup
-    {
-        try {
-            return $this->setRequestedMime(Mime::createFromExtension(MarkupRenderer::METADATA_EXTENSION));
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionRuntime("Internal error", 0, $e);
-        }
-    }
 
     /**
      * @throws ExceptionNotFound
@@ -881,15 +686,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         return $this->fetchArray;
     }
 
-    /**
-     * @param string $markupString - the markup is a string format
-     * @return FetcherMarkup
-     */
-    private function setMarkupString(string $markupString): FetcherMarkup
-    {
-        $this->markupString = $markupString;
-        return $this;
-    }
 
     /**
      * @param string $componentId
@@ -971,7 +767,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public function processIfNeeded(): FetcherMarkup
     {
-        $this->buildObjectAndEnvironmentIfNeeded();
 
         if (!$this->shouldProcess()) {
             return $this;
@@ -979,11 +774,12 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
         $this->feedCache();
         return $this;
+
     }
 
     public function getInstructionsArray(): array
     {
-        if($this->getMime()->getExtension()!==MarkupRenderer::INSTRUCTION_EXTENSION){
+        if ($this->getMime()->getExtension() !== MarkupRenderer::INSTRUCTION_EXTENSION) {
             throw new ExceptionRuntimeInternal("This is not an instruction run, you can't ask the instruction array");
         }
         if (isset($this->fetchArray)) {

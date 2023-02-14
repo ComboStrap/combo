@@ -14,10 +14,9 @@ use TestRequest;
  * Note that normally every page has a page context
  * meaning that you can go from an admin page to show the page.
  *
- * They may be nested with {@link ExecutionContext::startSubExecutionEnv()} this is because Dokuwiki use the global variable
- * ID to get the actual parsed markup.
  *
  * When an execution context has finished, it should be {@link ExecutionContext::close() closed}
+ * or destroyed
  *
  * You can get the actual execution context with {@link ExecutionContext::getActualOrCreateFromEnv()}
  *

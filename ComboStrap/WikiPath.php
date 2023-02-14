@@ -877,102 +877,6 @@ class WikiPath extends PathAbs
 
 
     /**
-     * @return LocalPath
-     * TODO: change it for a constructor on LocalPath
-     */
-    public function toLocalPath(): LocalPath
-    {
-        /**
-         * File path
-         */
-        $filePathString = $this->absolutePath;
-        $isNamespacePath = self::isNamespacePath($this->absolutePath);
-        if ($isNamespacePath) {
-            /**
-             * Namespace
-             * (Fucked up is fucked up)
-             * We qualify for the namespace here
-             * because there is no link or media for a namespace
-             */
-            global $conf;
-            switch ($this->drive) {
-                case self::MEDIA_DRIVE:
-                    $localPath = LocalPath::createFromPathString($conf['mediadir']);
-                    break;
-                case self::MARKUP_DRIVE:
-                    $localPath = LocalPath::createFromPathString($conf['datadir']);
-                    break;
-                default:
-                    $localPath = WikiPath::getDriveRoots()[$this->drive];
-                    break;
-            }
-
-            foreach ($this->getNames() as $name) {
-                $localPath = $localPath->resolve($name);
-            }
-            return $localPath;
-        }
-
-        // File
-        switch ($this->drive) {
-            case self::MEDIA_DRIVE:
-                if (!empty($rev)) {
-                    $filePathString = mediaFN($this->id, $rev);
-                } else {
-                    $filePathString = mediaFN($this->id);
-                }
-                break;
-            case self::MARKUP_DRIVE:
-                /**
-                 * Adaptation of {@link WikiFN}
-                 */
-                global $conf;
-                try {
-                    $extension = $this->getExtension();
-                } catch (ExceptionNotFound $e) {
-                    LogUtility::internalError("For a markup path file, the extension should have been set. This is not the case for ($this)");
-                    $extension = self::MARKUP_DEFAULT_TXT_EXTENSION;
-                }
-                $idFileSystem = str_replace(':', '/', $this->id);
-                if (empty($this->rev)) {
-                    $filePathString = $conf['datadir'] . '/' . utf8_encodeFN($idFileSystem) . '.' . $extension;
-                } else {
-                    $filePathString = $conf['olddir'] . '/' . utf8_encodeFN($idFileSystem) . '.' . $this->rev . '.' . $extension;
-                    if ($conf['compression']) {
-                        //test for extensions here, we want to read both compressions
-                        if (file_exists($filePathString . '.gz')) {
-                            $filePathString .= '.gz';
-                        } elseif (file_exists($filePathString . '.bz2')) {
-                            $filePathString .= '.bz2';
-                        } else {
-                            //file doesnt exist yet, so we take the configured extension
-                            $filePathString .= '.' . $conf['compression'];
-                        }
-                    }
-                }
-
-                break;
-            default:
-                $baseDirectory = WikiPath::getDriveRoots()[$this->drive];
-                if ($baseDirectory === null) {
-                    // We don't throw, the file will just not exist
-                    // this is metadata
-                    LogUtility::msg("The drive ($this->drive) is unknown, the local file system path could not be found");
-                } else {
-                    $filePath = $baseDirectory;
-                    foreach ($this->getNames() as $name) {
-                        $filePath = $filePath->resolve($name);
-                    }
-                    $filePathString = $filePath->toQualifiedId();
-                }
-                break;
-        }
-        return LocalPath::createFromPathString($filePathString);
-
-    }
-
-
-    /**
      * The absolute path for a wiki path
      * @return string - the wiki path version
      */
@@ -1090,5 +994,99 @@ class WikiPath extends PathAbs
 
     }
 
+    /**
+     * @return LocalPath
+     * TODO: change it for a constructor on LocalPath
+     * @throws ExceptionCast
+     */
+    public function toLocalPath(): LocalPath
+    {
+        /**
+         * File path
+         */
+        $filePathString = $this->absolutePath;
+        $isNamespacePath = self::isNamespacePath($this->absolutePath);
+        if ($isNamespacePath) {
+            /**
+             * Namespace
+             * (Fucked up is fucked up)
+             * We qualify for the namespace here
+             * because there is no link or media for a namespace
+             */
+            global $conf;
+            switch ($this->drive) {
+                case self::MEDIA_DRIVE:
+                    $localPath = LocalPath::createFromPathString($conf['mediadir']);
+                    break;
+                case self::MARKUP_DRIVE:
+                    $localPath = LocalPath::createFromPathString($conf['datadir']);
+                    break;
+                default:
+                    $localPath = WikiPath::getDriveRoots()[$this->drive];
+                    break;
+            }
+
+            foreach ($this->getNames() as $name) {
+                $localPath = $localPath->resolve($name);
+            }
+            return $localPath;
+        }
+
+        // File
+        switch ($this->drive) {
+            case self::MEDIA_DRIVE:
+                if (!empty($rev)) {
+                    $filePathString = mediaFN($this->id, $rev);
+                } else {
+                    $filePathString = mediaFN($this->id);
+                }
+                break;
+            case self::MARKUP_DRIVE:
+                /**
+                 * Adaptation of {@link WikiFN}
+                 */
+                global $conf;
+                try {
+                    $extension = $this->getExtension();
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError("For a markup path file, the extension should have been set. This is not the case for ($this)");
+                    $extension = self::MARKUP_DEFAULT_TXT_EXTENSION;
+                }
+                $idFileSystem = str_replace(':', '/', $this->id);
+                if (empty($this->rev)) {
+                    $filePathString = $conf['datadir'] . '/' . utf8_encodeFN($idFileSystem) . '.' . $extension;
+                } else {
+                    $filePathString = $conf['olddir'] . '/' . utf8_encodeFN($idFileSystem) . '.' . $this->rev . '.' . $extension;
+                    if ($conf['compression']) {
+                        //test for extensions here, we want to read both compressions
+                        if (file_exists($filePathString . '.gz')) {
+                            $filePathString .= '.gz';
+                        } elseif (file_exists($filePathString . '.bz2')) {
+                            $filePathString .= '.bz2';
+                        } else {
+                            //file doesnt exist yet, so we take the configured extension
+                            $filePathString .= '.' . $conf['compression'];
+                        }
+                    }
+                }
+
+                break;
+            default:
+                $baseDirectory = WikiPath::getDriveRoots()[$this->drive];
+                if ($baseDirectory === null) {
+                    // We don't throw, the file will just not exist
+                    // this is metadata
+                    throw new ExceptionCast("The drive ($this->drive) is unknown, the local file system path could not be found");
+                }
+                $filePath = $baseDirectory;
+                foreach ($this->getNames() as $name) {
+                    $filePath = $filePath->resolve($name);
+                }
+                $filePathString = $filePath->toQualifiedId();
+                break;
+        }
+        return LocalPath::createFromPathString($filePathString);
+
+    }
 
 }

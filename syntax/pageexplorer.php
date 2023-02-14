@@ -1,30 +1,27 @@
 <?php
 
 
-use ComboStrap\ExecutionContext;
-use ComboStrap\MarkupCacheDependencies;
-use ComboStrap\CacheManager;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\FileSystems;
 use ComboStrap\Html;
 use ComboStrap\Icon;
-use ComboStrap\IconDownloader;
 use ComboStrap\IdManager;
-use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
+use ComboStrap\LogUtility;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\MarkupPath;
-use ComboStrap\Path;
+use ComboStrap\MarkupRenderUtility;
 use ComboStrap\PathTreeNode;
 use ComboStrap\PluginUtility;
-use ComboStrap\MarkupRenderUtility;
 use ComboStrap\StyleUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\TreeNode;
+use ComboStrap\WikiPath;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
 

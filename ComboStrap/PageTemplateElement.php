@@ -162,8 +162,8 @@ class PageTemplateElement
         try {
             return FileSystems::closest($requestedPath, $this->getLastFileNameForSlot() . '.' . $contextExtension);
         } catch (ExceptionNotFound $e) {
-            foreach (WikiPath::ALL_MARKUP_EXTENSIONS as $markupExtension){
-                if($markupExtension==$contextExtension){
+            foreach (WikiPath::ALL_MARKUP_EXTENSIONS as $markupExtension) {
+                if ($markupExtension == $contextExtension) {
                     continue;
                 }
                 try {
@@ -213,21 +213,18 @@ class PageTemplateElement
 
     /**
      * @throws ExceptionNotFound if the page/markup fragment was not found (a container element does not have any also)
-     * @throws ExceptionBadArgument if the path can not be set as wiki path
      */
     public function getMarkupFetcher(): FetcherMarkup
     {
         if (isset($this->fetcherFragment)) {
-            if (!$this->fetcherFragment->isClosed()) {
-                return $this->fetcherFragment;
-            }
+            return $this->fetcherFragment;
         }
         /**
          * Rebuild the fragment if any
          */
         $fragmentPath = $this->getFragmentPath();
         $contextPath = $this->pageLayout->getRequestedContextPath();
-        $this->fetcherFragment = FetcherMarkup::createPageFragmentFetcherFromPath($fragmentPath, $contextPath);
+        $this->fetcherFragment = FetcherMarkup::createXhtmlMarkupFetcherFromPath($fragmentPath, $contextPath);
         return $this->fetcherFragment;
     }
 
@@ -235,7 +232,6 @@ class PageTemplateElement
     {
         return $this->getId() === PageTemplate::MAIN_CONTENT_ELEMENT;
     }
-
 
 
 }

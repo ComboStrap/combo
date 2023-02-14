@@ -126,12 +126,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
              * or the cache is not fresh
              */
             $fetcherMainPageFragment = $mainFetcher->getMarkupFetcher();
-            try {
-                $path = $fetcherMainPageFragment->processIfNeededAndGetFetchPath();
-            } finally {
-                $fetcherMainPageFragment->close();
-            }
-
+            $path = $fetcherMainPageFragment->processIfNeededAndGetFetchPath();
             $cache->addFileDependency($path);
         } catch (ExceptionNotFound $e) {
             // it should be found
@@ -151,11 +146,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
             }
             try {
                 $fetcherPageFragment = $pageElement->getMarkupFetcher();
-                try {
-                    $cache->addFileDependency($fetcherPageFragment->processIfNeededAndGetFetchPath());
-                } finally {
-                    $fetcherPageFragment->close();
-                }
+                $cache->addFileDependency($fetcherPageFragment->processIfNeededAndGetFetchPath());
             } catch (ExceptionNotFound $e) {
                 // no markup for this slot
             }
@@ -175,11 +166,8 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         }
 
         $mainFetcher = $this->pageLayout->getMainElement()->getMarkupFetcher();
-        try {
-            $mainHtml = $mainFetcher->getFetchString();
-        } finally {
-            $mainFetcher->close();
-        }
+        $mainHtml = $mainFetcher->getFetchString();
+
 
         /**
          * Found in {@link tpl_content()}

@@ -265,7 +265,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             LogUtility::errorIfDevOrTest("The resource is not a wiki path");
             return $this;
         }
-        $this->data = FetcherMarkup::createPageFragmentFetcherFromPath($wikiPage, $wikiPage)
+        $this->data = FetcherMarkup::createXhtmlMarkupFetcherFromPath($wikiPage, $wikiPage)
             ->setRequestedMimeToMetadata()
             ->feedCache()
             ->getFetchArray();

@@ -47,20 +47,18 @@ class CacheResults
             if ($cacheParser->mode === FetcherMarkup::XHTML_MODE) {
                 $page = $cacheParser->page;
                 $markupFetcher = MarkupPath::createMarkupFromId($page)->createHtmlFetcherWithContextPath();
-                try {
-                    /**
-                     * @var CacheParser[] $cacheStores
-                     */
-                    $cacheStores = [$markupFetcher->getSnippetCacheStore(), $markupFetcher->getDependenciesCacheStore()];
-                    foreach ($cacheStores as $cacheStore) {
-                        if (file_exists($cacheStore->cache)) {
-                            $this->cacheResults[$cacheStore->mode] = (new CacheResult($cacheStore))
-                                ->setResult($event->result);
-                        }
+
+                /**
+                 * @var CacheParser[] $cacheStores
+                 */
+                $cacheStores = [$markupFetcher->getSnippetCacheStore(), $markupFetcher->getDependenciesCacheStore()];
+                foreach ($cacheStores as $cacheStore) {
+                    if (file_exists($cacheStore->cache)) {
+                        $this->cacheResults[$cacheStore->mode] = (new CacheResult($cacheStore))
+                            ->setResult($event->result);
                     }
-                } finally {
-                    $markupFetcher->close();
                 }
+
             }
         }
     }

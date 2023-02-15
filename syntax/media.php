@@ -98,7 +98,12 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     {
         $markupUrlString = $attributes[MarkupRef::REF_ATTRIBUTE];
         $renderer->stats[renderer_plugin_combo_analytics::MEDIA_COUNT]++;
-        $markupUrl = MediaMarkup::createFromRef($markupUrlString);
+        try {
+            $markupUrl = MediaMarkup::createFromRef($markupUrlString);
+        } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
+            LogUtility::error("media update statistics: cannot create the media markup", "media", $e);
+            return;
+        }
         switch ($markupUrl->getInternalExternalType()) {
             case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
                 $renderer->stats[renderer_plugin_combo_analytics::INTERNAL_MEDIA_COUNT]++;
@@ -188,11 +193,8 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $mediaMarkup = MediaMarkup::createFromMarkup($match);
             } catch (ExceptionCompile $e) {
                 $message = "The media ($match) could not be parsed. Error: {$e->getMessage()}";
-                if (PluginUtility::isDevOrTest()) {
-                    // to get the trace on test run
-                    throw new ExceptionRuntime($message, self::TAG, 1, $e);
-                }
-                LogUtility::error($message);
+                // to get the trace on test run
+                LogUtility::error($message, self::TAG, $e);
                 return [];
             }
 

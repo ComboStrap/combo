@@ -100,6 +100,7 @@ class MediaMarkup
     private TagAttributes $extraMediaTagAttributes;
     private ?string $linkingClass = null;
     private IFetcher $fetcher;
+    private Url $fetchUrl;
 
     private function __construct()
     {
@@ -117,8 +118,6 @@ class MediaMarkup
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
-     * @throws ExceptionNotExists
-     * @throws ExceptionInternal
      */
     private function setMarkupRef(string $markupRef): MediaMarkup
     {
@@ -224,7 +223,6 @@ class MediaMarkup
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
      * @throws ExceptionNotFound
-     * @throws ExceptionNotExists
      */
     public static function createFromRef(string $markupRef): MediaMarkup
     {
@@ -239,7 +237,7 @@ class MediaMarkup
      */
     public function getFetchUrl(): Url
     {
-        return $this->fetcher->getFetchUrl();
+        return $this->getFetcher()->getFetchUrl();
     }
 
 
@@ -654,14 +652,7 @@ class MediaMarkup
             }
         }
 
-        try {
-            $this->fetcher = FetcherSystem::createPathFetcherFromUrl($fetchUrl);
-        } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionInternal|ExceptionNotExists|ExceptionNotFound $e) {
-            // we don't support http fetch
-            if (!($this->getMarkupRef()->getSchemeType() === MarkupRef::WEB_URI)) {
-                throw $e;
-            }
-        }
+        $this->fetchUrl = $fetchUrl;
         return $this;
     }
 
@@ -711,13 +702,35 @@ class MediaMarkup
 
     /**
      * @return IFetcher
+     * @throws ExceptionBadArgument
+     * @throws ExceptionInternal
+     * @throws ExceptionNotFound
      */
     public function getFetcher(): IFetcher
     {
+        if (!isset($this->fetcher)) {
+            if (!isset($this->fetchUrl)) {
+                throw new ExceptionRuntimeInternal("No fetcher or url was set");
+            }
+            /**
+             * Fetcher is build later
+             * because for a raster image
+             * actually, we can't built it
+             * if the file does not exists.
+             * It will throw an error immediatly and we may want not.
+             * For resources, we want to build the url even if the image does not exists.
+             */
+            try {
+                $this->fetcher = FetcherSystem::createPathFetcherFromUrl($this->fetchUrl);
+            } catch (ExceptionBadArgument|ExceptionInternal|ExceptionNotFound $e) {
+                // we don't support http fetch
+                if (!($this->getMarkupRef()->getSchemeType() === MarkupRef::WEB_URI)) {
+                    throw $e;
+                }
+            }
+        }
         return $this->fetcher;
     }
-
-
 
 
 }

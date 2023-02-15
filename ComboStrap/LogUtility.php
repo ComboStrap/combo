@@ -340,14 +340,14 @@ class LogUtility
         self::msg($message, LogUtility::LVL_MSG_ERROR, $canonical, $e);
     }
 
-    public static function warning(string $message, string $canonical = "support")
+    public static function warning(string $message, string $canonical = "support",  \Exception $e = null)
     {
-        self::msg($message, LogUtility::LVL_MSG_WARNING, $canonical);
+        self::msg($message, LogUtility::LVL_MSG_WARNING, $canonical, $e);
     }
 
-    public static function info(string $message, string $canonical = "support")
+    public static function info(string $message, string $canonical = "support", \Exception $e = null)
     {
-        self::msg($message, LogUtility::LVL_MSG_INFO, $canonical);
+        self::msg($message, LogUtility::LVL_MSG_INFO, $canonical, $e);
     }
 
     /**

@@ -147,7 +147,7 @@ class MarkupRenderer
 
                     $contextPath = null;
                     if (isset($this->requestedContextPath)){
-                        $contextPath = $this->$this->requestedContextPath;
+                        $contextPath = $this->requestedContextPath;
                     }
 
                     $this->instructionsSource = MarkupRenderer::createFromMarkup($this->markupSource, $executingPath, $contextPath)

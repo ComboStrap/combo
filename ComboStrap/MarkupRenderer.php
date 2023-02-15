@@ -140,7 +140,17 @@ class MarkupRenderer
                  * $ret = p_cached_output($file, 'xhtml', $pageid);
                  */
                 if (!isset($this->instructionsSource)) {
-                    $this->instructionsSource = MarkupRenderer::createFromMarkup($this->markupSource, $this->executingPath, $this->requestedContextPath)
+                    $executingPath = null;
+                    if (isset($this->executingPath)){
+                        $executingPath = $this->executingPath;
+                    }
+
+                    $contextPath = null;
+                    if (isset($this->requestedContextPath)){
+                        $contextPath = $this->$this->requestedContextPath;
+                    }
+
+                    $this->instructionsSource = MarkupRenderer::createFromMarkup($this->markupSource, $executingPath, $contextPath)
                         ->setRequestedMimeToInstruction()
                         ->setDeleteRootBlockElement($this->deleteRootElement)
                         ->getOutput();

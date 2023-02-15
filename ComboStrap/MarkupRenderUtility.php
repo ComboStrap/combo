@@ -31,7 +31,6 @@ class MarkupRenderUtility
             ->setDeleteRootBlockElement($strip)
             ->setRequestedMimeToXhtml();
 
-
         return $markupRenderer->getOutput();
 
 

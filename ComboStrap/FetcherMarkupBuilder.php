@@ -204,7 +204,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
 
     }
 
-    public function setRequestedMimeToMetadata(): FetcherMarkup
+    public function setRequestedMimeToMetadata(): FetcherMarkupBuilder
     {
         try {
             return $this->setRequestedMime(Mime::createFromExtension(MarkupRenderer::METADATA_EXTENSION));

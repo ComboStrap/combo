@@ -732,8 +732,11 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
         try {
             $wikiPath = $this->getPathObject()->toWikiPath();
-            FetcherMarkup::createXhtmlMarkupFetcherFromPath($wikiPath, $wikiPath)
+            FetcherMarkup::getBuilder()
+                ->setRequestedContextPath($wikiPath)
+                ->setRequestedExecutingPath($wikiPath)
                 ->setRequestedMimeToMetadata()
+                ->build()
                 ->feedCache()
                 ->getFetchArray();
         } catch (ExceptionCast $e) {

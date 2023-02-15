@@ -142,6 +142,15 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         return new FetcherMarkupBuilder();
     }
 
+    public static function createFromStringMarkupToXhtml(string $markup): FetcherMarkup
+    {
+        return self::getBuilder()
+            ->setMarkupString($markup)
+            ->setRequestedContextPathAsDefault()
+            ->setRequestedMimeToXhtml()
+            ->build();
+    }
+
     /**
      *
      * @param Url|null $url
@@ -638,6 +647,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         $this->processIfNeeded();
 
         if ($this->isMarkupStringExecution()) {
+
             return $this->fetchString;
         }
 
@@ -673,7 +683,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @throws ExceptionBadSyntax
      */
-    public function getFetchPathAsHtmlDom(): XmlDocument
+    public function getOutputAsHtmlDom(): XmlDocument
     {
         return XmlDocument::createHtmlDocFromMarkup($this->getFetchString());
     }
@@ -681,7 +691,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @throws ExceptionBadSyntax
      */
-    public function getFetchPathAsXHtmlDom(): XmlDocument
+    public function getOutputAsXHtmlDom(): XmlDocument
     {
         return XmlDocument::createXmlDocFromMarkup($this->getFetchString());
     }
@@ -880,6 +890,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     {
         return PluginUtility::getSnippetManager();
     }
+
+
 
 
 }

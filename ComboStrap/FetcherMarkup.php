@@ -95,6 +95,12 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     private bool $hasExecuted = false;
 
+    /**
+     * The result when this is a {@link self::isMarkupStringExecution() execution}
+     * @var string
+     */
+    private $fetchString;
+
 
     /**
      * @throws ExceptionBadArgument
@@ -480,47 +486,46 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * Snippets and dependencies if XHTML
          * (after processing as they can be added at runtime)
          */
-        if (!$this->isMarkupStringExecution()) {
-
-
-            /**
-             * We make the Snippet store to Html store an atomic operation
-             *
-             * Why ? Because if the rendering of the page is stopped,
-             * the cache of the HTML page may be stored but not the cache of the snippets
-             * leading to a bad page because the next rendering will see then no snippets.
-             */
-            try {
-                $this->storeSnippets();
-            } catch (Exception $e) {
-                // if any write os exception
-                LogUtility::msg("Error while storing the xhtml content: {$e->getMessage()}");
-                $this->removeSnippets();
-            }
-
-            /**
-             * Cache output dependencies
-             */
-            $this->cacheDependencies->storeDependencies();
-
-            /**
-             * We store always the output in the cache
-             * if the cache is not on, the file is just overwritten
-             *
-             * We don't use
-             * {{@link CacheParser::storeCache()}
-             * because it uses the protected parameter `__nocache`
-             * that will disallow the storage
-             *
-             * Reroute the cache output by runtime dependencies
-             * set during processing
-             */
-            $this->cacheDependencies->rerouteCacheDestination($this->contentCache);
-            io_saveFile($this->contentCache->cache, $contentToStore);
-
-
+        if ($this->isMarkupStringExecution()) {
+            $this->fetchString = $contentToStore;
+            return $this;
         }
 
+
+        /**
+         * We make the Snippet store to Html store an atomic operation
+         *
+         * Why ? Because if the rendering of the page is stopped,
+         * the cache of the HTML page may be stored but not the cache of the snippets
+         * leading to a bad page because the next rendering will see then no snippets.
+         */
+        try {
+            $this->storeSnippets();
+        } catch (Exception $e) {
+            // if any write os exception
+            LogUtility::msg("Error while storing the xhtml content: {$e->getMessage()}");
+            $this->removeSnippets();
+        }
+
+        /**
+         * Cache output dependencies
+         */
+        $this->cacheDependencies->storeDependencies();
+
+        /**
+         * We store always the output in the cache
+         * if the cache is not on, the file is just overwritten
+         *
+         * We don't use
+         * {{@link CacheParser::storeCache()}
+         * because it uses the protected parameter `__nocache`
+         * that will disallow the storage
+         *
+         * Reroute the cache output by runtime dependencies
+         * set during processing
+         */
+        $this->cacheDependencies->rerouteCacheDestination($this->contentCache);
+        io_saveFile($this->contentCache->cache, $contentToStore);
 
         return $this;
     }
@@ -630,6 +635,15 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     public function getFetchString(): string
     {
+        $this->processIfNeeded();
+
+        if ($this->isMarkupStringExecution()) {
+            return $this->fetchString;
+        }
+
+        /**
+         * Source path execution
+         */
         $path = $this->processIfNeededAndGetFetchPath();
         try {
             $text = FileSystems::getContent($path);
@@ -637,6 +651,10 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             throw new ExceptionRuntime("Internal error: The fetch path should exists.", self::CANONICAL, 1, $e);
         }
 
+        /**
+         * Edit button Processing for XHtml
+         * (Path is mandatory to create the buttons)
+         */
         if (!in_array($this->getMime()->getExtension(), ["html", "xhtml"])) {
             return $text;
         }

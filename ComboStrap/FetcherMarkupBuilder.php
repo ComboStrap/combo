@@ -60,6 +60,10 @@ class FetcherMarkupBuilder extends FetcherMarkup
     public function setRequestedExecutingPath(?Path $executingPath): FetcherMarkupBuilder
     {
 
+        if ($executingPath == null) {
+            return $this;
+        }
+
         try {
             /**
              * Normalize to wiki path if possible
@@ -216,6 +220,12 @@ class FetcherMarkupBuilder extends FetcherMarkup
     public function setRequestedRenderer(string $rendererName): FetcherMarkupBuilder
     {
         $this->rendererName = $rendererName;
+        return $this;
+    }
+
+    public function setRequestedContextPathAsDefault(): FetcherMarkupBuilder
+    {
+        $this->requestedContextPath = ExecutionContext::getActualOrCreateFromEnv()->getDefaultContextPath();
         return $this;
     }
 

@@ -775,7 +775,10 @@ class WikiPath extends PathAbs
     public
     function getRevision(): string
     {
-        if ($this->rev === null) {
+        /**
+         * Empty because the value may be null or empty string
+         */
+        if (empty($this->rev)) {
             throw new ExceptionNotFound("The rev was not set");
         }
         return $this->rev;

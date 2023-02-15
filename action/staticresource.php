@@ -132,10 +132,18 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             $event->data['statusmessage'] = '';
         } catch (\Exception $e) {
 
-            $httpResponse = $executionContext->response()->setException($e);
-            $event->data['file'] = WikiPath::createComboResource("images:error-bad-format.svg")->toLocalPath()->toAbsolutePath()->toQualifiedId();
+            $executionContext
+                ->response()
+                ->setException($e)
+                ->setStatusAndBodyFromException($e)
+                ->end();
+
+            //$event->data['file'] = WikiPath::createComboResource("images:error-bad-format.svg")->toLocalPath()->toAbsolutePath()->toQualifiedId();
+            $event->data['file'] = "error.json";
             $event->data['statusmessage'] = $e->getMessage();
-            $event->data['status'] = $httpResponse->getStatus();
+            //$event->data['status'] = $httpResponse->getStatus();
+            $event->data['mime'] = Mime::JSON;
+
 
         }
 
@@ -144,7 +152,10 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     function handleSendFile(Doku_Event $event, $params)
     {
 
-
+        if (ExecutionContext::getActualOrCreateFromEnv()->response()->hasEnded()) {
+            // when there is an error for instance
+            return;
+        }
         /**
          * If there is no buster key, the infinite cache is off
          */

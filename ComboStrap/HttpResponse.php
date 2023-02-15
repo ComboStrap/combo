@@ -71,7 +71,7 @@ class HttpResponse
         } elseif ($e instanceof ExceptionBadState || $e instanceof ExceptionInternal) {
             return HttpResponseStatus::INTERNAL_ERROR; //
         }
-        throw new ExceptionBadArgument("The exception is unknown.");
+        return HttpResponseStatus::INTERNAL_ERROR;
     }
 
 
@@ -337,8 +337,8 @@ class HttpResponse
             $this->setStatus(self::getStatusFromException($e));
         } catch (ExceptionBadArgument $e) {
             $this->setStatus(HttpResponseStatus::INTERNAL_ERROR);
-            $this->setBody($e->getMessage(), Mime::getText());
         }
+        $this->setBodyAsJsonMessage($e->getMessage());
         return $this;
     }
 
@@ -370,11 +370,16 @@ class HttpResponse
         return $this->dokuwikiResponseObject;
     }
 
+    /**
+     * @param Exception $e
+     * @return $this
+     */
     public function setException(Exception $e): HttpResponse
     {
-        if (PluginUtility::isDevOrTest()) {
-            throw new ExceptionRuntimeInternal($e, self::CANONICAL, 1, $e);
-        }
+        /**
+         * Don't throw an error on exception
+         * as this may be wanted
+         */
         $message = "<p>{$e->getMessage()}</p>";
         try {
             $status = self::getStatusFromException($e);
@@ -385,6 +390,18 @@ class HttpResponse
         }
         $this->setBody($message, Mime::getHtml());
         return $this;
+    }
+
+    /**
+     *
+     */
+    public function getBodyContentType(): string
+    {
+        try {
+            return $this->getHeader(self::HEADER_CONTENT_TYPE);
+        } catch (ExceptionNotFound $e) {
+            return Mime::BINARY_MIME;
+        }
     }
 
 

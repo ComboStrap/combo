@@ -595,7 +595,7 @@ class ExecutionContext
 
     public function setLogExceptionToError(): ExecutionContext
     {
-        LogUtility::setTestExceptionLevelToError();
+        $this->getConfig()->setLogExceptionToError();
         return $this;
     }
 

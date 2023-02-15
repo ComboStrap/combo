@@ -6,6 +6,7 @@ use action_plugin_combo_docustom;
 
 class SiteConfig
 {
+    const LOG_EXCEPTION_LEVEL = 'log-exception-level';
 
     /**
      * @var array - the configuration value to restore
@@ -129,6 +130,23 @@ class SiteConfig
     {
         $this->setConf('console',0);
         return $this;
+    }
+
+    public function setLogExceptionToError(): SiteConfig
+    {
+        $this->setLogExceptionLevel(LogUtility::LVL_MSG_ERROR);
+        return $this;
+    }
+
+    public function setLogExceptionLevel(int $level): SiteConfig
+    {
+        $this->setConf(self::LOG_EXCEPTION_LEVEL, $level);
+        return $this;
+    }
+
+    public function getLogExceptionLevel(): int
+    {
+        return $this->getValue(self::LOG_EXCEPTION_LEVEL, LogUtility::DEFAULT_THROW_LEVEL);
     }
 
 }

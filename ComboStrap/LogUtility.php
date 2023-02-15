@@ -60,11 +60,11 @@ class LogUtility
      *
      * @var bool
      */
-    private static $throwExceptionOnDevTest = true;
+    private static bool $throwExceptionOnDevTest = true;
     /**
      * @var int
      */
-    private static $exceptionLevelOnTest = self::LVL_MSG_WARNING;
+    const DEFAULT_THROW_LEVEL = self::LVL_MSG_WARNING;
 
     /**
      * Send a message to a manager and log it
@@ -273,8 +273,10 @@ class LogUtility
      */
     private static function throwErrorIfTest($level, $message, \Exception $e = null)
     {
+        $actualLevel = ExecutionContext::getActualOrCreateFromEnv()->getConfig()
+            ->getLogExceptionLevel();
         if (PluginUtility::isTest()
-            && ($level >= self::$exceptionLevelOnTest)
+            && ($level >= $actualLevel)
             && self::$throwExceptionOnDevTest
         ) {
             throw new LogException($message, $level, $e);
@@ -348,14 +350,19 @@ class LogUtility
         self::msg($message, LogUtility::LVL_MSG_INFO, $canonical);
     }
 
+    /**
+     * @param int $level
+     * @return void
+     * @deprecated use {@link SiteConfig::setLogExceptionLevel()}
+     */
     public static function setTestExceptionLevel(int $level)
     {
-        self::$exceptionLevelOnTest = $level;
+        ExecutionContext::getActualOrCreateFromEnv()->getConfig()->setLogExceptionLevel($level);
     }
 
     public static function setTestExceptionLevelToDefault()
     {
-        self::$exceptionLevelOnTest = self::LVL_MSG_WARNING;
+        ExecutionContext::getActualOrCreateFromEnv()->getConfig()->setLogExceptionLevel(self::LVL_MSG_WARNING);
     }
 
     public static function errorIfDevOrTest($message, $canonical = "support")
@@ -365,9 +372,13 @@ class LogUtility
         }
     }
 
+    /**
+     * @return void
+     * @deprecated use the config object instead
+     */
     public static function setTestExceptionLevelToError()
     {
-        self::setTestExceptionLevel(self::LVL_MSG_ERROR);
+        ExecutionContext::getActualOrCreateFromEnv()->getConfig()->setLogExceptionToError();
     }
 
     /**

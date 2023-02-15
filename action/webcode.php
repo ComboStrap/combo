@@ -14,6 +14,8 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 {
 
 
+    const YOU_DON_T_HAVE_THE_RIGHT = "You don't have the right to save a webcode component.";
+
     function register(Doku_Event_Handler $controller)
     {
 
@@ -51,7 +53,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
             return;
         }
 
-        LogUtility::error("You don't have the right to save a webcode component. You should be admin or part of the ($group) group.");
+        LogUtility::warning(self::YOU_DON_T_HAVE_THE_RIGHT . " You should be admin or part of the ($group) group.");
         $event->preventDefault();
 
 

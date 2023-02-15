@@ -175,8 +175,12 @@ class EditButton
              * because the edit button may also be on the secondary slot
              */
             $slotPath = WikiPath::createMarkupPathFromId($wikiId);
-            $formId = IdManager::getOrCreate()->generateNewHtmlIdForComponent(self::CANONICAL, $slotPath);
+            $formId = ExecutionContext::getActualOrCreateFromEnv()
+                ->getIdManager()
+                ->generateNewHtmlIdForComponent(self::CANONICAL, $slotPath);
             $data[self::FORM_ID] = $formId;
+
+
         } else {
             $data[self::FORM_ID] = $this->getHeadingId();
             $data["codeblockOffset"] = 0; // what is that ?

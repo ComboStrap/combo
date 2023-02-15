@@ -5,7 +5,10 @@
  */
 
 use ComboStrap\Bootstrap;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\IdManager;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 
 
@@ -24,7 +27,6 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "dropdown";
-
 
 
     /**
@@ -132,7 +134,7 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED :
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
 
             case DOKU_LEXER_EXIT :
@@ -180,7 +182,11 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
 
-                    $dropDownId = IdManager::getOrCreate()->generateNewHtmlIdForComponent(self::TAG);
+
+                    $dropDownId = ExecutionContext::getActualOrCreateFromEnv()
+                        ->getIdManager()
+                        ->generateNewHtmlIdForComponent(self::TAG);
+
                     $attributes = $data[PluginUtility::ATTRIBUTES] ?? $data[1];
                     $name = "Name attribute not set";
                     if (array_key_exists("name", $attributes)) {
@@ -196,7 +202,7 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
                     $bootstrapNameSpace = Bootstrap::getDataNamespace();
                     $dataToggleAttribute = "data{$bootstrapNameSpace}-toggle";
                     $htmlAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
-                    $renderer->doc .=<<<EOF
+                    $renderer->doc .= <<<EOF
 <li $htmlAttributes>
     <a id="$dropDownId" href="#" class="nav-link dropdown-toggle active" {$dataToggleAttribute}="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="$name">$name</a>
     <div class="dropdown-menu" aria-labelledby="$dropDownId">

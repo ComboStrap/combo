@@ -4,6 +4,7 @@
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetcherSvg;
 use ComboStrap\MediaMarkup;
 use ComboStrap\EditButton;
@@ -39,7 +40,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
     const CONF_ENABLE_SECTION_EDITING = "enableCardSectionEditing";
     const CANONICAL = self::TAG;
-
 
 
     /**
@@ -182,14 +182,19 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     }
                 }
 
-                $id = IdManager::getOrCreate()->generateNewHtmlIdForComponent(self::TAG);
-
-                return array(
+                $returnedArray = array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
-                    PluginUtility::CONTEXT => $context,
-                    TagAttributes::ID_KEY => $id
+                    PluginUtility::CONTEXT => $context
                 );
+
+                $id = ExecutionContext::getActualOrCreateFromEnv()
+                    ->getIdManager()
+                    ->generateNewHtmlIdForComponent(self::TAG);
+                $returnedArray[TagAttributes::ID_KEY] = $id;
+
+
+                return $returnedArray;
 
             case DOKU_LEXER_UNMATCHED :
 

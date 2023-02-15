@@ -4,6 +4,7 @@
  *
  */
 
+use ComboStrap\ExecutionContext;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -32,10 +33,6 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
 
     const TAG = 'accordion';
 
-    /**
-     * @var int a counter to give an id to the accordion card
-     */
-    private $accordionCounter = 0;
 
     /**
      * Syntax Type.
@@ -58,12 +55,12 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    public function getAllowedTypes()
+    public function getAllowedTypes(): array
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    public function accepts($mode)
+    public function accepts($mode): bool
     {
         /**
          * header mode is disable to take over
@@ -148,19 +145,21 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $this->accordionCounter++;
-                $attributes = PluginUtility::getTagAttributes($match);
+                $attributes = TagAttributes::createFromTagMatch($match)
+                    ->setLogicalTag(self::TAG);
 
                 // Attributes has at
                 // https://getbootstrap.com/docs/4.6/components/collapse/#accordion-example
-                PluginUtility::addClass2Attributes("accordion", $attributes);
-                if (!in_array("id", $attributes)) {
-                    $attributes["id"] = self::TAG . $this->accordionCounter;
+                $attributes->addClassName("accordion");
+
+                if (!$attributes->hasComponentAttribute(TagAttributes::ID_KEY)) {
+                    $idKey = ExecutionContext::getActualOrCreateFromEnv()->getIdManager()->generateNewHtmlIdForComponent(self::TAG);
+                    $attributes->addComponentAttributeValue(TagAttributes::ID_KEY, $idKey);
                 }
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -191,7 +190,7 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {
@@ -200,14 +199,15 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER:
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES])
+                        ->setLogicalTag(self::TAG);
+                    $renderer->doc .= $attributes->toHtmlEnterTag("div");
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
                 case DOKU_LEXER_EXIT:
-                    $renderer->doc .= '</div>' . DOKU_LF;
+                    $renderer->doc .= '</div>';
                     break;
             }
 

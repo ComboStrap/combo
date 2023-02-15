@@ -267,6 +267,24 @@ class ExecutionContext
     }
 
     /**
+     * We create the id manager in the execution
+     * context
+     * (because in case a user choose to not use templating, the {@link FetcherMarkup}
+     * is not available)
+     * And all dynamic component such as {@link \syntax_plugin_combo_dropdown} would not
+     * work anymore.
+     *
+     * @return IdManager
+     */
+    public function getIdManager(): IdManager
+    {
+        if (!isset($this->idManager)) {
+            $this->idManager = new IdManager($this);
+        }
+        return $this->idManager;
+    }
+
+    /**
      * Return the actual context path
      */
     public function getContextNamespacePath(): WikiPath
@@ -407,6 +425,7 @@ class ExecutionContext
         unset($this->executingFetcherMarkup);
         unset($this->executionScopedVariables);
         unset($this->cacheManager);
+        unset($this->idManager);
 
         /**
          * Log utility is not yet a conf

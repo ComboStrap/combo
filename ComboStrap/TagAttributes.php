@@ -390,7 +390,7 @@ class TagAttributes
     public function getClass($default = null)
     {
         $value = $this->getValue(self::CLASS_KEY, $default);
-        if($value!==null){
+        if ($value !== null) {
             return $value;
         }
         throw new ExceptionNull("No class was found");
@@ -569,6 +569,7 @@ class TagAttributes
             $transformValue = $this->getValueAndRemove(self::TRANSFORM);
             $this->addStyleDeclarationIfNotSet("transform", $transformValue);
         }
+
 
         /**
          * Tooltip
@@ -806,8 +807,11 @@ class TagAttributes
             if ($componentName === null) {
                 $componentName = "unknown-component";
             }
-            $id = IdManager::getOrCreate()->generateNewHtmlIdForComponent($componentName);
+            $id = ExecutionContext::getActualOrCreateFromEnv()
+                ->getIdManager()
+                ->generateNewHtmlIdForComponent($componentName);
             $this->addComponentAttributeValue(TagAttributes::GENERATED_ID_KEY, $id);
+
 
         }
 
@@ -836,7 +840,7 @@ class TagAttributes
             // no style
         }
 
-        if(isset($this->innerText)){
+        if (isset($this->innerText)) {
             $array[self::DOKUWIKI_TEXT_NODE_ATTRIBUTE] = $this->innerText;
         }
         return $array;
@@ -1240,7 +1244,7 @@ class TagAttributes
     function getOutputAttribute($attribute)
     {
         $value = $this->outputAttributes[$attribute];
-        if($value===null){
+        if ($value === null) {
             throw new ExceptionNotFound("No output attribute with the key ($attribute)");
         }
         return $value;
@@ -1440,7 +1444,7 @@ class TagAttributes
      */
     public function getInnerText(): string
     {
-        if(!isset($this->innerText)){
+        if (!isset($this->innerText)) {
             throw new ExceptionNotFound("No inner text set");
         }
         return $this->innerText;

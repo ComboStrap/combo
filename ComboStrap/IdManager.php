@@ -9,65 +9,56 @@ namespace ComboStrap;
 class IdManager
 {
 
+
     const CANONICAL = "id-manager";
 
     /**
      * @var array
      */
-    private static $idManagers;
+    private array $lastIdByScope = [];
+    private ExecutionContext $executionContext;
 
     /**
-     * @var array
+     * @param ExecutionContext $executionContext
      */
-    private $lastIdByCanonical;
+    public function __construct(ExecutionContext $executionContext)
+    {
+        $this->executionContext = $executionContext;
+    }
 
+    /**
+     * @return IdManager
+     * @deprecated use {@link ExecutionContext::getIdManager()} instead
+     * via {@link ExecutionContext::getExecutingFetcherMarkup()}
+     */
     static function getOrCreate(): IdManager
     {
 
-        $page = MarkupPath::createFromRequestedPage();
-        $cacheKey = $page->getWikiId();
-        $idManager = self::$idManagers[$cacheKey];
-        if ($idManager === null) {
-            // new run, delete all old cache managers
-            self::reset();
-            // create
-            $idManager = new IdManager();
-            self::$idManagers[$cacheKey] = $idManager;
-        }
-        return $idManager;
+        return ExecutionContext::getActualOrCreateFromEnv()->getIdManager();
+
+
     }
 
-    /**
-     * We may test two run with the same id
-     * Even if the id manager is scoped to the requested page id, we need to have a reset
-     */
-    public static function reset()
-    {
-        self::$idManagers = [];
-    }
 
-    public function generateNewHtmlIdForComponent(string $canonical, Path $slotPath = null): string
+    public function generateNewHtmlIdForComponent(string $componentId, Path $executingPath = null): string
     {
 
-        if ($slotPath === null) {
+        if ($executingPath === null) {
 
             try {
-                $slotPath = MarkupPath::createPageFromExecutingId()->getPathObject();
+                $executingPath = $this->executionContext
+                    ->getExecutingFetcherMarkup()
+                    ->getExecutingPathOrNull();
             } catch (ExceptionNotFound $e) {
-                if (
-                    PluginUtility::isDevOrTest()
-                    && ExecutionContext::getActualOrCreateFromEnv()->getExecutingAction()==="show"
-                ) {
-                    LogUtility::internalError("We should always have an id, no ?", self::CANONICAL, $e);
-                }
+                // ok, dynamic, markup string run ?
             }
 
         }
 
-        $idScope = $canonical;
-        if ($slotPath !== null) {
+        $idScope = $componentId;
+        if ($executingPath !== null) {
             try {
-                $slotName = $slotPath->getLastNameWithoutExtension();
+                $slotName = $executingPath->getLastNameWithoutExtension();
                 $idScope = "$idScope-$slotName";
             } catch (ExceptionNotFound $e) {
                 // no name (ie root)
@@ -78,16 +69,16 @@ class IdManager
         return Html::toHtmlId("$idScope-$lastId");
     }
 
-    public function generateAndGetNewSequenceValueForScope(string $scope)
+    private function generateAndGetNewSequenceValueForScope(string $scope)
     {
 
-        $lastId = $this->lastIdByCanonical[$scope];
+        $lastId = $this->lastIdByScope[$scope];
         if ($lastId === null) {
             $lastId = 1;
         } else {
             $lastId = $lastId + 1;
         }
-        $this->lastIdByCanonical[$scope] = $lastId;
+        $this->lastIdByScope[$scope] = $lastId;
         return $lastId;
 
     }

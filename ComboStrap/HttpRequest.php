@@ -42,8 +42,6 @@ class HttpRequest
          */
         // global scope
         MetadataDbStore::resetAll();
-        // request scope
-        IdManager::reset();
         // global variable
         global $TOC;
         unset($TOC);

@@ -242,11 +242,12 @@ class Snippet implements JsonSerializable
     public static function getOrCreateFromContext(Path $localSnippetPath): Snippet
     {
 
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         try {
-            $snippets = &ExecutionContext::getActualOrCreateFromEnv()->getRuntimeObject(self::CANONICAL);
+            $snippets = &$executionContext->getRuntimeObject(self::CANONICAL);
         } catch (ExceptionNotFound $e) {
             $snippets = [];
-            ExecutionContext::getActualOrCreateFromEnv()->setRuntimeObject(self::CANONICAL, $snippets);
+            $executionContext->setRuntimeObject(self::CANONICAL, $snippets);
         }
         $snippetGuid = $localSnippetPath->toUriString();
         $snippet = &$snippets[$snippetGuid];
@@ -265,7 +266,7 @@ class Snippet implements JsonSerializable
         }
 
         try {
-            $executingFetcher = ExecutionContext::getActualOrCreateFromEnv()
+            $executingFetcher = $executionContext
                 ->getExecutingFetcherMarkup();
             /**
              * New way
@@ -279,13 +280,20 @@ class Snippet implements JsonSerializable
                 $wikiId = $executingFetcher->getSourcePath()->toWikiPath()->getWikiId();
                 $snippet->addSlot($wikiId);
             } catch (ExceptionCast $e) {
-                // not a
+                // not a wiki path
+                $wikiId = $executingFetcher->getSourcePath()->toQualifiedId();
+                $snippet->addSlot($wikiId);
             } catch (ExceptionNotFound $e) {
-                // dynamic
+                // string/dynamic run
             }
         } catch (ExceptionNotFound $e) {
-            // admin page
-            $snippet->addSlot(Snippet::REQUEST_SCOPE);
+            // admin page or templating not on
+            try {
+                $wikiId = $executionContext->getExecutingWikiId();
+                $snippet->addSlot($wikiId);
+            } catch (ExceptionNotFound $e) {
+                $snippet->addSlot(Snippet::REQUEST_SCOPE);
+            }
         }
 
         return $snippet;

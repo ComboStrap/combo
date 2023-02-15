@@ -50,6 +50,15 @@ class Site
      * @var array
      */
     private static $STRAP_TEMPLATE_INFO;
+    private $executingContext;
+
+    /**
+     * @param $executingContext
+     */
+    public function __construct($executingContext)
+    {
+        $this->executingContext = $executingContext;
+    }
 
 
     /**
@@ -520,6 +529,10 @@ class Site
         $conf['template'] = $template;
     }
 
+    /**
+     * @return void
+     * @deprecated
+     */
     public static function setCacheXhtmlOn()
     {
         // ensure the value is not -1, which disables caching
@@ -1173,6 +1186,15 @@ class Site
     {
         global $conf;
         $conf['canonical'] = 0;
+    }
+
+    public function getConfig(): SiteConfig
+    {
+        if(isset($this->config)){
+            return $this->config;
+        }
+        $this->config = new SiteConfig($this->executingContext);
+        return $this->config;
     }
 
 

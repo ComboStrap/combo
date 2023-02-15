@@ -82,18 +82,7 @@ class ExecutionContext
     const PROFILE_ACTION = "profile";
 
 
-    /**
-     * @var array - the configuration value to restore
-     *
-     * Note we can't capture the whole global $conf
-     * because the configuration are loaded at runtime via {@link PluginTrait::loadConfig()}
-     *
-     * Meaning that the configuration environment at the start is not fully loaded
-     * and does not represent the environment totally
-     *
-     * We capture then the change and restore them at the end
-     */
-    private array $configurationValuesToRestore = [];
+
 
     /**
      * @var array of objects that are scoped to this request
@@ -101,6 +90,8 @@ class ExecutionContext
     private array $executionScopedVariables = [];
 
     private CacheManager $cacheManager;
+
+    private Site $app;
 
     /**
      * A root execution context if any
@@ -133,15 +124,26 @@ class ExecutionContext
      * @var string
      */
     private $capturedRequestId;
-    private array $capturedConf;
-    private bool $isConsoleOn = false;
+
     private HttpResponse $response;
+
+    /**
+     * @var IFetcher - the fetcher that takes into account the HTTP request
+     */
     private IFetcher $executingMainFetcher;
 
     /**
-     * @var FetcherMarkup  - the fetcher markup actually runnning
+     * @var FetcherMarkup  - the fetcher markup that is taking a markup (file, string)
+     * and making it a HTML, pdf, ...
+     * This fetcher is called by the main fetcher or by the {@link self::setExecutingFetcherMarkup()}
      */
     private FetcherMarkup $executingFetcherMarkup;
+
+    /**
+     * @var PageTemplate - the page template fetcher running (when a fetcher creates a page, it would uses this fetcher)
+     * This class is called by the main fetcher to create a page
+     */
+    private PageTemplate $executingPageTemplate;
 
     /**
      * @var WikiPath the {@link self::getContextPath()} when no context could be determined
@@ -152,12 +154,12 @@ class ExecutionContext
      */
     private $oldAct;
     private string $oldId;
-    private PageTemplate $executingPageTemplate;
 
-    public function __construct(Url $url)
+
+    public function __construct()
     {
 
-        $this->url = $url;
+        $this->url = Url::createFromGetOrPostGlobalVariable();
 
         $this->response = HttpResponse::createFromExecutionContext($this);
 
@@ -167,7 +169,7 @@ class ExecutionContext
         global $ACT;
         $this->capturedAct = $ACT;
         try {
-            $urlAct = $url->getQueryPropertyValue(self::DO_ATTRIBUTE);
+            $urlAct = $this->url->getQueryPropertyValue(self::DO_ATTRIBUTE);
         } catch (ExceptionNotFound $e) {
             // the default value
             $urlAct = "show";
@@ -181,7 +183,7 @@ class ExecutionContext
         $this->capturedGlobalId = $ID;
         try {
 
-            $urlId = $url->getQueryPropertyValue(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
+            $urlId = $this->url->getQueryPropertyValue(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
             $this->requestedWikiId = $urlId;
             $ID = $urlId;
 
@@ -224,34 +226,37 @@ class ExecutionContext
     }
 
 
+    /**
+     * @return ExecutionContext
+     * @deprecated uses {@link self::createBlank()} instead
+     */
     public static function createFromEnvironmentVariable(): ExecutionContext
     {
-
-        $url = Url::createFromGetOrPostGlobalVariable();
-        return self::createFromUrl($url);
-
+        return self::createBlank();
     }
 
-    private static function createFromUrl(Url $url): ExecutionContext
+
+    public static function createBlank(): ExecutionContext
     {
+
         if (self::$executionContext !== null) {
-            LogUtility::internalError("The root context should be closed first");
+            LogUtility::internalError("The previous root context should be closed first");
         }
-        $rootExecutionContext = (new ExecutionContext($url));
+        $rootExecutionContext = (new ExecutionContext());
         self::$executionContext = $rootExecutionContext;
         return $rootExecutionContext;
 
     }
 
     /**
-     * @return ExecutionContext - return the actual context or create one from the environment
+     * @return ExecutionContext - return the actual context or create a new one from the environment
      */
     public static function getActualOrCreateFromEnv(): ExecutionContext
     {
         try {
             return self::getContext();
         } catch (ExceptionNotFound $e) {
-            return self::createFromEnvironmentVariable();
+            return self::createBlank();
         }
     }
 
@@ -390,7 +395,7 @@ class ExecutionContext
     public function close()
     {
 
-        $this->restoreEnv();
+        $this->getApp()->getConfig()->restoreConfigState();
 
         unset($this->executingMainFetcher);
         unset($this->executingFetcherMarkup);
@@ -486,29 +491,23 @@ class ExecutionContext
      * @param $value
      * @param string|null $pluginNamespace - if null, stored in the global conf namespace
      * @return $this
+     *
      */
     public function setConf(string $key, $value, ?string $pluginNamespace = PluginUtility::PLUGIN_BASE_NAME): ExecutionContext
     {
-        /**
-         * Environment within dokuwiki is a global variable
-         *
-         * We set it the global variable
-         *
-         * but we capture it {@link ExecutionContext::$capturedConf}
-         * to restore it when the execution context os {@link ExecutionContext::close()}
-         */
-        $globalKey = "$pluginNamespace:$key";
-        if (!isset($this->configurationValuesToRestore[$globalKey])) {
-            $oldValue = Site::getConfValue($key, $value, $pluginNamespace);
-            $this->configurationValuesToRestore[$globalKey] = $oldValue;
-        }
-        Site::setConf($key, $value, $pluginNamespace);
+        $this->getApp()->getConfig()->setConf($key, $value, $pluginNamespace);
         return $this;
     }
 
+    /**
+     * @param string $key
+     * @param string|null $default
+     * @return mixed|null
+     * @deprecated use
+     */
     public function getConfValue(string $key, string $default = null)
     {
-        return Site::getConfValue($key, $default);
+        return $this->getApp()->getConfig()->getValue($key, $default);
     }
 
     public function setRuntimeBoolean(string $key, bool $b): ExecutionContext
@@ -529,58 +528,54 @@ class ExecutionContext
         return DataType::toBoolean($var);
     }
 
+    /**
+     * @return $this
+     * @deprecated uses {@link SiteConfig::setCacheXhtmlOn()}
+     */
     public function setCacheXhtmlOn(): ExecutionContext
     {
-        Site::setCacheXhtmlOn();
+        $this->getApp()->getConfig()->setCacheXhtmlOn();
         return $this;
     }
 
     /**
      *
      * @return $this
+     * @deprecated use the {@link SiteConfig::setConsoleOn} instead
      */
     public function setConsoleOn(): ExecutionContext
     {
-        $this->isConsoleOn = true;
+        $this->getApp()->getConfig()->setCacheXhtmlOn();
         return $this;
     }
 
     public function setConsoleOff(): ExecutionContext
     {
-        $this->isConsoleOn = false;
+        $this->getConfig()->setConsoleOff();
         return $this;
     }
 
+    /**
+     * @return $this
+     * @deprecated use {@link SiteConfig::setDisableTemplating()}
+     */
     public function setDisableTemplating(): ExecutionContext
     {
-        $this->setConf(action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM, 0);
+        $this->getApp()->getConfig()->setDisableTemplating();
         return $this;
     }
 
 
     /**
-     * Restore the configuration
-     * @return void
+     * @return bool
+     * @deprecated use the {@link SiteConfig::isConsoleOn()} instead
      */
-    private function restoreEnv()
-    {
-
-        foreach ($this->configurationValuesToRestore as $guid => $value) {
-            [$plugin, $confKey] = explode(":", $guid);
-            Site::setConf($confKey, $value, $plugin);
-        }
-    }
-
     public function isConsoleOn(): bool
     {
-        return $this->isConsoleOn;
+        return $this->getApp()->getConfig()->isConsoleOn();
     }
 
-    public function isPageFetcherEnabledAsShowAction(): bool
-    {
-        // the non strict equality is needed, we get a string for an unknown reason
-        return $this->getConfValue(action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM, action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM_DEFAULT) == 1;
-    }
+
 
     public function setEnablePageFetcherAsShowAction(): ExecutionContext
     {
@@ -911,5 +906,23 @@ class ExecutionContext
         unset($this->executingPageTemplate);
         return $this;
     }
+
+    public function getApp(): Site
+    {
+        if(isset($this->app)){
+            return $this->app;
+        }
+        $this->app = new Site($this);
+        return $this->app;
+    }
+
+    /**
+     * @return SiteConfig short utility function to get access to the global app config
+     */
+    public function getConfig(): SiteConfig
+    {
+        return $this->getApp()->getConfig();
+    }
+
 
 }

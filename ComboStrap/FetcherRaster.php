@@ -39,11 +39,10 @@ class FetcherRaster extends IFetcherLocalImage
      * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotExists
-     * @throws ExceptionNotFound
      */
     public static function createImageRasterFetchFromId(string $imageId, $rev = null): FetcherRaster
     {
-        return IFetcherLocalImage::createImageFetchFromPath(WikiPath::createMediaPathFromId($imageId, $rev));
+        return FetcherRaster::createImageRasterFetchFromPath(WikiPath::createMediaPathFromId($imageId, $rev));
     }
 
     /**
@@ -107,9 +106,12 @@ class FetcherRaster extends IFetcherLocalImage
     }
 
     /**
+     * We check the existence of the file at build time
+     * because when we build the url, we make it at several breakpoints.
+     * We therefore needs the intrinsic dimension (height and weight)
      *
      * @throws ExceptionBadSyntax - if the path is not valid image format
-     * @throws ExceptionNotExists - if the image does not exists
+     * @throws ExceptionNotExists|ExceptionCast - if the image does not exists
      */
     private
     function analyzeImageIfNeeded()

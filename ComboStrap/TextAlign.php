@@ -36,7 +36,7 @@ class TextAlign
                 }
 
                 $bootstrapMajorVersion = Bootstrap::getBootStrapMajorVersion();
-                if ($bootstrapMajorVersion === Bootstrap::BootStrapFourMajorVersion) {
+                if ($bootstrapMajorVersion == Bootstrap::BootStrapFourMajorVersion) {
                     $breakpoint = $conditionalTextAlignValue->getBreakpoint();
                     if (!empty($breakpoint)) {
                         LogUtility::msg("Bootstrap 4 does not support conditional value for the attribute (" . self::ATTRIBUTE_NAME . "). Therefore, the value ($textAlignValue) cannot be applied", LogUtility::LVL_MSG_WARNING, self::CANONICAL);

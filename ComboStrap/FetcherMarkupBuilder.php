@@ -25,6 +25,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
     protected bool $removeRootBlockElement = false;
     protected string $rendererName = MarkupRenderer::DEFAULT_RENDERER;
 
+
     public function __construct()
     {
     }
@@ -33,7 +34,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
      * @param string $markupString - the markup is a string format
      * @return FetcherMarkupBuilder
      */
-    public function setMarkupString(string $markupString): FetcherMarkupBuilder
+    public function setRequestedMarkupString(string $markupString): FetcherMarkupBuilder
     {
         $this->markupString = $markupString;
         return $this;
@@ -223,10 +224,11 @@ class FetcherMarkupBuilder extends FetcherMarkup
         return $this;
     }
 
-    public function setRequestedContextPathAsDefault(): FetcherMarkupBuilder
+    public function setRequestedContextPathWithDefault(): FetcherMarkupBuilder
     {
         $this->requestedContextPath = ExecutionContext::getActualOrCreateFromEnv()->getDefaultContextPath();
         return $this;
     }
+
 
 }

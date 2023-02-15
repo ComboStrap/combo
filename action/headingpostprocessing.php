@@ -94,12 +94,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                     LogUtility::error("The executing markup wiki path was not found", self::CANONICAL, $e);
                     return;
                 }
-                try {
-                    $requestedPath = WikiPath::createRequestedPagePathFromRequest();
-                } catch (ExceptionNotFound $e) {
-                    LogUtility::error("The requested page path from request was not found", self::CANONICAL, $e);
-                    return;
-                }
+                $requestedPath = WikiPath::createRequestedPagePathFromRequest();
                 if ($requestedPath->toQualifiedId() !== $runningMarkup->toQualifiedId()) {
                     return;
                 }

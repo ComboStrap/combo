@@ -26,13 +26,13 @@ class MarkupRenderUtility
      */
     public static function renderText2XhtmlAndStripPEventually($content, bool $strip = true): string
     {
-
-        $markupRenderer = MarkupRenderer::createFromMarkup($content, null, null)
-            ->setDeleteRootBlockElement($strip)
-            ->setRequestedMimeToXhtml();
-
-        return $markupRenderer->getOutput();
-
+        return FetcherMarkup::getBuilder()
+            ->setRequestedMarkupString($content)
+            ->setRemoveRootBlockElement($strip)
+            ->setRequestedContextPathWithDefault()
+            ->setRequestedMimeToXhtml()
+            ->build()
+            ->getFetchString();
 
     }
 
@@ -44,7 +44,7 @@ class MarkupRenderUtility
     public static function getInstructionsAndStripPEventually($pageContent, bool $stripOpenAndEnd = true): array
     {
 
-        $markupRenderer = MarkupRenderer::createFromMarkup($pageContent,null, null)
+        $markupRenderer = MarkupRenderer::createFromMarkup($pageContent, null, null)
             ->setRequestedMimeToInstruction()
             ->setDeleteRootBlockElement($stripOpenAndEnd);
 

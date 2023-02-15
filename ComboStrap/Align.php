@@ -68,7 +68,7 @@ class Align
                     } else {
                         $attributes->addClassName("ms-auto");
                     }
-                    $attributes->addStyleDeclarationIfNotSet("width", "fit-content");
+                    $attributes->addStyleDeclarationIfNotSet(Dimension::WIDTH_KEY, "fit-content");
                     break;
                 case "x-left-children":
                 case "left-children":

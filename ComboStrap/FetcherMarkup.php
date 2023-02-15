@@ -145,8 +145,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public static function createFromStringMarkupToXhtml(string $markup): FetcherMarkup
     {
         return self::getBuilder()
-            ->setMarkupString($markup)
-            ->setRequestedContextPathAsDefault()
+            ->setRequestedMarkupString($markup)
+            ->setRequestedContextPathWithDefault()
             ->setRequestedMimeToXhtml()
             ->build();
     }
@@ -445,7 +445,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 break;
             case MarkupRenderer::XHTML_RENDERER:
                 $instructionsFetcher = FetcherMarkup::getBuilder()
-                    ->setMarkupString($markup)
+                    ->setRequestedMarkupString($markup)
                     ->setRequestedContextPath($this->getRequestedContextPath())
                     ->setRequestedExecutingPath($this->getExecutingPathOrNull())
                     ->setRequestedMimeToInstructions()

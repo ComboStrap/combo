@@ -27,6 +27,7 @@ use ComboStrap\RasterImageLink;
 use ComboStrap\Region;
 use ComboStrap\RouterBestEndPage;
 use ComboStrap\Shadow;
+use ComboStrap\SiteConfig;
 use ComboStrap\Snippet;
 use ComboStrap\SvgImageLink;
 
@@ -289,7 +290,7 @@ $lang[FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR] = PluginUtility::getDocumentatio
 /**
  * Stylesheet and bootstrap
  */
-$lang[Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET] = PluginUtility::getDocumentationHyperLink(Bootstrap::CANONICAL, "Bootstrap"). ' - the Bootstrap version and its corresponding stylesheet';
+$lang[Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET] = PluginUtility::getDocumentationHyperLink(Bootstrap::CANONICAL, "Bootstrap") . ' - the Bootstrap version and its corresponding stylesheet';
 
 
 $lang[action_plugin_combo_snippetsbootstrap::CONF_JQUERY_DOKU] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::JQUERY_CANONICAL, "Jquery") . ' - use the DokuWiki Jquery version instead of Bootstrap';
@@ -300,3 +301,4 @@ $lang[Snippet::CONF_USE_CDN] = PluginUtility::getDocumentationHyperLink(Snippet:
 $lang[action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_docustom::TEMPLATE_CANONICAL, "Templating Module") . ' If checked, the combo template engine will be used and the dokuwiki template';
 
 
+$lang[SiteConfig::REM_CONF] = PluginUtility::getDocumentationHyperLink(SiteConfig::REM_CANONICAL, "Responsive Font Sizes") . ' The default font size for your HTML pages';

@@ -462,3 +462,9 @@ $conf['breakpointRailbar'] = "large";
  */
 $conf['jQueryDoku'] = 0;
 $conf["disableBackendJavascript"] = 0;
+
+
+/**
+ * {@link \ComboStrap\SiteConfig::REM_CONF}
+ */
+$conf['combo-conf-002'] = 16;

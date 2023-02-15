@@ -30,6 +30,7 @@ use ComboStrap\RasterImageLink;
 use ComboStrap\Region;
 use ComboStrap\RouterBestEndPage;
 use ComboStrap\Shadow;
+use ComboStrap\SiteConfig;
 use ComboStrap\Snippet;
 use ComboStrap\SvgImageLink;
 
@@ -395,3 +396,8 @@ $meta[action_plugin_combo_snippetsbootstrap::CONF_JQUERY_DOKU] = array('onoff');
  * Disable
  */
 $meta[action_plugin_combo_snippetsbootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT] = array('onoff');
+
+/**
+ * Rem conf
+ */
+$meta[SiteConfig::REM_CONF] = array('numeric');

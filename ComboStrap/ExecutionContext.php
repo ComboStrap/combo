@@ -101,7 +101,7 @@ class ExecutionContext
      * The id used if
      * @deprecated to delete
      */
-    public const DEFAULT_SLOT_ID_FOR_TEST = "test-slot-id";
+    public const DEFAULT_SLOT_ID_FOR_TEST = "start";
     private ?string $capturedGlobalId;
     /**
      * It may be an array when preview/save/cancel

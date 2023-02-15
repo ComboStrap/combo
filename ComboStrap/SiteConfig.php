@@ -9,6 +9,13 @@ class SiteConfig
     const LOG_EXCEPTION_LEVEL = 'log-exception-level';
 
     /**
+     * The default font-size for the pages
+     */
+    const REM_CONF = "combo-conf-002";
+    const REM_CONF_DEFAULT = 16;
+    const REM_CANONICAL = "rfs";
+
+    /**
      * @var array - the configuration value to restore
      *
      * Note we can't capture the whole global $conf
@@ -128,7 +135,7 @@ class SiteConfig
 
     public function setConsoleOff(): SiteConfig
     {
-        $this->setConf('console',0);
+        $this->setConf('console', 0);
         return $this;
     }
 
@@ -149,7 +156,18 @@ class SiteConfig
         return $this->getValue(self::LOG_EXCEPTION_LEVEL, LogUtility::DEFAULT_THROW_LEVEL);
     }
 
+    public function getRem(): int
+    {
 
+        $value = $this->getValue(self::REM_CONF, self::REM_CONF_DEFAULT);
+        try {
+            return DataType::toInteger($value);
+        } catch (ExceptionCompile $e) {
+            LogUtility::msg("The rem configuration value ($value) is not a integer. Error: {$e->getMessage()}");
+            return self::REM_CONF_DEFAULT;
+        }
+
+    }
 
 
 }

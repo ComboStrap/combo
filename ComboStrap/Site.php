@@ -757,28 +757,6 @@ class Site
     }
 
 
-    public static function getRem(): int
-    {
-        $defaultRem = 16;
-        if (Site::getTemplate() === self::STRAP_TEMPLATE_NAME) {
-            try {
-                self::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            } catch (ExceptionCompile $e) {
-                return $defaultRem;
-            }
-
-            $value = TplUtility::getRem();
-            if ($value === null) {
-                return $defaultRem;
-            }
-            try {
-                return DataType::toInteger($value);
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("The rem configuration value ($value) is not a integer. Error: {$e->getMessage()}");
-            }
-        }
-        return $defaultRem;
-    }
 
     public static function enableBrandingColorInheritance()
     {
@@ -869,41 +847,6 @@ class Site
         return self::SLOT_MAIN_HEADER_NAME;
     }
 
-    /**
-     * Strap is loaded only if this is the same version
-     * to avoid function, class, or members that does not exist
-     * @throws ExceptionCompile if strap template utility class could not be loaded
-     */
-    public static function loadStrapUtilityTemplateIfPresentAndSameVersion(): void
-    {
-
-        if (class_exists("ComboStrap\TplUtility")) {
-            /**
-             * May be of bad version (loaded in memory by php-fpm)
-             */
-            Site::checkTemplateVersion();
-            return;
-        }
-
-        $templateUtilityFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
-        if (file_exists($templateUtilityFile)) {
-
-            Site::checkTemplateVersion();
-            require_once($templateUtilityFile);
-            return;
-
-        }
-
-        if (Site::getTemplate() !== self::STRAP_TEMPLATE_NAME) {
-            $message = "The strap template is not installed";
-        } else {
-            $message = "The file ($templateUtilityFile) was not found";
-        }
-        throw new ExceptionCompile($message);
-
-    }
-
-
 
     /**
      */
@@ -928,15 +871,6 @@ class Site
         return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageTemplate::CONF_PAGE_MAIN_SIDEKICK_NAME, PageTemplate::CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT);
     }
 
-    /**
-     * @throws ExceptionCompile
-     */
-    public static function setConfStrapTemplate($name, $value)
-    {
-        Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-        TplUtility::setConf($name, $value);
-
-    }
 
     /**
      *
@@ -1190,7 +1124,7 @@ class Site
 
     public function getConfig(): SiteConfig
     {
-        if(isset($this->config)){
+        if (isset($this->config)) {
             return $this->config;
         }
         $this->config = new SiteConfig($this->executingContext);

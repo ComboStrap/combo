@@ -76,7 +76,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          */
         $handler = $event->data;
 
-        $act = ExecutionContext::getActualOrCreateFromEnv()->getExecutingAction();
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        $act = $executionContext->getExecutingAction();
         switch ($act) {
             case FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME:
                 $callStack = CallStack::createFromHandler($handler);
@@ -105,7 +106,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $requestedMarkup = MarkupPath::createPageFromPathObject($requestedPath);
                 $outline = Outline::createFromCallStack($callStack, $requestedMarkup);
-                if (Site::getTemplate() !== Site::STRAP_TEMPLATE_NAME) {
+                if (!$executionContext->getConfig()->isTemplatingEnabled()) {
                     $handler->calls = $outline->toDefaultTemplateInstructionCalls();
                 } else {
                     $handler->calls = $outline->toHtmlSectionOutlineCalls();

@@ -136,7 +136,6 @@ class HttpRequest
 
         if ($this->asAdmin) {
             Identity::becomeSuperUser($testRequest);
-
         }
 
         switch ($this->method) {

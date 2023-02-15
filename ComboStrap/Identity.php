@@ -217,5 +217,12 @@ class Identity
         return $perm;
     }
 
+    public static function getSecurityTokenForAdminUser(): string
+    {
+        $request = null;
+        Identity::becomeSuperUser($request,'admin');
+        return getSecurityToken();
+    }
+
 
 }

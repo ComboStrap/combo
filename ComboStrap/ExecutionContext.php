@@ -82,8 +82,6 @@ class ExecutionContext
     const PROFILE_ACTION = "profile";
 
 
-
-
     /**
      * @var array of objects that are scoped to this request
      */
@@ -184,6 +182,14 @@ class ExecutionContext
         try {
 
             $urlId = $this->url->getQueryPropertyValue(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
+            if (is_array($urlId)) {
+                /**
+                 * hack because the dokuwiki request global object as `ID` and `id` as array
+                 * but our own {@link Url object} don't allow that and makes an array instead
+                 * We don't use this data anyway, anymore ...
+                 */
+                $urlId = $urlId[0];
+            }
             $this->requestedWikiId = $urlId;
             $ID = $urlId;
 
@@ -576,7 +582,6 @@ class ExecutionContext
     }
 
 
-
     public function setEnablePageFetcherAsShowAction(): ExecutionContext
     {
         $this->getConfValue(action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM, 1);
@@ -909,7 +914,7 @@ class ExecutionContext
 
     public function getApp(): Site
     {
-        if(isset($this->app)){
+        if (isset($this->app)) {
             return $this->app;
         }
         $this->app = new Site($this);

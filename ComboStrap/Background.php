@@ -159,31 +159,24 @@ class Background
 
                     try {
                         $mediaMarkup = MediaMarkup::createFromCallStackArray($backgroundImageValue)
-                            ->setLinking(MediaMarkup::LAZY_LOAD_METHOD_NONE_VALUE);
+                            ->setLinking(MediaMarkup::LINKING_NOLINK_VALUE);
                     } catch (ExceptionCompile $e) {
                         LogUtility::error("We could not create a background image. Error: {$e->getMessage()}");
                         return;
                     }
+
                     try {
-                        $path = $mediaMarkup->getPath();
-                        if (!FileSystems::exists($path)) {
-                            LogUtility::error("The image ($path) does not exist", self::CANONICAL);
-                            return;
-                        }
-                        $mime = FileSystems::getMime($path);
-                    } catch (ExceptionNotFound $e) {
-                        try {
-                            $mime = FileSystems::getMime($mediaMarkup->getFetcher()->getFetchUrl());
-                        } catch (ExceptionNotFound $e) {
-                            LogUtility::error("The mime of the background image ($mediaMarkup) is unknown", self::CANONICAL);
-                            return;
-                        }
+                        $imageFetcher = $mediaMarkup->getFetcher();
+                    } catch (ExceptionBadArgument|ExceptionInternal|ExceptionNotFound $e) {
+                        LogUtility::internalError("The fetcher for the background image ($mediaMarkup) returns an error", self::CANONICAL, $e);
+                        return;
                     }
+                    $mime = $imageFetcher->getMime();
                     if (!$mime->isImage()) {
                         LogUtility::error("The background image ($mediaMarkup) is not an image but a $mime", self::CANONICAL);
                         return;
                     }
-                    $backgroundImageStyleValue = "url(" . $mediaMarkup->getFetcher()->getFetchUrl()->toString() . ")";
+                    $backgroundImageStyleValue = "url(" . $imageFetcher->getFetchUrl()->toAbsoluteUrl()->toCssString() . ")";
 
                 } else {
                     LogUtility::msg("Internal Error: The background image value ($backgroundImageValue) is not a string nor an array", LogUtility::LVL_MSG_ERROR, self::CANONICAL);

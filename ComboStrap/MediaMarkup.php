@@ -369,7 +369,7 @@ class MediaMarkup
     /**
      * @throws ExceptionNotFound
      */
-    public function getLinking()
+    public function getLinking(): string
     {
         /**
          * Linking
@@ -552,6 +552,20 @@ class MediaMarkup
         $lazy = $tagAttributes->getValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD);
         if ($lazy !== null) {
             $this->setLazyLoadMethod($lazy);
+        }
+
+        /**
+         * dokuwiki attribute
+         */
+        if (isset($this->fetchUrl)) {
+            $width = $tagAttributes->getValueAndRemoveIfPresent(Dimension::WIDTH_KEY);
+            if ($width !== null) {
+                $this->fetchUrl->addQueryParameterIfNotPresent(Dimension::WIDTH_KEY, $width);
+            }
+            $height = $tagAttributes->getValueAndRemoveIfPresent(Dimension::HEIGHT_KEY);
+            if ($height !== null) {
+                $this->fetchUrl->addQueryParameterIfNotPresent(Dimension::HEIGHT_KEY, $height);
+            }
         }
 
         foreach ($tagAttributes->getComponentAttributes() as $key => $value) {

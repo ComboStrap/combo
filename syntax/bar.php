@@ -27,14 +27,14 @@ if (!defined('DOKU_INC')) die();
 class syntax_plugin_combo_bar extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG_OLD = "slide";
+    const SLIDE_TAG_OLD = "slide";
     const CONF_ENABLE_BAR_EDITING = "enableBarEditing";
-    const CANONICAL = self::TAG_OLD;
+    const CANONICAL = self::SLIDE_TAG_OLD;
     const TAG = "bar";
     const HTML_TAG_ATTRIBUTES = "html_tag";
     const HTML_SECTION_TAG = "section";
     const SIZE_ATTRIBUTE = "size";
-    private static $tags = [self::TAG, self::TAG_OLD];
+    private static $tags = [self::TAG, self::SLIDE_TAG_OLD];
 
 
     /**

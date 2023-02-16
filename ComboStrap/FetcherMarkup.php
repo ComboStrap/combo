@@ -407,7 +407,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
                 } finally {
-                    $executionContext->closeRunningFetcherMarkup();
+                    $executionContext->closeExecutingFetcherMarkup();
                 }
                 break;
             case MarkupRenderer::METADATA_EXTENSION:
@@ -440,7 +440,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal("An error has occurred while processing the metadata. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
                 } finally {
-                    $executionContext->closeRunningFetcherMarkup();
+                    $executionContext->closeExecutingFetcherMarkup();
                 }
                 break;
             case MarkupRenderer::XHTML_RENDERER:
@@ -467,7 +467,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
                 } finally {
-                    $executionContext->closeRunningFetcherMarkup();
+                    $executionContext->closeExecutingFetcherMarkup();
                 }
                 $this->cacheAfterRendering = $markupRenderer->getCacheAfterRendering();
 
@@ -487,7 +487,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
                 } finally {
-                    $executionContext->closeRunningFetcherMarkup();
+                    $executionContext->closeExecutingFetcherMarkup();
                 }
                 break;
         }

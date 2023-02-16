@@ -755,6 +755,9 @@ class ExecutionContext
     public function setExecutingFetcherMarkup(FetcherMarkup $fetcherMarkup): ExecutionContext
     {
         if (isset($this->executingFetcherMarkup)) {
+            /**
+             * not true, webcode can launch a sub-one
+             */
             throw new ExceptionRuntimeInternal("Two fetcher markups cannot run at the same time");
         }
 
@@ -798,7 +801,7 @@ class ExecutionContext
         return $this;
     }
 
-    public function closeRunningFetcherMarkup(): ExecutionContext
+    public function closeExecutingFetcherMarkup(): ExecutionContext
     {
         unset($this->executingFetcherMarkup);
         $this->setExecutingAction($this->oldAct);

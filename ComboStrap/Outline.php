@@ -153,8 +153,14 @@ class Outline
                 case "header":
                     // Should happen only on outline section
                     // we take over inside a component
-                    $shouldWeCreateASection = true;
-                    $this->enterHeading($actualCall);
+                    if(!$actualCall->isPluginCall()) {
+                        /**
+                         * ie not {@link syntax_plugin_combo_header}
+                         * but the dokuwiki header (ie heading)
+                         */
+                        $shouldWeCreateASection = true;
+                        $this->enterHeading($actualCall);
+                    }
                     break;
             }
             if ($shouldWeCreateASection) {

@@ -34,25 +34,17 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
     const TWEET_SUPPORTED_LANG = array("en", "ar", "bn", "cs", "da", "de", "el", "es", "fa", "fi", "fil", "fr", "he", "hi", "hu", "id", "it", "ja", "ko", "msa", "nl", "no", "pl", "pt", "ro", "ru", "sv", "th", "tr", "uk", "ur", "vi", "zh-cn", "zh-tw");
     const CONF_TWEET_WIDGETS_THEME = "twitter:widgets:theme";
     const CONF_TWEET_WIDGETS_BORDER = "twitter:widgets:border-color";
+    const TYPO_TYPE = "typo";
+    const CARD_TYPE = "card";
 
 
     /**
      * @var mixed|string
      */
-    static public $type = "card";
+    static public $type = self::CARD_TYPE;
 
 
-    /**
-     * How Dokuwiki will add P element
-     *
-     *  * 'normal' - The plugin can be used inside paragraphs (inline)
-     *  * 'block'  - Open paragraphs need to be closed before plugin output - block should not be inside paragraphs
-     *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
-     *
-     * @see DokuWiki_Syntax_Plugin::getPType()
-     * @see https://www.dokuwiki.org/devel:syntax_plugins#ptype
-     */
-    function getType()
+    function getType(): string
     {
         return 'container';
     }
@@ -100,7 +92,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
         return 'stack';
     }
@@ -157,9 +149,9 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
                 // Suppress the component name
-                $defaultAttributes = array("type" => "card");
-                $tagAttributes = PluginUtility::getTagAttributes($match);
-                $tagAttributes = PluginUtility::mergeAttributes($tagAttributes, $defaultAttributes);
+                $defaultAttributes = array("type" => self::CARD_TYPE);
+                $knownTypes = [self::TYPO_TYPE, self::CARD_TYPE];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes,$knownTypes);
 
                 /**
                  * Parent
@@ -179,7 +171,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes,
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
                     PluginUtility::CONTEXT => $context
                 );
 
@@ -269,7 +261,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                 $callStack->moveToPreviousCorrespondingOpeningCall();
                 $callStack->insertEolIfNextCallIsNotEolOrBlock(); // eol is mandatory to have a paragraph if there is only content
                 $paragraphAttributes["class"] = "blockquote-text";
-                if ($type == "typo") {
+                if ($type == self::TYPO_TYPE) {
                     $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
                     if ($bootstrapVersion == Bootstrap::BootStrapFourMajorVersion) {
                         // As seen here https://getbootstrap.com/docs/4.0/content/typography/#blockquotes
@@ -288,13 +280,13 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                  *   * at the body location: a card body start and a blockquote typo start
                  *   * at the end location: a card end body and a blockquote end typo
                  */
-                if ($type == "card") {
+                if ($type == self::CARD_TYPE) {
 
                     $callStack->moveToPreviousCorrespondingOpeningCall();
                     $callEnterTypeCall = Call::createComboCall(
                         self::TAG,
                         DOKU_LEXER_ENTER,
-                        array(TagAttributes::TYPE_KEY => "typo"),
+                        array(TagAttributes::TYPE_KEY => self::TYPO_TYPE),
                         $context
                     );
                     $cardBodyEnterCall = Call::createComboCall(
@@ -333,7 +325,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                         Call::createComboCall(
                             self::TAG,
                             DOKU_LEXER_EXIT,
-                            array("type" => "typo"),
+                            array("type" => self::TYPO_TYPE),
                             $context
                         )
                     );
@@ -391,7 +383,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                     $tagAttributes = TagAttributes::createFromCallStackArray($blockquoteAttributes, self::TAG);
                     $type = $tagAttributes->getType();
                     switch ($type) {
-                        case "typo":
+                        case self::TYPO_TYPE:
 
                             $tagAttributes->addClassName("blockquote");
                             $cardTags = [syntax_plugin_combo_card::TAG, syntax_plugin_combo_masonry::TAG];
@@ -422,7 +414,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag("blockquote");
                             break;
-                        case "card":
+                        case self::CARD_TYPE:
                         default:
 
                             /**
@@ -436,7 +428,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             /**
                              * Starting the card
                              */
-                            $tagAttributes->addClassName("card");
+                            $tagAttributes->addClassName(self::CARD_TYPE);
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
                             /**
                              * The card body and blockquote body
@@ -459,11 +451,11 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     $type = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
                     switch ($type) {
-                        case "card":
+                        case self::CARD_TYPE:
                             $renderer->doc .= "</div>" . DOKU_LF;
                             break;
                         case self::TWEET:
-                        case "typo":
+                        case self::TYPO_TYPE:
                         default:
                             $renderer->doc .= "</blockquote>" . DOKU_LF;
                             break;

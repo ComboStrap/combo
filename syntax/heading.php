@@ -487,7 +487,8 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                $tagAttributes = TagAttributes::createFromTagMatch($match, [], self::ALL_TYPES);
+                $defaultValue = [TagAttributes::TYPE_KEY => self::DEFAULT_LEVEL_TITLE_CONTEXT];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultValue, self::ALL_TYPES);
 
                 /**
                  * Context determination

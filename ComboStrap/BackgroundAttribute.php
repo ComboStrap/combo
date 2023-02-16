@@ -7,7 +7,7 @@ namespace ComboStrap;
 /**
  * Process background attribute
  */
-class Background
+class BackgroundAttribute
 {
     /**
      * Background Logical attribute / Public

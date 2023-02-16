@@ -178,7 +178,6 @@ class TagAttributes
      */
     public const DOKUWIKI_TEXT_NODE_ATTRIBUTE = "_data";
 
-
     /**
      * A global static counter
      * to {@link TagAttributes::generateAndSetId()}
@@ -532,7 +531,7 @@ class TagAttributes
         Spacing::processSpacingAttributes($this);
         Hero::processHero($this);
         Opacity::processOpacityAttribute($this);
-        Background::processBackgroundAttributes($this);
+        BackgroundAttribute::processBackgroundAttributes($this);
         Shadow::process($this);
 
         /**
@@ -812,7 +811,6 @@ class TagAttributes
                 ->generateNewHtmlIdForComponent($componentName);
             $this->addComponentAttributeValue(TagAttributes::GENERATED_ID_KEY, $id);
 
-
         }
 
         $array = array();
@@ -1010,7 +1008,7 @@ class TagAttributes
              * and may has been categorized as the type
              */
             if (!$this->getType() == $lowerAtt) {
-                LogUtility::msg("Internal Error: The component attribute ($attribute) is not present. Use the ifPresent function, if you don't want this message", LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("Internal Error: The component attribute ($attribute) is not present. Use the ifPresent function, if you don't want this message");
             }
             return null;
 

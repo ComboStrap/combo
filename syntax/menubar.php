@@ -4,7 +4,7 @@
  *
  */
 
-use ComboStrap\Background;
+use ComboStrap\BackgroundAttribute;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -159,7 +159,7 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $default[Background::BACKGROUND_COLOR] = 'light';
+                $default[BackgroundAttribute::BACKGROUND_COLOR] = 'light';
                 $default[self::BREAKPOINT_ATTRIBUTE] = "lg";
                 $default[self::THEME_ATTRIBUTE] = "light";
                 $default[self::POSITION] = "normal";

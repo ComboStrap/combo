@@ -12,7 +12,7 @@ class Opacity
     /**
      * Set the opacity
      *
-     * For a background image, the opacity is set on the {@link Background::processBackgroundAttributes()}
+     * For a background image, the opacity is set on the {@link BackgroundAttribute::processBackgroundAttributes()}
      * Because the image background parameters are in array, it seems
      * that they are not interfering
      *

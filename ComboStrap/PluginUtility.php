@@ -39,8 +39,9 @@ class PluginUtility
     const POSITION = "position";
 
 
-    const EXIT_MESSAGE = "errorAtt";
+    const EXIT_MESSAGE = "exit_message";
     const EXIT_CODE = "exit_code";
+
     const DISPLAY = "display";
 
     /**

@@ -2,7 +2,8 @@
 
 
 // must be run within Dokuwiki
-use ComboStrap\Background;
+use ComboStrap\BackgroundAttribute;
+use ComboStrap\BackgroundTag;
 use ComboStrap\FetcherSvg;
 use ComboStrap\MarkupRef;
 use ComboStrap\MediaMarkup;
@@ -39,27 +40,6 @@ require_once(__DIR__ . '/../vendor/autoload.php');
  */
 class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 {
-
-    const TAG = "background";
-    const TAG_SHORT = "bg";
-    const ERROR = "error";
-
-    /**
-     * Function used in the special and enter tag
-     * @param $match
-     * @return array
-     */
-    private static function getAttributesAndAddBackgroundPrefix($match)
-    {
-
-        $attributes = PluginUtility::getTagAttributes($match);
-        if (isset($attributes[ColorRgb::COLOR])) {
-            $attributes[Background::BACKGROUND_COLOR] = $attributes[ColorRgb::COLOR];
-            unset($attributes[ColorRgb::COLOR]);
-        }
-        return $attributes;
-
-    }
 
 
     /**
@@ -116,8 +96,6 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
         foreach ($this->getTags() as $tag) {
             $pattern = PluginUtility::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
-            $emptyPattern = PluginUtility::getEmptyTagPattern($tag);
-            $this->Lexer->addSpecialPattern($emptyPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
 
@@ -140,29 +118,22 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                /**
-                 * Get and Add the background prefix
-                 */
-                $attributes = self::getAttributesAndAddBackgroundPrefix($match);
+                $tagAttributes = TagAttributes::createFromTagMatch($match);
+                BackgroundTag::modifyColorAttributes($tagAttributes);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
                 );
 
-            case DOKU_LEXER_SPECIAL :
-
-                $attributes = self::getAttributesAndAddBackgroundPrefix($match);
-                $callStack = CallStack::createFromHandler($handler);
-                return $this->setAttributesToParentAndReturnData($callStack, $attributes, $state);
-
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
+                return PluginUtility::handleAndReturnUnmatchedData(BackgroundTag::MARKUP_LONG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
                 $callStack = CallStack::createFromHandler($handler);
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
-                $backgroundAttributes = $openingTag->getAttributes();
+                $backgroundAttributes = TagAttributes::createFromCallStackArray($openingTag->getAttributes())
+                    ->setLogicalTag(BackgroundTag::MARKUP_LONG);
 
                 /**
                  * if the media syntax of Combo is not used, try to retrieve the media of dokuwiki
@@ -178,12 +149,12 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                     if (in_array($tagName, $imageTag)) {
                         $imageAttribute = $actual->getAttributes();
                         if ($tagName == syntax_plugin_combo_media::TAG) {
-                            $backgroundImageAttribute = Background::fromMediaToBackgroundImageStackArray($imageAttribute);
+                            $backgroundImageAttribute = BackgroundAttribute::fromMediaToBackgroundImageStackArray($imageAttribute);
 
                             /**
                              * Hack for tile svg
                              */
-                            $fill = $openingTag->getAttribute(Background::BACKGROUND_FILL);
+                            $fill = $openingTag->getAttribute(BackgroundAttribute::BACKGROUND_FILL);
                             if ($fill === FetcherSvg::TILE_TYPE) {
                                 $ref = $backgroundImageAttribute[MarkupRef::REF_ATTRIBUTE];
                                 if (!str_contains($ref, TagAttributes::TYPE_KEY) && str_contains($ref, "svg")) {
@@ -207,13 +178,13 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                                 IFetcherAbs::CACHE_KEY => $imageAttribute[5]
                             ];
                         }
-                        $backgroundAttributes[Background::BACKGROUND_IMAGE] = $backgroundImageAttribute;
+                        $backgroundAttributes->addComponentAttributeValue(BackgroundAttribute::BACKGROUND_IMAGE, $backgroundImageAttribute);
                         $callStack->deleteActualCallAndPrevious();
                     }
                 }
 
 
-                return $this->setAttributesToParentAndReturnData($callStack, $backgroundAttributes, $state);
+                return BackgroundTag::setAttributesToParentAndReturnData($callStack, $backgroundAttributes, $state);
 
 
         }
@@ -241,19 +212,12 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER:
                     /**
-                     * background is printed via the {@link Background::processBackgroundAttributes()}
+                     * background is printed via the {@link BackgroundAttribute::processBackgroundAttributes()}
                      */
                     break;
                 case DOKU_LEXER_EXIT :
                 case DOKU_LEXER_SPECIAL :
-                    /**
-                     * Print any error
-                     */
-                    if (isset($data[self::ERROR])) {
-                        $class = LinkMarkup::TEXT_ERROR_CLASS;
-                        $error = $data[self::ERROR];
-                        $renderer->doc .= "<p class=\"$class\">$error</p>" . DOKU_LF;
-                    }
+                    $renderer->doc .= BackgroundTag::renderHtml($data);
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     /**
@@ -271,8 +235,8 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
              * @var Doku_Renderer_metadata $renderer
              */
             $attributes = $data[PluginUtility::ATTRIBUTES];
-            if (isset($attributes[Background::BACKGROUND_IMAGE])) {
-                $image = $attributes[Background::BACKGROUND_IMAGE];
+            if (isset($attributes[BackgroundAttribute::BACKGROUND_IMAGE])) {
+                $image = $attributes[BackgroundAttribute::BACKGROUND_IMAGE];
                 syntax_plugin_combo_media::registerImageMeta($image, $renderer);
             }
         }
@@ -283,71 +247,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
     private function getTags()
     {
-        return [self::TAG, self::TAG_SHORT];
-    }
-
-    /**
-     * @param CallStack $callStack
-     * @param array $backgroundAttributes
-     * @param $state
-     * @return array
-     */
-    public function setAttributesToParentAndReturnData(CallStack $callStack, array $backgroundAttributes, $state)
-    {
-
-        /**
-         * The data array
-         */
-        $data = array();
-
-        /**
-         * Set the backgrounds attributes
-         * to the parent
-         * There is two state (special and exit)
-         * Go to the opening call if in exit
-         */
-        if ($state == DOKU_LEXER_EXIT) {
-            $callStack->moveToEnd();
-            $callStack->moveToPreviousCorrespondingOpeningCall();
-        }
-        $parentCall = $callStack->moveToParent();
-
-        if ($parentCall != false) {
-            if ($parentCall->getTagName() == Background::BACKGROUNDS) {
-                /**
-                 * The backgrounds node
-                 * (is already relative)
-                 */
-                $parentCall = $callStack->moveToParent();
-            } else {
-                /**
-                 * Another parent node
-                 * With a image background, the node should be relative
-                 */
-                if (isset($backgroundAttributes[Background::BACKGROUND_IMAGE])) {
-                    $parentCall->addAttribute(Position::POSITION_ATTRIBUTE, "relative");
-                }
-            }
-            $backgrounds = $parentCall->getAttribute(Background::BACKGROUNDS);
-            if ($backgrounds == null) {
-                $backgrounds = [$backgroundAttributes];
-            } else {
-                $backgrounds[] = $backgroundAttributes;
-            }
-            $parentCall->addAttribute(Background::BACKGROUNDS, $backgrounds);
-
-        } else {
-            $data[self::ERROR] = "A background should have a parent";
-        }
-
-        /**
-         * Return state to keep the call stack structure
-         * and the image data for the metadata
-         */
-        $data[PluginUtility::STATE] = $state;
-        $data[PluginUtility::ATTRIBUTES] = $backgroundAttributes;
-        return $data;
-
+        return [BackgroundTag::MARKUP_LONG, BackgroundTag::MARKUP_SHORT];
     }
 
 

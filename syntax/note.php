@@ -2,7 +2,7 @@
 
 
 // must be run within Dokuwiki
-use ComboStrap\Background;
+use ComboStrap\BackgroundAttribute;
 use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
@@ -175,8 +175,8 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
                         if (!$attributes->hasComponentAttribute("border-color")) {
                             $attributes->addComponentAttributeValue("border-color", "#FFF78c"); // lum - 186
                         }
-                        if (!$attributes->hasComponentAttribute(Background::BACKGROUND_COLOR)) {
-                            $attributes->addComponentAttributeValue(Background::BACKGROUND_COLOR, "#fff79f"); // lum - 195
+                        if (!$attributes->hasComponentAttribute(BackgroundAttribute::BACKGROUND_COLOR)) {
+                            $attributes->addComponentAttributeValue(BackgroundAttribute::BACKGROUND_COLOR, "#fff79f"); // lum - 195
                         }
                     }
 

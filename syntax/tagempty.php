@@ -4,6 +4,7 @@
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 // must be run within Dokuwiki
+use ComboStrap\BackgroundTag;
 use ComboStrap\Brand;
 use ComboStrap\BrandButton;
 use ComboStrap\BrandListTag;
@@ -11,6 +12,7 @@ use ComboStrap\BrandTag;
 use ComboStrap\Breadcrumb;
 use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheTag;
+use ComboStrap\CallStack;
 use ComboStrap\ExceptionInternal;
 use ComboStrap\HrTag;
 use ComboStrap\IconTag;
@@ -128,10 +130,16 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
             case CacheTag::MARKUP:
                 $returnedArray = CacheTag::handle($tagAttributes);
                 break;
+            case BackgroundTag::MARKUP_SHORT:
+            case BackgroundTag::MARKUP_LONG:
+                BackgroundTag::modifyColorAttributes($tagAttributes);
+                $callStack = CallStack::createFromHandler($handler);
+                $returnedArray = BackgroundTag::setAttributesToParentAndReturnData($callStack, $tagAttributes, $state);
+                break;
         }
 
         /**
-         * Common
+         * Common default
          */
         $defaultReturnedArray[PluginUtility::STATE] = $state;
         $defaultReturnedArray[PluginUtility::TAG] = $logicalTag;
@@ -187,13 +195,17 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
                     case CacheTag::MARKUP:
                         $renderer->doc .= CacheTag::renderXhtml($data);
                         break;
+                    case BackgroundTag::MARKUP_LONG:
+                    case BackgroundTag::MARKUP_SHORT:
+                        $renderer->doc .= BackgroundTag::renderHtml($data);
+                        break;
                     default:
                         LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");
                 }
                 break;
             case 'metadata':
                 /** @var Doku_Renderer_metadata $renderer */
-                switch ($tag){
+                switch ($tag) {
                     case IconTag::TAG:
                         IconTag::metadata($renderer, $tagAttributes);
                         break;

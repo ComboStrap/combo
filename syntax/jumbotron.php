@@ -4,7 +4,7 @@
  *
  */
 
-use ComboStrap\Background;
+use ComboStrap\BackgroundAttribute;
 use ComboStrap\Bootstrap;
 use ComboStrap\Hero;
 use ComboStrap\PluginUtility;
@@ -139,7 +139,7 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
 
                 $defaults = [
                     Hero::ATTRIBUTE => "md",
-                    Background::BACKGROUND_COLOR => "#e9ecef",
+                    BackgroundAttribute::BACKGROUND_COLOR => "#e9ecef",
                     Spacing::SPACING_ATTRIBUTE => "m-2"
                 ];
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaults)

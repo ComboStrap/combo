@@ -637,7 +637,7 @@ class WikiPath extends PathAbs
     {
         $id = $path;
         if ($id[0] === WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
-            $id = substr($id, 1);
+            return substr($id, 1);
         }
         return $id;
     }

@@ -427,6 +427,9 @@ class ExecutionContext
         unset($this->cacheManager);
         unset($this->idManager);
 
+        /** global dokuwiki messages variable */
+        global $MSG;
+        unset($MSG);
 
         /**
          * Restore requested id if any
@@ -672,6 +675,7 @@ class ExecutionContext
     private function setExecutingId(string $executingId): ExecutionContext
     {
         global $ID;
+        $executingId = WikiPath::toDokuWikiId($executingId);
         $ID = $executingId;
         return $this;
     }

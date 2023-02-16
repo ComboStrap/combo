@@ -170,7 +170,7 @@ class FetcherRaster extends IFetcherLocalImage
                 // There is a bug in the wiki syntax page
                 // {{wiki:dokuwiki-128.png?200x50}}
                 // https://forum.dokuwiki.org/d/19313-bugtypo-how-to-make-a-request-to-change-the-syntax-page-on-dokuwikii
-                LogUtility::msg("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                LogUtility::warning("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)",  self::CANONICAL);
             }
             return $mediaWidth;
         }

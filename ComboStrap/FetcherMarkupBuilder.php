@@ -46,7 +46,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
      * @param bool $b
      * @return $this
      */
-    public function setRemoveRootBlockElement(bool $b): FetcherMarkupBuilder
+    public function setDeleteRootBlockElement(bool $b): FetcherMarkupBuilder
     {
         $this->removeRootBlockElement = $b;
         return $this;

@@ -28,7 +28,7 @@ class MarkupRenderUtility
     {
         return FetcherMarkup::getBuilder()
             ->setRequestedMarkupString($content)
-            ->setRemoveRootBlockElement($strip)
+            ->setDeleteRootBlockElement($strip)
             ->setRequestedContextPathWithDefault()
             ->setRequestedMimeToXhtml()
             ->build()
@@ -62,7 +62,7 @@ class MarkupRenderUtility
     {
         $wikiPath = WikiPath::createMarkupPathFromId($pageId);
         $fetcher = FetcherMarkup::createXhtmlMarkupFetcherFromPath($wikiPath, $wikiPath)
-            ->setRemoveRootBlockElement(true)
+            ->setDeleteRootBlockElement(true)
             ->setRequestedMimeToXhtml();
         try {
             return $fetcher->getFetchString();

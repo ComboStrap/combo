@@ -449,6 +449,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     ->setRequestedContextPath($this->getRequestedContextPath())
                     ->setRequestedExecutingPath($this->getExecutingPathOrNull())
                     ->setRequestedMimeToInstructions()
+                    ->setDeleteRootBlockElement($this->removeRootBlockElement)
                     ->build();
 
                 $instructions = $instructionsFetcher

@@ -37,7 +37,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
     const LEVEL = 'level';
     const DISPLAY_BS_4_RESPONSIVE_SNIPPET_ID = "display-bs-4";
-    const ALL_TYPES = ["h1", "h2", "h3", "h4", "h5", "h6", "d1", "d2", "d3", "d4", "d5", "d6"];
+    const ALL_TYPES = ["h1", "h2", "h3", "h4", "h5", "h6", "d1", "d2", "d3", "d4", "d5", "d6", "1", "2", "3", "4", "5", "6"];
     const DISPLAY_TYPES = ["d1", "d2", "d3", "d4", "d5", "d6"];
     const DISPLAY_TYPES_ONLY_BS_5 = ["d5", "d6"]; // only available in 5
 
@@ -46,7 +46,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      * as outline and should be in the toc
      */
     const TYPE_OUTLINE = "outline";
-    const HEADING_TYPES = ["h1", "h2", "h3", "h4", "h5", "h6"];
+    const HEADING_TYPES = ["h1", "h2", "h3", "h4", "h5", "h6", "1", "2", "3", "4", "5", "6"];
     /**
      * The attribute that holds only the text of the heading
      * (used to create the id and the text in the toc)
@@ -424,7 +424,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      *
      *  * 'normal' - The plugin can be used inside paragraphs (inline)
      *  * 'block'  - Open paragraphs need to be closed before plugin output - block should not be inside paragraphs
-     *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
+     *  * 'stack'  - In stacks, dokuwiki will create paragraphs
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      *

@@ -41,8 +41,8 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
      * How Dokuwiki will add P element
      *
      *  * 'normal' - Inline
-     *  * 'block' - Block (p are not created inside)
-     *  * 'stack' - Block (p can be created inside)
+     *  * 'block' - Block (dokuwiki does not create p inside)
+     *  * 'stack' - Block (dokuwiki creates p inside)
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */

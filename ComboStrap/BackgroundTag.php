@@ -88,6 +88,7 @@ class BackgroundTag
          * Return the image data for the metadata
          */
         $data[PluginUtility::ATTRIBUTES] = $backgroundAttributes->toCallStackArray();
+        $data[PluginUtility::STATE] = $state;
         return $data;
 
     }

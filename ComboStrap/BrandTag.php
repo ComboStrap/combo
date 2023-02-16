@@ -7,7 +7,8 @@ use syntax_plugin_combo_follow;
 use syntax_plugin_combo_link;
 use syntax_plugin_combo_menubar;
 
-class BrandTag
+class
+BrandTag
 {
 
 
@@ -253,5 +254,7 @@ class BrandTag
         $brandLinkAttributes->setType($tagAttributes->getType());
         return $brandLinkAttributes;
     }
+
+
 
 }

@@ -145,6 +145,12 @@ class SiteConfig
         return $this;
     }
 
+    public function setDisableLogException(): SiteConfig
+    {
+        $this->setLogExceptionLevel(LogUtility::LVL_MSG_ABOVE_ERROR);
+        return $this;
+    }
+
     public function setLogExceptionLevel(int $level): SiteConfig
     {
         $this->setConf(self::LOG_EXCEPTION_LEVEL, $level);

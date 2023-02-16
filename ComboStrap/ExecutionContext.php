@@ -427,10 +427,6 @@ class ExecutionContext
         unset($this->cacheManager);
         unset($this->idManager);
 
-        /**
-         * Log utility is not yet a conf
-         */
-        LogUtility::setTestExceptionLevelToDefault();
 
         /**
          * Restore requested id if any
@@ -946,6 +942,22 @@ class ExecutionContext
     public function getConfig(): SiteConfig
     {
         return $this->getApp()->getConfig();
+    }
+
+    /**
+     * @throws ExceptionNotFound - when there is no executing id
+     */
+    public function getExecutingWikiPath(): WikiPath
+    {
+        try {
+            return $this->getExecutingFetcherMarkup()
+                ->getRequestedExecutingPath()
+                ->toWikiPath();
+        } catch (ExceptionCast|ExceptionNotFound $e) {
+            // Execution without templating (ie without fetcher markup)
+            return WikiPath::createMarkupPathFromId($this->getExecutingWikiId());
+        }
+
     }
 
 

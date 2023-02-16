@@ -24,6 +24,7 @@ class LogUtility
      * -1 = error, 0 = info, 1 = success, 2 = notify
      * (Not even in order of importance)
      */
+    const LVL_MSG_ABOVE_ERROR = 5; // a level to disable the error to thrown in test
     const LVL_MSG_ERROR = 4; //-1;
     const LVL_MSG_WARNING = 3; //2;
     const LVL_MSG_SUCCESS = 2; //1;
@@ -56,6 +57,7 @@ class LogUtility
 
 
     const LOGLEVEL_URI_QUERY_PROPERTY = "loglevel";
+
     /**
      *
      * @var bool
@@ -208,19 +210,11 @@ class LogUtility
             case "phpunit":
             case "browser":
             default:
-                $htmlMsg = "";
-                try {
-                    if ($canonical !== null) {
-                        $label = ucfirst(str_replace(":", " ", $canonical));
-                        $htmlMsg = PluginUtility::getDocumentationHyperLink($canonical, $label, false);
-                    } else {
-
-                        $htmlMsg = PluginUtility::getDocumentationHyperLink("", PluginUtility::$PLUGIN_NAME, false);
-                    }
-                } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-                    if (PluginUtility::isTest()) {
-                        throw new ExceptionRuntime("Hyperlink document Error", "log", 0, $e);
-                    }
+                if ($canonical !== null) {
+                    $label = ucfirst(str_replace(":", " ", $canonical));
+                    $htmlMsg = PluginUtility::getDocumentationHyperLink($canonical, $label, false);
+                } else {
+                    $htmlMsg = PluginUtility::getDocumentationHyperLink("", PluginUtility::$PLUGIN_NAME, false);
                 }
 
 
@@ -340,7 +334,7 @@ class LogUtility
         self::msg($message, LogUtility::LVL_MSG_ERROR, $canonical, $e);
     }
 
-    public static function warning(string $message, string $canonical = "support",  \Exception $e = null)
+    public static function warning(string $message, string $canonical = "support", \Exception $e = null)
     {
         self::msg($message, LogUtility::LVL_MSG_WARNING, $canonical, $e);
     }

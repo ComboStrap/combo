@@ -9,6 +9,8 @@ use ComboStrap\BrandButton;
 use ComboStrap\BrandListTag;
 use ComboStrap\BrandTag;
 use ComboStrap\Breadcrumb;
+use ComboStrap\CacheExpirationDate;
+use ComboStrap\CacheTag;
 use ComboStrap\ExceptionInternal;
 use ComboStrap\HrTag;
 use ComboStrap\IconTag;
@@ -123,6 +125,9 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
             case BrandTag::MARKUP:
                 $returnedArray = BrandTag::handle($tagAttributes, $handler);
                 break;
+            case CacheTag::MARKUP:
+                $returnedArray = CacheTag::handle($tagAttributes);
+                break;
         }
 
         /**
@@ -179,14 +184,21 @@ class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
                     case BrandTag::MARKUP:
                         $renderer->doc .= BrandTag::render($tagAttributes, $state, $data);
                         break;
+                    case CacheTag::MARKUP:
+                        $renderer->doc .= CacheTag::renderXhtml($data);
+                        break;
                     default:
                         LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");
                 }
                 break;
             case 'metadata':
                 /** @var Doku_Renderer_metadata $renderer */
-                if ($tag == IconTag::TAG) {
-                    IconTag::metadata($renderer, $tagAttributes);
+                switch ($tag){
+                    case IconTag::TAG:
+                        IconTag::metadata($renderer, $tagAttributes);
+                        break;
+                    case CacheTag::MARKUP:
+                        CacheTag::metadata($data);
                 }
                 break;
         }

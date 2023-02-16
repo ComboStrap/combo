@@ -355,6 +355,11 @@ class PageTemplate
             }
 
             /**
+             * Messages
+             */
+            $this->addMessages($bodyElement);
+
+            /**
              * Toc
              */
             try {
@@ -435,6 +440,7 @@ class PageTemplate
              * At last then
              */
             $this->addHeadElements($head, $htmlFragmentByVariables);
+
 
             /**
              * Preloaded Css
@@ -1033,6 +1039,78 @@ class PageTemplate
         $preloadHtml .= "</div>";
         return $preloadHtml;
 
+    }
+
+    /**
+     * Variation of {@link html_msgarea()}
+     */
+    public function addMessages(XmlElement $bodyElement): void
+    {
+
+        global $MSG, $MSG_shown;
+        /** @var array $MSG */
+        // store if the global $MSG has already been shown and thus HTML output has been started
+        $MSG_shown = true;
+
+        if (!isset($MSG)) return;
+
+
+        $shown = array();
+
+        $toasts = "";
+        foreach ($MSG as $msg) {
+            $hash = md5($msg['msg']);
+            if (isset($shown[$hash])) continue; // skip double messages
+            if (info_msg_allowed($msg)) {
+                $level = ucfirst($msg['lvl']);
+                switch ($level) {
+                    case "Error":
+                        $class = "text-danger";
+                        $autoHide = "false";
+                        break;
+                    default:
+                        $class = "text-primary";
+                        $autoHide = "true";
+                        break;
+                }
+                $toasts .= <<<EOF
+<div role="alert" aria-live="assertive" aria-atomic="true" class="toast fade" data-bs-autohide="$autoHide">
+  <div class="toast-header">
+    <strong class="me-auto $class">{$level}</strong>
+    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+  </div>
+  <div class="toast-body">
+        <p>{$msg['msg']}</p>
+  </div>
+</div>
+EOF;
+
+            }
+            $shown[$hash] = 1;
+        }
+
+        unset($GLOBALS['MSG']);
+
+        if ($toasts === "") {
+            return;
+        }
+
+        // position fixed to not participate into the grid
+        $toastsHtml =<<<EOF
+<div class="toast-container position-fixed mb-3 me-3 bottom-0 end-0" id="toastPlacement" style="z-index:1060">
+$toasts
+</div>
+EOF;
+        try {
+            $bodyElement->insertAdjacentHTML('beforeend', $toastsHtml);
+        } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
+            // should not happen
+            LogUtility::error($e);
+        }
+
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->getSnippetSystem()
+            ->attachJavascriptFromComponentId("toast");
     }
 
 }

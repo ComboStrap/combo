@@ -330,7 +330,7 @@ class XmlElement
      * @return XmlElement
      * @throws ExceptionBadArgument
      */
-    private function insertAdjacentDomElement(string $position, \DOMNode $domNode): XmlElement
+    public function insertAdjacentDomElement(string $position, \DOMNode $domNode): XmlElement
     {
         switch ($position) {
             case 'beforeend':

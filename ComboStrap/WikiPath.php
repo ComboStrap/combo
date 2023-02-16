@@ -467,13 +467,14 @@ class WikiPath extends PathAbs
     }
 
     /**
-     * The executing markup given by the global id
+     * The executing markup
      * @throws ExceptionNotFound
      */
     public static function createExecutingMarkupWikiPath(): WikiPath
     {
-        $id = ExecutionContext::getActualOrCreateFromEnv()->getExecutingWikiId();
-        return WikiPath::createMarkupPathFromId($id);
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getExecutingWikiPath();
+
     }
 
 

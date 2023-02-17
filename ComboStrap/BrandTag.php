@@ -235,7 +235,7 @@ BrandTag
             if (sizeof($variableDetected) === 1 && $variableDetected[0] === "path") {
                 try {
                     ExecutionContext::getActualOrCreateFromEnv()
-                        ->getExecutingFetcherMarkup()
+                        ->getExecutingMarkupHandler()
                         ->getCacheDependencies()
                         ->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
                 } catch (ExceptionNotFound $e) {

@@ -21,6 +21,7 @@ use ComboStrap\Dimension;
 use ComboStrap\Display;
 use ComboStrap\ExceptionBadState;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\FetcherMarkup;
 use ComboStrap\FetcherMarkupWebcode;
 use ComboStrap\FetcherRawLocalPath;
 use ComboStrap\LogUtility;
@@ -398,7 +399,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                              * such as don't show editbutton on webcode
                              */
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
-                            $renderer->doc .= PluginUtility::render($markupCode);
+                            $renderer->doc .= FetcherMarkup::createFromStringMarkupToXhtml($markupCode)->getFetchString();
                             $renderer->doc .= "</div>";
                             return true;
                         }

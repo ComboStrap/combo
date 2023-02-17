@@ -42,7 +42,7 @@ class ShareTag
          */
         try {
             ExecutionContext::getActualOrCreateFromEnv()
-                ->getExecutingFetcherMarkup()
+                ->getExecutingMarkupHandler()
                 ->getCacheDependencies()
                 ->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
         } catch (ExceptionNotFound $e) {

@@ -343,7 +343,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     $table = $pageSql->getTable();
                     try {
                         $cacheDependencies = ExecutionContext::getActualOrCreateFromEnv()
-                            ->getExecutingFetcherMarkup()
+                            ->getExecutingMarkupHandler()
                             ->getCacheDependencies();
 
                         switch ($table) {

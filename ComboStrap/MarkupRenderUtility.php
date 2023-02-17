@@ -26,6 +26,7 @@ class MarkupRenderUtility
      */
     public static function renderText2XhtmlAndStripPEventually($content, bool $strip = true): string
     {
+
         return FetcherMarkup::getBuilder()
             ->setRequestedMarkupString($content)
             ->setDeleteRootBlockElement($strip)

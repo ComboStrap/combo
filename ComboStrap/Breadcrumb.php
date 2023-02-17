@@ -179,7 +179,7 @@ class Breadcrumb
 
         try {
             ExecutionContext::getActualOrCreateFromEnv()
-                ->getExecutingFetcherMarkup()
+                ->getExecutingMarkupHandler()
                 ->getCacheDependencies()
                 // the output has the data from the requested page
                 ->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY)

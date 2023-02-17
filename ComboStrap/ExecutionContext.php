@@ -131,11 +131,13 @@ class ExecutionContext
     private IFetcher $executingMainFetcher;
 
     /**
-     * @var FetcherMarkup  - the fetcher markup that is taking a markup (file, string)
-     * and making it a HTML, pdf, ...
-     * This fetcher is called by the main fetcher or by the {@link self::setExecutingFetcherMarkup()}
+     * @var array - a stack of:
+     *   * markup handler executing (ie handler that is taking a markup (file, string) and making it a HTML, pdf, ...)
+     *   * and old global environement, $executingId, $contextExecutingId, $act
+     *
+     * This fetcher is called by the main fetcher or by the {@link self::setExecutingMarkupHandler()}
      */
-    private FetcherMarkup $executingFetcherMarkup;
+    private array $executingMarkupHandlerStack = [];
 
     /**
      * @var PageTemplate - the page template fetcher running (when a fetcher creates a page, it would uses this fetcher)
@@ -147,11 +149,6 @@ class ExecutionContext
      * @var WikiPath the {@link self::getContextPath()} when no context could be determined
      */
     private WikiPath $defaultContextPath;
-    /**
-     * @var mixed|string
-     */
-    private $oldAct;
-    private string $oldId;
 
 
     public function __construct()
@@ -422,7 +419,7 @@ class ExecutionContext
         $this->getApp()->getConfig()->restoreConfigState();
 
         unset($this->executingMainFetcher);
-        unset($this->executingFetcherMarkup);
+        unset($this->executingMarkupHandlerStack);
         unset($this->executionScopedVariables);
         unset($this->cacheManager);
         unset($this->idManager);
@@ -749,23 +746,25 @@ class ExecutionContext
      * This function sets the markup running context object globally,
      * so that code may access it via this global variable
      * (Fighting dokuwiki global scope)
-     * @param FetcherMarkup $fetcherMarkup
+     * @param FetcherMarkup $markupHandler
      * @return $this
      */
-    public function setExecutingFetcherMarkup(FetcherMarkup $fetcherMarkup): ExecutionContext
+    public function setExecutingMarkupHandler(FetcherMarkup $markupHandler): ExecutionContext
     {
-        if (isset($this->executingFetcherMarkup)) {
+
+        if (count($this->executingMarkupHandlerStack) >= 1 && !$markupHandler->isStringExecution()) {
             /**
-             * not true, webcode can launch a sub-one
+             * A markup handler for a file can call a handler with a string
+             * (example: {@link webcode can launch a sub-one
              */
-            throw new ExceptionRuntimeInternal("Two fetcher markups cannot run at the same time");
+            throw new ExceptionRuntimeInternal("Only one path markup handler can run at the same time");
         }
 
         /**
          * Act
          */
-        $this->oldAct = $this->getExecutingAction();
-        if ($fetcherMarkup->isMarkupStringExecution()) {
+        $oldAct = $this->getExecutingAction();
+        if ($markupHandler->isStringExecution()) {
             $runningAct = FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME;
             $this->setExecutingAction($runningAct);
         }
@@ -774,55 +773,62 @@ class ExecutionContext
          * Id
          */
         try {
-            $this->oldId = $this->getExecutingWikiId();
+            $oldExecutingId = $this->getExecutingWikiId();
         } catch (ExceptionNotFound $e) {
-            $this->oldId = null;
+            $oldExecutingId = null;
         }
         try {
 
-            $executingPath = $fetcherMarkup->getRequestedExecutingPath();
+            $executingPath = $markupHandler->getRequestedExecutingPath();
             $executingId = $executingPath->toQualifiedId();
             $this->setExecutingId($executingId);
-
-            /**
-             * Fragment run
-             */
-            if ($fetcherMarkup->isFragmentExecution()) {
-                global $INFO;
-                $contextPath = $fetcherMarkup->getRequestedContextPath();
-                $INFO['id'] = $contextPath->getWikiId();
-            }
-
         } catch (ExceptionNotFound $e) {
             // no executing path dynamic markup execution
         }
 
-        $this->executingFetcherMarkup = $fetcherMarkup;
+        /**
+         * Fragment run
+         */
+        global $INFO;
+        $oldContextId = $INFO['id'];
+        if ($markupHandler->isFragmentExecution()) {
+            $contextPath = $markupHandler->getRequestedContextPath();
+            $INFO['id'] = $contextPath->getWikiId();
+        }
+
+        $this->executingMarkupHandlerStack[] = [$markupHandler, $oldExecutingId, $oldContextId, $oldAct];
         return $this;
     }
 
-    public function closeExecutingFetcherMarkup(): ExecutionContext
+    public function closeExecutingMarkupHandler(): ExecutionContext
     {
-        unset($this->executingFetcherMarkup);
-        $this->setExecutingAction($this->oldAct);
-        unset($this->oldAct);
-        $this->setExecutingId($this->oldId);
-        unset($this->oldId);
+        /** @noinspection PhpUnusedLocalVariableInspection */
+        [$markupHandler, $oldExecutingId, $oldContextId, $oldAct] = array_pop($this->executingMarkupHandlerStack);
+
+        $this->setExecutingAction($oldAct);
+
+        $this->setExecutingId($oldExecutingId);
+
         global $INFO;
-        unset($INFO['id']);
+        if ($oldExecutingId === null) {
+            unset($INFO['id']);
+        } else {
+            $INFO['id'] = $oldContextId;
+        }
         return $this;
     }
 
 
     /**
-     * @throws ExceptionNotFound - if there is no fetcher markup execution running
+     * @throws ExceptionNotFound - if there is no markup handler execution running
      */
-    public function getExecutingFetcherMarkup(): FetcherMarkup
+    public function getExecutingMarkupHandler(): FetcherMarkup
     {
-        if (isset($this->executingFetcherMarkup)) {
-            return $this->executingFetcherMarkup;
+        $count = count($this->executingMarkupHandlerStack);
+        if ($count >= 1) {
+            return $this->executingMarkupHandlerStack[$count - 1][0];
         }
-        throw new ExceptionNotFound("No markup execution running");
+        throw new ExceptionNotFound("No markup handler running");
     }
 
     /**
@@ -871,7 +877,7 @@ class ExecutionContext
                  * Do we a fetcher markup running ?
                  */
                 return $this
-                    ->getExecutingFetcherMarkup()
+                    ->getExecutingMarkupHandler()
                     ->getRequestedContextPath();
             } catch (ExceptionNotFound $e) {
 
@@ -957,7 +963,7 @@ class ExecutionContext
     public function getExecutingWikiPath(): WikiPath
     {
         try {
-            return $this->getExecutingFetcherMarkup()
+            return $this->getExecutingMarkupHandler()
                 ->getRequestedExecutingPath()
                 ->toWikiPath();
         } catch (ExceptionCast|ExceptionNotFound $e) {

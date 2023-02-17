@@ -226,7 +226,13 @@ class FetcherMarkupBuilder extends FetcherMarkup
 
     public function setRequestedContextPathWithDefault(): FetcherMarkupBuilder
     {
-        $this->requestedContextPath = ExecutionContext::getActualOrCreateFromEnv()->getDefaultContextPath();
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        try {
+            // do we have an executing fetcher
+            $this->requestedContextPath = $executionContext->getExecutingWikiPath();
+        } catch (ExceptionNotFound $e) {
+            $this->requestedContextPath = $executionContext->getDefaultContextPath();
+        }
         return $this;
     }
 

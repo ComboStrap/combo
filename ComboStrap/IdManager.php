@@ -29,7 +29,7 @@ class IdManager
     /**
      * @return IdManager
      * @deprecated use {@link ExecutionContext::getIdManager()} instead
-     * via {@link ExecutionContext::getExecutingFetcherMarkup()}
+     * via {@link ExecutionContext::getExecutingMarkupHandler()}
      */
     static function getOrCreate(): IdManager
     {
@@ -47,7 +47,7 @@ class IdManager
 
             try {
                 $executingPath = $this->executionContext
-                    ->getExecutingFetcherMarkup()
+                    ->getExecutingMarkupHandler()
                     ->getExecutingPathOrNull();
             } catch (ExceptionNotFound $e) {
                 // ok, dynamic, markup string run ?

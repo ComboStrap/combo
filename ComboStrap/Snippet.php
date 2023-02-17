@@ -267,7 +267,7 @@ class Snippet implements JsonSerializable
 
         try {
             $executingFetcher = $executionContext
-                ->getExecutingFetcherMarkup();
+                ->getExecutingMarkupHandler();
             /**
              * New way
              */

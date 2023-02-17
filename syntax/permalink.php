@@ -133,7 +133,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                  */
                 try {
                     ExecutionContext::getActualOrCreateFromEnv()
-                        ->getExecutingFetcherMarkup()
+                        ->getExecutingMarkupHandler()
                         ->getCacheDependencies()
                         ->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
                 } catch (ExceptionNotFound $e) {

@@ -246,7 +246,7 @@ class WikiPath extends PathAbs
         if ($path == "") {
             try {
                 return $executionContext
-                    ->getExecutingFetcherMarkup()
+                    ->getExecutingMarkupHandler()
                     ->getRequestedContextPath();
             } catch (ExceptionNotFound $e) {
                 return $executionContext->getDefaultContextPath();

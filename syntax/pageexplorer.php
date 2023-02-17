@@ -401,7 +401,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                          * (if a file is added or deleted, the content will change)
                          */
                         $executionContext
-                            ->getExecutingFetcherMarkup()
+                            ->getExecutingMarkupHandler()
                             ->getCacheDependencies()
                             ->addDependency(MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY)
                             ->addDependency(MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY);
@@ -413,7 +413,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     /**
                      * Context
                      */
-                    $executingMarkupFetcher = $executionContext->getExecutingFetcherMarkup();
+                    $executingMarkupFetcher = $executionContext->getExecutingMarkupHandler();
                     $requestedContextPath = $executingMarkupFetcher->getRequestedContextPath();
 
                     /**

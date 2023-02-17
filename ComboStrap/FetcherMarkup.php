@@ -13,7 +13,7 @@ use Exception;
  * This is the context object
  * during parsing and rendering is determined by {@link FetcherMarkup}
  *
- * You can get it in any place via {@link ExecutionContext::getExecutingFetcherMarkup()}
+ * You can get it in any place via {@link ExecutionContext::getExecutingMarkupHandler()}
  *
  * It:
  * * does not output any full page (HTML document) but only fragment.
@@ -44,7 +44,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public const MARKUP_DYNAMIC_EXECUTION_NAME = "markup-dynamic-execution";
 
     /**
-     * @var CacheParser cache file (may be not set if this is a {@link self::isMarkupStringExecution() string execution}
+     * @var CacheParser cache file (may be not set if this is a {@link self::isStringExecution() string execution}
      */
     protected CacheParser $contentCache;
 
@@ -96,7 +96,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     private bool $hasExecuted = false;
 
     /**
-     * The result when this is a {@link self::isMarkupStringExecution() execution}
+     * The result when this is a {@link self::isStringExecution() execution}
      * @var string
      */
     private $fetchString;
@@ -201,7 +201,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public function shouldProcess(): bool
     {
 
-        if ($this->isMarkupStringExecution()) {
+        if ($this->isStringExecution()) {
             return true;
         }
 
@@ -309,7 +309,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         try {
             $path = $this->getSourcePath();
         } catch (ExceptionNotFound $e) {
-            if (!$this->isMarkupStringExecution()) {
+            if (!$this->isStringExecution()) {
                 throw new ExceptionRuntimeInternal("A source path should be available as this is not a markup string execution");
             }
         }
@@ -399,7 +399,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 $markupRenderer = MarkupRenderer::createFromMarkup($markup, $this->getExecutingPathOrNull(), $this->getRequestedContextPath())
                     ->setRequestedMimeToInstruction()
                     ->setDeleteRootBlockElement($this->removeRootBlockElement);
-                $executionContext->setExecutingFetcherMarkup($this);
+                $executionContext->setExecutingMarkupHandler($this);
                 try {
                     $instructions = $markupRenderer->getOutput();
                     $this->fetchArray = $instructions;
@@ -407,7 +407,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
                 } finally {
-                    $executionContext->closeExecutingFetcherMarkup();
+                    $executionContext->closeExecutingMarkupHandler();
                 }
                 break;
             case MarkupRenderer::METADATA_EXTENSION:
@@ -416,7 +416,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                  * for now. We use the dokwuiki standard function
                  */
                 $contentToStore = null;
-                $executionContext->setExecutingFetcherMarkup($this);
+                $executionContext->setExecutingMarkupHandler($this);
                 try {
                     /**
                      * Trigger a:
@@ -440,7 +440,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal("An error has occurred while processing the metadata. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
                 } finally {
-                    $executionContext->closeExecutingFetcherMarkup();
+                    $executionContext->closeExecutingMarkupHandler();
                 }
                 break;
             case MarkupRenderer::XHTML_RENDERER:
@@ -461,13 +461,13 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     $this
                 )
                     ->setRequestedMime($this->getMime());
-                $executionContext->setExecutingFetcherMarkup($this);
+                $executionContext->setExecutingMarkupHandler($this);
                 try {
                     $contentToStore = $markupRenderer->getOutput();
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
                 } finally {
-                    $executionContext->closeExecutingFetcherMarkup();
+                    $executionContext->closeExecutingMarkupHandler();
                 }
                 $this->cacheAfterRendering = $markupRenderer->getCacheAfterRendering();
 
@@ -480,14 +480,14 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 $markupRenderer = MarkupRenderer::createFromMarkup($markup, $this->getExecutingPathOrNull(), $this->getRequestedContextPath())
                     ->setRequestedMime($this->getMime())
                     ->setRendererName($this->rendererName);
-                $executionContext->setExecutingFetcherMarkup($this);
+                $executionContext->setExecutingMarkupHandler($this);
                 try {
                     $output = $markupRenderer->getOutput();
                     $contentToStore = $output;
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
                 } finally {
-                    $executionContext->closeExecutingFetcherMarkup();
+                    $executionContext->closeExecutingMarkupHandler();
                 }
                 break;
         }
@@ -496,7 +496,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * Snippets and dependencies if XHTML
          * (after processing as they can be added at runtime)
          */
-        if ($this->isMarkupStringExecution()) {
+        if ($this->isStringExecution()) {
             $this->fetchString = $contentToStore;
             return $this;
         }
@@ -580,7 +580,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public function __toString()
     {
-        if ($this->isMarkupStringExecution()) {
+        if ($this->isStringExecution()) {
             $name = "Markup String Execution";
         } else {
             try {
@@ -647,7 +647,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     {
         $this->processIfNeeded();
 
-        if ($this->isMarkupStringExecution()) {
+        if ($this->isStringExecution()) {
 
             return $this->fetchString;
         }
@@ -792,7 +792,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * During the transition, we support the two
          *
          * Note that with the new system where render code
-         * can access this object via {@link ExecutionContext::getExecutingFetcherMarkup()}
+         * can access this object via {@link ExecutionContext::getExecutingMarkupHandler()}
          * the code may had snippets without any id
          * (For the time being, not yet)
          */
@@ -824,7 +824,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     }
 
-    public function isMarkupStringExecution(): bool
+    public function isStringExecution(): bool
     {
         if ($this->markupSourcePath === null) {
             if ($this->markupString !== null) {
@@ -854,7 +854,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         }
         if (isset($this->fetchArray)) {
             /**
-             * In a {@link self::isMarkupStringExecution()}, there is only an array
+             * In a {@link self::isStringExecution()}, there is only an array
              * (no storage)
              */
             return $this->fetchArray;
@@ -870,7 +870,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public function isFragmentExecution(): bool
     {
-        if ($this->isMarkupStringExecution()) {
+        if ($this->isStringExecution()) {
             return false;
         }
         try {

@@ -566,6 +566,10 @@ class MediaMarkup
             if ($height !== null) {
                 $this->fetchUrl->addQueryParameterIfNotPresent(Dimension::HEIGHT_KEY, $height);
             }
+            $ratio = $tagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
+            if ($ratio !== null) {
+                $this->fetchUrl->addQueryParameterIfNotPresent(Dimension::RATIO_ATTRIBUTE, $ratio);
+            }
         }
 
         foreach ($tagAttributes->getComponentAttributes() as $key => $value) {

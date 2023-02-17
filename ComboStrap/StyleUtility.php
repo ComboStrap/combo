@@ -87,4 +87,34 @@ class StyleUtility
         return $stylingDeclarationAsArray;
 
     }
+
+    /**
+     * @throws ExceptionNotEquals
+     */
+    public static function arrayEquals(array $expectedQuery, array $actualQuery)
+    {
+        foreach ($actualQuery as $key => $value) {
+            $expectedValue = $expectedQuery[$key];
+            if ($expectedValue === null) {
+                throw new ExceptionNotEquals("The expected style does not have the $key property");
+            }
+            if ($expectedValue !== $value) {
+                throw new ExceptionNotEquals("The style $key property does not have the same value ($value vs $expectedValue)");
+            }
+            unset($expectedQuery[$key]);
+        }
+        foreach ($expectedQuery as $key => $value) {
+            throw new ExceptionNotEquals("The expected styles has an extra property ($key=$value)");
+        }
+    }
+
+    /**
+     * @throws ExceptionNotEquals
+     */
+    public static function stringEquals($leftStyles, $rightStyles)
+    {
+        $leftStylesArray = StyleUtility::HtmlStyleValueToArray($leftStyles);
+        $rightStylesArray = StyleUtility::HtmlStyleValueToArray($rightStyles);
+        self::arrayEquals($leftStylesArray,$rightStylesArray);
+    }
 }

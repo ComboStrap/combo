@@ -465,7 +465,7 @@ class ExecutionContext
      * @param $value
      * @param string|null $pluginNamespace - if null, stored in the global conf namespace
      * @return $this
-     *
+     * @deprecated use {@link SiteConfig::setConf()} instead
      */
     public function setConf(string $key, $value, ?string $pluginNamespace = PluginUtility::PLUGIN_BASE_NAME): ExecutionContext
     {

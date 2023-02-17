@@ -198,13 +198,20 @@ class XmlSystems
                                         try {
                                             $leftUrl->equals($rightUrl);
                                         } catch (ExceptionNotEquals $e) {
-                                            $error .= "The attribute (" . $rightAtt->getNodePath() . ") have different values. Error:{$e->getMessage()}\n";
+                                            $error .= "The attribute (" . $rightAtt->getNodePath() . ") has different values. Error:{$e->getMessage()}\n";
                                         }
                                     } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
-                                        $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ") and the right value is not an URL. Error:{$e->getMessage()}\n";
+                                        $error .= "The attribute (" . $leftAtt->getNodePath() . ") has different values (" . $leftAttValue . "," . $rightAttValue . ") and the right value is not an URL. Error:{$e->getMessage()}\n";
                                     }
                                 } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
-                                    $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ") and the left value is not an URL. Error:{$e->getMessage()}\n";
+                                    $error .= "The attribute (" . $leftAtt->getNodePath() . ") has different values (" . $leftAttValue . "," . $rightAttValue . ") and the left value is not an URL. Error:{$e->getMessage()}\n";
+                                }
+                                break;
+                            case "style":
+                                try {
+                                    StyleUtility::stringEquals($leftAttValue, $rightAttValue);
+                                } catch (ExceptionNotEquals $e) {
+                                    $error .= "The style attribute (" . $leftAtt->getNodePath() . ") has different values (" . $leftAttValue . "," . $rightAttValue . "). Error:{$e->getMessage()}\n";
                                 }
                                 break;
                             default:

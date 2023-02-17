@@ -139,7 +139,6 @@ class ExecutionContext
     private PageTemplate $executingPageTemplate;
 
 
-
     public function __construct()
     {
 
@@ -386,8 +385,8 @@ class ExecutionContext
             } catch (ExceptionNotFound $e) {
                 // not a template engine running
                 global $ACT;
-                if ($ACT !== ExecutionContext::SHOW_ACTION || $ACT !== FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME) {
-                    throw new ExceptionNotFound("No page is rendering");
+                if (!in_array($ACT, [ExecutionContext::SHOW_ACTION, FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME])) {
+                    throw new ExceptionNotFound("No page is rendering. Act is ($ACT)");
                 }
 
                 global $INPUT;

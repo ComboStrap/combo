@@ -33,6 +33,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  */
 class action_plugin_combo_reference extends DokuWiki_Action_Plugin
 {
+    const CANONICAL = "reference";
 
 
     /**
@@ -105,7 +106,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
                 try {
                     $link = MarkupRef::createLinkFromRef($ref);
                 } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
-                    LogUtility::error("Error while parsing the reference link. Error:" . $e->getMessage(), "reference");
+                    LogUtility::error("Error while parsing the reference link. Error: " . $e->getMessage(), self::CANONICAL, $e);
                     continue;
                 }
 

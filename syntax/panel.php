@@ -215,7 +215,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER:
 
                 // tagname to check if this is the old tag name one
-                $tagName = PluginUtility::getTag($match);
+                $tagName = PluginUtility::getMarkupTag($match);
 
                 // Context
                 $tagAttributes = PluginUtility::getTagAttributes($match);

@@ -128,7 +128,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $attributes = TagAttributes::createFromTagMatch($match);
-                $tag = PluginUtility::getTag($match);
+                $tag = PluginUtility::getMarkupTag($match);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes->toCallStackArray(),

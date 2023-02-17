@@ -3,6 +3,7 @@
 
 use ComboStrap\Bootstrap;
 use ComboStrap\BrandButton;
+use ComboStrap\ButtonTag;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -103,7 +104,7 @@ class syntax_plugin_combo_toggle extends DokuWiki_Syntax_Plugin
                  * Default parameters, type definition and parsing
                  */
                 $defaultParameters[self::WIDGET_ATTRIBUTE] = BrandButton::WIDGET_BUTTON_VALUE;
-                $knownTypes = syntax_plugin_combo_button::TYPES;
+                $knownTypes = ButtonTag::TYPES;
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes)
                     ->setLogicalTag(self::TAG);
 

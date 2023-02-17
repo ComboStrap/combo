@@ -4,6 +4,7 @@
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
 use ComboStrap\ArrayUtility;
+use ComboStrap\ButtonTag;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionBadArgument;
@@ -290,7 +291,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                      * Getting the attributes
                      */
                     $parentName = $parent->getTagName();
-                    if ($parentName == syntax_plugin_combo_button::TAG) {
+                    if ($parentName == ButtonTag::MARKUP_LONG) {
                         $htmlAttributes->mergeWithCallStackArray($parent->getAttributes());
                     }
 
@@ -466,9 +467,9 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             /**
                              * Button link
                              */
-                            case syntax_plugin_combo_button::TAG:
+                            case ButtonTag::MARKUP_LONG:
                                 $tagAttributes->addOutputAttributeValue("role", "button");
-                                syntax_plugin_combo_button::processButtonAttributesToHtmlAttributes($tagAttributes);
+                                ButtonTag::processButtonAttributesToHtmlAttributes($tagAttributes);
                                 break;
                             case syntax_plugin_combo_dropdown::TAG:
                                 $tagAttributes->addClassName("dropdown-item");
@@ -730,7 +731,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
         $attributes = $tagAttributes->toCallStackArray();
         if ($parent !== false) {
             $context = $parent->getTagName();
-            if ($context === syntax_plugin_combo_button::TAG) {
+            if ($context === ButtonTag::MARKUP_LONG) {
                 // the link takes by default the data from the button
                 $parentAttributes = $parent->getAttributes();
                 if ($parentAttributes !== null) {

@@ -746,7 +746,7 @@ class PluginUtility
      * @return null|string - return the tag name or null if not found
      */
     public
-    static function getTag($match): ?string
+    static function getMarkupTag($match): ?string
     {
 
         // Trim to start clean

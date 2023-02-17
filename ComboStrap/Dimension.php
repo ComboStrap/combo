@@ -5,7 +5,7 @@ namespace ComboStrap;
 
 
 use dokuwiki\Extension\SyntaxPlugin;
-use syntax_plugin_combo_button;
+use syntax_plugin_combo_xmlinlinetag;
 use syntax_plugin_combo_link;
 
 class Dimension
@@ -181,7 +181,7 @@ EOF;
             $controlFound = false;
             while ($actualCall = $callStack->next()) {
                 if (in_array($actualCall->getTagName(),
-                    [syntax_plugin_combo_button::TAG, syntax_plugin_combo_link::TAG, "internallink", "externallink"])) {
+                    [ButtonTag::MARKUP_LONG, syntax_plugin_combo_link::TAG, "internallink", "externallink"])) {
                     $controlFound = true;
                     break;
                 }

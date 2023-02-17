@@ -85,7 +85,7 @@ class TagAttributes
         FetcherRaster::CANONICAL,
         \syntax_plugin_combo_media::TAG,
         \syntax_plugin_combo_link::TAG, // link button for instance
-        \syntax_plugin_combo_button::TAG
+        ButtonTag::MARKUP_LONG
     ];
 
     /**
@@ -289,7 +289,7 @@ class TagAttributes
     public static function createFromTagMatch($match, array $defaultAttributes = [], array $knownTypes = [], bool $allowFirstBooleanAttributesAsType = false): TagAttributes
     {
         $inlineHtmlAttributes = PluginUtility::getTagAttributes($match, $knownTypes, $allowFirstBooleanAttributesAsType);
-        $tag = PluginUtility::getTag($match);
+        $tag = PluginUtility::getMarkupTag($match);
         $mergedAttributes = PluginUtility::mergeAttributes($inlineHtmlAttributes, $defaultAttributes);
         return self::createFromCallStackArray($mergedAttributes, $tag)
             ->setKnownTypes($knownTypes);

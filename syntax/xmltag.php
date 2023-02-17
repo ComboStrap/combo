@@ -6,9 +6,12 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 // must be run within Dokuwiki
 use ComboStrap\BlockquoteTag;
 use ComboStrap\BoxTag;
+use ComboStrap\ButtonTag;
+use ComboStrap\ColorRgb;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Skin;
 use ComboStrap\TagAttributes;
 
 
@@ -22,12 +25,156 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
      */
     const TAG = "xmltag";
 
+    public static function renderStatic(string $format, Doku_Renderer $renderer, array $data, DokuWiki_Syntax_Plugin $plugin): bool
+    {
+        $logicalTag = $data[PluginUtility::TAG];
+        $attributes = $data[PluginUtility::ATTRIBUTES];
+        $state = $data[PluginUtility::STATE];
+        $tagAttributes = TagAttributes::createFromCallStackArray($attributes)->setLogicalTag($logicalTag);
+        switch ($format) {
+            case "xhtml":
+                /** @var Doku_Renderer_xhtml $renderer */
+                switch ($state) {
+                    case DOKU_LEXER_ENTER:
+                        switch ($logicalTag) {
+                            case BlockquoteTag::TAG:
+                                $renderer->doc .= BlockquoteTag::renderEnterXhtml($tagAttributes, $data);
+                                return true;
+                            case BoxTag::TAG:
+                                $renderer->doc .= BoxTag::renderEnterXhtml($tagAttributes);
+                                return true;
+                            case ButtonTag::LOGICAL_TAG:
+                                $renderer->doc .= ButtonTag::renderEnterXhtml($tagAttributes, $plugin, $data);
+                                return true;
+                            default:
+                                LogUtility::errorIfDevOrTest("The empty tag (" . $logicalTag . ") was not processed.");
+                                return false;
+                        }
+                    case DOKU_LEXER_UNMATCHED:
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
+                        return true;
+                    case DOKU_LEXER_EXIT:
+                        switch ($logicalTag) {
+                            case BlockquoteTag::TAG:
+                                BlockquoteTag::renderExitXhtml($tagAttributes, $renderer, $data);
+                                break;
+                            case BoxTag::TAG:
+                                $renderer->doc .= BoxTag::renderExitXhtml($tagAttributes);
+                                return true;
+                            case ButtonTag::LOGICAL_TAG:
+                                $renderer->doc .= ButtonTag::renderExitXhtml($data);
+                                return true;
+                            default:
+                                LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
+                        }
+                        return true;
+                }
+                break;
+            case 'metadata':
+                /** @var Doku_Renderer_metadata $renderer */
+                break;
+        }
+        // unsupported $mode
+        return false;
+    }
+
+
     /**
-     * The list of xml tags
+     * Static because it handle inline and block tag
+     * @param $match
+     * @param $state
+     * @param $pos
+     * @param Doku_Handler $handler
+     * @return array
      */
-    const XMLTAGS = [
-        BlockquoteTag::TAG
-    ];
+    public static function handleStatic($match, $state, $pos, Doku_Handler $handler): array
+    {
+        /**
+         * Logical Tag Building
+         */
+        switch ($state) {
+
+            case DOKU_LEXER_ENTER:
+                $markupTag = PluginUtility::getMarkupTag($match);
+                $logicalTag = $markupTag;
+                $defaultAttributes = [];
+                $knownTypes = [];
+                $allowAnyFirstBooleanAttributesAsType = false;
+                switch ($markupTag) {
+                    case BlockquoteTag::TAG:
+                        // Suppress the component name
+                        $defaultAttributes = array("type" => BlockquoteTag::CARD_TYPE);
+                        $knownTypes = [BlockquoteTag::TYPO_TYPE, BlockquoteTag::CARD_TYPE];;
+                        break;
+                    case BoxTag::TAG:
+                        $defaultAttributes[BoxTag::HTML_TAG_ATTRIBUTE] = BoxTag::DEFAULT_HTML_TAG;;
+                        break;
+                    case ButtonTag::MARKUP_SHORT:
+                    case ButtonTag::MARKUP_LONG:
+                        $logicalTag = ButtonTag::LOGICAL_TAG;
+                        $knownTypes = ButtonTag::TYPES;
+                        $defaultAttributes = array(
+                            Skin::SKIN_ATTRIBUTE => Skin::FILLED_VALUE,
+                            TagAttributes::TYPE_KEY => ColorRgb::PRIMARY_VALUE
+                        );
+                        break;
+                }
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes, $allowAnyFirstBooleanAttributesAsType)
+                    ->setLogicalTag($logicalTag);
+
+                /**
+                 * Calculate extra returned key in the table
+                 */
+                $returnedArray = [];
+                switch ($markupTag) {
+                    case BlockquoteTag::TAG:
+                        $returnedArray = BlockquoteTag::handleEnter($handler);
+                        break;
+                    case BoxTag::TAG:
+                        BoxTag::handleEnter($tagAttributes);
+                        break;
+                    case ButtonTag::MARKUP_SHORT:
+                    case ButtonTag::MARKUP_LONG:
+                        $returnedArray = ButtonTag::handleEnter($tagAttributes, $handler);
+                        break;
+                }
+
+                /**
+                 * Common default
+                 */
+                $defaultReturnedArray[PluginUtility::STATE] = $state;
+                $defaultReturnedArray[PluginUtility::TAG] = $logicalTag;
+                $defaultReturnedArray[PluginUtility::ATTRIBUTES] = $tagAttributes->toCallStackArray();
+
+                return array_merge($defaultReturnedArray, $returnedArray);
+            case DOKU_LEXER_UNMATCHED :
+                return PluginUtility::handleAndReturnUnmatchedData(null, $match, $handler);
+            case DOKU_LEXER_EXIT :
+
+                $markupTag = PluginUtility::getMarkupTag($match);
+                $logicalTag = $markupTag;
+                $returnedArray = [];
+                switch ($markupTag) {
+                    case BlockquoteTag::TAG:
+                        $returnedArray = BlockquoteTag::handleExit($handler);
+                        break;
+                    case BoxTag::TAG:
+                        $returnedArray = BoxTag::handleExit($handler);
+                        break;
+                    case ButtonTag::MARKUP_SHORT:
+                    case ButtonTag::MARKUP_LONG:
+                        $logicalTag = ButtonTag::LOGICAL_TAG;
+                        $returnedArray = ButtonTag::handleExit($handler);
+                        break;
+                }
+                $defaultReturnedArray[PluginUtility::STATE] = $state;
+                $defaultReturnedArray[PluginUtility::TAG] = $logicalTag;
+                return array_merge($defaultReturnedArray, $returnedArray);
+
+            default:
+                throw new ExceptionRuntimeInternal("Should not happen");
+        }
+    }
 
 
     /**
@@ -136,73 +283,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
 
     function handle($match, $state, $pos, Doku_Handler $handler): array
     {
-        /**
-         * Logical Tag Building
-         */
-
-        switch ($state) {
-
-            case DOKU_LEXER_ENTER:
-                $logicalTag = PluginUtility::getTag($match);
-                $defaultAttributes = [];
-                $knownTypes = [];
-                $allowAnyFirstBooleanAttributesAsType = false;
-                switch ($logicalTag) {
-                    case BlockquoteTag::TAG:
-                        // Suppress the component name
-                        $defaultAttributes = array("type" => BlockquoteTag::CARD_TYPE);
-                        $knownTypes = [BlockquoteTag::TYPO_TYPE, BlockquoteTag::CARD_TYPE];;
-                        break;
-                    case BoxTag::TAG:
-                        $defaultAttributes[BoxTag::HTML_TAG_ATTRIBUTE] = BoxTag::DEFAULT_HTML_TAG;;
-                        break;
-                }
-                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes, $allowAnyFirstBooleanAttributesAsType)
-                    ->setLogicalTag($logicalTag);
-
-                /**
-                 * Calculate extra returned key in the table
-                 */
-                $returnedArray = [];
-                switch ($logicalTag) {
-                    case BlockquoteTag::TAG:
-                        $returnedArray = BlockquoteTag::handleEnter($handler);
-                        break;
-                    case BoxTag::TAG:
-                        BoxTag::handleEnter($tagAttributes);
-                        break;
-                }
-
-                /**
-                 * Common default
-                 */
-                $defaultReturnedArray[PluginUtility::STATE] = $state;
-                $defaultReturnedArray[PluginUtility::TAG] = $logicalTag;
-                $defaultReturnedArray[PluginUtility::ATTRIBUTES] = $tagAttributes->toCallStackArray();
-
-                return array_merge($defaultReturnedArray, $returnedArray);
-            case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(null, $match, $handler);
-            case DOKU_LEXER_EXIT :
-
-                $logicalTag = PluginUtility::getTag($match);
-                $returnedArray = [];
-                switch ($logicalTag) {
-                    case BlockquoteTag::TAG:
-                        $returnedArray = BlockquoteTag::handleExit($handler);
-                        break;
-                    case BoxTag::TAG:
-                        $returnedArray  = BoxTag::handleExit($handler);
-                        break;
-                }
-                $defaultReturnedArray[PluginUtility::STATE] = $state;
-                $defaultReturnedArray[PluginUtility::TAG] = $logicalTag;
-                return array_merge($defaultReturnedArray, $returnedArray);
-
-            default:
-                throw new ExceptionRuntimeInternal("Should not happen");
-        }
-
+        return self::handleStatic($match, $state, $pos, $handler);
     }
 
     /**
@@ -218,49 +299,8 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data): bool
     {
 
-        $tag = $data[PluginUtility::TAG];
-        $attributes = $data[PluginUtility::ATTRIBUTES];
-        $state = $data[PluginUtility::STATE];
-        $tagAttributes = TagAttributes::createFromCallStackArray($attributes)->setLogicalTag($tag);
-        switch ($format) {
-            case "xhtml":
-                /** @var Doku_Renderer_xhtml $renderer */
-                switch ($state) {
-                    case DOKU_LEXER_ENTER:
-                        switch ($tag) {
-                            case BlockquoteTag::TAG:
-                                $renderer->doc .= BlockquoteTag::renderEnterXhtml($tagAttributes, $data);
-                                return true;
-                            case BoxTag::TAG:
-                                $renderer->doc .= BoxTag::renderEnterXhtml($tagAttributes);
-                                return true;
-                            default:
-                                LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");
-                                return false;
-                        }
-                    case DOKU_LEXER_UNMATCHED:
-                        $renderer->doc .= PluginUtility::renderUnmatched($data);
-                        return true;
-                    case DOKU_LEXER_EXIT:
-                        switch ($tag) {
-                            case BlockquoteTag::TAG:
-                                BlockquoteTag::renderExitXhtml($tagAttributes, $renderer, $data);
-                                break;
-                            case BoxTag::TAG:
-                                $renderer->doc .= BoxTag::renderExitXhtml($tagAttributes);
-                                return true;
-                            default:
-                                LogUtility::errorIfDevOrTest("The tag (" . $tag . ") was not processed.");
-                        }
-                        return true;
-                }
-                break;
-            case 'metadata':
-                /** @var Doku_Renderer_metadata $renderer */
-                break;
-        }
-        // unsupported $mode
-        return false;
+        return self::renderStatic($format, $renderer, $data, $this);
+
     }
 
 

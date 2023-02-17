@@ -4,7 +4,7 @@
 namespace ComboStrap;
 
 
-use syntax_plugin_combo_button;
+use syntax_plugin_combo_xmlinlinetag;
 use syntax_plugin_combo_link;
 use syntax_plugin_combo_tooltip;
 
@@ -89,7 +89,7 @@ class Tooltip
          * Arbitrary HTML elements (such as <span>s) can be made focusable by adding the tabindex="0" attribute
          */
         $logicalTag = $tagAttributes->getLogicalTag();
-        if (!in_array($logicalTag, [syntax_plugin_combo_link::TAG, syntax_plugin_combo_button::TAG])) {
+        if (!in_array($logicalTag, [syntax_plugin_combo_link::TAG, ButtonTag::MARKUP_LONG])) {
             $tagAttributes->addOutputAttributeValue("tabindex", "0");
         }
 

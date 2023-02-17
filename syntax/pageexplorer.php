@@ -231,7 +231,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => PluginUtility::getTagAttributes($match),
                     PluginUtility::PAYLOAD => PluginUtility::getTagContent($match),
-                    PluginUtility::TAG => PluginUtility::getTag($match)
+                    PluginUtility::TAG => PluginUtility::getMarkupTag($match)
                 );
 
             case DOKU_LEXER_EXIT :

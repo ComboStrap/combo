@@ -78,7 +78,7 @@ class syntax_plugin_combo_xmlemptytag extends DokuWiki_Syntax_Plugin
         /**
          * Logical Tag Building
          */
-        $logicalTag = PluginUtility::getTag($match);
+        $logicalTag = PluginUtility::getMarkupTag($match);
         $defaultAttributes = [];
         $knownTypes = [];
         $allowAnyFirstBooleanAttributesAsType = false;

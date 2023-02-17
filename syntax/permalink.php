@@ -2,6 +2,7 @@
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
+use ComboStrap\ButtonTag;
 use ComboStrap\ExecutionContext;
 use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
@@ -48,7 +49,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
          * If this is a button, we cache it
          */
         $parent = $callStack->moveToParent();
-        if ($parent !== false && $parent->getTagName() === syntax_plugin_combo_button::TAG) {
+        if ($parent !== false && $parent->getTagName() === ButtonTag::MARKUP_LONG) {
             $parent->addAttribute(Display::DISPLAY, Display::DISPLAY_NONE_VALUE);
         }
 

@@ -5,7 +5,7 @@ namespace ComboStrap;
 use Doku_Handler;
 use Doku_Renderer_metadata;
 use Exception;
-use syntax_plugin_combo_button;
+use syntax_plugin_combo_xmlinlinetag;
 use syntax_plugin_combo_icon;
 use syntax_plugin_combo_link;
 use syntax_plugin_combo_media;
@@ -41,7 +41,7 @@ class IconTag
             $requestedColor === null &&
             Site::isBrandingColorInheritanceEnabled() &&
             !in_array($context, [
-                syntax_plugin_combo_button::TAG,
+                ButtonTag::MARKUP_LONG,
                 syntax_plugin_combo_note::TAG,
                 syntax_plugin_combo_link::TAG
             ])

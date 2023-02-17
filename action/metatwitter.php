@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\BlockquoteTag;
 use ComboStrap\Site;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionCompile;
@@ -203,8 +204,8 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
          * Embedded Tweet Theme
          */
 
-        $twitterMeta[self::META_WIDGETS_THEME] = Site::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME);
-        $twitterMeta[self::META_WIDGETS_BORDER_COLOR] = Site::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER);
+        $twitterMeta[self::META_WIDGETS_THEME] = Site::getConfValue(BlockquoteTag::CONF_TWEET_WIDGETS_THEME);
+        $twitterMeta[self::META_WIDGETS_BORDER_COLOR] = Site::getConfValue(BlockquoteTag::CONF_TWEET_WIDGETS_BORDER);
 
         /**
          * Add the properties

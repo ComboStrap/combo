@@ -24,8 +24,8 @@ class PluginUtility
     const STATE = "state";
     const PAYLOAD = "payload"; // The html or text
     const ATTRIBUTES = "attributes";
-    // The context is generally the parent tag but it may be also the grandfather.
-    // It permits to determine the HTML that is outputted
+// The context is generally the parent tag but it may be also the grandfather.
+// It permits to determine the HTML that is outputted
     const CONTEXT = 'context';
     const TAG = "tag";
 
@@ -145,6 +145,7 @@ class PluginUtility
         return '<' . $tag . $pattern . '(?=.*?<\/' . $tag . '>)';
     }
 
+
     /**
      * This pattern allows space after the tag name
      * for an end tag
@@ -167,7 +168,7 @@ class PluginUtility
      */
     public static function getVoidElementTagPattern($tag)
     {
-        return '<' . $tag . '.*?>';
+        return ' < ' . $tag . ' .*?>';
     }
 
 
@@ -213,25 +214,25 @@ class PluginUtility
 
         $parameters = array();
 
-        // Rules
-        //  * name may be alone (ie true boolean attribute)
-        //  * a name may get a `-`
-        //  * there may be space every everywhere when the value is enclosed with a quote
-        //  * there may be no space in the value and between the equal sign when the value is not enclosed
-        //
-        // /i not case sensitive
+// Rules
+//  * name may be alone (ie true boolean attribute)
+//  * a name may get a `-`
+//  * there may be space every everywhere when the value is enclosed with a quote
+//  * there may be no space in the value and between the equal sign when the value is not enclosed
+//
+// /i not case sensitive
         $attributePattern = '\s*([-\w]+)\s*(?:=(\s*[\'"]([^`"]*)[\'"]\s*|[^\s]*))?';
         $result = preg_match_all('/' . $attributePattern . '/i', $string, $matches);
         if ($result != 0) {
             foreach ($matches[1] as $key => $parameterKey) {
 
-                // group 3 (ie the value between quotes)
+// group 3 (ie the value between quotes)
                 $value = $matches[3][$key];
                 if ($value == "") {
-                    // check the value without quotes
+// check the value without quotes
                     $value = $matches[2][$key];
                 }
-                // if there is no value, this is a boolean
+// if there is no value, this is a boolean
                 if ($value == "") {
                     $value = true;
                 } else {
@@ -265,10 +266,10 @@ class PluginUtility
 
         $match = PluginUtility::getPreprocessEnterTag($match);
 
-        // Suppress the tag name (ie until the first blank)
+// Suppress the tag name (ie until the first blank)
         $spacePosition = strpos($match, " ");
         if (!$spacePosition) {
-            // No space, meaning this is only the tag name
+// No space, meaning this is only the tag name
             return array();
         }
         $match = trim(substr($match, $spacePosition));
@@ -276,7 +277,7 @@ class PluginUtility
             return array();
         }
 
-        // Do we have a type as first argument ?
+// Do we have a type as first argument ?
         $attributes = array();
         $spacePosition = strpos($match, " ");
         if ($spacePosition) {
@@ -299,11 +300,11 @@ class PluginUtility
         if ($isType) {
 
             $attributes["type"] = $nextArgument;
-            // Suppress the type
+// Suppress the type
             $match = substr($match, strlen($nextArgument));
             $match = trim($match);
 
-            // Do we have a value as first argument ?
+// Do we have a value as first argument ?
             if (!empty($hasThirdValue)) {
                 $spacePosition = strpos($match, " ");
                 if ($spacePosition) {
@@ -313,17 +314,17 @@ class PluginUtility
                 }
                 if (!strpos($nextArgument, "=") && !empty($nextArgument)) {
                     $attributes[$keyThirdArgument] = $nextArgument;
-                    // Suppress the third argument
+// Suppress the third argument
                     $match = substr($match, strlen($nextArgument));
                     $match = trim($match);
                 }
             }
         }
 
-        // Parse the remaining attributes
+// Parse the remaining attributes
         $parsedAttributes = self::parseAttributes($match);
 
-        // Merge
+// Merge
         $attributes = array_merge($attributes, $parsedAttributes);;
 
         return $attributes;
@@ -336,6 +337,7 @@ class PluginUtility
      * Create a pattern used where the tag is not a container.
      * ie
      * <br/>
+     *
      * <icon/>
      * This is generally used with a subtition plugin
      * and a {@link Lexer::addSpecialPattern} state
@@ -392,7 +394,7 @@ class PluginUtility
 
     public static function getNameSpace()
     {
-        // No : at the begin of the namespace please
+// No : at the begin of the namespace please
         return self::PLUGIN_BASE_NAME . ':';
     }
 
@@ -428,7 +430,7 @@ class PluginUtility
      */
     public static function processStyle(&$attributes)
     {
-        // Style
+// Style
         $styleAttributeName = "style";
         if ($attributes->hasComponentAttribute($styleAttributeName)) {
             $properties = explode(";", $attributes->getValueAndRemove($styleAttributeName));
@@ -535,7 +537,7 @@ class PluginUtility
                  *   * inside the configuration description crashing the page
                  */
                 if (PluginUtility::isDevOrTest()) {
-                    // shows errors in the html only on dev/test
+// shows errors in the html only on dev/test
                     $xhtmlIcon = "Error: {$e->getMessage()}";
                 }
             }
@@ -586,6 +588,7 @@ class PluginUtility
 
     /**
      * Return the content of a tag
+     *
      * <math>Content</math>
      * @param $match
      * @return string the content
@@ -593,14 +596,14 @@ class PluginUtility
     public
     static function getTagContent($match)
     {
-        // From the first >
+// From the first >
         $start = strpos($match, ">");
         if ($start == false) {
             LogUtility::msg("The match does not contain any opening tag. Match: {$match}", LogUtility::LVL_MSG_ERROR);
             return "";
         }
         $match = substr($match, $start + 1);
-        // If this is the last character, we get a false
+// If this is the last character, we get a false
         if ($match == false) {
             LogUtility::msg("The match does not contain any closing tag. Match: {$match}", LogUtility::LVL_MSG_ERROR);
             return "";
@@ -627,10 +630,10 @@ class PluginUtility
     {
 
         if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
-            // since php 5.4
+// since php 5.4
             $requestTime = $_SERVER['REQUEST_TIME_FLOAT'];
         } else {
-            // DokuWiki test framework use this
+// DokuWiki test framework use this
             $requestTime = $_SERVER['REQUEST_TIME'];
         }
         $keyPrefix = 'combo_';
@@ -765,6 +768,10 @@ class PluginUtility
         // Suppress the <
         if ($match[0] == "<") {
             $match = substr($match, 1);
+            // closing tag
+            if($match[0]=="/"){
+                $match = substr($match, 1);
+            }
         } else {
             LogUtility::msg("This is not a text tag because it does not start with the character `>`");
         }
@@ -782,7 +789,7 @@ class PluginUtility
 
 
     public
-    static function getComponentName($tag)
+    static function getComponentName($tag): string
     {
         return strtolower(PluginUtility::PLUGIN_BASE_NAME) . "_" . $tag;
     }
@@ -892,7 +899,7 @@ class PluginUtility
     private
     static function getPreprocessEnterTag($match)
     {
-        // Until the first >
+// Until the first >
         $pos = strpos($match, ">");
         if ($pos == false) {
             LogUtility::msg("The match does not contain any tag. Match: {$match}", LogUtility::LVL_MSG_WARNING);
@@ -901,15 +908,15 @@ class PluginUtility
         $match = substr($match, 0, $pos);
 
 
-        // Trim to start clean
+// Trim to start clean
         $match = trim($match);
 
-        // Suppress the <
+// Suppress the <
         if ($match[0] == "<") {
             $match = substr($match, 1);
         }
 
-        // Suppress the / for a leaf tag
+// Suppress the / for a leaf tag
         if ($match[strlen($match) - 1] == "/") {
             $match = substr($match, 0, strlen($match) - 1);
         }
@@ -926,10 +933,10 @@ class PluginUtility
     {
         $preprocessMatch = PluginUtility::getPreprocessEnterTag($match);
 
-        // Tag name (ie until the first blank)
+// Tag name (ie until the first blank)
         $spacePosition = strpos($match, " ");
         if (!$spacePosition) {
-            // No space, meaning this is only the tag name
+// No space, meaning this is only the tag name
             return $preprocessMatch;
         } else {
             return trim(substr(0, $spacePosition));
@@ -1047,7 +1054,7 @@ class PluginUtility
 
     public static function isCi(): bool
     {
-        // https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
+// https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
         return getenv("CI") === "true";
     }
 

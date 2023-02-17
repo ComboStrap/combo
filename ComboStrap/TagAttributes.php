@@ -95,7 +95,7 @@ class TagAttributes
     const CONTAINER_LOGICAL_ELEMENTS = [
         \syntax_plugin_combo_box::TAG,
         \syntax_plugin_combo_card::TAG,
-        \syntax_plugin_combo_blockquote::TAG,
+        BlockquoteTag::TAG,
     ];
 
     const SCRIPT_KEY = "script";

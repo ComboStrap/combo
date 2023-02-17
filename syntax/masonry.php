@@ -4,6 +4,7 @@
  *
  */
 
+use ComboStrap\BlockquoteTag;
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
@@ -53,7 +54,7 @@ class syntax_plugin_combo_masonry extends DokuWiki_Syntax_Plugin
      *
      * Bootstrap five does not include masonry
      * directly, we need to add a column around the children {@link syntax_plugin_combo_card} and
-     * {@link syntax_plugin_combo_blockquote}
+     * {@link BlockquoteTag}
      * https://getbootstrap.com/docs/5.0/examples/masonry/
      *
      * The column is open with the function {@link syntax_plugin_combo_masonry::endColIfBootstrap5AndCardColumns()}
@@ -217,7 +218,7 @@ class syntax_plugin_combo_masonry extends DokuWiki_Syntax_Plugin
                 $callStack->moveToPreviousCorrespondingOpeningCall();
                 while ($actualCall = $callStack->next()) {
                     if (
-                        in_array($actualCall->getTagName(), [syntax_plugin_combo_card::TAG, syntax_plugin_combo_blockquote::TAG])
+                        in_array($actualCall->getTagName(), [syntax_plugin_combo_card::TAG, BlockquoteTag::TAG])
                         && in_array($actualCall->getState(), [DOKU_LEXER_ENTER, DOKU_LEXER_EXIT])
                     ) {
                         $actualCall->setContext(self::TAG);

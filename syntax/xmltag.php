@@ -4,11 +4,10 @@
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 // must be run within Dokuwiki
-use ComboStrap\HrTag;
-use ComboStrap\IconTag;
+use ComboStrap\BlockquoteTag;
+use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\SearchTag;
 use ComboStrap\TagAttributes;
 
 
@@ -17,6 +16,17 @@ use ComboStrap\TagAttributes;
  */
 class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
 {
+    /**
+     * Should be the same than the last name of the class
+     */
+    const TAG = "xmltag";
+
+    /**
+     * The list of xml tags
+     */
+    const XMLTAGS = [
+        BlockquoteTag::TAG
+    ];
 
 
     /**
@@ -38,17 +48,42 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
     }
 
     /**
+     * @param string $mode
+     * @return bool
+     * Allowed type
+     */
+    public function accepts($mode): bool
+    {
+        /**
+         * header mode is disable to take over
+         * and replace it with {@link syntax_plugin_combo_headingwiki}
+         */
+        if ($mode == "header") {
+            return false;
+        }
+
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
+    }
+
+    /**
      * How Dokuwiki will add P element
      *
-     *  * 'normal' - Inline (will not close an ongoing p)
-     *  * 'block' - Block (dokuwiki does not not create p inside and close open p)
+     *  * 'normal' - Inline (dokuwiki will not close an ongoing p)
+     *  * 'block' - Block (dokuwiki does not not create p inside and close an open p)
      *  * 'stack' - Block (dokuwiki create p inside)
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
     function getPType(): string
     {
-        return 'normal';
+        /**
+         * Works with block and stack for now
+         * Not with `normal` as if dokuwiki has created a p
+         * and that is encounters a block, it will close the p inside the stack unfortunately
+         * (You can try with {@link BlockquoteTag}
+         */
+        return 'stack';
     }
 
     /**
@@ -68,22 +103,92 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
 
     function getSort(): int
     {
-        return 201;
+        return 999;
     }
 
 
     function connectTo($mode)
     {
 
-//        $pattern = PluginUtility::getContainerTagPattern("[\w-]+");
-//        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        // this pattern ensure that the tag
+        // `accordion` will not intercept also the tag `accordionitem`
+        // where:
+        // ?: means non capturing group (to not capture the last >)
+        // (\s.*?): is a capturing group that starts with a space
+        $pattern = "(?:\s.*?>|>)";
+        $pattern = '<[\w-]+.*?>';
+        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+
+    }
+
+    public function postConnect()
+    {
+
+        $this->Lexer->addExitPattern('</[\w-]+>', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
 
     function handle($match, $state, $pos, Doku_Handler $handler): array
     {
-        return [];
+        /**
+         * Logical Tag Building
+         */
+
+        switch ($state) {
+
+            case DOKU_LEXER_ENTER:
+                $logicalTag = PluginUtility::getTag($match);
+                $defaultAttributes = [];
+                $knownTypes = [];
+                $allowAnyFirstBooleanAttributesAsType = false;
+                switch ($logicalTag) {
+                    case BlockquoteTag::TAG:
+                        // Suppress the component name
+                        $defaultAttributes = array("type" => BlockquoteTag::CARD_TYPE);
+                        $knownTypes = [BlockquoteTag::TYPO_TYPE, BlockquoteTag::CARD_TYPE];;
+                        break;
+                }
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes, $allowAnyFirstBooleanAttributesAsType)
+                    ->setLogicalTag($logicalTag);
+
+                /**
+                 * Calculate extra returned key in the table
+                 */
+                $returnedArray = [];
+                switch ($logicalTag) {
+                    case BlockquoteTag::TAG:
+                        $returnedArray = BlockquoteTag::handleEnter($handler);
+                        break;
+                }
+
+                /**
+                 * Common default
+                 */
+                $defaultReturnedArray[PluginUtility::STATE] = $state;
+                $defaultReturnedArray[PluginUtility::TAG] = $logicalTag;
+                $defaultReturnedArray[PluginUtility::ATTRIBUTES] = $tagAttributes->toCallStackArray();
+
+                return array_merge($defaultReturnedArray, $returnedArray);
+            case DOKU_LEXER_UNMATCHED :
+                return PluginUtility::handleAndReturnUnmatchedData(null, $match, $handler);
+            case DOKU_LEXER_EXIT :
+
+                $logicalTag = PluginUtility::getTag($match);
+                $returnedArray = [];
+                switch ($logicalTag) {
+                    case BlockquoteTag::TAG:
+                        $returnedArray = BlockquoteTag::handleExit($handler);
+                        break;
+                }
+                $defaultReturnedArray[PluginUtility::STATE] = $state;
+                $defaultReturnedArray[PluginUtility::TAG] = $logicalTag;
+                return array_merge($defaultReturnedArray, $returnedArray);
+
+            default:
+                throw new ExceptionRuntimeInternal("Should not happen");
+        }
+
     }
 
     /**
@@ -99,6 +204,42 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data): bool
     {
 
+        $tag = $data[PluginUtility::TAG];
+        $attributes = $data[PluginUtility::ATTRIBUTES];
+        $state = $data[PluginUtility::STATE];
+        $tagAttributes = TagAttributes::createFromCallStackArray($attributes)->setLogicalTag($tag);
+        switch ($format) {
+            case "xhtml":
+                /** @var Doku_Renderer_xhtml $renderer */
+                switch ($state) {
+                    case DOKU_LEXER_ENTER:
+                        switch ($tag) {
+                            case BlockquoteTag::TAG:
+                                $renderer->doc .= BlockquoteTag::renderEnterXhtml($tagAttributes, $data);
+                                break;
+                            default:
+                                LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");
+                        }
+                        return true;
+                    case DOKU_LEXER_UNMATCHED:
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
+                        return true;
+                    case DOKU_LEXER_EXIT:
+                        switch ($tag) {
+                            case BlockquoteTag::TAG:
+                                BlockquoteTag::renderExitXhtml($tagAttributes, $renderer, $data);
+                                break;
+                            default:
+                                LogUtility::errorIfDevOrTest("The tag (" . $tag . ") was not processed.");
+                        }
+                        return true;
+                }
+                break;
+            case 'metadata':
+                /** @var Doku_Renderer_metadata $renderer */
+                break;
+        }
+        // unsupported $mode
         return false;
     }
 

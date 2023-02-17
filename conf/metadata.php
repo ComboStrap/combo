@@ -6,6 +6,7 @@
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 use ComboStrap\AdsUtility;
+use ComboStrap\BlockquoteTag;
 use ComboStrap\Bootstrap;
 use ComboStrap\Breakpoint;
 use ComboStrap\Canonical;
@@ -168,8 +169,8 @@ $meta[action_plugin_combo_metatwitter::CONF_DONT_NOT_TRACK] = array('multichoice
     action_plugin_combo_metatwitter::CONF_ON,
     action_plugin_combo_metatwitter::CONF_OFF
 ));
-$meta[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME] = array('string');
-$meta[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER] = array('string');
+$meta[BlockquoteTag::CONF_TWEET_WIDGETS_THEME] = array('string');
+$meta[BlockquoteTag::CONF_TWEET_WIDGETS_BORDER] = array('string');
 
 
 /**

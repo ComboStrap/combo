@@ -3,6 +3,7 @@
 require_once(__DIR__ . '/../../vendor/autoload.php');
 
 use ComboStrap\AdsUtility;
+use ComboStrap\BlockquoteTag;
 use ComboStrap\Bootstrap;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
@@ -141,8 +142,8 @@ $lang[action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE] = PluginUtili
 $lang[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_HANDLE] = PluginUtility::getDocumentationHyperLink("twitter", "Twitter") . " - Your twitter handle name used in a twitter card";
 $lang[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_ID] = PluginUtility::getDocumentationHyperLink("twitter", "Twitter") . " - Your twitter handle id used in a twitter card";
 $lang[action_plugin_combo_metatwitter::CONF_DONT_NOT_TRACK] = PluginUtility::getDocumentationHyperLink("tweet", "Tweet") . " - Set the `do not track` attribute";
-$lang[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME] = PluginUtility::getDocumentationHyperLink("tweet", "Tweet") . " - Set the theme for embedded twitter widget";
-$lang[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER] = PluginUtility::getDocumentationHyperLink("tweet", "Tweet") . " - Set the border-color for embedded twitter widget";
+$lang[BlockquoteTag::CONF_TWEET_WIDGETS_THEME] = PluginUtility::getDocumentationHyperLink("tweet", "Tweet") . " - Set the theme for embedded twitter widget";
+$lang[BlockquoteTag::CONF_TWEET_WIDGETS_BORDER] = PluginUtility::getDocumentationHyperLink("tweet", "Tweet") . " - Set the border-color for embedded twitter widget";
 
 
 /**

@@ -27,6 +27,8 @@ use ComboStrap\TagAttributes;
 class syntax_plugin_combo_xmlemptytag extends DokuWiki_Syntax_Plugin
 {
 
+    // should be the same than the last name of the class name
+    const TAG = "xmlemptytag";
 
     function getType(): string
     {

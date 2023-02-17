@@ -136,6 +136,7 @@ class Call
      * Insert a tag above
      * @param $tagName
      * @param $state
+     * @param $syntaxComponentName - the name of the dokuwiki syntax component (ie plugin_name)
      * @param array $attribute
      * @param string|null $rawContext
      * @param string|null $content - the parsed content
@@ -143,12 +144,13 @@ class Call
      * @param int|null $position
      * @return Call - a call
      */
-    public static function createComboCall($tagName, $state, array $attribute = array(), string $rawContext = null, string $content = null, string $payload = null, int $position = null): Call
+    public static function createComboCall($tagName, $state, array $attribute = array(), string $rawContext = null, string $content = null, string $payload = null, int $position = null, string $syntaxComponentName = null): Call
     {
         $data = array(
             PluginUtility::ATTRIBUTES => $attribute,
             PluginUtility::CONTEXT => $rawContext,
             PluginUtility::STATE => $state,
+            PluginUtility::TAG => $tagName,
             PluginUtility::POSITION => $position
         );
         if ($payload !== null) {
@@ -156,10 +158,20 @@ class Call
         }
         $positionInText = $position;
 
+        if ($syntaxComponentName !== null) {
+            $componentName = PluginUtility::getComponentName($syntaxComponentName);
+        } else {
+            $componentName = PluginUtility::getComponentName($tagName);
+        }
+        $obj = plugin_load('syntax', $componentName);
+        if ($obj === null) {
+            throw new ExceptionRuntimeInternal("The component tag ($componentName) does not exists");
+        }
+
         $call = [
             "plugin",
             array(
-                PluginUtility::getComponentName($tagName),
+                $componentName,
                 $data,
                 $state,
                 $content

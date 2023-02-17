@@ -329,7 +329,7 @@ class Snippet implements JsonSerializable
      * should create the snippet via the {@link Snippet::getOrCreateFromLibraryNamespace() local path}
      * and set {@link Snippet::setRemoteUrl() remote url}
      *
-     * @throws ExceptionBadArgument
+     * @throws ExceptionBadArgument - if the url does not have a file name
      */
     public static function getOrCreateFromRemoteUrl(Url $url): Snippet
     {
@@ -337,7 +337,7 @@ class Snippet implements JsonSerializable
         try {
             $libraryName = $url->getLastName();
         } catch (ExceptionNotFound $e) {
-            $messageFormat = "The following url ($url) does not have a file name. To create a snippet from a remote url, the url should have a path where the last is the name of the library file. ";
+            $messageFormat = "The following url ($url) does not have a file name. To create a snippet from a remote url, the url should have a path where the last is the name of the library file.";
             throw new ExceptionBadArgument($messageFormat);
         }
         /**

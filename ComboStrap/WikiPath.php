@@ -408,8 +408,10 @@ class WikiPath extends PathAbs
 
     public static function createMarkupPathFromId($id, $rev = null): WikiPath
     {
+        if (strpos($id, WikiFileSystem::SCHEME . "://") !== false) {
+            throw new ExceptionRuntimeInternal("The value ($id) is not an id but a wiki uri");
+        }
         WikiPath::addRootSeparatorIfNotPresent($id);
-
         return self::createMarkupPathFromPath($id);
     }
 
@@ -478,6 +480,9 @@ class WikiPath extends PathAbs
     }
 
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public static function createRequestedPagePathFromRequest(): WikiPath
     {
         return ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath();
@@ -604,7 +609,7 @@ class WikiPath extends PathAbs
 
     public static function getContextPath(): WikiPath
     {
-        return ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath();
+        return ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
     }
 
     /**

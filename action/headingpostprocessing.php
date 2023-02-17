@@ -86,7 +86,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                 $handler->calls = Outline::createFromCallStack($callStack)
                     ->toDynamicInstructionCalls();
                 return;
-            case "show":
+            case ExecutionContext::SHOW_ACTION:
             case action_plugin_combo_docustom::getDoParameterValue(FetcherPage::NAME):
                 try {
                     $runningMarkup = WikiPath::createExecutingMarkupWikiPath();
@@ -94,7 +94,12 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                     LogUtility::error("The executing markup wiki path was not found", self::CANONICAL, $e);
                     return;
                 }
-                $requestedPath = WikiPath::createRequestedPagePathFromRequest();
+                try {
+                    $requestedPath = WikiPath::createRequestedPagePathFromRequest();
+                } catch (ExceptionNotFound $e) {
+                    // admin
+                    return;
+                }
                 if ($requestedPath->toQualifiedId() !== $runningMarkup->toQualifiedId()) {
                     return;
                 }

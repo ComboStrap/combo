@@ -649,12 +649,12 @@ class PluginUtility
      *
      * @return string
      * @throws ExceptionNotFound
-     * @deprecated use {@link ExecutionContext}
+     * @deprecated use {@link ExecutionContext::getRequestedPath()}
      */
     public static function getRequestedWikiId(): string
     {
 
-        return ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
+        return ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath()->getWikiId();
 
     }
 

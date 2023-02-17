@@ -76,9 +76,12 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
      */
-    function getType()
+    function getType(): string
     {
-        return 'paragraphs';
+        /**
+         * Not `paragraphs' because we don't allow them in {@link syntax_plugin_combo_xmltag}
+         */
+        return 'formatting';
     }
 
     /**

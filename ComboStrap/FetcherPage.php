@@ -244,14 +244,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $this->fetcherCache = FetcherCache::createFrom($this);
         $this->build = true;
 
-        /**
-         * Request / Environment First
-         * We correct the requested id, the env in test is created with
-         * a default id
-         */
-        ExecutionContext::getActualOrCreateFromEnv()
-            ->setNewRequestedId($this->getRequestedPath()->getWikiId());
-
         $this->requestedMarkupPath = MarkupPath::createPageFromPathObject($this->getRequestedPath());
 
         $pageLang = Lang::createForMarkup($this->getRequestedPage());

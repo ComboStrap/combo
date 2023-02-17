@@ -9,11 +9,23 @@ class SiteConfig
     const LOG_EXCEPTION_LEVEL = 'log-exception-level';
 
     /**
+     * A configuration to enable the template system
+     */
+    public const CONF_ENABLE_TEMPLATE_SYSTEM = "combo-conf-001";
+    public const CONF_ENABLE_TEMPLATE_SYSTEM_DEFAULT = 1;
+
+    /**
      * The default font-size for the pages
      */
     const REM_CONF = "combo-conf-002";
     const REM_CONF_DEFAULT = 16;
     const REM_CANONICAL = "rfs";
+
+
+    /**
+     * @var WikiPath the {@link self::getContextPath()} when no context could be determined
+     */
+    private WikiPath $defaultContextPath;
 
     /**
      * @var array - the configuration value to restore
@@ -79,13 +91,13 @@ class SiteConfig
 
     public function setDisableTemplating(): SiteConfig
     {
-        $this->setConf(action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM, 0);
+        $this->setConf(self::CONF_ENABLE_TEMPLATE_SYSTEM, 0);
         return $this;
     }
 
     public function isTemplatingEnabled(): bool
     {
-        return $this->getBooleanValue(action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM, action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM_DEFAULT);
+        return $this->getBooleanValue(self::CONF_ENABLE_TEMPLATE_SYSTEM, self::CONF_ENABLE_TEMPLATE_SYSTEM_DEFAULT);
     }
 
     public function getValue(string $key, ?string $default)
@@ -173,6 +185,35 @@ class SiteConfig
             return self::REM_CONF_DEFAULT;
         }
 
+    }
+
+    public function setDefaultContextPath(WikiPath $contextPath)
+    {
+        $this->defaultContextPath = $contextPath;
+        if (FileSystems::isDirectory($this->defaultContextPath)) {
+            /**
+             * Not a directory.
+             *
+             * If the link or path is the empty path, the path is not the directory
+             * but the actual markup
+             */
+            throw new ExceptionRuntimeInternal("The path ($contextPath) should not be a namespace path");
+        }
+        return $this;
+    }
+
+    public function getDefaultContextPath(): WikiPath
+    {
+        if (isset($this->defaultContextPath)) {
+            return $this->defaultContextPath;
+        }
+        // in a admin or dynamic rendering
+        // dokuwiki may have set a $ID
+        global $ID;
+        if (isset($ID) && $ID !== ExecutionContext::DEFAULT_SLOT_ID_FOR_TEST) {
+            return WikiPath::createMarkupPathFromId($ID);
+        }
+        return WikiPath::createRootNamespacePathOnMarkupDrive()->resolve(Site::getIndexPageName() . "." . WikiPath::MARKUP_DEFAULT_TXT_EXTENSION);
     }
 
 

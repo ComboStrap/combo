@@ -1,23 +1,15 @@
 <?php
 
-use ComboStrap\ExceptionBadArgument;
-use ComboStrap\ExceptionInternal;
-use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionReporter;
 use ComboStrap\ExecutionContext;
 use ComboStrap\FetcherIdentityForms;
 use ComboStrap\FetcherPage;
-use ComboStrap\FetcherSystem;
-use ComboStrap\FileSystems;
 use ComboStrap\HttpResponseStatus;
-use ComboStrap\Identity;
 use ComboStrap\IFetcher;
-use ComboStrap\LocalPath;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
-use ComboStrap\PluginUtility;
 use ComboStrap\Site;
-use ComboStrap\TplUtility;
+use ComboStrap\SiteConfig;
 use ComboStrap\Url;
 
 /**
@@ -31,11 +23,6 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
     const DO_PREFIX = "combo_";
 
-    /**
-     * A configuration to enable the template system
-     */
-        public const CONF_ENABLE_FRONT_SYSTEM = "combo-conf-001";
-    public const CONF_ENABLE_FRONT_SYSTEM_DEFAULT = 1;
     const TEMPLATE_CANONICAL = "template";
 
     /**
@@ -46,9 +33,9 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
     /**
      * @return bool
      */
-    public static function isFrontSystemEnabled(): bool
+    public static function isTemplateSystemEnabled(): bool
     {
-        $confValue = Site::getConfValue(self::CONF_ENABLE_FRONT_SYSTEM, self::CONF_ENABLE_FRONT_SYSTEM_DEFAULT);
+        $confValue = Site::getConfValue(SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM, SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM_DEFAULT);
         return $confValue === 1;
     }
 
@@ -113,7 +100,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
         $action = $event->data;
 
-        if (self::isFrontSystemEnabled()) {
+        if (self::isTemplateSystemEnabled()) {
             switch ($action) {
                 case "show":
                     $action = self::getDoParameterValue(FetcherPage::NAME);

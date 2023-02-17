@@ -1,1 +1,4 @@
-combos.popover.enable();
+window.addEventListener("load", function () {
+    combos.popover.enable();
+});
+

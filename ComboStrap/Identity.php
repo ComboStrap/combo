@@ -119,11 +119,8 @@ class Identity
         if ($wikiId === null) {
             $executionContext = ExecutionContext::getActualOrCreateFromEnv();
             try {
-                $wikiId = $executionContext->getRequestedWikiId();
+                $wikiId = $executionContext->getRequestedPath()->getWikiId();
             } catch (ExceptionNotFound $e) {
-                if (PluginUtility::isDevOrTest()) {
-                    LogUtility::internalError("We should have an id, otherwise why are we asking for it", self::CANONICAL, $e);
-                }
                 return false;
             }
         }
@@ -220,7 +217,7 @@ class Identity
     public static function getSecurityTokenForAdminUser(): string
     {
         $request = null;
-        Identity::becomeSuperUser($request,'admin');
+        Identity::becomeSuperUser($request, 'admin');
         return getSecurityToken();
     }
 

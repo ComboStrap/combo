@@ -3,6 +3,11 @@
  *
  * Reversing Bad height default: https://github.com/splitbrain/dokuwiki/issues/3690
  */
-svg {
+.svg-cs {
     height: auto;
+}
+
+.blockquote-cs {
+    padding: initial;
+    border: none;
 }

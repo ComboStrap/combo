@@ -93,10 +93,10 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
         $shouldSlotExpire = $cacheManager->shouldSlotExpire($pageId);
         if ($shouldSlotExpire) {
             try {
-                $requestedWikiId = $executionContext->getRequestedWikiId();
+                $requestedWikiId = $executionContext->getRequestedPath()->getWikiId();
             } catch (ExceptionNotFound $e) {
-                LogUtility::errorIfDevOrTest($e);
-                return;
+                LogUtility::internalError("Cache expiration: The requested path could not be determined, default context path was set instead.");
+                $requestedWikiId = $executionContext->getContextPath()->getWikiId();
             }
             Event::createEvent(
                 self::SLOT_CACHE_EXPIRATION_EVENT,
@@ -158,35 +158,25 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
              */
             $message = "Expiration Date has expired";
             $outputDocument = $slot->getInstructionsDocument();
-            try {
-                CacheLog::deleteCacheIfExistsAndLog(
-                    $outputDocument,
-                    self::SLOT_CACHE_EXPIRATION_EVENT,
-                    $message);
-            } finally {
-                $outputDocument->close();
-            }
+            CacheLog::deleteCacheIfExistsAndLog(
+                $outputDocument,
+                self::SLOT_CACHE_EXPIRATION_EVENT,
+                $message);
             $fetcher = $slot->createHtmlFetcherWithContextPath();
-            try {
-                CacheLog::deleteCacheIfExistsAndLog(
-                    $fetcher,
-                    self::SLOT_CACHE_EXPIRATION_EVENT,
-                    $message);
-            } finally {
-                $fetcher->close();
-            }
+            CacheLog::deleteCacheIfExistsAndLog(
+                $fetcher,
+                self::SLOT_CACHE_EXPIRATION_EVENT,
+                $message);
+
             /**
              * Re-render
              */
             $fetcher2 = $slot->createHtmlFetcherWithContextPath();
-            try {
-                CacheLog::renderCacheAndLog(
-                    $fetcher2,
-                    self::SLOT_CACHE_EXPIRATION_EVENT,
-                    $message);
-            } finally {
-                $fetcher2->close();
-            }
+            CacheLog::renderCacheAndLog(
+                $fetcher2,
+                self::SLOT_CACHE_EXPIRATION_EVENT,
+                $message);
+
 
         } finally {
             $ID = $keep;

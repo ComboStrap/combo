@@ -85,6 +85,10 @@ class FetcherMarkupBuilder extends FetcherMarkup
 
     /**
      * The page context in which this fragment was requested
+     *
+     * Note that it may or may be not the main requested markup page.
+     * You can have a markup rendering inside another markup rendering.
+     *
      * @param WikiPath $contextPath
      * @return $this
      */
@@ -228,10 +232,13 @@ class FetcherMarkupBuilder extends FetcherMarkup
     {
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         try {
-            // do we have an executing fetcher
-            $this->requestedContextPath = $executionContext->getExecutingWikiPath();
-        } catch (ExceptionNotFound $e) {
-            $this->requestedContextPath = $executionContext->getDefaultContextPath();
+            // do we have an executing handler
+            $this->requestedContextPath = $executionContext
+                ->getExecutingMarkupHandler()
+                ->getRequestedExecutingPath()
+                ->toWikiPath();
+        } catch (ExceptionCast|ExceptionNotFound $e) {
+            $this->requestedContextPath = $executionContext->getConfig()->getDefaultContextPath();
         }
         return $this;
     }

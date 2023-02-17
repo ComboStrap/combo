@@ -51,9 +51,9 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
     public function handle_rail_bar(Doku_Event $event, $param)
     {
 
-        try {
-            ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
-        } catch (ExceptionNotFound $e) {
+
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        if ($executionContext->isPublicationAction()) {
             // a search for instance
             return;
         }

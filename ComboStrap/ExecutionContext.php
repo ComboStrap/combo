@@ -61,8 +61,11 @@ class ExecutionContext
     const DRAFT_DEL_ACTION = "draftdel";
     const REDIRECT_ACTION = "redirect";
 
-    // private actions does not render a page to be indexed
-    // by a search engine (ie no redirect)
+    /**
+     * private actions does not render a page to be indexed
+     * by a search engine (ie no redirect)
+     * May be easier, if not `show`, not public
+     */
     const PRIVATES_ACTION_NO_REDIRECT = [
         self::EDIT_ACTION,
         self::PREVIEW_ACTION,
@@ -110,18 +113,8 @@ class ExecutionContext
     private $capturedAct;
 
 
-    /**
-     * @var string - to check if the requested id was set, if not the running id is set
-     */
-    private string $requestedWikiId;
-
     private Url $url;
 
-
-    /**
-     * @var string
-     */
-    private $capturedRequestId;
 
     private HttpResponse $response;
 
@@ -145,10 +138,6 @@ class ExecutionContext
      */
     private PageTemplate $executingPageTemplate;
 
-    /**
-     * @var WikiPath the {@link self::getContextPath()} when no context could be determined
-     */
-    private WikiPath $defaultContextPath;
 
 
     public function __construct()
@@ -187,14 +176,11 @@ class ExecutionContext
                  */
                 $urlId = $urlId[0];
             }
-            $this->requestedWikiId = $urlId;
             $ID = $urlId;
 
         } catch (ExceptionNotFound $e) {
             // none
         }
-
-        $this->capturedRequestId = self::getRequestedIdViaGlobalVariables();
 
 
     }
@@ -316,100 +302,6 @@ class ExecutionContext
     }
 
 
-    public function __toString()
-    {
-        return $this->requestedWikiId;
-    }
-
-
-    /**
-     * A running id can be a secondary fragment
-     * The requested id is the main fragment id (found in the URL)
-     *
-     * Note that this should be set only once at the request level
-     * (ie in test purpose or the fetcher)
-     *
-     * @param string $requestedId
-     * @return $this
-     */
-    public function setNewRequestedId(string $requestedId): ExecutionContext
-    {
-        $this->requestedWikiId = $requestedId;
-        global $INPUT;
-        $INPUT->set("id", $requestedId);
-        return $this;
-    }
-
-
-    private static function getRequestedIdViaGlobalVariables()
-    {
-        /**
-         * {@link getID()} reads the id from the input variable
-         *
-         * The {@link \action_plugin_combo_lang::load_lang()}
-         * set it back right
-         */
-        global $INPUT;
-        $id = $INPUT->str("id");
-        if (!empty($id)) {
-            return $id;
-        }
-
-        /**
-         * This should be less used
-         * but shows where the requested id is spilled in dokuwiki
-         *
-         * If the component is in a sidebar, we don't want the ID of the sidebar
-         * but the ID of the page.
-         */
-        global $INFO;
-        if ($INFO !== null) {
-            $callingId = $INFO['id'];
-            if (!empty($callingId)) {
-                return $callingId;
-            }
-        }
-
-
-        global $ID;
-        if ($ID !== null) {
-            return $ID;
-        }
-
-        /**
-         * This is the case with event triggered
-         * before DokuWiki such as
-         * https://www.dokuwiki.org/devel:event:init_lang_load
-         * REQUEST is a mixed of post and get parameters
-         */
-        global $_REQUEST;
-        if (isset($_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE])) {
-            return $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-        }
-
-        if (!PluginUtility::isDevOrTest()) {
-            // should never happen, we don't throw an exception
-            LogUtility::internalError("Internal Error: The requested wiki id could not be determined");
-        }
-
-        return self::DEFAULT_SLOT_ID_FOR_TEST;
-
-    }
-
-    /**
-     * @return string - the wiki id of this context
-     * @throws ExceptionNotFound
-     * Note that
-     */
-    public function getRequestedWikiId(): string
-    {
-        if (!isset($this->requestedWikiId)) {
-            throw new ExceptionNotFound("No requested id was found in the context");
-        }
-        return $this->requestedWikiId;
-    }
-
-
     /**
      * @return void close the execution context
      */
@@ -428,12 +320,6 @@ class ExecutionContext
         global $MSG;
         unset($MSG);
 
-        /**
-         * Restore requested id if any
-         * (Not sure if it's needed)
-         */
-        global $INPUT;
-        $INPUT->set(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE, $this->capturedRequestId);
 
         /**
          * Environment restoration
@@ -474,9 +360,81 @@ class ExecutionContext
 
     }
 
+    /**
+     *
+     * @throws ExceptionNotFound - no page rendering requested
+     *
+     */
     public function getRequestedPath(): WikiPath
     {
-        return $this->getContextPath();
+        /**
+         * Do we have a template page executing ?
+         */
+        try {
+            return $this->getExecutingPageTemplate()
+                ->getRequestedContextPath();
+        } catch (ExceptionNotFound $e) {
+            try {
+                /**
+                 * Case when the main handler
+                 * run the main content before
+                 * to inject it in the template page
+                 * {@link PageTemplate::generateAndGetPageHtmlAsString()}
+                 */
+                return $this->getExecutingMarkupHandler()
+                    ->getRequestedContextPath();
+            } catch (ExceptionNotFound $e) {
+                // not a template engine running
+                global $ACT;
+                if ($ACT !== ExecutionContext::SHOW_ACTION || $ACT !== FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME) {
+                    throw new ExceptionNotFound("No page is rendering");
+                }
+
+                global $INPUT;
+                $inputId = $INPUT->str("id");
+                if (!empty($inputId)) {
+                    return WikiPath::createMarkupPathFromId($inputId);
+                }
+
+                global $ID;
+                if (!empty($ID)) {
+                    return WikiPath::createMarkupPathFromId($ID);
+                }
+
+                /**
+                 * This should be less used
+                 * but shows where the requested id is spilled in dokuwiki
+                 *
+                 * If the component is in a sidebar, we don't want the ID of the sidebar
+                 * but the ID of the page.
+                 */
+                global $INFO;
+                if ($INFO !== null) {
+                    $callingId = $INFO['id'];
+                    if (!empty($callingId)) {
+                        return WikiPath::createMarkupPathFromId($callingId);
+                    }
+                }
+
+                /**
+                 * This is the case with event triggered
+                 * before DokuWiki such as
+                 * https://www.dokuwiki.org/devel:event:init_lang_load
+                 * REQUEST is a mixed of post and get parameters
+                 */
+                global $_REQUEST;
+                if (isset($_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE])) {
+                    $requestId = $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
+                    if (!empty($requestId)) {
+                        return WikiPath::createMarkupPathFromId($requestId);
+                    }
+                }
+
+                throw new ExceptionRuntimeInternal("In a show action, the requested id should not be empty.");
+            }
+
+        }
+
     }
 
     /**
@@ -499,11 +457,6 @@ class ExecutionContext
     public function getUrl(): Url
     {
         return $this->url;
-    }
-
-    public function getCapturedRequestedId()
-    {
-        return $this->capturedRequestId;
     }
 
 
@@ -599,7 +552,7 @@ class ExecutionContext
 
     public function setEnablePageFetcherAsShowAction(): ExecutionContext
     {
-        $this->getConfValue(action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM, 1);
+        $this->getConfValue(SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM, 1);
         return $this;
     }
 
@@ -629,12 +582,6 @@ class ExecutionContext
      */
     public function isPublicationAction(): bool
     {
-
-        try {
-            $this->getRequestedWikiId();
-        } catch (ExceptionNotFound $e) {
-            return false;
-        }
 
         $act = $this->getExecutingAction();
         if (in_array($act, self::PRIVATES_ACTION_NO_REDIRECT)) {
@@ -669,12 +616,17 @@ class ExecutionContext
         return $this->response;
     }
 
-    private function setExecutingId(string $executingId): ExecutionContext
+    /**
+     * @param string|null $executingId
+     * @return void
+     */
+    private function setExecutingId(?string $executingId): void
     {
         global $ID;
-        $executingId = WikiPath::toDokuWikiId($executingId);
+        if ($executingId !== null) {
+            $executingId = WikiPath::toDokuWikiId($executingId);
+        }
         $ID = $executingId;
-        return $this;
     }
 
     public function setConfGlobal(string $key, string $value): ExecutionContext
@@ -805,9 +757,9 @@ class ExecutionContext
         /** @noinspection PhpUnusedLocalVariableInspection */
         [$markupHandler, $oldExecutingId, $oldContextId, $oldAct] = array_pop($this->executingMarkupHandlerStack);
 
-        $this->setExecutingAction($oldAct);
-
-        $this->setExecutingId($oldExecutingId);
+        $this
+            ->setExecutingAction($oldAct)
+            ->setExecutingId($oldExecutingId);
 
         global $INFO;
         if ($oldExecutingId === null) {
@@ -840,19 +792,11 @@ class ExecutionContext
      *
      * @param WikiPath $contextPath - a markup file context path used (not a namespace)
      * @return $this
+     * @deprecated
      */
     public function setDefaultContextPath(WikiPath $contextPath): ExecutionContext
     {
-        $this->defaultContextPath = $contextPath;
-        if (FileSystems::isDirectory($this->defaultContextPath)) {
-            /**
-             * Not a directory.
-             *
-             * If the link or path is the empty path, the path is not the directory
-             * but the actual markup
-             */
-            throw new ExceptionRuntimeInternal("The path ($contextPath) should not be a namespace path");
-        }
+        $this->getConfig()->setDefaultContextPath($contextPath);
         return $this;
     }
 
@@ -893,20 +837,14 @@ class ExecutionContext
 
     }
 
+
+    /**
+     * @return WikiPath
+     * @deprecated uses {@link SiteConfig::getDefaultContextPath()}
+     */
     public function getDefaultContextPath(): WikiPath
     {
-        if (isset($this->defaultContextPath)) {
-            return $this->defaultContextPath;
-        }
-        // in a admin or dynamic rendering
-        // dokuwiki may have set a $ID
-        global $ID;
-        if (isset($ID) && $ID !== self::DEFAULT_SLOT_ID_FOR_TEST) {
-            return WikiPath::createMarkupPathFromId($ID);
-        }
-        return WikiPath::createRootNamespacePathOnMarkupDrive()->resolve(Site::getIndexPageName() . "." . WikiPath::MARKUP_DEFAULT_TXT_EXTENSION);
-
-
+        return $this->getConfig()->getDefaultContextPath();
     }
 
     /**

@@ -957,7 +957,7 @@ class Snippet implements JsonSerializable
                     }
 
                     $critical = $this->getCritical();
-                    if (!$critical && action_plugin_combo_docustom::isFrontSystemEnabled()) {
+                    if (!$critical && action_plugin_combo_docustom::isTemplateSystemEnabled()) {
                         $tagAttributes
                             ->addOutputAttributeValue("rel", "preload")
                             ->addOutputAttributeValue('as', self::STYLE_TAG);

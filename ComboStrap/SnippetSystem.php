@@ -196,22 +196,6 @@ class SnippetSystem
     }
 
     /**
-     * @param string $snippetId
-     * @param string $type
-     * @return Snippet
-     * @throws ExceptionNotFound
-     * @deprecated - the slot is now added automatically at creation time via the context system
-     */
-    private
-    function &attachSnippetFromSlot(string $snippetId, string $type): Snippet
-    {
-        $slot = ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
-        $snippet = Snippet::getOrCreateFromComponentId($snippetId, $type)
-            ->addSlot($slot);
-        return $snippet;
-    }
-
-    /**
      * @param $componentId
      * @param $type
      * @return Snippet

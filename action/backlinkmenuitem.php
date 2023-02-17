@@ -77,10 +77,9 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
          * Add the link to build the link to the backlinks actions
          */
         try {
-            $requestedContextPage = ExecutionContext::getActualOrCreateFromEnv()
-                ->getRequestedPath();
+            $requestedContextPage = ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath();
         } catch (ExceptionNotFound $e) {
-            LogUtility::internalError("The requested context path should be available");
+            // admin
             return;
         }
         global $JSINFO;

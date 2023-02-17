@@ -147,5 +147,19 @@ class DataType
         return is_bool($value);
     }
 
+    public static function toString($value)
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+        if (is_array($value)) {
+            return ArrayUtility::formatAsString($value);
+        }
+        if (is_object($value)) {
+            return $value->__toString();
+        }
+        return strval($value);
+    }
+
 
 }

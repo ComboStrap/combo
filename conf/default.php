@@ -30,6 +30,7 @@ use ComboStrap\PageType;
 use ComboStrap\Prism;
 use ComboStrap\PageUrlType;
 use ComboStrap\Region;
+use ComboStrap\SiteConfig;
 use ComboStrap\Snippet;
 use ComboStrap\SnippetSystem;
 
@@ -426,7 +427,7 @@ $conf["defaultLayoutContainer"] = "sm";
 
 /**
  * Enable templating
- * See {@link action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM}
+ * See {@link SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM}
  */
 $conf["combo-conf-001"] = 1;
 

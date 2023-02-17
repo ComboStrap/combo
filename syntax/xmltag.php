@@ -1,7 +1,7 @@
 <?php
 
 
-require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 // must be run within Dokuwiki
 use ComboStrap\HrTag;
@@ -15,7 +15,7 @@ use ComboStrap\TagAttributes;
 /**
  * The xml tag (non-empty) pattern
  */
-class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
 {
 
 
@@ -40,9 +40,9 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
     /**
      * How Dokuwiki will add P element
      *
-     *  * 'normal' - Inline
-     *  * 'block' - Block (p are not created inside)
-     *  * 'stack' - Block (p can be created inside)
+     *  * 'normal' - Inline (will not close an ongoing p)
+     *  * 'block' - Block (dokuwiki does not not create p inside and close open p)
+     *  * 'stack' - Block (dokuwiki create p inside)
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
@@ -60,7 +60,10 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
      */
     public function getAllowedTypes(): array
     {
-        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        /**
+         * Tweak: `paragraphs` is not in the allowed type
+         */
+        return array('container', 'formatting', 'substition', 'protected', 'disabled');
     }
 
     function getSort(): int
@@ -72,6 +75,8 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
+//        $pattern = PluginUtility::getContainerTagPattern("[\w-]+");
+//        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 

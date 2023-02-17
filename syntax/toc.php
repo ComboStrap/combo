@@ -15,7 +15,6 @@ use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\Toc;
 
-if (!defined('DOKU_INC')) die();
 
 /**
  * Class syntax_plugin_combo_tov

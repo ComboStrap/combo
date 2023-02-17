@@ -357,7 +357,7 @@ $meta[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF] = array('mul
 /**
  * Take over the show
  */
-$meta[action_plugin_combo_docustom::CONF_ENABLE_FRONT_SYSTEM] = array("onoff");
+$meta[SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM] = array("onoff");
 
 /**
  * Railbar

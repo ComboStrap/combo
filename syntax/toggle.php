@@ -1,7 +1,6 @@
 <?php
 
 
-// must be run within Dokuwiki
 use ComboStrap\Bootstrap;
 use ComboStrap\BrandButton;
 use ComboStrap\CallStack;

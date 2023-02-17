@@ -296,7 +296,7 @@ class EditButton
             try {
                 $data['rev'] = $page->getPathObject()->getRevisionOrDefault();
             } catch (ExceptionNotFound $e) {
-                LogUtility::internalError("The file ({$page->getPathObject()}) does not exist, we cannot set the last modified time on the edit buttons.", self::CANONICAL);
+                //LogUtility::internalError("The file ({$page->getPathObject()}) does not exist, we cannot set the last modified time on the edit buttons.", self::CANONICAL);
             }
             $hiddenInputs = "";
             foreach ($data as $key => $val) {
@@ -416,7 +416,7 @@ EOF;
             return $wikiId;
         }
 
-        return ExecutionContext::getActualOrCreateFromEnv()->getRequestedWikiId();
+        return ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath()->getWikiId();
 
 
     }

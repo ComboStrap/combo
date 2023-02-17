@@ -414,11 +414,17 @@ class Bootstrap
          * Bootstrap needs another stylesheet
          * See https://getbootstrap.com/docs/5.0/getting-started/rtl/
          */
-        $direction = Lang::createFromRequestedMarkup()->getDirection();
+        try {
+            $direction = Lang::createFromRequestedMarkup()->getDirection();
+        } catch (ExceptionNotFound $e) {
+            $direction = Site::getLangObject()->getDirection();
+        }
         if (isset($styleSheetForVersionAndName[$direction])) {
             return $styleSheetForVersionAndName[$direction];
         }
-
+        if (!isset($styleSheetForVersionAndName['file'])) {
+            LogUtility::internalError('The file stylesheet attribute is unknown ('.DataType::toString($styleSheetForVersionAndName). ')');
+        }
         return $styleSheetForVersionAndName;
     }
 }

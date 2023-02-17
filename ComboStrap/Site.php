@@ -311,10 +311,6 @@ class Site
         return Lang::createFromValue(Site::getLang());
     }
 
-    public static function setCacheXhtmlDefault()
-    {
-        Site::setCacheDefault();
-    }
 
     public static function getOldDirectory(): LocalPath
     {

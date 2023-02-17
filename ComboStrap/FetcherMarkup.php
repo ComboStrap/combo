@@ -892,5 +892,13 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         return PluginUtility::getSnippetManager();
     }
 
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    public function getFetchStringAsDom(): XmlDocument
+    {
+        return XmlDocument::createXmlDocFromMarkup($this->getFetchString());
+    }
+
 
 }

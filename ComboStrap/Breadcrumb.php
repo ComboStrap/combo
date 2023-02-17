@@ -23,7 +23,7 @@ class Breadcrumb
     public const TAG = "breadcrumb";
     public const CANONICAL_HIERARCHICAL = "breadcrumb-hierarchical";
     public const DEPTH_ATTRIBUTE = "depth";
-    const TYPES = [ self::TYPOGRAPHY_TYPE, self::NAVIGATION_TYPE];
+    const TYPES = [self::TYPOGRAPHY_TYPE, self::NAVIGATION_TYPE];
 
     /**
      * Hierarchical breadcrumbs (you are here)
@@ -51,15 +51,8 @@ class Breadcrumb
         /**
          * Get the page
          */
-        $path = ContextManager::getOrCreate()->getAttribute(PagePath::PROPERTY_NAME);
-        if ($path === null) {
-            // should never happen but yeah
-            LogUtility::error("Internal Error: The page context was not set. Defaulting to the requested page", self::CANONICAL_HIERARCHICAL);
-            $actual = MarkupPath::createFromRequestedPage();
-        } else {
-            $actual = MarkupPath::createPageFromQualifiedId($path);
-        }
-
+        $path = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
+        $actual = MarkupPath::createPageFromPathObject($path);
 
         /**
          * TODO: How to check that we should be able to use the navigational type only once ?
@@ -183,7 +176,7 @@ class Breadcrumb
                 ->getCacheDependencies()
                 // the output has the data from the requested page
                 ->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY)
-            // the data from the requested page is dependent on the name, title or description of the page
+                // the data from the requested page is dependent on the name, title or description of the page
                 ->addDependency(MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY);
         } catch (ExceptionNotFound $e) {
             // not a fetcher markup run

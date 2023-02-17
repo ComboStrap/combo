@@ -60,27 +60,6 @@ class CacheManager
     }
 
 
-    /**
-     * @param Path $path
-     * @return MarkupCacheDependencies
-     */
-    public function getCacheDependenciesForPath(Path $path): MarkupCacheDependencies
-    {
-
-        $pathId = $path->toQualifiedId();
-        $cacheRuntimeDependencies = $this->slotCacheDependencies[$pathId];
-        if ($cacheRuntimeDependencies === null) {
-            $cacheRuntimeDependencies = MarkupCacheDependencies::create($path, $this->executionContext->getRequestedPath());
-            $this->slotCacheDependencies[$pathId] = $cacheRuntimeDependencies;
-        }
-        return $cacheRuntimeDependencies;
-
-    }
-
-
-
-
-
 
     public function getCacheResultsForSlot(string $id): CacheResults
     {
@@ -128,7 +107,12 @@ class CacheManager
         try {
             $expirationDate = $cacheExpirationDateMeta->getValue();
         } catch (ExceptionNotFound $e) {
-            $expirationDate = Cron::getDate($cacheExpirationFrequency);
+            try {
+                $expirationDate = Cron::getDate($cacheExpirationFrequency);
+            } catch (ExceptionBadSyntax $e) {
+                LogUtility::error("The cron expression ($cacheExpirationFrequency) of the page ($page) is not a valid cron expression");
+                return false;
+            }
         }
         $cacheExpirationDateMeta->setValue($expirationDate);
 

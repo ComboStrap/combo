@@ -1,23 +1,19 @@
 <?php
 
 
-require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
+require_once(__DIR__ . '/../vendor/autoload.php');
 
-// must be run within Dokuwiki
 use ComboStrap\BackgroundTag;
 use ComboStrap\Brand;
 use ComboStrap\BrandButton;
 use ComboStrap\BrandListTag;
 use ComboStrap\BrandTag;
 use ComboStrap\Breadcrumb;
-use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheTag;
 use ComboStrap\CallStack;
-use ComboStrap\ExceptionInternal;
 use ComboStrap\HrTag;
 use ComboStrap\IconTag;
 use ComboStrap\LogUtility;
-use ComboStrap\PageImage;
 use ComboStrap\PageImageTag;
 use ComboStrap\PluginUtility;
 use ComboStrap\SearchTag;
@@ -28,7 +24,7 @@ use ComboStrap\TagAttributes;
 /**
  * The empty pattern / void element
  */
-class syntax_plugin_combo_tagempty extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_xmlemptytag extends DokuWiki_Syntax_Plugin
 {
 
 

@@ -2,15 +2,14 @@
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
 
+use ComboStrap\Brand;
+use ComboStrap\BrandButton;
 use ComboStrap\BrandTag;
-use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\Dimension;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\BrandButton;
 use ComboStrap\TagAttributes;
 
 
@@ -98,7 +97,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL:
 
                 $defaultAttributes = [];
-                $knownTypes = null;
+                $knownTypes = Brand::getBrandNamesForButtonType(BrandButton::TYPE_BUTTON_FOLLOW);
                 $shareAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes)
                     ->setLogicalTag(self::TAG);
 

@@ -2,8 +2,6 @@
 
 namespace ComboStrap;
 
-use syntax_plugin_combo_brand;
-
 class ShareTag
 {
     const MARKUP = "share";

@@ -26,6 +26,7 @@ class ExceptionRuntime  extends \RuntimeException
         parent::__construct($message, $code, $previous);
     }
 
+
     /**
      * @return mixed|string
      */

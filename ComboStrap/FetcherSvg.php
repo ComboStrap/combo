@@ -417,6 +417,11 @@ class FetcherSvg extends IFetcherLocalImage
     public function getIntrinsicHeight(): int
     {
 
+        try {
+            $this->buildXmlDocumentIfNeeded();
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionBadSyntaxRuntime($e->getMessage(), self::CANONICAL, 1, $e);
+        }
         return $this->intrinsicHeight;
 
     }
@@ -427,8 +432,12 @@ class FetcherSvg extends IFetcherLocalImage
     public
     function getIntrinsicWidth(): int
     {
+        try {
+            $this->buildXmlDocumentIfNeeded();
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionBadSyntaxRuntime($e->getMessage(), self::CANONICAL, 1, $e);
+        }
         return $this->intrinsicWidth;
-
     }
 
     /**
@@ -724,32 +733,7 @@ class FetcherSvg extends IFetcherLocalImage
     private function getXmlDocument(): XmlDocument
     {
 
-        /**
-         * The svg document may be build
-         * via markup (See {@link self::setMarkup()}
-         */
-        if ($this->xmlDocument === null) {
-
-            /**
-             * A svg path
-             *
-             * Because we test bad svg, we want to be able to build an url.
-             * We don't want therefore to throw when the svg file is not valid
-             * We therefore check the validity at runtime
-             */
-            $path = $this->getSourcePath();
-            try {
-                $markup = FileSystems::getContent($path);
-            } catch (ExceptionNotFound $e) {
-                throw new ExceptionRuntime("The svg file ($path) was not found", self::CANONICAL);
-            }
-            try {
-                $this->buildXmlDocument($markup);
-            } catch (ExceptionBadSyntax $e) {
-                throw new ExceptionRuntime("The svg file ($path) is not a valid svg. Error: {$e->getMessage()}");
-            }
-
-        }
+        $this->buildXmlDocumentIfNeeded();
         return $this->xmlDocument;
     }
 
@@ -804,7 +788,7 @@ class FetcherSvg extends IFetcherLocalImage
      */
     private function setMarkup(string $markup): FetcherSvg
     {
-        $this->buildXmlDocument($markup);
+        $this->buildXmlDocumentIfNeeded($markup);
         return $this;
     }
 
@@ -1634,13 +1618,56 @@ class FetcherSvg extends IFetcherLocalImage
     }
 
     /**
+     * Build is done late
+     * because we want to be able to create
+     * a fetch url even if the file is not a correct svg
+     *
+     * The downside is that there is exception that may be triggered all over the place
+     *
      * @throws ExceptionBadSyntax
      */
-    private function buildXmlDocument(string $markup): FetcherSvg
+    private function buildXmlDocumentIfNeeded(string $markup = null): FetcherSvg
     {
-        $this->xmlDocument = XmlDocument::createXmlDocFromMarkup($markup);
-        $this->setIntrinsicDimensions();
+        /**
+         * The svg document may be build
+         * via markup (See {@link self::setMarkup()}
+         */
+        if ($this->xmlDocument !== null) {
+            return $this;
+        }
+
+        /**
+         * Markup string passed directly or
+         * via the source path below
+         */
+        if ($markup !== null) {
+            $this->xmlDocument = XmlDocument::createXmlDocFromMarkup($markup);
+            $this->setIntrinsicDimensions();
+            return $this;
+        }
+
+        /**
+         * A svg path
+         *
+         * Because we test bad svg, we want to be able to build an url.
+         * We don't want therefore to throw when the svg file is not valid
+         * We therefore check the validity at runtime
+         */
+        $path = $this->getSourcePath();
+        try {
+            $markup = FileSystems::getContent($path);
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntime("The svg file ($path) was not found", self::CANONICAL);
+        }
+        try {
+            $this->buildXmlDocumentIfNeeded($markup);
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionRuntime("The svg file ($path) is not a valid svg. Error: {$e->getMessage()}");
+        }
+
+        // dimension
         return $this;
+
     }
 
 

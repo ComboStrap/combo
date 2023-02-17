@@ -4,12 +4,14 @@
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 // must be run within Dokuwiki
+use ComboStrap\BarTag;
 use ComboStrap\BlockquoteTag;
 use ComboStrap\BoxTag;
 use ComboStrap\ButtonTag;
 use ComboStrap\CardTag;
 use ComboStrap\ColorRgb;
 use ComboStrap\ExceptionRuntimeInternal;
+use ComboStrap\Hero;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Skin;
@@ -50,6 +52,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case CardTag::LOGICAL_TAG:
                                 $renderer->doc .= CardTag::renderEnterXhtml($tagAttributes, $renderer, $data);
                                 return true;
+                            case BarTag::LOGICAL_TAG:
+                                $renderer->doc .= BarTag::renderEnterXhtml($tagAttributes, $data);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The empty tag (" . $logicalTag . ") was not processed.");
                                 return false;
@@ -74,6 +79,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case CardTag::LOGICAL_TAG:
                                 CardTag::handleExitXhtml($data, $renderer);
                                 return true;
+                            case BarTag::LOGICAL_TAG:
+                                $renderer->doc .= BarTag::renderExitXhtml($data);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                         }
@@ -83,7 +91,29 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
             case 'metadata':
                 /** @var Doku_Renderer_metadata $renderer */
                 break;
+            case 'xml':
+                /** @var renderer_plugin_combo_xml $renderer */
+                switch ($state) {
+                    case DOKU_LEXER_ENTER:
+                        switch ($logicalTag) {
+                            default:
+                            case BarTag::LOGICAL_TAG:
+                                $renderer->doc .= "<$logicalTag>";
+                                return true;
+                        }
+                    case DOKU_LEXER_UNMATCHED :
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
+                        break;
+                    case DOKU_LEXER_EXIT :
+                        switch ($logicalTag) {
+                            default:
+                            case BarTag::LOGICAL_TAG:
+                                $renderer->doc .= "</$logicalTag>";
+                                return true;
+                        }
+                }
         }
+
         // unsupported $mode
         return false;
     }
@@ -133,6 +163,12 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case CardTag::TEASER_TAG:
                         $logicalTag = CardTag::LOGICAL_TAG;
                         break;
+                    case BarTag::BAR_TAG:
+                    case BarTag::SLIDE_TAG:
+                        $logicalTag = BarTag::LOGICAL_TAG;
+                        $defaultAttributes[Hero::ATTRIBUTE] = "sm";
+                        break;
+
                 }
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes, $allowAnyFirstBooleanAttributesAsType)
                     ->setLogicalTag($logicalTag);
@@ -155,6 +191,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case CardTag::CARD_TAG:
                         $returnedArray = CardTag::handleEnter($tagAttributes, $handler);
                         break;
+                    case BarTag::BAR_TAG:
+                    case BarTag::SLIDE_TAG:
+                        $returnedArray = BarTag::handleEnter($tagAttributes);
                 }
 
                 /**
@@ -192,7 +231,15 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         $logicalTag = CardTag::LOGICAL_TAG;
                         $returnedArray = CardTag::handleExit($handler, $pos, $match);
                         break;
+                    case BarTag::BAR_TAG:
+                    case BarTag::SLIDE_TAG:
+                        $logicalTag = BarTag::LOGICAL_TAG;
+                        $returnedArray = BarTag::handleExit($handler, $pos, $match);
+                        break;
                 }
+                /**
+                 * Common exit attributes
+                 */
                 $defaultReturnedArray[PluginUtility::STATE] = $state;
                 $defaultReturnedArray[PluginUtility::TAG] = $logicalTag;
                 return array_merge($defaultReturnedArray, $returnedArray);

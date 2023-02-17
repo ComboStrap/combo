@@ -11,6 +11,7 @@
  */
 
 use ComboStrap\Align;
+use ComboStrap\BarTag;
 use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
@@ -221,7 +222,7 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                 $isRowTag = substr($match, 0, strlen($rowMatchPrefix)) == $rowMatchPrefix;
                 if ($parent != false
                     && !in_array($parent->getTagName(), [
-                        syntax_plugin_combo_bar::TAG,
+                        BarTag::BAR_TAG,
                         syntax_plugin_combo_container::TAG,
                         syntax_plugin_combo_cell::TAG,
                         syntax_plugin_combo_iterator::TAG,

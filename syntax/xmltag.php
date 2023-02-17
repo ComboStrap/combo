@@ -117,7 +117,8 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         $knownTypes = [BlockquoteTag::TYPO_TYPE, BlockquoteTag::CARD_TYPE];;
                         break;
                     case BoxTag::TAG:
-                        $defaultAttributes[BoxTag::HTML_TAG_ATTRIBUTE] = BoxTag::DEFAULT_HTML_TAG;;
+                        $defaultAttributes[BoxTag::HTML_TAG_ATTRIBUTE] = BoxTag::DEFAULT_HTML_TAG;
+                        $defaultAttributes[BoxTag::LOGICAL_TAG_ATTRIBUTE] = BoxTag::LOGICAL_TAG_DEFAUT;
                         break;
                     case ButtonTag::MARKUP_SHORT:
                     case ButtonTag::MARKUP_LONG:

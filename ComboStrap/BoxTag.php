@@ -8,18 +8,24 @@ use Doku_Handler;
 /**
  * Class syntax_plugin_combo_box
  * Implementation of a div
+ * It permits also to dynamically add html element from other component
+ * via the {@link Call::createComboCall()}
  *
  */
 class BoxTag
 {
 
     const TAG = "box";
-    // internal attribute to output html
-    const HTML_TAG_ATTRIBUTE = "html_tag";
+
+
+    // the logical tag applied (class)
+    const LOGICAL_TAG_ATTRIBUTE = "logical-tag";
+    const LOGICAL_TAG_DEFAUT = self::TAG;
+    // the html tag
+    const HTML_TAG_ATTRIBUTE = "html-tag";
     const DEFAULT_HTML_TAG = "div";
     // Tag that may make external http requests are not authorized
     const NON_AUTHORIZED_HTML_TAG = ["script", "style", "img", "video"];
-
 
     public static function handleEnter(TagAttributes $attributes)
     {
@@ -97,10 +103,14 @@ class BoxTag
 
     }
 
-    static public function renderEnterXhtml(TagAttributes $tagAttributes)
+    static public function renderEnterXhtml(TagAttributes $tagAttributes): string
     {
-        $tagName = $tagAttributes->getValueAndRemove(self::HTML_TAG_ATTRIBUTE, self::DEFAULT_HTML_TAG);
-        return $tagAttributes->toHtmlEnterTag($tagName);
+        $htmlTagName = $tagAttributes->getValueAndRemove(self::HTML_TAG_ATTRIBUTE, self::DEFAULT_HTML_TAG);
+        $logicalTag = $tagAttributes->getValueAndRemove(self::LOGICAL_TAG_ATTRIBUTE);
+        if ($logicalTag !== null) {
+            $tagAttributes->setLogicalTag($logicalTag);
+        }
+        return $tagAttributes->toHtmlEnterTag($htmlTagName);
     }
 
 

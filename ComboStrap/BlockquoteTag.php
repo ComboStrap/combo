@@ -10,7 +10,6 @@ namespace ComboStrap;
 
 use Doku_Handler;
 use Doku_Renderer_xhtml;
-use syntax_plugin_combo_cardbody;
 use syntax_plugin_combo_cite;
 use syntax_plugin_combo_fragment;
 use syntax_plugin_combo_header;
@@ -194,7 +193,7 @@ class BlockquoteTag
                 \syntax_plugin_combo_xmltag::TAG
             );
             $cardBodyEnterCall = Call::createComboCall(
-                syntax_plugin_combo_cardbody::TAG,
+                CardBodyTag::TAG,
                 DOKU_LEXER_ENTER
             );
             $firstChild = $callStack->moveToFirstChildTag();
@@ -239,7 +238,7 @@ class BlockquoteTag
             );
             $callStack->insertBefore(
                 Call::createComboCall(
-                    syntax_plugin_combo_cardbody::TAG,
+                    CardBodyTag::TAG,
                     DOKU_LEXER_EXIT
                 )
             );

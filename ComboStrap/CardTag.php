@@ -3,7 +3,6 @@
 namespace ComboStrap;
 
 use Doku_Renderer_xhtml;
-use syntax_plugin_combo_cardbody;
 use syntax_plugin_combo_fragment;
 use syntax_plugin_combo_header;
 use syntax_plugin_combo_masonry;
@@ -127,8 +126,18 @@ class CardTag
          * Insert card-body
          */
         $bodyCall = Call::createComboCall(
-            syntax_plugin_combo_cardbody::TAG,
-            DOKU_LEXER_ENTER
+            BoxTag::TAG,
+            DOKU_LEXER_ENTER,
+            [
+                BoxTag::HTML_TAG_ATTRIBUTE => "div",
+                BoxTag::LOGICAL_TAG_ATTRIBUTE => 'card-body',
+                TagAttributes::CLASS_KEY => 'card-body',
+            ],
+            null,
+            null,
+            null,
+            null,
+            \syntax_plugin_combo_xmltag::TAG
         );
         $insertBodyAfterThisCalls = PluginUtility::mergeAttributes(Call::IMAGE_TAGS, [syntax_plugin_combo_header::TAG]);
         if (in_array($actualCall->getTagName(), $insertBodyAfterThisCalls)) {
@@ -158,8 +167,14 @@ class CardTag
          */
         $callStack->insertBefore(
             Call::createComboCall(
-                syntax_plugin_combo_cardbody::TAG,
-                DOKU_LEXER_EXIT
+                BoxTag::TAG,
+                DOKU_LEXER_EXIT,
+                [BoxTag::HTML_TAG_ATTRIBUTE => "div"],
+                null,
+                null,
+                null,
+                null,
+                \syntax_plugin_combo_xmltag::TAG
             )
         );
 
@@ -203,7 +218,7 @@ class CardTag
         /**
          * Card
          */
-        return $attributes->toHtmlEnterTag("div") ;
+        return $attributes->toHtmlEnterTag("div");
     }
 
     public static function handleExitXhtml(array $data, Doku_Renderer_xhtml $renderer)

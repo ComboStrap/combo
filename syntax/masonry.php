@@ -7,6 +7,7 @@
 use ComboStrap\BlockquoteTag;
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
+use ComboStrap\CardTag;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) {
@@ -218,7 +219,7 @@ class syntax_plugin_combo_masonry extends DokuWiki_Syntax_Plugin
                 $callStack->moveToPreviousCorrespondingOpeningCall();
                 while ($actualCall = $callStack->next()) {
                     if (
-                        in_array($actualCall->getTagName(), [syntax_plugin_combo_card::TAG, BlockquoteTag::TAG])
+                        in_array($actualCall->getTagName(), [CardTag::CARD_TAG, BlockquoteTag::TAG])
                         && in_array($actualCall->getState(), [DOKU_LEXER_ENTER, DOKU_LEXER_EXIT])
                     ) {
                         $actualCall->setContext(self::TAG);

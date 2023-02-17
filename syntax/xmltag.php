@@ -7,6 +7,7 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 use ComboStrap\BlockquoteTag;
 use ComboStrap\BoxTag;
 use ComboStrap\ButtonTag;
+use ComboStrap\CardTag;
 use ComboStrap\ColorRgb;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\LogUtility;
@@ -46,14 +47,20 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case ButtonTag::LOGICAL_TAG:
                                 $renderer->doc .= ButtonTag::renderEnterXhtml($tagAttributes, $plugin, $data);
                                 return true;
+                            case CardTag::LOGICAL_TAG:
+                                $renderer->doc .= CardTag::renderEnterXhtml($tagAttributes, $renderer, $data);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The empty tag (" . $logicalTag . ") was not processed.");
                                 return false;
                         }
                     case DOKU_LEXER_UNMATCHED:
+
                         $renderer->doc .= PluginUtility::renderUnmatched($data);
                         return true;
+
                     case DOKU_LEXER_EXIT:
+
                         switch ($logicalTag) {
                             case BlockquoteTag::TAG:
                                 BlockquoteTag::renderExitXhtml($tagAttributes, $renderer, $data);
@@ -63,6 +70,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 return true;
                             case ButtonTag::LOGICAL_TAG:
                                 $renderer->doc .= ButtonTag::renderExitXhtml($data);
+                                return true;
+                            case CardTag::LOGICAL_TAG:
+                                CardTag::handleExitXhtml($data, $renderer);
                                 return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -118,6 +128,10 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             TagAttributes::TYPE_KEY => ColorRgb::PRIMARY_VALUE
                         );
                         break;
+                    case CardTag::CARD_TAG:
+                    case CardTag::TEASER_TAG:
+                        $logicalTag = CardTag::LOGICAL_TAG;
+                        break;
                 }
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes, $allowAnyFirstBooleanAttributesAsType)
                     ->setLogicalTag($logicalTag);
@@ -137,6 +151,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case ButtonTag::MARKUP_LONG:
                         $returnedArray = ButtonTag::handleEnter($tagAttributes, $handler);
                         break;
+                    case CardTag::CARD_TAG:
+                        $returnedArray = CardTag::handleEnter($tagAttributes, $handler);
+                        break;
                 }
 
                 /**
@@ -147,8 +164,11 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                 $defaultReturnedArray[PluginUtility::ATTRIBUTES] = $tagAttributes->toCallStackArray();
 
                 return array_merge($defaultReturnedArray, $returnedArray);
+
             case DOKU_LEXER_UNMATCHED :
+
                 return PluginUtility::handleAndReturnUnmatchedData(null, $match, $handler);
+
             case DOKU_LEXER_EXIT :
 
                 $markupTag = PluginUtility::getMarkupTag($match);
@@ -165,6 +185,11 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case ButtonTag::MARKUP_LONG:
                         $logicalTag = ButtonTag::LOGICAL_TAG;
                         $returnedArray = ButtonTag::handleExit($handler);
+                        break;
+                    case CardTag::CARD_TAG:
+                    case CardTag::TEASER_TAG:
+                        $logicalTag = CardTag::LOGICAL_TAG;
+                        $returnedArray = CardTag::handleExit($handler, $pos, $match);
                         break;
                 }
                 $defaultReturnedArray[PluginUtility::STATE] = $state;
@@ -226,6 +251,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
     function getPType(): string
     {
         /**
+         * Ptype is the driver of the {@link \dokuwiki\Parsing\Handler\Block::process()}
+         * that creates the P tag.
+         *
          * Works with block and stack for now
          * Not with `normal` as if dokuwiki has created a p
          * and that is encounters a block, it will close the p inside the stack unfortunately
@@ -234,6 +262,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
          * For box, not stack, otherwise it creates p
          * and as box is used mostly for layout purpose, it breaks the
          * {@link \ComboStrap\Align} flex css attribute
+         *
+         * For Cardbody, block value was !important! as
+         * it will not create an extra paragraph after it encounters a block
          */
         return 'block';
     }

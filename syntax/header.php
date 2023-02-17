@@ -3,6 +3,7 @@
 
 use ComboStrap\BlockquoteTag;
 use ComboStrap\CallStack;
+use ComboStrap\CardTag;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -122,7 +123,7 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     switch ($parent) {
                         case BlockquoteTag::TAG:
-                        case syntax_plugin_combo_card::TAG:
+                        case CardTag::CARD_TAG:
                             $tagAttributes->addClassName("card-header");
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
                             break;
@@ -142,7 +143,7 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
                     $parent = $data[PluginUtility::CONTEXT];
                     switch ($parent) {
                         case BlockquoteTag::TAG:
-                        case syntax_plugin_combo_card::TAG:
+                        case CardTag::CARD_TAG:
                             $renderer->doc .= "</div>";
                             break;
                         default:

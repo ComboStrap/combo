@@ -2,6 +2,7 @@
 
 
 use ComboStrap\CallStack;
+use ComboStrap\CardTag;
 use ComboStrap\Dimension;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadArgument;
@@ -170,7 +171,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
             // Inside a card, we need to take over and enable it
             $modes = [
-                PluginUtility::getModeFromTag(syntax_plugin_combo_card::TAG),
+                PluginUtility::getModeFromTag(CardTag::CARD_TAG),
             ];
             $enable = in_array($mode, $modes);
         }

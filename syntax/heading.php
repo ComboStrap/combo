@@ -4,6 +4,7 @@
 use ComboStrap\BlockquoteTag;
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
+use ComboStrap\CardTag;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionNotEnabled;
@@ -331,7 +332,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          * Card title Context class
          * TODO: should move to card
          */
-        if (in_array($context, [BlockquoteTag::TAG, syntax_plugin_combo_card::TAG])) {
+        if (in_array($context, [BlockquoteTag::TAG, CardTag::CARD_TAG])) {
             $tagAttributes->addClassName("card-title");
         }
 

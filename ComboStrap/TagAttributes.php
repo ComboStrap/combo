@@ -94,7 +94,7 @@ class TagAttributes
      */
     const CONTAINER_LOGICAL_ELEMENTS = [
         BoxTag::TAG,
-        \syntax_plugin_combo_card::TAG,
+        CardTag::CARD_TAG,
         BlockquoteTag::TAG,
     ];
 

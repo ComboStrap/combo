@@ -10,7 +10,6 @@ namespace ComboStrap;
 
 use Doku_Handler;
 use Doku_Renderer_xhtml;
-use syntax_plugin_combo_card;
 use syntax_plugin_combo_cardbody;
 use syntax_plugin_combo_cite;
 use syntax_plugin_combo_fragment;
@@ -268,7 +267,7 @@ class BlockquoteTag
             case self::TYPO_TYPE:
 
                 $tagAttributes->addClassName("blockquote");
-                $cardTags = [syntax_plugin_combo_card::TAG, syntax_plugin_combo_masonry::TAG];
+                $cardTags = [CardTag::CARD_TAG, syntax_plugin_combo_masonry::TAG];
                 if (in_array($data[PluginUtility::CONTEXT], $cardTags)) {
                     // As seen here: https://getbootstrap.com/docs/5.0/components/card/#header-and-footer
                     // A blockquote in a card
@@ -345,7 +344,7 @@ class BlockquoteTag
          * Closing the masonry column
          * (Only if this is a card blockquote)
          */
-        if ($type == syntax_plugin_combo_card::TAG) {
+        if ($type == CardTag::CARD_TAG) {
             $context = $data[PluginUtility::CONTEXT];
             if ($context === syntax_plugin_combo_masonry::TAG) {
                 syntax_plugin_combo_masonry::endColIfBootstrap5AnCardColumns($renderer, $context);

@@ -576,6 +576,10 @@ class MediaMarkup
             $this->extraMediaTagAttributes->addComponentAttributeValue($key, $value);
         }
 
+        foreach ($tagAttributes->getStyleDeclarations() as $key => $value){
+            $this->extraMediaTagAttributes->addStyleDeclarationIfNotSet($key, $value);
+        }
+
         return $this;
     }
 

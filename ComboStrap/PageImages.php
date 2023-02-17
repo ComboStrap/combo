@@ -205,8 +205,7 @@ class PageImages extends MetadataTabular
     public function addImage(string $wikiImagePath, $usages = null): PageImages
     {
 
-        $pageImagePath = PageImagePath::createFromParent($this)
-            ->setFromStoreValue($wikiImagePath);
+        $pageImagePath = PageImagePath::createFromParent($this)->setFromStoreValue($wikiImagePath);
         $row[PageImagePath::getPersistentName()] = $pageImagePath;
         if ($usages !== null) {
             $pageImageUsage = PageImageUsage::createFromParent($this)

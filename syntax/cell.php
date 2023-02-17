@@ -10,6 +10,7 @@
  *
  */
 
+use ComboStrap\BoxTag;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
@@ -187,14 +188,26 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
                     $callStack->moveToCall($openingTag);
                     $callStack->insertAfter(
                         Call::createComboCall(
-                            syntax_plugin_combo_box::TAG,
-                            DOKU_LEXER_ENTER
+                            BoxTag::TAG,
+                            DOKU_LEXER_ENTER,
+                            [],
+                            null,
+                            null,
+                            null,
+                            null,
+                            \syntax_plugin_combo_xmltag::TAG
                         ));
                     $callStack->moveToEnd();
                     $callStack->insertBefore(
                         Call::createComboCall(
-                            syntax_plugin_combo_box::TAG,
-                            DOKU_LEXER_EXIT
+                            BoxTag::TAG,
+                            DOKU_LEXER_EXIT,
+                            [],
+                            null,
+                            null,
+                            null,
+                            null,
+                            \syntax_plugin_combo_xmltag::TAG
                         ));
                 }
 

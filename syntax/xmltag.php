@@ -5,6 +5,7 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 
 // must be run within Dokuwiki
 use ComboStrap\BlockquoteTag;
+use ComboStrap\BoxTag;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -82,8 +83,12 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
          * Not with `normal` as if dokuwiki has created a p
          * and that is encounters a block, it will close the p inside the stack unfortunately
          * (You can try with {@link BlockquoteTag}
+         *
+         * For box, not stack, otherwise it creates p
+         * and as box is used mostly for layout purpose, it breaks the
+         * {@link \ComboStrap\Align} flex css attribute
          */
-        return 'stack';
+        return 'block';
     }
 
     /**
@@ -148,6 +153,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         $defaultAttributes = array("type" => BlockquoteTag::CARD_TYPE);
                         $knownTypes = [BlockquoteTag::TYPO_TYPE, BlockquoteTag::CARD_TYPE];;
                         break;
+                    case BoxTag::TAG:
+                        $defaultAttributes[BoxTag::HTML_TAG_ATTRIBUTE] = BoxTag::DEFAULT_HTML_TAG;;
+                        break;
                 }
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes, $allowAnyFirstBooleanAttributesAsType)
                     ->setLogicalTag($logicalTag);
@@ -159,6 +167,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                 switch ($logicalTag) {
                     case BlockquoteTag::TAG:
                         $returnedArray = BlockquoteTag::handleEnter($handler);
+                        break;
+                    case BoxTag::TAG:
+                        BoxTag::handleEnter($tagAttributes);
                         break;
                 }
 
@@ -179,6 +190,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                 switch ($logicalTag) {
                     case BlockquoteTag::TAG:
                         $returnedArray = BlockquoteTag::handleExit($handler);
+                        break;
+                    case BoxTag::TAG:
+                        $returnedArray  = BoxTag::handleExit($handler);
                         break;
                 }
                 $defaultReturnedArray[PluginUtility::STATE] = $state;
@@ -216,11 +230,14 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         switch ($tag) {
                             case BlockquoteTag::TAG:
                                 $renderer->doc .= BlockquoteTag::renderEnterXhtml($tagAttributes, $data);
-                                break;
+                                return true;
+                            case BoxTag::TAG:
+                                $renderer->doc .= BoxTag::renderEnterXhtml($tagAttributes);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");
+                                return false;
                         }
-                        return true;
                     case DOKU_LEXER_UNMATCHED:
                         $renderer->doc .= PluginUtility::renderUnmatched($data);
                         return true;
@@ -229,6 +246,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case BlockquoteTag::TAG:
                                 BlockquoteTag::renderExitXhtml($tagAttributes, $renderer, $data);
                                 break;
+                            case BoxTag::TAG:
+                                $renderer->doc .= BoxTag::renderExitXhtml($tagAttributes);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $tag . ") was not processed.");
                         }

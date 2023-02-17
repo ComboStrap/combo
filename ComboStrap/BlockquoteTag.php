@@ -10,7 +10,6 @@ namespace ComboStrap;
 
 use Doku_Handler;
 use Doku_Renderer_xhtml;
-use syntax_plugin_combo_box;
 use syntax_plugin_combo_card;
 use syntax_plugin_combo_cardbody;
 use syntax_plugin_combo_cite;
@@ -87,7 +86,7 @@ class BlockquoteTag
          * Pre-parsing:
          *    Cite: A cite should be wrapped into a footer
          *          This should happens before the p processing because we
-         *          are adding a {@link syntax_plugin_combo_box} which is a stack
+         *          are adding a {@link BoxTag} which is a stack
          *    Tweet blockquote: If a link has tweet link status, this is a tweet blockquote
          */
         $callStack->moveToEnd();
@@ -99,22 +98,32 @@ class BlockquoteTag
                     case DOKU_LEXER_ENTER:
                         // insert before
                         $callStack->insertBefore(Call::createComboCall(
-                            syntax_plugin_combo_box::TAG,
+                            BoxTag::TAG,
                             DOKU_LEXER_ENTER,
                             array(
                                 "class" => "blockquote-footer",
-                                syntax_plugin_combo_box::TAG_ATTRIBUTE => "footer"
-                            )
+                                BoxTag::HTML_TAG_ATTRIBUTE => "footer"
+                            ),
+                            null,
+                            null,
+                            null,
+                            null,
+                            \syntax_plugin_combo_xmltag::TAG
                         ));
                         break;
                     case DOKU_LEXER_EXIT:
                         // insert after
                         $callStack->insertAfter(Call::createComboCall(
-                            syntax_plugin_combo_box::TAG,
+                            BoxTag::TAG,
                             DOKU_LEXER_EXIT,
                             array(
-                                syntax_plugin_combo_box::TAG_ATTRIBUTE => "footer"
-                            )
+                                BoxTag::HTML_TAG_ATTRIBUTE => "footer"
+                            ),
+                            null,
+                            null,
+                            null,
+                            null,
+                            \syntax_plugin_combo_xmltag::TAG
                         ));
                         break;
                 }

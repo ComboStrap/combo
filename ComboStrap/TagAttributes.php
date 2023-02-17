@@ -93,7 +93,7 @@ class TagAttributes
      * Heading is a block but not a container
      */
     const CONTAINER_LOGICAL_ELEMENTS = [
-        \syntax_plugin_combo_box::TAG,
+        BoxTag::TAG,
         \syntax_plugin_combo_card::TAG,
         BlockquoteTag::TAG,
     ];

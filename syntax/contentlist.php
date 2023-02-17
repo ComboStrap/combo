@@ -2,6 +2,7 @@
 
 
 use ComboStrap\Align;
+use ComboStrap\BoxTag;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\DataType;
@@ -10,7 +11,6 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
-
 
 
 /**
@@ -66,9 +66,14 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
     {
 
         $callStack->insertBefore(Call::createComboCall(
-            syntax_plugin_combo_box::TAG,
+            BoxTag::TAG,
             DOKU_LEXER_EXIT,
-            [syntax_plugin_combo_box::TAG_ATTRIBUTE => "li"]
+            [BoxTag::HTML_TAG_ATTRIBUTE => "li"],
+            null,
+            null,
+            null,
+            null,
+            \syntax_plugin_combo_xmltag::TAG
         ));
 
     }
@@ -85,12 +90,17 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
         $attributesNumberedWrapper = [
             Align::ALIGN_ATTRIBUTE => Align::Y_TOP_CHILDREN, // To have the number at the top and not centered as for a combostrap flex
             TagAttributes::CLASS_KEY => syntax_plugin_combo_contentlistitem::LIST_GROUP_ITEM_CLASS,
-            syntax_plugin_combo_box::TAG_ATTRIBUTE => "li"
+            BoxTag::HTML_TAG_ATTRIBUTE => "li"
         ];
         $callStack->insertBefore(Call::createComboCall(
-            syntax_plugin_combo_box::TAG,
+            BoxTag::TAG,
             DOKU_LEXER_ENTER,
-            $attributesNumberedWrapper
+            $attributesNumberedWrapper,
+            null,
+            null,
+            null,
+            null,
+            \syntax_plugin_combo_xmltag::TAG
         ));
     }
 
@@ -248,8 +258,8 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                 } else {
                     foreach ($callStack->getChildren() as $child) {
                         $child->addClassName(syntax_plugin_combo_contentlistitem::LIST_GROUP_ITEM_CLASS);
-                        if ($child->getTagName() === syntax_plugin_combo_box::TAG_ATTRIBUTE) {
-                            $child->addAttribute(syntax_plugin_combo_box::TAG_ATTRIBUTE, "li");
+                        if ($child->getTagName() === BoxTag::HTML_TAG_ATTRIBUTE) {
+                            $child->addAttribute(BoxTag::HTML_TAG_ATTRIBUTE, "li");
                         }
                     }
                 }

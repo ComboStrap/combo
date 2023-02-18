@@ -60,6 +60,60 @@ class SnippetSystem
 
     }
 
+    /**
+     * @param Snippet[] $snippets
+     * @return string
+     */
+    public static function toHtmlFromSnippetArray(array $snippets): string
+    {
+        $xhtmlContent = "";
+        foreach ($snippets as $snippet) {
+
+            if ($snippet->hasHtmlOutputAlreadyOccurred()) {
+                continue;
+            }
+
+            try {
+                $tagAttributes = $snippet->toTagAttributes();
+            } catch (ExceptionBadState|ExceptionNotFound $e) {
+                LogUtility::internalError("We couldn't output the snippet ($snippet). Error: {$e->getMessage()}", self::CANONICAL);
+                continue;
+            }
+            $htmlElement = $snippet->getHtmlTag();
+            /**
+             * This code runs in editing mode
+             * or if the template is not strap
+             * No preload is then supported
+             */
+            if ($htmlElement === "link") {
+                try {
+                    $relValue = $tagAttributes->getOutputAttribute("rel");
+                    $relAs = $tagAttributes->getOutputAttribute("as");
+                    if ($relValue === "preload") {
+                        if ($relAs === "style") {
+                            $tagAttributes->removeOutputAttributeIfPresent("rel");
+                            $tagAttributes->addOutputAttributeValue("rel", "stylesheet");
+                            $tagAttributes->removeOutputAttributeIfPresent("as");
+                        }
+                    }
+                } catch (ExceptionNotFound $e) {
+                    // rel or as was not found
+                }
+            }
+            $xhtmlContent .= $tagAttributes->toHtmlEnterTag($htmlElement);
+
+            try {
+                $xhtmlContent .= $tagAttributes->getInnerText();
+            } catch (ExceptionNotFound $e) {
+                // ok
+            }
+            $xhtmlContent .= "</$htmlElement>";
+
+
+        }
+        return $xhtmlContent;
+    }
+
 
     /**
      * Returns all snippets (request and slot scoped)
@@ -340,52 +394,8 @@ class SnippetSystem
                 break;
         }
 
-        $xhtmlContent = "";
-        foreach ($snippets as $snippet) {
 
-            if ($snippet->hasHtmlOutputAlreadyOccurred()) {
-                continue;
-            }
-
-            try {
-                $tagAttributes = $snippet->toTagAttributes();
-            } catch (ExceptionBadState|ExceptionNotFound $e) {
-                LogUtility::internalError("We couldn't output the snippet ($snippet). Error: {$e->getMessage()}", self::CANONICAL);
-                continue;
-            }
-            $htmlElement = $snippet->getHtmlTag();
-            /**
-             * This code runs in editing mode
-             * or if the template is not strap
-             * No preload is then supported
-             */
-            if ($htmlElement === "link") {
-                try {
-                    $relValue = $tagAttributes->getOutputAttribute("rel");
-                    $relAs = $tagAttributes->getOutputAttribute("as");
-                    if ($relValue === "preload") {
-                        if ($relAs === "style") {
-                            $tagAttributes->removeOutputAttributeIfPresent("rel");
-                            $tagAttributes->addOutputAttributeValue("rel", "stylesheet");
-                            $tagAttributes->removeOutputAttributeIfPresent("as");
-                        }
-                    }
-                } catch (ExceptionNotFound $e) {
-                    // rel or as was not found
-                }
-            }
-            $xhtmlContent .= $tagAttributes->toHtmlEnterTag($htmlElement);
-
-            try {
-                $xhtmlContent .= $tagAttributes->getInnerText();
-            } catch (ExceptionNotFound $e) {
-                // ok
-            }
-            $xhtmlContent .= "</$htmlElement>";
-
-
-        }
-        return $xhtmlContent;
+        return self::toHtmlFromSnippetArray($snippets);
     }
 
     public

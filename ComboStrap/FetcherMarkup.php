@@ -64,7 +64,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @var Snippet[]
      */
-    private array $snippets = [];
+    private array $localSnippets = [];
 
     protected bool $removeRootBlockElement = false;
 
@@ -783,7 +783,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     private function getSnippets(): array
     {
 
-        $snippets = $this->snippets;
+        $snippets = $this->localSnippets;
 
         /**
          * Old ways where snippets were added to the global scope
@@ -819,7 +819,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public function addSnippet(Snippet $snippet): FetcherMarkup
     {
         $snippetGuid = $snippet->getPath()->toUriString();
-        $this->snippets[$snippetGuid] = $snippet;
+        $this->localSnippets[$snippetGuid] = $snippet;
         return $this;
 
     }
@@ -898,6 +898,20 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public function getFetchStringAsDom(): XmlDocument
     {
         return XmlDocument::createXmlDocFromMarkup($this->getFetchString());
+    }
+
+    public function getSnippetsAsHtmlString(): string
+    {
+
+        try {
+            $globalSnippets = SnippetSystem::getFromContext()->getSnippetsForSlot($this->getRequestedExecutingPath()->toQualifiedId());
+        } catch (ExceptionNotFound $e) {
+            // string execution
+            $globalSnippets = [];
+        }
+        $allSnippets = array_merge($globalSnippets,$this->localSnippets);
+        return SnippetSystem::toHtmlFromSnippetArray($allSnippets);
+
     }
 
 

@@ -571,6 +571,11 @@ class ExecutionContext
         return $this;
     }
 
+    /**
+     * @return SnippetSystem
+     * It's not attached to the {@link FetcherMarkup}
+     * because the user may choose to not use it (ie {@link SiteConfig::isTemplatingEnabled()}
+     */
     public function getSnippetSystem(): SnippetSystem
     {
         return SnippetSystem::getFromContext();

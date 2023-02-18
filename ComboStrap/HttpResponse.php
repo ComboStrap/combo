@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 
+use BrowserRunner;
 use Exception;
 use TestRequest;
 
@@ -402,6 +403,18 @@ class HttpResponse
         } catch (ExceptionNotFound $e) {
             return Mime::BINARY_MIME;
         }
+    }
+
+    public function executeBodyAsHtmlPage(): HttpResponse
+    {
+        $browserRunner = BrowserRunner::create();
+        $this->body = $browserRunner
+            ->executeHtmlPage($this->getBody())
+            ->getHtml();
+        if($browserRunner->getExitCode()!==0){
+            throw new ExceptionRuntime("HtmlPage Execution Error: \n{$browserRunner->getExitMessage()} ");
+        }
+        return $this;
     }
 
 

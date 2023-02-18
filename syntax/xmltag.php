@@ -9,6 +9,7 @@ use ComboStrap\BlockquoteTag;
 use ComboStrap\BoxTag;
 use ComboStrap\ButtonTag;
 use ComboStrap\CardTag;
+use ComboStrap\CarrouselTag;
 use ComboStrap\ColorRgb;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\Hero;
@@ -55,6 +56,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case BarTag::LOGICAL_TAG:
                                 $renderer->doc .= BarTag::renderEnterXhtml($tagAttributes, $data);
                                 return true;
+                            case CarrouselTag::TAG:
+                                $renderer->doc .= CarrouselTag::renderEnterXhtml($tagAttributes, $data);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The empty tag (" . $logicalTag . ") was not processed.");
                                 return false;
@@ -81,6 +85,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 return true;
                             case BarTag::LOGICAL_TAG:
                                 $renderer->doc .= BarTag::renderExitXhtml($data);
+                                return true;
+                            case CarrouselTag::TAG:
+                                $renderer->doc .= CarrouselTag::renderExitXhtml();
                                 return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -168,7 +175,6 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         $logicalTag = BarTag::LOGICAL_TAG;
                         $defaultAttributes[Hero::ATTRIBUTE] = "sm";
                         break;
-
                 }
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes, $allowAnyFirstBooleanAttributesAsType)
                     ->setLogicalTag($logicalTag);
@@ -194,6 +200,10 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case BarTag::BAR_TAG:
                     case BarTag::SLIDE_TAG:
                         $returnedArray = BarTag::handleEnter($tagAttributes);
+                        break;
+                    case CarrouselTag::TAG:
+                        $returnedArray = CarrouselTag::handleEnter($handler);
+                        break;
                 }
 
                 /**
@@ -236,6 +246,8 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         $logicalTag = BarTag::LOGICAL_TAG;
                         $returnedArray = BarTag::handleExit($handler, $pos, $match);
                         break;
+                    case CarrouselTag::TAG:
+                        $returnedArray = CarrouselTag::handleExit($handler);
                 }
                 /**
                  * Common exit attributes

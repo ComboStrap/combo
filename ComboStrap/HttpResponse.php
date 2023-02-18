@@ -405,13 +405,17 @@ class HttpResponse
         }
     }
 
-    public function executeBodyAsHtmlPage(): HttpResponse
+    /**
+     * @param int $waitTimeInSecondToComplete - the wait time after the load event to complete
+     * @return $this
+     */
+    public function executeBodyAsHtmlPage(int $waitTimeInSecondToComplete = 0): HttpResponse
     {
         $browserRunner = BrowserRunner::create();
         $this->body = $browserRunner
-            ->executeHtmlPage($this->getBody())
+            ->executeHtmlPage($this->getBody(), $waitTimeInSecondToComplete)
             ->getHtml();
-        if($browserRunner->getExitCode()!==0){
+        if ($browserRunner->getExitCode() !== 0) {
             throw new ExceptionRuntime("HtmlPage Execution Error: \n{$browserRunner->getExitMessage()} ");
         }
         return $this;

@@ -188,7 +188,7 @@ class ExecutionContext
     /**
      * @throws ExceptionNotFound
      */
-    public static function getContext(): ?ExecutionContext
+    public static function getExecutionContext(): ?ExecutionContext
     {
         if (!isset(self::$executionContext)) {
             throw new ExceptionNotFound("No root context");
@@ -242,7 +242,7 @@ class ExecutionContext
     public static function getActualOrCreateFromEnv(): ExecutionContext
     {
         try {
-            return self::getContext();
+            return self::getExecutionContext();
         } catch (ExceptionNotFound $e) {
             return self::createBlank();
         }
@@ -282,10 +282,7 @@ class ExecutionContext
     }
 
 
-    public static function setExecutionGlobalVariableToNull()
-    {
-        self::$executionContext = null;
-    }
+
 
 
     /**
@@ -329,11 +326,22 @@ class ExecutionContext
         $ACT = $this->getCapturedAct();
         global $ID;
         $ID = $this->getCapturedRunningId();
+        global $TOC;
+        unset($TOC);
+
+        // global scope store
+        MetadataDbStore::resetAll();
+
+        try {
+            Event::purgeQueue();
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionRuntime("Queue could not be purged", "combotest", 0, $e);
+        }
 
         /**
          * Deleting
          */
-        self::setExecutionGlobalVariableToNull();
+        self::$executionContext = null;
 
 
     }

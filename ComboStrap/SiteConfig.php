@@ -2,7 +2,6 @@
 
 namespace ComboStrap;
 
-use action_plugin_combo_docustom;
 
 class SiteConfig
 {
@@ -20,6 +19,19 @@ class SiteConfig
     const REM_CONF = "combo-conf-002";
     const REM_CONF_DEFAULT = 16;
     const REM_CANONICAL = "rfs";
+
+    /**
+     * The maximum size to be embedded
+     * Above this size limit they are fetched
+     */
+    public const HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT = "combo-conf-003";
+    public const HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT_DEFAULT = 4;
+    /**
+     * Private configuration used in test
+     * When set to true, all javascript snippet will be inlined
+     */
+    public const HTML_ALWAYS_INLINE_LOCAL_JAVASCRIPT = "combo-conf-004";
+    const CANONICAL = "site-config";
 
 
     /**
@@ -39,7 +51,7 @@ class SiteConfig
      * We capture then the change and restore them at the end
      */
     private array $configurationValuesToRestore = [];
-    private $executionContext;
+    private ExecutionContext $executionContext;
 
     /**
      * @param $executionContext
@@ -100,7 +112,7 @@ class SiteConfig
         return $this->getBooleanValue(self::CONF_ENABLE_TEMPLATE_SYSTEM, self::CONF_ENABLE_TEMPLATE_SYSTEM_DEFAULT);
     }
 
-    public function getValue(string $key, ?string $default)
+    public function getValue(string $key, ?string $default = null)
     {
         return Site::getConfValue($key, $default);
     }
@@ -214,6 +226,45 @@ class SiteConfig
             return WikiPath::createMarkupPathFromId($ID);
         }
         return WikiPath::createRootNamespacePathOnMarkupDrive()->resolve(Site::getIndexPageName() . "." . WikiPath::MARKUP_DEFAULT_TXT_EXTENSION);
+    }
+
+    public function getHtmlMaxInlineResourceSize()
+    {
+        try {
+            return DataType::toInteger($this->getValue(SiteConfig::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT, self::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT_DEFAULT)) * 1024;
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::internalError("Max in line size error.", self::CANONICAL, $e);
+            return self::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT_DEFAULT * 1024;
+        }
+    }
+
+    public function setHtmlMaxInlineResourceSize(int $kbSize): SiteConfig
+    {
+        $this->setConf(SiteConfig::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT, $kbSize);
+        return $this;
+    }
+
+    public function setDisableHeadingSectionEditing(): SiteConfig
+    {
+        $this->setConf('maxseclevel', 0, null);
+        return $this;
+    }
+
+    public function setHtmlEnableAlwaysInlineLocalJavascript(): SiteConfig
+    {
+        $this->setConf(self::HTML_ALWAYS_INLINE_LOCAL_JAVASCRIPT, 1);
+        return $this;
+    }
+
+    public function setHtmlDisableAlwaysInlineLocalJavascript(): SiteConfig
+    {
+        $this->setConf(self::HTML_ALWAYS_INLINE_LOCAL_JAVASCRIPT, 0);
+        return $this;
+    }
+
+    public function isLocalJavascriptAlwaysInlined(): bool
+    {
+        return $this->getBooleanValue(self::HTML_ALWAYS_INLINE_LOCAL_JAVASCRIPT, 0);
     }
 
 

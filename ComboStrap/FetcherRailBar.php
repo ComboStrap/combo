@@ -106,7 +106,7 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
         $localWikiRequest = null;
         $localWikiId = null;
         try {
-            ExecutionContext::getContext();
+            ExecutionContext::getExecutionContext();
         } catch (ExceptionNotFound $e) {
 
             /**

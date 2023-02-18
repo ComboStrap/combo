@@ -594,8 +594,9 @@ class Site
 
     public static function disableHeadingSectionEditing()
     {
-        global $conf;
-        $conf['maxseclevel'] = 0;
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->setDisableHeadingSectionEditing();
     }
 
     public static function setBreadCrumbOn()

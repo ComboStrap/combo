@@ -3,7 +3,8 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    let selector = '.carrousel-cs';
+    let classSuffix = 'carrousel-cs';
+    let selector = `.${classSuffix}`;
     const carrousels = [...document.querySelectorAll(selector)];
 
     let carrouselGlideType = "glide";
@@ -101,13 +102,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
 
-                /**
-                 * To be sure that the first layout calculation has occurred
-                 */
-                window.requestAnimationFrame(function () {
+
+                let callGlide = function () {
 
                     let perView = 1;
-
                     if (typeof elementMinimalWidth !== 'undefined') {
                         let offsetWidth = carrousel.offsetWidth;
                         perView = Math.floor(offsetWidth / elementMinimalWidth);
@@ -123,10 +121,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     combos.loader.loadExternalScript(
                         "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/glide.min.js",
                         "sha256-cXguqBvlUaDoW4nGjs4YamNC2mlLGJUOl64bhts/ztU=",
+                        `snippet-${classSuffix}`,
                         function(){
                             combos.loader.loadExternalStylesheet(
                                 "https://cdn.jsdelivr.net/npm/@glidejs/glide@3.5.2/dist/css/glide.core.min.css",
                                 "sha256-bmdlmBAVo1Q6XV2cHiyaBuBfe9KgYQhCrfQmoRq8+Sg=",
+                                `snippet-${classSuffix}`,
                                 function(){
 
                                     let glide = new Glide(carrousel, {
@@ -145,11 +145,19 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     );
 
+                };
 
-
-
-
-                });
+                if(navigator.userAgent.includes("Node.js") || navigator.userAgent.includes("jsdom")){
+                    /**
+                     * In test, in jsdom, no request animation frame
+                     */
+                    callGlide()
+                } else {
+                    /**
+                     * To be sure that the first layout calculation has occurred
+                     */
+                    window.requestAnimationFrame(callGlide);
+                }
                 break;
         }
 

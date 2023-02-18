@@ -24,12 +24,6 @@ class SvgImageLink extends ImageLink
     const CANONICAL = FetcherSvg::CANONICAL;
 
     /**
-     * The maximum size to be embedded
-     * Above this size limit they are fetched
-     */
-    const CONF_MAX_KB_SIZE_FOR_INLINE_SVG = "svgMaxInlineSizeKb";
-
-    /**
      * Lazy Load
      */
     const CONF_LAZY_LOAD_ENABLE = "svgLazyLoadEnable";
@@ -266,9 +260,14 @@ class SvgImageLink extends ImageLink
 
     }
 
+    /**
+     * @return int
+     */
     private function getMaxInlineSize()
     {
-        return Site::getConfValue(self::CONF_MAX_KB_SIZE_FOR_INLINE_SVG, 2) * 1024;
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->getHtmlMaxInlineResourceSize();
     }
 
 

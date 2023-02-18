@@ -252,7 +252,7 @@ $conf["svgInjectionEnable"] = 1;
 $conf["svgOptimizationEnable"] = 1;
 
 /**
- * Svg Inline Max size {@link \ComboStrap\SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG}
+ * Svg Inline Max size {@link \ComboStrap\SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_ELEMENT}
  * 2kb is too small for icon.
  * For instance, the et:twitter is 2,600b
  */

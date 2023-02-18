@@ -28,25 +28,6 @@ class HttpRequest
     }
 
 
-    /**
-     * Static data store are with php request scoped
-     * but in test, this may bring inconsistency
-     */
-    public static function purgeStaticDataRequestedScoped()
-    {
-        // The top context object
-        ExecutionContext::setExecutionGlobalVariableToNull();
-
-        /**
-         * TODO: They should be incorporated in the root execution context as object
-         */
-        // global scope
-        MetadataDbStore::resetAll();
-        // global variable
-        global $TOC;
-        unset($TOC);
-
-    }
 
 
     /**
@@ -127,8 +108,6 @@ class HttpRequest
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntime("The path is mandatory");
         }
-
-        HttpRequest::purgeStaticDataRequestedScoped();
 
         $testRequest = new \TestRequest();
 

@@ -227,9 +227,9 @@ $meta[SvgImageLink::CONF_SVG_INJECTION_ENABLE] = array('onoff');
 $meta[FetcherSvg::CONF_SVG_OPTIMIZATION_ENABLE] = array('onoff');
 
 /**
- * Svg Optimization Inline
+ * Inline Element (svg, javascript)
  */
-$meta[SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG] = array('string');
+$meta[SiteConfig::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT] = array('numeric');
 
 /**
  * Svg Upload Group Name

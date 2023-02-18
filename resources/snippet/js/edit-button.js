@@ -21,8 +21,10 @@ window.addEventListener('load', function () {
 
     });
 
-    // Disable the highlight function of pages.js
-    dw_page.sectionHighlight = function () {
-    };
+    // Disable the highlight function of dokuwiki pages.js
+    if (typeof dw_page !== 'undefined') {
+        dw_page.sectionHighlight = function () {
+        };
+    }
 
 });

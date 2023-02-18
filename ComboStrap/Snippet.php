@@ -646,7 +646,7 @@ class Snippet implements JsonSerializable
          * We default to the local url that will return an error
          * when fetched
          */
-        if(!$this->shouldBeInlined()) {
+        if (!$this->shouldBeInlined()) {
             LogUtility::internalError("The snippet ($this) is not a inline script, it has a path ($this->path) that does not exists and does not have any external url.");
         }
         return false;
@@ -765,7 +765,7 @@ class Snippet implements JsonSerializable
     private
     function getMaxInlineSize()
     {
-        return Site::getConfValue(SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG, 2) * 1024;
+        return Site::getConfValue(SiteConfig::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT, 2) * 1024;
     }
 
     /**
@@ -799,6 +799,22 @@ class Snippet implements JsonSerializable
                 return true;
             }
         }
+
+        /**
+         * The local file
+         * If javascript and always inline
+         */
+        if ($this->getExtension() === Snippet::EXTENSION_JS) {
+            if(!$this->hasRemoteUrl()) {
+                $alwaysInline = ExecutionContext::getActualOrCreateFromEnv()
+                    ->getConfig()
+                    ->isLocalJavascriptAlwaysInlined();
+                if ($alwaysInline) {
+                    return true;
+                }
+            }
+        }
+
         /**
          * The file exists (inline if small size)
          */
@@ -986,6 +1002,16 @@ class Snippet implements JsonSerializable
 
         return $this->hasHtmlOutputOccurred;
 
+    }
+
+    private function hasRemoteUrl(): bool
+    {
+        try {
+            $this->getRemoteUrl();
+            return true;
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
     }
 
 

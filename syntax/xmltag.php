@@ -8,9 +8,11 @@ use ComboStrap\BarTag;
 use ComboStrap\BlockquoteTag;
 use ComboStrap\BoxTag;
 use ComboStrap\ButtonTag;
+use ComboStrap\CallStack;
 use ComboStrap\CardTag;
 use ComboStrap\CarrouselTag;
 use ComboStrap\ColorRgb;
+use ComboStrap\ConsoleTag;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\Hero;
 use ComboStrap\LogUtility;
@@ -59,6 +61,10 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case CarrouselTag::TAG:
                                 $renderer->doc .= CarrouselTag::renderEnterXhtml($tagAttributes, $data);
                                 return true;
+                            case ConsoleTag::TAG:
+                                ConsoleTag::processEnterXhtml($tagAttributes, $plugin, $renderer);
+                                return true;
+
                             default:
                                 LogUtility::errorIfDevOrTest("The empty tag (" . $logicalTag . ") was not processed.");
                                 return false;
@@ -88,6 +94,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 return true;
                             case CarrouselTag::TAG:
                                 $renderer->doc .= CarrouselTag::renderExitXhtml();
+                                return true;
+                            case ConsoleTag::TAG:
+                                ConsoleTag::processExitXhtml($tagAttributes, $renderer);
                                 return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -147,6 +156,11 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                 $defaultAttributes = [];
                 $knownTypes = [];
                 $allowAnyFirstBooleanAttributesAsType = false;
+
+                // code block allow a second attribute value as file name
+                $hasTwoBooleanAttribute = false;
+                $secondBooleanAttribute = null;
+
                 switch ($markupTag) {
                     case BlockquoteTag::TAG:
                         // Suppress the component name
@@ -175,9 +189,26 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         $logicalTag = BarTag::LOGICAL_TAG;
                         $defaultAttributes[Hero::ATTRIBUTE] = "sm";
                         break;
+                    case ConsoleTag::TAG:
+                        $hasTwoBooleanAttribute = true;
+                        $secondBooleanAttribute = syntax_plugin_combo_code::FILE_PATH_KEY;
+                        $allowAnyFirstBooleanAttributesAsType = true;
+                        break;
                 }
-                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes, $allowAnyFirstBooleanAttributesAsType)
-                    ->setLogicalTag($logicalTag);
+
+                /**
+                 * Build tag Attributes
+                 */
+                if (!$hasTwoBooleanAttribute) {
+                    $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes, $allowAnyFirstBooleanAttributesAsType);
+                } else {
+                    $tagAttributes = TagAttributes::createEmpty();
+                    $attributesArray = PluginUtility::getQualifiedTagAttributes($match, true, $secondBooleanAttribute, $knownTypes, $allowAnyFirstBooleanAttributesAsType);
+                    foreach ($attributesArray as $key => $value) {
+                        $tagAttributes->addComponentAttributeValue($key, $value);
+                    }
+                }
+                $tagAttributes->setLogicalTag($logicalTag);
 
                 /**
                  * Calculate extra returned key in the table
@@ -217,7 +248,18 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED :
 
-                return PluginUtility::handleAndReturnUnmatchedData(null, $match, $handler);
+                $data = PluginUtility::handleAndReturnUnmatchedData(null, $match, $handler);
+                /**
+                 * Attribute of parent are send for context
+                 * (example `display = none`)
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+                $parentTag = $callStack->moveToParent();
+                if ($parentTag !== false) {
+                    $tagAttributes = $parentTag->getAttributes();
+                    $data[PluginUtility::ATTRIBUTES] = $tagAttributes;
+                }
+                return $data;
 
             case DOKU_LEXER_EXIT :
 
@@ -248,6 +290,10 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         break;
                     case CarrouselTag::TAG:
                         $returnedArray = CarrouselTag::handleExit($handler);
+                        break;
+                    case ConsoleTag::TAG:
+                        $returnedArray = ConsoleTag::handleExit($handler);
+                        break;
                 }
                 /**
                  * Common exit attributes
@@ -343,6 +389,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
          */
         return array('container', 'formatting', 'substition', 'protected', 'disabled');
     }
+
 
     function getSort(): int
     {

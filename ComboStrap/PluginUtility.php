@@ -769,7 +769,7 @@ class PluginUtility
         if ($match[0] == "<") {
             $match = substr($match, 1);
             // closing tag
-            if($match[0]=="/"){
+            if ($match[0] == "/") {
                 $match = substr($match, 1);
             }
         } else {
@@ -829,23 +829,26 @@ class PluginUtility
         /**
          * Attributes
          */
-        if (isset($data[PluginUtility::ATTRIBUTES])) {
-            $attributes = $data[PluginUtility::ATTRIBUTES];
-        } else {
-            $attributes = [];
-        }
+        $attributes = $data[PluginUtility::ATTRIBUTES] ?? [];
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-        $display = $tagAttributes->getValue(Display::DISPLAY);
-        if ($display !== "none") {
-            $payload = $data[self::PAYLOAD];
-            $previousTagDisplayType = $data[self::CONTEXT];
-            if ($previousTagDisplayType !== Call::INLINE_DISPLAY) {
-                $payload = ltrim($payload);
-            }
-            return Html::encode($payload);
-        } else {
+
+        /**
+         * Display
+         */
+        $display = $tagAttributes->getValueAndRemoveIfPresent(Display::DISPLAY);
+        if ($display === "none") {
             return "";
         }
+
+        $payload = $data[self::PAYLOAD];
+        $previousTagDisplayType = $data[self::CONTEXT];
+        if ($previousTagDisplayType !== Call::INLINE_DISPLAY) {
+            // Delete the eol at the beginning and end
+            // otherwise we get a big block
+            $payload = ltrim($payload);
+        }
+        return Html::encode($payload);
+
     }
 
     public

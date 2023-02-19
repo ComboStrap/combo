@@ -130,22 +130,7 @@ class HttpRequest
         }
 
 
-        $httpResponse = HttpResponse::createFromDokuWikiResponse($response);
-
-        try {
-            /**
-             * The get method will delete the env
-             * We set it back because this is for now how the
-             * {@link HttpRequest::purgeStaticDataRequestedScoped() static component}
-             * communicate based on the global requested page id
-             */
-            $wikiId = $this->url->getPropertyValue(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
-            $this->setRequestIdEnv($wikiId);
-        } catch (ExceptionNotFound $e) {
-            // no wiki id
-        }
-
-        return $httpResponse;
+        return HttpResponse::createFromDokuWikiResponse($response);
     }
 
     public function asAdmin(): HttpRequest

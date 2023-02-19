@@ -201,10 +201,15 @@ class LazyLoad
         return $image;
     }
 
+    /**
+     * @return void
+     * @deprecated use {@link SiteConfig::disableLazyLoad()}
+     */
     public static function disable()
     {
-        Site::setConf(SvgImageLink::CONF_LAZY_LOAD_ENABLE, 0);
-        Site::setConf(RasterImageLink::CONF_LAZY_LOADING_ENABLE, 0);
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->disableLazyLoad();
     }
 
 }

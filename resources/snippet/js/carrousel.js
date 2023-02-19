@@ -139,6 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                      * To be able to set percentage height value on the child elements.
                                      */
                                     glideSlidesContainer.style.height = `${glideSlidesContainer.offsetHeight}px`;
+
                                 }
                             );
 

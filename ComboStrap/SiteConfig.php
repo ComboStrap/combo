@@ -267,5 +267,12 @@ class SiteConfig
         return $this->getBooleanValue(self::HTML_ALWAYS_INLINE_LOCAL_JAVASCRIPT, 0);
     }
 
+    public function disableLazyLoad(): SiteConfig
+    {
+        return $this->setConf(SvgImageLink::CONF_LAZY_LOAD_ENABLE, 0)
+            ->setConf(RasterImageLink::CONF_LAZY_LOADING_ENABLE, 0);
+
+    }
+
 
 }

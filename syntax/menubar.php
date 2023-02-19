@@ -5,6 +5,7 @@
  */
 
 use ComboStrap\BackgroundAttribute;
+use ComboStrap\ContainerTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -163,9 +164,9 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
                 $default[self::BREAKPOINT_ATTRIBUTE] = "lg";
                 $default[self::THEME_ATTRIBUTE] = "light";
                 $default[self::POSITION] = "normal";
-                $default[syntax_plugin_combo_container::CONTAINER_ATTRIBUTE] = Site::getConfValue(
-                    syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF,
-                    syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE
+                $default[ContainerTag::CONTAINER_ATTRIBUTE] = Site::getConfValue(
+                    ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF,
+                    ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE
                 );
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
                 return array(
@@ -278,7 +279,7 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
                     if ($container === null) {
                         $container = $tagAttributes->getValueAndRemoveIfPresent(self::CONTAINER_ATTRIBUTE);
                     }
-                    $containerClass = syntax_plugin_combo_container::getClassName($container);
+                    $containerClass = ContainerTag::getClassName($container);
                     // The container should always be be inside to allow background
                     $tagAttributes->addHtmlAfterEnterTag("<div class=\"$containerClass\">");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("nav");

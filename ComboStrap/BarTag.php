@@ -3,7 +3,6 @@
 namespace ComboStrap;
 
 use action_plugin_combo_headingpostprocessing;
-use syntax_plugin_combo_container;
 
 /**
  * Separator: See: https://getwaves.io/
@@ -119,8 +118,8 @@ class BarTag
         $htmlTag = $data[BarTag::HTML_TAG_ATTRIBUTES];
         $html = $attributes->toHtmlEnterTag($htmlTag);
 
-        $layoutContainer = Site::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
-        $containerClass = syntax_plugin_combo_container::getClassName($layoutContainer);
+        $layoutContainer = Site::getConfValue(ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF, ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+        $containerClass = ContainerTag::getClassName($layoutContainer);
 
         $html .= "<div class=\"$barTag-body position-relative $containerClass\">";
         return $html;

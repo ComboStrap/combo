@@ -13,6 +13,7 @@ use ComboStrap\CardTag;
 use ComboStrap\CarrouselTag;
 use ComboStrap\ColorRgb;
 use ComboStrap\ConsoleTag;
+use ComboStrap\ContainerTag;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\Hero;
 use ComboStrap\LogUtility;
@@ -64,7 +65,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case ConsoleTag::TAG:
                                 ConsoleTag::processEnterXhtml($tagAttributes, $plugin, $renderer);
                                 return true;
-
+                            case ContainerTag::TAG:
+                                $renderer->doc .= ContainerTag::renderEnterXhtml($tagAttributes);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The empty tag (" . $logicalTag . ") was not processed.");
                                 return false;
@@ -97,6 +100,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 return true;
                             case ConsoleTag::TAG:
                                 ConsoleTag::processExitXhtml($tagAttributes, $renderer);
+                                return true;
+                            case ContainerTag::TAG:
+                                $renderer->doc .= ContainerTag::renderExitXhtml();
                                 return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -151,6 +157,10 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER:
+
+                $executionContext = \ComboStrap\ExecutionContext::getActualOrCreateFromEnv();
+
+                // Markup
                 $markupTag = PluginUtility::getMarkupTag($match);
                 $logicalTag = $markupTag;
                 $defaultAttributes = [];
@@ -193,6 +203,10 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         $hasTwoBooleanAttribute = true;
                         $secondBooleanAttribute = syntax_plugin_combo_code::FILE_PATH_KEY;
                         $allowAnyFirstBooleanAttributesAsType = true;
+                        break;
+                    case ContainerTag::TAG:
+                        $knownTypes = ContainerTag::CONTAINER_VALUES;
+                        $defaultAttributes[TagAttributes::TYPE_KEY] = $executionContext->getConfig()->getValue(ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF, ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
                         break;
                 }
 

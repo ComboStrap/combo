@@ -11,6 +11,7 @@ use ComboStrap\Bootstrap;
 use ComboStrap\Breakpoint;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
+use ComboStrap\ContainerTag;
 use ComboStrap\FetcherPage;
 use ComboStrap\FetcherRailBar;
 use ComboStrap\FetcherSvg;
@@ -353,7 +354,7 @@ $meta[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE] = array("on
 /**
  * Default page layout container
  */
-$meta[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF] = array('multichoice', '_choices' => syntax_plugin_combo_container::CONTAINER_VALUES);
+$meta[ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF] = array('multichoice', '_choices' => ContainerTag::CONTAINER_VALUES);
 
 /**
  * Take over the show

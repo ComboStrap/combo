@@ -21,6 +21,7 @@
 
 
 use ComboStrap\Canonical;
+use ComboStrap\ContainerTag;
 use ComboStrap\FetcherSvg;
 use ComboStrap\MediaMarkup;
 use ComboStrap\IconDownloader;
@@ -421,7 +422,7 @@ $conf["primaryColor"] = "";
 $conf["secondaryColor"] = "";
 
 /**
- * {@link syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF}
+ * {@link ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF}
  */
 $conf["defaultLayoutContainer"] = "sm";
 

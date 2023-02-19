@@ -2,7 +2,6 @@
 
 namespace ComboStrap;
 
-use syntax_plugin_combo_container;
 
 /**
  * A page template is the object
@@ -230,8 +229,8 @@ class PageTemplate
                  */
                 if ($domElement->hasAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
                     $domElement->removeAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
-                    $container = Site::getConfValue(syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF, syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
-                    $domElement->addClass(syntax_plugin_combo_container::getClassName($container));
+                    $container = Site::getConfValue(ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF, ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                    $domElement->addClass(ContainerTag::getClassName($container));
                 }
 
 

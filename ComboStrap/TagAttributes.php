@@ -70,7 +70,7 @@ class TagAttributes
         Dimension::ZOOM_ATTRIBUTE,
         syntax_plugin_combo_follow::HANDLE_ATTRIBUTE,
         \syntax_plugin_combo_menubar::BREAKPOINT_ATTRIBUTE,
-        \syntax_plugin_combo_container::CONTAINER_ATTRIBUTE,
+        ContainerTag::CONTAINER_ATTRIBUTE,
         \syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE,
         self::GENERATED_ID_KEY
     ];

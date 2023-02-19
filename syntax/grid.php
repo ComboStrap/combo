@@ -16,6 +16,7 @@ use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ConditionalLength;
+use ComboStrap\ContainerTag;
 use ComboStrap\DataType;
 use ComboStrap\Dimension;
 use ComboStrap\ExceptionBadArgument;
@@ -223,7 +224,7 @@ class syntax_plugin_combo_grid extends DokuWiki_Syntax_Plugin
                 if ($parent != false
                     && !in_array($parent->getTagName(), [
                         BarTag::BAR_TAG,
-                        syntax_plugin_combo_container::TAG,
+                        ContainerTag::TAG,
                         syntax_plugin_combo_cell::TAG,
                         syntax_plugin_combo_iterator::TAG,
                     ])

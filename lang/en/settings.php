@@ -7,6 +7,7 @@ use ComboStrap\BlockquoteTag;
 use ComboStrap\Bootstrap;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
+use ComboStrap\ContainerTag;
 use ComboStrap\FetcherPage;
 use ComboStrap\FetcherRailBar;
 use ComboStrap\FetcherSvg;
@@ -285,7 +286,7 @@ $lang[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE] = PluginUti
 /**
  * Container
  */
-$lang[syntax_plugin_combo_container::DEFAULT_LAYOUT_CONTAINER_CONF] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_container::CANONICAL, "Set the horizontal alignment of the layout");
+$lang[ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF] = PluginUtility::getDocumentationHyperLink(ContainerTag::CANONICAL, "Set the horizontal alignment of the layout");
 
 /**
  * Railbar

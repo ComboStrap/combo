@@ -146,6 +146,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     {
         return self::getBuilder()
             ->setRequestedMarkupString($markup)
+            ->setDeleteRootBlockElement(true)
             ->setRequestedContextPathWithDefault()
             ->setRequestedMimeToXhtml()
             ->build();

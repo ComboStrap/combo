@@ -55,7 +55,12 @@ class GridTag
      */
     public const TYPE_FIT_OLD_VALUE = "natural";
     public const MAX_CHILDREN_ATTRIBUTE = "max-line";
-    public const TYPE_WIDTH_SPECIFIED = "width";
+    /**
+     * The value is not `width` as this is also an
+     * attribute {@link Dimension::WIDTH_KEY}
+     * and it will fail the type check at {@link TagAttributes::hasComponentAttribute()}
+     */
+    public const TYPE_WIDTH_SPECIFIED = "width-specified";
     public const TAG = GridTag::GRID_TAG;
     /**
      * The strap template permits to

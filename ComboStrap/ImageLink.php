@@ -14,6 +14,7 @@ abstract class ImageLink extends MediaLink
 {
 
     const LIGHTBOX = "lightbox";
+    const IMG_LINK = "img-link";
 
 
     /**
@@ -50,7 +51,7 @@ abstract class ImageLink extends MediaLink
          *
          */
         $linkTagAttributes = TagAttributes::createEmpty()
-            ->setLogicalTag("img-link");
+            ->setLogicalTag(self::IMG_LINK);
         // https://www.dokuwiki.org/config:target
         global $conf;
         $target = $conf['target']['media'];

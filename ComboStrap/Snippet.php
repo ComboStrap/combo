@@ -814,8 +814,14 @@ class Snippet implements JsonSerializable
             }
 
             /**
-             * If this is a library don't inline
-             * Why ? The local combo.min.js library depends on bootstrap.min.js
+             * If this is a local library don't inline
+             * Why ?
+             * The local combo.min.js library depends on bootstrap.min.js
+             * If we inject it, we get `bootstrap` does not exist.
+             * Other solution, to resolve it, we could:
+             * * inline all javascript
+             * * start a local server and serve the local library
+             * * publish the local library (not really realistic if we test but yeah)
              */
             $libraryExtension = ".min.js";
             $isLibrary = substr($lastName, -strlen($libraryExtension)) === $libraryExtension;

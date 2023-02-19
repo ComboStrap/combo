@@ -805,7 +805,21 @@ class Snippet implements JsonSerializable
          * If javascript and always inline
          */
         if ($this->getExtension() === Snippet::EXTENSION_JS) {
-            if(!$this->hasRemoteUrl()) {
+
+            try {
+                $lastName = $internalPath->getLastName();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("Every snippet should have a last name");
+                return false;
+            }
+
+            /**
+             * If this is a library don't inline
+             * Why ? The local combo.min.js library depends on bootstrap.min.js
+             */
+            $libraryExtension = ".min.js";
+            $isLibrary = substr($lastName, -strlen($libraryExtension)) === $libraryExtension;
+            if (!$this->hasRemoteUrl() && !$isLibrary) {
                 $alwaysInline = ExecutionContext::getActualOrCreateFromEnv()
                     ->getConfig()
                     ->isLocalJavascriptAlwaysInlined();

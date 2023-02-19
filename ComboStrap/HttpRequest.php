@@ -28,8 +28,6 @@ class HttpRequest
     }
 
 
-
-
     /**
      * @param string $wikiId
      * @return HttpResponse
@@ -160,6 +158,11 @@ class HttpRequest
     {
         $this->method = self::GET;
         return $this;
+    }
+
+    public function fetchAndExcuteBodyAsHtml(int $waitTimeInSecondToComplete = 0): HttpResponse
+    {
+        return $this->fetch()->executeBodyAsHtmlPage($waitTimeInSecondToComplete);
     }
 
 

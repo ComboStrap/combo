@@ -45,11 +45,14 @@ class MarkupRenderUtility
     public static function getInstructionsAndStripPEventually($pageContent, bool $stripOpenAndEnd = true): array
     {
 
-        $markupRenderer = MarkupRenderer::createFromMarkup($pageContent, null, null)
-            ->setRequestedMimeToInstruction()
-            ->setDeleteRootBlockElement($stripOpenAndEnd);
+        $markupRenderer = FetcherMarkup::getBuilder()
+            ->setDeleteRootBlockElement($stripOpenAndEnd)
+            ->setRequestedMarkupString($pageContent)
+            ->setRequestedMimeToInstructions()
+            ->setRequestedContextPathWithDefault()
+            ->build();
 
-        return $markupRenderer->getOutput();
+        return $markupRenderer->getInstructionsArray();
 
 
     }

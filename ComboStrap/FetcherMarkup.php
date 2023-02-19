@@ -912,6 +912,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public function getInstructionsArray(): array
     {
+        $this->processIfNeeded();
+
         if ($this->getMime()->getExtension() !== MarkupRenderer::INSTRUCTION_EXTENSION) {
             throw new ExceptionRuntimeInternal("This is not an instruction run, you can't ask the instruction array");
         }

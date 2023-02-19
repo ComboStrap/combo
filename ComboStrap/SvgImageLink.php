@@ -58,7 +58,9 @@ class SvgImageLink extends ImageLink
 
         $lazyLoad = $this->isLazyLoaded();
 
-        $svgInjection = Site::getConfValue(self::CONF_SVG_INJECTION_ENABLE, 1);
+        $svgInjection = ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->getBooleanValue(self::CONF_SVG_INJECTION_ENABLE,1);
 
         /**
          * Snippet
@@ -271,12 +273,12 @@ class SvgImageLink extends ImageLink
     }
 
 
-    public function isLazyLoaded()
+    public function isLazyLoaded(): bool
     {
         try {
             return $this->mediaMarkup->isLazy();
         } catch (ExceptionNotFound $e) {
-            return Site::getConfValue(SvgImageLink::CONF_LAZY_LOAD_ENABLE);
+            return ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getBooleanValue(SvgImageLink::CONF_LAZY_LOAD_ENABLE, 1);
         }
     }
 

@@ -13,6 +13,8 @@ namespace ComboStrap;
 abstract class ImageLink extends MediaLink
 {
 
+    const LIGHTBOX = "lightbox";
+
 
     /**
      * This is mandatory for HTML
@@ -47,14 +49,14 @@ abstract class ImageLink extends MediaLink
          * Link to the media
          *
          */
-        $tagAttributes = $this->mediaMarkup->getExtraMediaTagAttributes()
+        $linkTagAttributes = TagAttributes::createEmpty()
             ->setLogicalTag("img-link");
         // https://www.dokuwiki.org/config:target
         global $conf;
         $target = $conf['target']['media'];
-        $tagAttributes->addOutputAttributeValueIfNotEmpty("target", $target);
+        $linkTagAttributes->addOutputAttributeValueIfNotEmpty("target", $target);
         if (!empty($target)) {
-            $tagAttributes->addOutputAttributeValue("rel", 'noopener');
+            $linkTagAttributes->addOutputAttributeValue("rel", 'noopener');
         }
 
         /**
@@ -75,46 +77,48 @@ abstract class ImageLink extends MediaLink
         try {
             $linking = $this->mediaMarkup->getLinking();
         } catch (ExceptionNotFound $e) {
-            return $htmlMediaMarkup;
+            $linking = MediaMarkup::LINKING_DIRECT_VALUE;
         }
         switch ($linking) {
             case MediaMarkup::LINKING_LINKONLY_VALUE:
                 // show only a url, no image
                 $href = FetcherRawLocalPath::createFromPath($dokuPath)->getFetchUrl()->toString();
-                $tagAttributes->addOutputAttributeValue("href", $href);
+                $linkTagAttributes->addOutputAttributeValue("href", $href);
                 try {
                     $title = $this->mediaMarkup->getLabel();
                 } catch (ExceptionNotFound $e) {
                     $title = $dokuPath->getLastName();
                 }
-                return $tagAttributes->toHtmlEnterTag("a") . $title . "</a>";
+                return $linkTagAttributes->toHtmlEnterTag("a") . $title . "</a>";
             case MediaMarkup::LINKING_NOLINK_VALUE:
                 // show only a the image
                 return $htmlMediaMarkup;
-            default:
             case MediaMarkup::LINKING_DIRECT_VALUE:
                 //directly to the image
                 $href = FetcherRawLocalPath::createFromPath($dokuPath)->getFetchUrl()->toString();
-                $tagAttributes->addOutputAttributeValue("href", $href);
-                $snippetId = "lightbox";
-                $tagAttributes->addClassName(StyleUtility::addComboStrapSuffix($snippetId));
+                $linkTagAttributes->addOutputAttributeValue("href", $href);
+                $snippetId = self::LIGHTBOX;
+                $linkTagAttributes->addClassName(StyleUtility::addComboStrapSuffix($snippetId));
                 $linkingClass = $this->mediaMarkup->getLinkingClass();
                 if ($linkingClass !== null) {
-                    $tagAttributes->addClassName($linkingClass);
+                    $linkTagAttributes->addClassName($linkingClass);
                 }
                 $snippetManager = PluginUtility::getSnippetManager();
                 $snippetManager->attachJavascriptComboLibrary();
                 $snippetManager->attachJavascriptFromComponentId($snippetId);
                 $snippetManager->attachCssInternalStyleSheet($snippetId);
-                return $tagAttributes->toHtmlEnterTag("a") . $htmlMediaMarkup . "</a>";
+                return $linkTagAttributes->toHtmlEnterTag("a") . $htmlMediaMarkup . "</a>";
 
             case MediaMarkup::LINKING_DETAILS_VALUE:
                 //go to the details media viewer
                 $url = UrlEndpoint::createDetailUrl()
                     ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $dokuPath->getWikiId())
                     ->addQueryParameter(WikiPath::REV_ATTRIBUTE, $dokuPath->getRevision());
-                $tagAttributes->addOutputAttributeValue("href", $url->toString());
-                return $tagAttributes->toHtmlEnterTag("a") . $htmlMediaMarkup . "</a>";
+                $linkTagAttributes->addOutputAttributeValue("href", $url->toString());
+                return $linkTagAttributes->toHtmlEnterTag("a") . $htmlMediaMarkup . "</a>";
+            default:
+                LogUtility::internalError("The linking ($linking) was not processed");
+                return $htmlMediaMarkup;
 
         }
 

@@ -122,7 +122,7 @@ class SiteConfig
      * @param int $default - the default value (1=true,0=false in the dokuwiki config system)
      * @return bool
      */
-    private function getBooleanValue(string $key, int $default): bool
+    public function getBooleanValue(string $key, int $default): bool
     {
         $value = $this->getValue($key, $default);
         /**
@@ -266,6 +266,7 @@ class SiteConfig
     {
         return $this->getBooleanValue(self::HTML_ALWAYS_INLINE_LOCAL_JAVASCRIPT, 0);
     }
+
 
     public function disableLazyLoad(): SiteConfig
     {

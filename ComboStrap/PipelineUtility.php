@@ -80,7 +80,7 @@ class PipelineUtility
          */
         $message = \syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($message);
 
-        $charactersToTrimFromCommand = implode("", self::QUOTES_CHARACTERS) . self::SPACE;
+        $charactersToTrimFromCommand = implode("", self::QUOTES_CHARACTERS);
         foreach ($commands as $command) {
             $command = trim($command, " )");
             $leftParenthesis = strpos($command, "(");
@@ -127,7 +127,7 @@ class PipelineUtility
                 }
             }
         }
-        return trim($message);
+        return $message;
     }
 
     private static function replace(array $commandArgs, $value)
@@ -156,7 +156,7 @@ class PipelineUtility
                 $headValue .= " ";
             }
             $headValue .= $words[$i];
-            if (strlen($headValue) > $length) {
+            if (strlen($headValue) >= $length) {
                 break;
             }
         }
@@ -247,7 +247,7 @@ class PipelineUtility
         try {
             $dateTime = Iso8601Date::createFromString($value);
         } catch (ExceptionBadSyntax $e) {
-            throw new ExceptionBadSyntax("The format method allows for now only date. The value ($value) is not a date.", \syntax_plugin_combo_pipeline::CANONICAL);
+            throw new ExceptionBadSyntax("The format method allows for now only date. The value ($value) is not a date.", PipelineTag::CANONICAL);
         }
 
         $size = sizeof($commandArgs);

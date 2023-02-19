@@ -5,6 +5,7 @@ use ComboStrap\CallStack;
 use ComboStrap\ConsoleTag;
 use ComboStrap\Dimension;
 use ComboStrap\Html;
+use ComboStrap\PipelineTag;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\TagAttributes;
@@ -67,13 +68,15 @@ class syntax_plugin_combo_xmlprotectedtag extends DokuWiki_Syntax_Plugin
         return 199;
     }
 
+    const TAGS = [ConsoleTag::TAG, PipelineTag::TAG];
 
     function connectTo($mode)
     {
 
-
-        $pattern = PluginUtility::getContainerTagPattern(ConsoleTag::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        foreach (self::TAGS as $tag) {
+            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        }
 
 
     }
@@ -81,8 +84,9 @@ class syntax_plugin_combo_xmlprotectedtag extends DokuWiki_Syntax_Plugin
 
     function postConnect()
     {
-
-        $this->Lexer->addExitPattern('</' . ConsoleTag::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        foreach (self::TAGS as $tag) {
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        }
 
     }
 
@@ -113,7 +117,6 @@ class syntax_plugin_combo_xmlprotectedtag extends DokuWiki_Syntax_Plugin
      * @param array $data - what the function handle() return'ed
      * @return boolean - rendered correctly? (however, returned value is not used at the moment)
      * @see DokuWiki_Syntax_Plugin::render()
-     *
      *
      */
     function render($format, Doku_Renderer $renderer, $data): bool

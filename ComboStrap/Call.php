@@ -86,7 +86,7 @@ class Call
         \syntax_plugin_combo_inote::TAG,
         ButtonTag::MARKUP_LONG,
         \syntax_plugin_combo_tooltip::TAG,
-        \syntax_plugin_combo_pipeline::TAG,
+        PipelineTag::TAG,
         Breadcrumb::TAG, // only the typo is inline but yeah
     );
 

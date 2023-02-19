@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\LogUtility;
+use ComboStrap\PipelineTag;
 use ComboStrap\PipelineUtility;
 use ComboStrap\PluginUtility;
 
@@ -12,9 +13,6 @@ require_once(__DIR__ . '/../ComboStrap/PipelineUtility.php');
  */
 class syntax_plugin_combo_pipeline extends DokuWiki_Syntax_Plugin
 {
-
-    const TAG = "pipeline";
-    const CANONICAL = self::TAG;
 
 
     /**
@@ -61,7 +59,7 @@ class syntax_plugin_combo_pipeline extends DokuWiki_Syntax_Plugin
      */
     public function getSort()
     {
-        return 195;
+        return 300;
     }
 
     /**
@@ -71,8 +69,8 @@ class syntax_plugin_combo_pipeline extends DokuWiki_Syntax_Plugin
     public function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getLeafContainerTagPattern(self::TAG);
-        $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+//        $pattern = PluginUtility::getLeafContainerTagPattern(PipelineTag::TAG);
+//        $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
     }
@@ -88,11 +86,7 @@ class syntax_plugin_combo_pipeline extends DokuWiki_Syntax_Plugin
      */
     public function handle($match, $state, $pos, Doku_Handler $handler): array
     {
-        $script = PluginUtility::getTagContent($match);
-        LogUtility::warning("The pipeline component has been deprecated for the variable syntax", self::CANONICAL);
-        return array(
-            PluginUtility::STATE => $state,
-            PluginUtility::PAYLOAD=> $script);
+    return [];
     }
 
     /**
@@ -108,15 +102,7 @@ class syntax_plugin_combo_pipeline extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data): bool
     {
 
-        switch ($format) {
-            case 'xhtml':
-                $pipelineWithPossibleVariableExpression = $data[PluginUtility::PAYLOAD];
-                $pipelineExpression = syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($pipelineWithPossibleVariableExpression);
-                $output = PipelineUtility::execute($pipelineExpression);
-                $renderer->doc .= $output;
-                break;
 
-        }
 
         return true;
 

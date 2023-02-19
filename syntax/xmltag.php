@@ -19,6 +19,7 @@ use ComboStrap\ExecutionContext;
 use ComboStrap\GridTag;
 use ComboStrap\Hero;
 use ComboStrap\LogUtility;
+use ComboStrap\PipelineTag;
 use ComboStrap\PluginUtility;
 use ComboStrap\Skin;
 use ComboStrap\TagAttributes;
@@ -73,6 +74,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case GridTag::LOGICAL_TAG:
                                 $renderer->doc .= GridTag::renderEnterXhtml($tagAttributes);
                                 return true;
+                            case PipelineTag::TAG:
+                                $renderer->doc .= PipelineTag::renderEnterXhtml($tagAttributes);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                                 return false;
@@ -111,6 +115,8 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 return true;
                             case GridTag::LOGICAL_TAG:
                                 $renderer->doc .= GridTag::renderExitXhtml($tagAttributes);
+                                return true;
+                            case PipelineTag::TAG:
                                 return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -325,6 +331,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         break;
                     case ConsoleTag::TAG:
                         $returnedArray = ConsoleTag::handleExit($handler);
+                        break;
+                    case PipelineTag::TAG:
+                        PipelineTag::processExit($handler);
                         break;
                     case GridTag::GRID_TAG:
                     case GridTag::ROW_TAG:

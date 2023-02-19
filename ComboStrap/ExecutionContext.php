@@ -3,8 +3,6 @@
 namespace ComboStrap;
 
 
-use action_plugin_combo_docustom;
-use dokuwiki\Extension\PluginTrait;
 use TestRequest;
 
 
@@ -282,9 +280,6 @@ class ExecutionContext
     }
 
 
-
-
-
     /**
      * @throws ExceptionNotFound
      */
@@ -392,6 +387,7 @@ class ExecutionContext
                     ->getRequestedContextPath();
             } catch (ExceptionNotFound $e) {
                 // not a template engine running
+                // `id` may be asked by acl to determine the right
                 global $ACT;
                 if (!in_array($ACT, [ExecutionContext::SHOW_ACTION, FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME])) {
                     throw new ExceptionNotFound("No page is rendering. Act is ($ACT)");
@@ -635,9 +631,12 @@ class ExecutionContext
     private function setExecutingId(?string $executingId): void
     {
         global $ID;
-        if ($executingId !== null) {
-            $executingId = WikiPath::toDokuWikiId($executingId);
+        if ($executingId == null) {
+            // ID should not be null
+            // to be able to check the ACL
+            return;
         }
+        $executingId = WikiPath::toDokuWikiId($executingId);
         $ID = $executingId;
     }
 

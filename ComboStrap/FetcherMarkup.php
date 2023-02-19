@@ -223,7 +223,18 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * the event coupled to the cache (ie PARSER_CACHE_USE)
          */
         $depends['age'] = $this->getCacheAge();
-        $useCache = $this->contentCache->useCache($depends);
+        /**
+         * Edge Case
+         * (as dokuwiki starts the rendering process here
+         * we need to set the execution id)
+         */
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv()
+            ->setExecutingMarkupHandler($this);
+        try {
+            $useCache = $this->contentCache->useCache($depends);
+        } finally {
+            $executionContext->closeExecutingMarkupHandler();
+        }
         return ($useCache === false);
 
     }
@@ -649,7 +660,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         $this->processIfNeeded();
 
         if ($this->isStringExecution()) {
-
             return $this->fetchString;
         }
 

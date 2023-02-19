@@ -158,7 +158,7 @@ class Align
             /**
              * A bootstrap row is already a flex, no need to add it
              */
-            if ($attributes->getLogicalTag() !== \syntax_plugin_combo_grid::TAG) {
+            if ($attributes->getLogicalTag() !== GridTag::TAG) {
                 $attributes->addClassName("d-flex");
                 if (!isset($flexAxis[self::Y_AXIS])) {
                     /**

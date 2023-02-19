@@ -140,7 +140,7 @@ class ConditionalLength
         if ($ratio > 1) {
             throw new ExceptionBadArgument("The length ratio ($ratio) is greater than 1. It should be less than 1 to get a col class.");
         }
-        $colsNumber = floor(\syntax_plugin_combo_grid::GRID_TOTAL_COLUMNS * $this->numerator / $this->denominator);
+        $colsNumber = floor(GridTag::GRID_TOTAL_COLUMNS * $this->numerator / $this->denominator);
         $breakpoint = $this->getBreakpointOrDefault();
         if ($breakpoint === "xs") {
             return "col-$colsNumber";
@@ -168,7 +168,7 @@ class ConditionalLength
         }
 
         $colsNumber = intval($this->numerator);
-        $totalColumns = \syntax_plugin_combo_grid::GRID_TOTAL_COLUMNS;
+        $totalColumns = GridTag::GRID_TOTAL_COLUMNS;
         if ($colsNumber > $totalColumns) {
             throw new ExceptionBadArgument("A row col class can be calculated only from a number below $totalColumns ({$this}");
         }

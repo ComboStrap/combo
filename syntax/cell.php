@@ -14,6 +14,7 @@ use ComboStrap\BoxTag;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
+use ComboStrap\GridTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -155,7 +156,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
                 $defaultAttributes = [];
                 $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes)->toCallStackArray();
 
-                LogUtility::warning("Cell (Col) has been deprecated for box (You can use now any component in a grid or row).", syntax_plugin_combo_grid::TAG);
+                LogUtility::warning("Cell (Col) has been deprecated for box (You can use now any component in a grid or row).", GridTag::TAG);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes);

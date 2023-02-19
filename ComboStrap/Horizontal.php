@@ -71,7 +71,7 @@ class Horizontal
 
         // works only on flex items
         // row is a flex item
-        if ($logicalTag !== \syntax_plugin_combo_grid::TAG) {
+        if ($logicalTag !== GridTag::TAG) {
             $tagAttributes->addClassName(\syntax_plugin_combo_cell::FLEX_CLASS);
         }
 

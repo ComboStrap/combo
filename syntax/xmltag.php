@@ -15,6 +15,8 @@ use ComboStrap\ColorRgb;
 use ComboStrap\ConsoleTag;
 use ComboStrap\ContainerTag;
 use ComboStrap\ExceptionRuntimeInternal;
+use ComboStrap\ExecutionContext;
+use ComboStrap\GridTag;
 use ComboStrap\Hero;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -68,8 +70,11 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case ContainerTag::TAG:
                                 $renderer->doc .= ContainerTag::renderEnterXhtml($tagAttributes);
                                 return true;
+                            case GridTag::LOGICAL_TAG:
+                                $renderer->doc .= GridTag::renderEnterXhtml($tagAttributes);
+                                return true;
                             default:
-                                LogUtility::errorIfDevOrTest("The empty tag (" . $logicalTag . ") was not processed.");
+                                LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                                 return false;
                         }
                     case DOKU_LEXER_UNMATCHED:
@@ -103,6 +108,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 return true;
                             case ContainerTag::TAG:
                                 $renderer->doc .= ContainerTag::renderExitXhtml();
+                                return true;
+                            case GridTag::LOGICAL_TAG:
+                                $renderer->doc .= GridTag::renderExitXhtml($tagAttributes);
                                 return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -158,7 +166,8 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $executionContext = \ComboStrap\ExecutionContext::getActualOrCreateFromEnv();
+                // context data
+                $executionContext = ExecutionContext::getActualOrCreateFromEnv();
 
                 // Markup
                 $markupTag = PluginUtility::getMarkupTag($match);
@@ -208,6 +217,11 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         $knownTypes = ContainerTag::CONTAINER_VALUES;
                         $defaultAttributes[TagAttributes::TYPE_KEY] = $executionContext->getConfig()->getValue(ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF, ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
                         break;
+                    case GridTag::ROW_TAG:
+                    case GridTag::GRID_TAG:
+                        $logicalTag = GridTag::LOGICAL_TAG;
+                        $knownTypes = GridTag::KNOWN_TYPES;
+                        break;
                 }
 
                 /**
@@ -248,6 +262,10 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         break;
                     case CarrouselTag::TAG:
                         $returnedArray = CarrouselTag::handleEnter($handler);
+                        break;
+                    case GridTag::GRID_TAG:
+                    case GridTag::ROW_TAG:
+                        GridTag::processEnter($tagAttributes, $handler, $match);
                         break;
                 }
 
@@ -308,6 +326,11 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case ConsoleTag::TAG:
                         $returnedArray = ConsoleTag::handleExit($handler);
                         break;
+                    case GridTag::GRID_TAG:
+                    case GridTag::ROW_TAG:
+                        $logicalTag = GridTag::LOGICAL_TAG;
+                        $returnedArray = GridTag::handleExit($handler);
+                        break;
                 }
                 /**
                  * Common exit attributes
@@ -334,7 +357,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
         /**
          * Choice between container, formatting and substition
          *
-         * Icon had 'substition' and can still have other mpde inside (ie tooltip)
+         * Icon had 'substition' and can still have other mode inside (ie tooltip)
          * We choose substition then
          */
         return 'substition';
@@ -385,6 +408,10 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
          *
          * For Cardbody, block value was !important! as
          * it will not create an extra paragraph after it encounters a block
+         *
+         * For {@link \ComboStrap\GridTag},
+         * not stack, otherwise you get extra p's
+         * and it will fucked up the flex layout
          */
         return 'block';
     }

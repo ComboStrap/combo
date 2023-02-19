@@ -476,7 +476,7 @@ class TagAttributes
              */
             if (isset($this->componentAttributesCaseInsensitive[TagAttributes::TYPE_KEY])) {
                 if ($attributeName == $this->componentAttributesCaseInsensitive[TagAttributes::TYPE_KEY]) {
-                    LogUtility::warning("Internal Error: The tag ({$this->getLogicalTag()}) has a the boolean attribute ($attributeName) defined as a type. The possible types should be defined for this tag as it's deprecated.");
+                    LogUtility::warning("Internal Error: The tag ({$this->getLogicalTag()}) has a boolean attribute ($attributeName) defined as a type. The possible types should be defined for this tag as it's deprecated.");
                     return true;
                 }
             }

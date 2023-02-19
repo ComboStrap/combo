@@ -20,7 +20,6 @@ class MarkupRenderer
      */
     private array $instructionsSource;
 
-    private bool $deleteRootElement = false;
     private Mime $requestedMime;
 
     /**
@@ -77,19 +76,8 @@ class MarkupRenderer
             ->setRequestedExecutingPath($fetcherMarkup->getExecutingPathOrNull());
     }
 
-    /**
-     * Dokuwiki will wrap the markup in a p element
-     * if the first element is not a block
-     * This option permits to delete it. This is used mostly in test to get
-     * the generated html
-     * @param bool $b
-     * @return $this
-     */
-    public function setDeleteRootBlockElement(bool $b): MarkupRenderer
-    {
-        $this->deleteRootElement = $b;
-        return $this;
-    }
+
+
 
 
     public function setRequestedMimeToInstruction(): MarkupRenderer
@@ -131,8 +119,7 @@ class MarkupRenderer
                  * the parsing. See {@link \action_plugin_combo_headingpostprocessing}
                  *
                  */
-                $instructions = p_get_instructions($this->markupSource);
-                return $this->deleteRootPElementsIfRequested($instructions);
+                return p_get_instructions($this->markupSource);
 
             default:
                 /**
@@ -152,7 +139,6 @@ class MarkupRenderer
 
                     $this->instructionsSource = MarkupRenderer::createFromMarkup($this->markupSource, $executingPath, $contextPath)
                         ->setRequestedMimeToInstruction()
-                        ->setDeleteRootBlockElement($this->deleteRootElement)
                         ->getOutput();
                 }
 
@@ -215,45 +201,6 @@ class MarkupRenderer
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntime("Internal error", 0, $e);
         }
-    }
-
-    private function deleteRootPElementsIfRequested(array $instructions): array
-    {
-        if ($this->deleteRootElement === false) {
-            return $instructions;
-        }
-
-        /**
-         * Delete the p added by {@link Block::process()}
-         * if the plugin of the {@link SyntaxPlugin::getPType() normal} and not in a block
-         *
-         * p_open = document_start in renderer
-         */
-        if ($instructions[1][0] !== 'p_open') {
-            return $instructions;
-        }
-        unset($instructions[1]);
-
-        /**
-         * The last p position is not fix
-         * We may have other calls due for instance
-         * of {@link \action_plugin_combo_syntaxanalytics}
-         */
-        $n = 1;
-        while (($lastPBlockPosition = (sizeof($instructions) - $n)) >= 0) {
-
-            /**
-             * p_open = document_end in renderer
-             */
-            if ($instructions[$lastPBlockPosition][0] == 'p_close') {
-                unset($instructions[$lastPBlockPosition]);
-                break;
-            } else {
-                $n = $n + 1;
-            }
-        }
-
-        return $instructions;
     }
 
     /**

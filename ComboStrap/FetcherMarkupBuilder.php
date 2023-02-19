@@ -22,7 +22,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
     protected ?Path $markupSourcePath = null;
     protected WikiPath $requestedContextPath;
     protected Mime $mime;
-    protected bool $removeRootBlockElement = false;
+    protected bool $deleteRootBlockElement = false;
     protected string $rendererName = MarkupRenderer::DEFAULT_RENDERER;
 
 
@@ -48,7 +48,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
      */
     public function setDeleteRootBlockElement(bool $b): FetcherMarkupBuilder
     {
-        $this->removeRootBlockElement = $b;
+        $this->deleteRootBlockElement = $b;
         return $this;
     }
 
@@ -149,7 +149,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
         }
         $newFetcherMarkup->markupSourcePath = $this->markupSourcePath;
         $newFetcherMarkup->mime = $this->mime;
-        $newFetcherMarkup->removeRootBlockElement = $this->removeRootBlockElement;
+        $newFetcherMarkup->deleteRootBlockElement = $this->deleteRootBlockElement;
         $newFetcherMarkup->rendererName = $this->rendererName;
 
         /**

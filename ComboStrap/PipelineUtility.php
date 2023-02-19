@@ -37,21 +37,50 @@ class PipelineUtility
     {
 
         /**
-         * Get the command and applies them
+         * Get the value (called the message in a pipeline)
          */
-        $parts = preg_split("/\|/", $expression);
-        $input = $parts[0];
-        $commands = array_splice($parts, 1);
+        $processedExpression = $expression;
+        $firstQuoteChar = strpos($processedExpression, '"');
+        $firstPipeChar = strpos($processedExpression, '|');
+        if ($firstQuoteChar < $firstPipeChar) {
+
+            /**
+             * Example: a literal with a pipe
+             * "World | Do" | replace ("world,"you")
+             */
+            $processedExpression = substr($processedExpression, $firstQuoteChar + 1);
+            $secondQuoteChar = strpos($processedExpression, '"');
+            $message = substr($processedExpression, 0, $secondQuoteChar);
+
+            $processedExpression = substr($processedExpression, $secondQuoteChar + 1);
+            $secondPipeChar = strpos($processedExpression, '|');
+            $commandChain = substr($processedExpression, $secondPipeChar + 1);
+
+        } else {
+
+            /**
+             * Example: a variable with an expression
+             * $title | replace ("world,"you")
+             */
+            $message = substr($processedExpression, 0, $firstPipeChar);
+            $commandChain = substr($processedExpression, $firstPipeChar + 1);
+
+        }
 
 
         /**
-         * Get the value
+         * Command chain splits
          */
-        $separatorCharacters = implode("", self::QUOTES_CHARACTERS) . self::SPACE;
-        $message = trim($input, $separatorCharacters);
-        // we replace after the split to be sure that there is not a | separator in the variable value
-        // that would fuck up the process
+        $commands = preg_split("/\|/", $commandChain);
+
+
+        /**
+         * We replace after the split to be sure that there is not a | separator in the variable value
+         * that would fuck up the process
+         */
         $message = \syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($message);
+
+        $charactersToTrimFromCommand = implode("", self::QUOTES_CHARACTERS) . self::SPACE;
         foreach ($commands as $command) {
             $command = trim($command, " )");
             $leftParenthesis = strpos($command, "(");
@@ -61,7 +90,7 @@ class PipelineUtility
             $commandArgs = array_map(
                 'trim',
                 $commandArgs,
-                array_fill(0, sizeof($commandArgs), $separatorCharacters)
+                array_fill(0, sizeof($commandArgs), $charactersToTrimFromCommand)
             );
             $commandName = trim($commandName);
             if (!empty($commandName)) {

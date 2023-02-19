@@ -32,6 +32,7 @@ class SiteConfig
      */
     public const HTML_ALWAYS_INLINE_LOCAL_JAVASCRIPT = "combo-conf-004";
     const CANONICAL = "site-config";
+    const GLOBAL_SCOPE = null;
 
 
     /**
@@ -273,6 +274,11 @@ class SiteConfig
         return $this->setConf(SvgImageLink::CONF_LAZY_LOAD_ENABLE, 0)
             ->setConf(RasterImageLink::CONF_LAZY_LOADING_ENABLE, 0);
 
+    }
+
+    public function setUseHeadingAsTitle(): SiteConfig
+    {
+        return $this->setConf('useheading',1,self::GLOBAL_SCOPE);
     }
 
 

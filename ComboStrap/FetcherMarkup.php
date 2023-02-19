@@ -66,7 +66,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     private array $localSnippets = [];
 
-    protected bool $removeRootBlockElement = false;
+    protected bool $deleteRootBlockElement = false;
 
     /**
      * @var WikiPath the context path, it's important to resolve relative link and to create cache for each context namespace for instance
@@ -150,6 +150,51 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             ->setRequestedContextPathWithDefault()
             ->setRequestedMimeToXhtml()
             ->build();
+    }
+
+    /**
+     * Dokuwiki will wrap the markup in a p element
+     * if the first element is not a block
+     * This option permits to delete it. This is used mostly in test to get
+     * the generated html
+     */
+    public function deleteRootPElementsIfRequested(array &$instructions): void
+    {
+
+        if (!$this->deleteRootBlockElement) {
+            return;
+        }
+
+        /**
+         * Delete the p added by {@link Block::process()}
+         * if the plugin of the {@link SyntaxPlugin::getPType() normal} and not in a block
+         *
+         * p_open = document_start in renderer
+         */
+        if ($instructions[1][0] !== 'p_open') {
+            return;
+        }
+        unset($instructions[1]);
+
+        /**
+         * The last p position is not fix
+         * We may have other calls due for instance
+         * of {@link \action_plugin_combo_syntaxanalytics}
+         */
+        $n = 1;
+        while (($lastPBlockPosition = (sizeof($instructions) - $n)) >= 0) {
+
+            /**
+             * p_open = document_end in renderer
+             */
+            if ($instructions[$lastPBlockPosition][0] == 'p_close') {
+                unset($instructions[$lastPBlockPosition]);
+                break;
+            } else {
+                $n = $n + 1;
+            }
+        }
+
     }
 
     /**
@@ -244,7 +289,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     function storeSnippets()
     {
 
-
         /**
          * Snippet
          */
@@ -260,7 +304,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          */
         $snippetCache = $this->getSnippetCacheStore();
 
-        if ($jsonDecodeSnippets !== null) {
+        if (count($jsonDecodeSnippets) > 0) {
             $data1 = json_encode($jsonDecodeSnippets);
             $snippetCache->storeCache($data1);
         } else {
@@ -409,8 +453,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         switch ($extension) {
             case MarkupRenderer::INSTRUCTION_EXTENSION:
                 $markupRenderer = MarkupRenderer::createFromMarkup($markup, $this->getExecutingPathOrNull(), $this->getRequestedContextPath())
-                    ->setRequestedMimeToInstruction()
-                    ->setDeleteRootBlockElement($this->removeRootBlockElement);
+                    ->setRequestedMimeToInstruction();
                 $executionContext->setExecutingMarkupHandler($this);
                 try {
                     $instructions = $markupRenderer->getOutput();
@@ -461,12 +504,21 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     ->setRequestedContextPath($this->getRequestedContextPath())
                     ->setRequestedExecutingPath($this->getExecutingPathOrNull())
                     ->setRequestedMimeToInstructions()
-                    ->setDeleteRootBlockElement($this->removeRootBlockElement)
+                    ->setDeleteRootBlockElement($this->deleteRootBlockElement)
                     ->build();
 
                 $instructions = $instructionsFetcher
                     ->processIfNeeded()
                     ->getInstructionsArray();
+
+                /**
+                 * Edge case: We delete here
+                 * because the instructions may have been created by dokuwiki
+                 * when we test for the cache with {@link CacheParser::useCache()}
+                 */
+                if ($this->deleteRootBlockElement) {
+                    self::deleteRootPElementsIfRequested($instructions);
+                }
 
                 $markupRenderer = MarkupRenderer::createFromInstructions(
                     $instructions,
@@ -920,7 +972,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             // string execution
             $globalSnippets = [];
         }
-        $allSnippets = array_merge($globalSnippets,$this->localSnippets);
+        $allSnippets = array_merge($globalSnippets, $this->localSnippets);
         return SnippetSystem::toHtmlFromSnippetArray($allSnippets);
 
     }

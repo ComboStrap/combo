@@ -152,8 +152,12 @@ class ExecutionContext
         try {
             $urlAct = $this->url->getQueryPropertyValue(self::DO_ATTRIBUTE);
         } catch (ExceptionNotFound $e) {
-            // the default value
-            $urlAct = "show";
+            /**
+             * The default value is unknown
+             * (if it was `show`, we don't allow to have it without running ID)
+             * but we may execute code that don't need it
+             */
+            $urlAct = null;
         }
         $ACT = $urlAct;
 
@@ -177,6 +181,7 @@ class ExecutionContext
 
         } catch (ExceptionNotFound $e) {
             // none
+            $ID = null;
         }
 
 
@@ -433,7 +438,12 @@ class ExecutionContext
                     }
                 }
 
-                throw new ExceptionRuntimeInternal("In a show action, the requested id should not be empty.");
+                if ($ACT === ExecutionContext::SHOW_ACTION) {
+                    // markup based on file
+                    LogUtility::errorIfDevOrTest("In a show action, the requested id should not be empty.");
+                }
+                // markup based on string (test)
+                throw new ExceptionNotFound();
             }
 
         }
